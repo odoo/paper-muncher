@@ -50,10 +50,6 @@ struct Output {
     static Output fromSizeAndMargin(Vec2Px size, InsetsPx margins) {
         return Output{size, margins};
     }
-
-    void repr(Io::Emit &e) const {
-        e("(output size: {} margins: {})", size, margins);
-    }
 };
 
 /// Computed layout values.

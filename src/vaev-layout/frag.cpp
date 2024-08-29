@@ -43,18 +43,18 @@ void Frag::add(Frag &&frag) {
 }
 
 void Frag::repr(Io::Emit &e) const {
-    e("(flow {} {}", style->display, layout.borderBox());
     if (children()) {
+        e("(flow {} {}", style->display, layout.borderBox());
         e.indentNewline();
         for (auto &c : children()) {
             c.repr(e);
             e.newline();
         }
         e.deindent();
-    } else if (content.is<Strong<Text::Run>>()) {
-        e(" run");
+        e(")");
+    } else {
+        e("(frag {} {})", style->display, layout.borderBox());
     }
-    e(")");
 }
 
 // MARK: Build -----------------------------------------------------------------
