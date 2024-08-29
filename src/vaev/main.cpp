@@ -2,7 +2,7 @@
 #include <karm-ui/app.h>
 #include <vaev-driver/fetcher.h>
 
-#include "../app.h"
+#include "app.h"
 
 Async::Task<> entryPointAsync(Sys::Context &ctx) {
     auto args = Sys::useArgs(ctx);

@@ -6,6 +6,9 @@
     },
     "type": "exe",
     "requires": [
-        "hideo-browser"
+        "hideo-base",
+        "vaev-html",
+        "vaev-xml",
+        "vaev-view"
     ]
 }
