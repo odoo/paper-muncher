@@ -1,0 +1,12 @@
+{
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.project.v1",
+    "id": "skift-org/vaev",
+    "type": "project",
+    "description": "The vaev browser engine",
+    "extern": {
+        "skift-org/skift": {
+            "git": "https://github.com/cute-engineering/ce-stdcpp.git",
+            "tag": "v1.3.0"
+        }
+    }
+}
