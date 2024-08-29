@@ -6,7 +6,7 @@
     "extern": {
         "skift-org/skift": {
             "git": "https://github.com/skift-org/skift",
-            "tag": "main"
+            "tag": "a88524c60c7b840e081d6cbe8d256c3062fd7b81"
         }
     }
 }

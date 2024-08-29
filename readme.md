@@ -11,8 +11,10 @@
 <br/>
 <br/>
 
+> **⚠ Warning**<br> Vaev is currently in the early stages of development and is not yet ready for production use. Here be dragons! 🐉
+
 Vaev aim to be lightning-fast, lightweight, and secure HTML/CSS engine
-built for effortless document generation and streamlined web browsing.
+built for effortless document generation.
 
 ## Supported Standards
 
@@ -26,5 +28,5 @@ Veav aims to support the following standards:
 
 ## Architecture
 
-An [architecture diagram](diagrams.tldr) is available next to this file. It's in the tldraw format.
+An [architecture diagram](doc/diagrams.tldr) is available next to this file. It's in the tldraw format.
 
