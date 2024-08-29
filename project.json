@@ -5,8 +5,8 @@
     "description": "The vaev browser engine",
     "extern": {
         "skift-org/skift": {
-            "git": "https://github.com/cute-engineering/ce-stdcpp.git",
-            "tag": "v1.3.0"
+            "git": "https://github.com/skift-org/skift",
+            "tag": "main"
         }
     }
 }
