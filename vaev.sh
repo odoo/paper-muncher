@@ -74,7 +74,6 @@ if [ ! -f .cutekit/tools-ready ]; then
 
     touch .cutekit/tools-ready
     echo "Done!"
-    exit 0
 fi
 
 if [ "$1" == "tools" -a "$2" == "setup" ]; then

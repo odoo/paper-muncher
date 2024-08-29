@@ -7,17 +7,17 @@
 -Werror
 
 -I./
--I./apps
--I./clis
--I./embed
--I./impls
--I./kernel
--I./libs
--I./specs
--I./srvs
--I./web
+-I../.cutekit/extern/skift-org/skift/src/apps
+-I../.cutekit/extern/skift-org/skift/src/clis
+-I../.cutekit/extern/skift-org/skift/src/embed
+-I../.cutekit/extern/skift-org/skift/src/impls
+-I../.cutekit/extern/skift-org/skift/src/kernel
+-I../.cutekit/extern/skift-org/skift/src/libs
+-I../.cutekit/extern/skift-org/skift/src/specs
+-I../.cutekit/extern/skift-org/skift/src/srvs
 -I../.cutekit/extern/cute-engineering
 -I../.cutekit/extern/cute-engineering
+-I../.cutekit/extern/skift-org/skift
 -I../.cutekit/generated
 -I../.cutekit/generated/__aliases__
 
