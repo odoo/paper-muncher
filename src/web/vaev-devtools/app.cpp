@@ -6,6 +6,7 @@
 #include <karm-mime/mime.h>
 #include <karm-sys/file.h>
 #include <karm-sys/launch.h>
+#include <karm-ui/drag.h>
 #include <karm-ui/input.h>
 #include <karm-ui/popover.h>
 #include <karm-ui/scroll.h>
@@ -17,7 +18,6 @@ namespace Hideo::Browser {
 
 enum struct SidePanel {
     CLOSE,
-    BOOKMARKS,
     DEVELOPER_TOOLS,
 };
 
@@ -62,10 +62,8 @@ using Model = Ui::Model<State, Action, reduce>;
 
 Ui::Child mainMenu([[maybe_unused]] State const &s) {
     return Kr::contextMenuContent({
-        Kr::contextMenuItem(Model::bind(SidePanel::BOOKMARKS), Mdi::BOOKMARK, "Bookmarks"),
         Ui::separator(),
         Kr::contextMenuItem(Ui::NOP, Mdi::PRINTER, "Print..."),
-#ifdef __ck_host__
         Kr::contextMenuItem(
             [&](auto &n) {
                 auto res = Sys::launch(Mime::Uti::PUBLIC_OPEN, s.url);
@@ -80,11 +78,8 @@ Ui::Child mainMenu([[maybe_unused]] State const &s) {
             },
             Mdi::WEB, "Open in default browser..."
         ),
-#endif
         Ui::separator(),
-        Kr::contextMenuItem(Model::bind(SidePanel::DEVELOPER_TOOLS), Mdi::CODE_TAGS, "Developer Tools"),
-        Ui::separator(),
-        Kr::contextMenuItem(Ui::NOP, Mdi::COG, "Settings"),
+        Kr::contextMenuItem(Model::bind(SidePanel::DEVELOPER_TOOLS), Mdi::CODE_TAGS, "Inspector"),
     });
 }
 
@@ -93,8 +88,7 @@ Ui::Child addressBar(Mime::Url const &url) {
                0,
                Math::Align::CENTER,
                Ui::text("{}", url),
-               Ui::grow(NONE),
-               Ui::button(Ui::NOP, Ui::ButtonStyle::subtle(), Mdi::BOOKMARK_OUTLINE)
+               Ui::grow(NONE)
            ) |
            Ui::box({
                .padding = {12, 0, 0, 0},
@@ -107,9 +101,7 @@ Ui::Child addressBar(Mime::Url const &url) {
 Ui::Child contextMenu(State const &s) {
     return Kr::contextMenuContent({
         Kr::contextMenuDock({
-            Kr::contextMenuIcon(Ui::NOP, Mdi::ARROW_LEFT),
-            Kr::contextMenuIcon(Ui::NOP, Mdi::ARROW_RIGHT),
-            Kr::contextMenuIcon(Ui::NOP, Mdi::REFRESH),
+            Kr::contextMenuIcon(Model::bind<Reload>(), Mdi::REFRESH),
         }),
         Ui::separator(),
         Kr::contextMenuItem(
@@ -133,18 +125,9 @@ Ui::Child inspectorContent(State const &s) {
 
 Ui::Child sidePanel(State const &s) {
     switch (s.sidePanel) {
-    case SidePanel::BOOKMARKS:
-        return Kr::sidePanelContent({
-            Kr::sidePanelTitle(Model::bind(SidePanel::CLOSE), "Bookmarks"),
-            Ui::separator(),
-            Ui::labelMedium(Ui::GRAY500, "No bookmarks") |
-                Ui::center() |
-                Ui::grow(),
-        });
-
     case SidePanel::DEVELOPER_TOOLS:
         return Kr::sidePanelContent({
-            Kr::sidePanelTitle(Model::bind(SidePanel::CLOSE), "Developer Tools"),
+            Kr::sidePanelTitle(Model::bind(SidePanel::CLOSE), "Inspector"),
             Ui::separator(),
             inspectorContent(s) | Ui::grow(),
         });
@@ -194,12 +177,29 @@ Ui::Child app(Mime::Url url, Res<Strong<Vaev::Dom::Document>> dom) {
             dom,
         },
         [](State const &s) {
+            return Ui::vflow(
+                       Hideo::toolbar(
+                           Ui::button(
+                               [&](Ui::Node &n) {
+                                   Ui::showDialog(n, Kr::alert("Vaev"s, "Copyright © 2024, Odoo S.A."s));
+                               },
+                               Ui::ButtonStyle::subtle(),
+                               Mdi::SURFING
+                           ),
+                           addressBar(s.url) | Ui::grow(), Ui::button(Model::bind<Reload>(), Ui::ButtonStyle::subtle(), Mdi::REFRESH), Ui::button([&](Ui::Node &n) {
+                               Ui::showPopover(n, n.bound().bottomEnd(), mainMenu(s));
+                           },
+                                                                                                                                                  Ui::ButtonStyle::subtle(), Mdi::DOTS_HORIZONTAL),
+                           Hideo::controls()
+                       ) | Ui::dragRegion(),
+                       appContent(s) | Ui::grow()
+                   ) |
+                   Ui::pinSize({800, 600}) | Ui::dialogLayer() | Ui::popoverLayer();
+
             return Hideo::scafold({
-                .icon = Mdi::WEB,
-                .title = "Browser"s,
+                .icon = Mdi::SURFING,
+                .title = "Vaev"s,
                 .startTools = slots$(
-                    Ui::button(Model::bindIf<GoBack>(s.canGoBack()), Ui::ButtonStyle::subtle(), Mdi::ARROW_LEFT),
-                    Ui::button(Model::bindIf<GoForward>(s.canGoForward()), Ui::ButtonStyle::subtle(), Mdi::ARROW_RIGHT),
                     Ui::button(Model::bind<Reload>(), Ui::ButtonStyle::subtle(), Mdi::REFRESH)
                 ),
                 .midleTools = slots$(addressBar(s.url) | Ui::grow()),
