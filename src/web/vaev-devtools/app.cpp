@@ -72,11 +72,11 @@ Ui::Child mainMenu([[maybe_unused]] State const &s) {
                         n,
                         Kr::alert(
                             "Error"s,
-                            Io::format("Failed to open in default browser\n\n{}", res).unwrap()
+                            Io::format("Failed to open in browser\n\n{}", res).unwrap()
                         )
                     );
             },
-            Mdi::WEB, "Open in default browser..."
+            Mdi::WEB, "Open in browser..."
         ),
         Ui::separator(),
         Kr::contextMenuItem(Model::bind(SidePanel::DEVELOPER_TOOLS), Mdi::CODE_TAGS, "Inspector"),
