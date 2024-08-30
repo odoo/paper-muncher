@@ -1,0 +1,10 @@
+{
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+    "id": "mdi-spec",
+    "type": "lib",
+    "description": "Material Design Icons",
+    "requires": [
+        "karm-base",
+        "fonts-mdi"
+    ]
+}

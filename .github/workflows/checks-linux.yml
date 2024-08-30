@@ -17,16 +17,16 @@ jobs:
             python-version: '3.11'
 
       - name: Set up the build environment
-        run: ./vaev.sh tools setup && ./vaev.sh tools doctor
+        run: ./ck tools setup && ./ck tools doctor
 
       - name: Download third-party dependencies
-        run: ./vaev.sh model install
+        run: ./ck model install
 
       - name: Build Userspace (Host)
-        run: ./vaev.sh builder build
+        run: ./ck builder build
 
       - name: Test Userspace (Host)
-        run: ./vaev.sh builder test
+        run: ./ck builder test
 
       - name: Check for formatting errors
         run: ./meta/scripts/style-check.sh || echo "Please run ./meta/scripts/style-fix.sh"

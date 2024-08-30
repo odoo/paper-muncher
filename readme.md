@@ -2,31 +2,40 @@
 <br/>
 <br/>
 <p align="center">
-    <img src="doc/assets/vaev.png" width="320">
+    <img src="doc/assets/logo.png" height="150" alt="Paper Muncher"/>
 </p>
+<br/>
 <p align="center">
-    The *kool* document engine
+    Munch HTML, spit PDF
 </p>
 <br/>
 <br/>
 <br/>
 
-> **⚠ Warning**<br> Vaev is currently in the early stages of development and is not yet ready for production use. Here be dragons! 🐉
 
-Vaev aim to be lightning-fast, lightweight, and secure HTML/CSS engine
-built for effortless document generation.
+# Introduction
 
-## Supported Standards
+In the beginning there was the Web, a sprawling chaos of information, a cacophony of code. And from this discord, a document tyrant arose: wkhtmltopdf. It ruled with an iron fist, its rendering slow, its output clunky. The chosen ones, the PDF wranglers, toiled in misery. But I… I bore witness.
 
-Veav aims to support the following standards:
+I saw the crashes, the memory leaks, the endless command-line wrangling. The pleas for a simpler path went unanswered. The tyrant wkhtmltopdf cared not for their suffering. In their despair, they craved a savior. A champion. A… Paper Muncher.
 
-- [CSS Snapshot 2023](https://www.w3.org/TR/CSS)
-- [HTML Living Standard](https://html.spec.whatwg.org/multipage/)
-- [SVG 2](https://www.w3.org/TR/SVG2/)
-- [MathML 3](https://www.w3.org/TR/MathML3/)
-- [XML 1.0](https://www.w3.org/TR/REC-xml/)
+From the ashes of frustration, a new tool rose. Forged in the fires of programmer ingenuity, the Paper Muncher arrived. It devoured webpages whole, spitting forth crisp, clean PDFs with ease. No more command-line incantations, no more cryptic errors. Just pure, unadulterated PDF conversion.
 
-## Architecture
+The reign of wkhtmltopdf is over. The Paper Muncher has come. Let its name be etched in the annals of document creation, a beacon of hope for the weary PDF wranglers.  Prepare to be Munched!
 
-An [architecture diagram](doc/diagrams.tldr) is available next to this file. It's in the tldraw format.
+# Trying it out
 
+> **⚠ Warning**<br> Paper Muncher is currently in the early stages of development and is not yet ready for use. Here be dragons! 🐉
+
+```sh
+# on Linux or MacOS
+./ck builder run o-devtools
+
+# windows support comming soon'ish
+```
+
+## License
+
+The paper muncher document generation tool and its core components are licensed under the **GNU Lesser General Public License v3.0 or later**.
+
+The full text of the license can be accessed via [this link](https://www.gnu.org/licenses/lgpl-3.0-standalone.html) and is also included in the [license.txt](license.txt) file of this software package.
