@@ -153,8 +153,6 @@ def _():
     everythingIsOk = everythingIsOk & moduleIsAvailable("graphviz")
     everythingIsOk = everythingIsOk & moduleIsAvailable("magic")
     everythingIsOk = everythingIsOk & moduleIsAvailable("cutekit")
-    everythingIsOk = everythingIsOk & moduleIsAvailable("chatty")
-    everythingIsOk = everythingIsOk & commandIsAvailable("qemu-system-x86_64")
     everythingIsOk = everythingIsOk & commandIsAvailable("clang", versionExpected=(18,))
     everythingIsOk = everythingIsOk & commandIsAvailable(
         "clang++", versionExpected=(16,)
@@ -170,13 +168,7 @@ def _():
     everythingIsOk = everythingIsOk & commandIsAvailable(
         "cutekit", versionCommand="version"
     )
-    everythingIsOk = everythingIsOk & commandIsAvailable("chatty")
     everythingIsOk = everythingIsOk & commandIsAvailable("pkg-config")
-
-    everythingIsOk = everythingIsOk & commandIsAvailable("sgdisk")
-    everythingIsOk = everythingIsOk & commandIsAvailable("mformat")
-    everythingIsOk = everythingIsOk & commandIsAvailable("mcopy")
-    everythingIsOk = everythingIsOk & commandIsAvailable("mmd")
 
     HEADERS = {
         "coroutine": [
