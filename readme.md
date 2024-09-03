@@ -12,6 +12,9 @@
 <br/>
 <br/>
 
+# Status
+
+This project is currently in an experimental, proof-of-concept phase. Our focus is on exploring new ideas, optimizing performance, and developing core features for potential future integration with Odoo. Please note that we're not yet ready to commit to specific features, timelines, or release dates, and the project's direction may evolve based on our findings. Remember, this is an early-stage project, so please temper your expectations.
 
 # Introduction
 
