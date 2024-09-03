@@ -8,13 +8,20 @@
 namespace Karm::Print {
 
 struct PdfPrinter : public Printer {
-    PaperStock _stock;
+    Math::Vec2f _paperSize;
+    Density _density;
     Vec<Io::StringWriter> _pages;
     Opt<Pdf::Canvas> _canvas;
 
+    PdfPrinter(PaperStock stock, Density density = Density::DEFAULT) {
+        _paperSize.width = (stock.width / INCH_TO_MM) * (density.toDpi());
+        _paperSize.height = (stock.height / INCH_TO_MM) * (density.toDpi());
+        _density = density;
+    }
+
     Gfx::Canvas &beginPage() override {
         _pages.emplaceBack();
-        _canvas = Pdf::Canvas{last(_pages)};
+        _canvas = Pdf::Canvas{last(_pages), _paperSize};
         return *_canvas;
     }
 
@@ -22,29 +29,39 @@ struct PdfPrinter : public Printer {
         Pdf::Ref alloc;
 
         Pdf::File file;
-        file.header = "PDF-1.7"s;
+        file.header = "PDF-2.0"s;
 
         Pdf::Array pagesKids;
         Pdf::Ref pagesRef = alloc.alloc();
 
         // Page
         for (auto &p : _pages) {
-            pagesKids.pushBack(file.add(
-                alloc.alloc(),
+            Pdf::Ref pageRef = alloc.alloc();
+            Pdf::Ref contentsRef = alloc.alloc();
+
+            file.add(
+                pageRef,
                 Pdf::Dict{
                     {"Type"s, Pdf::Name{"Page"s}},
                     {"Parent"s, pagesRef},
                     {
                         "Contents"s,
-                        Pdf::Stream{
-                            .dict = Pdf::Dict{
-                                {"Length"s, p.bytes().len()},
-                            },
-                            .data = p.bytes(),
-                        },
+                        contentsRef,
                     },
                 }
-            ));
+            );
+
+            file.add(
+                contentsRef,
+                Pdf::Stream{
+                    .dict = Pdf::Dict{
+                        {"Length"s, p.bytes().len()},
+                    },
+                    .data = p.bytes(),
+                }
+            );
+
+            pagesKids.pushBack(pageRef);
         }
 
         // Pages
@@ -52,7 +69,13 @@ struct PdfPrinter : public Printer {
             pagesRef,
             Pdf::Dict{
                 {"Type"s, Pdf::Name{"Pages"s}},
-                {"MediaBox"s, Pdf::Array{usize{0}, usize{0}, _stock.width, _stock.height}},
+                {"MediaBox"s,
+                 Pdf::Array{
+                     usize{0},
+                     usize{0},
+                     _paperSize.width,
+                     _paperSize.height,
+                 }},
                 {"Count"s, _pages.len()},
                 {"Kids"s, std::move(pagesKids)},
             }
@@ -78,6 +101,11 @@ struct PdfPrinter : public Printer {
 
     void write(Io::Emit &e) {
         pdf().write(e);
+    }
+
+    void write(Io::TextWriter &w) {
+        Io::Emit e{w};
+        write(e);
     }
 };
 
