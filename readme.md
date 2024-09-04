@@ -6,7 +6,7 @@
 </p>
 <br/>
 <p align="center">
-    Munch HTML, spit PDF
+    An experimental document-generation tool
 </p>
 <br/>
 <br/>
