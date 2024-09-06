@@ -735,8 +735,13 @@ struct BorderWidthProp {
         value[0] = try$(parseValue<Length>(c));
         if (c.ended()) {
             value[1] = value[0];
+            value[2] = value[0];
+            value[3] = value[0];
         } else {
             value[1] = try$(parseValue<Length>(c));
+            value[2] = value[0];
+            value[0] = value[1];
+            value[3] = value[2];
         }
 
         return Ok();
