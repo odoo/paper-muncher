@@ -1,8 +1,8 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.project.v1",
-    "id": "odoo/o-html2pdf",
+    "id": "odoo/paper-muncher",
     "type": "project",
-    "description": "The vaev document generator",
+    "description": "An experimental document-generation tool",
     "extern": {
         "cute-engineering/ce-heap": {
             "git": "https://github.com/cute-engineering/ce-heap.git",

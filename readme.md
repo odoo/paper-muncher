@@ -32,7 +32,7 @@ The reign of wkhtmltopdf is over. The Paper Muncher has come. Let its name be et
 
 ```sh
 # on Linux or MacOS
-./ck builder run o-devtools
+./ck builder run paper-muncher inspector <input document>
 
 # windows support comming soon'ish
 ```

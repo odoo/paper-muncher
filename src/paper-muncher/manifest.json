@@ -1,10 +1,11 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "id": "vaev-markup.cli",
+    "id": "paper-muncher",
     "type": "exe",
-    "description": "Markup CLI",
     "requires": [
         "karm-sys",
-        "vaev-markup"
+        "vaev-driver",
+        "vaev-view",
+        "hideo-base"
     ]
 }

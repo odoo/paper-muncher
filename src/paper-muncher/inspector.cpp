@@ -14,7 +14,9 @@
 #include <vaev-view/inspect.h>
 #include <vaev-view/view.h>
 
-namespace Hideo::Browser {
+#include "inspector.h"
+
+namespace PaperMuncher::Inspector {
 
 enum struct SidePanel {
     CLOSE,
@@ -182,7 +184,7 @@ Ui::Child app(Mime::Url url, Res<Strong<Vaev::Markup::Document>> dom) {
                        Hideo::toolbar(
                            Ui::button(
                                [&](Ui::Node &n) {
-                                   Ui::showDialog(n, Kr::alert("Vaev"s, "Copyright © 2024, Odoo S.A."s));
+                                   Ui::showDialog(n, Kr::alert("Paper-Muncher"s, "Copyright © 2024, Odoo S.A."s));
                                },
                                Ui::ButtonStyle::subtle(),
                                Mdi::SURFING
@@ -222,4 +224,4 @@ Ui::Child app(Mime::Url url, Res<Strong<Vaev::Markup::Document>> dom) {
     );
 }
 
-} // namespace Hideo::Browser
+} // namespace PaperMuncher::Inspector
