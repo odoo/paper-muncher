@@ -238,7 +238,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
         co_return PaperMuncher::Html2pdf::html2pdf(input, output);
     } else if (verb == "inspector") {
         if (args.len() != 2) {
-            Sys::errln("usage: paper-muncher inspectpr <html file url>");
+            Sys::errln("usage: paper-muncher inspector <html file url>");
             co_return Error::invalidInput();
         }
 
