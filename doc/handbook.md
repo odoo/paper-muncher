@@ -27,10 +27,10 @@ As a team we believe that building exceptional software requires strongs opinion
 
 ## Essential Commands
 
-* `./ck builder run paper-muncher inspector <input document>`:  Start the development environment.
-* `./ck builder run --debug paper-muncher inspector <input document>`:  For debugging.
-* `./ck builder run --profile paper-muncher inspector <input document>`:  For profiling (requires `perf` and `speedscope` to be installed).
-* `./ck builder run --mixins=release paper-muncher inspector <input document>` Build the release version.
+* `./ck builder run paper-muncher -- inspector <input document>`:  Start the development environment.
+* `./ck builder run --debug paper-muncher -- inspector <input document>`:  For debugging.
+* `./ck builder run --profile paper-muncher -- inspector <input document>`:  For profiling (requires `perf` and `speedscope` to be installed).
+* `./ck builder run --mixins=release paper-muncher -- inspector <input document>` Build the release version.
 * `./ck builder test`  Run all tests.
 * `./ck builder clean`  Clean the build directory.
 
