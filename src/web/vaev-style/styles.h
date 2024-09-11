@@ -824,6 +824,50 @@ struct FlexWrapProp {
     }
 };
 
+// https://www.w3.org/TR/css-flexbox-1/#propdef-flex-flow
+struct FlexFlowProp {
+    Tuple<FlexDirection, FlexWrap> value = initial();
+
+    static Tuple<FlexDirection, FlexWrap> initial() {
+        return {
+            FlexDirection::ROW,
+            FlexWrap::NOWRAP,
+        };
+    }
+
+    static constexpr Str name() { return "flex-flow"; }
+
+    void apply(Computed &c) const {
+        c.flex.cow().direction = value.v0;
+        c.flex.cow().wrap = value.v1;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        auto direction = parseValue<FlexDirection>(c);
+        if (direction) {
+            value.v0 = direction.unwrap();
+
+            auto wrap = parseValue<FlexWrap>(c);
+            if (wrap)
+                value.v1 = wrap.unwrap();
+        } else {
+            auto wrap = parseValue<FlexWrap>(c);
+            if (not wrap)
+                return Error::invalidData("expected flex direction or wrap");
+            value.v1 = wrap.unwrap();
+
+            direction = parseValue<FlexDirection>(c);
+            if (direction)
+                value.v0 = direction.unwrap();
+        }
+
+        return Ok();
+    }
+};
+
 // MARK: Fonts -----------------------------------------------------------------
 
 // https://www.w3.org/TR/css-fonts-4/#font-family-prop
@@ -1545,6 +1589,7 @@ using _StyleProp = Union<
     FlexGrowProp,
     FlexShrinkProp,
     FlexWrapProp,
+    FlexFlowProp,
 
     // Font
     FontFamilyProp,
