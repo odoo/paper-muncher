@@ -382,7 +382,7 @@ Res<FlexDirection> ValueParser<FlexDirection>::parse(Cursor<Css::Sst> &c) {
         return Error::invalidData("expected flex direction");
 }
 
-// Mark: FlexWrap
+// MARK: FlexWrap
 // https://drafts.csswg.org/css-flexbox-1/#flex-wrap-property
 Res<FlexWrap> ValueParser<FlexWrap>::parse(Cursor<Css::Sst> &c) {
     if (c.ended())
@@ -758,7 +758,7 @@ Res<Position> ValueParser<Position>::parse(Cursor<Css::Sst> &c) {
         return Error::invalidData("expected position");
 }
 
-// Mark: Resolution
+// MARK: Resolution
 // https://drafts.csswg.org/css-values/#resolution
 
 static Res<Resolution::Unit> _parseResolutionUnit(Str unit) {
