@@ -740,7 +740,7 @@ struct FlexBasisProp {
 
     static constexpr Str name() { return "flex-basis"; }
 
-    static constexpr FlexBasis initial() { return Width{Width::AUTO}; }
+    static FlexBasis initial() { return Width{Width::AUTO}; }
 
     void apply(Computed &c) const {
         c.flex.cow().basis = value;
@@ -998,7 +998,7 @@ struct MarginTopProp {
 
     static Str name() { return "margin-top"; }
 
-    static constexpr Width initial() { return Length{}; }
+    static Width initial() { return Length{}; }
 
     void apply(Computed &c) const {
         c.margin.cow().top = value;
@@ -1015,7 +1015,7 @@ struct MarginRightProp {
 
     static Str name() { return "margin-right"; }
 
-    static constexpr Width initial() { return Length{}; }
+    static Width initial() { return Length{}; }
 
     void apply(Computed &c) const {
         c.margin.cow().end = value;
@@ -1032,7 +1032,7 @@ struct MarginBottomProp {
 
     static constexpr Str name() { return "margin-bottom"; }
 
-    static constexpr Width initial() { return Length{}; }
+    static Width initial() { return Length{}; }
 
     void apply(Computed &c) const {
         c.margin.cow().bottom = value;
@@ -1409,7 +1409,7 @@ struct WidthProp {
 
     static constexpr Str name() { return "width"; }
 
-    static constexpr Size initial() { return Size::AUTO; }
+    static Size initial() { return Size::AUTO; }
 
     void apply(Computed &c) const {
         c.sizing.cow().width = value;
@@ -1428,7 +1428,7 @@ struct HeightProp {
 
     static constexpr Str name() { return "height"; }
 
-    static constexpr Size initial() { return Size::AUTO; }
+    static Size initial() { return Size::AUTO; }
 
     void apply(Computed &c) const {
         c.sizing.cow().height = value;
@@ -1447,7 +1447,7 @@ struct MinWidthProp {
 
     static constexpr Str name() { return "min-width"; }
 
-    static constexpr Size initial() { return Size::AUTO; }
+    static Size initial() { return Size::AUTO; }
 
     void apply(Computed &c) const {
         c.sizing.cow().minWidth = value;
@@ -1466,7 +1466,7 @@ struct MinHeightProp {
 
     static constexpr Str name() { return "min-height"; }
 
-    static constexpr Size initial() { return Size::AUTO; }
+    static Size initial() { return Size::AUTO; }
 
     void apply(Computed &c) const {
         c.sizing.cow().minHeight = value;
@@ -1485,7 +1485,7 @@ struct MaxWidthProp {
 
     static constexpr Str name() { return "max-width"; }
 
-    static constexpr Size initial() { return Size::NONE; }
+    static Size initial() { return Size::NONE; }
 
     void apply(Computed &c) const {
         c.sizing.cow().maxWidth = value;
@@ -1504,7 +1504,7 @@ struct MaxHeightProp {
 
     static constexpr Str name() { return "max-height"; }
 
-    static constexpr Size initial() { return Size::NONE; }
+    static Size initial() { return Size::NONE; }
 
     void apply(Computed &c) const {
         c.sizing.cow().maxHeight = value;
