@@ -790,7 +790,7 @@ struct FlexDirectionProp {
 
 // https://www.w3.org/TR/css-flexbox-1/#flex-grow-property
 struct FlexGrowProp {
-    f64 value = initial();
+    Number value = initial();
 
     static constexpr Str name() { return "flex-grow"; }
 
@@ -801,25 +801,25 @@ struct FlexGrowProp {
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<f64>(c));
+        value = try$(parseValue<Number>(c));
         return Ok();
     }
 };
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-shrink
 struct FlexShrinkProp {
-    f64 value = initial();
+    Number value = initial();
 
     static constexpr Str name() { return "flex-shrink"; }
 
-    static constexpr f64 initial() { return 1; }
+    static constexpr Number initial() { return 1; }
 
     void apply(Computed &c) const {
         c.flex.cow().shrink = value;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<f64>(c));
+        value = try$(parseValue<Number>(c));
         return Ok();
     }
 };
