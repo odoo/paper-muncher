@@ -55,8 +55,8 @@ struct Flex {
     FlexDirection direction = FlexDirection::ROW;
     FlexWrap wrap = FlexWrap::NOWRAP;
     FlexBasis basis = Width{Width::AUTO};
-    f64 grow = 0;
-    f64 shrink = 1;
+    Number grow = 0;
+    Number shrink = 1;
 };
 
 } // namespace Vaev
