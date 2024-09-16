@@ -26,7 +26,7 @@ struct AlignContentProp {
 
     static constexpr Str name() { return "align-content"; }
 
-    static constexpr Align initial() { return {}; }
+    static constexpr Align initial() { return Align::Keywords::STRETCH; }
 
     void apply(Computed &c) const {
         c.aligns.alignContent = value;
@@ -44,7 +44,7 @@ struct JustifyContentProp {
 
     static constexpr Str name() { return "justify-content"; }
 
-    static constexpr Align initial() { return {}; }
+    static constexpr Align initial() { return Align::Keywords::FLEX_START; }
 
     void apply(Computed &c) const {
         c.aligns.justifyContent = value;
@@ -80,7 +80,7 @@ struct AlignSelfProp {
 
     static constexpr Str name() { return "align-self"; }
 
-    static constexpr Align initial() { return {}; }
+    static constexpr Align initial() { return Align::Keywords::AUTO; }
 
     void apply(Computed &c) const {
         c.aligns.alignSelf = value;
@@ -116,7 +116,7 @@ struct AlignItemsProp {
 
     static constexpr Str name() { return "align-items"; }
 
-    static constexpr Align initial() { return {}; }
+    static constexpr Align initial() { return Align::Keywords::FLEX_START; }
 
     void apply(Computed &c) const {
         c.aligns.alignItems = value;
