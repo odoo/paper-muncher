@@ -770,12 +770,8 @@ Res<Percent> ValueParser<Percent>::parse(Cursor<Css::Sst> &c) {
 
     if (c.peek() == Css::Token::PERCENTAGE) {
         Io::SScan scan = c->token.data;
-        auto value = Io::atof(scan).unwrapOr(0.0);
-        if (scan.remStr() != "%")
-            return Error::invalidData("invalid percentage");
-
         c.next();
-        return Ok(Percent{value});
+        return Ok(Percent{Io::atof(scan).unwrapOr(0.0)});
     }
 
     return Error::invalidData("expected percentage");
