@@ -1,14 +1,19 @@
-#include <hideo-base/scafold.h>
 #include <karm-kira/context-menu.h>
 #include <karm-kira/dialog.h>
 #include <karm-kira/error-page.h>
+#include <karm-kira/scaffold.h>
 #include <karm-kira/side-panel.h>
+#include <karm-kira/titlebar.h>
+#include <karm-kira/toolbar.h>
 #include <karm-mime/mime.h>
 #include <karm-sys/file.h>
 #include <karm-sys/launch.h>
+#include <karm-ui/app.h>
+#include <karm-ui/dialog.h>
 #include <karm-ui/drag.h>
 #include <karm-ui/input.h>
 #include <karm-ui/popover.h>
+#include <karm-ui/reducer.h>
 #include <karm-ui/scroll.h>
 #include <vaev-driver/fetcher.h>
 #include <vaev-view/inspect.h>
@@ -181,7 +186,7 @@ Ui::Child app(Mime::Url url, Res<Strong<Vaev::Markup::Document>> dom) {
         },
         [](State const &s) {
             return Ui::vflow(
-                       Hideo::toolbar(
+                       Kr::toolbar({
                            Ui::button(
                                [&](Ui::Node &n) {
                                    Ui::showDialog(n, Kr::alert("Paper-Muncher"s, "Copyright © 2024, Odoo S.A."s));
@@ -196,30 +201,11 @@ Ui::Child app(Mime::Url url, Res<Strong<Vaev::Markup::Document>> dom) {
                                },
                                Ui::ButtonStyle::subtle(), Mdi::DOTS_HORIZONTAL
                            ),
-                           Hideo::controls()
-                       ) | Ui::dragRegion(),
-                       appContent(s) | Ui::grow()
+                           Kr::titlebarControls(),
+                       }) | Ui::dragRegion(),
+                       appContent(s) | Ui::inspector | Ui::grow()
                    ) |
                    Ui::pinSize({800, 600}) | Ui::dialogLayer() | Ui::popoverLayer();
-
-            return Hideo::scafold({
-                .icon = Mdi::SURFING,
-                .title = "Vaev"s,
-                .startTools = slots$(
-                    Ui::button(Model::bind<Reload>(), Ui::ButtonStyle::subtle(), Mdi::REFRESH)
-                ),
-                .midleTools = slots$(addressBar(s.url) | Ui::grow()),
-                .endTools = slots$(
-                    Ui::button(
-                        [&](Ui::Node &n) {
-                            Ui::showPopover(n, n.bound().bottomEnd(), mainMenu(s));
-                        },
-                        Ui::ButtonStyle::subtle(),
-                        Mdi::DOTS_HORIZONTAL
-                    )
-                ),
-                .body = slot$(appContent(s)),
-            });
         }
     );
 }

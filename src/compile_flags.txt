@@ -7,10 +7,9 @@
 -Werror
 
 -I./
--I./vendors/apps
+-I./vendors/assets
 -I./vendors/impls
 -I./vendors/libs
--I./vendors/specs
 -I./web
 -I../.cutekit/extern/cute-engineering
 -I../.cutekit/extern/cute-engineering

@@ -250,7 +250,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
 
         co_return Ui::runApp(
             ctx,
-            PaperMuncher::Inspector::app(input, dom) | Ui::inspector
+            PaperMuncher::Inspector::app(input, dom) 
         );
     } else {
         Sys::errln("unknown verb: {} (expected: css-dump-stylesheet, css-dump-sst, css-dump-tokens, style-list-props, markup-dump-dom, markup-dump-tokens, inspector)\n");

@@ -4,8 +4,8 @@
     "type": "exe",
     "requires": [
         "karm-sys",
+        "karm-kira",
         "vaev-driver",
-        "vaev-view",
-        "hideo-base"
+        "vaev-view"
     ]
 }
