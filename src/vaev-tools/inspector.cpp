@@ -21,7 +21,7 @@
 
 #include "inspector.h"
 
-namespace PaperMuncher::Inspector {
+namespace Vaev::Tools {
 
 enum struct SidePanel {
     CLOSE,
@@ -30,7 +30,7 @@ enum struct SidePanel {
 
 struct State {
     Mime::Url url;
-    Res<Strong<Vaev::Markup::Document>> dom;
+    Res<Strong<Markup::Document>> dom;
     SidePanel sidePanel = SidePanel::CLOSE;
 
     bool canGoBack() const {
@@ -53,7 +53,7 @@ using Action = Union<Reload, GoBack, GoForward, SidePanel>;
 void reduce(State &s, Action a) {
     a.visit(Visitor{
         [&](Reload) {
-            s.dom = Vaev::Driver::fetchDocument(s.url);
+            s.dom = Driver::fetchDocument(s.url);
         },
         [&](GoBack) {
         },
@@ -128,7 +128,7 @@ Ui::Child inspectorContent(State const &s) {
                Ui::center();
     }
 
-    return Vaev::View::inspect(s.dom.unwrap()) | Ui::vhscroll();
+    return View::inspect(s.dom.unwrap()) | Ui::vhscroll();
 }
 
 Ui::Child sidePanel(State const &s) {
@@ -160,7 +160,7 @@ Ui::Child webview(State const &s) {
     if (not s.dom)
         return alert(s, "The page could not be loaded"s, Io::toStr(s.dom).unwrap());
 
-    return Vaev::View::view(s.dom.unwrap()) |
+    return View::view(s.dom.unwrap()) |
            Ui::vscroll() |
            Ui::box({
                .backgroundFill = Gfx::WHITE,
@@ -178,7 +178,7 @@ Ui::Child appContent(State const &s) {
     );
 }
 
-Ui::Child app(Mime::Url url, Res<Strong<Vaev::Markup::Document>> dom) {
+Ui::Child inspector(Mime::Url url, Res<Strong<Markup::Document>> dom) {
     return Ui::reducer<Model>(
         {
             url,
@@ -203,11 +203,11 @@ Ui::Child app(Mime::Url url, Res<Strong<Vaev::Markup::Document>> dom) {
                            ),
                            Kr::titlebarControls(),
                        }) | Ui::dragRegion(),
-                       appContent(s) | Ui::inspector | Ui::grow()
+                       appContent(s) | Ui::grow()
                    ) |
                    Ui::pinSize({800, 600}) | Ui::dialogLayer() | Ui::popoverLayer();
         }
     );
 }
 
-} // namespace PaperMuncher::Inspector
+} // namespace Vaev::Tools

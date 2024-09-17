@@ -1,3 +1,4 @@
+#include <karm-cli/args.h>
 #include <karm-io/emit.h>
 #include <karm-io/funcs.h>
 #include <karm-print/pdf.h>
@@ -12,11 +13,9 @@
 
 #include "inspector.h"
 
-namespace PaperMuncher {
+namespace Vaev::Tools {
 
-namespace Css {
-
-Res<> dumpStylesheet(Mime::Url const &url) {
+Res<> cssDumpStylesheet(Mime::Url const &url) {
     auto start = Sys::now();
     auto stylesheet = try$(Vaev::Driver::fetchStylesheet(url));
     auto elapsed = Sys::now() - start;
@@ -25,7 +24,7 @@ Res<> dumpStylesheet(Mime::Url const &url) {
     return Ok();
 }
 
-Res<> dumpSst(Mime::Url const &url) {
+Res<> cssDumpSst(Mime::Url const &url) {
     auto file = try$(Sys::File::open(url));
     auto buf = try$(Io::readAllUtf8(file));
 
@@ -43,7 +42,7 @@ Res<> dumpSst(Mime::Url const &url) {
     return Ok();
 }
 
-Res<> dumpTokens(Mime::Url const &url) {
+Res<> cssDumpTokens(Mime::Url const &url) {
     auto file = try$(Sys::File::open(url));
     auto buf = try$(Io::readAllUtf8(file));
     Io::SScan s{buf};
@@ -53,11 +52,7 @@ Res<> dumpTokens(Mime::Url const &url) {
     return Ok();
 }
 
-} // namespace Css
-
-namespace Style {
-
-Res<> listProps() {
+Res<> styleListProps() {
     Vaev::Style::StyleProp::any([]<typename T>(Meta::Type<T>) {
         Sys::println("{}", T::name());
         return false;
@@ -65,17 +60,13 @@ Res<> listProps() {
     return Ok();
 }
 
-} // namespace Style
-
-namespace Markup {
-
-Res<> dumpDom(Mime::Url const &url) {
+Res<> markupDumpDom(Mime::Url const &url) {
     auto dom = try$(Vaev::Driver::fetchDocument(url));
     Sys::println("{}", dom);
     return Ok();
 }
 
-Res<> dumpTokens(Mime::Url const &url) {
+Res<> markupDumpTokens(Mime::Url const &url) {
     auto file = try$(Sys::File::open(url));
     auto buf = try$(Io::readAllUtf8(file));
 
@@ -105,10 +96,6 @@ Res<> dumpTokens(Mime::Url const &url) {
 
     return Ok();
 }
-
-} // namespace Markup
-
-namespace Html2pdf {
 
 Vaev::Style::Media constructMedia(Print::PaperStock paper) {
     return {
@@ -153,8 +140,8 @@ Res<> html2pdf(Mime::Url const &input, Mime::Url const &output) {
     auto start = Sys::now();
     auto [layout, paint] = Vaev::Driver::render(*dom, media, paper);
     auto elapsed = Sys::now() - start;
-    logInfo("render time: {}", elapsed);
 
+    logInfo("render time: {}", elapsed);
     logDebug("layout tree: {}", layout);
     logDebug("paint tree: {}", paint);
 
@@ -170,90 +157,130 @@ Res<> html2pdf(Mime::Url const &input, Mime::Url const &output) {
     return Ok();
 }
 
-} // namespace Html2pdf
-
-} // namespace PaperMuncher
+} // namespace Vaev::Tools
 
 Async::Task<> entryPointAsync(Sys::Context &ctx) {
-    auto args = Sys::useArgs(ctx);
+    auto inputArg = Cli::operand<Str>("input"s, "Input file"s, ""s);
+    auto outputArg = Cli::option<Str>('o', "output"s, "Output file"s, "-"s);
 
-    if (args.len() == 0) {
-        Sys::errln("usage: paper-muncher <verb> [OPTIONS...]\n");
-        co_return Error::invalidInput();
-    }
+    Cli::Command cmd{
+#ifdef __ck_odoo__
+        "paper-munch"s,
+#else
+        "vaev-tools"s,
+#endif
+        NONE,
+        "A next generation document generation tool"s,
+    };
 
-    auto verb = args[0];
+    Cli::Command &cssCmd = cmd.subCommand(
+        "css"s,
+        'c',
+        "CSS related commands"s
+    );
 
-    if (verb == "css-dump-stylesheet") {
-        if (args.len() != 2) {
-            Sys::errln("usage: paper-muncher css-dump-stylesheet <style-sheet url>");
-            co_return Error::invalidInput();
+    cssCmd.subCommand(
+        "dump-stylesheet"s,
+        's',
+        "Dump a stylesheet"s,
+        {inputArg},
+        [inputArg](Sys::Context &) -> Async::Task<> {
+            auto input = co_try$(Mime::parseUrlOrPath(inputArg));
+            co_return Vaev::Tools::cssDumpStylesheet(input);
         }
+    );
 
-        auto input = co_try$(Mime::parseUrlOrPath(args[1]));
-        co_return PaperMuncher::Css::dumpStylesheet(input);
-
-    } else if (verb == "css-dump-sst") {
-        if (args.len() != 2) {
-            Sys::errln("usage: paper-muncher css-dump-sst <style-sheet url>");
-            co_return Error::invalidInput();
+    cssCmd.subCommand(
+        "dump-sst"s,
+        'a',
+        "Dump a stylesheet"s,
+        {inputArg},
+        [inputArg](Sys::Context &) -> Async::Task<> {
+            auto input = co_try$(Mime::parseUrlOrPath(inputArg));
+            co_return Vaev::Tools::cssDumpSst(input);
         }
+    );
 
-        auto input = co_try$(Mime::parseUrlOrPath(args[1]));
-        co_return PaperMuncher::Css::dumpSst(input);
-    } else if (verb == "css-dump-tokens") {
-        if (args.len() != 2) {
-            Sys::errln("usage: paper-muncher css-dump-tokens <style-sheet url>");
-            co_return Error::invalidInput();
+    cssCmd.subCommand(
+        "dump-tokens"s,
+        't',
+        "Dump CSS tokens"s,
+        {inputArg},
+        [inputArg](Sys::Context &) -> Async::Task<> {
+            auto input = co_try$(Mime::parseUrlOrPath(inputArg));
+            co_return Vaev::Tools::cssDumpTokens(input);
         }
+    );
 
-        auto input = co_try$(Mime::parseUrlOrPath(args[1]));
-        co_return PaperMuncher::Css::dumpTokens(input);
-    } else if (verb == "style-list-props") {
-        co_return PaperMuncher::Style::listProps();
-    } else if (verb == "markup-dump-dom") {
-        if (args.len() != 2) {
-            Sys::errln("usage: paper-muncher markup-dump-dom <markup file url>");
-            co_return Error::invalidInput();
+    Cli::Command &styleCmd = cmd.subCommand(
+        "style"s,
+        's',
+        "Style related commands"s
+    );
+
+    styleCmd.subCommand(
+        "list-props"s,
+        'l',
+        "List all style properties"s,
+        {},
+        [](Sys::Context &) -> Async::Task<> {
+            co_return Vaev::Tools::styleListProps();
         }
+    );
 
-        auto input = co_try$(Mime::parseUrlOrPath(args[1]));
-        co_return PaperMuncher::Markup::dumpDom(input);
-    } else if (verb == "markup-dump-tokens") {
-        if (args.len() != 2) {
-            Sys::errln("usage: paper-muncher markup-dump-token <html file url>");
-            co_return Error::invalidInput();
+    Cli::Command &markupCmd = cmd.subCommand(
+        "markup"s,
+        'm',
+        "Markup related commands"s
+    );
+
+    markupCmd.subCommand(
+        "dump-dom"s,
+        NONE,
+        "Dump the DOM tree"s,
+        {inputArg},
+        [inputArg](Sys::Context &) -> Async::Task<> {
+            auto input = co_try$(Mime::parseUrlOrPath(inputArg));
+            co_return Vaev::Tools::markupDumpDom(input);
         }
+    );
 
-        auto input = co_try$(Mime::parseUrlOrPath(args[1]));
-        co_return PaperMuncher::Markup::dumpTokens(input);
-    } else if (verb == "html2pdf") {
-        if (args.len() != 3) {
-            Sys::errln("usage: paper-muncher html2pdf <input.html> <output.pdf>\n");
-            co_return Error::invalidInput();
+    markupCmd.subCommand(
+        "dump-tokens"s,
+        't',
+        "Dump HTML tokens"s,
+        {inputArg},
+        [inputArg](Sys::Context &) -> Async::Task<> {
+            auto input = co_try$(Mime::parseUrlOrPath(inputArg));
+            co_return Vaev::Tools::markupDumpTokens(input);
         }
+    );
 
-        auto input = co_try$(Mime::parseUrlOrPath(args[1]));
-        auto output = co_try$(Mime::parseUrlOrPath(args[2]));
-        co_return PaperMuncher::Html2pdf::html2pdf(input, output);
-    } else if (verb == "inspector") {
-        if (args.len() != 2) {
-            Sys::errln("usage: paper-muncher inspector <html file url>");
-            co_return Error::invalidInput();
+    cmd.subCommand(
+        "html2pdf"s,
+        'r',
+        "Convert HTML to PDF"s,
+        {inputArg, outputArg
+        },
+        [inputArg, outputArg](Sys::Context &) -> Async::Task<> {
+            auto input = co_try$(Mime::parseUrlOrPath(inputArg));
+            auto output = co_try$(Mime::parseUrlOrPath(outputArg));
+            co_return Vaev::Tools::html2pdf(input, output);
         }
+    );
 
-        auto input = args.len()
-                         ? co_try$(Mime::parseUrlOrPath(args[1]))
-                         : "about:start"_url;
+    auto &inspectorCmd = cmd.subCommand(
+        "inspector"s,
+        'i',
+        "Inspect a document"s,
+        {inputArg}
+    );
 
+    Ui::mountApp(inspectorCmd, [inputArg]() -> Ui::Child {
+        auto input = Mime::parseUrlOrPath(inputArg).unwrap();
         auto dom = Vaev::Driver::fetchDocument(input);
+        return Vaev::Tools::inspector(input, dom);
+    });
 
-        co_return Ui::runApp(
-            ctx,
-            PaperMuncher::Inspector::app(input, dom) 
-        );
-    } else {
-        Sys::errln("unknown verb: {} (expected: css-dump-stylesheet, css-dump-sst, css-dump-tokens, style-list-props, markup-dump-dom, markup-dump-tokens, inspector)\n");
-        co_return Error::invalidInput();
-    }
+    co_return co_await cmd.execAsync(ctx);
 }
