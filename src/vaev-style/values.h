@@ -117,6 +117,18 @@ struct ValueParser<CalcValue<T>> {
     }
 };
 
+
+template <>
+struct ValueParser<Colors> {
+    static Res<Colors> parse(Cursor<Css::Sst> &c);
+};
+
+template <>
+struct ValueParser<ColorScheme> {
+    static Res<ColorScheme> parse(Cursor<Css::Sst> &c);
+};
+
+
 template <>
 struct ValueParser<Color> {
     static Res<Color> parse(Cursor<Css::Sst> &c);
@@ -125,6 +137,11 @@ struct ValueParser<Color> {
 template <>
 struct ValueParser<ColorGamut> {
     static Res<ColorGamut> parse(Cursor<Css::Sst> &c);
+};
+
+template <>
+struct ValueParser<Contrast> {
+    static Res<Contrast> parse(Cursor<Css::Sst> &c);
 };
 
 template <>
@@ -381,21 +398,6 @@ struct ValueParser<ReducedMotion> {
 template <>
 struct ValueParser<ReducedTransparency> {
     static Res<ReducedTransparency> parse(Cursor<Css::Sst> &c);
-};
-
-template <>
-struct ValueParser<Contrast> {
-    static Res<Contrast> parse(Cursor<Css::Sst> &c);
-};
-
-template <>
-struct ValueParser<Colors> {
-    static Res<Colors> parse(Cursor<Css::Sst> &c);
-};
-
-template <>
-struct ValueParser<ColorScheme> {
-    static Res<ColorScheme> parse(Cursor<Css::Sst> &c);
 };
 
 template <>
