@@ -10,7 +10,7 @@
         "bits": "unknown",
         "freestanding": false,
         "host": true,
-        "version": "{jexpr.include('./meta/scripts/version.json')}",
+        "version": "0.1.0",
         "odoo": true,
         "karm-sys-encoding": "utf8",
         "karm-sys-line-ending": "lf",
@@ -19,7 +19,8 @@
         "karm-ui-backend": "sdl"
     },
     "routing": {
-        "stdc-math": "ce-libm-host"
+        "stdc-math": "ce-libm-host",
+        "__main__": "vaev-tools"
     },
     "tools": {
         "cc": {

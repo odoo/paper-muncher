@@ -1,0 +1,132 @@
+--- START OF DOM ---
+(DOCUMENT
+    (DOCUMENT_TYPE name="html" publicId="" systemId="")
+    (ELEMENT tagName=html
+        (ATTRIBUTE localName=HTML:lang value="en")
+        (TEXT data="\n\n")
+        (ELEMENT tagName=body
+            (TEXT data="\n    ")
+            (ELEMENT tagName=div)
+            (TEXT data="\n")
+        )
+        (TEXT data="\n\n")
+        (ELEMENT tagName=style
+            (TEXT data="\n    div {\n        width: 100px;\n        height: 100px;\n        background-color: red;\n    }\n\n    div {\n        background-color: green;\n    }\n\n    div {\n        background-color: blue;\n    }\n")
+        )
+        (TEXT data="\n\n")
+    )
+)
+
+--- END OF DOM ---
+
+--- START OF STYLE ---
+(style-book [(style-sheet text/css . 
+    rules: [
+        (style-rule
+            selector: html
+            props: [
+                (display (display box: CONTENTS))
+            ]
+        )
+        (style-rule
+            selector: (OR [head, style])
+            props: [
+                (display (display box: NONE))
+            ]
+        )
+        (style-rule
+            selector: table
+            props: [
+                (display (display inside: TABLE, outside: BLOCK, item: NO))
+            ]
+        )
+        (style-rule
+            selector: caption
+            props: [
+                (display (display internal: TABLE_CAPTION))
+            ]
+        )
+        (style-rule
+            selector: colgroup
+            props: [
+                (display (display internal: TABLE_COLUMN_GROUP))
+            ]
+        )
+        (style-rule
+            selector: col
+            props: [
+                (display (display internal: TABLE_COLUMN))
+            ]
+        )
+        (style-rule
+            selector: thead
+            props: [
+                (display (display internal: TABLE_HEADER_GROUP))
+            ]
+        )
+        (style-rule
+            selector: tbody
+            props: [
+                (display (display internal: TABLE_ROW_GROUP))
+            ]
+        )
+        (style-rule
+            selector: tfoot
+            props: [
+                (display (display internal: TABLE_FOOTER_GROUP))
+            ]
+        )
+        (style-rule
+            selector: tr
+            props: [
+                (display (display internal: TABLE_ROW))
+            ]
+        )
+        (style-rule
+            selector: (OR [td, th])
+            props: [
+                (display (display internal: TABLE_CELL))
+            ]
+        )
+    ]
+), (style-sheet text/css . 
+    rules: [
+        (style-rule
+            selector: div
+            props: [
+                (width 100PX)
+                (height 100PX)
+                (background-color [#00000000, #ff0000ff])
+            ]
+        )
+        (style-rule
+            selector: div
+            props: [
+                (background-color [#00000000, #008000ff])
+            ]
+        )
+        (style-rule
+            selector: div
+            props: [
+                (background-color [#00000000, #0000ffff])
+            ]
+        )
+    ]
+)])
+--- END OF STYLE ---
+
+--- START OF LAYOUT ---
+(flow (display inside: FLOW, outside: INLINE, item: NO) (rect 0 0 210 100)
+    (flow (display inside: FLOW, outside: INLINE, item: NO) (rect 0 0 210 100)
+        (frag (display inside: FLOW, outside: INLINE, item: NO) (rect 0 0 100 100))
+    )
+)
+--- END OF LAYOUT ---
+
+--- START OF PAINT ---
+(stack
+    (box (rect 0 0 210 100) (radii 0) [(color #00000000)])
+    (box (rect 0 0 210 100) (radii 0) [(color #00000000)])
+    (box (rect 0 0 100 100) (radii 0) [(color #00000000), (color #0000ffff)])
+)
+--- END OF PAINT ---
