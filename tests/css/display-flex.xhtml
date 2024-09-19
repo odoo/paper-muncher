@@ -1,0 +1,97 @@
+<test name="flex box">
+    <container>
+        <html lang="en">
+            <head>
+                <style>
+                    div {
+                        width: 100px;
+                        height: 100px;
+                    }
+                    div.flex {
+                        display: flex;
+                    }
+                    .red {
+                        background-color: red;
+                    }
+                    .green {
+                        background-color: green;
+                    }
+                    div.block {
+                        display: block;
+                    }
+                    div.block div {
+                        width: 50%;
+                        float: left;
+                    }
+                </style>
+            </head>
+            <body>
+                <slot/>
+            </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="block">
+            <div class="red"></div>
+            <div class="green"></div>
+        </div>
+    </rendering>
+
+    <error>
+        <div class="block">
+            <div style="float: none;" class="red"></div>
+            <div class="green"></div>
+        </div>
+    </error>
+
+    <rendering>
+        <div class="flex">
+            <div class="red"></div>
+            <div class="green"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="display: flex;">
+            <div class="red"></div>
+            <div class="green"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="display: flex; flex-flow: nowrap;">
+            <div class="red"></div>
+            <div class="green"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="display: flex; flex-flow: inherit;">
+            <div class="red"></div>
+            <div class="green"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="display: flex; flex-flow: initial;">
+            <div class="red"></div>
+            <div class="green"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="display: flex; flex-flow: row;">
+            <div class="red"></div>
+            <div class="green"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="display: flex; flex-flow: row-reverse;">
+            <div class="green"></div>
+            <div class="red"></div>
+        </div>
+    </rendering>
+</test>
+

@@ -65,7 +65,7 @@ if [ ! -f .cutekit/tools-ready ]; then
     mkdir -p .cutekit
     if [ ! -d .cutekit/venv ]; then
         echo "Setting up Python virtual environment..."
-        python3 -m venv .cutekit/venv
+        python3.11 -m venv .cutekit/venv
     fi
     source .cutekit/venv/bin/activate
 

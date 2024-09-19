@@ -1,0 +1,259 @@
+<test id="display-block-basic" name="display: block">
+    <container>
+        <html lang="en">
+            <head>
+                <style>
+                    div {
+                        width: 25px;
+                        height: 100px;
+                    }
+                    div.w-200 {
+                        width: 200px;
+                        border: 1px solid black;
+                    }
+                    div.w-100 {
+                        width: 100px;
+                    }
+                    .red {
+                        background-color: red;
+                    }
+                    .green {
+                        background-color: green;
+                    }
+                </style>
+            </head>
+            <body>
+                <slot/>
+            </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="w-200">
+            <div class="w-100 red"></div>
+            <div class="w-100 green"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="w-200">
+            <div class="w-100 red" style="width: 50%;"></div>
+            <div class="w-100 green"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="w-200">
+            <div class="w-100 red" style="width: 100px;"></div>
+            <div class="w-100 green"></div>
+        </div>
+    </rendering>
+
+    <error>
+        <div class="w-200">
+            <div class="red"></div>
+            <div class="w-100 green"></div>
+        </div>
+    </error>
+
+    <error>
+        <div class="w-200">
+            <div class="w-100 red" style="width: 51%;"></div>
+            <div class="w-100 green"></div>
+        </div>
+    </error>
+
+    <error>
+        <div class="w-200">
+            <div class="w-100 red" style="width: 101px;"></div>
+            <div class="w-100 green"></div>
+        </div>
+    </error>
+
+    <rendering>
+        <div class="w-200">
+            <div class="w-100 red"></div>
+            <div class="w-100 green" style="width: 50%;"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="w-200">
+            <div class="w-100 red" style="width: 50%;"></div>
+            <div class="w-100 green" style="width: 50%;"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="w-200" style="position: relative;">
+            <div class="w-100 red"></div>
+            <div class="w-100 green" style="position: absolute; top: 100px;"></div>
+        </div>
+    </rendering>
+</test>
+
+<test name="display: inline-block">
+    <container>
+        <html lang="en">
+            <head>
+                <style>
+                    div {
+                        width: 25px;
+                        height: 100px;
+                    }
+                    div.w-200 {
+                        width: 200px;
+                        border: 1px solid black;
+                    }
+                    div.w-100 {
+                        width: 100px;
+                    }
+                    .red {
+                        background-color: red;
+                    }
+                    .green {
+                        background-color: green;
+                    }
+                    div.inline-block {
+                        display: inline-block;
+                    }
+                </style>
+            </head>
+            <body>
+                <slot/>
+            </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="w-200">
+            <div class="w-100 red"></div>
+            <div class="w-100 green"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="w-200">
+            <div class="w-100 red"></div>
+            <div class="inline-block w-100 green"></div>
+        </div>
+    </rendering>
+
+    <error>
+        <div class="w-200">
+            <div class="inline-block w-100 red"></div>
+            <div class="w-100 green"></div>
+        </div>
+    </error>
+
+    <rendering>
+        <div class="w-200" style="line-height: 0;">
+            <div class="inline-block w-100 red"></div>
+            <div class="w-100 green"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="w-200" style="font-size: 0;">
+            <div class="inline-block w-100 red"></div>
+            <div class="w-100 green"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="w-200" style="position: relative;">
+            <div class="inline-block w-100 red"></div>
+            <div class="w-100 green" style="position: absolute; top: 100px;"></div>
+        </div>
+    </rendering>
+
+    <error>
+        <div class="w-200">
+            <div class="inline-block w-100 red"></div>
+            <div class="inline-block w-100 green"></div>
+        </div>
+    </error>
+
+    <rendering>
+        <div class="w-200" style="line-height: 0;">
+            <div class="inline-block w-100 red"></div>
+            <div class="inline-block w-100 green"></div>
+        </div>
+    </rendering>
+
+    <error>
+        <div class="w-200" style="font-size: 0;">
+            <div class="inline-block w-100 red"></div>
+            <div class="inline-block w-100 green"></div>
+        </div>
+    </error>
+
+    <rendering>
+        <div class="w-200" style="line-height: 0; font-size: 1px;">
+            <div class="inline-block w-100 red"></div>
+            <div class="inline-block w-100 green"></div>
+        </div>
+    </rendering>
+
+    <error>
+        <div class="w-200" style="line-height: 0; font-size: 0px;">
+            <div class="inline-block w-100 red"></div>
+            <div class="inline-block w-100 green"></div>
+        </div>
+    </error>
+
+    <error>
+        <div class="w-200" style="line-height: 0; font-size: 1px; width: 201px;">
+            <div class="inline-block w-100 red"></div>
+            <div class="inline-block w-100 green"></div>
+        </div>
+    </error>
+</test>
+
+<test name="display: inline">
+    <container>
+        <html lang="en">
+            <head>
+                <style>
+                    div {
+                        width: 25px;
+                        height: 100px;
+                    }
+                    div.w-200 {
+                        width: 200px;
+                        border: 1px solid black;
+                    }
+                    div.w-100 {
+                        width: 100px;
+                    }
+                    .red {
+                        background-color: red;
+                    }
+                    .green {
+                        background-color: green;
+                    }
+                    div.inline {
+                        display: inline;
+                    }
+                </style>
+            </head>
+            <body>
+                <slot/>
+            </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="w-200">
+            <div class="w-100 red"></div>
+            <div class="w-100 green"></div>
+        </div>
+    </rendering>
+
+    <error>
+        <div class="w-200">
+            <div class="inline w-100 red"></div>
+            <div class="w-100 green"></div>
+        </div>
+    </error>
+</test>
