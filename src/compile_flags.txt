@@ -8,11 +8,8 @@
 
 -I./
 -I./vendors/assets
--I./vendors/impls
--I./vendors/libs
--I./web
 -I../.cutekit/extern/cute-engineering
--I../.cutekit/extern/cute-engineering
+-I../.cutekit/extern/skift-org/karm/src
 -I../.cutekit/generated
 -I../.cutekit/generated/__aliases__
 
