@@ -116,7 +116,6 @@ struct ValueParser<CalcValue<T>> {
     }
 };
 
-
 template <>
 struct ValueParser<Colors> {
     static Res<Colors> parse(Cursor<Css::Sst> &c);
@@ -126,7 +125,6 @@ template <>
 struct ValueParser<ColorScheme> {
     static Res<ColorScheme> parse(Cursor<Css::Sst> &c);
 };
-
 
 template <>
 struct ValueParser<Color> {

@@ -306,7 +306,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
         {inputArg}
     );
 
-    Ui::mountApp(inspectorCmd, [inputArg]() -> Ui::Child {
+    Ui::mountApp(inspectorCmd, [inputArg] -> Ui::Child {
         auto input = Mime::parseUrlOrPath(inputArg).unwrap();
         auto dom = Vaev::Driver::fetchDocument(input);
         return Vaev::Tools::inspector(input, dom);

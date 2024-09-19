@@ -169,7 +169,8 @@ struct Packer<T> {
                 Res<> res = Ok();
                 ([&] {
                     res ? res = Io::pack(e, fields) : res;
-                }(), ...);
+                }(),
+                 ...);
                 return res;
             },
             val
