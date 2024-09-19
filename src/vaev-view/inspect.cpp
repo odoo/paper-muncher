@@ -3,6 +3,7 @@
 #include <karm-ui/reducer.h>
 #include <karm-ui/scroll.h>
 #include <karm-ui/view.h>
+#include <mdi/chevron-down.h>
 #include <vaev-markup/dom.h>
 
 #include "inspect.h"

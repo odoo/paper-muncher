@@ -15,6 +15,14 @@
 #include <karm-ui/popover.h>
 #include <karm-ui/reducer.h>
 #include <karm-ui/scroll.h>
+#include <mdi/alert-decagram.h>
+#include <mdi/button-cursor.h>
+#include <mdi/code-tags.h>
+#include <mdi/dots-horizontal.h>
+#include <mdi/printer.h>
+#include <mdi/refresh.h>
+#include <mdi/surfing.h>
+#include <mdi/web.h>
 #include <vaev-driver/fetcher.h>
 #include <vaev-view/inspect.h>
 #include <vaev-view/view.h>

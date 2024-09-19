@@ -28,7 +28,6 @@ struct ValueParser;
 
 template <typename T>
 always_inline static Res<T> parseValue(Cursor<Css::Sst> &c) {
-
     return ValueParser<T>::parse(c);
 }
 
