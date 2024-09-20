@@ -396,6 +396,11 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
             };
 
             auto input = co_try$(Mime::parseUrlOrPath(inputArg));
+            if (outputArg.unwrap() == "-"s) {
+                Io::Sink sink;
+                co_return Vaev::Tools::render(input, sink, options);
+            }
+
             auto outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
             auto outputFile = co_try$(Sys::File::create(outputUrl));
 
