@@ -62,10 +62,10 @@ Res<P> parseDeclaration(Css::Sst const &sst) {
 }
 
 template <typename P>
-Vec<P> parseDeclarations(Css::Sst const &sst) {
+Vec<P> parseDeclarations(Css::Content const &sst) {
     Vec<P> res;
 
-    for (auto const &item : sst.content) {
+    for (auto const &item : sst) {
         if (item != Css::Sst::DECL) {
             logWarn("unexpected item in declaration: {}", item.type);
             continue;
@@ -81,6 +81,18 @@ Vec<P> parseDeclarations(Css::Sst const &sst) {
     }
 
     return res;
+}
+
+template <typename P>
+Vec<P> parseDeclarations(Css::Sst const &sst) {
+    return parseDeclarations<P>(sst.content);
+}
+
+template <typename P>
+Vec<P> parseDeclarations(Str style) {
+    Css::Lexer lex{style};
+    auto sst = Css::consumeDeclarationList(lex, true);
+    return parseDeclarations<P>(sst);
 }
 
 } // namespace Vaev::Style

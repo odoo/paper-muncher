@@ -326,7 +326,7 @@ struct TokenList {
 struct Element : public Node {
     static constexpr auto TYPE = NodeType::ELEMENT;
 
-    Opt<String> id() const {
+    Opt<Str> id() const {
         return this->getAttribute(Html::ID_ATTR);
     }
 
@@ -385,7 +385,7 @@ struct Element : public Node {
         return this->attributes.tryGet(name) != NONE;
     }
 
-    Opt<String> getAttribute(AttrName name) const {
+    Opt<Str> getAttribute(AttrName name) const {
         auto attr = this->attributes.tryGet(name);
         if (attr == NONE)
             return NONE;

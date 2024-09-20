@@ -1,4 +1,5 @@
 #include "computer.h"
+#include <vaev-style/decls.h>
 
 namespace Vaev::Style {
 
@@ -47,6 +48,14 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
             return spec(a->selector) <=> spec(b->selector);
         }
     );
+
+    // Get the style attribute if any
+    auto styleAttr = el.getAttribute(Html::STYLE_ATTR);
+    StyleRule styleRule{
+        .selector = UNIVERSAL,
+        .props = parseDeclarations<StyleProp>(styleAttr ? *styleAttr : ""),
+    };
+    matchingRules.pushBack(&styleRule);
 
     // Compute computed style
     auto computed = makeStrong<Computed>(Computed::initial());
