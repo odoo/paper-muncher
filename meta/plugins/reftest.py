@@ -1,8 +1,8 @@
 from cutekit import shell, vt100, cli, builder, model
 from pathlib import Path
-import dataclasses as dt
-from dataclasses_json import DataClassJsonMixin
-import tempfile
+import re
+import textwrap
+import difflib
 
 
 def buildPaperMuncher(args: model.TargetArgs) -> builder.ProductScope:
@@ -17,24 +17,108 @@ def buildPaperMuncher(args: model.TargetArgs) -> builder.ProductScope:
 def _(args: model.TargetArgs):
     paperMuncher = buildPaperMuncher(args)
 
-    for file in shell.find("tests", ["*.html", "*.xhtml"]):
-        print(f"Running reftest {file}...")
-        path = Path(file)
+    test_tmp_folder = Path(__file__).parent.parent.parent / 'tests/tmp'
+    test_tmp_folder.mkdir(parents=True, exist_ok=True)
+    for temp in test_tmp_folder.glob('*.*'):
+        temp.unlink()
 
-        refPath = path.parent / ".ref" / (path.name + ".ref")
-        output = paperMuncher.popen("print", "-sdlpo", "/dev/null", file)
+    temp_file = test_tmp_folder / 'reftest.xhtml'
+    def update_temp_file(container, rendering):
+        # write xhtml into the temporary file
+        xhtml = container.replace("<slot/>", rendering) if container else rendering
+        with temp_file.open("w") as f:
+            f.write(f"<!DOCTYPE html>\n{textwrap.dedent(xhtml)}")
 
-        if not refPath.exists():
-            vt100.warning(f"{refPath} not found, creating reference")
-            refPath.parent.mkdir(parents=True, exist_ok=True)
-            with refPath.open("x") as ref:
-                ref.write(output)
+    for file in shell.find("tests", ["*.xhtml"]):
+        if '/tmp/' in file:
             continue
 
-        with refPath.open() as ref:
-            refContent = ref.read()
+        print(f"Running comparison test {file}...")
 
-            if refContent == output:
-                print(f"{vt100.GREEN}Passed{vt100.RESET}")
-            else:
-                print(f"{vt100.RED}Failed{vt100.RESET}")
+        with Path(file).open() as f:
+            content = f.read()
+
+        Num = 0
+        for id, name, test in re.findall(r"""<test\s*(?:id=['"]([^'"]+)['"])?\s*(?:name=['"]([^'"]+)['"])?\s*>([\w\W]+?)</test>""", content):
+            print(f"{vt100.WHITE}Test {name!r}{vt100.RESET}")
+            Num += 1
+            temp_file_name = re.sub(r"[^\w.-]", "_", f"{file}-{id or Num}")
+
+            search = re.search(r"""<container>([\w\W]+?)</container>""", content)
+            container = search and search.group(1)
+
+            expected_xhtml = None
+            expected_image = None
+            if id:
+                ref_image = Path(file).parent / f'{id}.bmp'
+                if ref_image.exists():
+                    with ref_image.open('rb') as f:
+                        expected_image = f.read()
+                    with (test_tmp_folder / f"{temp_file_name}.expected.bmp").open("wb") as f:
+                        f.write(expected_image)
+
+            num = 0
+            for tag, info, rendering in re.findall(r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test):
+                num += 1
+                if "skip" in info:
+                    print(f"{vt100.YELLOW}Skip test{vt100.RESET}")
+                    continue
+
+                update_temp_file(container, rendering)
+
+                # generate temporary bmp
+                img_path = test_tmp_folder / f"{temp_file_name}-{num}.bmp"
+                paperMuncher.popen("render", "-sdlpo", img_path, temp_file)
+                with img_path.open('rb') as f:
+                    output_image = f.read()
+
+                # the first template is the expected value
+                if not expected_xhtml:
+                    expected_xhtml = rendering
+                    expected_pdf = paperMuncher.popen("print", "-sdlpo", test_tmp_folder / f"{temp_file_name}.expected.pdf", temp_file)
+                    if not expected_image:
+                        expected_image = output_image
+                        with (test_tmp_folder / f"{temp_file_name}.expected.bmp").open("wb") as f:
+                            f.write(expected_image)
+                        continue
+
+                # check if the rendering is different
+                if (expected_image == output_image) == (tag == "rendering"):
+                    img_path.unlink()
+                    print(f"{vt100.GREEN}Passed{vt100.RESET}")
+                else:
+                    # generate temporary file for debugging
+                    output_pdf = paperMuncher.popen("print", "-sdlpo", test_tmp_folder / f"{temp_file_name}-{num}.pdf", temp_file)
+
+                    if tag == "error":
+                        print(f"{vt100.RED}Failed {name!r} (The result should be different){vt100.RESET}")
+                        print(f"{vt100.WHITE}{expected_xhtml[1:].rstrip()}{vt100.RESET}")
+                        print(f"{vt100.BLUE}{rendering[1:].rstrip()}{vt100.RESET}")
+                        print(f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.pdf'}{vt100.RESET}")
+                        print(f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.bmp'}{vt100.RESET}")
+                    else:
+                        print(f"{vt100.RED}Failed {name!r}{vt100.RESET}")
+                        print(f"{vt100.WHITE}{expected_xhtml[1:].rstrip()}{vt100.RESET}")
+                        print(f"{vt100.WHITE}{test_tmp_folder / f'{temp_file_name}.expected.pdf'}{vt100.RESET}")
+                        print(f"{vt100.WHITE}{test_tmp_folder / f'{temp_file_name}.expected.bmp'}{vt100.RESET}")
+                        print(f"{vt100.BLUE}{rendering[1:].rstrip()}{vt100.RESET}")
+                        print(f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.pdf'}{vt100.RESET}")
+                        print(f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.bmp'}{vt100.RESET}")
+
+                        # print rendering diff
+                        output = output_pdf.split("---")[-3]
+                        expected = expected_pdf.split('---')[-3]
+                        if expected == output:
+                            continue
+                        diff_html = []
+                        theDiffs = difflib.ndiff(expected.splitlines(), output.splitlines())
+                        for eachDiff in theDiffs:
+                            if eachDiff[0] == "-":
+                                diff_html.append(f"{vt100.RED}{eachDiff}{vt100.RESET}")
+                            elif eachDiff[0] == "+":
+                                diff_html.append(f"{vt100.GREEN}{eachDiff}{vt100.RESET}")
+                            elif eachDiff[0] != "?":
+                                diff_html.append(eachDiff)
+                        print('\n'.join(diff_html))
+
+    temp_file.unlink()

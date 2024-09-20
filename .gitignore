@@ -1,5 +1,6 @@
 .cutekit/
 __pycache__/
+tmp/
 .vscode/
 .DS_Store
 .python-version
