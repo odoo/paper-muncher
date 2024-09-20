@@ -22,7 +22,7 @@ def _(args: model.TargetArgs):
         path = Path(file)
 
         refPath = path.parent / ".ref" / (path.name + ".ref")
-        output = paperMuncher.popen("html2pdf", "-sdlpo", "/dev/null", file)
+        output = paperMuncher.popen("print", "-sdlpo", "/dev/null", file)
 
         if not refPath.exists():
             vt100.warning(f"{refPath} not found, creating reference")

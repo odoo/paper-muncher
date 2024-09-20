@@ -1,4 +1,6 @@
 #include <karm-cli/args.h>
+#include <karm-gfx/cpu/canvas.h>
+#include <karm-image/saver.h>
 #include <karm-io/emit.h>
 #include <karm-io/funcs.h>
 #include <karm-print/pdf.h>
@@ -97,13 +99,13 @@ Res<> markupDumpTokens(Mime::Url const &url) {
     return Ok();
 }
 
-Vaev::Style::Media constructMedia(Print::PaperStock paper) {
+Vaev::Style::Media constructMediaForPrint(Print::PaperStock paper) {
     return {
-        .type = Vaev::MediaType::SCREEN,
+        .type = Vaev::MediaType::PRINT,
         .width = Vaev::Px{paper.width},
         .height = Vaev::Px{paper.height},
         .aspectRatio = paper.width / paper.height,
-        .orientation = Vaev::Orientation::LANDSCAPE,
+        .orientation = Vaev::Orientation::PORTRAIT,
 
         .resolution = Vaev::Resolution::fromDpi(96),
         .scan = Vaev::Scan::PROGRESSIVE,
@@ -131,19 +133,19 @@ Vaev::Style::Media constructMedia(Print::PaperStock paper) {
     };
 }
 
-struct Html2PdfOption {
+struct PrintOption {
     bool dumpStyle = false;
     bool dumpDom = false;
     bool dumpLayout = false;
     bool dumpPaint = false;
 };
 
-Res<> html2pdf(Mime::Url const &input, Io::Writer &output, Html2PdfOption options = {}) {
+Res<> print(Mime::Url const &input, Io::Writer &output, PrintOption options = {}) {
     auto start = Sys::now();
 
     auto dom = try$(Vaev::Driver::fetchDocument(input));
     auto paper = Print::A4;
-    auto media = constructMedia(paper);
+    auto media = constructMediaForPrint(paper);
     auto [style, layout, paint] = Vaev::Driver::render(*dom, media, paper);
     auto elapsed = Sys::now() - start;
 
@@ -168,6 +170,83 @@ Res<> html2pdf(Mime::Url const &input, Io::Writer &output, Html2PdfOption option
     Io::Emit e{encoder};
     printer.write(e);
     try$(e.flush());
+
+    return Ok();
+}
+
+Vaev::Style::Media constructMediaForRender(Math::Vec2i size) {
+    return {
+        .type = Vaev::MediaType::SCREEN,
+        .width = Vaev::Px{size.width},
+        .height = Vaev::Px{size.height},
+        .aspectRatio = size.width / (Number)size.height,
+        .orientation = Vaev::Orientation::PORTRAIT,
+
+        .resolution = Vaev::Resolution::fromDpi(96),
+        .scan = Vaev::Scan::PROGRESSIVE,
+        .grid = false,
+        .update = Vaev::Update::NONE,
+
+        .overflowBlock = Vaev::OverflowBlock::NONE,
+        .overflowInline = Vaev::OverflowInline::NONE,
+
+        .color = 8,
+        .colorIndex = 0,
+        .monochrome = 0,
+        .colorGamut = Vaev::ColorGamut::SRGB,
+        .pointer = Vaev::Pointer::NONE,
+        .hover = Vaev::Hover::NONE,
+        .anyPointer = Vaev::Pointer::NONE,
+        .anyHover = Vaev::Hover::NONE,
+
+        .prefersReducedMotion = Vaev::ReducedMotion::REDUCE,
+        .prefersReducedTransparency = Vaev::ReducedTransparency::REDUCE,
+        .prefersContrast = Vaev::Contrast::NO_PREFERENCE,
+        .forcedColors = Vaev::Colors::NONE,
+        .prefersColorScheme = Vaev::ColorScheme::LIGHT,
+        .prefersReducedData = Vaev::ReducedData::NO_PREFERENCE,
+    };
+}
+
+struct RenderOption {
+    Math::Vec2i size = {800, 600};
+
+    bool dumpStyle = false;
+    bool dumpDom = false;
+    bool dumpLayout = false;
+    bool dumpPaint = false;
+};
+
+Res<> render(Mime::Url const &input, Io::Writer &output, RenderOption options = {}) {
+    auto start = Sys::now();
+
+    auto dom = try$(Vaev::Driver::fetchDocument(input));
+    auto media = constructMediaForRender(options.size);
+    auto [style, layout, paint] = Vaev::Driver::render(*dom, media, options.size.cast<Px>());
+    auto elapsed = Sys::now() - start;
+
+    logInfo("render time: {}", elapsed);
+
+    if (options.dumpDom)
+        Sys::println("--- START OF DOM ---\n{}\n--- END OF DOM ---\n", dom);
+
+    if (options.dumpStyle)
+        Sys::println("--- START OF STYLE ---\n{}\n--- END OF STYLE ---\n", style);
+
+    if (options.dumpLayout)
+        Sys::println("--- START OF LAYOUT ---\n{}\n--- END OF LAYOUT ---\n", layout);
+
+    if (options.dumpPaint)
+        Sys::println("--- START OF PAINT ---\n{}\n--- END OF PAINT ---\n", paint);
+
+    auto image = Gfx::Surface::alloc(options.size, Gfx::RGBA8888);
+    Gfx::CpuCanvas g;
+    g.begin(*image);
+    g.clear(Gfx::WHITE);
+    paint->paint(g);
+    g.end();
+
+    try$(Image::save(image->pixels(), output));
 
     return Ok();
 }
@@ -238,7 +317,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
         'l',
         "List all style properties"s,
         {},
-        [](Sys::Context &) -> Async::Task<> {
+        [=](Sys::Context &) -> Async::Task<> {
             co_return Vaev::Tools::styleListProps();
         }
     );
@@ -254,7 +333,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
         NONE,
         "Dump the DOM tree"s,
         {inputArg},
-        [inputArg](Sys::Context &) -> Async::Task<> {
+        [=](Sys::Context &) -> Async::Task<> {
             auto input = co_try$(Mime::parseUrlOrPath(inputArg));
             co_return Vaev::Tools::markupDumpDom(input);
         }
@@ -265,7 +344,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
         't',
         "Dump HTML tokens"s,
         {inputArg},
-        [inputArg](Sys::Context &) -> Async::Task<> {
+        [=](Sys::Context &) -> Async::Task<> {
             auto input = co_try$(Mime::parseUrlOrPath(inputArg));
             co_return Vaev::Tools::markupDumpTokens(input);
         }
@@ -277,12 +356,12 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
     Cli::Flag dumpPaintArg = Cli::flag('p', "dump-paint"s, "Dump the paint tree"s);
 
     cmd.subCommand(
-        "html2pdf"s,
-        'r',
-        "Convert HTML to PDF"s,
+        "print"s,
+        'p',
+        "Render document for printing"s,
         {inputArg, outputArg, dumpStyleArg, dumpDomArg, dumpLayoutArg, dumpPaintArg},
-        [inputArg, outputArg, dumpStyleArg, dumpDomArg, dumpLayoutArg, dumpPaintArg](Sys::Context &) -> Async::Task<> {
-            Vaev::Tools::Html2PdfOption options{
+        [=](Sys::Context &) -> Async::Task<> {
+            Vaev::Tools::PrintOption options{
                 .dumpStyle = dumpStyleArg,
                 .dumpDom = dumpDomArg,
                 .dumpLayout = dumpLayoutArg,
@@ -291,16 +370,41 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
 
             auto input = co_try$(Mime::parseUrlOrPath(inputArg));
             if (outputArg.unwrap() == "-"s)
-                co_return Vaev::Tools::html2pdf(input, Sys::out(), options);
+                co_return Vaev::Tools::print(input, Sys::out(), options);
 
             auto outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
             auto outputFile = co_try$(Sys::File::create(outputUrl));
-            co_return Vaev::Tools::html2pdf(input, outputFile, options);
+            co_return Vaev::Tools::print(input, outputFile, options);
+        }
+    );
+
+    Cli::Option<isize> widthArg = Cli::option<isize>('w', "width"s, "Width of the output image"s, 800);
+    Cli::Option<isize> heightArg = Cli::option<isize>('h', "height"s, "Height of the output image"s, 600);
+
+    cmd.subCommand(
+        "render"s,
+        'r',
+        "Render document to image"s,
+        {inputArg, outputArg, dumpStyleArg, dumpDomArg, dumpLayoutArg, dumpPaintArg, widthArg, heightArg},
+        [=](Sys::Context &) -> Async::Task<> {
+            Vaev::Tools::RenderOption options{
+                .size = {widthArg, heightArg},
+                .dumpStyle = dumpStyleArg,
+                .dumpDom = dumpDomArg,
+                .dumpLayout = dumpLayoutArg,
+                .dumpPaint = dumpPaintArg,
+            };
+
+            auto input = co_try$(Mime::parseUrlOrPath(inputArg));
+            auto outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
+            auto outputFile = co_try$(Sys::File::create(outputUrl));
+
+            co_return Vaev::Tools::render(input, outputFile, options);
         }
     );
 
     auto &inspectorCmd = cmd.subCommand(
-        "inspector"s,
+        "inspect"s,
         'i',
         "View a document in the inspector for debugging"s,
         {inputArg}
