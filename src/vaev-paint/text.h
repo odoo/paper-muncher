@@ -14,7 +14,7 @@ struct Text : public Node {
     Text(Math::Vec2f baseline, Strong<Karm::Text::Run> run, Gfx::Fill fill)
         : baseline(baseline), run(run), fill(fill) {}
 
-    virtual void paint(Gfx::Canvas &g) {
+    void paint(Gfx::Canvas &g) override {
         g.push();
         g.fillStyle(fill);
         g.fill(run->_font, *run, baseline);
@@ -28,7 +28,7 @@ struct Text : public Node {
         g.pop();
     }
 
-    virtual void repr(Io::Emit &e) const {
+    void repr(Io::Emit &e) const override {
         e("(text {})", baseline);
     }
 };
