@@ -17,6 +17,14 @@ function is_darwin() {
     return 1
 }
 
+if [ -z "$CUTEKIT_PYTHON" ]; then
+    if command -v python3.11 &> /dev/null; then
+        export CUTEKIT_PYTHON="python3.11"
+    else
+        export CUTEKIT_PYTHON="python3"
+    fi
+fi
+
 if [ "$EUID" -eq 0 ]; then
     echo "Please do not run this script as root."
 
@@ -65,7 +73,7 @@ if [ ! -f .cutekit/tools-ready ]; then
     mkdir -p .cutekit
     if [ ! -d .cutekit/venv ]; then
         echo "Setting up Python virtual environment..."
-        python3.11 -m venv .cutekit/venv
+        $CUTEKIT_PYTHON -m venv .cutekit/venv
     fi
     source .cutekit/venv/bin/activate
 
