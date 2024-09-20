@@ -1,1 +1,2 @@
-dev/* linguist-vendored
+tests/** linguist-vendored
+dev/** linguist-vendored
