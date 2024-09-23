@@ -90,12 +90,18 @@ def _(args: model.TargetArgs):
                     # generate temporary file for debugging
                     output_pdf = paperMuncher.popen("print", "-sdlpo", test_tmp_folder / f"{temp_file_name}-{num}.pdf", temp_file)
 
+                    help = None
+                    if " help=" in info:
+                        help = re.search(r""" help=['"]([^'"]*)['"]""", content).group(1)
+
                     if tag == "error":
                         print(f"{vt100.RED}Failed {name!r} (The result should be different){vt100.RESET}")
                         print(f"{vt100.WHITE}{expected_xhtml[1:].rstrip()}{vt100.RESET}")
                         print(f"{vt100.BLUE}{rendering[1:].rstrip()}{vt100.RESET}")
                         print(f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.pdf'}{vt100.RESET}")
                         print(f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.bmp'}{vt100.RESET}")
+                        if help:
+                            print(f"{vt100.BLUE}{help}{vt100.RESET}")
                     else:
                         print(f"{vt100.RED}Failed {name!r}{vt100.RESET}")
                         print(f"{vt100.WHITE}{expected_xhtml[1:].rstrip()}{vt100.RESET}")
@@ -104,6 +110,8 @@ def _(args: model.TargetArgs):
                         print(f"{vt100.BLUE}{rendering[1:].rstrip()}{vt100.RESET}")
                         print(f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.pdf'}{vt100.RESET}")
                         print(f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.bmp'}{vt100.RESET}")
+                        if help:
+                            print(f"{vt100.BLUE}{help}{vt100.RESET}")
 
                         # print rendering diff
                         output = output_pdf.split("---")[-3]

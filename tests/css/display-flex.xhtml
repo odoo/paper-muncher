@@ -4,8 +4,11 @@
             <head>
                 <style>
                     div {
-                        width: 100px;
+                        width: 200px;
                         height: 100px;
+                    }
+                    div div {
+                        width: 100px;
                     }
                     div.flex {
                         display: flex;
@@ -16,13 +19,6 @@
                     .green {
                         background-color: green;
                     }
-                    div.block {
-                        display: block;
-                    }
-                    div.block div {
-                        width: 50%;
-                        float: left;
-                    }
                 </style>
             </head>
             <body>
@@ -32,18 +28,11 @@
     </container>
 
     <rendering>
-        <div class="block">
-            <div class="red"></div>
-            <div class="green"></div>
+        <div>
+            <div style="float: left;" class="red"></div>
+            <div style="float: left;" class="green"></div>
         </div>
     </rendering>
-
-    <error>
-        <div class="block">
-            <div style="float: none;" class="red"></div>
-            <div class="green"></div>
-        </div>
-    </error>
 
     <rendering>
         <div class="flex">

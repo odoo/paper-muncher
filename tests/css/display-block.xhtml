@@ -90,6 +90,20 @@
             <div class="w-100 green" style="position: absolute; top: 100px;"></div>
         </div>
     </rendering>
+
+    <rendering>
+        <div class="w-200" style="position: relative;">
+            <div class="w-100 green" style="position: absolute; top: 0; left: 100px;"></div>
+            <div class="w-100 red"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="w-200">
+            <div class="w-100 red" style="float: left;"></div>
+            <div class="w-100 green" style="float: left;"></div>
+        </div>
+    </rendering>
 </test>
 
 <test name="display: inline-block">
@@ -195,7 +209,7 @@
         </div>
     </rendering>
 
-    <error>
+    <error help="The green blox should be on the same line when the font-size is null">
         <div class="w-200" style="line-height: 0; font-size: 0px;">
             <div class="inline-block w-100 red"></div>
             <div class="inline-block w-100 green"></div>
