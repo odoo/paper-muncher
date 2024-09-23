@@ -13,13 +13,19 @@ def buildPaperMuncher(args: model.TargetArgs) -> builder.ProductScope:
     return builder.build(scope, component)[0]
 
 
+class RefTestArgs(model.TargetArgs):
+    glob: str = cli.arg("g", "glob")
+    fast: str = cli.arg(None, "fast", "Proceed to the next test as soon as an error occurs.")
+
+
 @cli.command(None, "reftests", "Manage the reftests")
-def _(args: model.TargetArgs):
+def _(args: RefTestArgs):
     paperMuncher = buildPaperMuncher(args)
 
-    test_tmp_folder = Path(__file__).parent.parent.parent / 'tests/tmp'
+    test_folder = Path(__file__).parent.parent.parent / 'tests'
+    test_tmp_folder = test_folder / 'tmp'
     test_tmp_folder.mkdir(parents=True, exist_ok=True)
-    for temp in test_tmp_folder.glob('*.*'):
+    for temp in test_tmp_folder.glob('.*'):
         temp.unlink()
 
     temp_file = test_tmp_folder / 'reftest.xhtml'
@@ -29,13 +35,12 @@ def _(args: model.TargetArgs):
         with temp_file.open("w") as f:
             f.write(f"<!DOCTYPE html>\n{textwrap.dedent(xhtml)}")
 
-    for file in shell.find("tests", ["*.xhtml"]):
-        if '/tmp/' in file:
+    for file in test_folder.glob(args.glob or "*/*.xhtml"):
+        if file.suffix != ".xhtml":
             continue
-
         print(f"Running comparison test {file}...")
 
-        with Path(file).open() as f:
+        with file.open() as f:
             content = f.read()
 
         Num = 0
@@ -50,7 +55,7 @@ def _(args: model.TargetArgs):
             expected_xhtml = None
             expected_image = None
             if id:
-                ref_image = Path(file).parent / f'{id}.bmp'
+                ref_image = file.parent / f'{id}.bmp'
                 if ref_image.exists():
                     with ref_image.open('rb') as f:
                         expected_image = f.read()
@@ -128,5 +133,8 @@ def _(args: model.TargetArgs):
                             elif eachDiff[0] != "?":
                                 diff_html.append(eachDiff)
                         print('\n'.join(diff_html))
+
+                    if args.fast:
+                        break
 
     temp_file.unlink()
