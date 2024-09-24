@@ -25,8 +25,8 @@ def _(args: RefTestArgs):
     test_folder = Path(__file__).parent.parent.parent / 'tests'
     test_tmp_folder = test_folder / 'tmp'
     test_tmp_folder.mkdir(parents=True, exist_ok=True)
-    for temp in test_tmp_folder.glob('.*'):
-        temp.unlink()
+    # for temp in test_tmp_folder.glob('*.*'):
+    #     temp.unlink()
 
     temp_file = test_tmp_folder / 'reftest.xhtml'
     def update_temp_file(container, rendering):
