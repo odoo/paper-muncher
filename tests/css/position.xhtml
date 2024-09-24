@@ -1,0 +1,206 @@
+<test>
+    <container>
+        <html lang="en">
+            <head>
+                <style>
+                    body {
+                        margin: 0px;
+                    }
+                    section {
+                        width: 200px;
+                        height: 200px;
+                        padding: 5px;
+                        background: #ddd;
+                    }
+                    div {
+                        width: 100px;
+                        height: 100px;
+                    }
+                    .red {
+                        background-color: red;
+                    }
+                    .green {
+                        background-color: green;
+                    }
+                    .blue {
+                        background-color: blue;
+                    }
+                </style>
+            </head>
+            <body>
+                <section>
+                    <slot/>
+                </section>
+            </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div class="red" style="position: absolute; top: 60px; left: 60px;"></div>
+        <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
+    </rendering>
+
+    <error>
+        <div class="green" style="position: absolute; top: 31px; left: 30px;"></div>
+        <div class="red" style="position: absolute; top: 60px; left: 60px;"></div>
+        <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
+    </error>
+
+    <error help="test the rendering order">
+        <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div class="red" style="position: absolute; top: 60px; left: 60px;"></div>
+    </error>
+
+    <rendering>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div class="red" style="position: absolute; top: 60px; left: 60px;"></div>
+        <div>
+            <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div class="red" style="position: absolute; top: 60px; left: 60px;"></div>
+        <div></div>
+        <div>
+            <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
+        </div>
+    </rendering>
+
+    <rendering help="">
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div class="red" style="position: absolute; top: 60px; left: 60px;"></div>
+        <div style="position: relative;"></div>
+        <div>
+            <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
+        </div>
+    </rendering>
+
+    <error>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div class="red" style="position: absolute; top: 60px; left: 60px;"></div>
+        <div></div>
+        <div style="position: relative;">
+            <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
+        </div>
+    </error>
+
+    <rendering>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div class="red" style="position: absolute; top: 60px; left: 60px;"></div>
+        <div></div>
+        <div style="position: relative;">
+            <div class="blue" style="position: absolute; top: -95px; left: 5px;"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div class="red" style="position: absolute; top: 60px; left: 60px;"></div>
+        <div></div>
+        <div style="position: relative; top: 10px;">
+            <div class="blue" style="position: absolute; top: -105px; left: 5px;"></div>
+        </div>
+    </rendering>
+
+    <rendering help="Check that the different children are browsed.">
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div></div>
+        <div>
+            <div></div>
+            <div>
+                <div class="red" style="position: absolute; top: 60px; left: 60px;"></div>
+            </div>
+            <div>
+                <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="position: absolute; top: 10px; left: 10px;">
+            <div class="green" style="position: absolute; top: 20px; left: 20px;"></div>
+            <div class="red" style="position: absolute; top: 50px; left: 50px;"></div>
+            <div class="blue" style="position: absolute; top: 0px; left: 0px;"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div></div>
+        <div style="position: absolute; top: 10px; left: 10px;">
+            <div></div>
+            <div>
+                <div class="red" style="position: absolute; top: 50px; left: 50px;"></div>
+            </div>
+            <div>
+                <div class="blue" style="position: absolute; top: 0px; left: 0px;"></div>
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div></div>
+        <div style="position: absolute; top: 10px; left: 10px;">
+            <div></div>
+            <div>
+                <div class="red" style="position: absolute; top: 50px; left: 50px;"></div>
+            </div>
+            <div style="position: relative;">
+                <div class="blue" style="position: absolute; top: -200px; left: 0px;"></div>
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div></div>
+        <div style="position: relative; top: -95px; left: 5px;">
+            <div></div>
+            <div>
+                <div class="red" style="position: absolute; top: 50px; left: 50px;"></div>
+            </div>
+            <div style="position: relative;">
+                <div class="blue" style="position: absolute; top: -200px; left: 0px;"></div>
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div style="position: absolute; top: -40px; left: 60px;">
+            <div></div>
+            <div class="red" style="position: absolute;"></div>
+        </div>
+        <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
+    </rendering>
+
+    <error>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div style="position: absolute; top: -40px; left: 60px;">
+            <div></div>
+            <div class="red" style="position: absolute; top: 0px;"></div>
+        </div>
+        <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
+    </error>
+
+    <error>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div style="position: absolute; top: -40px; left: 60px;">
+            <div></div>
+            <div class="red" style="position: absolute; top: 0;"></div>
+        </div>
+        <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
+    </error>
+
+    <rendering help="test the rendering order with z-index">
+        <div class="blue" style="position: absolute; top: 10px; left: 10px; z-index: 1;"></div>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div class="red" style="position: absolute; top: 60px; left: 60px;"></div>
+    </rendering>
+
+</test>
