@@ -206,6 +206,28 @@
         <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
     </rendering>
 
+    <rendering help="Absolute positioning does have an influence on flow and z-index.">
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div style="position: absolute; top: -40px; left: 60px;">
+            <div></div>
+            <div style="position: absolute;">
+                <div class="blue" style="position: relative; top: -50px; left: -50px;"></div>
+            </div>
+            <div class="red"></div>
+        </div>
+    </rendering>
+
+    <error help="Absolute positioning does have an influence on flow and z-index.">
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div style="position: absolute; top: -40px; left: 60px;">
+            <div></div>
+            <div style="position: absolute;">
+                <div class="blue" style="position: relative; top: -50px; left: -50px;"></div>
+            </div>
+            <div class="red" style="position: absolute;"></div>
+        </div>
+    </error>
+
     <error>
         <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
         <div style="position: absolute; top: -40px; left: 35px; padding-left: 25px;">
@@ -232,6 +254,15 @@
         </div>
         <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
     </error>
+
+    <rendering help="The absolutely positioned box remained in the document flow for the undefined top position.">
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div style="position: absolute; top: -40px; left: 60px;">
+            <div></div>
+            <div class="blue" style="position: absolute; margin-top: -50px; margin-left: -50px;"></div>
+            <div class="red"></div>
+        </div>
+    </rendering>
 
     <rendering help="test the rendering order with z-index">
         <div class="blue" style="position: absolute; top: 10px; left: 10px; z-index: 1;"></div>
