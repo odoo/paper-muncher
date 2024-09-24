@@ -3,8 +3,6 @@
 #include <karm-image/picture.h>
 #include <karm-text/run.h>
 #include <vaev-markup/dom.h>
-#include <vaev-paint/stack.h>
-#include <vaev-style/computed.h>
 #include <vaev-style/computer.h>
 
 #include "base.h"
@@ -45,7 +43,7 @@ struct Tree {
 
 // MARK: Build -----------------------------------------------------------------
 
-void build(Style::Computer &c, Markup::Node const &n, Frag &parent);
+void _buildNode(Style::Computer &c, Markup::Node const &n, Frag &parent);
 
 Frag build(Style::Computer &c, Markup::Document const &doc);
 
@@ -54,10 +52,6 @@ Frag build(Style::Computer &c, Markup::Document const &doc);
 Output layout(Tree &t, Frag &f, Input input);
 
 Px measure(Tree &t, Frag &f, Axis axis, IntrinsicSize intrinsic, Px availableSpace);
-
-// MARK: Paint -----------------------------------------------------------------
-
-void paint(Frag &frag, Paint::Stack &stack, Math::Vec2f pos = {});
 
 void wireframe(Frag &frag, Gfx::Canvas &g);
 

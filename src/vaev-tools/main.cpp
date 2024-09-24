@@ -359,7 +359,14 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
         "print"s,
         'p',
         "Render document for printing"s,
-        {inputArg, outputArg, dumpStyleArg, dumpDomArg, dumpLayoutArg, dumpPaintArg},
+        {
+            inputArg,
+            outputArg,
+            dumpStyleArg,
+            dumpDomArg,
+            dumpLayoutArg,
+            dumpPaintArg,
+        },
         [=](Sys::Context &) -> Async::Task<> {
             Vaev::Tools::PrintOption options{
                 .dumpStyle = dumpStyleArg,
@@ -385,7 +392,16 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
         "render"s,
         'r',
         "Render document to image"s,
-        {inputArg, outputArg, dumpStyleArg, dumpDomArg, dumpLayoutArg, dumpPaintArg, widthArg, heightArg},
+        {
+            inputArg,
+            outputArg,
+            dumpStyleArg,
+            dumpDomArg,
+            dumpLayoutArg,
+            dumpPaintArg,
+            widthArg,
+            heightArg,
+        },
         [=](Sys::Context &) -> Async::Task<> {
             Vaev::Tools::RenderOption options{
                 .size = {widthArg, heightArg},

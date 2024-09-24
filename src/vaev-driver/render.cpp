@@ -1,5 +1,6 @@
 #include <karm-sys/time.h>
 #include <vaev-layout/frag.h>
+#include <vaev-layout/paint.h>
 #include <vaev-markup/dom.h>
 #include <vaev-paint/page.h>
 #include <vaev-paint/stack.h>

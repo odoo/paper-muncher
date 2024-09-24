@@ -63,6 +63,7 @@ Output blockLayout(Tree &t, Frag &f, Input input) {
         if (input.commit == Commit::YES) {
             auto offsets = _computeOffsets(t, c, input);
             c.layout.position = {Px{0} + offsets.start, blockSize + offsets.top};
+            // TODO: Handle other values of position
         }
 
         if (c.style->position != Position::ABSOLUTE) {
