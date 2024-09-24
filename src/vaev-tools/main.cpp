@@ -218,14 +218,9 @@ struct RenderOption {
 };
 
 Res<> render(Mime::Url const &input, Io::Writer &output, RenderOption options = {}) {
-    auto start = Sys::now();
-
     auto dom = try$(Vaev::Driver::fetchDocument(input));
     auto media = constructMediaForRender(options.size);
     auto [style, layout, paint] = Vaev::Driver::render(*dom, media, options.size.cast<Px>());
-    auto elapsed = Sys::now() - start;
-
-    logInfo("render time: {}", elapsed);
 
     if (options.dumpDom)
         Sys::println("--- START OF DOM ---\n{}\n--- END OF DOM ---\n", dom);
@@ -432,9 +427,17 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
     );
 
     Ui::mountApp(inspectorCmd, [inputArg] -> Ui::Child {
-        auto input = Mime::parseUrlOrPath(inputArg).unwrap();
-        auto dom = Vaev::Driver::fetchDocument(input);
-        return Vaev::Tools::inspector(input, dom);
+        if (inputArg.unwrap() == "-"s) {
+            auto input = Mime::parseUrlOrPath(inputArg).unwrap();
+            auto dom = Vaev::Driver::loadDocument(
+                "about:stdin"_url, "application/xhtml+xml"_mime, Sys::in()
+            );
+            return Vaev::Tools::inspector(input, dom);
+        } else {
+            auto input = Mime::parseUrlOrPath(inputArg).unwrap();
+            auto dom = Vaev::Driver::fetchDocument(input);
+            return Vaev::Tools::inspector(input, dom);
+        }
     });
 
     co_return co_await cmd.execAsync(ctx);
