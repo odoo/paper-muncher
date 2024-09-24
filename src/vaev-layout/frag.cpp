@@ -310,6 +310,17 @@ static Paint::Borders _paintBorders(Frag &frag, Math::Vec2f pos) {
     return paint;
 }
 
+static void _paintAbsoluteChildren(Frag &frag, Strong<Paint::Stack> &stack, Math::Vec2f initPos) {
+    for (auto &c : frag.children()) {
+        auto position = c.style->position;
+        if (position == Position::ABSOLUTE) {
+            paint(c, *stack, initPos);
+        } else if (position != Position::RELATIVE) {
+            _paintAbsoluteChildren(c, stack, initPos);
+        }
+    }
+}
+
 static void _paintInner(Frag &frag, Paint::Stack &stack, Math::Vec2f pos) {
     auto const &backgrounds = frag.style->backgrounds;
 
@@ -330,8 +341,21 @@ static void _paintInner(Frag &frag, Paint::Stack &stack, Math::Vec2f pos) {
         stack.add(makeStrong<Paint::Box>(std::move(paint)));
     }
 
+    Math::Vec2f initPos = pos + frag.layout.contentBox().topStart().cast<f64>();
+
+    auto position = frag.style->position;
+    auto isRelative = position == Position::ABSOLUTE || position == Position::RELATIVE;
+    if (isRelative) {
+        auto absoluteStack = makeStrong<Paint::Stack>();
+        absoluteStack->zIndex = frag.style->zIndex.value;
+        _paintAbsoluteChildren(frag, absoluteStack, initPos);
+        stack.add(absoluteStack);
+    }
+
     for (auto &c : frag.children()) {
-        paint(c, stack, pos + frag.layout.contentBox().topStart().cast<f64>());
+        if (c.style->position != Position::ABSOLUTE) {
+            paint(c, stack, initPos);
+        }
     }
 
     if (auto *run = frag.content.is<Strong<Text::Run>>()) {
