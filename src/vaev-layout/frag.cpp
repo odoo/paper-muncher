@@ -278,6 +278,38 @@ Output layout(Tree &t, Frag &f, Input input) {
 
 // MARK: Paint -----------------------------------------------------------------
 
+static Paint::Borders _paintBorders(Frag &frag, Math::Vec2f pos) {
+    Paint::Borders paint;
+
+    Gfx::Color currentColor = Gfx::BLACK;
+    currentColor = resolve(frag.style->color, currentColor);
+
+    auto bordersLayout = frag.layout.borders;
+    auto bordersStyle = frag.style->borders;
+
+    paint = Paint::Borders();
+    paint.bound = frag.layout.paddingBox().cast<f64>().offset(pos);
+    paint.radii = frag.layout.radii.cast<f64>().reduceOverlap(paint.bound.size());
+
+    paint.top.width = bordersLayout.top.cast<f64>();
+    paint.top.style = bordersStyle->top.style;
+    paint.top.fill = resolve(bordersStyle->top.color, currentColor);
+
+    paint.bottom.width = bordersLayout.bottom.cast<f64>();
+    paint.bottom.style = bordersStyle->bottom.style;
+    paint.bottom.fill = resolve(bordersStyle->bottom.color, currentColor);
+
+    paint.start.width = bordersLayout.start.cast<f64>();
+    paint.start.style = bordersStyle->start.style;
+    paint.start.fill = resolve(bordersStyle->start.color, currentColor);
+
+    paint.end.width = bordersLayout.end.cast<f64>();
+    paint.end.style = bordersStyle->end.style;
+    paint.end.fill = resolve(bordersStyle->end.color, currentColor);
+
+    return paint;
+}
+
 static void _paintInner(Frag &frag, Paint::Stack &stack, Math::Vec2f pos) {
     auto const &backgrounds = frag.style->backgrounds;
 
@@ -312,30 +344,7 @@ static void _paintInner(Frag &frag, Paint::Stack &stack, Math::Vec2f pos) {
     }
 
     if (not frag.layout.borders.zero()) {
-        Paint::Borders paint;
-        auto bordersLayout = frag.layout.borders;
-        auto bordersStyle = frag.style->borders;
-
-        paint = Paint::Borders();
-        paint.bound = frag.layout.paddingBox().cast<f64>().offset(pos);
-        paint.radii = frag.layout.radii.cast<f64>().reduceOverlap(paint.bound.size());
-
-        paint.top.width = bordersLayout.top.cast<f64>();
-        paint.top.style = bordersStyle->top.style;
-        paint.top.fill = resolve(bordersStyle->top.color, currentColor);
-
-        paint.bottom.width = bordersLayout.bottom.cast<f64>();
-        paint.bottom.style = bordersStyle->bottom.style;
-        paint.bottom.fill = resolve(bordersStyle->bottom.color, currentColor);
-
-        paint.start.width = bordersLayout.start.cast<f64>();
-        paint.start.style = bordersStyle->start.style;
-        paint.start.fill = resolve(bordersStyle->start.color, currentColor);
-
-        paint.end.width = bordersLayout.end.cast<f64>();
-        paint.end.style = bordersStyle->end.style;
-        paint.end.fill = resolve(bordersStyle->end.color, currentColor);
-
+        auto paint = _paintBorders(frag, pos);
         stack.add(makeStrong<Paint::Borders>(std::move(paint)));
     }
 }
