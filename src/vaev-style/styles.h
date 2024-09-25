@@ -886,6 +886,90 @@ struct FlexFlowProp {
     }
 };
 
+// https://www.w3.org/TR/css-flexbox-1/#propdef-flex
+struct FlexProp {
+    struct Flex {
+        FlexBasis flexBasis;
+        Number flexGrow, flexShrink;
+
+        void repr(Io::Emit &e) const {
+            e("({} {} {})", flexBasis, flexGrow, flexShrink);
+        }
+    } value = initial();
+
+    static Flex initial() {
+        return {
+            Width{Width::AUTO},
+            0,
+            1,
+        };
+    }
+
+    static constexpr Str name() { return "flex"; }
+
+    void apply(Computed &c) const {
+        auto &flex = c.flex.cow();
+        flex.basis = value.flexBasis;
+        flex.grow = value.flexGrow;
+        flex.shrink = value.flexShrink;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Css::Token::ident("none"))) {
+            value = {
+                Width{Width::AUTO},
+                0,
+                0,
+            };
+            return Ok();
+        } else if (c.skip(Css::Token::ident("initial"))) {
+            value = {
+                Width{Width::AUTO},
+                0,
+                1,
+            };
+            return Ok();
+        }
+
+        // deafult values if these parameters are omitted
+        value.flexGrow = value.flexShrink = 1;
+        value.flexBasis = FlexBasis(Width(Length(0, Length::Unit::PX)));
+
+        auto parseGrowShrink = [](Cursor<Css::Sst> &c, Flex &value) -> Res<> {
+            auto grow = parseValue<Number>(c);
+            if (not grow)
+                return Error::invalidData("expected flex item grow");
+
+            value.flexGrow = grow.unwrap();
+
+            auto shrink = parseValue<Number>(c);
+            if (shrink)
+                value.flexShrink = shrink.unwrap();
+
+            return Ok();
+        };
+
+        auto parsedGrowAndMaybeShrink = parseGrowShrink(c, value);
+        if (parsedGrowAndMaybeShrink) {
+            auto basis = parseValue<FlexBasis>(c);
+            if (basis)
+                value.flexBasis = basis.unwrap();
+        } else {
+            auto basis = parseValue<FlexBasis>(c);
+            if (basis)
+                value.flexBasis = basis.unwrap();
+            else
+                return Error::invalidData("expected flex item grow or basis");
+
+            auto parsedGrowAndMaybeShrink = parseGrowShrink(c, value);
+        }
+        return Ok();
+    }
+};
+
 // MARK: Fonts -----------------------------------------------------------------
 
 // https://www.w3.org/TR/css-fonts-4/#font-family-prop
@@ -1609,6 +1693,7 @@ using _StyleProp = Union<
     FlexShrinkProp,
     FlexWrapProp,
     FlexFlowProp,
+    FlexProp,
 
     // Font
     FontFamilyProp,
