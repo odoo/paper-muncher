@@ -51,6 +51,9 @@ def _(args: RefTestArgs):
         for info, test in re.findall(r"""<test([^>]*)>([\w\W]+?)</test>""", content):
             props = getInfo(info)
             print(f"{vt100.WHITE}Test {props.get('name')!r}{vt100.RESET}")
+            if "skip" in props:
+                print(f"{vt100.YELLOW}Skip test{vt100.RESET}")
+                continue
             Num += 1
             temp_file_name = re.sub(r"[^\w.-]", "_", f"{file}-{props.get('id') or Num}")
 
@@ -59,13 +62,15 @@ def _(args: RefTestArgs):
 
             expected_xhtml = None
             expected_image = None
+            expected_image_url = test_tmp_folder / f"{temp_file_name}.expected.bmp"
             if props.get('id'):
                 ref_image = file.parent / f"{props.get('id')}.bmp"
                 if ref_image.exists():
                     with ref_image.open('rb') as f:
                         expected_image = f.read()
-                    with (test_tmp_folder / f"{temp_file_name}.expected.bmp").open("wb") as f:
+                    with expected_image_url.open("wb") as f:
                         f.write(expected_image)
+                    expected_image_url = ref_image
 
             num = 0
             for tag, info, rendering in re.findall(r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test):
@@ -110,6 +115,7 @@ def _(args: RefTestArgs):
                     if tag == "error":
                         print(f"{vt100.RED}Failed {props.get('name')!r} (The result should be different){vt100.RESET}")
                         print(f"{vt100.WHITE}{expected_xhtml[1:].rstrip()}{vt100.RESET}")
+                        print(f"{vt100.WHITE}{expected_image_url}{vt100.RESET}")
                         print(f"{vt100.BLUE}{rendering[1:].rstrip()}{vt100.RESET}")
                         print(f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.pdf'}{vt100.RESET}")
                         print(f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.bmp'}{vt100.RESET}")
@@ -117,8 +123,9 @@ def _(args: RefTestArgs):
                             print(f"{vt100.BLUE}{help}{vt100.RESET}")
                     else:
                         print(f"{vt100.RED}Failed {props.get('name')!r}{vt100.RESET}")
-                        print(f"{vt100.WHITE}{expected_xhtml[1:].rstrip()}{vt100.RESET}")
-                        print(f"{vt100.WHITE}{test_tmp_folder / f'{temp_file_name}.expected.bmp'}{vt100.RESET}")
+                        if expected_xhtml != rendering:
+                            print(f"{vt100.WHITE}{expected_xhtml[1:].rstrip()}{vt100.RESET}")
+                        print(f"{vt100.WHITE}{expected_image_url}{vt100.RESET}")
                         print(f"{vt100.BLUE}{rendering[1:].rstrip()}{vt100.RESET}")
                         print(f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.pdf'}{vt100.RESET}")
                         print(f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.bmp'}{vt100.RESET}")
