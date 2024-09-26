@@ -263,6 +263,7 @@ Output layout(Tree &t, Frag &f, Input input) {
     size = size + padding.all() + borders.all();
 
     if (input.commit == Commit::YES) {
+        f.layout.position = input.position;
         f.layout.borderSize = size;
         f.layout.padding = padding;
         f.layout.borders = borders;

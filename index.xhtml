@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+<head>
+    <style>
+        body {
+            margin: 0px;
+        }
+
+        section {
+            width: 200px;
+            height: 200px;
+            padding: 5px;
+            background: #ddd;
+            position: relative;
+        }
+
+        div {
+            width: 100px;
+            height: 100px;
+        }
+
+        .red {
+            background-color: red;
+        }
+
+        .green {
+            background-color: green;
+        }
+
+        .blue {
+            background-color: blue;
+        }
+    </style>
+</head>
+
+<body>
+    <section>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div class="red" style="position: absolute; top: 60px; left: 60px;"></div>
+        <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
+    </section>
+
+    <section>
+        <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
+        <div></div>
+        <div style="position: relative; top: -95px; left: 5px;">
+            <div></div>
+            <div>
+                <div class="red" style="position: absolute; top: 50px; left: 50px;"></div>
+            </div>
+            <div style="position: relative;">
+                <div class="blue" style="position: absolute; top: -200px; left: 0px;"></div>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

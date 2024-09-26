@@ -534,6 +534,7 @@ Res<Integer> ValueParser<Integer>::parse(Cursor<Css::Sst> &c) {
 
     if (c.peek() == Css::Token::NUMBER) {
         Io::SScan scan = c->token.data;
+        c.next();
         return Ok(try$(Io::atoi(scan)));
     }
 
@@ -565,7 +566,7 @@ Res<Length> ValueParser<Length>::parse(Cursor<Css::Sst> &c) {
         c.next();
 
         return Ok(Length{value, unit});
-    } else if (c.peek() == Css::Token::number("0")) {
+    } else if (c.skip(Css::Token::number("0"))) {
         return Ok(Length{0.0, Length::Unit::PX});
     }
 

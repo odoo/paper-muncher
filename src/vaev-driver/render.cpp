@@ -1,6 +1,7 @@
 #include <karm-sys/time.h>
 #include <vaev-layout/frag.h>
 #include <vaev-layout/paint.h>
+#include <vaev-layout/positioned.h>
 #include <vaev-markup/dom.h>
 #include <vaev-paint/page.h>
 #include <vaev-paint/stack.h>
@@ -95,6 +96,7 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Vec2
             .containingBlock = {vp.small.width, vp.small.height},
         }
     );
+    Layout::layoutPositioned(tree, tree.root, {vp.small.width, vp.small.height});
 
     auto paintRoot = makeStrong<Paint::Stack>();
 

@@ -6,7 +6,7 @@
 
 namespace Vaev::Layout {
 
-static Paint::Borders _paintBorders(Frag &frag, Math::Vec2f pos) {
+static Paint::Borders _paintBorders(Frag &frag) {
     Paint::Borders paint;
 
     auto currentColor = Gfx::BLACK;
@@ -16,7 +16,7 @@ static Paint::Borders _paintBorders(Frag &frag, Math::Vec2f pos) {
     auto bordersStyle = frag.style->borders;
 
     paint = Paint::Borders();
-    paint.bound = frag.layout.paddingBox().cast<f64>().offset(pos);
+    paint.bound = frag.layout.paddingBox().cast<f64>();
     paint.radii = frag.layout.radii.cast<f64>().reduceOverlap(paint.bound.size());
 
     paint.top.width = bordersLayout.top.cast<f64>();
@@ -38,18 +38,7 @@ static Paint::Borders _paintBorders(Frag &frag, Math::Vec2f pos) {
     return paint;
 }
 
-static void _paintAbsoluteChildren(Frag &frag, Strong<Paint::Stack> &stack, Math::Vec2f initPos) {
-    for (auto &c : frag.children()) {
-        auto position = c.style->position;
-        if (position == Position::ABSOLUTE) {
-            paint(c, *stack, initPos);
-        } else if (position != Position::RELATIVE) {
-            _paintAbsoluteChildren(c, stack, initPos);
-        }
-    }
-}
-
-static void _paintInner(Frag &frag, Paint::Stack &stack, Math::Vec2f pos) {
+static void _paintInner(Frag &frag, Paint::Stack &stack) {
     auto const &backgrounds = frag.style->backgrounds;
 
     Gfx::Color currentColor = Gfx::BLACK;
@@ -64,50 +53,37 @@ static void _paintInner(Frag &frag, Paint::Stack &stack, Math::Vec2f pos) {
         }
 
         paint.radii = frag.layout.radii.cast<f64>();
-        paint.bound = frag.layout.borderBox().cast<f64>().offset(pos);
+        paint.bound = frag.layout.borderBox().cast<f64>();
 
         stack.add(makeStrong<Paint::Box>(std::move(paint)));
     }
 
-    Math::Vec2f initPos = pos + frag.layout.contentBox().topStart().cast<f64>();
-
-    auto position = frag.style->position;
-    auto isRelative = position == Position::ABSOLUTE || position == Position::RELATIVE;
-    if (isRelative) {
-        auto absoluteStack = makeStrong<Paint::Stack>();
-        absoluteStack->zIndex = frag.style->zIndex.value;
-        _paintAbsoluteChildren(frag, absoluteStack, initPos);
-        stack.add(absoluteStack);
-    }
-
     for (auto &c : frag.children()) {
-        if (c.style->position != Position::ABSOLUTE) {
-            paint(c, stack, initPos);
-        }
+        paint(c, stack);
     }
 
     if (auto run = frag.content.is<Strong<Text::Run>>()) {
         Math::Vec2f baseline = {0, frag.font.metrics().ascend};
         stack.add(makeStrong<Paint::Text>(
-            pos + frag.layout.borderBox().topStart().cast<f64>() + baseline,
+            frag.layout.borderBox().topStart().cast<f64>() + baseline,
             *run,
             currentColor
         ));
     }
 
     if (not frag.layout.borders.zero()) {
-        auto paint = _paintBorders(frag, pos);
+        auto paint = _paintBorders(frag);
         stack.add(makeStrong<Paint::Borders>(std::move(paint)));
     }
 }
 
-void paint(Frag &frag, Paint::Stack &stack, Math::Vec2f pos) {
+void paint(Frag &frag, Paint::Stack &stack) {
     if (frag.style->zIndex == ZIndex::AUTO) {
-        _paintInner(frag, stack, pos);
+        _paintInner(frag, stack);
     } else {
         auto innerStack = makeStrong<Paint::Stack>();
         innerStack->zIndex = frag.style->zIndex.value;
-        _paintInner(frag, *innerStack, pos);
+        _paintInner(frag, *innerStack);
         stack.add(std::move(innerStack));
     }
 }

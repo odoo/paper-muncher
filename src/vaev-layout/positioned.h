@@ -1,11 +1,10 @@
 #pragma once
 
-#include <vaev-paint/stack.h>
-
 #include "frag.h"
+#include "values.h"
 
 namespace Vaev::Layout {
 
-void paint(Frag &frag, Paint::Stack &stack);
+void layoutPositioned(Tree &t, Frag &f, RectPx containingBlock);
 
 } // namespace Vaev::Layout

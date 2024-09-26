@@ -33,6 +33,7 @@ struct Input {
     Commit commit = Commit::NO; //< Should the computed values be committed to the layout?
     IntrinsicSize intrinsic = IntrinsicSize::AUTO;
     Math::Vec2<Opt<Px>> knownSize = {};
+    Vec2Px position = {};
     Vec2Px availableSpace = {};
     Vec2Px containingBlock = {};
 };

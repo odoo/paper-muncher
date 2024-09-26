@@ -28,16 +28,6 @@ static Px _blockLayoutDetermineWidth(Tree &t, Frag &f, Input input) {
     return width;
 }
 
-static InsetsPx _computeOffsets(Tree &t, Frag &f, Input input) {
-    InsetsPx res;
-    auto offsets = f.style->offsets;
-    res.top = resolve(t, f, offsets->top, input.containingBlock.height);
-    res.end = resolve(t, f, offsets->end, input.containingBlock.width);
-    res.bottom = resolve(t, f, offsets->bottom, input.containingBlock.height);
-    res.start = resolve(t, f, offsets->start, input.containingBlock.width);
-    return res;
-}
-
 Output blockLayout(Tree &t, Frag &f, Input input) {
     Px blockSize = Px{0};
     Px inlineSize = input.knownSize.x.unwrapOrElse([&] {
@@ -55,16 +45,11 @@ Output blockLayout(Tree &t, Frag &f, Input input) {
             {
                 .commit = input.commit,
                 .knownSize = {childInlineSize, NONE},
+                .position = input.position + Vec2Px{Px{0}, blockSize},
                 .availableSpace = {inlineSize, Px{0}},
                 .containingBlock = {inlineSize, Px{0}},
             }
         );
-
-        if (input.commit == Commit::YES) {
-            auto offsets = _computeOffsets(t, c, input);
-            c.layout.position = {Px{0} + offsets.start, blockSize + offsets.top};
-            // TODO: Handle other values of position
-        }
 
         if (c.style->position != Position::ABSOLUTE) {
             blockSize += ouput.size.y;

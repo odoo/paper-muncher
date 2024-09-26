@@ -103,6 +103,7 @@ static Output _placeColumns(Tree &t, Frag &f, Input input, Vec<TableColumn> &col
                 cols[i].width,
                 rowBlockSize,
             },
+            .position = input.position + Vec2Px{inlineSize, Px{0}},
             .availableSpace = {},
             .containingBlock = input.containingBlock,
         };
@@ -112,12 +113,9 @@ static Output _placeColumns(Tree &t, Frag &f, Input input, Vec<TableColumn> &col
             childInput
         );
 
-        c.layout.position = {
-            inlineSize,
-            Px{0},
-        };
-
-        inlineSize += cols[i].width;
+        if (c.style->position != Position::ABSOLUTE) {
+            inlineSize += cols[i].width;
+        }
     }
 
     return Output::fromSize({
@@ -138,6 +136,7 @@ static Output _placeRows(Tree &t, Frag &f, Input input, Vec<TableColumn> &cols) 
         Input childInput = {
             .commit = input.commit,
             .knownSize = {knownInlineSize, NONE},
+            .position = input.position + Vec2Px{Px{0}, blockSize},
             .availableSpace = {},
             .containingBlock = {
                 knownInlineSize,
@@ -161,11 +160,6 @@ static Output _placeRows(Tree &t, Frag &f, Input input, Vec<TableColumn> &cols) 
         } else {
             layout(t, c, childInput);
         }
-
-        c.layout.position = {
-            Px{0},
-            blockSize,
-        };
 
         blockSize += childBlockSize;
     }
