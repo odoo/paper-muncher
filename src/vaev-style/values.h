@@ -212,7 +212,7 @@ struct ValueParser<Math::Insets<T>> {
         if (not left)
             return Ok(Math::Insets<T>{top.take(), right.take(), bottom.take()});
 
-        return Ok(Math::Insets<T>{top.take(), right.take(), bottom.take(), left.take()});
+        return Ok(Math::Insets<T>{left.take(), top.take(), right.take(), bottom.take()});
     }
 };
 

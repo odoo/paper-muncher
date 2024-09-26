@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vaev-css/parser.h>
+#include <vaev-style/styles.h>
 
 #include "base.h"
 
