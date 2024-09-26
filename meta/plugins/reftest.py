@@ -31,7 +31,7 @@ def _(args: RefTestArgs):
     temp_file = test_tmp_folder / 'reftest.xhtml'
     def update_temp_file(container, rendering):
         # write xhtml into the temporary file
-        xhtml = container.replace("<slot/>", rendering) if container else rendering
+        xhtml = re.sub(r"<slot\s*/>", rendering, container) if container else rendering
         with temp_file.open("w") as f:
             f.write(f"<!DOCTYPE html>\n{textwrap.dedent(xhtml)}")
 
