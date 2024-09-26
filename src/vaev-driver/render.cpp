@@ -14,7 +14,7 @@ namespace Vaev::Driver {
 static constexpr bool DEBUG_RENDER = false;
 
 static void _collectStyle(Markup::Node const &node, Style::StyleBook &sb) {
-    auto *el = node.is<Markup::Element>();
+    auto el = node.is<Markup::Element>();
     if (el and el->tagName == Html::STYLE) {
         auto text = el->textContent();
         Io::SScan textScan{text};

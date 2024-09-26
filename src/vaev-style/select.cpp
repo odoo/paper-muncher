@@ -56,7 +56,7 @@ static bool _matchDescendant(Selector const &s, Markup::Element const &e) {
     Markup::Node const *curr = &e;
     while (curr->hasParent()) {
         auto &parent = curr->parentNode();
-        if (auto *el = parent.is<Markup::Element>())
+        if (auto el = parent.is<Markup::Element>())
             if (s.match(*el))
                 return true;
         curr = &parent;
@@ -70,7 +70,7 @@ static bool _matchChild(Selector const &s, Markup::Element const &e) {
         return false;
 
     auto &parent = e.parentNode();
-    if (auto *el = parent.is<Markup::Element>())
+    if (auto el = parent.is<Markup::Element>())
         return s.match(*el);
     return false;
 }
@@ -81,7 +81,7 @@ static bool _matchAdjacent(Selector const &s, Markup::Element const &e) {
         return false;
 
     auto prev = e.previousSibling();
-    if (auto *el = prev.is<Markup::Element>())
+    if (auto el = prev.is<Markup::Element>())
         return s.match(*el);
     return false;
 }
@@ -91,7 +91,7 @@ static bool _matchSubsequent(Selector const &s, Markup::Element const &e) {
     Markup::Node const *curr = &e;
     while (curr->hasPreviousSibling()) {
         auto prev = curr->previousSibling();
-        if (auto *el = prev.is<Markup::Element>())
+        if (auto el = prev.is<Markup::Element>())
             if (s.match(*el))
                 return true;
         curr = &prev.unwrap();

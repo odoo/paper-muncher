@@ -18,13 +18,13 @@ Frag::Frag(Strong<Style::Computed> style, Text::Font font, Content content)
     : style{std::move(style)}, font{font}, content{std::move(content)} {}
 
 Karm::Slice<Frag> Frag::children() const {
-    if (auto *frags = content.is<Vec<Frag>>())
+    if (auto frags = content.is<Vec<Frag>>())
         return *frags;
     return {};
 }
 
 Karm::MutSlice<Frag> Frag::children() {
-    if (auto *frags = content.is<Vec<Frag>>()) {
+    if (auto frags = content.is<Vec<Frag>>()) {
         return *frags;
     }
     return {};
@@ -34,7 +34,7 @@ void Frag::add(Frag &&frag) {
     if (content.is<None>())
         content = Vec<Frag>{};
 
-    if (auto *frags = content.is<Vec<Frag>>()) {
+    if (auto frags = content.is<Vec<Frag>>()) {
         frags->pushBack(std::move(frag));
     }
 }
@@ -116,11 +116,11 @@ static void _buildRun(Style::Computer &, Markup::Text const &node, Frag &parent)
 }
 
 void _buildNode(Style::Computer &c, Markup::Node const &node, Frag &parent) {
-    if (auto *el = node.is<Markup::Element>()) {
+    if (auto el = node.is<Markup::Element>()) {
         _buildElement(c, *el, parent);
-    } else if (auto *text = node.is<Markup::Text>()) {
+    } else if (auto text = node.is<Markup::Text>()) {
         _buildRun(c, *text, parent);
-    } else if (auto *doc = node.is<Markup::Document>()) {
+    } else if (auto doc = node.is<Markup::Document>()) {
         _buildChildren(c, doc->children(), parent);
     }
 }
@@ -137,7 +137,7 @@ Frag build(Style::Computer &c, Markup::Document const &doc) {
 Output _contentLayout(Tree &t, Frag &f, Input input) {
     auto display = f.style->display;
 
-    if (auto *run = f.content.is<Strong<Text::Run>>()) {
+    if (auto run = f.content.is<Strong<Text::Run>>()) {
         return Output::fromSize((*run)->layout().cast<Px>());
     } else if (display == Display::FLOW or display == Display::FLOW_ROOT) {
         return blockLayout(t, f, input);

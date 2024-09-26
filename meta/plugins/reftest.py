@@ -23,7 +23,7 @@ def _(args: RefTestArgs):
     paperMuncher = buildPaperMuncher(args)
 
     test_folder = Path(__file__).parent.parent.parent / 'tests'
-    test_tmp_folder = test_folder / 'tmp'
+    test_tmp_folder = test_folder / '_local'
     test_tmp_folder.mkdir(parents=True, exist_ok=True)
     # for temp in test_tmp_folder.glob('*.*'):
     #     temp.unlink()

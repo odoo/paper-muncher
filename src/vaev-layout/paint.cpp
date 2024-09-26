@@ -86,7 +86,7 @@ static void _paintInner(Frag &frag, Paint::Stack &stack, Math::Vec2f pos) {
         }
     }
 
-    if (auto *run = frag.content.is<Strong<Text::Run>>()) {
+    if (auto run = frag.content.is<Strong<Text::Run>>()) {
         Math::Vec2f baseline = {0, frag.font.metrics().ascend};
         stack.add(makeStrong<Paint::Text>(
             pos + frag.layout.borderBox().topStart().cast<f64>() + baseline,

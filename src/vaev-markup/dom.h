@@ -42,13 +42,17 @@ struct Node :
     virtual NodeType nodeType() const = 0;
 
     template <typename T>
-    T *is() {
-        return nodeType() == T::TYPE ? static_cast<T *>(this) : nullptr;
+    MutCursor<T> is() {
+        if (nodeType() != T::TYPE)
+            return nullptr;
+        return {static_cast<T *>(this), 1};
     }
 
     template <typename T>
-    T const *is() const {
-        return nodeType() == T::TYPE ? static_cast<T const *>(this) : nullptr;
+    Cursor<T> is() const {
+        if (nodeType() != T::TYPE)
+            return nullptr;
+        return {static_cast<T const *>(this), 1};
     }
 
     // MARK: Parent
@@ -352,7 +356,7 @@ struct Element : public Node {
             panic("textContent is not implemented for elements with multiple children");
 
         auto const &child = *_children[0];
-        if (auto *text = child.is<Text>()) {
+        if (auto text = child.is<Text>()) {
             return text->data;
         }
 

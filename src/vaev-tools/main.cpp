@@ -140,16 +140,10 @@ struct PrintOption {
     bool dumpPaint = false;
 };
 
-Res<> print(Mime::Url const &input, Io::Writer &output, PrintOption options = {}) {
-    auto start = Sys::now();
-
-    auto dom = try$(Vaev::Driver::fetchDocument(input));
+Res<> print(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output, PrintOption options = {}) {
     auto paper = Print::A4;
     auto media = constructMediaForPrint(paper);
     auto [style, layout, paint] = Vaev::Driver::render(*dom, media, paper);
-    auto elapsed = Sys::now() - start;
-
-    logInfo("render time: {}", elapsed);
 
     if (options.dumpDom)
         Sys::println("--- START OF DOM ---\n{}\n--- END OF DOM ---\n", dom);
@@ -172,6 +166,16 @@ Res<> print(Mime::Url const &input, Io::Writer &output, PrintOption options = {}
     try$(e.flush());
 
     return Ok();
+}
+
+Res<> print(Mime::Url const &url, Io::Reader &input, Io::Writer &output, PrintOption options = {}) {
+    auto dom = try$(Vaev::Driver::loadDocument(url, "application/xhtml+xml"_mime, input));
+    return print(url, dom, output, options);
+}
+
+Res<> print(Mime::Url const &url, Io::Writer &output, PrintOption options = {}) {
+    auto dom = try$(Vaev::Driver::fetchDocument(url));
+    return print(url, dom, output, options);
 }
 
 Vaev::Style::Media constructMediaForRender(Math::Vec2i size) {
@@ -217,8 +221,7 @@ struct RenderOption {
     bool dumpPaint = false;
 };
 
-Res<> render(Mime::Url const &input, Io::Writer &output, RenderOption options = {}) {
-    auto dom = try$(Vaev::Driver::fetchDocument(input));
+Res<> render(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output, RenderOption options = {}) {
     auto media = constructMediaForRender(options.size);
     auto [style, layout, paint] = Vaev::Driver::render(*dom, media, options.size.cast<Px>());
 
@@ -246,11 +249,21 @@ Res<> render(Mime::Url const &input, Io::Writer &output, RenderOption options = 
     return Ok();
 }
 
+Res<> render(Mime::Url const &input, Io::Reader &reader, Io::Writer &output, RenderOption options = {}) {
+    auto dom = try$(Vaev::Driver::loadDocument(input, "application/xhtml+xml"_mime, reader));
+    return render(input, dom, output, options);
+}
+
+Res<> render(Mime::Url const &input, Io::Writer &output, RenderOption options = {}) {
+    auto dom = try$(Vaev::Driver::fetchDocument(input));
+    return render(input, dom, output, options);
+}
+
 } // namespace Vaev::Tools
 
 Async::Task<> entryPointAsync(Sys::Context &ctx) {
-    auto inputArg = Cli::operand<Str>("input"s, "Input file"s, ""s);
-    auto outputArg = Cli::option<Str>('o', "output"s, "Output file"s, "-"s);
+    auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, "-"s);
+    auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
 
     Cli::Command cmd{
 #ifdef __ck_odoo__
@@ -370,13 +383,25 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
                 .dumpPaint = dumpPaintArg,
             };
 
-            auto input = co_try$(Mime::parseUrlOrPath(inputArg));
-            if (outputArg.unwrap() == "-"s)
-                co_return Vaev::Tools::print(input, Sys::out(), options);
+            Mime::Url inputUrl = "about:stdin"_url;
+            MutCursor<Io::Reader> input = Sys::in();
+            MutCursor<Io::Writer> output = Sys::out();
 
-            auto outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
-            auto outputFile = co_try$(Sys::File::create(outputUrl));
-            co_return Vaev::Tools::print(input, outputFile, options);
+            Opt<Sys::FileReader> inputFile;
+            if (inputArg.unwrap() != "-"s) {
+                inputUrl = co_try$(Mime::parseUrlOrPath(inputArg));
+                inputFile = co_try$(Sys::File::open(inputUrl));
+                input = inputFile.unwrap();
+            }
+
+            Opt<Sys::FileWriter> outputFile;
+            if (outputArg.unwrap() != "-"s) {
+                auto outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
+                outputFile = co_try$(Sys::File::create(outputUrl));
+                output = outputFile.unwrap();
+            }
+
+            co_return Vaev::Tools::print(inputUrl, *input, *output, options);
         }
     );
 
@@ -406,16 +431,25 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
                 .dumpPaint = dumpPaintArg,
             };
 
-            auto input = co_try$(Mime::parseUrlOrPath(inputArg));
-            if (outputArg.unwrap() == "-"s) {
-                Io::Sink sink;
-                co_return Vaev::Tools::render(input, sink, options);
+            Mime::Url inputUrl = "about:stdin"_url;
+            MutCursor<Io::Reader> input = Sys::in();
+            MutCursor<Io::Writer> output = Sys::out();
+
+            Opt<Sys::FileReader> inputFile;
+            if (inputArg.unwrap() != "-"s) {
+                inputUrl = co_try$(Mime::parseUrlOrPath(inputArg));
+                inputFile = co_try$(Sys::File::open(inputUrl));
+                input = inputFile.unwrap();
             }
 
-            auto outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
-            auto outputFile = co_try$(Sys::File::create(outputUrl));
+            Opt<Sys::FileWriter> outputFile;
+            if (outputArg.unwrap() != "-"s) {
+                auto outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
+                outputFile = co_try$(Sys::File::create(outputUrl));
+                output = outputFile.unwrap();
+            }
 
-            co_return Vaev::Tools::render(input, outputFile, options);
+            co_return Vaev::Tools::render(inputUrl, *input, *output, options);
         }
     );
 
@@ -433,11 +467,11 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
                 "about:stdin"_url, "application/xhtml+xml"_mime, Sys::in()
             );
             return Vaev::Tools::inspector(input, dom);
-        } else {
-            auto input = Mime::parseUrlOrPath(inputArg).unwrap();
-            auto dom = Vaev::Driver::fetchDocument(input);
-            return Vaev::Tools::inspector(input, dom);
         }
+
+        auto input = Mime::parseUrlOrPath(inputArg).unwrap();
+        auto dom = Vaev::Driver::fetchDocument(input);
+        return Vaev::Tools::inspector(input, dom);
     });
 
     co_return co_await cmd.execAsync(ctx);
