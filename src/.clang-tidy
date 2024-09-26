@@ -7,4 +7,5 @@ Checks: >
     readability-function-cognitive-complexity,
     clang-diagnostic-*,
     llvm-*,
-    misc-*
+    misc-*,
+    -misc-non-private-member-variables-in-classes
