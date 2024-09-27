@@ -9,14 +9,12 @@ using Percent = Distinct<f64, struct _PercentTag>;
 
 template <typename T>
 struct PercentOr {
-    enum struct Type {
+    enum Type {
         PERCENT,
         VALUE,
     };
 
     using Resolved = typename T::Resolved;
-
-    using enum Type;
 
     Type _type;
 
