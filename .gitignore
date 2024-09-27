@@ -2,11 +2,11 @@ __pycache__/
 _local/
 .cache/
 .cutekit/
-.DS_Store/
+.DS_Store
 .idea/
 .mypy_cache/
-.vscode/
 .python-version
+.vscode/
 *._local
 *.code-workspace
 *.iml
