@@ -29,7 +29,7 @@ struct Text : public Node {
     }
 
     void repr(Io::Emit &e) const override {
-        e("(text {})", baseline);
+        e("(text z:{} {})", zIndex, baseline);
     }
 };
 

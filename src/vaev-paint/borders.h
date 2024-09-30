@@ -71,7 +71,7 @@ struct Borders : public Node {
     }
 
     void repr(Io::Emit &e) const override {
-        e("(borders {} {} {}", bound, radii, collapse);
+        e("(borders z:{} {} {} {}", zIndex, bound, radii, collapse);
     }
 
     void paint(Gfx::Canvas &ctx) override {

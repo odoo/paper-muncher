@@ -49,6 +49,8 @@ Frag build(Style::Computer &c, Markup::Document const &doc);
 
 // MARK: Layout ----------------------------------------------------------------
 
+InsetsPx computeMargins(Tree &t, Frag &f, Input input);
+
 Output layout(Tree &t, Frag &f, Input input);
 
 Px measure(Tree &t, Frag &f, Axis axis, IntrinsicSize intrinsic, Px availableSpace);

@@ -6,7 +6,7 @@ namespace Vaev::Paint {
 
 struct Image : public Node {
     void repr(Io::Emit &e) const override {
-        e("(image)");
+        e("(image z:{})", zIndex);
     }
 };
 

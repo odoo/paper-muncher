@@ -13,7 +13,7 @@ struct Stack : public Node {
 
     void prepare() override {
         stableSort(_children, [](auto &a, auto &b) {
-            return a->zIndex < b->zIndex;
+            return a->zIndex <=> b->zIndex;
         });
 
         for (auto &child : _children)
@@ -38,7 +38,7 @@ struct Stack : public Node {
     }
 
     void repr(Io::Emit &e) const override {
-        e("(stack");
+        e("(stack z:{}", zIndex);
         if (_children) {
             e.indentNewline();
             for (auto &child : _children) {

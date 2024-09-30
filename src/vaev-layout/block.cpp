@@ -39,20 +39,29 @@ Output blockLayout(Tree &t, Frag &f, Input input) {
         if (c.style->sizing->width == Size::AUTO)
             childInlineSize = inlineSize;
 
+        Input childInput = {
+            .commit = input.commit,
+            .availableSpace = {inlineSize, Px{0}},
+            .containingBlock = {inlineSize, Px{0}},
+        };
+
+        auto margin = computeMargins(t, c, childInput);
+
+        if (c.style->position != Position::ABSOLUTE) {
+            blockSize += margin.top;
+        }
+
+        childInput.position = input.position + Vec2Px{Px{0}, blockSize} + margin.topStart();
+        childInput.knownSize = {childInlineSize, NONE};
+
         auto ouput = layout(
             t,
             c,
-            {
-                .commit = input.commit,
-                .knownSize = {childInlineSize, NONE},
-                .position = input.position + Vec2Px{Px{0}, blockSize},
-                .availableSpace = {inlineSize, Px{0}},
-                .containingBlock = {inlineSize, Px{0}},
-            }
+            childInput
         );
 
         if (c.style->position != Position::ABSOLUTE) {
-            blockSize += ouput.size.y;
+            blockSize += ouput.size.y + margin.bottom + margin.top;
         }
     }
 

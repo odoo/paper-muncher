@@ -42,14 +42,9 @@ struct Input {
 
 struct Output {
     Vec2Px size;
-    InsetsPx margins = {};
 
     static Output fromSize(Vec2Px size) {
         return Output{size};
-    }
-
-    static Output fromSizeAndMargin(Vec2Px size, InsetsPx margins) {
-        return Output{size, margins};
     }
 };
 

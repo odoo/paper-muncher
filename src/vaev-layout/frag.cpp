@@ -152,7 +152,7 @@ Output _contentLayout(Tree &t, Frag &f, Input input) {
     }
 }
 
-static InsetsPx _computeMargins(Tree &t, Frag &f, Input input) {
+InsetsPx computeMargins(Tree &t, Frag &f, Input input) {
     InsetsPx res;
     auto margin = f.style->margin;
 
@@ -229,7 +229,6 @@ static Cons<Opt<Px>, IntrinsicSize> _computeSpecifiedSize(Tree &t, Frag &f, Inpu
 }
 
 Output layout(Tree &t, Frag &f, Input input) {
-    auto margin = _computeMargins(t, f, input);
     auto borders = _computeBorders(t, f);
     auto padding = _computePaddings(t, f, input);
     auto sizing = f.style->sizing;
@@ -257,7 +256,7 @@ Output layout(Tree &t, Frag &f, Input input) {
 
     input.position = input.position + borders.topStart() + padding.topStart();
 
-    auto [size, _] = _contentLayout(t, f, input);
+    auto [size] = _contentLayout(t, f, input);
 
     size.width = input.knownSize.width.unwrapOr(size.width);
     size.height = input.knownSize.height.unwrapOr(size.height);
@@ -269,11 +268,10 @@ Output layout(Tree &t, Frag &f, Input input) {
         f.layout.borderSize = size;
         f.layout.padding = padding;
         f.layout.borders = borders;
-        f.layout.margin = margin;
         f.layout.radii = _computeRadii(t, f, size);
     }
 
-    return Output::fromSizeAndMargin(size, margin);
+    return Output::fromSize(size);
 }
 
 void wireframe(Frag &frag, Gfx::Canvas &g) {
