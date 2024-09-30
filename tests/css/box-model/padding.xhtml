@@ -1,0 +1,104 @@
+<test id="padding-0"></test>
+<container>
+    <html lang="en">
+
+    <head>
+        <style>
+            body {
+                margin: 0px;
+            }
+
+            section {
+                width: 200px;
+                height: 200px;
+                background: #ddd;
+                position: relative;
+            }
+
+            .green {
+                background-color: green;
+            }
+
+            .white {
+                background-color: white;
+            }
+        </style>
+    </head>
+
+    <body>
+        <section>
+            <slot />
+        </section>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="white" style="width: 100px; height: 100px;"></div>
+</rendering>
+
+<rendering>
+    <div class="green" style="padding: 0px; height: 100px; width: 100px">
+        <div class="white" style="height: 100%"></div>
+    </div>
+</rendering>
+
+<error>
+</error>
+
+
+</test>
+
+<test id="padding-1"></test>
+<container>
+    <html lang="en">
+
+    <head>
+        <style>
+            body {
+                margin: 0px;
+            }
+
+            section {
+                width: 200px;
+                height: 200px;
+                background: #ddd;
+                position: relative;
+            }
+
+            .green {
+                background-color: green;
+            }
+
+            .white {
+                background-color: white;
+            }
+        </style>
+    </head>
+
+    <body>
+        <section>
+            <slot />
+        </section>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="green" style="height: 100px; width: 100px" />
+    <div class="white" style="position:absolute; top: 10px; left: 10px; width: 80px; height: 80px;" />
+</rendering>
+
+<rendering>
+    <div class="green" style="padding: 10px; height: 100px; width: 100px">
+        <div class="white" style="height: 100%" />
+    </div>
+</rendering>
+
+<error>
+</error>
+
+
+</test>

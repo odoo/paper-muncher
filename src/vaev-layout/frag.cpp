@@ -255,6 +255,8 @@ Output layout(Tree &t, Frag &f, Input input) {
     });
     input.intrinsic = heightIntrinsicSize;
 
+    input.position = input.position + borders.topStart() + padding.topStart();
+
     auto [size, _] = _contentLayout(t, f, input);
 
     size.width = input.knownSize.width.unwrapOr(size.width);
@@ -263,7 +265,7 @@ Output layout(Tree &t, Frag &f, Input input) {
     size = size + padding.all() + borders.all();
 
     if (input.commit == Commit::YES) {
-        f.layout.position = input.position;
+        f.layout.position = input.position - borders.topStart() - padding.topStart();
         f.layout.borderSize = size;
         f.layout.padding = padding;
         f.layout.borders = borders;
