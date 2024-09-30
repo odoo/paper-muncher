@@ -1,26 +1,32 @@
 <test id="display-flex-basic" name="flex box basic">
     <container>
-        <html lang="en">
-            <head>
-                <style>
-                    div {
-                        width: 100px;
-                        height: 100px;
-                    }
-                    div div {
-                        width: 50px;
-                    }
-                    .red {
-                        background-color: red;
-                    }
-                    .green {
-                        background-color: green;
-                    }
-                </style>
-            </head>
-            <body>
-                <slot/>
-            </body>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                div {
+                    width: 100px;
+                    height: 100px;
+                }
+
+                div div {
+                    width: 50px;
+                }
+
+                .red {
+                    background-color: red;
+                }
+
+                .green {
+                    background-color: green;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
         </html>
     </container>
 
@@ -76,33 +82,39 @@
 
 <test name="flex: row + flex-end + no-wrap" size="320">
     <container>
-        <html xmlns="http: //www.w3.org/1999/xhtml" lang="en">
-            <head>
-                <style>
-                    body {
-                        margin: 0;
-                    }
-                    div {
-                        height: 20px;
-                        background: #bbb;
-                    }
-                    section {
-                        width: 260px;
-                        height: 140px;
-                        background: #eee;
-                    }
-                    .flex {
-                        display: flex;
-                        flex-direction: row;
-                        justify-content: flex-end;
-                        align-items: flex-end;
-                        flex-wrap: no-wrap;
-                    }
-                </style>
-            </head>
-            <body>
-                <slot/>
-            </body>
+        <html xmlns="http: //www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div {
+                    height: 20px;
+                    background: #bbb;
+                }
+
+                section {
+                    width: 260px;
+                    height: 140px;
+                    background: #eee;
+                }
+
+                .flex {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: flex-end;
+                    align-items: flex-end;
+                    flex-wrap: no-wrap;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
         </html>
     </container>
 
@@ -130,7 +142,8 @@
             <div style="width: 30px; margin-left: 30px; flex: 1 1 30px;">4</div>
             <div style="width: 20px; margin-bottom: auto; flex: 9 16 20px;">5</div>
             <div style="width: 30px; margin-bottom: auto; flex: 0 1 20px;">6</div>
-            <div style="width: 30px; margin-bottom: auto; margin-top: auto; align-self: flex-start; flex: 4 0 30px;">7</div>
+            <div style="width: 30px; margin-bottom: auto; margin-top: auto; align-self: flex-start; flex: 4 0 30px;">7
+            </div>
             <div style="width: 20px; margin-bottom: auto; margin-top: 30px; flex: 16 16 20px;">8</div>
             <div style="width: 30px; margin-right: auto; flex: 1 1 30px;">9</div>
         </section>
@@ -139,32 +152,38 @@
 
 <test name="flex: row + space-around + stretch + wrap" size="320">
     <container>
-        <html xmlns="http: //www.w3.org/1999/xhtml" lang="en">
-            <head>
-                <style>
-                    body {
-                        margin: 0;
-                    }
-                    div {
-                        background: #bbb;
-                    }
-                    section {
-                        width: 291px;
-                        height: 160px;
-                        background: #eee;
-                    }
-                    .flex {
-                        display: flex;
-                        flex-direction: row;
-                        justify-content: space-around;
-                        align-items: stretch;
-                        flex-wrap: wrap;
-                    }
-                </style>
-            </head>
-            <body>
-                <slot/>
-            </body>
+        <html xmlns="http: //www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div {
+                    background: #bbb;
+                }
+
+                section {
+                    width: 291px;
+                    height: 160px;
+                    background: #eee;
+                }
+
+                .flex {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-around;
+                    align-items: stretch;
+                    flex-wrap: wrap;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
         </html>
     </container>
 
@@ -201,32 +220,38 @@
 
 <test name="flex: row + space-around + center + wrap" size="320">
     <container>
-        <html xmlns="http: //www.w3.org/1999/xhtml" lang="en">
-            <head>
-                <style>
-                    body {
-                        margin: 0;
-                    }
-                    div {
-                        background: #bbb;
-                    }
-                    section {
-                        width: 291px;
-                        height: 160px;
-                        background: #eee;
-                    }
-                    .flex {
-                        display: flex;
-                        flex-direction: row;
-                        justify-content: space-around;
-                        align-items: center;
-                        flex-wrap: wrap;
-                    }
-                </style>
-            </head>
-            <body>
-                <slot/>
-            </body>
+        <html xmlns="http: //www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div {
+                    background: #bbb;
+                }
+
+                section {
+                    width: 291px;
+                    height: 160px;
+                    background: #eee;
+                }
+
+                .flex {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-around;
+                    align-items: center;
+                    flex-wrap: wrap;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
         </html>
     </container>
 
@@ -263,32 +288,38 @@
 
 <test name="flex: row + space-around + flex-end + wrap" size="320">
     <container>
-        <html xmlns="http: //www.w3.org/1999/xhtml" lang="en">
-            <head>
-                <style>
-                    body {
-                        margin: 0;
-                    }
-                    div {
-                        background: #bbb;
-                    }
-                    section {
-                        width: 245px;
-                        height: 160px;
-                        background: #eee;
-                    }
-                    .flex {
-                        display: flex;
-                        flex-direction: row;
-                        justify-content: space-around;
-                        align-items: flex-end;
-                        flex-wrap: wrap;
-                    }
-                </style>
-            </head>
-            <body>
-                <slot/>
-            </body>
+        <html xmlns="http: //www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div {
+                    background: #bbb;
+                }
+
+                section {
+                    width: 245px;
+                    height: 160px;
+                    background: #eee;
+                }
+
+                .flex {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-around;
+                    align-items: flex-end;
+                    flex-wrap: wrap;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
         </html>
     </container>
 
@@ -313,7 +344,9 @@
             <div style="margin-left: auto; margin-right: auto; align-self: center; flex: 25 16 15px; ">1</div>
             <div style="margin-left: 0px; flex: 4 9 35px; ">2</div>
             <div style="margin-bottom: 30px; margin-top: auto; margin-left: 30px; flex: 9 16 15px; ">3</div>
-            <div style="margin-bottom: 30px; margin-top: 0px; margin-right: auto; align-self: stretch; flex: 9 16 15px; ">4</div>
+            <div
+                style="margin-bottom: 30px; margin-top: 0px; margin-right: auto; align-self: stretch; flex: 9 16 15px; ">
+                4</div>
             <div style="margin-bottom: auto; margin-right: 30px; flex: 25 9 15px; ">5</div>
             <div style="margin-bottom: 30px; margin-left: 0px; flex: 1 16 15px; ">6</div>
             <div style="margin-bottom: 30px; margin-left: 30px; flex: 4 16 15px; ">7</div>

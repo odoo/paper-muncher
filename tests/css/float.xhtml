@@ -1,26 +1,32 @@
 <test>
     <container>
-        <html lang="en">
-            <head>
-                <style>
-                    div {
-                        width: 200px;
-                        height: 100px;
-                    }
-                    div div {
-                        width: 50px;
-                    }
-                    .red {
-                        background-color: red;
-                    }
-                    .green {
-                        background-color: green;
-                    }
-                </style>
-            </head>
-            <body>
-                <slot/>
-            </body>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                div {
+                    width: 200px;
+                    height: 100px;
+                }
+
+                div div {
+                    width: 50px;
+                }
+
+                .red {
+                    background-color: red;
+                }
+
+                .green {
+                    background-color: green;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
         </html>
     </container>
 

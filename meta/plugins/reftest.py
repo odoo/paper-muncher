@@ -49,21 +49,39 @@ class RefTestArgs(model.TargetArgs):
 
 
 @cli.command(None, "reftests", "Manage the reftests")
+def _(): ...
+
+
+TESTS_DIR: Path = Path(__file__).parent.parent.parent / "tests"
+TEST_REPORT = TESTS_DIR / "report"
+
+
+@cli.command(None, "reftests/clean", "Manage the reftests")
+def _(args: RefTestArgs):
+    for f in TEST_REPORT.glob("*.*"):
+        f.unlink()
+    TEST_REPORT.rmdir()
+    print(f"Cleaned {TEST_REPORT}")
+
+
+@cli.command(None, "reftests/run", "Manage the reftests")
 def _(args: RefTestArgs):
     paperMuncher = buildPaperMuncher(args)
 
-    test_folder = Path(__file__).parent.parent.parent / "tests"
-    test_tmp_folder = test_folder / "_local"
-    test_tmp_folder.mkdir(parents=True, exist_ok=True)
-    # for temp in test_tmp_folder.glob('*.*'):
-    #     temp.unlink()
+    TEST_REPORT.mkdir(parents=True, exist_ok=True)
+    report = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Reftest</title>
+    </head>
+    <body>
+"""
 
-    temp_file = test_tmp_folder / "reftest.xhtml"
-
-    def update_temp_file(container, rendering):
+    def update_temp_file(path, container, rendering):
         # write xhtml into the temporary file
         xhtml = re.sub(r"<slot\s*/>", rendering, container) if container else rendering
-        with temp_file.open("w") as f:
+        with path.open("w") as f:
             f.write(f"<!DOCTYPE html>\n{textwrap.dedent(xhtml)}")
 
     REG_INFO = re.compile(r"""(\w+)=['"]([^'"]+)['"]""")
@@ -71,7 +89,7 @@ def _(args: RefTestArgs):
     def getInfo(txt):
         return {prop: value for prop, value in REG_INFO.findall(txt)}
 
-    for file in test_folder.glob(args.glob or "*/*.xhtml"):
+    for file in TESTS_DIR.glob(args.glob or "*/*.xhtml"):
         if file.suffix != ".xhtml":
             continue
         print(f"Running comparison test {file}...")
@@ -94,7 +112,7 @@ def _(args: RefTestArgs):
 
             expected_xhtml = None
             expected_image: bytes | None = None
-            expected_image_url = test_tmp_folder / f"{temp_file_name}.expected.bmp"
+            expected_image_url = TEST_REPORT / f"{temp_file_name}.expected.bmp"
             if props.get("id"):
                 ref_image = file.parent / f"{props.get('id')}.bmp"
                 if ref_image.exists():
@@ -116,13 +134,15 @@ def _(args: RefTestArgs):
                     print(f"{vt100.YELLOW}Skip test{vt100.RESET}")
                     continue
 
-                update_temp_file(container, rendering)
+                input_path = TEST_REPORT / f"{temp_file_name}-{num}.xhtml"
+
+                update_temp_file(input_path, container, rendering)
 
                 # generate temporary bmp
-                img_path = test_tmp_folder / f"{temp_file_name}-{num}.bmp"
+                img_path = TEST_REPORT / f"{temp_file_name}-{num}.bmp"
 
                 if props.get("size") == "full":
-                    paperMuncher.popen("render", "-sdlpo", img_path, temp_file)
+                    paperMuncher.popen("render", "-sdlpo", img_path, input_path)
                 else:
                     size = props.get("size", "200")
                     paperMuncher.popen(
@@ -133,7 +153,7 @@ def _(args: RefTestArgs):
                         size,
                         "-sdlpo",
                         img_path,
-                        temp_file,
+                        input_path,
                     )
 
                 with img_path.open("rb") as imageFile:
@@ -144,7 +164,7 @@ def _(args: RefTestArgs):
                     expected_xhtml = rendering
                     if not expected_image:
                         expected_image = output_image
-                        with (test_tmp_folder / f"{temp_file_name}.expected.bmp").open(
+                        with (TEST_REPORT / f"{temp_file_name}.expected.bmp").open(
                             "wb"
                         ) as imageWriter:
                             imageWriter.write(expected_image)
@@ -153,16 +173,21 @@ def _(args: RefTestArgs):
                 # check if the rendering is different
                 assert expected_image is not None
                 assert output_image is not None
-                if compareImages(expected_image, output_image) == (tag == "rendering"):
-                    img_path.unlink()
+
+                passed = compareImages(expected_image, output_image) == (
+                    tag == "rendering"
+                )
+
+                if passed:
+                    # img_path.unlink()
                     print(f"{vt100.GREEN}Passed{vt100.RESET}")
                 else:
                     # generate temporary file for debugging
                     paperMuncher.popen(
                         "print",
                         "-sdlpo",
-                        test_tmp_folder / f"{temp_file_name}-{num}.pdf",
-                        temp_file,
+                        TEST_REPORT / f"{temp_file_name}-{num}.pdf",
+                        input_path,
                     )
 
                     help = renderingProps.get("help")
@@ -176,10 +201,10 @@ def _(args: RefTestArgs):
                         print(f"{vt100.WHITE}{expected_image_url}{vt100.RESET}")
                         print(f"{vt100.BLUE}{rendering[1:].rstrip()}{vt100.RESET}")
                         print(
-                            f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.pdf'}{vt100.RESET}"
+                            f"{vt100.BLUE}{TEST_REPORT / f'{temp_file_name}-{num}.pdf'}{vt100.RESET}"
                         )
                         print(
-                            f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.bmp'}{vt100.RESET}"
+                            f"{vt100.BLUE}{TEST_REPORT / f'{temp_file_name}-{num}.bmp'}{vt100.RESET}"
                         )
                         if help:
                             print(f"{vt100.BLUE}{help}{vt100.RESET}")
@@ -192,15 +217,58 @@ def _(args: RefTestArgs):
                         print(f"{vt100.WHITE}{expected_image_url}{vt100.RESET}")
                         print(f"{vt100.BLUE}{rendering[1:].rstrip()}{vt100.RESET}")
                         print(
-                            f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.pdf'}{vt100.RESET}"
+                            f"{vt100.BLUE}{TEST_REPORT / f'{temp_file_name}-{num}.pdf'}{vt100.RESET}"
                         )
                         print(
-                            f"{vt100.BLUE}{test_tmp_folder / f'{temp_file_name}-{num}.bmp'}{vt100.RESET}"
+                            f"{vt100.BLUE}{TEST_REPORT / f'{temp_file_name}-{num}.bmp'}{vt100.RESET}"
                         )
                         if help:
                             print(f"{vt100.BLUE}{help}{vt100.RESET}")
 
-                    if args.fast:
-                        break
+                report += f"""
+                <div class="test-case {passed and 'passed' or 'failed'}">
+                    <h2>{props.get('name')}</h2>
+                    <div class="outputs">
+                        <img class="expected" src="{expected_image_url}" />
+                        <img class="actual" src="{TEST_REPORT / f'{temp_file_name}-{num}.bmp'}" />
+                        <iframe src="{input_path}" style="background-color: white; width: 200px; height: 200px;"></iframe>
+                    </div>
+                    <a href="{TEST_REPORT / f'{temp_file_name}-{num}.pdf'}">PDF</a>
+                    <a href="{expected_image_url}">Expected</a>
+                    <a href="{input_path}">Source</a>
+                </div>
+                <hr />
+                """
 
-    temp_file.unlink()
+                if args.fast:
+                    break
+
+    report += """
+    </body>
+    <style>
+        .test-case {
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .passed {
+            background-color: lightgreen;
+        }
+
+        .failed {
+            background-color: lightcoral;
+        }
+
+        .outputs {
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+    </html>
+    """
+
+    with (TEST_REPORT / "report.html").open("w") as f:
+        f.write(report)
+
+    print(f"Report: {TEST_REPORT / 'report.html'}")
+
