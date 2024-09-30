@@ -1,0 +1,45 @@
+<test id="percent-100"></test>
+<container>
+    <html lang="en">
+
+    <head>
+        <style>
+            body {
+                margin: 0px;
+            }
+
+            section {
+                width: 200px;
+                height: 200px;
+                background: #ddd;
+                position: relative;
+            }
+
+            .green {
+                background-color: green;
+            }
+        </style>
+    </head>
+
+    <body>
+        <section>
+            <slot />
+        </section>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="green" style="width: 200px; height: 200px;"></div>
+</rendering>
+
+<rendering>
+    <div class="green" style="width: 200px; height: 100%"></div>
+</rendering>
+
+<error>
+</error>
+
+
+</test>

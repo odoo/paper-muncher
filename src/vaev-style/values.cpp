@@ -718,6 +718,7 @@ Res<Percent> ValueParser<Percent>::parse(Cursor<Css::Sst> &c) {
         if (scan.remStr() != "%")
             return Error::invalidData("invalid percentage");
 
+        c.next();
         return Ok(Percent{value});
     }
 
@@ -821,11 +822,12 @@ Res<Size> ValueParser<Size>::parse(Cursor<Css::Sst> &c) {
             return Ok(Size::MAX_CONTENT);
         } else if (data == "fit-content") {
             return Ok(Size::FIT_CONTENT);
+        } else {
+            return Error::invalidData("unknown size value");
         }
     } else {
         return Ok(try$(parseValue<CalcValue<PercentOr<Length>>>(c)));
     }
-    unreachable();
 }
 
 // MARK: String

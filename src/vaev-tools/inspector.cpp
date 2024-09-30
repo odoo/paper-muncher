@@ -107,7 +107,7 @@ Ui::Child addressBar(Mime::Url const &url) {
                Kr::contextMenuIcon(Model::bind<Reload>(), Mdi::REFRESH)
            ) |
            Ui::box({
-               .padding = {12, 0, 0, 0},
+               .padding = {0, 0, 0, 12},
                .borderRadii = 4,
                .borderWidth = 1,
                .backgroundFill = Ui::GRAY800,
