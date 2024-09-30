@@ -6,10 +6,9 @@
 
 namespace Vaev::Layout {
 
-static Paint::Borders _paintBorders(Frag &frag) {
+static void _paintBorders(Frag &frag, Gfx::Color currentColor, Paint::Stack &stack) {
     Paint::Borders paint;
 
-    auto currentColor = Gfx::BLACK;
     currentColor = resolve(frag.style->color, currentColor);
 
     auto bordersLayout = frag.layout.borders;
@@ -35,32 +34,46 @@ static Paint::Borders _paintBorders(Frag &frag) {
     paint.end.style = bordersStyle->end.style;
     paint.end.fill = resolve(bordersStyle->end.color, currentColor);
 
-    return paint;
+    stack.add(makeStrong<Paint::Borders>(std::move(paint)));
+}
+
+static void _paintBackground(Frag &frag, Gfx::Color currentColor, Paint::Stack &stack) {
+    auto const &backgrounds = frag.style->backgrounds;
+
+    if (isEmpty(backgrounds))
+        return;
+
+    Paint::Box paint;
+
+    paint.backgrounds.ensure(backgrounds.len());
+    for (auto &bg : backgrounds) {
+        auto color = resolve(bg.fill, currentColor);
+
+        // Skip transparent backgrounds
+        if (color.alpha == 0)
+            continue;
+
+        paint.backgrounds.pushBack(color);
+    }
+
+    paint.radii = frag.layout.radii.cast<f64>();
+    paint.bound = frag.layout.borderBox().cast<f64>();
+
+    // Skip if there are no backgrounds to paint
+    if (isEmpty(paint.backgrounds))
+        return;
+
+    stack.add(makeStrong<Paint::Box>(std::move(paint)));
 }
 
 static void _paintInner(Frag &frag, Paint::Stack &stack) {
-    auto const &backgrounds = frag.style->backgrounds;
-
     Gfx::Color currentColor = Gfx::BLACK;
     currentColor = resolve(frag.style->color, currentColor);
 
-    if (backgrounds.len()) {
-        Paint::Box paint;
+    _paintBackground(frag, currentColor, stack);
 
-        paint.backgrounds.ensure(backgrounds.len());
-        for (auto &bg : backgrounds) {
-            paint.backgrounds.pushBack(resolve(bg.fill, currentColor));
-        }
-
-        paint.radii = frag.layout.radii.cast<f64>();
-        paint.bound = frag.layout.borderBox().cast<f64>();
-
-        stack.add(makeStrong<Paint::Box>(std::move(paint)));
-    }
-
-    for (auto &c : frag.children()) {
+    for (auto &c : frag.children())
         paint(c, stack);
-    }
 
     if (auto run = frag.content.is<Strong<Text::Run>>()) {
         Math::Vec2f baseline = {0, frag.font.metrics().ascend};
@@ -71,21 +84,21 @@ static void _paintInner(Frag &frag, Paint::Stack &stack) {
         ));
     }
 
-    if (not frag.layout.borders.zero()) {
-        auto paint = _paintBorders(frag);
-        stack.add(makeStrong<Paint::Borders>(std::move(paint)));
-    }
+    if (not frag.layout.borders.zero())
+        _paintBorders(frag, currentColor, stack);
 }
 
 void paint(Frag &frag, Paint::Stack &stack) {
     if (frag.style->zIndex == ZIndex::AUTO) {
         _paintInner(frag, stack);
-    } else {
-        auto innerStack = makeStrong<Paint::Stack>();
-        innerStack->zIndex = frag.style->zIndex.value;
-        _paintInner(frag, *innerStack);
-        stack.add(std::move(innerStack));
+        return;
     }
+
+    // Z-index is not auto, we need to create a new stacking context
+    auto innerStack = makeStrong<Paint::Stack>();
+    innerStack->zIndex = frag.style->zIndex.value;
+    _paintInner(frag, *innerStack);
+    stack.add(std::move(innerStack));
 }
 
 } // namespace Vaev::Layout

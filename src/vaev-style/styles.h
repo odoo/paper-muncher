@@ -176,15 +176,10 @@ struct BackgroundAttachmentProp {
         return {BackgroundAttachment::SCROLL};
     }
 
-    void apply(Computed &) const {
-        // TODO
-    }
-
-    Res<> parse(Computed &c) const {
+    void apply(Computed &c) const {
         c.backgrounds.resize(max(c.backgrounds.len(), value.len()));
         for (usize i = 0; i < value.len(); ++i)
             c.backgrounds[i].attachment = value[i];
-        return Ok();
     }
 };
 
@@ -204,6 +199,7 @@ struct BackgroundColorProp {
 
     Res<> parse(Cursor<Css::Sst> &c) {
         eatWhitespace(c);
+        value.clear();
         while (not c.ended()) {
             value.pushBack(try$(parseValue<Color>(c)));
             eatWhitespace(c);
@@ -276,6 +272,7 @@ struct BackgroundProp {
 
     Res<> parse(Cursor<Css::Sst> &c) {
         eatWhitespace(c);
+        value.clear();
         while (not c.ended()) {
             value.pushBack(try$(parseValue<Color>(c)));
             eatWhitespace(c);
