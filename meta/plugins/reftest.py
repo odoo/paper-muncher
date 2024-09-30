@@ -1,5 +1,6 @@
 from cutekit import shell, vt100, cli, builder, model
 from pathlib import Path
+from random import randint
 import re
 import textwrap
 import time
@@ -11,6 +12,20 @@ def buildPaperMuncher(args: model.TargetArgs) -> builder.ProductScope:
     if component is None:
         raise RuntimeError("paper-muncher not found")
     return builder.build(scope, component)[0]
+
+
+def fetchFile(args: model.TargetArgs, component: str, path: str) -> str:
+    r = model.Registry.use(args)
+    c = r.lookup(component, model.Component)
+    assert c is not None
+    p = Path(c.dirname()) / path
+    with p.open() as f:
+        return f.read()
+
+
+def fetchMessage(args: model.TargetArgs, type: str) -> str:
+    message = eval("[" + fetchFile(args, "karm-base", "defs/" + type + ".inc") + "]")
+    return message[randint(0, len(message) - 1)]
 
 
 def compareImages(
@@ -30,12 +45,12 @@ def compareImages(
     for i in range(len(lhs)):
         diff = abs(lhs[i] - rhs[i]) / 255
         if diff > highEpsilon:
-            print(f"Image rejected with diff = {diff}")
+            # print(f"Image rejected with diff = {diff}")
             return False
         errorSum += diff > lowEpsilon
 
     if errorSum > len(lhs) // 100:
-        print(f"Image reject with errorSum = {errorSum}")
+        # print(f"Image reject with errorSum = {errorSum}")
         return False
 
     return True
@@ -89,6 +104,9 @@ def _(args: RefTestArgs):
     def getInfo(txt):
         return {prop: value for prop, value in REG_INFO.findall(txt)}
 
+    passed, failed = 0, 0
+
+    counter = 0
     for file in TESTS_DIR.glob(args.glob or "*/*.xhtml"):
         if file.suffix != ".xhtml":
             continue
@@ -156,6 +174,13 @@ def _(args: RefTestArgs):
                         input_path,
                     )
 
+                paperMuncher.popen(
+                    "print",
+                    "-sdlpo",
+                    TEST_REPORT / f"{temp_file_name}-{num}.pdf",
+                    input_path,
+                )
+
                 with img_path.open("rb") as imageFile:
                     output_image: bytes = imageFile.read()
 
@@ -174,64 +199,44 @@ def _(args: RefTestArgs):
                 assert expected_image is not None
                 assert output_image is not None
 
-                passed = compareImages(expected_image, output_image) == (
-                    tag == "rendering"
-                )
+                ok = compareImages(expected_image, output_image) == (tag == "rendering")
 
-                if passed:
+                help = renderingProps.get("help")
+
+                if ok:
+                    passed += 1
                     # img_path.unlink()
-                    print(f"{vt100.GREEN}Passed{vt100.RESET}")
+                    print(f"{help}: {vt100.GREEN}Passed{vt100.RESET}")
                 else:
-                    # generate temporary file for debugging
-                    paperMuncher.popen(
-                        "print",
-                        "-sdlpo",
-                        TEST_REPORT / f"{temp_file_name}-{num}.pdf",
-                        input_path,
-                    )
+                    failed += 1
 
-                    help = renderingProps.get("help")
-                    if tag == "error":
-                        print(
-                            f"{vt100.RED}Failed {props.get('name')!r} (The result should be different){vt100.RESET}"
-                        )
-                        print(
-                            f"{vt100.WHITE}{expected_xhtml[1:].rstrip()}{vt100.RESET}"
-                        )
-                        print(f"{vt100.WHITE}{expected_image_url}{vt100.RESET}")
-                        print(f"{vt100.BLUE}{rendering[1:].rstrip()}{vt100.RESET}")
-                        print(
-                            f"{vt100.BLUE}{TEST_REPORT / f'{temp_file_name}-{num}.pdf'}{vt100.RESET}"
-                        )
-                        print(
-                            f"{vt100.BLUE}{TEST_REPORT / f'{temp_file_name}-{num}.bmp'}{vt100.RESET}"
-                        )
-                        if help:
-                            print(f"{vt100.BLUE}{help}{vt100.RESET}")
-                    else:
-                        print(f"{vt100.RED}Failed {props.get('name')!r}{vt100.RESET}")
-                        if expected_xhtml != rendering:
-                            print(
-                                f"{vt100.WHITE}{expected_xhtml[1:].rstrip()}{vt100.RESET}"
-                            )
-                        print(f"{vt100.WHITE}{expected_image_url}{vt100.RESET}")
-                        print(f"{vt100.BLUE}{rendering[1:].rstrip()}{vt100.RESET}")
-                        print(
-                            f"{vt100.BLUE}{TEST_REPORT / f'{temp_file_name}-{num}.pdf'}{vt100.RESET}"
-                        )
-                        print(
-                            f"{vt100.BLUE}{TEST_REPORT / f'{temp_file_name}-{num}.bmp'}{vt100.RESET}"
-                        )
-                        if help:
-                            print(f"{vt100.BLUE}{help}{vt100.RESET}")
+                    print()
+                    print(f"{help}: {vt100.RED}Failed{vt100.RESET}")
+                    # generate temporary file for debugging
+
+                    print(f"file://{input_path}")
+                    print(f"file://{TEST_REPORT / 'report.html'}#case-{counter}")
+                    print()
 
                 report += f"""
-                <div class="test-case {passed and 'passed' or 'failed'}">
-                    <h2>{props.get('name')}</h2>
+                <div id="case-{counter}" class="test-case {ok and 'passed' or 'failed'}">
+                    <h2>{tag} - {props.get('name')}</h2>
+                    <p>{help}</p>
                     <div class="outputs">
-                        <img class="expected" src="{expected_image_url}" />
-                        <img class="actual" src="{TEST_REPORT / f'{temp_file_name}-{num}.bmp'}" />
-                        <iframe src="{input_path}" style="background-color: white; width: 200px; height: 200px;"></iframe>
+                        <div>
+                            <img class="expected" src="{expected_image_url}" />
+                            <figcaption>{'Expected' if (tag == 'rendering') else 'Unexpected'}</figcaption>
+                        </div>
+
+                        <div>
+                            <img class="actual" src="{TEST_REPORT / f'{temp_file_name}-{num}.bmp'}" />
+                            <figcaption>Actual</figcaption>
+                        </div>
+
+                        <div>
+                            <iframe src="{input_path}" style="background-color: white; width: 200px; height: 200px;"></iframe>
+                            <figcaption>Rendition</figcaption>
+                        </div>
                     </div>
                     <a href="{TEST_REPORT / f'{temp_file_name}-{num}.pdf'}">PDF</a>
                     <a href="{expected_image_url}">Expected</a>
@@ -240,28 +245,44 @@ def _(args: RefTestArgs):
                 <hr />
                 """
 
+                counter += 1
+
                 if args.fast:
                     break
 
     report += """
     </body>
     <style>
+        body {
+            font-family: sans-serif;
+        }
+
         .test-case {
             padding: 8px;
             border-radius: 4px;
         }
 
         .passed {
-            background-color: lightgreen;
+            border: 2px solid #aea;
+            background-color: #efe;
         }
 
         .failed {
+            border: 2px solid red;
             background-color: lightcoral;
         }
 
         .outputs {
             display: flex;
             gap: 8px;
+        }
+
+        .actual {
+            border: 1px solid blue;
+        }
+
+        iframe {
+            border: none;
         }
     </style>
     </html>
@@ -270,5 +291,13 @@ def _(args: RefTestArgs):
     with (TEST_REPORT / "report.html").open("w") as f:
         f.write(report)
 
+    print()
+    if failed:
+        print(f"{vt100.BRIGHT_GREEN}// {fetchMessage(args, 'witty')}{vt100.RESET}")
+        print(
+            f"{vt100.RED}Failed {failed} tests{vt100.RESET}, {vt100.GREEN}Passed {passed} tests{vt100.RESET}"
+        )
+    else:
+        print(f"{vt100.GREEN}// {fetchMessage(args, 'nice')}{vt100.RESET}")
+        print(f"{vt100.GREEN}All tests passed{vt100.RESET}")
     print(f"Report: {TEST_REPORT / 'report.html'}")
-
