@@ -41,7 +41,7 @@ void Frag::add(Frag &&frag) {
 
 void Frag::repr(Io::Emit &e) const {
     if (children()) {
-        e("(flow {} {}", style->display, layout.borderBox());
+        e("(flow {} {} {}", style->display, style->position, layout.borderBox());
         e.indentNewline();
         for (auto &c : children()) {
             c.repr(e);
@@ -50,7 +50,7 @@ void Frag::repr(Io::Emit &e) const {
         e.deindent();
         e(")");
     } else {
-        e("(frag {} {})", style->display, layout.borderBox());
+        e("(frag {} {} {})", style->display, style->position, layout.borderBox());
     }
 }
 

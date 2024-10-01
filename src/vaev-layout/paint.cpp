@@ -66,14 +66,17 @@ static void _paintBackground(Frag &frag, Gfx::Color currentColor, Paint::Stack &
     stack.add(makeStrong<Paint::Box>(std::move(paint)));
 }
 
-static void _paintInner(Frag &frag, Paint::Stack &stack) {
+static void _establishStackingContext(Frag &frag, Paint::Stack &stack);
+static void _paintStackingContext(Frag &frag, Paint::Stack &stack);
+
+static void _paintFrag(Frag &frag, Paint::Stack &stack) {
     Gfx::Color currentColor = Gfx::BLACK;
     currentColor = resolve(frag.style->color, currentColor);
 
     _paintBackground(frag, currentColor, stack);
 
-    for (auto &c : frag.children())
-        paint(c, stack);
+    if (not frag.layout.borders.zero())
+        _paintBorders(frag, currentColor, stack);
 
     if (auto run = frag.content.is<Strong<Text::Run>>()) {
         Math::Vec2f baseline = {0, frag.font.metrics().ascend};
@@ -83,22 +86,77 @@ static void _paintInner(Frag &frag, Paint::Stack &stack) {
             currentColor
         ));
     }
+}
 
-    if (not frag.layout.borders.zero())
-        _paintBorders(frag, currentColor, stack);
+static void _paintChildren(Frag &frag, Paint::Stack &stack, auto predicate) {
+    for (auto &c : frag.children()) {
+        auto &s = *c.style;
+
+        auto zIndex = s.zIndex;
+        if (zIndex != ZIndex::AUTO) {
+            if (predicate(s))
+                _establishStackingContext(c, stack);
+            continue;
+        }
+
+        // NOTE: Positioned elements act as if they establish a stacking context
+        auto position = s.position;
+        if (position != Position::STATIC) {
+            if (predicate(s))
+                _paintStackingContext(c, stack);
+            continue;
+        }
+
+        if (predicate(s))
+            _paintFrag(c, stack);
+        _paintChildren(c, stack, predicate);
+    }
+}
+
+static void _paintStackingContext(Frag &frag, Paint::Stack &stack) {
+    // 1. the background and borders of the element forming the stacking context.
+    _paintFrag(frag, stack);
+
+    // 2. the child stacking contexts with negative stack levels (most negative first).
+    _paintChildren(frag, stack, [](Style::Computed const &s) {
+        return s.zIndex.value < 0;
+    });
+
+    // 3. the in-flow, non-inline-level, non-positioned descendants.
+    _paintChildren(frag, stack, [](Style::Computed const &s) {
+        return s.zIndex == ZIndex::AUTO and s.display != Display::INLINE and s.position == Position::STATIC;
+    });
+
+    // 4. the non-positioned floats.
+    _paintChildren(frag, stack, [](Style::Computed const &s) {
+        return s.zIndex == ZIndex::AUTO and s.position == Position::STATIC and s.float_ != Float::NONE;
+    });
+
+    // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
+    _paintChildren(frag, stack, [](Style::Computed const &s) {
+        return s.zIndex == ZIndex::AUTO and s.display == Display::INLINE and s.position == Position::STATIC;
+    });
+
+    // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
+    _paintChildren(frag, stack, [](Style::Computed const &s) {
+        return s.zIndex.value == 0 and s.position != Position::STATIC;
+    });
+
+    // 7. the child stacking contexts with positive stack levels (least positive first).
+    _paintChildren(frag, stack, [](Style::Computed const &s) {
+        return s.zIndex.value > 0;
+    });
+}
+
+static void _establishStackingContext(Frag &frag, Paint::Stack &stack) {
+    auto innerStack = makeStrong<Paint::Stack>();
+    innerStack->zIndex = frag.style->zIndex.value;
+    _paintStackingContext(frag, *innerStack);
+    stack.add(std::move(innerStack));
 }
 
 void paint(Frag &frag, Paint::Stack &stack) {
-    if (frag.style->zIndex == ZIndex::AUTO) {
-        _paintInner(frag, stack);
-        return;
-    }
-
-    // Z-index is not auto, we need to create a new stacking context
-    auto innerStack = makeStrong<Paint::Stack>();
-    innerStack->zIndex = frag.style->zIndex.value;
-    _paintInner(frag, *innerStack);
-    stack.add(std::move(innerStack));
+    _paintStackingContext(frag, stack);
 }
 
 } // namespace Vaev::Layout

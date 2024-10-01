@@ -152,12 +152,12 @@ def _(args: RefTestArgs):
                     print(f"{vt100.YELLOW}Skip test{vt100.RESET}")
                     continue
 
-                input_path = TEST_REPORT / f"{temp_file_name}-{num}.xhtml"
+                input_path = TEST_REPORT / f"{counter}.xhtml"
 
                 update_temp_file(input_path, container, rendering)
 
                 # generate temporary bmp
-                img_path = TEST_REPORT / f"{temp_file_name}-{num}.bmp"
+                img_path = TEST_REPORT / f"{counter}.bmp"
 
                 if props.get("size") == "full":
                     paperMuncher.popen("render", "-sdlpo", img_path, input_path)
@@ -177,7 +177,7 @@ def _(args: RefTestArgs):
                 paperMuncher.popen(
                     "print",
                     "-sdlpo",
-                    TEST_REPORT / f"{temp_file_name}-{num}.pdf",
+                    TEST_REPORT / f"{counter}.pdf",
                     input_path,
                 )
 
@@ -206,12 +206,12 @@ def _(args: RefTestArgs):
                 if ok:
                     passed += 1
                     # img_path.unlink()
-                    print(f"{help}: {vt100.GREEN}Passed{vt100.RESET}")
+                    print(f"{counter}: {help}: {vt100.GREEN}Passed{vt100.RESET}")
                 else:
                     failed += 1
 
                     print()
-                    print(f"{help}: {vt100.RED}Failed{vt100.RESET}")
+                    print(f"{counter}: {help}: {vt100.RED}Failed{vt100.RESET}")
                     # generate temporary file for debugging
 
                     print(f"file://{input_path}")
@@ -220,7 +220,7 @@ def _(args: RefTestArgs):
 
                 report += f"""
                 <div id="case-{counter}" class="test-case {ok and 'passed' or 'failed'}">
-                    <h2>{tag} - {props.get('name')}</h2>
+                    <h2>{counter} - {tag} - {props.get('name')}</h2>
                     <p>{help}</p>
                     <div class="outputs">
                         <div>
@@ -229,7 +229,7 @@ def _(args: RefTestArgs):
                         </div>
 
                         <div>
-                            <img class="actual" src="{TEST_REPORT / f'{temp_file_name}-{num}.bmp'}" />
+                            <img class="actual" src="{TEST_REPORT / f'{counter}.bmp'}" />
                             <figcaption>Actual</figcaption>
                         </div>
 
@@ -238,7 +238,7 @@ def _(args: RefTestArgs):
                             <figcaption>Rendition</figcaption>
                         </div>
                     </div>
-                    <a href="{TEST_REPORT / f'{temp_file_name}-{num}.pdf'}">PDF</a>
+                    <a href="{TEST_REPORT / f'{counter}.pdf'}">PDF</a>
                     <a href="{expected_image_url}">Expected</a>
                     <a href="{input_path}">Source</a>
                 </div>
@@ -255,6 +255,8 @@ def _(args: RefTestArgs):
     <style>
         body {
             font-family: sans-serif;
+            background-color: #18181b;
+            color: #fafafa
         }
 
         .test-case {
@@ -263,13 +265,11 @@ def _(args: RefTestArgs):
         }
 
         .passed {
-            border: 2px solid #aea;
-            background-color: #efe;
         }
 
         .failed {
-            border: 2px solid red;
-            background-color: lightcoral;
+            border: 2px solid #991b1b;
+            background-color: #450a0a;
         }
 
         .outputs {

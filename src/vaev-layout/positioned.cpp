@@ -8,8 +8,8 @@ void layoutPositioned(Tree &t, Frag &f, RectPx containingBlock) {
         if (f.style->position == Position::RELATIVE)
             origin = f.layout.position;
 
-        auto top = f.layout.borderBox().top();
-        auto start = f.layout.borderBox().start();
+        auto top = f.layout.position.y;
+        auto start = f.layout.position.x;
 
         auto topOffset = f.style->offsets->top;
         if (topOffset != Width::AUTO) {
