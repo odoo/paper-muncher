@@ -408,6 +408,27 @@ struct BorderLeftColorProp {
     }
 };
 
+struct BorderColorProp {
+    Color value = initial();
+
+    static constexpr Str name() { return "border-color"; }
+
+    static constexpr Color initial() { return BLACK; }
+
+    void apply(Computed &c) const {
+        auto &borders = c.borders.cow();
+        borders.start.color = value;
+        borders.end.color = value;
+        borders.top.color = value;
+        borders.bottom.color = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<Color>(c));
+        return Ok();
+    }
+};
+
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 struct BorderLeftStyleProp {
     BorderStyle value = initial();
@@ -1561,6 +1582,7 @@ using _StyleProp = Union<
     BorderRightColorProp,
     BorderBottomColorProp,
     BorderLeftColorProp,
+    BorderColorProp,
 
     BorderTopWidthProp,
     BorderRightWidthProp,
