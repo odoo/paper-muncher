@@ -1,9 +1,65 @@
 /* Vaev's User Agent Stylesheet */
 
+/* 15.3.1 MARK: Hidden elements  -------------------------------------------- */
+/* https://html.spec.whatwg.org/multipage/rendering.html#hidden-elements */
+
+area,
+base,
+basefont,
+datalist,
 head,
-style {
+link,
+meta,
+noembed,
+noframes,
+param,
+rp,
+script,
+style,
+template,
+title {
     display: none;
 }
+
+
+/* 15.3.2 MARK: The page ---------------------------------------------------- */
+/* https://html.spec.whatwg.org/multipage/rendering.html#the-page */
+
+html,
+body {
+    display: block;
+}
+
+/* 15.3.6 MARK: Sections and headings --------------------------------------- */
+/* https://html.spec.whatwg.org/multipage/rendering.html#sections-and-headings */
+
+article,
+aside,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hgroup,
+nav,
+section {
+    display: block;
+}
+
+/* 15.3.7 MARK: Lists ------------------------------------------------------- */
+/* https://html.spec.whatwg.org/multipage/rendering.html#lists */
+
+dir,
+dd,
+dl,
+dt,
+menu,
+ol,
+ul {
+    display: block;
+}
+
 
 /* 15.3.8 MARK: Tables ------------------------------------------------------ */
 /* https://html.spec.whatwg.org/multipage/rendering.html#tables-2 */
