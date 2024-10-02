@@ -1,0 +1,54 @@
+<test id="color-red">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                section {
+                    width: 200px;
+                    height: 200px;
+                    background: #ddd;
+                    position: relative;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="background-color: red;" />
+    </rendering>
+
+    <rendering>
+        <div style="background-color: #f00;" />
+    </rendering>
+
+    <rendering>
+        <div style="background-color: rgb(255, 0, 0);" />
+    </rendering>
+
+    <rendering>
+        <div style="background-color: rgba(255, 0, 0, 1);" />
+    </rendering>
+
+    <error>
+    </error>
+
+
+</test>

@@ -1,5 +1,7 @@
 #include "values.h"
 
+#include "base.h"
+
 namespace Vaev::Style {
 
 // MARK: Parser ----------------------------------------------------------------
@@ -178,6 +180,58 @@ static Res<Gfx::Color> _parseHexColor(Io::SScan &s) {
     }
 }
 
+static Res<Gfx::Color> _parseFuncColor(Css::Sst const &s) {
+    logDebug("parse func color: {}", s);
+    if (s.prefix == Css::Token::function("rgb(")) {
+        Cursor<Css::Sst> scan = s.content;
+
+        eatWhitespace(scan);
+        auto r = try$(parseValue<Integer>(scan));
+        eatWhitespace(scan);
+
+        scan.skip(Css::Token::COMMA);
+
+        eatWhitespace(scan);
+        auto g = try$(parseValue<Integer>(scan));
+        eatWhitespace(scan);
+
+        scan.skip(Css::Token::COMMA);
+
+        eatWhitespace(scan);
+        auto b = try$(parseValue<Integer>(scan));
+        eatWhitespace(scan);
+
+        return Ok(Gfx::Color::fromRgb(r, g, b));
+    } else if (s.prefix == Css::Token::function("rgba(")) {
+        Cursor<Css::Sst> scan = s.content;
+
+        eatWhitespace(scan);
+        auto r = try$(parseValue<Integer>(scan));
+
+        eatWhitespace(scan);
+        scan.skip(Css::Token::COMMA);
+        eatWhitespace(scan);
+
+        auto g = try$(parseValue<Integer>(scan));
+
+        eatWhitespace(scan);
+        scan.skip(Css::Token::COMMA);
+        eatWhitespace(scan);
+
+        auto b = try$(parseValue<Integer>(scan));
+
+        eatWhitespace(scan);
+        scan.skip(Css::Token::COMMA);
+        eatWhitespace(scan);
+
+        auto a = try$(parseValue<Number>(scan));
+
+        return Ok(Gfx::Color::fromRgba(r, g, b, 255 * a));
+    } else {
+        return Error::invalidData("unknown color function");
+    }
+}
+
 Res<Color> ValueParser<Color>::parse(Cursor<Css::Sst> &c) {
     if (c.ended())
         return Error::invalidData("unexpected end of input");
@@ -210,6 +264,8 @@ Res<Color> ValueParser<Color>::parse(Cursor<Css::Sst> &c) {
             c.next();
             return Ok(TRANSPARENT);
         }
+    } else if (c.peek() == Css::Sst::FUNC) {
+        return Ok(try$(_parseFuncColor(c.next())));
     }
 
     return Error::invalidData("expected color");
