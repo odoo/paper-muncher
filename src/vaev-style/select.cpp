@@ -53,13 +53,13 @@ Spec spec(Selector const &s) {
 
 // https://www.w3.org/TR/selectors-4/#descendant-combinators
 static bool _matchDescendant(Selector const &s, Markup::Element const &e) {
-    Markup::Node const *curr = &e;
+    Cursor<Markup::Node> curr = e;
     while (curr->hasParent()) {
         auto &parent = curr->parentNode();
         if (auto el = parent.is<Markup::Element>())
             if (s.match(*el))
                 return true;
-        curr = &parent;
+        curr = parent;
     }
     return false;
 }
@@ -100,21 +100,21 @@ static bool _matchSubsequent(Selector const &s, Markup::Element const &e) {
 }
 
 static bool _match(Infix const &s, Markup::Element const &e) {
-    if (not s.lhs->match(e))
+    if (not s.rhs->match(e))
         return false;
 
     switch (s.type) {
-    case Infix::Type::DESCENDANT:
-        return _matchDescendant(*s.rhs, e);
+    case Infix::Type::DESCENDANT: // ' '
+        return _matchDescendant(*s.lhs, e);
 
-    case Infix::Type::CHILD:
-        return _matchChild(*s.rhs, e);
+    case Infix::Type::CHILD: // >
+        return _matchChild(*s.lhs, e);
 
-    case Infix::Type::ADJACENT:
-        return _matchAdjacent(*s.rhs, e);
+    case Infix::Type::ADJACENT: // +
+        return _matchAdjacent(*s.lhs, e);
 
-    case Infix::Type::SUBSEQUENT:
-        return _matchSubsequent(*s.rhs, e);
+    case Infix::Type::SUBSEQUENT: // ~
+        return _matchSubsequent(*s.lhs, e);
 
     default:
         logWarn("unimplemented selector: {}", s);

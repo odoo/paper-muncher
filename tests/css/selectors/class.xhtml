@@ -1,0 +1,59 @@
+<test id="slect-class">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                section {
+                    width: 200px;
+                    height: 200px;
+                    background: #ddd;
+                    position: relative;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="klass" style="background-color: green;" />
+    </rendering>
+
+    <rendering>
+        <div class="klass" />
+        <style>
+            .klass {
+                background-color: green;
+            }
+        </style>
+    </rendering>
+
+
+    <error>
+        <div id="klass" />
+        <style>
+            .klass {
+                background-color: green;
+            }
+        </style>
+    </error>
+
+    <error>
+    </error>
+</test>
