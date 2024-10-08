@@ -241,7 +241,7 @@ Output layout(Tree &t, Frag &f, Input input) {
         // FIXME: Take box-sizing into account
         return s - padding.horizontal() - borders.horizontal();
     });
-    input.intrinsic = widthIntrinsicSize;
+    input.intrinsic.x = widthIntrinsicSize;
 
     auto [specifiedHeight, heightIntrinsicSize] = _computeSpecifiedSize(t, f, input, sizing->height);
     if (input.knownSize.height == NONE) {
@@ -252,7 +252,7 @@ Output layout(Tree &t, Frag &f, Input input) {
         // FIXME: Take box-sizing into account
         return s - padding.vertical() - borders.vertical();
     });
-    input.intrinsic = heightIntrinsicSize;
+    input.intrinsic.y = heightIntrinsicSize;
 
     input.position = input.position + borders.topStart() + padding.topStart();
 
