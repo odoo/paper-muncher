@@ -45,7 +45,7 @@
     </rendering>
 
     <rendering>
-        <div style="display: flex; flex-flow: nowrap;">
+        <div style="display: flex; flex-flow: row nowrap;">
             <div class="red"></div>
             <div class="green"></div>
         </div>
@@ -66,23 +66,30 @@
     </rendering>
 
     <rendering>
-        <div style="display: flex; flex-flow: row;">
+        <div style="display: flex; flex-flow: row nowrap;">
             <div class="red"></div>
             <div class="green"></div>
         </div>
     </rendering>
 
     <rendering>
-        <div style="display: flex; flex-flow: row-reverse;">
+        <div style="display: flex; flex-flow: row-reverse nowrap;">
             <div class="green"></div>
             <div class="red"></div>
         </div>
     </rendering>
+
+    <error>
+        <div style="display: flex;">
+            <div class="green"></div>
+            <div class="red"></div>
+        </div>
+    </error>
 </test>
 
-<test name="flex: row + flex-end + no-wrap" size="320">
+<test name="flex: row + flex-end + nowrap" size="320">
     <container>
-        <html xmlns="http://www.w3.org/1999/xhtml">
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 
         <head>
             <style>
@@ -106,7 +113,7 @@
                     flex-direction: row;
                     justify-content: flex-end;
                     align-items: flex-end;
-                    flex-wrap: no-wrap;
+                    flex-wrap: nowrap;
                 }
             </style>
         </head>
@@ -120,39 +127,78 @@
 
     <rendering>
         <section style="position: relative;">
-            <div style="position: absolute; width: 20px;">0</div>
-            <div style="position: absolute; width: 20px; top: 120px; left: 20px;">1</div>
-            <div style="position: absolute; width: 20px; top: 120px; left: 40px;">2</div>
-            <div style="position: absolute; width: 20px; top: 120px; left: 60px;">3</div>
-            <div style="position: absolute; width: 30px; top: 120px; left: 110px;">4</div>
-            <div style="position: absolute; width: 20px; top: 0px; left: 140px;">5</div>
-            <div style="position: absolute; width: 20px; top: 0px; left: 160px;">6</div>
-            <div style="position: absolute; width: 30px; top: 80px; left: 180px;">7</div>
-            <div style="position: absolute; width: 20px; top: 40px; left: 210px;">8</div>
-            <div style="position: absolute; width: 30px; top: 120px; left: 230px;">9</div>
+            <div style="position: absolute; width: 20px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 20px; top: 120px; left: 20px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 20px; top: 120px; left: 40px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 20px; top: 120px; left: 60px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 30px; top: 120px; left: 110px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 20px; top: 0px; left: 140px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 20px; top: 0px; left: 160px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 30px; top: 60px; left: 180px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 20px; top: 30px; left: 210px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 30px; top: 120px; left: 230px;">
+                <div style="height:18px;"></div>
+            </div>
         </section>
     </rendering>
 
     <rendering>
         <section class="flex">
-            <div style="width: 20px; margin-bottom: auto; flex: 1 16 20px;">0</div>
-            <div style="width: 30px; margin-left: 0px; flex: 25 1 20px;">1</div>
-            <div style="width: 30px; margin-top: 30px; margin-left: auto; flex: 0 4 20px;">2</div>
-            <div style="width: 20px; flex: 9 0 20px;">3</div>
-            <div style="width: 30px; margin-left: 30px; flex: 1 1 30px;">4</div>
-            <div style="width: 20px; margin-bottom: auto; flex: 9 16 20px;">5</div>
-            <div style="width: 30px; margin-bottom: auto; flex: 0 1 20px;">6</div>
-            <div style="width: 30px; margin-bottom: auto; margin-top: auto; align-self: flex-start; flex: 4 0 30px;">7
+            <div style="width: 20px; margin-bottom: auto; flex: 1 16 20px;">
+                <div style="height:18px;"></div>
             </div>
-            <div style="width: 20px; margin-bottom: auto; margin-top: 30px; flex: 16 16 20px;">8</div>
-            <div style="width: 30px; margin-right: auto; flex: 1 1 30px;">9</div>
+            <div style="width: 30px; margin-left: 0px; flex: 25 1 20px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="width: 30px; margin-top: 30px; margin-left: auto; flex: 0 4 20px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="width: 20px; flex: 9 0 20px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="width: 30px; margin-left: 30px; flex: 1 1 30px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="width: 20px; margin-bottom: auto; flex: 9 16 20px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="width: 30px; margin-bottom: auto; flex: 0 1 20px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="width: 30px; margin-bottom: auto; margin-top: auto; align-self: flex-start; flex: 4 0 30px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="width: 20px; margin-bottom: auto; margin-top: 30px; flex: 16 16 20px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="width: 30px; margin-right: auto; flex: 1 1 30px;">
+                <div style="height:18px;"></div>
+            </div>
         </section>
     </rendering>
 </test>
 
 <test name="flex: row + space-around + stretch + wrap" size="320">
     <container>
-        <html xmlns="http://www.w3.org/1999/xhtml">
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 
         <head>
             <style>
@@ -189,38 +235,58 @@
 
     <rendering>
         <section style="position: relative;">
-            <div style="position: absolute; top: 62px; height: 18px; left: 0px; width: 23px;">0</div>
-            <div style="position: absolute; top: 46px; height: 18px; left: 38px; width: 39.5px;">1</div>
-            <div style="position: absolute; top: 62px; height: 18px; left: 77.5px; width: 43px;">2</div>
-            <div style="position: absolute; top: 62px; height: 18px; left: 120.5px; width: 15.5px;">3</div>
-            <div style="position: absolute; top: 00px; height: 18px; left: 166px; width: 19.5px;">4</div>
-            <div style="position: absolute; top: 00px; height: 80px; left: 185.5px; width: 23px;">5</div>
-            <div style="position: absolute; top: 00px; height: 18px; left: 208.5px; width: 39.5px;">6</div>
-            <div style="position: absolute; top: 00px; height: 80px; left: 248px; width: 43px;">7</div>
-            <div style="position: absolute; top: 80px; height: 80px; left: 30px; width: 115.5px;">8</div>
-            <div style="position: absolute; top: 80px; height: 50px; left: 175.5px; width: 115.5px;">9</div>
+            <div style="position: absolute; top: 62px; height: 18px; left: 0px; width: 23px;"></div>
+            <div style="position: absolute; top: 46px; height: 18px; left: 38px; width: 39.5px;"></div>
+            <div style="position: absolute; top: 62px; height: 18px; left: 77.5px; width: 43px;"></div>
+            <div style="position: absolute; top: 62px; height: 18px; left: 120.5px; width: 15.5px;"></div>
+            <div style="position: absolute; top: 00px; height: 18px; left: 166px; width: 19.5px;"></div>
+            <div style="position: absolute; top: 00px; height: 80px; left: 185.5px; width: 23px;"></div>
+            <div style="position: absolute; top: 00px; height: 18px; left: 208.5px; width: 39.5px;"></div>
+            <div style="position: absolute; top: 00px; height: 80px; left: 248px; width: 43px;"></div>
+            <div style="position: absolute; top: 80px; height: 80px; left: 30px; width: 115.5px;"></div>
+            <div style="position: absolute; top: 80px; height: 50px; left: 175.5px; width: 115.5px;"></div>
         </section>
     </rendering>
 
     <rendering>
         <section class="flex">
-            <div style="margin: auto 15px 0px 0px; flex: 16 9 15px;">0</div>
-            <div style="margin: 30px auto 0px 0px; align-self: center; flex: 9 16 35px;">1</div>
-            <div style="margin: auto 0px 0px 0px; flex: 16 4 35px;">2</div>
-            <div style="margin: auto 0px 0px 0px; flex: 1 4 15px;">3</div>
-            <div style="margin: 0px 0px auto 30px; align-self: flex-end; flex: 9 4 15px;">4</div>
-            <div style="margin: 0px 0px 0px 0px; flex: 16 25 15px;">5</div>
-            <div style="margin: 0px auto 30px 0px; align-self: flex-start; flex: 9 4 35px;">6</div>
-            <div style="margin: 0px 0px 0px 0px; flex: 16 0 35px;">7</div>
-            <div style="margin: 0px 30px 0px 30px; align-self: stretch; flex: 9 25 35px;">8</div>
-            <div style="margin: 0px 0px 30px 0px; align-self: stretch; flex: 9 1 35px;">9</div>
+            <div style="margin: auto 15px 0px 0px; flex: 16 9 15px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 30px auto 0px 0px; align-self: center; flex: 9 16 35px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: auto 0px 0px 0px; flex: 16 4 35px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: auto 0px 0px 0px; flex: 1 4 15px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 0px 0px auto 30px; align-self: flex-end; flex: 9 4 15px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 0px 0px 0px 0px; flex: 16 25 15px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 0px auto 30px 0px; align-self: flex-start; flex: 9 4 35px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 0px 0px 0px 0px; flex: 16 0 35px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 0px 30px 0px 30px; align-self: stretch; flex: 9 25 35px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 0px 0px 30px 0px; align-self: stretch; flex: 9 1 35px;">
+                <div style="height:18px;"></div>
+            </div>
         </section>
     </rendering>
 </test>
 
 <test name="flex: row + space-around + center + wrap" size="320">
     <container>
-        <html xmlns="http://www.w3.org/1999/xhtml">
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 
         <head>
             <style>
@@ -257,38 +323,79 @@
 
     <rendering>
         <section style="position: relative;">
-            <div style="position: absolute; width: 15px; top: 0px; height: 18px; left: 30px;">0</div>
-            <div style="position: absolute; width: 35px; top: 38.5px; height: 18px; left: 75px;">1</div>
-            <div style="position: absolute; width: 19px; top: 0px; height: 95px; left: 110px;">2</div>
-            <div style="position: absolute; width: 35px; top: 38.5px; height: 18px; left: 129px;">3</div>
-            <div style="position: absolute; width: 40px; top: 38.5px; height: 18px; left: 194px;">4</div>
-            <div style="position: absolute; width: 36px; top: 0px; height: 18px; left: 264px;">5</div>
-            <div style="position: absolute; width: 50px; top: 118.5px; height: 18px; left: 0px;">6</div>
-            <div style="position: absolute; width: 85px; top: 133.5px; height: 18px; left: 80px;">7</div>
-            <div style="position: absolute; width: 97.5px; top: 142px; height: 18px; left: 165px;">8</div>
-            <div style="position: absolute; width: 37.5px; top: 118.5px; height: 18px; left: 262.5px;">9</div>
+            <div style="position: absolute; top: 0px; left: 30px; height: 18px; width: 15px;">
+                <div style="height: 18px; width: 15px;"></div>
+            </div>
+            <div style="position: absolute; top: 38.5px; left: 75px; height: 18px; width: 35px;">
+                <div style="height: 18px; width: 35px;"></div>
+            </div>
+            <div style="position: absolute; top: 0px; left: 110px; height: 95px; width: 17.7969px;">
+                <div style="height: 18px; width: 17.7969px;"></div>
+            </div>
+            <div style="position: absolute; top: 38.5px; left: 127.797px; height: 18px; width: 35px;">
+                <div style="height: 18px; width: 35px;"></div>
+            </div>
+            <div style="position: absolute; top: 38.5px; left: 192.797px; height: 18px; width: 32.5px;">
+                <div style="height: 18px; width: 32.5px;"></div>
+            </div>
+            <div style="position: absolute; top: 0px; left: 255.297px; height: 18px; width: 35.7031px;">
+                <div style="height: 18px; width: 35.7031px;"></div>
+            </div>
+            <div style="position: absolute; top: 118.5px; left: 0px; height: 18px; width: 48.9688px;">
+                <div style="height: 18px; width: 48.9688px;"></div>
+            </div>
+            <div style="position: absolute; top: 133.5px; left: 78.9688px; height: 18px; width: 81.5312px;">
+                <div style="height: 18px; width: 81.5312px;"></div>
+            </div>
+            <div style="position: absolute; top: 142px; left: 160.5px; height: 18px; width: 93.1719px;">
+                <div style="height: 18px; width: 93.1719px;"></div>
+            </div>
+            <div style="position: absolute; top: 118.5px; left: 253.672px; height: 18px; width: 37.3281px;">
+                <div style="height: 18px; width: 37.3281px;"></div>
+            </div>
+
         </section>
     </rendering>
 
     <rendering>
         <section class="flex">
-            <div style="margin: 0px 0px 0px 30px; align-self: flex-start; flex: 0 9 15px;">0</div>
-            <div style="margin: 0px 0px 0px 30px; align-self: center; flex: 0 1 35px;">1</div>
-            <div style="margin: 0px auto 0px 0px; align-self: stretch; flex: 4 9 15px;">2</div>
-            <div style="margin: 30px auto 30px 0px; align-self: center; flex: 0 0 35px;">3</div>
-            <div style="margin: 30px 30px 30px 30px; flex: 25 4 15px;">4</div>
-            <div style="margin: 0px 0px 30px 0px; align-self: flex-start; flex: 1 25 35px;">5</div>
-            <div style="margin: 0px auto 0px 0px; flex: 6 16 35px;">6</div>
-            <div style="margin: 30px 0px 0px 30px; flex: 20 9 35px;">7</div>
-            <div style="margin: auto 0px 0px 0px; flex: 25 1 35px;">8</div>
-            <div style="margin: 0px 0px 0px auto; flex: 1 0 35px;">9</div>
+            <div style="margin: 0px 0px 0px 30px; align-self: flex-start; flex: 0 9 15px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 0px 0px 0px 30px; align-self: center; flex: 0 1 35px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 0px auto 0px 0px; align-self: stretch; flex: 4 9 15px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 30px auto 30px 0px; align-self: center; flex: 0 0 35px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 30px 30px 30px 30px; flex: 25 4 15px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 0px 0px 30px 0px; align-self: flex-start; flex: 1 25 35px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 0px auto 0px 0px; flex: 6 16 35px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 30px 0px 0px 30px; flex: 20 9 35px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: auto 0px 0px 0px; flex: 25 1 35px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin: 0px 0px 0px auto; flex: 1 0 35px;">
+                <div style="height:18px;"></div>
+            </div>
         </section>
     </rendering>
 </test>
 
 <test name="flex: row + space-around + flex-end + wrap" size="320">
     <container>
-        <html xmlns="http://www.w3.org/1999/xhtml">
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 
         <head>
             <style>
@@ -325,33 +432,707 @@
 
     <rendering>
         <section style="position: relative;">
-            <div style="position: absolute; width: 15px; top: 0px; height: 95px; left: 0px;">0</div>
-            <div style="position: absolute; width: 15px; top: 38.5px; height: 18px; left: 15px;">1</div>
-            <div style="position: absolute; width: 35px; top: 77px; height: 18px; left: 30px;">2</div>
-            <div style="position: absolute; width: 15px; top: 47px; height: 18px; left: 95px;">3</div>
-            <div style="position: absolute; width: 15px; top: 0px; height: 65px; left: 110px;">4</div>
-            <div style="position: absolute; width: 15px; top: 0px; height: 18px; left: 125px;">5</div>
-            <div style="position: absolute; width: 15px; top: 47px; height: 18px; left: 170px;">6</div>
-            <div style="position: absolute; width: 15px; top: 47px; height: 18px; left: 215px;">7</div>
-            <div style="position: absolute; width: 15px; top: 30px; height: 18px; left: 230px;">8</div>
-            <div style="position: absolute; width: 245px; top: 142px; height: 18px; left: 0px;">9</div>
+            <div style="position: absolute; width: 15px; top: 0px; height: 95px; left: 0px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 15px; top: 38.5px; height: 18px; left: 15px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 35px; top: 77px; height: 18px; left: 30px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 15px; top: 47px; height: 18px; left: 95px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 15px; top: 0px; height: 65px; left: 110px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 15px; top: 0px; height: 18px; left: 125px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 15px; top: 47px; height: 18px; left: 170px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 15px; top: 47px; height: 18px; left: 215px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 15px; top: 30px; height: 18px; left: 230px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; width: 245px; top: 142px; height: 18px; left: 0px;">
+                <div style="height:18px;"></div>
+            </div>
         </section>
     </rendering>
 
     <rendering>
         <section class="flex">
-            <div style="margin-left: auto; margin-right: 0px; align-self: stretch; flex: 25 16 15px; ">0</div>
-            <div style="margin-left: auto; margin-right: auto; align-self: center; flex: 25 16 15px; ">1</div>
-            <div style="margin-left: 0px; flex: 4 9 35px; ">2</div>
-            <div style="margin-bottom: 30px; margin-top: auto; margin-left: 30px; flex: 9 16 15px; ">3</div>
+            <div style="margin-left: auto; margin-right: 0px; align-self: stretch; flex: 25 16 15px; ">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin-left: auto; margin-right: auto; align-self: center; flex: 25 16 15px; ">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin-left: 0px; flex: 4 9 35px; ">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin-bottom: 30px; margin-top: auto; margin-left: 30px; flex: 9 16 15px; ">
+                <div style="height:18px;"></div>
+            </div>
             <div
                 style="margin-bottom: 30px; margin-top: 0px; margin-right: auto; align-self: stretch; flex: 9 16 15px; ">
-                4</div>
-            <div style="margin-bottom: auto; margin-right: 30px; flex: 25 9 15px; ">5</div>
-            <div style="margin-bottom: 30px; margin-left: 0px; flex: 1 16 15px; ">6</div>
-            <div style="margin-bottom: 30px; margin-left: 30px; flex: 4 16 15px; ">7</div>
-            <div style="margin-top: 30px; margin-right: auto; align-self: flex-start; flex: 9 9 15px; ">8</div>
-            <div style="margin-right: auto; flex: 16 0 35px; ">9</div>
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin-bottom: auto; margin-right: 30px; flex: 25 9 15px; ">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin-bottom: 30px; margin-left: 0px; flex: 1 16 15px; ">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin-bottom: 30px; margin-left: 30px; flex: 4 16 15px; ">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin-top: 30px; margin-right: auto; align-self: flex-start; flex: 9 9 15px; ">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="margin-right: auto; flex: 16 0 35px; ">
+                <div style="height:18px;"></div>
+            </div>
+        </section>
+    </rendering>
+</test>
+
+<test name="flex: row-reverse + flex-end + nowrap" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div {
+                    background: #bbb;
+                }
+
+                section {
+                    width: 200px;
+                    height: 160px;
+                    background: #eee;
+                }
+
+                .flex {
+                    display: flex;
+                    justify-content: flex-end;
+                    align-items: center;
+                    flex-flow: row-reverse nowrap;
+                }
+
+                #c0 {
+                    margin-top: auto;
+                    align-self: center;
+                    flex: 0 0 25px;
+                }
+
+                #c1 {
+                    margin-left: 30px;
+                    flex: 0 0 45px;
+                }
+
+                #c2 {
+                    margin-bottom: auto;
+                    margin-top: 30px;
+                    flex: 0 0 25px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <section style="position: relative;">
+
+            <div style="position: absolute; top: 142px; height: 18px; left: 100px; width: 25px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; top: 71px; height: 18px; left: 55px; width: 45px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; top: 30px; height: 18px; left: 0px; width: 25px;">
+                <div style="height:18px;"></div>
+            </div>
+
+        </section>
+    </rendering>
+
+    <rendering>
+        <section class="flex">
+            <div id="c0">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c1">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c2">
+                <div style="height:18px;"></div>
+            </div>
+        </section>
+    </rendering>
+</test>
+
+
+<test name="flex: row-reverse + flex-start + wrap" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div {
+                    background: #bbb;
+                }
+
+                section {
+                    width: 200px;
+                    height: 160px;
+                    background: #eee;
+                }
+
+                .flex {
+                    display: flex;
+                    justify-content: flex-end;
+                    align-items: flex-start;
+                    flex-flow: row-reverse wrap;
+                }
+
+                #c0 {
+                    margin-top: 30px;
+                    margin-right: 30px;
+                    align-self: flex-start;
+                    flex: 0 0 65px;
+                }
+
+                #c1 {
+                    margin-top: auto;
+                    align-self: flex-start;
+                    flex: 0 0 45px;
+                }
+
+                #c2 {
+                    flex: 0 0 5px;
+                }
+
+                #c3 {
+                    margin-bottom: auto;
+                    margin-left: auto;
+                    margin-right: auto;
+                    align-self: flex-start;
+                    flex: 0 0 65px;
+                }
+
+                #c4 {
+                    margin-right: auto;
+                    align-self: flex-start;
+                    flex: 0 0 5px;
+                }
+
+                #c5 {
+                    margin-bottom: 30px;
+                    margin-top: 30px;
+                    flex: 0 0 5px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <section style="position: relative;">
+            <div style="position: absolute; top: 30px; left: 50px; height: 18px; width: 65px;"></div>
+            <div style="position: absolute; top: 47px; left: 5px; height: 18px; width: 45px;"></div>
+            <div style="position: absolute; top: 0px; left: 0px; height: 18px; width: 5px;"></div>
+            <div style="position: absolute; top: 65px; left: 93.3438px; height: 18px; width: 65px;"></div>
+            <div style="position: absolute; top: 65px; left: 5.03125px; height: 18px; width: 5px;"></div>
+            <div style="position: absolute; top: 95px; left: 0.03125px; height: 18px; width: 5px;"></div>
+        </section>
+    </rendering>
+
+    <rendering>
+        <section class="flex">
+            <div id="c0">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c1">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c2">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c3">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c4">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c5">
+                <div style="height:18px;"></div>
+            </div>
+        </section>
+    </rendering>
+</test>
+
+
+<test name="flex: cross margins and cross aligns" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div {
+                    background: #bbb;
+                }
+
+                section {
+                    width: 200px;
+                    height: 100px;
+                    background: #eee;
+                }
+
+                .flex {
+                    display: flex;
+                    justify-content: space-around;
+                }
+
+                #c0 {
+                    margin-top: 90px;
+                    align-self: stretch;
+                    flex: 0 0 25px;
+                }
+
+                #c1 {
+                    align-self: stretch;
+                    flex: 0 0 25px;
+                }
+
+                #c2 {
+                    margin-top: 20px;
+                    align-self: center;
+                    flex: 0 0 25px;
+                }
+
+                #c3 {
+                    margin-bottom: auto;
+                    margin-top: auto;
+                    align-self: flex-start;
+                    flex: 0 0 25px;
+                }
+
+                #c4 {
+                    margin-bottom: auto;
+                    margin-top: auto;
+                    align-self: flex-start;
+                    flex: 0 0 25px;
+                }
+
+                #c5 {
+                    margin-bottom: 90px;
+                    align-self: flex-end;
+                    flex: 0 0 25px;
+                }
+
+                #c6 {
+                    margin-top: 5px;
+                    align-self: flex-start;
+                    flex: 0 0 25px;
+                }
+
+                #c7 {
+                    margin-bottom: 90px;
+                    margin-top: 90px;
+                    align-self: stretch;
+                    flex: 0 0 25px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <section style="position: relative;">
+
+            <div style="position: absolute; top: 90px; height: 10px; left: 0px; width: 25px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; top: 0px; height: 100px; left: 25px; width: 25px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; top: 51px; height: 18px; left: 50px; width: 25px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; top: 41px; height: 18px; left: 75px; width: 25px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; top: 41px; height: 18px; left: 100px; width: 25px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; top: -8px; height: 18px; left: 125px; width: 25px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; top: 5px; height: 18px; left: 150px; width: 25px;">
+                <div style="height:18px;"></div>
+            </div>
+            <div style="position: absolute; top: 90px; height: 0px; left: 175px; width: 25px;">
+                <div style="height:18px;"></div>
+            </div>
+
+        </section>
+    </rendering>
+
+    <rendering>
+        <section class="flex">
+            <div id="c0">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c1">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c2">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c3">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c4">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c5">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c6">
+                <div style="height:18px;"></div>
+            </div>
+
+            <div id="c7">
+                <div style="height:18px;"></div>
+            </div>
+        </section>
+    </rendering>
+</test>
+
+
+<test name="flex: align-content" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                #p0 {
+                    align-content: flex-end;
+                }
+
+                #p1 {
+                    align-content: stretch;
+                }
+
+                #p2 {
+                    align-content: center;
+                }
+
+                #p3 {
+                    align-content: space-around;
+                }
+
+                #p4 {
+                    align-content: space-between;
+                }
+
+                #p5 {
+                    align-content: flex-start;
+                }
+
+                .main {
+                    display: flex;
+                    width: 100px;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                    flex-direction: row;
+                    height: 60px;
+                    background: #eee;
+                }
+
+                .child {
+                    margin-bottom: auto;
+                    margin-top: auto;
+                    flex: 0 0 65px;
+                    background: #bbb;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+    <rendering>
+        <section style="position: relative;">
+            <div xmlns="http://www.w3.org/1999/xhtml">
+                <div class="main" style="position: absolute; top: 0px; left: 0px; height: 60px; width: 100px;">
+                    <div class="child" style="position: absolute; top: 24px; left: 17.5px; height: 18px; width: 65px;">
+                    </div>
+                    <div class="child" style="position: absolute; top: 42px; left: 17.5px; height: 18px; width: 65px;">
+                    </div>
+                </div>
+                <div class="main" style="position: absolute; top: 60px; left: 0px; height: 60px; width: 100px;">
+                    <div class="child" style="position: absolute; top: 6px; left: 17.5px; height: 18px; width: 65px;">
+                    </div>
+                    <div class="child" style="position: absolute; top: 36px; left: 17.5px; height: 18px; width: 65px;">
+                    </div>
+                </div>
+                <div class="main" style="position: absolute; top: 120px; left: 0px; height: 60px; width: 100px;">
+                    <div class="child" style="position: absolute; top: 12px; left: 17.5px; height: 18px; width: 65px;">
+                    </div>
+                    <div class="child" style="position: absolute; top: 30px; left: 17.5px; height: 18px; width: 65px;">
+                    </div>
+                </div>
+                <div class="main" style="position: absolute; top: 180px; left: 0px; height: 60px; width: 100px;">
+                    <div class="child" style="position: absolute; top: 6px; left: 17.5px; height: 18px; width: 65px;">
+                    </div>
+                    <div class="child" style="position: absolute; top: 36px; left: 17.5px; height: 18px; width: 65px;">
+                    </div>
+                </div>
+                <div class="main" style="position: absolute; top: 240px; left: 0px; height: 60px; width: 100px;">
+                    <div class="child" style="position: absolute; top: 0px; left: 17.5px; height: 18px; width: 65px;">
+                    </div>
+                    <div class="child" style="position: absolute; top: 42px; left: 17.5px; height: 18px; width: 65px;">
+                    </div>
+                </div>
+                <div class="main" style="position: absolute; top: 300px; left: 0px; height: 60px; width: 100px;">
+                    <div class="child" style="position: absolute; top: 0px; left: 17.5px; height: 18px; width: 65px;">
+                    </div>
+                    <div class="child" style="position: absolute; top: 18px; left: 17.5px; height: 18px; width: 65px;">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </rendering>
+
+    <rendering>
+        <section>
+            <div id="p0" class="main">
+                <div class="child">
+                    <div style="height:18px;"></div>
+                </div>
+                <div class="child">
+                    <div style="height:18px;"></div>
+                </div>
+            </div>
+            <div id="p1" class="main">
+                <div class="child">
+                    <div style="height:18px;"></div>
+                </div>
+                <div class="child">
+                    <div style="height:18px;"></div>
+                </div>
+            </div>
+            <div id="p2" class="main">
+                <div class="child">
+                    <div style="height:18px;"></div>
+                </div>
+                <div class="child">
+                    <div style="height:18px;"></div>
+                </div>
+            </div>
+            <div id="p3" class="main">
+                <div class="child">
+                    <div style="height:18px;"></div>
+                </div>
+                <div class="child">
+                    <div style="height:18px;"></div>
+                </div>
+            </div>
+            <div id="p4" class="main">
+                <div class="child">
+                    <div style="height:18px;"></div>
+                </div>
+                <div class="child">
+                    <div style="height:18px;"></div>
+                </div>
+            </div>
+            <div id="p5" class="main">
+                <div class="child">
+                    <div style="height:18px;"></div>
+                </div>
+                <div class="child">
+                    <div style="height:18px;"></div>
+                </div>
+            </div>
+        </section>
+    </rendering>
+</test>
+
+<test name="flex: flex inside flex, definite dimensions, row orientation" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                .main-color {
+                    background: #eee;
+                }
+
+                .parent-color {
+                    background: #ccc;
+                }
+
+                .child-color {
+                    background: #aaa;
+                }
+
+                .main {
+                    display: flex;
+                    width: 500px;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                    flex-direction: row;
+                    height: 60px;
+                }
+
+                .parent {
+                    display: flex;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                    flex-direction: row;
+                    height: 60px;
+                    flex: 10 10 65px;
+                    margin: auto 16px auto 16px;
+                    width: 65px;
+                }
+
+                .child {
+                    margin: auto 16px auto 16px;
+                    flex: 10 10 65px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+    <rendering>
+        <section style="position: relative;">
+
+            <div class="main-color" style="position: absolute; top: 0px; left: 0px; height: 60px; width: 500px;">
+                <div class="parent-color"
+                    style="position: absolute; top: 0px; left: 16px; height: 60px; width: 134.672px;">
+                    <div class="child-color"
+                        style="position: absolute; top: 6px; left: 16px; height: 18px; width: 102.672px;">
+
+                    </div>
+                    <div class="child-color"
+                        style="position: absolute; top: 36px; left: 16px; height: 18px; width: 102.672px;">
+
+                    </div>
+                </div>
+                <div class="parent-color"
+                    style="position: absolute; top: 0px; left: 182.672px; height: 60px; width: 134.672px;">
+                    <div class="child-color"
+                        style="position: absolute; top: 6px; left: 16px; height: 18px; width: 102.672px;">
+
+                    </div>
+                    <div class="child-color"
+                        style="position: absolute; top: 36px; left: 16px; height: 18px; width: 102.672px;">
+
+                    </div>
+                </div>
+                <div class="parent-color"
+                    style="position: absolute; top: 0px; left: 349.344px; height: 60px; width: 134.672px;">
+                    <div class="child-color"
+                        style="position: absolute; top: 6px; left: 16px; height: 18px; width: 102.672px;">
+
+                    </div>
+                    <div class="child-color"
+                        style="position: absolute; top: 36px; left: 16px; height: 18px; width: 102.672px;">
+
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </rendering>
+
+    <rendering>
+        <section>
+            <div class="main main-color">
+                <div class="parent parent-color">
+                    <div class="child child-color">
+                        <div style="height:18px;"></div>
+                    </div>
+                    <div class="child child-color">
+                        <div style="height:18px;"></div>
+                    </div>
+                </div>
+                <div class="parent parent-color">
+                    <div class="child child-color">
+                        <div style="height:18px;"></div>
+                    </div>
+                    <div class="child child-color">
+                        <div style="height:18px;"></div>
+                    </div>
+                </div>
+                <div class="parent parent-color">
+                    <div class="child child-color">
+                        <div style="height:18px;"></div>
+                    </div>
+                    <div class="child child-color">
+                        <div style="height:18px;"></div>
+                    </div>
+                </div>
+            </div>
         </section>
     </rendering>
 </test>
