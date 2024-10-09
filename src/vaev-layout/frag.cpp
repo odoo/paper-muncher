@@ -64,10 +64,29 @@ static Strong<Text::Fontface> regularFontface() {
     return *_regularFontface;
 }
 
-static void _buildChildren(Style::Computer &c, Vec<Strong<Markup::Node>> const &children, Frag &parent) {
+void _buildChildren(Style::Computer &c, Vec<Strong<Markup::Node>> const &children, Frag &parent) {
     for (auto &child : children) {
         _buildNode(c, *child, parent);
     }
+}
+
+static void _buildTableChildren(Style::Computer &c, Vec<Strong<Markup::Node>> const &children, Frag &tableWrapperBox, Strong<Style::Computed> tableBoxStyle) {
+    Frag tableBox{
+        tableBoxStyle, tableWrapperBox.fontFace
+    };
+
+    tableBox.style->display = Display::Internal::TABLE_BOX;
+
+    for (auto &child : children) {
+        if (auto el = child->is<Markup::Element>()) {
+            if (el->tagName == Html::CAPTION) {
+                _buildNode(c, *child, tableWrapperBox);
+            } else {
+                _buildNode(c, *child, tableBox);
+            }
+        }
+    }
+    tableWrapperBox.add(std::move(tableBox));
 }
 
 static Opt<Math::Vec2u> _parseTableSpans(Markup::Element const &el) {
@@ -115,14 +134,30 @@ static void _buildElement(Style::Computer &c, Markup::Element const &el, Frag &p
         return;
     }
 
-    Frag frag = {style, font};
+    auto buildFrag = [](Style::Computer &c, Markup::Element const &el, Strong<Text::Fontface> font, Strong<Style::Computed> style) {
+        if (el.tagName == Html::TagId::TABLE) {
+
+            auto tableWrapperBoxStyle = makeStrong<Style::Computed>(Style::Computed::initial());
+            tableWrapperBoxStyle->display = style->display;
+
+            Frag tableWrapperBox = {tableWrapperBoxStyle, font};
+            _buildTableChildren(c, el.children(), tableWrapperBox, style);
+            return tableWrapperBox;
+        } else {
+            Frag frag = {style, font};
+            _buildChildren(c, el.children(), frag);
+            return frag;
+        }
+    };
+
+    auto frag = buildFrag(c, el, font, style);
+
     if (tableSpan)
         frag.tableSpan.cow() = {
             tableSpan.unwrap().x,
             tableSpan.unwrap().y,
         };
 
-    _buildChildren(c, el.children(), frag);
     parent.add(std::move(frag));
 }
 
@@ -175,7 +210,12 @@ Output _contentLayout(Tree &t, Frag &f, Input input) {
         };
         run->shape(font);
         return Output::fromSize(run->size().cast<Px>());
-    } else if (display == Display::FLOW or display == Display::FLOW_ROOT) {
+    } else if (
+        display == Display::FLOW or
+        display == Display::FLOW_ROOT or
+        display == Display::TABLE_CELL or
+        display == Display::TABLE_CAPTION
+    ) {
         return blockLayout(t, f, input);
     } else if (display == Display::FLEX) {
         return flexLayout(t, f, input);
@@ -183,6 +223,8 @@ Output _contentLayout(Tree &t, Frag &f, Input input) {
         return gridLayout(t, f, input);
     } else if (display == Display::TABLE) {
         return tableLayout(t, f, input);
+    } else if (display == Display::INTERNAL) {
+        return Output{};
     } else {
         return blockLayout(t, f, input);
     }
@@ -200,7 +242,7 @@ InsetsPx computeMargins(Tree &t, Frag &f, Input input) {
     return res;
 }
 
-static InsetsPx _computeBorders(Tree &t, Frag &f) {
+InsetsPx computeBorders(Tree &t, Frag &f) {
     InsetsPx res;
     auto borders = f.style->borders;
 
@@ -266,12 +308,13 @@ static Cons<Opt<Px>, IntrinsicSize> _computeSpecifiedSize(Tree &t, Frag &f, Inpu
 
 Output layout(Tree &t, Frag &f, Input input) {
     // FIXME: confirm how the preffered width/height parameters interacts with intrinsic size argument from input
-    auto borders = _computeBorders(t, f);
+    auto borders = computeBorders(t, f);
     auto padding = _computePaddings(t, f, input);
     auto sizing = f.style->sizing;
 
     auto [specifiedWidth, widthIntrinsicSize] = _computeSpecifiedSize(t, f, input, sizing->width, input.intrinsic.x);
     if (input.knownSize.width == NONE) {
+        // FIXME: making prefered width as mandatory width; im not sure this is ok
         input.knownSize.width = specifiedWidth;
     }
     input.knownSize.width = input.knownSize.width.map([&](auto s) {

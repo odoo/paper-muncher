@@ -1,0 +1,1613 @@
+<test name="table: fixed + no-border" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                    border: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                /* END: reset chrome's added style */
+
+                .black {
+                    background-color: black;
+                }
+
+                table {
+                    table-layout: fixed;
+                    width: 400px;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 400px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 200px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 200px; height: 20px; width: 200px;"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 200px;"></div>
+                    <div class="black" style="position: absolute; top: 0px; left: 200px; height: 20px; width: 200px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="position: absolute; top: 40px; left: 0px; height: 40px; width: 400px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 300px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 300px; height: 20px; width: 100px;"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 300px;"></div>
+                    <div class="black" style="position: absolute; top: 0px; left: 300px; height: 20px; width: 100px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="position: absolute; top: 80px; left: 0px; height: 40px; width: 400px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 266.661px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 266.661px; height: 20px; width: 133.339px;">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 266.661px;"></div>
+                    <div class="black"
+                        style="position: absolute; top: 0px; left: 266.661px; height: 20px; width: 133.339px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <table>
+            <thead>
+                <tr>
+                    <th class="fake-text-block black" />
+                    <th class="fake-text-block" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fake-text-block" />
+                    <td class="fake-text-block black" />
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 300px;" class="fake-text-block black" />
+                    <th style="width: 100px;" class="fake-text-block" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class=" fake-text-block" />
+                    <td class=" fake-text-block black" />
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 20px;" class="fake-text-block black" />
+                    <th style="width: 10px;" class="fake-text-block" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class=" fake-text-block" />
+                    <td class=" fake-text-block black" />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
+<test name="table: auto (simple) + no-border" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                    border: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                /* END: reset chrome's added style */
+
+                .black {
+                    background-color: black;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 0px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 0px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 0px;">
+                        <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 0px;">
+                        </div>
+                        <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 0px;"></div>
+                    </div>
+                </div>
+                <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 0px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 0px;">
+                        <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 0px;"></div>
+                        <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 0px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 40px; left: 0px; height: 40px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                        <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 300px;">
+                        </div>
+                        <div style="position: absolute; top: 0px; left: 300px; height: 20px; width: 100px;"></div>
+                    </div>
+                </div>
+                <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 400px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                        <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 300px;"></div>
+                        <div class="black"
+                            style="position: absolute; top: 0px; left: 300px; height: 20px; width: 100px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 80px; left: 0px; height: 40px; width: 30px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 30px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 30px;">
+                        <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 20px;">
+                        </div>
+                        <div style="position: absolute; top: 0px; left: 20px; height: 20px; width: 10px;"></div>
+                    </div>
+                </div>
+                <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 30px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 30px;">
+                        <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 20px;"></div>
+                        <div class="black" style="position: absolute; top: 0px; left: 20px; height: 20px; width: 10px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </rendering>
+
+    <rendering>
+        <table>
+            <thead>
+                <tr>
+                    <th class="fake-text-block black" />
+                    <th class="fake-text-block" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fake-text-block" />
+                    <td class="fake-text-block black" />
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 300px;" class="fake-text-block black" />
+                    <th style="width: 100px;" class="fake-text-block" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class=" fake-text-block" />
+                    <td class=" fake-text-block black" />
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 20px;" class="fake-text-block black" />
+                    <th style="width: 10px;" class="fake-text-block" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class=" fake-text-block" />
+                    <td class=" fake-text-block black" />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
+<test name="table: fixed + rowspan + no-border" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                    border: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                /* END: reset chrome's added style */
+
+                body {
+                    width: 900px;
+                }
+
+                .black {
+                    background-color: black;
+                }
+
+                table {
+                    width: 300px;
+                    table-layout: fixed;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+
+        <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 300px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 300px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 50px;"></div>
+                <div style="position: absolute; top: 0px; left: 50px; height: 40px; width: 100px;"></div>
+                <div style="position: absolute; top: 0px; left: 150px; height: 40px; width: 150px;"></div>
+            </div>
+            <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 300px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 300px;">
+                    <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 150px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 150px; height: 20px; width: 150px;"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 300px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 300px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 150px;"></div>
+                    <div class="black" style="position: absolute; top: 0px; left: 150px; height: 20px; width: 150px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </rendering>
+
+    <rendering>
+        <table>
+            <colgroup>
+                <col style="width: 50px;" />
+                <col />
+                <col />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th colspan="2" style="width: 200px;" class="fake-text-block black" />
+                    <th class="fake-text-block" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="2" class="fake-text-block" />
+                    <td class="fake-text-block black" />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
+<test name="table: fixed + rowspan + colspan + no-border" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                    border: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                /* END: reset chrome's added style */
+
+                .red {
+                    background-color: red;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .yellow {
+                    background-color: yellow;
+                }
+
+                .purple {
+                    background-color: purple;
+                }
+
+                table {
+                    table-layout: fixed;
+                    width: 1000px;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 1000px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 60px; width: 1000px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 1000px;">
+                        <div class="red" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 250px;">
+                        </div>
+                        <div class="yellow"
+                            style="position: absolute; top: 0px; left: 250px; height: 20px; width: 500px;"></div>
+                        <div class="green"
+                            style="position: absolute; top: 0px; left: 750px; height: 60px; width: 250px;"></div>
+                    </div>
+                    <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 1000px;">
+                        <div class="green" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 500px;">
+                        </div>
+                        <div class="blue"
+                            style="position: absolute; top: 0px; left: 500px; height: 20px; width: 250px;"></div>
+                    </div>
+                    <div style="position: absolute; top: 40px; left: 0px; height: 20px; width: 1000px;">
+                        <div class="purple"
+                            style="position: absolute; top: 0px; left: 0px; height: 20px; width: 750px;"></div>
+                    </div>
+                </div>
+                <div style="position: absolute; top: 60px; left: 0px; height: 40px; width: 1000px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 1000px;">
+                        <div class="blue" style="position: absolute; top: 0px; left: 0px; height: 40px; width: 250px;">
+                        </div>
+                        <div class="yellow"
+                            style="position: absolute; top: 0px; left: 250px; height: 20px; width: 750px;"></div>
+                    </div>
+                    <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 1000px;">
+                        <div class="red" style="position: absolute; top: 0px; left: 250px; height: 20px; width: 500px;">
+                        </div>
+                        <div class="green"
+                            style="position: absolute; top: 0px; left: 750px; height: 20px; width: 250px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <table>
+            <thead>
+                <tr>
+                    <th class="fake-text-block red" />
+                    <th colspan="2" class="fake-text-block yellow" />
+                    <th rowspan="3" class="fake-text-block green" />
+                </tr>
+                <tr>
+                    <td colspan="2" class="fake-text-block green" />
+                    <td class="fake-text-block blue" />
+                </tr>
+                <tr>
+                    <td colspan="3" class="fake-text-block purple" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td rowspan="2" class="fake-text-block blue" />
+                    <td colspan="3" class="fake-text-block yellow" />
+                </tr>
+                <tr>
+                    <td colspan="2" class="fake-text-block red" />
+                    <td class="fake-text-block green" />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
+<test name="table: auto + rowspan + colspan + no-border" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                    border: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                /* END: reset chrome's added style */
+
+                .red {
+                    background-color: red;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .yellow {
+                    background-color: yellow;
+                }
+
+                .purple {
+                    background-color: purple;
+                }
+
+                body {
+                    width: 800px;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+
+                .w-medium {
+                    width: 50px;
+                }
+
+                .w-big {
+                    width: 100px;
+                }
+
+                .w-small {
+                    width: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+
+        <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 150px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 60px; width: 150px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 150px;">
+                    <div class="red" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 50px;"></div>
+                    <div class="yellow" style="position: absolute; top: 0px; left: 50px; height: 20px; width: 50px;">
+                    </div>
+                    <div class="green" style="position: absolute; top: 0px; left: 100px; height: 60px; width: 50px;">
+                    </div>
+                </div>
+                <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 150px;">
+                    <div class="green" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 50px;">
+                    </div>
+                    <div class="blue" style="position: absolute; top: 0px; left: 50px; height: 20px; width: 50px;">
+                    </div>
+                </div>
+                <div style="position: absolute; top: 40px; left: 0px; height: 20px; width: 150px;">
+                    <div class="purple" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 100px;">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 60px; left: 0px; height: 40px; width: 150px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 150px;">
+                    <div class="blue" style="position: absolute; top: 0px; left: 0px; height: 40px; width: 50px;"></div>
+                    <div class="yellow" style="position: absolute; top: 0px; left: 50px; height: 20px; width: 100px;">
+                    </div>
+                </div>
+                <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 150px;">
+                    <div class="red" style="position: absolute; top: 0px; left: 50px; height: 20px; width: 50px;"></div>
+                    <div class="green" style="position: absolute; top: 0px; left: 100px; height: 20px; width: 50px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </rendering>
+
+    <rendering>
+        <table>
+            <thead>
+                <tr>
+                    <th class="fake-text-block red w-small" />
+                    <th colspan="2" class="fake-text-block yellow w-medium" />
+                    <th rowspan="3" class="fake-text-block green w-medium" />
+                </tr>
+                <tr>
+                    <td colspan="2" class="fake-text-block green" />
+                    <td class="fake-text-block blue w-medium" />
+                </tr>
+                <tr>
+                    <td colspan="3" class="fake-text-block purple w-small" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td rowspan="2" class="fake-text-block blue w-medium" />
+                    <td colspan="3" class="fake-text-block yellow" />
+                </tr>
+                <tr>
+                    <td colspan="2" class="fake-text-block red w-medium" />
+                    <td class="fake-text-block green w-small" />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
+
+<test name="table: fixed + cols + no-border" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                    border: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                /* END: reset chrome's added style */
+
+                body {
+                    width: 400px;
+                }
+
+                .black {
+                    background-color: black;
+                }
+
+                table {
+                    table-layout: fixed;
+                    width: 400px;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 400px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 25px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 25px; height: 20px; width: 100px;"></div>
+                    <div class="black" style="position: absolute; top: 0px; left: 125px; height: 20px; width: 275px;">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 25px;"></div>
+                    <div class="black" style="position: absolute; top: 0px; left: 25px; height: 20px; width: 100px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 125px; height: 20px; width: 275px;"></div>
+                </div>
+            </div>
+        </div>
+        <div style="position: absolute; top: 40px; left: 0px; height: 40px; width: 400px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 160px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 160px; height: 20px; width: 120px;"></div>
+                    <div class="black" style="position: absolute; top: 0px; left: 280px; height: 20px; width: 120px;">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 160px;"></div>
+                    <div class="black" style="position: absolute; top: 0px; left: 160px; height: 20px; width: 120px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 280px; height: 20px; width: 120px;"></div>
+                </div>
+            </div>
+        </div>
+        <div xmlns="http://www.w3.org/1999/xhtml"
+            style="position: absolute; top: 80px; left: 0px; height: 40px; width: 400px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 0px;"></div>
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 200px;"></div>
+                    <div class="black" style="position: absolute; top: 0px; left: 200px; height: 20px; width: 200px;">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 400px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 400px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 0px;"></div>
+                    <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 200px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 200px; height: 20px; width: 200px;"></div>
+                </div>
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <table>
+            <colgroup>
+                <col style="width: 25px;" />
+                <col style="width: 100px;" />
+                <col />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th class="fake-text-block black" style="width: 50px;" />
+                    <th class="fake-text-block" style="width: 10px;" />
+                    <th class="fake-text-block black" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fake-text-block" style="width: 90%;" />
+                    <td class="fake-text-block black" />
+                    <td class="fake-text-block" />
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <colgroup>
+                <col />
+                <col span="2" style="width: 30%;" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th class="fake-text-block black" />
+                    <th class="fake-text-block" />
+                    <th class="fake-text-block black" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fake-text-block" />
+                    <td class="fake-text-block black" />
+                    <td class="fake-text-block" />
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <colgroup>
+                <col />
+                <col span="2" style="width: 30%;" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th class="fake-text-block black" style="width: 0px;" />
+                    <th class="fake-text-block" />
+                    <th class="fake-text-block black" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fake-text-block" />
+                    <td class="fake-text-block black" />
+                    <td class="fake-text-block" />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
+<test name="table: auto + cols (no-perc) + no-border" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                    border: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                /* END: reset chrome's added style */
+
+                body {
+                    width: 400px;
+                }
+
+                .black {
+                    background-color: black;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+
+        <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 150px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 150px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 50px;"></div>
+                <div style="position: absolute; top: 0px; left: 50px; height: 40px; width: 100px;"></div>
+                <div style="position: absolute; top: 0px; left: 150px; height: 40px; width: 0px;"></div>
+            </div>
+            <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 150px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 150px;">
+                    <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 50px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 50px; height: 20px; width: 100px;">
+                    </div>
+                    <div class="black" style="position: absolute; top: 0px; left: 150px; height: 20px; width: 0px;">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 150px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 150px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 50px;">
+                    </div>
+                    <div class="black" style="position: absolute; top: 0px; left: 50px; height: 20px; width: 100px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 150px; height: 20px; width: 0px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="position: absolute; top: 40px; left: 0px; height: 40px; width: 280px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 130px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 30px;"></div>
+                <div style="position: absolute; top: 0px; left: 30px; height: 40px; width: 100px;"></div>
+            </div>
+            <div style="position: absolute; top: 0px; left: 130px; height: 40px; width: 150px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 150px;"></div>
+            </div>
+            <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 280px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 280px;">
+                    <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 30px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 30px; height: 20px; width: 50px;">
+                    </div>
+                    <div class="black" style="position: absolute; top: 0px; left: 80px; height: 20px; width: 50px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 130px; height: 20px; width: 150px;">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 280px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 280px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 30px;">
+                    </div>
+                    <div class="black" style="position: absolute; top: 0px; left: 30px; height: 20px; width: 50px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 80px; height: 20px; width: 50px;">
+                    </div>
+                    <div class="black" style="position: absolute; top: 0px; left: 130px; height: 20px; width: 150px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="position: absolute; top: 80px; left: 0px; height: 40px; width: 350px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 350px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 350px;">
+                    <div class="black" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 50px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 50px; height: 20px; width: 100px;"></div>
+                    <div class="black" style="position: absolute; top: 0px; left: 150px; height: 20px; width: 200px;">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 350px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 350px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 50px;"></div>
+                    <div class="black" style="position: absolute; top: 0px; left: 50px; height: 20px; width: 100px;">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 150px; height: 20px; width: 200px;"></div>
+                </div>
+            </div>
+        </div>
+
+    </rendering>
+
+    <rendering>
+        <table>
+            <colgroup>
+                <col style="width: 25px;" />
+                <col style="width: 100px;" />
+                <col />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th class="fake-text-block black" style="width: 50px;" />
+                    <th class="fake-text-block" style="width: 10px;" />
+                    <th class="fake-text-block black" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fake-text-block" />
+                    <td class="fake-text-block black" />
+                    <td class="fake-text-block" />
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <colgroup style="width: 300px;">
+                <col style="width: 30px;" />
+                <col style="width: 50px;" span="2" />
+            </colgroup>
+            <colgroup>
+                <col style="width: 150px;" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th class="fake-text-block black" />
+                    <th class="fake-text-block" />
+                    <th class="fake-text-block black" />
+                    <th class="fake-text-block" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fake-text-block" />
+                    <td class="fake-text-block black" />
+                    <td class="fake-text-block" />
+                    <td class="fake-text-block black" />
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50px;" class="black fake-text-block" />
+                    <th style="width: 100px;" class=" fake-text-block" />
+                    <th style="width: 200px;" class="black fake-text-block" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class=" fake-text-block" />
+                    <td class="black fake-text-block" />
+                    <td class=" fake-text-block" />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
+
+<test name="table: fixed + background-color interaction" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                    border: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                    caption-side: bottom;
+                }
+
+                /* END: reset chrome's added style */
+
+                .red {
+                    background-color: rgba(255, 0, 0, 0.205);
+                }
+
+                .green {
+                    background-color: rgba(30, 214, 30, 0.336);
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .yellow {
+                    background-color: rgba(255, 255, 0, 0.37);
+                }
+
+                .gray {
+                    background-color: rgba(197, 197, 178, 0.37);
+                }
+
+                .orange {
+                    background-color: rgba(231, 134, 8, 0.603);
+                }
+
+                .purple {
+                    background-color: purple;
+                }
+
+                table {
+                    table-layout: fixed;
+                    width: 800px;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="red" style="position: absolute; top: 0px; left: 0px; height: 140px; width: 800px;">
+            <div class="red" style="position: absolute; top: 0px; left: 0px; height: 60px; width: 800px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 800px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 800px;"></div>
+                </div>
+                <div style="position: absolute; top: 20px; left: 0px; height: 20px; width: 800px;">
+                    <div class="red" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 266.661px;">
+                    </div>
+                    <div class="gray"
+                        style="position: absolute; top: 0px; left: 266.661px; height: 20px; width: 533.339px;">
+                    </div>
+                </div>
+                <div class="green" style="position: absolute; top: 40px; left: 0px; height: 20px; width: 800px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 266.661px;"></div>
+                    <div class="purple"
+                        style="position: absolute; top: 0px; left: 266.661px; height: 20px; width: 266.661px;">
+                    </div>
+                    <div class="blue"
+                        style="position: absolute; top: 0px; left: 533.321px; height: 20px; width: 266.679px;">
+                    </div>
+                </div>
+            </div>
+            <div class="yellow" style="position: absolute; top: 60px; left: 0px; height: 60px; width: 800px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 800px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 800px;"></div>
+                </div>
+                <div class="orange" style="position: absolute; top: 20px; left: 0px; height: 20px; width: 800px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 533.321px;"></div>
+                    <div class="gray"
+                        style="position: absolute; top: 0px; left: 533.321px; height: 20px; width: 266.679px;">
+                    </div>
+                </div>
+                <div style="position: absolute; top: 40px; left: 0px; height: 20px; width: 800px;">
+                    <div class="blue" style="position: absolute; top: 0px; left: 0px; height: 20px; width: 266.661px;">
+                    </div>
+                    <div class="purple"
+                        style="position: absolute; top: 0px; left: 266.661px; height: 20px; width: 266.661px;">
+                    </div>
+                    <div class="yellow"
+                        style="position: absolute; top: 0px; left: 533.321px; height: 20px; width: 266.679px;">
+                    </div>
+                </div>
+            </div>
+            <div style="
+                background-color: black; position: absolute; top: 120px; left: 0px; height: 20px; width: 800px;">
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <table class="red">
+            <thead class="red">
+                <tr>
+                    <th colspan="3" class="fake-text-block"></th>
+                </tr>
+                <tr>
+                    <th class="fake-text-block red"></th>
+                    <th colspan="2" class="fake-text-block gray"></th>
+                </tr>
+                <tr class="green">
+                    <th class="fake-text-block"></th>
+                    <th class="purple fake-text-block"></th>
+                    <th class="blue fake-text-block"></th>
+                </tr>
+            </thead>
+            <tbody class="yellow">
+                <tr>
+                    <td colspan="3" class="fake-text-block"></td>
+                </tr>
+                <tr class="orange">
+                    <td colspan="2" class="fake-text-block"></td>
+                    <td class="gray fake-text-block"></td>
+                </tr>
+                <tr>
+                    <td class="blue fake-text-block"></td>
+                    <td class="purple fake-text-block"></td>
+                    <td class="yellow fake-text-block"></td>
+                </tr>
+
+            </tbody>
+            <caption class="fake-text-block" style="background-color: black;" />
+        </table>
+    </rendering>
+</test>
+
+<test name="table: fixed + border separate + no spacing" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                    caption-side: bottom;
+                }
+
+                /* END: reset chrome's added style */
+                body {
+                    width: 300px;
+                }
+
+                .table-border {
+                    border: 0px red solid;
+                    border-bottom-width: 1px;
+                    border-top-width: 20px;
+                    border-left-width: 10px;
+                    border-right-width: 60px;
+                }
+
+                table {
+                    width: 300px;
+                    table-layout: fixed;
+                }
+
+                .border {
+                    border: 5px black solid;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="table-border" style="position: absolute; top: 0px; left: 0px; height: 81px; width: 300px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 230px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 230px;">
+                    <div class="border" style="position: absolute; top: 0px; left: 0px; height: 30px; width: 115px;">
+                    </div>
+                    <div class="border" style="position: absolute; top: 0px; left: 115px; height: 30px; width: 115px;">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 30px; left: 0px; height: 30px; width: 230px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 230px;">
+                    <div class="border" style="position: absolute; top: 0px; left: 0px; height: 30px; width: 115px;">
+                    </div>
+                    <div class="border" style="position: absolute; top: 0px; left: 115px; height: 30px; width: 115px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <table class="table-border">
+            <thead>
+                <tr>
+                    <th class="fake-text-block border " />
+                    <th class="fake-text-block border" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class=" fake-text-block border" />
+                    <td class=" fake-text-block border " />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+
+</test>
+
+<test name="table: fixed + border separate + spacing" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                    caption-side: bottom;
+                }
+
+                /* END: reset chrome's added style */
+                body {
+                    width: 300px;
+                }
+
+                table {
+                    width: 300px;
+                    table-layout: fixed;
+                }
+
+                .table-border {
+                    border: 5px red solid;
+                    border-spacing: 5px 30px;
+                }
+
+                .border {
+                    border: 5px black solid;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+
+        <div class="table-border" style="position: absolute; top: 0px; left: 0px; height: 160px; width: 300px;">
+            <div style="position: absolute; top: 30px; left:5px; height: 30px; width: 280px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 280px;">
+                    <div class="border" style="position: absolute; top: 0px; left: 0px; height: 30px; width: 137.5px;">
+                    </div>
+                    <div class="border"
+                        style="position: absolute; top: 0px; left: 142.5px; height: 30px; width: 137.5px;"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 90px; left: 5px; height: 30px; width: 280px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 280px;">
+                    <div class="border" style="position: absolute; top: 0px; left: 0px; height: 30px; width: 137.5px;">
+                    </div>
+                    <div class="border"
+                        style="position: absolute; top: 0px; left: 142.5px; height: 30px; width: 137.5px;"></div>
+                </div>
+            </div>
+        </div>
+
+    </rendering>
+
+    <rendering>
+        <table class="table-border">
+            <thead>
+                <tr>
+                    <th class="fake-text-block border " />
+                    <th class="fake-text-block border" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class=" fake-text-block border" />
+                    <td class=" fake-text-block border " />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+
+</test>
+
+<test name="table: fixed + border separate + row and colspan + spacing" size="800">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                    caption-side: bottom;
+                }
+
+                /* END: reset chrome's added style */
+                body {
+                    width: 800px;
+                }
+
+                table {
+                    width: 800px;
+                    table-layout: fixed;
+                    border-spacing: 10px 30px;
+                }
+
+                .table-border {
+                    border: 5px red solid;
+                }
+
+                .border {
+                    border: 5px black solid;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+
+        <div class="table-border" style="position: absolute; top: 0px; left: 0px; height: 280px; width: 800px;">
+            <div style="position: absolute; top: 30px; left: 10px; height: 30px; width: 770px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 770px;">
+                    <div class="border" style="position: absolute; top: 0px; left: 0px; height: 30px; width: 458px;">
+                    </div>
+                    <div class="border" style="position: absolute; top: 0px; left: 468px; height: 30px; width: 146px;">
+                    </div>
+                    <div class="border" style="position: absolute; top: 0px; left: 624px; height: 30px; width: 146px;">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 90px; left: 10px; height: 150px; width: 770px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 770px;">
+                    <div class="border" style="position: absolute; top: 0px; left: 0px; height: 150px; width: 146px;">
+                    </div>
+                    <div class="border" style="position: absolute; top: 0px; left: 156px; height: 150px; width: 458px;">
+                    </div>
+                    <div class="border" style="position: absolute; top: 0px; left: 624px; height: 30px; width: 146px;">
+                    </div>
+                </div>
+                <div style="position: absolute; top: 60px; left: 0px; height: 30px; width: 770px;">
+                    <div class="border" style="position: absolute; top: 0px; left: 624px; height: 30px; width: 146px;">
+                    </div>
+                </div>
+                <div style="position: absolute; top: 120px; left: 0px; height: 30px; width: 770px;">
+                    <div class="border" style="position: absolute; top: 0px; left: 624px; height: 30px; width: 146px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <table class="table-border">
+            <thead>
+                <tr>
+                    <th colspan="3" class="fake-text-block border " />
+                    <th class="fake-text-block border" />
+                    <th class="fake-text-block border" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td rowspan="3" class=" fake-text-block border " />
+                    <td rowspan="3" colspan="3" class=" fake-text-block border" />
+                    <td class=" fake-text-block border " />
+                </tr>
+                <tr>
+                    <td class=" fake-text-block border " />
+                </tr>
+                <tr>
+                    <td class=" fake-text-block border " />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+
+</test>
+
+
+<test name="table: fixed + border separate + complex borders + no spacing" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                    caption-side: bottom;
+                }
+
+                /* END: reset chrome's added style */
+                body {
+                    width: 300px;
+                }
+
+                table {
+                    width: 300px;
+                    table-layout: fixed;
+                }
+
+                .border {
+                    border: 5px black solid;
+                }
+
+                .border-big-left {
+                    border-left-width: 10px;
+                }
+
+                .border-big-right {
+                    border-right-width: 10px;
+                }
+
+                .border-small-left {
+                    border-left-width: 1px;
+                }
+
+                .border-small-right {
+                    border-right-width: 1px;
+                }
+
+                .border-small-bottom {
+                    border-bottom-width: 1px;
+                }
+
+                .border-big-bottom {
+                    border-bottom-width: 10px;
+                }
+
+                .border-big-top {
+                    border-top-width: 10px;
+                }
+
+                .border-small-top {
+                    border-top-width: 1px;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <div style="position: absolute; top: 0px; left: 0px; height: 75px; width: 300px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 35px; width: 300px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 35px; width: 300px;">
+                        <div class=" border border-big-left border-small-right border-small-bottom"
+                            style="position: absolute; top: 0px; left: 0px; height: 35px; width: 100px;"></div>
+                        <div class=" border border-big-right border-big-bottom"
+                            style="position: absolute; top: 0px; left: 100px; height: 35px; width: 100px;"></div>
+                        <div class=" border"
+                            style="position: absolute; top: 0px; left: 200px; height: 35px; width: 100px;"></div>
+                    </div>
+                </div>
+                <div style="position: absolute; top: 35px; left: 0px; height: 40px; width: 300px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 300px;">
+                        <div class="  border border-small-left border-big-right border-big-bottom border-big-top"
+                            style="position: absolute; top: 0px; left: 0px; height: 40px; width: 100px;"></div>
+                        <div class="  border border-small-right border-big-top"
+                            style="position: absolute; top: 0px; left: 100px; height: 40px; width: 100px;"></div>
+                        <div class="  border border-big-left border-small-top"
+                            style="position: absolute; top: 0px; left: 200px; height: 40px; width: 100px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <table>
+            <thead>
+                <tr>
+                    <th class="fake-text-block border border-big-left border-small-right border-small-bottom" />
+                    <th class="fake-text-block border border-big-right border-big-bottom" />
+                    <th class="fake-text-block border" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td
+                        class=" fake-text-block border border-small-left border-big-right border-big-bottom border-big-top" />
+                    <td class=" fake-text-block border border-small-right border-big-top" />
+                    <td class=" fake-text-block border border-big-left border-small-top" />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>

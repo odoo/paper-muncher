@@ -35,8 +35,10 @@ Output blockLayout(Tree &t, Frag &f, Input input) {
             continue;
 
         Opt<Px> childInlineSize = NONE;
-        if (c.style->sizing->width == Size::AUTO)
+        if (c.style->sizing->width == Size::AUTO and
+            c.style->display != Display::TABLE) {
             childInlineSize = inlineSize;
+        }
 
         Input childInput = {
             .commit = input.commit,
