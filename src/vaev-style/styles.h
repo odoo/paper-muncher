@@ -321,20 +321,43 @@ struct DisplayProp {
     }
 };
 
-// MARK: Borders ---------------------------------------------------------------
+// https://www.w3.org/TR/CSS21/tables.html#propdef-table-layout
+struct TableLayoutProp {
+    TableLayout value = initial();
 
-// https://www.w3.org/TR/CSS22/tables.html#propdef-border-collapse
-struct BorderCollapseProp {
-    BorderCollapse value = initial();
+    static constexpr Str name() { return "table-layout"; }
 
-    static constexpr Str name() { return "border-collapse"; }
+    static constexpr TableLayout initial() { return TableLayout::AUTO; }
 
-    static constexpr BorderCollapse initial() { return BorderCollapse::SEPARATE; }
+    void apply(Computed &s) const {
+        s.table.cow().tableLayout = value;
+    }
 
-    void apply(Computed &) const {
-        // TODO
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<TableLayout>(c));
+        return Ok();
     }
 };
+
+// https://www.w3.org/TR/CSS21/tables.html#caption-position
+struct CaptionSideProp {
+    CaptionSide value = initial();
+
+    static constexpr Str name() { return "caption-side"; }
+
+    static constexpr CaptionSide initial() { return CaptionSide::TOP; }
+
+    void apply(Computed &s) const {
+        s.table.cow().captionSide = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<CaptionSide>(c));
+        return Ok();
+    }
+};
+
+// MARK: Borders ---------------------------------------------------------------
 
 // https://www.w3.org/TR/CSS22/box.html#propdef-border-color
 struct BorderTopColorProp {
@@ -918,6 +941,44 @@ struct BorderWidthProp {
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Math::Insets<Length>>(c));
 
+        return Ok();
+    }
+};
+
+// MARK: Borders - Table ---------------------------------------------------------------
+
+// https://www.w3.org/TR/CSS22/tables.html#propdef-border-collapse
+struct BorderCollapseProp {
+    BorderCollapse value = initial();
+
+    static constexpr Str name() { return "border-collapse"; }
+
+    static constexpr BorderCollapse initial() { return BorderCollapse::SEPARATE; }
+
+    void apply(Computed &c) const {
+        c.table.cow().collapse = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<BorderCollapse>(c));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/CSS22/tables.html#propdef-border-spacing
+struct BorderSpacingProp {
+    BorderSpacing value = initial();
+
+    static constexpr Str name() { return "border-spacing"; }
+
+    static constexpr BorderSpacing initial() { return {Px{0}, Px{0}}; }
+
+    void apply(Computed &c) const {
+        c.table.cow().spacing = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<BorderSpacing>(c));
         return Ok();
     }
 };
@@ -1903,6 +1964,8 @@ using _StyleProp = Union<
     BackgroundProp,
     ColorProp,
     DisplayProp,
+    TableLayoutProp,
+    CaptionSideProp,
 
     // Borders
     BorderTopColorProp,
@@ -1935,6 +1998,10 @@ using _StyleProp = Union<
     BorderProp,
 
     BorderWidthProp,
+
+    // Borders - Table
+    BorderCollapseProp,
+    BorderSpacingProp,
 
     // Flex
     FlexBasisProp,
