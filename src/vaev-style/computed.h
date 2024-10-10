@@ -13,6 +13,7 @@
 #include <vaev-base/numbers.h>
 #include <vaev-base/overflow.h>
 #include <vaev-base/sizing.h>
+#include <vaev-base/table.h>
 #include <vaev-base/visibility.h>
 #include <vaev-base/z-index.h>
 
@@ -50,6 +51,8 @@ struct Computed {
     Display display;
     Integer order;
     Visibility visibility;
+    // https://w3.org/TR/css-tables-3/#table-structure
+    Cow<Table> table;
 
     // CSS Fonts Module Level 4
     // https://www.w3.org/TR/css-fonts-4/

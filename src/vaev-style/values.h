@@ -14,6 +14,7 @@
 #include <vaev-base/overflow.h>
 #include <vaev-base/resolution.h>
 #include <vaev-base/sizing.h>
+#include <vaev-base/table.h>
 #include <vaev-base/z-index.h>
 #include <vaev-css/parser.h>
 
@@ -49,6 +50,17 @@ struct ValueParser<bool> {
 template <>
 struct ValueParser<Gfx::BorderStyle> {
     static Res<Gfx::BorderStyle> parse(Cursor<Css::Sst> &c);
+};
+
+template <>
+struct ValueParser<BorderCollapse> {
+
+    static Res<BorderCollapse> parse(Cursor<Css::Sst> &c);
+};
+
+template <>
+struct ValueParser<BorderSpacing> {
+    static Res<BorderSpacing> parse(Cursor<Css::Sst> &c);
 };
 
 template <typename T>
@@ -143,6 +155,11 @@ struct ValueParser<Contrast> {
 template <>
 struct ValueParser<Display> {
     static Res<Display> parse(Cursor<Css::Sst> &c);
+};
+
+template <>
+struct ValueParser<CaptionSide> {
+    static Res<CaptionSide> parse(Cursor<Css::Sst> &c);
 };
 
 template <>
@@ -407,6 +424,11 @@ struct ValueParser<ReducedTransparency> {
 template <>
 struct ValueParser<ReducedData> {
     static Res<ReducedData> parse(Cursor<Css::Sst> &c);
+};
+
+template <>
+struct ValueParser<TableLayout> {
+    static Res<TableLayout> parse(Cursor<Css::Sst> &c);
 };
 
 template <>
