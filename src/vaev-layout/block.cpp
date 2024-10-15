@@ -1,5 +1,6 @@
 #include "block.h"
 
+#include "float.h"
 #include "frag.h"
 #include "values.h"
 
@@ -35,6 +36,9 @@ Output blockLayout(Tree &t, Frag &f, Input input) {
     });
 
     for (auto &c : f.children()) {
+        if (c.style->float_ != Float::NONE)
+            continue;
+
         Opt<Px> childInlineSize = NONE;
         if (c.style->sizing->width == Size::AUTO)
             childInlineSize = inlineSize;
@@ -64,6 +68,8 @@ Output blockLayout(Tree &t, Frag &f, Input input) {
             blockSize += ouput.size.y + margin.bottom + margin.top;
         }
     }
+
+    // layoutFloat(t, f, input.containingBlock);
 
     return Output::fromSize({
         inlineSize,

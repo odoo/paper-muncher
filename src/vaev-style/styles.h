@@ -431,72 +431,72 @@ struct BorderColorProp {
 
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 struct BorderLeftStyleProp {
-    BorderStyle value = initial();
+    Gfx::BorderStyle value = initial();
 
     static constexpr Str name() { return "border-left-style"; }
 
-    static constexpr BorderStyle initial() { return BorderStyle::NONE; }
+    static constexpr Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
 
     void apply(Computed &c) const {
         c.borders.cow().start.style = value;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<BorderStyle>(c));
+        value = try$(parseValue<Gfx::BorderStyle>(c));
         return Ok();
     }
 };
 
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 struct BorderTopStyleProp {
-    BorderStyle value = initial();
+    Gfx::BorderStyle value = initial();
 
     static constexpr Str name() { return "border-top-style"; }
 
-    static constexpr BorderStyle initial() { return BorderStyle::NONE; }
+    static constexpr Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
 
     void apply(Computed &c) const {
         c.borders.cow().top.style = value;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<BorderStyle>(c));
+        value = try$(parseValue<Gfx::BorderStyle>(c));
         return Ok();
     }
 };
 
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 struct BorderRightStyleProp {
-    BorderStyle value = initial();
+    Gfx::BorderStyle value = initial();
 
     static constexpr Str name() { return "border-right-style"; }
 
-    static constexpr BorderStyle initial() { return BorderStyle::NONE; }
+    static constexpr Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
 
     void apply(Computed &c) const {
         c.borders.cow().end.style = value;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<BorderStyle>(c));
+        value = try$(parseValue<Gfx::BorderStyle>(c));
         return Ok();
     }
 };
 
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 struct BorderBottomStyleProp {
-    BorderStyle value = initial();
+    Gfx::BorderStyle value = initial();
 
     static constexpr Str name() { return "border-bottom-style"; }
 
-    static constexpr BorderStyle initial() { return BorderStyle::NONE; }
+    static constexpr Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
 
     void apply(Computed &c) const {
         c.borders.cow().bottom.style = value;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<BorderStyle>(c));
+        value = try$(parseValue<Gfx::BorderStyle>(c));
         return Ok();
     }
 };
@@ -717,7 +717,7 @@ struct BorderProp {
                 continue;
             }
 
-            auto style = parseValue<BorderStyle>(c);
+            auto style = parseValue<Gfx::BorderStyle>(c);
             if (style) {
                 value.style = style.unwrap();
                 continue;

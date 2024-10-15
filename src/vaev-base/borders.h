@@ -1,5 +1,6 @@
 #pragma once
 
+#include <karm-gfx/borders.h>
 #include <karm-gfx/fill.h>
 #include <karm-math/radii.h>
 
@@ -23,23 +24,9 @@ enum struct BorderCollapse {
     COLLAPSE,
 };
 
-enum struct BorderStyle {
-    NONE,
-
-    HIDDEN,
-    DOTTED,
-    DASHED,
-    SOLID,
-    DOUBLE,
-    GROOVE,
-    RIDGE,
-    INSET,
-    OUTSET,
-};
-
 struct Border {
     Length width;
-    BorderStyle style;
+    Gfx::BorderStyle style;
     Color color = Color::CURRENT;
 
     void repr(Io::Emit &e) const {

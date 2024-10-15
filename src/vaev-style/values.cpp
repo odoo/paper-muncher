@@ -111,28 +111,28 @@ Res<bool> ValueParser<bool>::parse(Cursor<Css::Sst> &c) {
 
 // MARK: Border-Style
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
-Res<BorderStyle> ValueParser<BorderStyle>::parse(Cursor<Css::Sst> &c) {
+Res<Gfx::BorderStyle> ValueParser<Gfx::BorderStyle>::parse(Cursor<Css::Sst> &c) {
     if (c.ended())
         return Error::invalidData("unexpected end of property");
 
     if (c.skip(Css::Token::ident("none"))) {
-        return Ok(BorderStyle::NONE);
+        return Ok(Gfx::BorderStyle::NONE);
     } else if (c.skip(Css::Token::ident("solid"))) {
-        return Ok(BorderStyle::SOLID);
+        return Ok(Gfx::BorderStyle::SOLID);
     } else if (c.skip(Css::Token::ident("dashed"))) {
-        return Ok(BorderStyle::DASHED);
+        return Ok(Gfx::BorderStyle::DASHED);
     } else if (c.skip(Css::Token::ident("dotted"))) {
-        return Ok(BorderStyle::DOTTED);
+        return Ok(Gfx::BorderStyle::DOTTED);
     } else if (c.skip(Css::Token::ident("hidden"))) {
-        return Ok(BorderStyle::HIDDEN);
+        return Ok(Gfx::BorderStyle::HIDDEN);
     } else if (c.skip(Css::Token::ident("double"))) {
-        return Ok(BorderStyle::DOUBLE);
+        return Ok(Gfx::BorderStyle::DOUBLE);
     } else if (c.skip(Css::Token::ident("groove"))) {
-        return Ok(BorderStyle::GROOVE);
+        return Ok(Gfx::BorderStyle::GROOVE);
     } else if (c.skip(Css::Token::ident("ridge"))) {
-        return Ok(BorderStyle::RIDGE);
+        return Ok(Gfx::BorderStyle::RIDGE);
     } else if (c.skip(Css::Token::ident("outset"))) {
-        return Ok(BorderStyle::OUTSET);
+        return Ok(Gfx::BorderStyle::OUTSET);
     } else {
         return Error::invalidData("unknown border-style");
     }

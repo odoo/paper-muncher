@@ -47,8 +47,8 @@ struct ValueParser<bool> {
 };
 
 template <>
-struct ValueParser<BorderStyle> {
-    static Res<BorderStyle> parse(Cursor<Css::Sst> &c);
+struct ValueParser<Gfx::BorderStyle> {
+    static Res<Gfx::BorderStyle> parse(Cursor<Css::Sst> &c);
 };
 
 template <typename T>

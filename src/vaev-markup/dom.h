@@ -45,14 +45,14 @@ struct Node :
     MutCursor<T> is() {
         if (nodeType() != T::TYPE)
             return nullptr;
-        return {static_cast<T *>(this), 1};
+        return static_cast<T *>(this);
     }
 
     template <typename T>
     Cursor<T> is() const {
         if (nodeType() != T::TYPE)
             return nullptr;
-        return {static_cast<T const *>(this), 1};
+        return static_cast<T const *>(this);
     }
 
     // MARK: Parent

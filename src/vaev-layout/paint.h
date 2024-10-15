@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vaev-paint/stack.h>
+#include <karm-scene/stack.h>
 
 #include "frag.h"
 
 namespace Vaev::Layout {
 
-void paint(Frag &frag, Paint::Stack &stack);
+void paint(Frag &frag, Scene::Stack &stack);
 
 } // namespace Vaev::Layout

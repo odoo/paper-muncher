@@ -168,16 +168,16 @@ static InsetsPx _computeBorders(Tree &t, Frag &f) {
     InsetsPx res;
     auto borders = f.style->borders;
 
-    if (borders->top.style != BorderStyle::NONE)
+    if (borders->top.style != Gfx::BorderStyle::NONE)
         res.top = resolve(t, f, borders->top.width);
 
-    if (borders->end.style != BorderStyle::NONE)
+    if (borders->end.style != Gfx::BorderStyle::NONE)
         res.end = resolve(t, f, borders->end.width);
 
-    if (borders->bottom.style != BorderStyle::NONE)
+    if (borders->bottom.style != Gfx::BorderStyle::NONE)
         res.bottom = resolve(t, f, borders->bottom.width);
 
-    if (borders->start.style != BorderStyle::NONE)
+    if (borders->start.style != Gfx::BorderStyle::NONE)
         res.start = resolve(t, f, borders->start.width);
 
     return res;
