@@ -53,13 +53,13 @@ Spec spec(Selector const &s) {
 
 // https://www.w3.org/TR/selectors-4/#descendant-combinators
 static bool _matchDescendant(Selector const &s, Markup::Element const &e) {
-    Cursor<Markup::Node> curr = e;
+    Cursor<Markup::Node> curr = &e;
     while (curr->hasParent()) {
         auto &parent = curr->parentNode();
         if (auto el = parent.is<Markup::Element>())
             if (s.match(*el))
                 return true;
-        curr = parent;
+        curr = &parent;
     }
     return false;
 }

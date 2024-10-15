@@ -384,21 +384,21 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
             };
 
             Mime::Url inputUrl = "about:stdin"_url;
-            MutCursor<Io::Reader> input = Sys::in();
-            MutCursor<Io::Writer> output = Sys::out();
+            MutCursor<Io::Reader> input = &Sys::in();
+            MutCursor<Io::Writer> output = &Sys::out();
 
             Opt<Sys::FileReader> inputFile;
             if (inputArg.unwrap() != "-"s) {
                 inputUrl = co_try$(Mime::parseUrlOrPath(inputArg));
                 inputFile = co_try$(Sys::File::open(inputUrl));
-                input = inputFile.unwrap();
+                input = &inputFile.unwrap();
             }
 
             Opt<Sys::FileWriter> outputFile;
             if (outputArg.unwrap() != "-"s) {
                 auto outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
                 outputFile = co_try$(Sys::File::create(outputUrl));
-                output = outputFile.unwrap();
+                output = &outputFile.unwrap();
             }
 
             co_return Vaev::Tools::print(inputUrl, *input, *output, options);
@@ -432,21 +432,21 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
             };
 
             Mime::Url inputUrl = "about:stdin"_url;
-            MutCursor<Io::Reader> input = Sys::in();
-            MutCursor<Io::Writer> output = Sys::out();
+            MutCursor<Io::Reader> input = &Sys::in();
+            MutCursor<Io::Writer> output = &Sys::out();
 
             Opt<Sys::FileReader> inputFile;
             if (inputArg.unwrap() != "-"s) {
                 inputUrl = co_try$(Mime::parseUrlOrPath(inputArg));
                 inputFile = co_try$(Sys::File::open(inputUrl));
-                input = inputFile.unwrap();
+                input = &inputFile.unwrap();
             }
 
             Opt<Sys::FileWriter> outputFile;
             if (outputArg.unwrap() != "-"s) {
                 auto outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
                 outputFile = co_try$(Sys::File::create(outputUrl));
-                output = outputFile.unwrap();
+                output = &outputFile.unwrap();
             }
 
             co_return Vaev::Tools::render(inputUrl, *input, *output, options);
