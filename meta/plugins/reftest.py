@@ -127,6 +127,8 @@ def _(args: RefTestArgs):
 
             search = re.search(r"""<container>([\w\W]+?)</container>""", test)
             container = search and search.group(1)
+            if not container:
+                container = '<html xmlns="http://www.w3.org/1999/xhtml"><body><slot /></body></html>'
 
             expected_xhtml = None
             expected_image: bytes | None = None
