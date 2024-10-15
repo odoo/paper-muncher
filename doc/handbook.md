@@ -10,7 +10,6 @@ Paper Muncher is the fruit of a long search for a wkhtmltopdf replacement (See o
  - Markup parser `vaev-markup` responsible for parsing html and xml into a DOM.
  - Style engine `vaev-style` responsible for parsing CSS into stylesheet object, and compute style.
  - Layout engine `vaev-layout` takes the computed style and DOM and build a fragment tree, this fragment tree is then layout following the different formating option offered by CSS (flex, grid, table, block and inline)
- - Paint engine `vaev-paint`, takes the layout tree and build a paint tree, this paint tree is then ready to be displayed on the screen or converted to a PDF file.
  - And a driver `vaev-driver` that tie all the other component together
 
 (See [the architecture diagram](../src/web/diagrams.tldr) for a visual representatio of how these component interacts)
@@ -27,10 +26,10 @@ As a team we believe that building exceptional software requires strongs opinion
 
 ## Essential Commands
 
-* `./ck builder run paper-muncher -- inspector <input document>`:  Start the development environment.
-* `./ck builder run --debug paper-muncher -- inspector <input document>`:  For debugging.
-* `./ck builder run --profile paper-muncher -- inspector <input document>`:  For profiling (requires `perf` and `speedscope` to be installed).
-* `./ck builder run --mixins=release paper-muncher -- inspector <input document>` Build the release version.
+* `./ck builder run paper-muncher -- inspect <input document>`:  Start the development environment.
+* `./ck builder run --debug paper-muncher -- inspect <input document>`:  For debugging.
+* `./ck builder run --profile paper-muncher -- inspect <input document>`:  For profiling (requires `perf` and `speedscope` to be installed).
+* `./ck builder run --mixins=release paper-muncher -- inspect <input document>` Build the release version.
 * `./ck builder test`  Run all tests.
 * `./ck builder clean`  Clean the build directory.
 
