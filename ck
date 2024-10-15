@@ -17,6 +17,14 @@ function is_darwin() {
     return 1
 }
 
+function is_arch() {
+    if [ -f /etc/os-release ]; then
+        grep -q "Arch Linux" /etc/os-release
+        return $?
+    fi
+    return 1
+}
+
 if [ -z "$CUTEKIT_PYTHON" ]; then
     if command -v python3.11 &> /dev/null; then
         export CUTEKIT_PYTHON="python3.11"
@@ -65,6 +73,9 @@ if [ ! -f .cutekit/tools-ready ]; then
     if is_ubuntu; then
         echo "Detected Ubuntu, installing dependencies automatically..."
         sudo ./meta/scripts/setup-ubuntu.sh
+    elif is_arch; then
+        echo "Detected Arch Linux, installing dependencies automatically..."
+        sudo ./meta/scripts/setup-arch.sh
     elif is_darwin; then
         echo "Detected macOS, installing dependencies automatically..."
         ./meta/scripts/setup-darwin.sh
