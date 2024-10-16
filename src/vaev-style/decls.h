@@ -51,7 +51,6 @@ Res<P> parseDeclaration(Css::Sst const &sst) {
 
         eatWhitespace(cursor);
         if (not cursor.ended()) {
-            logDebug("data: {}", cursor);
             resDecl = Error::invalidData("unknown tokens in content");
         }
 
