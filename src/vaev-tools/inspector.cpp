@@ -101,9 +101,12 @@ Ui::Child mainMenu([[maybe_unused]] State const &s) {
 Ui::Child addressBar(Mime::Url const &url) {
     return Ui::hflow(
                0,
-               Math::Align::CENTER,
-               Ui::text("{}", url),
-               Ui::grow(NONE),
+
+               Ui::text("{}", url) |
+                   Ui::center() |
+                   Ui::hscroll() |
+                   Ui::grow(),
+
                Kr::contextMenuIcon(Model::bind<Reload>(), Mdi::REFRESH)
            ) |
            Ui::box({
