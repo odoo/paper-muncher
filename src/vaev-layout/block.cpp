@@ -51,10 +51,6 @@ Output blockLayout(Tree &t, Frag &f, Input input) {
             childInput.knownSize.width = childInlineSize;
         }
 
-        if (c.style->position == Position::ABSOLUTE) {
-            childInput.intrinsic.width = IntrinsicSize::MIN_CONTENT;
-        }
-
         childInput.position = input.position + Vec2Px{Px{0}, blockSize} + margin.topStart();
 
         auto ouput = layout(
