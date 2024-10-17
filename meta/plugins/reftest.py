@@ -1,4 +1,4 @@
-from cutekit import shell, vt100, cli, builder, model
+from cutekit import shell, vt100, cli, builder, model, const
 from pathlib import Path
 from random import randint
 import re
@@ -68,7 +68,7 @@ def _(): ...
 
 
 TESTS_DIR: Path = Path(__file__).parent.parent.parent / "tests"
-TEST_REPORT = TESTS_DIR / "report"
+TEST_REPORT = (Path(const.PROJECT_CK_DIR) / "tests" / "report").absolute()
 
 
 @cli.command(None, "reftests/clean", "Manage the reftests")
@@ -107,7 +107,7 @@ def _(args: RefTestArgs):
     passed, failed = 0, 0
 
     counter = 0
-    for file in TESTS_DIR.glob(args.glob or "*/*.xhtml"):
+    for file in TESTS_DIR.glob(args.glob or "**/*.xhtml"):
         if file.suffix != ".xhtml":
             continue
         print(f"Running comparison test {file}...")
@@ -123,7 +123,6 @@ def _(args: RefTestArgs):
                 print(f"{vt100.YELLOW}Skip test{vt100.RESET}")
                 continue
             Num += 1
-            temp_file_name = re.sub(r"[^\w.-]", "_", f"{file}-{props.get('id') or Num}")
 
             search = re.search(r"""<container>([\w\W]+?)</container>""", test)
             container = search and search.group(1)
@@ -132,7 +131,7 @@ def _(args: RefTestArgs):
 
             expected_xhtml = None
             expected_image: bytes | None = None
-            expected_image_url = TEST_REPORT / f"{temp_file_name}.expected.bmp"
+            expected_image_url = TEST_REPORT / f"{counter}.expected.bmp"
             if props.get("id"):
                 ref_image = file.parent / f"{props.get('id')}.bmp"
                 if ref_image.exists():
@@ -191,7 +190,7 @@ def _(args: RefTestArgs):
                     expected_xhtml = rendering
                     if not expected_image:
                         expected_image = output_image
-                        with (TEST_REPORT / f"{temp_file_name}.expected.bmp").open(
+                        with (TEST_REPORT / f"{counter}.expected.bmp").open(
                             "wb"
                         ) as imageWriter:
                             imageWriter.write(expected_image)
@@ -303,3 +302,4 @@ def _(args: RefTestArgs):
         print(f"{vt100.GREEN}// {fetchMessage(args, 'nice')}{vt100.RESET}")
         print(f"{vt100.GREEN}All tests passed{vt100.RESET}")
     print(f"Report: {TEST_REPORT / 'report.html'}")
+    shell.exec("open", str(TEST_REPORT / "report.html"))
