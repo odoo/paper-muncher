@@ -430,6 +430,30 @@ struct BorderColorProp {
 };
 
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
+
+struct BorderStyle {
+    Math::Insets<Gfx::BorderStyle> value = initial();
+
+    static constexpr Str name() { return "border-style"; }
+
+    static constexpr Math::Insets<Gfx::BorderStyle> initial() {
+        return {Gfx::BorderStyle::NONE};
+    }
+
+    void apply(Computed &c) const {
+        c.borders.cow().start.style = value.start;
+        c.borders.cow().end.style = value.end;
+        c.borders.cow().top.style = value.top;
+        c.borders.cow().bottom.style = value.bottom;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<Math::Insets<Gfx::BorderStyle>>(c));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/CSS22/box.html#border-style-properties
 struct BorderLeftStyleProp {
     Gfx::BorderStyle value = initial();
 
@@ -1673,6 +1697,7 @@ using _StyleProp = Union<
     BorderBottomWidthProp,
     BorderLeftWidthProp,
 
+    BorderStyle,
     BorderTopStyleProp,
     BorderRightStyleProp,
     BorderBottomStyleProp,
