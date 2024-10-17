@@ -21,6 +21,11 @@ void layoutPositioned(Tree &t, Frag &f, RectPx containingBlock) {
             start = origin.x + resolve(t, f, startOffset, containingBlock.width);
         }
 
+        auto endOffset = f.style->offsets->end;
+        if (endOffset != Width::AUTO) {
+            start = (origin.x + containingBlock.width) - resolve(t, f, endOffset, containingBlock.width) - f.layout.borderSize.width;
+        }
+
         layout(
             t,
             f,
