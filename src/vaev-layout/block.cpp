@@ -9,21 +9,16 @@ namespace Vaev::Layout {
 static Px _blockLayoutDetermineWidth(Tree &t, Frag &f, Input input) {
     Px width = Px{0};
     for (auto &c : f.children()) {
+        auto ouput = layout(
+            t,
+            c,
+            {
+                .commit = Commit::NO,
+                .intrinsic = input.intrinsic,
+            }
+        );
 
-        if (c.style->sizing->width == Size::AUTO)
-            width = max(width, input.knownSize.width.unwrapOr(Px{0}));
-        else {
-            auto ouput = layout(
-                t,
-                c,
-                {
-                    .commit = Commit::NO,
-                    .intrinsic = input.intrinsic,
-                }
-            );
-
-            width = max(width, ouput.size.x);
-        }
+        width = max(width, ouput.size.x);
     }
 
     return width;
@@ -31,7 +26,7 @@ static Px _blockLayoutDetermineWidth(Tree &t, Frag &f, Input input) {
 
 Output blockLayout(Tree &t, Frag &f, Input input) {
     Px blockSize = Px{0};
-    Px inlineSize = input.knownSize.x.unwrapOrElse([&] {
+    Px inlineSize = input.knownSize.width.unwrapOrElse([&] {
         return _blockLayoutDetermineWidth(t, f, input);
     });
 
@@ -53,10 +48,14 @@ Output blockLayout(Tree &t, Frag &f, Input input) {
 
         if (c.style->position != Position::ABSOLUTE) {
             blockSize += margin.top;
+            childInput.knownSize.width = childInlineSize;
+        }
+
+        if (c.style->position == Position::ABSOLUTE) {
+            childInput.intrinsic.width = IntrinsicSize::MIN_CONTENT;
         }
 
         childInput.position = input.position + Vec2Px{Px{0}, blockSize} + margin.topStart();
-        childInput.knownSize = {childInlineSize, NONE};
 
         auto ouput = layout(
             t,
