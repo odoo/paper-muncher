@@ -65,10 +65,12 @@ static void _paintFrag(Frag &frag, Scene::Stack &stack) {
 
     _paintBox(frag, currentColor, stack);
 
-    if (auto run = frag.content.is<Strong<Text::Run>>()) {
-        Math::Vec2f baseline = {0, frag.font.metrics().ascend};
+    if (auto run = frag.content.is<Text::Run>()) {
+        Text::Font font = {frag.fontFace, frag.layout.fontSize.cast<f64>()};
+        Math::Vec2f baseline = {0, font.metrics().ascend};
         stack.add(makeStrong<Scene::Text>(
             frag.layout.borderBox().topStart().cast<f64>() + baseline,
+            font,
             *run,
             currentColor
         ));

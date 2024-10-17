@@ -11,11 +11,11 @@ namespace Vaev::Layout {
 
 // MARK: Frag ------------------------------------------------------------------
 
-Frag::Frag(Strong<Style::Computed> style, Text::Font font)
-    : style{std::move(style)}, font{font} {}
+Frag::Frag(Strong<Style::Computed> style, Strong<Text::Fontface> font)
+    : style{std::move(style)}, fontFace{font} {}
 
-Frag::Frag(Strong<Style::Computed> style, Text::Font font, Content content)
-    : style{std::move(style)}, font{font}, content{std::move(content)} {}
+Frag::Frag(Strong<Style::Computed> style, Strong<Text::Fontface> font, Content content)
+    : style{std::move(style)}, fontFace{font}, content{std::move(content)} {}
 
 Karm::Slice<Frag> Frag::children() const {
     if (auto frags = content.is<Vec<Frag>>())
@@ -72,7 +72,7 @@ static void _buildChildren(Style::Computer &c, Vec<Strong<Markup::Node>> const &
 
 static void _buildElement(Style::Computer &c, Markup::Element const &el, Frag &parent) {
     auto style = c.computeFor(*parent.style, el);
-    auto font = Text::Font{regularFontface(), 16};
+    auto font = regularFontface();
 
     if (el.tagName == Html::IMG) {
         Image::Picture img = Gfx::Surface::fallback();
@@ -99,20 +99,20 @@ static void _buildRun(Style::Computer &, Markup::Text const &node, Frag &parent)
     auto style = makeStrong<Style::Computed>(Style::Computed::initial());
     style->inherit(*parent.style);
 
-    auto font = Text::Font{regularFontface(), 16};
+    auto font = regularFontface();
     Io::SScan scan{node.data};
     scan.eat(Re::space());
     if (scan.ended())
         return;
-    auto run = makeStrong<Text::Run>(font);
+    Text::Run run;
     while (not scan.ended()) {
-        run->append(scan.next());
+        run.append(scan.next());
         if (scan.eat(Re::space())) {
-            run->append(' ');
+            run.append(' ');
         }
     }
 
-    parent.add({style, font, run});
+    parent.add({style, font, std::move(run)});
 }
 
 void _buildNode(Style::Computer &c, Markup::Node const &node, Frag &parent) {
@@ -126,8 +126,7 @@ void _buildNode(Style::Computer &c, Markup::Node const &node, Frag &parent) {
 }
 
 Frag build(Style::Computer &c, Markup::Document const &doc) {
-    auto font = Text::Font{regularFontface(), 16};
-    Frag root = {makeStrong<Style::Computed>(Style::Computed::initial()), font};
+    Frag root = {makeStrong<Style::Computed>(Style::Computed::initial()), regularFontface()};
     _buildNode(c, doc, root);
     return root;
 }
@@ -137,8 +136,14 @@ Frag build(Style::Computer &c, Markup::Document const &doc) {
 Output _contentLayout(Tree &t, Frag &f, Input input) {
     auto display = f.style->display;
 
-    if (auto run = f.content.is<Strong<Text::Run>>()) {
-        return Output::fromSize((*run)->layout().cast<Px>());
+    if (auto run = f.content.is<Text::Run>()) {
+        f.layout.fontSize = resolve(t, f, f.style->font->size);
+        Text::Font font = {
+            f.fontFace,
+            f.layout.fontSize.cast<f64>(),
+        };
+        run->shape(font);
+        return Output::fromSize(run->size().cast<Px>());
     } else if (display == Display::FLOW or display == Display::FLOW_ROOT) {
         return blockLayout(t, f, input);
     } else if (display == Display::FLEX) {

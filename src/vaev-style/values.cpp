@@ -491,8 +491,6 @@ Res<FontSize> ValueParser<FontSize>::parse(Cursor<Css::Sst> &c) {
         return Ok(FontSize::SMALLER);
     else if (c.skip(Css::Token::ident("larger")))
         return Ok(FontSize::LARGER);
-    else if (c.skip(Css::Token::ident("math")))
-        return Ok(FontSize::MATH);
     else
         return Ok(try$(parseValue<PercentOr<Length>>(c)));
 }

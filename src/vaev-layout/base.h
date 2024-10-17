@@ -57,6 +57,7 @@ struct Layout {
     Vec2Px borderSize;
     InsetsPx margin{};
     RadiiPx radii{};
+    Px fontSize{16};
 
     void repr(Io::Emit &e) const {
         e("(layout paddings: {} borders: {} position: {} borderSize: {} margin: {} radii: {})",

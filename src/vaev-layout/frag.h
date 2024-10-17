@@ -14,18 +14,18 @@ namespace Vaev::Layout {
 using Content = Union<
     None,
     Vec<Frag>,
-    Strong<Text::Run>,
+    Text::Run,
     Image::Picture>;
 
 struct Frag : public Meta::NoCopy {
     Strong<Style::Computed> style;
-    Text::Font font;
+    Strong<Text::Fontface> fontFace;
     Content content = NONE;
     Layout layout;
 
-    Frag(Strong<Style::Computed> style, Text::Font font);
+    Frag(Strong<Style::Computed> style, Strong<Text::Fontface> fontFace);
 
-    Frag(Strong<Style::Computed> style, Text::Font font, Content content);
+    Frag(Strong<Style::Computed> style, Strong<Text::Fontface> fontFace, Content content);
 
     Slice<Frag> children() const;
 

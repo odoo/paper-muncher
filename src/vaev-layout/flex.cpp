@@ -479,7 +479,8 @@ struct FlexFormatingContext {
     void _collectFlexItemsInfoFlexLinesNowWrap(Tree &t, Input input) {
         _lines.emplaceBack(_items);
 
-        if (input.intrinsic.x == IntrinsicSize::MIN_CONTENT or input.intrinsic.x == IntrinsicSize::MAX_CONTENT) {
+        if (input.intrinsic.x == IntrinsicSize::MIN_CONTENT or
+            input.intrinsic.x == IntrinsicSize::MAX_CONTENT) {
 
             Vec<Px> flexFraction;
             for (auto &flexItem : _items) {
