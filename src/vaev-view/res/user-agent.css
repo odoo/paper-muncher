@@ -30,6 +30,19 @@ body {
     display: block;
 }
 
+/* 15.3.4 MARK: Phrasing content -------------------------------------------- */
+/* https://html.spec.whatwg.org/multipage/rendering.html#phrasing-content-3   */
+
+/* FIXME: This should be :link */
+a {
+    color: #0000EE;
+}
+
+mark {
+    background: yellow;
+    color: black;
+}
+
 /* 15.3.6 MARK: Sections and headings --------------------------------------- */
 /* https://html.spec.whatwg.org/multipage/rendering.html#sections-and-headings */
 
@@ -45,6 +58,36 @@ hgroup,
 nav,
 section {
     display: block;
+}
+
+h1 {
+    font-size: 2.00em;
+    font-weight: bold;
+}
+
+h2 {
+    font-size: 1.50em;
+    font-weight: bold;
+}
+
+h3 {
+    font-size: 1.17em;
+    font-weight: bold;
+}
+
+h4 {
+    font-size: 1.00em;
+    font-weight: bold;
+}
+
+h5 {
+    font-size: 0.83em;
+    font-weight: bold;
+}
+
+h6 {
+    font-size: 0.67em;
+    font-weight: bold;
 }
 
 /* 15.3.7 MARK: Lists ------------------------------------------------------- */
