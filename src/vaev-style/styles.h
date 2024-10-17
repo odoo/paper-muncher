@@ -715,6 +715,154 @@ struct BorderRadius {
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+struct BorderTopProp {
+    Border value;
+
+    static constexpr Str name() { return "border-top"; }
+
+    void apply(Computed &c) const {
+        c.borders.cow().top = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        while (not c.ended()) {
+            auto width = parseValue<Length>(c);
+            if (width) {
+                value.width = width.unwrap();
+                continue;
+            }
+
+            auto color = parseValue<Color>(c);
+            if (color) {
+                value.color = color.unwrap();
+                continue;
+            }
+
+            auto style = parseValue<Gfx::BorderStyle>(c);
+            if (style) {
+                value.style = style.unwrap();
+                continue;
+            }
+
+            break;
+        }
+
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+struct BorderRightProp {
+    Border value;
+
+    static constexpr Str name() { return "border-right"; }
+
+    void apply(Computed &c) const {
+        c.borders.cow().end = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        while (not c.ended()) {
+            auto width = parseValue<Length>(c);
+            if (width) {
+                value.width = width.unwrap();
+                continue;
+            }
+
+            auto color = parseValue<Color>(c);
+            if (color) {
+                value.color = color.unwrap();
+                continue;
+            }
+
+            auto style = parseValue<Gfx::BorderStyle>(c);
+            if (style) {
+                value.style = style.unwrap();
+                continue;
+            }
+
+            break;
+        }
+
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+struct BorderBottomProp {
+    Border value;
+
+    static constexpr Str name() { return "border-bottom"; }
+
+    void apply(Computed &c) const {
+        c.borders.cow().bottom = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        while (not c.ended()) {
+            auto width = parseValue<Length>(c);
+            if (width) {
+                value.width = width.unwrap();
+                continue;
+            }
+
+            auto color = parseValue<Color>(c);
+            if (color) {
+                value.color = color.unwrap();
+                continue;
+            }
+
+            auto style = parseValue<Gfx::BorderStyle>(c);
+            if (style) {
+                value.style = style.unwrap();
+                continue;
+            }
+
+            break;
+        }
+
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+struct BorderLeftProp {
+    Border value;
+
+    static constexpr Str name() { return "border-left"; }
+
+    void apply(Computed &c) const {
+        c.borders.cow().start = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        while (not c.ended()) {
+            auto width = parseValue<Length>(c);
+            if (width) {
+                value.width = width.unwrap();
+                continue;
+            }
+
+            auto color = parseValue<Color>(c);
+            if (color) {
+                value.color = color.unwrap();
+                continue;
+            }
+
+            auto style = parseValue<Gfx::BorderStyle>(c);
+            if (style) {
+                value.style = style.unwrap();
+                continue;
+            }
+
+            break;
+        }
+
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 struct BorderProp {
     Border value;
 
@@ -1708,7 +1856,13 @@ using _StyleProp = Union<
     BorderRadiusBottomRight,
     BorderRadiusBottomLeft,
     BorderRadius,
+
+    BorderTopProp,
+    BorderRightProp,
+    BorderBottomProp,
+    BorderLeftProp,
     BorderProp,
+
     BorderWidthProp,
 
     // Flex
