@@ -1142,6 +1142,42 @@ struct FlexProp {
     }
 };
 
+// MARK: Float & Clear ---------------------------------------------------------
+
+struct FloatProp {
+    Float value = initial();
+
+    static constexpr Str name() { return "float"; }
+
+    static Float initial() { return Float::NONE; }
+
+    void apply(Computed &c) const {
+        c.float_ = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<Float>(c));
+        return Ok();
+    }
+};
+
+struct ClearProp {
+    Clear value = initial();
+
+    static constexpr Str name() { return "clear"; }
+
+    static Clear initial() { return Clear::NONE; }
+
+    void apply(Computed &c) const {
+        c.clear = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<Clear>(c));
+        return Ok();
+    }
+};
+
 // MARK: Fonts -----------------------------------------------------------------
 
 // https://www.w3.org/TR/css-fonts-4/#font-family-prop
@@ -1260,6 +1296,41 @@ struct FontSizeProp {
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<FontSize>(c));
         return Ok();
+    }
+};
+
+// MARK: Line ------------------------------------------------------------------
+
+struct LineHeightProp {
+    LineHeight value = initial();
+
+    static constexpr Str name() { return "line-height"; }
+
+    static LineHeight initial() { return LineHeight::NORMAL; }
+
+    void apply(Computed &) const {
+        // TODO
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        if (c.skip(Css::Token::ident("normal"))) {
+            value = LineHeight::NORMAL;
+            return Ok();
+        }
+
+        auto maybeNumber = parseValue<Number>(c);
+        if (maybeNumber) {
+            value = maybeNumber.unwrap();
+            return Ok();
+        }
+
+        auto maybeLength = parseValue<PercentOr<Length>>(c);
+        if (maybeLength) {
+            value = maybeLength.unwrap();
+            return Ok();
+        }
+
+        return Error::invalidData("expected line height");
     }
 };
 
@@ -1874,12 +1945,19 @@ using _StyleProp = Union<
     FlexFlowProp,
     FlexProp,
 
+    // Float & Clear
+    FloatProp,
+    ClearProp,
+
     // Font
     FontFamilyProp,
     FontWeightProp,
     FontWidthProp,
     FontStyleProp,
     FontSizeProp,
+
+    // Line
+    LineHeightProp,
 
     // Margin
     MarginTopProp,

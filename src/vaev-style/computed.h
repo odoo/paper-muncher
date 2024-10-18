@@ -10,6 +10,7 @@
 #include <vaev-base/float.h>
 #include <vaev-base/font.h>
 #include <vaev-base/insets.h>
+#include <vaev-base/line.h>
 #include <vaev-base/numbers.h>
 #include <vaev-base/overflow.h>
 #include <vaev-base/sizing.h>

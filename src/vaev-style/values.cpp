@@ -181,7 +181,6 @@ static Res<Gfx::Color> _parseHexColor(Io::SScan &s) {
 }
 
 static Res<Gfx::Color> _parseFuncColor(Css::Sst const &s) {
-    logDebug("parse func color: {}", s);
     if (s.prefix == Css::Token::function("rgb(")) {
         Cursor<Css::Sst> scan = s.content;
 
@@ -564,6 +563,49 @@ Res<FontWidth> ValueParser<FontWidth>::parse(Cursor<Css::Sst> &c) {
     }
 
     return Ok(try$(parseValue<Percent>(c)));
+}
+
+// MARK: Clear & Float
+//
+
+Res<Float> ValueParser<Float>::parse(Cursor<Css::Sst> &c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c.skip(Css::Token::ident("none"))) {
+        return Ok(Float::NONE);
+    } else if (c.skip(Css::Token::ident("inline-start"))) {
+        return Ok(Float::INLINE_START);
+    } else if (c.skip(Css::Token::ident("inline-end"))) {
+        return Ok(Float::INLINE_END);
+    } else if (c.skip(Css::Token::ident("left"))) {
+        return Ok(Float::LEFT);
+    } else if (c.skip(Css::Token::ident("right"))) {
+        return Ok(Float::RIGHT);
+    }
+
+    return Error::invalidData("expected float");
+}
+
+Res<Clear> ValueParser<Clear>::parse(Cursor<Css::Sst> &c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c.skip(Css::Token::ident("none"))) {
+        return Ok(Clear::NONE);
+    } else if (c.skip(Css::Token::ident("left"))) {
+        return Ok(Clear::LEFT);
+    } else if (c.skip(Css::Token::ident("right"))) {
+        return Ok(Clear::RIGHT);
+    } else if (c.skip(Css::Token::ident("both"))) {
+        return Ok(Clear::BOTH);
+    } else if (c.skip(Css::Token::ident("inline-start"))) {
+        return Ok(Clear::INLINE_START);
+    } else if (c.skip(Css::Token::ident("inline-end"))) {
+        return Ok(Clear::INLINE_END);
+    }
+
+    return Error::invalidData("expected clear");
 }
 
 // MARK: Hover
