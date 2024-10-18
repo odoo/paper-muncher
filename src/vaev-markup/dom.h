@@ -131,7 +131,7 @@ struct Node :
         return _parentIndex() > 0;
     }
 
-    Strong<Node> nextSibling() {
+    Strong<Node> nextSibling() const {
         usize index = _parentIndex();
         return parentNode()._children[index + 1];
     }
