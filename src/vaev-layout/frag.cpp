@@ -144,12 +144,13 @@ static void _buildElement(Style::Computer &c, Markup::Element const &el, Frag &p
     auto buildFrag = [](Style::Computer &c, Markup::Element const &el, Strong<Karm::Text::Fontface> font, Strong<Style::Computed> style) {
         if (el.tagName == Html::TagId::TABLE) {
 
-            auto tableWrapperBoxStyle = makeStrong<Style::Computed>(Style::Computed::initial());
-            tableWrapperBoxStyle->display = style->display;
+            auto wrapperStyle = makeStrong<Style::Computed>(Style::Computed::initial());
+            wrapperStyle->display = style->display;
+            wrapperStyle->margin = style->margin;
 
-            Frag tableWrapperBox = {tableWrapperBoxStyle, font};
-            _buildTableChildren(c, el.children(), tableWrapperBox, style);
-            return tableWrapperBox;
+            Frag wrapper = {wrapperStyle, font};
+            _buildTableChildren(c, el.children(), wrapper, style);
+            return wrapper;
         } else {
             Frag frag = {style, font};
             _buildChildren(c, el.children(), frag);

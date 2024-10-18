@@ -24,7 +24,7 @@ struct PercentOr {
     };
 
     constexpr PercentOr()
-        : PercentOr(Percent{}) {
+        : PercentOr(T{}) {
     }
 
     constexpr PercentOr(Percent percent)

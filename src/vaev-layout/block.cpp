@@ -53,7 +53,7 @@ Output blockLayout(Tree &t, Frag &f, Input input) {
             childInput.knownSize.width = childInlineSize;
         }
 
-        childInput.position = input.position + Vec2Px{Px{0}, blockSize} + margin.topStart();
+        childInput.position = input.position + Vec2Px{margin.start, blockSize};
 
         auto ouput = layout(
             t,
@@ -62,7 +62,7 @@ Output blockLayout(Tree &t, Frag &f, Input input) {
         );
 
         if (c.style->position != Position::ABSOLUTE) {
-            blockSize += ouput.size.y + margin.bottom + margin.top;
+            blockSize += ouput.size.y + margin.bottom;
         }
     }
 
