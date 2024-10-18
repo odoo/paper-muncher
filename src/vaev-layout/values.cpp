@@ -6,8 +6,15 @@
 namespace Vaev::Layout {
 
 Px _resolveFontRelative(Tree &t, Frag &f, Length l) {
-    Text::Font rootFont = {t.root.fontFace, 16};
-    Text::Font fragFont = {f.fontFace, 16};
+    Text::Font rootFont = {
+        t.root.fontFace,
+        t.root.layout.fontSize.cast<f64>(),
+    };
+
+    Text::Font fragFont = {
+        f.fontFace,
+        f.layout.fontSize.cast<f64>(),
+    };
 
     switch (l.unit()) {
 

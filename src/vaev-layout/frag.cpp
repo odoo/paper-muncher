@@ -57,11 +57,18 @@ void Frag::repr(Io::Emit &e) const {
 // MARK: Build -----------------------------------------------------------------
 
 static Opt<Strong<Text::Fontface>> _regularFontface = NONE;
+static Opt<Strong<Text::Fontface>> _boldFontface = NONE;
 
-static Strong<Text::Fontface> regularFontface() {
-    if (not _regularFontface)
-        _regularFontface = Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Regular.ttf"_url).unwrap();
-    return *_regularFontface;
+static Strong<Text::Fontface> _lookupFontface(Style::Computed &style) {
+    if (style.font->weight != FontWeight::NORMAL) {
+        if (not _boldFontface)
+            _boldFontface = Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Bold.ttf"_url).unwrap();
+        return *_boldFontface;
+    } else {
+        if (not _regularFontface)
+            _regularFontface = Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Regular.ttf"_url).unwrap();
+        return *_regularFontface;
+    }
 }
 
 void _buildChildren(Style::Computer &c, Vec<Strong<Markup::Node>> const &children, Frag &parent) {
@@ -115,7 +122,7 @@ static Opt<Math::Vec2u> _parseTableSpans(Markup::Element const &el) {
 
 static void _buildElement(Style::Computer &c, Markup::Element const &el, Frag &parent) {
     auto style = c.computeFor(*parent.style, el);
-    auto font = regularFontface();
+    auto font = _lookupFontface(*style);
     auto tableSpan = _parseTableSpans(el);
 
     if (el.tagName == Html::IMG) {
@@ -165,7 +172,7 @@ static void _buildRun(Style::Computer &, Markup::Text const &node, Frag &parent)
     auto style = makeStrong<Style::Computed>(Style::Computed::initial());
     style->inherit(*parent.style);
 
-    auto font = regularFontface();
+    auto font = _lookupFontface(*style);
     Io::SScan scan{node.data};
     scan.eat(Re::space());
     if (scan.ended())
@@ -192,7 +199,8 @@ void _buildNode(Style::Computer &c, Markup::Node const &node, Frag &parent) {
 }
 
 Frag build(Style::Computer &c, Markup::Document const &doc) {
-    Frag root = {makeStrong<Style::Computed>(Style::Computed::initial()), regularFontface()};
+    auto style = makeStrong<Style::Computed>(Style::Computed::initial());
+    Frag root = {style, _lookupFontface(*style)};
     _buildNode(c, doc, root);
     return root;
 }
