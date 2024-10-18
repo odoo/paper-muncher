@@ -23,6 +23,9 @@ struct Frag : public Meta::NoCopy {
     Content content = NONE;
     Layout layout;
 
+    // TODO: consider refactor this to "HTML attributes" once other attributes need to be considered
+    Cow<TableSpan> tableSpan;
+
     Frag(Strong<Style::Computed> style, Strong<Text::Fontface> fontFace);
 
     Frag(Strong<Style::Computed> style, Strong<Text::Fontface> fontFace, Content content);
@@ -50,6 +53,7 @@ Frag build(Style::Computer &c, Markup::Document const &doc);
 // MARK: Layout ----------------------------------------------------------------
 
 InsetsPx computeMargins(Tree &t, Frag &f, Input input);
+InsetsPx computeBorders(Tree &t, Frag &f);
 
 Output layout(Tree &t, Frag &f, Input input);
 

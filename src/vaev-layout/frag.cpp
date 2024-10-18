@@ -64,15 +64,59 @@ static Strong<Text::Fontface> regularFontface() {
     return *_regularFontface;
 }
 
-static void _buildChildren(Style::Computer &c, Vec<Strong<Markup::Node>> const &children, Frag &parent) {
+void _buildChildren(Style::Computer &c, Vec<Strong<Markup::Node>> const &children, Frag &parent) {
     for (auto &child : children) {
         _buildNode(c, *child, parent);
     }
 }
 
+static void _buildTableChildren(Style::Computer &c, Vec<Strong<Markup::Node>> const &children, Frag &tableWrapperBox, Strong<Style::Computed> tableBoxStyle) {
+    Frag tableBox{
+        tableBoxStyle, tableWrapperBox.fontFace
+    };
+
+    tableBox.style->display = Display::Internal::TABLE_BOX;
+
+    for (auto &child : children) {
+        if (auto el = child->is<Markup::Element>()) {
+            if (el->tagName == Html::CAPTION) {
+                _buildNode(c, *child, tableWrapperBox);
+            } else {
+                _buildNode(c, *child, tableBox);
+            }
+        }
+    }
+    tableWrapperBox.add(std::move(tableBox));
+}
+
+static Opt<Math::Vec2u> _parseTableSpans(Markup::Element const &el) {
+    auto rowSpan = el.getAttribute(AttrName{Html::AttrId::ROWSPAN});
+
+    Opt<Str> colSpan = el.getAttribute(
+        el.tagName == Html::COL or el.tagName == Html::COLGROUP
+            ? AttrName{Html::AttrId::SPAN}
+            : AttrName{Html::AttrId::COLSPAN}
+    );
+
+    if (rowSpan == NONE and colSpan == NONE)
+        return NONE;
+
+    usize rowSpanValue = 1, colSpanValue = 1;
+
+    // FIXME: prolly wrong use of Str API (atoi + buf())
+    if (rowSpan)
+        rowSpanValue = min(65534, atoi(rowSpan.unwrap().buf()));
+
+    if (colSpan)
+        colSpanValue = min(1000, atoi(colSpan.unwrap().buf()));
+
+    return Opt<Math::Vec2u>{{rowSpanValue, colSpanValue}};
+}
+
 static void _buildElement(Style::Computer &c, Markup::Element const &el, Frag &parent) {
     auto style = c.computeFor(*parent.style, el);
     auto font = regularFontface();
+    auto tableSpan = _parseTableSpans(el);
 
     if (el.tagName == Html::IMG) {
         Image::Picture img = Gfx::Surface::fallback();
@@ -90,8 +134,30 @@ static void _buildElement(Style::Computer &c, Markup::Element const &el, Frag &p
         return;
     }
 
-    Frag frag = {style, font};
-    _buildChildren(c, el.children(), frag);
+    auto buildFrag = [](Style::Computer &c, Markup::Element const &el, Strong<Text::Fontface> font, Strong<Style::Computed> style) {
+        if (el.tagName == Html::TagId::TABLE) {
+
+            auto tableWrapperBoxStyle = makeStrong<Style::Computed>(Style::Computed::initial());
+            tableWrapperBoxStyle->display = style->display;
+
+            Frag tableWrapperBox = {tableWrapperBoxStyle, font};
+            _buildTableChildren(c, el.children(), tableWrapperBox, style);
+            return tableWrapperBox;
+        } else {
+            Frag frag = {style, font};
+            _buildChildren(c, el.children(), frag);
+            return frag;
+        }
+    };
+
+    auto frag = buildFrag(c, el, font, style);
+
+    if (tableSpan)
+        frag.tableSpan.cow() = {
+            tableSpan.unwrap().x,
+            tableSpan.unwrap().y,
+        };
+
     parent.add(std::move(frag));
 }
 
@@ -144,7 +210,12 @@ Output _contentLayout(Tree &t, Frag &f, Input input) {
         };
         run->shape(font);
         return Output::fromSize(run->size().cast<Px>());
-    } else if (display == Display::FLOW or display == Display::FLOW_ROOT) {
+    } else if (
+        display == Display::FLOW or
+        display == Display::FLOW_ROOT or
+        display == Display::TABLE_CELL or
+        display == Display::TABLE_CAPTION
+    ) {
         return blockLayout(t, f, input);
     } else if (display == Display::FLEX) {
         return flexLayout(t, f, input);
@@ -152,6 +223,8 @@ Output _contentLayout(Tree &t, Frag &f, Input input) {
         return gridLayout(t, f, input);
     } else if (display == Display::TABLE) {
         return tableLayout(t, f, input);
+    } else if (display == Display::INTERNAL) {
+        return Output{};
     } else {
         return blockLayout(t, f, input);
     }
@@ -169,7 +242,7 @@ InsetsPx computeMargins(Tree &t, Frag &f, Input input) {
     return res;
 }
 
-static InsetsPx _computeBorders(Tree &t, Frag &f) {
+InsetsPx computeBorders(Tree &t, Frag &f) {
     InsetsPx res;
     auto borders = f.style->borders;
 
@@ -216,10 +289,10 @@ static Math::Radii<Px> _computeRadii(Tree &t, Frag &f, Vec2Px size) {
     return res;
 }
 
-static Cons<Opt<Px>, IntrinsicSize> _computeSpecifiedSize(Tree &t, Frag &f, Input input, Size size) {
-    if (size == Size::MIN_CONTENT) {
+static Cons<Opt<Px>, IntrinsicSize> _computeSpecifiedSize(Tree &t, Frag &f, Input input, Size size, IntrinsicSize intrinsic) {
+    if (size == Size::MIN_CONTENT or intrinsic == IntrinsicSize::MIN_CONTENT) {
         return {NONE, IntrinsicSize::MIN_CONTENT};
-    } else if (size == Size::MAX_CONTENT) {
+    } else if (size == Size::MAX_CONTENT or intrinsic == IntrinsicSize::MAX_CONTENT) {
         return {NONE, IntrinsicSize::MAX_CONTENT};
     } else if (size == Size::AUTO) {
         return {NONE, IntrinsicSize::AUTO};
@@ -234,12 +307,14 @@ static Cons<Opt<Px>, IntrinsicSize> _computeSpecifiedSize(Tree &t, Frag &f, Inpu
 }
 
 Output layout(Tree &t, Frag &f, Input input) {
-    auto borders = _computeBorders(t, f);
+    // FIXME: confirm how the preffered width/height parameters interacts with intrinsic size argument from input
+    auto borders = computeBorders(t, f);
     auto padding = _computePaddings(t, f, input);
     auto sizing = f.style->sizing;
 
-    auto [specifiedWidth, widthIntrinsicSize] = _computeSpecifiedSize(t, f, input, sizing->width);
+    auto [specifiedWidth, widthIntrinsicSize] = _computeSpecifiedSize(t, f, input, sizing->width, input.intrinsic.x);
     if (input.knownSize.width == NONE) {
+        // FIXME: making prefered width as mandatory width; im not sure this is ok
         input.knownSize.width = specifiedWidth;
     }
     input.knownSize.width = input.knownSize.width.map([&](auto s) {
@@ -248,7 +323,7 @@ Output layout(Tree &t, Frag &f, Input input) {
     });
     input.intrinsic.x = widthIntrinsicSize;
 
-    auto [specifiedHeight, heightIntrinsicSize] = _computeSpecifiedSize(t, f, input, sizing->height);
+    auto [specifiedHeight, heightIntrinsicSize] = _computeSpecifiedSize(t, f, input, sizing->height, input.intrinsic.y);
     if (input.knownSize.height == NONE) {
         input.knownSize.height = specifiedHeight;
     }

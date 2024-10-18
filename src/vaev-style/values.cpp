@@ -138,6 +138,43 @@ Res<Gfx::BorderStyle> ValueParser<Gfx::BorderStyle>::parse(Cursor<Css::Sst> &c) 
     }
 }
 
+// MARK: BorderCollapse
+// https://www.w3.org/TR/CSS22/tables.html#propdef-border-collapse
+Res<BorderCollapse> ValueParser<BorderCollapse>::parse(Cursor<Css::Sst> &c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c.skip(Css::Token::ident("collapse"))) {
+        return Ok(BorderCollapse::COLLAPSE);
+    } else if (c.skip(Css::Token::ident("separate"))) {
+        return Ok(BorderCollapse::SEPARATE);
+    }
+
+    return Error::invalidData("expected border collapse value");
+}
+
+// MARK: BorderSpacing
+// https://www.w3.org/TR/CSS22/tables.html#propdef-border-spacing
+Res<BorderSpacing> ValueParser<BorderSpacing>::parse(Cursor<Css::Sst> &c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    auto firstLength = parseValue<Length>(c);
+
+    if (not firstLength)
+        return Error::invalidData("expected length parameter for border-spacing");
+
+    auto secondLength = parseValue<Length>(c);
+
+    if (secondLength) {
+        return Ok(BorderSpacing{firstLength.unwrap(), secondLength.unwrap()});
+    } else {
+        return Ok(BorderSpacing{firstLength.unwrap(), firstLength.unwrap()});
+    }
+
+    return Error::invalidData("expected border spacing value");
+}
+
 // MARK: Color
 // https://drafts.csswg.org/css-color
 
@@ -304,6 +341,36 @@ static Res<Display> _parseLegacyDisplay(Cursor<Css::Sst> &c) {
     }
 
     return Error::invalidData("expected legacy display value");
+}
+
+// MARK: TableLayout
+// https://www.w3.org/TR/CSS21/tables.html#propdef-table-layout
+Res<TableLayout> ValueParser<TableLayout>::parse(Cursor<Css::Sst> &c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c.skip(Css::Token::ident("auto"))) {
+        return Ok(TableLayout::AUTO);
+    } else if (c.skip(Css::Token::ident("fixed"))) {
+        return Ok(TableLayout::FIXED);
+    }
+
+    return Error::invalidData("expected table layout value");
+}
+
+// MARK: CaptionSide
+// https://www.w3.org/TR/CSS21/tables.html#caption-position
+Res<CaptionSide> ValueParser<CaptionSide>::parse(Cursor<Css::Sst> &c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c.skip(Css::Token::ident("top"))) {
+        return Ok(CaptionSide::TOP);
+    } else if (c.skip(Css::Token::ident("bottom"))) {
+        return Ok(CaptionSide::BOTTOM);
+    }
+
+    return Error::invalidData("expected caption side value");
 }
 
 static Res<Display::Outside> _parseOutsideDisplay(Cursor<Css::Sst> &c) {
