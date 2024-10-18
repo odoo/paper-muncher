@@ -88,7 +88,7 @@ static bool _matchAdjacent(Selector const &s, Markup::Element const &e) {
 
 // https://www.w3.org/TR/selectors-4/#general-sibling-combinators
 static bool _matchSubsequent(Selector const &s, Markup::Element const &e) {
-    Markup::Node const *curr = &e;
+    Cursor<Markup::Node> curr = &e;
     while (curr->hasPreviousSibling()) {
         auto prev = curr->previousSibling();
         if (auto el = prev.is<Markup::Element>())
@@ -165,6 +165,48 @@ static bool _match(IdSelector const &s, Markup::Element const &el) {
 
 static bool _match(ClassSelector const &s, Markup::Element const &el) {
     return el.classList.contains(s.class_);
+}
+
+static bool _matchFirstOfType(Markup::Element const &e) {
+    Cursor<Markup::Node> curr = &e;
+    auto tag = e.tagName;
+
+    while (curr->hasPreviousSibling()) {
+        auto prev = curr->previousSibling();
+        if (auto el = prev.is<Markup::Element>())
+            if (e.tagName == tag)
+                return false;
+        curr = &prev.unwrap();
+    }
+    return true;
+}
+
+static bool _matchLastOfType(Markup::Element const &e) {
+    Cursor<Markup::Node> curr = &e;
+    auto tag = e.tagName;
+
+    while (curr->hasNextSibling()) {
+        auto prev = curr->nextSibling();
+        if (auto el = prev.is<Markup::Element>())
+            if (e.tagName == tag)
+                return false;
+        curr = &prev.unwrap();
+    }
+    return true;
+}
+
+static bool _match(Pseudo const &s, Markup::Element const &el) {
+    switch (s.type) {
+    case Pseudo::FIRST_OF_TYPE:
+        return _matchFirstOfType(el);
+
+    case Pseudo::LAST_OF_TYPE:
+        return _matchLastOfType(el);
+
+    default:
+        logDebug("unimplemented pseudo class: {}", s);
+        return false;
+    }
 }
 
 // 5.2. Universal selector
