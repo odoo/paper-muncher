@@ -11,10 +11,10 @@ namespace Vaev::Layout {
 
 // MARK: Frag ------------------------------------------------------------------
 
-Frag::Frag(Strong<Style::Computed> style, Strong<Text::Fontface> font)
+Frag::Frag(Strong<Style::Computed> style, Strong<Karm::Text::Fontface> font)
     : style{std::move(style)}, fontFace{font} {}
 
-Frag::Frag(Strong<Style::Computed> style, Strong<Text::Fontface> font, Content content)
+Frag::Frag(Strong<Style::Computed> style, Strong<Karm::Text::Fontface> font, Content content)
     : style{std::move(style)}, fontFace{font}, content{std::move(content)} {}
 
 Karm::Slice<Frag> Frag::children() const {
@@ -56,17 +56,17 @@ void Frag::repr(Io::Emit &e) const {
 
 // MARK: Build -----------------------------------------------------------------
 
-static Opt<Strong<Text::Fontface>> _regularFontface = NONE;
-static Opt<Strong<Text::Fontface>> _boldFontface = NONE;
+static Opt<Strong<Karm::Text::Fontface>> _regularFontface = NONE;
+static Opt<Strong<Karm::Text::Fontface>> _boldFontface = NONE;
 
-static Strong<Text::Fontface> _lookupFontface(Style::Computed &style) {
+static Strong<Karm::Text::Fontface> _lookupFontface(Style::Computed &style) {
     if (style.font->weight != FontWeight::NORMAL) {
         if (not _boldFontface)
-            _boldFontface = Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Bold.ttf"_url).unwrap();
+            _boldFontface = Karm::Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Bold.ttf"_url).unwrap();
         return *_boldFontface;
     } else {
         if (not _regularFontface)
-            _regularFontface = Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Regular.ttf"_url).unwrap();
+            _regularFontface = Karm::Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Regular.ttf"_url).unwrap();
         return *_regularFontface;
     }
 }
@@ -141,7 +141,7 @@ static void _buildElement(Style::Computer &c, Markup::Element const &el, Frag &p
         return;
     }
 
-    auto buildFrag = [](Style::Computer &c, Markup::Element const &el, Strong<Text::Fontface> font, Strong<Style::Computed> style) {
+    auto buildFrag = [](Style::Computer &c, Markup::Element const &el, Strong<Karm::Text::Fontface> font, Strong<Style::Computed> style) {
         if (el.tagName == Html::TagId::TABLE) {
 
             auto tableWrapperBoxStyle = makeStrong<Style::Computed>(Style::Computed::initial());
@@ -177,9 +177,26 @@ static void _buildRun(Style::Computer &, Markup::Text const &node, Frag &parent)
     scan.eat(Re::space());
     if (scan.ended())
         return;
-    Text::Run run;
+    Karm::Text::Run run;
+
     while (not scan.ended()) {
-        run.append(scan.next());
+        switch (style->text->transform) {
+        case TextTransform::UPPERCASE:
+            run.append(toAsciiUpper(scan.next()));
+            break;
+
+        case TextTransform::LOWERCASE:
+            run.append(toAsciiLower(scan.next()));
+            break;
+
+        case TextTransform::NONE:
+            run.append(scan.next());
+            break;
+
+        default:
+            break;
+        }
+
         if (scan.eat(Re::space())) {
             run.append(' ');
         }
@@ -210,9 +227,9 @@ Frag build(Style::Computer &c, Markup::Document const &doc) {
 Output _contentLayout(Tree &t, Frag &f, Input input) {
     auto display = f.style->display;
 
-    if (auto run = f.content.is<Text::Run>()) {
+    if (auto run = f.content.is<Karm::Text::Run>()) {
         f.layout.fontSize = resolve(t, f, f.style->font->size);
-        Text::Font font = {
+        Karm::Text::Font font = {
             f.fontFace,
             f.layout.fontSize.cast<f64>(),
         };

@@ -15,6 +15,7 @@
 #include <vaev-base/overflow.h>
 #include <vaev-base/sizing.h>
 #include <vaev-base/table.h>
+#include <vaev-base/text.h>
 #include <vaev-base/visibility.h>
 #include <vaev-base/z-index.h>
 
@@ -58,6 +59,7 @@ struct Computed {
     // CSS Fonts Module Level 4
     // https://www.w3.org/TR/css-fonts-4/
     Cow<Font> font;
+    Cow<Text> text;
 
     Cow<Flex> flex;
 
@@ -70,6 +72,7 @@ struct Computed {
     void inherit(Computed const &parent) {
         color = parent.color;
         font = parent.font;
+        text = parent.text;
     }
 };
 

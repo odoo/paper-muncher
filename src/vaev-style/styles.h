@@ -1922,6 +1922,40 @@ struct MaxHeightProp {
     }
 };
 
+// MARK: Text
+// https://drafts.csswg.org/css-text-4
+
+// https://drafts.csswg.org/css-text-4/#text-transform-property
+
+struct TextTransformProp {
+    TextTransform value = initial();
+
+    static constexpr Str name() { return "text-transform"; }
+
+    static TextTransform initial() { return TextTransform::NONE; }
+
+    void apply(Computed &c) const {
+        c.text.cow().transform = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Css::Token::ident("none"))) {
+            value = TextTransform::NONE;
+        } else if (c.skip(Css::Token::ident("uppercase"))) {
+            value = TextTransform::UPPERCASE;
+        } else if (c.skip(Css::Token::ident("lowsercase"))) {
+            value = TextTransform::LOWERCASE;
+        } else {
+            return Error::invalidData("expected text-transform");
+        }
+
+        return Ok();
+    }
+};
+
 // https://drafts.csswg.org/css2/#z-index
 
 struct ZIndexProp {
@@ -2063,6 +2097,9 @@ using _StyleProp = Union<
     MinHeightProp,
     MaxWidthProp,
     MaxHeightProp,
+
+    // Text
+    TextTransformProp,
 
     // ZIndex
     ZIndexProp

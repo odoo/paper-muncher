@@ -249,7 +249,7 @@ static Selector _parseAttributeSelector(Slice<Css::Sst> content) {
     auto caze = AttributeSelector::INSENSITIVE;
     Str name = "";
     String value = ""s;
-    auto match = AttributeSelector::Match{AttributeSelector::PRESENT};
+    auto match = AttributeSelector::PRESENT;
 
     usize step = 0;
     Cursor<Css::Sst> cur = content;
@@ -270,21 +270,21 @@ static Selector _parseAttributeSelector(Slice<Css::Sst> content) {
                 }
 
                 if (cur->token.data == "~") {
-                    match = AttributeSelector::Match{AttributeSelector::CONTAINS};
+                    match = AttributeSelector::CONTAINS;
                 } else if (cur->token.data == "|") {
-                    match = AttributeSelector::Match{AttributeSelector::HYPHENATED};
+                    match = AttributeSelector::HYPHENATED;
                 } else if (cur->token.data == "^") {
-                    match = AttributeSelector::Match{AttributeSelector::STR_START_WITH};
+                    match = AttributeSelector::STR_START_WITH;
                 } else if (cur->token.data == "$") {
-                    match = AttributeSelector::Match{AttributeSelector::STR_END_WITH};
+                    match = AttributeSelector::STR_END_WITH;
                 } else if (cur->token.data == "*") {
-                    match = AttributeSelector::Match{AttributeSelector::STR_CONTAIN};
+                    match = AttributeSelector::STR_CONTAIN;
                 } else {
                     break;
                 }
                 cur.next();
             } else {
-                match = AttributeSelector::Match{AttributeSelector::EXACT};
+                match = AttributeSelector::EXACT;
             }
             step++;
             break;
@@ -303,7 +303,12 @@ static Selector _parseAttributeSelector(Slice<Css::Sst> content) {
             cur.next();
     }
 
-    return AttributeSelector{name, caze, match, value};
+    return AttributeSelector{
+        name,
+        caze,
+        match,
+        value,
+    };
 }
 
 static OpCode _peekOpCode(Cursor<Css::Sst> &cur) {

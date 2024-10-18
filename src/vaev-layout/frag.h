@@ -14,21 +14,21 @@ namespace Vaev::Layout {
 using Content = Union<
     None,
     Vec<Frag>,
-    Text::Run,
+    Karm::Text::Run,
     Image::Picture>;
 
 struct Frag : public Meta::NoCopy {
     Strong<Style::Computed> style;
-    Strong<Text::Fontface> fontFace;
+    Strong<Karm::Text::Fontface> fontFace;
     Content content = NONE;
     Layout layout;
 
     // TODO: consider refactor this to "HTML attributes" once other attributes need to be considered
     Cow<TableSpan> tableSpan;
 
-    Frag(Strong<Style::Computed> style, Strong<Text::Fontface> fontFace);
+    Frag(Strong<Style::Computed> style, Strong<Karm::Text::Fontface> fontFace);
 
-    Frag(Strong<Style::Computed> style, Strong<Text::Fontface> fontFace, Content content);
+    Frag(Strong<Style::Computed> style, Strong<Karm::Text::Fontface> fontFace, Content content);
 
     Slice<Frag> children() const;
 

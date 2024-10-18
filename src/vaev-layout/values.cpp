@@ -6,12 +6,12 @@
 namespace Vaev::Layout {
 
 Px _resolveFontRelative(Tree &t, Frag &f, Length l) {
-    Text::Font rootFont = {
+    Karm::Text::Font rootFont = {
         t.root.fontFace,
         t.root.layout.fontSize.cast<f64>(),
     };
 
-    Text::Font fragFont = {
+    Karm::Text::Font fragFont = {
         f.fontFace,
         f.layout.fontSize.cast<f64>(),
     };
