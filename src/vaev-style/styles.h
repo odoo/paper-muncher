@@ -654,8 +654,8 @@ struct BorderRadiusTopLeft {
     static constexpr Length initial() { return Px{0}; }
 
     void apply(Computed &c) const {
-        c.borders.cow().radii.a = value[0];
-        c.borders.cow().radii.b = value[1];
+        c.borders.cow().radii.a = value[1];
+        c.borders.cow().radii.b = value[0];
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -680,8 +680,8 @@ struct BorderRadiusBottomRight {
     static constexpr Length initial() { return Px{0}; }
 
     void apply(Computed &c) const {
-        c.borders.cow().radii.e = value[0];
-        c.borders.cow().radii.f = value[1];
+        c.borders.cow().radii.e = value[1];
+        c.borders.cow().radii.f = value[0];
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
