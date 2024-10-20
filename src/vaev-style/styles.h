@@ -2082,6 +2082,8 @@ using _StyleProp = Union<
     PaddingLeftProp,
     PaddingProp,
 
+    OrderProp,
+
     // Positioning
     PositionProp,
     TopProp,

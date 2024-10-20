@@ -69,7 +69,7 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Vec2
         Layout::build(computer, dom),
         {
             .small = viewport,
-        }
+        },
     };
 
     elapsed = Sys::now() - start;
@@ -86,6 +86,7 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Vec2
 
     start = Sys::now();
 
+    tree.floatManager.init(tree.root);
     Layout::layout(
         tree,
         tree.root,
@@ -96,6 +97,7 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Vec2
             .containingBlock = {vp.small.width, vp.small.height},
         }
     );
+
     Layout::layoutPositioned(tree, tree.root, {vp.small.width, vp.small.height});
 
     auto sceneRoot = makeStrong<Scene::Stack>();

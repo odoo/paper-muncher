@@ -302,6 +302,55 @@ static InsetsPx _computePaddings(Tree &t, Frag &f, Input input) {
     return res;
 }
 
+void FloatManager::init(Frag &f) {
+    floatId.put(&f, floatId.len());
+    for (auto &c : f.children()) {
+        init(c);
+    }
+}
+
+void FloatManager::insertIfMissing(Frag *f, RectPx marginBox, Vec<Frag *> &v) {
+    if (not placedFloat.has(f)) {
+        v.pushBack(f);
+    }
+    placedFloat.put(f, marginBox);
+}
+
+void FloatManager::remove(Frag &f) {
+    for (usize i = 0; i < leftFloatElements.len(); ++i) {
+        if (leftFloatElements[i] == &f) {
+            leftFloatElements.removeAt(i);
+            placedFloat.del(&f);
+            return;
+        }
+    }
+    for (usize i = 0; i < rightFloatElements.len(); ++i) {
+        if (rightFloatElements[i] == &f) {
+            rightFloatElements.removeAt(i);
+            placedFloat.del(&f);
+            return;
+        }
+    }
+}
+
+RectPx FloatManager::placeFloat(Tree &t, Frag &c, Input floatChildInput) {
+    InsetsPx margin = computeMargins(t, c, floatChildInput);
+
+    auto output = layout(
+        t,
+        c,
+        floatChildInput
+    );
+
+    auto marginBox = RectPx{floatChildInput.position, output.size + margin.all()};
+
+    insertIfMissing(
+        &c, marginBox, c.style->float_ == Float::LEFT ? leftFloatElements : rightFloatElements
+    );
+
+    return marginBox;
+}
+
 static Math::Radii<Px> _computeRadii(Tree &t, Frag &f, Vec2Px size) {
     auto radii = f.style->borders->radii;
     Math::Radii<Px> res;
@@ -366,9 +415,6 @@ Output layout(Tree &t, Frag &f, Input input) {
     input.position = input.position + borders.topStart() + padding.topStart();
 
     auto [size] = _contentLayout(t, f, input);
-
-    size.width = input.knownSize.width.unwrapOr(size.width);
-    size.height = input.knownSize.height.unwrapOr(size.height);
 
     size = size + padding.all() + borders.all();
 

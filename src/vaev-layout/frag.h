@@ -9,6 +9,25 @@
 
 namespace Vaev::Layout {
 
+// MARK: Float Manager ---------------------------------------------------------
+
+struct FloatManager {
+    Vec<Frag *> leftFloatElements, rightFloatElements;
+    Map<Frag *, RectPx> placedFloat;
+    Map<Frag *, usize> floatId;
+
+    void init(Frag &f);
+
+    FloatManager() {
+    }
+
+    void remove(Frag &f);
+
+    void insertIfMissing(Frag *f, RectPx marginBox, Vec<Frag *> &v);
+
+    RectPx placeFloat(Tree &t, Frag &c, Input floatChildInput);
+};
+
 // MARK: Frag ------------------------------------------------------------------
 
 using Content = Union<
@@ -42,6 +61,7 @@ struct Frag : public Meta::NoCopy {
 struct Tree {
     Frag root;
     Viewport viewport;
+    FloatManager floatManager = FloatManager();
 };
 
 // MARK: Build -----------------------------------------------------------------
