@@ -638,7 +638,7 @@ struct FlexFormatingContext {
                 auto [sumUnfrozenOuterSizes, sumUnfrozenFlexFactors] = computeStats();
                 auto freeSpace = Number{_usedMainSize} - Number{sumUnfrozenOuterSizes + sumFrozenOuterSizes};
 
-                if (sumUnfrozenFlexFactors < 1 and abs(initialFreeSpace * sumUnfrozenFlexFactors) < abs(freeSpace))
+                if (sumUnfrozenFlexFactors < 1 and Math::abs(initialFreeSpace * sumUnfrozenFlexFactors) < Math::abs(freeSpace))
                     freeSpace = initialFreeSpace * sumUnfrozenFlexFactors;
 
                 if (flexCaseIsGrow) {
@@ -654,7 +654,7 @@ struct FlexFormatingContext {
 
                     for (auto *flexItem : unfrozenItems) {
                         Px ratio = flexItem->getScaledFlexShrinkFactor() / sumScaledFlexShrinkFactor;
-                        flexItem->usedSize.x = flexItem->flexBaseSize - ratio * Px{abs(freeSpace)};
+                        flexItem->usedSize.x = flexItem->flexBaseSize - ratio * Px{Math::abs(freeSpace)};
                     }
                 }
 

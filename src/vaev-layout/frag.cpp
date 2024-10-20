@@ -1,3 +1,4 @@
+#include <karm-base/clamp.h>
 #include <karm-text/loader.h>
 
 #include "block.h"
@@ -110,14 +111,16 @@ static Opt<Math::Vec2u> _parseTableSpans(Markup::Element const &el) {
 
     usize rowSpanValue = 1, colSpanValue = 1;
 
-    // FIXME: prolly wrong use of Str API (atoi + buf())
     if (rowSpan)
-        rowSpanValue = min(65534, atoi(rowSpan.unwrap().buf()));
+        rowSpanValue = min(65534, Io::atoi(rowSpan.unwrap()).unwrapOr(1));
 
     if (colSpan)
-        colSpanValue = min(1000, atoi(colSpan.unwrap().buf()));
+        colSpanValue = min(1000, Io::atoi(colSpan.unwrap()).unwrapOr(1));
 
-    return Opt<Math::Vec2u>{{rowSpanValue, colSpanValue}};
+    return Math::Vec2u{
+        rowSpanValue,
+        colSpanValue,
+    };
 }
 
 static void _buildElement(Style::Computer &c, Markup::Element const &el, Frag &parent) {
