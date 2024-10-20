@@ -21,13 +21,16 @@ title {
     display: none;
 }
 
-
 /* 15.3.2 MARK: The page ---------------------------------------------------- */
 /* https://html.spec.whatwg.org/multipage/rendering.html#the-page */
 
-html,
+html {
+    display: block;
+}
+
 body {
     display: block;
+    margin: 8px;
 }
 
 /* 15.3.4 MARK: Phrasing content -------------------------------------------- */
@@ -101,6 +104,10 @@ menu,
 ol,
 ul {
     display: block;
+}
+
+dd {
+    margin-inline-start: 40px;
 }
 
 

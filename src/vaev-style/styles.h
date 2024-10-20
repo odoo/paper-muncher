@@ -1484,6 +1484,80 @@ struct MarginProp {
     }
 };
 
+// https://drafts.csswg.org/css-logical/#margin-properties
+
+struct MarginInlineStartProp {
+    Width value = initial();
+
+    static Str name() { return "margin-inline-start"; }
+
+    static Width initial() { return Length{}; }
+
+    void apply(Computed &c) const {
+        // FIXME: Take writing mode into account
+        c.margin.cow().start = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<Width>(c));
+        return Ok();
+    }
+};
+
+struct MarginInlineEndProp {
+    Width value = initial();
+
+    static Str name() { return "margin-inline-end"; }
+
+    static Width initial() { return Length{}; }
+
+    void apply(Computed &c) const {
+        // FIXME: Take writing mode into account
+        c.margin.cow().end = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<Width>(c));
+        return Ok();
+    }
+};
+
+struct MarginBlockStartProp {
+    Width value = initial();
+
+    static Str name() { return "margin-block-start"; }
+
+    static Width initial() { return Length{}; }
+
+    void apply(Computed &c) const {
+        // FIXME: Take writing mode into account
+        c.margin.cow().top = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<Width>(c));
+        return Ok();
+    }
+};
+
+struct MarginBlockEndProp {
+    Width value = initial();
+
+    static Str name() { return "margin-block-end"; }
+
+    static Width initial() { return Length{}; }
+
+    void apply(Computed &c) const {
+        // FIXME: Take writing mode into account
+        c.margin.cow().bottom = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<Width>(c));
+        return Ok();
+    }
+};
+
 // https://www.w3.org/TR/css-color-4/#propdef-opacity
 
 struct OpacityProp {
@@ -2066,6 +2140,11 @@ using _StyleProp = Union<
     MarginBottomProp,
     MarginLeftProp,
     MarginProp,
+
+    MarginInlineStartProp,
+    MarginInlineEndProp,
+    MarginBlockStartProp,
+    MarginBlockEndProp,
 
     // Overflow
     OverflowXProp,
