@@ -36,8 +36,7 @@ body {
 /* 15.3.4 MARK: Phrasing content -------------------------------------------- */
 /* https://html.spec.whatwg.org/multipage/rendering.html#phrasing-content-3   */
 
-/* FIXME: This should be :link */
-a {
+:link {
     color: #0000EE;
 }
 

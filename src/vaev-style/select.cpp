@@ -104,16 +104,16 @@ static bool _match(Infix const &s, Markup::Element const &e) {
         return false;
 
     switch (s.type) {
-    case Infix::Type::DESCENDANT: // ' '
+    case Infix::DESCENDANT: // ' '
         return _matchDescendant(*s.lhs, e);
 
-    case Infix::Type::CHILD: // >
+    case Infix::CHILD: // >
         return _matchChild(*s.lhs, e);
 
-    case Infix::Type::ADJACENT: // +
+    case Infix::ADJACENT: // +
         return _matchAdjacent(*s.lhs, e);
 
-    case Infix::Type::SUBSEQUENT: // ~
+    case Infix::SUBSEQUENT: // ~
         return _matchSubsequent(*s.lhs, e);
 
     default:
@@ -167,6 +167,16 @@ static bool _match(ClassSelector const &s, Markup::Element const &el) {
     return el.classList.contains(s.class_);
 }
 
+// 8.2. The Link History Pseudo-classes: :link and :visited
+// https://www.w3.org/TR/selectors-4/#link
+
+static bool _matchLink(Markup::Element const &el) {
+    return el.tagName == Html::A and el.hasAttribute(Html::HREF_ATTR);
+}
+
+// 14.4.3. :first-of-type pseudo-class
+// https://www.w3.org/TR/selectors-4/#the-first-of-type-pseudo
+
 static bool _matchFirstOfType(Markup::Element const &e) {
     Cursor<Markup::Node> curr = &e;
     auto tag = e.tagName;
@@ -180,6 +190,9 @@ static bool _matchFirstOfType(Markup::Element const &e) {
     }
     return true;
 }
+
+// 14.4.4. :last-of-type pseudo-class
+// https://www.w3.org/TR/selectors-4/#the-last-of-type-pseudo
 
 static bool _matchLastOfType(Markup::Element const &e) {
     Cursor<Markup::Node> curr = &e;
@@ -197,6 +210,10 @@ static bool _matchLastOfType(Markup::Element const &e) {
 
 static bool _match(Pseudo const &s, Markup::Element const &el) {
     switch (s.type) {
+
+    case Pseudo::LINK:
+        return _matchLink(el);
+
     case Pseudo::FIRST_OF_TYPE:
         return _matchFirstOfType(el);
 
@@ -420,7 +437,7 @@ static Selector _parseSelectorElement(Cursor<Css::Sst> &cur, OpCode currentOp) {
                     return EmptySelector{};
                 }
             }
-            val = Pseudo{Pseudo::make(cur->token.data)};
+            val = Pseudo::make(cur->token.data);
             break;
         default:
             val = ClassSelector{cur->token.data};
