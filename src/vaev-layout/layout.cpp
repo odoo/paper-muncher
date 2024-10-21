@@ -128,9 +128,9 @@ Output layout(Tree &t, Frag &f, Input input) {
         input.knownSize.width = specifiedWidth;
     }
     input.knownSize.width = input.knownSize.width.map([&](auto s) {
-        if (f.style->boxSizing == BoxSizing::CONTENT_BOX)
+        if (f.style->boxSizing == BoxSizing::CONTENT_BOX and specifiedWidth != NONE)
             return s;
-        return s - padding.horizontal() - borders.horizontal();
+        return max(Px{0}, s - padding.horizontal() - borders.horizontal());
     });
     input.intrinsic.x = widthIntrinsicSize;
 
@@ -140,9 +140,9 @@ Output layout(Tree &t, Frag &f, Input input) {
     }
 
     input.knownSize.height = input.knownSize.height.map([&](auto s) {
-        if (f.style->boxSizing == BoxSizing::CONTENT_BOX)
+        if (f.style->boxSizing == BoxSizing::CONTENT_BOX and specifiedWidth != NONE)
             return s;
-        return s - padding.vertical() - borders.vertical();
+        return max(Px{0}, s - padding.vertical() - borders.vertical());
     });
     input.intrinsic.y = heightIntrinsicSize;
 
