@@ -33,6 +33,32 @@ body {
     margin: 8px;
 }
 
+/* 15.3.3 MARK: Flow content ------------------------------------------------ */
+/* https://html.spec.whatwg.org/multipage/rendering.html#flow-content-3 */
+
+address,
+blockquote,
+center,
+dialog,
+div,
+figure,
+figcaption,
+footer,
+form,
+header,
+hr,
+legend,
+listing,
+main,
+p,
+plaintext,
+pre,
+search,
+xmp {
+    display: block;
+}
+
+
 /* 15.3.4 MARK: Phrasing content -------------------------------------------- */
 /* https://html.spec.whatwg.org/multipage/rendering.html#phrasing-content-3   */
 
