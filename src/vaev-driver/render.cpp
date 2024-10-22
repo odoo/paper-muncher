@@ -2,6 +2,7 @@
 #include <karm-scene/stack.h>
 #include <karm-sys/time.h>
 #include <vaev-layout/frag.h>
+#include <vaev-layout/layout.h>
 #include <vaev-layout/paint.h>
 #include <vaev-layout/positioned.h>
 #include <vaev-markup/dom.h>

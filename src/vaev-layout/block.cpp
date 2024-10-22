@@ -1,8 +1,7 @@
 #include "block.h"
 
-#include "float.h"
 #include "frag.h"
-#include "values.h"
+#include "layout.h"
 
 namespace Vaev::Layout {
 

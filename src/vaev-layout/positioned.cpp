@@ -1,5 +1,7 @@
 #include "positioned.h"
 
+#include "layout.h"
+
 namespace Vaev::Layout {
 
 void layoutPositioned(Tree &t, Frag &f, RectPx containingBlock) {

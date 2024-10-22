@@ -1,6 +1,7 @@
 #include "table.h"
 
 #include "frag.h"
+#include "layout.h"
 #include "values.h"
 
 namespace Vaev::Layout {

@@ -148,4 +148,17 @@ void paint(Frag &frag, Scene::Stack &stack) {
     _paintStackingContext(frag, stack);
 }
 
+void wireframe(Frag &frag, Gfx::Canvas &g) {
+    for (auto &c : frag.children())
+        wireframe(c, g);
+
+    g.strokeStyle({
+        .fill = Gfx::BLACK,
+        .width = 1,
+        .align = Gfx::INSIDE_ALIGN,
+    });
+
+    g.stroke(frag.layout.borderBox().cast<f64>());
+}
+
 } // namespace Vaev::Layout

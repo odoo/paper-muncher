@@ -50,15 +50,4 @@ void _buildNode(Style::Computer &c, Markup::Node const &n, Frag &parent);
 
 Frag build(Style::Computer &c, Markup::Document const &doc);
 
-// MARK: Layout ----------------------------------------------------------------
-
-InsetsPx computeMargins(Tree &t, Frag &f, Input input);
-InsetsPx computeBorders(Tree &t, Frag &f);
-
-Output layout(Tree &t, Frag &f, Input input);
-
-Px measure(Tree &t, Frag &f, Axis axis, IntrinsicSize intrinsic, Px availableSpace);
-
-void wireframe(Frag &frag, Gfx::Canvas &g);
-
 } // namespace Vaev::Layout
