@@ -37,7 +37,7 @@ void Frag::add(Frag &&frag) {
 
 void Frag::repr(Io::Emit &e) const {
     if (children()) {
-        e("(flow {} {} {}", style->display, style->position, layout.borderBox());
+        e("(flow {} {} {} {}", attrs, style->display, style->position, layout.borderBox());
         e.indentNewline();
         for (auto &c : children()) {
             c.repr(e);
@@ -46,8 +46,50 @@ void Frag::repr(Io::Emit &e) const {
         e.deindent();
         e(")");
     } else {
-        e("(frag {} {} {})", style->display, style->position, layout.borderBox());
+        e("(frag {} {} {} {})", attrs, style->display, style->position, layout.borderBox());
     }
+}
+
+// MARK: Attributes ------------------------------------------------------------
+
+static Opt<Str> _parseStrAttr(Markup::Element const &el, AttrName name) {
+    return el.getAttribute(name);
+}
+
+static Opt<usize> _parseUsizeAttr(Markup::Element const &el, AttrName name) {
+    auto str = _parseStrAttr(el, name);
+    if (not str)
+        return NONE;
+    return Io::atoi(str.unwrap());
+}
+
+static Attrs _parseDomAttr(Markup::Element const &el) {
+    Attrs attrs;
+
+    // https://html.spec.whatwg.org/multipage/tables.html#the-col-element
+
+    // The element may have a span content attribute specified, whose value must
+    // be a valid non-negative integer greater than zero and less than or equal to 1000.
+
+    attrs.span = _parseUsizeAttr(el, Html::SPAN_ATTR).unwrapOr(1);
+    if (attrs.span == 0 or attrs.span > 1000)
+        attrs.span = 1;
+
+    // https://html.spec.whatwg.org/multipage/tables.html#attributes-common-to-td-and-th-elements
+
+    // The td and th elements may have a colspan content attribute specified,
+    // whose value must be a valid non-negative integer greater than zero and less than or equal to 1000.
+    attrs.colSpan = _parseUsizeAttr(el, Html::COLSPAN_ATTR).unwrapOr(1);
+    if (attrs.colSpan == 0 or attrs.colSpan > 1000)
+        attrs.colSpan = 1;
+
+    // The td and th elements may also have a rowspan content attribute specified,
+    // whose value must be a valid non-negative integer less than or equal to 65534.
+    attrs.rowSpan = _parseUsizeAttr(el, Html::ROWSPAN_ATTR).unwrapOr(1);
+    if (attrs.rowSpan > 65534)
+        attrs.rowSpan = 65534;
+
+    return attrs;
 }
 
 // MARK: Build -----------------------------------------------------------------
@@ -92,36 +134,9 @@ static void _buildTableChildren(Style::Computer &c, Vec<Strong<Markup::Node>> co
     tableWrapperBox.add(std::move(tableBox));
 }
 
-static Opt<Math::Vec2u> _parseTableSpans(Markup::Element const &el) {
-    auto rowSpan = el.getAttribute(AttrName{Html::AttrId::ROWSPAN});
-
-    Opt<Str> colSpan = el.getAttribute(
-        el.tagName == Html::COL or el.tagName == Html::COLGROUP
-            ? AttrName{Html::AttrId::SPAN}
-            : AttrName{Html::AttrId::COLSPAN}
-    );
-
-    if (rowSpan == NONE and colSpan == NONE)
-        return NONE;
-
-    usize rowSpanValue = 1, colSpanValue = 1;
-
-    if (rowSpan)
-        rowSpanValue = min(65534, Io::atoi(rowSpan.unwrap()).unwrapOr(1));
-
-    if (colSpan)
-        colSpanValue = min(1000, Io::atoi(colSpan.unwrap()).unwrapOr(1));
-
-    return Math::Vec2u{
-        rowSpanValue,
-        colSpanValue,
-    };
-}
-
 static void _buildElement(Style::Computer &c, Markup::Element const &el, Frag &parent) {
     auto style = c.computeFor(*parent.style, el);
     auto font = _lookupFontface(*style);
-    auto tableSpan = _parseTableSpans(el);
 
     if (el.tagName == Html::IMG) {
         Image::Picture img = Gfx::Surface::fallback();
@@ -157,13 +172,7 @@ static void _buildElement(Style::Computer &c, Markup::Element const &el, Frag &p
     };
 
     auto frag = buildFrag(c, el, font, style);
-
-    if (tableSpan)
-        frag.tableSpan.cow() = {
-            tableSpan.unwrap().x,
-            tableSpan.unwrap().y,
-        };
-
+    frag.attrs = _parseDomAttr(el);
     parent.add(std::move(frag));
 }
 

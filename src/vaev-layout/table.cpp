@@ -30,16 +30,16 @@ void advanceUntil(MutCursor<Frag> &cursor, Func<bool(Display)> pred) {
 
 struct TableCell {
     Math::Vec2u anchorIdx = {};
-    MutCursor<Frag> el = nullptr;
+    MutCursor<Frag> frag = nullptr;
 
     static TableCell const EMPTY;
 
     bool operator==(TableCell const &c) const {
-        return el == c.el and anchorIdx == c.anchorIdx;
+        return frag == c.frag and anchorIdx == c.anchorIdx;
     }
 
     bool isOccupied() const {
-        return el != nullptr;
+        return frag != nullptr;
     }
 };
 
@@ -176,7 +176,8 @@ struct TableFormatingContext {
             if (current.x == grid.size.x)
                 grid.increaseWidth();
 
-            usize rowSpan = tableRowCursor->tableSpan->row, colSpan = tableRowCursor->tableSpan->col;
+            usize rowSpan = tableRowCursor->attrs.rowSpan;
+            usize colSpan = tableRowCursor->attrs.colSpan;
 
             bool cellGrowsDownward;
             if (rowSpan == 0 and true /* TODO: and the table element's node document is not set to quirks mode, */) {
@@ -196,7 +197,7 @@ struct TableFormatingContext {
             {
                 TableCell cell = {
                     .anchorIdx = current,
-                    .el = tableRowCursor,
+                    .frag = tableRowCursor,
                 };
 
                 for (usize x = current.x; x < current.x + colSpan; ++x) {
@@ -291,7 +292,7 @@ struct TableFormatingContext {
 
                 // MARK: Columns
                 while (not columnGroupCursor.ended()) {
-                    auto span = columnGroupCursor->tableSpan->col;
+                    auto span = columnGroupCursor->attrs.span;
                     grid.increaseWidth(span);
 
                     cols.pushBack({.start = grid.size.x - span, .end = grid.size.x - 1, .el = *columnGroupCursor});
@@ -304,7 +305,7 @@ struct TableFormatingContext {
 
                 colGroups.pushBack({.start = startColRange, .end = grid.size.x - 1, .el = *tableBoxCursor});
             } else {
-                auto span = tableBoxCursor->tableSpan->col;
+                auto span = tableBoxCursor->attrs.span;
                 grid.increaseWidth(span);
 
                 colGroups.pushBack({.start = grid.size.x - span + 1, .end = grid.size.x - 1, .el = *tableBoxCursor});
@@ -379,9 +380,10 @@ struct TableFormatingContext {
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
-                usize rowSpan = cell.el->tableSpan->row, colSpan = cell.el->tableSpan->col;
+                usize rowSpan = cell.frag->attrs.rowSpan;
+                usize colSpan = cell.frag->attrs.colSpan;
 
-                auto cellBorder = computeBorders(fragTree, *cell.el);
+                auto cellBorder = computeBorders(fragTree, *cell.frag);
 
                 // Top and bottom borders
                 for (usize k = 0; k < rowSpan; ++k) {
@@ -463,7 +465,7 @@ struct TableFormatingContext {
         usize x = 0;
         while (x < grid.size.x) {
             auto cell = grid.get(x, 0);
-            if (cell.el->style->sizing->width == Size::Type::AUTO) {
+            if (cell.frag->style->sizing->width == Size::Type::AUTO) {
                 x++;
                 continue;
             }
@@ -471,12 +473,13 @@ struct TableFormatingContext {
             if (cell.anchorIdx != Math::Vec2u{x, 0})
                 continue;
 
-            auto cellWidth = resolve(t, *cell.el, cell.el->style->sizing->width.value, tableUsedWidth);
-            auto colSpan = cell.el->tableSpan->col;
+            auto cellWidth = resolve(t, *cell.frag, cell.frag->style->sizing->width.value, tableUsedWidth);
+            auto colSpan = cell.frag->attrs.colSpan;
 
             for (usize j = 0; j < colSpan; ++j, x++) {
-                // FIXME: not overriding values already computed, but should we subtract the already computed from
-                // cellWidth before division?
+                // FIXME: Not overriding values already computed,
+                //        but should we subtract the already computed from
+                //        cellWidth before division?
                 if (colWidth[x] == NONE)
                     colWidth[x] = cellWidth / Px{colSpan};
             }
@@ -545,7 +548,7 @@ struct TableFormatingContext {
             // FIXME: What should be the parameter for intrinsic in the vertical axis?
             auto cellMinOutput = layout(
                 t,
-                *cell.el,
+                *cell.frag,
                 Input{
                     .commit = Commit::NO,
                     .intrinsic = {IntrinsicSize::MIN_CONTENT, IntrinsicSize::AUTO},
@@ -556,7 +559,7 @@ struct TableFormatingContext {
             // FIXME: What should be the parameter for intrinsic in the vertical axis?
             auto cellMaxOutput = layout(
                 t,
-                *cell.el,
+                *cell.frag,
                 Input{
                     .commit = Commit::NO,
                     .intrinsic = {IntrinsicSize::MAX_CONTENT, IntrinsicSize::AUTO},
@@ -567,11 +570,11 @@ struct TableFormatingContext {
             auto cellMinWidth = cellMinOutput.size.x;
             auto cellMaxWidth = cellMaxOutput.size.x;
 
-            if (cell.el->style->sizing->width != Size::Type::AUTO) {
+            if (cell.frag->style->sizing->width != Size::Type::AUTO) {
                 auto cellPreferredWidth = resolve(
                     t,
                     f,
-                    cell.el->style->sizing->width.value,
+                    cell.frag->style->sizing->width.value,
                     input.availableSpace.x
                 );
                 cellMinWidth = max(cellMinWidth, cellPreferredWidth);
@@ -594,11 +597,11 @@ struct TableFormatingContext {
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
-                auto colSpan = cell.el->tableSpan->col;
+                auto colSpan = cell.frag->attrs.colSpan;
                 if (colSpan > 1)
                     continue;
 
-                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxWidth(t, *cell.el, input, cell);
+                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxWidth(t, *cell.frag, input, cell);
 
                 minColWidth[j] = max(minColWidth[j], cellMinWidth);
                 maxColWidth[j] = max(maxColWidth[j], cellMaxWidth);
@@ -632,11 +635,11 @@ struct TableFormatingContext {
                 if (not(cell.anchorIdx == Math::Vec2u{j, i}))
                     continue;
 
-                auto colSpan = cell.el->tableSpan->col;
+                auto colSpan = cell.frag->attrs.span;
                 if (colSpan <= 1)
                     continue;
 
-                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxWidth(t, *cell.el, input, cell);
+                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxWidth(t, *cell.frag, input, cell);
 
                 Px currSumMinColWidth{0}, currSumMaxColWidth{0};
                 for (usize k = 0; k < colSpan; ++k) {
@@ -749,12 +752,12 @@ struct TableFormatingContext {
                 // [A] CSS 2.2 does not specify how cells that span more than one row affect row height calculations except
                 // that the sum of the row heights involved must be great enough to encompass the cell spanning the rows.
 
-                auto rowSpan = cell.el->tableSpan->row;
-                if (cell.el->style->sizing->height != Size::Type::AUTO) {
+                auto rowSpan = cell.frag->attrs.rowSpan;
+                if (cell.frag->style->sizing->height != Size::Type::AUTO) {
                     auto computedHeight = resolve(
                         t,
-                        *cell.el,
-                        cell.el->style->sizing->height.value,
+                        *cell.frag,
+                        cell.frag->style->sizing->height.value,
                         Px{0}
                     );
 
@@ -765,7 +768,7 @@ struct TableFormatingContext {
 
                 auto cellOutput = layout(
                     t,
-                    *cell.el,
+                    *cell.frag,
                     Input{
                         .commit = Commit::NO,
                         .intrinsic = {IntrinsicSize::AUTO, IntrinsicSize::MIN_CONTENT},
@@ -961,8 +964,8 @@ Output tableLayout(Tree &t, Frag &wrapper, Input input) {
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
-                auto colSpan = cell.el->tableSpan->col;
-                auto rowSpan = cell.el->tableSpan->row;
+                auto colSpan = cell.frag->attrs.colSpan;
+                auto rowSpan = cell.frag->attrs.rowSpan;
 
                 // TODO: In CSS 2.2, the height of a cell box is the minimum
                 //       height required by the content.
@@ -973,7 +976,7 @@ Output tableLayout(Tree &t, Frag &wrapper, Input input) {
                 //       (See https://www.w3.org/TR/CSS22/tables.html#height-layout)
                 auto cellOutput = layout(
                     t,
-                    *cell.el,
+                    *cell.frag,
                     {
                         .commit = Commit::YES,
                         .knownSize = {

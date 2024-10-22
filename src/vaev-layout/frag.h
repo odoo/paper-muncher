@@ -17,14 +17,22 @@ using Content = Union<
     Karm::Text::Run,
     Image::Picture>;
 
+struct Attrs {
+    usize span = 1;
+    usize rowSpan = 1;
+    usize colSpan = 1;
+
+    void repr(Io::Emit &e) const {
+        e("(attrs span: {} rowSpan: {} colSpan: {})", span, rowSpan, colSpan);
+    }
+};
+
 struct Frag : public Meta::NoCopy {
     Strong<Style::Computed> style;
     Strong<Karm::Text::Fontface> fontFace;
     Content content = NONE;
     Layout layout;
-
-    // TODO: consider refactor this to "HTML attributes" once other attributes need to be considered
-    Cow<TableSpan> tableSpan;
+    Attrs attrs;
 
     Frag(Strong<Style::Computed> style, Strong<Karm::Text::Fontface> fontFace);
 
