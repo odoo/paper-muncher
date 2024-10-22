@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Layout with Float</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .header,
+        .footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .aside {
+            width: 20%;
+            float: left;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .main {
+            width: 60%;
+            float: left;
+            padding: 20px;
+        }
+
+        .footer {
+            clear: both;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Header</h1>
+    </div>
+
+    <div class="container">
+        <div class="aside">
+            <h2>Left Aside</h2>
+            <p>This is the left sidebar content.</p>
+        </div>
+
+        <div class="main">
+            <h2>Main Content</h2>
+            <p>This is the main content area.</p>
+        </div>
+
+        <div class="aside">
+            <h2>Right Aside</h2>
+            <p>This is the right sidebar content.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Footer</p>
+    </div>
+
+</body>
+
+</html>

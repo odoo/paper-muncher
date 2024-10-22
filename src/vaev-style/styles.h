@@ -1522,6 +1522,25 @@ struct MarginInlineEndProp {
     }
 };
 
+struct MarginInlineProp {
+    Math::Insets<Width> value = initial();
+
+    static Str name() { return "margin-inline"; }
+
+    static Math::Insets<Width> initial() { return {}; }
+
+    void apply(Computed &c) const {
+        // FIXME: Take writing mode into account
+        c.margin.cow().start = value.start;
+        c.margin.cow().end = value.end;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<Math::Insets<Width>>(c));
+        return Ok();
+    }
+};
+
 struct MarginBlockStartProp {
     Width value = initial();
 
@@ -1554,6 +1573,25 @@ struct MarginBlockEndProp {
 
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Width>(c));
+        return Ok();
+    }
+};
+
+struct MarginBlockProp {
+    Math::Insets<Width> value = initial();
+
+    static Str name() { return "margin-block"; }
+
+    static Math::Insets<Width> initial() { return {}; }
+
+    void apply(Computed &c) const {
+        // FIXME: Take writing mode into account
+        c.margin.cow().top = value.top;
+        c.margin.cow().bottom = value.bottom;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<Math::Insets<Width>>(c));
         return Ok();
     }
 };
@@ -2143,8 +2181,11 @@ using _StyleProp = Union<
 
     MarginInlineStartProp,
     MarginInlineEndProp,
+    MarginInlineProp,
+
     MarginBlockStartProp,
     MarginBlockEndProp,
+    MarginBlockProp,
 
     // Overflow
     OverflowXProp,
