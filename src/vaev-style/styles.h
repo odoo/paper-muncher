@@ -257,7 +257,7 @@ struct BackgroundRepeatProp {
 
 // https://www.w3.org/TR/CSS22/colors.html#x10
 struct BackgroundProp {
-    // FIXME this should cover everything else
+    // FIXME: this should cover everything else
     Vec<Color> value = initial();
 
     static constexpr Str name() { return "background"; }

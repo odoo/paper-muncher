@@ -44,7 +44,7 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
     // Sort rules by specificity
     stableSort(
         matchingRules,
-        [](auto const *a, auto const *b) {
+        [](auto const &a, auto const &b) {
             return spec(a->selector) <=> spec(b->selector);
         }
     );
@@ -61,7 +61,7 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
     auto computed = makeStrong<Computed>(Computed::initial());
     computed->inherit(parent);
 
-    for (auto const *styleRule : matchingRules) {
+    for (auto const &styleRule : matchingRules) {
         for (auto const &prop : styleRule->props) {
             if (prop.important == Important::NO)
                 prop.apply(*computed);
@@ -69,7 +69,7 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
     }
 
     // TODO: We might want to find a better way to do that :^)
-    for (auto const *styleRule : matchingRules) {
+    for (auto const &styleRule : matchingRules) {
         for (auto const &prop : styleRule->props) {
             if (prop.important == Important::YES)
                 prop.apply(*computed);
