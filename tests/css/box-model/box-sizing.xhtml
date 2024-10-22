@@ -1,0 +1,101 @@
+<test id="box-sizing-no-border"></test>
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            body {
+                margin: 0px;
+            }
+
+            section {
+                width: 200px;
+                height: 200px;
+                background: #ddd;
+                position: relative;
+            }
+
+            .green {
+                background-color: green;
+            }
+
+            .white {
+                background-color: white;
+                box-sizing: border-box;
+            }
+        </style>
+    </head>
+
+    <body>
+        <section>
+            <slot />
+        </section>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="green" style="width: 100px; height: 100px; box-sizing: border-box;"></div>
+</rendering>
+
+<rendering>
+    <div class="green" style="width: 100px; height: 100px; box-sizing: content-box;"></div>
+</rendering>
+
+<error>
+</error>
+
+
+</test>
+
+<test id="box-sizing-border"></test>
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            body {
+                margin: 0px;
+            }
+
+            section {
+                width: 200px;
+                height: 200px;
+                background: #ddd;
+                position: relative;
+            }
+
+            .green {
+                background-color: green;
+            }
+
+            .white {
+                background-color: white;
+                box-sizing: border-box;
+            }
+        </style>
+    </head>
+
+    <body>
+        <section>
+            <slot />
+        </section>
+    </body>
+
+    </html>
+</container>
+
+<rendering helper="border-box">
+    <div class="green" style="width: 100px; height: 100px; border: solid 5px black; box-sizing: border-box;"></div>
+</rendering>
+
+<rendering helper="content-box">
+    <div class="green" style="width: 90px; height: 90px; border: solid 5px black; box-sizing: content-box;"></div>
+</rendering>
+
+<error>
+</error>
+
+
+</test>

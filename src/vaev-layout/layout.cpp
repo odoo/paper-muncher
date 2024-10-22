@@ -128,7 +128,8 @@ Output layout(Tree &t, Frag &f, Input input) {
         input.knownSize.width = specifiedWidth;
     }
     input.knownSize.width = input.knownSize.width.map([&](auto s) {
-        // FIXME: Take box-sizing into account
+        if (f.style->boxSizing == BoxSizing::CONTENT_BOX)
+            return s;
         return s - padding.horizontal() - borders.horizontal();
     });
     input.intrinsic.x = widthIntrinsicSize;
@@ -139,7 +140,8 @@ Output layout(Tree &t, Frag &f, Input input) {
     }
 
     input.knownSize.height = input.knownSize.height.map([&](auto s) {
-        // FIXME: Take box-sizing into account
+        if (f.style->boxSizing == BoxSizing::CONTENT_BOX)
+            return s;
         return s - padding.vertical() - borders.vertical();
     });
     input.intrinsic.y = heightIntrinsicSize;
