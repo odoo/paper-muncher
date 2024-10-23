@@ -537,8 +537,8 @@ struct FlexFormatingContext {
     void _collectFlexItemsInfoFlexLinesWrap(Tree &t, Input input) {
         if (input.intrinsic.x == IntrinsicSize::MIN_CONTENT) {
             _lines.ensure(_items.len());
-
             Px largestMinContentContrib = Limits<Px>::MIN;
+            usize si = 0;
             for (auto &flexItem : _items) {
                 largestMinContentContrib = max(
                     largestMinContentContrib,
@@ -548,6 +548,7 @@ struct FlexFormatingContext {
                         {_availableMainSpace, _initiallyAvailableCrossSpace}
                     )
                 );
+                _lines.emplaceBack(mutSub(_items, si, si + 1));
             }
 
             _usedMainSize = largestMinContentContrib;
