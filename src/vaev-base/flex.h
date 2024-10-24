@@ -52,8 +52,11 @@ struct FlexBasis {
 };
 
 struct Flex {
+    // FlexContainer
     FlexDirection direction = FlexDirection::ROW;
     FlexWrap wrap = FlexWrap::NOWRAP;
+
+    // FlexItem
     FlexBasis basis = Width{Width::AUTO};
     Number grow = 0;
     Number shrink = 1;
