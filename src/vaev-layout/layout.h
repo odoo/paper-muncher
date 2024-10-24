@@ -1,13 +1,20 @@
 #pragma once
 
 #include "base.h"
+#include "box.h"
+#include "frag.h"
 
 namespace Vaev::Layout {
 
-InsetsPx computeMargins(Tree &t, Box &f, Input input);
+struct Tree {
+    Box root;
+    Viewport viewport;
+};
+
+InsetsPx computeMargins(Tree &t, Box &box, Input input);
 
 InsetsPx computeBorders(Tree &t, Box &f);
 
-Output layout(Tree &t, Box &f, Input input);
+Output layout(Tree &t, Box &box, Input input);
 
 } // namespace Vaev::Layout

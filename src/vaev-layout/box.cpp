@@ -1,7 +1,7 @@
 #include <karm-base/clamp.h>
 #include <karm-text/loader.h>
 
-#include "frag.h"
+#include "box.h"
 
 namespace Vaev::Layout {
 
@@ -37,7 +37,7 @@ void Box::add(Box &&frag) {
 
 void Box::repr(Io::Emit &e) const {
     if (children()) {
-        e("(flow {} {} {} {}", attrs, style->display, style->position, layout.borderBox());
+        e("(flow {} {} {} {}", attrs, style->display, style->position);
         e.indentNewline();
         for (auto &c : children()) {
             c.repr(e);
@@ -46,7 +46,7 @@ void Box::repr(Io::Emit &e) const {
         e.deindent();
         e(")");
     } else {
-        e("(frag {} {} {} {})", attrs, style->display, style->position, layout.borderBox());
+        e("(frag {} {} {} {})", attrs, style->display, style->position);
     }
 }
 

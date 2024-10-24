@@ -1,6 +1,6 @@
 #include "table.h"
 
-#include "frag.h"
+#include "box.h"
 #include "layout.h"
 #include "values.h"
 

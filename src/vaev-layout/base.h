@@ -48,45 +48,6 @@ struct Output {
     }
 };
 
-/// Computed layout values.
-
-struct Layout {
-    InsetsPx padding{};
-    InsetsPx borders{};
-    Vec2Px position; //< Position relative to the content box of the containing block
-    Vec2Px borderSize;
-    InsetsPx margin{};
-    RadiiPx radii{};
-    Px fontSize{16};
-
-    void repr(Io::Emit &e) const {
-        e("(layout paddings: {} borders: {} position: {} borderSize: {} margin: {} radii: {})",
-          padding, borders, position, borderSize, margin, radii);
-    }
-
-    Layout offseted(Vec2Px offset) const {
-        auto copy = *this;
-        copy.position = position + offset;
-        return copy;
-    }
-
-    RectPx borderBox() const {
-        return RectPx{position, borderSize};
-    }
-
-    RectPx paddingBox() const {
-        return borderBox().shrink(borders);
-    }
-
-    RectPx contentBox() const {
-        return paddingBox().shrink(padding);
-    }
-
-    RectPx marginBox() const {
-        return borderBox().grow(margin);
-    }
-};
-
 struct Box;
 
 struct Tree;

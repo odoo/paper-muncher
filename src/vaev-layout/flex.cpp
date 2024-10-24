@@ -1,13 +1,12 @@
 #include "flex.h"
 
-#include "frag.h"
 #include "layout.h"
 #include "values.h"
 
 namespace Vaev::Layout {
 
 struct FlexItem {
-    Box *frag;
+    Box *box;
     Flex flex;
 
     // these 2 sizes do NOT account margins
@@ -17,7 +16,8 @@ struct FlexItem {
     // position relative to its flex line
     Vec2Px position;
 
-    Px flexBaseSize, hypoMainSize;
+    Px flexBaseSize;
+    Px hypoMainSize;
 
     Vec2Px speculativeSize;
     InsetsPx speculativeMargin;
@@ -25,19 +25,12 @@ struct FlexItem {
     Vec2Px minContentSize, maxContentSize;
     InsetsPx minContentMargin, maxContentMargin;
 
-    FlexItem(Tree &t, Box &f)
-        : frag(&f), flex(*f.style->flex) {
-        speculateValues(t, Input{Commit::NO});
+    FlexItem(Tree &t, Box &box)
+        : box(&box), flex(*box.style->flex) {
+        speculateValues(t, {Commit::NO});
         // TODO: not always we will need min/max content sizes,
         //       this can be lazy computed for performance gains
         computeContentSizes(t);
-    }
-
-    void commit() {
-        frag->layout.margin.top = margin.top.unwrapOr(speculativeMargin.top);
-        frag->layout.margin.start = margin.start.unwrapOr(speculativeMargin.start);
-        frag->layout.margin.end = margin.end.unwrapOr(speculativeMargin.end);
-        frag->layout.margin.bottom = margin.bottom.unwrapOr(speculativeMargin.bottom);
     }
 
     void computeContentSizes(Tree &t) {
@@ -98,8 +91,8 @@ struct FlexItem {
     }
 
     bool hasAnyCrossMarginAuto() const {
-        return (frag->style->margin->top == Width::Type::AUTO) or
-               (frag->style->margin->bottom == Width::Type::AUTO);
+        return (box->style->margin->top == Width::Type::AUTO) or
+               (box->style->margin->bottom == Width::Type::AUTO);
     }
 
     Px getScaledFlexShrinkFactor() const {
@@ -107,11 +100,11 @@ struct FlexItem {
     }
 
     void _speculateValues(Tree &t, Input input, Vec2Px &speculativeSize, InsetsPx &speculativeMargin) {
-        Output out = layout(t, *frag, input);
+        Output out = layout(t, *box, input);
         speculativeSize = out.size;
         speculativeMargin = computeMargins(
             t,
-            *frag,
+            *box,
             {
                 .commit = Commit::NO,
                 .containingBlock = speculativeSize,
@@ -123,23 +116,23 @@ struct FlexItem {
         _speculateValues(t, input, speculativeSize, speculativeMargin);
     }
 
-    void computeFlexBaseSize(Tree &t, Box &f, Px mainContainerSize) {
+    void computeFlexBaseSize(Tree &t, Box &box, Px mainContainerSize) {
         // TODO: check specs
         if (flex.basis.type == FlexBasis::WIDTH) {
             if (flex.basis.width.type == Width::Type::VALUE) {
-                flexBaseSize = resolve(t, f, flex.basis.width.value, mainContainerSize);
+                flexBaseSize = resolve(t, box, flex.basis.width.value, mainContainerSize);
             } else if (flex.basis.width.type == Width::Type::AUTO) {
                 flexBaseSize = speculativeSize.x;
             }
         }
 
         if (flex.basis.type == FlexBasis::Type::CONTENT and
-            frag->style->sizing->height.type == Size::Type::LENGTH /* and
+            box.style->sizing->height.type == Size::Type::LENGTH /* and
             intrinsic aspect ratio*/
         ) {
             // TODO: placehold value, check specs
             Px aspectRatio{1};
-            auto crossSize = resolve(t, f, frag->style->sizing->height.value, Px{0});
+            auto crossSize = resolve(t, box, box.style->sizing->height.value, Px{0});
             flexBaseSize = (crossSize)*aspectRatio;
         }
 
@@ -423,12 +416,12 @@ struct FlexFormatingContext {
     // https://www.w3.org/TR/css-flexbox-1/#algo-main-item
 
     void _determineFlexBaseSizeAndHypotheticalMainSize(
-        Tree &t, Box &f, Input input
+        Tree &t, Box &box, Input input
     ) {
         for (auto &i : _items) {
             i.computeFlexBaseSize(
                 t,
-                f,
+                box,
                 _availableMainSpace
             );
 
@@ -871,7 +864,7 @@ struct FlexFormatingContext {
     // 12. MARK: Distribute any remaining free space ---------------------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-main-align
 
-    void _distributeRemainingFreeSpace(Box &f, Input input) {
+    void _distributeRemainingFreeSpace(Box &box, Input input) {
         for (auto &flexLine : _lines) {
             Px occupiedMainSize{0};
             for (auto &flexItem : flexLine.items) {
@@ -970,7 +963,7 @@ struct FlexFormatingContext {
     // 14. MARK: Align all flex items ------------------------------------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-cross-align
 
-    void _alignAllFlexItems(Tree &t, Box &f, Input input) {
+    void _alignAllFlexItems(Tree &t, Box &box, Input input) {
         for (auto &flexLine : _lines) {
             for (auto &flexItem : flexLine.items) {
                 flexItem.alignItem(
@@ -1097,7 +1090,6 @@ struct FlexFormatingContext {
                         .availableSpace = flexItem.usedSize,
                     }
                 );
-                flexItem.commit();
             }
         }
     }
@@ -1105,7 +1097,7 @@ struct FlexFormatingContext {
     // MARK: Public API --------------------------------------------------------
 
     // FIXME: auto, min and max content values for flex container dimensions are not working as in Chrome; add tests
-    Output run(Tree &t, Box &f, Input input) {
+    Output run(Tree &t, Box &box, Input input) {
         // 1. Generate anonymous flex items
         _generateAnonymousFlexItems(t, f);
 
@@ -1162,7 +1154,7 @@ struct FlexFormatingContext {
     }
 };
 
-Output flexLayout(Tree &t, Box &f, Input input) {
+Output flexLayout(Tree &t, Box &box, Input input) {
     FlexFormatingContext fc = {*f.style->flex};
     return fc.run(t, f, input);
 }

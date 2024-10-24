@@ -4,44 +4,36 @@
 
 namespace Vaev::Layout {
 
-void layoutPositioned(Tree &t, Box &f, RectPx containingBlock) {
-    if (f.style->position == Position::ABSOLUTE or f.style->position == Position::RELATIVE) {
+void layoutPositioned(Tree &t, Frag &f, RectPx containingBlock) {
+    if (f.style().position == Position::ABSOLUTE or f.style().position == Position::RELATIVE) {
         auto origin = containingBlock.topStart();
-        if (f.style->position == Position::RELATIVE)
-            origin = f.layout.position;
+        if (f.style().position == Position::RELATIVE)
+            origin = f.metrics.position;
 
-        auto top = f.layout.position.y;
-        auto start = f.layout.position.x;
+        auto top = f.metrics.position.y;
+        auto start = f.metrics.position.x;
 
-        auto topOffset = f.style->offsets->top;
+        auto topOffset = f.style().offsets->top;
         if (topOffset != Width::AUTO) {
-            top = origin.y + resolve(t, f, topOffset, containingBlock.height);
+            top = origin.y + resolve(t, f.box, topOffset, containingBlock.height);
         }
 
-        auto startOffset = f.style->offsets->start;
+        auto startOffset = f.style().offsets->start;
         if (startOffset != Width::AUTO) {
-            start = origin.x + resolve(t, f, startOffset, containingBlock.width);
+            start = origin.x + resolve(t, f.box, startOffset, containingBlock.width);
         }
 
-        auto endOffset = f.style->offsets->end;
+        auto endOffset = f.style().offsets->end;
         if (endOffset != Width::AUTO) {
-            start = (origin.x + containingBlock.width) - resolve(t, f, endOffset, containingBlock.width) - f.layout.borderSize.width;
+            start = (origin.x + containingBlock.width) - resolve(t, f, endOffset, containingBlock.width) - f.metrics.borderSize.width;
         }
 
-        layout(
-            t,
-            f,
-            {
-                .commit = Commit::YES,
-                .knownSize = f.layout.borderBox().size().cast<Opt<Px>>(),
-                .position = {start, top},
-            }
-        );
+        f.offset(Vec2Px{start, top} - f.metrics.position);
 
-        containingBlock = f.layout.contentBox();
+        containingBlock = f.metrics.contentBox();
     }
 
-    for (auto &c : f.children()) {
+    for (auto &c : f.children) {
         layoutPositioned(t, c, containingBlock);
     }
 }

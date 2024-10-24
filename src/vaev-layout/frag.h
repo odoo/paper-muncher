@@ -1,61 +1,53 @@
 #pragma once
 
-#include <karm-image/picture.h>
-#include <karm-text/run.h>
-#include <vaev-markup/dom.h>
-#include <vaev-style/computer.h>
-
-#include "base.h"
+#include "box.h"
 
 namespace Vaev::Layout {
 
-// MARK: Box ------------------------------------------------------------------
-
-using Content = Union<
-    None,
-    Vec<Box>,
-    Karm::Text::Run,
-    Image::Picture>;
-
-struct Attrs {
-    usize span = 1;
-    usize rowSpan = 1;
-    usize colSpan = 1;
+struct Metrics {
+    InsetsPx padding{};
+    InsetsPx borders{};
+    Vec2Px position; //< Position relative to the content box of the containing block
+    Vec2Px borderSize;
+    InsetsPx margin{};
+    RadiiPx radii{};
 
     void repr(Io::Emit &e) const {
-        e("(attrs span: {} rowSpan: {} colSpan: {})", span, rowSpan, colSpan);
+        e("(layout paddings: {} borders: {} position: {} borderSize: {} margin: {} radii: {})",
+          padding, borders, position, borderSize, margin, radii);
+    }
+
+    RectPx borderBox() const {
+        return RectPx{position, borderSize};
+    }
+
+    RectPx paddingBox() const {
+        return borderBox().shrink(borders);
+    }
+
+    RectPx contentBox() const {
+        return paddingBox().shrink(padding);
+    }
+
+    RectPx marginBox() const {
+        return borderBox().grow(margin);
     }
 };
 
-struct Box : public Meta::NoCopy {
-    Strong<Style::Computed> style;
-    Strong<Karm::Text::Fontface> fontFace;
-    Content content = NONE;
-    Layout layout;
-    Attrs attrs;
+struct Frag {
+    Cursor<Box> box;
+    Metrics metrics;
+    Vec<Frag> children;
 
-    Box(Strong<Style::Computed> style, Strong<Karm::Text::Fontface> fontFace);
+    Style::Computed const &style() const {
+        return *box->style;
+    }
 
-    Box(Strong<Style::Computed> style, Strong<Karm::Text::Fontface> fontFace, Content content);
-
-    Slice<Box> children() const;
-
-    MutSlice<Box> children();
-
-    void add(Box &&frag);
-
-    void repr(Io::Emit &e) const;
+    void offset(Vec2Px d) {
+        metrics.position = metrics.position + d;
+        for (auto &c : children)
+            c.offset(d);
+    }
 };
-
-struct Tree {
-    Box root;
-    Viewport viewport;
-};
-
-// MARK: Build -----------------------------------------------------------------
-
-void _buildNode(Style::Computer &c, Markup::Node const &n, Box &parent);
-
-Box build(Style::Computer &c, Markup::Document const &doc);
 
 } // namespace Vaev::Layout

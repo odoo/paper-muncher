@@ -1,15 +1,14 @@
 #include "block.h"
 
-#include "frag.h"
 #include "layout.h"
 
 namespace Vaev::Layout {
 
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
 struct BlockFormatingContext {
-    static Px _determineWidth(Tree &t, Box &f, Input input) {
+    static Px _determineWidth(Tree &t, Box &box, Input input) {
         Px width = Px{0};
-        for (auto &c : f.children()) {
+        for (auto &c : box.children()) {
             auto ouput = layout(
                 t,
                 c,
@@ -25,13 +24,13 @@ struct BlockFormatingContext {
         return width;
     }
 
-    Output run(Tree &t, Box &f, Input input) {
+    Output run(Tree &t, Box &box, Input input) {
         Px blockSize = Px{0};
         Px inlineSize = input.knownSize.width.unwrapOrElse([&] {
-            return _determineWidth(t, f, input);
+            return _determineWidth(t, box, input);
         });
 
-        for (auto &c : f.children()) {
+        for (auto &c : box.children()) {
             if (c.style->float_ != Float::NONE)
                 continue;
 
@@ -76,7 +75,7 @@ struct BlockFormatingContext {
     }
 };
 
-Output blockLayout(Tree &t, Box &f, Input input) {
+Output blockLayout(Tree &t, Box &box, Input input) {
     BlockFormatingContext fc;
     return fc.run(t, f, input);
 }

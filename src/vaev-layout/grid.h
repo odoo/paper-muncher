@@ -4,6 +4,6 @@
 
 namespace Vaev::Layout {
 
-Output gridLayout(Tree &t, Box &f, Input input);
+Output gridLayout(Tree &t, Box &box, Input input);
 
 } // namespace Vaev::Layout

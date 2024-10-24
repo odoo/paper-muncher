@@ -2,14 +2,13 @@
 
 #include "block.h"
 #include "flex.h"
-#include "frag.h"
 #include "grid.h"
 #include "table.h"
 #include "values.h"
 
 namespace Vaev::Layout {
 
-Output _contentLayout(Tree &t, Box &f, Input input) {
+Output _contentLayout(Tree &t, Box &box, Input input) {
     auto display = f.style->display;
 
     if (auto run = f.content.is<Karm::Text::Run>()) {
@@ -40,7 +39,7 @@ Output _contentLayout(Tree &t, Box &f, Input input) {
     }
 }
 
-InsetsPx computeMargins(Tree &t, Box &f, Input input) {
+InsetsPx computeMargins(Tree &t, Box &box, Input input) {
     InsetsPx res;
     auto margin = f.style->margin;
 
@@ -71,7 +70,7 @@ InsetsPx computeBorders(Tree &t, Box &f) {
     return res;
 }
 
-static InsetsPx _computePaddings(Tree &t, Box &f, Input input) {
+static InsetsPx _computePaddings(Tree &t, Box &box, Input input) {
     InsetsPx res;
     auto padding = f.style->padding;
 
@@ -83,7 +82,7 @@ static InsetsPx _computePaddings(Tree &t, Box &f, Input input) {
     return res;
 }
 
-static Math::Radii<Px> _computeRadii(Tree &t, Box &f, Vec2Px size) {
+static Math::Radii<Px> _computeRadii(Tree &t, Box &box, Vec2Px size) {
     auto radii = f.style->borders->radii;
     Math::Radii<Px> res;
 
@@ -99,7 +98,7 @@ static Math::Radii<Px> _computeRadii(Tree &t, Box &f, Vec2Px size) {
     return res;
 }
 
-static Cons<Opt<Px>, IntrinsicSize> _computeSpecifiedSize(Tree &t, Box &f, Input input, Size size, IntrinsicSize intrinsic) {
+static Cons<Opt<Px>, IntrinsicSize> _computeSpecifiedSize(Tree &t, Box &box, Input input, Size size, IntrinsicSize intrinsic) {
     if (size == Size::MIN_CONTENT or intrinsic == IntrinsicSize::MIN_CONTENT) {
         return {NONE, IntrinsicSize::MIN_CONTENT};
     } else if (size == Size::MAX_CONTENT or intrinsic == IntrinsicSize::MAX_CONTENT) {
@@ -116,7 +115,7 @@ static Cons<Opt<Px>, IntrinsicSize> _computeSpecifiedSize(Tree &t, Box &f, Input
     }
 }
 
-Output layout(Tree &t, Box &f, Input input) {
+Output layout(Tree &t, Box &box, Input input, Frag &frag) {
     // FIXME: confirm how the preffered width/height parameters interacts with intrinsic size argument from input
     auto borders = computeBorders(t, f);
     auto padding = _computePaddings(t, f, input);

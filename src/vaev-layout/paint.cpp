@@ -5,18 +5,18 @@
 
 namespace Vaev::Layout {
 
-static bool _paintBorders(Box &frag, Gfx::Color currentColor, Gfx::Borders &borders) {
-    currentColor = resolve(frag.style->color, currentColor);
+static bool _paintBorders(Frag &frag, Gfx::Color currentColor, Gfx::Borders &borders) {
+    currentColor = resolve(frag.style().color, currentColor);
 
-    borders.radii = frag.layout.radii.cast<f64>();
+    borders.radii = frag.metrics.radii.cast<f64>();
 
-    auto bordersLayout = frag.layout.borders;
+    auto bordersLayout = frag.metrics.borders;
     borders.widths.top = bordersLayout.top.cast<f64>();
     borders.widths.bottom = bordersLayout.bottom.cast<f64>();
     borders.widths.start = bordersLayout.start.cast<f64>();
     borders.widths.end = bordersLayout.end.cast<f64>();
 
-    auto bordersStyle = frag.style->borders;
+    auto bordersStyle = frag.box->style->borders;
     borders.styles[0] = bordersStyle->top.style;
     borders.styles[1] = bordersStyle->end.style;
     borders.styles[2] = bordersStyle->bottom.style;
@@ -30,8 +30,8 @@ static bool _paintBorders(Box &frag, Gfx::Color currentColor, Gfx::Borders &bord
     return not borders.widths.zero();
 }
 
-static void _paintBox(Box &frag, Gfx::Color currentColor, Scene::Stack &stack) {
-    auto const &backgrounds = frag.style->backgrounds;
+static void _paintBox(Frag &frag, Gfx::Color currentColor, Scene::Stack &stack) {
+    auto const &backgrounds = frag.box->style->backgrounds;
 
     Scene::Box paint;
     bool hasBackgrounds = any(backgrounds);
@@ -50,18 +50,18 @@ static void _paintBox(Box &frag, Gfx::Color currentColor, Scene::Stack &stack) {
     }
 
     bool hasBorders = _paintBorders(frag, currentColor, paint.borders);
-    paint.bound = frag.layout.borderBox().cast<f64>();
+    paint.bound = frag.metrics.borderBox().cast<f64>();
 
     if (hasBackgrounds or hasBorders)
         stack.add(makeStrong<Scene::Box>(std::move(paint)));
 }
 
-static void _establishStackingContext(Box &frag, Scene::Stack &stack);
-static void _paintStackingContext(Box &frag, Scene::Stack &stack);
+static void _establishStackingContext(Frag &frag, Scene::Stack &stack);
+static void _paintStackingContext(Frag &frag, Scene::Stack &stack);
 
-static void _paintBox(Box &frag, Scene::Stack &stack) {
+static void _paintBox(Frag &frag, Scene::Stack &stack) {
     Gfx::Color currentColor = Gfx::BLACK;
-    currentColor = resolve(frag.style->color, currentColor);
+    currentColor = resolve(frag.style().color, currentColor);
 
     _paintBox(frag, currentColor, stack);
 
@@ -77,9 +77,9 @@ static void _paintBox(Box &frag, Scene::Stack &stack) {
     }
 }
 
-static void _paintChildren(Box &frag, Scene::Stack &stack, auto predicate) {
-    for (auto &c : frag.children()) {
-        auto &s = *c.style;
+static void _paintChildren(Frag &frag, Scene::Stack &stack, auto predicate) {
+    for (auto &c : frag.children) {
+        auto &s = c.style();
 
         auto zIndex = s.zIndex;
         if (zIndex != ZIndex::AUTO) {
@@ -102,7 +102,7 @@ static void _paintChildren(Box &frag, Scene::Stack &stack, auto predicate) {
     }
 }
 
-static void _paintStackingContext(Box &frag, Scene::Stack &stack) {
+static void _paintStackingContext(Frag &frag, Scene::Stack &stack) {
     // 1. the background and borders of the element forming the stacking context.
     _paintBox(frag, stack);
 
@@ -137,19 +137,19 @@ static void _paintStackingContext(Box &frag, Scene::Stack &stack) {
     });
 }
 
-static void _establishStackingContext(Box &frag, Scene::Stack &stack) {
+static void _establishStackingContext(Frag &frag, Scene::Stack &stack) {
     auto innerStack = makeStrong<Scene::Stack>();
-    innerStack->zIndex = frag.style->zIndex.value;
+    innerStack->zIndex = frag.box->style->zIndex.value;
     _paintStackingContext(frag, *innerStack);
     stack.add(std::move(innerStack));
 }
 
-void paint(Box &frag, Scene::Stack &stack) {
+void paint(Frag &frag, Scene::Stack &stack) {
     _paintStackingContext(frag, stack);
 }
 
-void wireframe(Box &frag, Gfx::Canvas &g) {
-    for (auto &c : frag.children())
+void wireframe(Frag &frag, Gfx::Canvas &g) {
+    for (auto &c : frag.children)
         wireframe(c, g);
 
     g.strokeStyle({
@@ -158,7 +158,7 @@ void wireframe(Box &frag, Gfx::Canvas &g) {
         .align = Gfx::INSIDE_ALIGN,
     });
 
-    g.stroke(frag.layout.borderBox().cast<f64>());
+    g.stroke(frag.metrics.borderBox().cast<f64>());
 }
 
 } // namespace Vaev::Layout
