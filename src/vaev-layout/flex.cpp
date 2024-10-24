@@ -6,9 +6,128 @@
 
 namespace Vaev::Layout {
 
+// FIXME: refrain from saving this on every flex item/line to decrease their sizes
+struct FlexAxis {
+    bool isRowOriented;
+
+    FlexAxis(bool isRowOriented) : isRowOriented(isRowOriented) {}
+
+    template <typename T>
+    T &mainAxis(Math::Vec2<T> &value) const {
+        return isRowOriented ? value.x : value.y;
+    }
+
+    template <typename T>
+    T mainAxis(Math::Vec2<T> const &value) const {
+        return isRowOriented ? value.x : value.y;
+    }
+
+    template <typename T>
+    T &crossAxis(Math::Vec2<T> &value) const {
+        return isRowOriented ? value.y : value.x;
+    }
+
+    template <typename T>
+    T crossAxis(Math::Vec2<T> const &value) const {
+        return isRowOriented ? value.y : value.x;
+    }
+
+    template <typename T>
+    T mainAxis(Math::Insets<T> const &value) const {
+        return isRowOriented ? value.horizontal() : value.vertical();
+    }
+
+    template <typename T>
+    T &startMainAxis(Math::Insets<T> &value) const {
+        return isRowOriented ? value.start : value.top;
+    }
+
+    template <typename T>
+    T startMainAxis(Math::Insets<T> const &value) const {
+        return isRowOriented ? value.start : value.top;
+    }
+
+    template <typename T>
+    T &startCrossAxis(Math::Insets<T> &value) const {
+        return isRowOriented ? value.top : value.start;
+    }
+
+    template <typename T>
+    T startCrossAxis(Math::Insets<T> const &value) const {
+        return isRowOriented ? value.top : value.start;
+    }
+
+    template <typename T>
+    T &endMainAxis(Math::Insets<T> &value) const {
+        return isRowOriented ? value.end : value.bottom;
+    }
+
+    template <typename T>
+    T endMainAxis(Math::Insets<T> const &value) const {
+        return isRowOriented ? value.end : value.bottom;
+    }
+
+    template <typename T>
+    T &endCrossAxis(Math::Insets<T> &value) const {
+        return isRowOriented ? value.bottom : value.end;
+    }
+
+    template <typename T>
+    T endCrossAxis(Math::Insets<T> const &value) const {
+        return isRowOriented ? value.bottom : value.end;
+    }
+
+    template <typename T>
+    T crossAxis(Math::Insets<T> value) const {
+        return isRowOriented ? value.vertical() : value.horizontal();
+    }
+
+    Size mainAxis(Cow<SizingProps> sizing) const {
+        return isRowOriented ? sizing->width : sizing->height;
+    }
+
+    Size crossAxis(Cow<SizingProps> sizing) const {
+        return isRowOriented ? sizing->height : sizing->width;
+    }
+
+    Vec2Px extractMainAxisAndFillOther(Vec2Px base, Px other) const {
+        if (isRowOriented) {
+            return {base.x, other};
+        } else {
+            return {other, base.y};
+        }
+    }
+
+    Math::Vec2<Opt<Px>> extractMainAxisAndFillOptOther(Vec2Px base, Opt<Px> other = NONE) const {
+        if (isRowOriented) {
+            return {base.x, other};
+        } else {
+            return {other, base.y};
+        }
+    }
+
+    template <typename T>
+    Math::Vec2<T> buildPair(T main, T cross) const {
+        if (isRowOriented) {
+            return {main, cross};
+        } else {
+            return {cross, main};
+        }
+    }
+
+    Math::Vec2<Opt<Px>> buildOptPairWithMainAndOther(Px mainValue, Opt<Px> other = NONE) const {
+        if (isRowOriented) {
+            return {mainValue, other};
+        } else {
+            return {other, mainValue};
+        }
+    }
+};
+
 struct FlexItem {
     Box *box;
-    FlexProps flex;
+    FlexProps flexItemProps;
+    FlexAxis fa;
 
     // these 2 sizes do NOT account margins
     Vec2Px usedSize;
@@ -25,9 +144,12 @@ struct FlexItem {
     Vec2Px minContentSize, maxContentSize;
     InsetsPx minContentMargin, maxContentMargin;
 
-    FlexItem(Tree &tree, Box &box)
-        : box(&box), flex(*box.style->flex) {
-        speculateValues(tree, {});
+    // TODO: only implementing borders after border-box is finished
+    // InsetsPx borders;
+
+    FlexItem(Tree &tree, Box &box, bool isRowOriented)
+        : box(&box), flexItemProps(*box.style->flex), fa(isRowOriented) {
+        speculateValues(tree, Input{Commit::NO});
         // TODO: not always we will need min/max content sizes,
         //       this can be lazy computed for performance gains
         computeContentSizes(tree);
@@ -62,46 +184,47 @@ struct FlexItem {
     }
 
     enum OuterPosition {
-        TOP,
-        START,
-        END,
-        BOTTOM,
-        HORIZONTAL,
-        VERTICAL
+        START_CROSS,
+        START_MAIN,
+        END_MAIN,
+        END_CROSS,
+        BOTH_MAIN,
+        BOTH_CROSS
     };
 
     Px getMargin(OuterPosition position) const {
         // FIXME: when should we consider borders and when we shouldnt?
+
         switch (position) {
-        case TOP:
-            return margin.top.unwrapOr(speculativeMargin.top);
+        case START_CROSS:
+            return fa.startCrossAxis(margin).unwrapOr(fa.startCrossAxis(speculativeMargin));
 
-        case START:
-            return margin.start.unwrapOr(speculativeMargin.start);
+        case START_MAIN:
+            return fa.startMainAxis(margin).unwrapOr(fa.startMainAxis(speculativeMargin));
 
-        case END:
-            return margin.end.unwrapOr(speculativeMargin.end);
+        case END_MAIN:
+            return fa.endMainAxis(margin).unwrapOr(fa.endMainAxis(speculativeMargin));
 
-        case BOTTOM:
-            return margin.bottom.unwrapOr(speculativeMargin.bottom);
+        case END_CROSS:
+            return fa.endCrossAxis(margin).unwrapOr(fa.endCrossAxis(speculativeMargin));
 
-        case HORIZONTAL:
-            return margin.start.unwrapOr(speculativeMargin.start) +
-                   margin.end.unwrapOr(speculativeMargin.end);
+        case BOTH_MAIN:
+            return fa.startMainAxis(margin).unwrapOr(fa.startMainAxis(speculativeMargin)) +
+                   fa.endMainAxis(margin).unwrapOr(fa.endMainAxis(speculativeMargin));
 
-        case VERTICAL:
-            return margin.top.unwrapOr(speculativeMargin.top) +
-                   margin.bottom.unwrapOr(speculativeMargin.bottom);
+        case BOTH_CROSS:
+            return fa.startCrossAxis(margin).unwrapOr(fa.startCrossAxis(speculativeMargin)) +
+                   fa.endCrossAxis(margin).unwrapOr(fa.endCrossAxis(speculativeMargin));
         }
     }
 
     bool hasAnyCrossMarginAuto() const {
-        return (box->style->margin->top == Width::Type::AUTO) or
-               (box->style->margin->bottom == Width::Type::AUTO);
+        return (fa.startCrossAxis(*box->style->margin) == Width::Type::AUTO) or
+               (fa.endCrossAxis(*box->style->margin) == Width::Type::AUTO);
     }
 
     Px getScaledFlexShrinkFactor() const {
-        return flexBaseSize * Px{flex.shrink};
+        return flexBaseSize * Px{flexItemProps.shrink};
     }
 
     void _speculateValues(Tree &tree, Input input, Vec2Px &speculativeSize, InsetsPx &speculativeMargin) {
@@ -122,15 +245,20 @@ struct FlexItem {
 
     void computeFlexBaseSize(Tree &tree, Px mainContainerSize) {
         // TODO: check specs
-        if (flex.basis.type == FlexBasis::WIDTH) {
-            if (flex.basis.width.type == Width::Type::VALUE) {
-                flexBaseSize = resolve(tree, *box, flex.basis.width.value, mainContainerSize);
-            } else if (flex.basis.width.type == Width::Type::AUTO) {
-                flexBaseSize = speculativeSize.x;
+        if (flexItemProps.basis.type == FlexBasis::WIDTH) {
+            if (flexItemProps.basis.width.type == Width::Type::VALUE) {
+                flexBaseSize = resolve(
+                    tree,
+                    *box,
+                    flexItemProps.basis.width.value,
+                    mainContainerSize
+                );
+            } else if (flexItemProps.basis.width.type == Width::Type::AUTO) {
+                flexBaseSize = fa.mainAxis(speculativeSize);
             }
         }
 
-        if (flex.basis.type == FlexBasis::Type::CONTENT and
+        if (flexItemProps.basis.type == FlexBasis::Type::CONTENT and
             box->style->sizing->height.type == Size::Type::LENGTH /* and
             intrinsic aspect ratio*/
         ) {
@@ -149,8 +277,8 @@ struct FlexItem {
     void computeHypotheticalMainSize(Tree &tree, Vec2Px containerSize) {
         hypoMainSize = clamp(
             flexBaseSize,
-            getMinMaxPrefferedSize(tree, true, true, containerSize),
-            getMinMaxPrefferedSize(tree, true, false, containerSize)
+            getMinMaxPrefferedSize(tree, flexItemProps.isRowOriented(), true, containerSize),
+            getMinMaxPrefferedSize(tree, flexItemProps.isRowOriented(), false, containerSize)
         );
         hypoMainSize = flexBaseSize;
     }
@@ -194,76 +322,89 @@ struct FlexItem {
     Px getMainSizeMinMaxContentContribution(Tree &tree, bool isMin, Vec2Px containerSize) {
         Px contentContribution;
         if (isMin)
-            contentContribution = minContentSize.x + minContentMargin.horizontal();
+            contentContribution = fa.mainAxis(minContentSize) + fa.mainAxis(minContentMargin);
         else
-            contentContribution = maxContentSize.x + maxContentMargin.horizontal();
+            contentContribution = fa.mainAxis(maxContentSize) + fa.mainAxis(maxContentMargin);
 
-        if (box->style->sizing->width.type == Size::Type::LENGTH) {
+        if (fa.mainAxis(box->style->sizing).type == Size::Type::LENGTH) {
             contentContribution = max(
                 contentContribution,
-                resolve(tree, *box, box->style->sizing->width.value, containerSize.x)
+                resolve(
+                    tree,
+                    *box,
+                    fa.mainAxis(box->style->sizing).value,
+                    fa.mainAxis(containerSize)
+                )
             );
-        } else if (box->style->sizing->width.type == Size::Type::MIN_CONTENT) {
-            contentContribution = max(contentContribution, minContentSize.x + minContentMargin.horizontal());
-        } else if (box->style->sizing->width.type == Size::Type::AUTO and not isMin) {
-            contentContribution = speculativeSize.x;
+        } else if (fa.mainAxis(box->style->sizing).type == Size::Type::MIN_CONTENT) {
+            contentContribution = max(contentContribution, fa.mainAxis(minContentSize) + fa.mainAxis(minContentMargin));
+        } else if (fa.mainAxis(box->style->sizing).type == Size::Type::AUTO and not isMin) {
+            contentContribution = fa.mainAxis(speculativeSize);
         } else {
             logWarn("not implemented");
         }
 
-        if (flex.grow == 0)
+        if (flexItemProps.grow == 0)
             contentContribution = min(contentContribution, flexBaseSize);
 
-        if (flex.shrink == 0)
+        if (flexItemProps.shrink == 0)
             contentContribution = max(contentContribution, flexBaseSize);
 
         return clamp(
             contentContribution,
-            getMinMaxPrefferedSize(tree, true, true, containerSize),
-            getMinMaxPrefferedSize(tree, true, false, containerSize)
+            getMinMaxPrefferedSize(tree, fa.isRowOriented, true, containerSize),
+            getMinMaxPrefferedSize(tree, fa.isRowOriented, false, containerSize)
         );
     }
 
     void alignCrossFlexStart() {
         if (not hasAnyCrossMarginAuto()) {
-            position.y = getMargin(FlexItem::TOP);
+            fa.crossAxis(position) = getMargin(START_CROSS);
         }
     }
 
     void alignCrossFlexEnd(Px lineCrossSize) {
         if (not hasAnyCrossMarginAuto()) {
-            position.y = lineCrossSize - usedSize.y - getMargin(FlexItem::BOTTOM);
+            fa.crossAxis(position) =
+                lineCrossSize -
+                fa.crossAxis(usedSize) -
+                getMargin(END_CROSS);
         }
     }
 
     void alignCrossCenter(Px lineCrossSize) {
         if (not hasAnyCrossMarginAuto()) {
-            Px startOfBlock = (lineCrossSize - usedSize.y - getMargin(FlexItem::VERTICAL)) / Px{2};
-            position.y = startOfBlock + getMargin(FlexItem::TOP);
+            Px startOfBlock =
+                (lineCrossSize -
+                 fa.crossAxis(usedSize) -
+                 getMargin(BOTH_CROSS)
+                ) /
+                Px{2};
+            fa.crossAxis(position) = startOfBlock + getMargin(START_CROSS);
         }
     }
 
     void alignCrossStretch(Tree &tree, Commit commit, Px lineCrossSize) {
         if (
-            box->style->sizing->height.type == Size::Type::AUTO and
-            box->style->margin->bottom != Width::AUTO and
-            box->style->margin->top != Width::AUTO
+            fa.crossAxis(box->style->sizing).type == Size::Type::AUTO and
+            fa.startCrossAxis(*box->style->margin) != Width::Type::AUTO and
+            fa.endCrossAxis(*box->style->margin) != Width::Type::AUTO
         ) {
             /* Its used value is the length necessary to make the cross size of the item’s margin box as close to
             the same size as the line as possible, while still respecting the constraints imposed by
             min-height/min-width/max-height/max-width.*/
 
+            auto elementSpeculativeCrossSize = lineCrossSize - getMargin(BOTH_CROSS);
             speculateValues(
                 tree,
-                {
-                    .commit = commit,
-                    .knownSize = {usedSize.x, lineCrossSize - getMargin(FlexItem::VERTICAL)},
-                    // TODO: not really sure of these arguments, check specs
-                    .availableSpace = {usedSize.x, lineCrossSize - getMargin(FlexItem::VERTICAL)},
+                {.commit = commit,
+                 .knownSize = fa.extractMainAxisAndFillOptOther(usedSize, elementSpeculativeCrossSize),
+                 // TODO: not really sure of these arguments, check specs
+                 .availableSpace = fa.extractMainAxisAndFillOther(usedSize, elementSpeculativeCrossSize)
                 }
             );
 
-            position.y = getMargin(FlexItem::TOP);
+            fa.crossAxis(position) = getMargin(START_CROSS);
         }
     }
 
@@ -301,52 +442,63 @@ struct FlexItem {
 struct FlexLine {
     MutSlice<FlexItem> items;
     Px crossSize;
+    FlexAxis fa;
     Vec2Px position;
 
-    FlexLine(MutSlice<FlexItem> items)
-        : items(items), crossSize(0) {}
+    FlexLine(MutSlice<FlexItem> items, bool isRowOriented)
+        : items(items), crossSize(0), fa(isRowOriented) {}
 
     void alignMainFlexStart() {
-        Px currPositionX{0};
+        Px currPositionMainAxis{0};
         for (auto &flexItem : items) {
-            flexItem.position.x = currPositionX + flexItem.getMargin(FlexItem::START);
-            currPositionX += flexItem.usedSize.x + flexItem.getMargin(FlexItem::HORIZONTAL);
+            fa.mainAxis(flexItem.position) =
+                currPositionMainAxis + flexItem.getMargin(FlexItem::START_MAIN);
+            currPositionMainAxis +=
+                fa.mainAxis(flexItem.usedSize) + flexItem.getMargin(FlexItem::BOTH_MAIN);
         }
     }
 
     void alignMainFlexEnd(Px mainSize, Px occupiedSize) {
-        Px currPositionX{mainSize - occupiedSize};
+        Px currPositionMainAxis{mainSize - occupiedSize};
         for (auto &flexItem : items) {
-            flexItem.position.x = currPositionX + flexItem.getMargin(FlexItem::START);
-            currPositionX += flexItem.usedSize.x + flexItem.getMargin(FlexItem::HORIZONTAL);
+            fa.mainAxis(flexItem.position) =
+                currPositionMainAxis + flexItem.getMargin(FlexItem::START_MAIN);
+            currPositionMainAxis +=
+                fa.mainAxis(flexItem.usedSize) + flexItem.getMargin(FlexItem::BOTH_MAIN);
         }
     }
 
     void alignMainSpaceAround(Px mainSize, Px occupiedSize) {
         Px gapSize = (mainSize - occupiedSize) / Px{items.len()};
 
-        Px currPositionX{gapSize / Px{2}};
+        Px currPositionMainAxis{gapSize / Px{2}};
         for (auto &flexItem : items) {
-            flexItem.position.x = currPositionX + flexItem.getMargin(FlexItem::START);
-            currPositionX += flexItem.usedSize.x + flexItem.getMargin(FlexItem::HORIZONTAL) + gapSize;
+            fa.mainAxis(flexItem.position) =
+                currPositionMainAxis + flexItem.getMargin(FlexItem::START_MAIN);
+            currPositionMainAxis +=
+                fa.mainAxis(flexItem.usedSize) + flexItem.getMargin(FlexItem::BOTH_MAIN) + gapSize;
         }
     }
 
     void alignMainSpaceBetween(Px mainSize, Px occupiedSize) {
         Px gapSize = (mainSize - occupiedSize) / Px{items.len() - 1};
 
-        Px currPositionX{0};
+        Px currPositionMainAxis{0};
         for (auto &flexItem : items) {
-            flexItem.position.x = currPositionX + flexItem.getMargin(FlexItem::START);
-            currPositionX += flexItem.usedSize.x + flexItem.getMargin(FlexItem::HORIZONTAL) + gapSize;
+            fa.mainAxis(flexItem.position) =
+                currPositionMainAxis + flexItem.getMargin(FlexItem::START_MAIN);
+            currPositionMainAxis +=
+                fa.mainAxis(flexItem.usedSize) + flexItem.getMargin(FlexItem::BOTH_MAIN) + gapSize;
         }
     }
 
     void alignMainCenter(Px mainSize, Px occupiedSize) {
-        Px currPositionX{(mainSize - occupiedSize) / Px{2}};
+        Px currPositionMainAxis{(mainSize - occupiedSize) / Px{2}};
         for (auto &flexItem : items) {
-            flexItem.position.x = currPositionX + flexItem.getMargin(FlexItem::START);
-            currPositionX += flexItem.usedSize.x + flexItem.getMargin(FlexItem::HORIZONTAL);
+            fa.mainAxis(flexItem.position) =
+                currPositionMainAxis + flexItem.getMargin(FlexItem::START_MAIN);
+            currPositionMainAxis +=
+                fa.mainAxis(flexItem.usedSize) + flexItem.getMargin(FlexItem::BOTH_MAIN);
         }
     }
 
@@ -381,6 +533,7 @@ struct FlexLine {
 
 struct FlexFormatingContext {
     FlexProps _flex;
+    FlexAxis fa{_flex.isRowOriented()};
 
     // https://www.w3.org/TR/css-flexbox-1/#layout-algorithm
 
@@ -392,63 +545,44 @@ struct FlexFormatingContext {
     void _generateAnonymousFlexItems(Tree &tree, Box &box) {
         _items.ensure(box.children().len());
         for (auto &c : box.children())
-            _items.emplaceBack(tree, c);
+            _items.emplaceBack(tree, c, fa.isRowOriented);
     }
 
     // 2. MARK: Available main and cross space for the flex items --------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-available
 
-    Px _availableMainSpace = {};
-    Px _initiallyAvailableCrossSpace = {};
+    Vec2Px availableSpace = {};
 
     void _determineAvailableMainAndCrossSpace(
         Input input
     ) {
-        // TODO: Consider refactor orientation after checking karm-math/Flow.h
-        if (_flex.isRowOriented()) {
-            _availableMainSpace = input.knownSize.x.unwrapOr(input.availableSpace.x);
-            _initiallyAvailableCrossSpace = input.knownSize.y.unwrapOr(input.availableSpace.y);
-        } else {
-            // TODO: Implement other orientation cases
-            logWarn("column orientation or reverse-row still not implemented");
-            _availableMainSpace = input.knownSize.y.unwrapOr(input.availableSpace.y);
-            _initiallyAvailableCrossSpace = input.knownSize.x.unwrapOr(input.availableSpace.x);
-        }
+        availableSpace = {
+            input.knownSize.x.unwrapOr(input.availableSpace.x),
+            input.knownSize.y.unwrapOr(input.availableSpace.y),
+        };
     }
 
     // 3. MARK: Flex base size and hypothetical main size of each item ---------
     // https://www.w3.org/TR/css-flexbox-1/#algo-main-item
 
     void _determineFlexBaseSizeAndHypotheticalMainSize(
-        Tree &tree, Input input
+        Tree &tree
     ) {
         for (auto &i : _items) {
             i.computeFlexBaseSize(
                 tree,
-                _availableMainSpace
+                fa.mainAxis(availableSpace)
             );
 
-            i.computeHypotheticalMainSize(
-                tree,
-                {
-                    _availableMainSpace,
-                    _initiallyAvailableCrossSpace,
-                }
-            );
+            i.computeHypotheticalMainSize(tree, availableSpace);
 
             // Speculate margins before following steps
             i.speculateValues(
                 tree,
                 {
-                    .knownSize = {i.flexBaseSize, NONE},
-                    .availableSpace = {
-                        i.flexBaseSize,
-                        input.knownSize.y.unwrapOr(Px{0}),
-                    },
-                    .containingBlock = {
-                        i.flexBaseSize,
-                        input.knownSize.y.unwrapOr(Px{0}),
-                    },
+                    .commit = Commit::NO,
+                    .knownSize = fa.extractMainAxisAndFillOptOther(i.flexBaseSize),
+                    .availableSpace = availableSpace,
                 }
             );
         }
@@ -473,7 +607,7 @@ struct FlexFormatingContext {
     Vec<FlexLine> _lines = {};
 
     void _collectFlexItemsInfoFlexLinesNowWrap(Tree &tree, Input input) {
-        _lines.emplaceBack(_items);
+        _lines.emplaceBack(_items, fa.isRowOriented);
 
         if (input.intrinsic == IntrinsicSize::MIN_CONTENT or
             input.intrinsic == IntrinsicSize::MAX_CONTENT) {
@@ -483,15 +617,15 @@ struct FlexFormatingContext {
                 Px contribution = flexItem.getMainSizeMinMaxContentContribution(
                     tree,
                     input.intrinsic == IntrinsicSize::MIN_CONTENT,
-                    {_availableMainSpace, _initiallyAvailableCrossSpace}
+                    availableSpace
                 );
 
-                auto itemFlexFraction = (contribution - flexItem.flexBaseSize - flexItem.getMargin(FlexItem::HORIZONTAL));
+                auto itemFlexFraction = (contribution - flexItem.flexBaseSize - flexItem.getMargin(FlexItem::BOTH_MAIN));
                 if (itemFlexFraction > Px{0})
-                    itemFlexFraction = itemFlexFraction / Px{flexItem.flex.grow};
+                    itemFlexFraction = itemFlexFraction / Px{flexItem.flexItemProps.grow};
 
                 else if (itemFlexFraction < Px{0})
-                    itemFlexFraction = itemFlexFraction / Px{flexItem.flex.shrink};
+                    itemFlexFraction = itemFlexFraction / Px{flexItem.flexItemProps.shrink};
 
                 flexFraction.pushBack(itemFlexFraction);
             }
@@ -514,7 +648,7 @@ struct FlexFormatingContext {
                     if (largestFraction < Px{0}) {
                         product = largestFraction * flexItem.getScaledFlexShrinkFactor();
                     } else {
-                        product = largestFraction * Px{flexItem.flex.grow};
+                        product = largestFraction * Px{flexItem.flexItemProps.grow};
                     }
 
                     // then clamp that result by the max main size floored by the min main size.
@@ -540,10 +674,10 @@ struct FlexFormatingContext {
                     _items[i].getMainSizeMinMaxContentContribution(
                         tree,
                         true,
-                        {_availableMainSpace, _initiallyAvailableCrossSpace}
+                        availableSpace
                     )
                 );
-                _lines.emplaceBack(mutSub(_items, i, i + 1));
+                _lines.emplaceBack(mutSub(_items, i, i + 1), fa.isRowOriented);
             }
 
             _usedMainSize = largestMinContentContrib;
@@ -554,9 +688,9 @@ struct FlexFormatingContext {
 
                 Px currLineSize = Px{0};
                 while (ei < _items.len()) {
-                    Px itemContribution = _items[ei].hypoMainSize + _items[ei].getMargin(FlexItem::HORIZONTAL);
+                    Px itemContribution = _items[ei].hypoMainSize + _items[ei].getMargin(FlexItem::BOTH_MAIN);
                     // TODO: ignoring breaks for now
-                    if (currLineSize + itemContribution <= _availableMainSpace or currLineSize == Px{0}) {
+                    if (currLineSize + itemContribution <= fa.mainAxis(availableSpace) or currLineSize == Px{0}) {
                         currLineSize += itemContribution;
                         ei++;
                     } else
@@ -565,6 +699,7 @@ struct FlexFormatingContext {
 
                 _lines.pushBack({
                     mutSub(_items, si, ei),
+                    fa.isRowOriented,
                 });
 
                 si = ei;
@@ -590,7 +725,8 @@ struct FlexFormatingContext {
         for (auto &flexLine : _lines) {
             Px sumItemsHypotheticalMainSizes{0};
             for (auto const &flexItem : flexLine.items) {
-                sumItemsHypotheticalMainSizes += flexItem.hypoMainSize + flexItem.getMargin(FlexItem::HORIZONTAL);
+                sumItemsHypotheticalMainSizes +=
+                    flexItem.hypoMainSize + flexItem.getMargin(FlexItem::BOTH_MAIN);
             }
 
             bool matchedSize = sumItemsHypotheticalMainSizes == _usedMainSize;
@@ -605,13 +741,15 @@ struct FlexFormatingContext {
                     matchedSize or
                     (flexCaseIsGrow and flexItem.flexBaseSize > flexItem.hypoMainSize) or
                     (not flexCaseIsGrow and flexItem.flexBaseSize < flexItem.hypoMainSize) or
-                    (flexItem.flex.grow == 0 and flexItem.flex.shrink == 0)
+                    (flexItem.flexItemProps.grow == 0 and flexItem.flexItemProps.shrink == 0)
                 ) {
-                    flexItem.usedSize.x = flexItem.hypoMainSize;
+                    fa.mainAxis(flexItem.usedSize) = flexItem.hypoMainSize;
                     frozenItems.pushBack(&flexItem);
-                    sumFrozenOuterSizes += flexItem.usedSize.x + flexItem.getMargin(FlexItem::HORIZONTAL);
+                    sumFrozenOuterSizes +=
+                        fa.mainAxis(flexItem.usedSize) +
+                        flexItem.getMargin(FlexItem::BOTH_MAIN);
                 } else {
-                    flexItem.usedSize.x = flexItem.flexBaseSize;
+                    fa.mainAxis(flexItem.usedSize) = flexItem.flexBaseSize;
                     unfrozenItems.pushBack(&flexItem);
                 }
             }
@@ -620,8 +758,13 @@ struct FlexFormatingContext {
                 Px sumOfUnfrozenOuterSizes{0};
                 Number sumUnfrozenFlexFactors{0};
                 for (auto *flexItem : unfrozenItems) {
-                    sumOfUnfrozenOuterSizes += flexItem->flexBaseSize + flexItem->getMargin(FlexItem::HORIZONTAL);
-                    sumUnfrozenFlexFactors += flexCaseIsGrow ? flexItem->flex.grow : flexItem->flex.shrink;
+                    sumOfUnfrozenOuterSizes +=
+                        flexItem->flexBaseSize + flexItem->getMargin(FlexItem::BOTH_MAIN);
+
+                    sumUnfrozenFlexFactors +=
+                        flexCaseIsGrow
+                            ? flexItem->flexItemProps.grow
+                            : flexItem->flexItemProps.shrink;
                 }
 
                 return Tuple<Px, Number>(sumOfUnfrozenOuterSizes, sumUnfrozenFlexFactors);
@@ -640,8 +783,9 @@ struct FlexFormatingContext {
 
                 if (flexCaseIsGrow) {
                     for (auto *flexItem : unfrozenItems) {
-                        Number ratio = flexItem->flex.grow / sumUnfrozenFlexFactors;
-                        flexItem->usedSize.x = flexItem->flexBaseSize + Px{ratio * freeSpace};
+                        Number ratio = flexItem->flexItemProps.grow / sumUnfrozenFlexFactors;
+
+                        fa.mainAxis(flexItem->usedSize) = flexItem->flexBaseSize + Px{ratio * freeSpace};
                     }
                 } else {
                     Px sumScaledFlexShrinkFactor{0};
@@ -651,7 +795,7 @@ struct FlexFormatingContext {
 
                     for (auto *flexItem : unfrozenItems) {
                         Px ratio = flexItem->getScaledFlexShrinkFactor() / sumScaledFlexShrinkFactor;
-                        flexItem->usedSize.x = flexItem->flexBaseSize - ratio * Px{Math::abs(freeSpace)};
+                        fa.mainAxis(flexItem->usedSize) = flexItem->flexBaseSize - ratio * Px{Math::abs(freeSpace)};
                     }
                 }
 
@@ -660,9 +804,19 @@ struct FlexFormatingContext {
                 auto clampAndFloorContentBox = [&](FlexItem *flexItem) {
                     // FIXME: it seems that the browser sets minSize = max(minSize, textSize)
                     auto clampedSize = clamp(
-                        flexItem->usedSize.x,
-                        flexItem->getMinMaxPrefferedSize(t, true, true, {_availableMainSpace, _initiallyAvailableCrossSpace}),
-                        flexItem->getMinMaxPrefferedSize(t, true, false, {_availableMainSpace, _initiallyAvailableCrossSpace})
+                        fa.mainAxis(flexItem->usedSize),
+                        flexItem->getMinMaxPrefferedSize(
+                            t,
+                            fa.isRowOriented,
+                            true,
+                            availableSpace
+                        ),
+                        flexItem->getMinMaxPrefferedSize(
+                            t,
+                            fa.isRowOriented,
+                            false,
+                            availableSpace
+                        )
                     );
 
                     // TODO: should consider padding and border so content size is not negative
@@ -675,11 +829,11 @@ struct FlexFormatingContext {
 
                 for (auto *flexItem : unfrozenItems) {
                     Px clampedSize = clampAndFloorContentBox(flexItem);
-                    totalViolation += clampedSize - flexItem->usedSize.x;
+                    totalViolation += clampedSize - fa.mainAxis(flexItem->usedSize);
                 }
                 for (auto *flexItem : frozenItems) {
                     Px clampedSize = clampAndFloorContentBox(flexItem);
-                    totalViolation += clampedSize - flexItem->usedSize.x;
+                    totalViolation += clampedSize - fa.mainAxis(flexItem->usedSize);
                 }
 
                 if (totalViolation == Px{0}) {
@@ -687,8 +841,8 @@ struct FlexFormatingContext {
                     for (usize i = 0; i < unfrozenItems.len(); ++i) {
                         auto *flexItem = unfrozenItems[i];
                         Px clampedSize = clampAndFloorContentBox(flexItem);
-                        flexItem->usedSize.x = clampedSize;
-                        soma += clampedSize + flexItem->getMargin(FlexItem::HORIZONTAL);
+                        fa.mainAxis(flexItem->usedSize) = clampedSize;
+                        soma += clampedSize + flexItem->getMargin(FlexItem::BOTH_MAIN);
                     }
 
                     for (auto *flexItem : unfrozenItems)
@@ -701,7 +855,7 @@ struct FlexFormatingContext {
                             auto *flexItem = unfrozenItems[i];
                             Px clampedSize = clampAndFloorContentBox(flexItem);
 
-                            if (clampedSize < flexItem->usedSize.x)
+                            if (clampedSize < fa.mainAxis(flexItem->usedSize))
                                 indexesToFreeze.pushBack(i);
                         }
                     } else {
@@ -709,21 +863,22 @@ struct FlexFormatingContext {
                             auto *flexItem = unfrozenItems[i];
                             Px clampedSize = clampAndFloorContentBox(flexItem);
 
-                            if (clampedSize > flexItem->usedSize.x)
+                            if (clampedSize > fa.mainAxis(flexItem->usedSize))
                                 indexesToFreeze.pushBack(i);
                         }
                     }
                     for (usize i = 0; i < unfrozenItems.len(); ++i) {
                         auto *flexItem = unfrozenItems[i];
                         Px clampedSize = clampAndFloorContentBox(flexItem);
-                        flexItem->usedSize.x = clampedSize;
+                        fa.mainAxis(flexItem->usedSize) = clampedSize;
                     }
 
-                    // TODO: reverse indexesToFreeze so we use foreach
                     for (int j = indexesToFreeze.len() - 1; j >= 0; j--) {
                         usize i = indexesToFreeze[j];
 
-                        sumFrozenOuterSizes += unfrozenItems[i]->usedSize.x + unfrozenItems[i]->getMargin(FlexItem::HORIZONTAL);
+                        sumFrozenOuterSizes +=
+                            fa.mainAxis(unfrozenItems[i]->usedSize) +
+                            unfrozenItems[i]->getMargin(FlexItem::BOTH_MAIN);
                         frozenItems.pushBack(unfrozenItems[i]);
 
                         // fast delete of unordered buf
@@ -741,28 +896,29 @@ struct FlexFormatingContext {
     void _determineHypotheticalCrossSize(Tree &tree, Input input) {
         // TODO: once again, this was coded assuming a ROW orientation
         for (auto &i : _items) {
-            Px availableCrossSpace = input.knownSize.y.unwrapOr(Px{0}) - i.getMargin(FlexItem::VERTICAL);
+            Px availableCrossSpace = fa.crossAxis(availableSpace) - i.getMargin(FlexItem::BOTH_CROSS);
 
-            if (i.box->style->sizing->width == Size::AUTO)
+            if (fa.mainAxis(i.box->style->sizing) == Size::AUTO)
                 input.intrinsic = IntrinsicSize::STRETCH_TO_FIT;
 
             i.speculateValues(
                 tree,
                 {
                     .commit = input.commit,
-                    .knownSize = {i.usedSize.x, NONE},
-                    .availableSpace = {i.usedSize.x, availableCrossSpace},
+                    .knownSize = fa.extractMainAxisAndFillOptOther(i.usedSize),
+                    .availableSpace = fa.extractMainAxisAndFillOther(i.usedSize, availableCrossSpace),
                 }
             );
         }
     }
 
     // 8. MARK: Calculate the cross size of each flex line ---------------------
+
     // https://www.w3.org/TR/css-flexbox-1/#algo-cross-line
 
     void _calculateCrossSizeOfEachFlexLine(Input input) {
-        if (_lines.len() == 1 and input.knownSize.y) {
-            first(_lines).crossSize = input.knownSize.y.unwrap();
+        if (_lines.len() == 1 and fa.crossAxis(input.knownSize)) {
+            first(_lines).crossSize = fa.crossAxis(input.knownSize).unwrap();
             return;
         }
 
@@ -787,25 +943,34 @@ struct FlexFormatingContext {
                     maxDistBaselineCrossStartEdge = max(maxDistBaselineCrossStartEdge, Px{0});
                     maxDistBaselineCrossEndEdge = max(maxDistBaselineCrossEndEdge, Px{0});
                 } else {
-                    maxOuterHypCrossSize = max(maxOuterHypCrossSize, flexItem.speculativeSize.y + flexItem.getMargin(FlexItem::VERTICAL));
+                    maxOuterHypCrossSize = max(
+                        maxOuterHypCrossSize,
+                        fa.crossAxis(flexItem.speculativeSize) +
+                            flexItem.getMargin(FlexItem::BOTH_CROSS)
+                    );
                 }
             }
-            flexLine.crossSize = max(maxOuterHypCrossSize, maxDistBaselineCrossStartEdge + maxDistBaselineCrossEndEdge);
+            flexLine.crossSize = max(
+                maxOuterHypCrossSize,
+                maxDistBaselineCrossStartEdge + maxDistBaselineCrossEndEdge
+            );
         }
     }
 
     // 9. MARK: Handle 'align-content: stretch' --------------------------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-line-stretch
 
-    void _handleAlignContentStretch(Box &box) {
+    void _handleAlignContentStretch(Box &box, Input input) {
         // FIXME: If the flex container has a definite cross size <=?=> f.style->sizing->height.type != Size::Type::AUTO
-        if (box.style->sizing->height.type != Size::Type::AUTO and
-            box.style->aligns.alignContent == Style::Align::STRETCH) {
+        if (
+            (fa.crossAxis(box.style->sizing).type != Size::Type::AUTO or fa.crossAxis(input.knownSize)) and
+            box.style->aligns.alignContent == Style::Align::STRETCH
+        ) {
             Px sumOfCrossSizes{0};
             for (auto &flexLine : _lines)
                 sumOfCrossSizes += flexLine.crossSize;
-            if (_initiallyAvailableCrossSpace > sumOfCrossSizes) {
-                Px toDistribute = (_initiallyAvailableCrossSpace - sumOfCrossSizes) / Px{_lines.len()};
+            if (fa.crossAxis(availableSpace) > sumOfCrossSizes) {
+                Px toDistribute = (fa.crossAxis(availableSpace) - sumOfCrossSizes) / Px{_lines.len()};
                 for (auto &flexLine : _lines) {
                     flexLine.crossSize += toDistribute;
                 }
@@ -835,30 +1000,26 @@ struct FlexFormatingContext {
                     flexItem.box->style->sizing->height.type == Size::AUTO and
                     not flexItem.hasAnyCrossMarginAuto()
                 ) {
-                    flexItem.usedSize.y = flexLine.crossSize - flexItem.getMargin(FlexItem::VERTICAL);
-                    flexItem.usedSize.y = clamp(
-                        flexItem.usedSize.y,
+                    fa.crossAxis(flexItem.usedSize) =
+                        flexLine.crossSize - flexItem.getMargin(FlexItem::BOTH_CROSS);
+
+                    fa.crossAxis(flexItem.usedSize) = clamp(
+                        fa.crossAxis(flexItem.usedSize),
                         flexItem.getMinMaxPrefferedSize(
                             tree,
-                            false,
+                            not fa.isRowOriented,
                             true,
-                            {
-                                _availableMainSpace,
-                                _initiallyAvailableCrossSpace,
-                            }
+                            availableSpace
                         ),
                         flexItem.getMinMaxPrefferedSize(
                             tree,
+                            not fa.isRowOriented,
                             false,
-                            false,
-                            {
-                                _availableMainSpace,
-                                _initiallyAvailableCrossSpace,
-                            }
+                            availableSpace
                         )
                     );
                 } else {
-                    flexItem.usedSize.y = flexItem.speculativeSize.y;
+                    fa.crossAxis(flexItem.usedSize) = fa.crossAxis(flexItem.speculativeSize);
                 }
             }
         }
@@ -871,7 +1032,8 @@ struct FlexFormatingContext {
         for (auto &flexLine : _lines) {
             Px occupiedMainSize{0};
             for (auto &flexItem : flexLine.items) {
-                occupiedMainSize += flexItem.usedSize.x + flexItem.getMargin(FlexItem::HORIZONTAL);
+                occupiedMainSize +=
+                    fa.mainAxis(flexItem.usedSize) + flexItem.getMargin(FlexItem::BOTH_MAIN);
             }
 
             bool usedAutoMargins = false;
@@ -879,17 +1041,17 @@ struct FlexFormatingContext {
                 usize countOfAutos = 0;
 
                 for (auto &flexItem : flexLine.items) {
-                    countOfAutos += (flexItem.box->style->margin->start == Width::AUTO);
-                    countOfAutos += (flexItem.box->style->margin->end == Width::AUTO);
+                    countOfAutos += (fa.startMainAxis(*flexItem.box->style->margin) == Width::AUTO);
+                    countOfAutos += (fa.endMainAxis(*flexItem.box->style->margin) == Width::AUTO);
                 }
 
                 if (countOfAutos) {
                     Px marginsSize = (_usedMainSize - occupiedMainSize) / Px{countOfAutos};
                     for (auto &flexItem : flexLine.items) {
-                        if (flexItem.box->style->margin->start == Width::AUTO)
-                            flexItem.margin.start = marginsSize;
-                        if (flexItem.box->style->margin->end == Width::AUTO)
-                            flexItem.margin.end = marginsSize;
+                        if (fa.startMainAxis(*flexItem.box->style->margin) == Width::AUTO)
+                            fa.startMainAxis(flexItem.margin) = marginsSize;
+                        if (fa.endMainAxis(*flexItem.box->style->margin) == Width::AUTO)
+                            fa.endMainAxis(flexItem.margin) = marginsSize;
                     }
 
                     usedAutoMargins = true;
@@ -899,10 +1061,10 @@ struct FlexFormatingContext {
 
             if (not usedAutoMargins) {
                 for (auto &flexItem : flexLine.items) {
-                    if (flexItem.box->style->margin->start == Width::AUTO)
-                        flexItem.margin.start = Px{0};
-                    if (flexItem.box->style->margin->end == Width::AUTO)
-                        flexItem.margin.end = Px{0};
+                    if (fa.startMainAxis(*flexItem.box->style->margin) == Width::AUTO)
+                        fa.startMainAxis(flexItem.margin) = Px{0};
+                    if (fa.endMainAxis(*flexItem.box->style->margin) == Width::AUTO)
+                        fa.endMainAxis(flexItem.margin) = Px{0};
                 }
             }
 
@@ -931,32 +1093,36 @@ struct FlexFormatingContext {
     void _resolveCrossAxisAutoMargins() {
         for (auto &l : _lines) {
             for (auto &i : l.items) {
-                bool bottomMarginIsAuto = i.box->style->margin->bottom == Width::AUTO;
-                bool topMarginIsAuto = i.box->style->margin->top == Width::AUTO;
 
-                if (bottomMarginIsAuto or topMarginIsAuto) {
-                    if (i.usedSize.y + i.getMargin(FlexItem::VERTICAL) < l.crossSize) {
-                        if (bottomMarginIsAuto and not topMarginIsAuto) {
-                            auto topMargin = i.getMargin(FlexItem::TOP);
-                            Px freeCrossSpace = l.crossSize - i.usedSize.y - topMargin;
-                            i.margin.bottom = freeCrossSpace;
+                auto marginStyle = *i.box->style->margin;
 
-                        } else if (not bottomMarginIsAuto and topMarginIsAuto) {
-                            auto bottomMargin = i.getMargin(FlexItem::BOTTOM);
-                            Px freeCrossSpace = l.crossSize - i.usedSize.y - bottomMargin;
-                            i.margin.top = freeCrossSpace;
+                bool startCrossMarginIsAuto = fa.startCrossAxis(marginStyle) == Width::AUTO;
+                bool endCrossMarginIsAuto = fa.endCrossAxis(marginStyle) == Width::AUTO;
+
+                if (startCrossMarginIsAuto or endCrossMarginIsAuto) {
+                    if (fa.crossAxis(i.usedSize) + i.getMargin(FlexItem::BOTH_CROSS) < l.crossSize) {
+                        if (not startCrossMarginIsAuto and endCrossMarginIsAuto) {
+                            auto startMargin = i.getMargin(FlexItem::START_CROSS);
+                            Px freeCrossSpace = l.crossSize - fa.crossAxis(i.usedSize) - startMargin;
+                            fa.endCrossAxis(i.margin) = freeCrossSpace;
+
+                        } else if (startCrossMarginIsAuto and not endCrossMarginIsAuto) {
+                            auto endMargin = i.getMargin(FlexItem::END_CROSS);
+                            Px freeCrossSpace = l.crossSize - fa.crossAxis(i.usedSize) - endMargin;
+                            fa.startCrossAxis(i.margin) = freeCrossSpace;
                         } else {
-                            Px freeCrossSpace = l.crossSize - i.usedSize.y;
-                            i.margin.bottom = i.margin.top = freeCrossSpace / Px{2};
+                            Px freeCrossSpace = l.crossSize - fa.crossAxis(i.usedSize);
+                            fa.endCrossAxis(i.margin) =
+                                fa.startCrossAxis(i.margin) = freeCrossSpace / Px{2};
                         }
-                        i.position.y = i.getMargin(FlexItem::TOP);
+                        fa.crossAxis(i.position) = i.getMargin(FlexItem::START_CROSS);
                     } else {
                         if (i.box->style->margin->top == Width::Type::AUTO)
-                            i.margin.top = Px{0};
+                            fa.startCrossAxis(i.margin) = Px{0};
 
                         // FIXME: not sure if the following is what the specs want
-                        if (l.crossSize > i.usedSize.y)
-                            i.margin.bottom = l.crossSize - i.usedSize.y;
+                        if (l.crossSize > fa.crossAxis(i.usedSize))
+                            fa.endCrossAxis(i.margin) = l.crossSize - fa.crossAxis(i.usedSize);
                     }
                 }
             }
@@ -989,8 +1155,8 @@ struct FlexFormatingContext {
         for (auto &flexLine : _lines)
             _usedCrossSizeByLines += flexLine.crossSize;
 
-        if (input.knownSize.y)
-            _usedCrossSize = input.knownSize.y.unwrap();
+        if (fa.crossAxis(input.knownSize))
+            _usedCrossSize = fa.crossAxis(input.knownSize).unwrap();
         else
             _usedCrossSize = _usedCrossSizeByLines;
 
@@ -1001,30 +1167,30 @@ struct FlexFormatingContext {
     // https://www.w3.org/TR/css-flexbox-1/#algo-line-align
 
     void _alignAllFlexLines(Box &box) {
-        Px availableCrossSpace = _initiallyAvailableCrossSpace - _usedCrossSizeByLines;
+        Px availableCrossSpace = fa.crossAxis(availableSpace) - _usedCrossSizeByLines;
 
         auto alignContentFlexStart = [&]() {
-            Px currPositionY{0};
+            Px currPositionCross{0};
             for (auto &flexLine : _lines) {
-                flexLine.position.y = currPositionY;
-                currPositionY += flexLine.crossSize;
+                fa.crossAxis(flexLine.position) = currPositionCross;
+                currPositionCross += flexLine.crossSize;
             }
         };
 
         auto alignContentCenter = [&]() {
-            Px currPositionY{availableCrossSpace / Px{2}};
+            Px currPositionCross{availableCrossSpace / Px{2}};
             for (auto &flexLine : _lines) {
-                flexLine.position.y = currPositionY;
-                currPositionY += flexLine.crossSize;
+                fa.crossAxis(flexLine.position) = currPositionCross;
+                currPositionCross += flexLine.crossSize;
             }
         };
 
         switch (box.style->aligns.alignContent.keyword) {
         case Style::Align::FLEX_END: {
-            Px currPositionY{availableCrossSpace};
+            Px currPositionCross{availableCrossSpace};
             for (auto &flexLine : _lines) {
-                flexLine.position.y = currPositionY;
-                currPositionY += flexLine.crossSize;
+                fa.crossAxis(flexLine.position) = currPositionCross;
+                currPositionCross += flexLine.crossSize;
             }
             break;
         }
@@ -1040,10 +1206,10 @@ struct FlexFormatingContext {
             } else {
                 Px gapSize = availableCrossSpace / Px{_lines.len()};
 
-                Px currPositionY{gapSize / Px{2}};
+                Px currPositionCross{gapSize / Px{2}};
                 for (auto &flexLine : _lines) {
-                    flexLine.position.y = currPositionY;
-                    currPositionY += flexLine.crossSize + gapSize;
+                    fa.crossAxis(flexLine.position) = currPositionCross;
+                    currPositionCross += flexLine.crossSize + gapSize;
                 }
             }
             break;
@@ -1055,10 +1221,10 @@ struct FlexFormatingContext {
             else {
                 Px gapSize = availableCrossSpace / Px{_lines.len() - 1};
 
-                Px currPositionY{0};
+                Px currPositionCross{0};
                 for (auto &flexLine : _lines) {
-                    flexLine.position.y = currPositionY;
-                    currPositionY += flexLine.crossSize + gapSize;
+                    fa.crossAxis(flexLine.position) = currPositionCross;
+                    currPositionCross += flexLine.crossSize + gapSize;
                 }
             }
             break;
@@ -1080,10 +1246,9 @@ struct FlexFormatingContext {
         //       the sizes, and will be done only when committing
         for (auto &flexLine : _lines) {
             for (auto &flexItem : flexLine.items) {
-                flexItem.position.x += flexLine.position.x + input.position.x;
-                flexItem.position.y += flexLine.position.y + input.position.y;
+                flexItem.position = flexItem.position + flexLine.position + input.position;
 
-                layout(
+                auto out = layout(
                     tree,
                     *flexItem.box,
                     {
@@ -1109,7 +1274,7 @@ struct FlexFormatingContext {
         _determineAvailableMainAndCrossSpace(input);
 
         // 3. Determine the flex base size and hypothetical main size of each item
-        _determineFlexBaseSizeAndHypotheticalMainSize(tree, input);
+        _determineFlexBaseSizeAndHypotheticalMainSize(tree);
 
         // 4. Determine the main size of the flex container
         _determineMainSize(input);
@@ -1127,7 +1292,7 @@ struct FlexFormatingContext {
         _calculateCrossSizeOfEachFlexLine(input);
 
         // 9. Handle 'align-content: stretch'.
-        _handleAlignContentStretch(box);
+        _handleAlignContentStretch(box, input);
 
         // 10. Collapse visibility:collapse items.
         _collapseVisibilityCollapseItems();
@@ -1154,7 +1319,7 @@ struct FlexFormatingContext {
         if (input.commit == Commit::YES)
             _commit(tree, input);
 
-        return Output::fromSize({_usedMainSize, _usedCrossSize});
+        return Output::fromSize(fa.buildPair(_usedMainSize, _usedCrossSize));
     }
 };
 
