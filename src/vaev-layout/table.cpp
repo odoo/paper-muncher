@@ -22,7 +22,7 @@ bool isHeadBodyFootRowOrColGroup(Display display) {
     );
 }
 
-void advanceUntil(MutCursor<Frag> &cursor, Func<bool(Display)> pred) {
+void advanceUntil(MutCursor<Box> &cursor, Func<bool(Display)> pred) {
     while (not cursor.ended() and not pred(cursor->style->display)) {
         cursor.next();
     }
@@ -30,7 +30,7 @@ void advanceUntil(MutCursor<Frag> &cursor, Func<bool(Display)> pred) {
 
 struct TableCell {
     Math::Vec2u anchorIdx = {};
-    MutCursor<Frag> frag = nullptr;
+    MutCursor<Box> frag = nullptr;
 
     static TableCell const EMPTY;
 
@@ -45,12 +45,12 @@ struct TableCell {
 
 struct TableAxis {
     usize start, end;
-    Frag &el;
+    Box &el;
 };
 
 struct TableGroup {
     usize start, end;
-    Frag &el;
+    Box &el;
 };
 
 struct TableGrid {
@@ -97,8 +97,8 @@ struct TableFormatingContext {
     Vec<TableGroup> colGroups;
 
     Vec<usize> captionsIdxs;
-    Frag &wrapperBox;
-    Frag &tableBox;
+    Box &wrapperBox;
+    Box &tableBox;
 
     // Table forming algorithm
     Math::Vec2u current;
@@ -123,7 +123,7 @@ struct TableFormatingContext {
     InsetsPx boxBorder;
     Vec2Px spacing;
 
-    TableFormatingContext(Tree &fragTree, Frag &tableWrapperBox)
+    TableFormatingContext(Tree &fragTree, Box &tableWrapperBox)
         : wrapperBox(tableWrapperBox),
           tableBox(findTableBox(tableWrapperBox)),
           boxBorder(computeBorders(fragTree, tableBox)),
@@ -154,9 +154,9 @@ struct TableFormatingContext {
     }
 
     // https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-processing-rows
-    void processRows(Frag &tableRowElement) {
+    void processRows(Box &tableRowElement) {
         auto tableRowChildren = tableRowElement.children();
-        MutCursor<Frag> tableRowCursor{tableRowChildren};
+        MutCursor<Box> tableRowCursor{tableRowChildren};
 
         if (grid.size.y == current.y)
             grid.increaseHeight();
@@ -235,9 +235,9 @@ struct TableFormatingContext {
     }
 
     // https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-processing-row-groups
-    void processRowGroup(Frag &rowGroupElement) {
+    void processRowGroup(Box &rowGroupElement) {
         auto rowGroupChildren = rowGroupElement.children();
-        MutCursor<Frag> rowGroupCursor{rowGroupChildren};
+        MutCursor<Box> rowGroupCursor{rowGroupChildren};
 
         usize ystartRowGroup = grid.size.y;
 
@@ -266,7 +266,7 @@ struct TableFormatingContext {
     // https://html.spec.whatwg.org/multipage/tables.html#forming-a-table
     void run() {
         auto tableBoxChildren = tableBox.children();
-        MutCursor<Frag> tableBoxCursor{tableBoxChildren};
+        MutCursor<Box> tableBoxCursor{tableBoxChildren};
 
         if (tableBoxCursor.ended())
             return;
@@ -281,7 +281,7 @@ struct TableFormatingContext {
         // MARK: Columns groups
         while (not tableBoxCursor.ended() and tableBoxCursor->style->display == Display::TABLE_COLUMN_GROUP) {
             auto columnGroupChildren = tableBoxCursor->children();
-            MutCursor<Frag> columnGroupCursor = {columnGroupChildren};
+            MutCursor<Box> columnGroupCursor = {columnGroupChildren};
 
             advanceUntil(columnGroupCursor, [](Display d) {
                 return d == Vaev::Display::TABLE_COLUMN;
@@ -360,7 +360,7 @@ struct TableFormatingContext {
         }
     }
 
-    Frag &findTableBox(Frag &tableWrapperBox) {
+    Box &findTableBox(Box &tableWrapperBox) {
         for (auto &child : tableWrapperBox.children())
             if (child.style->display != Display::Internal::TABLE_CAPTION)
                 return child;
@@ -544,7 +544,7 @@ struct TableFormatingContext {
             capmin = max(capmin, captionOutput.size.x);
         }
 
-        auto getCellMinMaxWidth = [](Tree &t, Frag &f, Input &input, TableCell &cell) {
+        auto getCellMinMaxWidth = [](Tree &t, Box &f, Input &input, TableCell &cell) {
             // FIXME: What should be the parameter for intrinsic in the vertical axis?
             auto cellMinOutput = layout(
                 t,
@@ -795,7 +795,7 @@ struct TableFormatingContext {
     }
 };
 
-Output tableLayout(Tree &t, Frag &wrapper, Input input) {
+Output tableLayout(Tree &t, Box &wrapper, Input input) {
     // TODO: - vertical and horizontal alignment
     //       - borders collapse
 

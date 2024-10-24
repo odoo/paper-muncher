@@ -5,7 +5,7 @@
 
 namespace Vaev::Layout {
 
-static bool _paintBorders(Frag &frag, Gfx::Color currentColor, Gfx::Borders &borders) {
+static bool _paintBorders(Box &frag, Gfx::Color currentColor, Gfx::Borders &borders) {
     currentColor = resolve(frag.style->color, currentColor);
 
     borders.radii = frag.layout.radii.cast<f64>();
@@ -30,7 +30,7 @@ static bool _paintBorders(Frag &frag, Gfx::Color currentColor, Gfx::Borders &bor
     return not borders.widths.zero();
 }
 
-static void _paintBox(Frag &frag, Gfx::Color currentColor, Scene::Stack &stack) {
+static void _paintBox(Box &frag, Gfx::Color currentColor, Scene::Stack &stack) {
     auto const &backgrounds = frag.style->backgrounds;
 
     Scene::Box paint;
@@ -56,10 +56,10 @@ static void _paintBox(Frag &frag, Gfx::Color currentColor, Scene::Stack &stack) 
         stack.add(makeStrong<Scene::Box>(std::move(paint)));
 }
 
-static void _establishStackingContext(Frag &frag, Scene::Stack &stack);
-static void _paintStackingContext(Frag &frag, Scene::Stack &stack);
+static void _establishStackingContext(Box &frag, Scene::Stack &stack);
+static void _paintStackingContext(Box &frag, Scene::Stack &stack);
 
-static void _paintFrag(Frag &frag, Scene::Stack &stack) {
+static void _paintBox(Box &frag, Scene::Stack &stack) {
     Gfx::Color currentColor = Gfx::BLACK;
     currentColor = resolve(frag.style->color, currentColor);
 
@@ -77,7 +77,7 @@ static void _paintFrag(Frag &frag, Scene::Stack &stack) {
     }
 }
 
-static void _paintChildren(Frag &frag, Scene::Stack &stack, auto predicate) {
+static void _paintChildren(Box &frag, Scene::Stack &stack, auto predicate) {
     for (auto &c : frag.children()) {
         auto &s = *c.style;
 
@@ -97,14 +97,14 @@ static void _paintChildren(Frag &frag, Scene::Stack &stack, auto predicate) {
         }
 
         if (predicate(s))
-            _paintFrag(c, stack);
+            _paintBox(c, stack);
         _paintChildren(c, stack, predicate);
     }
 }
 
-static void _paintStackingContext(Frag &frag, Scene::Stack &stack) {
+static void _paintStackingContext(Box &frag, Scene::Stack &stack) {
     // 1. the background and borders of the element forming the stacking context.
-    _paintFrag(frag, stack);
+    _paintBox(frag, stack);
 
     // 2. the child stacking contexts with negative stack levels (most negative first).
     _paintChildren(frag, stack, [](Style::Computed const &s) {
@@ -137,18 +137,18 @@ static void _paintStackingContext(Frag &frag, Scene::Stack &stack) {
     });
 }
 
-static void _establishStackingContext(Frag &frag, Scene::Stack &stack) {
+static void _establishStackingContext(Box &frag, Scene::Stack &stack) {
     auto innerStack = makeStrong<Scene::Stack>();
     innerStack->zIndex = frag.style->zIndex.value;
     _paintStackingContext(frag, *innerStack);
     stack.add(std::move(innerStack));
 }
 
-void paint(Frag &frag, Scene::Stack &stack) {
+void paint(Box &frag, Scene::Stack &stack) {
     _paintStackingContext(frag, stack);
 }
 
-void wireframe(Frag &frag, Gfx::Canvas &g) {
+void wireframe(Box &frag, Gfx::Canvas &g) {
     for (auto &c : frag.children())
         wireframe(c, g);
 

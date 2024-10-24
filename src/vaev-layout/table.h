@@ -4,6 +4,6 @@
 
 namespace Vaev::Layout {
 
-Output tableLayout(Tree &t, Frag &f, Input input);
+Output tableLayout(Tree &t, Box &f, Input input);
 
 } // namespace Vaev::Layout

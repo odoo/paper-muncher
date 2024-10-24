@@ -4,10 +4,10 @@
 
 namespace Vaev::Layout {
 
-InsetsPx computeMargins(Tree &t, Frag &f, Input input);
+InsetsPx computeMargins(Tree &t, Box &f, Input input);
 
-InsetsPx computeBorders(Tree &t, Frag &f);
+InsetsPx computeBorders(Tree &t, Box &f);
 
-Output layout(Tree &t, Frag &f, Input input);
+Output layout(Tree &t, Box &f, Input input);
 
 } // namespace Vaev::Layout

@@ -3,14 +3,14 @@
 namespace Vaev::Layout {
 
 // https://drafts.csswg.org/css-writing-modes-4/#inline-axis
-Axis mainAxis(Frag &) {
+Axis mainAxis(Box &) {
     // TODO: Deduce axis
 
     return Axis::HORIZONTAL;
 }
 
 // https://drafts.csswg.org/css-writing-modes-4/#block-axis
-Axis crossAxis(Frag &) {
+Axis crossAxis(Box &) {
     // TODO: Deduce axis
 
     return Axis::VERTICAL;

@@ -7,7 +7,7 @@
 namespace Vaev::Layout {
 
 struct FlexItem {
-    Frag *frag;
+    Box *frag;
     Flex flex;
 
     // these 2 sizes do NOT account margins
@@ -25,7 +25,7 @@ struct FlexItem {
     Vec2Px minContentSize, maxContentSize;
     InsetsPx minContentMargin, maxContentMargin;
 
-    FlexItem(Tree &t, Frag &f)
+    FlexItem(Tree &t, Box &f)
         : frag(&f), flex(*f.style->flex) {
         speculateValues(t, Input{Commit::NO});
         // TODO: not always we will need min/max content sizes,
@@ -123,7 +123,7 @@ struct FlexItem {
         _speculateValues(t, input, speculativeSize, speculativeMargin);
     }
 
-    void computeFlexBaseSize(Tree &t, Frag &f, Px mainContainerSize) {
+    void computeFlexBaseSize(Tree &t, Box &f, Px mainContainerSize) {
         // TODO: check specs
         if (flex.basis.type == FlexBasis::WIDTH) {
             if (flex.basis.width.type == Width::Type::VALUE) {
@@ -392,7 +392,7 @@ struct FlexFormatingContext {
 
     Vec<FlexItem> _items = {};
 
-    void _generateAnonymousFlexItems(Tree &t, Frag &f) {
+    void _generateAnonymousFlexItems(Tree &t, Box &f) {
         _items.ensure(f.children().len());
         for (auto &c : f.children())
             _items.emplaceBack(t, c);
@@ -423,7 +423,7 @@ struct FlexFormatingContext {
     // https://www.w3.org/TR/css-flexbox-1/#algo-main-item
 
     void _determineFlexBaseSizeAndHypotheticalMainSize(
-        Tree &t, Frag &f, Input input
+        Tree &t, Box &f, Input input
     ) {
         for (auto &i : _items) {
             i.computeFlexBaseSize(
@@ -801,7 +801,7 @@ struct FlexFormatingContext {
     // 9. MARK: Handle 'align-content: stretch' --------------------------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-line-stretch
 
-    void _handleAlignContentStretch(Frag &f) {
+    void _handleAlignContentStretch(Box &f) {
         // FIXME: If the flex container has a definite cross size <=?=> f.style->sizing->height.type != Size::Type::AUTO
         if (f.style->sizing->height.type != Size::Type::AUTO and
             f.style->aligns.alignContent == Style::Align::STRETCH) {
@@ -827,7 +827,7 @@ struct FlexFormatingContext {
     // 11. MARK: Determine the used cross size of each flex item ---------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-stretch
 
-    void _determineUsedCrossSize(Tree &t, Frag &f) {
+    void _determineUsedCrossSize(Tree &t, Box &f) {
         for (auto &flexLine : _lines) {
             for (auto &flexItem : flexLine.items) {
                 Style::Align itemAlign = flexItem.frag->style->aligns.alignSelf;
@@ -871,7 +871,7 @@ struct FlexFormatingContext {
     // 12. MARK: Distribute any remaining free space ---------------------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-main-align
 
-    void _distributeRemainingFreeSpace(Frag &f, Input input) {
+    void _distributeRemainingFreeSpace(Box &f, Input input) {
         for (auto &flexLine : _lines) {
             Px occupiedMainSize{0};
             for (auto &flexItem : flexLine.items) {
@@ -970,7 +970,7 @@ struct FlexFormatingContext {
     // 14. MARK: Align all flex items ------------------------------------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-cross-align
 
-    void _alignAllFlexItems(Tree &t, Frag &f, Input input) {
+    void _alignAllFlexItems(Tree &t, Box &f, Input input) {
         for (auto &flexLine : _lines) {
             for (auto &flexItem : flexLine.items) {
                 flexItem.alignItem(
@@ -1004,7 +1004,7 @@ struct FlexFormatingContext {
     // 16. MARK: Align all flex lines ------------------------------------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-line-align
 
-    void _alignAllFlexLines(Frag &f) {
+    void _alignAllFlexLines(Box &f) {
         Px availableCrossSpace = _initiallyAvailableCrossSpace - _usedCrossSizeByLines;
 
         auto alignContentFlexStart = [&]() {
@@ -1105,7 +1105,7 @@ struct FlexFormatingContext {
     // MARK: Public API --------------------------------------------------------
 
     // FIXME: auto, min and max content values for flex container dimensions are not working as in Chrome; add tests
-    Output run(Tree &t, Frag &f, Input input) {
+    Output run(Tree &t, Box &f, Input input) {
         // 1. Generate anonymous flex items
         _generateAnonymousFlexItems(t, f);
 
@@ -1162,7 +1162,7 @@ struct FlexFormatingContext {
     }
 };
 
-Output flexLayout(Tree &t, Frag &f, Input input) {
+Output flexLayout(Tree &t, Box &f, Input input) {
     FlexFormatingContext fc = {*f.style->flex};
     return fc.run(t, f, input);
 }

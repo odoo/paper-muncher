@@ -4,7 +4,7 @@
 
 namespace Vaev::Layout {
 
-Output gridLayout(Tree &t, Frag &f, Input input) {
+Output gridLayout(Tree &t, Box &f, Input input) {
     // FIXME: Implement grid layout
     return blockLayout(t, f, input);
 }

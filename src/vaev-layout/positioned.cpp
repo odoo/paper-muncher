@@ -4,7 +4,7 @@
 
 namespace Vaev::Layout {
 
-void layoutPositioned(Tree &t, Frag &f, RectPx containingBlock) {
+void layoutPositioned(Tree &t, Box &f, RectPx containingBlock) {
     if (f.style->position == Position::ABSOLUTE or f.style->position == Position::RELATIVE) {
         auto origin = containingBlock.topStart();
         if (f.style->position == Position::RELATIVE)

@@ -114,7 +114,7 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Vec2
 
     return {
         std::move(stylebook),
-        makeStrong<Layout::Frag>(std::move(tree.root)),
+        makeStrong<Layout::Box>(std::move(tree.root)),
         sceneRoot,
     };
 }
@@ -162,7 +162,7 @@ RenderResult render(Markup::Document &dom, Style::Media const &media, Print::Pap
 
     return {
         std::move(stylebook),
-        makeStrong<Layout::Frag>(std::move(tree.root)),
+        makeStrong<Layout::Box>(std::move(tree.root)),
         sceneRoot,
     };
 }

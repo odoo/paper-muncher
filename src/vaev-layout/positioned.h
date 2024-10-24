@@ -5,6 +5,6 @@
 
 namespace Vaev::Layout {
 
-void layoutPositioned(Tree &t, Frag &f, RectPx containingBlock);
+void layoutPositioned(Tree &t, Box &f, RectPx containingBlock);
 
 } // namespace Vaev::Layout

@@ -8,12 +8,12 @@
 
 namespace Vaev::Layout {
 
-Px resolve(Tree &t, Frag &f, Length l);
+Px resolve(Tree &t, Box &f, Length l);
 
-Px resolve(Tree &t, Frag &f, PercentOr<Length> p, Px relative);
+Px resolve(Tree &t, Box &f, PercentOr<Length> p, Px relative);
 
-Px resolve(Tree &t, Frag &f, Width w, Px relative);
+Px resolve(Tree &t, Box &f, Width w, Px relative);
 
-Px resolve(Tree &t, Frag &f, FontSize fs);
+Px resolve(Tree &t, Box &f, FontSize fs);
 
 } // namespace Vaev::Layout

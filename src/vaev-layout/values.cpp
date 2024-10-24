@@ -5,7 +5,7 @@
 
 namespace Vaev::Layout {
 
-Px _resolveFontRelative(Tree &t, Frag &f, Length l) {
+Px _resolveFontRelative(Tree &t, Box &f, Length l) {
     Karm::Text::Font rootFont = {
         t.root.fontFace,
         t.root.layout.fontSize.cast<f64>(),
@@ -58,7 +58,7 @@ Px _resolveFontRelative(Tree &t, Frag &f, Length l) {
     }
 }
 
-Px resolve(Tree &t, Frag &f, Length l) {
+Px resolve(Tree &t, Box &f, Length l) {
     if (l.isFontRelative())
         return _resolveFontRelative(t, f, l);
     switch (l.unit()) {
@@ -217,7 +217,7 @@ template <typename T>
 using Resolved = Meta::Cond<Resolvable<T>, typename T::Resolved, T>;
 static_assert(Resolvable<PercentOr<Length>>);
 
-Px resolve(Tree &t, Frag &f, PercentOr<Length> p, Px relative) {
+Px resolve(Tree &t, Box &f, PercentOr<Length> p, Px relative) {
     if (p.resolved())
         return resolve(t, f, p.value());
     return Px{relative.cast<f64>() * (p.percent().value() / 100.)};
@@ -240,7 +240,7 @@ Resolved<T> resolveInfix(typename CalcValue<T>::OpCode op, Resolved<T> lhs, Reso
 }
 
 template <typename T>
-auto resolve(Tree &t, Frag &f, CalcValue<T> const &p, Px relative) {
+auto resolve(Tree &t, Box &f, CalcValue<T> const &p, Px relative) {
     if (p.type == CalcValue<T>::FIXED) {
         return resolve(t, f, p.lhs.template unwrap<T>(), relative);
     } else if (p.type == CalcValue<T>::SINGLE) {
@@ -272,13 +272,13 @@ auto resolve(Tree &t, Frag &f, CalcValue<T> const &p, Px relative) {
     unreachable();
 }
 
-Px resolve(Tree &t, Frag &f, Width w, Px relative) {
+Px resolve(Tree &t, Box &f, Width w, Px relative) {
     if (w == Width::Type::AUTO)
         return Px{0};
     return resolve(t, f, w.value, relative);
 }
 
-Px resolve(Tree &t, Frag &f, FontSize fs) {
+Px resolve(Tree &t, Box &f, FontSize fs) {
     // FIXME: get from user settings
     f64 userFontSizes = 16;
 

@@ -87,7 +87,7 @@ struct Layout {
     }
 };
 
-struct Frag;
+struct Box;
 
 struct Tree;
 

@@ -7,7 +7,7 @@ namespace Vaev::Layout {
 
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
 struct BlockFormatingContext {
-    static Px _determineWidth(Tree &t, Frag &f, Input input) {
+    static Px _determineWidth(Tree &t, Box &f, Input input) {
         Px width = Px{0};
         for (auto &c : f.children()) {
             auto ouput = layout(
@@ -25,7 +25,7 @@ struct BlockFormatingContext {
         return width;
     }
 
-    Output run(Tree &t, Frag &f, Input input) {
+    Output run(Tree &t, Box &f, Input input) {
         Px blockSize = Px{0};
         Px inlineSize = input.knownSize.width.unwrapOrElse([&] {
             return _determineWidth(t, f, input);
@@ -76,7 +76,7 @@ struct BlockFormatingContext {
     }
 };
 
-Output blockLayout(Tree &t, Frag &f, Input input) {
+Output blockLayout(Tree &t, Box &f, Input input) {
     BlockFormatingContext fc;
     return fc.run(t, f, input);
 }
