@@ -4,8 +4,8 @@
 
 namespace Vaev::Layout {
 
-Axis mainAxis(Frag &f);
+Axis mainAxis(Box &box);
 
-Axis crossAxis(Frag &f);
+Axis crossAxis(Box &box);
 
 } // namespace Vaev::Layout

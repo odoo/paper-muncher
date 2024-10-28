@@ -1,10 +1,9 @@
 #pragma once
 
-#include "frag.h"
-#include "values.h"
+#include "box.h"
 
 namespace Vaev::Layout {
 
-void layoutPositioned(Tree &t, Frag &f, RectPx containingBlock);
+void layoutPositioned(Tree &tree, Box &box, RectPx containingBlock);
 
 } // namespace Vaev::Layout
