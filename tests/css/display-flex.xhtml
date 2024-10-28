@@ -1245,3 +1245,1026 @@
         </section>
     </rendering>
 </test>
+
+<test name="flex: row/col orientation, intrinsic sizes" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                .main-color {
+                    background: lightgreen;
+                }
+
+                .parent-color {
+                    background: lightcoral;
+                }
+
+                .child-color {
+                    background: lightblue;
+                }
+
+                .parent {
+                    display: flex;
+                    justify-content: center;
+                    height: 300px;
+                    flex: 10 10 65px;
+                    margin: auto 16px auto 16px;
+                    width: 300px;
+                }
+
+                .main {
+                    display: flex;
+                    width: 100px;
+                    height: 100px;
+                    justify-content: center;
+                    flex-wrap: nowrap;
+                    flex-direction: column;
+                }
+
+                .parent-row {
+                    flex-wrap: wrap;
+                    flex-direction: row;
+                }
+
+                .parent-column {
+                    flex-wrap: nowrap;
+                    flex-direction: column;
+                }
+
+                .child {
+                    height: 20px;
+                    width: 20px;
+                    margin: 4px;
+                    flex: 10 10 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+    <rendering>
+        <section style="position: relative;">
+
+
+            <div class="main-color" style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;">
+                <div class="parent-color" style="position: absolute; top: -6px; left: 16px; height: 56px; width: 28px;">
+                    <div class="child-color"
+                        style="position: absolute; top: 4px; left: 4px; height: 20px; width: 20px;"></div>
+                    <div class="child-color"
+                        style="position: absolute; top: 32px; left: 4px; height: 20px; width: 20px;"></div>
+                </div>
+                <div class="parent-color" style="position: absolute; top: 50px; left: 16px; height: 56px; width: 28px;">
+                    <div class="child-color"
+                        style="position: absolute; top: 4px; left: 4px; height: 20px; width: 20px;"></div>
+                    <div class="child-color"
+                        style="position: absolute; top: 32px; left: 4px; height: 20px; width: 20px;"></div>
+                </div>
+
+            </div>
+
+        </section>
+    </rendering>
+
+    <rendering>
+        <section>
+            <div class="main main-color">
+                <div class="parent parent-column parent-color" style="height: min-content;width: min-content;">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                </div>
+                <div class="parent parent-row parent-color" style="width: min-content;">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                </div>
+            </div>
+        </section>
+    </rendering>
+</test>
+
+
+<test name="flex: flex inside flex, row and col" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                .main-color {
+                    background: lightgreen;
+                }
+
+                .parent-color {
+                    background: lightcoral;
+                }
+
+                .child-color {
+                    background: lightblue;
+                }
+
+                .parent {
+                    display: flex;
+                    justify-content: center;
+                    height: 300px;
+                    flex: 10 10 65px;
+                    margin: auto 16px auto 16px;
+                    width: 300px;
+                }
+
+                .main {
+                    display: flex;
+                    width: 200px;
+                    height: 200px;
+                    justify-content: center;
+                    flex-wrap: nowrap;
+                    flex-direction: column;
+                }
+
+                .parent-row {
+                    flex-wrap: wrap;
+                    flex-direction: row;
+                }
+
+                .parent-column {
+                    flex-wrap: nowrap;
+                    flex-direction: column;
+                }
+
+                .at-end {
+                    align-items: flex-end;
+                }
+
+
+                .child {
+                    height: 20px;
+                    width: 20px;
+                    margin: 4px;
+                    flex: 10 10 20px;
+                }
+
+                .dif-child {
+                    flex: 5 5 40px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+    <rendering>
+        <section style="position: relative;">
+
+
+
+            <div class="main-color" style="position: absolute; top: 0px; left: 0px; height: 200px; width: 200px;">
+                <div class="parent-color"
+                    style="position: absolute; top: 0px; left: 16px; height: 104px; width: 300px;">
+                    <div class="child-color"
+                        style="position: absolute; top: 4px; left: 4px; height: 20px; width: 20px;"></div>
+                    <div class="child-color"
+                        style="position: absolute; top: 32px; left: 4px; height: 40px; width: 20px;"></div>
+                    <div class="child-color"
+                        style="position: absolute; top: 80px; left: 4px; height: 20px; width: 20px;"></div>
+                </div>
+                <div class="parent-color"
+                    style="position: absolute; top: 104px; left: 16px; height: 96px; width: 300px;">
+                    <div class="child-color"
+                        style="position: absolute; top: 4px; left: 4px; height: 20px; width: 98.4062px;"></div>
+                    <div class="child-color"
+                        style="position: absolute; top: 4px; left: 110.406px; height: 20px; width: 98.4062px;">
+                    </div>
+                    <div class="child-color"
+                        style="position: absolute; top: 4px; left: 216.812px; height: 20px; width: 79.2031px;">
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </rendering>
+
+    <rendering>
+        <section>
+            <div class="main main-color">
+                <div class="parent parent-column parent-color">
+                    <div class="child child-color" />
+                    <div class="child dif-child child-color" />
+                    <div class="child child-color" />
+                </div>
+                <div class="parent parent-row parent-color">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                    <div class="child dif-child child-color" />
+                </div>
+            </div>
+        </section>
+    </rendering>
+</test>
+
+
+<test name="flex: flex inside flex inside flex, row and col" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                .main-color {
+                    background: lightgreen;
+                }
+
+                .parent-color {
+                    background: lightcoral;
+                }
+
+                .child-color {
+                    background: lightblue;
+                }
+
+                .parent {
+                    display: flex;
+                    justify-content: center;
+                    height: 40px;
+                    flex: 10 10 45px;
+                    margin: auto 16px auto 16px;
+                    width: 200px;
+                }
+
+                .main {
+                    display: flex;
+                    width: 200px;
+                    height: 500px;
+                    justify-content: center;
+                    flex-wrap: nowrap;
+                    flex-direction: column;
+                }
+
+                .parent-row {
+                    flex-wrap: wrap;
+                    flex-direction: row;
+                }
+
+                .parent-column {
+                    flex-wrap: wrap;
+                    flex-direction: column;
+                }
+
+                .child {
+                    height: 20px;
+                    width: 20px;
+                    margin: 4px;
+                    flex: 10 10 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+    <rendering>
+        <section style="position: relative;">
+
+            <div class="main-color" style="position: absolute; top: 0px; left: 0px; height: 500px; width: 200px;">
+                <div class="parent-color"
+                    style="position: absolute; top: 0px; left: 16px; height: 125px; width: 200px;">
+                    <div class="child-color"
+                        style="position: absolute; top: 4px; left: 4px; height: 54.5px; width: 20px;"></div>
+                    <div class="child-color"
+                        style="position: absolute; top: 66.5px; left: 4px; height: 54.5px; width: 20px;"></div>
+                </div>
+                <div class="parent-color"
+                    style="position: absolute; top: 125px; left: 16px; height: 125px; width: 200px;">
+                    <div class="child-color"
+                        style="position: absolute; top: 4px; left: 4px; height: 20px; width: 92px;"></div>
+                    <div class="child-color"
+                        style="position: absolute; top: 4px; left: 104px; height: 20px; width: 92px;"></div>
+                </div>
+                <div class="parent-color"
+                    style="position: absolute; top: 250px; left: 16px; height: 125px; width: 200px;">
+                    <div class="child-color"
+                        style="position: absolute; top: 4px; left: 4px; height: 20px; width: 192px;"></div>
+                </div>
+                <div class="parent-color"
+                    style="position: absolute; top: 375px; left: 16px; height: 125px; width: 200px;">
+                    <div class="main-color"
+                        style="position: absolute; top: 0px; left: 0px; height: 125px; width: 200px;">
+                        <div class="parent-color"
+                            style="position: absolute; top: 0px; left: 16px; height: 62.5px; width: 200px;">
+                            <div class="child-color"
+                                style="position: absolute; top: 4px; left: 4px; height: 23.25px; width: 20px;">
+                            </div>
+                            <div class="child-color"
+                                style="position: absolute; top: 35.25px; left: 4px; height: 23.25px; width: 20px;">
+                            </div>
+                        </div>
+                        <div class="parent-color"
+                            style="position: absolute; top: 62.5px; left: 16px; height: 62.5px; width: 200px;">
+                            <div class="child-color"
+                                style="position: absolute; top: 4px; left: 4px; height: 20px; width: 92px;">
+                            </div>
+                            <div class="child-color"
+                                style="position: absolute; top: 4px; left: 104px; height: 20px; width: 92px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 216px; height: 125px; width: 200px;">
+                        <div class="child-color"
+                            style="position: absolute; top: 4px; left: 4px; height: 20px; width: 92px;"></div>
+                        <div class="child-color"
+                            style="position: absolute; top: 4px; left: 104px; height: 20px; width: 92px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </rendering>
+
+    <rendering>
+        <section>
+            <div class="main main-color">
+                <div class="parent parent-column parent-color">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                </div>
+                <div class="parent parent-row parent-color">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                </div>
+                <div class="parent parent-row parent-color">
+                    <div class="child child-color" />
+                </div>
+                <div class="parent parent-column parent-color at-end">
+                    <div class="main">
+                        <div class="parent parent-column parent-color">
+                            <div class="child child-color" />
+                            <div class="child child-color" />
+                        </div>
+                        <div class="parent parent-row parent-color at-end">
+                            <div class="child child-color" />
+                            <div class="child child-color" />
+                        </div>
+                    </div>
+                    <div class="parent parent-row parent-color">
+                        <div class="child child-color" />
+                        <div class="child child-color" />
+                    </div>
+                </div>
+            </div>
+        </section>
+    </rendering>
+</test>
+
+
+
+<test name="flex: flex inside flex inside flex, row and col" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                .main-color {
+                    background: lightgreen;
+                }
+
+                .parent-color {
+                    background: lightcoral;
+                }
+
+                .child-color {
+                    background: lightblue;
+                }
+
+                .main {
+                    display: flex;
+                    flex-wrap: nowrap;
+                    flex-direction: column;
+                    width: auto;
+                    height: min-content;
+                }
+
+                .parent {
+                    display: flex;
+                    height: 40px;
+                    flex: 10 10 45px;
+                    margin: 2px;
+                    width: min-content;
+                    height: auto;
+                    flex-wrap: wrap;
+                }
+
+                .parent-row {
+                    flex-direction: row;
+                }
+
+                .no-wrap {
+                    flex-wrap: nowrap;
+                }
+
+                .hmin {
+                    height: min-content;
+                }
+
+                .hman {
+                    height: max-content;
+                }
+
+                .parent-column {
+                    flex-direction: column;
+                }
+
+                .child {
+                    height: 20px;
+                    width: 30px;
+                    margin: 1px;
+                    flex: 10 10 25px;
+                }
+
+                section {
+                    width: 500px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+    <rendering>
+        <section style="position: relative;">
+
+            <div class="main-color" style="position: absolute; top: 0px; left: 0px; height: 500px; width: 500px;">
+                <div class="parent-color" style="position: absolute; top: 2px; left: 2px; height: 496px; width: 32px;">
+                    <div class="child-color"
+                        style="position: absolute; top: 1px; left: 1px; height: 20px; width: 30px;"></div>
+                    <div class="child-color"
+                        style="position: absolute; top: 249px; left: 1px; height: 20px; width: 30px;"></div>
+                </div>
+            </div>
+
+        </section>
+    </rendering>
+
+    <rendering>
+        <section>
+            <div class="main main-color" style="order: 0;height: 500px;">
+                <div class="parent parent-row parent-color" style="order: 1;height: max-content;">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                </div>
+            </div>
+        </section>
+    </rendering>
+</test>
+
+<test name="flex: flex inside flex inside flex, row and col" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                .super-main-color {
+                    background: lightgoldenrodyellow;
+                }
+
+                .main-color {
+                    background: lightgreen;
+                }
+
+                .parent-color {
+                    background: lightcoral;
+                }
+
+                .child-color {
+                    background: lightblue;
+                }
+
+                .main {
+                    display: flex;
+                    flex-wrap: nowrap;
+                    flex-direction: column;
+                    width: auto;
+                    height: min-content;
+                }
+
+                .parent {
+                    display: flex;
+                    height: 40px;
+                    flex: 10 10 45px;
+                    margin: 2px;
+                    width: min-content;
+                    height: auto;
+                    flex-wrap: wrap;
+                }
+
+                .row {
+                    flex-direction: row;
+                }
+
+                .no-wrap {
+                    flex-wrap: nowrap;
+                }
+
+                .hmin {
+                    height: min-content;
+                }
+
+                .hmax {
+                    height: max-content;
+                }
+
+                .wmin {
+                    width: min-content;
+                }
+
+                .wmax {
+                    width: max-content;
+                }
+
+                .column {
+                    flex-direction: column;
+                }
+
+                .child {
+                    height: 20px;
+                    width: 30px;
+                    margin: 1px;
+                    flex: 10 10 25px;
+                }
+
+                section {
+                    width: 500px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+    <rendering>
+        <section style="position: relative;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 232px; width: 500px;" class="super-main-color">
+                <div style="position: absolute; top: 0px; left: 0px; height: 232px; width: 36px;" class="main-color">
+                    <div style="position: absolute; top: 2px; left: 2px; height: 54px; width: 32px;"
+                        class="parent-color">
+                        <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                        <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                    </div>
+                    <div style="position: absolute; top: 60px; left: 2px; height: 54px; width: 32px;"
+                        class="parent-color">
+                        <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                        <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                    </div>
+                    <div style="position: absolute; top: 118px; left: 2px; height: 54px; width: 32px;"
+                        class="parent-color">
+                        <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                        <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                    </div>
+                    <div style="position: absolute; top: 176px; left: 2px; height: 54px; width: 32px;"
+                        class="parent-color">
+                        <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                        <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                    </div>
+                </div>
+                <div style="position: absolute; top: 0px; left: 36px; height: 232px; width: 36px;" class="main-color">
+                    <div style="position: absolute; top: 2px; left: 2px; height: 54px; width: 32px;"
+                        class="parent-color">
+                        <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                        <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                    </div>
+                    <div style="position: absolute; top: 60px; left: 2px; height: 54px; width: 32px;"
+                        class="parent-color">
+                        <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                        <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                    </div>
+                    <div style="position: absolute; top: 118px; left: 2px; height: 54px; width: 32px;"
+                        class="parent-color">
+                        <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                        <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                    </div>
+                    <div style="position: absolute; top: 176px; left: 2px; height: 54px; width: 32px;"
+                        class="parent-color">
+                        <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                        <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                            class="child-color" />
+                    </div>
+                </div>
+            </div>
+        </section>
+    </rendering>
+
+    <rendering>
+        <section>
+            <div class="main super-main-color row">
+                <div class="main main-color">
+                    <!-- <div class="parent row parent-color">
+                        <div class="child child-color" />
+                        <div class="child child-color" />
+                    </div> -->
+                    <div class="parent column parent-color wmin">
+                        <div class="child child-color" />
+                        <div class="child child-color" />
+                    </div>
+                    <div class="parent column parent-color no-wrap">
+                        <div class="child child-color" />
+                        <div class="child child-color" />
+                    </div>
+                    <div class="parent column parent-color hmin">
+                        <div class="child child-color" />
+                        <div class="child child-color" />
+                    </div>
+                    <div class="parent column parent-color hmax">
+                        <div class="child child-color" />
+                        <div class="child child-color" />
+                    </div>
+                </div>
+                <div class="main main-color wmax">
+                    <div class="parent column parent-color">
+                        <div class="child child-color" />
+                        <div class="child child-color" />
+                    </div>
+                    <div class="parent column parent-color no-wrap">
+                        <div class="child child-color" />
+                        <div class="child child-color" />
+                    </div>
+                    <div class="parent column parent-color wmin">
+                        <div class="child child-color" />
+                        <div class="child child-color" />
+                    </div>
+                    <div class="parent column parent-color wmax">
+                        <div class="child child-color" />
+                        <div class="child child-color" />
+                    </div>
+                </div>
+            </div>
+        </section>
+    </rendering>
+</test>
+
+
+<test name="flex: intrinsic sizes" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                .main-color {
+                    background: lightgreen;
+                }
+
+                .parent-color {
+                    background: lightcoral;
+                }
+
+                .child-color {
+                    background: lightblue;
+                }
+
+                .main {
+                    display: flex;
+                    flex-wrap: nowrap;
+                    flex-direction: column;
+                    width: auto;
+                    height: min-content;
+                }
+
+                .parent {
+                    display: flex;
+                    height: 40px;
+                    flex: 10 10 45px;
+                    margin: 2px;
+                    width: min-content;
+                    height: auto;
+                    flex-wrap: wrap;
+                }
+
+                .row {
+                    flex-direction: row;
+                }
+
+                .no-wrap {
+                    flex-wrap: nowrap;
+                }
+
+                .hmin {
+                    height: min-content;
+                }
+
+                .hmax {
+                    height: max-content;
+                }
+
+                .wmin {
+                    width: min-content;
+                }
+
+                .wmax {
+                    width: max-content;
+                }
+
+                .column {
+                    flex-direction: column;
+                }
+
+                .child {
+                    height: 20px;
+                    width: 30px;
+                    margin: 1px;
+                    flex: 10 10 25px;
+                }
+
+                section {
+                    width: 500px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+    <rendering>
+        <section style="position: relative;">
+
+            <div style="position: absolute; top: 0px; left: 0px; height: 58px; width: 500px;" class="main-color">
+                <div style="position: absolute; top: 2px; left: 2px; height: 54px; width: 162.672px;"
+                    class="parent-color">
+                    <div style="position: absolute; top: 1px; left: 1px; height: 20px; width: 79.3438px;"
+                        class="child-color"></div>
+                    <div style="position: absolute; top: 1px; left: 82.3438px; height: 20px; width: 79.3438px;"
+                        class="child-color">
+                    </div>
+                </div>
+                <div style="position: absolute; top: 2px; left: 168.672px; height: 54px; width: 162.672px;"
+                    class="parent-color">
+                    <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                        class="child-color"></div>
+                    <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                        class="child-color"></div>
+                </div>
+                <div style="position: absolute; top: 2px; left: 335.344px; height: 54px; width: 162.672px;"
+                    class="parent-color">
+                    <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                        class="child-color"></div>
+                    <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                        class="child-color"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 58px; left: 0px; height: 58px; width: 500px;" class="main-color">
+                <div style="position: absolute; top: 2px; left: 2px; height: 54px; width: 246px;" class="parent-color">
+                    <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                        class="child-color"></div>
+                    <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                        class="child-color"></div>
+                </div>
+                <div style="position: absolute; top: 2px; left: 252px; height: 54px; width: 246px;"
+                    class="parent-color">
+                    <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                        class="child-color"></div>
+                    <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                        class="child-color"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 116px; left: 0px; height: 26px; width: 500px;" class="main-color">
+                <div style="position: absolute; top: 2px; left: 2px; height: 22px; width: 496px;" class="parent-color">
+                    <div style="position: absolute; top: 1px; left: 1px; height: 20px; width: 246px;"
+                        class="child-color"></div>
+                    <div style="position: absolute; top: 1px; left: 249px; height: 20px; width: 246px;"
+                        class="child-color"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 142px; left: 0px; height: 58px; width: 500px;" class="main-color">
+                <div style="position: absolute; top: 2px; left: 2px; height: 54px; width: 162.672px;"
+                    class="parent-color">
+                    <div style="position: absolute; top: 1px; left: 1px; height: 20px; width: 79.3438px;"
+                        class="child-color"></div>
+                    <div style="position: absolute; top: 1px; left: 82.3438px; height: 20px; width: 79.3438px;"
+                        class="child-color">
+                    </div>
+                </div>
+                <div style="position: absolute; top: 2px; left: 168.672px; height: 54px; width: 162.672px;"
+                    class="parent-color">
+                    <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                        class="child-color"></div>
+                    <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                        class="child-color"></div>
+                </div>
+                <div style="position: absolute; top: 2px; left: 335.344px; height: 54px; width: 162.672px;"
+                    class="parent-color">
+                    <div style="position: absolute; top: 1px; left: 1px; height: 25px; width: 30px;"
+                        class="child-color"></div>
+                    <div style="position: absolute; top: 28px; left: 1px; height: 25px; width: 30px;"
+                        class="child-color"></div>
+                </div>
+            </div>
+
+        </section>
+    </rendering>
+
+    <rendering>
+        <section>
+            <div class="main main-color row">
+                <div class="parent row parent-color">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                </div>
+                <div class="parent column parent-color">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                </div>
+                <div class="parent column parent-color no-wrap">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                </div>
+            </div>
+            <div class="main main-color row">
+                <div class="parent column parent-color hmin">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                </div>
+                <div class="parent column parent-color hmax">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                </div>
+            </div>
+            <div class="main main-color row">
+                <div class="parent row parent-color hmax wmin">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                </div>
+            </div>
+            <div class="main main-color row">
+                <div class="parent row parent-color">
+                    <div class=" child child-color" />
+                    <div class="child child-color" />
+                </div>
+                <div class="parent column parent-color">
+                    <div class=" child child-color" />
+                    <div class="child child-color" />
+                </div>
+                <div class="parent column parent-color no-wrap">
+                    <div class="child child-color" />
+                    <div class="child child-color" />
+                </div>
+            </div>
+        </section>
+    </rendering>
+</test>
+
+
+<test name="flex: row wrap max content" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                .parent-color {
+                    background: lightcoral;
+                }
+
+                .child-color {
+                    background: lightblue;
+                }
+
+                .parent {
+                    display: flex;
+                    height: 40px;
+                    flex: 10 10 45px;
+                    width: min-content;
+                    height: auto;
+                    flex-wrap: wrap;
+                }
+
+                .row {
+                    flex-direction: row;
+                }
+
+                .wmax {
+                    width: max-content;
+                }
+
+                .child {
+                    height: 20px;
+                    width: 40px;
+                    margin: 1px;
+                    flex: 10 10 45px;
+                }
+
+                .f100 {
+                    flex: 10 10 100px;
+                }
+
+                .w50 {
+                    width: 50px;
+                }
+
+                .w100 {
+                    width: 100px;
+                }
+
+                body {
+                    margin: 0px;
+                    padding: 0px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+    <rendering>
+        <div style="position: absolute; top: 0px; left: 0px; height: 22px; width: 42px;" class="parent-color">
+            <div style="position: absolute; top: 1px; left: 1px; height: 20px; width: 40px;" class="child-color" />
+        </div>
+        <div style="position: absolute; top: 22px; left: 0px; height: 22px; width: 102px;" class="parent-color">
+            <div style="position: absolute; top: 1px; left: 1px; height: 20px; width: 100px;" class="child-color" />
+        </div>
+        <div style="position: absolute; top: 44px; left: 0px; height: 22px; width: 42px;" class="parent-color">
+            <div style="position: absolute; top: 1px; left: 1px; height: 20px; width: 40px;" class="child-color" />
+        </div>
+        <div style="position: absolute; top: 66px; left: 0px; height: 44px; width: 84px;" class="parent-color">
+            <div style="position: absolute; top: 1px; left: 1px; height: 20px; width: 82px;" class="child-color" />
+            <div style="position: absolute; top: 23px; left: 1px; height: 20px; width: 82px;" class="child-color" />
+        </div>
+        <div style="position: absolute; top: 110px; left: 0px; height: 22px; width: 104px;" class="parent-color">
+            <div style="position: absolute; top: 1px; left: 1px; height: 20px; width: 50px;" class="child-color" />
+            <div style="position: absolute; top: 1px; left: 53px; height: 20px; width: 50px;" class="child-color" />
+        </div>
+        <div style="position: absolute; top: 132px; left: 0px; height: 22px; width: 204px;" class="parent-color">
+            <div style="position: absolute; top: 1px; left: 1px; height: 20px; width: 100px;" class="child-color" />
+            <div style="position: absolute; top: 1px; left: 103px; height: 20px; width: 100px;" class="child-color" />
+        </div>
+        <div style="position: absolute; top: 154px; left: 0px; height: 44px; width: 84px;" class="parent-color">
+            <div style="position: absolute; top: 1px; left: 1px; height: 20px; width: 82px;" class="child-color" />
+            <div style="position: absolute; top: 23px; left: 1px; height: 20px; width: 82px;" class="child-color" />
+        </div>
+        <div style="position: absolute; top: 198px; left: 0px; height: 44px; width: 144px;" class="parent-color">
+            <div style="position: absolute; top: 1px; left: 1px; height: 20px; width: 142px;" class="child-color" />
+            <div style="position: absolute; top: 23px; left: 1px; height: 20px; width: 142px;" class="child-color" />
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="parent row parent-color wmax ">
+            <div class="child child-color" />
+        </div>
+        <div class="parent row parent-color wmax ">
+            <div class="child child-color w100" />
+        </div>
+        <div class="parent row parent-color wmax ">
+            <div class="child child-color f100" />
+        </div>
+        <div class="parent row parent-color wmax ">
+            <div class="child child-color" />
+            <div class="child child-color" />
+        </div>
+        <div class="parent row parent-color wmax ">
+            <div class="child child-color w50" />
+            <div class="child child-color w50" />
+        </div>
+        <div class="parent row parent-color wmax ">
+            <div class="child child-color w100" />
+            <div class="child child-color w100" />
+        </div>
+        <div class="parent row parent-color wmax ">
+            <div class="child child-color f100" />
+            <div class="child child-color f100" />
+        </div>
+        <div class="parent row parent-color wmax ">
+            <div class="child child-color f100" />
+            <div class="child child-color w100" />
+        </div>
+
+    </rendering>
+</test>
