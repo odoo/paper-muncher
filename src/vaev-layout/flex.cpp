@@ -286,13 +286,13 @@ struct FlexItem {
     Px getMinMaxPrefferedSize(Tree &tree, bool isWidth, bool isMin, Vec2Px containerSize) const {
         Size sizeToResolve;
         if (isWidth and isMin)
-            sizeToResolve = box->style->sizing->minSize(Axis::HORIZONTAL);
+            sizeToResolve = box->style->sizing->minWidth;
         else if (isWidth and not isMin)
-            sizeToResolve = box->style->sizing->maxSize(Axis::HORIZONTAL);
+            sizeToResolve = box->style->sizing->maxWidth;
         else if (not isWidth and isMin)
-            sizeToResolve = box->style->sizing->minSize(Axis::VERTICAL);
+            sizeToResolve = box->style->sizing->minHeight;
         else
-            sizeToResolve = box->style->sizing->maxSize(Axis::VERTICAL);
+            sizeToResolve = box->style->sizing->maxHeight;
 
         switch (sizeToResolve.type) {
         case Size::LENGTH:
@@ -311,7 +311,27 @@ struct FlexItem {
         case Size::FIT_CONTENT:
             logWarn("not implemented");
         case Size::AUTO:
-            return isWidth ? speculativeSize.x : speculativeSize.y;
+            if (isMin) {
+                // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
+                Size specifiedSizeToResolve{isWidth ? box->style->sizing->width : box->style->sizing->height};
+
+                if (specifiedSizeToResolve.type == Size::Type::LENGTH) {
+                    auto resolvedSpecifiedSize = resolve(
+                        tree,
+                        *box,
+                        specifiedSizeToResolve.value,
+                        isWidth
+                            ? containerSize.x
+                            : containerSize.y
+                    );
+                    return min(resolvedSpecifiedSize, isWidth ? minContentSize.x : minContentSize.y);
+                } else {
+                    return isWidth ? minContentSize.x : minContentSize.y;
+                }
+
+            } else {
+                panic("AUTO is an invalid value for max-width");
+            }
         case Size::NONE:
             if (isMin)
                 panic("NONE is an invalid value for min-width");
@@ -319,6 +339,7 @@ struct FlexItem {
         }
     }
 
+    // https://www.w3.org/TR/css-flexbox-1/#intrinsic-item-contributions
     Px getMainSizeMinMaxContentContribution(Tree &tree, bool isMin, Vec2Px containerSize) {
         Px contentContribution;
         if (isMin)
@@ -357,7 +378,9 @@ struct FlexItem {
         );
     }
 
-    void alignCrossFlexStart() {
+    void
+    alignCrossFlexStart() {
+
         if (not hasAnyCrossMarginAuto()) {
             fa.crossAxis(position) = getMargin(START_CROSS);
         }
@@ -778,7 +801,10 @@ struct FlexFormatingContext {
                 auto [sumUnfrozenOuterSizes, sumUnfrozenFlexFactors] = computeStats();
                 auto freeSpace = Number{_usedMainSize} - Number{sumUnfrozenOuterSizes + sumFrozenOuterSizes};
 
-                if (sumUnfrozenFlexFactors < 1 and Math::abs(initialFreeSpace * sumUnfrozenFlexFactors) < Math::abs(freeSpace))
+                if (
+                    sumUnfrozenFlexFactors < 1 and
+                    Math::abs(initialFreeSpace * sumUnfrozenFlexFactors) < Math::abs(freeSpace)
+                )
                     freeSpace = initialFreeSpace * sumUnfrozenFlexFactors;
 
                 if (flexCaseIsGrow) {
@@ -795,14 +821,14 @@ struct FlexFormatingContext {
 
                     for (auto *flexItem : unfrozenItems) {
                         Px ratio = flexItem->getScaledFlexShrinkFactor() / sumScaledFlexShrinkFactor;
-                        fa.mainAxis(flexItem->usedSize) = flexItem->flexBaseSize - ratio * Px{Math::abs(freeSpace)};
+                        fa.mainAxis(flexItem->usedSize) =
+                            flexItem->flexBaseSize - ratio * Px{Math::abs(freeSpace)};
                     }
                 }
 
                 Px totalViolation{0};
 
                 auto clampAndFloorContentBox = [&](FlexItem *flexItem) {
-                    // FIXME: it seems that the browser sets minSize = max(minSize, textSize)
                     auto clampedSize = clamp(
                         fa.mainAxis(flexItem->usedSize),
                         flexItem->getMinMaxPrefferedSize(
@@ -837,12 +863,10 @@ struct FlexFormatingContext {
                 }
 
                 if (totalViolation == Px{0}) {
-                    Px soma{0};
                     for (usize i = 0; i < unfrozenItems.len(); ++i) {
                         auto *flexItem = unfrozenItems[i];
                         Px clampedSize = clampAndFloorContentBox(flexItem);
                         fa.mainAxis(flexItem->usedSize) = clampedSize;
-                        soma += clampedSize + flexItem->getMargin(FlexItem::BOTH_MAIN);
                     }
 
                     for (auto *flexItem : unfrozenItems)
