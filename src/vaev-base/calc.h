@@ -1,6 +1,7 @@
 #pragma once
 #include <karm-io/emit.h>
-#include <vaev-base/numbers.h>
+
+#include "numbers.h"
 
 namespace Vaev {
 

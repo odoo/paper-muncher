@@ -4,6 +4,7 @@
 #include <vaev-base/align.h>
 #include <vaev-base/background.h>
 #include <vaev-base/borders.h>
+#include <vaev-base/break.h>
 #include <vaev-base/color.h>
 #include <vaev-base/display.h>
 #include <vaev-base/flex.h>
@@ -62,6 +63,7 @@ struct Computed {
     Cow<Text> text;
 
     Cow<Flex> flex;
+    Cow<Break> break_;
 
     Float float_ = Float::NONE;
     Clear clear = Clear::NONE;
