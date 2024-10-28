@@ -5,7 +5,7 @@
 
 namespace Vaev::Layout {
 
-Px _resolveFontRelative(Tree &tree, Box &box, Length value) {
+Px _resolveFontRelative(Tree const &tree, Box const &box, Length value) {
     Karm::Text::Font rootFont = {
         tree.root.fontFace,
         tree.root.layout.fontSize.cast<f64>(),
@@ -58,7 +58,7 @@ Px _resolveFontRelative(Tree &tree, Box &box, Length value) {
     }
 }
 
-Px resolve(Tree &tree, Box &box, Length value) {
+Px resolve(Tree const &tree, Box const &box, Length value) {
     if (value.isFontRelative())
         return _resolveFontRelative(tree, box, value);
     switch (value.unit()) {
@@ -217,7 +217,7 @@ template <typename T>
 using Resolved = Meta::Cond<Resolvable<T>, typename T::Resolved, T>;
 static_assert(Resolvable<PercentOr<Length>>);
 
-Px resolve(Tree &tree, Box &box, PercentOr<Length> value, Px relative) {
+Px resolve(Tree const &tree, Box const &box, PercentOr<Length> value, Px relative) {
     if (value.resolved())
         return resolve(tree, box, value.value());
     return Px{relative.cast<f64>() * (value.percent().value() / 100.)};
@@ -240,7 +240,7 @@ Resolved<T> resolveInfix(typename CalcValue<T>::OpCode op, Resolved<T> lhs, Reso
 }
 
 template <typename T>
-auto resolve(Tree &tree, Box &box, CalcValue<T> const &value, Px relative) {
+auto resolve(Tree const &tree, Box const &box, CalcValue<T> const &value, Px relative) {
     if (value.type == CalcValue<T>::OpType::FIXED) {
         return resolve(tree, box, value.lhs.template unwrap<T>(), relative);
     } else if (value.type == CalcValue<T>::OpType::SINGLE) {
@@ -272,13 +272,13 @@ auto resolve(Tree &tree, Box &box, CalcValue<T> const &value, Px relative) {
     unreachable();
 }
 
-Px resolve(Tree &tree, Box &box, Width value, Px relative) {
+Px resolve(Tree const &tree, Box const &box, Width value, Px relative) {
     if (value == Width::Type::AUTO)
         return Px{0};
     return resolve(tree, box, value.value, relative);
 }
 
-Px resolve(Tree &tree, Box &box, FontSize value) {
+Px resolve(Tree const &tree, Box const &box, FontSize value) {
     // FIXME: get from user settings
     f64 userFontSizes = 16;
 
