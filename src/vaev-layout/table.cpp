@@ -537,7 +537,7 @@ struct TableFormatingContext {
                 wrapperBox.children()[i],
                 Input{
                     .commit = Commit::NO,
-                    .intrinsic = {IntrinsicSize::MIN_CONTENT, IntrinsicSize::AUTO},
+                    .intrinsic = IntrinsicSize::MIN_CONTENT,
                     .knownSize = {NONE, NONE}
                 }
             );
@@ -551,7 +551,7 @@ struct TableFormatingContext {
                 *cell.box,
                 Input{
                     .commit = Commit::NO,
-                    .intrinsic = {IntrinsicSize::MIN_CONTENT, IntrinsicSize::AUTO},
+                    .intrinsic = IntrinsicSize::MIN_CONTENT,
                     .knownSize = {NONE, NONE}
                 }
             );
@@ -562,7 +562,7 @@ struct TableFormatingContext {
                 *cell.box,
                 Input{
                     .commit = Commit::NO,
-                    .intrinsic = {IntrinsicSize::MAX_CONTENT, IntrinsicSize::AUTO},
+                    .intrinsic = IntrinsicSize::MAX_CONTENT,
                     .knownSize = {NONE, NONE}
                 }
             );
@@ -771,7 +771,7 @@ struct TableFormatingContext {
                     *cell.box,
                     Input{
                         .commit = Commit::NO,
-                        .intrinsic = {IntrinsicSize::AUTO, IntrinsicSize::MIN_CONTENT},
+                        .intrinsic = IntrinsicSize::MIN_CONTENT,
                         .knownSize = {colWidth[j], NONE}
                     }
                 );

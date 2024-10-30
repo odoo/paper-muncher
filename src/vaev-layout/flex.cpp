@@ -44,7 +44,7 @@ struct FlexItem {
         _speculateValues(
             t,
             {
-                .intrinsic = {IntrinsicSize::MAX_CONTENT, IntrinsicSize::AUTO},
+                .intrinsic = IntrinsicSize::MAX_CONTENT,
                 .knownSize = {NONE, NONE},
             },
             maxContentSize,
@@ -53,7 +53,7 @@ struct FlexItem {
         _speculateValues(
             t,
             {
-                .intrinsic = {IntrinsicSize::MIN_CONTENT, IntrinsicSize::AUTO},
+                .intrinsic = IntrinsicSize::MIN_CONTENT,
                 .knownSize = {NONE, NONE},
             },
             minContentSize,
@@ -475,14 +475,14 @@ struct FlexFormatingContext {
     void _collectFlexItemsInfoFlexLinesNowWrap(Tree &tree, Input input) {
         _lines.emplaceBack(_items);
 
-        if (input.intrinsic.x == IntrinsicSize::MIN_CONTENT or
-            input.intrinsic.x == IntrinsicSize::MAX_CONTENT) {
+        if (input.intrinsic == IntrinsicSize::MIN_CONTENT or
+            input.intrinsic == IntrinsicSize::MAX_CONTENT) {
 
             Vec<Px> flexFraction;
             for (auto &flexItem : _items) {
                 Px contribution = flexItem.getMainSizeMinMaxContentContribution(
                     tree,
-                    input.intrinsic.x == IntrinsicSize::MIN_CONTENT,
+                    input.intrinsic == IntrinsicSize::MIN_CONTENT,
                     {_availableMainSpace, _initiallyAvailableCrossSpace}
                 );
 
@@ -530,7 +530,7 @@ struct FlexFormatingContext {
     }
 
     void _collectFlexItemsInfoFlexLinesWrap(Tree &tree, Input input) {
-        if (input.intrinsic.x == IntrinsicSize::MIN_CONTENT) {
+        if (input.intrinsic == IntrinsicSize::MIN_CONTENT) {
             _lines.ensure(_items.len());
             Px largestMinContentContrib = Limits<Px>::MIN;
 
@@ -573,7 +573,7 @@ struct FlexFormatingContext {
     }
 
     void _collectFlexItemsIntoFlexLines(Tree &tree, Input input) {
-        if (_flex.wrap == FlexWrap::NOWRAP or input.intrinsic.x == IntrinsicSize::MAX_CONTENT)
+        if (_flex.wrap == FlexWrap::NOWRAP or input.intrinsic == IntrinsicSize::MAX_CONTENT)
             _collectFlexItemsInfoFlexLinesNowWrap(tree, input);
         else
             _collectFlexItemsInfoFlexLinesWrap(tree, input);
@@ -744,7 +744,7 @@ struct FlexFormatingContext {
             Px availableCrossSpace = input.knownSize.y.unwrapOr(Px{0}) - i.getMargin(FlexItem::VERTICAL);
 
             if (i.box->style->sizing->width == Size::AUTO)
-                input.intrinsic.x = IntrinsicSize::STRETCH_TO_FIT;
+                input.intrinsic = IntrinsicSize::STRETCH_TO_FIT;
 
             i.speculateValues(
                 tree,

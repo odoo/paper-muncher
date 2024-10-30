@@ -44,7 +44,7 @@ struct BlockFormatingContext {
             Input childInput = {
                 .commit = input.commit,
                 .availableSpace = {inlineSize, Px{0}},
-                .containingBlock = {inlineSize, Px{0}},
+                .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(Px{0})},
             };
 
             auto margin = computeMargins(tree, c, childInput);

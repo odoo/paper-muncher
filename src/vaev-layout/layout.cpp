@@ -71,14 +71,14 @@ InsetsPx computeBorders(Tree &tree, Box &box) {
     return res;
 }
 
-static InsetsPx _computePaddings(Tree &tree, Box &box, Input input) {
+static InsetsPx _computePaddings(Tree &tree, Box &box, Vec2Px containingBlock) {
     InsetsPx res;
     auto padding = box.style->padding;
 
-    res.top = resolve(tree, box, padding->top, input.containingBlock.height);
-    res.end = resolve(tree, box, padding->end, input.containingBlock.width);
-    res.bottom = resolve(tree, box, padding->bottom, input.containingBlock.height);
-    res.start = resolve(tree, box, padding->start, input.containingBlock.width);
+    res.top = resolve(tree, box, padding->top, containingBlock.height);
+    res.end = resolve(tree, box, padding->end, containingBlock.width);
+    res.bottom = resolve(tree, box, padding->bottom, containingBlock.height);
+    res.start = resolve(tree, box, padding->start, containingBlock.width);
 
     return res;
 }
@@ -99,32 +99,60 @@ static Math::Radii<Px> _computeRadii(Tree &tree, Box &box, Vec2Px size) {
     return res;
 }
 
-static Cons<Opt<Px>, IntrinsicSize> _computeSpecifiedSize(Tree &tree, Box &box, Input input, Size size, IntrinsicSize intrinsic) {
-    if (size == Size::MIN_CONTENT or intrinsic == IntrinsicSize::MIN_CONTENT) {
-        return {NONE, IntrinsicSize::MIN_CONTENT};
-    } else if (size == Size::MAX_CONTENT or intrinsic == IntrinsicSize::MAX_CONTENT) {
-        return {NONE, IntrinsicSize::MAX_CONTENT};
-    } else if (size == Size::AUTO) {
-        return {NONE, IntrinsicSize::AUTO};
+static Vec2Px _computeIntrinsicSize(Tree &tree, Box &box, IntrinsicSize intrinsic, Vec2Px containingBlock) {
+    if (intrinsic == IntrinsicSize::AUTO) {
+        panic("bad argument");
+    }
+
+    auto borders = computeBorders(tree, box);
+    auto padding = _computePaddings(tree, box, containingBlock);
+
+    auto [size] = _contentLayout(
+        tree,
+        box,
+        {
+            .commit = Commit::NO,
+            .knownSize = {NONE, NONE},
+        }
+    );
+
+    return size + padding.all() + borders.all();
+}
+
+static Opt<Px> _computeSpecifiedSize(Tree &tree, Box &box, Size size, Vec2Px containingBlock, bool isWidth) {
+    if (size == Size::MIN_CONTENT) {
+        auto intrinsicSize = _computeIntrinsicSize(tree, box, IntrinsicSize::MIN_CONTENT, containingBlock);
+        return isWidth ? intrinsicSize.x : intrinsicSize.y;
+    } else if (size == Size::MAX_CONTENT) {
+        auto intrinsicSize = _computeIntrinsicSize(tree, box, IntrinsicSize::MAX_CONTENT, containingBlock);
+        return isWidth ? intrinsicSize.x : intrinsicSize.y;
     } else if (size == Size::FIT_CONTENT) {
-        return {NONE, IntrinsicSize::STRETCH_TO_FIT};
+        auto minIntrinsicSize = _computeIntrinsicSize(tree, box, IntrinsicSize::MIN_CONTENT, containingBlock);
+        auto maxIntrinsicSize = _computeIntrinsicSize(tree, box, IntrinsicSize::MAX_CONTENT, containingBlock);
+        auto stretchIntrinsicSize = _computeIntrinsicSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, containingBlock);
+
+        if (isWidth)
+            return clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x);
+        else
+            return clamp(stretchIntrinsicSize.y, minIntrinsicSize.y, maxIntrinsicSize.y);
+    } else if (size == Size::AUTO) {
+        return NONE;
     } else if (size == Size::LENGTH) {
-        return {resolve(tree, box, size.value, input.containingBlock.width), IntrinsicSize::AUTO};
+        return resolve(tree, box, size.value, isWidth ? containingBlock.x : containingBlock.y);
     } else {
         logWarn("unknown specified size: {}", size);
-        return {Px{0}, IntrinsicSize::AUTO};
+        return Px{0};
     }
 }
 
 Output layout(Tree &tree, Box &box, Input input) {
     // FIXME: confirm how the preffered width/height parameters interacts with intrinsic size argument from input
     auto borders = computeBorders(tree, box);
-    auto padding = _computePaddings(tree, box, input);
+    auto padding = _computePaddings(tree, box, input.containingBlock);
     auto sizing = box.style->sizing;
 
-    auto [specifiedWidth, widthIntrinsicSize] = _computeSpecifiedSize(tree, box, input, sizing->width, input.intrinsic.x);
     if (input.knownSize.width == NONE) {
-        // FIXME: making prefered width as mandatory width; im not sure this is ok
+        auto specifiedWidth = _computeSpecifiedSize(tree, box, sizing->width, input.containingBlock, true);
         input.knownSize.width = specifiedWidth;
     }
 
@@ -132,18 +160,14 @@ Output layout(Tree &tree, Box &box, Input input) {
         return max(Px{0}, s - padding.horizontal() - borders.horizontal());
     });
 
-    input.intrinsic.x = widthIntrinsicSize;
-
-    auto [specifiedHeight, heightIntrinsicSize] = _computeSpecifiedSize(tree, box, input, sizing->height, input.intrinsic.y);
     if (input.knownSize.height == NONE) {
+        auto specifiedHeight = _computeSpecifiedSize(tree, box, sizing->height, input.containingBlock, false);
         input.knownSize.height = specifiedHeight;
     }
 
     input.knownSize.height = input.knownSize.height.map([&](auto s) {
         return max(Px{0}, s - padding.vertical() - borders.vertical());
     });
-
-    input.intrinsic.y = heightIntrinsicSize;
 
     input.position = input.position + borders.topStart() + padding.topStart();
 
