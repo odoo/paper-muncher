@@ -776,6 +776,7 @@ struct TableFormatingContext {
                     *cell.box,
                     {
                         .commit = Commit::NO,
+                        .intrinsic = IntrinsicSize::MIN_CONTENT,
                         .knownSize = {
                             colWidth[j],
                             NONE,
