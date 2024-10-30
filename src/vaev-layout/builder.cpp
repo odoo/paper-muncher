@@ -54,14 +54,26 @@ static Opt<Strong<Karm::Text::Fontface>> _regularFontface = NONE;
 static Opt<Strong<Karm::Text::Fontface>> _boldFontface = NONE;
 
 static Strong<Karm::Text::Fontface> _lookupFontface(Style::Computed &style) {
-    if (style.font->weight != FontWeight::NORMAL) {
-        if (not _boldFontface)
-            _boldFontface = Karm::Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Bold.ttf"_url).unwrap();
-        return *_boldFontface;
+    if (style.font->style != FontStyle::NORMAL) {
+        if (style.font->weight != FontWeight::NORMAL) {
+            if (not _boldFontface)
+                _boldFontface = Karm::Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-BoldItalic.ttf"_url).unwrap();
+            return *_boldFontface;
+        } else {
+            if (not _regularFontface)
+                _regularFontface = Karm::Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Italic.ttf"_url).unwrap();
+            return *_regularFontface;
+        }
     } else {
-        if (not _regularFontface)
-            _regularFontface = Karm::Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Regular.ttf"_url).unwrap();
-        return *_regularFontface;
+        if (style.font->weight != FontWeight::NORMAL) {
+            if (not _boldFontface)
+                _boldFontface = Karm::Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Bold.ttf"_url).unwrap();
+            return *_boldFontface;
+        } else {
+            if (not _regularFontface)
+                _regularFontface = Karm::Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Regular.ttf"_url).unwrap();
+            return *_regularFontface;
+        }
     }
 }
 
