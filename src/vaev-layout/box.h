@@ -52,10 +52,4 @@ struct Tree {
     Viewport viewport;
 };
 
-// MARK: Build -----------------------------------------------------------------
-
-void _buildNode(Style::Computer &c, Markup::Node const &n, Box &parent);
-
-Box build(Style::Computer &c, Markup::Document const &doc);
-
 } // namespace Vaev::Layout
