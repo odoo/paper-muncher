@@ -127,20 +127,11 @@ Output layout(Tree &tree, Box &box, Input input) {
         // FIXME: making prefered width as mandatory width; im not sure this is ok
         input.knownSize.width = specifiedWidth;
     }
-    input.knownSize.width = input.knownSize.width.map([&](auto s) {
-        if (sizing->maxWidth == Size::LENGTH) {
-            auto maxWidth = resolve(tree, box, sizing->maxWidth.value, input.containingBlock.width);
-            s = min(s, maxWidth);
-        }
-        if (sizing->minWidth == Size::LENGTH) {
-            auto minWidth = resolve(tree, box, sizing->minWidth.value, input.containingBlock.width);
-            s = max(s, minWidth);
-        }
 
-        if (box.style->boxSizing == BoxSizing::CONTENT_BOX and specifiedWidth != NONE)
-            return s;
+    input.knownSize.width = input.knownSize.width.map([&](auto s) {
         return max(Px{0}, s - padding.horizontal() - borders.horizontal());
     });
+
     input.intrinsic.x = widthIntrinsicSize;
 
     auto [specifiedHeight, heightIntrinsicSize] = _computeSpecifiedSize(tree, box, input, sizing->height, input.intrinsic.y);
@@ -149,19 +140,9 @@ Output layout(Tree &tree, Box &box, Input input) {
     }
 
     input.knownSize.height = input.knownSize.height.map([&](auto s) {
-        if (sizing->maxHeight == Size::LENGTH) {
-            auto maxHeight = resolve(tree, box, sizing->maxHeight.value, input.containingBlock.height);
-            s = min(s, maxHeight);
-        }
-        if (sizing->minHeight == Size::LENGTH) {
-            auto minHeight = resolve(tree, box, sizing->minHeight.value, input.containingBlock.height);
-            s = max(s, minHeight);
-        }
-
-        if (box.style->boxSizing == BoxSizing::CONTENT_BOX and specifiedWidth != NONE)
-            return s;
         return max(Px{0}, s - padding.vertical() - borders.vertical());
     });
+
     input.intrinsic.y = heightIntrinsicSize;
 
     input.position = input.position + borders.topStart() + padding.topStart();
