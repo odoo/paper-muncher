@@ -8,7 +8,7 @@ namespace Vaev::Layout {
 
 struct FlexItem {
     Box *box;
-    Flex flex;
+    FlexProps flex;
 
     // these 2 sizes do NOT account margins
     Vec2Px usedSize;
@@ -380,7 +380,7 @@ struct FlexLine {
 };
 
 struct FlexFormatingContext {
-    Flex _flex;
+    FlexProps _flex;
 
     // https://www.w3.org/TR/css-flexbox-1/#layout-algorithm
 

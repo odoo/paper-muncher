@@ -84,7 +84,8 @@ struct Size {
     }
 };
 
-struct Sizing {
+struct SizingProps {
+    BoxSizing boxSizing;
     Size width, height;
     Size minWidth, minHeight;
     Size maxWidth, maxHeight;

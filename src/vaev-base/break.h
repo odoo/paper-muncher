@@ -38,7 +38,7 @@ enum struct BreakInside {
 };
 
 // https://www.w3.org/TR/css-break-3
-struct Break {
+struct BreakProps {
     BreakBetween before = BreakBetween::AUTO;
     BreakBetween after = BreakBetween::AUTO;
     BreakInside inside = BreakInside::AUTO;
