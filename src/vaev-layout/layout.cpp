@@ -94,7 +94,7 @@ static Math::Radii<Px> _computeRadii(Tree &tree, Box &box, Vec2Px size) {
     return res;
 }
 
-static Vec2Px _computeIntrinsicSize(Tree &tree, Box &box, IntrinsicSize intrinsic, Vec2Px containingBlock) {
+Vec2Px computeIntrinsicSize(Tree &tree, Box &box, IntrinsicSize intrinsic, Vec2Px containingBlock) {
     if (intrinsic == IntrinsicSize::AUTO) {
         panic("bad argument");
     }
@@ -107,6 +107,7 @@ static Vec2Px _computeIntrinsicSize(Tree &tree, Box &box, IntrinsicSize intrinsi
         box,
         {
             .commit = Commit::NO,
+            .intrinsic = intrinsic,
             .knownSize = {NONE, NONE},
         }
     );
@@ -116,15 +117,15 @@ static Vec2Px _computeIntrinsicSize(Tree &tree, Box &box, IntrinsicSize intrinsi
 
 static Opt<Px> _computeSpecifiedSize(Tree &tree, Box &box, Size size, Vec2Px containingBlock, bool isWidth) {
     if (size == Size::MIN_CONTENT) {
-        auto intrinsicSize = _computeIntrinsicSize(tree, box, IntrinsicSize::MIN_CONTENT, containingBlock);
-        return isWidth ? intrinsicSize.x : intrinsicSize.y;
+        auto intrinsicSize = computeIntrinsicSize(tree, box, IntrinsicSize::MIN_CONTENT, containingBlock);
+        return isWidth ? Opt<Px>{intrinsicSize.x} : Opt<Px>{NONE};
     } else if (size == Size::MAX_CONTENT) {
-        auto intrinsicSize = _computeIntrinsicSize(tree, box, IntrinsicSize::MAX_CONTENT, containingBlock);
-        return isWidth ? intrinsicSize.x : intrinsicSize.y;
+        auto intrinsicSize = computeIntrinsicSize(tree, box, IntrinsicSize::MAX_CONTENT, containingBlock);
+        return isWidth ? Opt<Px>{intrinsicSize.x} : Opt<Px>{NONE};
     } else if (size == Size::FIT_CONTENT) {
-        auto minIntrinsicSize = _computeIntrinsicSize(tree, box, IntrinsicSize::MIN_CONTENT, containingBlock);
-        auto maxIntrinsicSize = _computeIntrinsicSize(tree, box, IntrinsicSize::MAX_CONTENT, containingBlock);
-        auto stretchIntrinsicSize = _computeIntrinsicSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, containingBlock);
+        auto minIntrinsicSize = computeIntrinsicSize(tree, box, IntrinsicSize::MIN_CONTENT, containingBlock);
+        auto maxIntrinsicSize = computeIntrinsicSize(tree, box, IntrinsicSize::MAX_CONTENT, containingBlock);
+        auto stretchIntrinsicSize = computeIntrinsicSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, containingBlock);
 
         if (isWidth)
             return clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x);
