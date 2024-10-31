@@ -5,6 +5,7 @@ Checks: >
     modernize-use-default-member-init,
     readability-non-const-parameter,
     readability-function-cognitive-complexity,
+    cppcoreguidelines-pro-type-member-init,
     clang-diagnostic-*,
     llvm-*,
     misc-*,
