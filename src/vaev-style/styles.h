@@ -116,7 +116,7 @@ struct AlignItemsProp {
 
     static constexpr Str name() { return "align-items"; }
 
-    static constexpr Align initial() { return Align::Keywords::FLEX_START; }
+    static constexpr Align initial() { return Align::Keywords::STRETCH; }
 
     void apply(Computed &c) const {
         c.aligns.alignItems = value;
