@@ -152,17 +152,17 @@ struct FlexItem {
 
     FlexItem(Tree &tree, Box &box, bool isRowOriented, Vec2Px containingBlock)
         : box(&box), flexItemProps(*box.style->flex), fa(isRowOriented) {
-        speculateValues(tree, Input{Commit::NO});
+        speculateValues(tree, Input{.containingBlock = containingBlock});
         // TODO: not always we will need min/max content sizes,
         //       this can be lazy computed for performance gains
         computeContentSizes(tree, containingBlock);
     }
 
-    void commit() {
-        box->layout.margin.top = margin.top.unwrapOr(speculativeMargin.top);
-        box->layout.margin.start = margin.start.unwrapOr(speculativeMargin.start);
-        box->layout.margin.end = margin.end.unwrapOr(speculativeMargin.end);
-        box->layout.margin.bottom = margin.bottom.unwrapOr(speculativeMargin.bottom);
+    void commit(MutCursor<Frag> frag) {
+        frag->metrics.margin.top = margin.top.unwrapOr(speculativeMargin.top);
+        frag->metrics.margin.start = margin.start.unwrapOr(speculativeMargin.start);
+        frag->metrics.margin.end = margin.end.unwrapOr(speculativeMargin.end);
+        frag->metrics.margin.bottom = margin.bottom.unwrapOr(speculativeMargin.bottom);
     }
 
     void computeContentSizes(Tree &tree, Vec2Px containingBlock) {
@@ -234,10 +234,7 @@ struct FlexItem {
         speculativeMargin = computeMargins(
             t,
             *box,
-            {
-                .commit = Commit::NO,
-                .containingBlock = input.availableSpace, // FIXME
-            }
+            input
         );
     }
 
@@ -464,7 +461,7 @@ struct FlexItem {
         }
     }
 
-    void alignCrossStretch(Tree &tree, Input input, Px lineCrossSize) {
+    void alignCrossStretch(Tree &tree, Px lineCrossSize) {
         if (
             fa.crossAxis(box->style->sizing).type == Size::Type::AUTO and
             fa.startCrossAxis(*box->style->margin) != Width::Type::AUTO and
@@ -478,7 +475,6 @@ struct FlexItem {
             speculateValues(
                 tree,
                 {
-                    .commit = input.commit,
                     .knownSize = fa.extractMainAxisAndFillOptOther(usedSize, elementSpeculativeCrossSize),
                 }
             );
@@ -487,7 +483,7 @@ struct FlexItem {
         fa.crossAxis(position) = getMargin(START_CROSS);
     }
 
-    void alignItem(Tree &tree, Input input, Px lineCrossSize, Style::Align::Keywords parentAlignItems) {
+    void alignItem(Tree &tree, Px lineCrossSize, Style::Align::Keywords parentAlignItems) {
         auto align = box->style->aligns.alignSelf.keyword;
 
         if (align == Style::Align::AUTO)
@@ -507,7 +503,7 @@ struct FlexItem {
             return;
 
         case Style::Align::STRETCH:
-            alignCrossStretch(tree, input, lineCrossSize);
+            alignCrossStretch(tree, lineCrossSize);
             return;
 
         default:
@@ -516,7 +512,7 @@ struct FlexItem {
             return;
         }
     }
-};
+}; // namespace Vaev::Layout
 
 struct FlexLine {
     MutSlice<FlexItem> items;
@@ -680,7 +676,6 @@ struct FlexFormatingContext {
             i.speculateValues(
                 tree,
                 {
-                    .commit = Commit::NO,
                     .knownSize = fa.extractMainAxisAndFillOptOther(i.flexBaseSize),
                     .availableSpace = availableSpace,
                 }
@@ -1073,7 +1068,6 @@ struct FlexFormatingContext {
             i.speculateValues(
                 tree,
                 {
-                    .commit = Commit::NO,
                     .knownSize = fa.extractMainAxisAndFillOptOther(i.usedSize),
                     .availableSpace = fa.extractMainAxisAndFillOther(i.usedSize, availableCrossSpace),
                 }
@@ -1287,7 +1281,7 @@ struct FlexFormatingContext {
                 }
             }
 
-            if (input.commit == Commit::YES) {
+            if (input.fragment) {
                 // This is done after any flexible lengths and any auto margins have been resolved.
                 // NOTE: justifying doesnt change sizes/margins, thus will only run when committing and setting positions
                 auto justifyContent = box.style->aligns.justifyContent.keyword;
@@ -1351,12 +1345,11 @@ struct FlexFormatingContext {
     // 14. MARK: Align all flex items ------------------------------------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-cross-align
 
-    void _alignAllFlexItems(Tree &tree, Box &box, Input input) {
+    void _alignAllFlexItems(Tree &tree, Box &box) {
         for (auto &flexLine : _lines) {
             for (auto &flexItem : flexLine.items) {
                 flexItem.alignItem(
                     tree,
-                    input,
                     flexLine.crossSize,
                     box.style->aligns.alignItems.keyword
                 );
@@ -1476,14 +1469,13 @@ struct FlexFormatingContext {
                     tree,
                     *flexItem.box,
                     {
-                        .commit = Commit::YES,
+                        .fragment = input.fragment,
                         .knownSize = {flexItem.usedSize.x, flexItem.usedSize.y},
                         .position = flexItem.position,
                         .availableSpace = flexItem.usedSize,
                     }
                 );
-
-                flexItem.commit();
+                flexItem.commit(input.fragment);
             }
         }
     }
@@ -1532,7 +1524,7 @@ struct FlexFormatingContext {
         _resolveCrossAxisAutoMargins();
 
         // 14. Align all flex items along the cross-axis.
-        _alignAllFlexItems(tree, box, input);
+        _alignAllFlexItems(tree, box);
 
         // 15. Determine the flex container's used cross size
         _determineFlexContainerUsedCrossSize(input, box);
@@ -1541,7 +1533,7 @@ struct FlexFormatingContext {
         _alignAllFlexLines(box);
 
         // XX. Commit
-        if (input.commit == Commit::YES)
+        if (input.fragment)
             _commit(tree, input);
 
         return Output::fromSize(fa.buildPair(_usedMainSize, _usedCrossSize));

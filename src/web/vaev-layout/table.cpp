@@ -553,8 +553,7 @@ struct TableFormatingContext {
             auto cellMinOutput = layout(
                 tree,
                 *cell.box,
-                Input{
-                    .commit = Commit::NO,
+                {
                     .intrinsic = IntrinsicSize::MIN_CONTENT,
                 }
             );
@@ -562,8 +561,7 @@ struct TableFormatingContext {
             auto cellMaxOutput = layout(
                 tree,
                 *cell.box,
-                Input{
-                    .commit = Commit::NO,
+                {
                     .intrinsic = IntrinsicSize::MAX_CONTENT,
                 }
             );
@@ -775,12 +773,8 @@ struct TableFormatingContext {
                     tree,
                     *cell.box,
                     {
-                        .commit = Commit::NO,
                         .intrinsic = IntrinsicSize::MIN_CONTENT,
-                        .knownSize = {
-                            colWidth[j],
-                            NONE,
-                        },
+                        .knownSize = {colWidth[j], NONE},
                     }
                 );
 
@@ -879,7 +873,7 @@ struct TableFormatingContext {
                     tree,
                     *cell.box,
                     {
-                        .commit = Commit::YES,
+                        .fragment = input.fragment,
                         .knownSize = {
                             colWidthPref.query(j, j + colSpan - 1) + spacing.x * Px{colSpan - 1},
                             rowHeightPref.query(i, i + rowSpan - 1) + spacing.y * Px{rowSpan - 1}
@@ -893,7 +887,7 @@ struct TableFormatingContext {
 
     Output run(Tree &tree, Input input) {
         Px currPositionY{input.position.y};
-        if (input.commit == Commit::YES) {
+        if (input.fragment) {
             runTableBox(tree, input, currPositionY);
         }
 

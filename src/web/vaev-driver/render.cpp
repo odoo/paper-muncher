@@ -77,18 +77,27 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Layo
 
     start = Sys::now();
 
-    Layout::layout(
+    elapsed = Sys::now() - start;
+
+    logDebugIf(DEBUG_RENDER, "layout tree measure time: {}", elapsed);
+
+    start = Sys::now();
+
+    auto root = Layout::Frag();
+
+    tree.fc.isDiscoveryMode = false;
+    auto outDiscovery = Layout::layout(
         tree,
         tree.root,
         {
-            .commit = Layout::Commit::YES,
+            .fragment = &root,
             .knownSize = {viewport.small.width, NONE},
             .availableSpace = {viewport.small.width, 0_px},
             .containingBlock = {viewport.small.width, viewport.small.height},
         }
     );
 
-    Layout::layoutPositioned(tree, tree.root, {viewport.small.width, viewport.small.height});
+    Layout::layoutPositioned(tree, root.children[0], {viewport.small.width, viewport.small.height});
 
     auto sceneRoot = makeStrong<Scene::Stack>();
 
@@ -96,8 +105,7 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Layo
     logDebugIf(DEBUG_RENDER, "layout tree layout time: {}", elapsed);
 
     auto paintStart = Sys::now();
-
-    Layout::paint(tree.root, *sceneRoot);
+    Layout::paint(root.children[0], *sceneRoot);
     sceneRoot->prepare();
 
     elapsed = Sys::now() - paintStart;
@@ -107,6 +115,7 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Layo
         std::move(stylebook),
         makeStrong<Layout::Box>(std::move(tree.root)),
         sceneRoot,
+        makeStrong<Layout::Frag>(root)
     };
 }
 
@@ -134,26 +143,65 @@ Vec<Strong<Scene::Page>> print(Markup::Document const &dom, Style::Media const &
     Layout::Tree tree = {
         Layout::build(computer, dom),
         vp,
+        Layout::FragmentationContext({
+            media.width / Px{media.resolution.toDppx()},
+            media.height / Px{media.resolution.toDppx()},
+        })
     };
 
-    Layout::layout(
-        tree,
-        tree.root,
-        {
-            .commit = Layout::Commit::YES,
-            .knownSize = {vp.small.width, NONE},
-            .availableSpace = {vp.small.width, 0_px},
-            .containingBlock = {vp.small.width, vp.small.height},
-        }
-    );
+    auto root = Layout::Frag();
+
+    Layout::Breakpoint prevBreakpoint{.endIdx = 0}, currBreakpoint;
+
+    while (true) {
+        tree.fc.isDiscoveryMode = true;
+        auto outDiscovery = Layout::layout(
+            tree,
+            tree.root,
+            {
+                .knownSize = {vp.small.width, NONE},
+                .availableSpace = {vp.small.width, 0_px},
+                .containingBlock = {vp.small.width, vp.small.height},
+                .breakpointTraverser = Layout::BreakpointTraverser(&prevBreakpoint),
+            }
+        );
+
+        currBreakpoint = outDiscovery.completelyLaidOut
+                             ? Layout::Breakpoint::buildClassB(1, false)
+                             : outDiscovery.breakpoint.unwrap();
+
+        tree.fc.isDiscoveryMode = false;
+        auto outReal = Layout::layout(
+            tree,
+            tree.root,
+            {
+                .fragment = &root,
+                .knownSize = {vp.small.width, NONE},
+                .availableSpace = {vp.small.width, 0_px},
+                .containingBlock = {vp.small.width, vp.small.height},
+                .breakpointTraverser = Layout::BreakpointTraverser(&prevBreakpoint, &currBreakpoint),
+            }
+        );
+
+        if (outReal.completelyLaidOut)
+            break;
+
+        std::swap(prevBreakpoint, currBreakpoint);
+    }
 
     auto scaleMatrix = Math::Trans2f::makeScale(media.resolution.toDppx());
 
     Vec<Strong<Scene::Page>> pages;
-    auto page = makeStrong<Scene::Page>(vp.small.size().cast<isize>(), scaleMatrix);
-    Layout::paint(tree.root, *page);
-    page->prepare();
-    pages.pushBack(page);
+    for (auto &c : root.children) {
+        Layout::paint(
+            c,
+            *pages.emplaceBack(
+                // FIXME: it can be that specific pages have different dimensions
+                makeStrong<Scene::Page>(vp.small.size().cast<isize>(), scaleMatrix)
+            )
+        );
+        last(pages)->prepare();
+    }
 
     return pages;
 }
