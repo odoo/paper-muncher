@@ -160,16 +160,19 @@ def _(args: RefTestArgs):
                 # generate temporary bmp
                 img_path = TEST_REPORT / f"{counter}.bmp"
 
+                xsize = props.get("size", "200")
+                ysize = xsize
                 if props.get("size") == "full":
+                    xsize = "800"
+                    ysize = "600"
                     paperMuncher.popen("render", "-sdlpo", img_path, input_path)
                 else:
-                    size = props.get("size", "200")
                     paperMuncher.popen(
                         "render",
                         "--width",
-                        size,
+                        xsize,
                         "--height",
-                        size,
+                        ysize,
                         "-sdlpo",
                         img_path,
                         input_path,
@@ -225,22 +228,22 @@ def _(args: RefTestArgs):
                     <p>{help}</p>
                     <div class="outputs">
                         <div>
-                            <img class="expected" src="{expected_image_url}" />
-                            <figcaption>{'Expected' if (tag == 'rendering') else 'Unexpected'}</figcaption>
-                        </div>
-
-                        <div>
                             <img class="actual" src="{TEST_REPORT / f'{counter}.bmp'}" />
                             <figcaption>Actual</figcaption>
                         </div>
 
                         <div>
-                            <iframe src="{input_path}" style="background-color: white; width: 200px; height: 200px;"></iframe>
+                            <img class="expected" src="{expected_image_url}" />
+                            <figcaption>{'Reference' if (tag == 'rendering') else 'Unexpected'}</figcaption>
+                        </div>
+
+                        <div>
+                            <iframe src="{input_path}" style="background-color: white; width: {xsize}px; height: {ysize}px;"></iframe>
                             <figcaption>Rendition</figcaption>
                         </div>
                     </div>
                     <a href="{TEST_REPORT / f'{counter}.pdf'}">PDF</a>
-                    <a href="{expected_image_url}">Expected</a>
+                    <a href="{expected_image_url}">Reference</a>
                     <a href="{input_path}">Source</a>
                 </div>
                 <hr />
@@ -302,4 +305,8 @@ def _(args: RefTestArgs):
         print(f"{vt100.GREEN}// {fetchMessage(args, 'nice')}{vt100.RESET}")
         print(f"{vt100.GREEN}All tests passed{vt100.RESET}")
     print(f"Report: {TEST_REPORT / 'report.html'}")
-    shell.exec("open", str(TEST_REPORT / "report.html"))
+
+    if shell.which("xdg-open"):
+        shell.exec("xdg-open", str(TEST_REPORT / "report.html"))
+    elif shell.which("open"):
+        shell.exec("open", str(TEST_REPORT / "report.html"))
