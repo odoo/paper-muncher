@@ -2101,6 +2101,40 @@ struct TextTransformProp {
     }
 };
 
+// https://drafts.csswg.org/css-text/#white-space-property
+
+struct WhiteSpaceProp {
+    WhiteSpace value = initial();
+
+    static constexpr Str name() { return "white-space"; }
+
+    static WhiteSpace initial() { return WhiteSpace::NORMAL; }
+
+    void apply(Computed &c) const {
+        c.text.cow().whiteSpace = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        if (c.skip(Css::Token::ident("normal"))) {
+            value = WhiteSpace::NORMAL;
+        } else if (c.skip(Css::Token::ident("nowrap"))) {
+            value = WhiteSpace::NOWRAP;
+        } else if (c.skip(Css::Token::ident("pre"))) {
+            value = WhiteSpace::PRE;
+        } else if (c.skip(Css::Token::ident("pre-wrap"))) {
+            value = WhiteSpace::PRE_WRAP;
+        } else if (c.skip(Css::Token::ident("pre-line"))) {
+            value = WhiteSpace::PRE_LINE;
+        } else if (c.skip(Css::Token::ident("break-spaces"))) {
+            value = WhiteSpace::BREAK_SPACES;
+        } else {
+            return Error::invalidData("expected white-space");
+        }
+
+        return Ok();
+    }
+};
+
 // https://drafts.csswg.org/css2/#z-index
 
 struct ZIndexProp {
@@ -2254,6 +2288,7 @@ using _StyleProp = Union<
     // Text
     TextAlignProp,
     TextTransformProp,
+    WhiteSpaceProp,
 
     // ZIndex
     ZIndexProp
