@@ -3,6 +3,7 @@
 #include <karm-print/paper.h>
 #include <vaev-base/align.h>
 #include <vaev-base/borders.h>
+#include <vaev-base/break.h>
 #include <vaev-base/calc.h>
 #include <vaev-base/color.h>
 #include <vaev-base/display.h>
@@ -71,6 +72,16 @@ struct ValueParser<BorderCollapse> {
 template <>
 struct ValueParser<BorderSpacing> {
     static Res<BorderSpacing> parse(Cursor<Css::Sst> &c);
+};
+
+template <>
+struct ValueParser<BreakBetween> {
+    static Res<BreakBetween> parse(Cursor<Css::Sst> &c);
+};
+
+template <>
+struct ValueParser<BreakInside> {
+    static Res<BreakInside> parse(Cursor<Css::Sst> &c);
 };
 
 template <typename T>
