@@ -8,8 +8,8 @@ namespace Vaev::Layout {
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
 struct BlockFormatingContext {
     Output run(Tree &tree, Box &box, Input input) {
-        Px blockSize = Px{0};
-        Px inlineSize = input.knownSize.width.unwrapOr(Px{0});
+        Px blockSize = 0_px;
+        Px inlineSize = input.knownSize.width.unwrapOr(0_px);
 
         // NOTE: Our parent has no clue about our width but wants us to commit,
         //       we need to compute it first
@@ -24,8 +24,8 @@ struct BlockFormatingContext {
             Input childInput = {
                 .commit = input.commit,
                 .intrinsic = input.intrinsic,
-                .availableSpace = {inlineSize, Px{0}},
-                .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(Px{0})},
+                .availableSpace = {inlineSize, 0_px},
+                .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_px)},
             };
 
             auto margin = computeMargins(tree, c, childInput);

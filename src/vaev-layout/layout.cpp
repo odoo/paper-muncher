@@ -137,7 +137,7 @@ static Opt<Px> _computeSpecifiedSize(Tree &tree, Box &box, Size size, Vec2Px con
         return resolve(tree, box, size.value, isWidth ? containingBlock.x : containingBlock.y);
     } else {
         logWarn("unknown specified size: {}", size);
-        return Px{0};
+        return 0_px;
     }
 }
 
@@ -153,7 +153,7 @@ Output layout(Tree &tree, Box &box, Input input) {
     }
 
     input.knownSize.width = input.knownSize.width.map([&](auto s) {
-        return max(Px{0}, s - padding.horizontal() - borders.horizontal());
+        return max(0_px, s - padding.horizontal() - borders.horizontal());
     });
 
     if (input.knownSize.height == NONE) {
@@ -162,7 +162,7 @@ Output layout(Tree &tree, Box &box, Input input) {
     }
 
     input.knownSize.height = input.knownSize.height.map([&](auto s) {
-        return max(Px{0}, s - padding.vertical() - borders.vertical());
+        return max(0_px, s - padding.vertical() - borders.vertical());
     });
 
     input.position = input.position + borders.topStart() + padding.topStart();

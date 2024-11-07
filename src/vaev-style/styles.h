@@ -626,7 +626,7 @@ struct BorderRadiusTopRight {
 
     static constexpr Str name() { return "border-top-right-radius"; }
 
-    static constexpr Length initial() { return Px{0}; }
+    static constexpr Length initial() { return 0_px; }
 
     void apply(Computed &c) const {
         c.borders.cow().radii.c = value[0];
@@ -651,7 +651,7 @@ struct BorderRadiusTopLeft {
 
     static constexpr Str name() { return "border-top-left-radius"; }
 
-    static constexpr Length initial() { return Px{0}; }
+    static constexpr Length initial() { return 0_px; }
 
     void apply(Computed &c) const {
         c.borders.cow().radii.a = value[1];
@@ -677,7 +677,7 @@ struct BorderRadiusBottomRight {
 
     static constexpr Str name() { return "border-bottom-right-radius"; }
 
-    static constexpr Length initial() { return Px{0}; }
+    static constexpr Length initial() { return 0_px; }
 
     void apply(Computed &c) const {
         c.borders.cow().radii.e = value[1];
@@ -702,7 +702,7 @@ struct BorderRadiusBottomLeft {
 
     static constexpr Str name() { return "border-bottom-left-radius"; }
 
-    static constexpr Length initial() { return Px{0}; }
+    static constexpr Length initial() { return 0_px; }
 
     void apply(Computed &c) const {
         c.borders.cow().radii.g = value[0];
@@ -971,7 +971,7 @@ struct BorderSpacingProp {
 
     static constexpr Str name() { return "border-spacing"; }
 
-    static constexpr BorderSpacing initial() { return {Px{0}, Px{0}}; }
+    static constexpr BorderSpacing initial() { return {0_px, 0_px}; }
 
     void apply(Computed &c) const {
         c.table.cow().spacing = value;

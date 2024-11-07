@@ -424,7 +424,7 @@ struct TableFormatingContext {
 
         auto tableUsedWidth =
             tableBox.style->sizing->width == Size::AUTO
-                ? Px{0}
+                ? 0_px
                 : resolve(tree, tableBox, tableBox.style->sizing->width.value, input.availableSpace.x);
 
         auto [columnBorders, sumBorders] = getColumnBorders();
@@ -494,7 +494,7 @@ struct TableFormatingContext {
 
         Vec<Px> finalColWidths{colWidth.len()};
         for (usize i = 0; i < grid.size.x; ++i) {
-            auto finalColWidth = colWidth[i].unwrapOr(Px{0});
+            auto finalColWidth = colWidth[i].unwrapOr(0_px);
             finalColWidths.pushBack(finalColWidth);
         }
         return {finalColWidths, tableUsedWidth};
@@ -602,7 +602,7 @@ struct TableFormatingContext {
             if (width == Size::AUTO)
                 continue;
 
-            auto widthValue = resolve(tree, el, width.value, tableComputedWidth.unwrapOr(Px{0}));
+            auto widthValue = resolve(tree, el, width.value, tableComputedWidth.unwrapOr(0_px));
 
             for (usize x = start; x <= end; ++x) {
                 minColWidth[x] = max(minColWidth[x], widthValue);
@@ -720,7 +720,7 @@ struct TableFormatingContext {
                 continue;
 
             for (usize y = row.start; y <= row.end; ++y) {
-                rowHeight[y] = resolve(tree, row.el, height.value, Px{0});
+                rowHeight[y] = resolve(tree, row.el, height.value, 0_px);
             }
         }
 
@@ -740,7 +740,7 @@ struct TableFormatingContext {
                         tree,
                         *cell.box,
                         cell.box->style->sizing->height.value,
-                        Px{0}
+                        0_px
                     );
 
                     for (usize k = 0; k < rowSpan; k++) {
@@ -826,7 +826,7 @@ Output tableLayout(Tree &tree, Box &wrapper, Input input) {
 
     auto queryPref = [](Vec<Px> const &pref, isize l, isize r) -> Px {
         if (r < l)
-            return Px{0};
+            return 0_px;
         if (l == 0)
             return pref[r];
         return pref[r] - pref[l - 1];

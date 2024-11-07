@@ -13,7 +13,7 @@ enum struct IntrinsicSize {
 };
 
 struct Viewport {
-    Px dpi = Px{96};
+    Px dpi = 96_px;
     // https://drafts.csswg.org/css-values/#small-viewport-size
     RectPx small;
     // https://drafts.csswg.org/css-values/#large-viewport-size
