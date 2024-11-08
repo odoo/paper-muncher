@@ -15,7 +15,7 @@ using PhysicalPixel = Distinct<i32, struct _PhysicalPixel>;
 /// Represents a logical pixel in the CSS coordinate system.
 using Px = Math::i24f8;
 
-constexpr Px operator""_px(u64 val) {
+constexpr Px operator""_px(unsigned long long val) {
     return Px(val);
 }
 
