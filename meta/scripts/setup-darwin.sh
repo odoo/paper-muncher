@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-brew install nasm llvm sdl2 python3 ninja libmagic
+brew install libmagic lld llvm nasm ninja pkg-config python3 sdl2
