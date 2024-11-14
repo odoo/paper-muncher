@@ -723,9 +723,11 @@ struct BorderRadiusBottomLeft {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 struct BorderRadius {
-    Math::Radii<PercentOr<Length>> value = {};
+    Math::Radii<PercentOr<Length>> value = initial();
 
     static constexpr Str name() { return "border-radius"; }
+
+    static constexpr Math::Radii<PercentOr<Length>> initial() { return {}; }
 
     void apply(Computed &c) const {
         c.borders.cow().radii = value;
@@ -979,62 +981,6 @@ struct BorderSpacingProp {
 
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<BorderSpacing>(c));
-        return Ok();
-    }
-};
-
-// MARK: Breaks ----------------------------------------------------------------
-
-// https://www.w3.org/TR/css-break-3/#propdef-break-after
-struct BreakAfterProp {
-    BreakBetween value = initial();
-
-    static constexpr Str name() { return "break-after"; }
-
-    static constexpr BreakBetween initial() { return BreakBetween::AUTO; }
-
-    void apply(Computed &c) const {
-        c.break_.cow().after = value;
-    }
-
-    Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<BreakBetween>(c));
-        return Ok();
-    }
-};
-
-// https://www.w3.org/TR/css-break-3/#propdef-break-before
-struct BreakBeforeProp {
-    BreakBetween value = initial();
-
-    static constexpr Str name() { return "break-before"; }
-
-    static constexpr BreakBetween initial() { return BreakBetween::AUTO; }
-
-    void apply(Computed &c) const {
-        c.break_.cow().before = value;
-    }
-
-    Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<BreakBetween>(c));
-        return Ok();
-    }
-};
-
-// https://www.w3.org/TR/css-break-3/#break-within
-struct BreakInsideProp {
-    BreakInside value = initial();
-
-    static constexpr Str name() { return "break-inside"; }
-
-    static constexpr BreakInside initial() { return BreakInside::AUTO; }
-
-    void apply(Computed &c) const {
-        c.break_.cow().inside = value;
-    }
-
-    Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<BreakInside>(c));
         return Ok();
     }
 };
@@ -2271,11 +2217,6 @@ using _StyleProp = Union<
     // Borders - Table
     BorderCollapseProp,
     BorderSpacingProp,
-
-    // Breaks
-    BreakAfterProp,
-    BreakBeforeProp,
-    BreakInsideProp,
 
     // Flex
     FlexBasisProp,

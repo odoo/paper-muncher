@@ -6,9 +6,8 @@
     "requires": [
         "karm-cli",
         "karm-sys",
-        "karm-kira",
-        "vaev-driver",
-        "vaev-view"
+        "karm-image",
+        "vaev-driver"
     ],
     "provides": [
         "paper-muncher",
