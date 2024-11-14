@@ -1,5 +1,7 @@
 #pragma once
 
+#include <karm-io/emit.h>
+
 namespace Vaev {
 
 // CSS Text Module Level 4

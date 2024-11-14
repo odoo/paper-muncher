@@ -1,5 +1,7 @@
 #pragma once
 
+#include <karm-io/emit.h>
+
 namespace Vaev {
 
 // https://www.w3.org/TR/css-overflow/#overflow-control
