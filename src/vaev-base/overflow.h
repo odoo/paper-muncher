@@ -8,6 +8,8 @@ enum struct Overflow {
     HIDDEN,
     SCROLL,
     AUTO,
+
+    _LEN
 };
 
 struct Overflows {
@@ -15,6 +17,15 @@ struct Overflows {
     Overflow y = Overflow::VISIBLE;
     Overflow block = Overflow::VISIBLE;
     Overflow inline_ = Overflow::VISIBLE;
+
+    void repr(Io::Emit &e) const {
+        e("(overflows");
+        e(" x={}", x);
+        e(" y={}", y);
+        e(" block={}", block);
+        e(" inline={}", inline_);
+        e(")");
+    }
 };
 
 } // namespace Vaev
