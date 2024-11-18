@@ -6,7 +6,6 @@
     "requires": [
         "vaev-layout",
         "vaev-markup",
-        "fonts-all",
         "karm-mime",
         "karm-sys"
     ]

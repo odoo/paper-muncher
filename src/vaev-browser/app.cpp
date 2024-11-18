@@ -1,6 +1,8 @@
 #include <karm-kira/context-menu.h>
 #include <karm-kira/dialog.h>
 #include <karm-kira/error-page.h>
+#include <karm-kira/print-dialog.h>
+#include <karm-kira/resizable.h>
 #include <karm-kira/scaffold.h>
 #include <karm-kira/side-panel.h>
 #include <karm-mime/mime.h>
@@ -10,7 +12,6 @@
 #include <karm-ui/input.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/popover.h>
-#include <karm-ui/resizable.h>
 #include <karm-ui/scroll.h>
 #include <mdi/alert-decagram.h>
 #include <mdi/arrow-left.h>
@@ -93,7 +94,15 @@ Ui::Child mainMenu([[maybe_unused]] State const &s) {
         ),
         Kr::contextMenuItem(Model::bind(SidePanel::BOOKMARKS), Mdi::BOOKMARK, "Bookmarks"),
         Ui::separator(),
-        Kr::contextMenuItem(Ui::NOP, Mdi::PRINTER, "Print..."),
+        Kr::contextMenuItem(
+            [](auto &n) {
+                Ui::showDialog(
+                    n,
+                    Kr::printDialog()
+                );
+            },
+            Mdi::PRINTER, "Print..."
+        ),
 #ifdef __ck_host__
         Kr::contextMenuItem(
             [&](auto &n) {
@@ -231,7 +240,7 @@ Ui::Child appContent(State const &s) {
         return webview(s);
     return Ui::hflow(
         webview(s) | Ui::grow(),
-        sidePanel(s) | Ui::resizable(Ui::ResizeHandle::START, {320}, NONE)
+        sidePanel(s) | Kr::resizable(Kr::ResizeHandle::START, {320}, NONE)
     );
 }
 
@@ -259,7 +268,6 @@ Ui::Child app(Mime::Url url, Res<Strong<Vaev::Markup::Document>> dom) {
                     )
                 ),
                 .body = slot$(appContent(s)),
-                .size = {1024, 720},
                 .compact = true,
             });
         }
