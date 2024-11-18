@@ -33,6 +33,14 @@ always_inline static Res<T> parseValue(Cursor<Css::Sst> &c) {
     return ValueParser<T>::parse(c);
 }
 
+template <typename T>
+always_inline static Res<T> parseValue(Str str) {
+    Css::Lexer lex{str};
+    auto content = Css::consumeDeclarationValue(lex);
+    Cursor<Css::Sst> c{content};
+    return ValueParser<T>::parse(c);
+}
+
 template <>
 struct ValueParser<Align> {
     static Res<Align> parse(Cursor<Css::Sst> &c);
