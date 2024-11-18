@@ -1,0 +1,89 @@
+<test id="custom-properties-basic" name="variables">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    --bodyVar: cornflowerblue;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    border-radius: 7px;
+                }
+
+                #foo {
+                    --fooVar: cornflowerblue;
+                }
+
+            </style>
+        </head>
+
+        <body>
+        <slot/>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="background: cornflowerblue;"></div>
+    </rendering>
+
+    <rendering help="using a variable defined higher">
+        <div style="background: var(--bodyVar);"></div>
+    </rendering>
+
+    <rendering help="using a variable defined here">
+        <div style="--color:cornflowerblue;background: var(--color);"></div>
+    </rendering>
+
+    <rendering help="using a default value">
+        <div style="background: var(--color, cornflowerblue);"></div>
+    </rendering>
+
+    <rendering help="not using a default value">
+        <div style="background: var(--bodyVar,lightsalmon);"></div>
+    </rendering>
+
+    <rendering help="using a variable defined horizontally">
+        <div id="foo" style="background: var(--fooVar);"></div>
+    </rendering>
+</test>
+
+<test id="custom-properties-basic-2" name="variables override">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            body {
+                --bodyVar: cornflowerblue;
+            }
+
+            div {
+                width: 100px;
+                height: 100px;
+                border-radius: 7px;
+            }
+        </style>
+    </head>
+
+    <body>
+    <slot/>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div style="background:lightsalmon;"></div>
+</rendering>
+
+<rendering help="redefining a variable">
+    <div style="--bodyVar:lightsalmon;background: var(--bodyVar);"></div>
+</rendering>
+
+</test>
