@@ -170,9 +170,9 @@ def _(args: RefTestArgs):
                     paperMuncher.popen(
                         "render",
                         "--width",
-                        xsize,
+                        xsize + "px",
                         "--height",
-                        ysize,
+                        ysize + "px",
                         "-sdlpo",
                         img_path,
                         input_path,
