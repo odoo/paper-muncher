@@ -71,6 +71,25 @@ struct TableGrid {
     }
 };
 
+template <typename T>
+struct PrefixSum {
+
+    Vec<Px> pref;
+
+    PrefixSum(Vec<Px> const &v) : pref(v) {
+        for (usize i = 1; i < v.len(); ++i)
+            pref[i] = pref[i - 1] + pref[i];
+    }
+
+    T query(isize l, isize r) {
+        if (r < l)
+            return T{};
+        if (l == 0)
+            return pref[r];
+        return pref[r] - pref[l - 1];
+    }
+};
+
 struct TableFormatingContext {
     TableGrid grid;
 
@@ -93,6 +112,9 @@ struct TableFormatingContext {
 
     Vec<DownwardsGrowingCell> downwardsGrowingCells;
     Vec<usize> pendingTfoots;
+
+    // TODO: amount of footers and headers
+    // footers will be the last rows of the grid; same for headers?
 
     struct {
         usize width;
@@ -123,9 +145,6 @@ struct TableFormatingContext {
                 captionsIdxs.pushBack(i);
             }
         }
-
-        run();
-        buildBordersGrid(tree);
     }
 
     // https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-growing-downward-growing-cells
@@ -247,7 +266,7 @@ struct TableFormatingContext {
     }
 
     // https://html.spec.whatwg.org/multipage/tables.html#forming-a-table
-    void run() {
+    void buildHTMLTable() {
         auto tableBoxChildren = tableBox.children();
         MutCursor<Box> tableBoxCursor{tableBoxChildren};
 
@@ -410,10 +429,13 @@ struct TableFormatingContext {
         return {borders, sumBorders};
     }
 
+    Vec<Px> colWidth;
+    Px tableUsedWidth;
+
     // MARK: Fixed Table Layout
     // https://www.w3.org/TR/CSS22/tables.html#fixed-table-layout
 
-    Tuple<Vec<Px>, Px> getFixedColWidths(Tree &tree, Input &input) {
+    void computeFixedColWidths(Tree &tree, Input &input) {
         // NOTE: Percentages for 'width' and 'height' on the table (box)
         //       are calculated relative to the containing block of the
         //       table wrapper box, not the table wrapper box itself.
@@ -422,7 +444,7 @@ struct TableFormatingContext {
         // NOTE: The table does not automatically expand to fill its containing block.
         //       (https://www.w3.org/TR/CSS22/tables.html#width-layout)
 
-        auto tableUsedWidth =
+        tableUsedWidth =
             tableBox.style->sizing->width == Size::AUTO
                 ? 0_px
                 : resolve(tree, tableBox, tableBox.style->sizing->width.value, input.availableSpace.x);
@@ -431,8 +453,8 @@ struct TableFormatingContext {
 
         Px fixedWidthToAccount = boxBorder.horizontal() + Px{grid.size.x + 1} * spacing.x;
 
-        Vec<Opt<Px>> colWidth{};
-        colWidth.resize(grid.size.x);
+        Vec<Opt<Px>> colWidthOrNone{};
+        colWidthOrNone.resize(grid.size.x);
         for (auto &col : cols) {
 
             auto width = col.el.style->sizing->width;
@@ -440,7 +462,7 @@ struct TableFormatingContext {
                 continue;
 
             for (usize x = col.start; x <= col.end; ++x) {
-                colWidth[x] = resolve(tree, col.el, width.value, tableUsedWidth);
+                colWidthOrNone[x] = resolve(tree, col.el, width.value, tableUsedWidth);
             }
         }
 
@@ -464,16 +486,16 @@ struct TableFormatingContext {
                 // FIXME: Not overriding values already computed,
                 //        but should we subtract the already computed from
                 //        cellWidth before division?
-                if (colWidth[x] == NONE)
-                    colWidth[x] = cellWidth / Px{colSpan};
+                if (colWidthOrNone[x] == NONE)
+                    colWidthOrNone[x] = cellWidth / Px{colSpan};
             }
         }
 
         Px sumColsWidths{0};
         usize emptyCols{0};
         for (usize i = 0; i < grid.size.x; ++i) {
-            if (colWidth[i])
-                sumColsWidths += colWidth[i].unwrap() + columnBorders[i];
+            if (colWidthOrNone[i])
+                sumColsWidths += colWidthOrNone[i].unwrap() + columnBorders[i];
             else
                 emptyCols++;
         }
@@ -481,29 +503,28 @@ struct TableFormatingContext {
         if (emptyCols > 0) {
             if (sumColsWidths < tableUsedWidth - fixedWidthToAccount) {
                 Px toDistribute = (tableUsedWidth - fixedWidthToAccount - sumColsWidths) / Px{emptyCols};
-                for (auto &w : colWidth)
+                for (auto &w : colWidthOrNone)
                     if (w == NONE)
                         w = toDistribute;
             }
         } else if (sumColsWidths < tableUsedWidth - fixedWidthToAccount) {
             Px toDistribute = (tableUsedWidth - fixedWidthToAccount - sumColsWidths);
-            for (auto &w : colWidth) {
+            for (auto &w : colWidthOrNone) {
                 w = w.unwrap() + (toDistribute * w.unwrap()) / sumColsWidths;
             }
         }
 
-        Vec<Px> finalColWidths{colWidth.len()};
+        colWidth.ensure(colWidthOrNone.len());
         for (usize i = 0; i < grid.size.x; ++i) {
-            auto finalColWidth = colWidth[i].unwrapOr(0_px);
-            finalColWidths.pushBack(finalColWidth);
+            auto finalColWidth = colWidthOrNone[i].unwrapOr(0_px);
+            colWidth.pushBack(finalColWidth);
         }
-        return {finalColWidths, tableUsedWidth};
     }
 
     // MARK: Auto Table Layout -------------------------------------------------
     // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
 
-    Tuple<Vec<Px>, Px> getAutoColWidths(Tree &tree, Input &input) {
+    void computeAutoColWidths(Tree &tree, Input &input) {
         // FIXME: This is a rough approximation of the algorithm.
         //        We need to distinguish between percentage-based and fixed lengths:
         //         - Percentage-based sizes are fixed and cannot have extra space distributed to them.
@@ -675,7 +696,7 @@ struct TableFormatingContext {
         // TODO: should minColWidth or maxColWidth be forcelly used if input is MIN_CONTENT or MAX_CONTENT respectivelly?
         if (tableBox.style->sizing->width != Size::AUTO) {
             // TODO: how to resolve percentage if case of table width?
-            auto tableUsedWidth = max(capmin, max(tableComputedWidth.unwrap(), sumMinColWidths));
+            tableUsedWidth = max(capmin, max(tableComputedWidth.unwrap(), sumMinColWidths));
 
             // If the used width is greater than MIN, the extra width should be distributed over the columns.
             // NOTE: A bit obvious, but assuming that specs refers to MIN columns above
@@ -684,25 +705,26 @@ struct TableFormatingContext {
                 for (auto &w : minColWidth)
                     w += (toDistribute * w) / sumMinColWidths;
             }
-            return {minColWidth, tableUsedWidth};
+
+            colWidth = minColWidth;
+            return;
         }
 
         // TODO: Specs doesnt say if we should distribute extra width over columns;
         //       also would it be over min or max columns?
-        if (min(sumMaxColWidths, capmin) < input.containingBlock.x)
-            return {
-                maxColWidth,
-                max(sumMaxColWidths, capmin)
-            };
-
-        return {
-            minColWidth,
-            max(sumMinColWidths, capmin)
-        };
+        if (min(sumMaxColWidths, capmin) < input.containingBlock.x) {
+            colWidth = maxColWidth;
+            tableUsedWidth = max(sumMaxColWidths, capmin);
+        } else {
+            colWidth = minColWidth;
+            tableUsedWidth = max(sumMinColWidths, capmin);
+        }
     }
 
     // https://www.w3.org/TR/CSS22/tables.html#height-layout
-    Vec<Px> getRowHeights(Tree &tree, Vec<Px> const &colWidth) {
+    Vec<Px> rowHeight;
+
+    void computeRowHeights(Tree &tree) {
         // NOTE: CSS 2.2 does not define how the height of table cells and
         //       table rows is calculated when their height is
         //       specified using percentage values.
@@ -711,7 +733,6 @@ struct TableFormatingContext {
         //       If definite, percentages being considered 0px
         //       (See https://www.w3.org/TR/css-tables-3/#computing-the-table-height)
 
-        Vec<Px> rowHeight;
         rowHeight.resize(grid.size.y);
 
         for (auto &row : rows) {
@@ -774,108 +795,79 @@ struct TableFormatingContext {
             }
             rowHeight[i] += rowBorderHeight;
         }
-
-        return rowHeight;
-    }
-};
-
-Output tableLayout(Tree &tree, Box &wrapper, Input input) {
-    // TODO: - vertical and horizontal alignment
-    //       - borders collapse
-
-    TableFormatingContext table(tree, wrapper);
-
-    // NOTE: When "table-layout: fixed" is set but "width: auto", the specs suggest
-    //       that the UA can use the fixed layout after computing the width
-    //      (see https://www.w3.org/TR/CSS22/visudet.html#blockwidth).
-    //
-    //      However, Chrome does not implement this exception, and we are not implementing it either.
-    bool shouldRunAutoAlgorithm =
-        table.tableBox.style->table->tableLayout == TableLayout::AUTO or
-        table.tableBox.style->sizing->width == Size::AUTO;
-
-    auto [colWidth, tableUsedWidth] =
-        shouldRunAutoAlgorithm
-            ? table.getAutoColWidths(tree, input)
-            : table.getFixedColWidths(tree, input);
-
-    auto rowHeight = table.getRowHeights(tree, colWidth);
-
-    Px currPositionY{input.position.y}, captionsHeight{0};
-    if (table.tableBox.style->table->captionSide == CaptionSide::TOP) {
-        for (auto i : table.captionsIdxs) {
-            auto cellOutput = layout(
-                tree,
-                wrapper.children()[i],
-                {
-                    .commit = input.commit,
-                    .position = {input.position.x, currPositionY},
-                }
-            );
-            captionsHeight += cellOutput.size.y;
-            currPositionY += captionsHeight;
-        }
     }
 
-    auto buildPref = [](Vec<Px> const &v) {
-        Vec<Px> pref(v);
-        for (usize i = 1; i < v.len(); ++i)
-            pref[i] = pref[i - 1] + pref[i];
-        return pref;
-    };
+    Vec2Px tableBoxSize;
 
-    auto queryPref = [](Vec<Px> const &pref, isize l, isize r) -> Px {
-        if (r < l)
-            return 0_px;
-        if (l == 0)
-            return pref[r];
-        return pref[r] - pref[l - 1];
-    };
+    void build(Tree &tree, Input input) {
+        buildHTMLTable();
+        buildBordersGrid(tree);
 
-    auto colWidthPref = buildPref(colWidth);
-    auto rowHeightPref = buildPref(rowHeight);
+        // NOTE: When "table-layout: fixed" is set but "width: auto", the specs suggest
+        //       that the UA can use the fixed layout after computing the width
+        //      (see https://www.w3.org/TR/CSS22/visudet.html#blockwidth).
+        //
+        //      However, Chrome does not implement this exception, and we are not implementing it either.
+        bool shouldRunAutoAlgorithm =
+            tableBox.style->table->tableLayout == TableLayout::AUTO or
+            tableBox.style->sizing->width == Size::AUTO;
 
-    auto tableBoxSize = Vec2Px{
-        queryPref(colWidthPref, 0, table.grid.size.x - 1) +
-            table.spacing.x * Px{table.grid.size.x + 1},
+        if (shouldRunAutoAlgorithm)
+            computeAutoColWidths(tree, input);
+        else
+            computeFixedColWidths(tree, input);
 
-        queryPref(rowHeightPref, 0, table.grid.size.y - 1) +
-            table.spacing.y * Px{table.grid.size.y + 1},
-    };
+        computeRowHeights(tree);
 
-    if (input.commit == Commit::YES) {
+        // FIXME: any built in i can use?
+        auto sum = [](Vec<Px> &v) {
+            Px sum{};
+            for (auto x : v)
+                sum += x;
+            return sum;
+        };
+
+        tableBoxSize = Vec2Px{
+            sum(colWidth) + spacing.x * Px{grid.size.x + 1},
+            sum(rowHeight) + spacing.y * Px{grid.size.y + 1},
+        };
+    }
+
+    void runTableBox(Tree &tree, Input input, Px &currPositionY) {
+        // TODO: this should be rewritten having a row index into account instead of cell/row/col(group)
+        PrefixSum<Px> colWidthPref{colWidth}, rowHeightPref{rowHeight};
         Px currPositionX{input.position.x};
 
         // table box
         layout(
             tree,
-            table.tableBox,
+            tableBox,
             {
                 .commit = Commit::YES,
                 .knownSize = {
-                    tableBoxSize.x + table.boxBorder.horizontal(),
-                    tableBoxSize.y + table.boxBorder.vertical(),
+                    tableBoxSize.x + boxBorder.horizontal(),
+                    tableBoxSize.y + boxBorder.vertical(),
                 },
                 .position = {currPositionX, currPositionY},
             }
         );
 
-        currPositionX += table.boxBorder.start + table.spacing.x;
-        currPositionY += table.boxBorder.top + table.spacing.y;
+        currPositionX += boxBorder.start + spacing.x;
+        currPositionY += boxBorder.top + spacing.y;
 
         // column groups
-        for (auto &group : table.colGroups) {
+        for (auto &group : colGroups) {
             layout(
                 tree,
                 group.el,
                 {
                     .commit = Commit::YES,
                     .knownSize = {
-                        queryPref(colWidthPref, group.start, group.end),
+                        colWidthPref.query(group.start, group.end),
                         tableBoxSize.y,
                     },
                     .position = {
-                        currPositionX + queryPref(colWidthPref, 0, group.start - 1),
+                        currPositionX + colWidthPref.query(0, group.start - 1),
                         currPositionY,
                     },
                 }
@@ -883,26 +875,26 @@ Output tableLayout(Tree &tree, Box &wrapper, Input input) {
         }
 
         // columns
-        for (auto &col : table.cols) {
+        for (auto &col : cols) {
             layout(
                 tree,
                 col.el,
                 {
                     .commit = Commit::YES,
                     .knownSize = {
-                        queryPref(colWidthPref, col.start, col.end),
+                        colWidthPref.query(col.start, col.end),
                         tableBoxSize.y,
                     },
                     .position = {
                         currPositionX,
-                        currPositionY + queryPref(colWidthPref, 0, col.start - 1),
+                        currPositionY + colWidthPref.query(0, col.start - 1),
                     },
                 }
             );
         }
 
         // row groups
-        for (auto &group : table.rowGroups) {
+        for (auto &group : rowGroups) {
             layout(
                 tree,
                 group.el,
@@ -910,18 +902,18 @@ Output tableLayout(Tree &tree, Box &wrapper, Input input) {
                     .commit = Commit::YES,
                     .knownSize = {
                         tableBoxSize.x,
-                        queryPref(rowHeightPref, group.start, group.end),
+                        rowHeightPref.query(group.start, group.end),
                     },
                     .position = {
                         currPositionX,
-                        currPositionY + queryPref(rowHeightPref, 0, group.start - 1),
+                        currPositionY + rowHeightPref.query(0, group.start - 1),
                     },
                 }
             );
         }
 
         // rows
-        for (auto &row : table.rows) {
+        for (auto &row : rows) {
             layout(
                 tree,
                 row.el,
@@ -929,21 +921,21 @@ Output tableLayout(Tree &tree, Box &wrapper, Input input) {
                     .commit = Commit::YES,
                     .knownSize = {
                         tableBoxSize.x,
-                        queryPref(rowHeightPref, row.start, row.end),
+                        rowHeightPref.query(row.start, row.end),
                     },
                     .position = {
                         currPositionX,
-                        currPositionY + queryPref(rowHeightPref, 0, row.start - 1),
+                        currPositionY + rowHeightPref.query(0, row.start - 1),
                     },
                 }
             );
         }
 
         // cells
-        for (usize i = 0; i < table.grid.size.y; currPositionY += rowHeight[i] + table.spacing.y, i++) {
+        for (usize i = 0; i < grid.size.y; currPositionY += rowHeight[i] + spacing.y, i++) {
             Px innnerCurrPositionX = Px{currPositionX};
-            for (usize j = 0; j < table.grid.size.x; innnerCurrPositionX += colWidth[j] + table.spacing.x, j++) {
-                auto cell = table.grid.get(j, i);
+            for (usize j = 0; j < grid.size.x; innnerCurrPositionX += colWidth[j] + spacing.x, j++) {
+                auto cell = grid.get(j, i);
 
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
@@ -964,8 +956,8 @@ Output tableLayout(Tree &tree, Box &wrapper, Input input) {
                     {
                         .commit = Commit::YES,
                         .knownSize = {
-                            queryPref(colWidthPref, j, j + colSpan - 1) + table.spacing.x * Px{colSpan - 1},
-                            queryPref(rowHeightPref, i, i + rowSpan - 1) + table.spacing.y * Px{rowSpan - 1}
+                            colWidthPref.query(j, j + colSpan - 1) + spacing.x * Px{colSpan - 1},
+                            rowHeightPref.query(i, i + rowSpan - 1) + spacing.y * Px{rowSpan - 1}
                         },
                         .position{innnerCurrPositionX, currPositionY},
                     }
@@ -974,11 +966,11 @@ Output tableLayout(Tree &tree, Box &wrapper, Input input) {
         }
     }
 
-    if (table.tableBox.style->table->captionSide == CaptionSide::BOTTOM) {
-        for (auto i : table.captionsIdxs) {
+    void runCaptions(Tree &tree, Input input, Px tableUsedWidth, Px &currPositionY, Px &captionsHeight) {
+        for (auto i : captionsIdxs) {
             auto cellOutput = layout(
                 tree,
-                wrapper.children()[i],
+                wrapperBox.children()[i],
                 {
                     .commit = input.commit,
                     .knownSize = {tableUsedWidth, NONE},
@@ -986,13 +978,39 @@ Output tableLayout(Tree &tree, Box &wrapper, Input input) {
                 }
             );
             captionsHeight += cellOutput.size.y;
+            currPositionY += captionsHeight;
         }
     }
 
-    return Output::fromSize({
-        tableUsedWidth + table.boxBorder.horizontal(),
-        tableBoxSize.y + captionsHeight + table.boxBorder.vertical(),
-    });
+    Output run(Tree &tree, Input input) {
+
+        Px currPositionY{input.position.y}, captionsHeight{0};
+        if (tableBox.style->table->captionSide == CaptionSide::TOP) {
+            runCaptions(tree, input, tableUsedWidth, currPositionY, captionsHeight);
+        }
+
+        if (input.commit == Commit::YES) {
+            runTableBox(tree, input, currPositionY);
+        }
+
+        if (tableBox.style->table->captionSide == CaptionSide::BOTTOM) {
+            runCaptions(tree, input, tableUsedWidth, currPositionY, captionsHeight);
+        }
+
+        return Output::fromSize({
+            tableUsedWidth + boxBorder.horizontal(),
+            tableBoxSize.y + captionsHeight + boxBorder.vertical(),
+        });
+    }
+};
+
+Output tableLayout(Tree &tree, Box &wrapper, Input input) {
+    // TODO: - vertical and horizontal alignment
+    //       - borders collapse
+
+    TableFormatingContext table(tree, wrapper);
+    table.build(tree, input);
+    return table.run(tree, input);
 }
 
 } // namespace Vaev::Layout
