@@ -29,11 +29,11 @@ def fetchMessage(args: model.TargetArgs, type: str) -> str:
 
 
 def compareImages(
-    lhs: bytes,
-    rhs: bytes,
-    lowEpsilon: float = 0.05,
-    highEpsilon: float = 0.1,
-    strict=False,
+        lhs: bytes,
+        rhs: bytes,
+        lowEpsilon: float = 0.05,
+        highEpsilon: float = 0.1,
+        strict=False,
 ) -> bool:
     if strict:
         return lhs == rhs
@@ -160,7 +160,7 @@ def _(args: RefTestArgs):
                     expected_image_url = ref_image
 
             for tag, info, rendering in re.findall(
-                r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test
+                    r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test
             ):
                 renderingProps = getInfo(info)
                 if "skip" in renderingProps:
@@ -200,7 +200,7 @@ def _(args: RefTestArgs):
                     if not expected_image:
                         expected_image = output_image
                         with (TEST_REPORT / f"{counter}.expected.bmp").open(
-                            "wb"
+                                "wb"
                         ) as imageWriter:
                             imageWriter.write(expected_image)
                         continue
@@ -232,6 +232,7 @@ def _(args: RefTestArgs):
 
                 test_report += f"""
                 <div id="case-{counter}" class="test-case {ok and 'passed' or 'failed'}">
+                    <div class="infoBar"></div>
                     <h2>{counter} - {tag}</h2>
                     <p>{help}</p>
                     <div class="outputs">
@@ -260,7 +261,7 @@ def _(args: RefTestArgs):
                 if args.fast:
                     break
             report += f"""
-                <div>
+                <div class=wrapper>
                     <div id="test-{counter}" class="test {failCount and 'failed' or 'passed'}">
                         <h1>{props.get('name')}</h2>
                         <p>{props.get('help') or ""}</p>
@@ -279,16 +280,46 @@ def _(args: RefTestArgs):
 
     report += """
     </body>
+    <script>
+    function initTheme(){
+    const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (prefersDarkScheme){
+        document.body.classList.remove("light");
+        document.body.classList.add("dark");
+
+    }else{
+        document.body.classList.add("light");
+        document.body.classList.remove("dark");
+    }
+    }
+    initTheme();
+    </script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        
+        body {
+            --bg: #1b1b1c;
+            --bg2: #161616;
+            --font: #fafafa;
+            --failed: #c52b2b;
+            --passed: #74b553;
+        }
+        
+        body.light {
+            --bg: #f3eee7;
+            --bg2: #f7ece7;
+            --font: #090909;
+            --failed: #c52b2b;
+            --passed: #74b553;
+        }
 
         header {
             padding: 8px;
-            background-color: #18181b;
+            background-color: var(--bg2);
             color: #fafafa;
             z-index: 100;
         }
@@ -299,44 +330,105 @@ def _(args: RefTestArgs):
             left: 0;
             right: 0;
             padding: 8px;
-            background-color: #18181b;
+            background-color: var(--bg2);
             z-index: 100;
         }
 
+        .infoBar {
+            position: absolute;
+            transform: translateY(-1rem);
+            height: 100%;
+            width: 1rem;
+            left: 0;
+        }
+
+        .failed .infoBar{
+            background: var(--failed);
+        }
+        
+        .passed .infoBar{
+            background: var(--passed);
+        }
+
+        .dark a:link {
+            color: #8bd3ff;
+        }
+        
+        .dark a:visited {
+            color: #8e8bff;
+        }
+        
+        .light a:link {
+            color: #267eb3;
+        }
+        
+        .light a:visited {
+            color: #267eb3;
+        }
+        
         body {
             font-family: sans-serif;
-            background-color: #09090b;
-            color: #fafafa
+            background-color: var(--bg);
+            color: var(--font);
+            font-size: 0.9rem;
         }
 
         .test {
-            padding: 8px;
-            background-color: #18181b;
-            border-bottom: 1px solid #27272a;
+            padding: 1rem;
+            background-color: var(--bg2);
+            border-bottom: 1px solid #4f4f4f;
             position: sticky;
+            gap: 0.2rem;
             top: 0;
             z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            text-decoration: underline;
+        }
+        
+        h2 {
+            font-size: 1.1rem;
+        }
+
+        .wrapper{
+            width:fit-content;
         }
 
         .test-case {
-            padding: 8px;
+            padding: 1rem;
+            padding-left: 2rem;
             border-bottom: 1px solid #333;
+            width: fit-content;
+            min-width: 100vw;
         }
 
         .passed {
         }
 
         .failed {
-            background-color: #450a0a;
         }
 
         .outputs {
+            margin: 1.2rem 0;
             display: flex;
-            gap: 8px;
+            gap: 1rem;
+            width: fit-content;
+        }
+
+        .outputs>div {
+            display: flex;
+            gap: 0.5rem;
+            flex-direction: column-reverse;
+            align-items: center;
         }
 
         .actual {
-            border: 1px solid blue;
+             border: 0px solid blue; 
         }
 
         iframe {
