@@ -120,9 +120,22 @@ def _(args: RefTestArgs):
             props = getInfo(info)
             print(f"{vt100.WHITE}Test {props.get('name')!r}{vt100.RESET}")
             if "skip" in props:
+                report += f"""
+                <div id="case-{counter}" class="test skipped">
+                    <h2>{counter} - {props.get('name')}</h2>
+                    <p>Skipped</p>
+                </div>
+                """
                 print(f"{vt100.YELLOW}Skip test{vt100.RESET}")
                 continue
             Num += 1
+
+            report += f"""
+            <div id="case-{counter}" class="test">
+                <h1>{props.get('name')}</h2>
+                <p>{props.get('help')}</p>
+                <a href="{file}">Source</a>
+            """
 
             search = re.search(r"""<container>([\w\W]+?)</container>""", test)
             container = search and search.group(1)
@@ -224,7 +237,7 @@ def _(args: RefTestArgs):
 
                 report += f"""
                 <div id="case-{counter}" class="test-case {ok and 'passed' or 'failed'}">
-                    <h2>{counter} - {tag} - {props.get('name')}</h2>
+                    <h2>{counter} - {tag}</h2>
                     <p>{help}</p>
                     <div class="outputs">
                         <div>
@@ -246,7 +259,6 @@ def _(args: RefTestArgs):
                     <a href="{expected_image_url}">Reference</a>
                     <a href="{input_path}">Source</a>
                 </div>
-                <hr />
                 """
 
                 counter += 1
@@ -254,25 +266,35 @@ def _(args: RefTestArgs):
                 if args.fast:
                     break
 
+            report += "</div><hr />"
+
     report += """
     </body>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: sans-serif;
             background-color: #18181b;
             color: #fafafa
         }
 
+        .test {
+        }
+
         .test-case {
             padding: 8px;
-            border-radius: 4px;
+            border-bottom: 1px solid #333;
         }
 
         .passed {
         }
 
         .failed {
-            border: 2px solid #991b1b;
             background-color: #450a0a;
         }
 
