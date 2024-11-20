@@ -118,28 +118,24 @@ def _(args: RefTestArgs):
         with file.open() as f:
             content = f.read()
 
-        Num = 0
+        passCount = 0
+        failCount = 0
         for info, test in re.findall(r"""<test([^>]*)>([\w\W]+?)</test>""", content):
             props = getInfo(info)
             print(f"{vt100.WHITE}Test {props.get('name')!r}{vt100.RESET}")
             if "skip" in props:
                 report += f"""
-                <div id="case-{counter}" class="test skipped">
-                    <h2>{counter} - {props.get('name')}</h2>
-                    <p>Skipped</p>
-                </div>
+                <div>
+                    <div id="case-{counter}" class="test skipped">
+                        <h2>{props.get('name') or "Unamed"}</h2>
+                        <p>Skipped</p>
+                    </div>
+                <div>
                 """
                 print(f"{vt100.YELLOW}Skip test{vt100.RESET}")
                 continue
-            Num += 1
 
-            report += f"""
-            <div id="case-{counter}" class="test">
-                <h1>{props.get('name')}</h2>
-                <p>{props.get('help')}</p>
-                <a href="{file}">Source</a>
-            </div>
-            """
+            test_report = ""
 
             search = re.search(r"""<container>([\w\W]+?)</container>""", test)
             container = search and search.group(1)
@@ -149,8 +145,8 @@ def _(args: RefTestArgs):
             expected_xhtml = None
             expected_image: bytes | None = None
             expected_image_url = TEST_REPORT / f"{counter}.expected.bmp"
-            if props.get("id"):
-                ref_image = file.parent / f"{props.get('id')}.bmp"
+            if props.get("name"):
+                ref_image = file.parent / f"{props.get('name')}.bmp"
                 if ref_image.exists():
                     with ref_image.open("rb") as imageReader:
                         expected_image = imageReader.read()
@@ -160,11 +156,9 @@ def _(args: RefTestArgs):
 
                     expected_image_url = ref_image
 
-            num = 0
             for tag, info, rendering in re.findall(
                 r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test
             ):
-                num += 1
                 renderingProps = getInfo(info)
                 if "skip" in renderingProps:
                     print(f"{vt100.YELLOW}Skip test{vt100.RESET}")
@@ -182,23 +176,15 @@ def _(args: RefTestArgs):
                 if props.get("size") == "full":
                     xsize = "800"
                     ysize = "600"
-                    paperMuncher.popen("render", "-sdlpo", img_path, input_path)
-                else:
-                    paperMuncher.popen(
-                        "render",
-                        "--width",
-                        xsize + "px",
-                        "--height",
-                        ysize + "px",
-                        "-sdlpo",
-                        img_path,
-                        input_path,
-                    )
 
                 paperMuncher.popen(
-                    "print",
-                    "-sdlpo",
-                    TEST_REPORT / f"{counter}.pdf",
+                    "render",
+                    "--width",
+                    xsize + "px",
+                    "--height",
+                    ysize + "px",
+                    "-o",
+                    img_path,
                     input_path,
                 )
 
@@ -221,25 +207,27 @@ def _(args: RefTestArgs):
                 assert output_image is not None
 
                 ok = compareImages(expected_image, output_image) == (tag == "rendering")
+                if ok:
+                    passCount += 1
+                else:
+                    failCount += 1
 
                 help = renderingProps.get("help")
 
                 if ok:
                     passed += 1
-                    # img_path.unlink()
                     print(f"{counter}: {help}: {vt100.GREEN}Passed{vt100.RESET}")
                 else:
                     failed += 1
 
                     print()
                     print(f"{counter}: {help}: {vt100.RED}Failed{vt100.RESET}")
-                    # generate temporary file for debugging
 
                     print(f"file://{input_path}")
                     print(f"file://{TEST_REPORT / 'report.html'}#case-{counter}")
                     print()
 
-                report += f"""
+                test_report += f"""
                 <div id="case-{counter}" class="test-case {ok and 'passed' or 'failed'}">
                     <h2>{counter} - {tag}</h2>
                     <p>{help}</p>
@@ -259,7 +247,6 @@ def _(args: RefTestArgs):
                             <figcaption>Rendition</figcaption>
                         </div>
                     </div>
-                    <a href="{TEST_REPORT / f'{counter}.pdf'}">PDF</a>
                     <a href="{expected_image_url}">Reference</a>
                     <a href="{input_path}">Source</a>
                 </div>
@@ -269,6 +256,17 @@ def _(args: RefTestArgs):
 
                 if args.fast:
                     break
+            report += f"""
+                <div>
+                    <div id="test-{counter}" class="test {failCount and 'failed' or 'passed'}">
+                        <h1>{props.get('name')}</h2>
+                        <p>{props.get('help') or ""}</p>
+                        <a href="{file}">Source</a>
+                        <span>{passCount} passed, {failCount} failed</span>
+                    </div>
+                    {test_report}
+                </div>
+                """
 
     report += """
     </body>
