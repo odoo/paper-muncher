@@ -301,7 +301,9 @@ Res<Color> ValueParser<Color>::parse(Cursor<Css::Sst> &c) {
             return Ok(TRANSPARENT);
         }
     } else if (c.peek() == Css::Sst::FUNC) {
-        return Ok(try$(_parseFuncColor(c.next())));
+        auto color = try$(_parseFuncColor(*c));
+        c.next();
+        return Ok(color);
     }
 
     return Error::invalidData("expected color");
