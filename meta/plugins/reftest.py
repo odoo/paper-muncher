@@ -94,6 +94,9 @@ def _(args: RefTestArgs):
         <title>Reftest</title>
     </head>
     <body>
+        <header>
+            Reftest report
+        </header>
 """
 
     def update_temp_file(path, container, rendering):
@@ -267,6 +270,12 @@ def _(args: RefTestArgs):
                     {test_report}
                 </div>
                 """
+    report += f"""
+        <footer>
+        <p class="witty">{fetchMessage(args, 'witty' if failed else 'nice')}</p>
+        <p> Failed {failed} tests, Passed {passed} tests</p>
+        </footer>
+    """
 
     report += """
     </body>
@@ -275,6 +284,23 @@ def _(args: RefTestArgs):
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        header {
+            padding: 8px;
+            background-color: #18181b;
+            color: #fafafa;
+            z-index: 100;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px;
+            background-color: #18181b;
+            z-index: 100;
         }
 
         body {
