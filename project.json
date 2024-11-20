@@ -7,7 +7,7 @@
     "extern": {
         "skift-org/karm": {
             "git": "https://github.com/skift-org/karm.git",
-            "tag": "v0.6.0"
+            "tag": "v0.7.0"
         },
         "cute-engineering/cat": {
             "git": "https://github.com/cute-engineering/cat.git",
