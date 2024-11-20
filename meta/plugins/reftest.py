@@ -41,6 +41,9 @@ def compareImages(
     if len(lhs) != len(rhs):
         return False
 
+    if lhs == rhs:
+        return True
+
     errorSum = 0
     for i in range(len(lhs)):
         diff = abs(lhs[i] - rhs[i]) / 255
@@ -135,6 +138,7 @@ def _(args: RefTestArgs):
                 <h1>{props.get('name')}</h2>
                 <p>{props.get('help')}</p>
                 <a href="{file}">Source</a>
+            </div>
             """
 
             search = re.search(r"""<container>([\w\W]+?)</container>""", test)
@@ -266,8 +270,6 @@ def _(args: RefTestArgs):
                 if args.fast:
                     break
 
-            report += "</div><hr />"
-
     report += """
     </body>
     <style>
@@ -279,11 +281,17 @@ def _(args: RefTestArgs):
 
         body {
             font-family: sans-serif;
-            background-color: #18181b;
+            background-color: #09090b;
             color: #fafafa
         }
 
         .test {
+            padding: 8px;
+            background-color: #18181b;
+            border-bottom: 1px solid #27272a;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .test-case {
