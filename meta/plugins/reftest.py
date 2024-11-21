@@ -435,6 +435,19 @@ def _(args: RefTestArgs):
             border: none;
         }
     </style>
+
+    <script>
+        // Use a braodcast channel to tell other reftest instances to stop
+        const id = Math.random().toString(36).substring(7);
+        const channel = new BroadcastChannel('reftest');
+        channel.onmessage = (event) => {
+            if (event.data.id !== id && event.data.msg === 'stop') {
+                window.close();
+            }
+        }
+        channel.postMessage({from: id, msg: 'stop'});
+
+    </script>
     </html>
     """
 
