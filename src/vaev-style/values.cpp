@@ -930,7 +930,7 @@ static Res<Resolution::Unit> _parseResolutionUnit(Str unit) {
         return Ok(Resolution::Unit::DPI);
     else if (eqCi(unit, "dpcm"s))
         return Ok(Resolution::Unit::DPCM);
-    else if (eqCi(unit, "dppx"s))
+    else if (eqCi(unit, "dppx"s) or eqCi(unit, "x"s))
         return Ok(Resolution::Unit::DPPX);
     else
         return Error::invalidData("unknown resolution unit");
