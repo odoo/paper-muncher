@@ -7,4 +7,4 @@ then
     exit 1
 fi
 
-brew install libmagic lld llvm nasm ninja pkg-config python3 sdl2
+brew install libmagic lld llvm nasm ninja pkgconf python3 sdl2
