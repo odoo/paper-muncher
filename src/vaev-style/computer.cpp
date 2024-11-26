@@ -32,6 +32,7 @@ void Computer::_evalRule(Rule const &rule, Markup::Element const &el, MatchingRu
     });
 }
 
+// https://drafts.csswg.org/css-cascade/#cascade-origin
 Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element const &el) {
     MatchingRules matchingRules;
 
@@ -42,10 +43,12 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
         }
     }
 
-    // Sort rules by specificity
+    // Sort origin and specificity
     stableSort(
         matchingRules,
         [](auto const &a, auto const &b) {
+            if (a->origin != b->origin)
+                return a->origin <=> b->origin;
             return spec(a->selector) <=> spec(b->selector);
         }
     );
@@ -54,7 +57,6 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
     auto styleAttr = el.getAttribute(Html::STYLE_ATTR);
 
     StyleRule styleRule{
-        .selector = UNIVERSAL,
         .props = parseDeclarations<StyleProp>(styleAttr ? *styleAttr : ""),
     };
     matchingRules.pushBack(&styleRule);
@@ -73,7 +75,7 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
         }
     }
 
-    for (auto const &prop : importantProps)
+    for (auto const &prop : iterRev(importantProps))
         prop->apply(*computed);
 
     return computed;

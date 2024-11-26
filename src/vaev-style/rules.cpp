@@ -24,7 +24,7 @@ void StyleRule::repr(Io::Emit &e) const {
     e(")");
 }
 
-StyleRule StyleRule::parse(Css::Sst const &sst) {
+StyleRule StyleRule::parse(Css::Sst const &sst, Origin origin) {
     if (sst != Css::Sst::RULE)
         panic("expected rule");
 
@@ -49,6 +49,7 @@ StyleRule StyleRule::parse(Css::Sst const &sst) {
         }
     }
 
+    res.origin = origin;
     return res;
 }
 
@@ -128,7 +129,7 @@ void Rule::repr(Io::Emit &e) const {
     });
 }
 
-Rule Rule::parse(Css::Sst const &sst) {
+Rule Rule::parse(Css::Sst const &sst, Origin origin) {
     if (sst != Css::Sst::RULE)
         panic("expected rule");
 
@@ -140,7 +141,7 @@ Rule Rule::parse(Css::Sst const &sst) {
     else if (tok.data == "@font-face")
         return FontFaceRule::parse(sst);
     else
-        return StyleRule::parse(sst);
+        return StyleRule::parse(sst, origin);
 }
 
 } // namespace Vaev::Style
