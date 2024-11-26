@@ -198,12 +198,16 @@ struct BackgroundColorProp {
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        eatWhitespace(c);
         value.clear();
-        while (not c.ended()) {
-            value.pushBack(try$(parseValue<Color>(c)));
+
+        eatWhitespace(c);
+        auto maybeColor = parseValue<Color>(c);
+        while (maybeColor) {
+            value.pushBack(maybeColor.take());
             eatWhitespace(c);
+            maybeColor = parseValue<Color>(c);
         }
+
         return Ok();
     }
 };
