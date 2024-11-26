@@ -236,7 +236,7 @@ struct FlexItem {
             *box,
             {
                 .commit = Commit::NO,
-                .containingBlock = input.availableSpace, // FIXME
+                .containingBlock = input.containingBlock,
             }
         );
     }
@@ -464,7 +464,7 @@ struct FlexItem {
         }
     }
 
-    void alignCrossStretch(Tree &tree, Input input, Px lineCrossSize) {
+    void alignCrossStretch(Tree &tree, Commit commit, Vec2Px availableSpaceInFlexContainer, Px lineCrossSize) {
         if (
             fa.crossAxis(box->style->sizing).type == Size::Type::AUTO and
             fa.startCrossAxis(*box->style->margin) != Width::Type::AUTO and
@@ -478,8 +478,9 @@ struct FlexItem {
             speculateValues(
                 tree,
                 {
-                    .commit = input.commit,
+                    .commit = commit,
                     .knownSize = fa.extractMainAxisAndFillOptOther(usedSize, elementSpeculativeCrossSize),
+                    .availableSpace = availableSpaceInFlexContainer,
                 }
             );
         }
@@ -487,7 +488,7 @@ struct FlexItem {
         fa.crossAxis(position) = getMargin(START_CROSS);
     }
 
-    void alignItem(Tree &tree, Input input, Px lineCrossSize, Style::Align::Keywords parentAlignItems) {
+    void alignItem(Tree &tree, Commit commit, Vec2Px availableSpaceInFlexContainer, Px lineCrossSize, Style::Align::Keywords parentAlignItems) {
         auto align = box->style->aligns.alignSelf.keyword;
 
         if (align == Style::Align::AUTO)
@@ -507,7 +508,7 @@ struct FlexItem {
             return;
 
         case Style::Align::STRETCH:
-            alignCrossStretch(tree, input, lineCrossSize);
+            alignCrossStretch(tree, commit, availableSpaceInFlexContainer, lineCrossSize);
             return;
 
         default:
@@ -1356,7 +1357,8 @@ struct FlexFormatingContext {
             for (auto &flexItem : flexLine.items) {
                 flexItem.alignItem(
                     tree,
-                    input,
+                    input.commit,
+                    availableSpace,
                     flexLine.crossSize,
                     box.style->aligns.alignItems.keyword
                 );
@@ -1479,7 +1481,7 @@ struct FlexFormatingContext {
                         .commit = Commit::YES,
                         .knownSize = {flexItem.usedSize.x, flexItem.usedSize.y},
                         .position = flexItem.position,
-                        .availableSpace = flexItem.usedSize,
+                        .availableSpace = availableSpace,
                     }
                 );
 
