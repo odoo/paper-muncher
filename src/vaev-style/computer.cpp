@@ -66,12 +66,22 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
     computed->inherit(parent);
     Vec<Cursor<StyleProp>> importantProps;
 
+    // HACK: Apply custom properties first
     for (auto const &styleRule : matchingRules) {
         for (auto &prop : styleRule->props) {
-            if (prop.important == Important::NO)
+            if (prop.is<CustomProp>())
                 prop.apply(*computed);
-            else
-                importantProps.pushBack(&prop);
+        }
+    }
+
+    for (auto const &styleRule : matchingRules) {
+        for (auto &prop : styleRule->props) {
+            if (not prop.is<CustomProp>()) {
+                if (prop.important == Important::NO)
+                    prop.apply(*computed);
+                else
+                    importantProps.pushBack(&prop);
+            }
         }
     }
 
