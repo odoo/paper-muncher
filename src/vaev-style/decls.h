@@ -7,6 +7,8 @@
 
 namespace Vaev::Style {
 
+static bool DEBUG_DECL = false;
+
 template <typename T>
 Res<T> parseDeclarationValue(Cursor<Css::Sst> &c) {
     if constexpr (requires { T{}.parse(c); }) {
@@ -15,7 +17,7 @@ Res<T> parseDeclarationValue(Cursor<Css::Sst> &c) {
 
         return Ok(std::move(t));
     } else {
-        logError("missing parser for declaration: {}", T::name());
+        logErrorIf(DEBUG_DECL, "missing parser for declaration: {}", T::name());
         return Error::notImplemented("missing parser for declaration");
     }
 }
@@ -102,7 +104,7 @@ Res<P> parseDeclaration(Css::Sst const &sst, bool allowDeferred = true) {
     );
 
     if (not resDecl)
-        logWarn("failed to parse declaration: {} - {}", sst, resDecl);
+        logWarnIf(DEBUG_DECL, "failed to parse declaration: {} - {}", sst, resDecl);
 
     return resDecl;
 }
@@ -113,14 +115,14 @@ Vec<P> parseDeclarations(Css::Content const &sst, bool allowDeferred = true) {
 
     for (auto const &item : sst) {
         if (item != Css::Sst::DECL) {
-            logWarn("unexpected item in declaration: {}", item.type);
+            logWarnIf(DEBUG_DECL, "unexpected item in declaration: {}", item.type);
             continue;
         }
 
         auto prop = parseDeclaration<P>(item, allowDeferred);
 
         if (not prop) {
-            logWarn("failed to parse declaration: {}", prop.none());
+            logWarnIf(DEBUG_DECL, "failed to parse declaration: {}", prop.none());
             continue;
         }
         res.pushBack(prop.take());

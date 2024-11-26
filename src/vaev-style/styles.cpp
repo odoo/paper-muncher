@@ -4,6 +4,8 @@
 
 namespace Vaev::Style {
 
+static bool DEBUG_PROPS = false;
+
 // MARK: DeferredProp ----------------------------------------------------------
 
 bool DeferredProp::_expandVariable(Cursor<Css::Sst> &c, Map<String, Css::Content> const &env, Css::Content &out) {
@@ -70,7 +72,7 @@ void DeferredProp::apply(Computed &c) const {
     // Parse the expanded content
     Res<StyleProp> computed = parseDeclaration<StyleProp>(decl, false);
     if (not computed) {
-        logWarn("failed to parse declaration: {}", computed);
+        logWarnIf(DEBUG_PROPS, "failed to parse declaration: {}", computed);
     } else {
         computed.unwrap().apply(c);
     }

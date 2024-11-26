@@ -4,6 +4,8 @@
 
 namespace Vaev::Style {
 
+static bool DEBUG_RULE = false;
+
 // MARK: StyleRule -------------------------------------------------------------
 
 void StyleRule::repr(Io::Emit &e) const {
@@ -45,7 +47,7 @@ StyleRule StyleRule::parse(Css::Sst const &sst, Origin origin) {
             if (prop)
                 res.props.pushBack(prop.take());
         } else {
-            logWarn("unexpected item in style rule: {}", item.type);
+            logWarnIf(DEBUG_RULE, "unexpected item in style rule: {}", item);
         }
     }
 
