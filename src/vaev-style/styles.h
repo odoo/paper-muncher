@@ -1267,7 +1267,23 @@ struct FontFamilyProp {
     Res<> parse(Cursor<Css::Sst> &c) {
         eatWhitespace(c);
         while (not c.ended()) {
-            value.pushBack(try$(parseValue<String>(c)));
+            if (c.skip(Css::Token::ident("serif")))
+                value.pushBack("serif"s);
+            else if (c.skip(Css::Token::ident("sans-serif")))
+                value.pushBack("sans-serif"s);
+            else if (c.skip(Css::Token::ident("cursive")))
+                value.pushBack("cursive"s);
+            else if (c.skip(Css::Token::ident("fantasy")))
+                value.pushBack("fantasy"s);
+            else if (c.skip(Css::Token::ident("monospace")))
+                value.pushBack("monospace"s);
+            else if (c.skip(Css::Token::ident("system-ui")))
+                value.pushBack("system-ui"s);
+            else if (c.skip(Css::Token::ident("math")))
+                value.pushBack("math"s);
+            else
+                value.pushBack(try$(parseValue<String>(c)));
+
             eatWhitespace(c);
         }
         return Ok();
