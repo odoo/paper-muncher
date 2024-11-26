@@ -682,7 +682,7 @@ struct TableFormatingContext {
             if (sumMinColWidths < tableUsedWidth) {
                 auto toDistribute = tableUsedWidth - sumMinColWidths;
                 for (auto &w : minColWidth)
-                    w += (toDistribute * w) / sumMaxColWidths;
+                    w += (toDistribute * w) / sumMinColWidths;
             }
             return {minColWidth, tableUsedWidth};
         }
