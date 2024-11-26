@@ -1059,7 +1059,7 @@
                 }
 
                 .yellow {
-                    background-color: rgba(255, 255, 0, 0.37);
+                    background-color: rgba(255, 255, 0, 0.445);
                 }
 
                 .gray {
@@ -1067,7 +1067,7 @@
                 }
 
                 .orange {
-                    background-color: rgba(231, 134, 8, 0.603);
+                    background-color: rgba(231, 134, 8, 0.253);
                 }
 
                 .purple {
@@ -1267,6 +1267,97 @@
                 <tr>
                     <td class=" fake-text-block border" />
                     <td class=" fake-text-block border " />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+
+</test>
+
+<test name="table: fixed + background + spacing" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                    border: 0;
+                }
+
+                /* END: reset chrome's added style */
+
+                table {
+                    border-spacing: 10px 20px;
+                }
+
+                .color1 {
+                    background-color: aqua;
+                }
+
+                .color2 {
+                    background-color: rgb(154, 179, 14);
+                }
+
+                table {
+                    table-layout: fixed;
+                    width: 400px;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+
+        <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 400px;">
+            <div style="position: absolute; top: 20px; left: 10px; height: 20px; width: 380px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 380px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 185px;" class="color1">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 195px; height: 20px; width: 185px;" class="color1">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 60px; left: 10px; height: 20px; width: 380px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 380px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 20px; width: 185px;" class="color2">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 195px; height: 20px; width: 185px;" class="color2">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </rendering>
+
+    <rendering>
+        <table>
+            <thead class="color1">
+                <tr>
+                    <th class="fake-text-block" />
+                    <th class="fake-text-block" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="color2">
+                    <td class="fake-text-block" />
+                    <td class="fake-text-block" />
                 </tr>
             </tbody>
         </table>

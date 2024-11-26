@@ -797,11 +797,33 @@ struct TableFormatingContext {
         }
     }
 
+    struct AxisHelper {
+        Opt<usize> groupIdx = NONE;
+        Opt<usize> axisIdx = NONE;
+    };
+
+    Vec<AxisHelper> buildAxisHelper(Vec<TableAxis> const &axes, Vec<TableGroup> const &groups, usize len) {
+        Vec<AxisHelper> helper{Buf<AxisHelper>::init(len)};
+        for (usize groupIdx = 0; groupIdx < groups.len(); groupIdx++) {
+            for (usize i = groups[groupIdx].start; i <= groups[groupIdx].end; ++i)
+                helper[i].groupIdx = groupIdx;
+        }
+        for (usize axisIdx = 0; axisIdx < axes.len(); axisIdx++) {
+            for (usize i = axes[axisIdx].start; i <= axes[axisIdx].end; ++i)
+                helper[i].axisIdx = axisIdx;
+        }
+        return helper;
+    };
+
     Vec2Px tableBoxSize;
+    Vec<AxisHelper> rowHelper, colHelper;
 
     void build(Tree &tree, Input input) {
         buildHTMLTable();
         buildBordersGrid(tree);
+
+        rowHelper = buildAxisHelper(rows, rowGroups, grid.size.y);
+        colHelper = buildAxisHelper(cols, colGroups, grid.size.x);
 
         // NOTE: When "table-layout: fixed" is set but "width: auto", the specs suggest
         //       that the UA can use the fixed layout after computing the width
@@ -819,22 +841,13 @@ struct TableFormatingContext {
 
         computeRowHeights(tree);
 
-        // FIXME: any built in i can use?
-        auto sum = [](Vec<Px> &v) {
-            Px sum{};
-            for (auto x : v)
-                sum += x;
-            return sum;
-        };
-
         tableBoxSize = Vec2Px{
-            sum(colWidth) + spacing.x * Px{grid.size.x + 1},
-            sum(rowHeight) + spacing.y * Px{grid.size.y + 1},
+            iter(colWidth).sum() + spacing.x * Px{grid.size.x + 1},
+            iter(rowHeight).sum() + spacing.y * Px{grid.size.y + 1},
         };
     }
 
     void runTableBox(Tree &tree, Input input, Px &currPositionY) {
-        // TODO: this should be rewritten having a row index into account instead of cell/row/col(group)
         PrefixSum<Px> colWidthPref{colWidth}, rowHeightPref{rowHeight};
         Px currPositionX{input.position.x};
 
@@ -854,83 +867,6 @@ struct TableFormatingContext {
 
         currPositionX += boxBorder.start + spacing.x;
         currPositionY += boxBorder.top + spacing.y;
-
-        // column groups
-        for (auto &group : colGroups) {
-            layout(
-                tree,
-                group.el,
-                {
-                    .commit = Commit::YES,
-                    .knownSize = {
-                        colWidthPref.query(group.start, group.end),
-                        tableBoxSize.y,
-                    },
-                    .position = {
-                        currPositionX + colWidthPref.query(0, group.start - 1),
-                        currPositionY,
-                    },
-                }
-            );
-        }
-
-        // columns
-        for (auto &col : cols) {
-            layout(
-                tree,
-                col.el,
-                {
-                    .commit = Commit::YES,
-                    .knownSize = {
-                        colWidthPref.query(col.start, col.end),
-                        tableBoxSize.y,
-                    },
-                    .position = {
-                        currPositionX,
-                        currPositionY + colWidthPref.query(0, col.start - 1),
-                    },
-                }
-            );
-        }
-
-        // row groups
-        for (auto &group : rowGroups) {
-            layout(
-                tree,
-                group.el,
-                {
-                    .commit = Commit::YES,
-                    .knownSize = {
-                        tableBoxSize.x,
-                        rowHeightPref.query(group.start, group.end),
-                    },
-                    .position = {
-                        currPositionX,
-                        currPositionY + rowHeightPref.query(0, group.start - 1),
-                    },
-                }
-            );
-        }
-
-        // rows
-        for (auto &row : rows) {
-            layout(
-                tree,
-                row.el,
-                {
-                    .commit = Commit::YES,
-                    .knownSize = {
-                        tableBoxSize.x,
-                        rowHeightPref.query(row.start, row.end),
-                    },
-                    .position = {
-                        currPositionX,
-                        currPositionY + rowHeightPref.query(0, row.start - 1),
-                    },
-                }
-            );
-        }
-
         // cells
         for (usize i = 0; i < grid.size.y; currPositionY += rowHeight[i] + spacing.y, i++) {
             Px innnerCurrPositionX = Px{currPositionX};
@@ -943,6 +879,16 @@ struct TableFormatingContext {
                 auto colSpan = cell.box->attrs.colSpan;
                 auto rowSpan = cell.box->attrs.rowSpan;
 
+                // https://www.w3.org/TR/CSS22/tables.html#table-layers
+                if (rowHelper[i].axisIdx)
+                    cell.box->style->backgrounds.pushFront(rows[rowHelper[i].axisIdx.unwrap()].el.style->backgrounds);
+                if (rowHelper[i].groupIdx)
+                    cell.box->style->backgrounds.pushFront(rowGroups[rowHelper[i].groupIdx.unwrap()].el.style->backgrounds);
+                if (colHelper[j].axisIdx)
+                    cell.box->style->backgrounds.pushFront(cols[colHelper[j].axisIdx.unwrap()].el.style->backgrounds);
+                if (colHelper[j].groupIdx)
+                    cell.box->style->backgrounds.pushFront(colGroups[colHelper[j].groupIdx.unwrap()].el.style->backgrounds);
+
                 // TODO: In CSS 2.2, the height of a cell box is the minimum
                 //       height required by the content.
                 //       The table cell's 'height' property can influence
@@ -950,7 +896,7 @@ struct TableFormatingContext {
                 //       increase the height of the cell box.
                 //
                 //       (See https://www.w3.org/TR/CSS22/tables.html#height-layout)
-                auto cellOutput = layout(
+                layout(
                     tree,
                     *cell.box,
                     {
@@ -959,7 +905,7 @@ struct TableFormatingContext {
                             colWidthPref.query(j, j + colSpan - 1) + spacing.x * Px{colSpan - 1},
                             rowHeightPref.query(i, i + rowSpan - 1) + spacing.y * Px{rowSpan - 1}
                         },
-                        .position{innnerCurrPositionX, currPositionY},
+                        .position = {innnerCurrPositionX, currPositionY},
                     }
                 );
             };
@@ -983,7 +929,6 @@ struct TableFormatingContext {
     }
 
     Output run(Tree &tree, Input input) {
-
         Px currPositionY{input.position.y}, captionsHeight{0};
         if (tableBox.style->table->captionSide == CaptionSide::TOP) {
             runCaptions(tree, input, tableUsedWidth, currPositionY, captionsHeight);
