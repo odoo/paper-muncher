@@ -24,7 +24,8 @@ bool DeferredProp::_expandVariable(Cursor<Css::Sst> &c, Map<String, Css::Content
 
     Str varName = content->token.data;
     if (auto ref = env.access(varName)) {
-        out.pushBack(*ref);
+        Cursor<Css::Sst> varContent = *ref;
+        _expandContent(varContent, env, out);
         return true;
     }
     content.next();
@@ -43,6 +44,7 @@ bool DeferredProp::_expandFunction(Cursor<Css::Sst> &c, Map<String, Css::Content
         return false;
 
     auto &func = out.emplaceBack(Css::Sst::FUNC);
+    func.prefix = c->prefix;
     Cursor<Css::Sst> content = c->content;
     _expandContent(content, env, func.content);
 
@@ -72,7 +74,7 @@ void DeferredProp::apply(Computed &c) const {
     // Parse the expanded content
     Res<StyleProp> computed = parseDeclaration<StyleProp>(decl, false);
     if (not computed) {
-        logWarnIf(DEBUG_PROPS, "failed to parse declaration: {}", computed);
+        logWarnIf(DEBUG_PROPS, "failed to parse declaration: {}: {}", decl, computed);
     } else {
         computed.unwrap().apply(c);
     }
