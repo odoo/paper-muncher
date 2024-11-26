@@ -291,6 +291,43 @@ struct FlexItem {
         );
     }
 
+    // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
+    Px getMinAutoPrefMainSize(Tree &tree, Vec2Px containerSize) const {
+
+        Opt<Px> definiteMaxMainSize;
+        auto maxMainSize = box->style->sizing->maxSize(fa.isRowOriented ? Axis::HORIZONTAL : Axis::VERTICAL);
+        if (maxMainSize.type == Size::Type::LENGTH) {
+            definiteMaxMainSize = resolve(
+                tree,
+                *box,
+                maxMainSize.value,
+                fa.mainAxis(containerSize)
+            );
+        }
+
+        Px contentSizeSuggestion = fa.mainAxis(minContentSize);
+        // TODO: clamped by cross size if there is an aspect ratio
+        if (definiteMaxMainSize)
+            contentSizeSuggestion = min(contentSizeSuggestion, definiteMaxMainSize.unwrap());
+
+        if (fa.mainAxis(box->style->sizing).type == Size::Type::LENGTH) {
+            Px specifiedSizeSuggestion = resolve(
+                tree,
+                *box,
+                fa.mainAxis(box->style->sizing).value,
+                fa.mainAxis(containerSize)
+            );
+
+            if (definiteMaxMainSize)
+                specifiedSizeSuggestion = min(specifiedSizeSuggestion, definiteMaxMainSize.unwrap());
+
+            return min(contentSizeSuggestion, specifiedSizeSuggestion);
+            // TODO: else if(aspect ratio)
+        } else {
+            return contentSizeSuggestion;
+        }
+    }
+
     Px getMinMaxPrefferedSize(Tree &tree, bool isWidth, bool isMin, Vec2Px containerSize) const {
         Size sizeToResolve;
         if (isWidth and isMin)
@@ -319,27 +356,13 @@ struct FlexItem {
         case Size::FIT_CONTENT:
             logWarn("not implemented");
         case Size::AUTO:
-            if (isMin) {
-                // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
-                Size specifiedSizeToResolve{isWidth ? box->style->sizing->width : box->style->sizing->height};
-
-                if (specifiedSizeToResolve.type == Size::Type::LENGTH) {
-                    auto resolvedSpecifiedSize = resolve(
-                        tree,
-                        *box,
-                        specifiedSizeToResolve.value,
-                        isWidth
-                            ? containerSize.x
-                            : containerSize.y
-                    );
-                    return min(resolvedSpecifiedSize, isWidth ? minContentSize.x : minContentSize.y);
-                } else {
-                    return isWidth ? minContentSize.x : minContentSize.y;
-                }
-
-            } else {
+            if (not isMin)
                 panic("AUTO is an invalid value for max-width");
-            }
+
+            // used cross min sizes are resolved to 0 whereas main sizes have specific method
+            return isWidth == fa.isRowOriented
+                       ? getMinAutoPrefMainSize(tree, containerSize)
+                       : 0_px;
         case Size::NONE:
             if (isMin)
                 panic("NONE is an invalid value for min-width");
