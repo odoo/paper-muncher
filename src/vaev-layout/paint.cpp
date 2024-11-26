@@ -71,8 +71,6 @@ static void _paintBox(Box &box, Scene::Stack &stack) {
     if (auto prose = box.content.is<Strong<Text::Prose>>()) {
         (*prose)->_style.color = currentColor;
 
-        Karm::Text::Font font = {box.fontFace, box.layout.fontSize.cast<f64>()};
-        Math::Vec2f baseline = {0, font.metrics().ascend};
         stack.add(makeStrong<Scene::Text>(
             box.layout.borderBox().topStart().cast<f64>(),
             *prose
