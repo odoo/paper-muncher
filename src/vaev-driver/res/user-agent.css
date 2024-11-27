@@ -215,5 +215,13 @@ tr {
 td,
 th {
     display: table-cell;
+}
+
+td,
+th {
+    padding: 1px;
+}
+
+th {
     font-weight: bold;
 }
