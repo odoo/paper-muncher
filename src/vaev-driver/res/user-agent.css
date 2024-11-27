@@ -215,4 +215,5 @@ tr {
 td,
 th {
     display: table-cell;
+    font-weight: bold;
 }
