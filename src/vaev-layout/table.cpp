@@ -115,6 +115,7 @@ struct TableFormatingContext {
 
     // TODO: amount of footers and headers
     // footers will be the last rows of the grid; same for headers?
+    usize numOfHeaderRows = 0, numOfFooterRows = 0;
 
     struct {
         usize width;
@@ -265,8 +266,24 @@ struct TableFormatingContext {
         endRowGroup();
     }
 
+    Opt<usize> findFirstHeader() {
+        auto tableBoxChildren = tableBox.children();
+        MutCursor<Box> tableBoxCursor{tableBoxChildren};
+
+        advanceUntil(tableBoxCursor, [](Display d) {
+            return d == Display::TABLE_HEADER_GROUP;
+        });
+
+        if (tableBoxCursor.ended())
+            return NONE;
+
+        return tableBoxCursor - tableBoxChildren.begin();
+    }
+
     // https://html.spec.whatwg.org/multipage/tables.html#forming-a-table
     void buildHTMLTable() {
+        auto indexOfHeaderGroup = findFirstHeader();
+
         auto tableBoxChildren = tableBox.children();
         MutCursor<Box> tableBoxCursor{tableBoxChildren};
 
@@ -323,6 +340,11 @@ struct TableFormatingContext {
 
         // MARK: Rows
 
+        if (indexOfHeaderGroup) {
+            processRowGroup(tableBox.children()[indexOfHeaderGroup.unwrap()]);
+            numOfHeaderRows = grid.size.y;
+        }
+
         while (true) {
             advanceUntil(tableBoxCursor, [](Display d) {
                 return d.isHeadBodyFootOrRow();
@@ -352,14 +374,23 @@ struct TableFormatingContext {
                 panic("current element should be thead or tbody");
             }
 
+            if (indexOfHeaderGroup and
+                indexOfHeaderGroup.unwrap() == (usize)(tableBoxCursor - tableBoxChildren.begin())) {
+                // table header was already processed in the beggining of the Rows section of the algorithm
+                tableBoxCursor.next();
+                continue;
+            }
+
             processRowGroup(*tableBoxCursor);
 
             tableBoxCursor.next();
         }
 
+        usize ystartFooterRows = grid.size.y;
         for (auto tfootIdx : pendingTfoots) {
             processRowGroup(tableBoxChildren[tfootIdx]);
         }
+        numOfFooterRows = grid.size.y - ystartFooterRows;
     }
 
     Box &findTableBox(Box &tableWrapperBox) {
