@@ -154,7 +154,7 @@ struct AlignItemsProp {
 
 // https://drafts.csswg.org/css-align-3/#column-row-gap
 struct RowGapProp {
-    PercentOr<Length> value = initial();
+    CalcValue<PercentOr<Length>> value = initial();
 
     static constexpr Str name() { return "row-gap"; }
 
@@ -164,19 +164,19 @@ struct RowGapProp {
         c.gaps.y = value;
     }
 
-    static PercentOr<Length> load(Computed const &c) {
+    static CalcValue<PercentOr<Length>> load(Computed const &c) {
         return c.gaps.y;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
+        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         return Ok();
     }
 };
 
 // https://drafts.csswg.org/css-align-3/#column-row-gap
 struct ColumnGapProp {
-    PercentOr<Length> value = initial();
+    CalcValue<PercentOr<Length>> value = initial();
 
     static constexpr Str name() { return "column-gap"; }
 
@@ -186,7 +186,7 @@ struct ColumnGapProp {
         c.gaps.x = value;
     }
 
-    static PercentOr<Length> load(Computed &c) {
+    static CalcValue<PercentOr<Length>> load(Computed &c) {
         return c.gaps.x;
     }
 
@@ -675,7 +675,7 @@ struct BorderBottomStyleProp {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 struct BorderTopWidthProp {
-    Length value = initial();
+    CalcValue<Length> value = initial();
 
     static constexpr Str name() { return "border-top-width"; }
 
@@ -685,19 +685,19 @@ struct BorderTopWidthProp {
         c.borders.cow().top.width = value;
     }
 
-    static Length load(Computed const &c) {
+    static CalcValue<Length> load(Computed const &c) {
         return c.borders->top.width;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<Length>(c));
+        value = try$(parseValue<CalcValue<Length>>(c));
         return Ok();
     }
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 struct BorderRightWidthProp {
-    Length value = initial();
+    CalcValue<Length> value = initial();
 
     static constexpr Str name() { return "border-right-width"; }
 
@@ -707,19 +707,19 @@ struct BorderRightWidthProp {
         c.borders.cow().end.width = value;
     }
 
-    static Length load(Computed const &c) {
+    static CalcValue<Length> load(Computed const &c) {
         return c.borders->end.width;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<Length>(c));
+        value = try$(parseValue<CalcValue<Length>>(c));
         return Ok();
     }
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 struct BorderBottomWidthProp {
-    Length value = initial();
+    CalcValue<Length> value = initial();
 
     static constexpr Str name() { return "border-bottom-width"; }
 
@@ -729,19 +729,19 @@ struct BorderBottomWidthProp {
         c.borders.cow().bottom.width = value;
     }
 
-    static Length load(Computed const &c) {
+    static CalcValue<Length> load(Computed const &c) {
         return c.borders->bottom.width;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<Length>(c));
+        value = try$(parseValue<CalcValue<Length>>(c));
         return Ok();
     }
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 struct BorderLeftWidthProp {
-    Length value = initial();
+    CalcValue<Length> value = initial();
 
     static constexpr Str name() { return "border-left-width"; }
 
@@ -751,19 +751,19 @@ struct BorderLeftWidthProp {
         c.borders.cow().start.width = value;
     }
 
-    static Length load(Computed const &c) {
+    static CalcValue<Length> load(Computed const &c) {
         return c.borders->start.width;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<Length>(c));
+        value = try$(parseValue<CalcValue<Length>>(c));
         return Ok();
     }
 };
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 struct BorderRadiusTopRight {
-    Array<PercentOr<Length>, 2> value = {initial(), initial()};
+    Array<CalcValue<PercentOr<Length>>, 2> value = {initial(), initial()};
 
     static constexpr Str name() { return "border-top-right-radius"; }
 
@@ -774,7 +774,7 @@ struct BorderRadiusTopRight {
         c.borders.cow().radii.d = value[1];
     }
 
-    static Array<PercentOr<Length>, 2> load(Computed const &c) {
+    static Array<CalcValue<PercentOr<Length>>, 2> load(Computed const &c) {
         return {
             c.borders->radii.c,
             c.borders->radii.d,
@@ -782,11 +782,11 @@ struct BorderRadiusTopRight {
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value[0] = try$(parseValue<PercentOr<Length>>(c));
+        value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         if (c.ended()) {
             value[1] = value[0];
         } else {
-            value[1] = try$(parseValue<PercentOr<Length>>(c));
+            value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         }
 
         return Ok();
@@ -795,7 +795,7 @@ struct BorderRadiusTopRight {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 struct BorderRadiusTopLeft {
-    Array<PercentOr<Length>, 2> value = {initial(), initial()};
+    Array<CalcValue<PercentOr<Length>>, 2> value = {initial(), initial()};
 
     static constexpr Str name() { return "border-top-left-radius"; }
 
@@ -806,7 +806,7 @@ struct BorderRadiusTopLeft {
         c.borders.cow().radii.b = value[0];
     }
 
-    static Array<PercentOr<Length>, 2> load(Computed const &c) {
+    static Array<CalcValue<PercentOr<Length>>, 2> load(Computed const &c) {
         return {
             c.borders->radii.a,
             c.borders->radii.b,
@@ -814,12 +814,12 @@ struct BorderRadiusTopLeft {
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value[0] = try$(parseValue<PercentOr<Length>>(c));
+        value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         eatWhitespace(c);
         if (c.ended()) {
             value[1] = value[0];
         } else {
-            value[1] = try$(parseValue<PercentOr<Length>>(c));
+            value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         }
 
         return Ok();
@@ -828,7 +828,7 @@ struct BorderRadiusTopLeft {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 struct BorderRadiusBottomRight {
-    Array<PercentOr<Length>, 2> value = {initial(), initial()};
+    Array<CalcValue<PercentOr<Length>>, 2> value = {initial(), initial()};
 
     static constexpr Str name() { return "border-bottom-right-radius"; }
 
@@ -839,7 +839,7 @@ struct BorderRadiusBottomRight {
         c.borders.cow().radii.f = value[0];
     }
 
-    static Array<PercentOr<Length>, 2> load(Computed const &c) {
+    static Array<CalcValue<PercentOr<Length>>, 2> load(Computed const &c) {
         return {
             c.borders->radii.e,
             c.borders->radii.f,
@@ -847,11 +847,11 @@ struct BorderRadiusBottomRight {
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value[0] = try$(parseValue<PercentOr<Length>>(c));
+        value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         if (c.ended()) {
             value[1] = value[0];
         } else {
-            value[1] = try$(parseValue<PercentOr<Length>>(c));
+            value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         }
 
         return Ok();
@@ -860,7 +860,7 @@ struct BorderRadiusBottomRight {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 struct BorderRadiusBottomLeft {
-    Array<PercentOr<Length>, 2> value = {initial(), initial()};
+    Array<CalcValue<PercentOr<Length>>, 2> value = {initial(), initial()};
 
     static constexpr Str name() { return "border-bottom-left-radius"; }
 
@@ -871,7 +871,7 @@ struct BorderRadiusBottomLeft {
         c.borders.cow().radii.h = value[1];
     }
 
-    static Array<PercentOr<Length>, 2> load(Computed const &c) {
+    static Array<CalcValue<PercentOr<Length>>, 2> load(Computed const &c) {
         return {
             c.borders->radii.g,
             c.borders->radii.h,
@@ -879,11 +879,11 @@ struct BorderRadiusBottomLeft {
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value[0] = try$(parseValue<PercentOr<Length>>(c));
+        value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         if (c.ended()) {
             value[1] = value[0];
         } else {
-            value[1] = try$(parseValue<PercentOr<Length>>(c));
+            value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         }
 
         return Ok();
@@ -892,22 +892,22 @@ struct BorderRadiusBottomLeft {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 struct BorderRadius {
-    Math::Radii<PercentOr<Length>> value = initial();
+    Math::Radii<CalcValue<PercentOr<Length>>> value = initial();
 
     static constexpr Str name() { return "border-radius"; }
 
-    static constexpr Math::Radii<PercentOr<Length>> initial() { return {}; }
+    static Math::Radii<CalcValue<PercentOr<Length>>> initial() { return {}; }
 
     void apply(Computed &c) const {
         c.borders.cow().radii = value;
     }
 
-    static Math::Radii<PercentOr<Length>> load(Computed const &c) {
+    static Math::Radii<CalcValue<PercentOr<Length>>> load(Computed const &c) {
         return c.borders->radii;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<Math::Radii<PercentOr<Length>>>(c));
+        value = try$(parseValue<Math::Radii<CalcValue<PercentOr<Length>>>>(c));
         return Ok();
     }
 };
@@ -928,7 +928,7 @@ struct BorderTopProp {
 
     Res<> parse(Cursor<Css::Sst> &c) {
         while (not c.ended()) {
-            auto width = parseValue<Length>(c);
+            auto width = parseValue<CalcValue<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -969,7 +969,7 @@ struct BorderRightProp {
 
     Res<> parse(Cursor<Css::Sst> &c) {
         while (not c.ended()) {
-            auto width = parseValue<Length>(c);
+            auto width = parseValue<CalcValue<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -1010,7 +1010,7 @@ struct BorderBottomProp {
 
     Res<> parse(Cursor<Css::Sst> &c) {
         while (not c.ended()) {
-            auto width = parseValue<Length>(c);
+            auto width = parseValue<CalcValue<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -1051,7 +1051,7 @@ struct BorderLeftProp {
 
     Res<> parse(Cursor<Css::Sst> &c) {
         while (not c.ended()) {
-            auto width = parseValue<Length>(c);
+            auto width = parseValue<CalcValue<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -1095,7 +1095,7 @@ struct BorderProp {
 
     Res<> parse(Cursor<Css::Sst> &c) {
         while (not c.ended()) {
-            auto width = parseValue<Length>(c);
+            auto width = parseValue<CalcValue<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -1122,7 +1122,7 @@ struct BorderProp {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 struct BorderWidthProp {
-    Math::Insets<Length> value = BorderProps::MEDIUM;
+    Math::Insets<CalcValue<Length>> value;
 
     static constexpr Str name() { return "border-width"; }
 
@@ -1133,7 +1133,7 @@ struct BorderWidthProp {
         c.borders.cow().bottom.width = value.bottom;
     }
 
-    static Math::Insets<Length> load(Computed const &c) {
+    static Math::Insets<CalcValue<Length>> load(Computed const &c) {
         return {
             c.borders->start.width,
             c.borders->end.width,
@@ -1143,7 +1143,7 @@ struct BorderWidthProp {
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<Math::Insets<Length>>(c));
+        value = try$(parseValue<Math::Insets<CalcValue<Length>>>(c));
 
         return Ok();
     }
@@ -1530,6 +1530,8 @@ struct FontFamilyProp {
             else
                 value.pushBack(try$(parseValue<String>(c)));
 
+            eatWhitespace(c);
+            c.skip(Css::Token::comma());
             eatWhitespace(c);
         }
         return Ok();
