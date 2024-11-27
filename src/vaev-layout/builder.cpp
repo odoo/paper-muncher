@@ -202,7 +202,7 @@ static void _buildImage(Style::Computer &c, Markup::Element const &el, Box &pare
 
     auto src = el.getAttribute(Html::SRC_ATTR).unwrapOr(""s);
     auto url = Mime::Url::parse(src);
-    Image::Picture img = Image::loadOrFallback(url).unwrap();
+    auto img = Karm::Image::loadOrFallback(url).unwrap();
     parent.add({style, font, img});
 }
 

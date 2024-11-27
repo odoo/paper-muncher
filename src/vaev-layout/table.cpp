@@ -910,16 +910,6 @@ struct TableFormatingContext {
                 auto colSpan = cell.box->attrs.colSpan;
                 auto rowSpan = cell.box->attrs.rowSpan;
 
-                // https://www.w3.org/TR/CSS22/tables.html#table-layers
-                if (rowHelper[i].axisIdx)
-                    cell.box->style->backgrounds.pushFront(rows[rowHelper[i].axisIdx.unwrap()].el.style->backgrounds);
-                if (rowHelper[i].groupIdx)
-                    cell.box->style->backgrounds.pushFront(rowGroups[rowHelper[i].groupIdx.unwrap()].el.style->backgrounds);
-                if (colHelper[j].axisIdx)
-                    cell.box->style->backgrounds.pushFront(cols[colHelper[j].axisIdx.unwrap()].el.style->backgrounds);
-                if (colHelper[j].groupIdx)
-                    cell.box->style->backgrounds.pushFront(colGroups[colHelper[j].groupIdx.unwrap()].el.style->backgrounds);
-
                 // TODO: In CSS 2.2, the height of a cell box is the minimum
                 //       height required by the content.
                 //       The table cell's 'height' property can influence

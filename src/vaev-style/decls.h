@@ -41,7 +41,7 @@ static inline Important _consumeImportant(Cursor<Css::Sst> &c, bool eatEverythin
 
 template <typename P>
 static inline P _deferProperty(Css::Sst const &sst) {
-    StyleProp prop = DeferredProp{sst.token.data, sst.content};
+    P prop = DeferredProp{sst.token.data, sst.content};
     if constexpr (requires { P::important; }) {
         Cursor<Css::Sst> content = sst.content;
         prop.important = _consumeImportant(content, true);
@@ -61,6 +61,22 @@ static inline Res<P> _parseDeclaration(Css::Sst const &sst) {
         return Error::invalidData("unknown tokens in content");
 
     return Ok(std::move(prop));
+}
+
+template <typename P>
+static inline Res<P> _parseDefaulted(Css::Sst const &sst) {
+    Cursor<Css::Sst> content = sst.content;
+    Res<P> res = Error::invalidData("unknown declaration");
+    if (content.skip(Css::Token::ident("initial"))) {
+        res = Ok(DefaultedProp{sst.token.data, Default::INITIAL});
+    } else if (content.skip(Css::Token::ident("inherit"))) {
+        res = Ok(DefaultedProp{sst.token.data, Default::INHERIT});
+    } else if (content.skip(Css::Token::ident("unset"))) {
+        res = Ok(DefaultedProp{sst.token.data, Default::UNSET});
+    } else if (content.skip(Css::Token::ident("revert"))) {
+        res = Ok(DefaultedProp{sst.token.data, Default::REVERT});
+    }
+    return res;
 }
 
 template <typename P>
@@ -92,8 +108,15 @@ Res<P> parseDeclaration(Css::Sst const &sst, bool allowDeferred = true) {
                 }
 
                 resDecl = _parseDeclaration<P, T>(sst);
-                if (not resDecl and allowDeferred) {
-                    if constexpr (Meta::Constructible<P, DeferredProp>) {
+
+                if constexpr (Meta::Constructible<P, DefaultedProp>) {
+                    if (not resDecl) {
+                        resDecl = _parseDefaulted<P>(sst);
+                    }
+                }
+
+                if constexpr (Meta::Constructible<P, DeferredProp>) {
+                    if (not resDecl and allowDeferred) {
                         resDecl = Ok(_deferProperty<P>(sst));
                     }
                 }

@@ -32,7 +32,7 @@ struct Computed {
     AlignProps aligns;
     Math::Vec2<PercentOr<Length>> gaps;
 
-    Vec<BackgroundProps> backgrounds;
+    Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
     Cow<Margin> margin;
     Cow<Padding> padding;

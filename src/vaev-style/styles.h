@@ -32,6 +32,10 @@ struct AlignContentProp {
         c.aligns.alignContent = value;
     }
 
+    static Align load(Computed const &c) {
+        return c.aligns.alignContent;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Align>(c));
         return Ok();
@@ -48,6 +52,10 @@ struct JustifyContentProp {
 
     void apply(Computed &c) const {
         c.aligns.justifyContent = value;
+    }
+
+    static Align load(Computed const &c) {
+        return c.aligns.justifyContent;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -68,6 +76,10 @@ struct JustifySelfProp {
         c.aligns.justifySelf = value;
     }
 
+    static Align load(Computed const &c) {
+        return c.aligns.justifySelf;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Align>(c));
         return Ok();
@@ -84,6 +96,10 @@ struct AlignSelfProp {
 
     void apply(Computed &c) const {
         c.aligns.alignSelf = value;
+    }
+
+    static Align load(Computed const &c) {
+        return c.aligns.alignSelf;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -104,6 +120,10 @@ struct JustifyItemsProp {
         c.aligns.justifyItems = value;
     }
 
+    static Align load(Computed const &c) {
+        return c.aligns.justifyItems;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Align>(c));
         return Ok();
@@ -120,6 +140,10 @@ struct AlignItemsProp {
 
     void apply(Computed &c) const {
         c.aligns.alignItems = value;
+    }
+
+    static Align load(Computed const &c) {
+        return c.aligns.alignItems;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -140,6 +164,10 @@ struct RowGapProp {
         c.gaps.y = value;
     }
 
+    static PercentOr<Length> load(Computed const &c) {
+        return c.gaps.y;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<PercentOr<Length>>(c));
         return Ok();
@@ -158,13 +186,41 @@ struct ColumnGapProp {
         c.gaps.x = value;
     }
 
+    static PercentOr<Length> load(Computed &c) {
+        return c.gaps.x;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<PercentOr<Length>>(c));
         return Ok();
     }
 };
 
-// MARK: Background ------------------------------------------------------------
+// MARK: Background Color ------------------------------------------------------
+
+// https://www.w3.org/TR/CSS22/colors.html#propdef-background-color
+struct BackgroundColorProp {
+    Color value = initial();
+
+    static constexpr Str name() { return "background-color"; }
+
+    static constexpr Color initial() { return TRANSPARENT; }
+
+    void apply(Computed &c) const {
+        c.backgrounds.cow().color = value;
+    }
+
+    static Color load(Computed const &c) {
+        return c.backgrounds->color;
+    }
+
+    Res<> parse(Cursor<Css::Sst> &c) {
+        value = try$(parseValue<Color>(c));
+        return Ok();
+    }
+};
+
+// MARK: Background Image ------------------------------------------------------
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-attachment
 struct BackgroundAttachmentProp {
@@ -177,51 +233,39 @@ struct BackgroundAttachmentProp {
     }
 
     void apply(Computed &c) const {
-        c.backgrounds.resize(max(c.backgrounds.len(), value.len()));
+        auto &layers = c.backgrounds.cow().layers;
+        layers.resize(max(layers.len(), value.len()));
         for (usize i = 0; i < value.len(); ++i)
-            c.backgrounds[i].attachment = value[i];
-    }
-};
-
-// https://www.w3.org/TR/CSS22/colors.html#propdef-background-color
-struct BackgroundColorProp {
-    Vec<Color> value = initial();
-
-    static constexpr Str name() { return "background-color"; }
-
-    static constexpr Array<Color, 1> initial() { return {TRANSPARENT}; }
-
-    void apply(Computed &c) const {
-        c.backgrounds.resize(max(c.backgrounds.len(), value.len()));
-        for (usize i = 0; i < value.len(); ++i)
-            c.backgrounds[i].fill = value[i];
+            layers[i].attachment = value[i];
     }
 
-    Res<> parse(Cursor<Css::Sst> &c) {
-        value.clear();
-
-        eatWhitespace(c);
-        auto maybeColor = parseValue<Color>(c);
-        while (maybeColor) {
-            value.pushBack(maybeColor.take());
-            eatWhitespace(c);
-            maybeColor = parseValue<Color>(c);
-        }
-
-        return Ok();
+    static Vec<BackgroundAttachment> load(Computed const &c) {
+        Vec<BackgroundAttachment> layers;
+        for (auto const &l : c.backgrounds->layers)
+            layers.pushBack(l.attachment);
+        return layers;
     }
 };
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-image
 struct BackgroundImageProp {
-    Vec<Opt<Mime::Url>> value = initial();
+    Vec<Image> value = initial();
 
     static constexpr Str name() { return "background-image"; }
 
-    static Array<Opt<Mime::Url>, 1> initial() { return {NONE}; }
+    static Array<Image, 0> initial() { return {}; }
 
     void apply(Computed &) const {
         // TODO
+    }
+
+    static Vec<Image> load(Computed const &) {
+        return {};
+    }
+
+    Res<> pase(Cursor<Css::Sst> &) {
+        // TODO
+        return Ok();
     }
 };
 
@@ -231,14 +275,21 @@ struct BackgroundPositionProp {
 
     static constexpr Str name() { return "background-position"; }
 
-    static constexpr Array<BackgroundPosition, 1> initial() {
-        return {BackgroundPosition{Percent{0}, Percent{0}}};
+    static constexpr Array<BackgroundPosition, 0> initial() {
+        return {};
     }
 
-    void apply(Computed &c) const {
-        c.backgrounds.resize(max(c.backgrounds.len(), value.len()));
-        for (usize i = 0; i < value.len(); ++i)
-            c.backgrounds[i].position = value[i];
+    void apply(Computed &) const {
+        // TODO
+    }
+
+    static Vec<BackgroundPosition> load(Computed const &) {
+        return {};
+    }
+
+    Res<> pase(Cursor<Css::Sst> &) {
+        // TODO
+        return Ok();
     }
 };
 
@@ -252,39 +303,39 @@ struct BackgroundRepeatProp {
         return {BackgroundRepeat::REPEAT};
     }
 
-    void apply(Computed &c) const {
-        c.backgrounds.resize(max(c.backgrounds.len(), value.len()));
-        for (usize i = 0; i < value.len(); ++i)
-            c.backgrounds[i].repeat = value[i];
+    void apply(Computed &) const {
+        // TODO
+    }
+
+    static Vec<BackgroundRepeat> load(Computed const &) {
+        return {};
+    }
+
+    Res<> pase(Cursor<Css::Sst> &) {
+        // TODO
+        return Ok();
     }
 };
 
 // https://www.w3.org/TR/CSS22/colors.html#x10
 struct BackgroundProp {
     // FIXME: this should cover everything else
-    Vec<Color> value = initial();
+    BackgroundProps value = initial();
 
     static constexpr Str name() { return "background"; }
 
-    static constexpr Array<Color, 1> initial() { return {TRANSPARENT}; }
+    static BackgroundProps initial() { return {TRANSPARENT}; }
 
     void apply(Computed &c) const {
-        c.backgrounds.resize(max(c.backgrounds.len(), value.len()));
-        for (usize i = 0; i < value.len(); ++i)
-            c.backgrounds[i].fill = value[i];
+        c.backgrounds.cow() = value;
+    }
+
+    static BackgroundProps load(Computed const &c) {
+        return *c.backgrounds;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value.clear();
-
-        eatWhitespace(c);
-        auto maybeColor = parseValue<Color>(c);
-        while (maybeColor) {
-            value.pushBack(maybeColor.take());
-            eatWhitespace(c);
-            maybeColor = parseValue<Color>(c);
-        }
-
+        value.color = try$(parseValue<Color>(c));
         return Ok();
     }
 };
@@ -305,6 +356,10 @@ struct ColorProp {
         c.color = value;
     }
 
+    static Color load(Computed const &c) {
+        return c.color;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Color>(c));
         return Ok();
@@ -321,6 +376,10 @@ struct DisplayProp {
 
     void apply(Computed &s) const {
         s.display = value;
+    }
+
+    static Display load(Computed const &s) {
+        return s.display;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -341,6 +400,10 @@ struct TableLayoutProp {
         s.table.cow().tableLayout = value;
     }
 
+    static TableLayout load(Computed const &s) {
+        return s.table->tableLayout;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<TableLayout>(c));
         return Ok();
@@ -357,6 +420,10 @@ struct CaptionSideProp {
 
     void apply(Computed &s) const {
         s.table.cow().captionSide = value;
+    }
+
+    static CaptionSide load(Computed const &s) {
+        return s.table->captionSide;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -379,6 +446,10 @@ struct BorderTopColorProp {
         c.borders.cow().top.color = value;
     }
 
+    static Color load(Computed const &c) {
+        return c.borders->top.color;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Color>(c));
         return Ok();
@@ -395,6 +466,10 @@ struct BorderRightColorProp {
 
     void apply(Computed &c) const {
         c.borders.cow().end.color = value;
+    }
+
+    static Color load(Computed const &c) {
+        return c.borders->end.color;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -415,6 +490,10 @@ struct BorderBottomColorProp {
         c.borders.cow().bottom.color = value;
     }
 
+    static Color load(Computed const &c) {
+        return c.borders->bottom.color;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Color>(c));
         return Ok();
@@ -433,6 +512,10 @@ struct BorderLeftColorProp {
         c.borders.cow().start.color = value;
     }
 
+    static Color load(Computed const &c) {
+        return c.borders->start.color;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Color>(c));
         return Ok();
@@ -440,22 +523,31 @@ struct BorderLeftColorProp {
 };
 
 struct BorderColorProp {
-    Color value = initial();
+    Math::Insets<Color> value = initial();
 
     static constexpr Str name() { return "border-color"; }
 
-    static constexpr Color initial() { return BLACK; }
+    static constexpr Math::Insets<Color> initial() { return {BLACK}; }
 
     void apply(Computed &c) const {
         auto &borders = c.borders.cow();
-        borders.start.color = value;
-        borders.end.color = value;
-        borders.top.color = value;
-        borders.bottom.color = value;
+        borders.start.color = value.start;
+        borders.end.color = value.end;
+        borders.top.color = value.top;
+        borders.bottom.color = value.bottom;
+    }
+
+    static Math::Insets<Color> load(Computed const &c) {
+        return {
+            c.borders->start.color,
+            c.borders->end.color,
+            c.borders->top.color,
+            c.borders->bottom.color,
+        };
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<Color>(c));
+        value = try$(parseValue<Math::Insets<Color>>(c));
         return Ok();
     }
 };
@@ -478,6 +570,15 @@ struct BorderStyle {
         c.borders.cow().bottom.style = value.bottom;
     }
 
+    static Math::Insets<Gfx::BorderStyle> load(Computed const &c) {
+        return {
+            c.borders->start.style,
+            c.borders->end.style,
+            c.borders->top.style,
+            c.borders->bottom.style,
+        };
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Math::Insets<Gfx::BorderStyle>>(c));
         return Ok();
@@ -494,6 +595,10 @@ struct BorderLeftStyleProp {
 
     void apply(Computed &c) const {
         c.borders.cow().start.style = value;
+    }
+
+    static Gfx::BorderStyle load(Computed const &c) {
+        return c.borders->start.style;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -514,6 +619,10 @@ struct BorderTopStyleProp {
         c.borders.cow().top.style = value;
     }
 
+    static Gfx::BorderStyle load(Computed const &c) {
+        return c.borders->top.style;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Gfx::BorderStyle>(c));
         return Ok();
@@ -530,6 +639,10 @@ struct BorderRightStyleProp {
 
     void apply(Computed &c) const {
         c.borders.cow().end.style = value;
+    }
+
+    static Gfx::BorderStyle load(Computed const &c) {
+        return c.borders->end.style;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -550,6 +663,10 @@ struct BorderBottomStyleProp {
         c.borders.cow().bottom.style = value;
     }
 
+    static Gfx::BorderStyle load(Computed const &c) {
+        return c.borders->bottom.style;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Gfx::BorderStyle>(c));
         return Ok();
@@ -566,6 +683,10 @@ struct BorderTopWidthProp {
 
     void apply(Computed &c) const {
         c.borders.cow().top.width = value;
+    }
+
+    static Length load(Computed const &c) {
+        return c.borders->top.width;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -586,6 +707,10 @@ struct BorderRightWidthProp {
         c.borders.cow().end.width = value;
     }
 
+    static Length load(Computed const &c) {
+        return c.borders->end.width;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Length>(c));
         return Ok();
@@ -602,6 +727,10 @@ struct BorderBottomWidthProp {
 
     void apply(Computed &c) const {
         c.borders.cow().bottom.width = value;
+    }
+
+    static Length load(Computed const &c) {
+        return c.borders->bottom.width;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -622,6 +751,10 @@ struct BorderLeftWidthProp {
         c.borders.cow().start.width = value;
     }
 
+    static Length load(Computed const &c) {
+        return c.borders->start.width;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Length>(c));
         return Ok();
@@ -639,6 +772,13 @@ struct BorderRadiusTopRight {
     void apply(Computed &c) const {
         c.borders.cow().radii.c = value[0];
         c.borders.cow().radii.d = value[1];
+    }
+
+    static Array<PercentOr<Length>, 2> load(Computed const &c) {
+        return {
+            c.borders->radii.c,
+            c.borders->radii.d,
+        };
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -664,6 +804,13 @@ struct BorderRadiusTopLeft {
     void apply(Computed &c) const {
         c.borders.cow().radii.a = value[1];
         c.borders.cow().radii.b = value[0];
+    }
+
+    static Array<PercentOr<Length>, 2> load(Computed const &c) {
+        return {
+            c.borders->radii.a,
+            c.borders->radii.b,
+        };
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -692,6 +839,13 @@ struct BorderRadiusBottomRight {
         c.borders.cow().radii.f = value[0];
     }
 
+    static Array<PercentOr<Length>, 2> load(Computed const &c) {
+        return {
+            c.borders->radii.e,
+            c.borders->radii.f,
+        };
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value[0] = try$(parseValue<PercentOr<Length>>(c));
         if (c.ended()) {
@@ -715,6 +869,13 @@ struct BorderRadiusBottomLeft {
     void apply(Computed &c) const {
         c.borders.cow().radii.g = value[0];
         c.borders.cow().radii.h = value[1];
+    }
+
+    static Array<PercentOr<Length>, 2> load(Computed const &c) {
+        return {
+            c.borders->radii.g,
+            c.borders->radii.h,
+        };
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -741,6 +902,10 @@ struct BorderRadius {
         c.borders.cow().radii = value;
     }
 
+    static Math::Radii<PercentOr<Length>> load(Computed const &c) {
+        return c.borders->radii;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Math::Radii<PercentOr<Length>>>(c));
         return Ok();
@@ -755,6 +920,10 @@ struct BorderTopProp {
 
     void apply(Computed &c) const {
         c.borders.cow().top = value;
+    }
+
+    static Border load(Computed const &c) {
+        return c.borders->top;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -794,6 +963,10 @@ struct BorderRightProp {
         c.borders.cow().end = value;
     }
 
+    static Border load(Computed const &c) {
+        return c.borders->end;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         while (not c.ended()) {
             auto width = parseValue<Length>(c);
@@ -831,6 +1004,10 @@ struct BorderBottomProp {
         c.borders.cow().bottom = value;
     }
 
+    static Border load(Computed const &c) {
+        return c.borders->bottom;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         while (not c.ended()) {
             auto width = parseValue<Length>(c);
@@ -866,6 +1043,10 @@ struct BorderLeftProp {
 
     void apply(Computed &c) const {
         c.borders.cow().start = value;
+    }
+
+    static Border load(Computed const &c) {
+        return c.borders->start;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -908,6 +1089,10 @@ struct BorderProp {
         c.borders.cow().end = value;
     }
 
+    static Border load(Computed const &c) {
+        return c.borders->top;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         while (not c.ended()) {
             auto width = parseValue<Length>(c);
@@ -948,6 +1133,15 @@ struct BorderWidthProp {
         c.borders.cow().bottom.width = value.bottom;
     }
 
+    static Math::Insets<Length> load(Computed const &c) {
+        return {
+            c.borders->start.width,
+            c.borders->end.width,
+            c.borders->top.width,
+            c.borders->bottom.width,
+        };
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Math::Insets<Length>>(c));
 
@@ -969,6 +1163,10 @@ struct BorderCollapseProp {
         c.table.cow().collapse = value;
     }
 
+    static BorderCollapse load(Computed const &c) {
+        return c.table->collapse;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<BorderCollapse>(c));
         return Ok();
@@ -985,6 +1183,10 @@ struct BorderSpacingProp {
 
     void apply(Computed &c) const {
         c.table.cow().spacing = value;
+    }
+
+    static BorderSpacing load(Computed const &c) {
+        return c.table->spacing;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1007,6 +1209,10 @@ struct FlexBasisProp {
         c.flex.cow().basis = value;
     }
 
+    static FlexBasis load(Computed const &c) {
+        return c.flex->basis;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<FlexBasis>(c));
         return Ok();
@@ -1023,6 +1229,10 @@ struct FlexDirectionProp {
 
     void apply(Computed &c) const {
         c.flex.cow().direction = value;
+    }
+
+    static FlexDirection load(Computed const &c) {
+        return c.flex->direction;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1043,6 +1253,10 @@ struct FlexGrowProp {
         c.flex.cow().grow = value;
     }
 
+    static Number load(Computed const &c) {
+        return c.flex->grow;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Number>(c));
         return Ok();
@@ -1061,6 +1275,10 @@ struct FlexShrinkProp {
         c.flex.cow().shrink = value;
     }
 
+    static Number load(Computed const &c) {
+        return c.flex->shrink;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Number>(c));
         return Ok();
@@ -1077,6 +1295,10 @@ struct FlexWrapProp {
 
     void apply(Computed &c) const {
         c.flex.cow().wrap = value;
+    }
+
+    static FlexWrap load(Computed const &c) {
+        return c.flex->wrap;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1101,6 +1323,13 @@ struct FlexFlowProp {
     void apply(Computed &c) const {
         c.flex.cow().direction = value.v0;
         c.flex.cow().wrap = value.v1;
+    }
+
+    static Tuple<FlexDirection, FlexWrap> load(Computed const &c) {
+        return {
+            c.flex->direction,
+            c.flex->wrap,
+        };
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1131,16 +1360,11 @@ struct FlexFlowProp {
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex
 struct FlexProp {
-    struct Flex {
-        FlexBasis flexBasis;
-        Number flexGrow, flexShrink;
+    FlexItemProps value = initial();
 
-        void repr(Io::Emit &e) const {
-            e("({} {} {})", flexBasis, flexGrow, flexShrink);
-        }
-    } value = initial();
+    static constexpr Str name() { return "flex"; }
 
-    static Flex initial() {
+    static FlexItemProps initial() {
         return {
             Width{Width::AUTO},
             0,
@@ -1148,13 +1372,19 @@ struct FlexProp {
         };
     }
 
-    static constexpr Str name() { return "flex"; }
-
     void apply(Computed &c) const {
         auto &flex = c.flex.cow();
         flex.basis = value.flexBasis;
         flex.grow = value.flexGrow;
         flex.shrink = value.flexShrink;
+    }
+
+    static FlexItemProps load(Computed const &c) {
+        return {
+            c.flex->basis,
+            c.flex->grow,
+            c.flex->shrink,
+        };
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1181,7 +1411,7 @@ struct FlexProp {
         value.flexGrow = value.flexShrink = 1;
         value.flexBasis = FlexBasis(Width(Length(0, Length::Unit::PX)));
 
-        auto parseGrowShrink = [](Cursor<Css::Sst> &c, Flex &value) -> Res<> {
+        auto parseGrowShrink = [](Cursor<Css::Sst> &c, FlexItemProps &value) -> Res<> {
             auto grow = parseValue<Number>(c);
             if (not grow)
                 return Error::invalidData("expected flex item grow");
@@ -1226,6 +1456,10 @@ struct FloatProp {
         c.float_ = value;
     }
 
+    static Float load(Computed const &c) {
+        return c.float_;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Float>(c));
         return Ok();
@@ -1241,6 +1475,10 @@ struct ClearProp {
 
     void apply(Computed &c) const {
         c.clear = value;
+    }
+
+    static Clear load(Computed const &c) {
+        return c.clear;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1266,6 +1504,10 @@ struct FontFamilyProp {
 
     void apply(Computed &c) const {
         c.font.cow().families = value;
+    }
+
+    static Vec<String> load(Computed const &c) {
+        return c.font->families;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1311,6 +1553,10 @@ struct FontWeightProp {
         c.font.cow().weight = value;
     }
 
+    static FontWeight load(Computed const &c) {
+        return c.font->weight;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<FontWeight>(c));
         return Ok();
@@ -1332,6 +1578,10 @@ struct FontWidthProp {
 
     void apply(Computed &c) const {
         c.font.cow().width = value;
+    }
+
+    static FontWidth load(Computed const &c) {
+        return c.font->width;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1357,6 +1607,10 @@ struct FontStyleProp {
         c.font.cow().style = value;
     }
 
+    static FontStyle load(Computed const &c) {
+        return c.font->style;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<FontStyle>(c));
         return Ok();
@@ -1380,6 +1634,10 @@ struct FontSizeProp {
         c.font.cow().size = value;
     }
 
+    static FontSize load(Computed const &c) {
+        return c.font->size;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<FontSize>(c));
         return Ok();
@@ -1397,6 +1655,10 @@ struct LineHeightProp {
 
     void apply(Computed &) const {
         // TODO
+    }
+
+    static LineHeight load(Computed const &) {
+        return initial(); // TODO
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1436,6 +1698,10 @@ struct MarginTopProp {
         c.margin.cow().top = value;
     }
 
+    static Width load(Computed const &c) {
+        return c.margin->top;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Width>(c));
         return Ok();
@@ -1451,6 +1717,10 @@ struct MarginRightProp {
 
     void apply(Computed &c) const {
         c.margin.cow().end = value;
+    }
+
+    static Width load(Computed const &c) {
+        return c.margin->end;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1470,6 +1740,10 @@ struct MarginBottomProp {
         c.margin.cow().bottom = value;
     }
 
+    static Width load(Computed const &c) {
+        return c.margin->bottom;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Width>(c));
         return Ok();
@@ -1487,6 +1761,10 @@ struct MarginLeftProp {
         c.margin.cow().start = value;
     }
 
+    static Width load(Computed const &c) {
+        return c.margin->start;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Width>(c));
         return Ok();
@@ -1502,6 +1780,10 @@ struct MarginProp {
 
     void apply(Computed &c) const {
         c.margin.cow() = value;
+    }
+
+    static Math::Insets<Width> load(Computed const &c) {
+        return c.margin->start;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1524,6 +1806,10 @@ struct MarginInlineStartProp {
         c.margin.cow().start = value;
     }
 
+    static Width load(Computed const &c) {
+        return c.margin->start;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Width>(c));
         return Ok();
@@ -1540,6 +1826,10 @@ struct MarginInlineEndProp {
     void apply(Computed &c) const {
         // FIXME: Take writing mode into account
         c.margin.cow().end = value;
+    }
+
+    static Width load(Computed const &c) {
+        return c.margin->end;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1561,6 +1851,13 @@ struct MarginInlineProp {
         c.margin.cow().end = value.end;
     }
 
+    static Math::Insets<Width> load(Computed const &c) {
+        return {
+            c.margin->start,
+            c.margin->end,
+        };
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Math::Insets<Width>>(c));
         return Ok();
@@ -1579,6 +1876,10 @@ struct MarginBlockStartProp {
         c.margin.cow().top = value;
     }
 
+    static Width load(Computed const &c) {
+        return c.margin->top;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Width>(c));
         return Ok();
@@ -1595,6 +1896,10 @@ struct MarginBlockEndProp {
     void apply(Computed &c) const {
         // FIXME: Take writing mode into account
         c.margin.cow().bottom = value;
+    }
+
+    static Width load(Computed const &c) {
+        return c.margin->bottom;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1616,6 +1921,13 @@ struct MarginBlockProp {
         c.margin.cow().bottom = value.bottom;
     }
 
+    static Math::Insets<Width> load(Computed const &c) {
+        return {
+            c.margin->top,
+            c.margin->bottom,
+        };
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Math::Insets<Width>>(c));
         return Ok();
@@ -1633,6 +1945,10 @@ struct OpacityProp {
 
     void apply(Computed &c) const {
         c.opacity = value;
+    }
+
+    static f64 load(Computed const &c) {
+        return c.opacity;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1660,6 +1976,10 @@ struct OverflowXProp {
         c.overflows.x = value;
     }
 
+    static Overflow load(Computed const &c) {
+        return c.overflows.x;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Overflow>(c));
         return Ok();
@@ -1676,6 +1996,10 @@ struct OverflowYProp {
 
     void apply(Computed &c) const {
         c.overflows.y = value;
+    }
+
+    static Overflow load(Computed const &c) {
+        return c.overflows.y;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1696,6 +2020,10 @@ struct OverflowBlockProp {
         c.overflows.block = value;
     }
 
+    static Overflow load(Computed const &c) {
+        return c.overflows.block;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Overflow>(c));
         return Ok();
@@ -1714,6 +2042,10 @@ struct OverflowInlineProp {
         c.overflows.inline_ = value;
     }
 
+    static Overflow load(Computed const &c) {
+        return c.overflows.inline_;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Overflow>(c));
         return Ok();
@@ -1725,7 +2057,7 @@ struct OverflowInlineProp {
 // https://www.w3.org/TR/css-box-3/#propdef-padding
 
 struct PaddingTopProp {
-    PercentOr<Length> value = initial();
+    CalcValue<PercentOr<Length>> value = initial();
 
     static Str name() { return "padding-top"; }
 
@@ -1735,14 +2067,18 @@ struct PaddingTopProp {
         c.padding.cow().top = value;
     }
 
+    static CalcValue<PercentOr<Length>> load(Computed const &c) {
+        return c.padding->top;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
+        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         return Ok();
     }
 };
 
 struct PaddingRightProp {
-    PercentOr<Length> value = initial();
+    CalcValue<PercentOr<Length>> value = initial();
 
     static Str name() { return "padding-right"; }
 
@@ -1752,14 +2088,18 @@ struct PaddingRightProp {
         c.padding.cow().end = value;
     }
 
+    static CalcValue<PercentOr<Length>> load(Computed const &c) {
+        return c.padding->end;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
+        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         return Ok();
     }
 };
 
 struct PaddingBottomProp {
-    PercentOr<Length> value = initial();
+    CalcValue<PercentOr<Length>> value = initial();
 
     static Str name() { return "padding-bottom"; }
 
@@ -1769,14 +2109,18 @@ struct PaddingBottomProp {
         c.padding.cow().bottom = value;
     }
 
+    static CalcValue<PercentOr<Length>> load(Computed const &c) {
+        return c.padding->bottom;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
+        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         return Ok();
     }
 };
 
 struct PaddingLeftProp {
-    PercentOr<Length> value = initial();
+    CalcValue<PercentOr<Length>> value = initial();
 
     static Str name() { return "padding-left"; }
 
@@ -1786,25 +2130,33 @@ struct PaddingLeftProp {
         c.padding.cow().start = value;
     }
 
+    static CalcValue<PercentOr<Length>> load(Computed const &c) {
+        return c.padding->start;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
+        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
         return Ok();
     }
 };
 
 struct PaddingProp {
-    Math::Insets<PercentOr<Length>> value = initial();
+    Math::Insets<CalcValue<PercentOr<Length>>> value = initial();
 
     static Str name() { return "padding"; }
 
-    static Math::Insets<PercentOr<Length>> initial() { return {}; }
+    static Math::Insets<CalcValue<PercentOr<Length>>> initial() { return {}; }
 
     void apply(Computed &c) const {
         c.padding.cow() = value;
     }
 
+    static Math::Insets<CalcValue<PercentOr<Length>>> load(Computed const &c) {
+        return *c.padding;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
-        value = try$(parseValue<Math::Insets<PercentOr<Length>>>(c));
+        value = try$(parseValue<Math::Insets<CalcValue<PercentOr<Length>>>>(c));
         return Ok();
     }
 };
@@ -1819,6 +2171,10 @@ struct OrderProp {
 
     void apply(Computed &c) const {
         c.order = value;
+    }
+
+    static Integer load(Computed const &c) {
+        return c.order;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1841,6 +2197,10 @@ struct PositionProp {
         c.position = value;
     }
 
+    static Position load(Computed const &c) {
+        return c.position;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Position>(c));
         return Ok();
@@ -1857,6 +2217,10 @@ struct TopProp {
 
     void apply(Computed &c) const {
         c.offsets.cow().top = value;
+    }
+
+    static Width load(Computed const &c) {
+        return c.offsets->top;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1877,6 +2241,10 @@ struct RightProp {
         c.offsets.cow().end = value;
     }
 
+    static Width load(Computed const &c) {
+        return c.offsets->end;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Width>(c));
         return Ok();
@@ -1895,6 +2263,10 @@ struct BottomProp {
         c.offsets.cow().bottom = value;
     }
 
+    static Width load(Computed const &c) {
+        return c.offsets->bottom;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Width>(c));
         return Ok();
@@ -1911,6 +2283,10 @@ struct LeftProp {
 
     void apply(Computed &c) const {
         c.offsets.cow().start = value;
+    }
+
+    static Width load(Computed const &c) {
+        return c.offsets->start;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1932,6 +2308,10 @@ struct BoxSizingProp {
 
     void apply(Computed &c) const {
         c.sizing.cow().boxSizing = value;
+    }
+
+    static BoxSizing load(Computed const &c) {
+        return c.sizing->boxSizing;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1959,6 +2339,10 @@ struct WidthProp {
         c.sizing.cow().width = value;
     }
 
+    static Size load(Computed const &c) {
+        return c.sizing->width;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Size>(c));
         return Ok();
@@ -1976,6 +2360,10 @@ struct HeightProp {
 
     void apply(Computed &c) const {
         c.sizing.cow().height = value;
+    }
+
+    static Size load(Computed const &c) {
+        return c.sizing->height;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -1997,6 +2385,10 @@ struct MinWidthProp {
         c.sizing.cow().minWidth = value;
     }
 
+    static Size load(Computed const &c) {
+        return c.sizing->minWidth;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Size>(c));
         return Ok();
@@ -2014,6 +2406,10 @@ struct MinHeightProp {
 
     void apply(Computed &c) const {
         c.sizing.cow().minHeight = value;
+    }
+
+    static Size load(Computed const &c) {
+        return c.sizing->minHeight;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -2035,6 +2431,10 @@ struct MaxWidthProp {
         c.sizing.cow().maxWidth = value;
     }
 
+    static Size load(Computed const &c) {
+        return c.sizing->maxWidth;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<Size>(c));
         return Ok();
@@ -2052,6 +2452,10 @@ struct MaxHeightProp {
 
     void apply(Computed &c) const {
         c.sizing.cow().maxHeight = value;
+    }
+
+    static Size load(Computed const &c) {
+        return c.sizing->maxHeight;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -2074,6 +2478,10 @@ struct TextAlignProp {
 
     void apply(Computed &c) const {
         c.text.cow().align = value;
+    }
+
+    static TextAlign load(Computed const &c) {
+        return c.text->align;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -2109,6 +2517,10 @@ struct TextTransformProp {
         c.text.cow().transform = value;
     }
 
+    static TextTransform load(Computed const &c) {
+        return c.text->transform;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -2138,6 +2550,10 @@ struct WhiteSpaceProp {
 
     void apply(Computed &c) const {
         c.text.cow().whiteSpace = value;
+    }
+
+    static WhiteSpace load(Computed const &c) {
+        return c.text->whiteSpace;
     }
 
     Res<> parse(Cursor<Css::Sst> &c) {
@@ -2174,6 +2590,10 @@ struct ZIndexProp {
         c.zIndex = value;
     }
 
+    static ZIndex load(Computed const &c) {
+        return c.zIndex;
+    }
+
     Res<> parse(Cursor<Css::Sst> &c) {
         value = try$(parseValue<ZIndex>(c));
         return Ok();
@@ -2204,7 +2624,8 @@ struct CustomProp {
     }
 };
 
-// NOSPEC: This is a property that could not be parsed, it's used to store the value as is and apply it with the cascade and custom properties
+// NOTE: A property that could not be parsed, it's used to store the value
+//       as-is and apply it with the cascade and custom properties
 struct DeferredProp {
     String propName;
     Css::Content value;
@@ -2217,11 +2638,35 @@ struct DeferredProp {
 
     static void _expandContent(Cursor<Css::Sst> &c, Map<String, Css::Content> const &env, Css::Content &out);
 
-    void apply(Computed &c) const;
+    // static void inherit(Computed const &parent, Computed &child) {
+    //     child.variables = parent.variables;
+    // }
+
+    void apply(Computed const &parent, Computed &c) const;
 
     void repr(Io::Emit &e) const {
         e("(Deffered {#} = {})", propName, value);
     }
+};
+
+enum struct Default {
+    INITIAL, //< represents the value defined as the property’s initial value.
+    INHERIT, //< represents the property’s computed value on the parent element.
+    UNSET,   //< acts as either inherit or initial, depending on whether the property is inherited or not.
+    REVERT,  //< rolls back the cascade to the cascaded value of the earlier origin.
+
+    _LEN,
+};
+
+struct DefaultedProp {
+    String propName;
+    Default value;
+
+    static constexpr Str name() { return "defaulted prop"; }
+
+    void apply(Computed const &parent, Computed &c) const;
+
+    void repr(Io::Emit &) const;
 };
 
 // MARK: Style Property  -------------------------------------------------------
@@ -2364,8 +2809,9 @@ using _StyleProp = Union<
     ZIndexProp,
 
     // Other
-    CustomProp, // this is generally a variable declaration
-    DeferredProp
+    CustomProp,
+    DeferredProp,
+    DefaultedProp
 
     /**/
     >;
@@ -2399,10 +2845,13 @@ struct StyleProp : public _StyleProp {
         });
     }
 
-    void apply(Computed &c) const {
+    void apply(Computed const &parent, Computed &c) const {
         visit([&](auto const &p) {
             if constexpr (requires { p.apply(c); })
                 p.apply(c);
+
+            if constexpr (requires { p.apply(parent, c); })
+                p.apply(parent, c);
         });
     }
 

@@ -70,7 +70,7 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
     for (auto const &styleRule : matchingRules) {
         for (auto &prop : styleRule->props) {
             if (prop.is<CustomProp>())
-                prop.apply(*computed);
+                prop.apply(parent, *computed);
         }
     }
 
@@ -78,7 +78,7 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
         for (auto &prop : styleRule->props) {
             if (not prop.is<CustomProp>()) {
                 if (prop.important == Important::NO)
-                    prop.apply(*computed);
+                    prop.apply(parent, *computed);
                 else
                     importantProps.pushBack(&prop);
             }
@@ -86,7 +86,7 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
     }
 
     for (auto const &prop : iterRev(importantProps))
-        prop->apply(*computed);
+        prop->apply(parent, *computed);
 
     return computed;
 }
