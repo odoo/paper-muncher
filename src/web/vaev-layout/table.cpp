@@ -445,7 +445,7 @@ struct TableFormatingContext {
     Vec<Px> colWidth;
     Px tableUsedWidth;
 
-    // MARK: Fixed Table Layout
+    // MARK: Fixed Table Layout ------------------------------------------------------------------------
     // https://www.w3.org/TR/CSS22/tables.html#fixed-table-layout
 
     void computeFixedColWidths(Tree &tree, Input &input) {
@@ -536,64 +536,42 @@ struct TableFormatingContext {
     }
 
     // MARK: Auto Table Layout -------------------------------------------------
-    // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
+    Pair<Px> getCellMinMaxAutoWidth(Tree &tree, Box &box, TableCell &cell, Px tableComputedWidth) {
+        auto cellMinOutput = computeIntrinsicSize(
+            tree,
+            box,
+            IntrinsicSize::MIN_CONTENT,
+            {} // FIXME
+        );
 
-    void computeAutoColWidths(Tree &tree, Input &input) {
-        // FIXME: This is a rough approximation of the algorithm.
-        //        We need to distinguish between percentage-based and fixed lengths:
-        //         - Percentage-based sizes are fixed and cannot have extra space distributed to them.
-        //         - Fixed lengths can receive extra space.
-        //        Currently, we lack a predicate to differentiate percentage sizes from fixed lengths.
-        //
-        //        Additionally, to fully implement the spec at:
-        //        https://www.w3.org/TR/css-tables-3/#intrinsic-percentage-width-of-a-column-based-on-cells-of-span-up-to-1
-        //        We will need a way to retrieve the percentage value, which is also not yet implemented.
+        auto cellMaxOutput = computeIntrinsicSize(
+            tree,
+            box,
+            IntrinsicSize::MAX_CONTENT,
+            {} // FIXME
+        );
 
-        auto getCellMinMaxWidth = [](Tree &tree, Box &box, Input &input, TableCell &cell) -> Pair<Px> {
-            auto cellMinOutput = layout(
+        auto cellMinWidth = cellMinOutput.x;
+        auto cellMaxWidth = cellMaxOutput.x;
+
+        if (cell.box->style->sizing->width != Size::Type::AUTO) {
+            auto cellPreferredWidth = resolve(
                 tree,
-                *cell.box,
-                Input{
-                    .commit = Commit::NO,
-                    .intrinsic = IntrinsicSize::MIN_CONTENT,
-                }
+                box,
+                cell.box->style->sizing->width.value,
+                tableComputedWidth
             );
+            cellMinWidth = max(cellMinWidth, cellPreferredWidth);
 
-            auto cellMaxOutput = layout(
-                tree,
-                *cell.box,
-                Input{
-                    .commit = Commit::NO,
-                    .intrinsic = IntrinsicSize::MAX_CONTENT,
-                }
-            );
+            // TODO: It is not 100% from docs if we should also use 'width'
+            //       (preferred width) for the maximum cell width
+            cellMaxWidth = max(cellMaxWidth, cellPreferredWidth);
+        }
 
-            auto cellMinWidth = cellMinOutput.size.x;
-            auto cellMaxWidth = cellMaxOutput.size.x;
+        return {cellMinWidth, cellMaxWidth};
+    };
 
-            if (cell.box->style->sizing->width != Size::Type::AUTO) {
-                auto cellPreferredWidth = resolve(
-                    tree,
-                    box,
-                    cell.box->style->sizing->width.value,
-                    input.availableSpace.x
-                );
-                cellMinWidth = max(cellMinWidth, cellPreferredWidth);
-
-                // TODO: It is not 100% from docs if we should also use 'width'
-                //       (preffered width) for the maximum cell width
-                cellMaxWidth = max(cellMaxWidth, cellPreferredWidth);
-            }
-
-            return {cellMinWidth, cellMaxWidth};
-        };
-
-        Vec<Px> minColWidth{};
-        minColWidth.resize(grid.size.x);
-
-        Vec<Px> maxColWidth{};
-        maxColWidth.resize(grid.size.x);
-
+    void computeAutoWidthOfCellsSpan1(Tree &tree, Vec<Px> &minColWidth, Vec<Px> &maxColWidth, Px tableWidth) {
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
                 auto cell = grid.get(j, i);
@@ -605,32 +583,15 @@ struct TableFormatingContext {
                 if (colSpan > 1)
                     continue;
 
-                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxWidth(tree, *cell.box, input, cell);
+                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth);
 
                 minColWidth[j] = max(minColWidth[j], cellMinWidth);
                 maxColWidth[j] = max(maxColWidth[j], cellMaxWidth);
             }
         }
+    }
 
-        Opt<Px> tableComputedWidth;
-        if (tableBox.style->sizing->width != Size::AUTO) {
-            tableComputedWidth = resolve(tree, tableBox, tableBox.style->sizing->width.value, input.availableSpace.x);
-        }
-
-        for (auto &[start, end, el] : cols) {
-            auto width = el.style->sizing->width;
-
-            // FIXME: docs are not clear on what to do for columns with AUTO width
-            if (width == Size::AUTO)
-                continue;
-
-            auto widthValue = resolve(tree, el, width.value, tableComputedWidth.unwrapOr(0_px));
-
-            for (usize x = start; x <= end; ++x) {
-                minColWidth[x] = max(minColWidth[x], widthValue);
-                maxColWidth[x] = max(maxColWidth[x], widthValue);
-            }
-        }
+    void computeAutoWidthOfCellsSpanN(Tree &tree, Vec<Px> &minColWidth, Vec<Px> &maxColWidth, Px tableWidth) {
 
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
@@ -643,7 +604,7 @@ struct TableFormatingContext {
                 if (colSpan <= 1)
                     continue;
 
-                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxWidth(tree, *cell.box, input, cell);
+                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth);
 
                 Px currSumMinColWidth{0}, currSumMaxColWidth{0};
                 for (usize k = 0; k < colSpan; ++k) {
@@ -666,7 +627,9 @@ struct TableFormatingContext {
                 }
             }
         }
+    }
 
+    void computeAutoWidthOfColGroups(Tree &tree, Vec<Px> &minColWidth, Px tableWidth) {
         for (auto &group : colGroups) {
 
             auto columnGroupWidth = group.el.style->sizing->width;
@@ -678,7 +641,7 @@ struct TableFormatingContext {
                 currSumOfGroupWidth += minColWidth[x];
             }
 
-            auto columnGroupWidthValue = resolve(tree, group.el, columnGroupWidth.value, input.availableSpace.x);
+            auto columnGroupWidthValue = resolve(tree, group.el, columnGroupWidth.value, tableWidth);
             if (currSumOfGroupWidth >= columnGroupWidthValue)
                 continue;
 
@@ -687,39 +650,104 @@ struct TableFormatingContext {
                 minColWidth[x] += toDistribute;
             }
         }
+    }
 
-        Px sumMinColWidths{0}, sumMaxColWidths{0};
-        for (auto x : minColWidth)
-            sumMinColWidths += x;
-        for (auto x : maxColWidth)
-            sumMaxColWidths += x;
+    void computeAutoWidthOfCols(Tree &tree, Vec<Px> &minColWidth, Vec<Px> &maxColWidth, Px tableWidth) {
+        for (auto &[start, end, el] : cols) {
+            auto width = el.style->sizing->width;
+
+            // FIXME: docs are not clear on what to do for columns with AUTO width
+            if (width == Size::AUTO)
+                continue;
+
+            auto widthValue = resolve(tree, el, width.value, tableWidth);
+
+            for (usize x = start; x <= end; ++x) {
+                minColWidth[x] = max(minColWidth[x], widthValue);
+                maxColWidth[x] = max(maxColWidth[x], widthValue);
+            }
+        }
+    }
+
+    Pair<Vec<Px>> computeMinMaxAutoWidths(Tree &tree, usize size, Px tableWidth) {
+        Vec<Px> minColWidth{};
+        minColWidth.resize(size);
+
+        Vec<Px> maxColWidth{};
+        maxColWidth.resize(size);
+
+        computeAutoWidthOfCellsSpan1(tree, minColWidth, maxColWidth, tableWidth);
+        computeAutoWidthOfCols(tree, minColWidth, maxColWidth, tableWidth);
+        computeAutoWidthOfCellsSpanN(tree, minColWidth, maxColWidth, tableWidth);
+        computeAutoWidthOfColGroups(tree, minColWidth, tableWidth);
+
+        return {minColWidth, maxColWidth};
+    }
+
+    // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
+
+    void computeAutoColWidths(Tree &tree, Input &input) {
+        // FIXME: This is a rough approximation of the algorithm.
+        //        We need to distinguish between percentage-based and fixed lengths:
+        //         - Percentage-based sizes are fixed and cannot have extra space distributed to them.
+        //         - Fixed lengths can receive extra space.
+        //        Currently, we lack a predicate to differentiate percentage sizes from fixed lengths.
+        //
+        //        Additionally, to fully implement the spec at:
+        //        https://www.w3.org/TR/css-tables-3/#intrinsic-percentage-width-of-a-column-based-on-cells-of-span-up-to-1
+        //        We will need a way to retrieve the percentage value, which is also not yet implemented.
 
         Px capmin = input.capmin.unwrap();
-        // TODO: should minColWidth or maxColWidth be forcelly used if input is MIN_CONTENT or MAX_CONTENT respectivelly?
         if (tableBox.style->sizing->width != Size::AUTO) {
-            // TODO: how to resolve percentage if case of table width?
-            tableUsedWidth = max(capmin, max(tableComputedWidth.unwrap(), sumMinColWidths));
+            auto [minWithoutPerc, maxWithoutPerc] = computeMinMaxAutoWidths(tree, grid.size.x, 0_px);
 
-            // If the used width is greater than MIN, the extra width should be distributed over the columns.
-            // NOTE: A bit obvious, but assuming that specs refers to MIN columns above
-            if (sumMinColWidths < tableUsedWidth) {
-                auto toDistribute = tableUsedWidth - sumMinColWidths;
-                for (auto &w : minColWidth)
-                    w += (toDistribute * w) / sumMinColWidths;
+            Px tableComputedWidth = resolve(tree, tableBox, tableBox.style->sizing->width.value, input.availableSpace.x);
+            tableUsedWidth = max(capmin, tableComputedWidth);
+
+            auto sumMinWithoutPerc = iter(minWithoutPerc).sum();
+            if (sumMinWithoutPerc > tableUsedWidth) {
+                tableUsedWidth = sumMinWithoutPerc;
+                colWidth = minWithoutPerc;
+                return;
             }
 
-            colWidth = minColWidth;
-            return;
-        }
+            auto [minWithPerc, maxWithPerc] = computeMinMaxAutoWidths(tree, grid.size.x, tableComputedWidth);
 
-        // TODO: Specs doesnt say if we should distribute extra width over columns;
-        //       also would it be over min or max columns?
-        if (min(sumMaxColWidths, capmin) < input.containingBlock.x) {
-            colWidth = maxColWidth;
-            tableUsedWidth = max(sumMaxColWidths, capmin);
+            auto sumMaxWithoutPerc = iter(maxWithoutPerc).sum();
+            Vec<Px> &distWOPToUse = sumMaxWithoutPerc < tableUsedWidth ? maxWithoutPerc : minWithoutPerc;
+            Vec<Px> &distWPToUse = sumMaxWithoutPerc < tableUsedWidth ? maxWithPerc : minWithPerc;
+
+            auto sumWithPerc = iter(distWPToUse).sum(), sumWithoutPerc = iter(distWOPToUse).sum();
+            if (sumWithPerc > tableUsedWidth) {
+                Px totalDiff = sumWithPerc - sumWithoutPerc;
+                Px allowedGrowth = tableUsedWidth - sumWithoutPerc;
+
+                // it should grow only (allowedGrowth / totalDiff)
+                for (usize j = 0; j < grid.size.x; ++j) {
+                    if (distWPToUse[j] != distWOPToUse[j]) {
+                        Px diff = distWPToUse[j] - distWOPToUse[j];
+                        distWOPToUse[j] += (diff * allowedGrowth) / totalDiff;
+                    }
+                }
+                colWidth = distWOPToUse;
+            } else {
+                auto toDistribute = tableUsedWidth - sumWithPerc;
+                for (auto &w : distWPToUse)
+                    w += (toDistribute * w) / sumWithPerc;
+                colWidth = distWPToUse;
+            }
         } else {
-            colWidth = minColWidth;
-            tableUsedWidth = max(sumMinColWidths, capmin);
+            auto [minColWidth, maxColWidth] = computeMinMaxAutoWidths(tree, grid.size.x, 0_px);
+            auto sumMaxColWidths = iter(maxColWidth).sum(), sumMinColWidths = iter(minColWidth).sum();
+            // TODO: Specs doesnt say if we should distribute extra width over columns;
+            //       also would it be over min or max columns?
+            if (min(sumMaxColWidths, capmin) < input.containingBlock.x) {
+                colWidth = maxColWidth;
+                tableUsedWidth = max(sumMaxColWidths, capmin);
+            } else {
+                colWidth = minColWidth;
+                tableUsedWidth = max(sumMinColWidths, capmin);
+            }
         }
     }
 
