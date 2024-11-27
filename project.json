@@ -5,9 +5,41 @@
     "version": "v0.1.2",
     "description": "An experimental document-generation tool",
     "extern": {
-        "skift-org/karm": {
-            "git": "https://github.com/skift-org/karm.git",
-            "tag": "v0.10.0"
+        "cute-engineering/ce-heap": {
+            "git": "https://github.com/cute-engineering/ce-heap.git",
+            "tag": "v1.1.0"
+        },
+        "cute-engineering/ce-mdi": {
+            "git": "https://github.com/cute-engineering/ce-mdi.git",
+            "tag": "v0.2.0"
+        },
+        "cute-engineering/ce-libc": {
+            "git": "https://github.com/cute-engineering/ce-libc.git",
+            "tag": "v1.1.0"
+        },
+        "cute-engineering/ce-libm": {
+            "git": "https://github.com/cute-engineering/ce-libm.git",
+            "tag": "v1.0.2"
+        },
+        "cute-engineering/ce-stdcpp": {
+            "git": "https://github.com/cute-engineering/ce-stdcpp.git",
+            "tag": "v1.3.0"
+        },
+        "cute-engineering/cat": {
+            "git": "https://github.com/cute-engineering/cat.git",
+            "tag": "v0.7.4"
+        },
+        "sdl2": {
+            "description": "A cross-platform development library designed to provide low level access to hardware",
+            "names": [
+                "sdl2"
+            ]
+        },
+        "uring": {
+            "description": "Linux io_uring library",
+            "names": [
+                "liburing"
+            ]
         },
         "cute-engineering/cat": {
             "git": "https://github.com/cute-engineering/cat.git",
