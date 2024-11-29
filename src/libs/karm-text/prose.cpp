@@ -38,6 +38,12 @@ void Prose::append(Rune rune) {
     last(_blocks).runeRange.end(_runes.len());
 }
 
+void Prose::appendBox() {
+    append(U'￼');
+    last(_cells).boxIndex = _boxes.len();
+    _boxes.emplaceBack();
+}
+
 void Prose::clear() {
     _runes.clear();
     _cells.clear();
@@ -68,7 +74,11 @@ void Prose::_measureBlocks() {
                 first = false;
 
             cell.pos = adv;
-            cell.adv = _style.font.advance(cell.glyph);
+            if (cell.boxIndex == Cell::NO_BOX) {
+                cell.adv = _style.font.advance(cell.glyph);
+            } else {
+                cell.adv = _boxes[cell.boxIndex].size.width;
+            }
             adv += cell.adv;
             prev = cell.glyph;
         }
@@ -81,13 +91,13 @@ void Prose::_wrapLines(f64 width) {
 
     Line line{{}, {}};
     bool first = true;
-    f64 adv = 0;
+    f64 xadv = 0;
     for (usize i = 0; i < _blocks.len(); i++) {
         auto &block = _blocks[i];
-        if (adv + block.width > width and _style.wordwrap and _style.multiline and not first) {
+        if (xadv + block.width > width and _style.wordwrap and _style.multiline and not first) {
             _lines.pushBack(line);
             line = {block.runeRange, {i, 1}};
-            adv = block.width;
+            xadv = block.width;
 
             if (block.newline(*this)) {
                 _lines.pushBack(line);
@@ -95,7 +105,7 @@ void Prose::_wrapLines(f64 width) {
                     {block.runeRange.end(), 0},
                     {i + 1, 0},
                 };
-                adv = 0;
+                xadv = 0;
             }
         } else {
             line.blockRange.size++;
@@ -107,9 +117,9 @@ void Prose::_wrapLines(f64 width) {
                     {block.runeRange.end(), 0},
                     {i + 1, 0},
                 };
-                adv = 0;
+                xadv = 0;
             } else {
-                adv += block.width;
+                xadv += block.width;
             }
         }
         first = false;

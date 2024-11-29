@@ -6,7 +6,9 @@
 
 namespace Vaev::Layout {
 
-static void _buildNode(Style::Computer &c, Markup::Node const &node, Box &parent);
+static void _buildElement(Style::Computer &c, Markup::Element const &el, Box &parent);
+
+static void _buildBlock(Style::Computer &c, Strong<Style::Computed> style, Markup::Element const &el, Box &parent);
 
 // MARK: Attributes ------------------------------------------------------------
 
@@ -86,30 +88,24 @@ static Strong<Karm::Text::Fontface> _lookupFontface(Style::Computed &style) {
 
 auto RE_SEGMENT_BREAK = Re::single('\n', '\r', '\f', '\v');
 
-static void _buildRun(Style::Computer &, Markup::Text const &node, Box &parent) {
-    auto style = makeStrong<Style::Computed>(Style::Computed::initial());
-    style->inherit(*parent.style);
-
-    auto fontFace = _lookupFontface(*style);
-    Io::SScan scan{node.data};
-    scan.eat(Re::space());
-    if (scan.ended())
-        return;
+static Text::ProseStyle _computeProseStyle(Style::Computed &style) {
+    auto fontFace = _lookupFontface(style);
 
     // FIXME: We should pass this around from the top in order to properly resolve rems
     Resolver resolver{
         .rootFont = Text::Font{fontFace, 16},
         .boxFont = Text::Font{fontFace, 16},
     };
+
     Text::ProseStyle proseStyle{
         .font = {
             fontFace,
-            resolver.resolve(style->font->size).cast<f64>(),
+            resolver.resolve(style.font->size).cast<f64>(),
         },
         .multiline = true,
     };
 
-    switch (style->text->align) {
+    switch (style.text->align) {
     case TextAlign::START:
     case TextAlign::LEFT:
         proseStyle.align = Text::TextAlign::LEFT;
@@ -129,21 +125,30 @@ static void _buildRun(Style::Computer &, Markup::Text const &node, Box &parent) 
         break;
     }
 
-    auto prose = makeStrong<Text::Prose>(proseStyle);
-    auto whitespace = style->text->whiteSpace;
+    return proseStyle;
+}
+
+static bool _buildText(Style::Computed &style, Markup::Text const &node, Box &parent) {
+    Io::SScan scan{node.data};
+
+    scan.eat(Re::space());
+    if (scan.ended())
+        return false;
+
+    auto whitespace = style.text->whiteSpace;
 
     while (not scan.ended()) {
-        switch (style->text->transform) {
+        switch (style.text->transform) {
         case TextTransform::UPPERCASE:
-            prose->append(toAsciiUpper(scan.next()));
+            parent.append(toAsciiUpper(scan.next()));
             break;
 
         case TextTransform::LOWERCASE:
-            prose->append(toAsciiLower(scan.next()));
+            parent.append(toAsciiLower(scan.next()));
             break;
 
         case TextTransform::NONE:
-            prose->append(scan.next());
+            parent.append(scan.next());
             break;
 
         default:
@@ -153,7 +158,7 @@ static void _buildRun(Style::Computer &, Markup::Text const &node, Box &parent) 
         if (whitespace == WhiteSpace::PRE) {
             auto tok = scan.token(Re::space());
             if (tok)
-                prose->append(tok);
+                parent.append(tok);
         } else if (whitespace == WhiteSpace::PRE_LINE) {
             bool hasBlank = false;
             if (scan.eat(Re::blank())) {
@@ -161,28 +166,75 @@ static void _buildRun(Style::Computer &, Markup::Text const &node, Box &parent) 
             }
 
             if (scan.eat(RE_SEGMENT_BREAK)) {
-                prose->append('\n');
+                parent.append('\n');
                 scan.eat(Re::blank());
                 hasBlank = false;
             }
 
             if (hasBlank)
-                prose->append(' ');
+                parent.append(' ');
         } else {
             // NORMAL
             if (scan.eat(Re::space()))
-                prose->append(' ');
+                parent.append(' ');
         }
     }
 
-    parent.add({style, fontFace, std::move(prose)});
+    return true;
+}
+
+static bool _buildInline(Style::Computer &c, Cursor<Strong<Markup::Node>> &nodes, Box &parent) {
+    auto style = makeStrong<Style::Computed>(Style::Computed::initial());
+    style->inherit(*parent.style);
+    auto proseStyle = _computeProseStyle(*style);
+    Box inlineBox{style, _lookupFontface(*style), Inline{proseStyle}};
+    bool anyContent = false;
+
+    while (not nodes.ended()) {
+        auto &curr = nodes.peek();
+        if (auto t = curr->is<Markup::Text>()) {
+            anyContent = anyContent or _buildText(*style, *t, inlineBox);
+        } else if (auto el = curr->is<Markup::Element>()) {
+            auto elStyle = c.computeFor(*style, *el);
+            if (elStyle->display != Display::INLINE)
+                break;
+
+            yap("display: {}", elStyle);
+
+            /*if (elStyle->display == Display::FLOW) {
+                // TODO: Handle spans
+            } else */
+            {
+                _buildBlock(c, elStyle, *el, inlineBox);
+            }
+
+            anyContent = true;
+        }
+
+        nodes.next();
+    }
+
+    if (anyContent)
+        parent.append(std::move(inlineBox));
+
+    return anyContent;
 }
 
 // MARK: Build Block -----------------------------------------------------------
 
 void _buildChildren(Style::Computer &c, Vec<Strong<Markup::Node>> const &children, Box &parent) {
-    for (auto &child : children) {
-        _buildNode(c, *child, parent);
+    Cursor<Strong<Markup::Node>> cursor = children;
+    _buildInline(c, cursor, parent);
+    while (not cursor.ended()) {
+        if (auto el = (*cursor)->is<Markup::Element>())
+            _buildElement(c, *el, parent);
+
+        cursor.next();
+
+        if (cursor.ended())
+            break;
+
+        _buildInline(c, cursor, parent);
     }
 }
 
@@ -191,7 +243,7 @@ static void _buildBlock(Style::Computer &c, Strong<Style::Computed> style, Marku
     Box box = {style, font};
     _buildChildren(c, el.children(), box);
     box.attrs = _parseDomAttr(el);
-    parent.add(std::move(box));
+    parent.append(std::move(box));
 }
 
 // MARK: Build Replace ---------------------------------------------------------
@@ -203,7 +255,7 @@ static void _buildImage(Style::Computer &c, Markup::Element const &el, Box &pare
     auto src = el.getAttribute(Html::SRC_ATTR).unwrapOr(""s);
     auto url = Mime::Url::parse(src);
     auto img = Karm::Image::loadOrFallback(url).unwrap();
-    parent.add({style, font, img});
+    parent.append({style, font, img});
 }
 
 // MARK: Build Table -----------------------------------------------------------
@@ -218,13 +270,13 @@ static void _buildTableChildren(Style::Computer &c, Vec<Strong<Markup::Node>> co
     for (auto &child : children) {
         if (auto el = child->is<Markup::Element>()) {
             if (el->tagName == Html::CAPTION) {
-                _buildNode(c, *child, tableWrapperBox);
+                _buildElement(c, *el, tableWrapperBox);
             } else {
-                _buildNode(c, *child, tableBox);
+                _buildElement(c, *el, tableBox);
             }
         }
     }
-    tableWrapperBox.add(std::move(tableBox));
+    tableWrapperBox.append(std::move(tableBox));
 }
 
 static void _buildTable(Style::Computer &c, Strong<Style::Computed> style, Markup::Element const &el, Box &parent) {
@@ -238,7 +290,7 @@ static void _buildTable(Style::Computer &c, Strong<Style::Computed> style, Marku
     _buildTableChildren(c, el.children(), wrapper, style);
     wrapper.attrs = _parseDomAttr(el);
 
-    parent.add(std::move(wrapper));
+    parent.append(std::move(wrapper));
 }
 
 // MARK: Build -----------------------------------------------------------------
@@ -265,20 +317,10 @@ static void _buildElement(Style::Computer &c, Markup::Element const &el, Box &pa
     }
 }
 
-static void _buildNode(Style::Computer &c, Markup::Node const &node, Box &parent) {
-    if (auto el = node.is<Markup::Element>()) {
-        _buildElement(c, *el, parent);
-    } else if (auto text = node.is<Markup::Text>()) {
-        _buildRun(c, *text, parent);
-    } else if (auto doc = node.is<Markup::Document>()) {
-        _buildChildren(c, doc->children(), parent);
-    }
-}
-
 Box build(Style::Computer &c, Markup::Document const &doc) {
     auto style = makeStrong<Style::Computed>(Style::Computed::initial());
     Box root = {style, _lookupFontface(*style)};
-    _buildNode(c, doc, root);
+    _buildChildren(c, doc.children(), root);
     return root;
 }
 

@@ -5,7 +5,25 @@
 
 namespace Vaev::Layout {
 
-// MARK: Box ------------------------------------------------------------------
+// MARK: Inline ----------------------------------------------------------------
+
+Inline::Inline(Text::ProseStyle style)
+    : prose(makeStrong<Text::Prose>(style)) {}
+
+void Inline::append(Box &&box) {
+    prose->appendBox();
+    boxes.pushBack(std::move(box));
+}
+
+void Inline::append(Rune rune) {
+    prose->append(rune);
+}
+
+void Inline::append(Str text) {
+    prose->append(text);
+}
+
+// MARK: Box -------------------------------------------------------------------
 
 Box::Box(Strong<Style::Computed> style, Strong<Text::Fontface> font)
     : style{std::move(style)}, fontFace{font} {}
@@ -23,15 +41,34 @@ MutSlice<Box> Box::children() {
     if (auto children = content.is<Vec<Box>>()) {
         return *children;
     }
+
+    if (auto inline_ = content.is<Inline>()) {
+        return inline_->boxes;
+    }
+
     return {};
 }
 
-void Box::add(Box &&box) {
+void Box::append(Box &&box) {
     if (content.is<None>())
         content = Vec<Box>{};
 
-    if (auto children = content.is<Vec<Box>>()) {
+    if (auto inline_ = content.is<Inline>()) {
+        inline_->append(std::move(box));
+    } else if (auto children = content.is<Vec<Box>>()) {
         children->pushBack(std::move(box));
+    }
+}
+
+void Box::append(Rune rune) {
+    if (auto inline_ = content.is<Inline>()) {
+        inline_->append(rune);
+    }
+}
+
+void Box::append(Str text) {
+    if (auto inline_ = content.is<Inline>()) {
+        inline_->append(text);
     }
 }
 

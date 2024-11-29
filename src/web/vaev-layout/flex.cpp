@@ -941,7 +941,7 @@ struct FlexFormatingContext {
 
             auto [sumUnfrozenOuterSizes, _] = computeStats();
             // FIXME: weird types of spaces and sizes here, since free space can be negative
-            Number initialFreeSpace = Number{_usedMainSize} - Number{sumUnfrozenOuterSizes + sumFrozenOuterSizes};
+            Number const initialFreeSpace = Number{_usedMainSize} - Number{sumUnfrozenOuterSizes + sumFrozenOuterSizes};
 
             while (unfrozenItems.len()) {
                 auto [sumUnfrozenOuterSizes, sumUnfrozenFlexFactors] = computeStats();
@@ -955,7 +955,7 @@ struct FlexFormatingContext {
 
                 if (flexCaseIsGrow) {
                     for (auto *flexItem : unfrozenItems) {
-                        Number ratio = flexItem->flexItemProps.grow / sumUnfrozenFlexFactors;
+                        Number const ratio = flexItem->flexItemProps.grow / sumUnfrozenFlexFactors;
 
                         fa.mainAxis(flexItem->usedSize) = flexItem->flexBaseSize + Px{ratio * freeSpace};
                     }
@@ -1177,7 +1177,7 @@ struct FlexFormatingContext {
             for (auto &flexLine : _lines)
                 sumOfCrossSizes += flexLine.crossSize;
             if (fa.crossAxis(availableSpace) > sumOfCrossSizes) {
-                Px toDistribute = (fa.crossAxis(availableSpace) - sumOfCrossSizes) / Px{_lines.len()};
+                Px const toDistribute = (fa.crossAxis(availableSpace) - sumOfCrossSizes) / Px{_lines.len()};
                 for (auto &flexLine : _lines) {
                     flexLine.crossSize += toDistribute;
                 }

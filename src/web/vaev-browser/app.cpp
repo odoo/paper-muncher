@@ -226,7 +226,7 @@ Ui::Child inspectorContent(State const &s) {
                Ui::center();
     }
 
-    return Vaev::Browser::inspect(
+    return inspect(
         s.dom.unwrap(),
         s.inspect,
         [&](auto &n, auto a) {

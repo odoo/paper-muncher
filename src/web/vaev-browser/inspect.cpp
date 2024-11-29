@@ -114,7 +114,7 @@ Ui::Child item(Strong<Markup::Node> n, InspectState const &s, Ui::Action<Inspect
 }
 
 Ui::Child node(Strong<Markup::Node> n, InspectState const &s, Ui::Action<InspectorAction> a, isize ident = 0) {
-    bool expanded = n.is<Markup::Document>() or s.expandedNodes.has(n);
+    bool const expanded = n.is<Markup::Document>() or s.expandedNodes.has(n);
     Ui::Children children{item(n, s, a, expanded, ident)};
 
     if (expanded) {

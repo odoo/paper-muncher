@@ -56,12 +56,16 @@ static void _paintBox(Box &box, Scene::Stack &stack) {
 
     _paintBox(box, currentColor, stack);
 
-    if (auto prose = box.content.is<Strong<Text::Prose>>()) {
-        (*prose)->_style.color = currentColor;
+    if (auto inline_ = box.content.is<Inline>()) {
+        auto &[prose, boxes] = *inline_;
+        prose->_style.color = currentColor;
+
+        for (auto &b : boxes)
+            paint(b, stack);
 
         stack.add(makeStrong<Scene::Text>(
             box.layout.borderBox().topStart().cast<f64>(),
-            *prose
+            prose
         ));
     } else if (auto image = box.content.is<Karm::Image::Picture>()) {
         stack.add(makeStrong<Scene::Image>(

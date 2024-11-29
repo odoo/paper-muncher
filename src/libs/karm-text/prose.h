@@ -58,9 +58,17 @@ struct ProseStyle {
 };
 
 struct Prose {
+    struct Box {
+        Math::Vec2f pos;
+        Math::Vec2f size;
+    };
+
     struct Cell {
+        static constexpr usize NO_BOX = Limits<usize>::MAX;
+
         urange runeRange;
         Glyph glyph;
+        usize boxIndex = NO_BOX;
         f64 pos = 0; //< Position of the glyph within the block
         f64 adv = 0; //< Advance of the glyph
 
@@ -137,6 +145,7 @@ struct Prose {
     ProseStyle _style;
 
     Vec<Rune> _runes;
+    Vec<Box> _boxes;
     Vec<Cell> _cells;
     Vec<Block> _blocks;
     Vec<Line> _lines;
@@ -159,6 +168,8 @@ struct Prose {
     void _beginBlock();
 
     void append(Rune rune);
+
+    void appendBox();
 
     void clear();
 

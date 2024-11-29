@@ -15,7 +15,7 @@ Output _contentLayout(Tree &tree, Box &box, Input input) {
 
     if (auto image = box.content.is<Karm::Image::Picture>()) {
         return Output::fromSize(image->bound().size().cast<Px>());
-    } else if (auto run = box.content.is<Strong<Text::Prose>>()) {
+    } else if (box.content.is<Inline>()) {
         return inlineLayout(tree, box, input);
     } else if (
         display == Display::FLOW or
@@ -115,6 +115,39 @@ Vec2Px computeIntrinsicSize(Tree &tree, Box &box, IntrinsicSize intrinsic, Vec2P
     );
 
     return size + padding.all() + borders.all();
+}
+
+// https://www.w3.org/TR/CSS22/visudet.html#shrink-to-fit-float
+Px computeShrinkToFitWidth(Tree &tree, Box &box, Vec2Px containingBlock, Vec2Px availableSpace) {
+    // 1. Calculate the preferred width by formatting the content without
+    //    breaking lines other than where explicit line breaks occur
+    Vec2Px prefferedSize =
+        computeIntrinsicSize(
+            tree,
+            box,
+            IntrinsicSize::MAX_CONTENT,
+            containingBlock
+        );
+
+    // 2. calculate the preferred minimum width, e.g., by trying all
+    //    possible line breaks. CSS 2.2 does not define the exact algorithm.
+    Vec2Px minimumSize =
+        computeIntrinsicSize(
+            tree,
+            box,
+            IntrinsicSize::MIN_CONTENT,
+            containingBlock
+        );
+
+    // 3. Find the available width: in this case, this is the width of the
+    //    containing block minus the used values of 'margin-left',
+    //   'border-left-width', 'padding-left', 'padding-right', 'border-right-width',
+    //    'margin-right', and the widths of any relevant scroll bars.
+    Px availableWidth = availableSpace.width;
+
+    // 4. Then the shrink-to-fit width is:
+    //    min(max(preferred minimum width, available width), preferred width).
+    return clamp(prefferedSize.width, minimumSize.width, availableWidth);
 }
 
 static Opt<Px> _computeSpecifiedSize(Tree &tree, Box &box, Size size, Vec2Px containingBlock, bool isWidth) {

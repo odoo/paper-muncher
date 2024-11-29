@@ -11,10 +11,23 @@ namespace Vaev::Layout {
 
 // MARK: Box ------------------------------------------------------------------
 
+struct Inline {
+    Strong<Text::Prose> prose;
+    Vec<Box> boxes;
+
+    Inline(Text::ProseStyle style);
+
+    void append(Box &&box);
+
+    void append(Rune rune);
+
+    void append(Str text);
+};
+
 using Content = Union<
     None,
     Vec<Box>,
-    Strong<Text::Prose>,
+    Inline,
     Karm::Image::Picture>;
 
 struct Attrs {
@@ -42,7 +55,11 @@ struct Box : public Meta::NoCopy {
 
     MutSlice<Box> children();
 
-    void add(Box &&box);
+    void append(Box &&box);
+
+    void append(Rune rune);
+
+    void append(Str text);
 
     void repr(Io::Emit &e) const;
 };

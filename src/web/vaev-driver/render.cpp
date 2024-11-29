@@ -12,148 +12,146 @@
 #include "render.h"
 
 namespace Vaev::Driver {
+    static constexpr bool DEBUG_RENDER = false;
 
-static constexpr bool DEBUG_RENDER = false;
+    static void _collectStyle(Markup::Node const &node, Style::StyleBook &sb) {
+        auto el = node.is<Markup::Element>();
+        if (el and el->tagName == Html::STYLE) {
+            auto text = el->textContent();
+            Io::SScan textScan{text};
+            auto sheet = Style::StyleSheet::parse(textScan);
+            sb.add(std::move(sheet));
+        } else if (el and el->tagName == Html::LINK) {
+            auto rel = el->getAttribute(Html::REL_ATTR);
+            if (rel == "stylesheet"s) {
+                auto href = el->getAttribute(Html::HREF_ATTR);
+                if (not href) {
+                    logWarn("link element missing href attribute");
+                    return;
+                }
 
-static void _collectStyle(Markup::Node const &node, Style::StyleBook &sb) {
-    auto el = node.is<Markup::Element>();
-    if (el and el->tagName == Html::STYLE) {
-        auto text = el->textContent();
-        Io::SScan textScan{text};
-        auto sheet = Style::StyleSheet::parse(textScan);
-        sb.add(std::move(sheet));
-    } else if (el and el->tagName == Html::LINK) {
-        auto rel = el->getAttribute(Html::REL_ATTR);
-        if (rel == "stylesheet"s) {
-            auto href = el->getAttribute(Html::HREF_ATTR);
-            if (not href) {
-                logWarn("link element missing href attribute");
-                return;
+                auto url = Mime::parseUrlOrPath(*href);
+                if (not url) {
+                    logWarn("link element href attribute is not a valid URL: {}", *href);
+                    return;
+                }
+
+                auto sheet = fetchStylesheet(url.take(), Style::Origin::AUTHOR);
+                if (not sheet) {
+                    logWarn("failed to fetch stylesheet: {}", sheet);
+                    return;
+                }
+
+                sb.add(sheet.take());
             }
-
-            auto url = Mime::parseUrlOrPath(*href);
-            if (not url) {
-                logWarn("link element href attribute is not a valid URL: {}", *href);
-                return;
-            }
-
-            auto sheet = fetchStylesheet(url.take(), Style::Origin::AUTHOR);
-            if (not sheet) {
-                logWarn("failed to fetch stylesheet: {}", sheet);
-                return;
-            }
-
-            sb.add(sheet.take());
+        } else {
+            for (auto &child: node.children())
+                _collectStyle(*child, sb);
         }
-    } else {
-        for (auto &child : node.children())
-            _collectStyle(*child, sb);
     }
-}
 
-RenderResult render(Markup::Document const &dom, Style::Media const &media, Layout::Viewport viewport) {
-    Style::StyleBook stylebook;
-    stylebook.add(
-        fetchStylesheet("bundle://vaev-driver/user-agent.css"_url, Style::Origin::USER_AGENT)
+    RenderResult render(Markup::Document const &dom, Style::Media const &media, Layout::Viewport viewport) {
+        Style::StyleBook stylebook;
+        stylebook.add(
+            fetchStylesheet("bundle://vaev-driver/user-agent.css"_url, Style::Origin::USER_AGENT)
             .take("user agent stylesheet not available")
-    );
+        );
 
-    auto start = Sys::now();
-    _collectStyle(dom, stylebook);
-    auto elapsed = Sys::now() - start;
-    logDebugIf(DEBUG_RENDER, "style collection time: {}", elapsed);
+        auto start = Sys::now();
+        _collectStyle(dom, stylebook);
+        auto elapsed = Sys::now() - start;
+        logDebugIf(DEBUG_RENDER, "style collection time: {}", elapsed);
 
-    start = Sys::now();
+        start = Sys::now();
 
-    Style::Computer computer{media, stylebook};
-    Layout::Tree tree = {
-        Layout::build(computer, dom),
-        viewport,
-    };
+        Style::Computer computer{media, stylebook};
+        Layout::Tree tree = {
+            Layout::build(computer, dom),
+            viewport,
+        };
 
-    elapsed = Sys::now() - start;
+        elapsed = Sys::now() - start;
 
-    logDebugIf(DEBUG_RENDER, "layout tree build time: {}", elapsed);
+        logDebugIf(DEBUG_RENDER, "layout tree build time: {}", elapsed);
 
-    start = Sys::now();
+        start = Sys::now();
 
-    Layout::layout(
-        tree,
-        tree.root,
-        {
-            .commit = Layout::Commit::YES,
-            .knownSize = {viewport.small.width, NONE},
-            .availableSpace = {viewport.small.width, 0_px},
-            .containingBlock = {viewport.small.width, viewport.small.height},
-        }
-    );
+        layout(
+            tree,
+            tree.root,
+            {
+                .commit = Layout::Commit::YES,
+                .knownSize = {viewport.small.width, NONE},
+                .availableSpace = {viewport.small.width, 0_px},
+                .containingBlock = {viewport.small.width, viewport.small.height},
+            }
+        );
 
-    Layout::layoutPositioned(tree, tree.root, {viewport.small.width, viewport.small.height});
+        layoutPositioned(tree, tree.root, {viewport.small.width, viewport.small.height});
 
-    auto sceneRoot = makeStrong<Scene::Stack>();
+        auto sceneRoot = makeStrong<Scene::Stack>();
 
-    elapsed = Sys::now() - start;
-    logDebugIf(DEBUG_RENDER, "layout tree layout time: {}", elapsed);
+        elapsed = Sys::now() - start;
+        logDebugIf(DEBUG_RENDER, "layout tree layout time: {}", elapsed);
 
-    auto paintStart = Sys::now();
+        auto paintStart = Sys::now();
 
-    Layout::paint(tree.root, *sceneRoot);
-    sceneRoot->prepare();
+        paint(tree.root, *sceneRoot);
+        sceneRoot->prepare();
 
-    elapsed = Sys::now() - paintStart;
-    logDebugIf(DEBUG_RENDER, "layout tree paint time: {}", elapsed);
+        elapsed = Sys::now() - paintStart;
+        logDebugIf(DEBUG_RENDER, "layout tree paint time: {}", elapsed);
 
-    return {
-        std::move(stylebook),
-        makeStrong<Layout::Box>(std::move(tree.root)),
-        sceneRoot,
-    };
-}
+        return {
+            std::move(stylebook),
+            makeStrong<Layout::Box>(std::move(tree.root)),
+            sceneRoot,
+        };
+    }
 
-Vec<Strong<Scene::Page>> print(Markup::Document const &dom, Style::Media const &media) {
-    Style::StyleBook stylebook;
-    stylebook.add(
-        fetchStylesheet("bundle://vaev-driver/user-agent.css"_url, Style::Origin::USER_AGENT)
+    Vec<Strong<Scene::Page> > print(Markup::Document const &dom, Style::Media const &media) {
+        Style::StyleBook stylebook;
+        stylebook.add(
+            fetchStylesheet("bundle://vaev-driver/user-agent.css"_url, Style::Origin::USER_AGENT)
             .take("user agent stylesheet not available")
-    );
+        );
 
-    auto start = Sys::now();
-    _collectStyle(dom, stylebook);
-    auto elapsed = Sys::now() - start;
-    logDebugIf(DEBUG_RENDER, "style collection time: {}", elapsed);
+        auto start = Sys::now();
+        _collectStyle(dom, stylebook);
+        auto elapsed = Sys::now() - start;
+        logDebugIf(DEBUG_RENDER, "style collection time: {}", elapsed);
 
-    Style::Computer computer{media, stylebook};
+        Style::Computer computer{media, stylebook};
 
-    Layout::Viewport vp{
-        .small = {
-            Px{media.width},
-            Px{media.height},
-        },
-    };
+        Layout::Viewport vp{
+            .small = {
+                Px{media.width},
+                Px{media.height},
+            },
+        };
 
-    Layout::Tree tree = {
-        Layout::build(computer, dom),
-        vp,
-    };
+        Layout::Tree tree = {
+            Layout::build(computer, dom),
+            vp,
+        };
 
-    Layout::layout(
-        tree,
-        tree.root,
-        {
-            .commit = Layout::Commit::YES,
-            .knownSize = {vp.small.width, NONE},
-            .availableSpace = {vp.small.width, 0_px},
-            .containingBlock = {vp.small.width, vp.small.height},
-        }
-    );
+        Layout::layout(
+            tree,
+            tree.root,
+            {
+                .commit = Layout::Commit::YES,
+                .knownSize = {vp.small.width, NONE},
+                .availableSpace = {vp.small.width, 0_px},
+                .containingBlock = {vp.small.width, vp.small.height},
+            }
+        );
 
-    Vec<Strong<Scene::Page>> pages;
-    auto page = makeStrong<Scene::Page>(vp.small.size().cast<isize>());
-    Layout::paint(tree.root, *page);
-    page->prepare();
-    pages.pushBack(page);
+        Vec<Strong<Scene::Page> > pages;
+        auto page = makeStrong<Scene::Page>(vp.small.size().cast<isize>());
+        paint(tree.root, *page);
+        page->prepare();
+        pages.pushBack(page);
 
-    return pages;
-}
-
+        return pages;
+    }
 } // namespace Vaev::Driver
