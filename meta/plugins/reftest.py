@@ -8,7 +8,7 @@ import time
 
 def buildPaperMuncher(args: model.TargetArgs) -> builder.ProductScope:
     scope = builder.TargetScope.use(args)
-    component = scope.registry.lookup("vaev-tools", model.Component)
+    component = scope.registry.lookup("paper-muncher", model.Component)
     if component is None:
         raise RuntimeError("paper-muncher not found")
     return builder.build(scope, component)[0]

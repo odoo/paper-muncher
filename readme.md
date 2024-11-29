@@ -34,15 +34,15 @@ The reign of wkhtmltopdf is over. The Paper Muncher has come. Let its name be et
 # On Linux or MacOS
 
 # View a document in the inspector
-./ck builder run --mixins=release paper-muncher -- inspect <input document>
+./ck run --release vaev-browser -- <input document>
 
 # Render a document to an image
-./ck builder run --mixins=release paper-muncher -- render index.xhtml -o image.bmp
+./ck run --release paper-muncher -- render index.xhtml -o image.bmp
 
 # Print a document to a PDF
-./ck builder run --mixins=release paper-muncher -- print index.xhtml -o document.pdf
+./ck run --release paper-muncher -- print index.xhtml -o document.pdf
 
-# windows support comming soon'ish
+# Windows support comming soon'ish
 ```
 
 ## License

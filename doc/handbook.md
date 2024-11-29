@@ -26,10 +26,10 @@ As a team we believe that building exceptional software requires strongs opinion
 
 ## Essential Commands
 
-* `./ck builder run paper-muncher -- inspect <input document>`:  Start the development environment.
-* `./ck builder run --debug paper-muncher -- inspect <input document>`:  For debugging.
-* `./ck builder run --profile paper-muncher -- inspect <input document>`:  For profiling (requires `perf` and `speedscope` to be installed).
-* `./ck builder run --mixins=release paper-muncher -- inspect <input document>` Build the release version.
+* `./ck run vaev-browser -- inspect <input document>`: Start the development environment.
+* `./ck run --debug vaev-browser -- inspect <input document>`: For debugging.
+* `./ck run --profile vaev-browser -- <input document>`: For profiling (requires `perf` and `speedscope` to be installed).
+* `./ck run --release vaev-browser -- <input document>`: Build the release version.
 * `./ck builder test`  Run all tests.
 * `./ck builder clean`  Clean the build directory.
 

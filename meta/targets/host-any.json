@@ -11,7 +11,6 @@
         "freestanding": false,
         "host": true,
         "version": "0.1.0",
-        "odoo": true,
         "karm-sys-encoding": "utf8",
         "karm-sys-line-ending": "lf",
         "karm-sys-path-separator": "slash",
@@ -20,7 +19,7 @@
     },
     "routing": {
         "stdc-math": "ce-libm-host",
-        "__main__": "vaev-tools"
+        "__main__": "paper-muncher"
     },
     "tools": {
         "cc": {

@@ -294,11 +294,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
     auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
 
     Cli::Command cmd{
-#ifdef __ck_odoo__
         "paper-munch"s,
-#else
-        "vaev-tools"s,
-#endif
         NONE,
         "A next generation document generation tool"s,
     };

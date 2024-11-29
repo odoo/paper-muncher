@@ -1,8 +1,11 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "id": "vaev-tools",
+    "id": "paper-muncher",
     "description": "Vaev development tools",
     "type": "exe",
+    "props": {
+        "cpp-excluded": true
+    },
     "requires": [
         "karm-cli",
         "karm-sys",
@@ -11,7 +14,6 @@
         "fonts-all"
     ],
     "provides": [
-        "paper-muncher",
         "pp"
     ]
 }

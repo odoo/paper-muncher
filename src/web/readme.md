@@ -5,14 +5,15 @@
     <img src="doc/assets/vaev.png" width="320">
 </p>
 <p align="center">
-    The *kool* browser engine
+    A lightning-fast, lightweight, and secure HTML/CSS engine
+built for effortless document generation and streamlined web browsing.
 </p>
 <br/>
-<br/>
-<br/>
 
-Vaev aim to be lightning-fast, lightweight, and secure HTML/CSS engine
-built for effortless document generation and streamlined web browsing.
+![](doc/assets/capture.png)
+
+<br/>
+<br/>
 
 ## Supported Standards
 
