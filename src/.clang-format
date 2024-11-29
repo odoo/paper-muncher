@@ -18,6 +18,7 @@ SpaceBeforeParens: ControlStatementsExceptForEachMacros
 QualifierAlignment: Right
 AlignAfterOpenBracket: BlockIndent
 SeparateDefinitionBlocks: Always
+NamespaceIndentation: None
 
 IncludeBlocks: Regroup
 IncludeCategories:

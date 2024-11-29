@@ -2,7 +2,7 @@
 <br/>
 <br/>
 <p align="center">
-    <img src="../doc/assets/vaev.png" width="320">
+    <img src="doc/assets/vaev.png" width="320">
 </p>
 <p align="center">
     The *kool* browser engine
