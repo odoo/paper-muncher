@@ -1,14 +1,14 @@
 <br/>
 <br/>
-<br/>
+
 <p align="center">
-    <img src="doc/assets/logo.png" height="150" alt="Paper Muncher"/>
+<img src="doc/assets/logo-light.png#gh-light-mode-only" width="280" />
+<img src="doc/assets/logo-dark.png#gh-dark-mode-only" width="280" />
 </p>
-<br/>
 <p align="center">
     An experimental document-generation tool
 </p>
-<br/>
+
 <br/>
 <br/>
 
