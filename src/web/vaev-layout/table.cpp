@@ -853,8 +853,6 @@ struct TableFormatingContext {
         buildHTMLTable();
         buildBordersGrid(tree);
 
-        logDebug("sla bixo {}", grid.size);
-
         rowHelper = buildAxisHelper(rows, rowGroups, grid.size.y);
         colHelper = buildAxisHelper(cols, colGroups, grid.size.x);
 
