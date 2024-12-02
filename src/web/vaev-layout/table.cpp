@@ -419,7 +419,7 @@ struct TableFormatingContext {
                 auto cellBorder = computeBorders(tree, *cell.box);
 
                 // Top and bottom borders
-                for (usize k = 0; k < rowSpan; ++k) {
+                for (usize k = 0; k < colSpan; ++k) {
                     bordersGrid.get(i, j + k).top = cellBorder.top;
                     bordersGrid.get(i + rowSpan - 1, j + k).bottom = cellBorder.bottom;
                 }
@@ -852,6 +852,8 @@ struct TableFormatingContext {
     void build(Tree &tree, Input input) {
         buildHTMLTable();
         buildBordersGrid(tree);
+
+        logDebug("sla bixo {}", grid.size);
 
         rowHelper = buildAxisHelper(rows, rowGroups, grid.size.y);
         colHelper = buildAxisHelper(cols, colGroups, grid.size.x);
