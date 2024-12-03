@@ -1702,3 +1702,142 @@
         </table>
     </rendering>
 </test>
+
+
+<test name="table: capmin and table auto width" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                /* BEGIN: reset chrome's added style */
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                    caption-side: bottom;
+                }
+
+                caption {
+                    text-align: left;
+                }
+
+                /* END: reset chrome's added style */
+                body {
+                    width: 300px;
+                }
+
+                table {
+                    width: 300px;
+                }
+
+                .border {
+                    border: 5px black solid;
+                }
+
+                .fake-text-block {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="position: absolute; top: 0px; left: 0px; height: 112px; width: 300px;">
+            <div style="position: absolute; top: 76px; left: 16px; height: 20px; width: 268px;background-color: green;">
+                <div
+                    style="position: absolute; top: 0px; left: 0px; height: 20px; width: 50px;background-color: yellow;">
+                </div>
+            </div>
+            <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 300px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 300px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 150px;" class="border">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 150px; height: 30px; width: 150px;" class="border">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 30px; left: 0px; height: 30px; width: 300px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 300px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 150px;" class="border">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 150px; height: 30px; width: 150px;" class="border">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="position: absolute; top: 112px; left: 0px; height: 112px; width: 382px;">
+            <div style="position: absolute; top: 76px; left: 16px; height: 20px; width: 350px;background-color: green;">
+                <div
+                    style="position: absolute; top: 0px; left: 0px; height: 20px; width: 350px;background-color: yellow;">
+                </div>
+            </div>
+            <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 382px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 382px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 191px;" class="border">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 191px; height: 30px; width: 191px;" class="border">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 30px; left: 0px; height: 30px; width: 382px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 382px;">
+                    <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 191px;" class="border">
+                    </div>
+                    <div style="position: absolute; top: 0px; left: 191px; height: 30px; width: 191px;" class="border">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <table>
+            <caption style="background-color: green;margin: 16px;">
+                <div class="fake-text-block" style="width: 50px;background-color: yellow;" />
+            </caption>
+            <thead>
+                <tr>
+                    <th class="fake-text-block border " />
+                    <th class="fake-text-block border" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class=" fake-text-block border" />
+                    <td class=" fake-text-block border " />
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <caption style="background-color: green;margin: 16px;">
+                <div class="fake-text-block" style="width: 350px;background-color: yellow;" />
+            </caption>
+            <thead>
+                <tr>
+                    <th class="fake-text-block border" />
+                    <th class="fake-text-block border" />
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class=" fake-text-block border" />
+                    <td class=" fake-text-block border " />
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>

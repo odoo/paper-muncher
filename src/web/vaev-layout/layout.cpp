@@ -21,14 +21,15 @@ Output _contentLayout(Tree &tree, Box &box, Input input) {
         display == Display::FLOW or
         display == Display::FLOW_ROOT or
         display == Display::TABLE_CELL or
-        display == Display::TABLE_CAPTION
+        display == Display::TABLE_CAPTION or
+        display == Display::TABLE
     ) {
         return blockLayout(tree, box, input);
     } else if (display == Display::FLEX) {
         return flexLayout(tree, box, input);
     } else if (display == Display::GRID) {
         return gridLayout(tree, box, input);
-    } else if (display == Display::TABLE) {
+    } else if (display == Display::TABLE_BOX) {
         return tableLayout(tree, box, input);
     } else if (display == Display::INTERNAL) {
         return Output{};

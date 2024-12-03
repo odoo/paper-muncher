@@ -215,16 +215,36 @@ static void _buildTableChildren(Style::Computer &c, Vec<Strong<Markup::Node>> co
 
     tableBox.style->display = Display::Internal::TABLE_BOX;
 
+    bool captionsOnTop = tableBox.style->table->captionSide == CaptionSide::TOP;
+
+    if (captionsOnTop) {
+        for (auto &child : children) {
+            if (auto el = child->is<Markup::Element>()) {
+                if (el->tagName == Html::CAPTION) {
+                    _buildNode(c, *el, tableWrapperBox);
+                }
+            }
+        }
+    }
+
     for (auto &child : children) {
         if (auto el = child->is<Markup::Element>()) {
-            if (el->tagName == Html::CAPTION) {
-                _buildNode(c, *child, tableWrapperBox);
-            } else {
-                _buildNode(c, *child, tableBox);
+            if (el->tagName != Html::CAPTION) {
+                _buildNode(c, *el, tableBox);
             }
         }
     }
     tableWrapperBox.add(std::move(tableBox));
+
+    if (not captionsOnTop) {
+        for (auto &child : children) {
+            if (auto el = child->is<Markup::Element>()) {
+                if (el->tagName == Html::CAPTION) {
+                    _buildNode(c, *el, tableWrapperBox);
+                }
+            }
+        }
+    }
 }
 
 static void _buildTable(Style::Computer &c, Strong<Style::Computed> style, Markup::Element const &el, Box &parent) {

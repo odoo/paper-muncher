@@ -98,8 +98,6 @@ struct TableFormatingContext {
     Vec<TableGroup> rowGroups;
     Vec<TableGroup> colGroups;
 
-    Vec<usize> captionsIdxs;
-    Box &wrapperBox;
     Box &tableBox;
 
     // Table forming algorithm
@@ -129,9 +127,8 @@ struct TableFormatingContext {
     InsetsPx boxBorder;
     Vec2Px spacing;
 
-    TableFormatingContext(Tree &tree, Box &tableWrapperBox)
-        : wrapperBox(tableWrapperBox),
-          tableBox(findTableBox(tableWrapperBox)),
+    TableFormatingContext(Tree &tree, Box &tableBox)
+        : tableBox(tableBox),
           boxBorder(computeBorders(tree, tableBox)),
           spacing(
               {
@@ -139,13 +136,6 @@ struct TableFormatingContext {
                   resolve(tree, tableBox, tableBox.style->table->spacing.vertical),
               }
           ) {
-
-        for (usize i = 0; i < tableWrapperBox.children().len(); ++i) {
-            auto &child = tableWrapperBox.children()[i];
-            if (child.style->display == Display::Internal::TABLE_CAPTION) {
-                captionsIdxs.pushBack(i);
-            }
-        }
     }
 
     // https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-growing-downward-growing-cells
@@ -393,14 +383,6 @@ struct TableFormatingContext {
         numOfFooterRows = grid.size.y - ystartFooterRows;
     }
 
-    Box &findTableBox(Box &tableWrapperBox) {
-        for (auto &child : tableWrapperBox.children())
-            if (child.style->display != Display::Internal::TABLE_CAPTION)
-                return child;
-
-        panic("table box not found in box tree");
-    }
-
     void buildBordersGrid(Tree &tree) {
         bordersGrid.borders.clear();
         bordersGrid.borders.resize(grid.size.x * grid.size.y);
@@ -478,11 +460,12 @@ struct TableFormatingContext {
         tableUsedWidth =
             tableBox.style->sizing->width == Size::AUTO
                 ? 0_px
-                : resolve(tree, tableBox, tableBox.style->sizing->width.value, input.availableSpace.x);
+                : resolve(tree, tableBox, tableBox.style->sizing->width.value, input.availableSpace.x) -
+                      boxBorder.horizontal(); // NOTE: maybe remove this after borderbox param is clearer
 
         auto [columnBorders, sumBorders] = getColumnBorders();
 
-        Px fixedWidthToAccount = boxBorder.horizontal() + Px{grid.size.x + 1} * spacing.x;
+        Px fixedWidthToAccount = Px{grid.size.x + 1} * spacing.x;
 
         Vec<Opt<Px>> colWidthOrNone{};
         colWidthOrNone.resize(grid.size.x);
@@ -565,19 +548,6 @@ struct TableFormatingContext {
         //        Additionally, to fully implement the spec at:
         //        https://www.w3.org/TR/css-tables-3/#intrinsic-percentage-width-of-a-column-based-on-cells-of-span-up-to-1
         //        We will need a way to retrieve the percentage value, which is also not yet implemented.
-
-        Px capmin{0};
-        for (auto i : captionsIdxs) {
-            auto captionOutput = layout(
-                tree,
-                wrapperBox.children()[i],
-                Input{
-                    .commit = Commit::NO,
-                    .intrinsic = IntrinsicSize::MIN_CONTENT,
-                }
-            );
-            capmin = max(capmin, captionOutput.size.x);
-        }
 
         auto getCellMinMaxWidth = [](Tree &tree, Box &box, Input &input, TableCell &cell) -> Pair<Px> {
             auto cellMinOutput = layout(
@@ -724,6 +694,7 @@ struct TableFormatingContext {
         for (auto x : maxColWidth)
             sumMaxColWidths += x;
 
+        Px capmin = input.capmin.unwrap();
         // TODO: should minColWidth or maxColWidth be forcelly used if input is MIN_CONTENT or MAX_CONTENT respectivelly?
         if (tableBox.style->sizing->width != Size::AUTO) {
             // TODO: how to resolve percentage if case of table width?
@@ -882,22 +853,8 @@ struct TableFormatingContext {
         PrefixSum<Px> colWidthPref{colWidth}, rowHeightPref{rowHeight};
         Px currPositionX{input.position.x};
 
-        // table box
-        layout(
-            tree,
-            tableBox,
-            {
-                .commit = Commit::YES,
-                .knownSize = {
-                    tableBoxSize.x + boxBorder.horizontal(),
-                    tableBoxSize.y + boxBorder.vertical(),
-                },
-                .position = {currPositionX, currPositionY},
-            }
-        );
-
-        currPositionX += boxBorder.start + spacing.x;
-        currPositionY += boxBorder.top + spacing.y;
+        currPositionX += spacing.x;
+        currPositionY += spacing.y;
         // cells
         for (usize i = 0; i < grid.size.y; currPositionY += rowHeight[i] + spacing.y, i++) {
             Px innnerCurrPositionX = Px{currPositionX};
@@ -933,48 +890,24 @@ struct TableFormatingContext {
         }
     }
 
-    void runCaptions(Tree &tree, Input input, Px tableUsedWidth, Px &currPositionY, Px &captionsHeight) {
-        for (auto i : captionsIdxs) {
-            auto cellOutput = layout(
-                tree,
-                wrapperBox.children()[i],
-                {
-                    .commit = input.commit,
-                    .knownSize = {tableUsedWidth, NONE},
-                    .position = {input.position.x, currPositionY},
-                }
-            );
-            captionsHeight += cellOutput.size.y;
-            currPositionY += captionsHeight;
-        }
-    }
-
     Output run(Tree &tree, Input input) {
-        Px currPositionY{input.position.y}, captionsHeight{0};
-        if (tableBox.style->table->captionSide == CaptionSide::TOP) {
-            runCaptions(tree, input, tableUsedWidth, currPositionY, captionsHeight);
-        }
-
+        Px currPositionY{input.position.y};
         if (input.commit == Commit::YES) {
             runTableBox(tree, input, currPositionY);
         }
 
-        if (tableBox.style->table->captionSide == CaptionSide::BOTTOM) {
-            runCaptions(tree, input, tableUsedWidth, currPositionY, captionsHeight);
-        }
-
         return Output::fromSize({
-            tableUsedWidth + boxBorder.horizontal(),
-            tableBoxSize.y + captionsHeight + boxBorder.vertical(),
+            tableUsedWidth,
+            tableBoxSize.y,
         });
     }
 };
 
-Output tableLayout(Tree &tree, Box &wrapper, Input input) {
+Output tableLayout(Tree &tree, Box &box, Input input) {
     // TODO: - vertical and horizontal alignment
     //       - borders collapse
 
-    TableFormatingContext table(tree, wrapper);
+    TableFormatingContext table(tree, box);
     table.build(tree, input);
     return table.run(tree, input);
 }
