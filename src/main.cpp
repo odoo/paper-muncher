@@ -3,6 +3,7 @@
 #include <karm-image/saver.h>
 #include <karm-io/emit.h>
 #include <karm-io/funcs.h>
+#include <karm-print/bmp.h>
 #include <karm-print/pdf.h>
 #include <karm-sys/entry.h>
 #include <karm-sys/file.h>
@@ -139,6 +140,7 @@ struct PrintOption {
     bool dumpDom = false;
     bool dumpLayout = false;
     bool dumpPaint = false;
+    bool printToBMP = false;
 
     Resolution resolution = Resolution::fromDpi(96);
     Opt<Length> width = NONE;
@@ -147,15 +149,10 @@ struct PrintOption {
 };
 
 Res<> print(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output, PrintOption options = {}) {
-    Layout::Resolver resolver;
-    resolver.viewport.dpi = options.resolution;
-
-    Length paperWidth = options.width.unwrapOr({options.paper.width, Length::MM});
-    Length paperHeight = options.height.unwrapOr({options.paper.height, Length::MM});
 
     Vec2Px paperSize = {
-        resolver.resolve(paperWidth),
-        resolver.resolve(paperHeight),
+        Px{options.paper.width},
+        Px{options.paper.height},
     };
 
     auto media = constructMediaForPrint(options.resolution, paperSize);
@@ -170,18 +167,16 @@ Res<> print(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output,
     if (options.dumpPaint)
         Sys::println("--- START OF PAINT ---\n{}\n--- END OF PAINT ---\n", pages);
 
-    Print::PdfPrinter printer{
-        options.paper
-    };
+    Strong<Print::FilePrinter> printer =
+        options.printToBMP
+            ? Strong<Print::FilePrinter>{makeStrong<Print::BMPPrinter>(Print::BMPPrinter{options.paper})}
+            : makeStrong<Print::PdfPrinter>(Print::PdfPrinter{options.paper});
 
     for (auto &page : pages) {
-        page->print(printer);
+        page->print(*printer);
     }
 
-    Io::TextEncoder<> encoder{output};
-    Io::Emit e{encoder};
-    printer.write(e);
-    try$(e.flush());
+    printer->write(output);
 
     return Ok();
 }
@@ -386,7 +381,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
     Cli::Flag dumpDomArg = Cli::flag('d', "dump-dom"s, "Dump the DOM tree"s);
     Cli::Flag dumpLayoutArg = Cli::flag('l', "dump-layout"s, "Dump the layout tree"s);
     Cli::Flag dumpPaintArg = Cli::flag('p', "dump-paint"s, "Dump the paint tree"s);
-    Cli::Option resolutionArg = Cli::option<Str>(NONE, "resolution"s, "Resolution of the output document in css units (e.g. 96dpi)"s, "96dpi"s);
+    Cli::Option resolutionArg = Cli::option<Str>(NONE, "resolution"s, "Resolution of the output document in css units (e.g. 96dpi)"s, "1x"s);
     Cli::Option widthArg = Cli::option<Str>('w', "width"s, "Width of the output document in css units (e.g. 800px)"s, ""s);
     Cli::Option heightArg = Cli::option<Str>('h', "height"s, "Height of the output document in css units (e.g. 600px)"s, ""s);
     Cli::Option paperArg = Cli::option<Str>(NONE, "paper"s, "Paper size for printing (default: A4)"s, "A4"s);
@@ -441,6 +436,10 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
                 auto outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
                 outputFile = co_try$(Sys::File::create(outputUrl));
                 output = &outputFile.unwrap();
+
+                if (auto mimeTypeOutput = Mime::sniffSuffix(outputUrl.path.suffix())) {
+                    options.printToBMP = mimeTypeOutput.unwrap() == "image/bmp"_mime;
+                }
             }
 
             co_return Vaev::Tools::print(inputUrl, *input, *output, options);
