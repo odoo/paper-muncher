@@ -54,7 +54,7 @@ static void _collectStyle(Markup::Node const &node, Style::StyleBook &sb) {
 RenderResult render(Markup::Document const &dom, Style::Media const &media, Layout::Viewport viewport) {
     Style::StyleBook stylebook;
     stylebook.add(
-        fetchStylesheet("bundle://vaev-driver/user-agent.css"_url, Style::Origin::USER_AGENT)
+        fetchStylesheet("bundle://vaev-driver/html.css"_url, Style::Origin::USER_AGENT)
             .take("user agent stylesheet not available")
     );
 
@@ -113,8 +113,12 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Layo
 Vec<Strong<Scene::Page>> print(Markup::Document const &dom, Style::Media const &media) {
     Style::StyleBook stylebook;
     stylebook.add(
-        fetchStylesheet("bundle://vaev-driver/user-agent.css"_url, Style::Origin::USER_AGENT)
+        fetchStylesheet("bundle://vaev-driver/html.css"_url, Style::Origin::USER_AGENT)
             .take("user agent stylesheet not available")
+    );
+    stylebook.add(
+        fetchStylesheet("bundle://vaev-driver/print.css"_url, Style::Origin::USER_AGENT)
+            .take("print stylesheet not available")
     );
 
     auto start = Sys::now();
