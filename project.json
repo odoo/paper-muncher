@@ -40,10 +40,6 @@
             "names": [
                 "liburing"
             ]
-        },
-        "cute-engineering/cat": {
-            "git": "https://github.com/cute-engineering/cat.git",
-            "tag": "v0.7.4"
         }
     }
 }
