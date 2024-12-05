@@ -126,8 +126,8 @@ Vec<Strong<Scene::Page>> print(Markup::Document const &dom, Style::Media const &
 
     Layout::Viewport vp{
         .small = {
-            Px{media.width},
-            Px{media.height},
+            media.width / Px{media.resolution.toDppx()},
+            media.height / Px{media.resolution.toDppx()},
         },
     };
 
@@ -147,8 +147,10 @@ Vec<Strong<Scene::Page>> print(Markup::Document const &dom, Style::Media const &
         }
     );
 
+    auto scaleMatrix = Math::Trans2f::makeScale(media.resolution.toDppx());
+
     Vec<Strong<Scene::Page>> pages;
-    auto page = makeStrong<Scene::Page>(vp.small.size().cast<isize>());
+    auto page = makeStrong<Scene::Page>(vp.small.size().cast<isize>(), scaleMatrix);
     Layout::paint(tree.root, *page);
     page->prepare();
     pages.pushBack(page);
