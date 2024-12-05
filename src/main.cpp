@@ -149,10 +149,12 @@ struct PrintOption {
 };
 
 Res<> print(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output, PrintOption options = {}) {
+    Layout::Resolver resolver;
+    resolver.viewport.dpi = options.resolution;
 
     Vec2Px paperSize = {
-        Px{options.paper.width},
-        Px{options.paper.height},
+        options.width ? resolver.resolve(options.width.unwrap()) : Px{options.paper.width},
+        options.height ? resolver.resolve(options.height.unwrap()) : Px{options.paper.height},
     };
 
     auto media = constructMediaForPrint(options.resolution, paperSize);
@@ -169,8 +171,12 @@ Res<> print(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output,
 
     Strong<Print::FilePrinter> printer =
         options.printToBMP
-            ? Strong<Print::FilePrinter>{makeStrong<Print::BMPPrinter>(Print::BMPPrinter{options.paper})}
-            : makeStrong<Print::PdfPrinter>(Print::PdfPrinter{options.paper});
+            ? Strong<Print::FilePrinter>{makeStrong<Print::BMPPrinter>(
+                  Print::BMPPrinter{Math::Vec2i{paperSize.x.cast<isize>(), paperSize.y.cast<isize>()}}
+              )}
+            : makeStrong<Print::PdfPrinter>(Print::PdfPrinter{
+                  Math::Vec2f{paperSize.x.cast<f64>(), paperSize.y.cast<f64>()}
+              });
 
     for (auto &page : pages) {
         page->print(*printer);
