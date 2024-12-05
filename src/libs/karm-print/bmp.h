@@ -8,15 +8,15 @@ namespace Karm::Print {
 
 struct BMPPrinter : public FilePrinter {
     isize const VERTICAL_GAP_PX_SIZE = 16;
-    PaperStock _paper;
+    Math::Vec2i _size;
     Vec<Strong<Gfx::Surface>> _pages;
     Opt<Gfx::CpuCanvas> _canvas;
 
-    BMPPrinter(PaperStock stock)
-        : _paper(stock) {}
+    BMPPrinter(Math::Vec2i size)
+        : _size(size) {}
 
     Gfx::Canvas &beginPage() override {
-        _pages.emplaceBack(Gfx::Surface::alloc(_paper.size().cast<isize>(), Gfx::RGBA8888));
+        _pages.emplaceBack(Gfx::Surface::alloc(_size, Gfx::RGBA8888));
 
         if (_canvas)
             _canvas->end();
@@ -29,11 +29,11 @@ struct BMPPrinter : public FilePrinter {
 
     Strong<Gfx::Surface> mergedImages() {
         isize finalHeight =
-            _paper.size().cast<isize>().y * _pages.len() +
+            _size.y * _pages.len() +
             VERTICAL_GAP_PX_SIZE * _pages.len();
 
         auto finalImageSize = Math::Vec2i{
-            _paper.size().cast<isize>().x,
+            _size.x,
             finalHeight,
         };
 
