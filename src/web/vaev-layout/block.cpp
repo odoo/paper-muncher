@@ -51,7 +51,7 @@ struct BlockFormatingContext {
             Input childInput = {
                 .commit = input.commit,
                 .intrinsic = input.intrinsic,
-                .availableSpace = {inlineSize, 0_px},
+                .availableSpace = {input.availableSpace.x, 0_px},
                 .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_px)},
             };
 
