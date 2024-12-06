@@ -168,6 +168,9 @@ Output layout(Tree &tree, Box &box, Input input) {
         return max(0_px, s - padding.vertical() - borders.vertical());
     });
 
+    input.availableSpace.height = max(0_px, input.availableSpace.height - padding.vertical() - borders.vertical());
+    input.availableSpace.width = max(0_px, input.availableSpace.width - padding.horizontal() - borders.horizontal());
+
     input.position = input.position + borders.topStart() + padding.topStart();
 
     auto [size] = _contentLayout(tree, box, input);
