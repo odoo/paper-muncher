@@ -74,7 +74,9 @@ struct TableGrid {
 template <typename T>
 struct PrefixSum {
 
-    Vec<Px> pref;
+    Vec<Px> pref = {};
+
+    PrefixSum() {}
 
     PrefixSum(Vec<Px> const &v) : pref(v) {
         for (usize i = 1; i < v.len(); ++i)
@@ -364,8 +366,7 @@ struct TableFormatingContext {
                 panic("current element should be thead or tbody");
             }
 
-            if (indexOfHeaderGroup and
-                indexOfHeaderGroup.unwrap() == (usize)(tableBoxCursor - tableBoxChildren.begin())) {
+            if (indexOfHeaderGroup == (usize)(tableBoxCursor - tableBoxChildren.begin())) {
                 // table header was already processed in the beggining of the Rows section of the algorithm
                 tableBoxCursor.next();
                 continue;
@@ -794,7 +795,7 @@ struct TableFormatingContext {
         }
     }
 
-    struct AxisHelper {
+    struct AxisHelper { // FIXME: find me a better name pls
         Opt<usize> groupIdx = NONE;
         Opt<usize> axisIdx = NONE;
     };
@@ -812,8 +813,10 @@ struct TableFormatingContext {
         return helper;
     };
 
-    Vec2Px tableBoxSize;
+    Vec2Px tableBoxSize, headerSize = {}, footerSize = {};
     Vec<AxisHelper> rowHelper, colHelper;
+    PrefixSum<Px> colWidthPref, rowHeightPref;
+    Math::Vec2u dataRowsInterval;
 
     void build(Tree &tree, Input input) {
         buildHTMLTable();
@@ -838,73 +841,318 @@ struct TableFormatingContext {
 
         computeRowHeights(tree);
 
+        colWidthPref = PrefixSum<Px>{colWidth};
+        rowHeightPref = PrefixSum<Px>{rowHeight};
+
+        dataRowsInterval = {numOfHeaderRows, grid.size.y - numOfFooterRows - 1};
+
         tableBoxSize = Vec2Px{
             iter(colWidth).sum() + spacing.x * Px{grid.size.x + 1},
             iter(rowHeight).sum() + spacing.y * Px{grid.size.y + 1},
         };
-    }
 
-    void runTableBox(Tree &tree, Input input, Px &currPositionY) {
-        PrefixSum<Px> colWidthPref{colWidth}, rowHeightPref{rowHeight};
-        Px currPositionX{input.position.x};
+        if (numOfHeaderRows) {
+            headerSize = Vec2Px{
+                tableBoxSize.x,
+                rowHeightPref.query(0, numOfHeaderRows - 1) + spacing.y * Px{numOfHeaderRows + 1},
+            };
+        }
 
-        currPositionX += spacing.x;
-        currPositionY += spacing.y;
-        // cells
-        for (usize i = 0; i < grid.size.y; currPositionY += rowHeight[i] + spacing.y, i++) {
-            Px innnerCurrPositionX = Px{currPositionX};
-            for (usize j = 0; j < grid.size.x; innnerCurrPositionX += colWidth[j] + spacing.x, j++) {
-                auto cell = grid.get(j, i);
-
-                if (cell.anchorIdx != Math::Vec2u{j, i})
-                    continue;
-
-                auto colSpan = cell.box->attrs.colSpan;
-                auto rowSpan = cell.box->attrs.rowSpan;
-
-                // TODO: In CSS 2.2, the height of a cell box is the minimum
-                //       height required by the content.
-                //       The table cell's 'height' property can influence
-                //       the height of the row (see above), but it does not
-                //       increase the height of the cell box.
-                //
-                //       (See https://www.w3.org/TR/CSS22/tables.html#height-layout)
-                layout(
-                    tree,
-                    *cell.box,
-                    {
-                        .fragment = input.fragment,
-                        .knownSize = {
-                            colWidthPref.query(j, j + colSpan - 1) + spacing.x * Px{colSpan - 1},
-                            rowHeightPref.query(i, i + rowSpan - 1) + spacing.y * Px{rowSpan - 1}
-                        },
-                        .position = {innnerCurrPositionX, currPositionY},
-                    }
-                );
+        if (numOfFooterRows) {
+            footerSize = Vec2Px{
+                tableBoxSize.x,
+                rowHeightPref.query(grid.size.y - numOfFooterRows, grid.size.y - 1) +
+                    spacing.y * Px{numOfHeaderRows + 1},
             };
         }
     }
 
-    Output run(Tree &tree, Input input) {
-        Px currPositionY{input.position.y};
-        if (input.fragment) {
-            runTableBox(tree, input, currPositionY);
+    struct RowOutput {
+        Vec2Px size;
+        bool completelyLaidOut;
+        Vec<Opt<Breakpoint>> breakpoints;
+    };
+
+    Opt<RowOutput> _layoutRow(Tree &tree, Input input, usize i, Px currPositionX, Px currPositionY, bool computeOutput, usize breakpointIndexOffset) {
+        Opt<RowOutput> outputRow;
+
+        if (computeOutput) {
+            outputRow = RowOutput{
+                {tableBoxSize.x, 0_px},
+                true,
+                {}
+            };
         }
 
-        return Output::fromSize({
-            tableUsedWidth,
-            tableBoxSize.y,
-        });
+        currPositionX += spacing.x;
+        for (usize j = 0; j < grid.size.x; currPositionX += colWidth[j] + spacing.x, j++) {
+            auto cell = grid.get(j, i);
+
+            if (cell.anchorIdx != Math::Vec2u{j, i})
+                continue;
+
+            auto colSpan = cell.box->attrs.colSpan;
+            auto rowSpan = cell.box->attrs.rowSpan;
+
+            // TODO: In CSS 2.2, the height of a cell box is the minimum
+            //       height required by the content.
+            //       The table cell's 'height' property can influence
+            //       the height of the row (see above), but it does not
+            //       increase the height of the cell box.
+            //
+            //       (See https://www.w3.org/TR/CSS22/tables.html#height-layout)
+
+            Opt<Px> verticalSize = rowHeightPref.query(i, i + rowSpan - 1) + spacing.y * Px{rowSpan - 1};
+
+            if (tree.fc.allowBreak() and input.breakpointTraverser.getStart() == i - breakpointIndexOffset) {
+                verticalSize = NONE;
+            }
+
+            // TODO: remove me, being used just for testing
+            // if (rowHelper[i].axisIdx) {
+            //     cell.box->style->backgrounds.cow().color = rows[rowHelper[i].axisIdx.unwrap()].el.style->backgrounds.cow().color;
+            // }
+
+            auto outputCell = layout(
+                tree,
+                *cell.box,
+                {
+                    .fragment = input.fragment,
+                    .knownSize = {
+                        colWidthPref.query(j, j + colSpan - 1) + spacing.x * Px{colSpan - 1},
+                        verticalSize,
+                    },
+                    .position = {currPositionX, currPositionY},
+                    .breakpointTraverser = input.breakpointTraverser.traverseInsideUsingIthChildToJthParallelFlow(i - breakpointIndexOffset, j),
+                    .ancestralsBorderPadding = input.ancestralsBorderPadding,
+                }
+            );
+
+            logDebug("<<<<<<<<<<<<<<<< output of {} ({}) is {} {} {}, vsize was {}", cell.box->style->order, j, outputCell.size, outputCell.completelyLaidOut, outputCell.breakpoint, verticalSize);
+
+            if (computeOutput) {
+                auto &outputRowValue = outputRow.unwrap();
+                outputRowValue.size.y = max(outputRowValue.size.y, outputCell.height());
+                outputRowValue.completelyLaidOut &= outputCell.completelyLaidOut;
+                outputRowValue.breakpoints.pushBack(outputCell.breakpoint);
+            }
+        };
+        return outputRow;
+    }
+
+    RowOutput layoutRow(Tree &tree, Input input, usize i, Px currPositionX, Px currPositionY, usize breakpointIndexOffset) {
+        return _layoutRow(tree, input, i, currPositionX, currPositionY, true, breakpointIndexOffset).unwrap();
+    }
+
+    void layoutHeader(Tree &tree, Input input, Px currPositionX, Px &currPositionY) {
+        for (usize i = 0; i < numOfHeaderRows; i++) {
+            auto _ = _layoutRow(tree, input, i, currPositionX, currPositionY, false, dataRowsInterval.x);
+            currPositionY += rowHeight[i] + spacing.y;
+        }
+    }
+
+    void layoutFooter(Tree &tree, Input input, Px currPositionX, Px &currPositionY) {
+        for (usize i = 0; i < numOfFooterRows; i++) {
+            auto _ = _layoutRow(tree, input, grid.size.y - numOfFooterRows + i, currPositionX, currPositionY, false, dataRowsInterval.x);
+            currPositionY += rowHeight[i] + spacing.y;
+        }
+    }
+
+    // https://www.w3.org/TR/css-tables-3/#freely-fragmentable
+    bool isSelfContainedRow(usize i) {
+        for (usize j = 0; j < grid.size.x; ++j) {
+            if (grid.get(j, i).anchorIdx != Math::Vec2u{j, i} or grid.get(j, i).box->attrs.rowSpan != 1)
+                return false;
+        }
+        return true;
+    }
+
+    Pair<bool> isFreelyFragmentableRow(usize i, Vec2Px fragmentainerSize) {
+        /*
+        NOT freely fragmentable if (AND):
+        - if the cells spanning the row do not span any subsequent row
+            - all cells are row span = 1
+        - their height is at least twice smaller than both the fragmentainer height and width
+            - height <= min(frag.height, frag.width) / 2
+
+        it is freely fragmentable if at least one cell has row span > 1 OR height > min(frag.height, frag.width) / 2
+        */
+
+        bool isSelfContained = isSelfContainedRow(i);
+        return {
+            isSelfContained,
+            not isSelfContained or rowHeight[i] * 2_px > min(fragmentainerSize.x, fragmentainerSize.y)
+        };
+    }
+
+    bool layoutRowsFragmentingUntilOverflow(Tree &tree, Input input, Breakpoint &currentBreakpoint, usize startAt, usize endAt, Px currPositionX, Px &currPositionY, bool considerFooter, usize breakpointIndexOffset) {
+        Px lastRowYContrib{};
+
+        bool avoidBreakInsideTable = tableBox.style->break_->inside == BreakInside::AVOID;
+
+        usize i;
+        for (i = startAt; i < endAt; ++i) {
+
+            auto [rowIsSelfContained, rowIsFreelyFragmentable] = isFreelyFragmentableRow(
+                i, tree.fc.defaultSize
+            );
+
+            Input newInput{input};
+            if (considerFooter)
+                newInput.ancestralsBorderPadding.y += footerSize.y;
+
+            auto outputRow = layoutRow(tree, newInput, i, currPositionX, currPositionY, breakpointIndexOffset);
+
+            if (not outputRow.completelyLaidOut) {
+                if (rowIsFreelyFragmentable or i == startAt) {
+                    bool avoidBreakInsideRow =
+                        rowHelper[i].axisIdx and
+                        rows[rowHelper[i].axisIdx.unwrap()].el.style->break_->inside == BreakInside::AVOID;
+
+                    bool avoidBreakInsideRowGroup =
+                        rowHelper[i].groupIdx and
+                        rowGroups[rowHelper[i].groupIdx.unwrap()].el.style->break_->inside == BreakInside::AVOID;
+
+                    auto maybeChildrenBreakpoint = Breakpoint::maybeBuildFromChildren(
+                        std::move(outputRow.breakpoints),
+                        i + 1,
+                        avoidBreakInsideRow or avoidBreakInsideRowGroup or avoidBreakInsideTable
+                    );
+
+                    if (maybeChildrenBreakpoint)
+                        currentBreakpoint.overrideIfBetter(std::move(maybeChildrenBreakpoint.unwrap()));
+                }
+                return false;
+            }
+
+            currentBreakpoint.overrideIfBetter(Breakpoint::buildClassB(
+                i + 1,
+                avoidBreakInsideTable
+            ));
+
+            if (rowIsSelfContained /* and not last row of table*/) {
+                // if row is self contained, the <tr> it belongs to has size 1
+                bool forcedBreakAfterCurrRow =
+                    rowHelper[i].axisIdx and
+                    rows[rowHelper[i].axisIdx.unwrap()].el.style->break_->after == BreakBetween::PAGE;
+
+                bool forcedBreakBeforeNextRow =
+                    i + 1 <= dataRowsInterval.y and
+                    rowHelper[i + 1].axisIdx and
+                    rows[rowHelper[i + 1].axisIdx.unwrap()].el.style->break_->before == BreakBetween::PAGE;
+
+                bool limitOfCurrRowGroup = i + 1 <= dataRowsInterval.y and rowHelper[i].groupIdx != rowHelper[i + 1].groupIdx;
+
+                bool forcedBreakAfterCurrRowGroup =
+                    limitOfCurrRowGroup and
+                    rowHelper[i].groupIdx and
+                    rowGroups[rowHelper[i].groupIdx.unwrap()].el.style->break_->after == BreakBetween::PAGE;
+
+                bool forcedBreakBeforeNextRowGroup =
+                    limitOfCurrRowGroup and
+                    i + 1 <= dataRowsInterval.y and
+                    rowHelper[i + 1].groupIdx and
+                    rowGroups[rowHelper[i + 1].groupIdx.unwrap()].el.style->break_->before == BreakBetween::PAGE;
+
+                if (forcedBreakAfterCurrRow or forcedBreakBeforeNextRow or
+                    forcedBreakAfterCurrRowGroup or forcedBreakBeforeNextRowGroup) {
+
+                    currentBreakpoint = Breakpoint::buildForced(i + 1);
+
+                    return false;
+                }
+            }
+
+            lastRowYContrib = outputRow.size.y + spacing.y;
+            currPositionY += lastRowYContrib;
+        }
+
+        return true;
+    }
+
+    Output run(Tree &tree, Input input, usize startAtTable, Opt<usize> stopAtTable) {
+        // TODO: in every row, at least one cell must be an anchor, or else this row is 'skipable'
+
+        // if shouldRepeatHeaderAndFooter, header and footer are never alone in the fragmentainer and we wont set
+        // breakpoints on them
+        // otherwise, they only appear once, might be alone in the fragmentainer and can be broken into pages
+        bool shouldRepeatHeaderAndFooter =
+            tree.fc.allowBreak() and
+            max(headerSize.y, footerSize.y) * 4_px <= tree.fc.defaultSize.y and
+            headerSize.y + footerSize.y * 2_px <= tree.fc.defaultSize.y;
+
+        usize startAt = startAtTable, stopAt = stopAtTable.unwrapOr(grid.size.y);
+        if (shouldRepeatHeaderAndFooter) {
+            startAt = dataRowsInterval.x + startAtTable;
+
+            // open interval at end
+            stopAt = dataRowsInterval.x + stopAtTable.unwrapOr(dataRowsInterval.y - dataRowsInterval.x + 1);
+        }
+
+        Px currPositionX{input.position.x}, currPositionY{input.position.y};
+        Px startingPositionY = currPositionY;
+        currPositionY += spacing.y;
+
+        Breakpoint currentBreakpoint;
+
+        bool completelyLaidOut = false;
+        if (tree.fc.allowBreak() and tree.fc.isDiscoveryMode) {
+            if (shouldRepeatHeaderAndFooter)
+                layoutHeader(tree, input, currPositionX, currPositionY);
+
+            completelyLaidOut = layoutRowsFragmentingUntilOverflow(
+                tree, input,
+                currentBreakpoint, startAt,
+                shouldRepeatHeaderAndFooter ? dataRowsInterval.y + 1 : grid.size.y,
+                currPositionX, currPositionY,
+                shouldRepeatHeaderAndFooter,
+                shouldRepeatHeaderAndFooter ? dataRowsInterval.x : 0
+            );
+
+            if (shouldRepeatHeaderAndFooter)
+                layoutFooter(tree, input, currPositionX, currPositionY);
+
+        } else {
+            Px currPositionX{input.position.x};
+
+            if (shouldRepeatHeaderAndFooter)
+                layoutHeader(tree, input, currPositionX, currPositionY);
+
+            for (usize i = startAt; i < stopAt; i++) {
+                auto rowOutput = layoutRow(
+                    tree, input, i, currPositionX, currPositionY,
+                    shouldRepeatHeaderAndFooter ? dataRowsInterval.x : 0
+                );
+
+                currPositionY += i + 1 == stopAt or i == startAt ? rowOutput.size.y : rowHeight[i];
+                currPositionY += spacing.y;
+
+                if (i == (shouldRepeatHeaderAndFooter ? dataRowsInterval.y : grid.size.y - 1))
+                    completelyLaidOut = rowOutput.completelyLaidOut;
+            }
+
+            if (shouldRepeatHeaderAndFooter)
+                layoutFooter(tree, input, currPositionX, currPositionY);
+        }
+
+        if (shouldRepeatHeaderAndFooter)
+            currentBreakpoint.endIdx -= dataRowsInterval.x;
+
+        return Output{
+            .size = {tableUsedWidth, currPositionY - startingPositionY},
+            .completelyLaidOut = completelyLaidOut,
+            .breakpoint = tree.fc.isDiscoveryMode ? Opt<Breakpoint>{currentBreakpoint} : NONE,
+        };
     }
 };
 
-Output tableLayout(Tree &tree, Box &box, Input input) {
+Output tableLayout(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt) {
     // TODO: - vertical and horizontal alignment
     //       - borders collapse
 
     TableFormatingContext table(tree, box);
     table.build(tree, input);
-    return table.run(tree, input);
+    return table.run(tree, input, startAt, stopAt);
 }
 
 } // namespace Vaev::Layout

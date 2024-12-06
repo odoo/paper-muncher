@@ -22,7 +22,7 @@ struct Breakpoint {
     // attribution could should be encapsulated in this class, instead of exposed to code
     usize appeal = 0;
 
-    Vec<Breakpoint> child = {};
+    Vec<Opt<Breakpoint>> children = {};
 
     void overrideIfBetter(Breakpoint &&BPWithMoreContent) {
         if (appeal == 0 and BPWithMoreContent.appeal == 0)
@@ -33,11 +33,11 @@ struct Breakpoint {
     }
 
     void repr(Io::Emit &e) const {
-        e("(end: {} appeal: {}", endIdx, appeal);
-        if (child.len() == 0)
+        e("(end: {} appeal: {} partial height: {}", endIdx, appeal, partialHeight);
+        if (children.len() == 0)
             e("; no child)");
         else
-            e("; child : {})", child[0]);
+            e("; children : {})", children);
     }
 
     static Breakpoint buildForced(usize endIdx) {
@@ -52,7 +52,30 @@ struct Breakpoint {
         Breakpoint b{
             .endIdx = endIdx,
             .appeal = childBreakpoint.appeal,
-            .child = {std::move(childBreakpoint)}
+            .children = {std::move(childBreakpoint)}
+        };
+
+        if (isAvoid)
+            b.appeal = min(b.appeal, AVOID_APPEAL);
+
+        return b;
+    }
+
+    static Opt<Breakpoint> maybeBuildFromChildren(Vec<Opt<Breakpoint>> &&childrenBreakpoints, usize endIdx, bool isAvoid) {
+        usize appeal = Limits<usize>::MAX;
+        for (auto &breakpoint : childrenBreakpoints) {
+            if (not breakpoint)
+                continue;
+            appeal = min(appeal, breakpoint.unwrap().appeal);
+        }
+
+        if (appeal == Limits<usize>::MAX)
+            return NONE;
+
+        Breakpoint b{
+            .endIdx = endIdx,
+            .appeal = appeal,
+            .children = {std::move(childrenBreakpoints)}
         };
 
         if (isAvoid)
@@ -87,23 +110,29 @@ struct BreakpointTraverser {
         MutCursor<Breakpoint> curr = nullptr
     ) : prevIteration(prev), currIteration(curr) {}
 
-    BreakpointTraverser traverseInsideUsingIthChild(usize i) {
+    BreakpointTraverser traverseInsideUsingIthChildToJthParallelFlow(usize i, usize j) {
         BreakpointTraverser deeperBPT;
-        if (prevIteration and prevIteration->child.len() > 0 and i + 1 == prevIteration->endIdx) {
-            deeperBPT.prevIteration = &prevIteration->child[0];
+        if (prevIteration and prevIteration->children.len() > 0 and i + 1 == prevIteration->endIdx) {
+            if (prevIteration->children[j])
+                deeperBPT.prevIteration = &prevIteration->children[j].unwrap();
         }
 
-        if (currIteration and currIteration->child.len() > 0 and i + 1 == currIteration->endIdx) {
-            deeperBPT.currIteration = &currIteration->child[0];
+        if (currIteration and currIteration->children.len() > 0 and i + 1 == currIteration->endIdx) {
+            if (currIteration->children[j])
+                deeperBPT.currIteration = &currIteration->children[j].unwrap();
         }
 
         return deeperBPT;
     }
 
+    BreakpointTraverser traverseInsideUsingIthChild(usize i) {
+        return traverseInsideUsingIthChildToJthParallelFlow(i, 0);
+    }
+
     Opt<usize> getStart() {
         if (prevIteration == nullptr)
             return NONE;
-        return prevIteration->endIdx - (prevIteration->child.len() ? 1 : 0);
+        return prevIteration->endIdx - (prevIteration->children.len() ? 1 : 0);
     }
 
     Opt<usize> getEnd() {
