@@ -48,7 +48,7 @@ Output _contentLayout(Tree &tree, Box &box, Input input, usize startAt, Opt<usiz
     } else if (display == Display::GRID) {
         return gridLayout(tree, box, input);
     } else if (display == Display::TABLE_BOX) {
-        return tableLayout(tree, box, input);
+        return tableLayout(tree, box, input, startAt, stopAt);
     } else if (display == Display::INTERNAL) {
         return Output{};
     } else {
@@ -187,7 +187,8 @@ void maybeSetMonolithicBreakpoint(FragmentationContext &fc, bool isMonolticDispl
     // NOTE: wont abstract this since this is currently a workaround since we dont have fragmentation for table,flex
     Breakpoint bottomOfContentBreakForTopMonolitic{
         .endIdx = boxChildrenLen,
-        .appeal = Breakpoint::Appeal::CLASS_B
+        .appeal = Breakpoint::Appeal::CLASS_B,
+        .advanceCase = Breakpoint::ADVANCE_CASE::ADVANCE_WITHOUT_CHILDREN
     };
 
     outputBreakpoint = bottomOfContentBreakForTopMonolitic;
@@ -228,7 +229,6 @@ Output layout(Tree &tree, Box &box, Input input) {
     if (tree.fc.isDiscoveryMode()) {
         bool isMonolticDisplay =
             box.style->display == Display::Inside::FLEX or
-            box.style->display == Display::Inside::TABLE or
             box.style->display == Display::Inside::GRID;
 
         if (isMonolticDisplay)
@@ -246,7 +246,9 @@ Output layout(Tree &tree, Box &box, Input input) {
 
         auto size = out.size;
         size.width = input.knownSize.width.unwrapOr(size.width);
-        size.height = input.knownSize.height.unwrapOr(size.height);
+        if (out.completelyLaidOut and not input.breakpointTraverser.prevIteration) {
+            size.height = input.knownSize.height.unwrapOr(size.height);
+        }
 
         // TODO: Class C breakpoint
 

@@ -287,7 +287,12 @@ Vec<Strong<Scene::Page>> print(Markup::Document const &dom, Print::Settings cons
         Layout::build(computer, dom),
     };
 
-    Layout::Breakpoint prevBreakpoint{.endIdx = 0}, currBreakpoint;
+    Layout::Breakpoint prevBreakpoint{
+        .endIdx = 0,
+        .advanceCase = Layout::Breakpoint::ADVANCE_CASE::ADVANCE_WITHOUT_CHILDREN
+    };
+    Layout::Breakpoint currBreakpoint;
+
     while (true) {
         Layout::Resolver resolver{};
         Style::Page page{.name = ""s, .number = pages.len(), .blank = false};
