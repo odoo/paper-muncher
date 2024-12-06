@@ -4,7 +4,7 @@
 
 namespace Vaev::Style {
 
-static bool DEBUG_PAGE = true;
+static bool DEBUG_PAGE = false;
 
 // MARK: Page Selector ----------------------------------------------------------
 

@@ -231,21 +231,21 @@ struct RenderOption {
     bool dumpLayout = false;
     bool dumpPaint = false;
 
-    Resolution resolution = Resolution::fromDpi(96);
+    Resolution scale = Resolution::fromDpi(96);
     Length width = 800_px;
     Length height = 600_px;
 };
 
 Res<> render(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output, RenderOption options = {}) {
     Layout::Resolver resolver;
-    resolver.viewport.dpi = options.resolution;
+    resolver.viewport.dpi = options.scale;
 
     Vec2Px imageSize = {
         resolver.resolve(options.width),
         resolver.resolve(options.height),
     };
 
-    auto media = constructMediaForRender(options.resolution, imageSize);
+    auto media = constructMediaForRender(options.scale, imageSize);
     auto [style, layout, paint] = Vaev::Driver::render(*dom, media, {.small = imageSize});
 
     if (options.dumpDom)
@@ -381,7 +381,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
     Cli::Flag dumpDomArg = Cli::flag('d', "dump-dom"s, "Dump the DOM tree"s);
     Cli::Flag dumpLayoutArg = Cli::flag('l', "dump-layout"s, "Dump the layout tree"s);
     Cli::Flag dumpPaintArg = Cli::flag('p', "dump-paint"s, "Dump the paint tree"s);
-    Cli::Option resolutionArg = Cli::option<Str>(NONE, "resolution"s, "Resolution of the output document in css units (e.g. 96dpi)"s, "1x"s);
+    Cli::Option scaleArg = Cli::option<Str>(NONE, "scale"s, "Scale of the output document in css units (e.g. 96dpi)"s, "1x"s);
     Cli::Option widthArg = Cli::option<Str>('w', "width"s, "Width of the output document in css units (e.g. 800px)"s, ""s);
     Cli::Option heightArg = Cli::option<Str>('h', "height"s, "Height of the output document in css units (e.g. 600px)"s, ""s);
     Cli::Option paperArg = Cli::option<Str>(NONE, "paper"s, "Paper size for printing (default: A4)"s, "A4"s);
@@ -397,7 +397,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
             dumpDomArg,
             dumpLayoutArg,
             dumpPaintArg,
-            resolutionArg,
+            scaleArg,
             widthArg,
             heightArg,
             paperArg,
@@ -410,7 +410,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
                 .dumpPaint = dumpPaintArg,
             };
 
-            options.resolution = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(resolutionArg.unwrap()));
+            options.resolution = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
 
             if (widthArg.unwrap())
                 options.width = co_try$(Vaev::Style::parseValue<Vaev::Length>(widthArg.unwrap()));
@@ -457,7 +457,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
             dumpDomArg,
             dumpLayoutArg,
             dumpPaintArg,
-            resolutionArg,
+            scaleArg,
             widthArg,
             heightArg,
         },
@@ -469,7 +469,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
                 .dumpPaint = dumpPaintArg,
             };
 
-            options.resolution = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(resolutionArg.unwrap()));
+            options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
 
             if (widthArg.unwrap())
                 options.width = co_try$(Vaev::Style::parseValue<Vaev::Length>(widthArg.unwrap()));
