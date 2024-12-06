@@ -286,7 +286,10 @@ Vec<Strong<Scene::Page>> print(Markup::Document const &dom, Print::Settings cons
         Layout::build(computer, dom),
     };
 
-    Layout::Breakpoint prevBreakpoint{.endIdx = 0}, currBreakpoint;
+    // ideally prev breakpoint would be an OPT here or a pointer for the first iteration, where it doesnt exist
+    Layout::Breakpoint currBreakpoint,
+        prevBreakpoint{.endIdx = 0, .advanceCase = Layout::Breakpoint::ADVANCE_CASE::ADVANCE_WITHOUT_CHILDREN};
+
     auto rootFragment = Layout::Frag();
     while (true) {
         Layout::Resolver resolver{};
