@@ -349,15 +349,22 @@ struct FlexItem {
                     ? containerSize.x
                     : containerSize.y
             );
+
         case Size::MIN_CONTENT:
             return isWidth ? minContentSize.x : minContentSize.y;
+
         case Size::MAX_CONTENT:
             return isWidth ? maxContentSize.x : maxContentSize.y;
+
         case Size::FIT_CONTENT:
             logWarn("not implemented");
+            return 0_px;
+
         case Size::AUTO:
-            if (not isMin)
+            if (not isMin) {
+                logDebug("{}", box->style->sizing);
                 panic("AUTO is an invalid value for max-width");
+            }
 
             // used cross min sizes are resolved to 0 whereas main sizes have specific method
             return isWidth == fa.isRowOriented

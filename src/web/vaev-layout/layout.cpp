@@ -5,6 +5,7 @@
 #include "flex.h"
 #include "grid.h"
 #include "inline.h"
+#include "positioned.h"
 #include "table.h"
 #include "values.h"
 
@@ -189,6 +190,12 @@ Output layout(Tree &tree, Box &box, Input input) {
     }
 
     return Output::fromSize(size);
+}
+
+Output layout(Tree &tree, Input input) {
+    auto out = layout(tree, tree.root, input);
+    layoutPositioned(tree, tree.root, input.containingBlock);
+    return out;
 }
 
 } // namespace Vaev::Layout
