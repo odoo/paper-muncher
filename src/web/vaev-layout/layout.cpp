@@ -244,7 +244,8 @@ Output layout(Tree &tree, Box &box, Input input) {
 
         auto size = out.size;
         size.width = input.knownSize.width.unwrapOr(size.width);
-        if (out.completelyLaidOut) {
+
+        if (out.completelyLaidOut and not input.breakpointTraverser.prevIteration) {
             size.height = input.knownSize.height.unwrapOr(size.height);
         }
 
@@ -277,7 +278,9 @@ Output layout(Tree &tree, Box &box, Input input) {
 
         auto size = out.size;
         size.width = input.knownSize.width.unwrapOr(size.width);
-        size.height = input.knownSize.height.unwrapOr(size.height);
+        if (out.completelyLaidOut and not input.breakpointTraverser.prevIteration) {
+            size.height = input.knownSize.height.unwrapOr(size.height);
+        }
 
         size = size + padding.all() + borders.all();
 

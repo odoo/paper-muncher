@@ -48,6 +48,10 @@ struct FragmentationContext {
         // NOTE: not considering X coordinate for overflow
         return total.y <= defaultSize.y;
     }
+
+    Px leftVerticalSpace(Vec2Px position, Vec2Px ancestralsBorderPadding) {
+        return defaultSize.y - position.y - ancestralsBorderPadding.y;
+    }
 };
 
 } // namespace Vaev::Layout

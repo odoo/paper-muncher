@@ -22,6 +22,8 @@ struct Breakpoint {
     // attribution could should be encapsulated in this class, instead of exposed to code
     usize appeal = 0;
 
+    Px partialHeight = {};
+
     Vec<Opt<Breakpoint>> children = {};
 
     void overrideIfBetter(Breakpoint &&BPWithMoreContent) {
@@ -100,6 +102,14 @@ struct Breakpoint {
             .appeal = 0
         };
     }
+
+    static Breakpoint buildWithPartialHeight(Px partialHeight) {
+        return {
+            .endIdx = 0,
+            .appeal = 2,
+            .partialHeight = partialHeight,
+        };
+    }
 };
 
 struct BreakpointTraverser {
@@ -132,13 +142,25 @@ struct BreakpointTraverser {
     Opt<usize> getStart() {
         if (prevIteration == nullptr)
             return NONE;
-        return prevIteration->endIdx - (prevIteration->children.len() ? 1 : 0);
+
+        bool repeatBreakpoint = prevIteration->partialHeight or prevIteration->children.len();
+
+        // should repeat prev breakpoint if:
+        // - itself has children, meaning it was not completly explored
+        // - there is still height to layout
+        return prevIteration->endIdx - repeatBreakpoint;
     }
 
     Opt<usize> getEnd() {
         if (currIteration == nullptr)
             return NONE;
         return currIteration->endIdx;
+    }
+
+    Opt<Px> getPartialHeight() {
+        if (prevIteration == nullptr)
+            return NONE;
+        return prevIteration->partialHeight == 0_px ? NONE : Opt<Px>{prevIteration->partialHeight};
     }
 };
 
