@@ -336,7 +336,9 @@ Vec<Strong<Scene::Page>> print(Markup::Document const &dom, Style::Media const &
     auto scaleMatrix = Math::Trans2f::makeScale(media.resolution.toDppx());
 
     Vec<Strong<Scene::Page>> pages;
-    Layout::Breakpoint prevBreakpoint{.endIdx = 0}, currBreakpoint;
+
+    // ideally prev breakpoint would be an OPT here or a pointer for the first iteration, where it doesnt exist
+    Layout::Breakpoint prevBreakpoint{.endIdx = 0, .advanceCase = Layout::Breakpoint::ADVANCE_CASE::ADVANCE_WITHOUT_CHILDREN}, currBreakpoint;
     auto rootFragment = Layout::Frag();
 
     Layout::Tree contentTree = {
