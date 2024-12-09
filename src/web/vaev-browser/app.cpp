@@ -1,3 +1,5 @@
+module;
+
 #include <karm-kira/context-menu.h>
 #include <karm-kira/dialog.h>
 #include <karm-kira/error-page.h>
@@ -36,7 +38,9 @@
 #include <vaev-view/dialog.h>
 #include <vaev-view/view.h>
 
-#include "inspect.h"
+export module Vaev.Browser:app;
+
+import :inspect;
 
 namespace Vaev::Browser {
 
