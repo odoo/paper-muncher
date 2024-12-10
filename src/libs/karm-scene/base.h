@@ -6,6 +6,10 @@
 
 namespace Karm::Scene {
 
+struct PaintOptions {
+    bool showBackgroundGraphics = true;
+};
+
 struct Node {
     isize zIndex = 0;
 
@@ -17,9 +21,9 @@ struct Node {
     /// The bounding rectangle of the node
     virtual Math::Rectf bound() { return {}; }
 
-    virtual void paint(Gfx::Canvas &, Math::Rectf = Math::Rectf::MAX) {}
+    virtual void paint(Gfx::Canvas &, Math::Rectf = Math::Rectf::MAX, PaintOptions = {}) {}
 
-    virtual void print(Print::Printer &) {}
+    virtual void print(Print::Printer &, PaintOptions = {.showBackgroundGraphics = false}) {}
 
     virtual void repr(Io::Emit &e) const {
         e("(node z:{})", zIndex);

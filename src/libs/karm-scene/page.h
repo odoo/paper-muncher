@@ -9,9 +9,9 @@ struct Page : public Stack {
 
     Page(Math::Vec2i size, Opt<Math::Trans2f> transform = NONE) : Stack(transform), _size(size) {}
 
-    void print(Print::Printer &doc) override {
-        Stack::print(doc);
-        paint(doc.beginPage(), _size.cast<f64>());
+    void print(Print::Printer &doc, PaintOptions o) override {
+        Stack::print(doc, o);
+        paint(doc.beginPage(), _size.cast<f64>(), o);
     }
 
     Math::Rectf bound() override {

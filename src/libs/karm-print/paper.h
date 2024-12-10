@@ -18,6 +18,14 @@ struct PaperStock {
     Math::Vec2f size() const {
         return {width, height};
     }
+
+    f64 aspect() const {
+        return width / height;
+    }
+
+    PaperStock landscape() const {
+        return {name, height, width};
+    }
 };
 
 struct PaperSeries {
@@ -118,6 +126,8 @@ static inline Res<PaperStock> findPaperStock(Str name) {
 struct Settings {
     PaperStock paper = Print::A4;
     double scale = 1.;
+    bool headerFooter = true;
+    bool backgroundGraphics = false;
 };
 
 } // namespace Karm::Print
