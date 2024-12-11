@@ -471,7 +471,7 @@ struct FlexItem {
         }
     }
 
-    void alignCrossStretch(Tree &tree, Commit commit, Vec2Px availableSpaceInFlexContainer, Px lineCrossSize) {
+    void alignCrossStretch(Tree &tree, Vec2Px availableSpaceInFlexContainer, Px lineCrossSize) {
         if (
             fa.crossAxis(box->style->sizing).type == Size::Type::AUTO and
             fa.startCrossAxis(*box->style->margin) != Width::Type::AUTO and
@@ -485,7 +485,6 @@ struct FlexItem {
             speculateValues(
                 tree,
                 {
-                    .commit = commit,
                     .knownSize = fa.extractMainAxisAndFillOptOther(usedSize, elementSpeculativeCrossSize),
                     .availableSpace = availableSpaceInFlexContainer,
                 }
@@ -495,7 +494,7 @@ struct FlexItem {
         fa.crossAxis(position) = getMargin(START_CROSS);
     }
 
-    void alignItem(Tree &tree, Commit commit, Vec2Px availableSpaceInFlexContainer, Px lineCrossSize, Style::Align::Keywords parentAlignItems) {
+    void alignItem(Tree &tree, Vec2Px availableSpaceInFlexContainer, Px lineCrossSize, Style::Align::Keywords parentAlignItems) {
         auto align = box->style->aligns.alignSelf.keyword;
 
         if (align == Style::Align::AUTO)
@@ -515,7 +514,7 @@ struct FlexItem {
             return;
 
         case Style::Align::STRETCH:
-            alignCrossStretch(tree, commit, availableSpaceInFlexContainer, lineCrossSize);
+            alignCrossStretch(tree, availableSpaceInFlexContainer, lineCrossSize);
             return;
 
         default:
@@ -1359,12 +1358,11 @@ struct FlexFormatingContext {
     // 14. MARK: Align all flex items ------------------------------------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-cross-align
 
-    void _alignAllFlexItems(Tree &tree, Box &box, Input input) {
+    void _alignAllFlexItems(Tree &tree, Box &box) {
         for (auto &flexLine : _lines) {
             for (auto &flexItem : flexLine.items) {
                 flexItem.alignItem(
                     tree,
-                    input.commit,
                     availableSpace,
                     flexLine.crossSize,
                     box.style->aligns.alignItems.keyword
@@ -1541,7 +1539,7 @@ struct FlexFormatingContext {
         _resolveCrossAxisAutoMargins();
 
         // 14. Align all flex items along the cross-axis.
-        _alignAllFlexItems(tree, box, input);
+        _alignAllFlexItems(tree, box);
 
         // 15. Determine the flex container's used cross size
         _determineFlexContainerUsedCrossSize(input, box);
