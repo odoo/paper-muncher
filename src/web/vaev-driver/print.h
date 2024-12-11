@@ -2,6 +2,8 @@
 
 #include <karm-print/printer.h>
 #include <karm-scene/page.h>
+#include <vaev-layout/frag.h>
+#include <vaev-layout/tree.h>
 #include <vaev-markup/dom.h>
 
 namespace Vaev::Driver {

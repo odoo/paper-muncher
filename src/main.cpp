@@ -233,7 +233,7 @@ Res<> render(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output
     };
 
     auto media = constructMediaForRender(options.scale, imageSize);
-    auto [style, layout, paint] = Vaev::Driver::render(*dom, media, {.small = imageSize});
+    auto [style, layout, paint, _] = Vaev::Driver::render(*dom, media, {.small = imageSize});
 
     if (options.dumpDom)
         Sys::println("--- START OF DOM ---\n{}\n--- END OF DOM ---\n", dom);

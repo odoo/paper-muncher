@@ -41,10 +41,15 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Layo
 
     start = Sys::now();
 
-    Layout::layout(
+    elapsed = Sys::now() - start;
+
+    logDebugIf(DEBUG_RENDER, "layout tree measure time: {}", elapsed);
+
+    start = Sys::now();
+
+    auto [outDiscovery, root] = Layout::layoutCreateFragment(
         tree,
         {
-            .commit = Layout::Commit::YES,
             .knownSize = {viewport.small.width, NONE},
             .availableSpace = {viewport.small.width, 0_px},
             .containingBlock = {viewport.small.width, viewport.small.height},
@@ -57,8 +62,7 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Layo
     logDebugIf(DEBUG_RENDER, "layout tree layout time: {}", elapsed);
 
     auto paintStart = Sys::now();
-
-    Layout::paint(tree.root, *sceneRoot);
+    Layout::paint(root, *sceneRoot);
     sceneRoot->prepare();
 
     elapsed = Sys::now() - paintStart;
@@ -68,6 +72,7 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Layo
         std::move(stylebook),
         makeStrong<Layout::Box>(std::move(tree.root)),
         sceneRoot,
+        makeStrong<Layout::Frag>(root)
     };
 }
 
