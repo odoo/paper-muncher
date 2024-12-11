@@ -21,7 +21,7 @@ Backtrace forceCaptureBacktrace() {
     char **symbols = backtrace_symbols(buffer, count);
 
     for (int i = 0; i < count; i++) {
-        char *symbol = symbols[i];
+        char const *symbol = symbols[i];
         bt._frames.pushBack({
             String(symbol),
             String("unknown"),
