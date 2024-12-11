@@ -87,21 +87,49 @@ Res<None, Output> processBreakpointsBeforeChild(usize endAt, Vec2Px currentSize,
 Output fragmentEmptyBox(Tree &tree, Input input) {
     // put this here instead of in layout.py since we want to know if its the empty box case
     Vec2Px knownSize{input.knownSize.x.unwrapOr(0_px), input.knownSize.y.unwrapOr(0_px)};
-    if (tree.fc.acceptsFit(
-            input.position.y,
-            knownSize.y,
-            input.pendingVerticalSizes
-        )) {
+
+    if (not tree.fc.allowBreak())
         return Output{
             .size = knownSize,
             .completelyLaidOut = true,
         };
+
+    Px leftVerticalSpace = tree.fc.leftVerticalSpace(input.position.y, input.pendingVerticalSizes);
+    Px partialHeight = input.breakpointTraverser.getPartialHeight().unwrapOr(0_px);
+    Px remainingVerticalSize = knownSize.y - partialHeight;
+
+    if (tree.fc.isDiscoveryMode()) {
+        if (leftVerticalSpace == 0_px and knownSize.y > 0_px)
+            return Output{
+                .size = Vec2Px{0_px, 0_px},
+                .completelyLaidOut = false,
+                .breakpoint = Breakpoint::buildOverflow()
+            };
+
+        if (leftVerticalSpace < remainingVerticalSize) {
+            return Output{
+                .size = {knownSize.x, leftVerticalSpace},
+                .completelyLaidOut = false,
+                .breakpoint = Breakpoint::buildWithPartialHeight(partialHeight + leftVerticalSpace),
+            };
+        } else {
+            return Output{
+                .size = {knownSize.x, remainingVerticalSize},
+                .completelyLaidOut = true,
+            };
+        }
     } else {
-        return Output{
-            .size = {},
-            .completelyLaidOut = false,
-            .breakpoint = Breakpoint::buildOverflow()
-        };
+        if (input.breakpointTraverser.currIteration and input.breakpointTraverser.getPartialHeight()) {
+            return Output{
+                .size = {knownSize.x, leftVerticalSpace},
+                .completelyLaidOut = false,
+            };
+        } else {
+            return Output{
+                .size = {knownSize.x, remainingVerticalSize},
+                .completelyLaidOut = true,
+            };
+        }
     }
 }
 
@@ -134,6 +162,8 @@ struct BlockFormatingContext {
     }
 
     Output run(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt) {
+        // TODO: when the block's height is definite, it should reflect in the different fragments it belongs to
+
         Px blockSize = 0_px;
         Px inlineSize = input.knownSize.width.unwrapOr(0_px);
 

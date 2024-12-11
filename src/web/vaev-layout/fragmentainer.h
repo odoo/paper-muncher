@@ -54,6 +54,10 @@ struct FragmentationContext {
     bool acceptsFit(Px verticalPosition, Px verticalSize, Px pendingVerticalSizes) {
         return verticalPosition + verticalSize + pendingVerticalSizes <= defaultSize.y;
     }
+
+    Px leftVerticalSpace(Px verticalPosition, Px pendingVerticalSizes) {
+        return defaultSize.y - verticalPosition - pendingVerticalSizes;
+    }
 };
 
 } // namespace Vaev::Layout

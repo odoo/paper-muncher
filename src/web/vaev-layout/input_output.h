@@ -22,6 +22,8 @@ struct Breakpoint {
     // attribution could should be encapsulated in this class, instead of exposed to code
     usize appeal = 0;
 
+    Px partialHeight = {};
+
     Vec<Opt<Breakpoint>> children = {};
 
     enum struct ADVANCE_CASE {
@@ -39,7 +41,7 @@ struct Breakpoint {
     }
 
     void repr(Io::Emit &e) const {
-        e("(end: {} appeal: {} advance case: {}", endIdx, appeal, advanceCase);
+        e("(end: {} appeal: {} advance case: {} partial height: {}", endIdx, appeal, advanceCase, partialHeight);
         if (children.len() == 0)
             e("; no child)");
         else
@@ -116,6 +118,15 @@ struct Breakpoint {
             .advanceCase = ADVANCE_CASE::NOT_ADVANCE
         };
     }
+
+    static Breakpoint buildWithPartialHeight(Px partialHeight) {
+        return {
+            .endIdx = 0,
+            .appeal = 2,
+            .partialHeight = partialHeight,
+            .advanceCase = ADVANCE_CASE::NOT_ADVANCE
+        };
+    }
 };
 
 struct BreakpointTraverser {
@@ -170,6 +181,12 @@ struct BreakpointTraverser {
         if (currIteration == nullptr)
             return NONE;
         return currIteration->endIdx;
+    }
+
+    Opt<Px> getPartialHeight() {
+        if (prevIteration == nullptr)
+            return NONE;
+        return prevIteration->partialHeight == 0_px ? NONE : Opt<Px>{prevIteration->partialHeight};
     }
 };
 
