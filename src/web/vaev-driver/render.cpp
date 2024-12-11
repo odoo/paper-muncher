@@ -78,10 +78,15 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Layo
 
     start = Sys::now();
 
-    Layout::layout(
+    elapsed = Sys::now() - start;
+
+    logDebugIf(DEBUG_RENDER, "layout tree measure time: {}", elapsed);
+
+    start = Sys::now();
+
+    auto [outDiscovery, root] = Layout::layoutCreateFragment(
         tree,
         {
-            .commit = Layout::Commit::YES,
             .knownSize = {viewport.small.width, NONE},
             .availableSpace = {viewport.small.width, 0_px},
             .containingBlock = {viewport.small.width, viewport.small.height},
@@ -94,8 +99,7 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Layo
     logDebugIf(DEBUG_RENDER, "layout tree layout time: {}", elapsed);
 
     auto paintStart = Sys::now();
-
-    Layout::paint(tree.root, *sceneRoot);
+    Layout::paint(root, *sceneRoot);
     sceneRoot->prepare();
 
     elapsed = Sys::now() - paintStart;
@@ -105,6 +109,7 @@ RenderResult render(Markup::Document const &dom, Style::Media const &media, Layo
         std::move(stylebook),
         makeStrong<Layout::Box>(std::move(tree.root)),
         sceneRoot,
+        makeStrong<Layout::Frag>(root)
     };
 }
 
@@ -119,18 +124,17 @@ static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, 
         .root = Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::TOP_LEFT_CORNER)),
         .viewport = Layout::Viewport{.small = topLeftMarginCornerRect.size()}
     };
-    Layout::layout(
+
+    auto [_, topLeftMarginCornerFrag] = Layout::layoutCreateFragment(
         topLeftMarginCornerTree,
         {
-            .commit = Layout::Commit::YES,
             .knownSize = topLeftMarginCornerRect.size().cast<Opt<Px>>(),
             .position = topLeftMarginCornerRect.topStart(),
             .availableSpace = topLeftMarginCornerRect.size(),
             .containingBlock = topLeftMarginCornerRect.size(),
         }
     );
-    Layout::paint(topLeftMarginCornerTree.root, stack);
-
+    Layout::paint(topLeftMarginCornerFrag, stack);
     // MARK: Top Right Corner --------------------------------------------------
 
     auto topRightMarginCornerRect = RectPx::fromTwoPoint(
@@ -141,17 +145,17 @@ static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, 
         .root = Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::TOP_RIGHT_CORNER)),
         .viewport = Layout::Viewport{.small = topRightMarginCornerRect.size()}
     };
-    Layout::layout(
+
+    auto [_, topRightMarginCornerFrag] = Layout::layoutCreateFragment(
         topRightMarginCornerTree,
         {
-            .commit = Layout::Commit::YES,
             .knownSize = topRightMarginCornerRect.size().cast<Opt<Px>>(),
             .position = topRightMarginCornerRect.topStart(),
             .availableSpace = topRightMarginCornerRect.size(),
             .containingBlock = topRightMarginCornerRect.size(),
         }
     );
-    Layout::paint(topRightMarginCornerTree.root, stack);
+    Layout::paint(topRightMarginCornerFrag, stack);
 
     // MARK: Bottom Left Corner ------------------------------------------------
 
@@ -163,18 +167,17 @@ static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, 
         .root = Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::BOTTOM_LEFT_CORNER)),
         .viewport = Layout::Viewport{.small = bottomLeftMarginCornerRect.size()}
     };
-    Layout::layout(
+
+    auto [_, bottomLeftMarginCornerFrag] = Layout::layoutCreateFragment(
         bottomLeftMarginCornerTree,
-        bottomLeftMarginCornerTree.root,
         {
-            .commit = Layout::Commit::YES,
             .knownSize = bottomLeftMarginCornerRect.size().cast<Opt<Px>>(),
             .position = bottomLeftMarginCornerRect.topStart(),
             .availableSpace = bottomLeftMarginCornerRect.size(),
             .containingBlock = bottomLeftMarginCornerRect.size(),
         }
     );
-    Layout::paint(bottomLeftMarginCornerTree.root, stack);
+    Layout::paint(bottomLeftMarginCornerFrag, stack);
 
     // MARK: Bottom Right Corner -----------------------------------------------
 
@@ -186,17 +189,17 @@ static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, 
         .root = Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::BOTTOM_RIGHT_CORNER)),
         .viewport = Layout::Viewport{.small = bottomRightMarginCornerRect.size()}
     };
-    Layout::layout(
+
+    auto [_, bottomRightMarginCornerFrag] = Layout::layoutCreateFragment(
         bottomRightMarginCornerTree,
         {
-            .commit = Layout::Commit::YES,
             .knownSize = bottomRightMarginCornerRect.size().cast<Opt<Px>>(),
             .position = bottomRightMarginCornerRect.topStart(),
             .availableSpace = bottomRightMarginCornerRect.size(),
             .containingBlock = bottomRightMarginCornerRect.size(),
         }
     );
-    Layout::paint(bottomRightMarginCornerTree.root, stack);
+    Layout::paint(bottomRightMarginCornerFrag, stack);
 
     // MARK: Top ---------------------------------------------------------------
 
@@ -215,17 +218,16 @@ static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, 
         .viewport = Layout::Viewport{.small = topRect.size()}
     };
 
-    Layout::layout(
+    auto [_, topFrag] = Layout::layoutCreateFragment(
         topTree,
         {
-            .commit = Layout::Commit::YES,
             .knownSize = topRect.size().cast<Opt<Px>>(),
             .position = topRect.topStart(),
             .availableSpace = topRect.size(),
             .containingBlock = topRect.size(),
         }
     );
-    Layout::paint(topTree.root, stack);
+    Layout::paint(topFrag, stack);
 
     // MARK: Bottom ------------------------------------------------------------
 
@@ -244,10 +246,9 @@ static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, 
         .viewport = Layout::Viewport{.small = bottomRect.size()}
     };
 
-    Layout::layout(
+    auto [_, bottomFrag] = Layout::layoutCreateFragment(
         bottomTree,
         {
-            .commit = Layout::Commit::YES,
             .knownSize = bottomRect.size().cast<Opt<Px>>(),
             .position = bottomRect.topStart(),
             .availableSpace = bottomRect.size(),
@@ -255,7 +256,7 @@ static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, 
         }
     );
 
-    Layout::paint(bottomTree.root, stack);
+    Layout::paint(bottomFrag, stack);
 
     // MARK: Left --------------------------------------------------------------
     auto leftRect = RectPx::fromTwoPoint(
@@ -273,10 +274,9 @@ static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, 
         .viewport = Layout::Viewport{.small = leftRect.size()}
     };
 
-    Layout::layout(
+    auto [_, leftFrag] = Layout::layoutCreateFragment(
         leftTree,
         {
-            .commit = Layout::Commit::YES,
             .knownSize = leftRect.size().cast<Opt<Px>>(),
             .position = leftRect.topStart(),
             .availableSpace = leftRect.size(),
@@ -284,7 +284,7 @@ static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, 
         }
     );
 
-    Layout::paint(leftTree.root, stack);
+    Layout::paint(leftFrag, stack);
 
     // MARK: Right -------------------------------------------------------------
 
@@ -303,10 +303,9 @@ static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, 
         .viewport = Layout::Viewport{.small = rightRect.size()}
     };
 
-    Layout::layout(
+    auto [_, rightFrag] = Layout::layoutCreateFragment(
         rightTree,
         {
-            .commit = Layout::Commit::YES,
             .knownSize = rightRect.size().cast<Opt<Px>>(),
             .position = rightRect.topStart(),
             .availableSpace = rightRect.size(),
@@ -314,7 +313,7 @@ static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, 
         }
     );
 
-    Layout::paint(rightTree.root, stack);
+    Layout::paint(rightFrag, stack);
 }
 
 Vec<Strong<Scene::Page>> print(Markup::Document const &dom, Style::Media const &media) {
@@ -334,55 +333,91 @@ Vec<Strong<Scene::Page>> print(Markup::Document const &dom, Style::Media const &
 
     // MARK: Page and Margins --------------------------------------------------
 
-    Vec<Strong<Scene::Page>> pages;
-
-    Layout::Resolver resolver{};
-    Style::Page page{.name = ""s, .number = pages.len(), .blank = false};
-    auto pageStyle = computer.computeFor(page);
-    RectPx pageRect{
-        media.width / Px{media.resolution.toDppx()},
-        media.height / Px{media.resolution.toDppx()}
-    };
-
     auto scaleMatrix = Math::Trans2f::makeScale(media.resolution.toDppx());
-    auto pageScene = makeStrong<Scene::Page>(pageRect.size().cast<isize>(), scaleMatrix);
 
-    InsetsPx pageMargin = {
-        resolver.resolve(pageStyle->style->margin->top, pageRect.height),
-        resolver.resolve(pageStyle->style->margin->end, pageRect.width),
-        resolver.resolve(pageStyle->style->margin->bottom, pageRect.height),
-        resolver.resolve(pageStyle->style->margin->start, pageRect.width),
-    };
-
-    RectPx pageContent = pageRect.shrink(pageMargin);
-
-    _paintMargins(*pageStyle, pageRect, pageContent, *pageScene);
-
-    // MARK: Page Content ------------------------------------------------------
-
-    Layout::Viewport vp{
-        .small = pageContent.size(),
-    };
+    Vec<Strong<Scene::Page>> pages;
+    Layout::Breakpoint prevBreakpoint{.endIdx = 0}, currBreakpoint;
+    auto rootFragment = Layout::Frag();
 
     Layout::Tree contentTree = {
         Layout::build(computer, dom),
-        vp,
+        {},
+        Layout::FragmentationContext({
+            media.width / Px{media.resolution.toDppx()},
+            media.height / Px{media.resolution.toDppx()},
+        })
     };
 
-    Layout::layout(
-        contentTree,
-        {
-            .commit = Layout::Commit::YES,
+    while (true) {
+        Layout::Resolver resolver{};
+        resolver.viewport.dpi = media.resolution;
+
+        Style::Page page{.name = ""s, .number = pages.len(), .blank = false};
+        auto pageStyle = computer.computeFor(page);
+        RectPx pageRect{
+            media.width / Px{media.resolution.toDppx()},
+            media.height / Px{media.resolution.toDppx()}
+        };
+
+        auto pageScene = pages.emplaceBack(
+            // FIXME: it can be that specific pages have different dimensions
+            makeStrong<Scene::Page>(pageRect.size().cast<isize>(), scaleMatrix)
+        );
+
+        InsetsPx pageMargin = {
+            resolver.resolve(pageStyle->style->margin->top, pageRect.height),
+            resolver.resolve(pageStyle->style->margin->end, pageRect.width),
+            resolver.resolve(pageStyle->style->margin->bottom, pageRect.height),
+            resolver.resolve(pageStyle->style->margin->start, pageRect.width),
+        };
+
+        RectPx pageContent = pageRect.shrink(pageMargin);
+
+        _paintMargins(*pageStyle, pageRect, pageContent, *pageScene);
+
+        // MARK: Page Content ------------------------------------------------------
+
+        Layout::Viewport vp{
+            .small = pageContent.size(),
+            .large = pageRect.size(),
+            .dynamic = pageRect.size(),
+        };
+
+        Layout::Input pageLayoutInput{
             .knownSize = {pageContent.width, NONE},
             .position = pageContent.topStart(),
             .availableSpace = pageContent.size(),
             .containingBlock = pageContent.size(),
-        }
-    );
+        };
 
-    Layout::paint(contentTree.root, *pageScene);
-    pageScene->prepare();
-    pages.pushBack(pageScene);
+        contentTree.fc.setDiscovery();
+        auto outDiscovery = Layout::layout(
+            contentTree,
+            contentTree.root,
+            pageLayoutInput.withBreakpointTraverser(Layout::BreakpointTraverser(&prevBreakpoint))
+        );
+
+        currBreakpoint = outDiscovery.completelyLaidOut
+                             ? Layout::Breakpoint::buildClassB(1, false)
+                             : outDiscovery.breakpoint.unwrap();
+
+        contentTree.fc.unsetDiscovery();
+        auto outReal = Layout::layout(
+            contentTree,
+            contentTree.root,
+            pageLayoutInput
+                .withFragment(&rootFragment)
+                .withBreakpointTraverser(Layout::BreakpointTraverser(&prevBreakpoint, &currBreakpoint))
+        );
+
+        Layout::paint(last(rootFragment.children), *pageScene);
+        pageScene->prepare();
+
+        if (outReal.completelyLaidOut)
+            break;
+
+        std::swap(prevBreakpoint, currBreakpoint);
+    }
 
     return pages;
 }
