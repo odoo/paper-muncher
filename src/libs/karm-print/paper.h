@@ -152,7 +152,9 @@ struct Margins {
 
 enum struct Orientation {
     PORTRAIT,
-    LANDSCAPE
+    LANDSCAPE,
+
+    _LEN,
 };
 
 struct Settings {
