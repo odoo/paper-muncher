@@ -18,7 +18,7 @@ struct View : public Ui::View<View> {
             .width = Px{viewport.width},
             .height = Px{viewport.height},
             .aspectRatio = viewport.width / (f64)viewport.height,
-            .orientation = Orientation::LANDSCAPE,
+            .orientation = Print::Orientation::LANDSCAPE,
 
             .resolution = Resolution::fromDpi(96),
             .scan = Scan::PROGRESSIVE,

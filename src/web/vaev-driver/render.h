@@ -17,6 +17,4 @@ struct RenderResult {
 
 RenderResult render(Markup::Document const &dom, Style::Media const &media, Layout::Viewport viewport);
 
-Vec<Strong<Scene::Page>> print(Markup::Document const &dom, Style::Media const &media);
-
 } // namespace Vaev::Driver

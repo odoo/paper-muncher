@@ -3,13 +3,14 @@
 #include <karm-image/saver.h>
 #include <karm-io/emit.h>
 #include <karm-io/funcs.h>
-#include <karm-print/bmp.h>
-#include <karm-print/pdf.h>
+#include <karm-print/image-printer.h>
+#include <karm-print/pdf-printer.h>
 #include <karm-sys/entry.h>
 #include <karm-sys/file.h>
 #include <karm-sys/time.h>
 #include <karm-ui/app.h>
 #include <vaev-driver/fetcher.h>
+#include <vaev-driver/print.h>
 #include <vaev-driver/render.h>
 #include <vaev-layout/values.h>
 #include <vaev-markup/html.h>
@@ -100,41 +101,6 @@ Res<> markupDumpTokens(Mime::Url const &url) {
     return Ok();
 }
 
-Vaev::Style::Media constructMediaForPrint(Resolution resolution, Vec2Px paperSize) {
-    return {
-        .type = Vaev::MediaType::PRINT,
-
-        .width = paperSize.width,
-        .height = paperSize.height,
-        .aspectRatio = (double)paperSize.width / (double)paperSize.height,
-        .orientation = Vaev::Orientation::PORTRAIT,
-
-        .resolution = resolution,
-        .scan = Vaev::Scan::PROGRESSIVE,
-        .grid = false,
-        .update = Vaev::Update::NONE,
-
-        .overflowBlock = Vaev::OverflowBlock::PAGED,
-        .overflowInline = Vaev::OverflowInline::NONE,
-
-        .color = 8,
-        .colorIndex = 0,
-        .monochrome = 0,
-        .colorGamut = Vaev::ColorGamut::SRGB,
-        .pointer = Vaev::Pointer::NONE,
-        .hover = Vaev::Hover::NONE,
-        .anyPointer = Vaev::Pointer::NONE,
-        .anyHover = Vaev::Hover::NONE,
-
-        .prefersReducedMotion = Vaev::ReducedMotion::REDUCE,
-        .prefersReducedTransparency = Vaev::ReducedTransparency::REDUCE,
-        .prefersContrast = Vaev::Contrast::MORE,
-        .forcedColors = Vaev::Colors::NONE,
-        .prefersColorScheme = Vaev::ColorScheme::LIGHT,
-        .prefersReducedData = Vaev::ReducedData::NO_PREFERENCE,
-    };
-}
-
 struct PrintOption {
     bool dumpStyle = false;
     bool dumpDom = false;
@@ -142,23 +108,41 @@ struct PrintOption {
     bool dumpPaint = false;
     bool printToBMP = false;
 
-    Resolution resolution = Resolution::fromDpi(96);
+    Resolution scale = Resolution::fromDppx(1);
     Opt<Length> width = NONE;
     Opt<Length> height = NONE;
     Print::PaperStock paper = Print::A4;
+    Print::Orientation orientation = Print::Orientation::PORTRAIT;
 };
 
 Res<> print(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output, PrintOption options = {}) {
+    Layout::Resolver resolver;
+    resolver.viewport.dpi = options.scale;
 
-    Vec2Px paperSize = {
-        Px{options.paper.width},
-        Px{options.paper.height},
+    auto paper = options.paper;
+
+    if (options.orientation == Print::Orientation::LANDSCAPE)
+        paper = paper.landscape();
+
+    if (options.width) {
+        paper.name = "custom";
+        paper.width = resolver.resolve(*options.width).cast<f64>();
+    }
+
+    if (options.height) {
+        paper.name = "custom";
+        paper.height = resolver.resolve(*options.height).cast<f64>();
+    }
+
+    Print::Settings settings = {
+        .paper = paper,
+        .scale = options.scale.toDppx(),
+        .headerFooter = true,
+        .backgroundGraphics = false,
     };
-
-    auto media = constructMediaForPrint(options.resolution, paperSize);
     auto pages = Vaev::Driver::print(
         *dom,
-        media
+        settings
     );
 
     if (options.dumpDom)
@@ -169,16 +153,19 @@ Res<> print(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output,
 
     Strong<Print::FilePrinter> printer =
         options.printToBMP
-            ? Strong<Print::FilePrinter>{makeStrong<Print::BMPPrinter>(Print::BMPPrinter{options.paper})}
-            : makeStrong<Print::PdfPrinter>(Print::PdfPrinter{options.paper});
+            ? Strong<Print::FilePrinter>{makeStrong<Print::ImagePrinter>()}
+            : makeStrong<Print::PdfPrinter>();
 
     for (auto &page : pages) {
-        page->print(*printer);
+        page->print(
+            *printer,
+            {
+                .showBackgroundGraphics = true,
+            }
+        );
     }
 
-    printer->write(output);
-
-    return Ok();
+    return printer->write(output);
 }
 
 Res<> print(Mime::Url const &url, Io::Reader &input, Io::Writer &output, PrintOption options = {}) {
@@ -191,15 +178,15 @@ Res<> print(Mime::Url const &url, Io::Writer &output, PrintOption options = {}) 
     return print(url, dom, output, options);
 }
 
-Vaev::Style::Media constructMediaForRender(Resolution resolution, Vec2Px size) {
+Vaev::Style::Media constructMediaForRender(Resolution scale, Vec2Px size) {
     return {
         .type = Vaev::MediaType::SCREEN,
         .width = size.width,
         .height = size.height,
         .aspectRatio = (Number)size.width / (Number)size.height,
-        .orientation = Vaev::Orientation::PORTRAIT,
+        .orientation = Print::Orientation::PORTRAIT,
 
-        .resolution = resolution,
+        .resolution = scale,
         .scan = Vaev::Scan::PROGRESSIVE,
         .grid = false,
         .update = Vaev::Update::NONE,
@@ -385,22 +372,23 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
     Cli::Option widthArg = Cli::option<Str>('w', "width"s, "Width of the output document in css units (e.g. 800px)"s, ""s);
     Cli::Option heightArg = Cli::option<Str>('h', "height"s, "Height of the output document in css units (e.g. 600px)"s, ""s);
     Cli::Option paperArg = Cli::option<Str>(NONE, "paper"s, "Paper size for printing (default: A4)"s, "A4"s);
+    Cli::Option orientationArg = Cli::option<Str>(NONE, "orientation"s, "Page orientation (default: portrait)"s, "portrait"s);
 
     cmd.subCommand(
         "print"s,
         'p',
         "Render document for printing"s,
-        {
-            inputArg,
-            outputArg,
-            dumpStyleArg,
-            dumpDomArg,
-            dumpLayoutArg,
-            dumpPaintArg,
-            scaleArg,
-            widthArg,
-            heightArg,
-            paperArg,
+        {inputArg,
+         outputArg,
+         dumpStyleArg,
+         dumpDomArg,
+         dumpLayoutArg,
+         dumpPaintArg,
+         scaleArg,
+         widthArg,
+         heightArg,
+         paperArg,
+         orientationArg
         },
         [=](Sys::Context &) -> Async::Task<> {
             Vaev::Tools::PrintOption options{
@@ -410,7 +398,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
                 .dumpPaint = dumpPaintArg,
             };
 
-            options.resolution = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
+            options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
 
             if (widthArg.unwrap())
                 options.width = co_try$(Vaev::Style::parseValue<Vaev::Length>(widthArg.unwrap()));
@@ -419,6 +407,8 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
                 options.height = co_try$(Vaev::Style::parseValue<Vaev::Length>(heightArg.unwrap()));
 
             options.paper = co_try$(Print::findPaperStock(paperArg.unwrap()));
+
+            options.orientation = co_try$(Vaev::Style::parseValue<Print::Orientation>(orientationArg.unwrap()));
 
             Mime::Url inputUrl = "about:stdin"_url;
             MutCursor<Io::Reader> input = &Sys::in();

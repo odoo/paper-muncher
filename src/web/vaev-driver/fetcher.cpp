@@ -122,4 +122,40 @@ Res<Style::StyleSheet> fetchStylesheet(Mime::Url url, Style::Origin origin) {
     return Ok(Style::StyleSheet::parse(s, origin));
 }
 
+void fetchStylesheets(Markup::Node const &node, Style::StyleBook &sb) {
+    auto el = node.is<Markup::Element>();
+    if (el and el->tagName == Html::STYLE) {
+        auto text = el->textContent();
+        Io::SScan textScan{text};
+        auto sheet = Style::StyleSheet::parse(textScan);
+        sb.add(std::move(sheet));
+    } else if (el and el->tagName == Html::LINK) {
+        auto rel = el->getAttribute(Html::REL_ATTR);
+        if (rel == "stylesheet"s) {
+            auto href = el->getAttribute(Html::HREF_ATTR);
+            if (not href) {
+                logWarn("link element missing href attribute");
+                return;
+            }
+
+            auto url = Mime::parseUrlOrPath(*href);
+            if (not url) {
+                logWarn("link element href attribute is not a valid URL: {}", *href);
+                return;
+            }
+
+            auto sheet = fetchStylesheet(url.take(), Style::Origin::AUTHOR);
+            if (not sheet) {
+                logWarn("failed to fetch stylesheet: {}", sheet);
+                return;
+            }
+
+            sb.add(sheet.take());
+        }
+    } else {
+        for (auto &child : node.children())
+            fetchStylesheets(*child, sb);
+    }
+}
+
 } // namespace Vaev::Driver

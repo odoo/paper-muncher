@@ -807,14 +807,14 @@ Res<Number> ValueParser<Number>::parse(Cursor<Css::Sst> &c) {
 
 // MARK: Orientation
 // https://drafts.csswg.org/mediaqueries/#orientation
-Res<Orientation> ValueParser<Orientation>::parse(Cursor<Css::Sst> &c) {
+Res<Print::Orientation> ValueParser<Print::Orientation>::parse(Cursor<Css::Sst> &c) {
     if (c.ended())
         return Error::invalidData("unexpected end of input");
 
     if (c.skip(Css::Token::ident("portrait")))
-        return Ok(Orientation::PORTRAIT);
+        return Ok(Print::Orientation::PORTRAIT);
     else if (c.skip(Css::Token::ident("landscape")))
-        return Ok(Orientation::LANDSCAPE);
+        return Ok(Print::Orientation::LANDSCAPE);
     else
         return Error::invalidData("expected orientation");
 }

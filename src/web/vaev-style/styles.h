@@ -2642,7 +2642,7 @@ struct CustomProp {
     static constexpr Str name() { return "custom prop"; }
 
     void apply(Computed &c) const {
-        c.variables.cow().put(varName, value);
+        c.setCustomProp(varName, value);
     }
 
     void repr(Io::Emit &e) const {

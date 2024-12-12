@@ -1,5 +1,6 @@
 #pragma once
 
+#include <karm-print/paper.h>
 #include <vaev-base/align.h>
 #include <vaev-base/borders.h>
 #include <vaev-base/calc.h>
@@ -283,8 +284,8 @@ struct ValueParser<Number> {
 };
 
 template <>
-struct ValueParser<Orientation> {
-    static Res<Orientation> parse(Cursor<Css::Sst> &c);
+struct ValueParser<Print::Orientation> {
+    static Res<Print::Orientation> parse(Cursor<Css::Sst> &c);
 };
 
 template <>

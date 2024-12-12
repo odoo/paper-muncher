@@ -130,10 +130,12 @@ struct Margins {
         NONE,
         MINIMUM,
         CUSTOM,
+
+        _LEN
     };
     using enum _Named;
     _Named named;
-    Math::Insetsf custom;
+    Math::Insetsf custom = 20 * UNIT;
 
     Margins(_Named named) : named(named) {}
 
@@ -142,11 +144,21 @@ struct Margins {
     bool operator==(_Named named) const {
         return this->named == named;
     }
+
+    void repr(Io::Emit &e) const {
+        e("{}", named);
+    }
+};
+
+enum struct Orientation {
+    PORTRAIT,
+    LANDSCAPE
 };
 
 struct Settings {
     PaperStock paper = Print::A4;
     Margins margins = Margins::DEFAULT;
+    Orientation orientation = Orientation::PORTRAIT;
 
     double scale = 1.;
     bool headerFooter = true;
