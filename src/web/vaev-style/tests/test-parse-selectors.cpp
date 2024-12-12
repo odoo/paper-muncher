@@ -2,7 +2,6 @@
 #include <vaev-style/select.h>
 
 namespace Vaev::Style::Tests {
-
 test$("vaev-style-parse-simple-selectors") {
     expectEq$(
         Selector::parse(""),
@@ -188,6 +187,22 @@ test$("vaev-style-parse-mixed-selectors") {
     );
 
     expectEq$(
+        Selector::parse("td, .o_content .o .o_table th "),
+        Selector::or_(
+            {TypeSelector{Html::TD},
+             Selector::descendant(Selector::descendant(Selector::descendant(ClassSelector{"o_content"s}, ClassSelector{"o"s}), ClassSelector{"o_table"s}), TypeSelector{Html::TH})}
+        )
+    );
+
+    expectEq$(
+        Selector::parse("td, .o_content .o_table th "),
+        Selector::or_(
+            {TypeSelector{Html::TD},
+             Selector::descendant(Selector::descendant(ClassSelector{"o_content"s}, ClassSelector{"o_table"s}), TypeSelector{Html::TH})}
+        )
+    );
+
+    expectEq$(
         Selector::parse(".o_content .o_table > thead > tr:not(:last-child) th:not(:first-child)"),
         Selector::descendant(
             Selector::child(
@@ -201,13 +216,6 @@ test$("vaev-style-parse-mixed-selectors") {
         )
     );
 
-    expectEq$(
-        Selector::parse(".o_content .o_table thead, .o_content .o_table tbody, .o_content .o_table tfoot, .o_content .o_table tr, .o_content .o_table td, .o_content .o_table th "),
-        Selector::descendant(
-            Selector::and_({TypeSelector{Html::TR}, Selector::not_(Pseudo{Pseudo::LAST_CHILD})}),
-            Selector::and_({TypeSelector{Html::TH}, {Selector::not_(Pseudo{Pseudo::FIRST_CHILD})}})
-        )
-    );
     return Ok();
 }
 
@@ -342,5 +350,4 @@ test$("vaev-style-parse-attribute-selectors") {
 
     return Ok();
 }
-
 } // namespace Vaev::Style::Tests

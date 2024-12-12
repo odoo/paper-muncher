@@ -3,7 +3,6 @@
 #include "values.h"
 
 namespace Vaev::Style {
-
 static constexpr bool DEBUG_SELECTORS = false;
 
 // MARK: Selector Specificity ---------------------------------------------------
@@ -240,7 +239,6 @@ static bool _matchLastOfType(Markup::Element const &e) {
 
 static bool _match(Pseudo const &s, Markup::Element const &el) {
     switch (s.type) {
-
     case Pseudo::LINK:
         return _matchLink(el);
 
@@ -367,6 +365,7 @@ static Selector _parseAttributeSelector(Slice<Css::Sst> content) {
     };
 }
 
+// consume an Op Code
 static OpCode _peekOpCode(Cursor<Css::Sst> &cur) {
     if (cur.ended()) {
         return OpCode::NOP;
@@ -442,6 +441,7 @@ static OpCode _peekOpCode(Cursor<Css::Sst> &cur) {
 
 static Selector _parseInfixExpr(Selector lhs, Cursor<Css::Sst> &cur, OpCode opCode = OpCode::NOP);
 
+// consume a selector element (everything  that has a lesser priority than the current OP)
 static Selector _parseSelectorElement(Cursor<Css::Sst> &cur, OpCode currentOp) {
     if (cur.ended()) {
         logErrorIf(DEBUG_SELECTORS, "ERROR : unterminated selector");
@@ -510,6 +510,7 @@ static Selector _parseSelectorElement(Cursor<Css::Sst> &cur, OpCode currentOp) {
 
 static Selector _parseNfixExpr(Selector lhs, OpCode op, Cursor<Css::Sst> &cur) {
     Vec<Selector> selectors = {lhs, _parseSelectorElement(cur, op)};
+    // all the selectors between the op eg : a,b.B,c -> [a,b.B,c]
 
     while (not cur.ended()) {
         Cursor<Css::Sst> rollBack = cur;
@@ -527,17 +528,24 @@ static Selector _parseNfixExpr(Selector lhs, OpCode op, Cursor<Css::Sst> &cur) {
                 cur = rollBack;
                 break;
             }
-
             last(selectors) = _parseNfixExpr(last(selectors), nextOpCode, cur);
         } else {
-            // parse new infix
+            // parse new infix if the next op is more important
 
             if (nextOpCode < op) {
                 cur = rollBack;
                 break;
             }
 
-            selectors.pushBack(_parseInfixExpr(_parseSelectorElement(cur, op), cur, nextOpCode));
+            if (not(cur.rem() == 2 and cur.peek(1) == Css::Token::WHITESPACE)) [[likely]] {
+                last(selectors) = _parseInfixExpr(last(selectors), cur, nextOpCode);
+
+                // auto const lhs = _parseSelectorElement(cur, op);
+                // selectors.pushBack(_parseInfixExpr(lhs, cur, nextOpCode));
+            } else {
+                last(selectors) = _parseInfixExpr(last(selectors), cur, nextOpCode);
+                cur.next();
+            }
         }
     }
 
@@ -612,5 +620,4 @@ Selector Selector::parse(Str input) {
     Io::SScan s{input};
     return parse(s);
 };
-
 } // namespace Vaev::Style
