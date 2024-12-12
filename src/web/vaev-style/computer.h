@@ -19,7 +19,7 @@ struct Computer {
 
     Strong<Computed> _evalCascade(Computed const &parent, MatchingRules &matches);
 
-    Strong<Computed> computeFor(Computed const &parent, Markup::Element const &el);
+    Strong<Computed> computeFor(Computed const &parent, Cursor<Computed> sibling, Markup::Element const &el);
 
     Strong<PageComputedStyle> computeFor(Computed const &parent, Page const &page);
 };
