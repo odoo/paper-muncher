@@ -3,6 +3,7 @@
 #include <karm-base/distinct.h>
 #include <karm-base/res.h>
 #include <karm-base/string.h>
+#include <karm-math/insets.h>
 #include <karm-math/vec.h>
 
 namespace Karm::Print {
@@ -17,6 +18,14 @@ struct PaperStock {
 
     Math::Vec2f size() const {
         return {width, height};
+    }
+
+    f64 aspect() const {
+        return width / height;
+    }
+
+    PaperStock landscape() const {
+        return {name, height, width};
     }
 };
 
@@ -115,9 +124,33 @@ static inline Res<PaperStock> findPaperStock(Str name) {
 
 // MARK: Print Settings --------------------------------------------------------
 
+struct Margins {
+    enum struct _Named {
+        DEFAULT,
+        NONE,
+        MINIMUM,
+        CUSTOM,
+    };
+    using enum _Named;
+    _Named named;
+    Math::Insetsf custom;
+
+    Margins(_Named named) : named(named) {}
+
+    Margins(Math::Insetsf custom) : named(_Named::CUSTOM), custom(custom) {}
+
+    bool operator==(_Named named) const {
+        return this->named == named;
+    }
+};
+
 struct Settings {
     PaperStock paper = Print::A4;
+    Margins margins = Margins::DEFAULT;
+
     double scale = 1.;
+    bool headerFooter = true;
+    bool backgroundGraphics = false;
 };
 
 } // namespace Karm::Print
