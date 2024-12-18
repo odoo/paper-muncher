@@ -18,7 +18,15 @@
                     background-color: #74b553;
                 }
 
+                .o_content .o_table thead, .o_content .o_table tbody, .o_content .o_table tfoot, .o_content .o_table tr, .o_content .o_table td, .o_content .o_table th {
+                    border-style: none;
+                }
 
+                thead, tbody, tfoot, tr, td, th {
+                    border-color: inherit;
+                    border-style: solid;
+                    border-width: 0;
+                }
             </style>
         </head>
 
@@ -55,6 +63,77 @@
                 background-color: #74b553;
             }
         </style>
+    </rendering>
+
+</test>
+<test name="select-real-odoo-2">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                .foo {
+                    width: 100px;
+                    height: 100px;
+                    background: #61eaae;
+                }
+
+                .good {
+                    background-color: #b98af1;
+                }
+
+                .col-10 {
+                    background-color: #b98af1;
+                }
+                .row {
+                    --bs-gutter-x: 1.5rem;
+                    --bs-gutter-y: 0;
+                    display: -webkit-box;
+                    display: -webkit-flex;
+                    display: flex;
+                    flex-wrap: wrap;
+                    margin-top: calc(-1* var(--bs-gutter-y));
+                    margin-right: calc(-.5* var(--bs-gutter-x));
+                    margin-left: calc(-.5* var(--bs-gutter-x));
+                }
+                .col-8 {
+                    -webkit-box-flex: 0;
+                    -webkit-flex: 0 0 auto;
+                    flex: 0 0 auto;
+                    width: 66.66666667%;
+                }
+            </style>
+        </head>
+
+        <body>
+        <div xmlns="http://www.w3.org/1999/xhtml" class="o_content ">
+            <header>
+                <div class="row o_header_font">
+                    <div class="col-8">
+                        <slot/>
+                        <div class="foo"></div>
+                    </div>
+                </div>
+            </header>
+        </div>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="row">
+            <div class="foo good"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div class="row">
+            <div class="foo col-10"></div>
+        </div>
     </rendering>
 
 </test>
