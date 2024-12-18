@@ -1,0 +1,78 @@
+<test name="calc">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                    --thevar: -200px;
+                }
+
+                .foo {
+                    background-color: #b98af1;
+                    height: 100px;
+                }
+
+                #ref {
+                    width: 100px;
+                    background: #61eaae;
+                }
+
+                .good {
+                    width: 100px;
+                }
+            </style>
+        </head>
+
+        <body>
+        <div id="ref" class="foo"></div>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="foo good"></div>
+    </rendering>
+
+    <rendering help="classic addition">
+        <div class="foo" style="width: calc(50px + 50px)"></div>
+    </rendering>
+
+    <rendering help="classic subtraction">
+        <div class="foo" style="width: calc(150px - 50px)"></div>
+    </rendering>
+
+    <rendering help="classic multiplication">
+        <div class="foo" style="width: calc(2 * 50px)"></div>
+    </rendering>
+
+    <rendering help="classic multiplication 2">
+        <div class="foo" style="width: calc(.5 * 200px)"></div>
+    </rendering>
+
+    <rendering help="classic division">
+        <div class="foo" style="width: calc(200px / 2)"></div>
+    </rendering>
+
+    <rendering help="short multiplication">
+        <div class="foo" style="width: calc(50px* 2)"></div>
+    </rendering>
+
+    <rendering help="short division">
+        <div class="foo" style="width: calc(200px/ 2)"></div>
+    </rendering>
+
+    <rendering help="negative multiplication">
+        <div class="foo" style="width: calc(-0.5* -200px)"></div>
+    </rendering>
+
+    <rendering help="negative multiplication 2">
+        <div class="foo" style="width: calc(-.5* -200px)"></div>
+    </rendering>
+
+    <rendering help="negative multiplication with var">
+        <div class="foo" style="width: calc(-.5* var(--thevar))"></div>
+    </rendering>
+</test>
