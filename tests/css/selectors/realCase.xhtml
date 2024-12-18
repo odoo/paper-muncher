@@ -1,0 +1,60 @@
+<test name="select-real-odoo">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                th {
+                    width: 100px;
+                    height: 100px;
+                    background: #f1aeb5;
+                }
+
+                .good {
+                    background-color: #74b553;
+                }
+
+
+            </style>
+        </head>
+
+        <body>
+        <div class="o_content ">
+            <div class="d-flex align-items-start">
+                <table class="o_table  ">
+                    <thead id="table_header">
+                    <tr>
+                        <th></th>
+                        <slot/>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <th class="good"></th>
+    </rendering>
+
+    <rendering>
+        <th></th>
+
+        <style>
+            .o_content .o_table > thead > tr:not(:last-child) th:not(:first-child) {
+                background-color: #74b553;
+            }
+        </style>
+    </rendering>
+
+</test>
