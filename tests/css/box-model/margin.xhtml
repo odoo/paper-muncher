@@ -1,0 +1,48 @@
+<test name="margin">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                .foo {
+                    background-color: #b98af1;
+                    width: 100px;
+                    height: 100px;
+                }
+
+                #ref {
+                    background: #61eaae;
+                }
+
+                .good {
+                    position: absolute;
+                    left: 100px;
+                }
+            </style>
+        </head>
+
+        <body>
+        <div id="ref" class="foo"></div>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="good foo"></div>
+    </rendering>
+
+    <rendering help="simple margin">
+        <div class="foo" style="margin-left: 100px"></div>
+    </rendering>
+
+    <rendering help="negative margin">
+        <div class="foo" style="position:absolute;left:150px;margin-left: -50px"></div>
+    </rendering>
+
+
+</test>
