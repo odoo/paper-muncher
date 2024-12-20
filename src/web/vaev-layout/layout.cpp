@@ -45,7 +45,10 @@ Output _contentLayout(Tree &tree, Box &box, Input input, usize startAt, Opt<usiz
     ) {
         return blockLayout(tree, box, input, startAt, stopAt);
     } else if (display == Display::FLEX) {
-        return flexLayout(tree, box, input);
+        if (tree.fc.hasInfiniteDimensions())
+            return flexLayout(tree, box, input);
+        else
+            return blockLayout(tree, box, input, startAt, stopAt);
     } else if (display == Display::GRID) {
         return gridLayout(tree, box, input);
     } else if (display == Display::TABLE_BOX) {
@@ -226,9 +229,7 @@ Output layout(Tree &tree, Box &box, Input input) {
     input.position = input.position + borders.topStart() + padding.topStart();
     input.pendingVerticalSizes += borders.bottom + padding.bottom;
 
-    bool isMonolticDisplay =
-        box.style->display == Display::Inside::FLEX or
-        box.style->display == Display::Inside::GRID;
+    bool isMonolticDisplay = box.style->display == Display::Inside::GRID;
 
     usize startAt = tree.fc.allowBreak() ? input.breakpointTraverser.getStart().unwrapOr(0) : 0;
     if (tree.fc.isDiscoveryMode()) {
