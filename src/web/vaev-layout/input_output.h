@@ -257,7 +257,7 @@ struct Output {
     // - discovery mode: knowing if a child was complete so we can break after it
     //      (if not fully laid out, we need to stop the block formatting context)
     // - non-discovery mode: knowing if we can finish rendering
-    bool completelyLaidOut;
+    bool completelyLaidOut = true;
 
     // only to be used in discovery mode
     Opt<Breakpoint> breakpoint = NONE;
