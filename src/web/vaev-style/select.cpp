@@ -14,6 +14,13 @@ Spec spec(Selector const &s) {
             if (n.type == Nfix::WHERE)
                 return Spec::ZERO;
 
+            if (n.type == Nfix::OR) {
+                Spec maxSpec = Spec::ZERO;
+                for (auto &inner : n.inners)
+                    maxSpec = max(maxSpec, spec(inner));
+                return maxSpec;
+            }
+
             Spec sum = Spec::ZERO;
             for (auto &inner : n.inners)
                 sum = sum + spec(inner);
