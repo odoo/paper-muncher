@@ -153,8 +153,8 @@ Res<> print(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output,
 
     Strong<Print::FilePrinter> printer =
         options.printToBMP
-            ? Strong<Print::FilePrinter>{makeStrong<Print::ImagePrinter>()}
-            : makeStrong<Print::PdfPrinter>();
+            ? Strong<Print::FilePrinter>{makeStrong<Print::ImagePrinter>(options.scale)}
+            : makeStrong<Print::PdfPrinter>(options.scale);
 
     for (auto &page : pages) {
         page->print(

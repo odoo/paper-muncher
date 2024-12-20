@@ -13,11 +13,14 @@ struct ImagePrinter : public FilePrinter {
     Opt<Gfx::CpuCanvas> _canvas;
     Image::Saver _saver;
 
-    ImagePrinter(Image::Saver saver = {})
-        : _saver(saver) {}
+    ImagePrinter(Vaev::Resolution scale = Vaev::Resolution::fromDppx(1), Image::Saver saver = {})
+        : FilePrinter(scale), _saver(saver) {}
 
     Gfx::Canvas &beginPage(PaperStock paper) override {
-        _pages.emplaceBack(Gfx::Surface::alloc(paper.size().cast<isize>(), Gfx::RGBA8888));
+        _pages.emplaceBack(Gfx::Surface::alloc(
+            (paper.size() * _scale.toDppx()).cast<isize>(),
+            Gfx::RGBA8888
+        ));
 
         if (_canvas)
             _canvas->end();
