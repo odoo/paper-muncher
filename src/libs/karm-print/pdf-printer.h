@@ -16,9 +16,12 @@ struct PdfPrinter : public FilePrinter {
     Vec<PdfPage> _pages;
     Opt<Pdf::Canvas> _canvas;
 
+    PdfPrinter(Vaev::Resolution scale = Vaev::Resolution::fromDppx(1))
+        : FilePrinter(scale) {}
+
     Gfx::Canvas &beginPage(PaperStock paper) override {
         auto &page = _pages.emplaceBack(paper);
-        _canvas = Pdf::Canvas{page.data, paper.size()};
+        _canvas = Pdf::Canvas{page.data, paper.size() * _scale.toDppx()};
         return *_canvas;
     }
 
