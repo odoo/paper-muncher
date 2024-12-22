@@ -6,6 +6,7 @@
 #include "list.h"
 #include "rc.h"
 #include "res.h"
+#include "vec.h"
 
 namespace Karm::Async {
 
@@ -86,7 +87,7 @@ struct Continuation : public Resumable {
 template <Sender S>
 struct [[nodiscard]] Awaiter :
     public Continuation<typename S::Inner>,
-    Meta::Static,
+    Meta::Pinned,
     Meta::NoCopy {
 
     using Continuation<typename S::Inner>::value;
@@ -213,7 +214,7 @@ static inline void detach(S s) {
 
 // MARK: Cancelation -----------------------------------------------------------
 
-struct Cancelation : Meta::Static {
+struct Cancelation : Meta::Pinned {
     struct Token {
         Cancelation *_c = nullptr;
 
@@ -223,6 +224,12 @@ struct Cancelation : Meta::Static {
 
         bool canceled() const {
             return _c and _c->canceled();
+        }
+
+        Res<> errorIfCanceled() const {
+            if (canceled())
+                return Error::interrupted("operation canceled");
+            return Ok();
         }
     };
 
@@ -244,6 +251,8 @@ struct Cancelation : Meta::Static {
         return Token{*this};
     }
 };
+
+using Ct = Cancelation::Token;
 
 // MARK: Promise ---------------------------------------------------------------
 

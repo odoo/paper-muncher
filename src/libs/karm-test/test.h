@@ -6,12 +6,11 @@
 #include <karm-meta/nocopy.h>
 
 #include "_prelude.h"
-
 #include "driver.h"
 
 namespace Karm::Test {
 
-struct Test : Meta::Static {
+struct Test : Meta::Pinned {
     enum struct Kind {
         SYNC,
         ASYNC,
