@@ -95,6 +95,8 @@ struct Resolver {
 
 // MARK: Resolve during layout -------------------------------------------------
 
+bool isPurePercentage(CalcValue<PercentOr<Length>>);
+
 Px resolve(Tree const &tree, Box const &box, Length value);
 
 Px resolve(Tree const &tree, Box const &box, PercentOr<Length> value, Px relative);

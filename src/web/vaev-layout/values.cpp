@@ -267,6 +267,15 @@ Px Resolver::resolve(FontSize value) {
 
 // MARK: Resolve during layout -------------------------------------------------
 
+bool isPurePercentage(CalcValue<PercentOr<Length>> value) {
+    if (value.type == CalcValue<PercentOr<Length>>::OpType::FIXED or
+        value.type == CalcValue<PercentOr<Length>>::OpType::SINGLE) {
+        return (value.lhs.template unwrap<PercentOr<Length>>())._type == PercentOr<Length>::PERCENT;
+    } else {
+        return false;
+    }
+}
+
 Px resolve(Tree const &tree, Box const &box, Length value) {
     return Resolver::from(tree, box).resolve(value);
 }

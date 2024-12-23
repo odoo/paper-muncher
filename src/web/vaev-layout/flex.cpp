@@ -239,7 +239,7 @@ struct FlexItem {
     }
 
     // https://www.w3.org/TR/css-flexbox-1/#valdef-flex-basis-auto
-    void computeFlexBaseSize(Tree &tree, Px mainContainerSize, IntrinsicSize containerSizing) {
+    void computeFlexBaseSize(Tree &tree, Opt<Px> mainContainerDefiniteSize, IntrinsicSize containerSizing) {
         // A NONE return here indicates a CONTENT case for the flex basis
         auto getDefiniteFlexBasisSize = [](FlexProps &flexItemProps, FlexAxis &fa, Box *box) -> Opt<CalcValue<PercentOr<Length>>> {
             if (flexItemProps.basis.type != FlexBasis::WIDTH)
@@ -255,13 +255,18 @@ struct FlexItem {
         };
 
         if (auto flexBasisDefiniteSize = getDefiniteFlexBasisSize(flexItemProps, fa, box)) {
-            flexBaseSize = resolve(
-                tree,
-                *box,
-                flexBasisDefiniteSize.unwrap(),
-                mainContainerSize
-            );
-            return;
+            // https://developer.mozilla.org/en-US/docs/Web/CSS/flex-basis#width
+            // TODO: if we have the information it isnt a percentage, we wouldnt need a relative width as an argument
+            // once the isPercentage API is properly implemented, we shouldnt be calling resolve with this useless arg
+            if (not isPurePercentage(flexBasisDefiniteSize.unwrap()) or mainContainerDefiniteSize) {
+                flexBaseSize = resolve(
+                    tree,
+                    *box,
+                    flexBasisDefiniteSize.unwrap(),
+                    mainContainerDefiniteSize.unwrapOr(0_px)
+                );
+                return;
+            }
         }
 
         if (isMinMaxIntrinsicSize(containerSizing)) {
@@ -674,12 +679,22 @@ struct FlexFormatingContext {
     // 3. MARK: Flex base size and hypothetical main size of each item ---------
     // https://www.w3.org/TR/css-flexbox-1/#algo-main-item
 
-    void _determineFlexBaseSizeAndHypotheticalMainSize(Tree &tree, IntrinsicSize containerSize) {
+    void _determineFlexBaseSizeAndHypotheticalMainSize(Tree &tree, Box &box, Input input) {
+        Opt<Px> containerDefiniteMainSize;
+        if (fa.mainAxis(box.style->sizing) == Size::LENGTH) {
+            containerDefiniteMainSize = resolve(
+                tree,
+                box,
+                fa.mainAxis(box.style->sizing).value,
+                fa.mainAxis(input.containingBlock)
+            );
+        }
+
         for (auto &i : _items) {
             i.computeFlexBaseSize(
                 tree,
-                fa.mainAxis(availableSpace),
-                containerSize
+                containerDefiniteMainSize,
+                input.intrinsic
             );
 
             i.computeHypotheticalMainSize(tree, availableSpace);
@@ -1504,7 +1519,7 @@ struct FlexFormatingContext {
         _determineAvailableMainAndCrossSpace(tree, input);
 
         // 3. Determine the flex base size and hypothetical main size of each item
-        _determineFlexBaseSizeAndHypotheticalMainSize(tree, input.intrinsic);
+        _determineFlexBaseSizeAndHypotheticalMainSize(tree, box, input);
 
         // 4. Determine the main size of the flex container
         _determineMainSize(tree, input, box);
