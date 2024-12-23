@@ -109,6 +109,7 @@ struct PrintOption {
     bool printToBMP = false;
 
     Resolution scale = Resolution::fromDppx(1);
+    Resolution density = Resolution::fromDppx(1);
     Opt<Length> width = NONE;
     Opt<Length> height = NONE;
     Print::PaperStock paper = Print::A4;
@@ -153,7 +154,7 @@ Res<> print(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output,
 
     Strong<Print::FilePrinter> printer =
         options.printToBMP
-            ? Strong<Print::FilePrinter>{makeStrong<Print::ImagePrinter>()}
+            ? Strong<Print::FilePrinter>{makeStrong<Print::ImagePrinter>(options.density.toDppx())}
             : makeStrong<Print::PdfPrinter>();
 
     for (auto &page : pages) {
@@ -169,7 +170,8 @@ Res<> print(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output,
 }
 
 Res<> print(Mime::Url const &url, Io::Reader &input, Io::Writer &output, PrintOption options = {}) {
-    auto dom = try$(Vaev::Driver::loadDocument(url, "application/xhtml+xml"_mime, input));
+    auto mime = Mime::sniffSuffix(url.path.suffix()).unwrapOr("application/xhtml+xml"_mime);
+    auto dom = try$(Vaev::Driver::loadDocument(url, mime, input));
     return print(url, dom, output, options);
 }
 
@@ -219,6 +221,7 @@ struct RenderOption {
     bool dumpPaint = false;
 
     Resolution scale = Resolution::fromDpi(96);
+    Resolution density = Resolution::fromDpi(96);
     Length width = 800_px;
     Length height = 600_px;
 };
@@ -247,10 +250,11 @@ Res<> render(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output
     if (options.dumpPaint)
         Sys::println("--- START OF PAINT ---\n{}\n--- END OF PAINT ---\n", paint);
 
-    auto image = Gfx::Surface::alloc(imageSize.cast<isize>(), Gfx::RGBA8888);
+    auto image = Gfx::Surface::alloc(imageSize.cast<isize>() * options.density.toDppx(), Gfx::RGBA8888);
     Gfx::CpuCanvas g;
     g.begin(*image);
     g.clear(Gfx::WHITE);
+    g.scale(options.density.toDppx());
     paint->paint(g);
     g.end();
 
@@ -260,7 +264,8 @@ Res<> render(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output
 }
 
 Res<> render(Mime::Url const &input, Io::Reader &reader, Io::Writer &output, RenderOption options = {}) {
-    auto dom = try$(Vaev::Driver::loadDocument(input, "application/xhtml+xml"_mime, reader));
+    auto mime = Mime::sniffSuffix(input.path.suffix()).unwrapOr("application/xhtml+xml"_mime);
+    auto dom = try$(Vaev::Driver::loadDocument(input, mime, reader));
     return render(input, dom, output, options);
 }
 
@@ -368,7 +373,8 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
     Cli::Flag dumpDomArg = Cli::flag('d', "dump-dom"s, "Dump the DOM tree"s);
     Cli::Flag dumpLayoutArg = Cli::flag('l', "dump-layout"s, "Dump the layout tree"s);
     Cli::Flag dumpPaintArg = Cli::flag('p', "dump-paint"s, "Dump the paint tree"s);
-    Cli::Option scaleArg = Cli::option<Str>(NONE, "scale"s, "Scale of the output document in css units (e.g. 96dpi)"s, "1x"s);
+    Cli::Option scaleArg = Cli::option<Str>(NONE, "scale"s, "Scale of the output document in css units (e.g. 1x)"s, "1x"s);
+    Cli::Option densityArg = Cli::option<Str>(NONE, "density"s, "Density of the output document in css units (e.g. 96dpi)"s, "1x"s);
     Cli::Option widthArg = Cli::option<Str>('w', "width"s, "Width of the output document in css units (e.g. 800px)"s, ""s);
     Cli::Option heightArg = Cli::option<Str>('h', "height"s, "Height of the output document in css units (e.g. 600px)"s, ""s);
     Cli::Option paperArg = Cli::option<Str>(NONE, "paper"s, "Paper size for printing (default: A4)"s, "A4"s);
@@ -378,17 +384,19 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
         "print"s,
         'p',
         "Render document for printing"s,
-        {inputArg,
-         outputArg,
-         dumpStyleArg,
-         dumpDomArg,
-         dumpLayoutArg,
-         dumpPaintArg,
-         scaleArg,
-         widthArg,
-         heightArg,
-         paperArg,
-         orientationArg
+        {
+            inputArg,
+            outputArg,
+            dumpStyleArg,
+            dumpDomArg,
+            dumpLayoutArg,
+            dumpPaintArg,
+            scaleArg,
+            densityArg,
+            widthArg,
+            heightArg,
+            paperArg,
+            orientationArg,
         },
         [=](Sys::Context &) -> Async::Task<> {
             Vaev::Tools::PrintOption options{
@@ -399,6 +407,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
             };
 
             options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
+            options.density = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(densityArg.unwrap()));
 
             if (widthArg.unwrap())
                 options.width = co_try$(Vaev::Style::parseValue<Vaev::Length>(widthArg.unwrap()));
@@ -448,6 +457,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
             dumpLayoutArg,
             dumpPaintArg,
             scaleArg,
+            densityArg,
             widthArg,
             heightArg,
         },
@@ -460,6 +470,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
             };
 
             options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
+            options.density = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(densityArg.unwrap()));
 
             if (widthArg.unwrap())
                 options.width = co_try$(Vaev::Style::parseValue<Vaev::Length>(widthArg.unwrap()));
