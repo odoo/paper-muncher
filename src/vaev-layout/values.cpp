@@ -370,6 +370,17 @@ export struct Resolver {
 
 // MARK: Resolve during layout -------------------------------------------------
 
+export bool isPurePercentage(CalcValue<PercentOr<Length>> calcValue) {
+    if (not calcValue._inner.is<CalcValue<PercentOr<Length>>::Value>())
+        return false;
+
+    auto const& value = calcValue._inner.unwrap<CalcValue<PercentOr<Length>>::Value>();
+    if (not value.is<PercentOr<Length>>())
+        return false;
+    auto const& percentOrLength = value.unwrap<PercentOr<Length>>();
+    return percentOrLength.is<Percent>();
+}
+
 export Au resolve(Tree const& tree, Box const& box, Length const& value) {
     return Resolver::from(tree, box).resolve(value);
 }
