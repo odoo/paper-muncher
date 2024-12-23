@@ -157,7 +157,7 @@ Res<> print(Mime::Url const &, Strong<Markup::Document> dom, Io::Writer &output,
             : makeStrong<Print::PdfPrinter>();
 
     for (auto &page : pages) {
-        page->print(
+        page.print(
             *printer,
             {
                 .showBackgroundGraphics = true,
