@@ -1,11 +1,9 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "id": "karm-gpu",
+    "id": "karm-rpc",
     "type": "lib",
-    "description": "GPU acceleration",
+    "description": "A remote procedure call library",
     "requires": [
-        "karm-io",
-        "karm-math",
-        "karm-shader"
+        "karm-sys"
     ]
 }
