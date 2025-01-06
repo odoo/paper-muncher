@@ -4310,6 +4310,29 @@ void HtmlParser::_handleAfterHead(HtmlToken const &t) {
 // 13.2.6.4.7 MARK: The "in body" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inbody
 void HtmlParser::_handleInBody(HtmlToken const &t) {
+    auto closePElementIfInButtonScope = [&]() {
+        // https://html.spec.whatwg.org/#close-a-p-element
+        // If the stack of open elements has a p element in button scope, then close a p element.
+        if (_hasElementInButtonScope(Html::P)) {
+
+            // Generate implied end tags, except for p elements.
+            generateImpliedEndTags(*this, Html::P);
+
+            // If the current node is not a p element, then this is a parse error.
+            if (last(_openElements)->tagName != Html::P)
+                _raise();
+
+            // Pop elements from the stack of open elements until a p element has been popped from the stack.
+            while (_openElements.len() > 0) {
+                auto lastEl = last(_openElements);
+
+                _openElements.popBack();
+                if (lastEl->tagName == Html::P)
+                    break;
+            }
+        }
+    };
+
     // A character token that is U+0000 NULL
     if (t.type == HtmlToken::CHARACTER and t.rune == '\0') {
         _raise();
@@ -4386,12 +4409,28 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
 
     }
 
-    // TODO: A start tag whose tag name is one of:
+    // A start tag whose tag name is one of:
     // "address", "article", "aside", "blockquote", "center",
     // "details", "dialog", "dir", "div", "dl", "fieldset",
     // "figcaption", "figure", "footer", "header", "hgroup",
     // "main", "menu", "nav", "ol", "p", "search", "section",
     // "summary", "ul"
+    else if (
+        t.type == HtmlToken::START_TAG and
+        (t.name == "address" or t.name == "article" or t.name == "aside" or t.name == "blockquote" or
+         t.name == "center" or t.name == "details" or t.name == "dialog" or t.name == "dir" or
+         t.name == "div" or t.name == "dl" or t.name == "fieldset" or t.name == "figcaption" or
+         t.name == "figure" or t.name == "footer" or t.name == "header" or t.name == "hgroup" or
+         t.name == "main" or t.name == "menu" or t.name == "nav" or t.name == "ol" or
+         t.name == "p" or t.name == "search" or t.name == "section" or t.name == "summary" or t.name == "ul"
+        )
+    ) {
+        // If the stack of open elements has a p element in button scope, then close a p element.
+        closePElementIfInButtonScope();
+
+        // Insert an HTML element for the token.
+        insertHtmlElement(*this, t);
+    }
 
     // TODO: A start tag whose tag name is one of: "h1", "h2", "h3", "h4", "h5", "h6"
 
