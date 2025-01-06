@@ -1744,7 +1744,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // U+003E GREATER-THAN SIGN (>)
         // Switch to the data state. Emit the current comment token.
         if (rune == '>') {
-            _ensure(HtmlToken::COMMENT).data = _builder.take();
+            _ensure(HtmlToken::COMMENT).data = _commentBuilder.take();
             _switchTo(State::DATA);
             _emit();
         }
@@ -1762,13 +1762,13 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // REPLACEMENT CHARACTER character to the comment token's data.
         else if (rune == 0) {
             _raise("unexpected-null-character");
-            _builder.append(0xFFFD);
+            _commentBuilder.append(0xFFFD);
         }
 
         // Anything else
         // Append the current input character to the comment token's data.
         else {
-            _builder.append(rune);
+            _commentBuilder.append(rune);
         }
 
         break;
@@ -1875,6 +1875,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // the data state. Emit the current comment token.
         else if (rune == '>') {
             _raise("abrupt-closing-of-empty-comment");
+            _ensure(HtmlToken::COMMENT).data = _commentBuilder.take();
             _switchTo(State::DATA);
             _emit();
         }
@@ -1893,7 +1894,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Append a U+002D HYPHEN-MINUS character (-) to the comment token's
         // data. Reconsume in the comment state.
         else {
-            _builder.append('-');
+            _commentBuilder.append('-');
             _reconsumeIn(State::COMMENT, rune);
         }
 
@@ -1908,7 +1909,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Append the current input character to the comment token's data.
         // Switch to the comment less-than sign state.
         if (rune == '<') {
-            _builder.append(rune);
+            _commentBuilder.append(rune);
             _switchTo(State::COMMENT_LESS_THAN_SIGN);
         }
 
@@ -1923,7 +1924,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // REPLACEMENT CHARACTER character to the comment token's data.
         else if (rune == 0) {
             _raise("unexpected-null-character");
-            _builder.append(0xFFFD);
+            _commentBuilder.append(0xFFFD);
         }
 
         // EOF
@@ -1940,7 +1941,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Anything else
         // Append the current input character to the comment token's data.
         else {
-            _builder.append(rune);
+            _commentBuilder.append(rune);
         }
 
         break;
@@ -1954,14 +1955,14 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Append the current input character to the comment token's data.
         // Switch to the comment less-than sign bang state.
         if (rune == '!') {
-            _builder.append(rune);
+            _commentBuilder.append(rune);
             _switchTo(State::COMMENT_LESS_THAN_SIGN_BANG);
         }
 
         // U+003C LESS-THAN SIGN (<)
         // Append the current input character to the comment token's data.
         else if (rune == '<') {
-            _builder.append(rune);
+            _commentBuilder.append(rune);
         }
 
         // Anything else
@@ -2057,7 +2058,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Append a U+002D HYPHEN-MINUS character (-) to the comment token's
         // data. Reconsume in the comment state.
         else {
-            _builder.append('-');
+            _commentBuilder.append('-');
             _reconsumeIn(State::COMMENT, rune);
         }
 
@@ -2071,6 +2072,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // U+003E GREATER-THAN SIGN (>)
         // Switch to the data state. Emit the current comment token.
         if (rune == '>') {
+            _ensure(HtmlToken::COMMENT).data = _commentBuilder.take();
             _switchTo(State::DATA);
             _emit();
         }
@@ -2085,7 +2087,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Append a U+002D HYPHEN-MINUS character (-) to the comment token's
         // data.
         else if (rune == '-') {
-            _builder.append('-');
+            _commentBuilder.append('-');
         }
 
         // EOF
@@ -2102,8 +2104,8 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Append two U+002D HYPHEN-MINUS characters (-) to the comment
         // token's data. Reconsume in the comment state.
         else {
-            _builder.append('-');
-            _builder.append('-');
+            _commentBuilder.append('-');
+            _commentBuilder.append('-');
             _reconsumeIn(State::COMMENT, rune);
         }
 
@@ -2119,9 +2121,9 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // EXCLAMATION MARK character (!) to the comment token's data.
         // Switch to the comment end dash state.
         if (rune == '-') {
-            _builder.append('-');
-            _builder.append('-');
-            _builder.append('!');
+            _commentBuilder.append('-');
+            _commentBuilder.append('-');
+            _commentBuilder.append('!');
             _switchTo(State::COMMENT_END_DASH);
         }
 
@@ -2149,9 +2151,9 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // EXCLAMATION MARK character (!) to the comment token's data.
         // Reconsume in the comment state.
         else {
-            _builder.append('-');
-            _builder.append('-');
-            _builder.append('!');
+            _commentBuilder.append('-');
+            _commentBuilder.append('-');
+            _commentBuilder.append('!');
             _reconsumeIn(State::COMMENT, rune);
         }
 
