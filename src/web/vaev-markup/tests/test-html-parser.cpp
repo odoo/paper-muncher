@@ -171,4 +171,24 @@ test$("parse-p-after-comment") {
     return Ok();
 }
 
+test$("parse-not-nested-p-and-els-inbody") {
+    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    Markup::HtmlParser parser{dom};
+
+    parser.write("<div>b</div><p>a<div>b</div><p>a<p>a");
+
+    expect$(dom->nodeType() == NodeType::DOCUMENT);
+    expect$(dom->hasChildren());
+
+    auto html = try$(dom->firstChild().cast<Element>());
+    expect$(html->tagName == Html::HTML);
+    expect$(html->children().len() == 2);
+
+    auto body = try$(html->firstChild()->nextSibling().cast<Element>());
+    expect$(body->tagName == Html::BODY);
+    expect$(body->children().len() == 5);
+
+    return Ok();
+}
+
 } // namespace Vaev::Markup::Tests
