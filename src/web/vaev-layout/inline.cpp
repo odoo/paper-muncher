@@ -1,7 +1,5 @@
 #include "inline.h"
 
-#include "box.h"
-
 namespace Vaev::Layout {
 
 Output inlineLayout(Tree &, Box &box, Input input) {

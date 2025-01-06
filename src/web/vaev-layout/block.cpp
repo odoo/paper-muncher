@@ -1,10 +1,8 @@
-#include "input_output.h"
 #include "layout.h"
-#include "tree.h"
 
 namespace Vaev::Layout {
 
-void maybeProcessChildBreakpoint(FragmentationContext &fc, Breakpoint &currentBreakpoint, usize childIndex, bool currBoxIsBreakAvoid, Opt<Breakpoint> maybeChildBreakpoint) {
+void maybeProcessChildBreakpoint(Fragmentainer &fc, Breakpoint &currentBreakpoint, usize childIndex, bool currBoxIsBreakAvoid, Opt<Breakpoint> maybeChildBreakpoint) {
     if (not fc.isDiscoveryMode())
         return;
 
@@ -23,7 +21,7 @@ void maybeProcessChildBreakpoint(FragmentationContext &fc, Breakpoint &currentBr
     );
 }
 
-Res<None, Output> processBreakpointsAfterChild(FragmentationContext &fc, Breakpoint &currentBreakpoint, Box &parentBox, usize childIndex, Vec2Px currentBoxSize, bool childCompletelyLaidOut) {
+Res<None, Output> processBreakpointsAfterChild(Fragmentainer &fc, Breakpoint &currentBreakpoint, Box &parentBox, usize childIndex, Vec2Px currentBoxSize, bool childCompletelyLaidOut) {
     if (not fc.isDiscoveryMode())
         return Ok(NONE);
 

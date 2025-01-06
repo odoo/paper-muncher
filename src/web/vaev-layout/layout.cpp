@@ -1,13 +1,11 @@
 #include "layout.h"
 
 #include "block.h"
-#include "box.h"
 #include "flex.h"
 #include "grid.h"
 #include "inline.h"
 #include "positioned.h"
 #include "table.h"
-#include "tree.h"
 #include "values.h"
 
 namespace Vaev::Layout {
@@ -163,7 +161,7 @@ static Opt<Px> _computeSpecifiedSize(Tree &tree, Box &box, Size size, Vec2Px con
     }
 }
 
-Res<None, Output> shouldAbortFragmentingBeforeLayout(FragmentationContext &fc, Input input) {
+static Res<None, Output> _shouldAbortFragmentingBeforeLayout(Fragmentainer &fc, Input input) {
     if (not fc.acceptsFit(
             input.position.y,
             0_px,
@@ -178,8 +176,10 @@ Res<None, Output> shouldAbortFragmentingBeforeLayout(FragmentationContext &fc, I
     return Ok(NONE);
 }
 
-void maybeSetMonolithicBreakpoint(FragmentationContext &fc, bool isMonolticDisplay, bool childCompletelyLaidOut, usize boxChildrenLen, Opt<Breakpoint> &outputBreakpoint) {
-    if (not(fc.monolithicCount == 1 and isMonolticDisplay) or fc.hasInfiniteDimensions())
+static void _maybeSetMonolithicBreakpoint(Fragmentainer &fc, bool isMonolticDisplay, bool childCompletelyLaidOut, usize boxChildrenLen, Opt<Breakpoint> &outputBreakpoint) {
+    if (not fc.isMonolithicBox() or
+        not isMonolticDisplay or
+        fc.hasInfiniteDimensions())
         return;
 
     if (not childCompletelyLaidOut)
@@ -226,16 +226,16 @@ Output layout(Tree &tree, Box &box, Input input) {
     input.position = input.position + borders.topStart() + padding.topStart();
     input.pendingVerticalSizes += borders.bottom + padding.bottom;
 
-    bool isMonolticDisplay =
+    bool isMonolithicDisplay =
         box.style->display == Display::Inside::FLEX or
         box.style->display == Display::Inside::GRID;
 
     usize startAt = tree.fc.allowBreak() ? input.breakpointTraverser.getStart().unwrapOr(0) : 0;
+
     if (tree.fc.isDiscoveryMode()) {
+        try$(_shouldAbortFragmentingBeforeLayout(tree.fc, input));
 
-        try$(shouldAbortFragmentingBeforeLayout(tree.fc, input));
-
-        if (isMonolticDisplay)
+        if (isMonolithicDisplay)
             tree.fc.enterMonolithicBox();
 
         // TODO: Class C breakpoint
@@ -254,9 +254,9 @@ Output layout(Tree &tree, Box &box, Input input) {
 
         // TODO: Class C breakpoint
 
-        maybeSetMonolithicBreakpoint(
+        _maybeSetMonolithicBreakpoint(
             tree.fc,
-            isMonolticDisplay,
+            isMonolithicDisplay,
             out.completelyLaidOut,
             box.children().len(),
             out.breakpoint
@@ -264,7 +264,7 @@ Output layout(Tree &tree, Box &box, Input input) {
 
         out.size = size + padding.all() + borders.all();
 
-        if (isMonolticDisplay)
+        if (isMonolithicDisplay)
             tree.fc.leaveMonolithicBox();
 
         return out;
@@ -277,7 +277,7 @@ Output layout(Tree &tree, Box &box, Input input) {
         Frag currFrag(&box);
         input.fragment = input.fragment ? &currFrag : nullptr;
 
-        if (isMonolticDisplay)
+        if (isMonolithicDisplay)
             tree.fc.enterMonolithicBox();
 
         auto out = _contentLayout(tree, box, input, startAt, stopAt);
@@ -288,7 +288,7 @@ Output layout(Tree &tree, Box &box, Input input) {
             size.height = input.knownSize.height.unwrapOr(size.height);
         }
 
-        if (isMonolticDisplay)
+        if (isMonolithicDisplay)
             tree.fc.leaveMonolithicBox();
 
         size = size + padding.all() + borders.all();

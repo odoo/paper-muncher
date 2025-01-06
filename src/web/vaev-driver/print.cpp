@@ -4,7 +4,6 @@
 #include <vaev-layout/builder.h>
 #include <vaev-layout/layout.h>
 #include <vaev-layout/paint.h>
-#include <vaev-layout/tree.h>
 #include <vaev-layout/values.h>
 #include <vaev-style/page.h>
 
@@ -327,7 +326,7 @@ Vec<Print::Page> print(Markup::Document const &dom, Print::Settings const &setti
         };
 
         contentTree.viewport = vp;
-        contentTree.fc.currSize = pageContent.size();
+        contentTree.fc = {pageContent.size()};
 
         if (settings.headerFooter and settings.margins != Print::Margins::NONE)
             _paintMargins(*pageStyle, pageRect, pageContent, *pageStack);

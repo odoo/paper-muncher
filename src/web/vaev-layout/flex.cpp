@@ -1,6 +1,5 @@
 #include "flex.h"
 
-#include "box.h"
 #include "layout.h"
 #include "values.h"
 

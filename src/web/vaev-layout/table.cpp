@@ -1,6 +1,5 @@
 #include "table.h"
 
-#include "box.h"
 #include "layout.h"
 #include "values.h"
 
@@ -1158,7 +1157,7 @@ struct TableFormatingContext {
 
             if (tree.fc.isDiscoveryMode()) {
                 if (
-                    not handleUnforcedBreakpointsInsideAndAfterRow(rowBreakpoint.unwrap(), rowOutput, i, tree.fc.currSize) or
+                    not handleUnforcedBreakpointsInsideAndAfterRow(rowBreakpoint.unwrap(), rowOutput, i, tree.fc.size()) or
                     not handlePossibleForcedBreakpointAfterRow(rowBreakpoint.unwrap(), rowOutput.allBottomsAndCompletelyLaidOut, (i + 1 == stopAt), i)
                 ) {
                     completelyLaidOut = false;
@@ -1202,7 +1201,6 @@ struct TableFormatingContext {
     }
 
     Output run(Tree &tree, Input input, usize startAtTable, Opt<usize> stopAtTable) {
-
         // TODO: in every row, at least one cell must be an anchor, or else this row is 'skipable'
 
         // if shouldRepeatHeaderAndFooter, header and footer are never alone in the fragmentainer and we wont set
@@ -1210,8 +1208,8 @@ struct TableFormatingContext {
         // otherwise, they only appear once, might be alone in the fragmentainer and can be broken into pages
         bool shouldRepeatHeaderAndFooter =
             tree.fc.allowBreak() and
-            max(headerSize.y, footerSize.y) * 4_px <= tree.fc.currSize.y and
-            headerSize.y + footerSize.y * 2_px <= tree.fc.currSize.y;
+            max(headerSize.y, footerSize.y) * 4_px <= tree.fc.size().y and
+            headerSize.y + footerSize.y * 2_px <= tree.fc.size().y;
 
         Px currPositionX{input.position.x}, currPositionY{input.position.y};
         Px startingPositionY = currPositionY;
