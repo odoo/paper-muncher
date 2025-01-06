@@ -230,7 +230,7 @@ struct HtmlParser : public HtmlSink {
 
     void _raise(Str msg = "parse-error");
 
-    // MARL: Utilities
+    // MARK: Utilities
 
     bool _hasElementInScope(TagName tag) {
         for (auto &el : _openElements)

@@ -4351,8 +4351,9 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
 
     // TODO: An end-of-file token
 
-    // TODO: An end tag whose tag name is "body"
-    else if (t.type == HtmlToken::END_TAG and t.name == "body") {
+    // An end tag whose tag name is "body"
+    // An end tag whose tag name is "html"
+    else if (t.type == HtmlToken::END_TAG and (t.name == "body" or t.name == "html")) {
         // If the stack of open elements does not have a body element in
         // scope, this is a parse error; ignore the token.
         if (not _hasElementInScope(Html::BODY)) {
@@ -4361,16 +4362,26 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
         }
 
         // Otherwise, if there is a node in the stack of open elements that
-        // is not a implid end tag, then this is a parse error.
-        if (not contains(IMPLIED_END_TAGS, last(_openElements)->tagName)) {
-            _raise();
+        // is not an implied end tag or
+        // tbody element, a td element, a tfoot element, a th element, a thead element, a tr element, the body element, or the html
+        // then this is a parse error.
+        for (auto &el : _openElements) {
+            if (not contains(IMPLIED_END_TAGS, el->tagName) and
+                el->tagName != Html::TBODY and el->tagName != Html::TD and el->tagName != Html::TFOOT and
+                el->tagName != Html::TH and el->tagName != Html::THEAD and el->tagName != Html::TR and
+                el->tagName != Html::BODY and el->tagName != Html::HTML) {
+                _raise();
+                break;
+            }
         }
 
         // Switch the insertion mode to "after body".
         _switchTo(Mode::AFTER_BODY);
-    }
 
-    // TODO: An end tag whose tag name is "html"
+        if (t.name == "html")
+            accept(t);
+
+    }
 
     // TODO: A start tag whose tag name is one of:
     // "address", "article", "aside", "blockquote", "center",
