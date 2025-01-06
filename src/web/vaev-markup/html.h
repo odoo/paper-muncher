@@ -98,7 +98,7 @@ struct HtmlLexer {
     HtmlSink *_sink = nullptr;
 
     Rune _currChar = 0;
-    StringBuilder _builder;
+    StringBuilder _builder, _commentBuilder;
     StringBuilder _temp;
 
     HtmlToken &_begin(HtmlToken::Type type) {
