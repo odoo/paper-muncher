@@ -191,4 +191,110 @@ test$("parse-not-nested-p-and-els-inbody") {
     return Ok();
 }
 
+test$("parse-char-referece-as-text") {
+    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    Markup::HtmlParser parser{dom};
+
+    parser.write("<html><body>im there&sect;&Aacute;&sect;&seca;&seca&Aacute;im also there</body></html>");
+
+    expect$(dom->nodeType() == NodeType::DOCUMENT);
+    expect$(dom->hasChildren());
+
+    auto html = try$(dom->firstChild().cast<Element>());
+    expect$(html->tagName == Html::HTML);
+    expect$(html->children().len() > 1);
+
+    auto body = try$(html->firstChild()->nextSibling().cast<Element>());
+    expect$(body->tagName == Html::BODY);
+    expect$(body->hasChildren());
+
+    auto text = body->firstChild();
+    expect$(text->nodeType() == NodeType::TEXT);
+
+    expect$(try$(text.cast<Text>())->data == "im there§Á§&seca;&secaÁim also there");
+
+    return Ok();
+}
+
+test$("parse-char-referece-as-attribute-value") {
+    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    Markup::HtmlParser parser{dom};
+
+    parser.write("<meta value=\"im there&sect;&Aacute;&sect;&seca;&seca&Aacute;im also there\">");
+
+    expect$(dom->nodeType() == NodeType::DOCUMENT);
+    expect$(dom->hasChildren());
+
+    auto html = try$(dom->firstChild().cast<Element>());
+    expect$(html->tagName == Html::HTML);
+    expect$(html->children().len() == 2);
+
+    auto head = try$(html->firstChild().cast<Element>());
+    expect$(head->tagName == Html::HEAD);
+    expect$(head->hasChildren());
+
+    auto meta = try$(head->firstChild().cast<Element>());
+    expect$(meta->tagName == Html::META);
+
+    expect$(meta->hasAttribute(Html::VALUE_ATTR));
+    expect$(meta->getAttribute(Html::VALUE_ATTR) == "im there§Á§&seca;&secaÁim also there");
+
+    return Ok();
+}
+
+test$("parse-char-referece-spec-example") {
+    // https://html.spec.whatwg.org/#named-character-reference-state : EXAMPLE
+    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    Markup::HtmlParser parser{dom};
+
+    parser.write(
+        "<html><meta value=\"I'm &notit; I tell you\">"
+        "<body><div>I'm &notit; I tell you</div><div>I'm &notin; I tell you</div></body></html>"
+    );
+
+    expect$(dom->nodeType() == NodeType::DOCUMENT);
+    expect$(dom->hasChildren());
+
+    auto html = try$(dom->firstChild().cast<Element>());
+    expect$(html->tagName == Html::HTML);
+    expect$(html->children().len() > 1);
+
+    auto body = try$(html->firstChild()->nextSibling().cast<Element>());
+    expect$(body->tagName == Html::BODY);
+    expect$(body->hasChildren());
+
+    {
+        auto div1 = try$(body->firstChild().cast<Element>());
+        expect$(div1->tagName == Html::DIV);
+        expect$(div1->hasChildren());
+
+        auto text1 = div1->firstChild();
+        expect$(text1->nodeType() == NodeType::TEXT);
+        expect$(try$(text1.cast<Text>())->data == "I'm ¬it; I tell you");
+    }
+    {
+        auto div2 = try$(body->firstChild()->nextSibling().cast<Element>());
+        expect$(div2->tagName == Html::DIV);
+        expect$(div2->hasChildren());
+
+        auto text2 = div2->firstChild();
+        expect$(text2->nodeType() == NodeType::TEXT);
+
+        expect$(try$(text2.cast<Text>())->data == "I'm ∉ I tell you");
+    }
+    {
+        auto head = try$(html->firstChild().cast<Element>());
+        expect$(head->tagName == Html::HEAD);
+        expect$(head->hasChildren());
+
+        auto meta = try$(head->firstChild().cast<Element>());
+        expect$(meta->tagName == Html::META);
+
+        expect$(meta->hasAttribute(Html::VALUE_ATTR));
+        expect$(meta->getAttribute(Html::VALUE_ATTR) == "I'm &notit; I tell you");
+    }
+
+    return Ok();
+}
+
 } // namespace Vaev::Markup::Tests

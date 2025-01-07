@@ -3201,7 +3201,6 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
     }
 
     case State::NAMED_CHARACTER_REFERENCE: {
-        notImplemented();
         // 13.2.5.73 MARK: Named character reference state
 
         // Consume the maximum number of characters possible, where the
@@ -3209,38 +3208,167 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // column of the named character references table. Append each
         // character to the temporary buffer when it's consumed.
 
-        // If there is a match
-        // If the character reference was consumed as part of an attribute,
-        // and the last character matched is not a U+003B SEMICOLON
-        // character (;), and the next input character is either a U+003D
-        // EQUALS SIGN character (=) or an ASCII alphanumeric, then, for
-        // historical reasons, flush code points consumed as a character
-        // reference and switch to the return state.
+        // NOTE: This state asks us to "Consume the maximum number of characters possible" but also to check the
+        // "next input character"; an extra implementation effort was made in order to be able to access
+        // the "next input character"
 
-        // Otherwise:
+        // NOTE: While the default and valid behaviour is for entities to end with semicolon (;), some entities have
+        // 2 names, one ending with semicolon and the other not.
+        // For these cases, even if we have a match, if it doesnt end with semi-colon, we will continue consuming
 
-        // If the last character matched is not a U+003B SEMICOLON character
-        // (;), then this is a missing-semicolon-after-character-reference
-        // parse error.
+        // NOTE: Some entities are prefix of others: "&not" is prefix of "&notinva;"; however, since ";" only appears if
+        // its the last char, it cant be that a string ending with it is also a prefix
 
-        // Set the temporary buffer to the empty string. Append one or two
-        // characters corresponding to the character reference name (as
-        // given by the second column of the named character references
-        // table) to the temporary buffer.
+        // NOTE: In this state, we only add alphanum chars to _temp
 
-        // Flush code points consumed as a character reference. Switch to
-        // the return state. Otherwise Flush code points consumed as a
-        // character reference. Switch to the ambiguous ampersand state. If
-        // the markup contains (not in an attribute) the string I'm &notit;
-        // I tell you, the character reference is parsed as "not", as in,
-        // I'm ¬it; I tell you (and this is a parse error). But if the
-        // markup was I'm &notin; I tell you, the character reference would
-        // be parsed as "notin;", resulting in I'm ∉ I tell you (and no
-        // parse error).
+        // NOTE: In case of matching just a prefix or not matching at all but having already consumed characters into
+        // _temp, it is ok to rely on _flushCodePointsConsumedAsACharacterReference for correctly dispatch the runes in
+        // _temp.
+        // In the case where there is no match at all, the next state is State::AMBIGUOUS_AMPERSAND which emits the
+        // consumed alphanum.
+        //      Eg. given the entity "&between;", the input "&betweem" will be emited as State::AMBIGUOUS_AMPERSAND
+        //      does
+        // For return states, attribute states add alphanum chars to their builder and data states emit alphanum
+        //      Eg. given the entities "&not" and "&notinva;", the input "&notinvd" matches "&not" and
+        //      flushes "invd" as the return state would
 
-        // However, if the markup contains the string I'm &notit; I tell you
-        // in an attribute, no character reference is parsed and string
-        // remains intact (and there is no parse error).
+        bool hasPartialMatch = false;
+
+        auto computeMatchState = [&](StringBuilder prefix) {
+            // TODO: (performance) consider sorting entities lexicographically and binary search or using a trie
+
+            prefix.append(rune);
+
+            auto target = prefix.str();
+
+            auto bestMatch = Match::NO;
+            for (auto &entity : ENTITIES) {
+                auto match = startWith(entity.name, target);
+
+                if (match == Match::PARTIAL)
+                    hasPartialMatch = true;
+
+                if (match == Match::YES)
+                    bestMatch = max(bestMatch, match);
+            };
+            return bestMatch;
+        };
+
+        auto matchStateWithNextInputChar = computeMatchState(_temp);
+
+        // NOTE: if rune==';', we are either having Match::YES or Match::NO, not partial
+        if (hasPartialMatch) {
+            _temp.append(rune);
+
+            if (matchStateWithNextInputChar == Match::YES)
+                matchedCharReferenceNoSemiColon = _temp.len();
+
+            break;
+        }
+
+        // If there is a match from before matchedCharReferenceNoSemiColon
+        if (matchStateWithNextInputChar == Match::NO and matchedCharReferenceNoSemiColon) {
+            // If the character reference was consumed as part of an attribute,
+            // and the last character matched is not a U+003B SEMICOLON
+            // character (;), and the next input character is either a U+003D
+            // EQUALS SIGN character (=) or an ASCII alphanumeric, then, for
+            // historical reasons, flush code points consumed as a character
+            // reference and switch to the return state.
+            if (
+                _consumedAsPartOfAnAttribute() and
+                (rune == '=' or isAsciiAlphaNum(rune))
+            ) {
+                _flushCodePointsConsumedAsACharacterReference();
+                _reconsumeIn(_returnState, rune);
+            } else {
+                // Otherwise:
+
+                // If the last character matched is not a U+003B SEMICOLON character
+                // (;), then this is a missing-semicolon-after-character-reference
+                // parse error.
+                _raise("missing-semicolon-after-character-reference");
+
+                // Set the temporary buffer to the empty string.
+                // Append one or two characters corresponding to the character reference name (as
+                // given by the second column of the named character references
+                // table) to the temporary buffer.
+
+                // NOTE: we should expand the entity but also re-add the not matched remaining characters
+                // to the _temp buffer
+
+                auto _tempWithUnexpandedEntity = _temp.str();
+                auto entityName = _Str<Utf8>(_tempWithUnexpandedEntity.begin(), matchedCharReferenceNoSemiColon.unwrap());
+
+                for (auto &entity : ENTITIES) {
+                    if (entityName == entity.name) {
+
+                        _temp.clear();
+                        _temp.append(Slice<Rune>::fromNullterminated(entity.runes));
+
+                        for (usize i = matchedCharReferenceNoSemiColon.unwrap(); i < _tempWithUnexpandedEntity.len(); ++i) {
+                            _temp.append(_tempWithUnexpandedEntity[i]);
+                        }
+                        break;
+                    }
+                }
+
+                // Flush code points consumed as a character reference. Switch to
+                // the return state.
+                matchedCharReferenceNoSemiColon = NONE;
+                _flushCodePointsConsumedAsACharacterReference();
+                _reconsumeIn(_returnState, rune);
+            }
+        }
+
+        else if (matchStateWithNextInputChar == Match::YES) {
+            // FIXME: consider run this assert only in DEBUG mode
+            if (rune != ';')
+                panic("A full entity match that is not a partial match must end with a semicolon");
+
+            _temp.append(rune);
+
+            // If the character reference was consumed as part of an attribute,
+            // and the last character matched is not a U+003B SEMICOLON
+            // character (;), and the next input character is either a U+003D
+            // EQUALS SIGN character (=) or an ASCII alphanumeric, then, for
+            // historical reasons, flush code points consumed as a character
+            // reference and switch to the return state.
+
+            // => This is impossible since the last matched char is a semicolon
+
+            // Otherwise:
+
+            // If the last character matched is not a U+003B SEMICOLON character
+            // (;), then this is a missing-semicolon-after-character-reference
+            // parse error.
+
+            // => This is impossible since the last matched char is a semicolon
+
+            // Set the temporary buffer to the empty string.
+            // Append one or two characters corresponding to the character reference name (as
+            // given by the second column of the named character references
+            // table) to the temporary buffer.
+            for (auto &entity : ENTITIES) {
+                if (_temp.str() == entity.name) {
+                    _temp.clear();
+                    _temp.append(Slice<Rune>::fromNullterminated(entity.runes));
+                    break;
+                }
+            }
+
+            // Flush code points consumed as a character reference. Switch to
+            // the return state.
+            matchedCharReferenceNoSemiColon = NONE;
+            _flushCodePointsConsumedAsACharacterReference();
+            _switchTo(_returnState);
+        }
+
+        else {
+            // Otherwise Flush code points consumed as a character reference.
+            // Switch to the ambiguous ampersand state.
+            _flushCodePointsConsumedAsACharacterReference();
+            _reconsumeIn(State::AMBIGUOUS_AMPERSAND, rune);
+        }
         break;
     }
 
@@ -3254,9 +3382,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // attribute's value. Otherwise, emit the current input character as
         // a character token.
         if (isAsciiAlphaNum(rune)) {
-            if (_returnState == State::ATTRIBUTE_VALUE_DOUBLE_QUOTED ||
-                _returnState == State::ATTRIBUTE_VALUE_SINGLE_QUOTED ||
-                _returnState == State::ATTRIBUTE_VALUE_UNQUOTED) {
+            if (_consumedAsPartOfAnAttribute()) {
                 _builder.append(rune);
             } else {
                 _emit(rune);
