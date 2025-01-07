@@ -102,6 +102,8 @@ struct HtmlLexer {
     StringBuilder _temp;
     StringBuilder peekerForSingleState;
 
+    Opt<usize> matchedCharReferenceNoSemiColon;
+
     HtmlToken &_begin(HtmlToken::Type type) {
         _token = HtmlToken{};
         _token->type = type;
@@ -162,7 +164,19 @@ struct HtmlLexer {
     }
 
     void _flushCodePointsConsumedAsACharacterReference() {
-        debug("flushing code points consumed as a character reference");
+        for (auto codePoint : iterRunes(_temp.str())) {
+            if (_consumedAsPartOfAnAttribute()) {
+                _builder.append(codePoint);
+            } else {
+                _emit(codePoint);
+            }
+        }
+    }
+
+    bool _consumedAsPartOfAnAttribute() {
+        return _returnState == State::ATTRIBUTE_VALUE_DOUBLE_QUOTED ||
+               _returnState == State::ATTRIBUTE_VALUE_SINGLE_QUOTED ||
+               _returnState == State::ATTRIBUTE_VALUE_UNQUOTED;
     }
 
     void bind(HtmlSink &sink) {
