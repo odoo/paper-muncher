@@ -163,7 +163,7 @@ struct Canvas : Meta::NoCopy {
     virtual void fill(Text::Font &font, Text::Glyph glyph, Math::Vec2f baseline);
 
     // Fill a run of text
-    virtual void fill(Text::Font &font, Text::Run const &run, Math::Vec2f baseline);
+    virtual void fill(Text::Prose &prose);
 
     // MARK: Clear Operations --------------------------------------------------
 

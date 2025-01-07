@@ -307,7 +307,7 @@ struct Input : public View<Input> {
         auto &text = _ensureText();
 
         text.paintCaret(g, _model->_cur.head, _style.color.unwrapOr(Ui::GRAY100));
-        text.paint(g);
+        g.fill(text);
 
         g.pop();
     }
@@ -386,7 +386,7 @@ struct SimpleInput : public View<SimpleInput> {
 
         if (_focus)
             text.paintCaret(g, _ensureModel()._cur.head, _style.color.unwrapOr(Ui::GRAY100));
-        text.paint(g);
+        g.fill(text);
 
         g.pop();
     }

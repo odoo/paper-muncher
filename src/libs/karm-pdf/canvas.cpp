@@ -23,8 +23,8 @@ void Canvas::strokeStyle(Gfx::Stroke) {
     logDebug("pdf: strokeStyle() operation not implemented");
 }
 
-void Canvas::transform(Math::Trans2f) {
-    logDebug("pdf: transform() operation not implemented");
+void Canvas::transform(Math::Trans2f trans) {
+    _e.ln("{} {} {} {} {} {} cm", trans.xx, trans.xy, trans.yx, trans.yy, trans.ox, trans.oy);
 }
 
 // MARK: Path Operations ---------------------------------------------------
@@ -70,7 +70,7 @@ void Canvas::quadTo(Math::Vec2f cp, Math::Vec2f p, Math::Path::Flags flags) {
 }
 
 void Canvas::arcTo(Math::Vec2f, f64, Math::Vec2f, Math::Path::Flags) {
-    notImplemented();
+    logDebug("pdf: arcTo() operation not implemented");
 }
 
 void Canvas::line(Math::Edgef line) {
@@ -92,7 +92,7 @@ void Canvas::rect(Math::Rectf rect, Math::Radiif) {
 }
 
 void Canvas::ellipse(Math::Ellipsef) {
-    notImplemented();
+    logDebug("pdf: ellipse() operation not implemented");
 }
 
 void Canvas::path(Math::Path const &) {
@@ -145,12 +145,6 @@ void Canvas::clip(Gfx::FillRule) {
 void Canvas::apply(Gfx::Filter) {
     logDebug("pdf: apply() operation not implemented");
 };
-
-// MARK: Shape Operations --------------------------------------------------
-
-void Canvas::fill(Text::Font &, Text::Glyph, Math::Vec2f) {
-    //  logDebug("pdf: fill() operation not implemented");
-}
 
 // MARK: Clear Operations --------------------------------------------------
 

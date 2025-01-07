@@ -188,30 +188,4 @@ Math::Vec2f Prose::layout(f64 width) {
     return {textWidth, textHeight};
 }
 
-// MARK: Paint -------------------------------------------------------------
-
-void Prose::paint(Gfx::Canvas &g) {
-    g.push();
-
-    if (_style.color)
-        g.fillStyle(*_style.color);
-
-    for (auto const &line : _lines) {
-        for (auto &block : line.blocks()) {
-            for (auto &cell : block.cells()) {
-                if (cell.span and cell.span->color) {
-                    g.push();
-                    g.fillStyle(*cell.span->color);
-                    g.fill(_style.font, cell.glyph, {block.pos + cell.pos, line.baseline});
-                    g.pop();
-                } else {
-                    g.fill(_style.font, cell.glyph, {block.pos + cell.pos, line.baseline});
-                }
-            }
-        }
-    }
-
-    g.pop();
-}
-
 } // namespace Karm::Text

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <karm-gfx/canvas.h>
 #include <karm-logger/logger.h>
 
 #include "font.h"
@@ -217,8 +216,6 @@ struct Prose : public Meta::Pinned {
     Math::Vec2f layout(f64 width);
 
     // MARK: Paint -------------------------------------------------------------
-
-    void paint(Gfx::Canvas &g);
 
     void paintCaret(Gfx::Canvas &g, usize runeIndex, Gfx::Color color) const {
         auto m = _style.font.metrics();

@@ -7,7 +7,7 @@
 
 namespace Karm::Text {
 
-struct Run;
+struct Prose;
 
 struct Font;
 

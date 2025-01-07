@@ -115,8 +115,7 @@ Output fragmentEmptyBox(Tree &tree, Input input) {
 
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
 struct BlockFormatingContext {
-
-    Px computeCAPMIN(Tree &tree, Box &box, Input input, Px inlineSize) {
+    Px _computeCapmin(Tree &tree, Box &box, Input input, Px inlineSize) {
         Px capmin{};
         for (auto &c : box.children()) {
             if (c.style->display != Display::TABLE_BOX) {
@@ -200,8 +199,10 @@ struct BlockFormatingContext {
 
             childInput.position = input.position + Vec2Px{margin.start, blockSize};
 
+            // HACK: Table Box mostly behaves like a block box, let's compute its capmin
+            //       and avoid duplicating the layout code
             if (c.style->display == Display::Internal::TABLE_BOX) {
-                childInput.capmin = computeCAPMIN(tree, box, input, inlineSize);
+                childInput.capmin = _computeCapmin(tree, box, input, inlineSize);
             }
 
             auto output = layout(

@@ -23,7 +23,7 @@ struct Text : public Node {
 
         g.push();
         g.origin(_origin);
-        _prose->paint(g);
+        g.fill(*_prose);
         g.pop();
     }
 

@@ -86,10 +86,6 @@ struct Canvas : public Gfx::Canvas {
 
     void apply(Gfx::Filter filter) override;
 
-    // MARK: Shape Operations --------------------------------------------------
-
-    void fill(Text::Font &font, Text::Glyph glyph, Math::Vec2f baseline) override;
-
     // MARK: Clear Operations --------------------------------------------------
 
     void clear(Gfx::Color color) override;

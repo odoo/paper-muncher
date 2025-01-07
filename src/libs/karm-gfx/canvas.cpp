@@ -1,5 +1,5 @@
 #include <karm-text/font.h>
-#include <karm-text/run.h>
+#include <karm-text/prose.h>
 
 #include "canvas.h"
 
@@ -116,10 +116,27 @@ void Canvas::fill(Text::Font &font, Text::Glyph glyph, Math::Vec2f baseline) {
     pop();
 }
 
-void Canvas::fill(Text::Font &font, Text::Run const &run, Math::Vec2f baseline) {
+void Canvas::fill(Text::Prose &prose) {
     push();
-    for (auto &cell : run._cells)
-        fill(font, cell.glyph, baseline + Math::Vec2f{cell.xpos, 0});
+
+    if (prose._style.color)
+        fillStyle(*prose._style.color);
+
+    for (auto const &line : prose._lines) {
+        for (auto &block : line.blocks()) {
+            for (auto &cell : block.cells()) {
+                if (cell.span and cell.span->color) {
+                    push();
+                    fillStyle(*cell.span->color);
+                    fill(prose._style.font, cell.glyph, {block.pos + cell.pos, line.baseline});
+                    pop();
+                } else {
+                    fill(prose._style.font, cell.glyph, {block.pos + cell.pos, line.baseline});
+                }
+            }
+        }
+    }
+
     pop();
 }
 

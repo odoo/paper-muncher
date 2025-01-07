@@ -18,7 +18,7 @@ struct Fragmentainer {
     bool _isDiscoveryMode = false; //< Are we looking for suitable breakpoints?
     usize _monolithicCount = 0;    //< How deep we are in a monolithic box
 
-    Fragmentainer(Vec2Px currSize = {Limits<Px>::MAX, Limits<Px>::MAX}) : _size(currSize) {}
+    Fragmentainer(Vec2Px currSize = Vec2Px::MAX) : _size(currSize) {}
 
     Vec2Px size() const { return _size; }
 
@@ -43,7 +43,7 @@ struct Fragmentainer {
     }
 
     bool hasInfiniteDimensions() {
-        return _size == Vec2Px{Limits<Px>::MAX, Limits<Px>::MAX};
+        return _size == Vec2Px::MAX;
     }
 
     bool allowBreak() {

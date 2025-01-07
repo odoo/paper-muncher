@@ -236,7 +236,7 @@ struct Text : public View<Text> {
     void paint(Gfx::Canvas &g, Math::Recti) override {
         g.push();
         g.origin(bound().xy.cast<f64>());
-        _prose->paint(g);
+        g.fill(*_prose);
         g.pop();
     }
 
