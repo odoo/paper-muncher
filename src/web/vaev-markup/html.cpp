@@ -573,6 +573,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // then switch to the data state and emit the current tag token.
         // Otherwise, treat it as per the "anything else" entry below.
         else if (rune == '>' and _isAppropriateEndTagToken()) {
+            _builder.clear();
             _switchTo(State::DATA);
             _emit();
         }
@@ -1715,6 +1716,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // data state. Emit the current tag token.
         if (rune == '>') {
             _ensure().selfClosing = true;
+            _builder.clear();
             _switchTo(State::DATA);
             _emit();
         }
