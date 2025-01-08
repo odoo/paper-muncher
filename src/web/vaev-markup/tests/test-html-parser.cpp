@@ -98,6 +98,8 @@ test$("parse-title") {
     expect$(dom->hasChildren());
 
     auto html = try$(dom->firstChild().cast<Element>());
+    expect$(html->children().len() == 2);
+
     auto head = try$(html->firstChild().cast<Element>());
     expect$(head->tagName == Html::HEAD);
     expect$(head->hasChildren());
