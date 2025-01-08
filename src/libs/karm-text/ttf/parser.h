@@ -227,7 +227,7 @@ struct Parser {
         if (not positioning)
             return 0;
 
-        return positioning.unwrap().car.xAdvance;
+        return positioning.unwrap().v0.xAdvance;
     }
 
     void glyphContour(Gfx::Canvas &g, Text::Glyph glyph) const {

@@ -104,9 +104,9 @@ struct UdpConnection :
         return globalSched().sendAsync(_fd, buf, {}, addr);
     }
 
-    Res<Cons<usize, SocketAddr>> recv(MutBytes buf) {
+    Res<Pair<usize, SocketAddr>> recv(MutBytes buf) {
         auto [nbytes, _, addr] = try$(_fd->recv(buf, {}));
-        return Ok<Cons<usize, SocketAddr>>(nbytes, addr);
+        return Ok<Pair<usize, SocketAddr>>(nbytes, addr);
     }
 
     auto recvAsync(MutBytes buf) {
@@ -165,9 +165,9 @@ struct IpcConnection {
         return Ok();
     }
 
-    Res<Cons<usize>> recv(MutBytes buf, MutSlice<Handle> hnds) {
+    Res<Pair<usize>> recv(MutBytes buf, MutSlice<Handle> hnds) {
         auto [nbytes, nhnds, _] = try$(_fd->recv(buf, hnds));
-        return Ok<Cons<usize>>(nbytes, nhnds);
+        return Ok<Pair<usize>>(nbytes, nhnds);
     }
 
     Async::Task<> sendAsync(Bytes buf, Slice<Handle> hnds) {
@@ -175,9 +175,9 @@ struct IpcConnection {
         co_return Ok();
     }
 
-    Async::Task<Cons<usize>> recvAsync(MutBytes buf, MutSlice<Handle> hnds) {
+    Async::Task<Pair<usize>> recvAsync(MutBytes buf, MutSlice<Handle> hnds) {
         auto [nbytes, nhnds, _] = co_trya$(globalSched().recvAsync(_fd, buf, hnds));
-        co_return Ok<Cons<usize>>(nbytes, nhnds);
+        co_return Ok<Pair<usize>>(nbytes, nhnds);
     }
 };
 

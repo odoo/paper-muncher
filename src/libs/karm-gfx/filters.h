@@ -95,7 +95,7 @@ struct Filter;
 struct FilterChain {
     static constexpr auto NAME = "chain";
 
-    Cons<Box<Filter>> filters;
+    Pair<Box<Filter>> filters;
     void apply(MutPixels) const;
 };
 

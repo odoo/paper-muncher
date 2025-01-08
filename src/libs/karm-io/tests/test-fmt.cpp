@@ -198,7 +198,7 @@ test$("fmt-string") {
 // MARK: Format Tuple ----------------------------------------------------------
 
 test$("fmt-cons") {
-    try$(testCase("{1, 2}", Cons{1, 2}));
+    try$(testCase("{1, 2}", Pair{1, 2}));
     return Ok();
 }
 

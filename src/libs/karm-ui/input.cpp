@@ -443,7 +443,7 @@ struct Slider : public ProxyNode<Slider> {
 
     void layout(Math::Recti r) override {
         _bound = r;
-        child().layout(_bound.hsplit(((r.width - r.height) * _value) + r.height).car);
+        child().layout(_bound.hsplit(((r.width - r.height) * _value) + r.height).v0);
     }
 
     Math::Recti bound() override {
@@ -460,7 +460,7 @@ struct Slider : public ProxyNode<Slider> {
                 if (_onChange) {
                     _onChange(*this, _value);
                 } else {
-                    child().layout(_bound.hsplit(((_bound.width - _bound.height) * _value) + _bound.height).car);
+                    child().layout(_bound.hsplit(((_bound.width - _bound.height) * _value) + _bound.height).v0);
                     shouldRepaint(*this);
                 }
             }

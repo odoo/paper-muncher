@@ -31,9 +31,9 @@ Res<> stringify(Io::Emit &emit, Value const &v) {
                     first = false;
 
                     emit('"');
-                    emit(kv.car);
+                    emit(kv.v0);
                     emit("\":");
-                    try$(stringify(emit, kv.cdr));
+                    try$(stringify(emit, kv.v1));
                 }
                 emit('}');
                 return Ok();

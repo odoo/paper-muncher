@@ -1,5 +1,5 @@
 #include <karm-base/array.h>
-#include <karm-base/cons.h>
+#include <karm-base/tuple.h>
 
 #include "html.h"
 
@@ -3496,38 +3496,38 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // 0x9F	0x0178	LATIN CAPITAL LETTER Y WITH DIAERESIS (Ÿ)
 
         Array const CONV = {
-            Cons{0x80u, 0x20ACuz},
-            Cons{0x82u, 0x201Auz},
-            Cons{0x83u, 0x0192uz},
-            Cons{0x84u, 0x201Euz},
-            Cons{0x85u, 0x2026uz},
-            Cons{0x86u, 0x2020uz},
-            Cons{0x87u, 0x2021uz},
-            Cons{0x88u, 0x02C6uz},
-            Cons{0x89u, 0x2030uz},
-            Cons{0x8Au, 0x0160uz},
-            Cons{0x8Bu, 0x2039uz},
-            Cons{0x8Cu, 0x0152uz},
-            Cons{0x8Eu, 0x017Duz},
-            Cons{0x91u, 0x2018uz},
-            Cons{0x92u, 0x2019uz},
-            Cons{0x93u, 0x201Cuz},
-            Cons{0x94u, 0x201Duz},
-            Cons{0x95u, 0x2022uz},
-            Cons{0x96u, 0x2013uz},
-            Cons{0x97u, 0x2014uz},
-            Cons{0x98u, 0x02DCuz},
-            Cons{0x99u, 0x2122uz},
-            Cons{0x9Au, 0x0161uz},
-            Cons{0x9Bu, 0x203Auz},
-            Cons{0x9Cu, 0x0153uz},
-            Cons{0x9Eu, 0x017Euz},
-            Cons{0x9Fu, 0x0178uz},
+            Pair{0x80u, 0x20ACuz},
+            Pair{0x82u, 0x201Auz},
+            Pair{0x83u, 0x0192uz},
+            Pair{0x84u, 0x201Euz},
+            Pair{0x85u, 0x2026uz},
+            Pair{0x86u, 0x2020uz},
+            Pair{0x87u, 0x2021uz},
+            Pair{0x88u, 0x02C6uz},
+            Pair{0x89u, 0x2030uz},
+            Pair{0x8Au, 0x0160uz},
+            Pair{0x8Bu, 0x2039uz},
+            Pair{0x8Cu, 0x0152uz},
+            Pair{0x8Eu, 0x017Duz},
+            Pair{0x91u, 0x2018uz},
+            Pair{0x92u, 0x2019uz},
+            Pair{0x93u, 0x201Cuz},
+            Pair{0x94u, 0x201Duz},
+            Pair{0x95u, 0x2022uz},
+            Pair{0x96u, 0x2013uz},
+            Pair{0x97u, 0x2014uz},
+            Pair{0x98u, 0x02DCuz},
+            Pair{0x99u, 0x2122uz},
+            Pair{0x9Au, 0x0161uz},
+            Pair{0x9Bu, 0x203Auz},
+            Pair{0x9Cu, 0x0153uz},
+            Pair{0x9Eu, 0x017Euz},
+            Pair{0x9Fu, 0x0178uz},
         };
 
         for (auto &conv : CONV)
-            if (conv.car == _currChar) {
-                _currChar = conv.cdr;
+            if (conv.v0 == _currChar) {
+                _currChar = conv.v1;
                 break;
             }
 

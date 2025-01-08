@@ -406,7 +406,7 @@ struct FontDesc : public _FontDesc {
     using _FontDesc::_FontDesc;
 
     static constexpr Array LEGACY_ALIAS = {
-        Cons<Str>("font-stretch", "font-width"),
+        Pair<Str>("font-stretch", "font-width"),
     };
 
     static Str mapLegacyAlias(Str name) {

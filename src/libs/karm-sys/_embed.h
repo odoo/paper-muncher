@@ -1,8 +1,8 @@
 #pragma once
 
-#include <karm-base/cons.h>
 #include <karm-base/range.h>
 #include <karm-base/time.h>
+#include <karm-base/tuple.h>
 #include <karm-mime/uti.h>
 
 #include "async.h"
@@ -31,7 +31,7 @@ Res<Strong<Sys::Fd>> createFile(Mime::Url const &url);
 
 Res<Strong<Sys::Fd>> openOrCreateFile(Mime::Url const &url);
 
-Res<Cons<Strong<Sys::Fd>, Strong<Sys::Fd>>> createPipe();
+Res<Pair<Strong<Sys::Fd>, Strong<Sys::Fd>>> createPipe();
 
 Res<Strong<Sys::Fd>> createIn();
 

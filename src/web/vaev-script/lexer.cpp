@@ -17,7 +17,7 @@ void Token::repr(Io::Emit &e) const {
 
 // MARK: Lexer -----------------------------------------------------------------
 
-using Str2Token = Cons<Str, Token::Type>;
+using Str2Token = Pair<Str, Token::Type>;
 
 static constexpr auto _singleCharTokens = [] {
     Array<Token::Type, 256> res{};

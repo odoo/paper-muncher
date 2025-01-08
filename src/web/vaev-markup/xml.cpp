@@ -33,26 +33,26 @@ static constexpr auto RE_S =
 
 static bool _isNameStartChar(Rune r) {
     Array RANGES = {
-        Cons<Rune, Rune>{':', ':'},
-        Cons<Rune, Rune>{'A', 'Z'},
-        Cons<Rune, Rune>{'_', '_'},
-        Cons<Rune, Rune>{'a', 'z'},
-        Cons<Rune, Rune>{0xC0, 0xD6},
-        Cons<Rune, Rune>{0xD8, 0xF6},
-        Cons<Rune, Rune>{0xF8, 0x2FF},
-        Cons<Rune, Rune>{0x370, 0x37D},
-        Cons<Rune, Rune>{0x37F, 0x1FFF},
-        Cons<Rune, Rune>{0x200C, 0x200D},
-        Cons<Rune, Rune>{0x2070, 0x218F},
-        Cons<Rune, Rune>{0x2C00, 0x2FEF},
-        Cons<Rune, Rune>{0x3001, 0xD7FF},
-        Cons<Rune, Rune>{0xF900, 0xFDCF},
-        Cons<Rune, Rune>{0xFDF0, 0xFFFD},
-        Cons<Rune, Rune>{0x10000, 0xEFFFF},
+        Pair<Rune, Rune>{':', ':'},
+        Pair<Rune, Rune>{'A', 'Z'},
+        Pair<Rune, Rune>{'_', '_'},
+        Pair<Rune, Rune>{'a', 'z'},
+        Pair<Rune, Rune>{0xC0, 0xD6},
+        Pair<Rune, Rune>{0xD8, 0xF6},
+        Pair<Rune, Rune>{0xF8, 0x2FF},
+        Pair<Rune, Rune>{0x370, 0x37D},
+        Pair<Rune, Rune>{0x37F, 0x1FFF},
+        Pair<Rune, Rune>{0x200C, 0x200D},
+        Pair<Rune, Rune>{0x2070, 0x218F},
+        Pair<Rune, Rune>{0x2C00, 0x2FEF},
+        Pair<Rune, Rune>{0x3001, 0xD7FF},
+        Pair<Rune, Rune>{0xF900, 0xFDCF},
+        Pair<Rune, Rune>{0xFDF0, 0xFFFD},
+        Pair<Rune, Rune>{0x10000, 0xEFFFF},
     };
 
     for (auto range : RANGES)
-        if (r >= range.car and r <= range.cdr)
+        if (r >= range.v0 and r <= range.v1)
             return true;
 
     return false;
@@ -62,16 +62,16 @@ static constexpr auto RE_NAME_START_CHAR = Re::ctype(_isNameStartChar);
 
 static bool _isNameChar(Rune r) {
     Array RANGES = {
-        Cons<Rune, Rune>{'-', '-'},
-        Cons<Rune, Rune>{'.', '.'},
-        Cons<Rune, Rune>{'0', '9'},
-        Cons<Rune, Rune>{0xB7, 0xB7},
-        Cons<Rune, Rune>{0x0300, 0x036F},
-        Cons<Rune, Rune>{0x203F, 0x2040},
+        Pair<Rune, Rune>{'-', '-'},
+        Pair<Rune, Rune>{'.', '.'},
+        Pair<Rune, Rune>{'0', '9'},
+        Pair<Rune, Rune>{0xB7, 0xB7},
+        Pair<Rune, Rune>{0x0300, 0x036F},
+        Pair<Rune, Rune>{0x203F, 0x2040},
     };
 
     for (auto range : RANGES)
-        if (r >= range.car and r <= range.cdr)
+        if (r >= range.v0 and r <= range.v1)
             return true;
 
     return false;

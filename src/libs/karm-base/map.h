@@ -7,27 +7,27 @@ namespace Karm {
 
 template <typename K, typename V>
 struct Map {
-    Vec<Cons<K, V>> _els{};
+    Vec<Pair<K, V>> _els{};
 
     Map() = default;
 
-    Map(std::initializer_list<Cons<K, V>> &&list)
+    Map(std::initializer_list<Pair<K, V>> &&list)
         : _els(std::move(list)) {}
 
     void put(K const &key, V value) {
         for (auto &i : ::mutIter(_els)) {
-            if (i.car == key) {
-                i.cdr = std::move(value);
+            if (i.v0 == key) {
+                i.v1 = std::move(value);
                 return;
             }
         }
 
-        _els.pushBack(Cons<K, V>{key, std::move(value)});
+        _els.pushBack(Pair<K, V>{key, std::move(value)});
     }
 
     bool has(K const &key) const {
         for (auto &i : _els) {
-            if (i.car == key) {
+            if (i.v0 == key) {
                 return true;
             }
         }
@@ -37,8 +37,8 @@ struct Map {
 
     V &get(K const &key) {
         for (auto &i : _els) {
-            if (i.car == key) {
-                return i.cdr;
+            if (i.v0 == key) {
+                return i.v1;
             }
         }
 
@@ -47,22 +47,22 @@ struct Map {
 
     MutCursor<V> access(K const &key) {
         for (auto &i : _els)
-            if (i.car == key)
-                return &i.cdr;
+            if (i.v0 == key)
+                return &i.v1;
         return {};
     }
 
     Cursor<V> access(K const &key) const {
         for (auto &i : _els)
-            if (i.car == key)
-                return &i.cdr;
+            if (i.v0 == key)
+                return &i.v1;
         return {};
     }
 
     V take(K const &key) {
         for (usize i = 0; i < _els.len(); i++) {
-            if (_els[i].car == key) {
-                V value = std::move(_els[i].cdr);
+            if (_els[i].v0 == key) {
+                V value = std::move(_els[i].v1);
                 _els.removeAt(i);
                 return value;
             }
@@ -73,8 +73,8 @@ struct Map {
 
     Opt<V> tryGet(K const &key) const {
         for (auto &i : _els) {
-            if (i.car == key) {
-                return i.cdr;
+            if (i.v0 == key) {
+                return i.v1;
             }
         }
 
@@ -83,7 +83,7 @@ struct Map {
 
     bool del(K const &key) {
         for (usize i = 0; i < _els.len(); i++) {
-            if (_els[i].car == key) {
+            if (_els[i].v0 == key) {
                 _els.removeAt(i);
                 return true;
             }
@@ -96,7 +96,7 @@ struct Map {
         bool changed = false;
 
         for (usize i = 1; i < _els.len() + 1; i++) {
-            if (_els[i - 1].cdr == value) {
+            if (_els[i - 1].v1 == value) {
                 _els.removeAt(i - 1);
                 changed = true;
                 i--;
@@ -108,7 +108,7 @@ struct Map {
 
     bool removeFirst(V const &value) {
         for (usize i = 1; i < _els.len() + 1; i++) {
-            if (_els[i - 1].cdr == value) {
+            if (_els[i - 1].v1 == value) {
                 _els.removeAt(i - 1);
                 return true;
             }
@@ -126,7 +126,7 @@ struct Map {
     }
 
     V at(usize index) const {
-        return _els[index].cdr;
+        return _els[index].v1;
     }
 
     usize len() const {

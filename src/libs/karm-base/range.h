@@ -2,7 +2,7 @@
 
 #include "align.h"
 #include "clamp.h"
-#include "cons.h"
+#include "tuple.h"
 
 namespace Karm {
 
@@ -96,7 +96,7 @@ struct Range {
         return {};
     }
 
-    constexpr Cons<Range> split(Range other) {
+    constexpr Pair<Range> split(Range other) {
         return {halfUnder(other), halfOver(other)};
     }
 

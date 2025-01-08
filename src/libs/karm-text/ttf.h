@@ -13,7 +13,7 @@ struct TtfFontface : public Fontface {
     Ttf::Parser _parser;
     Map<Rune, Glyph> _cachedEntries;
     Map<Glyph, f64> _cachedAdvances;
-    Map<Cons<Glyph>, f64> _cachedKerns;
+    Map<Pair<Glyph>, f64> _cachedKerns;
     f64 _unitPerEm = 0;
 
     static Res<Strong<TtfFontface>> load(Sys::Mmap &&mmap);

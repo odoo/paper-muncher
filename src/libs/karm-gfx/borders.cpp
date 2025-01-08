@@ -53,7 +53,7 @@ void Borders::_paintCurveEdge(Gfx::Canvas &c, Pair<Math::Curvef> const &start, P
     c.beginPath();
 
     // Outer edge
-    auto outerStart = start.car, outerEnd = end.car;
+    auto outerStart = start.v0, outerEnd = end.v0;
     c.moveTo(outerStart.a);
     c.cubicTo(outerStart.b, outerStart.c, outerStart.d);
 
@@ -61,7 +61,7 @@ void Borders::_paintCurveEdge(Gfx::Canvas &c, Pair<Math::Curvef> const &start, P
     c.cubicTo(outerEnd.b, outerEnd.c, outerEnd.d);
 
     // Inner edge
-    auto innerStart = start.cdr, innerEnd = end.cdr;
+    auto innerStart = start.v1, innerEnd = end.v1;
     c.lineTo(innerEnd.d);
     c.cubicTo(innerEnd.c, innerEnd.b, innerEnd.a);
 
@@ -107,12 +107,12 @@ void Borders::_paintCurveEdges(Gfx::Canvas &c, Math::Rectf rect) {
         _paintCurveEdge(
             c,
             {
-                outerTopStart.split(topStartRatio).cdr,
-                innerTopStart.split(topStartRatio).cdr,
+                outerTopStart.split(topStartRatio).v1,
+                innerTopStart.split(topStartRatio).v1,
             },
             {
-                outerTopEnd.split(topEndRatio).car,
-                innerTopEnd.split(topEndRatio).car,
+                outerTopEnd.split(topEndRatio).v0,
+                innerTopEnd.split(topEndRatio).v0,
             },
             fills[0]
         );
@@ -121,12 +121,12 @@ void Borders::_paintCurveEdges(Gfx::Canvas &c, Math::Rectf rect) {
         _paintCurveEdge(
             c,
             {
-                outerTopEnd.split(topEndRatio).cdr,
-                innerTopEnd.split(topEndRatio).cdr,
+                outerTopEnd.split(topEndRatio).v1,
+                innerTopEnd.split(topEndRatio).v1,
             },
             {
-                outerBottomEnd.split(bottomEndRatio).car,
-                innerBottomEnd.split(bottomEndRatio).car,
+                outerBottomEnd.split(bottomEndRatio).v0,
+                innerBottomEnd.split(bottomEndRatio).v0,
             },
             fills[1]
         );
@@ -135,12 +135,12 @@ void Borders::_paintCurveEdges(Gfx::Canvas &c, Math::Rectf rect) {
         _paintCurveEdge(
             c,
             {
-                outerBottomEnd.split(bottomEndRatio).cdr,
-                innerBottomEnd.split(bottomEndRatio).cdr,
+                outerBottomEnd.split(bottomEndRatio).v1,
+                innerBottomEnd.split(bottomEndRatio).v1,
             },
             {
-                outerBottomStart.split(bottomStartRatio).car,
-                innerBottomStart.split(bottomStartRatio).car,
+                outerBottomStart.split(bottomStartRatio).v0,
+                innerBottomStart.split(bottomStartRatio).v0,
             },
             fills[2]
         );
@@ -149,12 +149,12 @@ void Borders::_paintCurveEdges(Gfx::Canvas &c, Math::Rectf rect) {
         _paintCurveEdge(
             c,
             {
-                outerBottomStart.split(bottomStartRatio).cdr,
-                innerBottomStart.split(bottomStartRatio).cdr,
+                outerBottomStart.split(bottomStartRatio).v1,
+                innerBottomStart.split(bottomStartRatio).v1,
             },
             {
-                outerTopStart.split(topStartRatio).car,
-                innerTopStart.split(topStartRatio).car,
+                outerTopStart.split(topStartRatio).v0,
+                innerTopStart.split(topStartRatio).v0,
             },
             fills[3]
         );
@@ -164,12 +164,12 @@ void Borders::_paintStraightEdge(Gfx::Canvas &c, Pair<Math::Vec2f> const &start,
     c.beginPath();
 
     // Outer edge
-    c.moveTo(start.car);
-    c.lineTo(end.car);
+    c.moveTo(start.v0);
+    c.lineTo(end.v0);
 
     // Inner edge
-    c.lineTo(end.cdr);
-    c.lineTo(start.cdr);
+    c.lineTo(end.v1);
+    c.lineTo(start.v1);
 
     c.closePath();
 

@@ -982,18 +982,18 @@ struct Formatter<DateTime> {
 // MARK: Format Tuple ----------------------------------------------------------
 
 template <typename Car, typename Cdr>
-struct Formatter<Cons<Car, Cdr>> {
+struct Formatter<Pair<Car, Cdr>> {
 
-    Res<usize> format(Io::TextWriter &writer, Cons<Car, Cdr> const &val) {
+    Res<usize> format(Io::TextWriter &writer, Pair<Car, Cdr> const &val) {
         usize written = 0;
         written += try$(writer.writeRune('{'));
 
         Formatter<Car> carFormatter;
-        written += try$(carFormatter.format(writer, val.car));
+        written += try$(carFormatter.format(writer, val.v0));
         written += try$(writer.writeStr(", "s));
 
         Formatter<Cdr> cdrFormatter;
-        written += try$(cdrFormatter.format(writer, val.cdr));
+        written += try$(cdrFormatter.format(writer, val.v1));
         written += try$(writer.writeRune('}'));
         return Ok(written);
     }

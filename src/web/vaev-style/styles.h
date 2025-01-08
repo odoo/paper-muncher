@@ -2917,9 +2917,9 @@ struct StyleProp : public _StyleProp {
 
     static constexpr Array LEGACY_ALIAS = {
         // https://drafts.csswg.org/css-align-3/#gap-legacy
-        Cons<Str>{"grid-row-gap", "row-gap"},
-        Cons<Str>{"grid-column-gap", "column-gap"},
-        Cons<Str>{"grid-gap", "gap"},
+        Pair<Str>{"grid-row-gap", "row-gap"},
+        Pair<Str>{"grid-column-gap", "column-gap"},
+        Pair<Str>{"grid-gap", "gap"},
     };
 
     Str name() const;

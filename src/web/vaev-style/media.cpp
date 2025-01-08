@@ -5,7 +5,7 @@
 
 namespace Vaev::Style {
 
-static Cons<Style::RangePrefix, Str> _explodeFeatureName(Io::SScan s) {
+static Pair<Style::RangePrefix, Str> _explodeFeatureName(Io::SScan s) {
     if (s.skip("min-"))
         return {Style::RangePrefix::MIN, s.remStr()};
     else if (s.skip("max-"))

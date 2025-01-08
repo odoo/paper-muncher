@@ -1,7 +1,7 @@
 #pragma once
 
-#include <karm-base/cons.h>
 #include <karm-base/opt.h>
+#include <karm-base/tuple.h>
 #include <karm-io/bscan.h>
 #include <karm-logger/logger.h>
 

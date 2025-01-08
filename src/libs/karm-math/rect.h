@@ -1,7 +1,7 @@
 #pragma once
 
 #include <karm-base/clamp.h>
-#include <karm-base/cons.h>
+#include <karm-base/tuple.h>
 
 #include "insets.h"
 #include "vec.h"
@@ -274,11 +274,11 @@ union Rect {
         return xy.hasNan() or wh.hasNan();
     }
 
-    always_inline constexpr Cons<Rect, Rect> hsplit(T v) const {
+    always_inline constexpr Pair<Rect, Rect> hsplit(T v) const {
         return {Rect{x, y, v, height}, Rect{x + v, y, width - v, height}};
     }
 
-    always_inline constexpr Cons<Rect, Rect> vsplit(T v) const {
+    always_inline constexpr Pair<Rect, Rect> vsplit(T v) const {
         return {Rect{x, y, width, v}, Rect{x, y + v, width, height - v}};
     }
 

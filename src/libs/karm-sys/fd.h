@@ -15,8 +15,8 @@ namespace Karm::Sys {
 
 struct Fd;
 
-using _Accepted = Cons<Strong<Fd>, SocketAddr>;
-using _Sent = Cons<usize, usize>;
+using _Accepted = Pair<Strong<Fd>, SocketAddr>;
+using _Sent = Pair<usize, usize>;
 using _Received = Tuple<usize, usize, SocketAddr>;
 
 struct Fd : Meta::NoCopy {

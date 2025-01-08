@@ -19,7 +19,7 @@ struct Gradient {
     };
 
     using Buf = Array<Color, 256>;
-    using Stop = Cons<Color, f64>;
+    using Stop = Pair<Color, f64>;
 
     Type _type = LINEAR;
     Math::Vec2f _start = {0.5, 0.5};

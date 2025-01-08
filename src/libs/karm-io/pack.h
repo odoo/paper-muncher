@@ -6,6 +6,7 @@
 #include <karm-math/vec.h>
 #include <karm-meta/nocopy.h>
 #include <karm-meta/visit.h>
+
 #include <karm-sys/_handle.h>
 
 #include "bscan.h"
@@ -242,15 +243,15 @@ struct Packer<_String<E>> {
 // MARK: Tuple -----------------------------------------------------------------
 
 template <typename Car, typename Cdr>
-struct Packer<Cons<Car, Cdr>> {
-    static Res<> pack(PackEmit &e, Cons<Car, Cdr> const &val) {
-        Io::pack(e, val.car);
-        Io::pack(e, val.cdr);
+struct Packer<Pair<Car, Cdr>> {
+    static Res<> pack(PackEmit &e, Pair<Car, Cdr> const &val) {
+        Io::pack(e, val.v0);
+        Io::pack(e, val.v1);
         return Ok();
     }
 
-    static Res<Cons<Car, Cdr>> unpack(PackScan &s) {
-        Cons res = {
+    static Res<Pair<Car, Cdr>> unpack(PackScan &s) {
+        Pair res = {
             try$(Io::unpack<Car>(s)),
             try$(Io::unpack<Cdr>(s)),
         };
