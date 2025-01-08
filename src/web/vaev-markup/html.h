@@ -233,11 +233,60 @@ struct HtmlParser : public HtmlSink {
 
     // MARK: Utilities
 
-    bool _hasElementInScope(TagName tag) {
-        for (auto &el : _openElements)
+    // FIXME: remaining elements from https://html.spec.whatwg.org/#has-an-element-in-scope
+    static constexpr Array BASIC_SCOPE_DELIMITERS = {
+        Html::APPLET, Html::CAPTION, Html::HTML, Html::TABLE, Html::TD,
+        Html::TH, Html::MARQUEE, Html::OBJECT, Html::TEMPLATE
+    };
+
+    bool _hasElementInLambdaScope(TagName tag, Func<bool(TagName)> inScopeList) {
+        if (_openElements.len() == 0)
+            panic("html element should always be in scope");
+
+        for (usize i = _openElements.len() - 1; i >= 0; --i) {
+            auto &el = _openElements[i];
             if (el->tagName == tag)
                 return true;
-        return false;
+            else if (inScopeList(el->tagName))
+                return false;
+        }
+
+        unreachable();
+    }
+
+    // https://html.spec.whatwg.org/#has-an-element-in-scope
+    bool _hasElementInScope(TagName tag) {
+        return _hasElementInLambdaScope(tag, [](TagName tag) -> bool {
+            return contains(BASIC_SCOPE_DELIMITERS, tag);
+        });
+    }
+
+    // https://html.spec.whatwg.org/#has-an-element-in-button-scope
+    bool _hasElementInButtonScope(TagName tag) {
+        return _hasElementInLambdaScope(tag, [](TagName tag) -> bool {
+            return tag == Html::BUTTON or contains(BASIC_SCOPE_DELIMITERS, tag);
+        });
+    }
+
+    // https://html.spec.whatwg.org/#has-an-element-in-list-item-scope
+    bool _hasElementInListItemScope(TagName tag) {
+        return _hasElementInLambdaScope(tag, [](TagName tag) -> bool {
+            return tag == Html::OL or tag == Html::UL or contains(BASIC_SCOPE_DELIMITERS, tag);
+        });
+    }
+
+    // https://html.spec.whatwg.org/#has-an-element-in-table-scope
+    bool _hasElementInTableScope(TagName tag) {
+        return _hasElementInLambdaScope(tag, [](TagName tag) -> bool {
+            return tag == Html::HTML or tag == Html::TABLE or tag == Html::TEMPLATE;
+        });
+    }
+
+    // https://html.spec.whatwg.org/#has-an-element-in-select-scope
+    bool _hasElementInSelectScope(TagName tag) {
+        return _hasElementInLambdaScope(tag, [](TagName tag) -> bool {
+            return tag != Html::OPTGROUP and tag != Html::OPTION;
+        });
     }
 
     // MARK: Modes
