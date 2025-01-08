@@ -269,6 +269,8 @@ struct HtmlParser : public HtmlSink {
     void write(Str str) {
         for (auto r : iterRunes(str))
             _lexer.consume(r);
+        // NOTE: '\3' (End of Text) is used here as a placeholder so we are directed to the EOF case
+        _lexer.consume('\3', true);
     }
 };
 
