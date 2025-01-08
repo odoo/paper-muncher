@@ -156,4 +156,33 @@ test$("parse-doctype") {
     return Ok();
 }
 
+test$("parse-title") {
+    auto s = Io::SScan("<title>the title</title>");
+    XmlParser p{};
+    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    try$(p.parse(s, Vaev::HTML, *dom));
+    expect$(dom->title() == "the title");
+    return Ok();
+}
+
+test$("parse-comment-with-gt-symb") {
+    auto s = Io::SScan(
+        "<title>im a title!</title>"
+        "<!-- a b <meta> c d -->"
+    );
+    XmlParser p{};
+    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    try$(p.parse(s, Vaev::HTML, *dom));
+
+    expect$(dom->hasChildren());
+    auto title = dom->firstChild();
+    expect$(title->nodeType() == NodeType::ELEMENT);
+
+    auto comment = title->nextSibling();
+    expect$(comment->nodeType() == NodeType::COMMENT);
+    expect$(try$(comment.cast<Comment>())->data == " a b <meta> c d ");
+
+    return Ok();
+}
+
 } // namespace Vaev::Markup::Tests
