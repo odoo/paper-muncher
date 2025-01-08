@@ -1778,15 +1778,16 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // 13.2.5.42 MARK: Markup declaration open state
         // If the next few characters are:
 
-        _temp.append(rune);
+        peekerForSingleState.append(rune);
+
         // Two U+002D HYPHEN-MINUS characters (-)
         // Consume those two characters, create a comment token whose data
         // is the empty string, and switch to the comment start state.
-        if (auto r = startWith("--"s, _temp.str()); r != Match::NO) {
+        if (auto r = startWith("--"s, peekerForSingleState.str()); r != Match::NO) {
             if (r == Match::PARTIAL)
                 break;
 
-            _temp.clear();
+            peekerForSingleState.clear();
             _begin(HtmlToken::COMMENT);
             _switchTo(State::COMMENT_START);
         }
@@ -1794,11 +1795,11 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // ASCII case-insensitive match for the word "DOCTYPE"
         // Consume those characters and switch to the DOCTYPE state.
 
-        else if (auto r = startWith("DOCTYPE"s, _temp.str()); r != Match::NO) {
+        else if (auto r = startWith("DOCTYPE"s, peekerForSingleState.str()); r != Match::NO) {
             if (r == Match::PARTIAL)
                 break;
 
-            _temp.clear();
+            peekerForSingleState.clear();
             _switchTo(State::DOCTYPE);
         }
 
@@ -1810,12 +1811,12 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // error. Create a comment token whose data is the "[CDATA[" string.
         // Switch to the bogus comment state.
 
-        else if (auto r = startWith("[CDATA["s, _temp.str()); r != Match::NO) {
+        else if (auto r = startWith("[CDATA["s, peekerForSingleState.str()); r != Match::NO) {
             if (r == Match::PARTIAL)
                 break;
 
             // NOSPEC: This is in reallity more complicated
-            _temp.clear();
+            peekerForSingleState.clear();
             _switchTo(State::CDATA_SECTION);
         }
 
@@ -1824,7 +1825,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // comment token whose data is the empty string. Switch to the bogus
         // comment state (don't consume anything in the current state).
         else {
-            _temp.clear();
+            peekerForSingleState.clear();
             _raise("incorrectly-opened-comment");
             _begin(HtmlToken::COMMENT);
             _reconsumeIn(State::BOGUS_COMMENT, rune);
