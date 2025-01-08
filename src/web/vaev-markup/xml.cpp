@@ -554,6 +554,10 @@ Res<Rune> XmlParser::_parseEntityRef(Io::SScan &s) {
     else if (name == "quot")
         return Ok('"');
 
+    // NOTE: (workaround) we don't support XML fully so nbsp can't be loaded from a DOCTYPE as its supposed to
+    else if (name == "nbsp")
+        return Ok(160);
+
     rollback.arm();
     return Error::invalidData("unknown entity reference");
 }
