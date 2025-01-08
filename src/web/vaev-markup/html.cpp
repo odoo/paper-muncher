@@ -3858,9 +3858,9 @@ static constexpr Array IMPLIED_END_TAGS = {
     Html::DD, Html::DT, Html::LI, Html::OPTION, Html::OPTGROUP, Html::P, Html::RB, Html::RP, Html::RT, Html::RTC
 };
 
-static void generateImpliedEndTags(HtmlParser &b, Str except = ""s) {
+static void generateImpliedEndTags(HtmlParser &b, TagName except) {
     while (contains(IMPLIED_END_TAGS, last(b._openElements)->tagName) and
-           last(b._openElements)->tagName.name() != except) {
+           last(b._openElements)->tagName != except) {
         b._openElements.popBack();
     }
 }
@@ -4422,7 +4422,7 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
             // If node is a dd element, then run these substeps:
             if (tag == Html::DD) {
                 // 1. Generate implied end tags, except for dd elements.
-                generateImpliedEndTags(*this, "dd");
+                generateImpliedEndTags(*this, Html::DD);
 
                 // 2. If the current node is not a dd element, then this is a parse error.
                 if (last(_openElements)->tagName != Html::DD) {
@@ -4441,7 +4441,7 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
 
             if (tag == Html::DT) {
                 // 1. Generate implied end tags, except for dt elements.
-                generateImpliedEndTags(*this, "dt");
+                generateImpliedEndTags(*this, Html::DT);
 
                 // 2. If the current node is not a dt element, then this is a parse error.
                 if (last(_openElements)->tagName != Html::DT) {
@@ -4556,7 +4556,7 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
             // 2. Loop: If node is an HTML element with the same tag name as the token, then:
             if (node->tagName.name() == t.name) {
                 // 1. Generate implied end tags, except for HTML elements with the same tag name as the token.
-                generateImpliedEndTags(*this, t.name);
+                generateImpliedEndTags(*this, node->tagName);
 
                 // 2. If node is not the current node, then this is a parse error.
                 if (node != last(_openElements))
