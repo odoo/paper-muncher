@@ -100,6 +100,7 @@ struct HtmlLexer {
     Rune _currChar = 0;
     StringBuilder _builder, _commentBuilder;
     StringBuilder _temp;
+    StringBuilder peekerForSingleState;
 
     HtmlToken &_begin(HtmlToken::Type type) {
         _token = HtmlToken{};
