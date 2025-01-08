@@ -57,6 +57,7 @@ struct State {
     Res<Strong<Markup::Document>> dom;
     SidePanel sidePanel = SidePanel::CLOSE;
     InspectState inspect = {};
+    bool wireframe = false;
 
     State(Navigate nav, Res<Strong<Markup::Document>> dom)
         : history{nav}, dom{dom} {}
@@ -80,10 +81,13 @@ struct GoBack {};
 
 struct GoForward {};
 
+struct ToggleWireframe {};
+
 using Action = Union<
     Reload,
     GoBack,
     GoForward,
+    ToggleWireframe,
     SidePanel,
     InspectorAction,
     Navigate>;
@@ -105,6 +109,9 @@ Ui::Task<Action> reduce(State &s, Action a) {
         [&](GoForward) {
             s.currentIndex++;
             reduce(s, Reload{}).unwrap();
+        },
+        [&](ToggleWireframe) {
+            s.wireframe = not s.wireframe;
         },
         [&](SidePanel p) {
             s.sidePanel = p;
@@ -163,6 +170,7 @@ Ui::Child mainMenu([[maybe_unused]] State const &s) {
 #endif
         Ui::separator(),
         Kr::contextMenuItem(Model::bind(SidePanel::DEVELOPER_TOOLS), Mdi::CODE_TAGS, "Developer Tools"),
+        Kr::contextMenuCheck(Model::bind<ToggleWireframe>(), s.wireframe, "Show wireframe"),
         Ui::separator(),
         Kr::contextMenuItem(Ui::NOP, Mdi::COG, "Settings"),
     });
@@ -275,7 +283,7 @@ Ui::Child webview(State const &s) {
     if (not s.dom)
         return alert(s, "The page could not be loaded"s, Io::toStr(s.dom).unwrap());
 
-    return Vaev::View::view(s.dom.unwrap()) |
+    return Vaev::View::view(s.dom.unwrap(), {.wireframe = s.wireframe}) |
            Ui::vscroll() |
            Ui::box({
                .backgroundFill = Gfx::WHITE,
