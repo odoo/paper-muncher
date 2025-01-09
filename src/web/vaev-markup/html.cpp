@@ -573,6 +573,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // then switch to the data state and emit the current tag token.
         // Otherwise, treat it as per the "anything else" entry below.
         else if (rune == '>' and _isAppropriateEndTagToken()) {
+            _builder.clear();
             _switchTo(State::DATA);
             _emit();
         }
@@ -1715,6 +1716,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // data state. Emit the current tag token.
         if (rune == '>') {
             _ensure().selfClosing = true;
+            _builder.clear();
             _switchTo(State::DATA);
             _emit();
         }
@@ -1744,7 +1746,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // U+003E GREATER-THAN SIGN (>)
         // Switch to the data state. Emit the current comment token.
         if (rune == '>') {
-            _ensure(HtmlToken::COMMENT).data = _builder.take();
+            _ensure(HtmlToken::COMMENT).data = _commentBuilder.take();
             _switchTo(State::DATA);
             _emit();
         }
@@ -1762,13 +1764,13 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // REPLACEMENT CHARACTER character to the comment token's data.
         else if (rune == 0) {
             _raise("unexpected-null-character");
-            _builder.append(0xFFFD);
+            _commentBuilder.append(0xFFFD);
         }
 
         // Anything else
         // Append the current input character to the comment token's data.
         else {
-            _builder.append(rune);
+            _commentBuilder.append(rune);
         }
 
         break;
@@ -1778,15 +1780,16 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // 13.2.5.42 MARK: Markup declaration open state
         // If the next few characters are:
 
-        _temp.append(rune);
+        peekerForSingleState.append(rune);
+
         // Two U+002D HYPHEN-MINUS characters (-)
         // Consume those two characters, create a comment token whose data
         // is the empty string, and switch to the comment start state.
-        if (auto r = startWith("--"s, _temp.str()); r != Match::NO) {
+        if (auto r = startWith("--"s, peekerForSingleState.str()); r != Match::NO) {
             if (r == Match::PARTIAL)
                 break;
 
-            _temp.clear();
+            peekerForSingleState.clear();
             _begin(HtmlToken::COMMENT);
             _switchTo(State::COMMENT_START);
         }
@@ -1794,11 +1797,11 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // ASCII case-insensitive match for the word "DOCTYPE"
         // Consume those characters and switch to the DOCTYPE state.
 
-        else if (auto r = startWith("DOCTYPE"s, _temp.str()); r != Match::NO) {
+        else if (auto r = startWith("DOCTYPE"s, peekerForSingleState.str()); r != Match::NO) {
             if (r == Match::PARTIAL)
                 break;
 
-            _temp.clear();
+            peekerForSingleState.clear();
             _switchTo(State::DOCTYPE);
         }
 
@@ -1810,12 +1813,12 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // error. Create a comment token whose data is the "[CDATA[" string.
         // Switch to the bogus comment state.
 
-        else if (auto r = startWith("[CDATA["s, _temp.str()); r != Match::NO) {
+        else if (auto r = startWith("[CDATA["s, peekerForSingleState.str()); r != Match::NO) {
             if (r == Match::PARTIAL)
                 break;
 
             // NOSPEC: This is in reallity more complicated
-            _temp.clear();
+            peekerForSingleState.clear();
             _switchTo(State::CDATA_SECTION);
         }
 
@@ -1824,7 +1827,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // comment token whose data is the empty string. Switch to the bogus
         // comment state (don't consume anything in the current state).
         else {
-            _temp.clear();
+            peekerForSingleState.clear();
             _raise("incorrectly-opened-comment");
             _begin(HtmlToken::COMMENT);
             _reconsumeIn(State::BOGUS_COMMENT, rune);
@@ -1875,6 +1878,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // the data state. Emit the current comment token.
         else if (rune == '>') {
             _raise("abrupt-closing-of-empty-comment");
+            _ensure(HtmlToken::COMMENT).data = _commentBuilder.take();
             _switchTo(State::DATA);
             _emit();
         }
@@ -1893,7 +1897,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Append a U+002D HYPHEN-MINUS character (-) to the comment token's
         // data. Reconsume in the comment state.
         else {
-            _builder.append('-');
+            _commentBuilder.append('-');
             _reconsumeIn(State::COMMENT, rune);
         }
 
@@ -1908,7 +1912,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Append the current input character to the comment token's data.
         // Switch to the comment less-than sign state.
         if (rune == '<') {
-            _builder.append(rune);
+            _commentBuilder.append(rune);
             _switchTo(State::COMMENT_LESS_THAN_SIGN);
         }
 
@@ -1923,7 +1927,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // REPLACEMENT CHARACTER character to the comment token's data.
         else if (rune == 0) {
             _raise("unexpected-null-character");
-            _builder.append(0xFFFD);
+            _commentBuilder.append(0xFFFD);
         }
 
         // EOF
@@ -1940,7 +1944,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Anything else
         // Append the current input character to the comment token's data.
         else {
-            _builder.append(rune);
+            _commentBuilder.append(rune);
         }
 
         break;
@@ -1954,14 +1958,14 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Append the current input character to the comment token's data.
         // Switch to the comment less-than sign bang state.
         if (rune == '!') {
-            _builder.append(rune);
+            _commentBuilder.append(rune);
             _switchTo(State::COMMENT_LESS_THAN_SIGN_BANG);
         }
 
         // U+003C LESS-THAN SIGN (<)
         // Append the current input character to the comment token's data.
         else if (rune == '<') {
-            _builder.append(rune);
+            _commentBuilder.append(rune);
         }
 
         // Anything else
@@ -2057,7 +2061,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Append a U+002D HYPHEN-MINUS character (-) to the comment token's
         // data. Reconsume in the comment state.
         else {
-            _builder.append('-');
+            _commentBuilder.append('-');
             _reconsumeIn(State::COMMENT, rune);
         }
 
@@ -2071,6 +2075,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // U+003E GREATER-THAN SIGN (>)
         // Switch to the data state. Emit the current comment token.
         if (rune == '>') {
+            _ensure(HtmlToken::COMMENT).data = _commentBuilder.take();
             _switchTo(State::DATA);
             _emit();
         }
@@ -2085,7 +2090,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Append a U+002D HYPHEN-MINUS character (-) to the comment token's
         // data.
         else if (rune == '-') {
-            _builder.append('-');
+            _commentBuilder.append('-');
         }
 
         // EOF
@@ -2102,8 +2107,8 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Append two U+002D HYPHEN-MINUS characters (-) to the comment
         // token's data. Reconsume in the comment state.
         else {
-            _builder.append('-');
-            _builder.append('-');
+            _commentBuilder.append('-');
+            _commentBuilder.append('-');
             _reconsumeIn(State::COMMENT, rune);
         }
 
@@ -2119,9 +2124,9 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // EXCLAMATION MARK character (!) to the comment token's data.
         // Switch to the comment end dash state.
         if (rune == '-') {
-            _builder.append('-');
-            _builder.append('-');
-            _builder.append('!');
+            _commentBuilder.append('-');
+            _commentBuilder.append('-');
+            _commentBuilder.append('!');
             _switchTo(State::COMMENT_END_DASH);
         }
 
@@ -2149,9 +2154,9 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // EXCLAMATION MARK character (!) to the comment token's data.
         // Reconsume in the comment state.
         else {
-            _builder.append('-');
-            _builder.append('-');
-            _builder.append('!');
+            _commentBuilder.append('-');
+            _commentBuilder.append('-');
+            _commentBuilder.append('!');
             _reconsumeIn(State::COMMENT, rune);
         }
 
@@ -3198,7 +3203,6 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
     }
 
     case State::NAMED_CHARACTER_REFERENCE: {
-        notImplemented();
         // 13.2.5.73 MARK: Named character reference state
 
         // Consume the maximum number of characters possible, where the
@@ -3206,38 +3210,167 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // column of the named character references table. Append each
         // character to the temporary buffer when it's consumed.
 
-        // If there is a match
-        // If the character reference was consumed as part of an attribute,
-        // and the last character matched is not a U+003B SEMICOLON
-        // character (;), and the next input character is either a U+003D
-        // EQUALS SIGN character (=) or an ASCII alphanumeric, then, for
-        // historical reasons, flush code points consumed as a character
-        // reference and switch to the return state.
+        // NOTE: This state asks us to "Consume the maximum number of characters possible" but also to check the
+        // "next input character"; an extra implementation effort was made in order to be able to access
+        // the "next input character"
 
-        // Otherwise:
+        // NOTE: While the default and valid behaviour is for entities to end with semicolon (;), some entities have
+        // 2 names, one ending with semicolon and the other not.
+        // For these cases, even if we have a match, if it doesnt end with semi-colon, we will continue consuming
 
-        // If the last character matched is not a U+003B SEMICOLON character
-        // (;), then this is a missing-semicolon-after-character-reference
-        // parse error.
+        // NOTE: Some entities are prefix of others: "&not" is prefix of "&notinva;"; however, since ";" only appears if
+        // its the last char, it cant be that a string ending with it is also a prefix
 
-        // Set the temporary buffer to the empty string. Append one or two
-        // characters corresponding to the character reference name (as
-        // given by the second column of the named character references
-        // table) to the temporary buffer.
+        // NOTE: In this state, we only add alphanum chars to _temp
 
-        // Flush code points consumed as a character reference. Switch to
-        // the return state. Otherwise Flush code points consumed as a
-        // character reference. Switch to the ambiguous ampersand state. If
-        // the markup contains (not in an attribute) the string I'm &notit;
-        // I tell you, the character reference is parsed as "not", as in,
-        // I'm ¬it; I tell you (and this is a parse error). But if the
-        // markup was I'm &notin; I tell you, the character reference would
-        // be parsed as "notin;", resulting in I'm ∉ I tell you (and no
-        // parse error).
+        // NOTE: In case of matching just a prefix or not matching at all but having already consumed characters into
+        // _temp, it is ok to rely on _flushCodePointsConsumedAsACharacterReference for correctly dispatch the runes in
+        // _temp.
+        // In the case where there is no match at all, the next state is State::AMBIGUOUS_AMPERSAND which emits the
+        // consumed alphanum.
+        //      Eg. given the entity "&between;", the input "&betweem" will be emited as State::AMBIGUOUS_AMPERSAND
+        //      does
+        // For return states, attribute states add alphanum chars to their builder and data states emit alphanum
+        //      Eg. given the entities "&not" and "&notinva;", the input "&notinvd" matches "&not" and
+        //      flushes "invd" as the return state would
 
-        // However, if the markup contains the string I'm &notit; I tell you
-        // in an attribute, no character reference is parsed and string
-        // remains intact (and there is no parse error).
+        bool hasPartialMatch = false;
+
+        auto computeMatchState = [&](StringBuilder prefix) {
+            // TODO: (performance) consider sorting entities lexicographically and binary search or using a trie
+
+            prefix.append(rune);
+
+            auto target = prefix.str();
+
+            auto bestMatch = Match::NO;
+            for (auto &entity : ENTITIES) {
+                auto match = startWith(entity.name, target);
+
+                if (match == Match::PARTIAL)
+                    hasPartialMatch = true;
+
+                if (match == Match::YES)
+                    bestMatch = max(bestMatch, match);
+            };
+            return bestMatch;
+        };
+
+        auto matchStateWithNextInputChar = computeMatchState(_temp);
+
+        // NOTE: if rune==';', we are either having Match::YES or Match::NO, not partial
+        if (hasPartialMatch) {
+            _temp.append(rune);
+
+            if (matchStateWithNextInputChar == Match::YES)
+                matchedCharReferenceNoSemiColon = _temp.len();
+
+            break;
+        }
+
+        // If there is a match from before matchedCharReferenceNoSemiColon
+        if (matchStateWithNextInputChar == Match::NO and matchedCharReferenceNoSemiColon) {
+            // If the character reference was consumed as part of an attribute,
+            // and the last character matched is not a U+003B SEMICOLON
+            // character (;), and the next input character is either a U+003D
+            // EQUALS SIGN character (=) or an ASCII alphanumeric, then, for
+            // historical reasons, flush code points consumed as a character
+            // reference and switch to the return state.
+            if (
+                _consumedAsPartOfAnAttribute() and
+                (rune == '=' or isAsciiAlphaNum(rune))
+            ) {
+                _flushCodePointsConsumedAsACharacterReference();
+                _reconsumeIn(_returnState, rune);
+            } else {
+                // Otherwise:
+
+                // If the last character matched is not a U+003B SEMICOLON character
+                // (;), then this is a missing-semicolon-after-character-reference
+                // parse error.
+                _raise("missing-semicolon-after-character-reference");
+
+                // Set the temporary buffer to the empty string.
+                // Append one or two characters corresponding to the character reference name (as
+                // given by the second column of the named character references
+                // table) to the temporary buffer.
+
+                // NOTE: we should expand the entity but also re-add the not matched remaining characters
+                // to the _temp buffer
+
+                auto _tempWithUnexpandedEntity = _temp.str();
+                auto entityName = _Str<Utf8>(_tempWithUnexpandedEntity.begin(), matchedCharReferenceNoSemiColon.unwrap());
+
+                for (auto &entity : ENTITIES) {
+                    if (entityName == entity.name) {
+
+                        _temp.clear();
+                        _temp.append(Slice<Rune>::fromNullterminated(entity.runes));
+
+                        for (usize i = matchedCharReferenceNoSemiColon.unwrap(); i < _tempWithUnexpandedEntity.len(); ++i) {
+                            _temp.append(_tempWithUnexpandedEntity[i]);
+                        }
+                        break;
+                    }
+                }
+
+                // Flush code points consumed as a character reference. Switch to
+                // the return state.
+                matchedCharReferenceNoSemiColon = NONE;
+                _flushCodePointsConsumedAsACharacterReference();
+                _reconsumeIn(_returnState, rune);
+            }
+        }
+
+        else if (matchStateWithNextInputChar == Match::YES) {
+            // FIXME: consider run this assert only in DEBUG mode
+            if (rune != ';')
+                panic("A full entity match that is not a partial match must end with a semicolon");
+
+            _temp.append(rune);
+
+            // If the character reference was consumed as part of an attribute,
+            // and the last character matched is not a U+003B SEMICOLON
+            // character (;), and the next input character is either a U+003D
+            // EQUALS SIGN character (=) or an ASCII alphanumeric, then, for
+            // historical reasons, flush code points consumed as a character
+            // reference and switch to the return state.
+
+            // => This is impossible since the last matched char is a semicolon
+
+            // Otherwise:
+
+            // If the last character matched is not a U+003B SEMICOLON character
+            // (;), then this is a missing-semicolon-after-character-reference
+            // parse error.
+
+            // => This is impossible since the last matched char is a semicolon
+
+            // Set the temporary buffer to the empty string.
+            // Append one or two characters corresponding to the character reference name (as
+            // given by the second column of the named character references
+            // table) to the temporary buffer.
+            for (auto &entity : ENTITIES) {
+                if (_temp.str() == entity.name) {
+                    _temp.clear();
+                    _temp.append(Slice<Rune>::fromNullterminated(entity.runes));
+                    break;
+                }
+            }
+
+            // Flush code points consumed as a character reference. Switch to
+            // the return state.
+            matchedCharReferenceNoSemiColon = NONE;
+            _flushCodePointsConsumedAsACharacterReference();
+            _switchTo(_returnState);
+        }
+
+        else {
+            // Otherwise Flush code points consumed as a character reference.
+            // Switch to the ambiguous ampersand state.
+            _flushCodePointsConsumedAsACharacterReference();
+            _reconsumeIn(State::AMBIGUOUS_AMPERSAND, rune);
+        }
         break;
     }
 
@@ -3251,9 +3384,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // attribute's value. Otherwise, emit the current input character as
         // a character token.
         if (isAsciiAlphaNum(rune)) {
-            if (_returnState == State::ATTRIBUTE_VALUE_DOUBLE_QUOTED ||
-                _returnState == State::ATTRIBUTE_VALUE_SINGLE_QUOTED ||
-                _returnState == State::ATTRIBUTE_VALUE_UNQUOTED) {
+            if (_consumedAsPartOfAnAttribute()) {
                 _builder.append(rune);
             } else {
                 _emit(rune);
@@ -3855,9 +3986,9 @@ static constexpr Array IMPLIED_END_TAGS = {
     Html::DD, Html::DT, Html::LI, Html::OPTION, Html::OPTGROUP, Html::P, Html::RB, Html::RP, Html::RT, Html::RTC
 };
 
-static void generateImpliedEndTags(HtmlParser &b, Str except = ""s) {
+static void generateImpliedEndTags(HtmlParser &b, TagName except) {
     while (contains(IMPLIED_END_TAGS, last(b._openElements)->tagName) and
-           last(b._openElements)->tagName.name() != except) {
+           last(b._openElements)->tagName != except) {
         b._openElements.popBack();
     }
 }
@@ -4307,6 +4438,29 @@ void HtmlParser::_handleAfterHead(HtmlToken const &t) {
 // 13.2.6.4.7 MARK: The "in body" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inbody
 void HtmlParser::_handleInBody(HtmlToken const &t) {
+    auto closePElementIfInButtonScope = [&]() {
+        // https://html.spec.whatwg.org/#close-a-p-element
+        // If the stack of open elements has a p element in button scope, then close a p element.
+        if (_hasElementInButtonScope(Html::P)) {
+
+            // Generate implied end tags, except for p elements.
+            generateImpliedEndTags(*this, Html::P);
+
+            // If the current node is not a p element, then this is a parse error.
+            if (last(_openElements)->tagName != Html::P)
+                _raise();
+
+            // Pop elements from the stack of open elements until a p element has been popped from the stack.
+            while (_openElements.len() > 0) {
+                auto lastEl = last(_openElements);
+
+                _openElements.popBack();
+                if (lastEl->tagName == Html::P)
+                    break;
+            }
+        }
+    };
+
     // A character token that is U+0000 NULL
     if (t.type == HtmlToken::CHARACTER and t.rune == '\0') {
         _raise();
@@ -4351,8 +4505,9 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
 
     // TODO: An end-of-file token
 
-    // TODO: An end tag whose tag name is "body"
-    else if (t.type == HtmlToken::END_TAG and t.name == "body") {
+    // An end tag whose tag name is "body"
+    // An end tag whose tag name is "html"
+    else if (t.type == HtmlToken::END_TAG and (t.name == "body" or t.name == "html")) {
         // If the stack of open elements does not have a body element in
         // scope, this is a parse error; ignore the token.
         if (not _hasElementInScope(Html::BODY)) {
@@ -4361,23 +4516,49 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
         }
 
         // Otherwise, if there is a node in the stack of open elements that
-        // is not a implid end tag, then this is a parse error.
-        if (not contains(IMPLIED_END_TAGS, last(_openElements)->tagName)) {
-            _raise();
+        // is not an implied end tag or
+        // tbody element, a td element, a tfoot element, a th element, a thead element, a tr element, the body element, or the html
+        // then this is a parse error.
+        for (auto &el : _openElements) {
+            if (not contains(IMPLIED_END_TAGS, el->tagName) and
+                el->tagName != Html::TBODY and el->tagName != Html::TD and el->tagName != Html::TFOOT and
+                el->tagName != Html::TH and el->tagName != Html::THEAD and el->tagName != Html::TR and
+                el->tagName != Html::BODY and el->tagName != Html::HTML) {
+                _raise();
+                break;
+            }
         }
 
         // Switch the insertion mode to "after body".
         _switchTo(Mode::AFTER_BODY);
+
+        if (t.name == "html")
+            accept(t);
+
     }
 
-    // TODO: An end tag whose tag name is "html"
-
-    // TODO: A start tag whose tag name is one of:
+    // A start tag whose tag name is one of:
     // "address", "article", "aside", "blockquote", "center",
     // "details", "dialog", "dir", "div", "dl", "fieldset",
     // "figcaption", "figure", "footer", "header", "hgroup",
     // "main", "menu", "nav", "ol", "p", "search", "section",
     // "summary", "ul"
+    else if (
+        t.type == HtmlToken::START_TAG and
+        (t.name == "address" or t.name == "article" or t.name == "aside" or t.name == "blockquote" or
+         t.name == "center" or t.name == "details" or t.name == "dialog" or t.name == "dir" or
+         t.name == "div" or t.name == "dl" or t.name == "fieldset" or t.name == "figcaption" or
+         t.name == "figure" or t.name == "footer" or t.name == "header" or t.name == "hgroup" or
+         t.name == "main" or t.name == "menu" or t.name == "nav" or t.name == "ol" or
+         t.name == "p" or t.name == "search" or t.name == "section" or t.name == "summary" or t.name == "ul"
+        )
+    ) {
+        // If the stack of open elements has a p element in button scope, then close a p element.
+        closePElementIfInButtonScope();
+
+        // Insert an HTML element for the token.
+        insertHtmlElement(*this, t);
+    }
 
     // TODO: A start tag whose tag name is one of: "h1", "h2", "h3", "h4", "h5", "h6"
 
@@ -4408,7 +4589,7 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
             // If node is a dd element, then run these substeps:
             if (tag == Html::DD) {
                 // 1. Generate implied end tags, except for dd elements.
-                generateImpliedEndTags(*this, "dd");
+                generateImpliedEndTags(*this, Html::DD);
 
                 // 2. If the current node is not a dd element, then this is a parse error.
                 if (last(_openElements)->tagName != Html::DD) {
@@ -4427,7 +4608,7 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
 
             if (tag == Html::DT) {
                 // 1. Generate implied end tags, except for dt elements.
-                generateImpliedEndTags(*this, "dt");
+                generateImpliedEndTags(*this, Html::DT);
 
                 // 2. If the current node is not a dt element, then this is a parse error.
                 if (last(_openElements)->tagName != Html::DT) {
@@ -4542,7 +4723,7 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
             // 2. Loop: If node is an HTML element with the same tag name as the token, then:
             if (node->tagName.name() == t.name) {
                 // 1. Generate implied end tags, except for HTML elements with the same tag name as the token.
-                generateImpliedEndTags(*this, t.name);
+                generateImpliedEndTags(*this, node->tagName);
 
                 // 2. If node is not the current node, then this is a parse error.
                 if (node != last(_openElements))
