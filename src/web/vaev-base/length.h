@@ -15,10 +15,6 @@ using PhysicalPixel = Distinct<i32, struct _PhysicalPixel>;
 /// Represents a logical pixel in the CSS coordinate system.
 using Px = Math::i24f8;
 
-constexpr Px operator""_px(unsigned long long val) {
-    return Px(val);
-}
-
 using RectPx = Math::Rect<Px>;
 
 using Vec2Px = Math::Vec2<Px>;
@@ -150,3 +146,7 @@ struct Length {
 };
 
 } // namespace Vaev
+
+constexpr Vaev::Px operator""_px(unsigned long long val) {
+    return Vaev::Px(val);
+}
