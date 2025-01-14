@@ -65,6 +65,8 @@ inline Spec const Spec::A = {1, 0, 0};
 inline Spec const Spec::B = {0, 1, 0};
 inline Spec const Spec::C = {0, 0, 1};
 
+Spec const INLINE_SPEC = Spec::ZERO;
+
 struct Selector;
 
 struct UniversalSelector {
@@ -110,6 +112,7 @@ struct Infix {
 };
 
 struct Nfix {
+    // NOTE: is(), not() and where() are coded as Nfixes instead of Pseudo
     enum struct Type {
         AND,   // ''
         OR,    // :is(), ', '
@@ -355,6 +358,7 @@ struct Selector : public _Selector {
     }
 
     bool match(Markup::Element const &el) const;
+    Opt<Spec> matchWithSpecificity(Markup::Element const &el) const;
 
     bool operator==(Selector const &) const = default;
 

@@ -11,6 +11,7 @@ static constexpr bool DEBUG_SELECTORS = false;
 Spec spec(Selector const &s) {
     return s.visit(Visitor{
         [](Nfix const &n) {
+            // FIXME: missing other pseudo class selectors implemented as nfix
             if (n.type == Nfix::WHERE)
                 return Spec::ZERO;
 
@@ -281,6 +282,26 @@ bool Selector::match(Markup::Element const &el) const {
             return false;
         }
     );
+}
+
+Opt<Spec> Selector::matchWithSpecificity(Markup::Element const &el) const {
+    return visit(Visitor{
+        [&el](Nfix const &n) {
+            if (n.type == Nfix::OR) {
+                Opt<Spec> matchedSpecificity;
+                for (auto &inner : n.inners) {
+                    if (inner.match(el))
+                        matchedSpecificity = max(matchedSpecificity, spec(inner));
+                }
+                return matchedSpecificity;
+            } else {
+                return Selector{n}.match(el) ? Opt<Spec>{spec(n)} : NONE;
+            }
+        },
+        [&](auto const &s) {
+            return Selector{s}.match(el) ? Opt<Spec>{spec(s)} : NONE;
+        }
+    });
 }
 
 // MARK: Parser ----------------------------------------------------------------

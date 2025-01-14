@@ -11,7 +11,7 @@ struct Computer {
     Media _media;
     StyleBook const &_styleBook;
 
-    using MatchingRules = Vec<Cursor<StyleRule>>;
+    using MatchingRules = Vec<Tuple<Cursor<StyleRule>, Spec>>;
 
     void _evalRule(Rule const &rule, Markup::Element const &el, MatchingRules &matches);
 

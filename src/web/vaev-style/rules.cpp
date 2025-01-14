@@ -8,8 +8,8 @@ static bool DEBUG_RULE = false;
 
 // MARK: StyleRule -------------------------------------------------------------
 
-bool StyleRule::match(Markup::Element const &el) const {
-    return selector.match(el);
+Opt<Spec> StyleRule::matchWithSpecificity(Markup::Element const &el) const {
+    return selector.matchWithSpecificity(el);
 }
 
 void StyleRule::repr(Io::Emit &e) const {

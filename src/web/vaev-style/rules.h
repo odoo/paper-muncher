@@ -19,7 +19,7 @@ struct StyleRule {
 
     void repr(Io::Emit &e) const;
 
-    bool match(Markup::Element const &el) const;
+    Opt<Spec> matchWithSpecificity(Markup::Element const &el) const;
 
     static StyleRule parse(Css::Sst const &sst, Origin origin = Origin::AUTHOR);
 };

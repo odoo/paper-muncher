@@ -18,8 +18,8 @@ Computed const &Computed::initial() {
 void Computer::_evalRule(Rule const &rule, Markup::Element const &el, MatchingRules &matches) {
     rule.visit(Visitor{
         [&](StyleRule const &r) {
-            if (r.match(el))
-                matches.pushBack(&r);
+            if (auto specificity = r.matchWithSpecificity(el))
+                matches.pushBack({&r, specificity.unwrap()});
         },
         [&](MediaRule const &r) {
             if (r.match(_media))
@@ -54,9 +54,9 @@ Strong<Computed> Computer::_evalCascade(Computed const &parent, MatchingRules &m
     stableSort(
         matchingRules,
         [](auto const &a, auto const &b) {
-            if (a->origin != b->origin)
-                return a->origin <=> b->origin;
-            return spec(a->selector) <=> spec(b->selector);
+            if (a.v0->origin != b.v0->origin)
+                return a.v0->origin <=> b.v0->origin;
+            return a.v1 <=> b.v1;
         }
     );
 
@@ -66,14 +66,14 @@ Strong<Computed> Computer::_evalCascade(Computed const &parent, MatchingRules &m
     Vec<Cursor<StyleProp>> importantProps;
 
     // HACK: Apply custom properties first
-    for (auto const &styleRule : matchingRules) {
+    for (auto const &[styleRule, _] : matchingRules) {
         for (auto &prop : styleRule->props) {
             if (prop.is<CustomProp>())
                 prop.apply(parent, *computed);
         }
     }
 
-    for (auto const &styleRule : matchingRules) {
+    for (auto const &[styleRule, _] : matchingRules) {
         for (auto &prop : styleRule->props) {
             if (not prop.is<CustomProp>()) {
                 if (prop.important == Important::NO)
@@ -106,7 +106,7 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
         .props = parseDeclarations<StyleProp>(styleAttr ? *styleAttr : ""),
         .origin = Origin::INLINE,
     };
-    matchingRules.pushBack(&styleRule);
+    matchingRules.pushBack({&styleRule, INLINE_SPEC});
 
     return _evalCascade(parent, matchingRules);
 }
