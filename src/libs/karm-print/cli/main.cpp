@@ -1,10 +1,13 @@
+#include <karm-print/page.h>
 #include <karm-print/pdf-printer.h>
+#include <karm-scene/text.h>
 #include <karm-sys/entry.h>
 #include <karm-sys/file.h>
 
 Async::Task<> entryPointAsync(Sys::Context &) {
-    Print::PdfPrinter printer{};
-    auto &ctx = printer.beginPage(Print::A4);
+    auto printer = co_try$(Print::PdfPrinter::create(Mime::Uti::PUBLIC_PDF));
+
+    auto &ctx = printer->beginPage(Print::A4);
     ctx.fillStyle(Gfx::RED);
     ctx.rect({0, 0, 100, 100});
     ctx.fill(Gfx::FillRule::NONZERO);
@@ -17,10 +20,7 @@ Async::Task<> entryPointAsync(Sys::Context &) {
     ctx.rect({0, 200, 100, 100});
     ctx.fill(Gfx::FillRule::NONZERO);
 
-    auto outFile = co_try$(Sys::File::create("file:test.pdf"_url));
-    Io::TextEncoder<> outEncoder{outFile};
-    co_try$(printer.write(outEncoder));
-    co_try$(outFile.flush());
+    co_try$(printer->save("file:test.pdf"_url));
 
     co_return Ok();
 }
