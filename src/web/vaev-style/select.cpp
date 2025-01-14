@@ -39,10 +39,10 @@ Spec spec(Selector const &s) {
             return Spec::B;
         },
         [](Pseudo const &) {
-            return Spec::ZERO;
+            return Spec::B;
         },
         [](AttributeSelector const &) {
-            return Spec::ZERO;
+            return Spec::B;
         },
         [](auto const &s) {
             logWarnIf(DEBUG_SELECTORS, "unimplemented selector: {}", s);
