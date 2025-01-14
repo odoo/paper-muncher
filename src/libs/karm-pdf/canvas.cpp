@@ -64,9 +64,8 @@ void Canvas::cubicTo(Math::Vec2f cp1, Math::Vec2f cp2, Math::Vec2f p, Math::Path
 }
 
 void Canvas::quadTo(Math::Vec2f cp, Math::Vec2f p, Math::Path::Flags flags) {
-    cp = _mapPoint(cp, flags);
-    p = _mapPointAndUpdate(p, flags);
-    _e.ln("{} {} {} {} q", cp.x, cp.y, p.x, p.y);
+    auto curve = Math::Curvef::quadratic(_p, cp, p);
+    cubicTo(curve.b, curve.c, curve.d, flags);
 }
 
 void Canvas::arcTo(Math::Vec2f, f64, Math::Vec2f, Math::Path::Flags) {

@@ -19,6 +19,13 @@ struct PdfPrinter : public FilePrinter {
     Gfx::Canvas &beginPage(PaperStock paper) override {
         auto &page = _pages.emplaceBack(paper);
         _canvas = Pdf::Canvas{page.data, paper.size()};
+
+        // NOTE: PDF has the coordinate system origin at the bottom left corner.
+        //       But we want to have it at the top left corner.
+        _canvas->transform(
+            {1, 0, 0, -1, 0, paper.height}
+        );
+
         return *_canvas;
     }
 
