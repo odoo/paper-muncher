@@ -4,6 +4,8 @@
 
 namespace Karm::Mime {
 
+struct Mime;
+
 struct Uti {
     String _buf;
 
@@ -17,16 +19,19 @@ struct Uti {
 
     Uti(Common c) {
         switch (c) {
-#define UTI(NAME, STR)  \
-    case Common::NAME:  \
-        _buf = STR ""s; \
+#define UTI(NAME, STR, ...) \
+    case Common::NAME:      \
+        _buf = STR ""s;     \
         break;
 #include "defs/uti.inc"
 #undef UTI
         }
     }
 
-    Uti(String str) : _buf{str} {}
+    Uti(String str)
+        : _buf{str} {}
+
+    static Res<Uti> fromMime(Mime const &);
 
     static Uti parse(Str str) {
         return Uti{str}; // lol
