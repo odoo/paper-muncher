@@ -3963,6 +3963,137 @@ static void insertAComment(HtmlParser &b, HtmlToken const &t) {
     location.insert(comment);
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#reset-the-insertion-mode-appropriately
+static void resetTheInsertionModeAppropriately(HtmlParser &b) {
+    // 1. Let last be false.
+    bool _last = false;
+
+    // 2. Let node be the last node in the stack of open elements.
+    // 3. Loop: If node is the first node in the stack of open elements, then set last to true, and,
+    // if the parser was created as part of the HTML fragment parsing algorithm (fragment case),
+    // set node to the context element passed to that algorithm.
+
+    auto nodeIdx = b._openElements.len() - 1;
+    while (true) {
+        auto node = b._openElements[nodeIdx];
+
+        if (nodeIdx == 0)
+            _last = true;
+
+        // 4. If node is a select element, run these substeps:
+        if (node->tagName == Html::SELECT) {
+            // 4.1 If last is true, jump to the step below labeled done.
+            if (_last) {
+                b._switchTo(HtmlParser::Mode::IN_SELECT);
+                return;
+            }
+
+            // 4.2 Let ancestor be node.
+            auto ancestorIdx = b._openElements.len() - 1;
+
+            // 4.3 Loop: If ancestor is the first node in the stack of open elements, jump to the step below labeled done.
+            while (ancestorIdx != 0) {
+                // 4.4 Let ancestor be the node before ancestor in the stack of open elements.
+                ancestorIdx--;
+
+                // 4.5 If ancestor is a template node, jump to the step below labeled done.
+                if (b._openElements[ancestorIdx]->tagName == Html::SELECT)
+                    break;
+
+                // 4.6 If ancestor is a table node, switch the insertion mode to "in select in table" and return.
+                if (b._openElements[ancestorIdx]->tagName == Html::TABLE) {
+                    b._switchTo(HtmlParser::Mode::IN_SELECT_IN_TABLE);
+                    return;
+                }
+
+                // 4.7 Jump back to the step labeled loop.
+            }
+
+            // 4.8 Done: Switch the insertion mode to "in select" and return.]
+            b._switchTo(HtmlParser::Mode::IN_SELECT);
+            return;
+        }
+
+        // 5. If node is a td or th element and last is false, then switch the insertion mode to "in cell" and return.
+        if ((node->tagName == Html::TD or node->tagName == Html::TH) and not _last) {
+            b._switchTo(HtmlParser::Mode::IN_CELL);
+            return;
+        }
+
+        // 6. If node is a tr element, then switch the insertion mode to "in row" and return.
+        if (node->tagName == Html::TR) {
+            b._switchTo(HtmlParser::Mode::IN_ROW);
+            return;
+        }
+
+        // 7. If node is a tbody, thead, or tfoot element, then switch the insertion mode to "in table body" and return.
+        if (node->tagName == Html::TBODY or node->tagName == Html::THEAD or node->tagName == Html::TFOOT) {
+            b._switchTo(HtmlParser::Mode::IN_TABLE_BODY);
+            return;
+        }
+
+        // 8. If node is a caption element, then switch the insertion mode to "in caption" and return.
+        if (node->tagName == Html::CAPTION) {
+            b._switchTo(HtmlParser::Mode::IN_CAPTION);
+            return;
+        }
+
+        // 9. If node is a colgroup element, then switch the insertion mode to "in column group" and return.
+        if (node->tagName == Html::COLGROUP) {
+            b._switchTo(HtmlParser::Mode::IN_COLUMN_GROUP);
+            return;
+        }
+
+        // 10. If node is a table element, then switch the insertion mode to "in table" and return.
+        if (node->tagName == Html::TABLE) {
+            b._switchTo(HtmlParser::Mode::IN_TABLE);
+            return;
+        }
+
+        // 11. If node is a template element, then switch the insertion mode to the current template insertion mode and return.
+
+        // 12. If node is a head element and last is false, then switch the insertion mode to "in head" and return.
+        if (node->tagName == Html::HEAD and not _last) {
+            b._switchTo(HtmlParser::Mode::IN_HEAD);
+            return;
+        }
+
+        // 13. If node is a body element, then switch the insertion mode to "in body" and return.
+        if (node->tagName == Html::BODY) {
+            b._switchTo(HtmlParser::Mode::IN_BODY);
+            return;
+        }
+
+        // 14. If node is a frameset element, then switch the insertion mode to "in frameset" and return. (fragment case)
+        if (node->tagName == Html::FRAMESET) {
+            b._switchTo(HtmlParser::Mode::IN_FRAMESET);
+            return;
+        }
+
+        // 15. If node is an html element, run these substeps:
+        if (node->tagName == Html::HTML) {
+            // 15.1 If the head element pointer is null, switch the insertion mode to "before head" and return. (fragment case)
+            if (not b._headElement)
+                b._switchTo(HtmlParser::Mode::BEFORE_HEAD);
+
+            // 15.2 Otherwise, the head element pointer is not null, switch the insertion mode to "after head" and return.
+            else
+                b._switchTo(HtmlParser::Mode::AFTER_HEAD);
+
+            return;
+        }
+
+        // 16. If last is true, then switch the insertion mode to "in body" and return. (fragment case)
+        if (_last)
+            b._switchTo(HtmlParser::Mode::IN_BODY);
+
+        // 17. Let node now be the node before node in the stack of open elements.
+        nodeIdx--;
+
+        // 18. Return to the step labeled loop.
+    }
+}
+
 // 13.2.6.2 MARK: Parsing elements that contain only text
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-elements-that-contain-only-text
 
@@ -3986,7 +4117,7 @@ static constexpr Array IMPLIED_END_TAGS = {
     Html::DD, Html::DT, Html::LI, Html::OPTION, Html::OPTGROUP, Html::P, Html::RB, Html::RP, Html::RT, Html::RTC
 };
 
-static void generateImpliedEndTags(HtmlParser &b, TagName except) {
+static void generateImpliedEndTags(HtmlParser &b, Opt<TagName> except = NONE) {
     while (contains(IMPLIED_END_TAGS, last(b._openElements)->tagName) and
            last(b._openElements)->tagName != except) {
         b._openElements.popBack();
@@ -4671,6 +4802,19 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
     // TODO: An end tag token whose tag name is one of: "applet", "marquee", "object"
 
     // TODO: A start tag whose tag name is "table"
+    else if (t.type == HtmlToken::START_TAG and t.name == "table") {
+        // TODO: If the Document is not set to quirks mode,
+        // and the stack of open elements has a p element in button scope, then close a p element.
+
+        // Insert an HTML element for the token.
+        insertHtmlElement(*this, t);
+
+        // Set the frameset-ok flag to "not ok".
+        _framesetOk = false;
+
+        // Switch the insertion mode to "in table".
+        _switchTo(Mode::IN_TABLE);
+    }
 
     // TODO: An end tag whose tag name is "br"
 
@@ -4814,6 +4958,641 @@ void HtmlParser::_handleText(HtmlToken const &t) {
     // FIXME: Implement the rest of the rules
 }
 
+static void _inTableModeAnythingElse(HtmlParser &b, HtmlToken const &t) {
+    // Parse error.
+    b._raise();
+
+    // Enable foster parenting,
+    b._fosterParenting = true;
+
+    // process the token using the rules for the "in body" insertion mode,
+    b._acceptIn(HtmlParser::Mode::IN_BODY, t);
+
+    // and then disable foster parenting.
+    b._fosterParenting = false;
+}
+
+// 13.2.6.4.9 MARK: The "in table" insertion mode
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intable
+void HtmlParser::_handleInTable(HtmlToken const &t) {
+    auto _clearTheStackBackToATableContext = [&]() {
+        while (last(_openElements)->tagName != Html::TABLE and
+               last(_openElements)->tagName != Html::TEMPLATE and
+               last(_openElements)->tagName != Html::HTML) {
+
+            _openElements.popBack();
+        }
+    };
+
+    // A character token, if the current node is table, tbody, template, tfoot, thead, or tr element
+    if (t.type == HtmlToken::CHARACTER and
+        (last(_openElements)->tagName == Html::TABLE or last(_openElements)->tagName == Html::TBODY or
+         last(_openElements)->tagName == Html::TEMPLATE or last(_openElements)->tagName == Html::TFOOT or
+         last(_openElements)->tagName == Html::THEAD or last(_openElements)->tagName == Html::TR
+        )) {
+        // Let the pending table character tokens be an empty list of tokens.
+        _pendingTableCharacterTokens.clear();
+
+        // Let the original insertion mode be the current insertion mode.
+        _originalInsertionMode = _insertionMode;
+
+        // Switch the insertion mode to "in table text" and reprocess the token.
+        _switchTo(Mode::IN_TABLE_TEXT);
+        accept(t);
+    }
+
+    // A comment token
+    else if (t.type == HtmlToken::COMMENT) {
+        // Insert a comment.
+        insertAComment(*this, t);
+    }
+
+    // A DOCTYPE token
+    else if (t.type == HtmlToken::DOCTYPE) {
+        // Parse error. Ignore the token.
+        _raise();
+    }
+
+    // A start tag whose tag name is "caption"
+    else if (t.type == HtmlToken::START_TAG and t.name == "caption") {
+        // Clear the stack back to a table context. (See below.)
+        _clearTheStackBackToATableContext();
+
+        // TODO: Insert a marker at the end of the list of active formatting elements.
+
+        // Insert an HTML element for the token, then switch the insertion mode to "in caption".
+        insertHtmlElement(*this, t);
+        _switchTo(Mode::IN_CAPTION);
+    }
+
+    // A start tag whose tag name is "colgroup"
+    else if (t.type == HtmlToken::START_TAG and t.name == "colgroup") {
+        // Clear the stack back to a table context. (See below.)
+        _clearTheStackBackToATableContext();
+
+        // Insert an HTML element for the token, then switch the insertion mode to "in column group".
+        insertHtmlElement(*this, t);
+        _switchTo(Mode::IN_COLUMN_GROUP);
+    }
+
+    // A start tag whose tag name is "col"
+    else if (t.type == HtmlToken::START_TAG and t.name == "col") {
+        // Clear the stack back to a table context. (See below.)
+        _clearTheStackBackToATableContext();
+
+        // Insert an HTML element for a "colgroup" start tag token with no attributes, then switch the insertion mode to "in column group".
+        HtmlToken colGroupToken;
+        colGroupToken.type = HtmlToken::START_TAG;
+        colGroupToken.name = String{"colgroup"};
+        insertAForeignElement(*this, colGroupToken, Vaev::HTML);
+        _switchTo(Mode::IN_COLUMN_GROUP);
+
+        // Reprocess the current token.
+        accept(t);
+    }
+
+    // A start tag whose tag name is one of: "tbody", "tfoot", "thead"
+    else if (t.type == HtmlToken::START_TAG and
+             (t.name == "tbody" or t.name == "tfoot" or t.name == "thead")) {
+        // Clear the stack back to a table context. (See below.)
+        _clearTheStackBackToATableContext();
+
+        // Insert an HTML element for the token, then switch the insertion mode to "in table body".
+        insertHtmlElement(*this, t);
+        _switchTo(Mode::IN_TABLE_BODY);
+    }
+
+    // A start tag whose tag name is one of: "td", "th", "tr"
+    else if (t.type == HtmlToken::START_TAG and
+             (t.name == "td" or t.name == "th" or t.name == "tr")) {
+        // Clear the stack back to a table context. (See below.)
+        _clearTheStackBackToATableContext();
+
+        // Insert an HTML element for a "tbody" start tag token with no attributes, then switch the insertion mode to "in table body".
+        HtmlToken TableBodyToken;
+        TableBodyToken.type = HtmlToken::START_TAG;
+        TableBodyToken.name = "tbody"s;
+        insertAForeignElement(*this, TableBodyToken, Vaev::HTML);
+        _switchTo(Mode::IN_TABLE_BODY);
+
+        // Reprocess the current token.
+        accept(t);
+    }
+
+    // A start tag whose tag name is "table"
+    else if (t.type == HtmlToken::START_TAG and t.name == "table") {
+        // Parse error.
+        _raise();
+
+        // If the stack of open elements does not have a table element in table scope, ignore the token.
+        if (not _hasElementInTableScope(Html::TABLE))
+            return;
+
+        // Otherwise:
+
+        // Pop elements from this stack until a table element has been popped from the stack.
+        while (Karm::any(_openElements) and _openElements.popBack()->tagName != Html::TABLE) {
+            // do nothing
+        }
+
+        // Reset the insertion mode appropriately.
+        resetTheInsertionModeAppropriately(*this);
+
+        // Reprocess the token.
+        accept(t);
+    }
+
+    // An end tag whose tag name is "table"
+    else if (t.type == HtmlToken::END_TAG and t.name == "table") {
+        // If the stack of open elements does not have a table element in table scope, this is a parse error;
+        // ignore the token.
+        if (not _hasElementInTableScope(Html::TABLE)) {
+            _raise();
+            return;
+        }
+
+        // Pop elements from this stack until a table element has been popped from the stack.
+        while (Karm::any(_openElements) and _openElements.popBack()->tagName != Html::TABLE) {
+            // do nothing
+        }
+
+        // Reset the insertion mode appropriately.
+        resetTheInsertionModeAppropriately(*this);
+    }
+
+    // An end tag whose tag name is one of: "body", "caption", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"
+    else if (t.type == HtmlToken::END_TAG and
+             (t.name == "body" or t.name == "caption" or t.name == "col" or
+              t.name == "colgroup" or t.name == "html" or t.name == "tbody" or
+              t.name == "td" or t.name == "tfoot" or t.name == "th" or
+              t.name == "thead" or t.name == "tr"
+             )) {
+        // Parse error. Ignore the token.
+        _raise();
+    }
+
+    // A start tag whose tag name is one of: "style", "script", "template"
+    else if (t.type == HtmlToken::START_TAG and
+             (t.name == "style" or t.name == "script" or t.name == "template")) {
+        // Process the token using the rules for the "in head" insertion mode.
+        _acceptIn(Mode::IN_HEAD, t);
+    }
+
+    // An end tag whose tag name is "template"
+    else if (t.type == HtmlToken::END_TAG and t.name == "template") {
+        // Process the token using the rules for the "in head" insertion mode.
+        _acceptIn(Mode::IN_HEAD, t);
+    }
+
+    // TODO: A start tag whose tag name is "input"
+    else if (t.type == HtmlToken::START_TAG and t.name == "input") {
+
+        // If the token does not have an attribute with the name "type",
+        // or if it does, but that attribute's value is not an ASCII case-insensitive match for the string "hidden",
+        bool hasHiddenAsTypeAttrValue = false;
+        for (auto &[name, value] : t.attrs) {
+            if (name == "type") {
+                // TODO: ASCII case-insensitive match
+                if (value == "hidden") {
+                    hasHiddenAsTypeAttrValue = true;
+                }
+
+                break;
+            }
+        }
+
+        // then: act as described in the "anything else" entry below.
+        if (hasHiddenAsTypeAttrValue) {
+            _inTableModeAnythingElse(*this, t);
+            return;
+        }
+
+        // Parse error.
+        _raise();
+
+        // Insert an HTML element for the token.
+        insertHtmlElement(*this, t);
+
+        // Pop that input element off the stack of open elements.
+        _openElements.popBack();
+
+        // TODO: Acknowledge the token's self-closing flag, if it is set.
+    }
+
+    // A start tag whose tag name is "form"
+    else if (t.type == HtmlToken::START_TAG and t.name == "form") {
+        // Parse error.
+        _raise();
+
+        // If there is a template element on the stack of open elements, or if the form element pointer is not null, ignore the token.
+        for (auto &el : _openElements) {
+            if (el->tagName == Html::TEMPLATE)
+                return;
+        }
+
+        if (not _formElement)
+            return;
+
+        // Insert an HTML element for the token, and set the form element pointer to point to the element created.
+        HtmlToken formToken;
+        formToken.type = HtmlToken::START_TAG;
+        formToken.name = "form"s;
+
+        _formElement = insertAForeignElement(*this, formToken, Vaev::HTML);
+
+        // Pop that form element off the stack of open elements.
+        _openElements.popBack();
+    }
+
+    // An end-of-file token
+    else if (t.type == HtmlToken::END_OF_FILE) {
+        // Process the token using the rules for the "in body" insertion mode.
+        _acceptIn(Mode::IN_BODY, t);
+    }
+
+    // Anything else
+    else {
+        _inTableModeAnythingElse(*this, t);
+    }
+}
+
+// 13.2.6.4.10 MARK: The "in table text" insertion mode
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intabletext
+void HtmlParser::_handleInTableText(HtmlToken const &t) {
+
+    // A character token that is U+0000 NULL
+    if (t.type == HtmlToken::CHARACTER and t.rune == '\0') {
+        // Parse error. Ignore the token.
+        _raise();
+    }
+
+    // Any other character token
+    else if (t.type == HtmlToken::CHARACTER) {
+        // Append the character token to the pending table character tokens list.
+        _pendingTableCharacterTokens.pushBack(t);
+    }
+
+    else {
+        // If any of the tokens in the pending table character tokens list are character tokens that are not ASCII
+        // whitespace,
+        // then this is a parse error:
+        bool hasNonWhitespace = false;
+        for (auto const &token : _pendingTableCharacterTokens) {
+            if (token.rune != '\t' and token.rune != '\n' and
+                token.rune != '\f' and token.rune != '\r' and token.rune != ' ') {
+                hasNonWhitespace = true;
+                break;
+            }
+        }
+
+        if (hasNonWhitespace) {
+            // reprocess the character tokens in the pending table character tokens list using the rules given in
+            // the "anything else" entry in the "in table" insertion mode.
+            for (auto const &token : _pendingTableCharacterTokens) {
+                _inTableModeAnythingElse(*this, token);
+            }
+        } else {
+            // Otherwise, insert the characters given by the pending table character tokens list.
+            for (auto const &token : _pendingTableCharacterTokens) {
+                insertACharacter(*this, token);
+            }
+        }
+
+        // Switch the insertion mode to the original insertion mode and reprocess the token.
+        _switchTo(_originalInsertionMode);
+        accept(t);
+    }
+}
+
+// 13.2.6.4.13 MARK: The "in table body" insertion mode
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intbody
+void HtmlParser::_handleInTableBody(HtmlToken const &t) {
+    auto _clearTheStackBackToATableBodyContext = [&]() {
+        while (last(_openElements)->tagName != Html::TBODY and
+               last(_openElements)->tagName != Html::TFOOT and
+               last(_openElements)->tagName != Html::THEAD and
+               last(_openElements)->tagName != Html::TEMPLATE and
+               last(_openElements)->tagName != Html::HTML) {
+
+            _openElements.popBack();
+        }
+    };
+
+    // A start tag whose tag name is "tr"
+    if (t.type == HtmlToken::START_TAG and t.name == "tr") {
+        // Clear the stack back to a table body context. (See below.)
+        _clearTheStackBackToATableBodyContext();
+
+        // Insert an HTML element for the token, then switch the insertion mode to "in row".
+        insertHtmlElement(*this, t);
+        _switchTo(Mode::IN_ROW);
+    }
+
+    // A start tag whose tag name is one of: "th", "td"
+    else if (t.type == HtmlToken::START_TAG and (t.name == "th" or t.name == "td")) {
+        _raise();
+
+        // Clear the stack back to a table body context. (See below.)
+        _clearTheStackBackToATableBodyContext();
+
+        // Insert an HTML element for a "tr" start tag token with no attributes, then switch the insertion mode to "in row".
+        HtmlToken tableRowToken;
+        tableRowToken.type = HtmlToken::START_TAG;
+        tableRowToken.name = "tr"s;
+        insertAForeignElement(*this, tableRowToken, Vaev::HTML);
+
+        _switchTo(Mode::IN_ROW);
+
+        accept(t);
+    }
+
+    else if (t.type == HtmlToken::END_TAG and (t.name == "tbody" or t.name == "tfoot" or t.name == "thead")) {
+        // If the stack of open elements does not have an element in table scope that is an HTML element with the same
+        // tag name as the token, this is a parse error; ignore the token.
+
+        if (not _hasElementInTableScope(TagName::make(t.name, Vaev::HTML))) {
+            _raise();
+            return;
+        }
+
+        // Clear the stack back to a table body context. (See below.)
+        _clearTheStackBackToATableBodyContext();
+
+        // Pop the current node from the stack of open elements. Switch the insertion mode to "in table".
+        _openElements.popBack();
+        _switchTo(Mode::IN_TABLE);
+    }
+
+    else if ((t.type == HtmlToken::START_TAG and
+              (t.name == "caption" or t.name == "col" or t.name == "colgroup" or
+               t.name == "tbody" or t.name == "tfoot" or t.name == "thead"
+              )) or
+             (t.type == HtmlToken::END_TAG and t.name == "table"
+             )) {
+
+        // If the stack of open elements does not have a tbody, thead, or tfoot element in table scope,
+        // TODO: consider refactor so _hasElementInScope accepts list instead of single element
+        if (not _hasElementInTableScope(Html::TBODY) and
+            not _hasElementInTableScope(Html::THEAD) and
+            not _hasElementInTableScope(Html::TFOOT)) {
+            // this is a parse error; ignore the token.
+            _raise();
+            return;
+        }
+
+        // Otherwise:
+
+        // Clear the stack back to a table body context. (See below.)
+        _clearTheStackBackToATableBodyContext();
+
+        // Pop the current node from the stack of open elements. Switch the insertion mode to "in table".
+        _openElements.popBack();
+        _switchTo(Mode::IN_TABLE);
+
+        // Reprocess the token.
+        accept(t);
+    }
+
+    // An end tag whose tag name is one of: "body", "caption", "col", "colgroup", "html", "td", "th", "tr"
+    else if (t.type == HtmlToken::END_TAG and
+             (t.name == "body" or t.name == "caption" or t.name == "col" or
+              t.name == "colgroup" or t.name == "html" or
+              t.name == "td" or t.name == "th" or t.name == "tr"
+             )) {
+        // Parse error. Ignore the token.
+        _raise();
+    }
+
+    else {
+        // Process the token using the rules for the "in table" insertion mode.
+        _acceptIn(Mode::IN_TABLE, t);
+    }
+}
+
+// 13.2.6.4.14 MARK: The "in row" insertion mode
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intr
+void HtmlParser::_handleInTableRow(HtmlToken const &t) {
+    auto _clearTheStackBackToATableRowContext = [&]() {
+        while (last(_openElements)->tagName != Html::TR and
+               last(_openElements)->tagName != Html::TEMPLATE and
+               last(_openElements)->tagName != Html::HTML) {
+
+            _openElements.popBack();
+        }
+    };
+
+    // A start tag whose tag name is one of: "th", "td"
+    if (t.type == HtmlToken::START_TAG and (t.name == "th" or t.name == "td")) {
+        // Clear the stack back to a table row context. (See below.)
+        _clearTheStackBackToATableRowContext();
+
+        // Insert an HTML element for the token, then switch the insertion mode to "in cell".
+        insertHtmlElement(*this, t);
+        _switchTo(Mode::IN_CELL);
+
+        // TODO: Insert a marker at the end of the list of active formatting elements.
+    }
+
+    // An end tag whose tag name is "tr"
+    else if (t.type == HtmlToken::END_TAG and t.name == "tr") {
+        if (not _hasElementInTableScope(Html::TR)) {
+            _raise();
+            return;
+        }
+
+        // Otherwise:
+
+        // Clear the stack back to a table row context. (See below.)
+        _clearTheStackBackToATableRowContext();
+
+        // Pop the current node (which will be a tr element) from the stack of open elements.
+        _openElements.popBack();
+
+        // Switch the insertion mode to "in table body".
+        _switchTo(Mode::IN_TABLE_BODY);
+    }
+
+    // A start tag whose tag name is one of: "caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr"
+    // An end tag whose tag name is "table"
+    else if ((t.type == HtmlToken::START_TAG and
+              (t.name == "caption" or t.name == "col" or t.name == "colgroup" or
+               t.name == "tbody" or t.name == "tfoot" or t.name == "thead" or t.name == "tr"
+              )) or
+             (t.type == HtmlToken::END_TAG and t.name == "table"
+             )) {
+
+        // If the stack of open elements does not have a tr element in table scope,
+        if (not _hasElementInTableScope(Html::TR)) {
+            // this is a parse error; ignore the token.
+            _raise();
+            return;
+        }
+
+        // Otherwise:
+
+        // Clear the stack back to a table row context. (See below.)
+        _clearTheStackBackToATableRowContext();
+
+        // Pop the current node (which will be a tr element) from the stack of open elements.
+        _openElements.popBack();
+
+        // Switch the insertion mode to "in table body".
+        _switchTo(Mode::IN_TABLE_BODY);
+
+        // Reprocess the token.
+        accept(t);
+    }
+
+    // An end tag whose tag name is one of: "tbody", "tfoot", "thead"
+    else if (t.type == HtmlToken::END_TAG and (t.name == "tbody" or t.name == "tfoot" or t.name == "thead")) {
+        // If the stack of open elements does not have an element in table scope that is an HTML element with the same
+        // tag name as the token,
+
+        if (not _hasElementInTableScope(TagName::make(t.name, Vaev::HTML))) {
+            // this is a parse error; ignore the token.
+            _raise();
+            return;
+        }
+
+        // Clear the stack back to a table body context. (See below.)
+        _clearTheStackBackToATableRowContext();
+
+        // Pop the current node (which will be a tr element) from the stack of open elements.
+        _openElements.popBack();
+
+        // Switch the insertion mode to "in table body".
+        _switchTo(Mode::IN_TABLE_BODY);
+
+        // Reprocess the token.
+        accept(t);
+    }
+
+    // An end tag whose tag name is one of: "body", "caption", "col", "colgroup", "html", "td", "th"
+    else if (t.type == HtmlToken::END_TAG and
+             (t.name == "body" or t.name == "caption" or t.name == "col" or
+              t.name == "colgroup" or t.name == "html" or
+              t.name == "td" or t.name == "th"
+             )) {
+        // Parse error. Ignore the token.
+        _raise();
+    }
+
+    else {
+        // Process the token using the rules for the "in table" insertion mode.
+        _acceptIn(Mode::IN_TABLE, t);
+    }
+}
+
+// 13.2.6.4.15 MARK: The "in cell" insertion mode
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intd
+void HtmlParser::_handleInCell(HtmlToken const &t) {
+    auto _closeTheCell = [&]() {
+        // Generate implied end tags.
+        generateImpliedEndTags(*this);
+
+        // If the current node is not now a td element or a th element, then this is a parse error.
+        if (last(_openElements)->tagName != Html::TD and last(_openElements)->tagName != Html::TR) {
+            _raise();
+        }
+
+        // Pop elements from the stack of open elements until a td element or a th element has been popped from the stack.
+        while (Karm::any(_openElements)) {
+            auto poppedEl = _openElements.popBack();
+            if (poppedEl == Html::TD or poppedEl == Html::TH)
+                break;
+        }
+
+        // TODO: Clear the list of active formatting elements up to the last marker.
+
+        // Switch the insertion mode to "in row".
+        _switchTo(Mode::IN_ROW);
+    };
+
+    // An end tag whose tag name is one of: "td", "th"
+    if (t.type == HtmlToken::END_TAG and (t.name == "td" or t.name == "th")) {
+        // If the stack of open elements does not have an element in table scope that is an HTML element with the same
+        // tag name as that of the token,
+        TagName tokenTagName{TagName::make(t.name, Vaev::HTML)};
+
+        if (not _hasElementInTableScope(tokenTagName)) {
+            // this is a parse error; ignore the token.
+            _raise();
+            return;
+        }
+
+        // Otherwise:
+
+        // Generate implied end tags.
+        generateImpliedEndTags(*this);
+
+        // Now, if the current node is not an HTML element with the same tag name as the token,
+        if (last(_openElements)->tagName != tokenTagName) {
+            // then this is a parse error.
+            _raise();
+        }
+
+        // Pop elements from the stack of open elements until an HTML element with the same tag name as
+        // the token has been popped from the stack.
+        while (Karm::any(_openElements) and _openElements.popBack()->tagName != tokenTagName) {
+            // do nothing
+        }
+
+        // TODO: Clear the list of active formatting elements up to the last marker.
+
+        // Switch the insertion mode to "in row".
+        _switchTo(Mode::IN_ROW);
+    }
+
+    // A start tag whose tag name is one of: "caption", "col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr"
+    else if (t.type == HtmlToken::START_TAG and
+             (t.name == "caption" or t.name == "col" or t.name == "colgroup" or
+              t.name == "tbody" or t.name == "td" or t.name == "tfoot" or
+              t.name == "th" or t.name == "thead" or t.name == "tr"
+             )) {
+
+        // Assert: The stack of open elements has a td or th element in table scope.
+        if (not _hasElementInTableScope(Html::TD) and not _hasElementInTableScope(Html::TR)) {
+            _raise();
+            // FIXME: should this be a panic()?
+        }
+
+        // Close the cell (see below) and reprocess the token.
+        _closeTheCell();
+        accept(t);
+    }
+
+    // An end tag whose tag name is one of: "body", "caption", "col", "colgroup", "html"
+    else if (t.type == HtmlToken::END_TAG and
+             (t.name == "body" or t.name == "caption" or t.name == "col" or
+              t.name == "colgroup" or t.name == "html"
+             )) {
+        // Parse error. Ignore the token.
+        _raise();
+    }
+
+    // An end tag whose tag name is one of: "table", "tbody", "tfoot", "thead", "tr"
+    else if (t.type == HtmlToken::END_TAG and
+             (t.name == "table" or t.name == "tbody" or t.name == "tfoot" or t.name == "thead" or t.name == "tr")) {
+
+        // If the stack of open elements does not have an element in table scope that is an HTML element with the same
+        // tag name as the token,
+        if (not _hasElementInTableScope(TagName::make(t.name, Vaev::HTML))) {
+            // this is a parse error; ignore the token.
+            _raise();
+            return;
+        }
+
+        // Otherwise, close the cell (see below) and reprocess the token.
+        _closeTheCell();
+        accept(t);
+    }
+
+    else {
+        // Process the token using the rules for the "in body" insertion mode.
+        _acceptIn(Mode::IN_BODY, t);
+    }
+}
+
 // 3.2.6.4.22 MARK: The "after after body" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#the-after-after-body-insertion-mode
 void HtmlParser::_handleAfterBody(HtmlToken const &t) {
@@ -4886,12 +5665,12 @@ void HtmlParser::_acceptIn(Mode mode, HtmlToken const &t) {
         _handleText(t);
         break;
 
-    // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intable
     case Mode::IN_TABLE:
+        _handleInTable(t);
         break;
 
-    // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intabletext
     case Mode::IN_TABLE_TEXT:
+        _handleInTableText(t);
         break;
 
     // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-incaption
@@ -4902,16 +5681,16 @@ void HtmlParser::_acceptIn(Mode mode, HtmlToken const &t) {
     case Mode::IN_COLUMN_GROUP:
         break;
 
-    // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intablebody
     case Mode::IN_TABLE_BODY:
+        _handleInTableBody(t);
         break;
 
-    // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inrow
     case Mode::IN_ROW:
+        _handleInTableRow(t);
         break;
 
-    // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-incell
     case Mode::IN_CELL:
+        _handleInCell(t);
         break;
 
     // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inselect

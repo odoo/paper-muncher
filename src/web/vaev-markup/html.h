@@ -228,6 +228,7 @@ struct HtmlParser : public HtmlSink {
 
     bool _scriptingEnabled = false;
     bool _framesetOk = true;
+    bool _fosterParenting = false;
 
     Mode _insertionMode = Mode::INITIAL;
     Mode _originalInsertionMode = Mode::INITIAL;
@@ -237,6 +238,8 @@ struct HtmlParser : public HtmlSink {
     Vec<Strong<Element>> _openElements;
     Opt<Strong<Element>> _headElement;
     Opt<Strong<Element>> _formElement;
+
+    Vec<HtmlToken> _pendingTableCharacterTokens;
 
     HtmlParser(Strong<Document> document)
         : _document(document) {
@@ -320,6 +323,16 @@ struct HtmlParser : public HtmlSink {
     void _handleInBody(HtmlToken const &t);
 
     void _handleText(HtmlToken const &t);
+
+    void _handleInTable(HtmlToken const &t);
+
+    void _handleInTableText(HtmlToken const &t);
+
+    void _handleInTableBody(HtmlToken const &t);
+
+    void _handleInTableRow(HtmlToken const &t);
+
+    void _handleInCell(HtmlToken const &t);
 
     void _handleAfterBody(HtmlToken const &t);
 
