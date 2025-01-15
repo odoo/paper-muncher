@@ -297,4 +297,32 @@ test$("parse-char-referece-spec-example") {
     return Ok();
 }
 
+test$("parse-input-element") {
+    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    Markup::HtmlParser parser{dom};
+
+    parser.write("<div><input></div>");
+
+    expect$(dom->nodeType() == NodeType::DOCUMENT);
+    expect$(dom->hasChildren());
+
+    auto html = try$(dom->firstChild().cast<Element>());
+    expect$(html->tagName == Html::HTML);
+    expect$(html->children().len() == 2);
+
+    auto body = try$(html->firstChild()->nextSibling().cast<Element>());
+    expect$(body->tagName == Html::BODY);
+    expect$(body->children().len() == 1);
+
+    auto div = try$(body->firstChild().cast<Element>());
+    expect$(div->tagName == Html::DIV);
+    expect$(div->hasChildren());
+
+    auto input = try$(div->firstChild().cast<Element>());
+    expect$(input->tagName == Html::INPUT);
+
+    return Ok();
+}
+
+
 } // namespace Vaev::Markup::Tests

@@ -4677,6 +4677,34 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
     // TODO: A start tag whose tag name is one of: "area", "br", "embed", "img", "keygen", "wbr"
 
     // TODO: A start tag whose tag name is "input"
+    else if (t.type == HtmlToken::START_TAG and t.name == "input") {
+        // TODO: Reconstruct the active formatting elements, if any.
+
+        // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
+        insertHtmlElement(*this, t);
+        _openElements.popBack();
+
+        // TODO: Acknowledge the token's self-closing flag, if it is set.
+
+        // If the token does not have an attribute with the name "type",
+        // or if it does, but that attribute's value is not an ASCII case-insensitive match for the string "hidden",
+        bool hasHiddenAsTypeAttrValue = false;
+        for (auto &[name, value] : t.attrs) {
+            if (name == "type") {
+                // TODO: ASCII case-insensitive match
+                if (value == "hidden") {
+                    hasHiddenAsTypeAttrValue = true;
+                }
+
+                break;
+            }
+        }
+
+        if (not hasHiddenAsTypeAttrValue) {
+            //  then: set the frameset-ok flag to "not ok".
+            _framesetOk = false;
+        }
+    }
 
     // TODO: A start tag whose tag name is one of: "param", "source", "track"
 
