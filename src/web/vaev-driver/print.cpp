@@ -247,6 +247,11 @@ static Style::Media _constructMedia(Print::Settings const &settings) {
         .forcedColors = Colors::NONE,
         .prefersColorScheme = ColorScheme::LIGHT,
         .prefersReducedData = ReducedData::NO_PREFERENCE,
+
+        // NOTE: Deprecated Media Features
+        .deviceWidth = Px{settings.paper.width},
+        .deviceHeight = Px{settings.paper.height},
+        .deviceAspectRatio = settings.paper.width / (f64)settings.paper.height,
     };
 }
 

@@ -45,6 +45,11 @@ struct View : public Ui::View<View> {
             .forcedColors = Colors::NONE,
             .prefersColorScheme = Ui::darkMode ? ColorScheme::DARK : ColorScheme::LIGHT,
             .prefersReducedData = ReducedData::NO_PREFERENCE,
+
+            // NOTE: Deprecated Media Features
+            .deviceWidth = Px{viewport.width},
+            .deviceHeight = Px{viewport.height},
+            .deviceAspectRatio = viewport.width / (f64)viewport.height,
         };
     }
 

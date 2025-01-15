@@ -129,6 +129,11 @@ struct Media {
     //       the prefers-reduced-data feature
     // https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-data
     ReducedData prefersReducedData;
+
+    // Appendix A: Deprecated Media Features
+    Px deviceWidth;
+    Px deviceHeight;
+    Number deviceAspectRatio;
 };
 
 // MARK: Media Features --------------------------------------------------------
@@ -302,11 +307,11 @@ using WidthFeature = RangeFeature<"width", Length, &Media::width>;
 /// https://drafts.csswg.org/mediaqueries/#height
 using HeightFeature = RangeFeature<"height", Length, &Media::height>;
 
-/// 4.3. Device Width: the device-width feature
+/// 4.3. Aspect-Ratio: the aspect-ratio feature
 /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
 using AspectRatioFeature = RangeFeature<"aspect-ratio", Number, &Media::aspectRatio>;
 
-/// 4.4. Device Height: the device-height feature
+/// 4.4. Orientation: the orientation feature
 /// https://drafts.csswg.org/mediaqueries/#orientation
 using OrientationFeature = DiscreteFeature<"orientation", Print::Orientation, &Media::orientation>;
 
@@ -405,6 +410,11 @@ using PrefersColorSchemeFeature = DiscreteFeature<"prefers-color-scheme", ColorS
 // https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-data
 using PrefersReducedDataFeature = DiscreteFeature<"prefers-reduced-data", ReducedData, &Media::prefersReducedData>;
 
+// Appendix A: Deprecated Media Features
+using DeviceWidthFeature = RangeFeature<"device-width", Length, &Media::deviceWidth>;
+using DeviceHeightFeature = RangeFeature<"device-height", Length, &Media::deviceHeight>;
+using DeviceAspectRatioFeature = RangeFeature<"device-aspect-ratio", Number, &Media::deviceAspectRatio>;
+
 // MARK: Media Feature ---------------------------------------------------------
 
 using _Feature = Union<
@@ -432,7 +442,10 @@ using _Feature = Union<
     PrefersContrastFeature,
     ForcedColorsFeature,
     PrefersColorSchemeFeature,
-    PrefersReducedDataFeature>;
+    PrefersReducedDataFeature,
+    DeviceWidthFeature,
+    DeviceHeightFeature,
+    DeviceAspectRatioFeature>;
 
 struct Feature : public _Feature {
     using _Feature::_Feature;

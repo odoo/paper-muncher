@@ -114,6 +114,11 @@ Vaev::Style::Media constructMediaForRender(Vaev::Resolution scale, Vaev::Vec2Px 
         .forcedColors = Vaev::Colors::NONE,
         .prefersColorScheme = Vaev::ColorScheme::LIGHT,
         .prefersReducedData = Vaev::ReducedData::NO_PREFERENCE,
+
+        // NOTE: Deprecated Media Features
+        .deviceWidth = size.width,
+        .deviceHeight = size.height,
+        .deviceAspectRatio = (Vaev::Number)size.width / (Vaev::Number)size.height,
     };
 }
 
