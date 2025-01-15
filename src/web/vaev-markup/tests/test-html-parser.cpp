@@ -324,5 +324,108 @@ test$("parse-input-element") {
     return Ok();
 }
 
+test$("parse-empty-table-element") {
+    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    Markup::HtmlParser parser{dom};
+
+    parser.write("<table></table>");
+
+    expect$(dom->nodeType() == NodeType::DOCUMENT);
+    expect$(dom->hasChildren());
+
+    auto html = try$(dom->firstChild().cast<Element>());
+    expect$(html->tagName == Html::HTML);
+    expect$(html->children().len() == 2);
+
+    auto body = try$(html->firstChild()->nextSibling().cast<Element>());
+    expect$(body->tagName == Html::BODY);
+    expect$(body->children().len() == 1);
+
+    auto table = try$(body->firstChild().cast<Element>());
+    expect$(table->tagName == Html::TABLE);
+    expect$(not table->hasChildren());
+
+    return Ok();
+}
+
+test$("parse-table-element") {
+    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    Markup::HtmlParser parser{dom};
+
+    parser.write("<table><thead><tr><th>hi</th></tr></thead></table>");
+
+    expect$(dom->nodeType() == NodeType::DOCUMENT);
+    expect$(dom->hasChildren());
+
+    auto html = try$(dom->firstChild().cast<Element>());
+    expect$(html->tagName == Html::HTML);
+    expect$(html->children().len() == 2);
+
+    auto body = try$(html->firstChild()->nextSibling().cast<Element>());
+    expect$(body->tagName == Html::BODY);
+    expect$(body->children().len() == 1);
+
+    auto table = try$(body->firstChild().cast<Element>());
+    expect$(table->tagName == Html::TABLE);
+    expect$(table->children().len() == 1);
+
+    auto thead = try$(table->firstChild().cast<Element>());
+    expect$(thead->tagName == Html::THEAD);
+    expect$(thead->children().len() == 1);
+
+    auto headerRow = try$(thead->firstChild().cast<Element>());
+    expect$(headerRow->tagName == Html::TR);
+    expect$(headerRow->children().len() == 1);
+
+    auto headerCell = try$(headerRow->firstChild().cast<Element>());
+    expect$(headerCell->tagName == Html::TH);
+    expect$(headerCell->children().len() == 1);
+
+    auto text = headerCell->firstChild();
+    expect$(text->nodeType() == NodeType::TEXT);
+    expect$(try$(text.cast<Text>())->data == "hi");
+
+    return Ok();
+}
+
+test$("parse-table-element-create-body-tr-scope") {
+    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    Markup::HtmlParser parser{dom};
+
+    parser.write("<table><th>hi</th></table>");
+
+    expect$(dom->nodeType() == NodeType::DOCUMENT);
+    expect$(dom->hasChildren());
+
+    auto html = try$(dom->firstChild().cast<Element>());
+    expect$(html->tagName == Html::HTML);
+    expect$(html->children().len() == 2);
+
+    auto body = try$(html->firstChild()->nextSibling().cast<Element>());
+    expect$(body->tagName == Html::BODY);
+    expect$(body->children().len() == 1);
+
+    auto table = try$(body->firstChild().cast<Element>());
+    expect$(table->tagName == Html::TABLE);
+    expect$(table->children().len() == 1);
+
+    auto tbody = try$(table->firstChild().cast<Element>());
+    expect$(tbody->tagName == Html::TBODY);
+    expect$(tbody->children().len() == 1);
+
+    auto row = try$(tbody->firstChild().cast<Element>());
+    expect$(row->tagName == Html::TR);
+    expect$(row->children().len() == 1);
+
+    auto header = try$(row->firstChild().cast<Element>());
+    expect$(header->tagName == Html::TH);
+    expect$(header->children().len() == 1);
+
+    auto text = header->firstChild();
+    expect$(text->nodeType() == NodeType::TEXT);
+    expect$(try$(text.cast<Text>())->data == "hi");
+
+    return Ok();
+}
 
 } // namespace Vaev::Markup::Tests
