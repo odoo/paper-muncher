@@ -30,6 +30,7 @@ void Canvas::transform(Math::Trans2f trans) {
 // MARK: Path Operations ---------------------------------------------------
 
 void Canvas::beginPath() {
+    _e.ln("n");
 }
 
 void Canvas::closePath() {
@@ -116,7 +117,7 @@ void Canvas::stroke() {
 
 void Canvas::stroke(Gfx::Stroke style) {
     auto color = style.fill.unwrap<Gfx::Color>();
-    _e.ln("{} {} {} RG", color.red / 255., color.green, color.blue);
+    _e.ln("{} {} {} RG", color.red / 255., color.green / 255., color.blue / 255.);
 
     _e.ln("{} w", style.width);
 

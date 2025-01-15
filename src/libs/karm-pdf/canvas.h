@@ -9,7 +9,6 @@ namespace Karm::Pdf {
 struct Canvas : public Gfx::Canvas {
     Io::Emit _e;
     Math::Vec2f _mediaBox{};
-
     Math::Vec2f _p{};
 
     Canvas(Io::Emit e, Math::Vec2f mediaBox)
