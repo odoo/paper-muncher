@@ -358,6 +358,7 @@ struct Selector : public _Selector {
     }
 
     bool match(Markup::Element const &el) const;
+
     Opt<Spec> matchWithSpecificity(Markup::Element const &el) const;
 
     bool operator==(Selector const &) const = default;

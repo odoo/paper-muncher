@@ -286,20 +286,19 @@ bool Selector::match(Markup::Element const &el) const {
 
 Opt<Spec> Selector::matchWithSpecificity(Markup::Element const &el) const {
     return visit(Visitor{
-        [&el](Nfix const &n) {
+        [&](Nfix const &n) -> Opt<Spec> {
             if (n.type == Nfix::OR) {
-                Opt<Spec> matchedSpecificity;
+                Opt<Spec> specificity;
                 for (auto &inner : n.inners) {
                     if (inner.match(el))
-                        matchedSpecificity = max(matchedSpecificity, spec(inner));
+                        specificity = max(specificity, spec(inner));
                 }
-                return matchedSpecificity;
-            } else {
-                return Selector{n}.match(el) ? Opt<Spec>{spec(n)} : NONE;
+                return specificity;
             }
+            return match(el) ? Opt<Spec>{spec(n)} : NONE;
         },
-        [&](auto const &s) {
-            return Selector{s}.match(el) ? Opt<Spec>{spec(s)} : NONE;
+        [&](auto const &s) -> Opt<Spec> {
+            return match(el) ? Opt<Spec>{spec(s)} : NONE;
         }
     });
 }
