@@ -9,11 +9,12 @@
 namespace Karm {
 
 /// A reference-counted object heap cell.
+template <typename L>
 struct _Cell {
     static constexpr u64 MAGIC = 0xCAFEBABECAFEBABE;
 
     u64 _magic = MAGIC;
-    Lock _lock;
+    L _lock;
     bool _clear = false;
     isize _strong = 0;
     isize _weak = 0;
@@ -92,8 +93,8 @@ struct _Cell {
     }
 };
 
-template <typename T>
-struct Cell : public _Cell {
+template <typename L, typename T>
+struct Cell : public _Cell<L> {
     Manual<T> _buf{};
 
     template <typename... Args>
@@ -120,49 +121,49 @@ struct Cell : public _Cell {
 /// reference is in scope. When the reference goes out of scope
 /// the object is deallocated if there are no other strong
 /// references to it.
-template <typename T>
-struct Strong {
-    _Cell *_cell{};
+template <typename L, typename T>
+struct _Strong {
+    _Cell<L> *_cell{};
 
     // MARK: Rule of Five ------------------------------------------------------
 
-    constexpr Strong() = delete;
+    constexpr _Strong() = delete;
 
-    constexpr Strong(Move, _Cell *ptr)
+    constexpr _Strong(Move, _Cell<L> *ptr)
         : _cell(ptr->refStrong()) {
     }
 
-    constexpr Strong(Strong const &other)
+    constexpr _Strong(_Strong const &other)
         : _cell(other._cell->refStrong()) {
     }
 
-    constexpr Strong(Strong &&other)
+    constexpr _Strong(_Strong &&other)
         : _cell(std::exchange(other._cell, nullptr)) {
     }
 
     template <Meta::Derive<T> U>
-    constexpr Strong(Strong<U> const &other)
+    constexpr _Strong(_Strong<L, U> const &other)
         : _cell(other._cell->refStrong()) {
     }
 
     template <Meta::Derive<T> U>
-    constexpr Strong(Strong<U> &&other)
+    constexpr _Strong(_Strong<L, U> &&other)
         : _cell(std::exchange(other._cell, nullptr)) {
     }
 
-    constexpr ~Strong() {
+    constexpr ~_Strong() {
         if (_cell) {
             _cell->derefStrong();
             _cell = nullptr;
         }
     }
 
-    constexpr Strong &operator=(Strong const &other) {
-        *this = Strong(other);
+    constexpr _Strong &operator=(_Strong const &other) {
+        *this = _Strong(other);
         return *this;
     }
 
-    constexpr Strong &operator=(Strong &&other) {
+    constexpr _Strong &operator=(_Strong &&other) {
         std::swap(_cell, other._cell);
         return *this;
     }
@@ -209,12 +210,12 @@ struct Strong {
 
     constexpr T const &unwrap() const lifetimebound {
         ensure();
-        return _cell->unwrap<T>();
+        return _cell->template unwrap<T>();
     }
 
     constexpr T &unwrap() lifetimebound {
         ensure();
-        return _cell->unwrap<T>();
+        return _cell->template unwrap<T>();
     }
 
     template <Meta::Derive<T> U>
@@ -223,7 +224,7 @@ struct Strong {
         if (not is<U>()) [[unlikely]]
             panic("unwrapping T as U");
 
-        return _cell->unwrap<U>();
+        return _cell->template unwrap<U>();
     }
 
     template <Meta::Derive<T> U>
@@ -232,7 +233,7 @@ struct Strong {
         if (not is<U>()) [[unlikely]]
             panic("unwrapping T as U");
 
-        return _cell->unwrap<U>();
+        return _cell->template unwrap<U>();
     }
 
     template <typename U>
@@ -246,7 +247,7 @@ struct Strong {
             return nullptr;
         }
 
-        return &_cell->unwrap<U>();
+        return &_cell->template unwrap<U>();
     }
 
     template <typename U>
@@ -260,7 +261,7 @@ struct Strong {
             return nullptr;
         }
 
-        return &_cell->unwrap<U>();
+        return &_cell->template unwrap<U>();
     }
 
     Meta::Type<> inspect() const {
@@ -269,15 +270,15 @@ struct Strong {
     }
 
     template <typename U>
-    constexpr Opt<Strong<U>> cast() {
+    constexpr Opt<_Strong<L, U>> cast() {
         if (not is<U>()) {
             return NONE;
         }
 
-        return Strong<U>(MOVE, _cell);
+        return _Strong<L, U>(MOVE, _cell);
     }
 
-    auto operator<=>(Strong const &other) const
+    auto operator<=>(_Strong const &other) const
         requires Meta::Comparable<T>
     {
         if (_cell == other._cell)
@@ -285,7 +286,7 @@ struct Strong {
         return unwrap() <=> other.unwrap();
     }
 
-    bool operator==(Strong const &other) const
+    bool operator==(_Strong const &other) const
         requires Meta::Equatable<T>
     {
         if (_cell == other._cell)
@@ -306,45 +307,45 @@ struct Strong {
 ///
 /// A weak reference does not keep the object alive, but can be
 /// upgraded to a strong reference if the object is still alive.
-template <typename T>
-struct Weak {
-    _Cell *_cell;
+template <typename L, typename T>
+struct _Weak {
+    _Cell<L> *_cell;
 
-    constexpr Weak() = delete;
+    constexpr _Weak() = delete;
 
     template <Meta::Derive<T> U>
-    constexpr Weak(Strong<U> const &other)
+    constexpr _Weak(_Strong<L, U> const &other)
         : _cell(other._cell->refWeak()) {}
 
     template <Meta::Derive<T> U>
-    constexpr Weak(Weak<U> const &other)
+    constexpr _Weak(_Weak<L, U> const &other)
         : _cell(other._cell->refWeak()) {}
 
     template <Meta::Derive<T> U>
-    constexpr Weak(Weak<U> &&other)
+    constexpr _Weak(_Weak<L, U> &&other)
         : _cell(std::exchange(other._cell, nullptr)) {
     }
 
-    constexpr Weak(Move, _Cell *ptr)
+    constexpr _Weak(Move, _Cell<L> *ptr)
         : _cell(ptr->refWeak()) {
     }
 
-    constexpr Weak &operator=(Strong<T> const &other) {
-        *this = Weak(other);
+    constexpr _Weak &operator=(_Strong<L, T> const &other) {
+        *this = _Weak(other);
         return *this;
     }
 
-    constexpr Weak &operator=(Weak const &other) {
-        *this = Weak(other);
+    constexpr _Weak &operator=(_Weak const &other) {
+        *this = _Weak(other);
         return *this;
     }
 
-    constexpr Weak &operator=(Weak &&other) {
+    constexpr _Weak &operator=(_Weak &&other) {
         std::swap(_cell, other._cell);
         return *this;
     }
 
-    constexpr ~Weak() {
+    constexpr ~_Weak() {
         if (_cell) {
             _cell->derefWeak();
             _cell = nullptr;
@@ -354,18 +355,35 @@ struct Weak {
     /// Upgrades the weak reference to a strong reference.
     ///
     /// Returns `NONE` if the object has been deallocated.
-    Opt<Strong<T>> upgrade() const {
+    Opt<_Strong<L, T>> upgrade() const {
         if (not _cell or _cell->_clear)
             return NONE;
-        return Strong<T>(MOVE, _cell);
+        return _Strong<L, T>(MOVE, _cell);
     }
 };
+
+template <typename T>
+using Strong = _Strong<NoLock, T>;
+
+template <typename T>
+using Weak = _Weak<NoLock, T>;
 
 /// Allocates an object of type `T` on the heap and returns
 /// a strong reference to it.
 template <typename T, typename... Args>
 constexpr static Strong<T> makeStrong(Args &&...args) {
-    return {MOVE, new Cell<T>(std::forward<Args>(args)...)};
+    return {MOVE, new Cell<NoLock, T>(std::forward<Args>(args)...)};
+}
+
+template <typename T>
+using AtomicStrong = _Strong<Lock, T>;
+
+template <typename T>
+using AtomicWeak = _Weak<Lock, T>;
+
+template <typename T, typename... Args>
+constexpr static AtomicStrong<T> makeAtomicStrong(Args &&...args) {
+    return {MOVE, new Cell<Lock, T>(std::forward<Args>(args)...)};
 }
 
 } // namespace Karm

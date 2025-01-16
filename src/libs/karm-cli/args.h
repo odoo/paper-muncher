@@ -330,7 +330,7 @@ struct Command {
             opt->usage(e);
         }
 
-        if (any(_commands)) {
+        if (Karm::any(_commands)) {
             e("<command> [args...]");
         }
     }
@@ -350,7 +350,7 @@ struct Command {
 
         e("Description:\n\t{}\n\n", description);
 
-        if (any(options)) {
+        if (Karm::any(options)) {
             e("Options:\n");
             for (auto &opt : options) {
                 if (opt->kind != OptionKind::OPTION)
@@ -365,7 +365,7 @@ struct Command {
             e("\n");
         }
 
-        if (any(_commands)) {
+        if (Karm::any(_commands)) {
             e("Subcommands:\n");
             for (auto &cmd : _commands) {
                 e("\t{c} {} - {}\n", cmd->shortName.unwrapOr(' '), cmd->longName, cmd->description);
@@ -449,7 +449,7 @@ struct Command {
         if (callbackAsync)
             co_trya$(callbackAsync.unwrap()(ctx));
 
-        if (any(_commands) and c.ended()) {
+        if (Karm::any(_commands) and c.ended()) {
             Io::Emit e{Sys::out()};
             _showUsage(e);
             e.newline();
@@ -461,7 +461,7 @@ struct Command {
             if (c->kind != Token::OPERAND)
                 co_return Error::invalidInput("expected subcommand");
 
-            if (not any(_commands))
+            if (not Karm::any(_commands))
                 co_return Error::invalidInput("unexpected subcommand");
 
             auto value = c->value;

@@ -3,13 +3,14 @@
 #include <karm-meta/nocopy.h>
 
 #include "_embed.h"
+
 #include "atomic.h"
 #include "string.h"
 
 namespace Karm {
 
 struct [[nodiscard]] CriticalScope :
-    Meta::Pinned {
+    private Meta::Pinned {
 
     CriticalScope() {
         _Embed::enterCritical();
@@ -21,7 +22,7 @@ struct [[nodiscard]] CriticalScope :
 };
 
 struct Lock :
-    Meta::Pinned {
+    private Meta::Pinned {
 
     Atomic<bool> _lock{};
 
@@ -54,7 +55,9 @@ struct Lock :
     }
 };
 
-struct NoLock : Meta::Pinned {
+struct NoLock :
+    private Meta::Pinned {
+
     bool tryAcquire() {
         return true;
     }
@@ -74,7 +77,8 @@ concept Lockable =
 
 template <Lockable L = Lock>
 struct [[nodiscard]] LockScope :
-    Meta::Pinned {
+    private Meta::Pinned {
+
     L &_lock;
 
     LockScope(L &lock)
@@ -110,7 +114,9 @@ struct LockProtected {
 template <typename T, Lockable L = Lock>
 LockProtected(T, L &) -> LockProtected<T, L>;
 
-struct RwLock : Meta::Pinned {
+struct RwLock :
+    Meta::Pinned {
+
     Lock _lock;
     Atomic<isize> _pendings{};
     isize _readers{};
@@ -180,7 +186,9 @@ struct RwLock : Meta::Pinned {
     }
 };
 
-struct [[nodiscard]] ReadLockScope : Meta::Pinned {
+struct [[nodiscard]] ReadLockScope :
+    Meta::Pinned {
+
     RwLock &_lock;
 
     ReadLockScope(RwLock &lock)
@@ -193,7 +201,9 @@ struct [[nodiscard]] ReadLockScope : Meta::Pinned {
     }
 };
 
-struct [[nodiscard]] WriteLockScope : Meta::Pinned {
+struct [[nodiscard]] WriteLockScope :
+    Meta::Pinned {
+
     RwLock &_lock;
 
     WriteLockScope(RwLock &lock)
