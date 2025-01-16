@@ -4,6 +4,8 @@
 
 namespace Karm::Pdf {
 
+static constexpr bool DEBUG_CANVAS = false;
+
 // MARK: Context Operations ------------------------------------------------
 
 void Canvas::push() {
@@ -20,7 +22,7 @@ void Canvas::fillStyle(Gfx::Fill fill) {
 }
 
 void Canvas::strokeStyle(Gfx::Stroke) {
-    logDebug("pdf: strokeStyle() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: strokeStyle() operation not implemented");
 }
 
 void Canvas::transform(Math::Trans2f trans) {
@@ -70,7 +72,7 @@ void Canvas::quadTo(Math::Vec2f cp, Math::Vec2f p, Math::Path::Flags flags) {
 }
 
 void Canvas::arcTo(Math::Vec2f, f64, Math::Vec2f, Math::Path::Flags) {
-    logDebug("pdf: arcTo() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: arcTo() operation not implemented");
 }
 
 void Canvas::line(Math::Edgef line) {
@@ -92,11 +94,11 @@ void Canvas::rect(Math::Rectf rect, Math::Radiif) {
 }
 
 void Canvas::ellipse(Math::Ellipsef) {
-    logDebug("pdf: ellipse() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: ellipse() operation not implemented");
 }
 
 void Canvas::path(Math::Path const &) {
-    logDebug("pdf: path() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: path() operation not implemented");
 }
 
 void Canvas::fill(Gfx::FillRule rule) {
@@ -112,7 +114,7 @@ void Canvas::fill(Gfx::Fill f, Gfx::FillRule rule) {
 }
 
 void Canvas::stroke() {
-    logDebug("pdf: stroke() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: stroke() operation not implemented");
 }
 
 void Canvas::stroke(Gfx::Stroke style) {
@@ -139,41 +141,41 @@ void Canvas::stroke(Gfx::Stroke style) {
 }
 
 void Canvas::clip(Gfx::FillRule) {
-    logDebug("pdf: clip() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: clip() operation not implemented");
 }
 
 void Canvas::apply(Gfx::Filter) {
-    logDebug("pdf: apply() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: apply() operation not implemented");
 };
 
 // MARK: Clear Operations --------------------------------------------------
 
 void Canvas::clear(Gfx::Color) {
-    logDebug("pdf: clear() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: clear() operation not implemented");
 }
 
 void Canvas::clear(Math::Recti, Gfx::Color) {
-    logDebug("pdf: clear() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: clear() operation not implemented");
 }
 
 // MARK: Plot Operations ---------------------------------------------------
 
 void Canvas::plot(Math::Vec2i, Gfx::Color) {
-    logDebug("pdf: plot() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: plot() operation not implemented");
 }
 
 void Canvas::plot(Math::Edgei, Gfx::Color) {
-    logDebug("pdf: plot() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: plot() operation not implemented");
 }
 
 void Canvas::plot(Math::Recti, Gfx::Color) {
-    logDebug("pdf: plot() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: plot() operation not implemented");
 }
 
 // MARK: Blit Operations ---------------------------------------------------
 
 void Canvas::blit(Math::Recti, Math::Recti, Gfx::Pixels) {
-    logDebug("pdf: blit() operation not implemented");
+    logDebugIf(DEBUG_CANVAS, "pdf: blit() operation not implemented");
 }
 
 } // namespace Karm::Pdf
