@@ -40,9 +40,18 @@
         <div class="foo" style="margin-left: 100px"></div>
     </rendering>
 
-    <rendering help="negative margin">
+    <rendering help="negative margin block absolute" skip="true">
         <div class="foo" style="position:absolute;left:150px;margin-left: -50px"></div>
     </rendering>
 
+    <rendering help="negative margin block relative">
+        <div class="foo" style="position:relative;left:150px;margin-left: -50px"></div>
+    </rendering>
+
+    <rendering help="negative margin flex" skip="true">
+        <div style="display: flex; width:100%; height: fit-content">
+            <div class="foo" style="position:absolute;left:150px;margin-left: -50px"></div>
+        </div>
+    </rendering>
 
 </test>

@@ -61,6 +61,7 @@ def compareImages(
 
 class RefTestArgs(model.TargetArgs):
     glob: str = cli.arg("g", "glob")
+    headless: bool = cli.arg(None, "headless", "Run the tests without opening the report.")
     fast: str = cli.arg(
         None, "fast", "Proceed to the next test as soon as an error occurs."
     )
@@ -110,7 +111,9 @@ def _(args: RefTestArgs):
     def getInfo(txt):
         return {prop: value for prop, value in REG_INFO.findall(txt)}
 
-    passed, failed = 0, 0
+    passed = 0
+    failed = 0
+    skipped = 0
 
     counter = 0
     for file in TESTS_DIR.glob(args.glob or "**/*.xhtml"):
@@ -123,15 +126,19 @@ def _(args: RefTestArgs):
 
         passCount = 0
         failCount = 0
+        skippedCount = 0
         for info, test in re.findall(r"""<test([^>]*)>([\w\W]+?)</test>""", content):
             props = getInfo(info)
             print(f"{vt100.WHITE}Test {props.get('name')!r}{vt100.RESET}")
             if "skip" in props:
+                skippedCount += 1
+                skipped += 1
+
                 report += f"""
                 <div>
                     <div id="case-{counter}" class="test skipped">
                         <h2>{props.get('name') or "Unamed"}</h2>
-                        <p>Skipped</p>
+                        <p>Test Skipped</p>
                     </div>
                 <div>
                 """
@@ -164,6 +171,9 @@ def _(args: RefTestArgs):
             ):
                 renderingProps = getInfo(info)
                 if "skip" in renderingProps:
+                    skippedCount += 1
+                    skipped += 1
+
                     print(f"{vt100.YELLOW}Skip test{vt100.RESET}")
                     continue
 
@@ -266,7 +276,7 @@ def _(args: RefTestArgs):
                         <h1>{props.get('name')}</h2>
                         <p>{props.get('help') or ""}</p>
                         <a href="{file}">Source</a>
-                        <span>{passCount} passed, {failCount} failed</span>
+                        <span>{passCount} passed, {failCount} failed and {skippedCount} skipped</span>
                     </div>
                     {test_report}
                 </div>
@@ -274,7 +284,7 @@ def _(args: RefTestArgs):
     report += f"""
         <footer>
         <p class="witty">{fetchMessage(args, 'witty' if failed else 'nice')}</p>
-        <p> Failed {failed} tests, Passed {passed} tests</p>
+        <p> Failed {failed} tests, Passed {passed} tests, Skipped {skipped}</p>
         </footer>
     """
 
@@ -454,18 +464,21 @@ def _(args: RefTestArgs):
     with (TEST_REPORT / "report.html").open("w") as f:
         f.write(report)
 
+    if not args.headless:
+        if shell.which("xdg-open"):
+            shell.exec("xdg-open", str(TEST_REPORT / "report.html"))
+        elif shell.which("open"):
+            shell.exec("open", str(TEST_REPORT / "report.html"))
+
     print()
     if failed:
         print(f"{vt100.BRIGHT_GREEN}// {fetchMessage(args, 'witty')}{vt100.RESET}")
         print(
             f"{vt100.RED}Failed {failed} tests{vt100.RESET}, {vt100.GREEN}Passed {passed} tests{vt100.RESET}"
         )
+        print(f"Report: {TEST_REPORT / 'report.html'}")
+        raise RuntimeError("Some tests failed")
     else:
         print(f"{vt100.GREEN}// {fetchMessage(args, 'nice')}{vt100.RESET}")
         print(f"{vt100.GREEN}All tests passed{vt100.RESET}")
-    print(f"Report: {TEST_REPORT / 'report.html'}")
-
-    if shell.which("xdg-open"):
-        shell.exec("xdg-open", str(TEST_REPORT / "report.html"))
-    elif shell.which("open"):
-        shell.exec("open", str(TEST_REPORT / "report.html"))
+        print(f"Report: {TEST_REPORT / 'report.html'}")
