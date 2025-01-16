@@ -240,7 +240,7 @@ struct BlockFormatingContext : public FormatingContext {
             inlineSize = max(inlineSize, output.size.x + margin.horizontal());
         }
 
-        return Output{
+        return {
             .size = Vec2Px{inlineSize, blockSize},
             .completelyLaidOut = blockWasCompletelyLaidOut,
             .breakpoint = currentBreakpoint

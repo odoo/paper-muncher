@@ -748,7 +748,7 @@ struct TableFormatingContext : public FormatingContext {
         rowHeight.resize(grid.size.y);
 
         for (auto &row : rows) {
-            auto height = row.el.style->sizing->height;
+            auto &height = row.el.style->sizing->height;
             if (height == Size::AUTO)
                 continue;
 

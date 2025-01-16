@@ -31,15 +31,15 @@ struct Resolver {
 
     Resolver inherit(Resolver const &resolver);
 
-    Px _resolveFontRelative(Length value);
+    Px _resolveFontRelative(Length const &value);
 
-    Px resolve(Length value);
+    Px resolve(Length const &value);
 
-    Px resolve(PercentOr<Length> value, Px relative);
+    Px resolve(PercentOr<Length> const &value, Px relative);
 
-    Px resolve(Width value, Px relative);
+    Px resolve(Width const &value, Px relative);
 
-    Px resolve(FontSize value);
+    Px resolve(FontSize const &value);
 
     // MARK: Eval --------------------------------------------------------------
 
@@ -95,13 +95,13 @@ struct Resolver {
 
 // MARK: Resolve during layout -------------------------------------------------
 
-Px resolve(Tree const &tree, Box const &box, Length value);
+Px resolve(Tree const &tree, Box const &box, Length const &value);
 
-Px resolve(Tree const &tree, Box const &box, PercentOr<Length> value, Px relative);
+Px resolve(Tree const &tree, Box const &box, PercentOr<Length> const &value, Px relative);
 
-Px resolve(Tree const &tree, Box const &box, Width value, Px relative);
+Px resolve(Tree const &tree, Box const &box, Width const &value, Px relative);
 
-Px resolve(Tree const &tree, Box const &box, FontSize value);
+Px resolve(Tree const &tree, Box const &box, FontSize const &value);
 
 template <typename T, typename... Args>
 static inline auto resolve(Tree const &tree, Box const &box, CalcValue<T> const &value, Args... args) -> Resolved<T> {
