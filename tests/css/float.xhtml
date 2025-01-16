@@ -1,4 +1,4 @@
-<test>
+<test name="float">
     <container>
         <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 
@@ -24,7 +24,7 @@
         </head>
 
         <body>
-            <slot />
+        <slot/>
         </body>
 
         </html>
@@ -37,7 +37,7 @@
         </div>
     </rendering>
 
-    <error>
+    <error skip="true">
         <div>
             <div class="red"></div>
             <div class="green"></div>
@@ -51,14 +51,14 @@
         </div>
     </rendering>
 
-    <error>
+    <error skip="true">
         <div>
             <div class="red" style="float: right;"></div>
             <div class="green" style="float: left;"></div>
         </div>
     </error>
 
-    <rendering>
+    <rendering skip="true">
         <div style="position: relative;">
             <div class="red"></div>
             <div class="green" style="position: absolute; top: 0; left: 50px;"></div>

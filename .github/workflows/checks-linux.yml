@@ -1,6 +1,6 @@
 name: Checks (Ubuntu)
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   ubuntu:
@@ -14,7 +14,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-            python-version: '3.11'
+          python-version: '3.11'
 
       - name: Set up the build environment
         run: ./ck tools setup && ./ck tools doctor
@@ -27,6 +27,9 @@ jobs:
 
       - name: Test Userspace (Host)
         run: ./ck builder test
+
+      - name: Run the Reftests
+        run: ./ck reftests run --headless
 
       - name: Check for formatting errors
         run: ./meta/scripts/style-check.sh || echo "Please run ./meta/scripts/style-format.sh"
