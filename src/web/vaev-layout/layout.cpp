@@ -5,35 +5,19 @@
 #include "grid.h"
 #include "inline.h"
 #include "positioned.h"
+#include "replaced.h"
 #include "table.h"
 #include "values.h"
 
 namespace Vaev::Layout {
 
-Output _contentLayout(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt) {
+static Opt<Strong<FormatingContext>> _constructFormatingContext(Box &box) {
     auto display = box.style->display;
 
-    if (auto image = box.content.is<Karm::Image::Picture>()) {
-        return Output::fromSize(image->bound().size().cast<Px>());
-    } else if (auto run = box.content.is<Strong<Text::Prose>>()) {
-        auto out = inlineLayout(tree, box, input);
-
-        if (tree.fc.allowBreak() and
-            not tree.fc.acceptsFit(
-                input.position.y,
-                out.size.y,
-                input.pendingVerticalSizes
-            )) {
-            return Output{
-                .size = {},
-                .completelyLaidOut = false,
-                .breakpoint = Breakpoint::buildOverflow()
-            };
-        } else
-            return Output{
-                .size = out.size,
-                .completelyLaidOut = true,
-            };
+    if (box.content.is<Karm::Image::Picture>()) {
+        return constructReplacedFormatingContext(box);
+    } else if (box.content.is<Strong<Text::Prose>>()) {
+        return constructInlineFormatingContext(box);
     } else if (
         display == Display::FLOW or
         display == Display::FLOW_ROOT or
@@ -41,18 +25,26 @@ Output _contentLayout(Tree &tree, Box &box, Input input, usize startAt, Opt<usiz
         display == Display::TABLE_CAPTION or
         display == Display::TABLE
     ) {
-        return blockLayout(tree, box, input, startAt, stopAt);
+        return constructBlockFormatingContext(box);
     } else if (display == Display::FLEX) {
-        return flexLayout(tree, box, input);
+        return constructFlexFormatingContext(box);
     } else if (display == Display::GRID) {
-        return gridLayout(tree, box, input);
+        return constructGridFormatingContext(box);
     } else if (display == Display::TABLE_BOX) {
-        return tableLayout(tree, box, input, startAt, stopAt);
+        return constructTableFormatingContext(box);
     } else if (display == Display::INTERNAL) {
-        return Output{};
+        return NONE;
     } else {
-        return blockLayout(tree, box, input, startAt, stopAt);
+        return constructBlockFormatingContext(box);
     }
+}
+
+Output _contentLayout(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt) {
+    if (box.formatingContext == NONE)
+        box.formatingContext = _constructFormatingContext(box);
+    if (not box.formatingContext)
+        return Output{};
+    return box.formatingContext->unwrap().run(tree, box, input, startAt, stopAt);
 }
 
 InsetsPx computeMargins(Tree &tree, Box &box, Input input) {

@@ -89,15 +89,13 @@ struct PrefixSum {
     }
 };
 
-struct TableFormatingContext {
+struct TableFormatingContext : public FormatingContext {
     TableGrid grid;
 
     Vec<TableAxis> cols;
     Vec<TableAxis> rows;
     Vec<TableGroup> rowGroups;
     Vec<TableGroup> colGroups;
-
-    Box &tableBox;
 
     // Table forming algorithm
     Math::Vec2u current;
@@ -122,20 +120,6 @@ struct TableFormatingContext {
             return borders[i * width + j];
         }
     } bordersGrid;
-
-    InsetsPx boxBorder;
-    Vec2Px spacing;
-
-    TableFormatingContext(Tree &tree, Box &tableBox)
-        : tableBox(tableBox),
-          boxBorder(computeBorders(tree, tableBox)),
-          spacing(
-              {
-                  resolve(tree, tableBox, tableBox.style->table->spacing.horizontal),
-                  resolve(tree, tableBox, tableBox.style->table->spacing.vertical),
-              }
-          ) {
-    }
 
     // https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-growing-downward-growing-cells
     void growDownwardGrowingCells() {
@@ -255,8 +239,8 @@ struct TableFormatingContext {
         endRowGroup();
     }
 
-    Opt<usize> findFirstHeader() {
-        auto tableBoxChildren = tableBox.children();
+    Opt<usize> findFirstHeader(Box &box) {
+        auto tableBoxChildren = box.children();
         MutCursor<Box> tableBoxCursor{tableBoxChildren};
 
         advanceUntil(tableBoxCursor, [](Display d) {
@@ -270,10 +254,10 @@ struct TableFormatingContext {
     }
 
     // https://html.spec.whatwg.org/multipage/tables.html#forming-a-table
-    void buildHTMLTable() {
-        auto indexOfHeaderGroup = findFirstHeader();
+    void buildHTMLTable(Box &box) {
+        auto indexOfHeaderGroup = findFirstHeader(box);
 
-        auto tableBoxChildren = tableBox.children();
+        auto tableBoxChildren = box.children();
         MutCursor<Box> tableBoxCursor{tableBoxChildren};
 
         if (tableBoxCursor.ended())
@@ -330,7 +314,7 @@ struct TableFormatingContext {
         // MARK: Rows
 
         if (indexOfHeaderGroup) {
-            processRowGroup(tableBox.children()[indexOfHeaderGroup.unwrap()]);
+            processRowGroup(box.children()[indexOfHeaderGroup.unwrap()]);
             numOfHeaderRows = grid.size.y;
         }
 
@@ -446,7 +430,7 @@ struct TableFormatingContext {
     // MARK: Fixed Table Layout ------------------------------------------------------------------------
     // https://www.w3.org/TR/CSS22/tables.html#fixed-table-layout
 
-    void computeFixedColWidths(Tree &tree, Input &input) {
+    void computeFixedColWidths(Tree &tree, Box &box, Input &input) {
         // NOTE: Percentages for 'width' and 'height' on the table (box)
         //       are calculated relative to the containing block of the
         //       table wrapper box, not the table wrapper box itself.
@@ -456,9 +440,9 @@ struct TableFormatingContext {
         //       (https://www.w3.org/TR/CSS22/tables.html#width-layout)
 
         tableUsedWidth =
-            tableBox.style->sizing->width == Size::AUTO
+            box.style->sizing->width == Size::AUTO
                 ? 0_px
-                : resolve(tree, tableBox, tableBox.style->sizing->width.value, input.availableSpace.x) -
+                : resolve(tree, box, box.style->sizing->width.value, input.availableSpace.x) -
                       boxBorder.horizontal(); // NOTE: maybe remove this after borderbox param is clearer
 
         auto [columnBorders, sumBorders] = getColumnBorders();
@@ -684,7 +668,7 @@ struct TableFormatingContext {
 
     // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
 
-    void computeAutoColWidths(Tree &tree, Input &input) {
+    void computeAutoColWidths(Tree &tree, Box &box, Input &input) {
         // FIXME: This is a rough approximation of the algorithm.
         //        We need to distinguish between percentage-based and fixed lengths:
         //         - Percentage-based sizes are fixed and cannot have extra space distributed to them.
@@ -696,10 +680,10 @@ struct TableFormatingContext {
         //        We will need a way to retrieve the percentage value, which is also not yet implemented.
 
         Px capmin = input.capmin.unwrap();
-        if (tableBox.style->sizing->width != Size::AUTO) {
+        if (box.style->sizing->width != Size::AUTO) {
             auto [minWithoutPerc, maxWithoutPerc] = computeMinMaxAutoWidths(tree, grid.size.x, 0_px);
 
-            Px tableComputedWidth = resolve(tree, tableBox, tableBox.style->sizing->width.value, input.availableSpace.x);
+            Px tableComputedWidth = resolve(tree, box, box.style->sizing->width.value, input.availableSpace.x);
             tableUsedWidth = max(capmin, tableComputedWidth);
 
             auto sumMinWithoutPerc = iter(minWithoutPerc).sum();
@@ -840,14 +824,22 @@ struct TableFormatingContext {
         return helper;
     };
 
-    Vec2Px tableBoxSize, headerSize = {}, footerSize = {};
+    InsetsPx boxBorder;
+    Vec2Px spacing;
+    Vec2Px tableBoxSize = {}, headerSize = {}, footerSize = {};
     Vec<AxisHelper> rowHelper, colHelper;
     PrefixSum<Px> colWidthPref, rowHeightPref;
     Math::Vec2u dataRowsInterval;
     Vec<Px> startPositionOfRow;
 
-    void build(Tree &tree, Input input) {
-        buildHTMLTable();
+    void build(Tree &tree, Box &box, Input input) {
+        boxBorder = computeBorders(tree, box);
+        spacing = {
+            resolve(tree, box, box.style->table->spacing.horizontal),
+            resolve(tree, box, box.style->table->spacing.vertical),
+        };
+
+        buildHTMLTable(box);
         buildBordersGrid(tree);
 
         rowHelper = buildAxisHelper(rows, rowGroups, grid.size.y);
@@ -859,13 +851,13 @@ struct TableFormatingContext {
         //
         //      However, Chrome does not implement this exception, and we are not implementing it either.
         bool shouldRunAutoAlgorithm =
-            tableBox.style->table->tableLayout == TableLayout::AUTO or
-            tableBox.style->sizing->width == Size::AUTO;
+            box.style->table->tableLayout == TableLayout::AUTO or
+            box.style->sizing->width == Size::AUTO;
 
         if (shouldRunAutoAlgorithm)
-            computeAutoColWidths(tree, input);
+            computeAutoColWidths(tree, box, input);
         else
-            computeFixedColWidths(tree, input);
+            computeFixedColWidths(tree, box, input);
 
         computeRowHeights(tree);
 
@@ -1077,10 +1069,10 @@ struct TableFormatingContext {
         return true;
     }
 
-    bool handleUnforcedBreakpointsInsideAndAfterRow(Breakpoint &currentBreakpoint, RowOutput outputRow, usize i, Vec2Px fragmentainerSize) {
+    bool handleUnforcedBreakpointsInsideAndAfterRow(Box &box, Breakpoint &currentBreakpoint, RowOutput outputRow, usize i, Vec2Px fragmentainerSize) {
         bool rowIsFreelyFragmentable = isFreelyFragmentableRow(i, fragmentainerSize);
 
-        bool avoidBreakInsideTable = tableBox.style->break_->inside == BreakInside::AVOID;
+        bool avoidBreakInsideTable = box.style->break_->inside == BreakInside::AVOID;
 
         bool avoidBreakInsideRow =
             rowHelper[i].axisIdx and
@@ -1134,7 +1126,7 @@ struct TableFormatingContext {
         return true;
     }
 
-    Tuple<bool, Opt<Breakpoint>> layoutRows(Tree &tree, Input input, usize startAt, usize stopAt, Px currPositionX, Px &currPositionY, bool shouldRepeatHeaderAndFooter) {
+    Tuple<bool, Opt<Breakpoint>> layoutRows(Tree &tree, Box &box, Input input, usize startAt, usize stopAt, Px currPositionX, Px &currPositionY, bool shouldRepeatHeaderAndFooter) {
         bool completelyLaidOut = false;
         Opt<Breakpoint> rowBreakpoint = NONE;
 
@@ -1157,7 +1149,7 @@ struct TableFormatingContext {
 
             if (tree.fc.isDiscoveryMode()) {
                 if (
-                    not handleUnforcedBreakpointsInsideAndAfterRow(rowBreakpoint.unwrap(), rowOutput, i, tree.fc.size()) or
+                    not handleUnforcedBreakpointsInsideAndAfterRow(box, rowBreakpoint.unwrap(), rowOutput, i, tree.fc.size()) or
                     not handlePossibleForcedBreakpointAfterRow(rowBreakpoint.unwrap(), rowOutput.allBottomsAndCompletelyLaidOut, (i + 1 == stopAt), i)
                 ) {
                     completelyLaidOut = false;
@@ -1200,8 +1192,15 @@ struct TableFormatingContext {
         return {startAt, stopAt};
     }
 
-    Output run(Tree &tree, Input input, usize startAtTable, Opt<usize> stopAtTable) {
+    Output run(Tree &tree, Box &box, Input input, usize startAtTable, Opt<usize> stopAtTable) {
+        // TODO: - vertical and horizontal alignment
+        //       - borders collapse
         // TODO: in every row, at least one cell must be an anchor, or else this row is 'skipable'
+
+        // HACK: Quick reset for formating context reuse.
+        //       Proper reset logic to be implemented in a future commit.
+        *this = {};
+        build(tree, box, input);
 
         // if shouldRepeatHeaderAndFooter, header and footer are never alone in the fragmentainer and we wont set
         // breakpoints on them;
@@ -1228,7 +1227,7 @@ struct TableFormatingContext {
             );
 
         auto [completelyLaidOut, breakpoint] = layoutRows(
-            tree, input,
+            tree, box, input,
             startAt, stopAt,
             currPositionX, currPositionY,
             shouldRepeatHeaderAndFooter
@@ -1254,13 +1253,8 @@ struct TableFormatingContext {
     }
 };
 
-Output tableLayout(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt) {
-    // TODO: - vertical and horizontal alignment
-    //       - borders collapse
-
-    TableFormatingContext table(tree, box);
-    table.build(tree, input);
-    return table.run(tree, input, startAt, stopAt);
+Strong<FormatingContext> constructTableFormatingContext(Box &) {
+    return makeStrong<TableFormatingContext>();
 }
 
 } // namespace Vaev::Layout

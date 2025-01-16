@@ -230,8 +230,9 @@ struct BreakpointTraverser {
     }
 };
 
-// MARK: Box ------------------------------------------------------------------
+// MARK: Box -------------------------------------------------------------------
 
+struct FormatingContext;
 struct Box;
 
 using Content = Union<
@@ -255,6 +256,7 @@ struct Box : public Meta::NoCopy {
     Strong<Text::Fontface> fontFace;
     Content content = NONE;
     Attrs attrs;
+    Opt<Strong<FormatingContext>> formatingContext = NONE;
 
     Box(Strong<Style::Computed> style, Strong<Karm::Text::Fontface> fontFace);
 
@@ -351,6 +353,11 @@ enum struct IntrinsicSize {
     MAX_CONTENT,
     STRETCH_TO_FIT,
 };
+
+static inline bool isMinMaxIntrinsicSize(IntrinsicSize intrinsic) {
+    return intrinsic == IntrinsicSize::MIN_CONTENT or
+           intrinsic == IntrinsicSize::MAX_CONTENT;
+}
 
 struct Input {
     /// Parent fragment where the layout will be attached.
@@ -452,6 +459,14 @@ struct Output {
     Px height() const {
         return size.y;
     }
+};
+
+// MARK: Formating Context -----------------------------------------------------
+
+struct FormatingContext {
+    virtual ~FormatingContext() = default;
+
+    virtual Output run(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt) = 0;
 };
 
 } // namespace Vaev::Layout

@@ -4,6 +4,6 @@
 
 namespace Vaev::Layout {
 
-Output flexLayout(Tree &tree, Box &box, Input input);
+Strong<FormatingContext> constructFlexFormatingContext(Box &box);
 
 } // namespace Vaev::Layout

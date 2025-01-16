@@ -4,6 +4,6 @@
 
 namespace Vaev::Layout {
 
-Output blockLayout(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt);
+Strong<FormatingContext> constructBlockFormatingContext(Box &box);
 
 } // namespace Vaev::Layout

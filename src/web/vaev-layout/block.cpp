@@ -1,3 +1,5 @@
+#include "block.h"
+
 #include "layout.h"
 
 namespace Vaev::Layout {
@@ -114,7 +116,7 @@ Output fragmentEmptyBox(Tree &tree, Input input) {
 }
 
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
-struct BlockFormatingContext {
+struct BlockFormatingContext : public FormatingContext {
     Px _computeCapmin(Tree &tree, Box &box, Input input, Px inlineSize) {
         Px capmin{};
         for (auto &c : box.children()) {
@@ -140,7 +142,7 @@ struct BlockFormatingContext {
         return capmin;
     }
 
-    Output run(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt) {
+    Output run(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt) override {
         Px blockSize = 0_px;
         Px inlineSize = input.knownSize.width.unwrapOr(0_px);
 
@@ -246,9 +248,8 @@ struct BlockFormatingContext {
     }
 };
 
-Output blockLayout(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt) {
-    BlockFormatingContext fc;
-    return fc.run(tree, box, input, startAt, stopAt);
+Strong<FormatingContext> constructBlockFormatingContext(Box &) {
+    return makeStrong<BlockFormatingContext>();
 }
 
 } // namespace Vaev::Layout

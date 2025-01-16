@@ -123,10 +123,6 @@ struct FlexAxis {
     }
 };
 
-bool isMinMaxIntrinsicSize(IntrinsicSize intrinsic) {
-    return intrinsic == IntrinsicSize::MIN_CONTENT or intrinsic == IntrinsicSize::MAX_CONTENT;
-}
-
 struct FlexItem {
     Box *box;
     FlexProps flexItemProps;
@@ -617,11 +613,12 @@ struct FlexLine {
     }
 };
 
-struct FlexFormatingContext {
+struct FlexFormatingContext : public FormatingContext {
     FlexProps _flex;
     FlexAxis fa{_flex.isRowOriented()};
 
     // https://www.w3.org/TR/css-flexbox-1/#layout-algorithm
+    FlexFormatingContext(FlexProps flex) : _flex(flex) {}
 
     // 1. MARK: Generate anonymous flex items ----------------------------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-anon-box
@@ -1495,7 +1492,11 @@ struct FlexFormatingContext {
     // MARK: Public API --------------------------------------------------------
 
     // FIXME: auto, min and max content values for flex container dimensions are not working as in Chrome; add tests
-    Output run(Tree &tree, Box &box, Input input) {
+    Output run(Tree &tree, Box &box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        // HACK: Quick reset for formating context reuse.
+        //       Proper reset logic to be implemented in a future commit.
+        *this = {*box.style->flex};
+
         // 1. Generate anonymous flex items
         _generateAnonymousFlexItems(tree, box, input.containingBlock);
 
@@ -1552,13 +1553,8 @@ struct FlexFormatingContext {
     }
 };
 
-Output flexLayout(Tree &tree, Box &box, Input input) {
-    FlexFormatingContext fc = {
-        ._flex = *box.style->flex,
-        .fa = box.style->flex->isRowOriented(),
-    };
-
-    return fc.run(tree, box, input);
+Strong<FormatingContext> constructFlexFormatingContext(Box &box) {
+    return makeStrong<FlexFormatingContext>(*box.style->flex);
 }
 
 } // namespace Vaev::Layout

@@ -4,6 +4,6 @@
 
 namespace Vaev::Layout {
 
-Output tableLayout(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt);
+Strong<FormatingContext> constructTableFormatingContext(Box &box);
 
 } // namespace Vaev::Layout

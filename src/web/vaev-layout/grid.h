@@ -4,6 +4,6 @@
 
 namespace Vaev::Layout {
 
-Output gridLayout(Tree &tree, Box &box, Input input);
+Strong<FormatingContext> constructGridFormatingContext(Box &box);
 
 } // namespace Vaev::Layout
