@@ -21,7 +21,7 @@ struct Func<Out(In...)> {
     struct Wrap : _Wrap {
         F _f;
 
-        Wrap(F &&f) : _f(std::move(f)) {}
+        Wrap(F&& f) : _f(std::move(f)) {}
 
         Out operator()(In... in) const override { return _f(std::forward<In>(in)...); }
     };
@@ -71,7 +71,7 @@ struct Func<Out(In...)> {
     }
 
     template <typename F>
-    Func &operator=(F f) {
+    Func& operator=(F f) {
         _wrap = makeBox(Wrap<F>{std::move(f)});
         return *this;
     }
@@ -91,7 +91,7 @@ struct SharedFunc<Out(In...)> {
     struct Wrap : _Wrap {
         F _f;
 
-        Wrap(F &&f) : _f(std::move(f)) {}
+        Wrap(F&& f) : _f(std::move(f)) {}
 
         Out operator()(In... in) const override { return _f(std::forward<In>(in)...); }
     };
@@ -134,7 +134,7 @@ struct SharedFunc<Out(In...)> {
     }
 
     template <typename F>
-    SharedFunc &operator=(F f) {
+    SharedFunc& operator=(F f) {
         _wrap = makeStrong(Wrap<F>{std::move(f)});
         return *this;
     }
@@ -142,14 +142,14 @@ struct SharedFunc<Out(In...)> {
 
 template <typename... Args>
 auto bind(auto f, Args... args) {
-    return [f = std::move(f), args...](auto &&...in) {
+    return [f = std::move(f), args...](auto&&... in) {
         return f(args..., std::forward<decltype(in)>(in)...);
     };
 }
 
 template <typename... Args>
 auto rbind(auto f, Args... args) {
-    return [f = std::move(f), args...](auto &&...in) {
+    return [f = std::move(f), args...](auto&&... in) {
         return f(std::forward<decltype(in)>(in)..., args...);
     };
 }

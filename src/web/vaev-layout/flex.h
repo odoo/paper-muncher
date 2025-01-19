@@ -4,6 +4,6 @@
 
 namespace Vaev::Layout {
 
-Strong<FormatingContext> constructFlexFormatingContext(Box &box);
+Strong<FormatingContext> constructFlexFormatingContext(Box& box);
 
 } // namespace Vaev::Layout

@@ -70,7 +70,7 @@ struct State {
         return currentIndex < history.len() - 1;
     }
 
-    Navigate const &currentUrl() const {
+    Navigate const& currentUrl() const {
         return history[currentIndex];
     }
 };
@@ -92,10 +92,10 @@ using Action = Union<
     InspectorAction,
     Navigate>;
 
-Ui::Task<Action> reduce(State &s, Action a) {
+Ui::Task<Action> reduce(State& s, Action a) {
     a.visit(Visitor{
         [&](Reload) {
-            auto const &object = s.currentUrl();
+            auto const& object = s.currentUrl();
             if (object.action == Mime::Uti::PUBLIC_MODIFY) {
                 s.dom = Vaev::Driver::viewSource(object.url);
             } else {
@@ -131,7 +131,7 @@ Ui::Task<Action> reduce(State &s, Action a) {
 
 using Model = Ui::Model<State, Action, reduce>;
 
-Ui::Child mainMenu([[maybe_unused]] State const &s) {
+Ui::Child mainMenu([[maybe_unused]] State const& s) {
     return Kr::contextMenuContent({
         Kr::contextMenuItem(
             Ui::NOP,
@@ -142,7 +142,7 @@ Ui::Child mainMenu([[maybe_unused]] State const &s) {
         Kr::contextMenuItem(
             not s.dom
                 ? Ui::OnPress{NONE}
-                : [dom = s.dom.unwrap()](auto &n) {
+                : [dom = s.dom.unwrap()](auto& n) {
                       Ui::showDialog(
                           n,
                           View::printDialog(dom)
@@ -151,7 +151,7 @@ Ui::Child mainMenu([[maybe_unused]] State const &s) {
             Mdi::PRINTER, "Print..."
         ),
 #ifdef __ck_host__
-        Kr::contextMenuItem([&](auto &n) {
+        Kr::contextMenuItem([&](auto& n) {
             auto res = Sys::launch({
                 .action = Mime::Uti::PUBLIC_OPEN,
                 .objects = {s.currentUrl().url},
@@ -185,10 +185,10 @@ Ui::Child addressMenu() {
     });
 }
 
-Ui::Child addressBar(Mime::Url const &url) {
+Ui::Child addressBar(Mime::Url const& url) {
     return Ui::hflow(
                Ui::button(
-                   [&](auto &n) {
+                   [&](auto& n) {
                        Ui::showPopover(n, n.bound().bottomStart(), addressMenu());
                    },
                    Ui::ButtonStyle::subtle(), Mdi::TUNE_VARIANT
@@ -208,7 +208,7 @@ Ui::Child addressBar(Mime::Url const &url) {
            Ui::focusable();
 }
 
-Ui::Child contextMenu(State const &s) {
+Ui::Child contextMenu(State const& s) {
     return Kr::contextMenuContent({
         Kr::contextMenuDock({
             Kr::contextMenuIcon(Model::bindIf<GoBack>(s.canGoBack()), Mdi::ARROW_LEFT),
@@ -230,7 +230,7 @@ Ui::Child contextMenu(State const &s) {
     });
 }
 
-Ui::Child inspectorContent(State const &s) {
+Ui::Child inspectorContent(State const& s) {
     if (not s.dom) {
         return Ui::labelMedium(Ui::GRAY500, "No document") |
                Ui::center();
@@ -239,13 +239,13 @@ Ui::Child inspectorContent(State const &s) {
     return Vaev::Browser::inspect(
         s.dom.unwrap(),
         s.inspect,
-        [&](auto &n, auto a) {
+        [&](auto& n, auto a) {
             Model::bubble(n, a);
         }
     );
 }
 
-Ui::Child sidePanel(State const &s) {
+Ui::Child sidePanel(State const& s) {
     switch (s.sidePanel) {
     case SidePanel::BOOKMARKS:
         return Kr::sidePanelContent({
@@ -268,7 +268,7 @@ Ui::Child sidePanel(State const &s) {
     }
 }
 
-Ui::Child alert(State const &s, String title, String body) {
+Ui::Child alert(State const& s, String title, String body) {
     return Kr::errorPageContent({
         Kr::errorPageTitle(Mdi::GOOGLE_DOWNASAUR, title),
         Kr::errorPageBody(body),
@@ -279,7 +279,7 @@ Ui::Child alert(State const &s, String title, String body) {
     });
 }
 
-Ui::Child webview(State const &s) {
+Ui::Child webview(State const& s) {
     if (not s.dom)
         return alert(s, "The page could not be loaded"s, Io::toStr(s.dom).unwrap());
 
@@ -291,7 +291,7 @@ Ui::Child webview(State const &s) {
            Kr::contextMenu(slot$(contextMenu(s)));
 }
 
-Ui::Child appContent(State const &s) {
+Ui::Child appContent(State const& s) {
     if (s.sidePanel == SidePanel::CLOSE)
         return webview(s);
     return Ui::hflow(
@@ -306,7 +306,7 @@ Ui::Child app(Mime::Url url, Res<Strong<Vaev::Markup::Document>> dom) {
             Navigate{url},
             dom,
         },
-        [](State const &s) {
+        [](State const& s) {
             return Kr::scaffold({
                 .icon = Mdi::SURFING,
                 .title = "Vaev"s,
@@ -317,7 +317,7 @@ Ui::Child app(Mime::Url url, Res<Strong<Vaev::Markup::Document>> dom) {
                 .midleTools = slots$(addressBar(s.currentUrl().url) | Ui::grow()),
                 .endTools = slots$(
                     Ui::button(
-                        [&](Ui::Node &n) {
+                        [&](Ui::Node& n) {
                             Ui::showPopover(n, n.bound().bottomEnd(), mainMenu(s));
                         },
                         Ui::ButtonStyle::subtle(),

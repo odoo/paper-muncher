@@ -26,7 +26,7 @@ MutSlice<Box> Box::children() {
     return {};
 }
 
-void Box::add(Box &&box) {
+void Box::add(Box&& box) {
     if (content.is<None>())
         content = Vec<Box>{};
 
@@ -35,11 +35,11 @@ void Box::add(Box &&box) {
     }
 }
 
-void Box::repr(Io::Emit &e) const {
+void Box::repr(Io::Emit& e) const {
     if (children()) {
         e("(box {} {} {}", attrs, style->display, style->position);
         e.indentNewline();
-        for (auto &c : children()) {
+        for (auto& c : children()) {
             c.repr(e);
             e.newline();
         }

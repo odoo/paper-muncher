@@ -6,7 +6,7 @@
 namespace Vaev::View {
 
 Ui::Child printDialog(Strong<Markup::Document> dom) {
-    return Kr::printDialog([dom](Print::Settings const &settings) {
+    return Kr::printDialog([dom](Print::Settings const& settings) {
         return Driver::print(*dom, settings);
     });
 }

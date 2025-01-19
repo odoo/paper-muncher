@@ -2,7 +2,7 @@
 
 namespace Karm::Gfx {
 
-Tuple<Math::Curvef, Math::Curvef, Math::Curvef, Math::Curvef> Borders::_computeCornerCurvers(Math::Radiif const &uncheckRadii, Math::Rectf const &rect) {
+Tuple<Math::Curvef, Math::Curvef, Math::Curvef, Math::Curvef> Borders::_computeCornerCurvers(Math::Radiif const& uncheckRadii, Math::Rectf const& rect) {
     auto radii = uncheckRadii.reduceOverlap(rect.size());
 
     f64 cpa = radii.a * (1 - CIRCLE_APPROXIMATION);
@@ -49,7 +49,7 @@ Tuple<Math::Curvef, Math::Curvef, Math::Curvef, Math::Curvef> Borders::_computeC
     };
 }
 
-void Borders::_paintCurveEdge(Gfx::Canvas &c, Pair<Math::Curvef> const &start, Pair<Math::Curvef> const &end, Gfx::Fill const &color) {
+void Borders::_paintCurveEdge(Gfx::Canvas& c, Pair<Math::Curvef> const& start, Pair<Math::Curvef> const& end, Gfx::Fill const& color) {
     c.beginPath();
 
     // Outer edge
@@ -73,7 +73,7 @@ void Borders::_paintCurveEdge(Gfx::Canvas &c, Pair<Math::Curvef> const &start, P
     c.fill(color);
 }
 
-void Borders::_paintCurveEdges(Gfx::Canvas &c, Math::Rectf rect) {
+void Borders::_paintCurveEdges(Gfx::Canvas& c, Math::Rectf rect) {
     // Calculates outer rectangles and their corresponding radii.
     Math::Rectf outerRect = rect;
     Math::Radiif outerRadii = radii;
@@ -160,7 +160,7 @@ void Borders::_paintCurveEdges(Gfx::Canvas &c, Math::Rectf rect) {
         );
 }
 
-void Borders::_paintStraightEdge(Gfx::Canvas &c, Pair<Math::Vec2f> const &start, Pair<Math::Vec2f> const &end, Gfx::Fill const &color) {
+void Borders::_paintStraightEdge(Gfx::Canvas& c, Pair<Math::Vec2f> const& start, Pair<Math::Vec2f> const& end, Gfx::Fill const& color) {
     c.beginPath();
 
     // Outer edge
@@ -176,7 +176,7 @@ void Borders::_paintStraightEdge(Gfx::Canvas &c, Pair<Math::Vec2f> const &start,
     c.fill(color);
 }
 
-void Borders::_paintStraightEdges(Gfx::Canvas &c, Math::Rectf rect) {
+void Borders::_paintStraightEdges(Gfx::Canvas& c, Math::Rectf rect) {
     Math::Rectf outerRect = rect;
     Math::Rectf innerRect = rect.shrink(widths);
 
@@ -213,7 +213,7 @@ void Borders::_paintStraightEdges(Gfx::Canvas &c, Math::Rectf rect) {
         );
 }
 
-void Borders::paint(Gfx::Canvas &c, Math::Rectf rect) {
+void Borders::paint(Gfx::Canvas& c, Math::Rectf rect) {
     if (widths.zero())
         return;
 

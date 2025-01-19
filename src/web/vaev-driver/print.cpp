@@ -12,7 +12,7 @@
 
 namespace Vaev::Driver {
 
-static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, RectPx pageContent, Scene::Stack &stack) {
+static void _paintMargins(Style::PageComputedStyle& pageStyle, RectPx pageRect, RectPx pageContent, Scene::Stack& stack) {
     // MARK: Top Left Corner ---------------------------------------------------
 
     auto topLeftMarginCornerRect = RectPx::fromTwoPoint(
@@ -216,7 +216,7 @@ static void _paintMargins(Style::PageComputedStyle &pageStyle, RectPx pageRect, 
     Layout::paint(rightFrag, stack);
 }
 
-static Style::Media _constructMedia(Print::Settings const &settings) {
+static Style::Media _constructMedia(Print::Settings const& settings) {
     return {
         .type = MediaType::SCREEN,
         .width = Px{settings.paper.width},
@@ -255,7 +255,7 @@ static Style::Media _constructMedia(Print::Settings const &settings) {
     };
 }
 
-Vec<Print::Page> print(Markup::Document const &dom, Print::Settings const &settings) {
+Vec<Print::Page> print(Markup::Document const& dom, Print::Settings const& settings) {
     auto media = _constructMedia(settings);
 
     Style::StyleBook stylebook;

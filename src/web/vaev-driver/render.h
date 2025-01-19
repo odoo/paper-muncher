@@ -15,6 +15,6 @@ struct RenderResult {
     Strong<Layout::Frag> frag;
 };
 
-RenderResult render(Markup::Document const &dom, Style::Media const &media, Layout::Viewport viewport);
+RenderResult render(Markup::Document const& dom, Style::Media const& media, Layout::Viewport viewport);
 
 } // namespace Vaev::Driver

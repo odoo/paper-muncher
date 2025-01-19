@@ -85,7 +85,7 @@ struct Breakpoint {
         ADVANCE_WITHOUT_CHILDREN
     } advanceCase;
 
-    void overrideIfBetter(Breakpoint &&BPWithMoreContent) {
+    void overrideIfBetter(Breakpoint&& BPWithMoreContent) {
         // in case of overflows, we need the earliest breakpoint possible
         if (appeal == Appeal::OVERFLOW and BPWithMoreContent.appeal == Appeal::OVERFLOW)
             return;
@@ -94,7 +94,7 @@ struct Breakpoint {
             *this = std::move(BPWithMoreContent);
     }
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         e("(end: {} appeal: {} advance case: {}", endIdx, appeal, advanceCase);
         if (children.len() == 0)
             e("; no child)");
@@ -116,7 +116,7 @@ struct Breakpoint {
         appeal = Appeal::AVOID;
     }
 
-    static Breakpoint buildFromChild(Breakpoint &&childBreakpoint, usize endIdx, bool isAvoid) {
+    static Breakpoint buildFromChild(Breakpoint&& childBreakpoint, usize endIdx, bool isAvoid) {
         Breakpoint b{
             .endIdx = endIdx,
             .appeal = childBreakpoint.appeal,
@@ -132,7 +132,7 @@ struct Breakpoint {
 
     static Breakpoint buildFromChildren(Vec<Opt<Breakpoint>> childrenBreakpoints, usize endIdx, bool isAvoid, bool advance) {
         Appeal appeal = Appeal::MAX;
-        for (auto &breakpoint : childrenBreakpoints) {
+        for (auto& breakpoint : childrenBreakpoints) {
             if (not breakpoint)
                 continue;
 
@@ -246,7 +246,7 @@ struct Attrs {
     usize rowSpan = 1;
     usize colSpan = 1;
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         e("(attrs span: {} rowSpan: {} colSpan: {})", span, rowSpan, colSpan);
     }
 };
@@ -266,9 +266,9 @@ struct Box : public Meta::NoCopy {
 
     MutSlice<Box> children();
 
-    void add(Box &&box);
+    void add(Box&& box);
 
-    void repr(Io::Emit &e) const;
+    void repr(Io::Emit& e) const;
 };
 
 struct Viewport {
@@ -297,7 +297,7 @@ struct Metrics {
     InsetsPx margin{};
     RadiiPx radii{};
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         e("(layout paddings: {} borders: {} position: {} borderSize: {} margin: {} radii: {})",
           padding, borders, position, borderSize, margin, radii);
     }
@@ -328,19 +328,19 @@ struct Frag {
 
     Frag() : box{nullptr} {}
 
-    Style::Computed const &style() const {
+    Style::Computed const& style() const {
         return *box->style;
     }
 
     /// Offset the position of this fragment and its subtree.
     void offset(Vec2Px d) {
         metrics.position = metrics.position + d;
-        for (auto &c : children)
+        for (auto& c : children)
             c.offset(d);
     }
 
     /// Add a child fragment.
-    void add(Frag &&frag) {
+    void add(Frag&& frag) {
         children.pushBack(std::move(frag));
     }
 };
@@ -466,7 +466,7 @@ struct Output {
 struct FormatingContext {
     virtual ~FormatingContext() = default;
 
-    virtual Output run(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt) = 0;
+    virtual Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) = 0;
 };
 
 } // namespace Vaev::Layout

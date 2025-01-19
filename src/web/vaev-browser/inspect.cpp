@@ -34,14 +34,14 @@ auto idented(isize ident) {
     };
 }
 
-Ui::Child elementStartTag(Markup::Element const &el, bool expanded) {
+Ui::Child elementStartTag(Markup::Element const& el, bool expanded) {
     return Ui::text(
         Ui::TextStyles::codeSmall().withColor(Ui::ACCENT500),
         expanded ? "<{}>" : "<{}> … </{}>", el.tagName, el.tagName
     );
 }
 
-Ui::Child elementEndTag(Markup::Element const &el) {
+Ui::Child elementEndTag(Markup::Element const& el) {
     return Ui::text(
         Ui::TextStyles::codeSmall().withColor(Ui::ACCENT500),
         "</{}>", el.tagName
@@ -62,7 +62,7 @@ Ui::Child itemHeader(Strong<Markup::Node> n, Ui::Action<InspectorAction> a, bool
                     expanded ? Mdi::CHEVRON_DOWN : Mdi::CHEVRON_RIGHT
                 ) |
                     Ui::button(
-                        [n, a](auto &btn) {
+                        [n, a](auto& btn) {
                             a(btn, ExpandNode{n});
                         },
                         Ui::ButtonStyle::subtle()
@@ -102,10 +102,10 @@ Ui::ButtonStyle selected() {
     };
 }
 
-Ui::Child item(Strong<Markup::Node> n, InspectState const &s, Ui::Action<InspectorAction> a, bool expanded, isize ident) {
+Ui::Child item(Strong<Markup::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, bool expanded, isize ident) {
     auto style = s.selectedNode == n ? selected() : Ui::ButtonStyle::subtle().withRadii(0);
     return Ui::button(
-        [n, a](auto &btn) {
+        [n, a](auto& btn) {
             a(btn, SelectNode{n});
         },
         style,
@@ -113,12 +113,12 @@ Ui::Child item(Strong<Markup::Node> n, InspectState const &s, Ui::Action<Inspect
     );
 }
 
-Ui::Child node(Strong<Markup::Node> n, InspectState const &s, Ui::Action<InspectorAction> a, isize ident = 0) {
+Ui::Child node(Strong<Markup::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, isize ident = 0) {
     bool expanded = n.is<Markup::Document>() or s.expandedNodes.has(n);
     Ui::Children children{item(n, s, a, expanded, ident)};
 
     if (expanded) {
-        for (auto &c : n->children()) {
+        for (auto& c : n->children()) {
             children.pushBack(node(c, s, a, n.is<Markup::Document>() ? 0 : ident + 1));
         }
         children.pushBack(itemFooter(n, ident));
@@ -143,7 +143,7 @@ Ui::Child computedStyles() {
            Ui::pinSize(128);
 }
 
-Ui::Child inspect(Strong<Vaev::Markup::Document> n, InspectState const &s, Ui::Action<InspectorAction> a) {
+Ui::Child inspect(Strong<Vaev::Markup::Document> n, InspectState const& s, Ui::Action<InspectorAction> a) {
     return Ui::vflow(
         node(n, s, a) | Ui::vscroll() | Ui::grow(),
         computedStyles() | Kr::resizable(Kr::ResizeHandle::TOP, {128}, NONE)

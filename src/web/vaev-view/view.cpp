@@ -53,13 +53,13 @@ struct View : public Ui::View<View> {
         };
     }
 
-    void reconcile(View &o) override {
+    void reconcile(View& o) override {
         _dom = o._dom;
         _props = o._props;
         _renderResult = NONE;
     }
 
-    void paint(Gfx::Canvas &g, Math::Recti rect) override {
+    void paint(Gfx::Canvas& g, Math::Recti rect) override {
         auto viewport = bound().size();
         if (not _renderResult) {
             auto media = _constructMedia(viewport);

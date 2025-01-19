@@ -20,12 +20,12 @@ struct Page {
         return makeStrong<Scene::Viewbox>(_paper.size(), _content);
     }
 
-    void print(Print::Printer &doc, Scene::PaintOptions o = {.showBackgroundGraphics = false}) {
-        auto &canvas = doc.beginPage(_paper);
+    void print(Print::Printer& doc, Scene::PaintOptions o = {.showBackgroundGraphics = false}) {
+        auto& canvas = doc.beginPage(_paper);
         content()->paint(canvas, _paper.size().cast<f64>(), o);
     }
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         e("(page paper:{} root:{})", _paper, content());
     }
 };

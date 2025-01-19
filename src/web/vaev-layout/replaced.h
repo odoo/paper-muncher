@@ -4,6 +4,6 @@
 
 namespace Vaev::Layout {
 
-Strong<FormatingContext> constructReplacedFormatingContext(Box &box);
+Strong<FormatingContext> constructReplacedFormatingContext(Box& box);
 
 } // namespace Vaev::Layout

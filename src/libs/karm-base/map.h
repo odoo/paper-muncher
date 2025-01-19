@@ -11,11 +11,11 @@ struct Map {
 
     Map() = default;
 
-    Map(std::initializer_list<Pair<K, V>> &&list)
+    Map(std::initializer_list<Pair<K, V>>&& list)
         : _els(std::move(list)) {}
 
-    void put(K const &key, V value) {
-        for (auto &i : ::mutIter(_els)) {
+    void put(K const& key, V value) {
+        for (auto& i : ::mutIter(_els)) {
             if (i.v0 == key) {
                 i.v1 = std::move(value);
                 return;
@@ -25,8 +25,8 @@ struct Map {
         _els.pushBack(Pair<K, V>{key, std::move(value)});
     }
 
-    bool has(K const &key) const {
-        for (auto &i : _els) {
+    bool has(K const& key) const {
+        for (auto& i : _els) {
             if (i.v0 == key) {
                 return true;
             }
@@ -35,8 +35,8 @@ struct Map {
         return false;
     }
 
-    V &get(K const &key) {
-        for (auto &i : _els) {
+    V& get(K const& key) {
+        for (auto& i : _els) {
             if (i.v0 == key) {
                 return i.v1;
             }
@@ -45,21 +45,21 @@ struct Map {
         panic("key not found");
     }
 
-    MutCursor<V> access(K const &key) {
-        for (auto &i : _els)
+    MutCursor<V> access(K const& key) {
+        for (auto& i : _els)
             if (i.v0 == key)
                 return &i.v1;
         return {};
     }
 
-    Cursor<V> access(K const &key) const {
-        for (auto &i : _els)
+    Cursor<V> access(K const& key) const {
+        for (auto& i : _els)
             if (i.v0 == key)
                 return &i.v1;
         return {};
     }
 
-    V take(K const &key) {
+    V take(K const& key) {
         for (usize i = 0; i < _els.len(); i++) {
             if (_els[i].v0 == key) {
                 V value = std::move(_els[i].v1);
@@ -71,8 +71,8 @@ struct Map {
         panic("key not found");
     }
 
-    Opt<V> tryGet(K const &key) const {
-        for (auto &i : _els) {
+    Opt<V> tryGet(K const& key) const {
+        for (auto& i : _els) {
             if (i.v0 == key) {
                 return i.v1;
             }
@@ -81,7 +81,7 @@ struct Map {
         return NONE;
     }
 
-    bool del(K const &key) {
+    bool del(K const& key) {
         for (usize i = 0; i < _els.len(); i++) {
             if (_els[i].v0 == key) {
                 _els.removeAt(i);
@@ -92,7 +92,7 @@ struct Map {
         return false;
     }
 
-    bool removeAll(V const &value) {
+    bool removeAll(V const& value) {
         bool changed = false;
 
         for (usize i = 1; i < _els.len() + 1; i++) {
@@ -106,7 +106,7 @@ struct Map {
         return changed;
     }
 
-    bool removeFirst(V const &value) {
+    bool removeFirst(V const& value) {
         for (usize i = 1; i < _els.len() + 1; i++) {
             if (_els[i - 1].v1 == value) {
                 _els.removeAt(i - 1);

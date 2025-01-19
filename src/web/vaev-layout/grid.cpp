@@ -4,7 +4,7 @@
 
 namespace Vaev::Layout {
 
-Strong<FormatingContext> constructGridFormatingContext(Box &box) {
+Strong<FormatingContext> constructGridFormatingContext(Box& box) {
     return constructBlockFormatingContext(box);
 }
 

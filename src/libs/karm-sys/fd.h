@@ -42,9 +42,9 @@ struct Fd : Meta::NoCopy {
 
     virtual Res<_Received> recv(MutBytes, MutSlice<Handle>) = 0;
 
-    virtual Res<> pack(Io::PackEmit &e) = 0;
+    virtual Res<> pack(Io::PackEmit& e) = 0;
 
-    static Res<Strong<Fd>> unpack(Io::PackScan &s);
+    static Res<Strong<Fd>> unpack(Io::PackScan& s);
 };
 
 struct NullFd : public Fd {
@@ -70,7 +70,7 @@ struct NullFd : public Fd {
 
     Res<_Received> recv(MutBytes, MutSlice<Handle>) override;
 
-    Res<> pack(Io::PackEmit &e) override;
+    Res<> pack(Io::PackEmit& e) override;
 };
 
 template <typename T>

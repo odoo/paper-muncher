@@ -21,7 +21,7 @@ struct _Cell {
 
     virtual ~_Cell() = default;
 
-    virtual void *_unwrap() lifetimebound = 0;
+    virtual void* _unwrap() lifetimebound = 0;
 
     virtual void clear() = 0;
 
@@ -41,7 +41,7 @@ struct _Cell {
         }
     }
 
-    _Cell *refStrong() lifetimebound {
+    _Cell* refStrong() lifetimebound {
         LockScope scope(_lock);
 
         if (_clear) [[unlikely]]
@@ -64,7 +64,7 @@ struct _Cell {
         collectAndRelease();
     }
 
-    _Cell *refWeak() lifetimebound {
+    _Cell* refWeak() lifetimebound {
         LockScope scope(_lock);
 
         _weak++;
@@ -85,11 +85,11 @@ struct _Cell {
     }
 
     template <typename T>
-    T &unwrap() lifetimebound {
+    T& unwrap() lifetimebound {
         if (_clear) [[unlikely]]
             panic("unwrap() called on cleared cell");
 
-        return *static_cast<T *>(_unwrap());
+        return *static_cast<T*>(_unwrap());
     }
 };
 
@@ -98,11 +98,11 @@ struct Cell : public _Cell<L> {
     Manual<T> _buf{};
 
     template <typename... Args>
-    Cell(Args &&...args) {
+    Cell(Args&&... args) {
         _buf.ctor(std::forward<Args>(args)...);
     }
 
-    void *_unwrap() lifetimebound override {
+    void* _unwrap() lifetimebound override {
         return &_buf.unwrap();
     }
 
@@ -123,31 +123,31 @@ struct Cell : public _Cell<L> {
 /// references to it.
 template <typename L, typename T>
 struct _Strong {
-    _Cell<L> *_cell{};
+    _Cell<L>* _cell{};
 
     // MARK: Rule of Five ------------------------------------------------------
 
     constexpr _Strong() = delete;
 
-    constexpr _Strong(Move, _Cell<L> *ptr)
+    constexpr _Strong(Move, _Cell<L>* ptr)
         : _cell(ptr->refStrong()) {
     }
 
-    constexpr _Strong(_Strong const &other)
+    constexpr _Strong(_Strong const& other)
         : _cell(other._cell->refStrong()) {
     }
 
-    constexpr _Strong(_Strong &&other)
+    constexpr _Strong(_Strong&& other)
         : _cell(std::exchange(other._cell, nullptr)) {
     }
 
     template <Meta::Derive<T> U>
-    constexpr _Strong(_Strong<L, U> const &other)
+    constexpr _Strong(_Strong<L, U> const& other)
         : _cell(other._cell->refStrong()) {
     }
 
     template <Meta::Derive<T> U>
-    constexpr _Strong(_Strong<L, U> &&other)
+    constexpr _Strong(_Strong<L, U>&& other)
         : _cell(std::exchange(other._cell, nullptr)) {
     }
 
@@ -158,31 +158,31 @@ struct _Strong {
         }
     }
 
-    constexpr _Strong &operator=(_Strong const &other) {
+    constexpr _Strong& operator=(_Strong const& other) {
         *this = _Strong(other);
         return *this;
     }
 
-    constexpr _Strong &operator=(_Strong &&other) {
+    constexpr _Strong& operator=(_Strong&& other) {
         std::swap(_cell, other._cell);
         return *this;
     }
 
     // MARK: Operators ---------------------------------------------------------
 
-    constexpr T const *operator->() const lifetimebound {
+    constexpr T const* operator->() const lifetimebound {
         return &unwrap();
     }
 
-    constexpr T *operator->() lifetimebound {
+    constexpr T* operator->() lifetimebound {
         return &unwrap();
     }
 
-    constexpr T const &operator*() const lifetimebound {
+    constexpr T const& operator*() const lifetimebound {
         return unwrap();
     }
 
-    constexpr T &operator*() lifetimebound {
+    constexpr T& operator*() lifetimebound {
         return unwrap();
     }
 
@@ -208,18 +208,18 @@ struct _Strong {
             panic("null dereference");
     }
 
-    constexpr T const &unwrap() const lifetimebound {
+    constexpr T const& unwrap() const lifetimebound {
         ensure();
         return _cell->template unwrap<T>();
     }
 
-    constexpr T &unwrap() lifetimebound {
+    constexpr T& unwrap() lifetimebound {
         ensure();
         return _cell->template unwrap<T>();
     }
 
     template <Meta::Derive<T> U>
-    constexpr U const &unwrap() const lifetimebound {
+    constexpr U const& unwrap() const lifetimebound {
         ensure();
         if (not is<U>()) [[unlikely]]
             panic("unwrapping T as U");
@@ -228,7 +228,7 @@ struct _Strong {
     }
 
     template <Meta::Derive<T> U>
-    constexpr U &unwrap() lifetimebound {
+    constexpr U& unwrap() lifetimebound {
         ensure();
         if (not is<U>()) [[unlikely]]
             panic("unwrapping T as U");
@@ -278,7 +278,7 @@ struct _Strong {
         return _Strong<L, U>(MOVE, _cell);
     }
 
-    auto operator<=>(_Strong const &other) const
+    auto operator<=>(_Strong const& other) const
         requires Meta::Comparable<T>
     {
         if (_cell == other._cell)
@@ -286,7 +286,7 @@ struct _Strong {
         return unwrap() <=> other.unwrap();
     }
 
-    bool operator==(_Strong const &other) const
+    bool operator==(_Strong const& other) const
         requires Meta::Equatable<T>
     {
         if (_cell == other._cell)
@@ -294,11 +294,11 @@ struct _Strong {
         return unwrap() == other.unwrap();
     }
 
-    auto operator<=>(T const &other) const {
+    auto operator<=>(T const& other) const {
         return unwrap() <=> other;
     }
 
-    bool operator==(T const &other) const {
+    bool operator==(T const& other) const {
         return unwrap() == other;
     }
 };
@@ -309,38 +309,38 @@ struct _Strong {
 /// upgraded to a strong reference if the object is still alive.
 template <typename L, typename T>
 struct _Weak {
-    _Cell<L> *_cell;
+    _Cell<L>* _cell;
 
     constexpr _Weak() = delete;
 
     template <Meta::Derive<T> U>
-    constexpr _Weak(_Strong<L, U> const &other)
+    constexpr _Weak(_Strong<L, U> const& other)
         : _cell(other._cell->refWeak()) {}
 
     template <Meta::Derive<T> U>
-    constexpr _Weak(_Weak<L, U> const &other)
+    constexpr _Weak(_Weak<L, U> const& other)
         : _cell(other._cell->refWeak()) {}
 
     template <Meta::Derive<T> U>
-    constexpr _Weak(_Weak<L, U> &&other)
+    constexpr _Weak(_Weak<L, U>&& other)
         : _cell(std::exchange(other._cell, nullptr)) {
     }
 
-    constexpr _Weak(Move, _Cell<L> *ptr)
+    constexpr _Weak(Move, _Cell<L>* ptr)
         : _cell(ptr->refWeak()) {
     }
 
-    constexpr _Weak &operator=(_Strong<L, T> const &other) {
+    constexpr _Weak& operator=(_Strong<L, T> const& other) {
         *this = _Weak(other);
         return *this;
     }
 
-    constexpr _Weak &operator=(_Weak const &other) {
+    constexpr _Weak& operator=(_Weak const& other) {
         *this = _Weak(other);
         return *this;
     }
 
-    constexpr _Weak &operator=(_Weak &&other) {
+    constexpr _Weak& operator=(_Weak&& other) {
         std::swap(_cell, other._cell);
         return *this;
     }
@@ -371,7 +371,7 @@ using Weak = _Weak<NoLock, T>;
 /// Allocates an object of type `T` on the heap and returns
 /// a strong reference to it.
 template <typename T, typename... Args>
-constexpr static Strong<T> makeStrong(Args &&...args) {
+constexpr static Strong<T> makeStrong(Args&&... args) {
     return {MOVE, new Cell<NoLock, T>(std::forward<Args>(args)...)};
 }
 
@@ -382,7 +382,7 @@ template <typename T>
 using AtomicWeak = _Weak<Lock, T>;
 
 template <typename T, typename... Args>
-constexpr static AtomicStrong<T> makeAtomicStrong(Args &&...args) {
+constexpr static AtomicStrong<T> makeAtomicStrong(Args&&... args) {
     return {MOVE, new Cell<Lock, T>(std::forward<Args>(args)...)};
 }
 

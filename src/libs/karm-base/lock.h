@@ -3,7 +3,6 @@
 #include <karm-meta/nocopy.h>
 
 #include "_embed.h"
-
 #include "atomic.h"
 #include "string.h"
 
@@ -69,7 +68,7 @@ struct NoLock :
 
 template <typename T>
 concept Lockable =
-    requires(T &lockable) {
+    requires(T& lockable) {
         lockable.tryAcquire();
         lockable.acquire();
         lockable.release();
@@ -79,9 +78,9 @@ template <Lockable L = Lock>
 struct [[nodiscard]] LockScope :
     private Meta::Pinned {
 
-    L &_lock;
+    L& _lock;
 
-    LockScope(L &lock)
+    LockScope(L& lock)
         : _lock(lock) {
         _lock.acquire();
     }
@@ -92,7 +91,7 @@ struct [[nodiscard]] LockScope :
 };
 
 template <Lockable L>
-LockScope(L &) -> LockScope<L>;
+LockScope(L&) -> LockScope<L>;
 
 template <typename T, Lockable L = Lock>
 struct LockProtected {
@@ -102,7 +101,7 @@ struct LockProtected {
     LockProtected() = default;
 
     template <typename... Args>
-    LockProtected(Args &&...args)
+    LockProtected(Args&&... args)
         : _value(std::forward<Args>(args)...) {}
 
     auto with(auto f) {
@@ -112,7 +111,7 @@ struct LockProtected {
 };
 
 template <typename T, Lockable L = Lock>
-LockProtected(T, L &) -> LockProtected<T, L>;
+LockProtected(T, L&) -> LockProtected<T, L>;
 
 struct RwLock :
     Meta::Pinned {
@@ -189,9 +188,9 @@ struct RwLock :
 struct [[nodiscard]] ReadLockScope :
     Meta::Pinned {
 
-    RwLock &_lock;
+    RwLock& _lock;
 
-    ReadLockScope(RwLock &lock)
+    ReadLockScope(RwLock& lock)
         : _lock(lock) {
         _lock.acquireRead();
     }
@@ -204,9 +203,9 @@ struct [[nodiscard]] ReadLockScope :
 struct [[nodiscard]] WriteLockScope :
     Meta::Pinned {
 
-    RwLock &_lock;
+    RwLock& _lock;
 
-    WriteLockScope(RwLock &lock)
+    WriteLockScope(RwLock& lock)
         : _lock(lock) {
         _lock.acquireWrite();
     }

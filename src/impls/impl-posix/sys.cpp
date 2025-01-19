@@ -26,12 +26,12 @@
 
 namespace Karm::Sys::_Embed {
 
-Res<Mime::Path> resolve(Mime::Url const &url) {
+Res<Mime::Path> resolve(Mime::Url const& url) {
     Mime::Path resolved;
     if (url.scheme == "file") {
         resolved = url.path;
     } else if (url.scheme == "ipc") {
-        auto const *runtimeDir = getenv("XDG_RUNTIME_DIR");
+        auto const* runtimeDir = getenv("XDG_RUNTIME_DIR");
         if (not runtimeDir) {
             runtimeDir = "/tmp/";
             logWarn("XDG_RUNTIME_DIR not set, falling back on {}", runtimeDir);
@@ -52,7 +52,7 @@ Res<Mime::Path> resolve(Mime::Url const &url) {
                        .join("__res__")
                        .join(path);
     } else if (url.scheme == "location") {
-        auto *maybeHome = getenv("HOME");
+        auto* maybeHome = getenv("HOME");
         if (not maybeHome)
             return Error::notFound("HOME not set");
 
@@ -72,7 +72,7 @@ Res<Mime::Path> resolve(Mime::Url const &url) {
 
 // MARK: Fd --------------------------------------------------------------------
 
-Res<Strong<Fd>> unpackFd(Io::PackScan &s) {
+Res<Strong<Fd>> unpackFd(Io::PackScan& s) {
     auto handle = s.take();
     if (handle == INVALID)
         return Error::invalidHandle();
@@ -81,7 +81,7 @@ Res<Strong<Fd>> unpackFd(Io::PackScan &s) {
 
 // MARK: File I/O --------------------------------------------------------------
 
-Res<Strong<Fd>> openFile(Mime::Url const &url) {
+Res<Strong<Fd>> openFile(Mime::Url const& url) {
     String str = try$(resolve(url)).str();
 
     isize raw = ::open(str.buf(), O_RDONLY);
@@ -93,7 +93,7 @@ Res<Strong<Fd>> openFile(Mime::Url const &url) {
     return Ok(fd);
 }
 
-Res<Strong<Fd>> createFile(Mime::Url const &url) {
+Res<Strong<Fd>> createFile(Mime::Url const& url) {
     String str = try$(resolve(url)).str();
 
     auto raw = ::open(str.buf(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -102,7 +102,7 @@ Res<Strong<Fd>> createFile(Mime::Url const &url) {
     return Ok(makeStrong<Posix::Fd>(raw));
 }
 
-Res<Strong<Fd>> openOrCreateFile(Mime::Url const &url) {
+Res<Strong<Fd>> openOrCreateFile(Mime::Url const& url) {
     String str = try$(resolve(url)).str();
 
     auto raw = ::open(str.buf(), O_RDWR | O_CREAT, 0644);
@@ -144,15 +144,15 @@ Res<Strong<Fd>> createErr() {
     return Ok(fd);
 }
 
-Res<Vec<DirEntry>> readDir(Mime::Url const &url) {
+Res<Vec<DirEntry>> readDir(Mime::Url const& url) {
     String str = try$(resolve(url)).str();
 
-    DIR *dir = ::opendir(str.buf());
+    DIR* dir = ::opendir(str.buf());
     if (not dir)
         return Posix::fromLastErrno();
 
     Vec<DirEntry> entries;
-    struct dirent *entry;
+    struct dirent* entry;
     errno = 0;
     while ((entry = ::readdir(dir))) {
         try$(Posix::consumeErrno());
@@ -174,7 +174,7 @@ Res<Vec<DirEntry>> readDir(Mime::Url const &url) {
     return Ok(entries);
 }
 
-Res<Stat> stat(Mime::Url const &url) {
+Res<Stat> stat(Mime::Url const& url) {
     String str = try$(resolve(url)).str();
     struct stat buf;
     if (::stat(str.buf(), &buf) < 0)
@@ -232,7 +232,7 @@ Res<Strong<Fd>> listenUdp(SocketAddr addr) {
 
     struct sockaddr_in addr_ = Posix::toSockAddr(addr);
 
-    if (::bind(fd, (struct sockaddr *)&addr_, sizeof(addr_)) < 0)
+    if (::bind(fd, (struct sockaddr*)&addr_, sizeof(addr_)) < 0)
         return Posix::fromLastErrno();
 
     return Ok(makeStrong<Posix::Fd>(fd));
@@ -244,7 +244,7 @@ Res<Strong<Fd>> connectTcp(SocketAddr addr) {
         return Posix::fromLastErrno();
 
     struct sockaddr_in addr_ = Posix::toSockAddr(addr);
-    if (::connect(fd, (struct sockaddr *)&addr_, sizeof(addr_)) < 0)
+    if (::connect(fd, (struct sockaddr*)&addr_, sizeof(addr_)) < 0)
         return Posix::fromLastErrno();
 
     return Ok(makeStrong<Posix::Fd>(fd));
@@ -261,7 +261,7 @@ Res<Strong<Fd>> listenTcp(SocketAddr addr) {
 
     struct sockaddr_in addr_ = Posix::toSockAddr(addr);
 
-    if (::bind(fd, (struct sockaddr *)&addr_, sizeof(addr_)) < 0)
+    if (::bind(fd, (struct sockaddr*)&addr_, sizeof(addr_)) < 0)
         return Posix::fromLastErrno();
 
     if (::listen(fd, 128) < 0)
@@ -281,7 +281,7 @@ Res<Strong<Fd>> listenIpc(Mime::Url url) {
     auto sunPath = MutSlice(addr.sun_path, sizeof(addr.sun_path) - 1);
     copy(sub(path), sunPath);
 
-    if (::bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+    if (::bind(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0)
         return Posix::fromLastErrno();
 
     if (::listen(fd, 128) < 0)
@@ -292,7 +292,7 @@ Res<Strong<Fd>> listenIpc(Mime::Url url) {
 
 // MARK: Time ------------------------------------------------------------------
 
-TimeSpan fromTimeSpec(struct timespec const &ts) {
+TimeSpan fromTimeSpec(struct timespec const& ts) {
     auto usecs = (u64)ts.tv_sec * 1000000 + (u64)ts.tv_nsec / 1000;
     return TimeSpan::fromUSecs(usecs);
 }
@@ -311,7 +311,7 @@ TimeSpan uptime() {
 
 // MARK: Memory Managment ------------------------------------------------------
 
-isize mmapOptionsToProt(MmapOptions const &options) {
+isize mmapOptionsToProt(MmapOptions const& options) {
     isize prot = 0;
 
     if (options.flags & MmapFlags::READ)
@@ -326,8 +326,8 @@ isize mmapOptionsToProt(MmapOptions const &options) {
     return prot;
 }
 
-Res<MmapResult> memMap(MmapOptions const &options) {
-    void *addr = mmap((void *)options.vaddr, options.size, mmapOptionsToProt(options), MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+Res<MmapResult> memMap(MmapOptions const& options) {
+    void* addr = mmap((void*)options.vaddr, options.size, mmapOptionsToProt(options), MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 
     if (addr == MAP_FAILED)
         return Posix::fromLastErrno();
@@ -340,14 +340,14 @@ Res<MmapResult> memMap(MmapOptions const &options) {
     return Ok(MmapResult{0, (usize)addr, (usize)options.size});
 }
 
-Res<MmapResult> memMap(MmapOptions const &options, Strong<Fd> maybeFd) {
+Res<MmapResult> memMap(MmapOptions const& options, Strong<Fd> maybeFd) {
     Strong<Posix::Fd> fd = try$(maybeFd.cast<Posix::Fd>());
     usize size = options.size;
 
     if (size == 0)
         size = try$(Io::size(*fd));
 
-    void *addr = mmap((void *)options.vaddr, size, mmapOptionsToProt(options), MAP_SHARED, fd->_raw, options.offset);
+    void* addr = mmap((void*)options.vaddr, size, mmapOptionsToProt(options), MAP_SHARED, fd->_raw, options.offset);
 
     if (addr == MAP_FAILED)
         return Posix::fromLastErrno();
@@ -355,21 +355,21 @@ Res<MmapResult> memMap(MmapOptions const &options, Strong<Fd> maybeFd) {
     return Ok(MmapResult{0, (usize)addr, (usize)size});
 }
 
-Res<> memUnmap(void const *buf, usize len) {
-    if (::munmap((void *)buf, len) < 0)
+Res<> memUnmap(void const* buf, usize len) {
+    if (::munmap((void*)buf, len) < 0)
         return Posix::fromLastErrno();
 
     return Ok();
 }
 
-Res<> memFlush(void *flush, usize len) {
+Res<> memFlush(void* flush, usize len) {
     if (::msync(flush, len, MS_INVALIDATE) < 0)
         return Posix::fromLastErrno();
 
     return Ok();
 }
 
-Res<> populate(SysInfo &infos) {
+Res<> populate(SysInfo& infos) {
     struct utsname uts;
     if (uname(&uts) < 0)
         return Posix::fromLastErrno();
@@ -385,15 +385,15 @@ Res<> populate(SysInfo &infos) {
     return Ok();
 }
 
-Res<> populate(MemInfo &) {
+Res<> populate(MemInfo&) {
     return Error::notImplemented();
 }
 
-Res<> populate(Vec<CpuInfo> &) {
+Res<> populate(Vec<CpuInfo>&) {
     return Error::notImplemented();
 }
 
-Res<> populate(UserInfo &infos) {
+Res<> populate(UserInfo& infos) {
     infos.name = Str::fromNullterminated(getenv("USER"));
     infos.home.scheme = "file"s;
     infos.home.path = Mime::Path::parse(getenv("HOME"));
@@ -404,7 +404,7 @@ Res<> populate(UserInfo &infos) {
     return Ok();
 }
 
-Res<> populate(Vec<UserInfo> &infos) {
+Res<> populate(Vec<UserInfo>& infos) {
     UserInfo info;
     try$(populate(info));
     infos.pushBack(info);

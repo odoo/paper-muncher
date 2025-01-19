@@ -190,7 +190,7 @@ struct Button : public _Box<Button> {
           _onPress(std::move(onPress)),
           _buttonStyle(style) {}
 
-    void reconcile(Button &o) override {
+    void reconcile(Button& o) override {
         _buttonStyle = o._buttonStyle;
         _onPress = std::move(o._onPress);
 
@@ -202,7 +202,7 @@ struct Button : public _Box<Button> {
         _Box<Button>::reconcile(o);
     }
 
-    BoxStyle &boxStyle() override {
+    BoxStyle& boxStyle() override {
         if (not _onPress) {
             return _buttonStyle.disabledStyle;
         } else if (_mouseListener.isIdle()) {
@@ -214,7 +214,7 @@ struct Button : public _Box<Button> {
         }
     }
 
-    void event(App::Event &e) override {
+    void event(App::Event& e) override {
         _Box<Button>::event(e);
         if (e.accepted())
             return;
@@ -281,7 +281,7 @@ struct Input : public View<Input> {
     Input(Text::ProseStyle style, Strong<Text::Model> model, OnChange<Text::Action> onChange)
         : _style(style), _model(model), _onChange(std::move(onChange)) {}
 
-    void reconcile(Input &o) override {
+    void reconcile(Input& o) override {
         _style = o._style;
         _model = o._model;
         _onChange = std::move(o._onChange);
@@ -291,7 +291,7 @@ struct Input : public View<Input> {
         _text = NONE;
     }
 
-    Text::Prose &_ensureText() {
+    Text::Prose& _ensureText() {
         if (not _text) {
             _text = makeStrong<Text::Prose>(_style);
             (*_text)->append(_model->runes());
@@ -299,12 +299,12 @@ struct Input : public View<Input> {
         return **_text;
     }
 
-    void paint(Gfx::Canvas &g, Math::Recti) override {
+    void paint(Gfx::Canvas& g, Math::Recti) override {
         g.push();
         g.clip(bound());
         g.origin(bound().xy.cast<f64>());
 
-        auto &text = _ensureText();
+        auto& text = _ensureText();
 
         text.paintCaret(g, _model->_cur.head, _style.color.unwrapOr(Ui::GRAY100));
         g.fill(text);
@@ -312,7 +312,7 @@ struct Input : public View<Input> {
         g.pop();
     }
 
-    void event(App::Event &e) override {
+    void event(App::Event& e) override {
         auto a = Text::Action::fromEvent(e);
         if (a) {
             e.accept();
@@ -353,7 +353,7 @@ struct SimpleInput : public View<SimpleInput> {
           _text(text),
           _onChange(std::move(onChange)) {}
 
-    void reconcile(SimpleInput &o) override {
+    void reconcile(SimpleInput& o) override {
         _style = o._style;
         _model = o._model;
         _onChange = std::move(o._onChange);
@@ -363,13 +363,13 @@ struct SimpleInput : public View<SimpleInput> {
         _prose = NONE;
     }
 
-    Text::Model &_ensureModel() {
+    Text::Model& _ensureModel() {
         if (not _model)
             _model = Text::Model(_text);
         return *_model;
     }
 
-    Text::Prose &_ensureText() {
+    Text::Prose& _ensureText() {
         if (not _prose) {
             _prose = makeStrong<Text::Prose>(_style);
             (*_prose)->append(_ensureModel().runes());
@@ -377,12 +377,12 @@ struct SimpleInput : public View<SimpleInput> {
         return **_prose;
     }
 
-    void paint(Gfx::Canvas &g, Math::Recti) override {
+    void paint(Gfx::Canvas& g, Math::Recti) override {
         g.push();
         g.clip(bound());
         g.origin(bound().xy.cast<f64>());
 
-        auto &text = _ensureText();
+        auto& text = _ensureText();
 
         if (_focus)
             text.paintCaret(g, _ensureModel()._cur.head, _style.color.unwrapOr(Ui::GRAY100));
@@ -391,7 +391,7 @@ struct SimpleInput : public View<SimpleInput> {
         g.pop();
     }
 
-    void event(App::Event &e) override {
+    void event(App::Event& e) override {
         _focus.event(*this, e);
         auto a = Text::Action::fromEvent(e);
         if (a) {
@@ -434,7 +434,7 @@ struct Slider : public ProxyNode<Slider> {
           _onChange(std::move(onChange)) {
     }
 
-    void reconcile(Slider &o) override {
+    void reconcile(Slider& o) override {
         _value = o._value;
         _onChange = o._onChange;
 
@@ -450,7 +450,7 @@ struct Slider : public ProxyNode<Slider> {
         return _bound;
     }
 
-    void bubble(App::Event &e) override {
+    void bubble(App::Event& e) override {
         if (auto dv = e.is<DragEvent>()) {
             if (dv->type == DragEvent::DRAG) {
                 auto max = bound().width - bound().height;
@@ -478,24 +478,24 @@ Child slider(f64 value, OnChange<f64> onChange, Child child) {
 // MARK: Intent ----------------------------------------------------------------
 
 struct Intent : public ProxyNode<Intent> {
-    Func<void(Node &, App::Event &e)> _map;
+    Func<void(Node&, App::Event& e)> _map;
 
-    Intent(Func<void(Node &, App::Event &e)> map, Child child)
+    Intent(Func<void(Node&, App::Event& e)> map, Child child)
         : ProxyNode<Intent>(std::move(child)), _map(std::move(map)) {}
 
-    void reconcile(Intent &o) override {
+    void reconcile(Intent& o) override {
         _map = std::move(o._map);
         ProxyNode<Intent>::reconcile(o);
     }
 
-    void event(App::Event &e) override {
+    void event(App::Event& e) override {
         if (e.accepted())
             return;
         _map(*this, e);
         ProxyNode<Intent>::event(e);
     }
 
-    void bubble(App::Event &e) override {
+    void bubble(App::Event& e) override {
         if (e.accepted())
             return;
         _map(*this, e);
@@ -503,7 +503,7 @@ struct Intent : public ProxyNode<Intent> {
     }
 };
 
-Child intent(Func<void(Node &, App::Event &e)> map, Child child) {
+Child intent(Func<void(Node&, App::Event& e)> map, Child child) {
     return makeStrong<Intent>(std::move(map), std::move(child));
 }
 

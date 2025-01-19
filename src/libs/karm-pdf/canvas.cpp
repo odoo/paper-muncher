@@ -97,7 +97,7 @@ void Canvas::ellipse(Math::Ellipsef) {
     logDebugIf(DEBUG_CANVAS, "pdf: ellipse() operation not implemented");
 }
 
-void Canvas::path(Math::Path const &) {
+void Canvas::path(Math::Path const&) {
     logDebugIf(DEBUG_CANVAS, "pdf: path() operation not implemented");
 }
 

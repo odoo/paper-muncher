@@ -61,27 +61,27 @@ struct Err : public Io::TextWriterBase<> {
     }
 };
 
-In &in();
+In& in();
 
-Out &out();
+Out& out();
 
-Err &err();
+Err& err();
 
-inline void print(Str str = "", auto &&...args) {
+inline void print(Str str = "", auto&&... args) {
     (void)Io::format(out(), str, std::forward<decltype(args)>(args)...);
 }
 
-inline void err(Str str = "", auto &&...args) {
+inline void err(Str str = "", auto&&... args) {
     (void)Io::format(err(), str, std::forward<decltype(args)>(args)...);
 }
 
-inline void println(Str str = "", auto &&...args) {
+inline void println(Str str = "", auto&&... args) {
     (void)Io::format(out(), str, std::forward<decltype(args)>(args)...);
     (void)out().writeStr(Str{Sys::LINE_ENDING});
     (void)out().flush();
 }
 
-inline void errln(Str str = "", auto &&...args) {
+inline void errln(Str str = "", auto&&... args) {
     (void)Io::format(err(), str, std::forward<decltype(args)>(args)...);
     (void)err().writeStr(Str{Sys::LINE_ENDING});
     (void)err().flush();

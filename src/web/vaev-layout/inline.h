@@ -4,6 +4,6 @@
 
 namespace Vaev::Layout {
 
-Strong<FormatingContext> constructInlineFormatingContext(Box &box);
+Strong<FormatingContext> constructInlineFormatingContext(Box& box);
 
 } // namespace Vaev::Layout

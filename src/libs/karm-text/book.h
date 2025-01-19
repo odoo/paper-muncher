@@ -15,7 +15,7 @@ struct FontQuery {
     FontStretch stretch = FontStretch::NORMAL;
     FontStyle style = FontStyle::NORMAL;
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         e.ln("family: {#}", family);
         e.ln("weight: {}", weight);
         e.ln("stretch: {}", stretch);

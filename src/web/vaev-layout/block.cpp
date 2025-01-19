@@ -4,7 +4,7 @@
 
 namespace Vaev::Layout {
 
-void maybeProcessChildBreakpoint(Fragmentainer &fc, Breakpoint &currentBreakpoint, usize childIndex, bool currBoxIsBreakAvoid, Opt<Breakpoint> maybeChildBreakpoint) {
+void maybeProcessChildBreakpoint(Fragmentainer& fc, Breakpoint& currentBreakpoint, usize childIndex, bool currBoxIsBreakAvoid, Opt<Breakpoint> maybeChildBreakpoint) {
     if (not fc.isDiscoveryMode())
         return;
 
@@ -23,7 +23,7 @@ void maybeProcessChildBreakpoint(Fragmentainer &fc, Breakpoint &currentBreakpoin
     );
 }
 
-Res<None, Output> processBreakpointsAfterChild(Fragmentainer &fc, Breakpoint &currentBreakpoint, Box &parentBox, usize childIndex, Vec2Px currentBoxSize, bool childCompletelyLaidOut) {
+Res<None, Output> processBreakpointsAfterChild(Fragmentainer& fc, Breakpoint& currentBreakpoint, Box& parentBox, usize childIndex, Vec2Px currentBoxSize, bool childCompletelyLaidOut) {
     if (not fc.isDiscoveryMode())
         return Ok(NONE);
 
@@ -36,7 +36,7 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer &fc, Breakpoint &cu
         };
     }
 
-    Box &childBox = parentBox.children()[childIndex];
+    Box& childBox = parentBox.children()[childIndex];
     bool isLastChild = childIndex + 1 == parentBox.children().len();
 
     // breakpoint right after child
@@ -83,7 +83,7 @@ Res<None, Output> processBreakpointsBeforeChild(usize endAt, Vec2Px currentSize,
     return Ok(NONE);
 }
 
-Output fragmentEmptyBox(Tree &tree, Input input) {
+Output fragmentEmptyBox(Tree& tree, Input input) {
     // put this here instead of in layout.py since we want to know if its the empty box case
     Vec2Px knownSize{input.knownSize.x.unwrapOr(0_px), input.knownSize.y.unwrapOr(0_px)};
     if (tree.fc.isDiscoveryMode()) {
@@ -117,9 +117,9 @@ Output fragmentEmptyBox(Tree &tree, Input input) {
 
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
 struct BlockFormatingContext : public FormatingContext {
-    Px _computeCapmin(Tree &tree, Box &box, Input input, Px inlineSize) {
+    Px _computeCapmin(Tree& tree, Box& box, Input input, Px inlineSize) {
         Px capmin{};
-        for (auto &c : box.children()) {
+        for (auto& c : box.children()) {
             if (c.style->display != Display::TABLE_BOX) {
                 auto margin = computeMargins(
                     tree, c,
@@ -142,7 +142,7 @@ struct BlockFormatingContext : public FormatingContext {
         return capmin;
     }
 
-    Output run(Tree &tree, Box &box, Input input, usize startAt, Opt<usize> stopAt) override {
+    Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
         Px blockSize = 0_px;
         Px inlineSize = input.knownSize.width.unwrapOr(0_px);
 
@@ -162,7 +162,7 @@ struct BlockFormatingContext : public FormatingContext {
         bool blockWasCompletelyLaidOut = false;
 
         for (usize i = startAt; i < endChildren; ++i) {
-            auto &c = box.children()[i];
+            auto& c = box.children()[i];
 
             try$(
                 processBreakpointsBeforeChild(
@@ -248,7 +248,7 @@ struct BlockFormatingContext : public FormatingContext {
     }
 };
 
-Strong<FormatingContext> constructBlockFormatingContext(Box &) {
+Strong<FormatingContext> constructBlockFormatingContext(Box&) {
     return makeStrong<BlockFormatingContext>();
 }
 

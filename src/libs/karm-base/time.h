@@ -101,12 +101,12 @@ struct TimeSpan {
         return toMonths() / 12;
     }
 
-    constexpr TimeSpan &operator+=(TimeSpan other) {
+    constexpr TimeSpan& operator+=(TimeSpan other) {
         _value += other._value;
         return *this;
     }
 
-    constexpr TimeSpan &operator-=(TimeSpan other) {
+    constexpr TimeSpan& operator-=(TimeSpan other) {
         _value -= other._value;
         return *this;
     }
@@ -123,8 +123,8 @@ struct TimeSpan {
         return _value;
     }
 
-    auto operator<=>(TimeSpan const &other) const = default;
-    bool operator==(TimeSpan const &other) const = default;
+    auto operator<=>(TimeSpan const& other) const = default;
+    bool operator==(TimeSpan const& other) const = default;
 };
 
 inline TimeSpan operator""_us(unsigned long long value) {
@@ -183,12 +183,12 @@ struct TimeStamp {
         return _value == END_OF_TIME;
     }
 
-    constexpr TimeStamp &operator+=(TimeSpan other) {
+    constexpr TimeStamp& operator+=(TimeSpan other) {
         *this = *this + other;
         return *this;
     }
 
-    constexpr TimeStamp &operator-=(TimeSpan other) {
+    constexpr TimeStamp& operator-=(TimeSpan other) {
         *this = *this - other;
         return *this;
     }
@@ -221,8 +221,8 @@ struct TimeStamp {
         return _value;
     }
 
-    auto operator<=>(TimeStamp const &) const = default;
-    bool operator==(TimeStamp const &) const = default;
+    auto operator<=>(TimeStamp const&) const = default;
+    bool operator==(TimeStamp const&) const = default;
 };
 
 // MARK: Time ------------------------------------------------------------------
@@ -260,7 +260,7 @@ struct Day {
         return _raw;
     }
 
-    auto operator<=>(Day const &) const = default;
+    auto operator<=>(Day const&) const = default;
 };
 
 #define FOREACH_MONTH(MONTH) \
@@ -328,7 +328,7 @@ struct Month {
         return _raw;
     }
 
-    auto operator<=>(Month const &) const = default;
+    auto operator<=>(Month const&) const = default;
 };
 
 struct Year {
@@ -379,7 +379,7 @@ struct Year {
         return _raw;
     }
 
-    auto operator<=>(Year const &) const = default;
+    auto operator<=>(Year const&) const = default;
 };
 
 // MARK: Date ------------------------------------------------------------------
@@ -437,7 +437,7 @@ struct DayOfWeek {
         }
     }
 
-    auto operator<=>(DayOfWeek const &) const = default;
+    auto operator<=>(DayOfWeek const&) const = default;
 };
 
 struct Date {
@@ -500,7 +500,7 @@ struct Date {
         return (toTimeStamp() - firstJan.toTimeStamp()).toDays();
     }
 
-    auto operator<=>(Date const &) const = default;
+    auto operator<=>(Date const&) const = default;
 };
 
 // MARK: DateTime --------------------------------------------------------------

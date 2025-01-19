@@ -5,10 +5,10 @@
 #include <karm-text/loader.h>
 #include <karm-text/prose.h>
 
-Async::Task<> entryPointAsync(Sys::Context &) {
+Async::Task<> entryPointAsync(Sys::Context&) {
     auto printer = co_try$(Print::PdfPrinter::create(Mime::Uti::PUBLIC_PDF));
 
-    auto &ctx = printer->beginPage(Print::A4);
+    auto& ctx = printer->beginPage(Print::A4);
     ctx.fillStyle(Gfx::RED);
     ctx.rect({0, 0, 100, 100});
     ctx.fill(Gfx::FillRule::NONZERO);

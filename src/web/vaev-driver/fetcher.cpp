@@ -9,7 +9,7 @@
 
 namespace Vaev::Driver {
 
-Res<Strong<Markup::Document>> loadDocument(Mime::Url const &url, Mime::Mime const &mime, Io::Reader &reader) {
+Res<Strong<Markup::Document>> loadDocument(Mime::Url const& url, Mime::Mime const& mime, Io::Reader& reader) {
     auto dom = makeStrong<Markup::Document>(url);
     auto buf = try$(Io::readAllUtf8(reader));
 
@@ -36,7 +36,7 @@ Res<Strong<Markup::Document>> loadDocument(Mime::Url const &url, Mime::Mime cons
     }
 }
 
-Res<Strong<Markup::Document>> viewSource(Mime::Url const &url) {
+Res<Strong<Markup::Document>> viewSource(Mime::Url const& url) {
     auto file = try$(Sys::File::open(url));
     auto buf = try$(Io::readAllUtf8(file));
 
@@ -54,7 +54,7 @@ Res<Strong<Markup::Document>> viewSource(Mime::Url const &url) {
     return Ok(dom);
 }
 
-Res<Strong<Markup::Document>> indexOf(Mime::Url const &url) {
+Res<Strong<Markup::Document>> indexOf(Mime::Url const& url) {
     auto dom = makeStrong<Markup::Document>(url);
 
     auto body = makeStrong<Markup::Element>(Html::BODY);
@@ -71,7 +71,7 @@ Res<Strong<Markup::Document>> indexOf(Mime::Url const &url) {
 
     auto dir = try$(Sys::Dir::open(url));
 
-    for (auto const &entry : dir.entries()) {
+    for (auto const& entry : dir.entries()) {
         auto li = makeStrong<Markup::Element>(Html::LI);
         ul->appendChild(li);
 
@@ -88,7 +88,7 @@ Res<Strong<Markup::Document>> indexOf(Mime::Url const &url) {
     return Ok(dom);
 }
 
-Res<Strong<Markup::Document>> fetchDocument(Mime::Url const &url) {
+Res<Strong<Markup::Document>> fetchDocument(Mime::Url const& url) {
     if (url.scheme == "about") {
         if (url.path.str() == "blank")
             return fetchDocument("bundle://vaev-driver/blank.xhtml"_url);
@@ -122,7 +122,7 @@ Res<Style::StyleSheet> fetchStylesheet(Mime::Url url, Style::Origin origin) {
     return Ok(Style::StyleSheet::parse(s, origin));
 }
 
-void fetchStylesheets(Markup::Node const &node, Style::StyleBook &sb) {
+void fetchStylesheets(Markup::Node const& node, Style::StyleBook& sb) {
     auto el = node.is<Markup::Element>();
     if (el and el->tagName == Html::STYLE) {
         auto text = el->textContent();
@@ -153,7 +153,7 @@ void fetchStylesheets(Markup::Node const &node, Style::StyleBook &sb) {
             sb.add(sheet.take());
         }
     } else {
-        for (auto &child : node.children())
+        for (auto& child : node.children())
             fetchStylesheets(*child, sb);
     }
 }

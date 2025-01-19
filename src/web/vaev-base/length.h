@@ -130,17 +130,17 @@ struct Length {
         return not isAbsolute();
     }
 
-    constexpr bool operator==(Length const &other) const {
+    constexpr bool operator==(Length const& other) const {
         return _val == other._val and _unit == other._unit;
     }
 
-    constexpr std::partial_ordering operator<=>(Length const &other) const {
+    constexpr std::partial_ordering operator<=>(Length const& other) const {
         if (_unit != other._unit)
             return std::partial_ordering::unordered;
         return _val <=> other._val;
     }
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         e("{}{}", _val, _unit);
     }
 };

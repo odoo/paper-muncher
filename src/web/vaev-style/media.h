@@ -160,7 +160,7 @@ struct RangeBound {
     T value = {};
     Type type = NONE;
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         e(
             "{}{}",
             value,
@@ -171,7 +171,7 @@ struct RangeBound {
     }
 };
 
-template <StrLit NAME, typename T, auto Media::*F>
+template <StrLit NAME, typename T, auto Media::* F>
 struct RangeFeature {
     using Bound = RangeBound<T>;
     using Inner = T;
@@ -206,7 +206,7 @@ struct RangeFeature {
         return result;
     }
 
-    bool match(Media const &media) const {
+    bool match(Media const& media) const {
         return match(media.*F);
     }
 
@@ -249,12 +249,12 @@ struct RangeFeature {
         }
     }
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         e("{}: {} - {}", NAME, lower, upper);
     }
 };
 
-template <StrLit NAME, typename T, auto Media::*F>
+template <StrLit NAME, typename T, auto Media::* F>
 struct DiscreteFeature {
     using Inner = T;
 
@@ -284,11 +284,11 @@ struct DiscreteFeature {
         return actual == value;
     }
 
-    bool match(Media const &media) const {
+    bool match(Media const& media) const {
         return match(media.*F);
     }
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         e("({}: {} {})", NAME, type, value);
     }
 };
@@ -450,14 +450,14 @@ using _Feature = Union<
 struct Feature : public _Feature {
     using _Feature::_Feature;
 
-    void repr(Io::Emit &e) const {
-        visit([&](auto const &feature) {
+    void repr(Io::Emit& e) const {
+        visit([&](auto const& feature) {
             e("{}", feature);
         });
     }
 
-    bool match(Media const &media) const {
-        return visit([&](auto const &feature) {
+    bool match(Media const& media) const {
+        return visit([&](auto const& feature) {
             return feature.match(media);
         });
     }
@@ -486,7 +486,7 @@ struct MediaQuery {
         Box<MediaQuery> lhs;
         Box<MediaQuery> rhs;
 
-        bool match(Media const &media) const {
+        bool match(Media const& media) const {
             switch (type) {
             case Type::AND:
                 return lhs->match(media) and rhs->match(media);
@@ -497,7 +497,7 @@ struct MediaQuery {
             }
         }
 
-        void repr(Io::Emit &e) const {
+        void repr(Io::Emit& e) const {
             e("({} {} {})", *lhs, type, *rhs);
         }
     };
@@ -513,7 +513,7 @@ struct MediaQuery {
         Type type;
         Box<MediaQuery> query;
 
-        bool match(Media const &media) const {
+        bool match(Media const& media) const {
             switch (type) {
             case Type::NOT:
                 return not query->match(media);
@@ -524,7 +524,7 @@ struct MediaQuery {
             }
         }
 
-        void repr(Io::Emit &e) const {
+        void repr(Io::Emit& e) const {
             e("({} {})", type, *query);
         }
     };
@@ -546,7 +546,7 @@ struct MediaQuery {
 
     MediaQuery(Feature feature) : _store(feature) {}
 
-    MediaQuery(Meta::Convertible<Feature> auto &&feature)
+    MediaQuery(Meta::Convertible<Feature> auto&& feature)
         : _store(Feature{
               std::forward<decltype(feature)>(feature),
           }) {}
@@ -580,9 +580,9 @@ struct MediaQuery {
         return MediaQuery{OR, lhs, rhs};
     }
 
-    bool match(Media const &media) const {
+    bool match(Media const& media) const {
         return _store.visit(Visitor{
-            [&](auto const &value) {
+            [&](auto const& value) {
                 return value.match(media);
             },
             [](None) {
@@ -591,9 +591,9 @@ struct MediaQuery {
         });
     }
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         _store.visit(Visitor{
-            [&](auto const &value) {
+            [&](auto const& value) {
                 e("{}", value);
             },
             [&](None) {
@@ -605,6 +605,6 @@ struct MediaQuery {
 
 // MARK: Parser ----------------------------------------------------------------
 
-MediaQuery parseMediaQuery(Cursor<Css::Sst> &c);
+MediaQuery parseMediaQuery(Cursor<Css::Sst>& c);
 
 } // namespace Vaev::Style

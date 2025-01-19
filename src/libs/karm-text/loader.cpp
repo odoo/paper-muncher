@@ -7,7 +7,7 @@
 
 namespace Karm::Text {
 
-Res<Strong<Fontface>> loadFontface(Sys::Mmap &&map) {
+Res<Strong<Fontface>> loadFontface(Sys::Mmap&& map) {
     return Ok(try$(TtfFontface::load(std::move(map))));
 }
 

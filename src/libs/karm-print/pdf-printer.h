@@ -16,8 +16,8 @@ struct PdfPrinter : public FilePrinter {
     Vec<PdfPage> _pages;
     Opt<Pdf::Canvas> _canvas;
 
-    Gfx::Canvas &beginPage(PaperStock paper) override {
-        auto &page = _pages.emplaceBack(paper);
+    Gfx::Canvas& beginPage(PaperStock paper) override {
+        auto& page = _pages.emplaceBack(paper);
         _canvas = Pdf::Canvas{page.data, paper.size()};
 
         // NOTE: PDF has the coordinate system origin at the bottom left corner.
@@ -39,7 +39,7 @@ struct PdfPrinter : public FilePrinter {
         Pdf::Ref pagesRef = alloc.alloc();
 
         // Page
-        for (auto &p : _pages) {
+        for (auto& p : _pages) {
             Pdf::Ref pageRef = alloc.alloc();
             Pdf::Ref contentsRef = alloc.alloc();
 
@@ -103,11 +103,11 @@ struct PdfPrinter : public FilePrinter {
         return file;
     }
 
-    void write(Io::Emit &e) {
+    void write(Io::Emit& e) {
         pdf().write(e);
     }
 
-    Res<> write(Io::Writer &w) override {
+    Res<> write(Io::Writer& w) override {
         Io::TextEncoder<> encoder{w};
         Io::Emit e{encoder};
         write(e);

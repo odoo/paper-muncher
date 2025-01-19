@@ -46,7 +46,7 @@ struct Host : public Node {
         return pixels().bound();
     }
 
-    void paint(Gfx::Canvas &g, Math::Recti r) override {
+    void paint(Gfx::Canvas& g, Math::Recti r) override {
         g.push();
         g.clip(r);
         g.clear(r, GRAY950);
@@ -60,7 +60,7 @@ struct Host : public Node {
     void paint() {
         _g.begin(mutPixels());
 
-        for (auto &d : _dirty) {
+        for (auto& d : _dirty) {
             paint(_g, d);
         }
 
@@ -74,11 +74,11 @@ struct Host : public Node {
         _root->layout(r);
     }
 
-    void event(App::Event &event) override {
+    void event(App::Event& event) override {
         _root->event(event);
     }
 
-    void bubble(App::Event &event) override {
+    void bubble(App::Event& event) override {
         if (auto e = event.is<Node::PaintEvent>()) {
             _dirty.pushBack(e->bound);
             event.accept();

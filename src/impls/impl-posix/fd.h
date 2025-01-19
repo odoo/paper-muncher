@@ -32,7 +32,7 @@ struct Fd : public Sys::Fd {
 
     Res<Sys::_Received> recv(MutBytes, MutSlice<Sys::Handle>) override;
 
-    Res<> pack(Io::PackEmit &e) override;
+    Res<> pack(Io::PackEmit& e) override;
 };
 
 } // namespace Posix

@@ -11,7 +11,7 @@ static constexpr bool DEBUG_HTML_PARSER = false;
 
 struct Entity {
     Str name;
-    Rune const *runes;
+    Rune const* runes;
 
     operator bool() {
         return runes != nullptr;
@@ -3244,7 +3244,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
             auto target = prefix.str();
 
             auto bestMatch = Match::NO;
-            for (auto &entity : ENTITIES) {
+            for (auto& entity : ENTITIES) {
                 auto match = startWith(entity.name, target);
 
                 if (match == Match::PARTIAL)
@@ -3301,7 +3301,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
                 auto _tempWithUnexpandedEntity = _temp.str();
                 auto entityName = _Str<Utf8>(_tempWithUnexpandedEntity.begin(), matchedCharReferenceNoSemiColon.unwrap());
 
-                for (auto &entity : ENTITIES) {
+                for (auto& entity : ENTITIES) {
                     if (entityName == entity.name) {
 
                         _temp.clear();
@@ -3350,7 +3350,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
             // Append one or two characters corresponding to the character reference name (as
             // given by the second column of the named character references
             // table) to the temporary buffer.
-            for (auto &entity : ENTITIES) {
+            for (auto& entity : ENTITIES) {
                 if (_temp.str() == entity.name) {
                     _temp.clear();
                     _temp.append(Slice<Rune>::fromNullterminated(entity.runes));
@@ -3656,7 +3656,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
             Pair{0x9Fu, 0x0178uz},
         };
 
-        for (auto &conv : CONV)
+        for (auto& conv : CONV)
             if (conv.v0 == _currChar) {
                 _currChar = conv.v1;
                 break;
@@ -3694,7 +3694,7 @@ void HtmlParser::_raise(Str msg) {
 // https://html.spec.whatwg.org/multipage/parsing.html#the-stack-of-open-elements
 
 // https://html.spec.whatwg.org/multipage/parsing.html#special
-bool isSpecial(TagName const &tag) {
+bool isSpecial(TagName const& tag) {
     static constexpr Array SPECIAL{
 #define SPECIAL(NAME) NAME,
 #include "defs/ns-html-special.inc"
@@ -3707,7 +3707,7 @@ bool isSpecial(TagName const &tag) {
 // 13.2.4.3 MARK: The list of active formatting elements
 // https://html.spec.whatwg.org/multipage/parsing.html#list-of-active-formatting-elements
 
-void reconstructActiveFormattingElements(HtmlParser &) {
+void reconstructActiveFormattingElements(HtmlParser&) {
     // TODO
 }
 
@@ -3715,7 +3715,7 @@ void reconstructActiveFormattingElements(HtmlParser &) {
 // https://html.spec.whatwg.org/multipage/parsing.html#tokenization
 
 // https://html.spec.whatwg.org/multipage/parsing.html#acknowledge-self-closing-flag
-void acknowledgeSelfClosingFlag(HtmlToken const &) {
+void acknowledgeSelfClosingFlag(HtmlToken const&) {
     logDebugIf(DEBUG_HTML_PARSER, "acknowledgeSelfClosingFlag not implemented");
 }
 
@@ -3743,7 +3743,7 @@ struct AdjustedInsertionLocation {
 };
 
 // https://html.spec.whatwg.org/multipage/parsing.html#appropriate-place-for-inserting-a-node
-AdjustedInsertionLocation apropriatePlaceForInsertingANode(HtmlParser &b, Opt<Strong<Element>> overrideTarget = NONE) {
+AdjustedInsertionLocation apropriatePlaceForInsertingANode(HtmlParser& b, Opt<Strong<Element>> overrideTarget = NONE) {
     // 1. If there was an override target specified, then let target be
     //    the override target.
     //
@@ -3795,7 +3795,7 @@ AdjustedInsertionLocation apropriatePlaceForInsertingANode(HtmlParser &b, Opt<St
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#create-an-element-for-the-token
-Strong<Element> createElementFor(HtmlToken const &t, Ns ns) {
+Strong<Element> createElementFor(HtmlToken const& t, Ns ns) {
     // NOSPEC: Keep it simple for the POC
 
     // 1. If the active speculative HTML parser is not null, then return the
@@ -3844,7 +3844,7 @@ Strong<Element> createElementFor(HtmlToken const &t, Ns ns) {
     auto el = makeStrong<Element>(tag);
 
     // 10. Append each attribute in the given token to element.
-    for (auto &[name, value] : t.attrs) {
+    for (auto& [name, value] : t.attrs) {
         el->setAttribute(AttrName::make(name, ns), value);
     }
 
@@ -3883,7 +3883,7 @@ Strong<Element> createElementFor(HtmlToken const &t, Ns ns) {
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-foreign-element
 
-static Strong<Element> insertAForeignElement(HtmlParser &b, HtmlToken const &t, Ns ns, bool onlyAddToElementStack = false) {
+static Strong<Element> insertAForeignElement(HtmlParser& b, HtmlToken const& t, Ns ns, bool onlyAddToElementStack = false) {
     // 1. Let the adjusted insertion location be the appropriate place for inserting a node.
     auto location = apropriatePlaceForInsertingANode(b);
 
@@ -3905,12 +3905,12 @@ static Strong<Element> insertAForeignElement(HtmlParser &b, HtmlToken const &t, 
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-an-html-element
-static Strong<Element> insertHtmlElement(HtmlParser &b, HtmlToken const &t) {
+static Strong<Element> insertHtmlElement(HtmlParser& b, HtmlToken const& t) {
     return insertAForeignElement(b, t, Vaev::HTML, false);
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-character
-static void insertACharacter(HtmlParser &b, Rune c) {
+static void insertACharacter(HtmlParser& b, Rune c) {
     // 2. Let the adjusted insertion location be the appropriate place for inserting a node.
     auto location = apropriatePlaceForInsertingANode(b);
 
@@ -3938,13 +3938,13 @@ static void insertACharacter(HtmlParser &b, Rune c) {
     }
 }
 
-static void insertACharacter(HtmlParser &b, HtmlToken const &t) {
+static void insertACharacter(HtmlParser& b, HtmlToken const& t) {
     // 1. Let data be the characters passed to the algorithm, or, if no characters were explicitly specified, the character of the character token being processed.
     insertACharacter(b, t.rune);
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-comment
-static void insertAComment(HtmlParser &b, HtmlToken const &t) {
+static void insertAComment(HtmlParser& b, HtmlToken const& t) {
     // 1. Let data be the data given in the comment token being processed.
 
     // 2. If position was specified, then let the adjusted insertion
@@ -3964,7 +3964,7 @@ static void insertAComment(HtmlParser &b, HtmlToken const &t) {
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#reset-the-insertion-mode-appropriately
-static void resetTheInsertionModeAppropriately(HtmlParser &b) {
+static void resetTheInsertionModeAppropriately(HtmlParser& b) {
     // 1. Let last be false.
     bool _last = false;
 
@@ -4097,14 +4097,14 @@ static void resetTheInsertionModeAppropriately(HtmlParser &b) {
 // 13.2.6.2 MARK: Parsing elements that contain only text
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-elements-that-contain-only-text
 
-static void parseRawTextElement(HtmlParser &b, HtmlToken const &t) {
+static void parseRawTextElement(HtmlParser& b, HtmlToken const& t) {
     insertHtmlElement(b, t);
     b._lexer._switchTo(HtmlLexer::RAWTEXT);
     b._originalInsertionMode = b._insertionMode;
     b._switchTo(HtmlParser::Mode::TEXT);
 }
 
-static void parseRcDataElement(HtmlParser &b, HtmlToken const &t) {
+static void parseRcDataElement(HtmlParser& b, HtmlToken const& t) {
     insertHtmlElement(b, t);
     b._lexer._switchTo(HtmlLexer::RCDATA);
     b._originalInsertionMode = b._insertionMode;
@@ -4117,7 +4117,7 @@ static constexpr Array IMPLIED_END_TAGS = {
     Html::DD, Html::DT, Html::LI, Html::OPTION, Html::OPTGROUP, Html::P, Html::RB, Html::RP, Html::RT, Html::RTC
 };
 
-static void generateImpliedEndTags(HtmlParser &b, Opt<TagName> except = NONE) {
+static void generateImpliedEndTags(HtmlParser& b, Opt<TagName> except = NONE) {
     while (contains(IMPLIED_END_TAGS, last(b._openElements)->tagName) and
            last(b._openElements)->tagName != except) {
         b._openElements.popBack();
@@ -4129,12 +4129,12 @@ static void generateImpliedEndTags(HtmlParser &b, Opt<TagName> except = NONE) {
 // 13.2.6.4.1 MARK: The "initial" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#the-initial-insertion-mode
 
-static QuirkMode _whichQuirkMode(HtmlToken const &) {
+static QuirkMode _whichQuirkMode(HtmlToken const&) {
     // NOSPEC: We assume no quirk mode
     return QuirkMode::NO;
 }
 
-void HtmlParser::_handleInitialMode(HtmlToken const &t) {
+void HtmlParser::_handleInitialMode(HtmlToken const& t) {
     // A character token that is one of U+0009 CHARACTER TABULATION,
     // U+000A LINE FEED (LF), U+000C FORM FEED (FF),
     // U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
@@ -4171,7 +4171,7 @@ void HtmlParser::_handleInitialMode(HtmlToken const &t) {
 
 // 13.2.6.4.2 MARK: The "before html" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#the-before-html-insertion-mode
-void HtmlParser::_handleBeforeHtml(HtmlToken const &t) {
+void HtmlParser::_handleBeforeHtml(HtmlToken const& t) {
     // A DOCTYPE token
     if (t.type == HtmlToken::DOCTYPE) {
         // ignore
@@ -4221,7 +4221,7 @@ void HtmlParser::_handleBeforeHtml(HtmlToken const &t) {
 
 // 13.2.6.4.3 MARK: The "before head" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#the-before-head-insertion-mode
-void HtmlParser::_handleBeforeHead(HtmlToken const &t) {
+void HtmlParser::_handleBeforeHead(HtmlToken const& t) {
     // A character token that is one of U+0009 CHARACTER TABULATION,
     // U+000A LINE FEED (LF), U+000C FORM FEED (FF),
     // U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
@@ -4277,7 +4277,7 @@ void HtmlParser::_handleBeforeHead(HtmlToken const &t) {
 
 // 13.2.6.4.4 MARK: The "in head" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inhead
-void HtmlParser::_handleInHead(HtmlToken const &t) {
+void HtmlParser::_handleInHead(HtmlToken const& t) {
     auto anythingElse = [&] {
         _openElements.popBack();
         _switchTo(Mode::AFTER_HEAD);
@@ -4413,7 +4413,7 @@ void HtmlParser::_handleInHead(HtmlToken const &t) {
 
 // 13.2.6.4.5 MARK: The "in head noscript" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inheadnoscript
-void HtmlParser::_handleInHeadNoScript(HtmlToken const &t) {
+void HtmlParser::_handleInHeadNoScript(HtmlToken const& t) {
     auto anythingElse = [&] {
         _raise();
         _openElements.popBack();
@@ -4478,7 +4478,7 @@ void HtmlParser::_handleInHeadNoScript(HtmlToken const &t) {
 
 // 13.2.6.4.6 MARK: The "after head" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#the-after-head-insertion-mode
-void HtmlParser::_handleAfterHead(HtmlToken const &t) {
+void HtmlParser::_handleAfterHead(HtmlToken const& t) {
     auto anythingElse = [&] {
         HtmlToken bodyToken;
         bodyToken.type = HtmlToken::START_TAG;
@@ -4568,7 +4568,7 @@ void HtmlParser::_handleAfterHead(HtmlToken const &t) {
 
 // 13.2.6.4.7 MARK: The "in body" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inbody
-void HtmlParser::_handleInBody(HtmlToken const &t) {
+void HtmlParser::_handleInBody(HtmlToken const& t) {
     auto closePElementIfInButtonScope = [&]() {
         // https://html.spec.whatwg.org/#close-a-p-element
         // If the stack of open elements has a p element in button scope, then close a p element.
@@ -4650,7 +4650,7 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
         // is not an implied end tag or
         // tbody element, a td element, a tfoot element, a th element, a thead element, a tr element, the body element, or the html
         // then this is a parse error.
-        for (auto &el : _openElements) {
+        for (auto& el : _openElements) {
             if (not contains(IMPLIED_END_TAGS, el->tagName) and
                 el->tagName != Html::TBODY and el->tagName != Html::TD and el->tagName != Html::TFOOT and
                 el->tagName != Html::TH and el->tagName != Html::THEAD and el->tagName != Html::TR and
@@ -4833,7 +4833,7 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
         // If the token does not have an attribute with the name "type",
         // or if it does, but that attribute's value is not an ASCII case-insensitive match for the string "hidden",
         bool hasHiddenAsTypeAttrValue = false;
-        for (auto &[name, value] : t.attrs) {
+        for (auto& [name, value] : t.attrs) {
             if (name == "type") {
                 // TODO: ASCII case-insensitive match
                 if (value == "hidden") {
@@ -4924,7 +4924,7 @@ void HtmlParser::_handleInBody(HtmlToken const &t) {
 
 // 13.2.6.4.8 MARK: The "text" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-incdata
-void HtmlParser::_handleText(HtmlToken const &t) {
+void HtmlParser::_handleText(HtmlToken const& t) {
     // A character token
     if (t.type == HtmlToken::CHARACTER) {
         insertACharacter(
@@ -4958,7 +4958,7 @@ void HtmlParser::_handleText(HtmlToken const &t) {
     // FIXME: Implement the rest of the rules
 }
 
-static void _inTableModeAnythingElse(HtmlParser &b, HtmlToken const &t) {
+static void _inTableModeAnythingElse(HtmlParser& b, HtmlToken const& t) {
     // Parse error.
     b._raise();
 
@@ -4974,7 +4974,7 @@ static void _inTableModeAnythingElse(HtmlParser &b, HtmlToken const &t) {
 
 // 13.2.6.4.9 MARK: The "in table" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intable
-void HtmlParser::_handleInTable(HtmlToken const &t) {
+void HtmlParser::_handleInTable(HtmlToken const& t) {
     auto _clearTheStackBackToATableContext = [&]() {
         while (last(_openElements)->tagName != Html::TABLE and
                last(_openElements)->tagName != Html::TEMPLATE and
@@ -5150,7 +5150,7 @@ void HtmlParser::_handleInTable(HtmlToken const &t) {
         // If the token does not have an attribute with the name "type",
         // or if it does, but that attribute's value is not an ASCII case-insensitive match for the string "hidden",
         bool hasHiddenAsTypeAttrValue = false;
-        for (auto &[name, value] : t.attrs) {
+        for (auto& [name, value] : t.attrs) {
             if (name == "type") {
                 // TODO: ASCII case-insensitive match
                 if (value == "hidden") {
@@ -5185,7 +5185,7 @@ void HtmlParser::_handleInTable(HtmlToken const &t) {
         _raise();
 
         // If there is a template element on the stack of open elements, or if the form element pointer is not null, ignore the token.
-        for (auto &el : _openElements) {
+        for (auto& el : _openElements) {
             if (el->tagName == Html::TEMPLATE)
                 return;
         }
@@ -5218,7 +5218,7 @@ void HtmlParser::_handleInTable(HtmlToken const &t) {
 
 // 13.2.6.4.10 MARK: The "in table text" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intabletext
-void HtmlParser::_handleInTableText(HtmlToken const &t) {
+void HtmlParser::_handleInTableText(HtmlToken const& t) {
 
     // A character token that is U+0000 NULL
     if (t.type == HtmlToken::CHARACTER and t.rune == '\0') {
@@ -5237,7 +5237,7 @@ void HtmlParser::_handleInTableText(HtmlToken const &t) {
         // whitespace,
         // then this is a parse error:
         bool hasNonWhitespace = false;
-        for (auto const &token : _pendingTableCharacterTokens) {
+        for (auto const& token : _pendingTableCharacterTokens) {
             if (token.rune != '\t' and token.rune != '\n' and
                 token.rune != '\f' and token.rune != '\r' and token.rune != ' ') {
                 hasNonWhitespace = true;
@@ -5248,12 +5248,12 @@ void HtmlParser::_handleInTableText(HtmlToken const &t) {
         if (hasNonWhitespace) {
             // reprocess the character tokens in the pending table character tokens list using the rules given in
             // the "anything else" entry in the "in table" insertion mode.
-            for (auto const &token : _pendingTableCharacterTokens) {
+            for (auto const& token : _pendingTableCharacterTokens) {
                 _inTableModeAnythingElse(*this, token);
             }
         } else {
             // Otherwise, insert the characters given by the pending table character tokens list.
-            for (auto const &token : _pendingTableCharacterTokens) {
+            for (auto const& token : _pendingTableCharacterTokens) {
                 insertACharacter(*this, token);
             }
         }
@@ -5266,7 +5266,7 @@ void HtmlParser::_handleInTableText(HtmlToken const &t) {
 
 // 13.2.6.4.13 MARK: The "in table body" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intbody
-void HtmlParser::_handleInTableBody(HtmlToken const &t) {
+void HtmlParser::_handleInTableBody(HtmlToken const& t) {
     auto _clearTheStackBackToATableBodyContext = [&]() {
         while (last(_openElements)->tagName != Html::TBODY and
                last(_openElements)->tagName != Html::TFOOT and
@@ -5371,7 +5371,7 @@ void HtmlParser::_handleInTableBody(HtmlToken const &t) {
 
 // 13.2.6.4.14 MARK: The "in row" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intr
-void HtmlParser::_handleInTableRow(HtmlToken const &t) {
+void HtmlParser::_handleInTableRow(HtmlToken const& t) {
     auto _clearTheStackBackToATableRowContext = [&]() {
         while (last(_openElements)->tagName != Html::TR and
                last(_openElements)->tagName != Html::TEMPLATE and
@@ -5485,7 +5485,7 @@ void HtmlParser::_handleInTableRow(HtmlToken const &t) {
 
 // 13.2.6.4.15 MARK: The "in cell" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intd
-void HtmlParser::_handleInCell(HtmlToken const &t) {
+void HtmlParser::_handleInCell(HtmlToken const& t) {
     auto _closeTheCell = [&]() {
         // Generate implied end tags.
         generateImpliedEndTags(*this);
@@ -5595,7 +5595,7 @@ void HtmlParser::_handleInCell(HtmlToken const &t) {
 
 // 3.2.6.4.22 MARK: The "after after body" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#the-after-after-body-insertion-mode
-void HtmlParser::_handleAfterBody(HtmlToken const &t) {
+void HtmlParser::_handleAfterBody(HtmlToken const& t) {
     // A comment token
     if (t.type == HtmlToken::COMMENT) {
         // Insert a comment.
@@ -5628,7 +5628,7 @@ void HtmlParser::_switchTo(Mode mode) {
     _insertionMode = mode;
 }
 
-void HtmlParser::_acceptIn(Mode mode, HtmlToken const &t) {
+void HtmlParser::_acceptIn(Mode mode, HtmlToken const& t) {
     logDebugIf(DEBUG_HTML_PARSER, "Parsing {} in {}", t, mode);
 
     switch (mode) {
@@ -5730,7 +5730,7 @@ void HtmlParser::_acceptIn(Mode mode, HtmlToken const &t) {
     }
 }
 
-void HtmlParser::accept(HtmlToken const &t) {
+void HtmlParser::accept(HtmlToken const& t) {
     _acceptIn(_insertionMode, t);
 }
 

@@ -15,7 +15,7 @@ namespace Vaev::Driver {
 
 static constexpr bool DEBUG_RENDER = false;
 
-RenderResult render(Markup::Document const &dom, Style::Media const &media, Layout::Viewport viewport) {
+RenderResult render(Markup::Document const& dom, Style::Media const& media, Layout::Viewport viewport) {
     Style::StyleBook stylebook;
     stylebook.add(
         fetchStylesheet("bundle://vaev-driver/html.css"_url, Style::Origin::USER_AGENT)

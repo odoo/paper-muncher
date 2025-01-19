@@ -6,7 +6,7 @@
 namespace Karm::Io::Tests {
 
 template <typename T>
-Res<> testCase(Str expected, T const &value, Str format = "") {
+Res<> testCase(Str expected, T const& value, Str format = "") {
     auto str = try$(toStr(value, format));
     if (str != expected) {
         logError("expected: {}, got: {}", expected, str);

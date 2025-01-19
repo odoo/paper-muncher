@@ -63,12 +63,12 @@ Child text(Str text);
 Child text(Strong<Karm::Text::Prose> prose);
 
 template <typename... Args>
-inline Child text(Text::ProseStyle style, Str format, Args &&...args) {
+inline Child text(Text::ProseStyle style, Str format, Args&&... args) {
     return text(style, Io::format(format, std::forward<Args>(args)...).unwrap());
 }
 
 template <typename... Args>
-inline Child text(Str format, Args &&...args) {
+inline Child text(Str format, Args&&... args) {
     return text(Io::format(format, std::forward<Args>(args)...).unwrap());
 }
 
@@ -76,11 +76,11 @@ inline Child text(Str format, Args &&...args) {
     inline Child STYLE(Str text) { return Karm::Ui::text(TextStyles::STYLE(), text); }                                    \
     inline Child STYLE(Gfx::Color color, Str text) { return Karm::Ui::text(TextStyles::STYLE().withColor(color), text); } \
     template <typename... Args>                                                                                           \
-    inline Child STYLE(Str format, Args &&...args) {                                                                      \
+    inline Child STYLE(Str format, Args&&... args) {                                                                      \
         return text(TextStyles::STYLE(), format, std::forward<Args>(args)...);                                            \
     }                                                                                                                     \
     template <typename... Args>                                                                                           \
-    inline Child STYLE(Gfx::Color color, Str format, Args &&...args) {                                                    \
+    inline Child STYLE(Gfx::Color color, Str format, Args&&... args) {                                                    \
         return text(TextStyles::STYLE().withColor(color), format, std::forward<Args>(args)...);                           \
     }
 
@@ -119,7 +119,7 @@ Child image(Image::Picture image, Math::Radiif radii);
 
 // MARK: Canvas ----------------------------------------------------------------
 
-using OnPaint = Func<void(Gfx::Canvas &g, Math::Vec2i size)>;
+using OnPaint = Func<void(Gfx::Canvas& g, Math::Vec2i size)>;
 
 Child canvas(OnPaint onPaint);
 

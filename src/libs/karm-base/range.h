@@ -128,7 +128,7 @@ struct Range {
         return true;
     }
 
-    std::strong_ordering operator<=>(Range const &other) const {
+    std::strong_ordering operator<=>(Range const& other) const {
         if (start == other.start and size == other.size)
             return std::strong_ordering::equal;
 
@@ -138,7 +138,7 @@ struct Range {
         return std::strong_ordering::greater;
     }
 
-    bool operator==(Range const &other) const {
+    bool operator==(Range const& other) const {
         return start == other.start and size == other.size;
     }
 

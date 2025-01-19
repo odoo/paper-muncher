@@ -7,7 +7,7 @@ static Color _lerp(Gradient::Stop lhs, Gradient::Stop rhs, f64 pos) {
     return lhs.v0.lerpWith(rhs.v0, t);
 }
 
-static void _bakeStops(Slice<Gradient::Stop> stops, Gradient::Buf &buf, bool wraparound) {
+static void _bakeStops(Slice<Gradient::Stop> stops, Gradient::Buf& buf, bool wraparound) {
     fill(mutSub(buf), Gfx::BLACK);
 
     if (stops.len() == 0)

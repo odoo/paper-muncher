@@ -40,7 +40,7 @@ Ui::Child aboutDialog(String name) {
             ),
         }),
         dialogFooter({
-            button([](auto &n) {
+            button([](auto& n) {
                 showDialog(n, licenseDialog());
             },
                    Ui::ButtonStyle::regular(), "License"),

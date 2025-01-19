@@ -17,7 +17,7 @@ struct Text : public Node {
         return {_origin, _prose->size()};
     }
 
-    void paint(Gfx::Canvas &g, Math::Rectf r, PaintOptions) override {
+    void paint(Gfx::Canvas& g, Math::Rectf r, PaintOptions) override {
         if (not bound().colide(r))
             return;
 
@@ -27,7 +27,7 @@ struct Text : public Node {
         g.pop();
     }
 
-    void repr(Io::Emit &e) const override {
+    void repr(Io::Emit& e) const override {
         e("(text z:{} {})", zIndex, _origin);
     }
 };

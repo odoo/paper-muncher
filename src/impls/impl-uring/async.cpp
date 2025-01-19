@@ -43,8 +43,8 @@ struct UringSched : public Sys::Sched {
 
     struct _Job {
         virtual ~_Job() = default;
-        virtual void submit(io_uring_sqe *sqe) = 0;
-        virtual void complete(io_uring_cqe *cqe) = 0;
+        virtual void submit(io_uring_sqe* sqe) = 0;
+        virtual void complete(io_uring_cqe* cqe) = 0;
     };
 
     io_uring _ring;
@@ -60,7 +60,7 @@ struct UringSched : public Sys::Sched {
 
     void submit(Strong<_Job> job) {
         auto id = _id++;
-        auto *sqe = io_uring_get_sqe(&_ring);
+        auto* sqe = io_uring_get_sqe(&_ring);
         if (not sqe) [[unlikely]]
             panic("failed to get sqe");
         sqe->user_data = id;
@@ -78,11 +78,11 @@ struct UringSched : public Sys::Sched {
             Job(Strong<Fd> fd, MutBytes buf)
                 : _fd(fd), _buf(buf) {}
 
-            void submit(io_uring_sqe *sqe) override {
+            void submit(io_uring_sqe* sqe) override {
                 io_uring_prep_read(sqe, _fd->handle().value(), _buf.buf(), _buf.len(), 0);
             }
 
-            void complete(io_uring_cqe *cqe) override {
+            void complete(io_uring_cqe* cqe) override {
                 auto res = cqe->res;
                 if (res < 0)
                     _promise.resolve(Posix::fromErrno(-cqe->res));
@@ -109,11 +109,11 @@ struct UringSched : public Sys::Sched {
             Job(Strong<Fd> fd, Bytes buf)
                 : _fd(fd), _buf(buf) {}
 
-            void submit(io_uring_sqe *sqe) override {
+            void submit(io_uring_sqe* sqe) override {
                 io_uring_prep_write(sqe, _fd->handle().value(), _buf.buf(), _buf.len(), 0);
             }
 
-            void complete(io_uring_cqe *cqe) override {
+            void complete(io_uring_cqe* cqe) override {
                 auto res = cqe->res;
                 if (res < 0)
                     _promise.resolve(Posix::fromErrno(-cqe->res));
@@ -139,11 +139,11 @@ struct UringSched : public Sys::Sched {
             Job(Strong<Fd> fd)
                 : _fd(fd) {}
 
-            void submit(io_uring_sqe *sqe) override {
+            void submit(io_uring_sqe* sqe) override {
                 io_uring_prep_fsync(sqe, _fd->handle().value(), 0);
             }
 
-            void complete(io_uring_cqe *cqe) override {
+            void complete(io_uring_cqe* cqe) override {
                 auto res = cqe->res;
                 if (res < 0)
                     _promise.resolve(Posix::fromErrno(-cqe->res));
@@ -171,11 +171,11 @@ struct UringSched : public Sys::Sched {
             Job(Strong<Fd> fd)
                 : _fd(fd) {}
 
-            void submit(io_uring_sqe *sqe) override {
-                io_uring_prep_accept(sqe, _fd->handle().value(), (struct sockaddr *)&_addr, &_addrLen, 0);
+            void submit(io_uring_sqe* sqe) override {
+                io_uring_prep_accept(sqe, _fd->handle().value(), (struct sockaddr*)&_addr, &_addrLen, 0);
             }
 
-            void complete(io_uring_cqe *cqe) override {
+            void complete(io_uring_cqe* cqe) override {
                 auto res = cqe->res;
                 if (res < 0)
                     _promise.resolve(Posix::fromErrno(-cqe->res));
@@ -210,8 +210,8 @@ struct UringSched : public Sys::Sched {
             Job(Strong<Fd> fd, Bytes buf, SocketAddr addr)
                 : _fd(fd), _buf(buf), _addr(Posix::toSockAddr(addr)) {}
 
-            void submit(io_uring_sqe *sqe) override {
-                _iov.iov_base = const_cast<Byte *>(_buf.begin());
+            void submit(io_uring_sqe* sqe) override {
+                _iov.iov_base = const_cast<Byte*>(_buf.begin());
                 _iov.iov_len = _buf.len();
 
                 _msg.msg_name = &_addr;
@@ -222,7 +222,7 @@ struct UringSched : public Sys::Sched {
                 io_uring_prep_sendmsg(sqe, _fd->handle().value(), &_msg, 0);
             }
 
-            void complete(io_uring_cqe *cqe) override {
+            void complete(io_uring_cqe* cqe) override {
                 if (cqe->res < 0)
                     _promise.resolve(Posix::fromErrno(-cqe->res));
                 else
@@ -251,7 +251,7 @@ struct UringSched : public Sys::Sched {
             Job(Strong<Fd> fd, MutBytes buf)
                 : _fd(fd), _buf(buf) {}
 
-            void submit(io_uring_sqe *sqe) override {
+            void submit(io_uring_sqe* sqe) override {
                 _iov.iov_base = _buf.begin();
                 _iov.iov_len = _buf.len();
 
@@ -263,7 +263,7 @@ struct UringSched : public Sys::Sched {
                 io_uring_prep_recvmsg(sqe, _fd->handle().value(), &_msg, 0);
             }
 
-            void complete(io_uring_cqe *cqe) override {
+            void complete(io_uring_cqe* cqe) override {
                 if (cqe->res < 0)
                     _promise.resolve(Posix::fromErrno(-cqe->res));
                 else {
@@ -292,12 +292,12 @@ struct UringSched : public Sys::Sched {
             Job(TimeStamp until)
                 : _until(until) {}
 
-            void submit(io_uring_sqe *sqe) override {
+            void submit(io_uring_sqe* sqe) override {
                 _ts = toKernelTimespec(_until);
                 io_uring_prep_timeout(sqe, &_ts, 0, IORING_TIMEOUT_ABS | IORING_TIMEOUT_REALTIME);
             }
 
-            void complete(io_uring_cqe *cqe) override {
+            void complete(io_uring_cqe* cqe) override {
                 if (cqe->res < 0 and cqe->res != -ETIME)
                     _promise.resolve(Posix::fromErrno(-cqe->res));
                 else
@@ -324,10 +324,10 @@ struct UringSched : public Sys::Sched {
             delta = until - now;
 
         struct __kernel_timespec ts = toKernelTimespec(delta);
-        Array<io_uring_cqe *, NCQES> cqes{};
+        Array<io_uring_cqe*, NCQES> cqes{};
         io_uring_wait_cqes(&_ring, cqes.buf(), 1, &ts, nullptr);
 
-        for (auto *cqe : cqes) {
+        for (auto* cqe : cqes) {
             if (not cqe)
                 break;
 
@@ -341,7 +341,7 @@ struct UringSched : public Sys::Sched {
     }
 };
 
-Sched &globalSched() {
+Sched& globalSched() {
     static UringSched sched = [] {
         io_uring ring{};
         auto res = io_uring_queue_init(UringSched::NCQES, &ring, 0);

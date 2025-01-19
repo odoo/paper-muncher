@@ -3,7 +3,7 @@
 
 namespace Vaev::Style {
 
-Computed const &Computed::initial() {
+Computed const& Computed::initial() {
     static Computed computed = [] {
         Computed res{};
         StyleProp::any([&]<typename T>(Meta::Type<T>) {
@@ -15,45 +15,45 @@ Computed const &Computed::initial() {
     return computed;
 }
 
-void Computer::_evalRule(Rule const &rule, Markup::Element const &el, MatchingRules &matches) {
+void Computer::_evalRule(Rule const& rule, Markup::Element const& el, MatchingRules& matches) {
     rule.visit(Visitor{
-        [&](StyleRule const &r) {
+        [&](StyleRule const& r) {
             if (auto specificity = r.matchWithSpecificity(el))
                 matches.pushBack({&r, specificity.unwrap()});
         },
-        [&](MediaRule const &r) {
+        [&](MediaRule const& r) {
             if (r.match(_media))
-                for (auto const &subRule : r.rules)
+                for (auto const& subRule : r.rules)
                     _evalRule(subRule, el, matches);
         },
-        [&](auto const &) {
+        [&](auto const&) {
             // Ignore other rule types
         }
     });
 }
 
-void Computer::_evalRule(Rule const &rule, Page const &page, PageComputedStyle &c) {
+void Computer::_evalRule(Rule const& rule, Page const& page, PageComputedStyle& c) {
     rule.visit(Visitor{
-        [&](PageRule const &r) {
+        [&](PageRule const& r) {
             if (r.match(page))
                 r.apply(c);
         },
-        [&](MediaRule const &r) {
+        [&](MediaRule const& r) {
             if (r.match(_media))
-                for (auto const &subRule : r.rules)
+                for (auto const& subRule : r.rules)
                     _evalRule(subRule, page, c);
         },
-        [&](auto const &) {
+        [&](auto const&) {
             // Ignore other rule types
         }
     });
 }
 
-Strong<Computed> Computer::_evalCascade(Computed const &parent, MatchingRules &matchingRules) {
+Strong<Computed> Computer::_evalCascade(Computed const& parent, MatchingRules& matchingRules) {
     // Sort origin and specificity
     stableSort(
         matchingRules,
-        [](auto const &a, auto const &b) {
+        [](auto const& a, auto const& b) {
             if (a.v0->origin != b.v0->origin)
                 return a.v0->origin <=> b.v0->origin;
             return a.v1 <=> b.v1;
@@ -66,15 +66,15 @@ Strong<Computed> Computer::_evalCascade(Computed const &parent, MatchingRules &m
     Vec<Cursor<StyleProp>> importantProps;
 
     // HACK: Apply custom properties first
-    for (auto const &[styleRule, _] : matchingRules) {
-        for (auto &prop : styleRule->props) {
+    for (auto const& [styleRule, _] : matchingRules) {
+        for (auto& prop : styleRule->props) {
             if (prop.is<CustomProp>())
                 prop.apply(parent, *computed);
         }
     }
 
-    for (auto const &[styleRule, _] : matchingRules) {
-        for (auto &prop : styleRule->props) {
+    for (auto const& [styleRule, _] : matchingRules) {
+        for (auto& prop : styleRule->props) {
             if (not prop.is<CustomProp>()) {
                 if (prop.important == Important::NO)
                     prop.apply(parent, *computed);
@@ -84,19 +84,19 @@ Strong<Computed> Computer::_evalCascade(Computed const &parent, MatchingRules &m
         }
     }
 
-    for (auto const &prop : iterRev(importantProps))
+    for (auto const& prop : iterRev(importantProps))
         prop->apply(parent, *computed);
 
     return computed;
 }
 
 // https://drafts.csswg.org/css-cascade/#cascade-origin
-Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element const &el) {
+Strong<Computed> Computer::computeFor(Computed const& parent, Markup::Element const& el) {
     MatchingRules matchingRules;
 
     // Collect matching styles rules
-    for (auto const &sheet : _styleBook.styleSheets)
-        for (auto const &rule : sheet.rules)
+    for (auto const& sheet : _styleBook.styleSheets)
+        for (auto const& rule : sheet.rules)
             _evalRule(rule, el, matchingRules);
 
     // Get the style attribute if any
@@ -111,11 +111,11 @@ Strong<Computed> Computer::computeFor(Computed const &parent, Markup::Element co
     return _evalCascade(parent, matchingRules);
 }
 
-Strong<PageComputedStyle> Computer::computeFor(Computed const &parent, Page const &page) {
+Strong<PageComputedStyle> Computer::computeFor(Computed const& parent, Page const& page) {
     auto computed = makeStrong<PageComputedStyle>(parent);
 
-    for (auto const &sheet : _styleBook.styleSheets)
-        for (auto const &rule : sheet.rules)
+    for (auto const& sheet : _styleBook.styleSheets)
+        for (auto const& rule : sheet.rules)
             _evalRule(rule, page, *computed);
 
     return computed;

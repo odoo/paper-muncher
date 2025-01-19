@@ -4,7 +4,7 @@
 
 namespace Vaev::Layout {
 
-Resolver Resolver::from(Tree const &tree, Box const &box) {
+Resolver Resolver::from(Tree const& tree, Box const& box) {
     Px fontSize{16};
 
     Resolver resolver;
@@ -15,14 +15,14 @@ Resolver Resolver::from(Tree const &tree, Box const &box) {
     return resolver;
 }
 
-Resolver Resolver::inherit(Resolver const &resolver) {
+Resolver Resolver::inherit(Resolver const& resolver) {
     Resolver copy = resolver;
     copy.boxFont = NONE;
     copy.parentFontSize = resolver.boxFont->fontsize;
     return copy;
 }
 
-Px Resolver::_resolveFontRelative(Length const &value) {
+Px Resolver::_resolveFontRelative(Length const& value) {
     if (not boxFont or not rootFont) {
         logWarn("missing font information");
         return 0_px;
@@ -71,7 +71,7 @@ Px Resolver::_resolveFontRelative(Length const &value) {
     }
 }
 
-Px Resolver::resolve(Length const &value) {
+Px Resolver::resolve(Length const& value) {
     if (value.isFontRelative())
         return _resolveFontRelative(value);
     switch (value.unit()) {
@@ -221,19 +221,19 @@ Px Resolver::resolve(Length const &value) {
     }
 }
 
-Px Resolver::resolve(PercentOr<Length> const &value, Px relative) {
+Px Resolver::resolve(PercentOr<Length> const& value, Px relative) {
     if (value.resolved())
         return resolve(value.value());
     return Px{relative.cast<f64>() * (value.percent().value() / 100.)};
 }
 
-Px Resolver::resolve(Width const &value, Px relative) {
+Px Resolver::resolve(Width const& value, Px relative) {
     if (value == Width::Type::AUTO)
         return 0_px;
     return resolve(value.value, relative);
 }
 
-Px Resolver::resolve(FontSize const &value) {
+Px Resolver::resolve(FontSize const& value) {
     switch (value.named()) {
     case FontSize::XX_SMALL:
         return Px::fromFloatNearest(userFontSize * 0.5);
@@ -266,19 +266,19 @@ Px Resolver::resolve(FontSize const &value) {
 
 // MARK: Resolve during layout -------------------------------------------------
 
-Px resolve(Tree const &tree, Box const &box, Length const &value) {
+Px resolve(Tree const& tree, Box const& box, Length const& value) {
     return Resolver::from(tree, box).resolve(value);
 }
 
-Px resolve(Tree const &tree, Box const &box, PercentOr<Length> const &value, Px relative) {
+Px resolve(Tree const& tree, Box const& box, PercentOr<Length> const& value, Px relative) {
     return Resolver::from(tree, box).resolve(value, relative);
 }
 
-Px resolve(Tree const &tree, Box const &box, Width const &value, Px relative) {
+Px resolve(Tree const& tree, Box const& box, Width const& value, Px relative) {
     return Resolver::from(tree, box).resolve(value, relative);
 }
 
-Px resolve(Tree const &tree, Box const &box, FontSize const &value) {
+Px resolve(Tree const& tree, Box const& box, FontSize const& value) {
     return Resolver::from(tree, box).resolve(value);
 }
 

@@ -16,9 +16,9 @@ struct TtfFontface : public Fontface {
     Map<Pair<Glyph>, f64> _cachedKerns;
     f64 _unitPerEm = 0;
 
-    static Res<Strong<TtfFontface>> load(Sys::Mmap &&mmap);
+    static Res<Strong<TtfFontface>> load(Sys::Mmap&& mmap);
 
-    TtfFontface(Sys::Mmap &&mmap, Ttf::Parser parser);
+    TtfFontface(Sys::Mmap&& mmap, Ttf::Parser parser);
 
     FontMetrics metrics() const override;
 
@@ -30,7 +30,7 @@ struct TtfFontface : public Fontface {
 
     f64 kern(Glyph prev, Glyph curr) override;
 
-    void contour(Gfx::Canvas &g, Glyph glyph) const override;
+    void contour(Gfx::Canvas& g, Glyph glyph) const override;
 };
 
 } // namespace Karm::Text

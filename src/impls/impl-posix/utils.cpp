@@ -212,7 +212,7 @@ Sys::SocketAddr fromSockAddr(struct sockaddr_in sockaddr) {
     return addr;
 }
 
-Sys::Stat fromStat(struct stat const &buf) {
+Sys::Stat fromStat(struct stat const& buf) {
     Sys::Stat stat{};
     Sys::Type type = Sys::Type::FILE;
     if (S_ISDIR(buf.st_mode))
@@ -252,7 +252,7 @@ struct timespec toTimespec(TimeSpan ts) {
 }
 
 Res<Str> repoRoot() {
-    auto *maybeRepo = getenv("CK_BUILDDIR");
+    auto* maybeRepo = getenv("CK_BUILDDIR");
 
     if (not maybeRepo)
         maybeRepo = getenv("SKIFT_BUNDLES");

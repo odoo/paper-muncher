@@ -30,7 +30,7 @@ struct PrintOption {
 };
 
 Res<> print(
-    Mime::Url const &url, Io::Reader &input, Io::Writer &output, PrintOption options = {}
+    Mime::Url const& url, Io::Reader& input, Io::Writer& output, PrintOption options = {}
 ) {
     auto mime = Mime::sniffSuffix(url.path.suffix()).unwrapOr("application/xhtml+xml"_mime);
     auto dom = try$(Vaev::Driver::loadDocument(url, mime, input));
@@ -71,7 +71,7 @@ Res<> print(
         }
     ));
 
-    for (auto &page : pages) {
+    for (auto& page : pages) {
         page.print(
             *printer,
             {
@@ -130,7 +130,7 @@ struct RenderOption {
     Mime::Uti outputFormat = Mime::Uti::PUBLIC_BMP;
 };
 
-Res<> render(Mime::Url const &input, Io::Reader &reader, Io::Writer &output, RenderOption options = {}) {
+Res<> render(Mime::Url const& input, Io::Reader& reader, Io::Writer& output, RenderOption options = {}) {
     auto mime = Mime::sniffSuffix(input.path.suffix()).unwrapOr("application/xhtml+xml"_mime);
     auto dom = try$(Vaev::Driver::loadDocument(input, mime, reader));
 
@@ -164,7 +164,7 @@ Res<> render(Mime::Url const &input, Io::Reader &reader, Io::Writer &output, Ren
 
 } // namespace PaperMuncher
 
-Async::Task<> entryPointAsync(Sys::Context &ctx) {
+Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, "-"s);
     auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
     auto outputMimeArg = Cli::option<Str>(NONE, "output-mime"s, "Overide the output MIME type"s, ""s);
@@ -197,7 +197,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
             paperArg,
             orientationArg,
         },
-        [=](Sys::Context &) -> Async::Task<> {
+        [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::PrintOption options;
 
             options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
@@ -252,7 +252,7 @@ Async::Task<> entryPointAsync(Sys::Context &ctx) {
             heightArg,
             outputMimeArg,
         },
-        [=](Sys::Context &) -> Async::Task<> {
+        [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::RenderOption options{};
 
             options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));

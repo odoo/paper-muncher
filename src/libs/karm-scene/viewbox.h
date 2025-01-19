@@ -18,7 +18,7 @@ struct Viewbox : public Node {
         return _viewbox.size();
     }
 
-    void paint(Gfx::Canvas &g, Math::Rectf r, PaintOptions o) override {
+    void paint(Gfx::Canvas& g, Math::Rectf r, PaintOptions o) override {
         if (not bound().colide(r))
             return;
 
@@ -31,7 +31,7 @@ struct Viewbox : public Node {
         g.pop();
     }
 
-    void repr(Io::Emit &e) const override {
+    void repr(Io::Emit& e) const override {
         e("(viewbox {} content:{})", _viewbox, _content);
     }
 };

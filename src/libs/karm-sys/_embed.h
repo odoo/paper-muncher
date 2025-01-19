@@ -21,15 +21,15 @@ namespace Karm::Sys::_Embed {
 
 // MARK: Fd --------------------------------------------------------------------
 
-Res<Strong<Sys::Fd>> unpackFd(Io::PackScan &);
+Res<Strong<Sys::Fd>> unpackFd(Io::PackScan&);
 
 // MARK: File I/O --------------------------------------------------------------
 
-Res<Strong<Sys::Fd>> openFile(Mime::Url const &url);
+Res<Strong<Sys::Fd>> openFile(Mime::Url const& url);
 
-Res<Strong<Sys::Fd>> createFile(Mime::Url const &url);
+Res<Strong<Sys::Fd>> createFile(Mime::Url const& url);
 
-Res<Strong<Sys::Fd>> openOrCreateFile(Mime::Url const &url);
+Res<Strong<Sys::Fd>> openOrCreateFile(Mime::Url const& url);
 
 Res<Pair<Strong<Sys::Fd>, Strong<Sys::Fd>>> createPipe();
 
@@ -39,9 +39,9 @@ Res<Strong<Sys::Fd>> createOut();
 
 Res<Strong<Sys::Fd>> createErr();
 
-Res<Vec<Sys::DirEntry>> readDir(Mime::Url const &url);
+Res<Vec<Sys::DirEntry>> readDir(Mime::Url const& url);
 
-Res<Stat> stat(Mime::Url const &url);
+Res<Stat> stat(Mime::Url const& url);
 
 // MARK: User interactions -----------------------------------------------------
 
@@ -67,25 +67,25 @@ TimeSpan uptime();
 
 // MARK: Memory Managment ------------------------------------------------------
 
-Res<Sys::MmapResult> memMap(Sys::MmapOptions const &options);
+Res<Sys::MmapResult> memMap(Sys::MmapOptions const& options);
 
-Res<Sys::MmapResult> memMap(Sys::MmapOptions const &options, Strong<Sys::Fd> fd);
+Res<Sys::MmapResult> memMap(Sys::MmapOptions const& options, Strong<Sys::Fd> fd);
 
-Res<> memUnmap(void const *buf, usize len);
+Res<> memUnmap(void const* buf, usize len);
 
-Res<> memFlush(void *flush, usize len);
+Res<> memFlush(void* flush, usize len);
 
 // MARK: System Informations ---------------------------------------------------
 
-Res<> populate(Sys::SysInfo &);
+Res<> populate(Sys::SysInfo&);
 
-Res<> populate(Sys::MemInfo &);
+Res<> populate(Sys::MemInfo&);
 
-Res<> populate(Vec<Sys::CpuInfo> &);
+Res<> populate(Vec<Sys::CpuInfo>&);
 
-Res<> populate(Sys::UserInfo &);
+Res<> populate(Sys::UserInfo&);
 
-Res<> populate(Vec<Sys::UserInfo> &);
+Res<> populate(Vec<Sys::UserInfo>&);
 
 // MARK: Process Managment -----------------------------------------------------
 
@@ -101,6 +101,6 @@ void hardenSandbox();
 
 // MARK: Asynchronous I/O ------------------------------------------------------
 
-Sched &globalSched();
+Sched& globalSched();
 
 } // namespace Karm::Sys::_Embed

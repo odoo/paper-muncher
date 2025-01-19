@@ -38,7 +38,7 @@ struct Picture {
         return pixels().sample(pos);
     }
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         e("(picture {}x{})", width(), height());
     }
 };

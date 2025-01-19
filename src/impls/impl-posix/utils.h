@@ -22,7 +22,7 @@ struct sockaddr_in toSockAddr(Sys::SocketAddr addr);
 
 Sys::SocketAddr fromSockAddr(struct sockaddr_in sockaddr);
 
-Sys::Stat fromStat(struct stat const &buf);
+Sys::Stat fromStat(struct stat const& buf);
 
 struct timespec toTimespec(TimeStamp ts);
 

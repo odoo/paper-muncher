@@ -21,7 +21,7 @@ struct Transform : public Node {
             .bound();
     }
 
-    void paint(Gfx::Canvas &g, Math::Rectf r, PaintOptions o) override {
+    void paint(Gfx::Canvas& g, Math::Rectf r, PaintOptions o) override {
         if (not bound().colide(r))
             return;
 
@@ -32,7 +32,7 @@ struct Transform : public Node {
         g.pop();
     }
 
-    void repr(Io::Emit &e) const override {
+    void repr(Io::Emit& e) const override {
         e("(transform transform:{} content:{})", _transform, _content);
     }
 };

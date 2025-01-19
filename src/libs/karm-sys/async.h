@@ -35,10 +35,10 @@ struct Sched :
     virtual Async::Task<> sleepAsync(TimeStamp until) = 0;
 };
 
-Sched &globalSched();
+Sched& globalSched();
 
 template <Async::Sender S>
-auto run(S s, Sched &sched = globalSched()) {
+auto run(S s, Sched& sched = globalSched()) {
     return Async::run(std::move(s), [&] {
         (void)sched.wait(TimeStamp::endOfTime());
     });

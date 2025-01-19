@@ -23,7 +23,7 @@ struct FocusEvent {
 struct FocusListener {
     bool _focused = false;
 
-    void event(Ui::Node &n, App::Event &e) {
+    void event(Ui::Node& n, App::Event& e) {
         if (auto fe = e.is<FocusEvent>()) {
             if (fe->type == FocusEvent::ENTER) {
                 _focused = true;
@@ -50,7 +50,7 @@ struct Focusable : public ProxyNode<Focusable> {
     Focusable(Ui::Child child) : ProxyNode<Focusable>(std::move(child)) {
     }
 
-    void paint(Gfx::Canvas &g, Math::Recti r) override {
+    void paint(Gfx::Canvas& g, Math::Recti r) override {
         ProxyNode<Focusable>::paint(g, r);
 
         if (_focused) {
@@ -59,7 +59,7 @@ struct Focusable : public ProxyNode<Focusable> {
         }
     }
 
-    void event(App::Event &e) override {
+    void event(App::Event& e) override {
         bool passthrough = false;
 
         if (auto fe = e.is<FocusEvent>()) {

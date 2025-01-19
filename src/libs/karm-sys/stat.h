@@ -21,13 +21,13 @@ struct Stat {
     }
 };
 
-Res<Stat> stat(Mime::Url const &url);
+Res<Stat> stat(Mime::Url const& url);
 
-static inline Res<bool> isFile(Mime::Url const &url) {
+static inline Res<bool> isFile(Mime::Url const& url) {
     return Ok(try$(stat(url)).type == Type::FILE);
 }
 
-static inline Res<bool> isDir(Mime::Url const &url) {
+static inline Res<bool> isDir(Mime::Url const& url) {
     return Ok(try$(stat(url)).type == Type::DIR);
 }
 

@@ -6,7 +6,7 @@ namespace Vaev::Script {
 
 // MARK: Token -----------------------------------------------------------------
 
-void Token::repr(Io::Emit &e) const {
+void Token::repr(Io::Emit& e) const {
     e(
         "({}::{} {#})",
         category(),
@@ -133,7 +133,7 @@ static constexpr Array _keywordTokens = {
     Str2Token{"yield", Token::YIELD},
 };
 
-Token Lexer::_next(Io::SScan &s) const {
+Token Lexer::_next(Io::SScan& s) const {
     if (s.ended())
         return Token::END_OF_FILE;
 

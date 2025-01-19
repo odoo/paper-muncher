@@ -5,7 +5,7 @@
 
 namespace Qoi {
 
-Res<> encode(Gfx::Pixels pixels, Io::BEmit &e) {
+Res<> encode(Gfx::Pixels pixels, Io::BEmit& e) {
     e.writeBytes(MAGIC);
     e.writeU32be(pixels.width());
     e.writeU32be(pixels.height());

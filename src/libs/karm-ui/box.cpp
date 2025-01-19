@@ -9,12 +9,12 @@ struct Box : public _Box<Box> {
     Box(BoxStyle style, Child child)
         : _Box(child), _style(style) {}
 
-    void reconcile(Box &o) override {
+    void reconcile(Box& o) override {
         _style = o._style;
         _Box<Box>::reconcile(o);
     }
 
-    BoxStyle &boxStyle() override {
+    BoxStyle& boxStyle() override {
         return _style;
     }
 };

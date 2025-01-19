@@ -19,12 +19,13 @@ QualifierAlignment: Right
 AlignAfterOpenBracket: BlockIndent
 SeparateDefinitionBlocks: Always
 NamespaceIndentation: None
+PointerAlignment: Left
 
 IncludeBlocks: Regroup
 IncludeCategories:
-    - Regex: '<[[:alnum:].\/-]+>'
+    - Regex: '<.*>'
       Priority: 0
       SortPriority: 0
-    - Regex: '"[[:alnum:].\/-]+"'
+    - Regex: '".*"'
       Priority: 10
       SortPriority: 10

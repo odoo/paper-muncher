@@ -67,7 +67,7 @@ struct JSConsole : public Sys::Fd {
         notImplemented();
     }
 
-    Res<> pack(Io::PackEmit &) override {
+    Res<> pack(Io::PackEmit&) override {
         notImplemented();
     }
 };
@@ -89,29 +89,29 @@ Res<Strong<Sys::Fd>> createErr() {
     return Ok(makeStrong<JSConsole>(JSConsole::ERROR));
 }
 
-Res<Strong<Sys::Fd>> unpackFd(Io::PackScan &) {
+Res<Strong<Sys::Fd>> unpackFd(Io::PackScan&) {
     notImplemented();
 }
 
-Res<Vec<DirEntry>> readDir(Mime::Url const &) {
+Res<Vec<DirEntry>> readDir(Mime::Url const&) {
     return Error::notImplemented("directory listing not supported");
 }
 
-Res<Stat> stat(Mime::Url const &) {
+Res<Stat> stat(Mime::Url const&) {
     return Error::notImplemented("directory listing not supported");
 }
 
 // MARK: File I/O --------------------------------------------------------------
 
-Res<Strong<Fd>> openFile(Mime::Url const &) {
+Res<Strong<Fd>> openFile(Mime::Url const&) {
     return Error::notImplemented();
 }
 
-Res<Strong<Fd>> createFile(Mime::Url const &) {
+Res<Strong<Fd>> createFile(Mime::Url const&) {
     return Error::notImplemented();
 }
 
-Res<Strong<Fd>> openOrCreateFile(Mime::Url const &) {
+Res<Strong<Fd>> openOrCreateFile(Mime::Url const&) {
     return Error::notImplemented();
 }
 
@@ -135,21 +135,21 @@ Res<Strong<Fd>> listenIpc(Mime::Url) {
 
 // MARK: Memory Managment ------------------------------------------------------
 
-Res<MmapResult> memMap(MmapOptions const &, Strong<Fd>) {
+Res<MmapResult> memMap(MmapOptions const&, Strong<Fd>) {
     return Error::notImplemented("file mapping not supported");
 }
 
-Res<> memUnmap(void const *, usize) {
+Res<> memUnmap(void const*, usize) {
     return Error::notImplemented();
 }
 
 // MARK: System Informations ---------------------------------------------------
 
-Res<> populate(Sys::SysInfo &) {
+Res<> populate(Sys::SysInfo&) {
     return Ok();
 }
 
-Res<> populate(Sys::MemInfo &mem) {
+Res<> populate(Sys::MemInfo& mem) {
     mem.physicalTotal = (usize)__heap_end - (usize)__heap_base;
     mem.physicalUsed = -1;
     mem.swapTotal = 0;
@@ -159,15 +159,15 @@ Res<> populate(Sys::MemInfo &mem) {
     return Ok();
 }
 
-Res<> populate(Vec<Sys::CpuInfo> &) {
+Res<> populate(Vec<Sys::CpuInfo>&) {
     return Ok();
 }
 
-Res<> populate(Sys::UserInfo &) {
+Res<> populate(Sys::UserInfo&) {
     return Ok();
 }
 
-Res<> populate(Vec<Sys::UserInfo> &) {
+Res<> populate(Vec<Sys::UserInfo>&) {
     return Ok();
 }
 

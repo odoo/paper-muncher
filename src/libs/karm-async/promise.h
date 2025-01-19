@@ -37,17 +37,17 @@ struct State {
         return _value.has();
     }
 
-    T &unwrap() {
+    T& unwrap() {
         if (not _value.has()) [[unlikely]]
             panic("promise not resolved");
         return _value.unwrap();
     }
 
-    void attach(Listener &listener) {
+    void attach(Listener& listener) {
         _queue.append(&listener, _queue.tail());
     }
 
-    void detach(Listener &listener) {
+    void detach(Listener& listener) {
         _queue.detach(&listener);
     }
 };

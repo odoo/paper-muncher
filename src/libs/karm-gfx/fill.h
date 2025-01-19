@@ -39,28 +39,28 @@ struct Gradient {
         Builder(Type type, Math::Vec2f start, Math::Vec2f end)
             : _type(type), _start(start), _end(end) {}
 
-        Builder &withStop(Color color, f64 pos) {
+        Builder& withStop(Color color, f64 pos) {
             _stops.pushBack({color, pos});
             return *this;
         }
 
-        Builder &withStart(Math::Vec2f start) {
+        Builder& withStart(Math::Vec2f start) {
             _start = start;
             return *this;
         }
 
-        Builder &withEnd(Math::Vec2f end) {
+        Builder& withEnd(Math::Vec2f end) {
             _end = end;
             return *this;
         }
 
-        Builder &withHsv() {
+        Builder& withHsv() {
             for (f64 i = 0; i <= 360; i += 30)
                 withStop(hsvToRgb({i, 1, 1}), i / 360.0);
             return *this;
         }
 
-        Builder &withColors(Meta::Same<Color> auto... args) {
+        Builder& withColors(Meta::Same<Color> auto... args) {
             Array colors = {args...};
 
             if (colors.len() == 1)
@@ -107,22 +107,22 @@ struct Gradient {
     Gradient(Type type, Math::Vec2f start, Math::Vec2f end, Strong<Buf> buf)
         : _type(type), _start(start), _end(end), _buf(buf) {}
 
-    Gradient &withType(Type type) {
+    Gradient& withType(Type type) {
         _type = type;
         return *this;
     }
 
-    Gradient &withStart(Math::Vec2f start) {
+    Gradient& withStart(Math::Vec2f start) {
         _start = start;
         return *this;
     }
 
-    Gradient &withEnd(Math::Vec2f end) {
+    Gradient& withEnd(Math::Vec2f end) {
         _end = end;
         return *this;
     }
 
-    Gradient &withPoints(Math::Vec2f start, Math::Vec2f end) {
+    Gradient& withPoints(Math::Vec2f start, Math::Vec2f end) {
         _start = start;
         _end = end;
         return *this;
@@ -167,21 +167,21 @@ struct Fill : public _Fills {
 
     always_inline Color sample(Math::Vec2f pos) const {
         return visit(
-            [&](auto const &p) {
+            [&](auto const& p) {
                 return p.sample(pos);
             }
         );
     }
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         visit(Visitor{
-            [&](Color const &c) {
+            [&](Color const& c) {
                 c.repr(e);
             },
-            [&](Gradient const &grad) {
+            [&](Gradient const& grad) {
                 e("(gradient {} {})", grad._start, grad._end);
             },
-            [&](Pixels const &pixels) {
+            [&](Pixels const& pixels) {
                 e("(pixels {} {})", pixels.width(), pixels.height());
             }
         });

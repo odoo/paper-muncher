@@ -9,7 +9,7 @@ namespace Vaev::Css {
 
 // MARK: Token -----------------------------------------------------------------
 
-void Token::repr(Io::Emit &e) const {
+void Token::repr(Io::Emit& e) const {
     if (not*this) {
         e("nil");
         return;
@@ -179,7 +179,7 @@ static auto const RE_STRING =
         )
     );
 
-Token Lexer::_nextIdent(Io::SScan &s) const {
+Token Lexer::_nextIdent(Io::SScan& s) const {
     if (not s.skip('('))
         return {Token::IDENT, s.end()};
 
@@ -194,7 +194,7 @@ Token Lexer::_nextIdent(Io::SScan &s) const {
     return {Token::FUNCTION, s.end()};
 }
 
-Token Lexer::_next(Io::SScan &s) const {
+Token Lexer::_next(Io::SScan& s) const {
     s.begin();
     if (s.ended()) {
         return {Token::END_OF_FILE, s.end()};

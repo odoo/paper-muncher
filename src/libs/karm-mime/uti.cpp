@@ -4,7 +4,7 @@
 
 namespace Karm::Mime {
 
-Res<Uti> Uti::fromMime(Mime const &mime) {
+Res<Uti> Uti::fromMime(Mime const& mime) {
 #define UTI(NAME, STR, MIME, ...) \
     if (mime.is(Mime{MIME}))      \
         return Ok(Uti::NAME);

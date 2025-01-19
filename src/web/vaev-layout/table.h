@@ -4,6 +4,6 @@
 
 namespace Vaev::Layout {
 
-Strong<FormatingContext> constructTableFormatingContext(Box &box);
+Strong<FormatingContext> constructTableFormatingContext(Box& box);
 
 } // namespace Vaev::Layout

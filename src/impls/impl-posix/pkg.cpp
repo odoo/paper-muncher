@@ -9,7 +9,7 @@ Res<Vec<String>> installedBundles() {
     auto repoRoot = try$(Mime::parseUrlOrPath(try$(Posix::repoRoot())));
     auto dirs = try$(Sys::_Embed::readDir(repoRoot));
     Vec<String> ids;
-    for (auto &dir : dirs) {
+    for (auto& dir : dirs) {
         if (dir.type == Sys::Type::DIR)
             ids.pushBack(dir.name);
     }
@@ -17,7 +17,7 @@ Res<Vec<String>> installedBundles() {
 }
 
 Res<String> currentBundle() {
-    auto *maybeBundle = getenv("CK_COMPONENT");
+    auto* maybeBundle = getenv("CK_COMPONENT");
     if (maybeBundle)
         return Ok(Str::fromNullterminated(maybeBundle));
 

@@ -49,18 +49,18 @@ union Rect {
         : xy(), wh(wh) {
     }
 
-    constexpr Rect(Rect const &other)
+    constexpr Rect(Rect const& other)
         : _els{other._els} {}
 
-    constexpr Rect(Rect &&other)
+    constexpr Rect(Rect&& other)
         : _els{std::move(other._els)} {}
 
-    constexpr Rect &operator=(Rect const &other) {
+    constexpr Rect& operator=(Rect const& other) {
         _els = other._els;
         return *this;
     }
 
-    constexpr Rect &operator=(Rect &&other) {
+    constexpr Rect& operator=(Rect&& other) {
         _els = std::move(other._els);
         return *this;
     }
@@ -316,7 +316,7 @@ union Rect {
         return width / height;
     }
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         e("(rect {} {} {} {})", x, y, width, height);
     }
 

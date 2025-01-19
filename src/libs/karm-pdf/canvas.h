@@ -67,7 +67,7 @@ struct Canvas : public Gfx::Canvas {
 
     void rect(Math::Rectf rect, Math::Radiif radii = 0) override;
 
-    void path(Math::Path const &path) override;
+    void path(Math::Path const& path) override;
 
     void fill(Gfx::FillRule rule) override;
 

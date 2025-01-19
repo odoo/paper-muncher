@@ -29,9 +29,9 @@ struct Connection :
     Connection(Strong<Sys::Fd> fd)
         : _fd(std::move(fd)) {}
 
-    Connection(Connection &&) = default;
+    Connection(Connection&&) = default;
 
-    Connection &operator=(Connection &&) = default;
+    Connection& operator=(Connection&&) = default;
 
     Res<usize> read(MutBytes buf) override {
         return _fd->read(buf);

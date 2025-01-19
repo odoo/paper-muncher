@@ -3,7 +3,7 @@
 #include <karm-sys/entry.h>
 #include <karm-sys/time.h>
 
-Async::Task<> entryPointAsync(Sys::Context &) {
+Async::Task<> entryPointAsync(Sys::Context&) {
     Vec<TimeSpan> samples;
     auto surface = Gfx::Surface::alloc({1000, 1000});
 
@@ -43,13 +43,13 @@ Async::Task<> entryPointAsync(Sys::Context &) {
     }
 
     // median
-    sort(samples, [](auto &a, auto &b) {
+    sort(samples, [](auto& a, auto& b) {
         return a.toUSecs() <=> b.toUSecs();
     });
 
     // average
     f64 sum = 0;
-    for (auto &s : samples)
+    for (auto& s : samples)
         sum += s.toUSecs();
 
     Sys::println("\n");

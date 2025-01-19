@@ -48,7 +48,7 @@ struct HtmlToken {
     bool forceQuirks{false};
     bool selfClosing{false};
 
-    void repr(Io::Emit &e) const {
+    void repr(Io::Emit& e) const {
         e("({}", type);
         if (name)
             e(" name={}", name);
@@ -62,7 +62,7 @@ struct HtmlToken {
             e(" systemIdent={#}", systemIdent);
         if (attrs.len() > 0) {
             e.indentNewline();
-            for (auto &attr : attrs)
+            for (auto& attr : attrs)
                 e("({} {#})", attr.name, attr.value);
             e.deindent();
         }
@@ -76,7 +76,7 @@ struct HtmlToken {
 
 struct HtmlSink {
     virtual ~HtmlSink() = default;
-    virtual void accept(HtmlToken const &token) = 0;
+    virtual void accept(HtmlToken const& token) = 0;
 };
 
 struct HtmlLexer {
@@ -95,7 +95,7 @@ struct HtmlLexer {
 
     Opt<HtmlToken> _token;
     Opt<HtmlToken> _last;
-    HtmlSink *_sink = nullptr;
+    HtmlSink* _sink = nullptr;
 
     Rune _currChar = 0;
     StringBuilder _builder, _commentBuilder;
@@ -104,20 +104,20 @@ struct HtmlLexer {
 
     Opt<usize> matchedCharReferenceNoSemiColon;
 
-    HtmlToken &_begin(HtmlToken::Type type) {
+    HtmlToken& _begin(HtmlToken::Type type) {
         _token = HtmlToken{};
         _token->type = type;
         return *_token;
     }
 
-    HtmlToken &_ensure() {
+    HtmlToken& _ensure() {
         if (not _token)
             panic("unexpected-token");
         return *_token;
     }
 
-    HtmlToken &_ensure(HtmlToken::Type type) {
-        auto &token = _ensure();
+    HtmlToken& _ensure(HtmlToken::Type type) {
+        auto& token = _ensure();
         if (token.type != type)
             panic("unexpected-token");
         return token;
@@ -139,8 +139,8 @@ struct HtmlLexer {
         _ensure().attrs.emplaceBack();
     }
 
-    HtmlToken::Attr &_lastAttr() {
-        auto &token = _ensure();
+    HtmlToken::Attr& _lastAttr() {
+        auto& token = _ensure();
         if (token.attrs.len() == 0)
             panic("_beginAttribute miss match");
         return last(token.attrs);
@@ -179,7 +179,7 @@ struct HtmlLexer {
                _returnState == State::ATTRIBUTE_VALUE_UNQUOTED;
     }
 
-    void bind(HtmlSink &sink) {
+    void bind(HtmlSink& sink) {
         if (_sink)
             panic("sink already bound");
         _sink = &sink;
@@ -261,7 +261,7 @@ struct HtmlParser : public HtmlSink {
             panic("html element should always be in scope");
 
         for (usize i = _openElements.len() - 1; i >= 0; --i) {
-            auto &el = _openElements[i];
+            auto& el = _openElements[i];
             if (el->tagName == tag)
                 return true;
             else if (inScopeList(el->tagName))
@@ -308,39 +308,39 @@ struct HtmlParser : public HtmlSink {
 
     // MARK: Modes
 
-    void _handleInitialMode(HtmlToken const &t);
+    void _handleInitialMode(HtmlToken const& t);
 
-    void _handleBeforeHtml(HtmlToken const &t);
+    void _handleBeforeHtml(HtmlToken const& t);
 
-    void _handleBeforeHead(HtmlToken const &t);
+    void _handleBeforeHead(HtmlToken const& t);
 
-    void _handleInHead(HtmlToken const &t);
+    void _handleInHead(HtmlToken const& t);
 
-    void _handleInHeadNoScript(HtmlToken const &t);
+    void _handleInHeadNoScript(HtmlToken const& t);
 
-    void _handleAfterHead(HtmlToken const &t);
+    void _handleAfterHead(HtmlToken const& t);
 
-    void _handleInBody(HtmlToken const &t);
+    void _handleInBody(HtmlToken const& t);
 
-    void _handleText(HtmlToken const &t);
+    void _handleText(HtmlToken const& t);
 
-    void _handleInTable(HtmlToken const &t);
+    void _handleInTable(HtmlToken const& t);
 
-    void _handleInTableText(HtmlToken const &t);
+    void _handleInTableText(HtmlToken const& t);
 
-    void _handleInTableBody(HtmlToken const &t);
+    void _handleInTableBody(HtmlToken const& t);
 
-    void _handleInTableRow(HtmlToken const &t);
+    void _handleInTableRow(HtmlToken const& t);
 
-    void _handleInCell(HtmlToken const &t);
+    void _handleInCell(HtmlToken const& t);
 
-    void _handleAfterBody(HtmlToken const &t);
+    void _handleAfterBody(HtmlToken const& t);
 
     void _switchTo(Mode mode);
 
-    void _acceptIn(Mode mode, HtmlToken const &t);
+    void _acceptIn(Mode mode, HtmlToken const& t);
 
-    void accept(HtmlToken const &t) override;
+    void accept(HtmlToken const& t) override;
 
     void write(Str str) {
         for (auto r : iterRunes(str))
