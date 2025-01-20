@@ -60,7 +60,7 @@ Child text(Text::ProseStyle style, Str text);
 
 Child text(Str text);
 
-Child text(Strong<Karm::Text::Prose> prose);
+Child text(Rc<Karm::Text::Prose> prose);
 
 template <typename... Args>
 inline Child text(Text::ProseStyle style, Str format, Args&&... args) {
@@ -123,7 +123,7 @@ using OnPaint = Func<void(Gfx::Canvas& g, Math::Vec2i size)>;
 
 Child canvas(OnPaint onPaint);
 
-Child canvas(Strong<Scene::Node> child, Scene::PaintOptions options = {});
+Child canvas(Rc<Scene::Node> child, Scene::PaintOptions options = {});
 
 // MARK: Blur ------------------------------------------------------------------
 

@@ -65,7 +65,7 @@ struct SlideIn : public ProxyNode<SlideIn> {
 };
 
 Child slideIn(SlideFrom from, Ui::Child child) {
-    return makeStrong<SlideIn>(from, std::move(child));
+    return makeRc<SlideIn>(from, std::move(child));
 }
 
 // MARK: Scale In --------------------------------------------------------------
@@ -106,7 +106,7 @@ struct ScaleIn : public ProxyNode<ScaleIn> {
 };
 
 Child scaleIn(Child child) {
-    return makeStrong<ScaleIn>(std::move(child));
+    return makeRc<ScaleIn>(std::move(child));
 }
 
 // MARK: Carousel --------------------------------------------------------------
@@ -164,7 +164,7 @@ struct Carousel : public GroupNode<Carousel> {
 };
 
 Child carousel(usize selected, Children children, Math::Flow flow) {
-    return makeStrong<Carousel>(selected, std::move(children), flow);
+    return makeRc<Carousel>(selected, std::move(children), flow);
 }
 
 } // namespace Karm::Ui

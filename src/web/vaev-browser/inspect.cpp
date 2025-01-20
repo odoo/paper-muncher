@@ -48,7 +48,7 @@ Ui::Child elementEndTag(Markup::Element const& el) {
     );
 }
 
-Ui::Child itemHeader(Strong<Markup::Node> n, Ui::Action<InspectorAction> a, bool expanded) {
+Ui::Child itemHeader(Rc<Markup::Node> n, Ui::Action<InspectorAction> a, bool expanded) {
     if (n.is<Markup::Document>()) {
         return Ui::codeMedium("#document");
     } else if (n.is<Markup::DocumentType>()) {
@@ -79,7 +79,7 @@ Ui::Child itemHeader(Strong<Markup::Node> n, Ui::Action<InspectorAction> a, bool
     }
 }
 
-Ui::Child itemFooter(Strong<Markup::Node> n, isize ident) {
+Ui::Child itemFooter(Rc<Markup::Node> n, isize ident) {
     if (auto el = n.is<Markup::Element>())
         return Ui::hflow(n->children().len() ? guide() : Ui::empty(), elementEndTag(*el)) | idented(ident);
     return Ui::empty();
@@ -102,7 +102,7 @@ Ui::ButtonStyle selected() {
     };
 }
 
-Ui::Child item(Strong<Markup::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, bool expanded, isize ident) {
+Ui::Child item(Rc<Markup::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, bool expanded, isize ident) {
     auto style = s.selectedNode == n ? selected() : Ui::ButtonStyle::subtle().withRadii(0);
     return Ui::button(
         [n, a](auto& btn) {
@@ -113,7 +113,7 @@ Ui::Child item(Strong<Markup::Node> n, InspectState const& s, Ui::Action<Inspect
     );
 }
 
-Ui::Child node(Strong<Markup::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, isize ident = 0) {
+Ui::Child node(Rc<Markup::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, isize ident = 0) {
     bool expanded = n.is<Markup::Document>() or s.expandedNodes.has(n);
     Ui::Children children{item(n, s, a, expanded, ident)};
 
@@ -143,7 +143,7 @@ Ui::Child computedStyles() {
            Ui::pinSize(128);
 }
 
-Ui::Child inspect(Strong<Vaev::Markup::Document> n, InspectState const& s, Ui::Action<InspectorAction> a) {
+Ui::Child inspect(Rc<Vaev::Markup::Document> n, InspectState const& s, Ui::Action<InspectorAction> a) {
     return Ui::vflow(
         node(n, s, a) | Ui::vscroll() | Ui::grow(),
         computedStyles() | Kr::resizable(Kr::ResizeHandle::TOP, {128}, NONE)

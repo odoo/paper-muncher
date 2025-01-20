@@ -21,23 +21,23 @@ namespace Karm::Sys::_Embed {
 
 // MARK: Fd --------------------------------------------------------------------
 
-Res<Strong<Sys::Fd>> unpackFd(Io::PackScan&);
+Res<Rc<Sys::Fd>> unpackFd(Io::PackScan&);
 
 // MARK: File I/O --------------------------------------------------------------
 
-Res<Strong<Sys::Fd>> openFile(Mime::Url const& url);
+Res<Rc<Sys::Fd>> openFile(Mime::Url const& url);
 
-Res<Strong<Sys::Fd>> createFile(Mime::Url const& url);
+Res<Rc<Sys::Fd>> createFile(Mime::Url const& url);
 
-Res<Strong<Sys::Fd>> openOrCreateFile(Mime::Url const& url);
+Res<Rc<Sys::Fd>> openOrCreateFile(Mime::Url const& url);
 
-Res<Pair<Strong<Sys::Fd>, Strong<Sys::Fd>>> createPipe();
+Res<Pair<Rc<Sys::Fd>, Rc<Sys::Fd>>> createPipe();
 
-Res<Strong<Sys::Fd>> createIn();
+Res<Rc<Sys::Fd>> createIn();
 
-Res<Strong<Sys::Fd>> createOut();
+Res<Rc<Sys::Fd>> createOut();
 
-Res<Strong<Sys::Fd>> createErr();
+Res<Rc<Sys::Fd>> createErr();
 
 Res<Vec<Sys::DirEntry>> readDir(Mime::Url const& url);
 
@@ -51,13 +51,13 @@ Async::Task<> launchAsync(Intent intent);
 
 // MARK: Sockets ---------------------------------------------------------------
 
-Res<Strong<Sys::Fd>> listenUdp(SocketAddr addr);
+Res<Rc<Sys::Fd>> listenUdp(SocketAddr addr);
 
-Res<Strong<Sys::Fd>> connectTcp(SocketAddr addr);
+Res<Rc<Sys::Fd>> connectTcp(SocketAddr addr);
 
-Res<Strong<Sys::Fd>> listenTcp(SocketAddr addr);
+Res<Rc<Sys::Fd>> listenTcp(SocketAddr addr);
 
-Res<Strong<Sys::Fd>> listenIpc(Mime::Url url);
+Res<Rc<Sys::Fd>> listenIpc(Mime::Url url);
 
 // MARK: Time ------------------------------------------------------------------
 
@@ -69,7 +69,7 @@ TimeSpan uptime();
 
 Res<Sys::MmapResult> memMap(Sys::MmapOptions const& options);
 
-Res<Sys::MmapResult> memMap(Sys::MmapOptions const& options, Strong<Sys::Fd> fd);
+Res<Sys::MmapResult> memMap(Sys::MmapOptions const& options, Rc<Sys::Fd> fd);
 
 Res<> memUnmap(void const* buf, usize len);
 

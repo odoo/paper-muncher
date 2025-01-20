@@ -6,20 +6,20 @@ namespace Karm {
 
 template <typename T>
 struct Cow {
-    Strong<T> _inner = base();
+    Rc<T> _inner = base();
 
-    static Opt<Strong<T>> _base;
+    static Opt<Rc<T>> _base;
 
-    static Strong<T> base() {
+    static Rc<T> base() {
         if (not _base) {
-            _base = makeStrong<T>();
+            _base = makeRc<T>();
         }
         return _base.unwrap();
     }
 
     T& cow() {
         if (_inner.refs() > 1)
-            _inner = makeStrong<T>(_inner.unwrap());
+            _inner = makeRc<T>(_inner.unwrap());
         return _inner.unwrap();
     }
 
@@ -37,11 +37,11 @@ struct Cow {
 };
 
 template <typename T>
-Opt<Strong<T>> Cow<T>::_base = NONE;
+Opt<Rc<T>> Cow<T>::_base = NONE;
 
 template <typename T>
 Cow<T> makeCow(T const& value) {
-    return {makeStrong<T>(value)};
+    return {makeRc<T>(value)};
 }
 
 } // namespace Karm

@@ -54,7 +54,7 @@ struct Radio : public Ui::View<Radio> {
 };
 
 Ui::Child radio(bool value, Ui::OnChange<bool> onChange) {
-    return makeStrong<Radio>(value, std::move(onChange));
+    return makeRc<Radio>(value, std::move(onChange));
 }
 
 } // namespace Karm::Kira

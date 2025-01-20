@@ -148,7 +148,7 @@ struct DialogLayer : public LeafNode<DialogLayer> {
 };
 
 Child dialogLayer(Child child) {
-    return makeStrong<DialogLayer>(child);
+    return makeRc<DialogLayer>(child);
 }
 
 } // namespace Karm::Ui

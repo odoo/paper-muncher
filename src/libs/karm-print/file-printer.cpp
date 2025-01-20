@@ -6,13 +6,13 @@
 
 namespace Karm::Print {
 
-Res<Strong<FilePrinter>> FilePrinter::create(Mime::Uti uti, FilePrinterProps props) {
+Res<Rc<FilePrinter>> FilePrinter::create(Mime::Uti uti, FilePrinterProps props) {
     if (uti == Mime::Uti::PUBLIC_PDF) {
-        return Ok(makeStrong<PdfPrinter>());
+        return Ok(makeRc<PdfPrinter>());
     } else if (uti == Mime::Uti::PUBLIC_BMP or
                uti == Mime::Uti::PUBLIC_TGA or
                uti == Mime::Uti::PUBLIC_QOI) {
-        return Ok(makeStrong<ImagePrinter>(props.density, Image::Saver{uti}));
+        return Ok(makeRc<ImagePrinter>(props.density, Image::Saver{uti}));
     }
 
     return Error::invalidData("cannot create printer");

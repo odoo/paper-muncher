@@ -14,7 +14,7 @@ struct Service {
 
 struct Context :
     Meta::Pinned {
-    Vec<Strong<Service>> _srvs;
+    Vec<Rc<Service>> _srvs;
 
     template <typename T>
     T& use() {
@@ -27,7 +27,7 @@ struct Context :
 
     template <typename T, typename... Args>
     void add(Args&&... args) {
-        _srvs.pushBack(makeStrong<T>(std::forward<Args>(args)...));
+        _srvs.pushBack(makeRc<T>(std::forward<Args>(args)...));
     }
 };
 

@@ -20,7 +20,7 @@ struct Box : public _Box<Box> {
 };
 
 Child box(BoxStyle style, Child inner) {
-    return makeStrong<Box>(style, inner);
+    return makeRc<Box>(style, inner);
 }
 
 } // namespace Karm::Ui

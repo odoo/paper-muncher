@@ -9,31 +9,31 @@
 namespace Karm::Sys {
 
 struct In : public Io::Reader {
-    Strong<Fd> _fd;
+    Rc<Fd> _fd;
 
-    In(Strong<Fd> fd)
+    In(Rc<Fd> fd)
         : _fd(fd) {}
 
     Res<usize> read(MutBytes bytes) override {
         return _fd->read(bytes);
     }
 
-    Strong<Fd> fd() {
+    Rc<Fd> fd() {
         return _fd;
     }
 };
 
 struct Out : public Io::TextWriterBase<> {
-    Strong<Fd> _fd;
+    Rc<Fd> _fd;
 
-    Out(Strong<Fd> fd)
+    Out(Rc<Fd> fd)
         : _fd(fd) {}
 
     Res<usize> write(Bytes bytes) override {
         return _fd->write(bytes);
     }
 
-    Strong<Fd> fd() {
+    Rc<Fd> fd() {
         return _fd;
     }
 
@@ -43,16 +43,16 @@ struct Out : public Io::TextWriterBase<> {
 };
 
 struct Err : public Io::TextWriterBase<> {
-    Strong<Fd> _fd;
+    Rc<Fd> _fd;
 
-    Err(Strong<Fd> fd)
+    Err(Rc<Fd> fd)
         : _fd(fd) {}
 
     Res<usize> write(Bytes bytes) override {
         return _fd->write(bytes);
     }
 
-    Strong<Fd> fd() {
+    Rc<Fd> fd() {
         return _fd;
     }
 

@@ -59,7 +59,7 @@ struct Checkbox : public Ui::View<Checkbox> {
 };
 
 Ui::Child checkbox(bool value, Ui::OnChange<bool> onChange) {
-    return makeStrong<Checkbox>(value, std::move(onChange));
+    return makeRc<Checkbox>(value, std::move(onChange));
 }
 
 } // namespace Karm::Kira

@@ -234,14 +234,14 @@ struct HtmlParser : public HtmlSink {
     Mode _originalInsertionMode = Mode::INITIAL;
 
     HtmlLexer _lexer;
-    Strong<Document> _document;
-    Vec<Strong<Element>> _openElements;
-    Opt<Strong<Element>> _headElement;
-    Opt<Strong<Element>> _formElement;
+    Rc<Document> _document;
+    Vec<Rc<Element>> _openElements;
+    Opt<Rc<Element>> _headElement;
+    Opt<Rc<Element>> _formElement;
 
     Vec<HtmlToken> _pendingTableCharacterTokens;
 
-    HtmlParser(Strong<Document> document)
+    HtmlParser(Rc<Document> document)
         : _document(document) {
         _lexer.bind(*this);
     }

@@ -180,7 +180,7 @@ struct _Mmap {
     using enum MmapFlags;
 
     MmapOptions _options{};
-    Opt<Strong<Fd>> _fd;
+    Opt<Rc<Fd>> _fd;
 
     _Mmap& read() {
         _options.flags |= READ;
@@ -228,7 +228,7 @@ struct _Mmap {
         return Ok(Mmap{range.paddr, (void const*)range.vaddr, range.size});
     }
 
-    Res<Mmap> map(Strong<Fd> fd) {
+    Res<Mmap> map(Rc<Fd> fd) {
         _options.flags |= READ;
         MmapResult range = try$(_Embed::memMap(_options, fd));
         return Ok(Mmap{range.paddr, (void const*)range.vaddr, range.size});
@@ -244,7 +244,7 @@ struct _Mmap {
         return Ok(MutMmap{range.paddr, (void*)range.vaddr, range.size});
     }
 
-    Res<MutMmap> mapMut(Strong<Fd> fd) {
+    Res<MutMmap> mapMut(Rc<Fd> fd) {
         _options.flags |= WRITE;
         MmapResult result = try$(_Embed::memMap(_options, fd));
         return Ok(MutMmap{result.paddr, (void*)result.vaddr, result.size});

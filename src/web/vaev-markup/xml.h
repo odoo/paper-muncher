@@ -13,7 +13,7 @@ struct XmlParser {
 
     Res<> _parseCharData(Io::SScan& s, StringBuilder& sb);
 
-    Res<Strong<Comment>> _parseComment(Io::SScan& s);
+    Res<Rc<Comment>> _parseComment(Io::SScan& s);
 
     Res<> _parsePi(Io::SScan& s);
 
@@ -29,11 +29,11 @@ struct XmlParser {
 
     Res<> _parseProlog(Io::SScan& s, Node& parent);
 
-    Res<Strong<DocumentType>> _parseDoctype(Io::SScan& s);
+    Res<Rc<DocumentType>> _parseDoctype(Io::SScan& s);
 
-    Res<Strong<Element>> _parseElement(Io::SScan& s, Ns ns);
+    Res<Rc<Element>> _parseElement(Io::SScan& s, Ns ns);
 
-    Res<Strong<Element>> _parseStartTag(Io::SScan& s, Ns ns);
+    Res<Rc<Element>> _parseStartTag(Io::SScan& s, Ns ns);
 
     Res<> _parseAttribute(Io::SScan& s, Ns ns, Element& el);
 
@@ -49,7 +49,7 @@ struct XmlParser {
 
     Res<> _parseText(Io::SScan& s, Element& el);
 
-    Res<Strong<Element>> _parseEmptyElementTag(Io::SScan& s, Ns ns);
+    Res<Rc<Element>> _parseEmptyElementTag(Io::SScan& s, Ns ns);
 
     Res<Rune> _parseCharRef(Io::SScan& s);
 

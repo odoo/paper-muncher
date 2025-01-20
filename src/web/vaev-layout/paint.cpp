@@ -45,7 +45,7 @@ static void _paintFrag(Frag& frag, Gfx::Color currentColor, Scene::Stack& stack)
     Math::Rectf bound = frag.metrics.borderBox().cast<f64>();
 
     if (any(backgrounds) or hasBorders)
-        stack.add(makeStrong<Scene::Box>(bound, std::move(borders), std::move(backgrounds)));
+        stack.add(makeRc<Scene::Box>(bound, std::move(borders), std::move(backgrounds)));
 }
 
 static void _establishStackingContext(Frag& frag, Scene::Stack& stack);
@@ -57,15 +57,15 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
 
     _paintFrag(frag, currentColor, stack);
 
-    if (auto prose = frag.box->content.is<Strong<Text::Prose>>()) {
+    if (auto prose = frag.box->content.is<Rc<Text::Prose>>()) {
         (*prose)->_style.color = currentColor;
 
-        stack.add(makeStrong<Scene::Text>(
+        stack.add(makeRc<Scene::Text>(
             frag.metrics.borderBox().topStart().cast<f64>(),
             *prose
         ));
     } else if (auto image = frag.box->content.is<Karm::Image::Picture>()) {
-        stack.add(makeStrong<Scene::Image>(
+        stack.add(makeRc<Scene::Image>(
             frag.metrics.borderBox().cast<f64>(),
             *image
         ));
@@ -133,7 +133,7 @@ static void _paintStackingContext(Frag& frag, Scene::Stack& stack) {
 }
 
 static void _establishStackingContext(Frag& frag, Scene::Stack& stack) {
-    auto innerStack = makeStrong<Scene::Stack>();
+    auto innerStack = makeRc<Scene::Stack>();
     innerStack->zIndex = frag.style().zIndex.value;
     _paintStackingContext(frag, *innerStack);
     stack.add(std::move(innerStack));

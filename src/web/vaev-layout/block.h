@@ -4,6 +4,6 @@
 
 namespace Vaev::Layout {
 
-Strong<FormatingContext> constructBlockFormatingContext(Box& box);
+Rc<FormatingContext> constructBlockFormatingContext(Box& box);
 
 } // namespace Vaev::Layout

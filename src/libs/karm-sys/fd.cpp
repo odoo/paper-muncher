@@ -4,7 +4,7 @@
 
 namespace Karm::Sys {
 
-Res<Strong<Fd>> Fd::unpack(Io::PackScan& s) {
+Res<Rc<Fd>> Fd::unpack(Io::PackScan& s) {
     return _Embed::unpackFd(s);
 }
 
@@ -24,13 +24,13 @@ Res<usize> NullFd::flush() {
     return Ok(0uz);
 }
 
-Res<Strong<Fd>> NullFd::dup() {
-    return Ok(makeStrong<NullFd>());
+Res<Rc<Fd>> NullFd::dup() {
+    return Ok(makeRc<NullFd>());
 }
 
 Res<_Accepted> NullFd::accept() {
     return Ok<_Accepted>(
-        makeStrong<NullFd>(),
+        makeRc<NullFd>(),
         Ip4::unspecified(0)
     );
 }

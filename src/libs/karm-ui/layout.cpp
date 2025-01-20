@@ -21,7 +21,7 @@ struct Grow : public ProxyNode<Grow> {
 };
 
 Child grow(Opt<Child> child) {
-    return makeStrong<Grow>(
+    return makeRc<Grow>(
         child.unwrapOrElse([] {
             return empty();
         })
@@ -29,7 +29,7 @@ Child grow(Opt<Child> child) {
 }
 
 Child grow(isize grow, Opt<Child> child) {
-    return makeStrong<Grow>(
+    return makeRc<Grow>(
         grow,
         child.unwrapOrElse([] {
             return empty();
@@ -57,7 +57,7 @@ struct Empty : public View<Empty> {
 };
 
 Child empty(Math::Vec2i size) {
-    return makeStrong<Empty>(size);
+    return makeRc<Empty>(size);
 }
 
 Child cond(bool cond, Child child) {
@@ -89,7 +89,7 @@ struct Bound : public ProxyNode<Bound> {
 };
 
 Child bound(Child child) {
-    return makeStrong<Bound>(child);
+    return makeRc<Bound>(child);
 }
 
 struct Placed : public ProxyNode<Placed> {
@@ -121,7 +121,7 @@ struct Placed : public ProxyNode<Placed> {
 };
 
 Child placed(Math::Recti place, Child child) {
-    return makeStrong<Placed>(place, child);
+    return makeRc<Placed>(place, child);
 }
 
 // MARK: Separator -------------------------------------------------------------
@@ -140,7 +140,7 @@ struct Separator : public View<Separator> {
 };
 
 Child separator() {
-    return makeStrong<Separator>();
+    return makeRc<Separator>();
 }
 
 // MARK: Align -----------------------------------------------------------------
@@ -173,7 +173,7 @@ struct Align : public ProxyNode<Align> {
 };
 
 Child align(Math::Align align, Child child) {
-    return makeStrong<Align>(align, child);
+    return makeRc<Align>(align, child);
 }
 
 Child center(Child child) {
@@ -261,11 +261,11 @@ struct Sizing : public ProxyNode<Sizing> {
 };
 
 Child sizing(Math::Vec2i min, Math::Vec2i max, Child child) {
-    return makeStrong<Sizing>(min, max, child);
+    return makeRc<Sizing>(min, max, child);
 }
 
 Child minSize(Math::Vec2i size, Child child) {
-    return makeStrong<Sizing>(size, UNCONSTRAINED, child);
+    return makeRc<Sizing>(size, UNCONSTRAINED, child);
 }
 
 Child minSize(isize size, Child child) {
@@ -273,7 +273,7 @@ Child minSize(isize size, Child child) {
 }
 
 Child maxSize(Math::Vec2i size, Child child) {
-    return makeStrong<Sizing>(UNCONSTRAINED, size, child);
+    return makeRc<Sizing>(UNCONSTRAINED, size, child);
 }
 
 Child maxSize(isize size, Child child) {
@@ -281,7 +281,7 @@ Child maxSize(isize size, Child child) {
 }
 
 Child pinSize(Math::Vec2i size, Child child) {
-    return makeStrong<Sizing>(size, size, child);
+    return makeRc<Sizing>(size, size, child);
 }
 
 Child pinSize(isize size, Child child) {
@@ -319,7 +319,7 @@ struct Insets : public ProxyNode<Insets> {
 };
 
 Child insets(Math::Insetsi s, Child child) {
-    return makeStrong<Insets>(s, child);
+    return makeRc<Insets>(s, child);
 }
 
 // MARK: Aspect Ratio ----------------------------------------------------------
@@ -352,7 +352,7 @@ struct AspectRatio : public ProxyNode<AspectRatio> {
 };
 
 Child aspectRatio(f64 ratio, Child child) {
-    return makeStrong<AspectRatio>(ratio, child);
+    return makeRc<AspectRatio>(ratio, child);
 }
 
 // MARK: Stack -----------------------------------------------------------------
@@ -386,7 +386,7 @@ struct StackLayout : public GroupNode<StackLayout> {
 };
 
 Child stack(Children children) {
-    return makeStrong<StackLayout>(children);
+    return makeRc<StackLayout>(children);
 }
 
 // MARK: Flow ------------------------------------------------------------------
@@ -472,7 +472,7 @@ struct FlowLayout : public GroupNode<FlowLayout> {
 };
 
 Child flow(FlowStyle style, Children children) {
-    return makeStrong<FlowLayout>(style, children);
+    return makeRc<FlowLayout>(style, children);
 }
 
 // MARK: Grid ------------------------------------------------------------------
@@ -494,11 +494,11 @@ struct Cell : public ProxyNode<Cell> {
 };
 
 Child cell(Math::Vec2i pos, Child child) {
-    return makeStrong<Cell>(pos, pos, child);
+    return makeRc<Cell>(pos, pos, child);
 }
 
 Child cell(Math::Vec2i start, Math::Vec2i end, Child child) {
-    return makeStrong<Cell>(start, end, child);
+    return makeRc<Cell>(start, end, child);
 }
 
 struct GridLayout : public GroupNode<GridLayout> {
@@ -678,7 +678,7 @@ struct GridLayout : public GroupNode<GridLayout> {
 };
 
 Child grid(GridStyle style, Children children) {
-    return makeStrong<GridLayout>(style, children);
+    return makeRc<GridLayout>(style, children);
 }
 
 } // namespace Karm::Ui

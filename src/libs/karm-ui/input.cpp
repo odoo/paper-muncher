@@ -226,7 +226,7 @@ struct Button : public _Box<Button> {
 };
 
 Child button(OnPress onPress, ButtonStyle style, Child child) {
-    return makeStrong<Button>(std::move(onPress), style, child);
+    return makeRc<Button>(std::move(onPress), style, child);
 }
 
 Child button(OnPress onPress, ButtonStyle style, Str t) {
@@ -273,12 +273,12 @@ Child button(OnPress onPress, Mdi::Icon i, Str t) {
 struct Input : public View<Input> {
     Text::ProseStyle _style;
 
-    Strong<Text::Model> _model;
+    Rc<Text::Model> _model;
     OnChange<Text::Action> _onChange;
 
-    Opt<Strong<Text::Prose>> _text;
+    Opt<Rc<Text::Prose>> _text;
 
-    Input(Text::ProseStyle style, Strong<Text::Model> model, OnChange<Text::Action> onChange)
+    Input(Text::ProseStyle style, Rc<Text::Model> model, OnChange<Text::Action> onChange)
         : _style(style), _model(model), _onChange(std::move(onChange)) {}
 
     void reconcile(Input& o) override {
@@ -293,7 +293,7 @@ struct Input : public View<Input> {
 
     Text::Prose& _ensureText() {
         if (not _text) {
-            _text = makeStrong<Text::Prose>(_style);
+            _text = makeRc<Text::Prose>(_style);
             (*_text)->append(_model->runes());
         }
         return **_text;
@@ -331,12 +331,12 @@ struct Input : public View<Input> {
     }
 };
 
-Child input(Text::ProseStyle style, Strong<Text::Model> text, OnChange<Text::Action> onChange) {
-    return makeStrong<Input>(style, text, std::move(onChange));
+Child input(Text::ProseStyle style, Rc<Text::Model> text, OnChange<Text::Action> onChange) {
+    return makeRc<Input>(style, text, std::move(onChange));
 }
 
-Child input(Strong<Text::Model> text, OnChange<Text::Action> onChange) {
-    return makeStrong<Input>(TextStyles::bodyMedium(), text, std::move(onChange));
+Child input(Rc<Text::Model> text, OnChange<Text::Action> onChange) {
+    return makeRc<Input>(TextStyles::bodyMedium(), text, std::move(onChange));
 }
 
 struct SimpleInput : public View<SimpleInput> {
@@ -346,7 +346,7 @@ struct SimpleInput : public View<SimpleInput> {
 
     FocusListener _focus;
     Opt<Text::Model> _model;
-    Opt<Strong<Text::Prose>> _prose;
+    Opt<Rc<Text::Prose>> _prose;
 
     SimpleInput(Text::ProseStyle style, String text, OnChange<String> onChange)
         : _style(style),
@@ -371,7 +371,7 @@ struct SimpleInput : public View<SimpleInput> {
 
     Text::Prose& _ensureText() {
         if (not _prose) {
-            _prose = makeStrong<Text::Prose>(_style);
+            _prose = makeRc<Text::Prose>(_style);
             (*_prose)->append(_ensureModel().runes());
         }
         return **_prose;
@@ -418,7 +418,7 @@ struct SimpleInput : public View<SimpleInput> {
 };
 
 Child input(Text::ProseStyle style, String text, OnChange<String> onChange) {
-    return makeStrong<SimpleInput>(style, text, std::move(onChange));
+    return makeRc<SimpleInput>(style, text, std::move(onChange));
 }
 
 // MARK: Slider -----------------------------------------------------------------
@@ -472,7 +472,7 @@ struct Slider : public ProxyNode<Slider> {
 };
 
 Child slider(f64 value, OnChange<f64> onChange, Child child) {
-    return makeStrong<Slider>(value, std::move(onChange), std::move(child));
+    return makeRc<Slider>(value, std::move(onChange), std::move(child));
 }
 
 // MARK: Intent ----------------------------------------------------------------
@@ -504,7 +504,7 @@ struct Intent : public ProxyNode<Intent> {
 };
 
 Child intent(Func<void(Node&, App::Event& e)> map, Child child) {
-    return makeStrong<Intent>(std::move(map), std::move(child));
+    return makeRc<Intent>(std::move(map), std::move(child));
 }
 
 } // namespace Karm::Ui

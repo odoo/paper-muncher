@@ -2,9 +2,9 @@
 
 namespace Karm::Text {
 
-Res<Strong<TtfFontface>> TtfFontface::load(Sys::Mmap&& mmap) {
+Res<Rc<TtfFontface>> TtfFontface::load(Sys::Mmap&& mmap) {
     auto ttf = try$(Ttf::Parser::init(mmap.bytes()));
-    return Ok(makeStrong<TtfFontface>(std::move(mmap), ttf));
+    return Ok(makeRc<TtfFontface>(std::move(mmap), ttf));
 }
 
 TtfFontface::TtfFontface(Sys::Mmap&& mmap, Ttf::Parser parser)

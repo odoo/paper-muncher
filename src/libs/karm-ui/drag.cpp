@@ -116,7 +116,7 @@ struct Dismisable :
 };
 
 Child dismisable(OnDismis onDismis, DismisDir dir, f64 threshold, Ui::Child child) {
-    return makeStrong<Dismisable>(std::move(onDismis), dir, threshold, std::move(child));
+    return makeRc<Dismisable>(std::move(onDismis), dir, threshold, std::move(child));
 }
 
 // MARK: Drag Region -----------------------------------------------------------
@@ -160,7 +160,7 @@ struct DragRegion : public ProxyNode<DragRegion> {
 };
 
 Child dragRegion(Child child, Math::Vec2i dir) {
-    return makeStrong<DragRegion>(child, dir);
+    return makeRc<DragRegion>(child, dir);
 }
 
 // MARK: Handle ----------------------------------------------------------------

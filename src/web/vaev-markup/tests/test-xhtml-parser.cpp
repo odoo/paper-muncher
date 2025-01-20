@@ -148,7 +148,7 @@ test$("parse-comment") {
 test$("parse-doctype") {
     auto s = Io::SScan("<!DOCTYPE html><html></html>");
     XmlParser p{};
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     try$(p.parse(s, Vaev::HTML, *dom));
     auto first = dom->firstChild();
     auto doctype = try$(first.cast<DocumentType>());
@@ -159,7 +159,7 @@ test$("parse-doctype") {
 test$("parse-title") {
     auto s = Io::SScan("<title>the title</title>");
     XmlParser p{};
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     try$(p.parse(s, Vaev::HTML, *dom));
     expect$(dom->title() == "the title");
     return Ok();
@@ -171,7 +171,7 @@ test$("parse-comment-with-gt-symb") {
         "<!-- a b <meta> c d -->"
     );
     XmlParser p{};
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     try$(p.parse(s, Vaev::HTML, *dom));
 
     expect$(dom->hasChildren());

@@ -248,8 +248,8 @@ struct BlockFormatingContext : public FormatingContext {
     }
 };
 
-Strong<FormatingContext> constructBlockFormatingContext(Box&) {
-    return makeStrong<BlockFormatingContext>();
+Rc<FormatingContext> constructBlockFormatingContext(Box&) {
+    return makeRc<BlockFormatingContext>();
 }
 
 } // namespace Vaev::Layout

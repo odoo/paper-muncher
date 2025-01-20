@@ -11,13 +11,13 @@ namespace Karm::Print {
 
 struct Page {
     PaperStock _paper;
-    Strong<Scene::Node> _content;
+    Rc<Scene::Node> _content;
 
-    Page(PaperStock paper, Opt<Strong<Scene::Node>> content = NONE)
-        : _paper(paper), _content(content ? content.take() : makeStrong<Scene::Stack>()) {}
+    Page(PaperStock paper, Opt<Rc<Scene::Node>> content = NONE)
+        : _paper(paper), _content(content ? content.take() : makeRc<Scene::Stack>()) {}
 
-    Strong<Scene::Node> content() const {
-        return makeStrong<Scene::Viewbox>(_paper.size(), _content);
+    Rc<Scene::Node> content() const {
+        return makeRc<Scene::Viewbox>(_paper.size(), _content);
     }
 
     void print(Print::Printer& doc, Scene::PaintOptions o = {.showBackgroundGraphics = false}) {

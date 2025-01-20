@@ -44,7 +44,7 @@ struct Resizable : public Ui::ProxyNode<Resizable> {
 };
 
 Ui::Child resizable(Ui::Child child, Math::Vec2i size, Ui::OnChange<Math::Vec2i> onChange) {
-    return makeStrong<Resizable>(child, size, std::move(onChange));
+    return makeRc<Resizable>(child, size, std::move(onChange));
 }
 
 static Ui::Child _resizeHandle(Math::Vec2i dir) {

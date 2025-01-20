@@ -43,18 +43,18 @@ struct Page {
 };
 
 struct PageComputedStyle {
-    using Areas = Array<Strong<Computed>, toUnderlyingType(PageArea::_LEN)>;
+    using Areas = Array<Rc<Computed>, toUnderlyingType(PageArea::_LEN)>;
 
-    Strong<Computed> style;
+    Rc<Computed> style;
     Areas _areas;
 
     PageComputedStyle(Computed const& initial)
-        : style(makeStrong<Computed>(initial)),
+        : style(makeRc<Computed>(initial)),
           _areas(Areas::fill([&](...) {
-              return makeStrong<Computed>(initial);
+              return makeRc<Computed>(initial);
           })) {}
 
-    Strong<Computed> area(PageArea margin) const {
+    Rc<Computed> area(PageArea margin) const {
         return _areas[toUnderlyingType(margin)];
     }
 };

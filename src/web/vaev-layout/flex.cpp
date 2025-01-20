@@ -1553,8 +1553,8 @@ struct FlexFormatingContext : public FormatingContext {
     }
 };
 
-Strong<FormatingContext> constructFlexFormatingContext(Box& box) {
-    return makeStrong<FlexFormatingContext>(*box.style->flex);
+Rc<FormatingContext> constructFlexFormatingContext(Box& box) {
+    return makeRc<FlexFormatingContext>(*box.style->flex);
 }
 
 } // namespace Vaev::Layout

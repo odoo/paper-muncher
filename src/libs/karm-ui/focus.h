@@ -90,7 +90,7 @@ struct Focusable : public ProxyNode<Focusable> {
 };
 
 static inline Ui::Child focusable(Ui::Child child) {
-    return makeStrong<Focusable>(std::move(child));
+    return makeRc<Focusable>(std::move(child));
 }
 
 static inline auto focusable() {

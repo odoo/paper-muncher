@@ -701,7 +701,7 @@ struct Formatter<std::partial_ordering> {
 // MARK: Format References -----------------------------------------------------
 
 template <typename T>
-struct Formatter<Strong<T>> {
+struct Formatter<Rc<T>> {
     Formatter<T> formatter;
 
     void parse(Io::SScan& scan) {
@@ -712,7 +712,7 @@ struct Formatter<Strong<T>> {
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, Strong<T> const& val) {
+    Res<usize> format(Io::TextWriter& writer, Rc<T> const& val) {
         return formatter.format(writer, val.unwrap());
     }
 };

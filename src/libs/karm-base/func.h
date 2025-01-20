@@ -96,7 +96,7 @@ struct SharedFunc<Out(In...)> {
         Out operator()(In... in) const override { return _f(std::forward<In>(in)...); }
     };
 
-    Strong<_Wrap> _wrap;
+    Rc<_Wrap> _wrap;
 
     SharedFunc() = delete;
 
@@ -105,17 +105,17 @@ struct SharedFunc<Out(In...)> {
 
     template <typename F>
     requires Meta::FuncPtr<F> and Meta::Callable<F, In...>
-    SharedFunc(F f) : _wrap(makeStrong<Wrap<F>>(std::move(f))) {}
+    SharedFunc(F f) : _wrap(makeRc<Wrap<F>>(std::move(f))) {}
 
     template <typename F>
     requires (Meta::RvalueRef<F &&> and not (Meta::FuncPtr<F>)) and Meta::Callable<F, In...>
-    SharedFunc(F &&f) : _wrap(makeStrong<Wrap<F>>(std::move(f))) {}
+    SharedFunc(F &&f) : _wrap(makeRc<Wrap<F>>(std::move(f))) {}
 
     template <typename F>
     requires Meta::FuncPtr<F>
     SharedFunc &operator=(F f)
     {
-        _wrap = makeStrong<Wrap<F>>(std::move(f));
+        _wrap = makeRc<Wrap<F>>(std::move(f));
         return *this;
     }
 
@@ -123,7 +123,7 @@ struct SharedFunc<Out(In...)> {
     requires (Meta::RvalueRef<F &&> and not (Meta::FuncPtr<F>))
     SharedFunc &operator=(F &&f)
     {
-        _wrap = makeStrong<Wrap<F>>(std::move(f));
+        _wrap = makeRc<Wrap<F>>(std::move(f));
         return *this;
     }
 
@@ -135,7 +135,7 @@ struct SharedFunc<Out(In...)> {
 
     template <typename F>
     SharedFunc& operator=(F f) {
-        _wrap = makeStrong(Wrap<F>{std::move(f)});
+        _wrap = makeRc(Wrap<F>{std::move(f)});
         return *this;
     }
 };

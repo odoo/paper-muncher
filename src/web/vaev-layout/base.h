@@ -238,7 +238,7 @@ struct Box;
 using Content = Union<
     None,
     Vec<Box>,
-    Strong<Text::Prose>,
+    Rc<Text::Prose>,
     Karm::Image::Picture>;
 
 struct Attrs {
@@ -252,15 +252,15 @@ struct Attrs {
 };
 
 struct Box : public Meta::NoCopy {
-    Strong<Style::Computed> style;
-    Strong<Text::Fontface> fontFace;
+    Rc<Style::Computed> style;
+    Rc<Text::Fontface> fontFace;
     Content content = NONE;
     Attrs attrs;
-    Opt<Strong<FormatingContext>> formatingContext = NONE;
+    Opt<Rc<FormatingContext>> formatingContext = NONE;
 
-    Box(Strong<Style::Computed> style, Strong<Karm::Text::Fontface> fontFace);
+    Box(Rc<Style::Computed> style, Rc<Karm::Text::Fontface> fontFace);
 
-    Box(Strong<Style::Computed> style, Strong<Karm::Text::Fontface> fontFace, Content content);
+    Box(Rc<Style::Computed> style, Rc<Karm::Text::Fontface> fontFace, Content content);
 
     Slice<Box> children() const;
 

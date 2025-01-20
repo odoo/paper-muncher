@@ -7,10 +7,10 @@ namespace Vaev::Layout {
 
 // MARK: Box ------------------------------------------------------------------
 
-Box::Box(Strong<Style::Computed> style, Strong<Text::Fontface> font)
+Box::Box(Rc<Style::Computed> style, Rc<Text::Fontface> font)
     : style{std::move(style)}, fontFace{font} {}
 
-Box::Box(Strong<Style::Computed> style, Strong<Text::Fontface> font, Content content)
+Box::Box(Rc<Style::Computed> style, Rc<Text::Fontface> font, Content content)
     : style{std::move(style)}, fontFace{font}, content{std::move(content)} {}
 
 Slice<Box> Box::children() const {

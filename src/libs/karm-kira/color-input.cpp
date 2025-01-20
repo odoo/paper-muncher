@@ -103,7 +103,7 @@ struct HsvSquare : public Ui::View<HsvSquare> {
 };
 
 Ui::Child hsvSquare(Gfx::Hsv value, Ui::OnChange<Gfx::Hsv> onChange) {
-    return makeStrong<HsvSquare>(value, std::move(onChange));
+    return makeRc<HsvSquare>(value, std::move(onChange));
 }
 
 static Ui::Child _sliderThumb(Gfx::Color color) {

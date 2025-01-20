@@ -38,7 +38,7 @@ struct ContextMenu : public Ui::ProxyNode<ContextMenu> {
 };
 
 Ui::Child contextMenu(Ui::Child child, Ui::Slot menu) {
-    return makeStrong<ContextMenu>(child, std::move(menu));
+    return makeRc<ContextMenu>(child, std::move(menu));
 }
 
 Ui::Child contextMenuContent(Ui::Children children) {

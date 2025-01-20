@@ -6,12 +6,12 @@
 namespace Karm::Image {
 
 struct Picture {
-    Strong<Gfx::Surface const> _surface;
+    Rc<Gfx::Surface const> _surface;
 
-    Picture(Strong<Gfx::Surface const> surface)
+    Picture(Rc<Gfx::Surface const> surface)
         : _surface(std::move(surface)) {}
 
-    Picture(Strong<Gfx::Surface> surface)
+    Picture(Rc<Gfx::Surface> surface)
         : _surface(std::move(surface)) {}
 
     always_inline operator Gfx::Pixels() const {

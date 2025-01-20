@@ -164,12 +164,12 @@ inline Child reducer(
     Func<Child(typename Model::State const&)> build
 ) {
 
-    return makeStrong<Reducer<Model>>(std::move(init), std::move(build));
+    return makeRc<Reducer<Model>>(std::move(init), std::move(build));
 }
 
 template <typename Model>
 inline Child reducer(Func<Child(typename Model::State const&)> build) {
-    return makeStrong<Reducer<Model>>(typename Model::State{}, std::move(build));
+    return makeRc<Reducer<Model>>(typename Model::State{}, std::move(build));
 }
 
 // MARK: State -----------------------------------------------------------------

@@ -3726,15 +3726,15 @@ void acknowledgeSelfClosingFlag(HtmlToken const&) {
 // https://html.spec.whatwg.org/multipage/parsing.html#creating-and-inserting-nodes
 
 struct AdjustedInsertionLocation {
-    Strong<Element> parent;
+    Rc<Element> parent;
 
     // https://html.spec.whatwg.org/multipage/parsing.html#insert-an-element-at-the-adjusted-insertion-location
-    void insert(Strong<Node> node) {
+    void insert(Rc<Node> node) {
         // NOSPEC
         parent->appendChild(node);
     }
 
-    Opt<Strong<Node>> lastChild() {
+    Opt<Rc<Node>> lastChild() {
         // NOSPEC
         if (not parent->hasChildren())
             return NONE;
@@ -3743,7 +3743,7 @@ struct AdjustedInsertionLocation {
 };
 
 // https://html.spec.whatwg.org/multipage/parsing.html#appropriate-place-for-inserting-a-node
-AdjustedInsertionLocation apropriatePlaceForInsertingANode(HtmlParser& b, Opt<Strong<Element>> overrideTarget = NONE) {
+AdjustedInsertionLocation apropriatePlaceForInsertingANode(HtmlParser& b, Opt<Rc<Element>> overrideTarget = NONE) {
     // 1. If there was an override target specified, then let target be
     //    the override target.
     //
@@ -3795,7 +3795,7 @@ AdjustedInsertionLocation apropriatePlaceForInsertingANode(HtmlParser& b, Opt<St
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#create-an-element-for-the-token
-Strong<Element> createElementFor(HtmlToken const& t, Ns ns) {
+Rc<Element> createElementFor(HtmlToken const& t, Ns ns) {
     // NOSPEC: Keep it simple for the POC
 
     // 1. If the active speculative HTML parser is not null, then return the
@@ -3841,7 +3841,7 @@ Strong<Element> createElementFor(HtmlToken const& t, Ns ns) {
     //    leave it unset.
     auto tag = TagName::make(t.name, ns);
     logDebugIf(DEBUG_HTML_PARSER, "Creating element: {} {}", t.name, tag);
-    auto el = makeStrong<Element>(tag);
+    auto el = makeRc<Element>(tag);
 
     // 10. Append each attribute in the given token to element.
     for (auto& [name, value] : t.attrs) {
@@ -3883,7 +3883,7 @@ Strong<Element> createElementFor(HtmlToken const& t, Ns ns) {
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-foreign-element
 
-static Strong<Element> insertAForeignElement(HtmlParser& b, HtmlToken const& t, Ns ns, bool onlyAddToElementStack = false) {
+static Rc<Element> insertAForeignElement(HtmlParser& b, HtmlToken const& t, Ns ns, bool onlyAddToElementStack = false) {
     // 1. Let the adjusted insertion location be the appropriate place for inserting a node.
     auto location = apropriatePlaceForInsertingANode(b);
 
@@ -3905,7 +3905,7 @@ static Strong<Element> insertAForeignElement(HtmlParser& b, HtmlToken const& t, 
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-an-html-element
-static Strong<Element> insertHtmlElement(HtmlParser& b, HtmlToken const& t) {
+static Rc<Element> insertHtmlElement(HtmlParser& b, HtmlToken const& t) {
     return insertAForeignElement(b, t, Vaev::HTML, false);
 }
 
@@ -3931,7 +3931,7 @@ static void insertACharacter(HtmlParser& b, Rune c) {
     //            adjusted insertion location finds itself, and insert the
     //            newly created node at the adjusted insertion location.
     else {
-        auto text = makeStrong<Text>(""s);
+        auto text = makeRc<Text>(""s);
         text->appendData(c);
 
         location.insert(text);
@@ -3957,7 +3957,7 @@ static void insertAComment(HtmlParser& b, HtmlToken const& t) {
     // 3. Create a Comment node whose data attribute is set to data and
     //    whose node document is the same as that of the node in which
     //    the adjusted insertion location finds itself.
-    auto comment = makeStrong<Comment>(t.data);
+    auto comment = makeRc<Comment>(t.data);
 
     // 4. Insert the newly created node at the adjusted insertion location.
     location.insert(comment);
@@ -4148,12 +4148,12 @@ void HtmlParser::_handleInitialMode(HtmlToken const& t) {
 
     // A comment token
     else if (t.type == HtmlToken::COMMENT) {
-        _document->appendChild(makeStrong<Comment>(t.data));
+        _document->appendChild(makeRc<Comment>(t.data));
     }
 
     // A DOCTYPE token
     else if (t.type == HtmlToken::DOCTYPE) {
-        _document->appendChild(makeStrong<DocumentType>(
+        _document->appendChild(makeRc<DocumentType>(
             t.name,
             t.publicIdent,
             t.systemIdent
@@ -4180,7 +4180,7 @@ void HtmlParser::_handleBeforeHtml(HtmlToken const& t) {
 
     // A comment token
     else if (t.type == HtmlToken::COMMENT) {
-        _document->appendChild(makeStrong<Comment>(t.data));
+        _document->appendChild(makeRc<Comment>(t.data));
     }
 
     // A character token that is one of U+0009 CHARACTER TABULATION,
@@ -4211,7 +4211,7 @@ void HtmlParser::_handleBeforeHtml(HtmlToken const& t) {
     // An end tag whose tag name is one of: "head", "body", "html", "br"
     // Anything else
     else {
-        auto el = makeStrong<Element>(Html::HTML);
+        auto el = makeRc<Element>(Html::HTML);
         _document->appendChild(el);
         _openElements.pushBack(el);
         _switchTo(Mode::BEFORE_HEAD);

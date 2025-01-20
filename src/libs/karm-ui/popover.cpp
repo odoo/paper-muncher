@@ -125,7 +125,7 @@ struct PopoverLayer : public ProxyNode<PopoverLayer> {
 };
 
 Child popoverLayer(Child child) {
-    return makeStrong<PopoverLayer>(child);
+    return makeRc<PopoverLayer>(child);
 }
 
 } // namespace Karm::Ui

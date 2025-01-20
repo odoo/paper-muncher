@@ -1253,8 +1253,8 @@ struct TableFormatingContext : public FormatingContext {
     }
 };
 
-Strong<FormatingContext> constructTableFormatingContext(Box&) {
-    return makeStrong<TableFormatingContext>();
+Rc<FormatingContext> constructTableFormatingContext(Box&) {
+    return makeRc<TableFormatingContext>();
 }
 
 } // namespace Vaev::Layout

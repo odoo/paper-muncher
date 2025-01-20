@@ -21,7 +21,7 @@ enum struct Hint {
 
 struct Node;
 
-using Child = Strong<Node>;
+using Child = Rc<Node>;
 using Children = Vec<Child>;
 using Visitor = Func<void(Node&)>;
 

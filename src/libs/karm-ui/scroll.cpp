@@ -179,15 +179,15 @@ struct Scroll : public ProxyNode<Scroll> {
 };
 
 Child vhscroll(Child child) {
-    return makeStrong<Scroll>(child, Math::Orien::BOTH);
+    return makeRc<Scroll>(child, Math::Orien::BOTH);
 }
 
 Child hscroll(Child child) {
-    return makeStrong<Scroll>(child, Math::Orien::HORIZONTAL);
+    return makeRc<Scroll>(child, Math::Orien::HORIZONTAL);
 }
 
 Child vscroll(Child child) {
-    return makeStrong<Scroll>(child, Math::Orien::VERTICAL);
+    return makeRc<Scroll>(child, Math::Orien::VERTICAL);
 }
 
 // MARK: Clip ------------------------------------------------------------------
@@ -242,15 +242,15 @@ struct Clip : public ProxyNode<Clip> {
 };
 
 Child vhclip(Child child) {
-    return makeStrong<Clip>(child, Math::Orien::BOTH);
+    return makeRc<Clip>(child, Math::Orien::BOTH);
 }
 
 Child hclip(Child child) {
-    return makeStrong<Clip>(child, Math::Orien::HORIZONTAL);
+    return makeRc<Clip>(child, Math::Orien::HORIZONTAL);
 }
 
 Child vclip(Child child) {
-    return makeStrong<Clip>(child, Math::Orien::VERTICAL);
+    return makeRc<Clip>(child, Math::Orien::VERTICAL);
 }
 
 } // namespace Karm::Ui

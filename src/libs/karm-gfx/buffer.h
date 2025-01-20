@@ -248,8 +248,8 @@ struct Surface {
     usize _stride;
     Gfx::Fmt _fmt;
 
-    static Strong<Surface> alloc(Math::Vec2i size, Gfx::Fmt fmt = Gfx::RGBA8888) {
-        return makeStrong<Surface>(
+    static Rc<Surface> alloc(Math::Vec2i size, Gfx::Fmt fmt = Gfx::RGBA8888) {
+        return makeRc<Surface>(
             Buf<u8>::init(size.x * size.y * fmt.bpp()),
             size,
             size.x * fmt.bpp(),
@@ -257,7 +257,7 @@ struct Surface {
         );
     }
 
-    static Strong<Surface> fallback() {
+    static Rc<Surface> fallback() {
         auto img = alloc({2, 2}, Gfx::RGBA8888);
         img->mutPixels().clear(Gfx::Color::fromHex(0xFF00FF));
         return img;

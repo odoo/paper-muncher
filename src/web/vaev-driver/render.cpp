@@ -50,7 +50,7 @@ RenderResult render(Markup::Document const& dom, Style::Media const& media, Layo
         }
     );
 
-    auto sceneRoot = makeStrong<Scene::Stack>();
+    auto sceneRoot = makeRc<Scene::Stack>();
 
     elapsed = Sys::now() - start;
     logDebugIf(DEBUG_RENDER, "layout tree layout time: {}", elapsed);
@@ -64,9 +64,9 @@ RenderResult render(Markup::Document const& dom, Style::Media const& media, Layo
 
     return {
         std::move(stylebook),
-        makeStrong<Layout::Box>(std::move(tree.root)),
+        makeRc<Layout::Box>(std::move(tree.root)),
         sceneRoot,
-        makeStrong<Layout::Frag>(std::move(root))
+        makeRc<Layout::Frag>(std::move(root))
     };
 }
 

@@ -56,17 +56,17 @@ template <typename T>
 struct _Future {
     using Inner = T;
 
-    Strong<State<T>> _state;
+    Rc<State<T>> _state;
 
     template <Receiver<T> R>
     struct _Operation :
         public State<T>::Listener,
         Meta::Pinned {
 
-        Strong<State<T>> _state;
+        Rc<State<T>> _state;
         R _r;
 
-        _Operation(Strong<State<T>> state, R r)
+        _Operation(Rc<State<T>> state, R r)
             : _state{std::move(state)}, _r{std::move(r)} {}
 
         ~_Operation() {
@@ -98,9 +98,9 @@ using Future = _Future<Res<V, E>>;
 
 template <typename T>
 struct _Promise : Meta::NoCopy {
-    Opt<Strong<State<T>>> _state;
+    Opt<Rc<State<T>>> _state;
 
-    _Promise() : _state{makeStrong<State<T>>()} {}
+    _Promise() : _state{makeRc<State<T>>()} {}
 
     void resolve(T value) {
         if (not _state.has()) [[unlikely]]

@@ -4,7 +4,7 @@
 namespace Vaev::Markup::Tests {
 
 test$("parse-empty-document") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write(""s);
@@ -12,7 +12,7 @@ test$("parse-empty-document") {
 }
 
 test$("parse-open-close-tag-with-structure") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write("<html></html>"s);
@@ -34,7 +34,7 @@ test$("parse-open-close-tag-with-structure") {
 }
 
 test$("parse-empty-tag") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write("<html/>"s);
@@ -47,7 +47,7 @@ test$("parse-empty-tag") {
 }
 
 test$("parse-attr") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write("<html lang=\"en\"/>"s);
@@ -63,7 +63,7 @@ test$("parse-attr") {
 }
 
 test$("parse-text") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write("<html>text</html>"s);
@@ -87,7 +87,7 @@ test$("parse-text") {
 }
 
 test$("parse-title") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write("<title>the title</title>");
@@ -115,7 +115,7 @@ test$("parse-title") {
 }
 
 test$("parse-comment-with-gt-symb") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write(
@@ -142,7 +142,7 @@ test$("parse-comment-with-gt-symb") {
 }
 
 test$("parse-p-after-comment") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write(
@@ -172,7 +172,7 @@ test$("parse-p-after-comment") {
 }
 
 test$("parse-not-nested-p-and-els-inbody") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write("<div>b</div><p>a<div>b</div><p>a<p>a");
@@ -192,7 +192,7 @@ test$("parse-not-nested-p-and-els-inbody") {
 }
 
 test$("parse-char-referece-as-text") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write("<html><body>im there&sect;&Aacute;&sect;&seca;&seca&Aacute;im also there</body></html>");
@@ -217,7 +217,7 @@ test$("parse-char-referece-as-text") {
 }
 
 test$("parse-char-referece-as-attribute-value") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write("<meta value=\"im there&sect;&Aacute;&sect;&seca;&seca&Aacute;im also there\">");
@@ -244,7 +244,7 @@ test$("parse-char-referece-as-attribute-value") {
 
 test$("parse-char-referece-spec-example") {
     // https://html.spec.whatwg.org/#named-character-reference-state : EXAMPLE
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write(
@@ -298,7 +298,7 @@ test$("parse-char-referece-spec-example") {
 }
 
 test$("parse-input-element") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write("<div><input></div>");
@@ -325,7 +325,7 @@ test$("parse-input-element") {
 }
 
 test$("parse-empty-table-element") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write("<table></table>");
@@ -349,7 +349,7 @@ test$("parse-empty-table-element") {
 }
 
 test$("parse-table-element") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write("<table><thead><tr><th>hi</th></tr></thead></table>");
@@ -389,7 +389,7 @@ test$("parse-table-element") {
 }
 
 test$("parse-table-element-create-body-tr-scope") {
-    auto dom = makeStrong<Markup::Document>(Mime::Url());
+    auto dom = makeRc<Markup::Document>(Mime::Url());
     Markup::HtmlParser parser{dom};
 
     parser.write("<table><th>hi</th></table>");

@@ -16,7 +16,7 @@ struct TtfFontface : public Fontface {
     Map<Pair<Glyph>, f64> _cachedKerns;
     f64 _unitPerEm = 0;
 
-    static Res<Strong<TtfFontface>> load(Sys::Mmap&& mmap);
+    static Res<Rc<TtfFontface>> load(Sys::Mmap&& mmap);
 
     TtfFontface(Sys::Mmap&& mmap, Ttf::Parser parser);
 

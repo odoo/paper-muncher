@@ -24,7 +24,7 @@ struct Gradient {
     Type _type = LINEAR;
     Math::Vec2f _start = {0.5, 0.5};
     Math::Vec2f _end = {1, 1};
-    Strong<Buf> _buf;
+    Rc<Buf> _buf;
 
     struct Builder {
         static constexpr isize LIMIT = 16;
@@ -104,7 +104,7 @@ struct Gradient {
         return Builder{DIAMOND, {0.5, 0.5}, {1, 0.5}};
     }
 
-    Gradient(Type type, Math::Vec2f start, Math::Vec2f end, Strong<Buf> buf)
+    Gradient(Type type, Math::Vec2f start, Math::Vec2f end, Rc<Buf> buf)
         : _type(type), _start(start), _end(end), _buf(buf) {}
 
     Gradient& withType(Type type) {

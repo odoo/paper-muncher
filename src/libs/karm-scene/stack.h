@@ -5,9 +5,9 @@
 namespace Karm::Scene {
 
 struct Stack : public Node {
-    Vec<Strong<Node>> _children;
+    Vec<Rc<Node>> _children;
 
-    void add(Strong<Node> child) {
+    void add(Rc<Node> child) {
         _children.pushBack(child);
     }
 

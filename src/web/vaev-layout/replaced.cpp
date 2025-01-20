@@ -31,8 +31,8 @@ struct ReplacedFormatingContext : public FormatingContext {
     }
 };
 
-Strong<FormatingContext> constructReplacedFormatingContext(Box&) {
-    return makeStrong<ReplacedFormatingContext>();
+Rc<FormatingContext> constructReplacedFormatingContext(Box&) {
+    return makeRc<ReplacedFormatingContext>();
 }
 
 } // namespace Vaev::Layout

@@ -48,7 +48,7 @@ static void _bakeStops(Slice<Gradient::Stop> stops, Gradient::Buf& buf, bool wra
 }
 
 Gradient Gradient::Builder::bake() {
-    auto buf = makeStrong<Buf>();
+    auto buf = makeRc<Buf>();
     _bakeStops(_stops, *buf, _type == CONICAL);
     return {_type, _start, _end, buf};
 }

@@ -10,9 +10,9 @@ namespace Vaev::Driver {
 
 struct RenderResult {
     Style::StyleBook style;
-    Strong<Layout::Box> layout;
-    Strong<Scene::Node> scenes;
-    Strong<Layout::Frag> frag;
+    Rc<Layout::Box> layout;
+    Rc<Scene::Node> scenes;
+    Rc<Layout::Frag> frag;
 };
 
 RenderResult render(Markup::Document const& dom, Style::Media const& media, Layout::Viewport viewport);

@@ -308,7 +308,7 @@ Vec<Print::Page> print(Markup::Document const& dom, Print::Settings const& setti
 
         auto pageSize = pageRect.size().cast<f64>();
 
-        auto pageStack = makeStrong<Scene::Stack>();
+        auto pageStack = makeRc<Scene::Stack>();
 
         InsetsPx pageMargin = {};
 
@@ -363,7 +363,7 @@ Vec<Print::Page> print(Markup::Document const& dom, Print::Settings const& setti
         Layout::paint(fragment, *pageStack);
         pageStack->prepare();
 
-        pages.emplaceBack(settings.paper, makeStrong<Scene::Transform>(pageStack, Math::Trans2f::makeScale(media.resolution.toDppx())));
+        pages.emplaceBack(settings.paper, makeRc<Scene::Transform>(pageStack, Math::Trans2f::makeScale(media.resolution.toDppx())));
 
         if (outReal.completelyLaidOut)
             break;

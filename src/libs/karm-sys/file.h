@@ -15,10 +15,10 @@ struct _File :
     public Io::Flusher,
     Meta::NoCopy {
 
-    Strong<Fd> _fd;
+    Rc<Fd> _fd;
     Mime::Url _url;
 
-    _File(Strong<Fd> fd, Mime::Url url)
+    _File(Rc<Fd> fd, Mime::Url url)
         : _fd(fd), _url(url) {}
 
     Res<usize> seek(Io::Seek seek) override {
@@ -37,7 +37,7 @@ struct _File :
         return _fd->stat();
     }
 
-    Strong<Fd> fd() {
+    Rc<Fd> fd() {
         return _fd;
     }
 };

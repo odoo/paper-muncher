@@ -122,48 +122,48 @@ struct Cell : public _Cell<L> {
 /// the object is deallocated if there are no other strong
 /// references to it.
 template <typename L, typename T>
-struct _Strong {
+struct _Rc {
     _Cell<L>* _cell{};
 
     // MARK: Rule of Five ------------------------------------------------------
 
-    constexpr _Strong() = delete;
+    constexpr _Rc() = delete;
 
-    constexpr _Strong(Move, _Cell<L>* ptr)
+    constexpr _Rc(Move, _Cell<L>* ptr)
         : _cell(ptr->refStrong()) {
     }
 
-    constexpr _Strong(_Strong const& other)
+    constexpr _Rc(_Rc const& other)
         : _cell(other._cell->refStrong()) {
     }
 
-    constexpr _Strong(_Strong&& other)
+    constexpr _Rc(_Rc&& other)
         : _cell(std::exchange(other._cell, nullptr)) {
     }
 
     template <Meta::Derive<T> U>
-    constexpr _Strong(_Strong<L, U> const& other)
+    constexpr _Rc(_Rc<L, U> const& other)
         : _cell(other._cell->refStrong()) {
     }
 
     template <Meta::Derive<T> U>
-    constexpr _Strong(_Strong<L, U>&& other)
+    constexpr _Rc(_Rc<L, U>&& other)
         : _cell(std::exchange(other._cell, nullptr)) {
     }
 
-    constexpr ~_Strong() {
+    constexpr ~_Rc() {
         if (_cell) {
             _cell->derefStrong();
             _cell = nullptr;
         }
     }
 
-    constexpr _Strong& operator=(_Strong const& other) {
-        *this = _Strong(other);
+    constexpr _Rc& operator=(_Rc const& other) {
+        *this = _Rc(other);
         return *this;
     }
 
-    constexpr _Strong& operator=(_Strong&& other) {
+    constexpr _Rc& operator=(_Rc&& other) {
         std::swap(_cell, other._cell);
         return *this;
     }
@@ -270,15 +270,15 @@ struct _Strong {
     }
 
     template <typename U>
-    constexpr Opt<_Strong<L, U>> cast() {
+    constexpr Opt<_Rc<L, U>> cast() {
         if (not is<U>()) {
             return NONE;
         }
 
-        return _Strong<L, U>(MOVE, _cell);
+        return _Rc<L, U>(MOVE, _cell);
     }
 
-    auto operator<=>(_Strong const& other) const
+    auto operator<=>(_Rc const& other) const
         requires Meta::Comparable<T>
     {
         if (_cell == other._cell)
@@ -286,7 +286,7 @@ struct _Strong {
         return unwrap() <=> other.unwrap();
     }
 
-    bool operator==(_Strong const& other) const
+    bool operator==(_Rc const& other) const
         requires Meta::Equatable<T>
     {
         if (_cell == other._cell)
@@ -314,7 +314,7 @@ struct _Weak {
     constexpr _Weak() = delete;
 
     template <Meta::Derive<T> U>
-    constexpr _Weak(_Strong<L, U> const& other)
+    constexpr _Weak(_Rc<L, U> const& other)
         : _cell(other._cell->refWeak()) {}
 
     template <Meta::Derive<T> U>
@@ -330,7 +330,7 @@ struct _Weak {
         : _cell(ptr->refWeak()) {
     }
 
-    constexpr _Weak& operator=(_Strong<L, T> const& other) {
+    constexpr _Weak& operator=(_Rc<L, T> const& other) {
         *this = _Weak(other);
         return *this;
     }
@@ -355,15 +355,15 @@ struct _Weak {
     /// Upgrades the weak reference to a strong reference.
     ///
     /// Returns `NONE` if the object has been deallocated.
-    Opt<_Strong<L, T>> upgrade() const {
+    Opt<_Rc<L, T>> upgrade() const {
         if (not _cell or _cell->_clear)
             return NONE;
-        return _Strong<L, T>(MOVE, _cell);
+        return _Rc<L, T>(MOVE, _cell);
     }
 };
 
 template <typename T>
-using Strong = _Strong<NoLock, T>;
+using Rc = _Rc<NoLock, T>;
 
 template <typename T>
 using Weak = _Weak<NoLock, T>;
@@ -371,18 +371,18 @@ using Weak = _Weak<NoLock, T>;
 /// Allocates an object of type `T` on the heap and returns
 /// a strong reference to it.
 template <typename T, typename... Args>
-constexpr static Strong<T> makeStrong(Args&&... args) {
+constexpr static Rc<T> makeRc(Args&&... args) {
     return {MOVE, new Cell<NoLock, T>(std::forward<Args>(args)...)};
 }
 
 template <typename T>
-using AtomicStrong = _Strong<Lock, T>;
+using Arc = _Rc<Lock, T>;
 
 template <typename T>
-using AtomicWeak = _Weak<Lock, T>;
+using Aweak = _Weak<Lock, T>;
 
 template <typename T, typename... Args>
-constexpr static AtomicStrong<T> makeAtomicStrong(Args&&... args) {
+constexpr static Arc<T> makeArc(Args&&... args) {
     return {MOVE, new Cell<Lock, T>(std::forward<Args>(args)...)};
 }
 

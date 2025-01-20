@@ -11,7 +11,7 @@ struct FilePrinterProps {
 };
 
 struct FilePrinter : public Printer {
-    static Res<Strong<FilePrinter>> create(Mime::Uti uti, FilePrinterProps props = {});
+    static Res<Rc<FilePrinter>> create(Mime::Uti uti, FilePrinterProps props = {});
 
     virtual Res<> write(Io::Writer& w) = 0;
 

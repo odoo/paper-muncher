@@ -54,12 +54,12 @@ struct Navigate {
 struct State {
     usize currentIndex = 0;
     Vec<Navigate> history;
-    Res<Strong<Markup::Document>> dom;
+    Res<Rc<Markup::Document>> dom;
     SidePanel sidePanel = SidePanel::CLOSE;
     InspectState inspect = {};
     bool wireframe = false;
 
-    State(Navigate nav, Res<Strong<Markup::Document>> dom)
+    State(Navigate nav, Res<Rc<Markup::Document>> dom)
         : history{nav}, dom{dom} {}
 
     bool canGoBack() const {
@@ -300,7 +300,7 @@ Ui::Child appContent(State const& s) {
     );
 }
 
-Ui::Child app(Mime::Url url, Res<Strong<Vaev::Markup::Document>> dom) {
+Ui::Child app(Mime::Url url, Res<Rc<Vaev::Markup::Document>> dom) {
     return Ui::reducer<Model>(
         {
             Navigate{url},

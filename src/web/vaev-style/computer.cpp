@@ -49,7 +49,7 @@ void Computer::_evalRule(Rule const& rule, Page const& page, PageComputedStyle& 
     });
 }
 
-Strong<Computed> Computer::_evalCascade(Computed const& parent, MatchingRules& matchingRules) {
+Rc<Computed> Computer::_evalCascade(Computed const& parent, MatchingRules& matchingRules) {
     // Sort origin and specificity
     stableSort(
         matchingRules,
@@ -61,7 +61,7 @@ Strong<Computed> Computer::_evalCascade(Computed const& parent, MatchingRules& m
     );
 
     // Compute computed style
-    auto computed = makeStrong<Computed>(Computed::initial());
+    auto computed = makeRc<Computed>(Computed::initial());
     computed->inherit(parent);
     Vec<Cursor<StyleProp>> importantProps;
 
@@ -91,7 +91,7 @@ Strong<Computed> Computer::_evalCascade(Computed const& parent, MatchingRules& m
 }
 
 // https://drafts.csswg.org/css-cascade/#cascade-origin
-Strong<Computed> Computer::computeFor(Computed const& parent, Markup::Element const& el) {
+Rc<Computed> Computer::computeFor(Computed const& parent, Markup::Element const& el) {
     MatchingRules matchingRules;
 
     // Collect matching styles rules
@@ -111,8 +111,8 @@ Strong<Computed> Computer::computeFor(Computed const& parent, Markup::Element co
     return _evalCascade(parent, matchingRules);
 }
 
-Strong<PageComputedStyle> Computer::computeFor(Computed const& parent, Page const& page) {
-    auto computed = makeStrong<PageComputedStyle>(parent);
+Rc<PageComputedStyle> Computer::computeFor(Computed const& parent, Page const& page) {
+    auto computed = makeRc<PageComputedStyle>(parent);
 
     for (auto const& sheet : _styleBook.styleSheets)
         for (auto const& rule : sheet.rules)

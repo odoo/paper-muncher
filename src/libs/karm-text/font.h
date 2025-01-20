@@ -53,7 +53,7 @@ struct FontMeasure {
 };
 
 struct Fontface {
-    static Strong<Fontface> fallback();
+    static Rc<Fontface> fallback();
 
     virtual ~Fontface() = default;
 
@@ -71,7 +71,7 @@ struct Fontface {
 };
 
 struct Font {
-    Strong<Fontface> fontface;
+    Rc<Fontface> fontface;
     f64 fontsize;
     f64 lineheight = 1.2;
 

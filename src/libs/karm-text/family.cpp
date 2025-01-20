@@ -46,8 +46,8 @@ FontFamily::Builder& FontFamily::Builder::withRange(Range<Rune> range) {
     return *this;
 }
 
-Strong<FontFamily> FontFamily::Builder::bake() {
-    return makeStrong<FontFamily>(std::move(members));
+Rc<FontFamily> FontFamily::Builder::bake() {
+    return makeRc<FontFamily>(std::move(members));
 }
 
 FontFamily::Builder FontFamily::make(FontBook const& book) {

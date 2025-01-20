@@ -8,9 +8,9 @@ namespace Karm::Scene {
 
 struct Text : public Node {
     Math::Vec2f _origin;
-    Strong<Karm::Text::Prose> _prose;
+    Rc<Karm::Text::Prose> _prose;
 
-    Text(Math::Vec2f origin, Strong<Karm::Text::Prose> prose)
+    Text(Math::Vec2f origin, Rc<Karm::Text::Prose> prose)
         : _origin(origin), _prose(prose) {}
 
     Math::Rectf bound() override {

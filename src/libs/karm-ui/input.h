@@ -159,11 +159,11 @@ Child button(OnPress onPress, Mdi::Icon i, Str t);
 
 // MARK: Input -----------------------------------------------------------------
 
-Child input(Text::ProseStyle style, Strong<Text::Model> text, OnChange<Text::Action> onChange);
+Child input(Text::ProseStyle style, Rc<Text::Model> text, OnChange<Text::Action> onChange);
 
 Child input(Text::ProseStyle, String text, OnChange<String> onChange);
 
-Child input(Strong<Text::Model> text, OnChange<Text::Action> onChange);
+Child input(Rc<Text::Model> text, OnChange<Text::Action> onChange);
 
 // MARK: Slider ----------------------------------------------------------------
 

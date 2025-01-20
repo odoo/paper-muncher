@@ -152,10 +152,10 @@ test$("fmt-union") {
 // MARK: Format References -----------------------------------------------------
 
 test$("fmt-references") {
-    auto number = makeStrong<int>(123);
+    auto number = makeRc<int>(123);
     try$(testCase("123", number));
 
-    Opt<Strong<Str>> str = makeStrong<Str>("test");
+    Opt<Rc<Str>> str = makeRc<Str>("test");
     try$(testCase("test", str));
 
     Weak<Str> weakStr = *str;

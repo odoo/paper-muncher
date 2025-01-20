@@ -9,7 +9,7 @@ namespace Karm::Print {
 struct ImagePrinter : public FilePrinter {
     static constexpr isize GAPS = 16;
 
-    Vec<Strong<Gfx::Surface>> _pages;
+    Vec<Rc<Gfx::Surface>> _pages;
     Opt<Gfx::CpuCanvas> _canvas;
     f64 _density;
     Image::Saver _saver;
@@ -31,7 +31,7 @@ struct ImagePrinter : public FilePrinter {
         return *_canvas;
     }
 
-    Strong<Gfx::Surface> _mergedImages() {
+    Rc<Gfx::Surface> _mergedImages() {
         if (_pages.len() == 0)
             return Gfx::Surface::alloc(GAPS, Gfx::RGBA8888);
 

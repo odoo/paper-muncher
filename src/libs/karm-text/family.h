@@ -20,7 +20,7 @@ struct FontAdjust {
 struct FontFamily : public Fontface {
     struct Member {
         FontAdjust adjust;
-        Strong<Fontface> face;
+        Rc<Fontface> face;
         Opt<Ranges<Range<Rune>>> ranges;
     };
 
@@ -44,7 +44,7 @@ struct FontFamily : public Fontface {
 
         Builder& withRange(Range<Rune> range);
 
-        Strong<FontFamily> bake();
+        Rc<FontFamily> bake();
     };
 
     static Builder make(FontBook const& book);

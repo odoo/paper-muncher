@@ -179,9 +179,9 @@ struct OptionImpl : public _OptionImpl {
 
 template <typename T>
 struct Option {
-    Strong<OptionImpl<T>> _impl;
+    Rc<OptionImpl<T>> _impl;
 
-    Option(Strong<OptionImpl<T>> impl)
+    Option(Rc<OptionImpl<T>> impl)
         : _impl(std::move(impl)) {}
 
     T const& unwrap() const {
@@ -192,7 +192,7 @@ struct Option {
         return _impl->value.unwrapOr(T{});
     }
 
-    operator Strong<_OptionImpl>() {
+    operator Rc<_OptionImpl>() {
         return _impl;
     }
 };
@@ -200,21 +200,21 @@ struct Option {
 using Flag = Option<bool>;
 
 static inline Flag flag(Opt<Rune> shortName, String longName, String description) {
-    return makeStrong<OptionImpl<bool>>(OptionKind::OPTION, shortName, longName, description, false);
+    return makeRc<OptionImpl<bool>>(OptionKind::OPTION, shortName, longName, description, false);
 }
 
 template <typename T>
 static inline Option<T> option(Opt<Rune> shortName, String longName, String description, Opt<T> defaultValue = NONE) {
-    return makeStrong<OptionImpl<T>>(OptionKind::OPTION, shortName, longName, description, defaultValue);
+    return makeRc<OptionImpl<T>>(OptionKind::OPTION, shortName, longName, description, defaultValue);
 }
 
 template <typename T>
 static inline Option<T> operand(String longName, String description, T defaultValue = {}) {
-    return makeStrong<OptionImpl<T>>(OptionKind::OPERAND, NONE, longName, description, defaultValue);
+    return makeRc<OptionImpl<T>>(OptionKind::OPERAND, NONE, longName, description, defaultValue);
 }
 
 static inline Option<Vec<Str>> extra(String description) {
-    return makeStrong<OptionImpl<Vec<Str>>>(OptionKind::EXTRA, NONE, ""s, description, Vec<Str>{});
+    return makeRc<OptionImpl<Vec<Str>>>(OptionKind::EXTRA, NONE, ""s, description, Vec<Str>{});
 }
 
 // MARK: Command ---------------------------------------------------------------
@@ -228,10 +228,10 @@ struct Command {
     String longName;
     Opt<Rune> shortName;
     String description = ""s;
-    Vec<Strong<_OptionImpl>> options;
+    Vec<Rc<_OptionImpl>> options;
     Opt<Callback> callbackAsync;
 
-    Vec<Strong<Command>> _commands;
+    Vec<Rc<Command>> _commands;
 
     Option<bool> _help = flag('h', "help"s, "Show this help message and exit."s);
     Option<bool> _usage = flag('u', "usage"s, "Show usage message and exit."s);
@@ -242,7 +242,7 @@ struct Command {
         String longName,
         Opt<Rune> shortName = NONE,
         String description = ""s,
-        Vec<Strong<_OptionImpl>> options = {},
+        Vec<Rc<_OptionImpl>> options = {},
         Opt<Callback> callbackAsync = NONE
     )
         : longName(std::move(longName)),
@@ -258,10 +258,10 @@ struct Command {
         String longName,
         Opt<Rune> shortName = NONE,
         String description = ""s,
-        Vec<Strong<_OptionImpl>> options = {},
+        Vec<Rc<_OptionImpl>> options = {},
         Opt<Callback> callbackAsync = NONE
     ) {
-        auto cmd = makeStrong<Command>(
+        auto cmd = makeRc<Command>(
             longName,
             shortName,
             description,
@@ -284,7 +284,7 @@ struct Command {
         String description,
         Opt<T> defaultValue = NONE
     ) {
-        auto store = makeStrong<OptionImpl<T>>(
+        auto store = makeRc<OptionImpl<T>>(
             OptionKind::OPTION,
             shortName,
             longName,
@@ -296,7 +296,7 @@ struct Command {
     }
 
     Flag flag(Opt<Rune> shortName, String longName, String description) {
-        auto store = makeStrong<OptionImpl<bool>>(
+        auto store = makeRc<OptionImpl<bool>>(
             OptionKind::OPTION,
             shortName,
             longName,

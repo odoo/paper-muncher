@@ -11,12 +11,12 @@
 
 namespace Vaev::Layout {
 
-static Opt<Strong<FormatingContext>> _constructFormatingContext(Box& box) {
+static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     auto display = box.style->display;
 
     if (box.content.is<Karm::Image::Picture>()) {
         return constructReplacedFormatingContext(box);
-    } else if (box.content.is<Strong<Text::Prose>>()) {
+    } else if (box.content.is<Rc<Text::Prose>>()) {
         return constructInlineFormatingContext(box);
     } else if (
         display == Display::FLOW or

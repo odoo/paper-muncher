@@ -4,10 +4,10 @@
 namespace Karm::Scene {
 
 struct Viewbox : public Node {
-    Strong<Node> _content;
+    Rc<Node> _content;
     Math::Rectf _viewbox;
 
-    Viewbox(Math::Rectf viewbox, Strong<Node> content)
+    Viewbox(Math::Rectf viewbox, Rc<Node> content)
         : _content(content), _viewbox(viewbox) {}
 
     void prepare() override {

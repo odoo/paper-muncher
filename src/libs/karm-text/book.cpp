@@ -214,7 +214,7 @@ Str FontBook::_resolveFamily(Family family) const {
     return family.unwrap<Str>();
 }
 
-Opt<Strong<Fontface>> FontBook::queryExact(FontQuery query) const {
+Opt<Rc<Fontface>> FontBook::queryExact(FontQuery query) const {
     auto family = _resolveFamily(query.family);
 
     for (auto& info : _faces) {
@@ -230,10 +230,10 @@ Opt<Strong<Fontface>> FontBook::queryExact(FontQuery query) const {
     return NONE;
 }
 
-Opt<Strong<Fontface>> FontBook::queryClosest(FontQuery query) const {
+Opt<Rc<Fontface>> FontBook::queryClosest(FontQuery query) const {
     Str desiredfamily = _resolveFamily(query.family);
 
-    Opt<Strong<Fontface>> matchingFace;
+    Opt<Rc<Fontface>> matchingFace;
     auto matchingFamily = ""s;
     auto matchingStretch = FontStretch::NO_MATCH;
     auto matchingStyle = FontStyle::NO_MATCH;
@@ -288,8 +288,8 @@ Opt<Strong<Fontface>> FontBook::queryClosest(FontQuery query) const {
     return matchingFace;
 }
 
-Vec<Strong<Fontface>> FontBook::queryFamily(String family) const {
-    Vec<Strong<Fontface>> res;
+Vec<Rc<Fontface>> FontBook::queryFamily(String family) const {
+    Vec<Rc<Fontface>> res;
     for (auto& info : _faces)
         if (commonFamily(info.attrs.family, family) == family)
             res.pushBack(info.face);

@@ -77,7 +77,7 @@ struct Toggle : public Ui::View<Toggle> {
 };
 
 Ui::Child toggle(bool value, Ui::OnChange<bool> onChange) {
-    return makeStrong<Toggle>(value, std::move(onChange));
+    return makeRc<Toggle>(value, std::move(onChange));
 }
 
 } // namespace Karm::Kira
