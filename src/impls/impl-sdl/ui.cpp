@@ -618,7 +618,7 @@ static Res<> _setWindowIcon(SDL_Window* window) {
     return Ok();
 }
 
-Res<Strong<Host>> makeHost(Child root) {
+Res<Rc<Host>> makeHost(Child root) {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 
     auto size = root->size({1024, 720}, Hint::MIN);
@@ -639,7 +639,7 @@ Res<Strong<Host>> makeHost(Child root) {
     if (not iconRes)
         logWarn("could not set window icon: {}", iconRes);
 
-    auto host = makeStrong<SdlHost>(root, window);
+    auto host = makeRc<SdlHost>(root, window);
 
     SDL_SetWindowHitTest(window, _hitTestCallback, (void*)&host.unwrap());
 

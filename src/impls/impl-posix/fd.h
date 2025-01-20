@@ -22,7 +22,7 @@ struct Fd : public Sys::Fd {
 
     Res<usize> flush() override;
 
-    Res<Strong<Sys::Fd>> dup() override;
+    Res<Rc<Sys::Fd>> dup() override;
 
     Res<Sys::_Accepted> accept() override;
 

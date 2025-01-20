@@ -49,7 +49,7 @@ struct UringSched : public Sys::Sched {
 
     io_uring _ring;
     usize _id = 0;
-    Map<usize, Strong<_Job>> _jobs;
+    Map<usize, Rc<_Job>> _jobs;
 
     UringSched(io_uring ring)
         : _ring(ring) {}
@@ -58,7 +58,7 @@ struct UringSched : public Sys::Sched {
         io_uring_queue_exit(&_ring);
     }
 
-    void submit(Strong<_Job> job) {
+    void submit(Rc<_Job> job) {
         auto id = _id++;
         auto* sqe = io_uring_get_sqe(&_ring);
         if (not sqe) [[unlikely]]
@@ -69,13 +69,13 @@ struct UringSched : public Sys::Sched {
         io_uring_submit(&_ring);
     }
 
-    Async::Task<usize> readAsync(Strong<Fd> fd, MutBytes buf) override {
+    Async::Task<usize> readAsync(Rc<Fd> fd, MutBytes buf) override {
         struct Job : public _Job {
-            Strong<Fd> _fd;
+            Rc<Fd> _fd;
             MutBytes _buf;
             Async::Promise<usize> _promise;
 
-            Job(Strong<Fd> fd, MutBytes buf)
+            Job(Rc<Fd> fd, MutBytes buf)
                 : _fd(fd), _buf(buf) {}
 
             void submit(io_uring_sqe* sqe) override {
@@ -95,18 +95,18 @@ struct UringSched : public Sys::Sched {
             }
         };
 
-        auto job = makeStrong<Job>(fd, buf);
+        auto job = makeRc<Job>(fd, buf);
         submit(job);
         return Async::makeTask(job->future());
     }
 
-    Async::Task<usize> writeAsync(Strong<Fd> fd, Bytes buf) override {
+    Async::Task<usize> writeAsync(Rc<Fd> fd, Bytes buf) override {
         struct Job : public _Job {
-            Strong<Fd> _fd;
+            Rc<Fd> _fd;
             Bytes _buf;
             Async::Promise<usize> _promise;
 
-            Job(Strong<Fd> fd, Bytes buf)
+            Job(Rc<Fd> fd, Bytes buf)
                 : _fd(fd), _buf(buf) {}
 
             void submit(io_uring_sqe* sqe) override {
@@ -126,17 +126,17 @@ struct UringSched : public Sys::Sched {
             }
         };
 
-        auto job = makeStrong<Job>(fd, buf);
+        auto job = makeRc<Job>(fd, buf);
         submit(job);
         return Async::makeTask(job->future());
     }
 
-    Async::Task<usize> flushAsync(Strong<Fd> fd) override {
+    Async::Task<usize> flushAsync(Rc<Fd> fd) override {
         struct Job : public _Job {
-            Strong<Fd> _fd;
+            Rc<Fd> _fd;
             Async::Promise<usize> _promise;
 
-            Job(Strong<Fd> fd)
+            Job(Rc<Fd> fd)
                 : _fd(fd) {}
 
             void submit(io_uring_sqe* sqe) override {
@@ -156,19 +156,19 @@ struct UringSched : public Sys::Sched {
             }
         };
 
-        auto job = makeStrong<Job>(fd);
+        auto job = makeRc<Job>(fd);
         submit(job);
         return Async::makeTask(job->future());
     }
 
-    Async::Task<_Accepted> acceptAsync(Strong<Fd> fd) override {
+    Async::Task<_Accepted> acceptAsync(Rc<Fd> fd) override {
         struct Job : public _Job {
-            Strong<Fd> _fd;
+            Rc<Fd> _fd;
             sockaddr_in _addr{};
             unsigned _addrLen = sizeof(sockaddr_in);
             Async::Promise<_Accepted> _promise;
 
-            Job(Strong<Fd> fd)
+            Job(Rc<Fd> fd)
                 : _fd(fd) {}
 
             void submit(io_uring_sqe* sqe) override {
@@ -180,7 +180,7 @@ struct UringSched : public Sys::Sched {
                 if (res < 0)
                     _promise.resolve(Posix::fromErrno(-cqe->res));
                 else {
-                    _Accepted accepted = {makeStrong<Posix::Fd>(res), Posix::fromSockAddr(_addr)};
+                    _Accepted accepted = {makeRc<Posix::Fd>(res), Posix::fromSockAddr(_addr)};
                     _promise.resolve(Ok(accepted));
                 }
             }
@@ -190,24 +190,24 @@ struct UringSched : public Sys::Sched {
             }
         };
 
-        auto job = makeStrong<Job>(fd);
+        auto job = makeRc<Job>(fd);
         submit(job);
         return Async::makeTask(job->future());
     }
 
-    Async::Task<_Sent> sendAsync(Strong<Fd> fd, Bytes buf, Slice<Handle> handles, SocketAddr addr) override {
+    Async::Task<_Sent> sendAsync(Rc<Fd> fd, Bytes buf, Slice<Handle> handles, SocketAddr addr) override {
         if (handles.len() > 0)
             notImplemented(); // TODO: Implement handle passing on POSIX
 
         struct Job : public _Job {
-            Strong<Fd> _fd;
+            Rc<Fd> _fd;
             Bytes _buf;
             iovec _iov;
             msghdr _msg;
             sockaddr_in _addr;
             Async::Promise<_Sent> _promise;
 
-            Job(Strong<Fd> fd, Bytes buf, SocketAddr addr)
+            Job(Rc<Fd> fd, Bytes buf, SocketAddr addr)
                 : _fd(fd), _buf(buf), _addr(Posix::toSockAddr(addr)) {}
 
             void submit(io_uring_sqe* sqe) override {
@@ -234,21 +234,21 @@ struct UringSched : public Sys::Sched {
             }
         };
 
-        auto job = makeStrong<Job>(fd, buf, addr);
+        auto job = makeRc<Job>(fd, buf, addr);
         submit(job);
         return Async::makeTask(job->future());
     }
 
-    Async::Task<_Received> recvAsync(Strong<Fd> fd, MutBytes buf, MutSlice<Handle>) override {
+    Async::Task<_Received> recvAsync(Rc<Fd> fd, MutBytes buf, MutSlice<Handle>) override {
         struct Job : public _Job {
-            Strong<Fd> _fd;
+            Rc<Fd> _fd;
             MutBytes _buf;
             iovec _iov;
             msghdr _msg;
             sockaddr_in _addr;
             Async::Promise<_Received> _promise;
 
-            Job(Strong<Fd> fd, MutBytes buf)
+            Job(Rc<Fd> fd, MutBytes buf)
                 : _fd(fd), _buf(buf) {}
 
             void submit(io_uring_sqe* sqe) override {
@@ -277,7 +277,7 @@ struct UringSched : public Sys::Sched {
             }
         };
 
-        auto job = makeStrong<Job>(fd, buf);
+        auto job = makeRc<Job>(fd, buf);
         submit(job);
         return Async::makeTask(job->future());
     }
@@ -309,7 +309,7 @@ struct UringSched : public Sys::Sched {
             }
         };
 
-        auto job = makeStrong<Job>(until);
+        auto job = makeRc<Job>(until);
         submit(job);
         return Async::makeTask(job->future());
     }

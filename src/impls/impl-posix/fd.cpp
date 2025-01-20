@@ -60,13 +60,13 @@ Res<usize> Fd::flush() {
     return Ok(0uz);
 }
 
-Res<Strong<Sys::Fd>> Fd::dup() {
+Res<Rc<Sys::Fd>> Fd::dup() {
     isize duped = ::dup(_raw);
 
     if (duped < 0)
         return Posix::fromLastErrno();
 
-    return Ok(makeStrong<Fd>(duped));
+    return Ok(makeRc<Fd>(duped));
 }
 
 Res<Sys::_Accepted> Fd::accept() {
@@ -77,7 +77,7 @@ Res<Sys::_Accepted> Fd::accept() {
         return Posix::fromLastErrno();
 
     return Ok<Sys::_Accepted>(
-        makeStrong<Fd>(fd),
+        makeRc<Fd>(fd),
         Posix::fromSockAddr(addr_)
     );
 }

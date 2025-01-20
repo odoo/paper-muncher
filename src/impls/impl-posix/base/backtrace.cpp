@@ -1,13 +1,8 @@
 #include <execinfo.h>
 #include <karm-base/_embed.h>
 #include <karm-base/backtrace.h>
-#include <karm-io/aton.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 namespace Karm::_Embed {
-
-// MARK: Backtrace -------------------------------------------------------------
 
 Backtrace captureBacktrace() {
     return forceCaptureBacktrace();
@@ -30,22 +25,6 @@ Backtrace forceCaptureBacktrace() {
 
     free(symbols);
     return bt;
-}
-
-// MARK: Locks -----------------------------------------------------------------
-
-void relaxe() {
-#if defined(__x86_64__)
-    asm volatile("pause");
-#endif
-}
-
-void enterCritical() {
-    // NOTE: We don't do any thread so we don't need to do anything here.
-}
-
-void leaveCritical() {
-    // NOTE: We don't do any thread so we don't need to do anything here.
 }
 
 } // namespace Karm::_Embed

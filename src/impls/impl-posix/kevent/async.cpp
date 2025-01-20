@@ -60,7 +60,7 @@ struct DarwinSched :
         return Async::makeTask(future);
     }
 
-    Async::Task<usize> readAsync(Strong<Fd> fd, MutBytes buf) override {
+    Async::Task<usize> readAsync(Rc<Fd> fd, MutBytes buf) override {
         co_trya$(waitFor({
             .ident = fd->handle().value(),
             .filter = EVFILT_READ,
@@ -73,7 +73,7 @@ struct DarwinSched :
         co_return Ok(co_try$(fd->read(buf)));
     }
 
-    Async::Task<usize> writeAsync(Strong<Fd> fd, Bytes buf) override {
+    Async::Task<usize> writeAsync(Rc<Fd> fd, Bytes buf) override {
         co_trya$(waitFor({
             .ident = fd->handle().value(),
             .filter = EVFILT_WRITE,
@@ -86,7 +86,7 @@ struct DarwinSched :
         co_return Ok(co_try$(fd->write(buf)));
     }
 
-    Async::Task<usize> flushAsync(Strong<Fd> fd) override {
+    Async::Task<usize> flushAsync(Rc<Fd> fd) override {
         co_trya$(waitFor({
             .ident = fd->handle().value(),
             .filter = EVFILT_WRITE,
@@ -99,7 +99,7 @@ struct DarwinSched :
         co_return Ok(co_try$(fd->flush()));
     }
 
-    Async::Task<_Accepted> acceptAsync(Strong<Fd> fd) override {
+    Async::Task<_Accepted> acceptAsync(Rc<Fd> fd) override {
         co_trya$(waitFor({
             .ident = fd->handle().value(),
             .filter = EVFILT_READ,
@@ -112,7 +112,7 @@ struct DarwinSched :
         co_return Ok(co_try$(fd->accept()));
     }
 
-    Async::Task<_Sent> sendAsync(Strong<Fd> fd, Bytes buf, Slice<Handle> handles, SocketAddr addr) override {
+    Async::Task<_Sent> sendAsync(Rc<Fd> fd, Bytes buf, Slice<Handle> handles, SocketAddr addr) override {
         co_trya$(waitFor({
             .ident = fd->handle().value(),
             .filter = EVFILT_WRITE,
@@ -125,7 +125,7 @@ struct DarwinSched :
         co_return Ok(co_try$(fd->send(buf, handles, addr)));
     }
 
-    Async::Task<_Received> recvAsync(Strong<Fd> fd, MutBytes buf, MutSlice<Handle> hnds) override {
+    Async::Task<_Received> recvAsync(Rc<Fd> fd, MutBytes buf, MutSlice<Handle> hnds) override {
         co_trya$(waitFor({
             .ident = fd->handle().value(),
             .filter = EVFILT_READ,

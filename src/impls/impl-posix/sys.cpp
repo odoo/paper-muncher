@@ -72,74 +72,74 @@ Res<Mime::Path> resolve(Mime::Url const& url) {
 
 // MARK: Fd --------------------------------------------------------------------
 
-Res<Strong<Fd>> unpackFd(Io::PackScan& s) {
+Res<Rc<Fd>> unpackFd(Io::PackScan& s) {
     auto handle = s.take();
     if (handle == INVALID)
         return Error::invalidHandle();
-    return Ok(makeStrong<Posix::Fd>(handle.value()));
+    return Ok(makeRc<Posix::Fd>(handle.value()));
 }
 
 // MARK: File I/O --------------------------------------------------------------
 
-Res<Strong<Fd>> openFile(Mime::Url const& url) {
+Res<Rc<Fd>> openFile(Mime::Url const& url) {
     String str = try$(resolve(url)).str();
 
     isize raw = ::open(str.buf(), O_RDONLY);
     if (raw < 0)
         return Posix::fromLastErrno();
-    auto fd = makeStrong<Posix::Fd>(raw);
+    auto fd = makeRc<Posix::Fd>(raw);
     if (try$(fd->stat()).type == Type::DIR)
         return Error::isADirectory();
     return Ok(fd);
 }
 
-Res<Strong<Fd>> createFile(Mime::Url const& url) {
+Res<Rc<Fd>> createFile(Mime::Url const& url) {
     String str = try$(resolve(url)).str();
 
     auto raw = ::open(str.buf(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (raw < 0)
         return Posix::fromLastErrno();
-    return Ok(makeStrong<Posix::Fd>(raw));
+    return Ok(makeRc<Posix::Fd>(raw));
 }
 
-Res<Strong<Fd>> openOrCreateFile(Mime::Url const& url) {
+Res<Rc<Fd>> openOrCreateFile(Mime::Url const& url) {
     String str = try$(resolve(url)).str();
 
     auto raw = ::open(str.buf(), O_RDWR | O_CREAT, 0644);
     if (raw < 0)
         return Posix::fromLastErrno();
-    auto fd = makeStrong<Posix::Fd>(raw);
+    auto fd = makeRc<Posix::Fd>(raw);
     if (try$(fd->stat()).type == Type::DIR)
         return Error::isADirectory();
     return Ok(fd);
 }
 
-Res<Pair<Strong<Fd>>> createPipe() {
+Res<Pair<Rc<Fd>>> createPipe() {
     int fds[2];
 
     if (::pipe(fds) < 0)
         return Posix::fromLastErrno();
 
-    return Ok(Pair<Strong<Fd>>{
-        makeStrong<Posix::Fd>(fds[0]),
-        makeStrong<Posix::Fd>(fds[1]),
+    return Ok(Pair<Rc<Fd>>{
+        makeRc<Posix::Fd>(fds[0]),
+        makeRc<Posix::Fd>(fds[1]),
     });
 }
 
-Res<Strong<Fd>> createIn() {
-    auto fd = makeStrong<Posix::Fd>(0);
+Res<Rc<Fd>> createIn() {
+    auto fd = makeRc<Posix::Fd>(0);
     fd->_leak = true; // Don't close stdin when we close the fd
     return Ok(fd);
 }
 
-Res<Strong<Fd>> createOut() {
-    auto fd = makeStrong<Posix::Fd>(1);
+Res<Rc<Fd>> createOut() {
+    auto fd = makeRc<Posix::Fd>(1);
     fd->_leak = true; // Don't close stdout when we close the fd
     return Ok(fd);
 }
 
-Res<Strong<Fd>> createErr() {
-    auto fd = makeStrong<Posix::Fd>(2);
+Res<Rc<Fd>> createErr() {
+    auto fd = makeRc<Posix::Fd>(2);
     fd->_leak = true; // Don't close stderr when we close the fd
     return Ok(fd);
 }
@@ -225,7 +225,7 @@ Async::Task<> launchAsync(Intent intent) {
 
 // MARK: Sockets ---------------------------------------------------------------
 
-Res<Strong<Fd>> listenUdp(SocketAddr addr) {
+Res<Rc<Fd>> listenUdp(SocketAddr addr) {
     int fd = ::socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0)
         return Posix::fromLastErrno();
@@ -235,10 +235,10 @@ Res<Strong<Fd>> listenUdp(SocketAddr addr) {
     if (::bind(fd, (struct sockaddr*)&addr_, sizeof(addr_)) < 0)
         return Posix::fromLastErrno();
 
-    return Ok(makeStrong<Posix::Fd>(fd));
+    return Ok(makeRc<Posix::Fd>(fd));
 }
 
-Res<Strong<Fd>> connectTcp(SocketAddr addr) {
+Res<Rc<Fd>> connectTcp(SocketAddr addr) {
     int fd = ::socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0)
         return Posix::fromLastErrno();
@@ -247,10 +247,10 @@ Res<Strong<Fd>> connectTcp(SocketAddr addr) {
     if (::connect(fd, (struct sockaddr*)&addr_, sizeof(addr_)) < 0)
         return Posix::fromLastErrno();
 
-    return Ok(makeStrong<Posix::Fd>(fd));
+    return Ok(makeRc<Posix::Fd>(fd));
 }
 
-Res<Strong<Fd>> listenTcp(SocketAddr addr) {
+Res<Rc<Fd>> listenTcp(SocketAddr addr) {
     int fd = ::socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0)
         return Posix::fromLastErrno();
@@ -267,10 +267,10 @@ Res<Strong<Fd>> listenTcp(SocketAddr addr) {
     if (::listen(fd, 128) < 0)
         return Posix::fromLastErrno();
 
-    return Ok(makeStrong<Posix::Fd>(fd));
+    return Ok(makeRc<Posix::Fd>(fd));
 }
 
-Res<Strong<Fd>> listenIpc(Mime::Url url) {
+Res<Rc<Fd>> listenIpc(Mime::Url url) {
     int fd = ::socket(AF_UNIX, SOCK_STREAM, 0);
     if (fd < 0)
         return Posix::fromLastErrno();
@@ -287,7 +287,7 @@ Res<Strong<Fd>> listenIpc(Mime::Url url) {
     if (::listen(fd, 128) < 0)
         return Posix::fromLastErrno();
 
-    return Ok(makeStrong<Posix::Fd>(fd));
+    return Ok(makeRc<Posix::Fd>(fd));
 }
 
 // MARK: Time ------------------------------------------------------------------
@@ -340,8 +340,8 @@ Res<MmapResult> memMap(MmapOptions const& options) {
     return Ok(MmapResult{0, (usize)addr, (usize)options.size});
 }
 
-Res<MmapResult> memMap(MmapOptions const& options, Strong<Fd> maybeFd) {
-    Strong<Posix::Fd> fd = try$(maybeFd.cast<Posix::Fd>());
+Res<MmapResult> memMap(MmapOptions const& options, Rc<Fd> maybeFd) {
+    Rc<Posix::Fd> fd = try$(maybeFd.cast<Posix::Fd>());
     usize size = options.size;
 
     if (size == 0)

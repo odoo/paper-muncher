@@ -47,7 +47,7 @@ struct JSConsole : public Sys::Fd {
         return _buf.flush();
     }
 
-    Res<Strong<Fd>> dup() override {
+    Res<Rc<Fd>> dup() override {
         notImplemented();
     }
 
@@ -77,19 +77,19 @@ TimeStamp now() {
     return TimeStamp::epoch() + TimeSpan::fromMSecs(span);
 }
 
-Res<Strong<Sys::Fd>> createIn() {
-    return Ok(makeStrong<Sys::NullFd>());
+Res<Rc<Sys::Fd>> createIn() {
+    return Ok(makeRc<Sys::NullFd>());
 }
 
-Res<Strong<Sys::Fd>> createOut() {
-    return Ok(makeStrong<JSConsole>(JSConsole::LOG));
+Res<Rc<Sys::Fd>> createOut() {
+    return Ok(makeRc<JSConsole>(JSConsole::LOG));
 }
 
-Res<Strong<Sys::Fd>> createErr() {
-    return Ok(makeStrong<JSConsole>(JSConsole::ERROR));
+Res<Rc<Sys::Fd>> createErr() {
+    return Ok(makeRc<JSConsole>(JSConsole::ERROR));
 }
 
-Res<Strong<Sys::Fd>> unpackFd(Io::PackScan&) {
+Res<Rc<Sys::Fd>> unpackFd(Io::PackScan&) {
     notImplemented();
 }
 
@@ -103,39 +103,39 @@ Res<Stat> stat(Mime::Url const&) {
 
 // MARK: File I/O --------------------------------------------------------------
 
-Res<Strong<Fd>> openFile(Mime::Url const&) {
+Res<Rc<Fd>> openFile(Mime::Url const&) {
     return Error::notImplemented();
 }
 
-Res<Strong<Fd>> createFile(Mime::Url const&) {
+Res<Rc<Fd>> createFile(Mime::Url const&) {
     return Error::notImplemented();
 }
 
-Res<Strong<Fd>> openOrCreateFile(Mime::Url const&) {
+Res<Rc<Fd>> openOrCreateFile(Mime::Url const&) {
     return Error::notImplemented();
 }
 
 // MARK: Sockets ---------------------------------------------------------------
 
-Res<Strong<Fd>> listenUdp(SocketAddr) {
+Res<Rc<Fd>> listenUdp(SocketAddr) {
     return Error::notImplemented("raw sockets not supported");
 }
 
-Res<Strong<Fd>> connectTcp(SocketAddr) {
+Res<Rc<Fd>> connectTcp(SocketAddr) {
     return Error::notImplemented("raw sockets not supported");
 }
 
-Res<Strong<Fd>> listenTcp(SocketAddr) {
+Res<Rc<Fd>> listenTcp(SocketAddr) {
     return Error::notImplemented("raw sockets not supported");
 }
 
-Res<Strong<Fd>> listenIpc(Mime::Url) {
+Res<Rc<Fd>> listenIpc(Mime::Url) {
     return Error::notImplemented("ipc sockets not supported");
 }
 
 // MARK: Memory Managment ------------------------------------------------------
 
-Res<MmapResult> memMap(MmapOptions const&, Strong<Fd>) {
+Res<MmapResult> memMap(MmapOptions const&, Rc<Fd>) {
     return Error::notImplemented("file mapping not supported");
 }
 
