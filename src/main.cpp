@@ -12,6 +12,7 @@
 #include <vaev-driver/fetcher.h>
 #include <vaev-driver/print.h>
 #include <vaev-driver/render.h>
+#include <vaev-layout/paint.h>
 #include <vaev-layout/values.h>
 #include <vaev-markup/html.h>
 #include <vaev-markup/xml.h>
@@ -30,7 +31,10 @@ struct PrintOption {
 };
 
 Res<> print(
-    Mime::Url const& url, Io::Reader& input, Io::Writer& output, PrintOption options = {}
+    Mime::Url const& url,
+    Io::Reader& input,
+    Io::Writer& output,
+    PrintOption options = {}
 ) {
     auto mime = Mime::sniffSuffix(url.path.suffix()).unwrapOr("application/xhtml+xml"_mime);
     auto dom = try$(Vaev::Driver::loadDocument(url, mime, input));
@@ -128,9 +132,15 @@ struct RenderOption {
     Vaev::Length width = 800_px;
     Vaev::Length height = 600_px;
     Mime::Uti outputFormat = Mime::Uti::PUBLIC_BMP;
+    bool wireframe = false;
 };
 
-Res<> render(Mime::Url const& input, Io::Reader& reader, Io::Writer& output, RenderOption options = {}) {
+Res<> render(
+    Mime::Url const& input,
+    Io::Reader& reader,
+    Io::Writer& output,
+    RenderOption options = {}
+) {
     auto mime = Mime::sniffSuffix(input.path.suffix()).unwrapOr("application/xhtml+xml"_mime);
     auto dom = try$(Vaev::Driver::loadDocument(input, mime, reader));
 
@@ -143,7 +153,7 @@ Res<> render(Mime::Url const& input, Io::Reader& reader, Io::Writer& output, Ren
     };
 
     auto media = constructMediaForRender(options.scale, imageSize);
-    auto [style, layout, paint, _] = Vaev::Driver::render(*dom, media, {.small = imageSize});
+    auto [style, layout, paint, frags] = Vaev::Driver::render(*dom, media, {.small = imageSize});
 
     auto image = Gfx::Surface::alloc(
         imageSize.cast<isize>() * options.density.toDppx(),
@@ -155,6 +165,8 @@ Res<> render(Mime::Url const& input, Io::Reader& reader, Io::Writer& output, Ren
     g.clear(Gfx::WHITE);
     g.scale(options.density.toDppx());
     paint->paint(g);
+    if (options.wireframe)
+        Vaev::Layout::wireframe(*frags, g);
     g.end();
 
     try$(Image::save(image->pixels(), output));
@@ -181,6 +193,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto heightArg = Cli::option<Str>('h', "height"s, "Height of the output document in css units (e.g. 600px)"s, ""s);
     auto paperArg = Cli::option<Str>(NONE, "paper"s, "Paper size for printing (default: A4)"s, "A4"s);
     auto orientationArg = Cli::option<Str>(NONE, "orientation"s, "Page orientation (default: portrait)"s, "portrait"s);
+    auto wireframeArg = Cli::flag(NONE, "wireframe"s, "Render wireframe of the layout"s);
 
     cmd.subCommand(
         "print"s,
@@ -251,6 +264,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             widthArg,
             heightArg,
             outputMimeArg,
+            wireframeArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::RenderOption options{};
@@ -263,6 +277,8 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             if (heightArg.unwrap())
                 options.height = co_try$(Vaev::Style::parseValue<Vaev::Length>(heightArg.unwrap()));
+
+            options.wireframe = wireframeArg.unwrap();
 
             Mime::Url inputUrl = "about:stdin"_url;
             MutCursor<Io::Reader> input = &Sys::in();
