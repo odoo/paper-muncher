@@ -42,15 +42,25 @@ Res<Mime::Path> resolve(Mime::Url const& url) {
 
         resolved = Mime::Path::parse(runtimeDir).join(path);
     } else if (url.scheme == "bundle") {
-        auto repo = try$(Posix::repoRoot());
+        auto [repo, format] = try$(Posix::repoRoot());
 
         auto path = url.path;
         path.rooted = false;
 
-        resolved = Mime::Path::parse(repo)
-                       .join(url.host)
-                       .join("__res__")
-                       .join(path);
+        if (format == Posix::RepoType::CUTEKIT) {
+            resolved = Mime::Path::parse(repo)
+                           .join(url.host)
+                           .join("__res__")
+                           .join(path);
+        } else if (format == Posix::RepoType::PREFIX) {
+            resolved = Mime::Path::parse(repo)
+                           .join("share")
+                           .join(url.host)
+                           .join(path);
+            logDebug("resolved bundle path: {}", resolved);
+        } else {
+            return Error::notFound("unknown repo type");
+        }
     } else if (url.scheme == "location") {
         auto* maybeHome = getenv("HOME");
         if (not maybeHome)

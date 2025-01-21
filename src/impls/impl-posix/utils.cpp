@@ -251,21 +251,31 @@ struct timespec toTimespec(TimeSpan ts) {
     return pts;
 }
 
-Res<Str> repoRoot() {
+Res<Tuple<Str, RepoType>> repoRoot() {
     auto* maybeRepo = getenv("CK_BUILDDIR");
+    if (maybeRepo) {
+        return Ok(Tuple<Str, RepoType>{
+            Str::fromNullterminated(maybeRepo),
+            RepoType::CUTEKIT,
+        });
+    }
 
-    if (not maybeRepo)
-        maybeRepo = getenv("SKIFT_BUNDLES");
+    maybeRepo = getenv("SKIFT_BUNDLES");
+    if (maybeRepo) {
+        return Ok(Tuple<Str, RepoType>{
+            Str::fromNullterminated(maybeRepo),
+            RepoType::CUTEKIT,
+        });
+    }
 
-#ifdef __ck_prefix__
-    if (not maybeRepo)
-        maybeRepo = __ck_prefix__;
+#ifdef __ck_prefix_value
+    return Ok(Tuple<Str, RepoType>{
+        stringify$(__ck_prefix_value) ""s,
+        RepoType::PREFIX,
+    });
 #endif
 
-    if (not maybeRepo)
-        return Error::notFound("SKIFT_BUNDLES not set");
-
-    return Ok(Str::fromNullterminated(maybeRepo));
+    return Error::notFound("SKIFT_BUNDLES not set");
 }
 
 } // namespace Posix

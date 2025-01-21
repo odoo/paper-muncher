@@ -28,6 +28,11 @@ struct timespec toTimespec(TimeStamp ts);
 
 struct timespec toTimespec(TimeSpan ts);
 
-Res<Str> repoRoot();
+enum struct RepoType {
+    CUTEKIT,
+    PREFIX
+};
+
+Res<Tuple<Str, RepoType>> repoRoot();
 
 } // namespace Posix
