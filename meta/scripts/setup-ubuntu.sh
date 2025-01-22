@@ -2,8 +2,6 @@
 
 set -e
 
-export DEBIAN_FRONTEND=noninteractive
-
-apt update
-apt install build-essential git ninja-build libsdl2-dev nasm gcc-multilib qemu-system-x86 mtools liburing-dev ccache jq
-bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm 19
+apt-get update -y --no-install-recommends
+apt-get install -y --no-install-recommends build-essential git ninja-build libsdl2-dev nasm liburing-dev ccache jq
+bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm 19 all

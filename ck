@@ -100,7 +100,9 @@ if [ "$1" == "tools" -a "$2" == "setup" ]; then
     exit 0
 fi
 
-if is_darwin; then
+if is_ubuntu; then
+    source ./meta/scripts/env-ubuntu.sh
+elif is_darwin; then
     source ./meta/scripts/env-darwin.sh
 fi
 
