@@ -25,6 +25,12 @@ function is_arch() {
     return 1
 }
 
+if [ "$EUID" -eq 0 ]; then
+    export CUTEKIT_ELEVATOR=""
+elif [ -z "$CUTEKIT_ELEVATOR" ]; then
+    export CUTEKIT_ELEVATOR="sudo"
+fi
+
 if [ -z "$CUTEKIT_PYTHON" ]; then
     if command -v python3.11 &> /dev/null; then
         export CUTEKIT_PYTHON="python3.11"
@@ -72,10 +78,10 @@ if [ ! -f .cutekit/tools-ready ]; then
 
     if is_ubuntu; then
         echo "Detected Ubuntu, installing dependencies automatically..."
-        sudo ./meta/scripts/setup-ubuntu.sh
+        $CUTEKIT_ELEVATOR ./meta/scripts/setup-ubuntu.sh
     elif is_arch; then
         echo "Detected Arch Linux, installing dependencies automatically..."
-        sudo ./meta/scripts/setup-arch.sh
+        $CUTEKIT_ELEVATOR ./meta/scripts/setup-arch.sh
     elif is_darwin; then
         echo "Detected macOS, installing dependencies automatically..."
         ./meta/scripts/setup-darwin.sh
