@@ -1070,7 +1070,8 @@ struct FlexFormatingContext : public FormatingContext {
         for (auto& i : _items) {
             Px availableCrossSpace = fa.crossAxis(availableSpace) - i.getMargin(FlexItem::BOTH_CROSS);
 
-            if (fa.mainAxis(i.box->style->sizing) == Size::AUTO || fa.crossAxis(i.box->style->sizing) == Size::AUTO)
+            if (fa.mainAxis(i.box->style->sizing) == Size::AUTO and
+                fa.crossAxis(i.box->style->sizing) == Size::AUTO)
                 input.intrinsic = IntrinsicSize::STRETCH_TO_FIT;
 
             i.speculateValues(

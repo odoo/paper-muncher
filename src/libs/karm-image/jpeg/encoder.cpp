@@ -26,7 +26,7 @@ static Res<> _encodeMcu(
 
     usize code = 0;
     usize codeLength = 0;
-    if (!dcTable.getCode(coeffLength, code, codeLength)) {
+    if (not dcTable.getCode(coeffLength, code, codeLength)) {
         return Error::invalidData("invalid dc huffman code length");
     }
     bitWriter.writeBits(code, codeLength);
@@ -36,21 +36,21 @@ static Res<> _encodeMcu(
     for (usize i = 1; i < 64; ++i) {
         // find zero run length
         u8 numZeroes = 0;
-        while (i < 64 && mcu[ZIGZAG[i]] == 0) {
+        while (i < 64 and mcu[ZIGZAG[i]] == 0) {
             numZeroes += 1;
             i += 1;
         }
 
         if (i == 64) {
-            if (!acTable.getCode(0x00, code, codeLength)) {
+            if (not acTable.getCode(0x00, code, codeLength))
                 return Error::invalidData("invalid ac huffman code");
-            }
+
             bitWriter.writeBits(code, codeLength);
             return Ok();
         }
 
         while (numZeroes >= 16) {
-            if (!acTable.getCode(0xF0, code, codeLength))
+            if (not acTable.getCode(0xF0, code, codeLength))
                 return Error::invalidData("invalid ac huffman code");
 
             bitWriter.writeBits(code, codeLength);
@@ -69,9 +69,8 @@ static Res<> _encodeMcu(
 
         // find symbol in table
         u8 symbol = numZeroes << 4 | coeffLength;
-        if (!acTable.getCode(symbol, code, codeLength)) {
+        if (not acTable.getCode(symbol, code, codeLength))
             return Error::invalidData("invalid ac huffman code");
-        }
 
         bitWriter.writeBits(code, codeLength);
         bitWriter.writeBits(coeff, coeffLength);

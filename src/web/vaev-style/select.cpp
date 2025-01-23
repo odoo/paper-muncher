@@ -618,9 +618,8 @@ static Res<Selector> _parseInfixExpr(Selector lhs, Cursor<Css::Sst>& cur, OpCode
 }
 
 Res<Selector> Selector::parse(Cursor<Css::Sst>& c) {
-    if (!c) {
+    if (not c)
         return Error::invalidData("expected selector");
-    }
 
     logDebugIf(DEBUG_SELECTORS, "PARSING SELECTOR : {}", c);
     Selector currentSelector = try$(_parseSelectorElement(c, OpCode::NOP));
