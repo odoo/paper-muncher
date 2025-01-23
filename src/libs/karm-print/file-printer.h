@@ -7,6 +7,7 @@
 namespace Karm::Print {
 
 struct FilePrinterProps {
+    /// Pixel density for raster formats (ignored for vector formats)
     f64 density = 1;
 };
 
