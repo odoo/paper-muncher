@@ -57,7 +57,6 @@ Res<Mime::Path> resolve(Mime::Url const& url) {
                            .join("share")
                            .join(url.host)
                            .join(path);
-            logDebug("resolved bundle path: {}", resolved);
         } else {
             return Error::notFound("unknown repo type");
         }
