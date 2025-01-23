@@ -18,7 +18,7 @@ struct Sched :
 
     void quit(Res<> ret) { _ret = ret; }
 
-    virtual Res<> wait(TimeStamp until) = 0;
+    virtual Res<> wait(Instant until) = 0;
 
     virtual Async::Task<usize> readAsync(Rc<Fd>, MutBytes) = 0;
 
@@ -32,7 +32,7 @@ struct Sched :
 
     virtual Async::Task<_Received> recvAsync(Rc<Fd>, MutBytes, MutSlice<Handle>) = 0;
 
-    virtual Async::Task<> sleepAsync(TimeStamp until) = 0;
+    virtual Async::Task<> sleepAsync(Instant until) = 0;
 };
 
 Sched& globalSched();
@@ -40,7 +40,7 @@ Sched& globalSched();
 template <Async::Sender S>
 auto run(S s, Sched& sched = globalSched()) {
     return Async::run(std::move(s), [&] {
-        (void)sched.wait(TimeStamp::endOfTime());
+        (void)sched.wait(Instant::endOfTime());
     });
 }
 

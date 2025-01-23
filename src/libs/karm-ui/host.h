@@ -36,7 +36,7 @@ struct Host : public Node {
 
     virtual void flip(Slice<Math::Recti> regions) = 0;
 
-    virtual Res<> wait(TimeStamp) = 0;
+    virtual Res<> wait(Instant) = 0;
 
     bool alive() {
         return not _res;
@@ -113,7 +113,7 @@ struct Host : public Node {
                 return false;
 
             while (nextFrame < instant)
-                nextFrame += TimeSpan::fromMSecs(FRAME_TIME * 1000);
+                nextFrame += Duration::fromMSecs(FRAME_TIME * 1000);
 
             lastFrame = nextFrame;
             nextFrameScheduled = true;
@@ -139,7 +139,7 @@ struct Host : public Node {
                 _dirty.clear();
             }
 
-            try$(wait(nextFrameScheduled ? nextFrame : TimeStamp::endOfTime()));
+            try$(wait(nextFrameScheduled ? nextFrame : Instant::endOfTime()));
             nextFrameScheduled = false;
         }
 

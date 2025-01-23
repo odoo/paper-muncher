@@ -11,15 +11,15 @@ Async::Task<> sleepyBoy() {
     co_return Error::skipped();
 #endif
 
-    auto duration = TimeSpan::fromMSecs(100);
+    auto duration = Duration::fromMSecs(100);
     auto start = Sys::now();
     co_trya$(globalSched().sleepAsync(start + duration));
     auto end = Sys::now();
 
-    if (end - start < duration - TimeSpan::fromMSecs(10))
+    if (end - start < duration - Duration::fromMSecs(10))
         co_return Error::other("sleepAsync woke up too early");
 
-    if (end - start > duration + TimeSpan::fromMSecs(10))
+    if (end - start > duration + Duration::fromMSecs(10))
         co_return Error::other("sleepAsync woke up too late");
 
     co_return Ok();

@@ -301,18 +301,18 @@ Res<Rc<Fd>> listenIpc(Mime::Url url) {
 
 // MARK: Time ------------------------------------------------------------------
 
-TimeSpan fromTimeSpec(struct timespec const& ts) {
+Duration fromTimeSpec(struct timespec const& ts) {
     auto usecs = (u64)ts.tv_sec * 1000000 + (u64)ts.tv_nsec / 1000;
-    return TimeSpan::fromUSecs(usecs);
+    return Duration::fromUSecs(usecs);
 }
 
-TimeStamp now() {
+Instant now() {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    return TimeStamp::epoch() + fromTimeSpec(ts);
+    return Instant::epoch() + fromTimeSpec(ts);
 }
 
-TimeSpan uptime() {
+Duration uptime() {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return fromTimeSpec(ts);
@@ -422,7 +422,7 @@ Res<> populate(Vec<UserInfo>& infos) {
 
 // MARK: Process Managment -----------------------------------------------------
 
-Res<> sleep(TimeSpan span) {
+Res<> sleep(Duration span) {
     struct timespec ts;
     ts.tv_sec = span.toSecs();
     ts.tv_nsec = (span.toUSecs() % 1000000) * 1000;

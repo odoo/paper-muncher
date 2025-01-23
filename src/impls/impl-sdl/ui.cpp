@@ -515,7 +515,7 @@ struct SdlHost :
         g.pop();
     }
 
-    Res<> wait(TimeStamp ts) override {
+    Res<> wait(Instant ts) override {
         // HACK: Since we don't have a lot of control onto how SDL wait for
         //       events we can't integrate it properly with our event loop
         //       To remedi this we will just cap how long we wait, this way
@@ -524,8 +524,8 @@ struct SdlHost :
         // NOTE: A better option would be to have SDL in a separeted thread
         //       and do the communication over an inter-thread channel but
         //       but this would require to make the Framework thread safe
-        auto delay = TimeSpan::fromMSecs((usize)(FRAME_TIME * 1000));
-        auto cappedWait = min(ts, Sys::now() + delay);
+        auto delay = Duration::fromMSecs((usize)(FRAME_TIME * 1000));
+        auto cappedWait = min(ts, Sys::instant() + delay);
         try$(Sys::globalSched().wait(cappedWait));
 
         SDL_Event e{};

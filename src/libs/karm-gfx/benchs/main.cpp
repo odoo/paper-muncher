@@ -4,7 +4,7 @@
 #include <karm-sys/time.h>
 
 Async::Task<> entryPointAsync(Sys::Context&) {
-    Vec<TimeSpan> samples;
+    Vec<Duration> samples;
     auto surface = Gfx::Surface::alloc({1000, 1000});
 
     for (isize i = 0; i < 100; i++) {
@@ -54,7 +54,7 @@ Async::Task<> entryPointAsync(Sys::Context&) {
 
     Sys::println("\n");
     Sys::println("median: {}", samples[samples.len() / 2]);
-    Sys::println("average: {}", TimeSpan::fromUSecs(sum / samples.len()));
+    Sys::println("average: {}", Duration::fromUSecs(sum / samples.len()));
     Sys::println("min: {}", first(samples));
     Sys::println("max: {}", last(samples));
 

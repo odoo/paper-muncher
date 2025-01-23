@@ -72,9 +72,9 @@ struct JSConsole : public Sys::Fd {
     }
 };
 
-TimeStamp now() {
+SystemTime now() {
     auto span = embedGetTimeStamp();
-    return TimeStamp::epoch() + TimeSpan::fromMSecs(span);
+    return SystemTime::epoch() + Duration::fromMSecs(span);
 }
 
 Res<Rc<Sys::Fd>> createIn() {

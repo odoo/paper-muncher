@@ -12,9 +12,9 @@ enum struct Type {
 struct Stat {
     Type type;
     usize size;
-    TimeStamp accessTime;
-    TimeStamp modifyTime;
-    TimeStamp changeTime;
+    SystemTime accessTime;
+    SystemTime modifyTime;
+    SystemTime changeTime;
 
     bool operator==(Type other) const {
         return type == other;
