@@ -29,9 +29,9 @@ struct DarwinSched :
         close(_kqueue);
     }
 
-    struct timespec _computeTimeout(TimeStamp until) {
-        TimeStamp now = Sys::now();
-        TimeSpan delta = TimeSpan::zero();
+    struct timespec _computeTimeout(Instant until) {
+        Instant now = Sys::now();
+        Duration delta = Duration::zero();
         if (now < until)
             delta = until - now;
         return Posix::toTimespec(delta);
@@ -138,7 +138,7 @@ struct DarwinSched :
         co_return Ok(co_try$(fd->recv(buf, hnds)));
     }
 
-    Async::Task<> sleepAsync(TimeStamp until) override {
+    Async::Task<> sleepAsync(Instant until) override {
         struct timespec ts = _computeTimeout(until);
 
         co_trya$(waitFor({
@@ -153,7 +153,7 @@ struct DarwinSched :
         co_return Ok();
     }
 
-    Res<> wait(TimeStamp until) override {
+    Res<> wait(Instant until) override {
         struct kevent64_s ev;
         struct timespec ts = _computeTimeout(until);
 

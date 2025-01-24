@@ -945,16 +945,23 @@ struct Formatter<char const*> : public StringFormatter<Utf8> {
 // MARK: Format Time -----------------------------------------------------------
 
 template <>
-struct Formatter<TimeSpan> {
-    Res<usize> format(Io::TextWriter& writer, TimeSpan const& val) {
+struct Formatter<Duration> {
+    Res<usize> format(Io::TextWriter& writer, Duration const& val) {
         return Io::format(writer, "{}.{03}s", val.toSecs(), val.toMSecs() % 1000);
     }
 };
 
 template <>
-struct Formatter<TimeStamp> {
-    Res<usize> format(Io::TextWriter& writer, TimeStamp const& val) {
-        return Io::format(writer, "{}", DateTime::fromTimeStamp(val));
+struct Formatter<Instant> {
+    Res<usize> format(Io::TextWriter& writer, Instant const& val) {
+        return Io::format(writer, "monotonic:{}", val._value);
+    }
+};
+
+template <>
+struct Formatter<SystemTime> {
+    Res<usize> format(Io::TextWriter& writer, SystemTime const& val) {
+        return Io::format(writer, "{}", DateTime::fromInstant(val));
     }
 };
 

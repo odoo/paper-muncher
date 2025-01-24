@@ -219,13 +219,13 @@ Sys::Stat fromStat(struct stat const& buf) {
         type = Sys::Type::DIR;
     stat.type = type;
     stat.size = (usize)buf.st_size;
-    stat.accessTime = TimeStamp::epoch() + TimeSpan::fromSecs(buf.st_atime);
-    stat.modifyTime = TimeStamp::epoch() + TimeSpan::fromSecs(buf.st_mtime);
-    stat.changeTime = TimeStamp::epoch() + TimeSpan::fromSecs(buf.st_ctime);
+    stat.accessTime = SystemTime::epoch() + Duration::fromSecs(buf.st_atime);
+    stat.modifyTime = SystemTime::epoch() + Duration::fromSecs(buf.st_mtime);
+    stat.changeTime = SystemTime::epoch() + Duration::fromSecs(buf.st_ctime);
     return stat;
 }
 
-struct timespec toTimespec(TimeStamp ts) {
+struct timespec toTimespec(SystemTime ts) {
     struct timespec pts;
     if (ts.isEndOfTime()) {
         pts.tv_sec = Limits<long>::MAX;
@@ -238,7 +238,7 @@ struct timespec toTimespec(TimeStamp ts) {
     return pts;
 }
 
-struct timespec toTimespec(TimeSpan ts) {
+struct timespec toTimespec(Duration ts) {
     struct timespec pts;
     if (ts.isInfinite()) {
         pts.tv_sec = Limits<long>::MAX;

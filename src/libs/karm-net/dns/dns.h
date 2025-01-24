@@ -115,7 +115,7 @@ struct Answer {
     String name;
     Type type;
     Class class_;
-    TimeSpan ttl;
+    Duration ttl;
     Buf<Byte> data;
 };
 
@@ -248,7 +248,7 @@ struct Packet {
             a.name = name.take();
             a.type = (Type)s.nextU16be();
             a.class_ = (Class)s.nextU16be();
-            a.ttl = TimeSpan::fromSecs(s.nextU32be());
+            a.ttl = Duration::fromSecs(s.nextU32be());
             auto len = s.nextU16be();
             a.data = s.nextBytes(len);
 

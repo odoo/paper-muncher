@@ -61,9 +61,11 @@ Res<Rc<Sys::Fd>> listenIpc(Mime::Url url);
 
 // MARK: Time ------------------------------------------------------------------
 
-TimeStamp now();
+SystemTime now();
 
-TimeSpan uptime();
+Instant instant();
+
+Duration uptime();
 
 // MARK: Memory Managment ------------------------------------------------------
 
@@ -89,9 +91,9 @@ Res<> populate(Vec<Sys::UserInfo>&);
 
 // MARK: Process Managment -----------------------------------------------------
 
-Res<> sleep(TimeSpan);
+Res<> sleep(Duration);
 
-Res<> sleepUntil(TimeStamp);
+Res<> sleepUntil(Instant);
 
 Res<> exit(i32);
 

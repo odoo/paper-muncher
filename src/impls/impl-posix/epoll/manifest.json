@@ -1,6 +1,6 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "id": "impl-posix.uring",
+    "id": "impl-posix.epoll",
     "type": "lib",
     "props": {
         "cpp-excluded": true
@@ -10,13 +10,9 @@
             "linux"
         ],
         "async": [
-            null,
-            "uring"
+            "epoll"
         ]
     },
-    "requires": [
-        "uring"
-    ],
     "provides": [
         "karm-sys-async-impl"
     ]

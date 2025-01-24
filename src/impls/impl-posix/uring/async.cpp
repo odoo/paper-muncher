@@ -12,7 +12,7 @@
 
 namespace Karm::Sys::_Embed {
 
-struct __kernel_timespec toKernelTimespec(TimeStamp ts) {
+struct __kernel_timespec toKernelTimespec(Instant ts) {
     struct __kernel_timespec kts;
     if (ts.isEndOfTime()) {
         kts.tv_sec = LONG_MAX;
@@ -25,7 +25,7 @@ struct __kernel_timespec toKernelTimespec(TimeStamp ts) {
     return kts;
 }
 
-struct __kernel_timespec toKernelTimespec(TimeSpan ts) {
+struct __kernel_timespec toKernelTimespec(Duration ts) {
     struct __kernel_timespec kts;
     if (ts.isInfinite()) {
         kts.tv_sec = LONG_MAX;
@@ -282,19 +282,19 @@ struct UringSched : public Sys::Sched {
         return Async::makeTask(job->future());
     }
 
-    Async::Task<> sleepAsync(TimeStamp until) override {
+    Async::Task<> sleepAsync(Instant until) override {
         struct Job : public _Job {
-            TimeStamp _until;
+            Instant _until;
             Async::Promise<> _promise;
 
             struct __kernel_timespec _ts{};
 
-            Job(TimeStamp until)
+            Job(Instant until)
                 : _until(until) {}
 
             void submit(io_uring_sqe* sqe) override {
                 _ts = toKernelTimespec(_until);
-                io_uring_prep_timeout(sqe, &_ts, 0, IORING_TIMEOUT_ABS | IORING_TIMEOUT_REALTIME);
+                io_uring_prep_timeout(sqe, &_ts, 0, IORING_TIMEOUT_ABS);
             }
 
             void complete(io_uring_cqe* cqe) override {
@@ -314,12 +314,12 @@ struct UringSched : public Sys::Sched {
         return Async::makeTask(job->future());
     }
 
-    Res<> wait(TimeStamp until) override {
+    Res<> wait(Instant until) override {
         // HACK: io_uring_wait_cqes doesn't support absolute timeout
         //       so we have to do it ourselves
-        TimeStamp now = Sys::now();
+        Instant now = Sys::instant();
 
-        TimeSpan delta = TimeSpan::zero();
+        Duration delta = Duration::zero();
         if (now < until)
             delta = until - now;
 
