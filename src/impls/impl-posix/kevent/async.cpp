@@ -30,7 +30,7 @@ struct DarwinSched :
     }
 
     struct timespec _computeTimeout(Instant until) {
-        Instant now = Sys::now();
+        Instant now = Sys::instant();
         Duration delta = Duration::zero();
         if (now < until)
             delta = until - now;
