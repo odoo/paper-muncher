@@ -38,6 +38,18 @@ struct PdfPrinter : public FilePrinter {
         Pdf::Array pagesKids;
         Pdf::Ref pagesRef = alloc.alloc();
 
+        Pdf::Ref fontRef = alloc.alloc();
+        // Font
+        file.add(
+            fontRef,
+            Pdf::Dict{
+                {"BaseFont"s, Pdf::Name{"Noto Sans"s}},
+                {"Encoding"s, Pdf::Name{"PdfDocEncoding"s}},
+                {"Subtype"s, Pdf::Name{"Type1"s}},
+                {"Type"s, Pdf::Name{"Font"s}},
+            }
+        );
+
         // Page
         for (auto& p : _pages) {
             Pdf::Ref pageRef = alloc.alloc();
@@ -59,6 +71,17 @@ struct PdfPrinter : public FilePrinter {
                         "Contents"s,
                         contentsRef,
                     },
+                    {
+                        "Resources"s,
+                        Pdf::Dict{
+                            {
+                                "Font"s,
+                                Pdf::Dict{
+                                    {"F1"s, fontRef}
+                                },
+                            },
+                        },
+                    }
                 }
             );
 

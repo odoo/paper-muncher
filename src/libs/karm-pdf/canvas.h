@@ -71,6 +71,8 @@ struct Canvas : public Gfx::Canvas {
 
     void fill(Gfx::FillRule rule) override;
 
+    void fill(Text::Prose& prose) override;
+
     void fill(Gfx::Fill fill, Gfx::FillRule rule) override;
 
     void stroke() override;

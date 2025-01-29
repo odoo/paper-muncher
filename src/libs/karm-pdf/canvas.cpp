@@ -1,4 +1,5 @@
 #include <karm-logger/logger.h>
+#include <karm-text/prose.h>
 
 #include "canvas.h"
 
@@ -106,6 +107,37 @@ void Canvas::fill(Gfx::FillRule rule) {
         _e.ln("f");
     else
         _e.ln("f*");
+}
+
+void Canvas::fill(Text::Prose& prose) {
+    // There is no font styling in PDF, italic (or bold) is a change of font
+    push();
+    _e.ln("BT");
+    _e.ln("/F1 14 Tf");
+
+    if (prose._style.color)
+        fillStyle(*prose._style.color);
+
+    // position is bottom left of text
+    _e.ln("1 0 0 -1 0 {} Tm", prose._lineHeight * prose._lines.len());
+    reverse(mutSub(prose._lines));
+    for (usize i = 0; i < prose._lines.len(); ++i) {
+        auto const& line = prose._lines[i];
+
+        auto alignedStart = first(line.blocks()).pos;
+        _e.ln("{} {} Td"s, alignedStart, i == 0 ? 0 : prose._lineHeight);
+
+        _e("(");
+        for (auto rune : line.runes()) {
+            _e(rune);
+            // NBSP after $ causing bad formatting
+        }
+        _e(") Tj"s);
+        _e.ln("");
+    }
+
+    _e.ln("ET");
+    pop();
 }
 
 void Canvas::fill(Gfx::Fill f, Gfx::FillRule rule) {

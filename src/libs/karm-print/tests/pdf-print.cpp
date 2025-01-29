@@ -1,6 +1,7 @@
 #include <karm-print/page.h>
 #include <karm-print/pdf-printer.h>
 #include <karm-scene/transform.h>
+#include <karm-sys/file.h>
 #include <karm-test/macros.h>
 #include <karm-ui/view.h>
 #include <vaev-base/resolution.h>
@@ -10,20 +11,9 @@
 namespace Karm::Print::Tests {
 
 test$("karm-pdf-hello-world") {
-    Mime::Uti outputFormat = Mime::Uti::PUBLIC_PDF;
-    Print::PaperStock paper = Print::A4;
-    Vaev::Resolution resolution{1, Vaev::Resolution::X};
-
     Rc<Text::Prose> prose{makeRc<Text::Prose>(Ui::TextStyles::bodyMedium(), "Hello, world!"s)};
     prose->_style.color = Gfx::BLACK;
     prose->layout(300);
-
-    auto pdfPrinter = try$(FilePrinter::create(
-        outputFormat,
-        FilePrinterProps{
-            .density = 1,
-        }
-    ));
 
     auto pageStack = makeRc<Scene::Stack>();
     pageStack->add(makeRc<Scene::Text>(
@@ -31,6 +21,10 @@ test$("karm-pdf-hello-world") {
         prose
     ));
 
+    // ----------------
+
+    Print::PaperStock paper = Print::A4;
+    Vaev::Resolution resolution{1, Vaev::Resolution::X};
     Print::Page page{
         paper,
         makeRc<Scene::Transform>(
@@ -39,6 +33,9 @@ test$("karm-pdf-hello-world") {
         )
     };
 
+    // -----------------
+
+    auto pdfPrinter = makeRc<PdfPrinter>();
     page.print(
         *pdfPrinter,
         {
@@ -46,7 +43,12 @@ test$("karm-pdf-hello-world") {
         }
     );
 
-    MutCursor<Io::Writer> output = &Sys::out();
+    // -----------------
+
+    // MutCursor<Io::Writer> output = &Sys::out();
+    auto outputUrl = try$(Mime::parseUrlOrPath("/home/paulo/Repos/paper-muncher/test.pdf"));
+    auto x = try$(Sys::File::create(outputUrl));
+    MutCursor<Io::Writer> output = &x;
     try$(pdfPrinter->write(*output));
 
     return Ok();

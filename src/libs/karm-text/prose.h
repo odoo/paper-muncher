@@ -143,6 +143,13 @@ struct Prose : public Meta::Pinned {
         MutSlice<Block> blocks() {
             return mutSub(prose->_blocks, blockRange);
         }
+
+        Slice<Rune> runes() const {
+            auto b = blocks();
+            auto start = first(b).runeRange.start;
+            auto end = last(b).runeRange.end();
+            return sub(prose->_runes, {start, end});
+        }
     };
 
     ProseStyle _style;
@@ -215,6 +222,7 @@ struct Prose : public Meta::Pinned {
 
     Math::Vec2f layout(f64 width);
 
+    // THIS IS COUPLED WITH GRAPHICS LOGIC
     // MARK: Paint -------------------------------------------------------------
 
     void paintCaret(Gfx::Canvas& g, usize runeIndex, Gfx::Color color) const {
