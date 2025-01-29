@@ -466,6 +466,7 @@ struct Output {
 struct FormatingContext {
     virtual ~FormatingContext() = default;
 
+    virtual void build(Tree&, Box&) {};
     virtual Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) = 0;
 };
 

@@ -40,8 +40,12 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
 }
 
 Output _contentLayout(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) {
-    if (box.formatingContext == NONE)
-        box.formatingContext = _constructFormatingContext(box);
+    if (box.formatingContext == NONE) {
+        auto& fc = box.formatingContext.emplace(
+            _constructFormatingContext(box).unwrap()
+        );
+        fc->build(tree, box);
+    }
     if (not box.formatingContext)
         return Output{};
     return box.formatingContext->unwrap().run(tree, box, input, startAt, stopAt);
