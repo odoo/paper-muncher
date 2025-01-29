@@ -6,6 +6,9 @@
 #include <karm-sys/time.h>
 
 #include "driver.h"
+
+#include <karm-gfx/buffer.h>
+
 #include "test.h"
 
 namespace Karm::Test {
@@ -42,7 +45,7 @@ Async::Task<> Driver::runAllAsync() {
             Sys::errln("{}", Cli::styled("SKIP"s, Cli::style(Cli::YELLOW).bold()));
         } else if (not result) {
             failed++;
-            Sys::errln("{}", Cli::styled(result.none(), Cli::style(Cli::RED).bold()));
+            Sys::errln("{}", Cli::styled(Io::cased( result, Io::Case::UPPER), Cli::style(Cli::RED).bold()));
         } else {
             passed++;
             Sys::errln("{}", Cli::styled("PASS"s, Cli::style(Cli::GREEN).bold()));
