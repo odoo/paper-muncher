@@ -40,11 +40,14 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
 }
 
 Output _contentLayout(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) {
-    if (box.formatingContext == NONE)
+    if (box.formatingContext == NONE) {
         box.formatingContext = _constructFormatingContext(box);
+        if (box.formatingContext)
+            box.formatingContext.unwrap()->build(tree, box);
+    }
     if (not box.formatingContext)
         return Output{};
-    return box.formatingContext->unwrap().run(tree, box, input, startAt, stopAt);
+    return box.formatingContext.unwrap()->run(tree, box, input, startAt, stopAt);
 }
 
 InsetsPx computeMargins(Tree& tree, Box& box, Input input) {
