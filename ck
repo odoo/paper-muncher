@@ -10,6 +10,14 @@ function is_ubuntu() {
     return 1
 }
 
+function is_debian() {
+    if [ -f /etc/os-release ]; then
+        grep -q "debian" /etc/os-release
+        return $?
+    fi
+    return 1
+}
+
 function is_darwin() {
     if [ "$(uname)" == "Darwin" ]; then
         return 0
@@ -79,6 +87,9 @@ if [ ! -f .cutekit/tools-ready ]; then
     if is_ubuntu; then
         echo "Detected Ubuntu, installing dependencies automatically..."
         $CUTEKIT_ELEVATOR ./meta/scripts/setup-ubuntu.sh
+    elif is_debian; then
+        echo "Detected Debian, installing dependencies automatically..."
+        $CUTEKIT_ELEVATOR ./meta/scripts/setup-debian.sh
     elif is_arch; then
         echo "Detected Arch Linux, installing dependencies automatically..."
         $CUTEKIT_ELEVATOR ./meta/scripts/setup-arch.sh
