@@ -500,7 +500,8 @@ static Res<Selector> _parseSelectorElement(Cursor<Css::Sst>& cur, OpCode current
 
             if (cur->prefix == Css::Token::function("not(")) {
                 Cursor<Css::Sst> c = cur->content;
-                val = Selector::not_(try$(_parseSelectorElement(c, OpCode::NOT)));
+                // consume a whole selector not a single one
+                val = Selector::not_(try$(Selector::parse(c)));
             } else {
                 val = Pseudo::make(cur->token.data);
             }
