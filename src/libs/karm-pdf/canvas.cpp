@@ -113,7 +113,11 @@ void Canvas::fill(Text::Prose& prose) {
     // There is no font styling in PDF, italic (or bold) is a change of font
     push();
     _e.ln("BT");
-    _e.ln("/F1 14 Tf");
+    _e.ln(
+        "/F{} {} Tf",
+        _fontManager->getFontId(prose._style.font.fontface),
+        prose._style.font.fontSize()
+    );
 
     if (prose._style.color)
         fillStyle(*prose._style.color);

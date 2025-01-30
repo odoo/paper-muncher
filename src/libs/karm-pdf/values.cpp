@@ -79,6 +79,7 @@ void File::write(Io::Emit& e) const {
 
     e("trailer\n");
     Value{trailer}.write(e);
+    e("\n");
 
     e("startxref\n");
     e("{}\n", startxref);
