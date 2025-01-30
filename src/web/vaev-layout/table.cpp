@@ -110,16 +110,19 @@ struct TableFormatingContext : public FormatingContext {
 
     // TODO: amount of footers and headers
     // footers will be the last rows of the grid; same for headers?
-    usize numOfHeaderRows = 0, numOfFooterRows = 0;
+    usize numOfHeaderRows = 0;
+    usize numOfFooterRows = 0;
 
-    struct {
-        usize width;
+    struct BorderGrid {
+        usize width = 0;
         Vec<InsetsPx> borders;
 
         InsetsPx& get(usize i, usize j) {
             return borders[i * width + j];
         }
-    } bordersGrid;
+    };
+
+    BorderGrid bordersGrid;
 
     // https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-growing-downward-growing-cells
     void growDownwardGrowingCells() {
@@ -574,7 +577,6 @@ struct TableFormatingContext : public FormatingContext {
     }
 
     void computeAutoWidthOfCellsSpanN(Tree& tree, Vec<Px>& minColWidth, Vec<Px>& maxColWidth, Px tableWidth) {
-
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
                 auto cell = grid.get(j, i);
@@ -588,7 +590,9 @@ struct TableFormatingContext : public FormatingContext {
 
                 auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth);
 
-                Px currSumMinColWidth{0}, currSumMaxColWidth{0};
+                Px currSumMinColWidth{0};
+                Px currSumMaxColWidth{0};
+
                 for (usize k = 0; k < colSpan; ++k) {
                     currSumMinColWidth += minColWidth[j + k];
                     currSumMaxColWidth += maxColWidth[j + k];
@@ -698,7 +702,9 @@ struct TableFormatingContext : public FormatingContext {
             Vec<Px>& distWOPToUse = sumMaxWithoutPerc < tableUsedWidth ? maxWithoutPerc : minWithoutPerc;
             Vec<Px>& distWPToUse = sumMaxWithoutPerc < tableUsedWidth ? maxWithPerc : minWithPerc;
 
-            auto sumWithPerc = iter(distWPToUse).sum(), sumWithoutPerc = iter(distWOPToUse).sum();
+            auto sumWithPerc = iter(distWPToUse).sum();
+            auto sumWithoutPerc = iter(distWOPToUse).sum();
+
             if (sumWithPerc > tableUsedWidth) {
                 Px totalDiff = sumWithPerc - sumWithoutPerc;
                 Px allowedGrowth = tableUsedWidth - sumWithoutPerc;
@@ -719,7 +725,9 @@ struct TableFormatingContext : public FormatingContext {
             }
         } else {
             auto [minColWidth, maxColWidth] = computeMinMaxAutoWidths(tree, grid.size.x, 0_px);
-            auto sumMaxColWidths = iter(maxColWidth).sum(), sumMinColWidths = iter(minColWidth).sum();
+            auto sumMaxColWidths = iter(maxColWidth).sum();
+            auto sumMinColWidths = iter(minColWidth).sum();
+
             // TODO: Specs doesnt say if we should distribute extra width over columns;
             //       also would it be over min or max columns?
             if (min(sumMaxColWidths, capmin) < containingBlockX) {
@@ -966,7 +974,7 @@ struct TableFormatingContext : public FormatingContext {
 
         if (tree.fc.isDiscoveryMode()) {
             if (cellBox->style->break_->inside == BreakInside::AVOID) {
-                outputCell.breakpoint->applyAvoid();
+                outputCell.breakpoint.unwrap().withAppeal(Breakpoint::Appeal::AVOID);
             }
         }
 
@@ -1080,7 +1088,7 @@ struct TableFormatingContext : public FormatingContext {
 
         if (forcedBreakAfterCurrRow or forcedBreakBeforeNextRow or
             forcedBreakAfterCurrRowGroup or forcedBreakBeforeNextRowGroup) {
-            currentBreakpoint = Breakpoint::buildForced(i + 1);
+            currentBreakpoint = Breakpoint::forced(i + 1);
             return false;
         }
 
@@ -1103,7 +1111,7 @@ struct TableFormatingContext : public FormatingContext {
         if (rowIsFreelyFragmentable) {
             // breakpoint inside of row, take in consideration ALL breakpoints
             // should stay in this row next fragmentation
-            currentBreakpoint.overrideIfBetter(Breakpoint::buildFromChildren(
+            currentBreakpoint.overrideIfBetter(Breakpoint::fromChildren(
                 outputRow.breakpoints,
                 i + 1,
                 avoidBreakInsideRow or avoidBreakInsideRowGroup or avoidBreakInsideTable,
@@ -1125,7 +1133,7 @@ struct TableFormatingContext : public FormatingContext {
                     outputRow.breakpoints[j] = NONE;
             }
 
-            currentBreakpoint.overrideIfBetter(Breakpoint::buildFromChildren(
+            currentBreakpoint.overrideIfBetter(Breakpoint::fromChildren(
                 outputRow.breakpoints,
                 i + 1,
                 avoidBreakInsideRow or avoidBreakInsideRowGroup or avoidBreakInsideTable,
@@ -1135,7 +1143,7 @@ struct TableFormatingContext : public FormatingContext {
         } else {
 
             // no cells are being split
-            currentBreakpoint.overrideIfBetter(Breakpoint::buildClassB(
+            currentBreakpoint.overrideIfBetter(Breakpoint::classB(
                 i + 1,
                 avoidBreakInsideTable
             ));
@@ -1231,7 +1239,8 @@ struct TableFormatingContext : public FormatingContext {
             max(headerSize.y, footerSize.y) * 4_px <= tree.fc.size().y and
             headerSize.y + footerSize.y * 2_px <= tree.fc.size().y;
 
-        Px currPositionX{input.position.x}, currPositionY{input.position.y};
+        Px currPositionX{input.position.x};
+        Px currPositionY{input.position.y};
         Px startingPositionY = currPositionY;
         currPositionY += spacing.y;
 

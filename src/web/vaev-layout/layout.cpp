@@ -165,7 +165,7 @@ static Res<None, Output> _shouldAbortFragmentingBeforeLayout(Fragmentainer& fc, 
         return Output{
             .size = Vec2Px{0_px, 0_px},
             .completelyLaidOut = false,
-            .breakpoint = Breakpoint::buildOverflow()
+            .breakpoint = Breakpoint::overflow()
         };
 
     return Ok(NONE);
@@ -184,7 +184,7 @@ static void _maybeSetMonolithicBreakpoint(Fragmentainer& fc, bool isMonolticDisp
     Breakpoint bottomOfContentBreakForTopMonolitic{
         .endIdx = boxChildrenLen,
         .appeal = Breakpoint::Appeal::CLASS_B,
-        .advanceCase = Breakpoint::ADVANCE_CASE::ADVANCE_WITHOUT_CHILDREN
+        .advance = Breakpoint::Advance::WITHOUT_CHILDREN
     };
 
     outputBreakpoint = bottomOfContentBreakForTopMonolitic;
