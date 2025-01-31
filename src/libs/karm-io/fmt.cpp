@@ -383,6 +383,12 @@ void NumberFormatter::parse(Io::SScan& scan) {
         base = 16;
         break;
 
+    case 'y':
+        base = 16;
+        fillChar = '0';
+        bytePadded = true;
+        break;
+
     case 'p':
         prefix = true;
         base = 16;
@@ -414,6 +420,9 @@ Res<usize> NumberFormatter::formatUnsigned(Io::TextWriter& writer, usize val) {
     } while (val != 0 and buf.len() < buf.cap());
 
     while (width > buf.len())
+        buf.pushBack(fillChar);
+
+    if (bytePadded and buf.len() % 2)
         buf.pushBack(fillChar);
 
     reverse(mutSub(buf));

@@ -262,6 +262,7 @@ struct Formatter<Cased<T>> {
 struct NumberFormatter {
     bool prefix = false;
     bool isChar = false;
+    bool bytePadded = false;
     usize base = 10;
     usize width = 0;
     char fillChar = ' ';

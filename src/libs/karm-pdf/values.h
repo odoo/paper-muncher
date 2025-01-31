@@ -61,6 +61,13 @@ struct File {
         return ref;
     }
 
+    // FIXME: find me a better name: prepare before write
+    void prepareBody() {
+        sort(body._els, [](auto& a, auto& b) {
+            return a.v0.num <=> b.v0.num;
+        });
+    }
+
     void write(Io::Emit& e) const;
 };
 
