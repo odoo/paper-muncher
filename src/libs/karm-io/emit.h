@@ -76,12 +76,14 @@ struct Emit : public Io::TextWriterBase<> {
             return Ok(0);
         }
 
-        usize written = 0;
+        usize writtenNewLine = 0;
         if (_newline)
-            written += try$(_insertNewline());
-        written += try$(_writer.writeRune(r));
+            writtenNewLine += try$(_insertNewline());
+
+        usize written = try$(_writer.writeRune(r));
         _total += written;
-        return Ok(written);
+
+        return Ok(written + writtenNewLine);
     }
 
     void operator()(Rune r) {
