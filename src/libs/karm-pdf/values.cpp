@@ -93,7 +93,7 @@ void File::write(Io::Emit& e) const {
 }
 
 void XRef::write(Io::Emit& e) const {
-    e("0 {}\n", entries.len() + 1);
+    e("1 {}\n", entries.len());
     for (usize i = 0; i < entries.len(); ++i) {
         auto const& entry = entries[i];
         if (entry.used) {

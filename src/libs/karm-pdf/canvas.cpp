@@ -1,4 +1,5 @@
 #include <karm-logger/logger.h>
+#include <karm-text/prose.h>
 
 #include "canvas.h"
 
@@ -106,6 +107,56 @@ void Canvas::fill(Gfx::FillRule rule) {
         _e.ln("f");
     else
         _e.ln("f*");
+}
+
+void Canvas::fill(Text::Prose& prose) {
+    push();
+    _e.ln("BT");
+    _e.ln(
+        "/F{} {} Tf",
+        _fontManager->getFontId(prose._style.font.fontface),
+        prose._style.font.fontSize()
+    );
+
+    if (prose._style.color)
+        fillStyle(*prose._style.color);
+
+    _e.ln("1 0 0 -1 0 {} Tm", prose._lineHeight * prose._lines.len());
+
+    // TODO: this is needed since we are inverting the vertical axis in the PDF coordinate space
+    reverse(mutSub(prose._lines));
+
+    for (usize i = 0; i < prose._lines.len(); ++i) {
+        auto const& line = prose._lines[i];
+
+        auto alignedStart = first(line.blocks()).pos;
+        _e.ln("{} {} Td"s, alignedStart, i == 0 ? 0 : prose._lineHeight);
+
+        auto prevEndPos = alignedStart;
+
+        _e("[<");
+        for (auto& block : line.blocks()) {
+            for (auto& cell : block.cells()) {
+                auto glyphAdvance = prose._style.font.advance(cell.glyph);
+                auto nextEndPosWithoutKern = prevEndPos + glyphAdvance;
+                auto nextDesiredEndPos = block.pos + cell.pos + cell.adv;
+
+                auto kern = nextEndPosWithoutKern - nextDesiredEndPos;
+                if (not Math::epsilonEq<f64>(kern, 0, 0.01))
+                    _e(">{}<", kern);
+
+                for (auto rune : cell.runes()) {
+                    _e("{04x}", rune);
+                }
+                prevEndPos = prevEndPos + glyphAdvance - kern;
+            }
+        }
+        _e(">] TJ"s);
+        _e.ln("");
+    }
+
+    _e.ln("ET");
+    pop();
 }
 
 void Canvas::fill(Gfx::Fill f, Gfx::FillRule rule) {
