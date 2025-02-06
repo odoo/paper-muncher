@@ -354,19 +354,24 @@ void NumberFormatter::parse(Str str) {
     parse(scan);
 }
 
-void NumberFormatter::parse(Io::SScan& scan) {
-    if (scan.skip('#'))
+void NumberFormatter::parse(Io::SScan& s) {
+    if (s.skip('#'))
         prefix = true;
 
-    if (scan.skip('0'))
+    if (s.skip('0'))
         fillChar = '0';
 
-    width = atoi(scan).unwrapOr(0);
+    width = atoi(s).unwrapOr(0);
 
-    if (scan.ended())
+    if (s.skip('.')) {
+        if (s.skip('0'))
+            trailingZeros = true;
+        precision = atoi(s).unwrapOrDefault(6);
+    }
+
+    if (s.ended())
         return;
-
-    Rune c = scan.next();
+    Rune c = s.next();
     switch (c) {
     case 'b':
         base = 2;
@@ -397,12 +402,6 @@ void NumberFormatter::parse(Io::SScan& scan) {
 
     default:
         break;
-    }
-
-    if (scan.skip('.')) {
-        if (scan.skip('0'))
-            trailingZeros = true;
-        precision = atoi(scan).unwrapOrDefault(6);
     }
 }
 

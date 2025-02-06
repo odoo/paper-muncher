@@ -61,7 +61,7 @@ Res<> print(
         .paper = paper,
         .scale = options.scale.toDppx(),
         .headerFooter = true,
-        .backgroundGraphics = false,
+        .backgroundGraphics = true,
     };
     auto pages = Vaev::Driver::print(
         *dom,

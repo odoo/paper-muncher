@@ -18,7 +18,7 @@ void Canvas::pop() {
 
 void Canvas::fillStyle(Gfx::Fill fill) {
     auto color = fill.unwrap<Gfx::Color>();
-    _e.ln("{} {} {} rg", color.red / 255.0, color.green / 255.0, color.blue / 255.0);
+    _e.ln("{:.3} {:.3} {:.3} rg", color.red / 255.0, color.green / 255.0, color.blue / 255.0);
 }
 
 void Canvas::strokeStyle(Gfx::Stroke) {
@@ -41,29 +41,29 @@ void Canvas::closePath() {
 
 void Canvas::moveTo(Math::Vec2f p, Math::Path::Flags flags) {
     p = _mapPointAndUpdate(p, flags);
-    _e.ln("{} {} m", p.x, p.y);
+    _e.ln("{:.2} {:.2} m", p.x, p.y);
 }
 
 void Canvas::lineTo(Math::Vec2f p, Math::Path::Flags flags) {
     p = _mapPointAndUpdate(p, flags);
-    _e.ln("{} {} l", p.x, p.y);
+    _e.ln("{:.2} {:.2} l", p.x, p.y);
 }
 
 void Canvas::hlineTo(f64 x, Math::Path::Flags flags) {
     auto p = _mapPoint({x, 0}, flags);
-    _e.ln("{} 0 l", p.x);
+    _e.ln("{:.2} 0 l", p.x);
 }
 
 void Canvas::vlineTo(f64 y, Math::Path::Flags flags) {
     auto p = _mapPoint({0, y}, flags);
-    _e.ln("0 {} l", p.y);
+    _e.ln("0 {:.2} l", p.y);
 }
 
 void Canvas::cubicTo(Math::Vec2f cp1, Math::Vec2f cp2, Math::Vec2f p, Math::Path::Flags flags) {
     cp1 = _mapPoint(cp1, flags);
     cp2 = _mapPoint(cp2, flags);
     p = _mapPointAndUpdate(p, flags);
-    _e.ln("{} {} {} {} {} {} c", cp1.x, cp1.y, cp2.x, cp2.y, p.x, p.y);
+    _e.ln("{:.2} {:.2} {:.2} {:.2} {:.2} {:.2} c", cp1.x, cp1.y, cp2.x, cp2.y, p.x, p.y);
 }
 
 void Canvas::quadTo(Math::Vec2f cp, Math::Vec2f p, Math::Path::Flags flags) {
@@ -119,9 +119,9 @@ void Canvas::stroke() {
 
 void Canvas::stroke(Gfx::Stroke style) {
     auto color = style.fill.unwrap<Gfx::Color>();
-    _e.ln("{} {} {} RG", color.red / 255., color.green / 255., color.blue / 255.);
+    _e.ln("{:.3} {:.3} {:.3} RG", color.red / 255., color.green / 255., color.blue / 255.);
 
-    _e.ln("{} w", style.width);
+    _e.ln("{:.2} w", style.width);
 
     if (style.cap == Gfx::ROUND_CAP)
         _e.ln("1 J");
