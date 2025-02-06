@@ -97,8 +97,8 @@ struct Emit : public Io::TextWriterBase<> {
     }
 
     template <typename... Ts>
-    void operator()(Str format, Ts&&... ts) {
-        _tryWrapper(Io::format(*this, format, std::forward<Ts>(ts)...));
+    void operator()(Str fmt, Ts&&... ts) {
+        _tryWrapper(Io::format(*this, fmt, std::forward<Ts>(ts)...));
     }
 
     template <typename... Ts>
