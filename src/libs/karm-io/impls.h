@@ -37,6 +37,26 @@ struct Empty : public Reader {
     }
 };
 
+struct Count : public Writer, Seeker {
+    Io::Writer& _reader;
+    usize _pos;
+
+    Count(Io::Writer& reader)
+        : _reader(reader), _pos(0) {}
+
+    Res<usize> write(Bytes bytes) override {
+        usize written = try$(_reader.write(bytes));
+        _pos += written;
+        return Ok(written);
+    }
+
+    Res<usize> seek(Seek seek) override {
+        if (seek != Whence::CURRENT and seek.offset != 0)
+            return Error::invalidData("can't seek count reader");
+        return Ok(_pos);
+    }
+};
+
 template <Readable Readable>
 struct Limit : public Reader {
     Readable _reader;
