@@ -73,6 +73,15 @@ test$("fmt-signed-number") {
     return Ok();
 }
 
+test$("fmt-float-number") {
+    try$(testCase("3", 3.001, "{.00}"));
+    try$(testCase("3", 3.001, "{.1}"));
+    try$(testCase("3.1", 3.1, "{.1}"));
+    try$(testCase("3.0", 3.001, "{.01}"));
+
+    return Ok();
+}
+
 enum struct MyEnum {
     BAR,
     BAZ,
@@ -201,7 +210,7 @@ test$("fmt-string") {
 
 // MARK: Format Tuple ----------------------------------------------------------
 
-test$("fmt-cons") {
+test$("fmt-pair") {
     try$(testCase("{1, 2}", Pair{1, 2}));
     return Ok();
 }

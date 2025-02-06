@@ -1,4 +1,5 @@
 #include <karm-io/expr.h>
+#include <karm-math/funcs.h>
 
 #include "emit.h"
 #include "fmt.h"
@@ -397,6 +398,12 @@ void NumberFormatter::parse(Io::SScan& scan) {
     default:
         break;
     }
+
+    if (scan.skip('.')) {
+        if (scan.skip('0'))
+            trailingZeros = true;
+        precision = atoi(scan).unwrapOrDefault(6);
+    }
 }
 
 Res<usize> NumberFormatter::formatUnsigned(Io::TextWriter& writer, usize val) {
@@ -433,6 +440,22 @@ Res<usize> NumberFormatter::formatSigned(Io::TextWriter& writer, isize val) {
         val = -val;
     }
     written += try$(formatUnsigned(writer, val));
+    return Ok(written);
+}
+
+Res<usize> NumberFormatter::formatFloat(Io::TextWriter& writer, f64 val) {
+    NumberFormatter formatter;
+    usize written = 0;
+    isize ipart = (isize)val;
+    written += try$(formatter.formatSigned(writer, ipart));
+    f64 fpart = val - (f64)ipart;
+    u64 ifpart = (u64)(fpart * Math::pow(10, precision));
+    if ((ifpart != 0 or trailingZeros) and precision > 0) {
+        written += try$(writer.writeRune('.'));
+        formatter.width = precision;
+        formatter.fillChar = '0';
+        written += try$(formatter.formatUnsigned(writer, ifpart));
+    }
     return Ok(written);
 }
 

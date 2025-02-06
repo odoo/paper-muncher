@@ -265,6 +265,8 @@ struct NumberFormatter {
     usize base = 10;
     usize width = 0;
     char fillChar = ' ';
+    bool trailingZeros = false;
+    usize precision = 6;
 
     Str formatPrefix();
 
@@ -276,11 +278,13 @@ struct NumberFormatter {
 
     Res<usize> formatSigned(Io::TextWriter& writer, isize val);
 
+    Res<usize> formatFloat(Io::TextWriter& writer, f64 val);
+
     Res<usize> formatRune(Io::TextWriter& writer, Rune val);
 };
 
-template <typename T>
-struct UnsignedFormatter : public NumberFormatter {
+template <Meta::UnsignedIntegral T>
+struct Formatter<T> : public NumberFormatter {
     Res<usize> format(Io::TextWriter& writer, T const& val) {
         if (isChar)
             return formatRune(writer, val);
@@ -288,8 +292,8 @@ struct UnsignedFormatter : public NumberFormatter {
     }
 };
 
-template <typename T>
-struct SignedFormatter : public NumberFormatter {
+template <Meta::SignedIntegral T>
+struct Formatter<T> : public NumberFormatter {
     Res<usize> format(Io::TextWriter& writer, T const& val) {
         if (isChar)
             return writer.writeRune(val);
@@ -297,28 +301,10 @@ struct SignedFormatter : public NumberFormatter {
     }
 };
 
-template <Meta::UnsignedIntegral T>
-struct Formatter<T> : public UnsignedFormatter<T> {};
-
-template <Meta::SignedIntegral T>
-struct Formatter<T> : public SignedFormatter<T> {};
-
 template <Meta::Float T>
-struct Formatter<T> {
+struct Formatter<T> : public NumberFormatter {
     Res<usize> format(Io::TextWriter& writer, f64 const& val) {
-        NumberFormatter formatter;
-        usize written = 0;
-        isize ipart = (isize)val;
-        written += try$(formatter.formatSigned(writer, ipart));
-        f64 fpart = val - (f64)ipart;
-        if (fpart != 0.0) {
-            written += try$(writer.writeRune('.'));
-            formatter.width = 6;
-            formatter.fillChar = '0';
-            fpart *= 1000000;
-            written += try$(formatter.formatUnsigned(writer, (u64)fpart));
-        }
-        return Ok(written);
+        return formatFloat(writer, val);
     }
 };
 

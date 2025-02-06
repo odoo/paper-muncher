@@ -180,6 +180,17 @@ constexpr T pow2(T x) {
     return x * x;
 }
 
+constexpr isize pow(isize a, isize b) {
+    isize result = 1;
+    while (b > 0) {
+        if (b & 1)
+            result *= a;
+        a *= a;
+        b >>= 1;
+    }
+    return result;
+}
+
 template <typename T>
 auto sqrt(T x) -> T {
     if (x < 0.0)
