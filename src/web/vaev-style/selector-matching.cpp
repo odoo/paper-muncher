@@ -224,27 +224,23 @@ static bool _match(UniversalSelector const&, Markup::Element const&) {
 // MARK: Selector --------------------------------------------------------------
 
 Opt<Spec> matchSelectorWithSpecificity(Selector const& selector, Markup::Element const& el) {
-    return selector.visit(Visitor{
-        [&](Nfix const& n) -> Opt<Spec> {
-            if (n.type == Nfix::OR) {
-                Opt<Spec> specificity;
-                for (auto& inner : n.inners) {
-                    if (matchSelector(inner, el))
-                        specificity = max(specificity, spec(inner));
-                }
-                return specificity;
-            }
-            return matchSelector(n, el) ? Opt<Spec>{spec(n)} : NONE;
-        },
-        [&](auto const& s) -> Opt<Spec> {
-            return matchSelector(s, el) ? Opt<Spec>{spec(s)} : NONE;
+    if (auto n = selector.is<Nfix>(); n and n->type == Nfix::OR) {
+        Opt<Spec> specificity;
+        for (auto& inner : n->inners) {
+            if (matchSelector(inner, el))
+                specificity = max(specificity, spec(inner));
         }
-    });
+        return specificity;
+    }
+
+    if (matchSelector(selector, el))
+        return spec(selector);
+
+    return NONE;
 }
 
 bool matchSelector(Selector const& selector, Markup::Element const& el) {
     // Route the selector to the appropriate matching function.
-
     return selector.visit(Visitor{
         [&](auto const& s) {
             if constexpr (requires { _match(s, el); })
