@@ -65,6 +65,10 @@ struct Ptr {
     }
 
     template <Meta::Derive<T> U>
+    Ptr(U& ref) : _ptr{&ref} {
+    }
+
+    template <Meta::Derive<T> U>
     Ptr(Move, U* ptr) : _ptr{static_cast<T*>(ptr)} {
     }
 
