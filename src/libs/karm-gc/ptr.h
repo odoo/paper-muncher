@@ -61,7 +61,7 @@ struct Ptr {
 
     Ptr() = default;
 
-    Ptr(nullptr_t) : _ptr{nullptr} {
+    Ptr(std::nullptr_t) : _ptr{nullptr} {
     }
 
     template <Meta::Derive<T> U>
@@ -125,7 +125,7 @@ struct Ptr {
         return {MOVE, _ptr};
     }
 
-    bool operator==(nullptr_t) const {
+    bool operator==(std::nullptr_t) const {
         return not _ptr;
     }
 
