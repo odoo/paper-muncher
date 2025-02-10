@@ -1,8 +1,8 @@
-#include "dom.h"
+#include "document.h"
 
-namespace Vaev::Markup {
+#include "element.h"
 
-// MARK: Document --------------------------------------------------------------
+namespace Vaev::Dom {
 
 String Document::title() const {
     String res = ""s;
@@ -18,4 +18,4 @@ String Document::title() const {
     return res;
 }
 
-} // namespace Vaev::Markup
+} // namespace Vaev::Dom

@@ -7,7 +7,7 @@ We're genuinely excited to have you join us. Before you dive in, please take som
 ## About the Project
 
 Paper Muncher is the fruit of a long search for a wkhtmltopdf replacement (See our [FAQ](faq.md) to understand why other options like Weasyprint and Chrome where rejected). It's based of a toy browser engine that @sleepy-monax (a.k.a nivb) wrote on their freetime now called Vaev. Its composed of a:
- - Markup parser `vaev-markup` responsible for parsing html and xml into a DOM.
+ - Markup parser `vaev-dom` responsible for parsing html and xml into a DOM.
  - Style engine `vaev-style` responsible for parsing CSS into stylesheet object, and compute style.
  - Layout engine `vaev-layout` takes the computed style and DOM and build a fragment tree, this fragment tree is then layout following the different formating option offered by CSS (flex, grid, table, block and inline)
  - And a driver `vaev-driver` that tie all the other component together

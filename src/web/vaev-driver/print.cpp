@@ -255,7 +255,7 @@ static Style::Media _constructMedia(Print::Settings const& settings) {
     };
 }
 
-Vec<Print::Page> print(Markup::Document const& dom, Print::Settings const& settings) {
+Vec<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
     auto media = _constructMedia(settings);
 
     Style::StyleBook stylebook;
@@ -280,8 +280,8 @@ Vec<Print::Page> print(Markup::Document const& dom, Print::Settings const& setti
 
     Style::Computed initialStyle = Style::Computed::initial();
     initialStyle.color = Gfx::BLACK;
-    initialStyle.setCustomProp("-vaev-url", {Css::Token::string(Io::format("\"{}\"", dom.url()).unwrap())});
-    initialStyle.setCustomProp("-vaev-title", {Css::Token::string(Io::format("\"{}\"", dom.title()).unwrap())});
+    initialStyle.setCustomProp("-vaev-url", {Css::Token::string(Io::format("\"{}\"", dom->url()).unwrap())});
+    initialStyle.setCustomProp("-vaev-title", {Css::Token::string(Io::format("\"{}\"", dom->title()).unwrap())});
     initialStyle.setCustomProp("-vaev-datetime", {Css::Token::string(Io::format("\"{}\"", Sys::now()).unwrap())});
 
     // MARK: Page Content ------------------------------------------------------

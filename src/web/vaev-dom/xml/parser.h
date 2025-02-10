@@ -1,11 +1,22 @@
 #pragma once
 
-#include "dom.h"
+#include <karm-gc/heap.h>
 
-namespace Vaev::Markup {
+#include "../comment.h"
+#include "../document-type.h"
+#include "../document.h"
+#include "../element.h"
+
+namespace Vaev::Dom {
 
 struct XmlParser {
-    Res<> parse(Io::SScan& s, Ns ns, Markup::Document& doc);
+    Gc::Heap& _heap;
+
+    XmlParser(Gc::Heap& heap)
+        : _heap(heap) {
+    }
+
+    Res<> parse(Io::SScan& s, Ns ns, Dom::Document& doc);
 
     Res<> _parseS(Io::SScan& s);
 
@@ -13,7 +24,7 @@ struct XmlParser {
 
     Res<> _parseCharData(Io::SScan& s, StringBuilder& sb);
 
-    Res<Rc<Comment>> _parseComment(Io::SScan& s);
+    Res<Gc::Ref<Comment>> _parseComment(Io::SScan& s);
 
     Res<> _parsePi(Io::SScan& s);
 
@@ -29,11 +40,11 @@ struct XmlParser {
 
     Res<> _parseProlog(Io::SScan& s, Node& parent);
 
-    Res<Rc<DocumentType>> _parseDoctype(Io::SScan& s);
+    Res<Gc::Ref<DocumentType>> _parseDoctype(Io::SScan& s);
 
-    Res<Rc<Element>> _parseElement(Io::SScan& s, Ns ns);
+    Res<Gc::Ref<Element>> _parseElement(Io::SScan& s, Ns ns);
 
-    Res<Rc<Element>> _parseStartTag(Io::SScan& s, Ns ns);
+    Res<Gc::Ref<Element>> _parseStartTag(Io::SScan& s, Ns ns);
 
     Res<> _parseAttribute(Io::SScan& s, Ns ns, Element& el);
 
@@ -49,7 +60,7 @@ struct XmlParser {
 
     Res<> _parseText(Io::SScan& s, Element& el);
 
-    Res<Rc<Element>> _parseEmptyElementTag(Io::SScan& s, Ns ns);
+    Res<Gc::Ref<Element>> _parseEmptyElementTag(Io::SScan& s, Ns ns);
 
     Res<Rune> _parseCharRef(Io::SScan& s);
 
@@ -60,4 +71,4 @@ struct XmlParser {
     Res<> _parseExternalId(Io::SScan& s, DocumentType& docType);
 };
 
-} // namespace Vaev::Markup
+} // namespace Vaev::Dom

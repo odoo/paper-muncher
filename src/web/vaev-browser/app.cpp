@@ -1,3 +1,4 @@
+#include <karm-gc/root.h>
 #include <karm-kira/context-menu.h>
 #include <karm-kira/dialog.h>
 #include <karm-kira/error-page.h>
@@ -52,15 +53,16 @@ struct Navigate {
 };
 
 struct State {
+    Gc::Heap& heap;
     usize currentIndex = 0;
     Vec<Navigate> history;
-    Res<Rc<Markup::Document>> dom;
+    Res<Gc::Root<Dom::Document>> dom;
     SidePanel sidePanel = SidePanel::CLOSE;
     InspectState inspect = {};
     bool wireframe = false;
 
-    State(Navigate nav, Res<Rc<Markup::Document>> dom)
-        : history{nav}, dom{dom} {}
+    State(Gc::Heap& heap, Navigate nav, Res<Gc::Root<Dom::Document>> dom)
+        : heap(heap), history{nav}, dom{dom} {}
 
     bool canGoBack() const {
         return currentIndex > 0;
@@ -97,9 +99,9 @@ Ui::Task<Action> reduce(State& s, Action a) {
         [&](Reload) {
             auto const& object = s.currentUrl();
             if (object.action == Mime::Uti::PUBLIC_MODIFY) {
-                s.dom = Vaev::Driver::viewSource(object.url);
+                s.dom = Vaev::Driver::viewSource(s.heap, object.url);
             } else {
-                s.dom = Vaev::Driver::fetchDocument(object.url);
+                s.dom = Vaev::Driver::fetchDocument(s.heap, object.url);
             }
         },
         [&](GoBack) {
@@ -288,7 +290,9 @@ Ui::Child webview(State const& s) {
            Ui::box({
                .backgroundFill = Gfx::WHITE,
            }) |
-           Kr::contextMenu(slot$(contextMenu(s)));
+           Kr::contextMenu([&] {
+               return contextMenu(s);
+           });
 }
 
 Ui::Child appContent(State const& s) {
@@ -300,9 +304,10 @@ Ui::Child appContent(State const& s) {
     );
 }
 
-Ui::Child app(Mime::Url url, Res<Rc<Vaev::Markup::Document>> dom) {
+Ui::Child app(Gc::Heap& heap, Mime::Url url, Res<Gc::Ref<Vaev::Dom::Document>> dom) {
     return Ui::reducer<Model>(
         {
+            heap,
             Navigate{url},
             dom,
         },
@@ -310,21 +315,29 @@ Ui::Child app(Mime::Url url, Res<Rc<Vaev::Markup::Document>> dom) {
             return Kr::scaffold({
                 .icon = Mdi::SURFING,
                 .title = "Vaev"s,
-                .startTools = slots$(
-                    Ui::button(Model::bindIf<GoBack>(s.canGoBack()), Ui::ButtonStyle::subtle(), Mdi::ARROW_LEFT),
-                    Ui::button(Model::bindIf<GoForward>(s.canGoForward()), Ui::ButtonStyle::subtle(), Mdi::ARROW_RIGHT),
-                ),
-                .midleTools = slots$(addressBar(s.currentUrl().url) | Ui::grow()),
-                .endTools = slots$(
-                    Ui::button(
-                        [&](Ui::Node& n) {
-                            Ui::showPopover(n, n.bound().bottomEnd(), mainMenu(s));
-                        },
-                        Ui::ButtonStyle::subtle(),
-                        Mdi::DOTS_HORIZONTAL
-                    )
-                ),
-                .body = slot$(appContent(s)),
+                .startTools = [&] -> Ui::Children {
+                    return {
+                        Ui::button(Model::bindIf<GoBack>(s.canGoBack()), Ui::ButtonStyle::subtle(), Mdi::ARROW_LEFT),
+                        Ui::button(Model::bindIf<GoForward>(s.canGoForward()), Ui::ButtonStyle::subtle(), Mdi::ARROW_RIGHT),
+                    };
+                },
+                .midleTools = [&] -> Ui::Children {
+                    return {addressBar(s.currentUrl().url) | Ui::grow()};
+                },
+                .endTools = [&] -> Ui::Children {
+                    return {
+                        Ui::button(
+                            [&](Ui::Node& n) {
+                                Ui::showPopover(n, n.bound().bottomEnd(), mainMenu(s));
+                            },
+                            Ui::ButtonStyle::subtle(),
+                            Mdi::DOTS_HORIZONTAL
+                        ),
+                    };
+                },
+                .body = [&] {
+                    return appContent(s);
+                },
                 .compact = true,
             });
         }

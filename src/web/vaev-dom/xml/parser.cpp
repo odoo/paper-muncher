@@ -1,14 +1,14 @@
 #include <karm-io/expr.h>
 #include <karm-logger/logger.h>
 
-#include "xml.h"
+#include "parser.h"
 
-namespace Vaev::Markup {
+namespace Vaev::Dom {
 
 // 2 MARK: Documents
 // https://www.w3.org/TR/xml/#sec-documents
 
-Res<> XmlParser::parse(Io::SScan& s, Ns ns, Markup::Document& doc) {
+Res<> XmlParser::parse(Io::SScan& s, Ns ns, Dom::Document& doc) {
     // document :: = prolog element Misc *
 
     try$(_parseProlog(s, doc));
@@ -129,7 +129,7 @@ Res<> XmlParser::_parseCharData(Io::SScan& s, StringBuilder& sb) {
 static constexpr auto RE_COMMENT_START = "<!--"_re;
 static constexpr auto RE_COMMENT_END = "-->"_re;
 
-Res<Rc<Comment>> XmlParser::_parseComment(Io::SScan& s) {
+Res<Gc::Ref<Comment>> XmlParser::_parseComment(Io::SScan& s) {
     // 	Comment ::= '<!--' ((Char - '-') | ('-' (Char - '-')))* '-->'
 
     auto rollback = s.rollbackPoint();
@@ -149,7 +149,7 @@ Res<Rc<Comment>> XmlParser::_parseComment(Io::SScan& s) {
         return Error::invalidData("expected '-->'");
 
     rollback.disarm();
-    return Ok(makeRc<Comment>(sb.take()));
+    return Ok(_heap.alloc<Comment>(sb.take()));
 }
 
 // 2.6 MARK: Processing Instructions
@@ -280,14 +280,14 @@ Res<> XmlParser::_parseProlog(Io::SScan& s, Node& parent) {
 
 static constexpr auto RE_DOCTYPE_START = "<!DOCTYPE"_re;
 
-Res<Rc<DocumentType>> XmlParser::_parseDoctype(Io::SScan& s) {
+Res<Gc::Ref<DocumentType>> XmlParser::_parseDoctype(Io::SScan& s) {
     // doctypedecl ::= '<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'
     auto rollback = s.rollbackPoint();
 
     if (not s.skip(RE_DOCTYPE_START))
         return Error::invalidData("expected '<!DOCTYPE'");
 
-    auto docType = makeRc<DocumentType>();
+    auto docType = _heap.alloc<DocumentType>();
 
     try$(_parseS(s));
 
@@ -310,7 +310,7 @@ Res<Rc<DocumentType>> XmlParser::_parseDoctype(Io::SScan& s) {
 // 3 MARK: Logical Structures
 // https://www.w3.org/TR/xml/#sec-logical-struct
 
-Res<Rc<Element>> XmlParser::_parseElement(Io::SScan& s, Ns ns) {
+Res<Gc::Ref<Element>> XmlParser::_parseElement(Io::SScan& s, Ns ns) {
     // element ::= EmptyElemTag | STag content ETag
 
     auto rollback = s.rollbackPoint();
@@ -335,7 +335,7 @@ Res<Rc<Element>> XmlParser::_parseElement(Io::SScan& s, Ns ns) {
 // 3.1 MARK: Start-Tags, End-Tags, and Empty-Element Tags
 // https://www.w3.org/TR/xml/#sec-starttags
 
-Res<Rc<Element>> XmlParser::_parseStartTag(Io::SScan& s, Ns ns) {
+Res<Gc::Ref<Element>> XmlParser::_parseStartTag(Io::SScan& s, Ns ns) {
     // STag ::= '<' Name (S Attribute)* S? '>'
 
     auto rollback = s.rollbackPoint();
@@ -344,7 +344,7 @@ Res<Rc<Element>> XmlParser::_parseStartTag(Io::SScan& s, Ns ns) {
 
     auto name = try$(_parseName(s));
 
-    auto el = makeRc<Element>(TagName::make(name, ns));
+    auto el = _heap.alloc<Element>(TagName::make(name, ns));
 
     try$(_parseS(s));
 
@@ -472,12 +472,12 @@ Res<> XmlParser::_parseText(Io::SScan& s, Element& el) {
 
     auto te = sb.take();
     if (te)
-        el.appendChild(makeRc<Text>(te));
+        el.appendChild(_heap.alloc<Text>(te));
 
     return Ok();
 }
 
-Res<Rc<Element>> XmlParser::_parseEmptyElementTag(Io::SScan& s, Ns ns) {
+Res<Gc::Ref<Element>> XmlParser::_parseEmptyElementTag(Io::SScan& s, Ns ns) {
     // EmptyElemTag ::= '<' Name (S Attribute)* S? '/>'
 
     auto rollback = s.rollbackPoint();
@@ -486,7 +486,7 @@ Res<Rc<Element>> XmlParser::_parseEmptyElementTag(Io::SScan& s, Ns ns) {
 
     auto name = try$(_parseName(s));
 
-    auto el = makeRc<Element>(TagName::make(name, ns));
+    auto el = _heap.alloc<Element>(TagName::make(name, ns));
     try$(_parseS(s));
     while (not s.skip("/>"_re) and not s.ended()) {
         try$(_parseAttribute(s, ns, *el));
@@ -600,4 +600,4 @@ Res<> XmlParser::_parseExternalId(Io::SScan& s, DocumentType& docType) {
     }
 }
 
-} // namespace Vaev::Markup
+} // namespace Vaev::Dom

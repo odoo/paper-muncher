@@ -14,8 +14,8 @@
 #include <vaev-driver/render.h>
 #include <vaev-layout/paint.h>
 #include <vaev-layout/values.h>
-#include <vaev-markup/html.h>
-#include <vaev-markup/xml.h>
+#include <vaev-dom/html/parser.h>
+#include <vaev-dom/xml/parser.h>
 #include <vaev-style/values.h>
 
 namespace PaperMuncher {
@@ -36,8 +36,9 @@ Res<> print(
     Io::Writer& output,
     PrintOption options = {}
 ) {
+    Gc::Heap heap;
     auto mime = Mime::sniffSuffix(url.path.suffix()).unwrapOr("application/xhtml+xml"_mime);
-    auto dom = try$(Vaev::Driver::loadDocument(url, mime, input));
+    auto dom = try$(Vaev::Driver::loadDocument(heap, url, mime, input));
 
     Vaev::Layout::Resolver resolver;
     resolver.viewport.dpi = options.scale;
@@ -141,8 +142,9 @@ Res<> render(
     Io::Writer& output,
     RenderOption options = {}
 ) {
+    Gc::Heap heap;
     auto mime = Mime::sniffSuffix(input.path.suffix()).unwrapOr("application/xhtml+xml"_mime);
-    auto dom = try$(Vaev::Driver::loadDocument(input, mime, reader));
+    auto dom = try$(Vaev::Driver::loadDocument(heap, input, mime, reader));
 
     Vaev::Layout::Resolver resolver;
     resolver.viewport.dpi = options.scale;

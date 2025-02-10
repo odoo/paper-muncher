@@ -7,11 +7,11 @@
 namespace Vaev::View {
 
 struct View : public Ui::View<View> {
-    Rc<Markup::Document> _dom;
+    Gc::Root<Dom::Document> _dom;
     ViewProps _props;
     Opt<Driver::RenderResult> _renderResult;
 
-    View(Rc<Markup::Document> dom, ViewProps props)
+    View(Gc::Root<Dom::Document> dom, ViewProps props)
         : _dom(dom), _props(props) {}
 
     Style::Media _constructMedia(Math::Vec2i viewport) {
@@ -98,7 +98,7 @@ struct View : public Ui::View<View> {
     }
 };
 
-Ui::Child view(Rc<Markup::Document> dom, ViewProps props) {
+Ui::Child view(Gc::Root<Dom::Document> dom, ViewProps props) {
     return makeRc<View>(dom, props);
 }
 
