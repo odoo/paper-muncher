@@ -1,18 +1,18 @@
-**HTTPipe Specification**
+# Protocol
 
-This document describes the HTTPipe mode of PaperMuncher and the corresponding wire protocol interactions. It outlines how to start PaperMuncher in HTTPipe mode, as well as the format and flow of requests, responses, and result submissions.
+This document describes the "HTTP over pipe" mode of PaperMuncher and the corresponding wire protocol interactions. It outlines how to start PaperMuncher in "HTTP over pipe" mode, as well as the format and flow of requests, responses, and result submissions.
 
 ---
 
 ## 1. Overview
 
-HTTPipe mode allows PaperMuncher to fetch content, process it, and submit the processed result back via HTTP. The primary use case is converting web pages or other retrievable resources into PDF documents, though the mechanism can be extended for other transformations.
+"HTTP over pipe" mode allows PaperMuncher to fetch content, process it, and submit the processed result back via HTTP. The primary use case is converting web pages or other retrievable resources into PDF documents, though the mechanism can be extended for other transformations.
 
 ---
 
-## 2. Starting PaperMuncher in HTTPipe Mode
+## 2. Starting PaperMuncher in "HTTP over pipe" Mode
 
-To start PaperMuncher in HTTPipe mode, use the following command:
+To start PaperMuncher in "HTTP over pipe" mode, use the following command:
 
 ```bash
 paper-muncher print <input> -o <output> --httpipe [options]
@@ -21,13 +21,13 @@ paper-muncher print <input> -o <output> --httpipe [options]
 where:
 
 - `<input>`
-  The resource to convert. This can be a file path, or a URL if you are using HTTPipe mode.
+  The resource to convert. This can be a file path, or a URL if you are using "HTTP over pipe" mode.
 
 - `-o <output>`  
   Specifies the output file path.
 
 - `--httpipe`
-  Activates HTTPipe mode, indicating the input should be fetched via HTTP, and the result optionally submitted via an HTTP POST.
+  Activates "HTTP over pipe" mode, indicating the input should be fetched via HTTP, and the result optionally submitted via an HTTP POST.
 
 - `[options]`
   Additional flags or configuration parameters relevant to your setup (e.g., SSL options, custom headers, etc.).
@@ -36,7 +36,7 @@ where:
 
 ## 3. Wire Protocol
 
-This section covers the HTTP messages exchanged when PaperMuncher operates in HTTPipe mode.
+This section covers the HTTP messages exchanged when PaperMuncher operates in "HTTP over pipe" mode.
 
 ### 3.1 HttpPipe Request
 
@@ -54,7 +54,7 @@ User-Agent: PaperMuncher/0.1.0 Vaev/0.1.0
 
 ### 3.2 HttpPipe Response
 
-The server responds to the GET request, typically returning an HTML page or other resource content. A valid HTTPipe response might look like:
+The server responds to the GET request, typically returning an HTML page or other resource content. A valid "HTTP over pipe" response might look like:
 
 ```
 HTTPIPE/1 200
@@ -117,6 +117,7 @@ Content-Length: 131345
 
 4. **Result POST (Optional)**
    PaperMuncher will then POST the PDF file back:
+
    ```
    POST https://example.com/upload HTTPIPE/1
    User-Agent: PaperMuncher/0.1.0 Vaev/0.1.0

@@ -2,6 +2,6 @@
     "favicon": "📄",
     "title": "Paper Muncher",
     "header": "Paper Muncher",
-    "navbar": "[Home](/) [Usage](/usage.md) [Source Code](https://github.com/odoo/paper-muncher)",
+    "navbar": "[Home](/) [Install](/install.md) [Usage](/usage.md) [Protocol](/protocol.md) [Source Code](https://github.com/odoo/paper-muncher)",
     "footer": "© 2025 Odoo S.A."
 }
