@@ -2,18 +2,73 @@
 
 #include <karm-gc/heap.h>
 #include <karm-mime/url.h>
+#include <karm-net/http/http.h>
+#include <karm-sys/chan.h>
+#include <karm-sys/file.h>
 #include <vaev-dom/document.h>
 #include <vaev-style/stylesheet.h>
 
 namespace Vaev::Driver {
 
-Res<Style::StyleSheet> fetchStylesheet(Mime::Url url, Style::Origin origin = Style::Origin::AUTHOR);
+struct ChunkedTransfer : public Io::Writer {
+    bool validState = false;
+    Io::Writer& _out;
 
-void fetchStylesheets(Gc::Ref<Dom::Node> node, Style::StyleBook& sb);
+    ChunkedTransfer(Io::Writer& out) : _out(out){};
+    virtual Res<Net::Http::Response> done() = 0;
+};
 
-Res<Gc::Ref<Dom::Document>> fetchDocument(Gc::Heap& heap, Mime::Url const& url);
+struct FileChunkTransfer : public ChunkedTransfer {
 
-Res<Gc::Ref<Dom::Document>> loadDocument(Gc::Heap& heap, Mime::Url const& url, Mime::Mime const& mime, Io::Reader& reader);
+    FileChunkTransfer(Io::Writer& out) : ChunkedTransfer(out) {}
+
+    Res<usize> write(Bytes bytes) override {
+        return _out.write(bytes);
+    }
+
+    Res<Net::Http::Response> done() override {
+        return Ok(Net::Http::Response{});
+    }
+};
+
+struct Fetcher {
+
+    virtual Res<String> fetch(Mime::Url const& url) = 0;
+
+    virtual Res<Rc<ChunkedTransfer>> transfer(Mime::Url const& url) = 0;
+};
+
+struct FileFetcher : public Fetcher {
+
+    Mime::Url const STDIN_URL = "about:stdin"_url;
+    Mime::Url const STDOUT_URL = "about:stdout"_url;
+
+    Opt<Sys::FileWriter> fileWriter;
+
+    Res<String> fetch(Mime::Url const& url) override {
+        if (url == STDIN_URL)
+            return Io::readAllUtf8(Sys::in());
+
+        auto file = try$(Sys::File::open(url));
+        return Io::readAllUtf8(file);
+    }
+
+    virtual Res<Rc<ChunkedTransfer>> transfer(Mime::Url const& url) override {
+        if (url == STDOUT_URL)
+            return Ok(makeRc<FileChunkTransfer>(Sys::out()));
+
+        fileWriter = try$(Sys::File::create(url));
+        return Ok(makeRc<FileChunkTransfer>(fileWriter.unwrap()));
+    };
+};
+
+Res<Style::StyleSheet> fetchStylesheet(Fetcher& fetcher, Mime::Url url, Style::Origin origin = Style::Origin::AUTHOR);
+
+void fetchStylesheets(Fetcher& fetcher, Gc::Ref<Dom::Node> node, Style::StyleBook& sb);
+
+Res<Gc::Ref<Dom::Document>> fetchDocument(Fetcher& fetcher, Gc::Heap& heap, Mime::Url const& url);
+
+Res<Gc::Ref<Dom::Document>> loadDocument(Fetcher& fetcher, Gc::Heap& heap, Mime::Url const& url, Mime::Mime const& mime);
 
 Res<Gc::Ref<Dom::Document>> viewSource(Gc::Heap& heap, Mime::Url const& url);
 
