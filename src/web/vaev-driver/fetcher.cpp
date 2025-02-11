@@ -9,9 +9,9 @@
 
 namespace Vaev::Driver {
 
-Res<Gc::Ref<Dom::Document>> loadDocument(Gc::Heap& heap, Mime::Url const& url, Mime::Mime const& mime, Io::Reader& reader) {
+Res<Gc::Ref<Dom::Document>> loadDocument(Fetcher& fetcher, Gc::Heap& heap, Mime::Url const& url, Mime::Mime const& mime) {
     auto dom = heap.alloc<Dom::Document>(url);
-    auto buf = try$(Io::readAllUtf8(reader));
+    auto buf = try$(fetcher.fetch(url));
 
     if (mime.is("text/html"_mime)) {
         Dom::HtmlParser parser{heap, dom};
@@ -88,13 +88,13 @@ Res<Gc::Ref<Dom::Document>> indexOf(Gc::Heap& heap, Mime::Url const& url) {
     return Ok(dom);
 }
 
-Res<Gc::Ref<Dom::Document>> fetchDocument(Gc::Heap& heap, Mime::Url const& url) {
+Res<Gc::Ref<Dom::Document>> fetchDocument(Fetcher& fetcher, Gc::Heap& heap, Mime::Url const& url) {
     if (url.scheme == "about") {
         if (url.path.str() == "blank")
-            return fetchDocument(heap, "bundle://vaev-driver/blank.xhtml"_url);
+            return fetchDocument(fetcher, heap, "bundle://vaev-driver/blank.xhtml"_url);
 
         if (url.path.str() == "start")
-            return fetchDocument(heap, "bundle://vaev-driver/start-page.xhtml"_url);
+            return fetchDocument(fetcher, heap, "bundle://vaev-driver/start-page.xhtml"_url);
 
         return Error::invalidInput("unsupported about page");
     } else if (url.scheme == "file" or url.scheme == "bundle") {
@@ -106,22 +106,19 @@ Res<Gc::Ref<Dom::Document>> fetchDocument(Gc::Heap& heap, Mime::Url const& url) 
         if (not mime.has())
             return Error::invalidInput("cannot determine MIME type");
 
-        auto dom = makeRc<Dom::Document>(url);
-        auto file = try$(Sys::File::open(url));
-        return loadDocument(heap, url, *mime, file);
+        return loadDocument(fetcher, heap, url, *mime);
     } else {
         return Error::invalidInput("unsupported url scheme");
     }
 }
 
-Res<Style::StyleSheet> fetchStylesheet(Mime::Url url, Style::Origin origin) {
-    auto file = try$(Sys::File::open(url));
-    auto buf = try$(Io::readAllUtf8(file));
+Res<Style::StyleSheet> fetchStylesheet(Fetcher& fetcher, Mime::Url url, Style::Origin origin) {
+    auto buf = try$(fetcher.fetch(url));
     Io::SScan s{buf};
     return Ok(Style::StyleSheet::parse(s, origin));
 }
 
-void fetchStylesheets(Gc::Ref<Dom::Node> node, Style::StyleBook& sb) {
+void fetchStylesheets(Fetcher& fetcher, Gc::Ref<Dom::Node> node, Style::StyleBook& sb) {
     auto el = node->is<Dom::Element>();
     if (el and el->tagName == Html::STYLE) {
         auto text = el->textContent();
@@ -137,8 +134,8 @@ void fetchStylesheets(Gc::Ref<Dom::Node> node, Style::StyleBook& sb) {
                 return;
             }
 
-            auto url = Mime::parseUrlOrPath(*href, node->baseURI());
-            auto sheet = fetchStylesheet(url, Style::Origin::AUTHOR);
+            auto url = Mime::parseUrlOrPath(*href);
+            auto sheet = fetchStylesheet(fetcher, url, Style::Origin::AUTHOR);
             if (not sheet) {
                 logWarn("failed to fetch stylesheet from {}: {}", url, sheet);
                 return;
@@ -148,7 +145,7 @@ void fetchStylesheets(Gc::Ref<Dom::Node> node, Style::StyleBook& sb) {
         }
     } else {
         for (auto child = node->firstChild(); child; child = child->nextSibling())
-            fetchStylesheets(*child, sb);
+            fetchStylesheets(fetcher, *child, sb);
     }
 }
 

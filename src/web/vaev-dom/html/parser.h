@@ -206,6 +206,7 @@ struct HtmlParser : public HtmlSink {
     void accept(HtmlToken const& t) override;
 
     void write(Str str) {
+        // TODO: consider change type of Str to Io::Reader to allow streaming
         for (auto r : iterRunes(str))
             _lexer.consume(r);
         // NOTE: '\3' (End of Text) is used here as a placeholder so we are directed to the EOF case

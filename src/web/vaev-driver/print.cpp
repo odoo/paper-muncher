@@ -255,20 +255,20 @@ static Style::Media _constructMedia(Print::Settings const& settings) {
     };
 }
 
-Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
+Generator<Print::Page> print(Fetcher& fetcher, Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
     auto media = _constructMedia(settings);
 
     Style::StyleBook stylebook;
     stylebook.add(
-        fetchStylesheet("bundle://vaev-driver/html.css"_url, Style::Origin::USER_AGENT)
+        fetchStylesheet(fetcher, "bundle://vaev-driver/html.css"_url, Style::Origin::USER_AGENT)
             .take("user agent stylesheet not available")
     );
     stylebook.add(
-        fetchStylesheet("bundle://vaev-driver/print.css"_url, Style::Origin::USER_AGENT)
+        fetchStylesheet(fetcher, "bundle://vaev-driver/print.css"_url, Style::Origin::USER_AGENT)
             .take("print stylesheet not available")
     );
 
-    fetchStylesheets(dom, stylebook);
+    fetchStylesheets(fetcher, dom, stylebook);
 
     Style::Computer computer{
         media, stylebook

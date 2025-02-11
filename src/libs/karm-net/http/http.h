@@ -280,7 +280,7 @@ struct Request : public Header {
 
 struct Response : public Header {
     Version version;
-    Code code;
+    Code code = Code::OK;
 
     static Res<Response> parse(Io::SScan& s) {
         Response res;
