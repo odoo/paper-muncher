@@ -5,7 +5,7 @@
 namespace Karm::Gc {
 
 struct Cell {
-    Cell* _next;
+    Cell* _next = nullptr;
 
     virtual ~Cell() = default;
 };
