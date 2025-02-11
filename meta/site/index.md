@@ -1,6 +1,6 @@
-<img id="avatar" alt="LGPL3 License" src="assets/avatar.png" />
+<img id="munchkin" alt="The Paper Munchkin" src="assets/munchkin.svg" />
 <style>
-    #avatar {
+    #munchkin {
         float: right;
         width: 8rlh;
         height: 8rlh;
