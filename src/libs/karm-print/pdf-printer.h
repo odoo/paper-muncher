@@ -139,16 +139,8 @@ struct PdfPrinter : public FilePrinter {
         return file;
     }
 
-    void write(Io::Emit& e) {
-        pdf().write(e);
-    }
-
     Res<> write(Io::Writer& w) override {
-        Io::TextEncoder<> encoder{w};
-        Io::Emit e{encoder};
-        write(e);
-        try$(e.flush());
-        return Ok();
+        return pdf().write(w);
     }
 };
 

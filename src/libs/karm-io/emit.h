@@ -7,10 +7,9 @@
 
 namespace Karm::Io {
 
-struct Emit : public Io::TextWriterBase<> {
+struct Emit : public Io::TextWriter {
     Io::TextWriter& _writer;
     usize _ident = 0;
-    usize _total = 0;
     Res<> _error = Ok();
     bool _newline = false;
 
@@ -60,14 +59,11 @@ struct Emit : public Io::TextWriterBase<> {
         _newline = false;
         for (usize i = 0; i < _ident; i++)
             written += try$(_writer.writeStr("    "s));
-        _total += written;
         return Ok(written);
     }
 
     virtual Res<usize> write(Bytes bytes) override {
-        auto written = try$(_writer.write(bytes));
-        _total += written;
-        return Ok(written);
+        return _writer.write(bytes);
     }
 
     Res<usize> writeRune(Rune r) override {
@@ -80,7 +76,6 @@ struct Emit : public Io::TextWriterBase<> {
             try$(_insertNewline());
 
         usize written = try$(_writer.writeRune(r));
-        _total += written;
         return Ok(written);
     }
 
@@ -107,15 +102,11 @@ struct Emit : public Io::TextWriterBase<> {
         newline();
     }
 
-    usize total() {
-        return _total;
-    }
-
     Res<usize> flush() override {
         try$(_error);
         if (_newline)
             try$(_insertNewline());
-        return Ok(_total);
+        return Ok(0);
     }
 };
 

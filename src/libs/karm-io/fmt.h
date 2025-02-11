@@ -24,7 +24,7 @@ struct Formatter;
 struct _Args {
     virtual ~_Args() = default;
     virtual usize len() = 0;
-    virtual Res<usize> format(Io::SScan& scan, Io::TextWriter& writer, usize index) = 0;
+    virtual Res<> format(Io::SScan& scan, Io::TextWriter& w, usize index) = 0;
 };
 
 template <typename... Ts>
@@ -37,8 +37,8 @@ struct Args : public _Args {
         return _tuple.len();
     }
 
-    Res<usize> format(Io::SScan& scan, Io::TextWriter& writer, usize index) override {
-        Res<usize> result = Error::invalidData("format index out of range");
+    Res<> format(Io::SScan& scan, Io::TextWriter& w, usize index) override {
+        Res<> result = Error::invalidData("format index out of range");
         usize i = 0;
         _tuple.visit([&](auto const& t) {
             if (index == i) {
@@ -49,7 +49,7 @@ struct Args : public _Args {
                               }) {
                     formatter.parse(scan);
                 }
-                result = formatter.format(writer, t);
+                result = formatter.format(w, t);
             }
             i++;
 
@@ -59,16 +59,17 @@ struct Args : public _Args {
     }
 };
 
-Res<usize> _format(Io::TextWriter& writer, Str format, _Args& args);
+Res<> _format(Io::TextWriter& w, Str format, _Args& args);
 
-inline Res<usize> format(Io::TextWriter& writer, Str format) {
-    return writer.writeStr(format);
+inline Res<> format(Io::TextWriter& w, Str format) {
+    try$(w.format(format));
+    return Ok();
 }
 
 template <typename... Ts>
-inline Res<usize> format(Io::TextWriter& writer, Str format, Ts&&... ts) {
+inline Res<> format(Io::TextWriter& w, Str format, Ts&&... ts) {
     Args<Ts...> args{std::forward<Ts>(ts)...};
-    return _format(writer, format, args);
+    return _format(w, format, args);
 }
 
 inline Res<String> format(Str format) {
@@ -77,15 +78,15 @@ inline Res<String> format(Str format) {
 
 template <typename... Ts>
 inline Res<String> format(Str format, Ts&&... ts) {
-    Io::StringWriter writer{};
+    Io::StringWriter w{};
     Args<Ts...> args{std::forward<Ts>(ts)...};
-    try$(_format(writer, format, args));
-    return Ok(writer.take());
+    try$(_format(w, format, args));
+    return Ok(w.take());
 }
 
 template <typename T>
 inline Res<String> toStr(T const& t, Str format = "") {
-    Io::StringWriter writer{};
+    Io::StringWriter w{};
     Formatter<T> formatter;
     if constexpr (requires(Io::SScan& scan) {
                       formatter.parse(scan);
@@ -93,8 +94,8 @@ inline Res<String> toStr(T const& t, Str format = "") {
         Io::SScan scan{format};
         formatter.parse(scan);
     }
-    try$(formatter.format(writer, t));
-    return Ok(writer.take());
+    try$(formatter.format(w, t));
+    return Ok(w.take());
 }
 
 // MARK: Align Formatting ------------------------------------------------------
@@ -128,38 +129,37 @@ struct Formatter<Aligned<T>> {
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, Aligned<T> val) {
+    Res<> format(Io::TextWriter& w, Aligned<T> val) {
         Io::StringWriter buf;
         try$(_innerFmt.format(buf, val._inner));
         usize width = buf.len();
-        usize result = 0;
 
         if (width < val._width) {
             usize pad = val._width - width;
             switch (val._align) {
             case Align::LEFT:
-                result += try$(writer.writeStr(buf.str()));
+                try$(w.format(buf.str()));
                 for (usize i = 0; i < pad; i++)
-                    result += try$(writer.writeRune(' '));
+                    try$(w.writeRune(' '));
                 break;
             case Align::RIGHT:
                 for (usize i = 0; i < pad; i++)
-                    result += try$(writer.writeRune(' '));
-                result += try$(writer.writeStr(buf.str()));
+                    try$(w.writeRune(' '));
+                try$(w.format(buf.str()));
                 break;
             case Align::CENTER:
                 for (usize i = 0; i < pad / 2; i++)
-                    result += try$(writer.writeRune(' '));
-                result += try$(writer.writeStr(buf.str()));
+                    try$(w.writeRune(' '));
+                try$(w.format(buf.str()));
                 for (usize i = 0; i < pad / 2; i++)
-                    result += try$(writer.writeRune(' '));
+                    try$(w.writeRune(' '));
                 break;
             }
         } else {
-            result += try$(writer.writeStr(buf.str()));
+            try$(w.format(buf.str()));
         }
 
-        return Ok(result);
+        return Ok();
     }
 };
 
@@ -239,21 +239,22 @@ inline auto cased(auto inner, Case cased) {
 
 template <typename T>
 struct Formatter<Cased<T>> {
-    Formatter<T> _innerFmt{};
+    Formatter<T> _inner{};
 
     void parse(Io::SScan& scan) {
         if constexpr (requires() {
-                          _innerFmt.parse(scan);
+                          _inner.parse(scan);
                       }) {
-            _innerFmt.parse(scan);
+            _inner.parse(scan);
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, Cased<T> val) {
+    Res<> format(Io::TextWriter& w, Cased<T> val) {
         Io::StringWriter sw;
-        try$(_innerFmt.format(sw, val._inner));
+        try$(_inner.format(sw, val._inner));
         String result = try$(changeCase(sw.str(), val._case));
-        return writer.writeStr(result.str());
+        try$(w.format(result.str()));
+        return Ok();
     }
 };
 
@@ -274,51 +275,55 @@ struct NumberFormatter {
 
     void parse(Io::SScan& scan);
 
-    Res<usize> formatUnsigned(Io::TextWriter& writer, usize val);
+    Res<> formatUnsigned(Io::TextWriter& w, usize val);
 
-    Res<usize> formatSigned(Io::TextWriter& writer, isize val);
+    Res<> formatSigned(Io::TextWriter& w, isize val);
 
-    Res<usize> formatFloat(Io::TextWriter& writer, f64 val);
+    Res<> formatFloat(Io::TextWriter& w, f64 val);
 
-    Res<usize> formatRune(Io::TextWriter& writer, Rune val);
+    Res<> formatRune(Io::TextWriter& w, Rune val);
 };
 
 template <Meta::UnsignedIntegral T>
 struct Formatter<T> : public NumberFormatter {
-    Res<usize> format(Io::TextWriter& writer, T const& val) {
+    Res<> format(Io::TextWriter& w, T const& val) {
         if (isChar)
-            return formatRune(writer, val);
-        return formatUnsigned(writer, val);
+            try$(formatRune(w, val));
+        else
+            try$(formatUnsigned(w, val));
+        return Ok();
     }
 };
 
 template <Meta::SignedIntegral T>
 struct Formatter<T> : public NumberFormatter {
-    Res<usize> format(Io::TextWriter& writer, T const& val) {
+    Res<> format(Io::TextWriter& w, T const& val) {
         if (isChar)
-            return writer.writeRune(val);
-        return formatSigned(writer, val);
+            try$(w.writeRune(val));
+        else
+            try$(formatSigned(w, val));
+        return Ok();
     }
 };
 
 template <Meta::Float T>
 struct Formatter<T> : public NumberFormatter {
-    Res<usize> format(Io::TextWriter& writer, f64 const& val) {
-        return formatFloat(writer, val);
+    Res<> format(Io::TextWriter& w, f64 const& val) {
+        return formatFloat(w, val);
     }
 };
 
 template <typename T>
 struct Formatter<Be<T>> : public Formatter<T> {
-    Res<usize> format(Io::TextWriter& writer, Be<T> const& val) {
-        return Formatter<T>::format(writer, val.value());
+    Res<> format(Io::TextWriter& w, Be<T> const& val) {
+        return Formatter<T>::format(w, val.value());
     }
 };
 
 template <typename T>
 struct Formatter<Le<T>> : public Formatter<T> {
-    Res<usize> format(Io::TextWriter& writer, Le<T> const& val) {
-        return Formatter<T>::format(writer, val.value());
+    Res<> format(Io::TextWriter& w, Le<T> const& val) {
+        return Formatter<T>::format(w, val.value());
     }
 };
 
@@ -326,11 +331,12 @@ struct Formatter<Le<T>> : public Formatter<T> {
 
 template <Meta::Enum T>
 struct Formatter<T> {
-    Res<usize> format(Io::TextWriter& writer, T val) {
+    Res<> format(Io::TextWriter& w, T val) {
         if constexpr (BoundedEnum<T>) {
-            return writer.writeStr(nameOf<T>(val));
+            try$(w.format(nameOf<T>(val)));
+            return Ok();
         } else {
-            return Io::format(writer, "({} {})", nameOf<T>(), toUnderlyingType(val));
+            return Io::format(w, "({} {})", nameOf<T>(), toUnderlyingType(val));
         }
     }
 };
@@ -339,19 +345,17 @@ struct Formatter<T> {
 
 template <typename T>
 struct Formatter<T*> {
-    bool prefix = false;
+    bool _prefix = false;
 
     void parse(Io::SScan& scan) {
-        prefix = scan.skip('#');
+        _prefix = scan.skip('#');
     }
 
-    Res<usize> format(Io::TextWriter& writer, T* val) {
-        usize written = 0;
-
-        if (prefix) {
-            written += try$(writer.writeRune('('));
-            written += try$(writer.writeStr(nameOf<T>()));
-            written += try$(writer.writeStr(" *)"s));
+    Res<> format(Io::TextWriter& w, T* val) {
+        if (_prefix) {
+            try$(w.writeRune('('));
+            try$(w.format(nameOf<T>()));
+            try$(w.format(" *)"s));
         }
 
         if (val) {
@@ -360,19 +364,20 @@ struct Formatter<T*> {
             fmt.fillChar = '0';
             fmt.width = sizeof(T*) * 2;
             fmt.prefix = true;
-            written += try$(fmt.formatUnsigned(writer, (usize)val));
+            try$(fmt.formatUnsigned(w, (usize)val));
         } else {
-            written += try$(writer.writeStr("nullptr"s));
+            try$(w.format("nullptr"s));
         }
 
-        return Ok(written);
+        return Ok();
     }
 };
 
 template <>
 struct Formatter<std::nullptr_t> {
-    Res<usize> format(Io::TextWriter& writer, std::nullptr_t) {
-        return writer.writeStr("nullptr"s);
+    Res<> format(Io::TextWriter& w, std::nullptr_t) {
+        try$(w.format("nullptr"s));
+        return Ok();
     }
 };
 
@@ -380,34 +385,38 @@ struct Formatter<std::nullptr_t> {
 
 template <>
 struct Formatter<None> {
-    Res<usize> format(Io::TextWriter& writer, None const&) {
-        return writer.writeStr("None"s);
+    Res<> format(Io::TextWriter& w, None const&) {
+        try$(w.format("None"s));
+        return Ok();
     }
 };
 
 template <>
 struct Formatter<bool> {
-    Res<usize> format(Io::TextWriter& writer, bool val) {
-        return writer.writeStr(val ? "True"s : "False"s);
+    Res<> format(Io::TextWriter& w, bool val) {
+        try$(w.format(val ? "True"s : "False"s));
+        return Ok();
     }
 };
 
 template <typename T>
 struct Formatter<Opt<T>> {
-    Formatter<T> formatter;
+    Formatter<T> inner;
 
     void parse(Io::SScan& scan) {
         if constexpr (requires() {
-                          formatter.parse(scan);
+                          inner.parse(scan);
                       }) {
-            formatter.parse(scan);
+            inner.parse(scan);
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, Opt<T> const& val) {
+    Res<> format(Io::TextWriter& w, Opt<T> const& val) {
         if (val)
-            return formatter.format(writer, *val);
-        return writer.writeStr("None"s);
+            try$(inner.format(w, *val));
+        else
+            try$(w.format("None"s));
+        return Ok();
     }
 };
 
@@ -415,31 +424,31 @@ struct Formatter<Opt<T>> {
 
 template <typename T>
 struct Formatter<Ok<T>> {
-    Formatter<T> formatter;
+    Formatter<T> inner;
 
     void parse(Io::SScan& scan) {
         if constexpr (requires() {
-                          formatter.parse(scan);
+                          inner.parse(scan);
                       }) {
-            formatter.parse(scan);
+            inner.parse(scan);
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, Ok<T> const& val) {
+    Res<> format(Io::TextWriter& w, Ok<T> const& val) {
         if constexpr (Meta::Same<T, None>)
-            return writer.writeStr("Ok"s);
+            try$(w.format("Ok"s));
         else
-            return formatter.format(writer, val.inner);
+            try$(inner.format(w, val.inner));
+        return Ok();
     }
 };
 
 template <>
 struct Formatter<Error> {
-    Res<usize> format(Io::TextWriter& writer, Error const& val) {
-        usize written = 0;
+    Res<> format(Io::TextWriter& w, Error const& val) {
         Str msg = Str::fromNullterminated(val.msg());
-        written += try$(writer.writeStr(msg));
-        return Ok(written);
+        try$(w.format(msg));
+        return Ok();
     }
 };
 
@@ -462,10 +471,10 @@ struct Formatter<Res<T, E>> {
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, Res<T, E> const& val) {
+    Res<> format(Io::TextWriter& w, Res<T, E> const& val) {
         if (val)
-            return _fmtOk.format(writer, val.unwrap());
-        return _fmtErr.format(writer, val.none());
+            return _fmtOk.format(w, val.unwrap());
+        return _fmtErr.format(w, val.none());
     }
 };
 
@@ -474,9 +483,9 @@ struct Formatter<Res<T, E>> {
 template <typename... Ts>
 struct Formatter<Union<Ts...>> {
 
-    Res<usize> format(Io::TextWriter& writer, Union<Ts...> const& val) {
-        return val.visit([&](auto const& v) -> Res<usize> {
-            return Io::format(writer, "{}", v);
+    Res<> format(Io::TextWriter& w, Union<Ts...> const& val) {
+        return val.visit([&](auto const& v) -> Res<> {
+            return Io::format(w, "{}", v);
         });
     }
 };
@@ -485,43 +494,43 @@ struct Formatter<Union<Ts...>> {
 
 template <>
 struct Formatter<std::strong_ordering> {
-    Res<usize> format(Io::TextWriter& writer, std::strong_ordering val) {
+    Res<> format(Io::TextWriter& w, std::strong_ordering val) {
         if (val == std::strong_ordering::less)
-            return writer.writeStr("Less"s);
-
-        if (val == std::strong_ordering::greater)
-            return writer.writeStr("Greater"s);
-
-        return writer.writeStr("Equal"s);
+            try$(w.format("Less"s));
+        else if (val == std::strong_ordering::greater)
+            try$(w.format("Greater"s));
+        else
+            try$(w.format("Equal"s));
+        return Ok();
     }
 };
 
 template <>
 struct Formatter<std::weak_ordering> {
-    Res<usize> format(Io::TextWriter& writer, std::weak_ordering val) {
+    Res<> format(Io::TextWriter& w, std::weak_ordering val) {
         if (val == std::weak_ordering::less)
-            return writer.writeStr("Less"s);
-
-        if (val == std::weak_ordering::greater)
-            return writer.writeStr("Greater"s);
-
-        return writer.writeStr("Equivalent"s);
+            try$(w.format("Less"s));
+        else if (val == std::weak_ordering::greater)
+            try$(w.format("Greater"s));
+        else
+            try$(w.format("Equivalent"s));
+        return Ok();
     }
 };
 
 template <>
 struct Formatter<std::partial_ordering> {
-    Res<usize> format(Io::TextWriter& writer, std::partial_ordering val) {
+    Res<> format(Io::TextWriter& w, std::partial_ordering val) {
         if (val == std::partial_ordering::equivalent)
-            return writer.writeStr("Equivalent"s);
+            try$(w.format("Equivalent"s));
+        else if (val == std::partial_ordering::less)
+            try$(w.format("Less"s));
+        else if (val == std::partial_ordering::greater)
+            try$(w.format("Greater"s));
+        else
+            try$(w.format("Unordered"s));
 
-        if (val == std::partial_ordering::less)
-            return writer.writeStr("Less"s);
-
-        if (val == std::partial_ordering::greater)
-            return writer.writeStr("Greater"s);
-
-        return writer.writeStr("Unordered"s);
+        return Ok();
     }
 };
 
@@ -539,8 +548,8 @@ struct Formatter<Rc<T>> {
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, Rc<T> const& val) {
-        return formatter.format(writer, val.unwrap());
+    Res<> format(Io::TextWriter& w, Rc<T> const& val) {
+        return formatter.format(w, val.unwrap());
     }
 };
 
@@ -556,11 +565,13 @@ struct Formatter<Weak<T>> {
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, Weak<T> const& val) {
+    Res<> format(Io::TextWriter& w, Weak<T> const& val) {
         auto inner = val.upgrade();
         if (not inner)
-            return writer.writeStr("None"s);
-        return formatter.format(writer, inner.unwrap().unwrap());
+            try$(w.format("None"s));
+        else
+            try$(formatter.format(w, inner.unwrap()));
+        return Ok();
     }
 };
 
@@ -576,8 +587,8 @@ struct Formatter<Box<T>> {
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, Box<T> const& val) {
-        return formatter.format(writer, *val);
+    Res<> format(Io::TextWriter& w, Box<T> const& val) {
+        return formatter.format(w, *val);
     }
 };
 
@@ -593,8 +604,8 @@ struct Formatter<Cow<T>> {
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, Cow<T> const& val) {
-        return formatter.format(writer, *val);
+    Res<usize> format(Io::TextWriter& w, Cow<T> const& val) {
+        return formatter.format(w, *val);
     }
 };
 
@@ -631,14 +642,15 @@ struct Formatter<T> {
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, T const& val) {
-        auto written = try$(writer.writeStr("["s));
+    Res<> format(Io::TextWriter& w, T const& val) {
+        try$(w.format("["s));
         for (usize i = 0; i < val.len(); i++) {
             if (i != 0)
-                written += try$(writer.writeStr(", "s));
-            written += try$(inner.format(writer, val[i]));
+                try$(w.format(", "s));
+            try$(inner.format(w, val[i]));
         }
-        return Ok(written + try$(writer.writeStr("]"s)));
+        try$(w.format("]"s));
+        return Ok();
     }
 };
 
@@ -659,20 +671,19 @@ struct Formatter<Map<K, V>> {
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, Map<K, V> const& val) {
-        usize written = 0;
-        written += try$(writer.writeStr("{"s));
+    Res<> format(Io::TextWriter& w, Map<K, V> const& val) {
+        try$(w.format("{"s));
         bool first = true;
         for (auto const& [key, value] : val.iter()) {
             if (not first)
-                written += try$(writer.writeStr(", "s));
+                try$(w.format(", "s));
             first = false;
-            written += try$(keyFormatter.format(writer, key));
-            written += try$(writer.writeStr(": "s));
-            written += try$(valFormatter.format(writer, value));
+            try$(keyFormatter.format(w, key));
+            try$(w.format(": "s));
+            try$(valFormatter.format(w, value));
         }
-        written += try$(writer.writeStr("}"s));
-        return Ok(written);
+        try$(w.format("}"s));
+        return Ok();
     }
 };
 
@@ -691,14 +702,13 @@ struct Formatter<Range<T, Tag>> {
         }
     }
 
-    Res<usize> format(Io::TextWriter& writer, Range<T, Tag> const& val) {
-        usize written = 0;
-        written += try$(writer.writeStr("["s));
-        written += try$(inner.format(writer, val.start));
-        written += try$(writer.writeStr("-"s));
-        written += try$(inner.format(writer, val.end()));
-        written += try$(writer.writeStr("]"s));
-        return Ok(written);
+    Res<> format(Io::TextWriter& w, Range<T, Tag> const& val) {
+        try$(w.format("["s));
+        try$(inner.format(w, val.start));
+        try$(w.format("-"s));
+        try$(inner.format(w, val.end()));
+        try$(w.format("]"s));
+        return Ok();
     }
 };
 
@@ -713,38 +723,39 @@ struct StringFormatter {
             prefix = true;
     }
 
-    Res<usize> format(Io::TextWriter& writer, _Str<E> text) {
-        if (not prefix)
-            return writer.writeStr(text);
+    Res<> format(Io::TextWriter& w, _Str<E> text) {
+        if (not prefix) {
+            try$(w.format(text));
+            return Ok();
+        }
 
-        usize written = 0;
-        written += try$(writer.writeRune('"'));
+        try$(w.writeRune('"'));
         for (Rune c : iterRunes(text)) {
             if (c == '"')
-                written += try$(writer.writeStr("\\\""s));
+                try$(w.format("\\\""s));
             else if (c == '\\')
-                written += try$(writer.writeStr("\\\\"s));
+                try$(w.format("\\\\"s));
             else if (c == '\a')
-                written += try$(writer.writeStr("\\a"s));
+                try$(w.format("\\a"s));
             else if (c == '\b')
-                written += try$(writer.writeStr("\\b"s));
+                try$(w.format("\\b"s));
             else if (c == '\f')
-                written += try$(writer.writeStr("\\f"s));
+                try$(w.format("\\f"s));
             else if (c == '\n')
-                written += try$(writer.writeStr("\\n"s));
+                try$(w.format("\\n"s));
             else if (c == '\r')
-                written += try$(writer.writeStr("\\r"s));
+                try$(w.format("\\r"s));
             else if (c == '\t')
-                written += try$(writer.writeStr("\\t"s));
+                try$(w.format("\\t"s));
             else if (c == '\v')
-                written += try$(writer.writeStr("\\v"s));
+                try$(w.format("\\v"s));
             else if (not isAsciiPrint(c))
-                written += try$(Io::format(writer, "\\u{x}", c));
+                try$(Io::format(w, "\\u{x}", c));
             else
-                written += try$(writer.writeRune(c));
+                try$(w.writeRune(c));
         }
-        written += try$(writer.writeRune('"'));
-        return Ok(written);
+        try$(w.writeRune('"'));
+        return Ok();
     }
 };
 
@@ -753,8 +764,8 @@ struct Formatter<_Str<E>> : public StringFormatter<E> {};
 
 template <StaticEncoding E>
 struct Formatter<_String<E>> : public StringFormatter<E> {
-    Res<usize> format(Io::TextWriter& writer, _String<E> const& text) {
-        return StringFormatter<E>::format(writer, text.str());
+    Res<> format(Io::TextWriter& w, _String<E> const& text) {
+        return StringFormatter<E>::format(w, text.str());
     }
 };
 
@@ -763,9 +774,9 @@ struct Formatter<StrLit<N>> : public StringFormatter<Utf8> {};
 
 template <>
 struct Formatter<char const*> : public StringFormatter<Utf8> {
-    Res<usize> format(Io::TextWriter& writer, char const* text) {
+    Res<> format(Io::TextWriter& w, char const* text) {
         _Str<Utf8> str = Str::fromNullterminated(text);
-        return StringFormatter::format(writer, str);
+        return StringFormatter::format(w, str);
     }
 };
 
@@ -773,43 +784,43 @@ struct Formatter<char const*> : public StringFormatter<Utf8> {
 
 template <>
 struct Formatter<Duration> {
-    Res<usize> format(Io::TextWriter& writer, Duration const& val) {
-        return Io::format(writer, "{}.{03}s", val.toSecs(), val.toMSecs() % 1000);
+    Res<> format(Io::TextWriter& w, Duration const& val) {
+        return Io::format(w, "{}.{03}s", val.toSecs(), val.toMSecs() % 1000);
     }
 };
 
 template <>
 struct Formatter<Instant> {
-    Res<usize> format(Io::TextWriter& writer, Instant const& val) {
-        return Io::format(writer, "monotonic:{}", val._value);
+    Res<> format(Io::TextWriter& w, Instant const& val) {
+        return Io::format(w, "monotonic:{}", val._value);
     }
 };
 
 template <>
 struct Formatter<SystemTime> {
-    Res<usize> format(Io::TextWriter& writer, SystemTime const& val) {
-        return Io::format(writer, "{}", DateTime::fromInstant(val));
+    Res<> format(Io::TextWriter& w, SystemTime const& val) {
+        return Io::format(w, "{}", DateTime::fromInstant(val));
     }
 };
 
 template <>
 struct Formatter<Time> {
-    Res<usize> format(Io::TextWriter& writer, Time const& val) {
-        return Io::format(writer, "{02}:{02}:{02}", val.hour, val.minute, val.second);
+    Res<> format(Io::TextWriter& w, Time const& val) {
+        return Io::format(w, "{02}:{02}:{02}", val.hour, val.minute, val.second);
     }
 };
 
 template <>
 struct Formatter<Date> {
-    Res<usize> format(Io::TextWriter& writer, Date const& val) {
-        return Io::format(writer, "{04}-{02}-{02}", (isize)val.year, (usize)val.month + 1, (usize)val.day + 1);
+    Res<> format(Io::TextWriter& w, Date const& val) {
+        return Io::format(w, "{04}-{02}-{02}", (isize)val.year, (usize)val.month + 1, (usize)val.day + 1);
     }
 };
 
 template <>
 struct Formatter<DateTime> {
-    Res<usize> format(Io::TextWriter& writer, DateTime const& val) {
-        return Io::format(writer, "{} {}", val.date, val.time);
+    Res<> format(Io::TextWriter& w, DateTime const& val) {
+        return Io::format(w, "{} {}", val.date, val.time);
     }
 };
 
@@ -817,41 +828,37 @@ struct Formatter<DateTime> {
 
 template <typename Car, typename Cdr>
 struct Formatter<Pair<Car, Cdr>> {
-
-    Res<usize> format(Io::TextWriter& writer, Pair<Car, Cdr> const& val) {
-        usize written = 0;
-        written += try$(writer.writeRune('{'));
+    Res<> format(Io::TextWriter& w, Pair<Car, Cdr> const& val) {
+        try$(w.writeRune('{'));
 
         Formatter<Car> carFormatter;
-        written += try$(carFormatter.format(writer, val.v0));
-        written += try$(writer.writeStr(", "s));
+        try$(carFormatter.format(w, val.v0));
+        try$(w.format(", "s));
 
         Formatter<Cdr> cdrFormatter;
-        written += try$(cdrFormatter.format(writer, val.v1));
-        written += try$(writer.writeRune('}'));
-        return Ok(written);
+        try$(cdrFormatter.format(w, val.v1));
+        try$(w.writeRune('}'));
+        return Ok();
     }
 };
 
 template <typename... Ts>
 struct Formatter<Tuple<Ts...>> {
-
-    Res<usize> format(Io::TextWriter& writer, Tuple<Ts...> const& val) {
-        usize written = 0;
+    Res<> format(Io::TextWriter& w, Tuple<Ts...> const& val) {
         bool first = true;
-        written += try$(writer.writeRune('{'));
-        try$(val.visit([&]<typename T>(T const& f) -> Res<usize> {
+        try$(w.writeRune('{'));
+        try$(val.visit([&]<typename T>(T const& f) -> Res<> {
             if (not first)
-                written += try$(writer.writeStr(", "s));
+                try$(w.format(", "s));
 
             Formatter<T> formatter;
-            written += try$(formatter.format(writer, f));
+            try$(formatter.format(w, f));
 
             first = false;
-            return Ok(0uz);
+            return Ok();
         }));
-        written += try$(writer.writeRune('}'));
-        return Ok(written);
+        try$(w.writeRune('}'));
+        return Ok();
     }
 };
 
@@ -859,21 +866,20 @@ struct Formatter<Tuple<Ts...>> {
 
 template <>
 struct Formatter<Backtrace> {
-    Res<usize> format(Io::TextWriter& writer, Backtrace const& val) {
-        if (val.status() == Backtrace::DISABLED)
-            return writer.writeStr("(backtrace disabled)"s);
-
-        if (val.status() == Backtrace::UNSUPPORTED)
-            return writer.writeStr("(backtrace unsupported)"s);
-
-        usize index = 1;
-        usize written = 0;
-        for (auto const& frame : val.frames()) {
-            written += try$(Io::format(writer, "#{}: {} at {}:{}\n", index, frame.desc, frame.file, frame.line));
-            index++;
+    Res<> format(Io::TextWriter& w, Backtrace const& val) {
+        if (val.status() == Backtrace::DISABLED) {
+            try$(w.format("(backtrace disabled)"s));
+        } else if (val.status() == Backtrace::UNSUPPORTED) {
+            try$(w.format("(backtrace unsupported)"s));
+        } else {
+            usize index = 1;
+            for (auto const& frame : val.frames()) {
+                try$(Io::format(w, "#{}: {} at {}:{}\n", index, frame.desc, frame.file, frame.line));
+                index++;
+            }
         }
 
-        return Ok(written);
+        return Ok();
     }
 };
 

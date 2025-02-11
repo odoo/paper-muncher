@@ -8,9 +8,8 @@ namespace Karm::Io {
 
 // MARK: Format ----------------------------------------------------------------
 
-Res<usize> _format(Io::TextWriter& writer, Str format, _Args& args) {
+Res<> _format(Io::TextWriter& writer, Str format, _Args& args) {
     Io::SScan scan{format};
-    usize written = 0;
     usize index = 0;
 
     while (not scan.ended()) {
@@ -24,17 +23,17 @@ Res<usize> _format(Io::TextWriter& writer, Str format, _Args& args) {
             }
             scan.next();
             Io::SScan inner{scan.end()};
-            written += try$(args.format(inner, writer, index));
+           try$(args.format(inner, writer, index));
             index++;
         } else if (c == '\n') {
             // normalize newlines
-            written += try$(writer.writeStr(Str{Sys::LINE_ENDING}));
+          try$(writer.writeStr(Str{Sys::LINE_ENDING}));
         } else {
-            written += try$(writer.writeRune(c));
+           try$(writer.writeRune(c));
         }
     }
 
-    return Ok(written);
+    return Ok();
 };
 
 // MARK: Change case -----------------------------------------------------------

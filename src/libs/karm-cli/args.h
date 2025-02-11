@@ -43,11 +43,10 @@ struct Token {
 
     bool operator==(Token const& other) const = default;
 
-    void repr(Io::Emit& e) const {
+    Res<> format(Io::TextWriter& w) const {
         if (kind == Kind::FLAG)
-            e("(token {} {#c})", kind, flag);
-        else
-            e("(token {} {#})", kind, value);
+            return Io::format(w, "(token {} {#c})", kind, flag);
+        return Io::format(w, "(token {} {#})", kind, value);
     }
 };
 

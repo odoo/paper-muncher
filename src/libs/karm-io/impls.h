@@ -223,28 +223,6 @@ struct BitReader {
     }
 };
 
-template <StaticEncoding E>
-struct _StringWriter :
-    public TextWriter,
-    public _StringBuilder<E> {
 
-    _StringWriter(usize cap = 16) : _StringBuilder<E>(cap) {}
-
-    Res<usize> write(Bytes) override {
-        panic("can't write raw bytes to a string");
-    }
-
-    Res<usize> writeRune(Rune rune) override {
-        _StringBuilder<E>::append(rune);
-        return Ok(E::runeLen(rune));
-    }
-
-    Res<usize> writeUnit(Slice<typename E::Unit> unit) {
-        _StringBuilder<E>::append(unit);
-        return Ok(unit.len());
-    }
-};
-
-using StringWriter = _StringWriter<Utf8>;
 
 } // namespace Karm::Io

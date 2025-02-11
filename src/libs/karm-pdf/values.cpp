@@ -66,21 +66,26 @@ void Value::write(Io::Emit& e) const {
     });
 }
 
-void File::write(Io::Emit& e) const {
+Res<> File::write(Io::Writer& writer) const {
+    Io::Count counter{writer};
+    Io::TextEncoder<Utf8> encoder{counter};
+    Io::Emit e{encoder};
+
     e("%{}\n", header);
     e("%Powered By Karm PDF 🐢🏳️‍⚧️🦔\n", header);
 
     XRef xref;
 
     for (auto const& [k, v] : body.iter()) {
-        xref.add(e.total(), k.gen);
+        try$(e.flush());
+        xref.add(try$(Io::tell(counter)), k.gen);
         e("{} {} obj\n", k.num, k.gen);
         v.write(e);
         e("\nendobj\n");
     }
 
-    (void)e.flush();
-    auto startxref = e.total();
+    try$(e.flush());
+    auto startxref = try$(Io::tell(counter));
     e("xref\n");
     xref.write(e);
 
@@ -90,6 +95,8 @@ void File::write(Io::Emit& e) const {
     e("startxref\n");
     e("{}\n", startxref);
     e("%%EOF");
+
+    return Ok();
 }
 
 void XRef::write(Io::Emit& e) const {

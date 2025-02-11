@@ -23,7 +23,7 @@ struct In : public Io::Reader {
     }
 };
 
-struct Out : public Io::TextWriterBase<> {
+struct Out : public Io::TextEncoderBase<> {
     Rc<Fd> _fd;
 
     Out(Rc<Fd> fd)
@@ -42,7 +42,7 @@ struct Out : public Io::TextWriterBase<> {
     }
 };
 
-struct Err : public Io::TextWriterBase<> {
+struct Err : public Io::TextEncoderBase<> {
     Rc<Fd> _fd;
 
     Err(Rc<Fd> fd)
@@ -76,15 +76,22 @@ inline void err(Str str = "", auto&&... args) {
 }
 
 inline void println(Str str = "", auto&&... args) {
-    (void)Io::format(out(), str, std::forward<decltype(args)>(args)...);
-    (void)out().writeStr(Str{Sys::LINE_ENDING});
-    (void)out().flush();
+    // NOTE: Using a lambda here for proper error handling even if we ignore the result.
+    (void)([&] -> Res<> {
+        try$(Io::format(out(), str, std::forward<decltype(args)>(args)...));
+        try$(out().format(Str{Sys::LINE_ENDING}));
+        try$(out().flush());
+        return Ok();
+    }());
 }
 
 inline void errln(Str str = "", auto&&... args) {
-    (void)Io::format(err(), str, std::forward<decltype(args)>(args)...);
-    (void)err().writeStr(Str{Sys::LINE_ENDING});
-    (void)err().flush();
+    // NOTE: Using a lambda here for proper error handling even if we ignore the result.
+    (void)([&] -> Res<> {
+        try$(Io::format(err(), str, std::forward<decltype(args)>(args)...));
+        try$(err().format(Str{Sys::LINE_ENDING}));
+        try$(err().flush());
+    }());
 }
 
 } // namespace Karm::Sys

@@ -73,7 +73,7 @@ struct File {
         return ref;
     }
 
-    void write(Io::Emit& e) const;
+    Res<> write(Io::Writer& e) const;
 };
 
 struct XRef {
