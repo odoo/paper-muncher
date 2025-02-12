@@ -9,6 +9,16 @@
 
 namespace Vaev::Driver {
 
+Rc<Fetcher> makeFetcher(bool isHTTPipe) {
+    auto base = makeRc<FileFetcher>();
+    if (isHTTPipe) {
+        auto fetcher = makeRc<HttpPipe>();
+        fetcher->fallbackFetcher.pushBack(base);
+        return fetcher;
+    } else
+        return base;
+}
+
 Res<Gc::Ref<Dom::Document>> loadDocument(Fetcher& fetcher, Gc::Heap& heap, Mime::Url const& url, Mime::Mime const& mime) {
     auto dom = heap.alloc<Dom::Document>(url);
     auto buf = try$(fetcher.fetch(url));

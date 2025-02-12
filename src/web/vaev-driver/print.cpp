@@ -267,7 +267,6 @@ Vec<Print::Page> print(Fetcher& fetcher, Gc::Ref<Dom::Document> dom, Print::Sett
         fetchStylesheet(fetcher, "bundle://vaev-driver/print.css"_url, Style::Origin::USER_AGENT)
             .take("print stylesheet not available")
     );
-
     fetchStylesheets(fetcher, dom, stylebook);
 
     Style::Computer computer{

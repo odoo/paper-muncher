@@ -260,11 +260,12 @@ struct Request : public Header {
         return Ok(req);
     }
 
-    Res<> unparse(Io::TextWriter& w) {
+    Res<usize> unparse(Io::TextWriter& w) {
         // Start line
+        usize written = 0;
 
         path.rooted = true;
-        try$(Io::format(w, "{} {} ", toStr(method), path));
+        written += try$(Io::format(w, "{} {} ", toStr(method), path));
         path.rooted = false;
 
         try$(version.unparse(w));
@@ -273,7 +274,7 @@ struct Request : public Header {
         // Headers and empty line
         try$(_unparse(w));
 
-        return Ok();
+        return Ok(written);
     }
 };
 
