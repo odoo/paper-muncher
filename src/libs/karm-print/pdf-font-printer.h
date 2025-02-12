@@ -138,8 +138,8 @@ struct TtfGlyphInfoAdapter {
         return allWidths;
     }
 
-    Bytes CIDToGIDMap() {
-        Vec<u8> mapping;
+    Buf<Byte> CIDToGIDMap() {
+        Buf<Byte> buf;
 
         u16 const BYTE_MASK = 255;
 
@@ -153,17 +153,17 @@ struct TtfGlyphInfoAdapter {
             }
 
             for (usize j = 0; j < consecutiveUnmappedCIDs; ++j) {
-                mapping.pushBack(0);
-                mapping.pushBack(0);
+                buf.insert(buf.len(), 0);
+                buf.insert(buf.len(), 0);
             }
             consecutiveUnmappedCIDs = 0;
 
             auto gid = glyph.unwrap();
-            mapping.pushBack((gid >> 8) & BYTE_MASK);
-            mapping.pushBack(gid & BYTE_MASK);
+            buf.insert(buf.len(), (gid >> 8) & BYTE_MASK);
+            buf.insert(buf.len(), gid & BYTE_MASK);
         }
 
-        return mapping._buf;
+        return buf;
     }
 };
 
