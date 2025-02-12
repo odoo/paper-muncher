@@ -64,7 +64,7 @@ Child text(Rc<Karm::Text::Prose> prose);
 
 template <typename... Args>
 inline Child text(Text::ProseStyle style, Str format, Args&&... args) {
-    return text(style, Io::format(format, std::forward<Args>(args)...).unwrap());
+    return text(style, Io::format(format, std::forward<Args>(args)...));
 }
 
 template <typename... Args>

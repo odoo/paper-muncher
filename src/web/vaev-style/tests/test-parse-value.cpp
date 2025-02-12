@@ -78,7 +78,7 @@ test$("vaev-css-build-margin") {
         Computed c;
         res.unwrap().apply(c, c);
 
-        expectEq$(Io::format("{}", *c.margin).unwrap(), Io::format("{}", expected).unwrap());
+        expectEq$(Io::format("{}", *c.margin), Io::format("{}", expected));
 
         return Ok();
     };

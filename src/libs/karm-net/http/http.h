@@ -2,6 +2,7 @@
 
 #include <karm-base/distinct.h>
 #include <karm-base/map.h>
+#include <karm-io/aton.h>
 #include <karm-io/fmt.h>
 #include <karm-io/funcs.h>
 #include <karm-mime/url.h>
@@ -340,21 +341,21 @@ struct Response : public Header {
 
 template <>
 struct Karm::Io::Formatter<Karm::Net::Http::Code> {
-    Res<usize> format(Io::TextWriter& writer, Karm::Net::Http::Code code) {
+    Res<> format(Io::TextWriter& writer, Karm::Net::Http::Code code) {
         return writer.writeStr(Karm::Net::Http::toStr(code));
     }
 };
 
 template <>
 struct Karm::Io::Formatter<Karm::Net::Http::Method> {
-    Res<usize> format(Io::TextWriter& writer, Karm::Net::Http::Method method) {
+    Res<> format(Io::TextWriter& writer, Karm::Net::Http::Method method) {
         return writer.writeStr(Karm::Net::Http::toStr(method));
     }
 };
 
 template <>
 struct Karm::Io::Formatter<Karm::Net::Http::Version> {
-    Res<usize> format(Io::TextWriter& writer, Karm::Net::Http::Version version) {
+    Res<> format(Io::TextWriter& writer, Karm::Net::Http::Version version) {
         return Io::format(writer, "HTTP/{}.{}", version.major, version.minor);
     }
 };

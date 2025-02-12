@@ -164,7 +164,7 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
                     n,
                     Kr::alert(
                         "Error"s,
-                        Io::format("Failed to open in default browser\n\n{}", res).unwrap()
+                        Io::format("Failed to open in default browser\n\n{}", res)
                     )
                 );
         },
@@ -283,7 +283,7 @@ Ui::Child alert(State const& s, String title, String body) {
 
 Ui::Child webview(State const& s) {
     if (not s.dom)
-        return alert(s, "The page could not be loaded"s, Io::toStr(s.dom).unwrap());
+        return alert(s, "The page could not be loaded"s, Io::toStr(s.dom));
 
     return Vaev::View::view(s.dom.unwrap(), {.wireframe = s.wireframe}) |
            Ui::vscroll() |

@@ -131,7 +131,7 @@ struct UringSched : public Sys::Sched {
         return Async::makeTask(job->future());
     }
 
-    Async::Task<usize> flushAsync(Rc<Fd> fd) override {
+    Async::Task<> flushAsync(Rc<Fd> fd) override {
         struct Job : public _Job {
             Rc<Fd> _fd;
             Async::Promise<usize> _promise;

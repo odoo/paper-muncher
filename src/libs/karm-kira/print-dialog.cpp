@@ -299,7 +299,7 @@ Ui::Child _printSettings(State const& s) {
                         "Page per sheet"s
                     ),
                     selectRow(
-                        selectValue(Io::format("{}", Io::cased(s.settings.margins, Io::Case::CAPITAL)).unwrap()),
+                        selectValue(Io::format("{}", Io::cased(s.settings.margins, Io::Case::CAPITAL))),
                         [] -> Ui::Children {
                             return {
                                 selectItem(Model::bind<ChangeMargin>(Print::Margins::NONE), "None"s),

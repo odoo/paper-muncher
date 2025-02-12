@@ -7,6 +7,7 @@
 #include <karm-base/tuple.h>
 
 #include "impls.h"
+#include "text.h"
 
 namespace Karm::Io {
 

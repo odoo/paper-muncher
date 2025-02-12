@@ -176,10 +176,9 @@ struct BufferWriter : public Writer, public Flusher {
         return _buf;
     }
 
-    Res<usize> flush() override {
-        auto l = _buf.len();
+    Res<> flush() override {
         _buf.trunc(0);
-        return Ok(l);
+        return Ok();
     }
 
     Buf<Byte> take() {
@@ -222,29 +221,5 @@ struct BitReader {
         return Ok(bits);
     }
 };
-
-template <StaticEncoding E>
-struct _StringWriter :
-    public TextWriter,
-    public _StringBuilder<E> {
-
-    _StringWriter(usize cap = 16) : _StringBuilder<E>(cap) {}
-
-    Res<usize> write(Bytes) override {
-        panic("can't write raw bytes to a string");
-    }
-
-    Res<usize> writeRune(Rune rune) override {
-        _StringBuilder<E>::append(rune);
-        return Ok(E::runeLen(rune));
-    }
-
-    Res<usize> writeUnit(Slice<typename E::Unit> unit) {
-        _StringBuilder<E>::append(unit);
-        return Ok(unit.len());
-    }
-};
-
-using StringWriter = _StringWriter<Utf8>;
 
 } // namespace Karm::Io

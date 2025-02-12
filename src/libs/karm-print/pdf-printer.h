@@ -62,7 +62,7 @@ struct PdfPrinter : public FilePrinter {
             // FIXME: adding all fonts for now on each page; later, we will need to filter by page
             Pdf::Dict pageFontsDict;
             for (auto& [managerId, objRef] : fontManagerId2FontObjRef._els) {
-                auto formattedName = Io::format("F{}", managerId).unwrap();
+                auto formattedName = Io::format("F{}", managerId);
                 pageFontsDict.put(formattedName.str(), objRef);
             }
 
@@ -139,16 +139,8 @@ struct PdfPrinter : public FilePrinter {
         return file;
     }
 
-    void write(Io::Emit& e) {
-        pdf().write(e);
-    }
-
     Res<> write(Io::Writer& w) override {
-        Io::TextEncoder<> encoder{w};
-        Io::Emit e{encoder};
-        write(e);
-        try$(e.flush());
-        return Ok();
+        return pdf().write(w);
     }
 };
 

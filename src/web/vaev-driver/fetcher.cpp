@@ -63,7 +63,7 @@ Res<Gc::Ref<Dom::Document>> indexOf(Gc::Heap& heap, Mime::Url const& url) {
     auto h1 = heap.alloc<Dom::Element>(Html::H1);
     body->appendChild(h1);
 
-    auto text = heap.alloc<Dom::Text>(Io::format("Index of {}", url.path).unwrapOr(""s));
+    auto text = heap.alloc<Dom::Text>(Io::format("Index of {}", url.path));
     h1->appendChild(text);
 
     auto ul = heap.alloc<Dom::Element>(Html::UL);

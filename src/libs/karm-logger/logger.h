@@ -35,7 +35,7 @@ static constexpr Level WARNING = {2, "warn ", Cli::YELLOW};
 static constexpr Level ERROR = {3, "error", Cli::RED};
 static constexpr Level FATAL = {4, "fatal", Cli::style(Cli::RED).bold()};
 
-inline void _catch(Res<usize> res) {
+inline void _catch(Res<> res) {
     if (res)
         return;
     debug("failed to write to logger");

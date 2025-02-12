@@ -280,9 +280,9 @@ Vec<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settin
 
     Style::Computed initialStyle = Style::Computed::initial();
     initialStyle.color = Gfx::BLACK;
-    initialStyle.setCustomProp("-vaev-url", {Css::Token::string(Io::format("\"{}\"", dom->url()).unwrap())});
-    initialStyle.setCustomProp("-vaev-title", {Css::Token::string(Io::format("\"{}\"", dom->title()).unwrap())});
-    initialStyle.setCustomProp("-vaev-datetime", {Css::Token::string(Io::format("\"{}\"", Sys::now()).unwrap())});
+    initialStyle.setCustomProp("-vaev-url", {Css::Token::string(Io::format("\"{}\"", dom->url()))});
+    initialStyle.setCustomProp("-vaev-title", {Css::Token::string(Io::format("\"{}\"", dom->title()))});
+    initialStyle.setCustomProp("-vaev-datetime", {Css::Token::string(Io::format("\"{}\"", Sys::now()))});
 
     // MARK: Page Content ------------------------------------------------------
 
