@@ -201,6 +201,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto paperArg = Cli::option<Str>(NONE, "paper"s, "Paper size for printing (default: A4)"s, "A4"s);
     auto orientationArg = Cli::option<Str>(NONE, "orientation"s, "Page orientation (default: portrait)"s, "portrait"s);
     auto wireframeArg = Cli::flag(NONE, "wireframe"s, "Render wireframe of the layout"s);
+    auto httpipeArg = Cli::flag(NONE, "httpipe"s, "Activate HTTPipe mode"s);
 
     cmd.subCommand(
         "print"s,
@@ -216,6 +217,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             heightArg,
             paperArg,
             orientationArg,
+            httpipeArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::PrintOption options;
@@ -246,9 +248,9 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (outputMimeArg.unwrap() != ""s)
                 options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));
 
-            Vaev::Driver::FileFetcher fetcher;
+            auto fetcher = Vaev::Driver::makeFetcher(httpipeArg);
 
-            co_return PaperMuncher::print(inputUrl, outputUrl, fetcher, options);
+            co_return PaperMuncher::print(inputUrl, outputUrl, *fetcher, options);
         }
     );
 
@@ -265,6 +267,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             heightArg,
             outputMimeArg,
             wireframeArg,
+            httpipeArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::RenderOption options{};
@@ -293,9 +296,9 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (outputMimeArg.unwrap() != ""s)
                 options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));
 
-            Vaev::Driver::FileFetcher fetcher;
+            auto fetcher = Vaev::Driver::makeFetcher(httpipeArg);
 
-            co_return PaperMuncher::render(inputUrl, outputUrl, fetcher, options);
+            co_return PaperMuncher::render(inputUrl, outputUrl, *fetcher, options);
         }
     );
 
