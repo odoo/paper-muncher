@@ -27,7 +27,8 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     ) {
         return constructBlockFormatingContext(box);
     } else if (display == Display::FLEX) {
-        return constructFlexFormatingContext(box);
+        return constructBlockFormatingContext(box);
+        // return constructFlexFormatingContext(box);
     } else if (display == Display::GRID) {
         return constructGridFormatingContext(box);
     } else if (display == Display::TABLE_BOX) {
@@ -222,7 +223,7 @@ Output layout(Tree& tree, Box& box, Input input) {
     input.pendingVerticalSizes += borders.bottom + padding.bottom;
 
     bool isMonolithicDisplay =
-        box.style->display == Display::Inside::FLEX or
+        // box.style->display == Display::Inside::FLEX or
         box.style->display == Display::Inside::GRID;
 
     usize startAt = tree.fc.allowBreak() ? input.breakpointTraverser.getStart().unwrapOr(0) : 0;
