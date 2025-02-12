@@ -1,10 +1,6 @@
 #pragma once
 
-#include <karm-base/distinct.h>
-#include <karm-base/map.h>
 #include <karm-io/aton.h>
-#include <karm-io/fmt.h>
-#include <karm-io/funcs.h>
 #include <karm-mime/url.h>
 
 namespace Karm::Net::Http {
@@ -80,6 +76,8 @@ enum struct Code : u16 {
     FOREACH_CODE(ITER)
 #undef ITER
 };
+
+using enum Code;
 
 enum struct CodeClass : u8 {
     UNKNOWN = 0,
@@ -162,179 +160,42 @@ struct Version {
     u8 major;
     u8 minor;
 
-    static Res<Version> parse(Io::SScan& s) {
-        if (not s.skip("HTTP/"))
-            return Error::invalidData("Expected \"HTTP/\"");
-        Version v;
-        v.major = try$(atou(s));
-        s.skip('.');
-        v.minor = try$(atou(s));
-        return Ok(v);
-    }
+    static Res<Version> parse(Io::SScan& s);
 
-    Res<> unparse(Io::TextWriter& w) {
-        try$(Io::format(w, "HTTP/{}.{}", major, minor));
-        return Ok();
-    }
+    Res<> unparse(Io::TextWriter& w);
 };
 
-struct Header {
-    Map<String, String> headers;
+struct Header : public Map<String, String> {
+    using Map<String, String>::Map;
 
-    void add(Str const& key, Str value) {
-        headers.put(key, std::move(value));
-    }
+    void add(Str const& key, Str value);
 
-    Res<> _parse(Io::SScan& s) {
-        while (not s.ended()) {
-            Str key, value;
+    Res<> parse(Io::SScan& s);
 
-            auto RE_ENDLINE =
-                Re::zeroOrMore(' '_re) & "\r\n"_re;
-
-            auto RE_SEPARATOR =
-                Re::separator(':'_re);
-
-            auto RE_KEY_VALUE =
-                Re::token(
-                    key,
-                    Re::until(RE_SEPARATOR)
-                ) &
-                RE_SEPARATOR &
-                Re::token(
-                    value,
-                    Re::until(RE_ENDLINE)
-                ) &
-                RE_ENDLINE;
-
-            if (s.skip("\r\n"))
-                break;
-
-            if (not s.skip(RE_KEY_VALUE))
-                return Error::invalidData("Expected header");
-
-            headers.put(key, value);
-        }
-
-        return Ok();
-    }
-
-    Res<> _unparse(Io::TextWriter& w) {
-        for (auto& [key, value] : headers.iter()) {
-            try$(Io::format(w, "{}: {}\r\n", key, value));
-        }
-
-        try$(w.writeStr("\r\n"s));
-
-        return Ok();
-    }
+    Res<> unparse(Io::TextWriter& w);
 };
 
-struct Request : public Header {
+struct Request {
     Method method;
     Mime::Path path;
     Version version;
+    Header header;
 
-    static Res<Request> parse(Io::SScan& s) {
-        Request req;
+    static Res<Request> parse(Io::SScan& s);
 
-        req.method = try$(parseMethod(s));
-
-        if (not s.skip(' '))
-            return Error::invalidData("Expected space");
-
-        req.path = Mime::Path::parse(s, true, true);
-        req.path.rooted = true;
-        req.path.normalize();
-        req.path.rooted = false;
-
-        if (not s.skip(' '))
-            return Error::invalidData("Expected space");
-
-        req.version = try$(Version::parse(s));
-
-        if (not s.skip("\r\n"))
-            return Error::invalidData("Expected \"\\r\\n\"");
-
-        try$(req._parse(s));
-
-        return Ok(req);
-    }
-
-    Res<> unparse(Io::TextWriter& w) {
-        // Start line
-
-        path.rooted = true;
-        try$(Io::format(w, "{} {} ", toStr(method), path));
-        path.rooted = false;
-
-        try$(version.unparse(w));
-        try$(w.writeStr("\r\n"s));
-
-        // Headers and empty line
-        try$(_unparse(w));
-
-        return Ok();
-    }
+    Res<> unparse(Io::TextWriter& w);
 };
 
-struct Response : public Header {
+struct Response {
     Version version;
     Code code = Code::OK;
+    Header header;
 
-    static Res<Response> parse(Io::SScan& s) {
-        Response res;
+    static Res<Response> parse(Io::SScan& s);
 
-        res.version = try$(Version::parse(s));
+    static Res<Response> read(Io::Reader& r);
 
-        if (not s.skip(' '))
-            return Error::invalidData("Expected space");
-
-        res.code = try$(parseCode(s));
-
-        if (not s.skip(' '))
-            return Error::invalidData("Expected space");
-
-        s.skip(Re::untilAndConsume("\r\n"_re));
-
-        try$(res._parse(s));
-
-        return Ok(res);
-    }
-
-    static Res<Response> read(Io::Reader& r) {
-        Io::BufferWriter bw;
-        while (true) {
-            auto [read, reachedDelim] = try$(Io::readLine(
-                r, bw, bytes("\r\n"s)
-            ));
-
-            if (not reachedDelim)
-                return Error::invalidInput("input stream ended with incomplete http header");
-
-            if (read == 0)
-                break;
-        }
-
-        Io::SScan scan{bw.bytes().cast<char>()};
-        return parse(scan);
-    }
-
-    Res<Opt<Buf<Byte>>> readBody(Io::Reader& r) {
-        auto contentLengthValue = headers.tryGet("Content-Length"s);
-        if (not contentLengthValue)
-            return Ok(NONE);
-
-        auto contentLength = try$(Io::atou(contentLengthValue.unwrap().str()));
-
-        Io::BufferWriter bodyBytes;
-        auto read = try$(Io::copy(r, bodyBytes, contentLength));
-
-        if (read != contentLength)
-            return Error::invalidInput("read body size is different from Content-Length header value");
-
-        return Ok(bodyBytes.take());
-    }
+    Res<Opt<Buf<Byte>>> readBody(Io::Reader& r);
 };
 
 } // namespace Karm::Net::Http

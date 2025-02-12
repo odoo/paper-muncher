@@ -9,6 +9,14 @@
 
 namespace Vaev::Driver {
 
+Rc<Fetcher> makeFetcher(bool isHTTPipe) {
+    auto base = makeRc<FileFetcher>();
+    if (isHTTPipe) {
+        return makeRc<HttpPipe>(base);
+    } else
+        return base;
+}
+
 Res<Gc::Ref<Dom::Document>> loadDocument(Fetcher& fetcher, Gc::Heap& heap, Mime::Url const& url, Mime::Mime const& mime) {
     auto dom = heap.alloc<Dom::Document>(url);
     auto buf = try$(fetcher.fetch(url));
@@ -134,7 +142,7 @@ void fetchStylesheets(Fetcher& fetcher, Gc::Ref<Dom::Node> node, Style::StyleBoo
                 return;
             }
 
-            auto url = Mime::parseUrlOrPath(*href);
+            auto url = Mime::parseUrlOrPath(*href, node->baseURI());
             auto sheet = fetchStylesheet(fetcher, url, Style::Origin::AUTHOR);
             if (not sheet) {
                 logWarn("failed to fetch stylesheet from {}: {}", url, sheet);

@@ -175,8 +175,8 @@ Res<> render(
 } // namespace PaperMuncher
 
 Async::Task<> entryPointAsync(Sys::Context& ctx) {
-    auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, "-"s);
-    auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
+    auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, "fd:stdin"s);
+    auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "fd:stdout"s);
     auto outputMimeArg = Cli::option<Str>(NONE, "output-mime"s, "Overide the output MIME type"s, ""s);
 
     Cli::Command cmd{
@@ -192,6 +192,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto paperArg = Cli::option<Str>(NONE, "paper"s, "Paper size for printing (default: A4)"s, "A4"s);
     auto orientationArg = Cli::option<Str>(NONE, "orientation"s, "Page orientation (default: portrait)"s, "portrait"s);
     auto wireframeArg = Cli::flag(NONE, "wireframe"s, "Render wireframe of the layout"s);
+    auto httpipeArg = Cli::flag(NONE, "httpipe"s, "Activate HTTPipe mode"s);
 
     cmd.subCommand(
         "print"s,
@@ -207,6 +208,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             heightArg,
             paperArg,
             orientationArg,
+            httpipeArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::PrintOption options;
@@ -224,10 +226,9 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             options.orientation = co_try$(Vaev::Style::parseValue<Print::Orientation>(orientationArg.unwrap()));
 
-            Mime::Url inputUrl = "about:stdin"_url;
-            Mime::Url outputUrl = "about:stdout"_url;
+            Mime::Url inputUrl = "fd:stdin"_url;
+            Mime::Url outputUrl = "fd:stdout"_url;
 
-            Opt<Sys::FileReader> inputFile;
             if (inputArg.unwrap() != "-"s)
                 inputUrl = Mime::parseUrlOrPath(inputArg);
 
@@ -237,9 +238,9 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (outputMimeArg.unwrap() != ""s)
                 options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));
 
-            Vaev::Driver::FileFetcher fetcher;
+            auto fetcher = Vaev::Driver::makeFetcher(httpipeArg);
 
-            co_return PaperMuncher::print(inputUrl, outputUrl, fetcher, options);
+            co_return PaperMuncher::print(inputUrl, outputUrl, *fetcher, options);
         }
     );
 
@@ -256,6 +257,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             heightArg,
             outputMimeArg,
             wireframeArg,
+            httpipeArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::RenderOption options{};
@@ -271,10 +273,9 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             options.wireframe = wireframeArg.unwrap();
 
-            Mime::Url inputUrl = "about:stdin"_url;
-            Mime::Url outputUrl = "about:stdout"_url;
+            Mime::Url inputUrl = "fd:stdin"_url;
+            Mime::Url outputUrl = "fd:stdout"_url;
 
-            Opt<Sys::FileReader> inputFile;
             if (inputArg.unwrap() != "-"s)
                 inputUrl = Mime::parseUrlOrPath(inputArg);
 
@@ -284,9 +285,9 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (outputMimeArg.unwrap() != ""s)
                 options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));
 
-            Vaev::Driver::FileFetcher fetcher;
+            auto fetcher = Vaev::Driver::makeFetcher(httpipeArg);
 
-            co_return PaperMuncher::render(inputUrl, outputUrl, fetcher, options);
+            co_return PaperMuncher::render(inputUrl, outputUrl, *fetcher, options);
         }
     );
 
