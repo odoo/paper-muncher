@@ -1,2 +1,2 @@
-git+https://github.com/cute-engineering/cutekit.git@0.8.1
+git+https://github.com/cute-engineering/cutekit.git@0.8.2
 Markdown~=3.7
