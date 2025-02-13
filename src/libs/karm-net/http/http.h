@@ -280,7 +280,7 @@ struct Request : public Header {
 
 struct Response : public Header {
     Version version;
-    Code code;
+    Code code = Code::OK;
 
     static Res<Response> parse(Io::SScan& s) {
         Response res;
@@ -330,8 +330,8 @@ struct Response : public Header {
         Io::BufferWriter bodyBytes;
         auto read = try$(Io::copy(r, bodyBytes, contentLength));
 
-        if (read != contentLength)
-            return Error::invalidInput("read body size is different from Content-Length header value");
+        if (read < contentLength)
+            return Error::invalidInput("read body length is smaller than Content-Length header value");
 
         return Ok(bodyBytes.take());
     }
