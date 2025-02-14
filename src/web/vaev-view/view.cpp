@@ -17,8 +17,8 @@ struct View : public Ui::View<View> {
     Style::Media _constructMedia(Math::Vec2i viewport) {
         return {
             .type = MediaType::SCREEN,
-            .width = Px{viewport.width},
-            .height = Px{viewport.height},
+            .width = Au{viewport.width},
+            .height = Au{viewport.height},
             .aspectRatio = viewport.width / (f64)viewport.height,
             .orientation = Print::Orientation::LANDSCAPE,
 
@@ -47,8 +47,8 @@ struct View : public Ui::View<View> {
             .prefersReducedData = ReducedData::NO_PREFERENCE,
 
             // NOTE: Deprecated Media Features
-            .deviceWidth = Px{viewport.width},
-            .deviceHeight = Px{viewport.height},
+            .deviceWidth = Au{viewport.width},
+            .deviceHeight = Au{viewport.height},
             .deviceAspectRatio = viewport.width / (f64)viewport.height,
         };
     }
@@ -63,7 +63,7 @@ struct View : public Ui::View<View> {
         auto viewport = bound().size();
         if (not _renderResult) {
             auto media = _constructMedia(viewport);
-            _renderResult = Driver::render(*_dom, media, {.small = viewport.cast<Px>()});
+            _renderResult = Driver::render(*_dom, media, {.small = viewport.cast<Au>()});
         }
 
         g.push();
@@ -89,7 +89,7 @@ struct View : public Ui::View<View> {
     Math::Vec2i size(Math::Vec2i size, Ui::Hint) override {
         // FIXME: This is wasteful, we should cache the result
         auto media = _constructMedia(size);
-        auto [_, layout, _, frag] = Driver::render(*_dom, media, {.small = size.cast<Px>()});
+        auto [_, layout, _, frag] = Driver::render(*_dom, media, {.small = size.cast<Au>()});
 
         return {
             frag->metrics.borderBox().width.cast<isize>(),

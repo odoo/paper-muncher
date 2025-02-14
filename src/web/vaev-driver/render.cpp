@@ -44,7 +44,7 @@ RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media, Layou
         tree,
         {
             .knownSize = {viewport.small.width, NONE},
-            .availableSpace = {viewport.small.width, 0_px},
+            .availableSpace = {viewport.small.width, 0_au},
             .containingBlock = {viewport.small.width, viewport.small.height},
         }
     );

@@ -86,7 +86,7 @@ Res<> print(
     return printer->write(output);
 }
 
-Vaev::Style::Media constructMediaForRender(Vaev::Resolution scale, Vaev::Vec2Px size) {
+Vaev::Style::Media constructMediaForRender(Vaev::Resolution scale, Vec2Au size) {
     return {
         .type = Vaev::MediaType::SCREEN,
         .width = size.width,
@@ -128,8 +128,8 @@ Vaev::Style::Media constructMediaForRender(Vaev::Resolution scale, Vaev::Vec2Px 
 struct RenderOption {
     Vaev::Resolution scale = Vaev::Resolution::fromDpi(96);
     Vaev::Resolution density = Vaev::Resolution::fromDpi(96);
-    Vaev::Length width = 800_px;
-    Vaev::Length height = 600_px;
+    Vaev::Length width = 800_au;
+    Vaev::Length height = 600_au;
     Mime::Uti outputFormat = Mime::Uti::PUBLIC_BMP;
     bool wireframe = false;
 };
@@ -147,7 +147,7 @@ Res<> render(
     Vaev::Layout::Resolver resolver;
     resolver.viewport.dpi = options.scale;
 
-    Vaev::Vec2Px imageSize = {
+    Vec2Au imageSize = {
         resolver.resolve(options.width),
         resolver.resolve(options.height),
     };
