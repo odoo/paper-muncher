@@ -275,50 +275,51 @@ static Res<Gfx::Color> _parseHexColor(Io::SScan& s) {
     }
 }
 
+// https://drafts.csswg.org/css-color/#rgb-functions
 static Res<Gfx::Color> _parseFuncColor(Css::Sst const& s) {
-    if (s.prefix == Css::Token::function("rgb(")) {
+    if (s.prefix == Css::Token::function("rgb(") or s.prefix == Css::Token::function("rgba(")) {
         Cursor<Css::Sst> scan = s.content;
 
+        auto readColorValue = [](Cursor<Css::Sst>& scan) -> Res<u8> {
+            if (scan.skip(Css::Token::ident("none")))
+                return Ok(0);
+
+            if (scan.peek() == Css::Token::Type::PERCENTAGE) {
+                auto perc = try$(parseValue<Percent>(scan));
+                return Ok((perc.value() * 255) / 100);
+            }
+
+            auto intVal = try$(parseValue<Integer>(scan));
+            return Ok(intVal);
+        };
+
         eatWhitespace(scan);
-        auto r = try$(parseValue<Integer>(scan));
+        auto r = try$(readColorValue(scan));
         eatWhitespace(scan);
 
         scan.skip(Css::Token::COMMA);
 
         eatWhitespace(scan);
-        auto g = try$(parseValue<Integer>(scan));
+        auto g = try$(readColorValue(scan));
         eatWhitespace(scan);
 
         scan.skip(Css::Token::COMMA);
 
         eatWhitespace(scan);
-        auto b = try$(parseValue<Integer>(scan));
+        auto b = try$(readColorValue(scan));
         eatWhitespace(scan);
 
-        return Ok(Gfx::Color::fromRgb(r, g, b));
-    } else if (s.prefix == Css::Token::function("rgba(")) {
-        Cursor<Css::Sst> scan = s.content;
+        if (scan.rem() == 0)
+            return Ok(Gfx::Color::fromRgb(r, g, b));
 
-        eatWhitespace(scan);
-        auto r = try$(parseValue<Integer>(scan));
+        Number a = 1;
 
-        eatWhitespace(scan);
-        scan.skip(Css::Token::COMMA);
-        eatWhitespace(scan);
+        scan.skip(Css::Token::other("/"));
 
-        auto g = try$(parseValue<Integer>(scan));
-
-        eatWhitespace(scan);
-        scan.skip(Css::Token::COMMA);
-        eatWhitespace(scan);
-
-        auto b = try$(parseValue<Integer>(scan));
-
-        eatWhitespace(scan);
-        scan.skip(Css::Token::COMMA);
-        eatWhitespace(scan);
-
-        auto a = try$(parseValue<Number>(scan));
+        if (scan.peek() == Css::Token::Type::PERCENTAGE)
+            a = try$(parseValue<Percent>(scan)).value() / 100;
+        else if (scan.peek() == Css::Token::Type::NUMBER)
+            a = try$(parseValue<Number>(scan));
 
         return Ok(Gfx::Color::fromRgba(r, g, b, 255 * a));
     } else {
