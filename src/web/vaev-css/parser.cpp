@@ -301,6 +301,10 @@ Sst consumeFunc(Lexer& lex) {
 
     while (true) {
         switch (lex.peek().type) {
+        case Token::COMMENT:
+            lex.next();
+            break;
+
         case Token::END_OF_FILE:
             logError("unexpected end of file");
             return fn;
