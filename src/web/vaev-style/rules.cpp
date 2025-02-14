@@ -55,8 +55,19 @@ StyleRule StyleRule::parse(Css::Sst const& sst, Origin origin) {
     for (auto const& item : sst.content) {
         if (item == Css::Sst::DECL) {
             auto prop = parseDeclaration<StyleProp>(item);
-            if (prop)
-                res.props.pushBack(prop.take());
+
+            if (not prop)
+                continue;
+
+            if (auto c = prop.unwrap().is<ColorProp>()) {
+                // If the 'color' prop is 'currentcolor', it should use the inherited value
+                // However, we do not store the inherited value when resolving colors; so its easier to remove this as
+                // a property, and let the default value (inherited) be used
+                if (c->name() == "color" and c->value.type == Color::CURRENT)
+                    continue;
+            }
+
+            res.props.pushBack(prop.take());
         } else {
             logWarnIf(DEBUG_RULE, "unexpected item in style rule: {}", item);
         }
