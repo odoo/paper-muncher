@@ -275,52 +275,114 @@ static Res<Gfx::Color> _parseHexColor(Io::SScan& s) {
     }
 }
 
-static Res<Gfx::Color> _parseFuncColor(Css::Sst const& s) {
-    if (s.prefix == Css::Token::function("rgb(")) {
-        Cursor<Css::Sst> scan = s.content;
+static Res<u8> _parseAlphaValue(Cursor<Css::Sst>& scan) {
+    if (scan.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (scan.peek() == Css::Token::Type::PERCENTAGE) {
+        auto perc = try$(parseValue<Percent>(scan)).value();
+        return Ok(round((perc * 255) / 100));
+    } else if (scan.peek() == Css::Token::Type::NUMBER)
+        return Ok(round(try$(parseValue<Number>(scan)) * 255));
+    return Error::invalidData("expected alpha channel");
+}
+
+// https://drafts.csswg.org/css-color/#rgb-functions
+static Res<Gfx::Color> _parseSRGBModernFuncColor(Css::Sst const& s) {
+    Cursor<Css::Sst> scan = s.content;
+    eatWhitespace(scan);
+
+    if (scan.ended())
+        return Error::invalidData("unexpected end of input");
+
+    Array<u8, 3> channels{};
+    for (usize i = 0; i < 3; ++i) {
+
+        if (scan.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (scan.skip(Css::Token::ident("none"))) {
+            channels[i] = 0;
+        } else if (scan.peek() == Css::Token::Type::PERCENTAGE) {
+            auto perc = try$(parseValue<Percent>(scan));
+            channels[i] = round((perc.value() * 255) / 100.0f);
+        } else
+            channels[i] = try$(parseValue<Number>(scan));
 
         eatWhitespace(scan);
-        auto r = try$(parseValue<Integer>(scan));
-        eatWhitespace(scan);
+    }
 
-        scan.skip(Css::Token::COMMA);
+    u8 r = channels[0];
+    u8 g = channels[1];
+    u8 b = channels[2];
 
-        eatWhitespace(scan);
-        auto g = try$(parseValue<Integer>(scan));
-        eatWhitespace(scan);
+    eatWhitespace(scan);
 
-        scan.skip(Css::Token::COMMA);
-
-        eatWhitespace(scan);
-        auto b = try$(parseValue<Integer>(scan));
-        eatWhitespace(scan);
-
+    if (scan.ended())
         return Ok(Gfx::Color::fromRgb(r, g, b));
-    } else if (s.prefix == Css::Token::function("rgba(")) {
-        Cursor<Css::Sst> scan = s.content;
+
+    if (scan.skip(Css::Token::delim("/"))) {
+        eatWhitespace(scan);
+        if (scan.skip(Css::Token::ident("none")))
+            return Ok(Gfx::Color::fromRgba(r, g, b, 0));
+        return Ok(Gfx::Color::fromRgba(r, g, b, try$(_parseAlphaValue(scan))));
+    } else
+        return Error::invalidData("expected '/' before alpha channel");
+}
+
+static Res<Gfx::Color> _parseSRGBLegacyFuncColor(Css::Sst const& s) {
+    Cursor<Css::Sst> scan = s.content;
+    eatWhitespace(scan);
+
+    if (scan.ended())
+        return Error::invalidData("unexpected end of input");
+
+    bool usingPercentages = scan.peek() == Css::Token::Type::PERCENTAGE;
+
+    Array<u8, 3> channels{};
+    for (usize i = 0; i < 3; ++i) {
+
+        if (scan.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (usingPercentages) {
+            auto perc = try$(parseValue<Percent>(scan));
+            channels[i] = round((perc.value() * 255) / 100.0f);
+        } else {
+            channels[i] = try$(parseValue<Number>(scan));
+        }
 
         eatWhitespace(scan);
-        auto r = try$(parseValue<Integer>(scan));
+        if (i < 2) {
+            if (not scan.skip(Css::Token::COMMA))
+                return Error::invalidData("expected comma between rgb color channels");
+            eatWhitespace(scan);
+        }
+    }
 
+    u8 r = channels[0];
+    u8 g = channels[1];
+    u8 b = channels[2];
+
+    eatWhitespace(scan);
+
+    if (scan.ended())
+        return Ok(Gfx::Color::fromRgb(r, g, b));
+
+    if (scan.skip(Css::Token::COMMA)) {
         eatWhitespace(scan);
-        scan.skip(Css::Token::COMMA);
-        eatWhitespace(scan);
+        return Ok(Gfx::Color::fromRgba(r, g, b, try$(_parseAlphaValue(scan))));
+    } else
+        return Error::invalidData("expected comma before alpha channel");
+}
 
-        auto g = try$(parseValue<Integer>(scan));
+static Res<Gfx::Color> _parseFuncColor(Css::Sst const& s) {
+    if (s.prefix == Css::Token::function("rgb(") or s.prefix == Css::Token::function("rgba(")) {
+        auto modernColor = _parseSRGBModernFuncColor(s);
+        if (modernColor)
+            return modernColor;
 
-        eatWhitespace(scan);
-        scan.skip(Css::Token::COMMA);
-        eatWhitespace(scan);
-
-        auto b = try$(parseValue<Integer>(scan));
-
-        eatWhitespace(scan);
-        scan.skip(Css::Token::COMMA);
-        eatWhitespace(scan);
-
-        auto a = try$(parseValue<Number>(scan));
-
-        return Ok(Gfx::Color::fromRgba(r, g, b, 255 * a));
+        return _parseSRGBLegacyFuncColor(s);
     } else {
         return Error::invalidData("unknown color function");
     }
