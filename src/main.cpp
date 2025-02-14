@@ -9,13 +9,13 @@
 #include <karm-sys/file.h>
 #include <karm-sys/time.h>
 #include <karm-ui/app.h>
+#include <vaev-dom/html/parser.h>
+#include <vaev-dom/xml/parser.h>
 #include <vaev-driver/fetcher.h>
 #include <vaev-driver/print.h>
 #include <vaev-driver/render.h>
 #include <vaev-layout/paint.h>
 #include <vaev-layout/values.h>
-#include <vaev-dom/html/parser.h>
-#include <vaev-dom/xml/parser.h>
 #include <vaev-style/values.h>
 
 namespace PaperMuncher {
@@ -64,11 +64,6 @@ Res<> print(
         .headerFooter = true,
         .backgroundGraphics = true,
     };
-    auto pages = Vaev::Driver::print(
-        *dom,
-        settings
-    );
-
     auto printer = try$(Print::FilePrinter::create(
         options.outputFormat,
         {
@@ -76,14 +71,17 @@ Res<> print(
         }
     ));
 
-    for (auto& page : pages) {
+    Vaev::Driver::print(
+        *dom,
+        settings
+    ) | forEach([&](Print::Page& page) {
         page.print(
             *printer,
             {
                 .showBackgroundGraphics = true,
             }
         );
-    }
+    });
 
     return printer->write(output);
 }

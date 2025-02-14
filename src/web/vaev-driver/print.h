@@ -6,6 +6,6 @@
 
 namespace Vaev::Driver {
 
-Vec<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings);
+Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings);
 
 } // namespace Vaev::Driver

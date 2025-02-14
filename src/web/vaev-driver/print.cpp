@@ -255,7 +255,7 @@ static Style::Media _constructMedia(Print::Settings const& settings) {
     };
 }
 
-Vec<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
+Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
     auto media = _constructMedia(settings);
 
     Style::StyleBook stylebook;
@@ -276,8 +276,6 @@ Vec<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settin
 
     // MARK: Page and Margins --------------------------------------------------
 
-    Vec<Print::Page> pages;
-
     Style::Computed initialStyle = Style::Computed::initial();
     initialStyle.color = Gfx::BLACK;
     initialStyle.setCustomProp("-vaev-url", {Css::Token::string(Io::format("\"{}\"", dom->url()))});
@@ -296,9 +294,10 @@ Vec<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settin
     };
     Layout::Breakpoint currBreakpoint;
 
+    usize count = 0;
     while (true) {
         Layout::Resolver resolver{};
-        Style::Page page{.name = ""s, .number = pages.len(), .blank = false};
+        Style::Page page{.name = ""s, .number = count++, .blank = false};
 
         auto pageStyle = computer.computeFor(initialStyle, page);
         RectPx pageRect{
@@ -363,15 +362,13 @@ Vec<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settin
         Layout::paint(fragment, *pageStack);
         pageStack->prepare();
 
-        pages.emplaceBack(settings.paper, makeRc<Scene::Transform>(pageStack, Math::Trans2f::makeScale(media.resolution.toDppx())));
+        co_yield Print::Page(settings.paper, makeRc<Scene::Transform>(pageStack, Math::Trans2f::makeScale(media.resolution.toDppx())));
 
         if (outReal.completelyLaidOut)
             break;
 
         std::swap(prevBreakpoint, currBreakpoint);
     }
-
-    return pages;
 }
 
 } // namespace Vaev::Driver
