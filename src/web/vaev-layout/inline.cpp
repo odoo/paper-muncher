@@ -17,7 +17,7 @@ struct InlineFormatingContext : public FormatingContext {
             }
         });
 
-        auto size = prose.layout(inlineSize.cast<f64>()).cast<Au>();
+        auto size = prose.layout(inlineSize);
 
         if (tree.fc.allowBreak() and not tree.fc.acceptsFit(
                                          input.position.y,

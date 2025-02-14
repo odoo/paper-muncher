@@ -62,23 +62,23 @@ constexpr isize roundi(T x) {
 
 template <typename T>
 constexpr T floor(T x) {
-    if (x < 0)
-        return (T)(long)(x - 1);
+    if (x < T{})
+        return (T)(long)(x - T{1});
 
     return (T)(long)x;
 }
 
 template <typename T>
 constexpr T ceil(T x) {
-    if (x < 0)
+    if (x < T{})
         return (T)(long)x;
 
-    return (T)(long)(x + 1);
+    return (T)(long)(x + T{1});
 }
 
 template <typename T>
 constexpr T round(T x) {
-    return (T)(long)(x + 0.5);
+    return (T)(long)(x + T{0.5});
 }
 
 // MARK: Trigonometry ----------------------------------------------------------

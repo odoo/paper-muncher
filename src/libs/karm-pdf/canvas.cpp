@@ -129,7 +129,7 @@ void Canvas::fill(Text::Prose& prose) {
     for (usize i = 0; i < prose._lines.len(); ++i) {
         auto const& line = prose._lines[i];
 
-        auto alignedStart = first(line.blocks()).pos;
+        auto alignedStart = first(line.blocks()).pos.cast<f64>();
         _e.ln("{} {} Td"s, alignedStart, i == 0 ? 0 : prose._lineHeight);
 
         auto prevEndPos = alignedStart;
@@ -139,7 +139,7 @@ void Canvas::fill(Text::Prose& prose) {
             for (auto& cell : block.cells()) {
                 auto glyphAdvance = prose._style.font.advance(cell.glyph);
                 auto nextEndPosWithoutKern = prevEndPos + glyphAdvance;
-                auto nextDesiredEndPos = block.pos + cell.pos + cell.adv;
+                auto nextDesiredEndPos = (block.pos + cell.pos + cell.adv).cast<f64>();
 
                 auto kern = nextEndPosWithoutKern - nextDesiredEndPos;
                 if (not Math::epsilonEq<f64>(kern, 0, 0.01))
