@@ -454,6 +454,16 @@ Res<Color> ValueParser<Color>::parse(Cursor<Css::Sst>& c) {
     } else if (c.peek() == Css::Token::IDENT) {
         Str data = c->token.data.str();
 
+        if (eqCi(data, "currentcolor"s)) {
+            c.next();
+            return Ok(Color::CURRENT);
+        }
+
+        if (eqCi(data, "transparent"s)) {
+            c.next();
+            return Ok(TRANSPARENT);
+        }
+
         auto maybeColor = parseNamedColor(data);
         if (maybeColor) {
             c.next();
@@ -466,15 +476,6 @@ Res<Color> ValueParser<Color>::parse(Cursor<Css::Sst>& c) {
             return Ok(maybeSystemColor.unwrap());
         }
 
-        if (data == "currentColor") {
-            c.next();
-            return Ok(Color::CURRENT);
-        }
-
-        if (data == "transparent") {
-            c.next();
-            return Ok(TRANSPARENT);
-        }
     } else if (c.peek() == Css::Sst::FUNC) {
 
         if (c->prefix == Css::Token::function("color-mix(")) {
