@@ -388,6 +388,61 @@ static Res<Gfx::Color> _parseFuncColor(Css::Sst const& s) {
     }
 }
 
+Res<Color> _parseColorMixFunc(Css::Sst const& s) {
+    Cursor<Css::Sst> scan = s.content;
+
+    eatWhitespace(scan);
+    if (not scan.skip(Css::Token::ident("in"))) // FIXME: correct token class?
+        return Error::invalidData("expected 'in' keyword");
+
+    eatWhitespace(scan);
+
+    if (scan.ended() or not(scan.peek() == Css::Token::IDENT))
+        return Error::invalidData("expected color-space identifier");
+
+    auto colorSpace = scan.next().token.data;
+    // FIXME: not parsing interpolation method for polar spaces
+
+    eatWhitespace(scan);
+
+    if (not scan.skip(Css::Token::COMMA))
+        return Error::invalidData("expected comma separting color mix arguments");
+
+    eatWhitespace(scan);
+    Array<Tuple<Color, Opt<i8>>, 2> colors;
+    for (usize i = 0; i < 2; ++i) {
+
+        eatWhitespace(scan);
+
+        if (scan.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (scan.peek() == Css::Token::Type::PERCENTAGE) {
+            colors[i].v1 = try$(parseValue<Percent>(scan)).value();
+            eatWhitespace(scan);
+            colors[i].v0 = try$(parseValue<Color>(scan));
+        } else {
+            colors[i].v0 = try$(parseValue<Color>(scan));
+            eatWhitespace(scan);
+            if (not scan.ended() and scan.peek() == Css::Token::Type::PERCENTAGE)
+                colors[i].v1 = try$(parseValue<Percent>(scan)).value();
+        }
+
+        eatWhitespace(scan);
+        if (i == 0 and not scan.skip(Css::Token::Type::COMMA)) {
+            return Error::invalidData("expected comma");
+        }
+    }
+
+    return Ok(Color{
+        ColorSpace::fromStr(colorSpace),
+        std::move(colors[0].v0),
+        std::move(colors[1].v0),
+        colors[0].v1,
+        colors[1].v1,
+    });
+}
+
 Res<Color> ValueParser<Color>::parse(Cursor<Css::Sst>& c) {
     if (c.ended())
         return Error::invalidData("unexpected end of input");
@@ -421,6 +476,13 @@ Res<Color> ValueParser<Color>::parse(Cursor<Css::Sst>& c) {
             return Ok(TRANSPARENT);
         }
     } else if (c.peek() == Css::Sst::FUNC) {
+
+        if (c->prefix == Css::Token::function("color-mix(")) {
+            auto color = try$(_parseColorMixFunc(*c));
+            c.next();
+            return Ok(color);
+        }
+
         auto color = try$(_parseFuncColor(*c));
         c.next();
         return Ok(color);
