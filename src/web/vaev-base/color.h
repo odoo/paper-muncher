@@ -26,32 +26,41 @@ struct Color {
 
     Type type;
 
-    union {
-        Gfx::Color srgb;
-        SystemColor system;
-    };
+    using Value = Union<None, Gfx::Color, SystemColor>;
+    Value _color;
 
-    constexpr Color()
-        : type(Type::SRGB), srgb(Gfx::ALPHA) {}
+    Color() : type(Type::SRGB), _color(Gfx::Color{Gfx::ALPHA}) {}
 
-    constexpr Color(Type type)
-        : type(type) {}
+    static Value defaultColorValue(Type type) {
+        switch (type) {
+        case Type::SRGB:
+            return Gfx::Color{Gfx::ALPHA};
+        case Type::SYSTEM:
+            return SystemColor{};
+        case Type::CURRENT:
+            return NONE;
+        }
+    }
 
-    constexpr Color(Gfx::Color srgb)
-        : type(Type::SRGB), srgb(srgb) {}
+    Color(Type type) : type(type), _color(defaultColorValue(type)) {}
 
-    constexpr Color(SystemColor system)
-        : type(Type::SYSTEM), system(system) {}
+    Color(Gfx::Color srgb) : type(Type::SRGB), _color(srgb) {}
+
+    Color(SystemColor system) : type(Type::SYSTEM), _color(system) {}
 
     void repr(Io::Emit& e) const {
         switch (type) {
-        case Type::SRGB:
+        case Type::SRGB: {
+            auto srgb = _color.unwrap<Gfx::Color>();
             e("#{02x}{02x}{02x}{02x}", srgb.red, srgb.green, srgb.blue, srgb.alpha);
             break;
+        }
 
-        case Type::SYSTEM:
+        case Type::SYSTEM: {
+            auto system = _color.unwrap<SystemColor>();
             e("{}", system);
             break;
+        }
 
         case Type::CURRENT:
             e("currentColor");
