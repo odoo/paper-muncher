@@ -90,6 +90,26 @@ struct Color {
         }
     }
 
+    always_inline constexpr Color premultiply() const {
+        f64 a = alpha / 255.0f;
+        return {
+            static_cast<u8>(round(red * a)),
+            static_cast<u8>(round(green * a)),
+            static_cast<u8>(round(blue * a)),
+            static_cast<u8>(round(alpha)),
+        };
+    }
+
+    always_inline constexpr Color unpremultiply() const {
+        f64 a = alpha / 255.0f;
+        return {
+            static_cast<u8>(round(red / a)),
+            static_cast<u8>(round(green / a)),
+            static_cast<u8>(round(blue / a)),
+            static_cast<u8>(round(alpha)),
+        };
+    }
+
     always_inline constexpr Color lerpWith(Color const other, f64 const t) const {
         return {
             static_cast<u8>(red + (other.red - red) * t),
