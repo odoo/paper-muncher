@@ -5,11 +5,6 @@
 namespace Vaev {
 
 Opt<Color> parseNamedColor(Str name) {
-    if (eqCi(name, "transparent"s))
-        return TRANSPARENT;
-
-    if (eqCi(name, "currentColor"s))
-        return Color::CURRENT;
 
 #define COLOR(ID, NAME, ...)   \
     if (eqCi(name, #NAME ""s)) \
