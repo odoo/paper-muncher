@@ -37,10 +37,10 @@ static Array<Gfx::Color, static_cast<usize>(SystemColor::_LEN)> SYSTEM_COLOR = {
 Gfx::Color resolve(Color c, Gfx::Color currentColor) {
     switch (c.type) {
     case Color::Type::SRGB:
-        return c.srgb;
+        return c._color.unwrap<Gfx::Color>();
 
     case Color::Type::SYSTEM:
-        return SYSTEM_COLOR[static_cast<usize>(c.system)];
+        return SYSTEM_COLOR[static_cast<usize>(c._color.unwrap<SystemColor>())];
 
     case Color::Type::CURRENT:
         return currentColor;
