@@ -353,7 +353,11 @@ struct ColorProp {
     }
 
     void apply(Computed& c) const {
-        c.color = value;
+        c.color = resolve(value, Gfx::BLACK);
+    }
+
+    void apply(Computed const& parent, Computed& c) const {
+        c.color = resolve(value, parent.color);
     }
 
     static Color load(Computed const& c) {
