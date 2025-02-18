@@ -97,6 +97,8 @@ Res<Angle> ValueParser<Angle>::parse(Cursor<Css::Sst>& c) {
         Io::SScan scan = c->token.data.str();
         auto value = Io::atof(scan).unwrapOr(0.0);
         auto unit = try$(_parseAngleUnit(scan.remStr()));
+
+        c.next();
         return Ok(Angle{value, unit});
     }
 
@@ -287,6 +289,19 @@ static Res<u8> _parseAlphaValue(Cursor<Css::Sst>& scan) {
     return Error::invalidData("expected alpha channel");
 }
 
+static Res<Number> _parseNumPercNone(Cursor<Css::Sst>& scan, Number percOf, Number noneValue = 0) {
+    if (scan.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (scan.skip(Css::Token::ident("none"))) {
+        return Ok(noneValue);
+    } else if (scan.peek() == Css::Token::Type::PERCENTAGE) {
+        auto perc = try$(parseValue<Percent>(scan));
+        return Ok((perc.value() * percOf) / 100.0f);
+    } else
+        return Ok(try$(parseValue<Number>(scan)));
+}
+
 // https://drafts.csswg.org/css-color/#rgb-functions
 static Res<Gfx::Color> _parseSRGBModernFuncColor(Css::Sst const& s) {
     Cursor<Css::Sst> scan = s.content;
@@ -301,13 +316,7 @@ static Res<Gfx::Color> _parseSRGBModernFuncColor(Css::Sst const& s) {
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (scan.skip(Css::Token::ident("none"))) {
-            channels[i] = 0;
-        } else if (scan.peek() == Css::Token::Type::PERCENTAGE) {
-            auto perc = try$(parseValue<Percent>(scan));
-            channels[i] = round((perc.value() * 255) / 100.0f);
-        } else
-            channels[i] = try$(parseValue<Number>(scan));
+        channels[i] = round(try$(_parseNumPercNone(scan, 255)));
 
         eatWhitespace(scan);
     }
@@ -351,7 +360,6 @@ static Res<Gfx::Color> _parseSRGBLegacyFuncColor(Css::Sst const& s) {
         } else {
             channels[i] = try$(parseValue<Number>(scan));
         }
-
         eatWhitespace(scan);
         if (i < 2) {
             if (not scan.skip(Css::Token::COMMA))
@@ -376,6 +384,89 @@ static Res<Gfx::Color> _parseSRGBLegacyFuncColor(Css::Sst const& s) {
         return Error::invalidData("expected comma before alpha channel");
 }
 
+// https://drafts.csswg.org/css-color/#funcdef-hsl
+static Res<Gfx::Color> _parseHSLModernFuncColor(Css::Sst const& s) {
+    Cursor<Css::Sst> scan = s.content;
+    eatWhitespace(scan);
+
+    if (scan.ended())
+        return Error::invalidData("unexpected end of input");
+
+    Number hue;
+    if (scan.skip(Css::Token::ident("none")))
+        hue = 0;
+    else if (scan.peek() == Css::Token::DIMENSION)
+        hue = try$(parseValue<Angle>(scan)).toDegree();
+    else if (scan.peek() == Css::Token::Type::NUMBER)
+        hue = try$(parseValue<Number>(scan));
+    else
+        return Error::invalidData("expected hue");
+
+    eatWhitespace(scan);
+
+    auto sat = try$(_parseNumPercNone(scan, 1));
+    eatWhitespace(scan);
+
+    auto l = try$(_parseNumPercNone(scan, 1));
+    eatWhitespace(scan);
+
+    auto color = Gfx::hslToRgb(Gfx::Hsl{hue, sat, l});
+    if (scan.ended())
+        return Ok(color);
+
+    if (scan.skip(Css::Token::delim("/"))) {
+        eatWhitespace(scan);
+        if (scan.skip(Css::Token::ident("none")))
+            return Ok(color);
+        color.alpha = try$(_parseAlphaValue(scan));
+        return Ok(color);
+    } else
+        return Error::invalidData("expected comma before alpha channel");
+}
+
+static Res<Gfx::Color> _parseHSLLegacyFuncColor(Css::Sst const& s) {
+    Cursor<Css::Sst> scan = s.content;
+    eatWhitespace(scan);
+
+    if (scan.ended())
+        return Error::invalidData("unexpected end of input");
+
+    Number hue;
+    if (scan.skip(Css::Token::ident("none")))
+        hue = 0;
+    else if (scan.peek() == Css::Token::DIMENSION)
+        hue = try$(parseValue<Angle>(scan)).toDegree();
+    else if (scan.peek() == Css::Token::Type::NUMBER)
+        hue = try$(parseValue<Number>(scan));
+    else
+        return Error::invalidData("expected hue");
+
+    eatWhitespace(scan);
+
+    if (not scan.skip(Css::Token::COMMA))
+        return Error::invalidData("comma is expected separating hsl components");
+    eatWhitespace(scan);
+
+    auto sat = try$(parseValue<Percent>(scan)).value() / 100.0f;
+    eatWhitespace(scan);
+
+    if (not scan.skip(Css::Token::COMMA))
+        return Error::invalidData("comma is expected separating hsl components");
+    eatWhitespace(scan);
+
+    auto l = try$(parseValue<Percent>(scan)).value() / 100.0f;
+    eatWhitespace(scan);
+
+    if (scan.ended())
+        return Ok(Gfx::hslToRgb(Gfx::Hsl{hue, sat, l}));
+
+    if (scan.skip(Css::Token::COMMA)) {
+        eatWhitespace(scan);
+        return Ok(Gfx::hslToRgb(Gfx::Hsl{hue, sat, l, try$(_parseAlphaValue(scan))}));
+    } else
+        return Error::invalidData("expected comma before alpha channel");
+}
+
 static Res<Gfx::Color> _parseFuncColor(Css::Sst const& s) {
     if (s.prefix == Css::Token::function("rgb(") or s.prefix == Css::Token::function("rgba(")) {
         auto modernColor = _parseSRGBModernFuncColor(s);
@@ -383,6 +474,12 @@ static Res<Gfx::Color> _parseFuncColor(Css::Sst const& s) {
             return modernColor;
 
         return _parseSRGBLegacyFuncColor(s);
+    } else if (s.prefix == Css::Token::function("hsl(") or s.prefix == Css::Token::function("hsla(")) {
+        auto modernColor = _parseHSLModernFuncColor(s);
+        if (modernColor)
+            return modernColor;
+
+        return _parseHSLLegacyFuncColor(s);
     } else {
         return Error::invalidData("unknown color function");
     }
