@@ -277,7 +277,9 @@ struct NumberFormatter {
 
     Res<> formatSigned(Io::TextWriter& writer, isize val);
 
+#ifndef __ck_freestanding__
     Res<> formatFloat(Io::TextWriter& writer, f64 val);
+#endif
 
     Res<> formatRune(Io::TextWriter& writer, Rune val);
 };
@@ -300,12 +302,14 @@ struct Formatter<T> : public NumberFormatter {
     }
 };
 
+#ifndef __ck_freestanding__
 template <Meta::Float T>
 struct Formatter<T> : public NumberFormatter {
     Res<> format(Io::TextWriter& writer, f64 const& val) {
         return formatFloat(writer, val);
     }
 };
+#endif
 
 template <typename T>
 struct Formatter<Be<T>> : public Formatter<T> {

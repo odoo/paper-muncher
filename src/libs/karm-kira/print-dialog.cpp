@@ -276,7 +276,7 @@ Ui::Child _printSettings(State const& s) {
             NONE,
             "More settings"s,
             NONE,
-            Karm::Ui::Slots{[&] -> Ui::Children {
+            Ui::Slots{[&] -> Ui::Children {
                 return {
                     rowContent(
                         NONE,

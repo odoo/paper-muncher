@@ -321,7 +321,7 @@ Ui::Child app(Gc::Heap& heap, Mime::Url url, Res<Gc::Ref<Vaev::Dom::Document>> d
                         Ui::button(Model::bindIf<GoForward>(s.canGoForward()), Ui::ButtonStyle::subtle(), Mdi::ARROW_RIGHT),
                     };
                 },
-                .midleTools = [&] -> Ui::Children {
+                .middleTools = [&] -> Ui::Children {
                     return {addressBar(s.currentUrl().url) | Ui::grow()};
                 },
                 .endTools = [&] -> Ui::Children {

@@ -440,6 +440,7 @@ Res<> NumberFormatter::formatSigned(Io::TextWriter& writer, isize val) {
     return Ok();
 }
 
+#ifndef __ck_freestanding__
 Res<> NumberFormatter::formatFloat(Io::TextWriter& writer, f64 val) {
     NumberFormatter formatter;
     isize ipart = (isize)val;
@@ -454,6 +455,7 @@ Res<> NumberFormatter::formatFloat(Io::TextWriter& writer, f64 val) {
     }
     return Ok();
 }
+#endif
 
 Res<> NumberFormatter::formatRune(Io::TextWriter& writer, Rune val) {
     if (not prefix)
