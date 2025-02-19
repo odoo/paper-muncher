@@ -179,7 +179,7 @@ export void wireframe(Frag& frag, Gfx::Canvas& g) {
         wireframe(c, g);
 
     g.strokeStyle({
-        .fill = Gfx::BLACK,
+        .fill = Gfx::GREEN,
         .width = 1,
         .align = Gfx::INSIDE_ALIGN,
     });
