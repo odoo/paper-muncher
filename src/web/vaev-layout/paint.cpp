@@ -42,7 +42,7 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
         backgrounds.pushBack(color);
 
     bool hasBorders = _paintBorders(frag, frag.style().color, borders);
-    Math::Rectf bound = frag.metrics.borderBox().cast<f64>();
+    Math::Rectf bound = frag.metrics.borderBox().cast<f64>().round();
 
     if (any(backgrounds) or hasBorders)
         stack.add(makeRc<Scene::Box>(bound, std::move(borders), std::move(backgrounds)));
