@@ -2,9 +2,9 @@
 
 #include <karm-base/box.h>
 #include <karm-base/vec.h>
+#include <karm-io/fmt.h>
 #include <vaev-css/parser.h>
 #include <vaev-dom/element.h>
-#include <karm-io/fmt.h>
 
 namespace Vaev::Style {
 
@@ -368,13 +368,14 @@ struct Selector : public _Selector {
     static Res<Selector> parse(Str input);
 
     auto unparsed() lifetimebound {
-        struct Unparser{
+        struct Unparser {
             Selector& s;
 
             void repr(Io::Emit& e) const {
-                unparse(s,e);
+                unparse(s, e);
             }
         };
+
         return Unparser{*this};
     }
 };
@@ -385,27 +386,26 @@ inline bool Nfix::operator==(Nfix const&) const = default;
 
 Spec spec(Selector const& sel);
 
-
 inline void unparse(Selector const& sel, Io::Emit& e) {
-    sel.visit(Visitor {
+    sel.visit(Visitor{
         [&](Nfix const& s) {
             if (s.type == Nfix::OR) {
-                for (usize i = 0; i<s.inners.len(); i++) {
+                for (usize i = 0; i < s.inners.len(); i++) {
                     if (i != s.inners.len() - 1) {
-                        e("{},",s.inners[i]);
-                    }else {
-                        e("{}", s.inners[i]);;
+                        e("{},", s.inners[i]);
+                    } else {
+                        e("{}", s.inners[i]);
+                        ;
                     }
                 }
-            }else if (s.type == Nfix::AND) {
-                for (usize i = 0; i<s.inners.len(); i++) {
-                    e("{}", s.inners[i]);;
+            } else if (s.type == Nfix::AND) {
+                for (usize i = 0; i < s.inners.len(); i++) {
+                    e("{}", s.inners[i]);
+                    ;
                 }
-            }else {
+            } else {
                 e("{}", s);
             }
-
-
         },
         [&](Meta::Contains<UniversalSelector, ClassSelector, IdSelector, TypeSelector> auto const& s) -> void {
             e("{}", s);
@@ -418,23 +418,22 @@ inline void unparse(Selector const& sel, Io::Emit& e) {
             } else if (s.type == Infix::ADJACENT) {
                 e("{}+{}", s.lhs, s.rhs);
             } else if (s.type == Infix::SUBSEQUENT) {
-                e("{}~{}", s.lhs, s.rhs);;
+                e("{}~{}", s.lhs, s.rhs);
+                ;
             } else {
                 e("{}", s);
             }
-
         },
-        [&](Pseudo const& s) -> void{
+        [&](Pseudo const& s) -> void {
             e("{}", s);
         },
         [&](AttributeSelector const& s) {
             e("{}", s);
         },
-        [&](auto const& s) -> void{
+        [&](auto const& s) -> void {
             e("{}", s);
         }
     });
 }
-
 
 } // namespace Vaev::Style
