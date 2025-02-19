@@ -1,3 +1,5 @@
+module;
+
 #include <karm-gc/root.h>
 #include <karm-kira/context-menu.h>
 #include <karm-kira/dialog.h>
@@ -37,7 +39,9 @@
 #include <vaev-view/dialog.h>
 #include <vaev-view/view.h>
 
-#include "inspect.h"
+export module Vaev.Browser:app;
+
+import :inspect;
 
 namespace Vaev::Browser {
 
@@ -304,7 +308,7 @@ Ui::Child appContent(State const& s) {
     );
 }
 
-Ui::Child app(Gc::Heap& heap, Mime::Url url, Res<Gc::Ref<Vaev::Dom::Document>> dom) {
+export Ui::Child app(Gc::Heap& heap, Mime::Url url, Res<Gc::Ref<Vaev::Dom::Document>> dom) {
     return Ui::reducer<Model>(
         {
             heap,
