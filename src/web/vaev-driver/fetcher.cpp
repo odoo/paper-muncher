@@ -145,7 +145,7 @@ void fetchStylesheets(Gc::Ref<Dom::Node> node, Style::StyleBook& sb) {
 
             auto sheet = fetchStylesheet(url.take(), Style::Origin::AUTHOR);
             if (not sheet) {
-                logWarn("failed to fetch stylesheet: {}", sheet);
+                logWarn("failed to fetch stylesheet: {} {}", sheet, href);
                 return;
             }
 
