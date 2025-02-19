@@ -61,22 +61,13 @@ struct FileFetcher : public Fetcher {
 
     virtual ~FileFetcher() = default;
 
-    Mime::Url const STDIN_URL = "about:stdin"_url;
-    Mime::Url const STDOUT_URL = "about:stdout"_url;
-
     Res<String> fetch(Mime::Url const& url) override {
-        if (url == STDIN_URL)
-            return Io::readAllUtf8(Sys::in());
-
         auto file = try$(Sys::File::open(url));
         return Io::readAllUtf8(file);
     }
 
     virtual Res<Rc<ChunkedTransfer>> transfer(Mime::Url const& url) override {
-        if (url == STDOUT_URL)
-            return Ok(makeRc<FileChunkTransfer>(Sys::out()));
-
-        Sys::FileWriter fileWriter{try$(Sys::File::create(url))};
+        auto fileWriter = try$(Sys::File::create(url));
         return Ok(makeRc<FileChunkTransfer>(fileWriter));
     };
 };

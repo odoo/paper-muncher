@@ -175,8 +175,8 @@ Res<> render(
 } // namespace PaperMuncher
 
 Async::Task<> entryPointAsync(Sys::Context& ctx) {
-    auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, "-"s);
-    auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
+    auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, "fd:stdin"s);
+    auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "fd:stdout"s);
     auto outputMimeArg = Cli::option<Str>(NONE, "output-mime"s, "Overide the output MIME type"s, ""s);
 
     Cli::Command cmd{
@@ -226,10 +226,9 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             options.orientation = co_try$(Vaev::Style::parseValue<Print::Orientation>(orientationArg.unwrap()));
 
-            Mime::Url inputUrl = "about:stdin"_url;
-            Mime::Url outputUrl = "about:stdout"_url;
+            Mime::Url inputUrl = "fd:stdin"_url;
+            Mime::Url outputUrl = "fd:stdout"_url;
 
-            Opt<Sys::FileReader> inputFile;
             if (inputArg.unwrap() != "-"s)
                 inputUrl = co_try$(Mime::parseUrlOrPath(inputArg));
 
@@ -274,10 +273,9 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             options.wireframe = wireframeArg.unwrap();
 
-            Mime::Url inputUrl = "about:stdin"_url;
-            Mime::Url outputUrl = "about:stdout"_url;
+            Mime::Url inputUrl = "fd:stdin"_url;
+            Mime::Url outputUrl = "fd:stdout"_url;
 
-            Opt<Sys::FileReader> inputFile;
             if (inputArg.unwrap() != "-"s)
                 inputUrl = co_try$(Mime::parseUrlOrPath(inputArg));
 
