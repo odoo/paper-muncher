@@ -92,6 +92,10 @@ static void _establishStackingContext(Frag& frag, Scene::Stack& stack);
 static void _paintStackingContext(Frag& frag, Scene::Stack& stack);
 
 static void _paintFrag(Frag& frag, Scene::Stack& stack) {
+    auto& s = frag.style();
+    if (s.visibility == Visibility::HIDDEN)
+        return;
+
     _paintFragBordersAndBackgrounds(frag, stack);
 
     if (auto prose = frag.box->content.is<Rc<Text::Prose>>()) {

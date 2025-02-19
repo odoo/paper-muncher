@@ -21,6 +21,7 @@ void Computed::inherit(Computed const& parent) {
     font = parent.font;
     text = parent.text;
     variables = parent.variables;
+    visibility = parent.visibility;
 }
 
 void Computed::repr(Io::Emit& e) const {

@@ -2794,6 +2794,37 @@ struct TextTransformProp {
     }
 };
 
+// https://drafts.csswg.org/css-display/#visibility
+struct VisibilityProp {
+    Visibility value = initial();
+
+    static constexpr Str name() { return "visibility"; }
+
+    static Visibility initial() { return Visibility::VISIBLE; }
+
+    void apply(Computed& c) const {
+        c.visibility = value;
+    }
+
+    static void inherit(Computed const& parent, Computed& child) {
+        child.visibility = parent.visibility;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        if (c.skip(Css::Token::ident("visible"))) {
+            value = Visibility::VISIBLE;
+        } else if (c.skip(Css::Token::ident("hidden"))) {
+            value = Visibility::HIDDEN;
+        } else if (c.skip(Css::Token::ident("collapse"))) {
+            value = Visibility::COLLAPSE;
+        } else {
+            return Error::invalidData("expected visibility");
+        }
+
+        return Ok();
+    }
+};
+
 // https://drafts.csswg.org/css-text/#white-space-property
 
 struct WhiteSpaceProp {
@@ -2949,6 +2980,7 @@ using _StyleProp = Union<
     DisplayProp,
     TableLayoutProp,
     CaptionSideProp,
+    VisibilityProp,
 
     // Borders
     BorderTopColorProp,
