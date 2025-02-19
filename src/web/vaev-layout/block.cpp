@@ -161,6 +161,7 @@ struct BlockFormatingContext : public FormatingContext {
 
         bool blockWasCompletelyLaidOut = false;
 
+        Au lastMarginBottom = 0_au;
         for (usize i = startAt; i < endChildren; ++i) {
             auto& c = box.children()[i];
 
@@ -194,7 +195,8 @@ struct BlockFormatingContext : public FormatingContext {
             }
 
             if (c.style->position != Position::ABSOLUTE) {
-                blockSize += margin.top;
+                // TODO: collapsed margins for sibling elements
+                blockSize += max(margin.top, lastMarginBottom) - lastMarginBottom;
                 if (input.fragment or input.knownSize.x)
                     childInput.knownSize.width = childInlineSize;
             }
@@ -238,6 +240,9 @@ struct BlockFormatingContext : public FormatingContext {
             }
 
             inlineSize = max(inlineSize, output.size.x + margin.horizontal());
+
+            if (c.style->position != Position::ABSOLUTE)
+                lastMarginBottom = margin.bottom;
         }
 
         return {
