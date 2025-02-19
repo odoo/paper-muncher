@@ -6,38 +6,38 @@ We're genuinely excited to have you join us. Before you dive in, please take som
 
 ## About the Project
 
-Paper Muncher is the fruit of a long search for a wkhtmltopdf replacement (See our [FAQ](faq.md) to understand why other options like Weasyprint and Chrome where rejected). It's based of a toy browser engine that @sleepy-monax (a.k.a nivb) wrote on their freetime now called Vaev. Its composed of a:
- - Markup parser `vaev-dom` responsible for parsing html and xml into a DOM.
- - Style engine `vaev-style` responsible for parsing CSS into stylesheet object, and compute style.
- - Layout engine `vaev-layout` takes the computed style and DOM and build a fragment tree, this fragment tree is then layout following the different formating option offered by CSS (flex, grid, table, block and inline)
- - And a driver `vaev-driver` that tie all the other component together
+Paper Muncher is the fruit of a long search for a wkhtmltopdf replacement (See our [FAQ](faq.md) to understand why other options like Weasyprint and Chrome were rejected). It's based on a toy browser engine that @sleepy-monax (a.k.a clvb) wrote on their freetime now called Vaev. It's composed of:
+ - Markup parser `vaev-dom` responsible for parsing HTML and XML into a DOM.
+ - Style engine `vaev-style` responsible for parsing CSS into stylesheet objects, and computing styles.
+ - Layout engine `vaev-layout` takes the computed style and DOM to build a fragment tree. This fragment tree is then laid out following the different formatting options offered by CSS (flex, grid, table, block and inline)
+ - And a driver `vaev-driver` that ties all the other components together
 
-(See [the architecture diagram](../src/web/diagrams.tldr) for a visual representatio of how these component interacts)
+(See [the architecture diagram](../src/web/diagrams.tldr) for a visual representation of how these components interact)
 
 ## Team Values
 
-As a team we believe that building exceptional software requires strongs opinions, strong vision, openness, and respect. We keep our process as lean and flexible as possible. We are here to have fun, grow, and build an exceptional product.
+As a team we believe that building exceptional software requires strong opinions, strong vision, openness, and respect. We keep our process as lean and flexible as possible. We are here to have fun, grow, and build an exceptional product.
 
 ## Essential Tools
 
-* [VSCode](https://code.visualstudio.com/) (zed or neovim works too)
+* [VSCode](https://code.visualstudio.com/) (zed or neovim work too)
 * [Clangd for VSCode](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)
 * [tldraw for VSCode](https://marketplace.visualstudio.com/items?itemName=tldraw-org.tldraw-vscode)
 
 ## Essential Commands
 
-* `./ck run vaev-browser -- inspect <input document>`: Start the development environment.
-* `./ck run --debug vaev-browser -- inspect <input document>`: For debugging.
+* `./ck run vaev-browser -- <input document>`: Start the development environment.
+* `./ck run --debug vaev-browser -- <input document>`: For debugging.
 * `./ck run --profile vaev-browser -- <input document>`: For profiling (requires `perf` and `speedscope` to be installed).
 * `./ck run --release vaev-browser -- <input document>`: Build the release version.
-* `./ck builder test`  Run all tests.
-* `./ck builder clean`  Clean the build directory.
+* `./ck builder test`: Run all tests.
+* `./ck builder clean`: Clean the build directory.
 
-## Essential editor configuration
+## Essential Editor Configuration
 
-* In a way to have a consistent code style, we use clang-format to format our code, you can configure your editor to use it on save or use the `./meta/scripts/style-format.sh` script.
+* To maintain a consistent code style, we use clang-format to format our code. You can configure your editor to use it on save or use the `./ck fmt -f` script.
 
-## Essential Ressources
+## Essential Resources
 
 * [Cppreference](https://en.cppreference.com/w/)
 * [CSS Snapshot 2023](https://www.w3.org/TR/CSS)
@@ -50,32 +50,33 @@ As a team we believe that building exceptional software requires strongs opinion
 
 We've adopted a specific C++ style to help us avoid common pitfalls and write maintainable code.
 
-* **Modern C++23:**  We use the latest features like concepts and coroutines.
-* **Concepts over template metaprogramming:**  For better readability.
-* **Custom containers:**  We use `Set<T>`, `Map<K, V>`, `Vec<T>`, `Opt<T>`, `Union<Ts...>`, `Tuple<Ts...>`, etc. instead of `std::` They avoid most UB and pitfall of the std (e.g. std::vector\<bool>)
-* **No exceptions:**  We use `Res<T>` and `try$()` for error handling to avoid the complexities and potential issues with exceptions in C++ (e.g., what should happen if a constructor throws an exception? What if a destructor throws an exception? What if a destructor is called during stack unwinding? etc.)
-* **No rtti:**  We use `Union<Ts...>` instead of rtti for better control over memory layout and performance.
-* **Structs over classes:**  We've chosen to use `struct` by default, as there's little practical difference in C++ and a choice has to be made.
-* **No private/public:**  We prefix private variables with an underscore to indicate they're private and avoid the need for `private:` and `public:` sections. This makes testing easier and removes the need for hacks like `#define private public`.
-* **Short names for common things:**  Frequently used types and functions have shorter names for better readability, e.g., `Io::PlainTextScanner` becomes `Io::Scan`.
+* **Modern C++23:** We use the latest features like concepts and coroutines.
+* **Concepts over template metaprogramming:** For better readability.
+* **Custom containers:** We use `Set<T>`, `Map<K, V>`, `Vec<T>`, `Opt<T>`, `Union<Ts...>`, `Tuple<Ts...>`, etc. instead of `std::` equivalents. They avoid most UB and pitfalls of the standard library (e.g., `std::vector<bool>`).
+* **No exceptions:** We use `Res<T>` and `try$()` for error handling to avoid exception complexities (Did you know that destructors can throw exceptions?).
+* **No RTTI:** We use `Union<Ts...>` instead for better control over memory layout and performance.
+* **Structs over classes:** Used by default since there's little practical difference in C++.
+* **No private/public:** Private variables are prefixed with `_` to indicate visibility. This simplifies testing.
+* **Short names for common things:** Frequently used types/functions have concise names (e.g., `Io::Scan` instead of `Io::PlainTextScanner`).
+- See [karmism](../src/libs/doc/karmism.md) for more details.
 
 ## Testing
 
-* **Focus on tricky parts:**  Test code that's complex or error-prone.
-* **Test things that change often:**  Ensure that frequently modified code remains correct.
-* Most layout and parsing code should be tested with W3C tests
+* **Focus on tricky parts:** Test complex or error-prone code thoroughly.
+* **Test changing code:** Ensure frequently modified code remains correct.
+* Most layout and parsing code should be validated with W3C tests.
 
 ## Source Control & Code Review
 
-* **Commit often:**  Keep your commits small and focused.
-* **Use branches:**  Name your branches like `<your-trigram>-<your-feature>`.
-* **Merge small changes quickly:**  Bugfixes can be merged directly into `main`.
-* **Seek code reviews:** Ask anyone for a code review when you're ready. Once you both agree the code is good and that the CI is green, merge it into `main`.
+* **Commit often:** Keep commits small and focused.
+* **Use branches:** Name branches like `<your-trigram>-<your-feature>`.
+* **Merge small changes quickly:** Bugfixes can be merged directly into `main`.
+* **Seek code reviews:** Request reviews from any team member. Merge after approval and CI passes.
 
 ## Remote Work
 
-We are at GR2 on Wednesdays and Thursdays, and remote the rest of the week.
+We are at GR2 on Wednesdays and Thursdays, and remote otherwise.
 
 ## Remember
 
-These are guidelines, not rigid rules. Use your best judgment and don't hesitate to ask if you have questions.
+These are guidelines, not rigid rules. Use your best judgment and ask questions when unsure.
