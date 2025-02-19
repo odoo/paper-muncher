@@ -30,7 +30,7 @@ struct ChunkedTransfer : public Io::Writer {
         return Ok(written);
     }
 
-    ChunkedTransfer(Io::Writer& out) : _out(out){};
+    ChunkedTransfer(Io::Writer& out) : _out(out) {};
 };
 
 struct FileChunkTransfer : public ChunkedTransfer {
@@ -100,7 +100,7 @@ struct HttPipeTransfer : public ChunkedTransfer {
         req.method = Karm::Net::Http::Method::POST;
         req.path = url.path;
         req.version = Net::Http::Version{.major = 1, .minor = 1};
-        req.add("Transfer-Encoding", "chunked");
+        req.header.add("Transfer-Encoding", "chunked");
 
         try$(req.unparse(encoder));
 
