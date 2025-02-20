@@ -258,7 +258,7 @@ static Res<Gfx::Color> _parseHexColor(Io::SScan& s) {
         auto g = nextHex(1);
         auto b = nextHex(1);
         auto a = nextHex(1);
-        return Ok(Gfx::Color::fromRgba(r, g, b, a));
+        return Ok(Gfx::Color::fromRgba(r | (r << 4), g | (g << 4), b | (b << 4), a | (a << 4)));
     } else if (s.rem() == 6) {
         // #RRGGBB
         auto r = nextHex(2);
