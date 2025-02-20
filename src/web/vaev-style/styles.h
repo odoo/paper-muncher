@@ -1098,28 +1098,7 @@ struct BorderProp {
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
-            if (width) {
-                value.width = width.unwrap();
-                continue;
-            }
-
-            auto color = parseValue<Color>(c);
-            if (color) {
-                value.color = color.unwrap();
-                continue;
-            }
-
-            auto style = parseValue<Gfx::BorderStyle>(c);
-            if (style) {
-                value.style = style.unwrap();
-                continue;
-            }
-
-            break;
-        }
-
+        value = try$(parseValue<Border>(c));
         return Ok();
     }
 };
