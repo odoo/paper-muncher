@@ -289,6 +289,19 @@ static Res<u8> _parseAlphaValue(Cursor<Css::Sst>& scan) {
     return Error::invalidData("expected alpha channel");
 }
 
+static Res<Opt<u8>> _parseAlphaComponentModernSyntax(Cursor<Css::Sst>& scan) {
+    if (scan.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (scan.skip(Css::Token::delim("/"))) {
+        eatWhitespace(scan);
+        if (scan.skip(Css::Token::ident("none")))
+            return Ok(NONE);
+        return Ok(try$(_parseAlphaValue(scan)));
+    } else
+        return Error::invalidData("expected '/' before alpha channel");
+}
+
 static Res<Number> _parseNumPercNone(Cursor<Css::Sst>& scan, Number percOf, Number noneValue = 0) {
     if (scan.ended())
         return Error::invalidData("unexpected end of input");
@@ -302,6 +315,20 @@ static Res<Number> _parseNumPercNone(Cursor<Css::Sst>& scan, Number percOf, Numb
         return Ok(try$(parseValue<Number>(scan)));
 }
 
+static Res<Array<Number, 3>> _parsePredefinedRGBParams(Cursor<Css::Sst>& scan, Number percOf = 255) {
+    Array<Number, 3> channels{};
+    for (usize i = 0; i < 3; ++i) {
+
+        if (scan.ended())
+            return Error::invalidData("unexpected end of input");
+
+        channels[i] = round(try$(_parseNumPercNone(scan, percOf)));
+
+        eatWhitespace(scan);
+    }
+    return Ok(channels);
+}
+
 // https://drafts.csswg.org/css-color/#rgb-functions
 static Res<Gfx::Color> _parseSRGBModernFuncColor(Css::Sst const& s) {
     Cursor<Css::Sst> scan = s.content;
@@ -310,33 +337,20 @@ static Res<Gfx::Color> _parseSRGBModernFuncColor(Css::Sst const& s) {
     if (scan.ended())
         return Error::invalidData("unexpected end of input");
 
-    Array<u8, 3> channels{};
-    for (usize i = 0; i < 3; ++i) {
-
-        if (scan.ended())
-            return Error::invalidData("unexpected end of input");
-
-        channels[i] = round(try$(_parseNumPercNone(scan, 255)));
-
-        eatWhitespace(scan);
-    }
-
-    u8 r = channels[0];
-    u8 g = channels[1];
-    u8 b = channels[2];
+    auto channels = try$(_parsePredefinedRGBParams(scan));
+    u8 r = round(channels[0]);
+    u8 g = round(channels[1]);
+    u8 b = round(channels[2]);
 
     eatWhitespace(scan);
 
     if (scan.ended())
         return Ok(Gfx::Color::fromRgb(r, g, b));
 
-    if (scan.skip(Css::Token::delim("/"))) {
-        eatWhitespace(scan);
-        if (scan.skip(Css::Token::ident("none")))
-            return Ok(Gfx::Color::fromRgba(r, g, b, 0));
-        return Ok(Gfx::Color::fromRgba(r, g, b, try$(_parseAlphaValue(scan))));
-    } else
-        return Error::invalidData("expected '/' before alpha channel");
+    if (auto alphaComponent = try$(_parseAlphaComponentModernSyntax(scan)))
+        return Ok(Gfx::Color::fromRgba(r, g, b, alphaComponent.unwrap()));
+    else
+        return Ok(Gfx::Color::fromRgba(r, g, b, 0));
 }
 
 static Res<Gfx::Color> _parseSRGBLegacyFuncColor(Css::Sst const& s) {
@@ -410,18 +424,13 @@ static Res<Gfx::Color> _parseHSLModernFuncColor(Css::Sst const& s) {
     auto l = try$(_parseNumPercNone(scan, 1));
     eatWhitespace(scan);
 
-    auto color = Gfx::hslToRgb(Gfx::Hsl{hue, sat, l});
     if (scan.ended())
-        return Ok(color);
+        return Ok(Gfx::hslToRgb(Gfx::Hsl{hue, sat, l}));
 
-    if (scan.skip(Css::Token::delim("/"))) {
-        eatWhitespace(scan);
-        if (scan.skip(Css::Token::ident("none")))
-            return Ok(color);
-        color.alpha = try$(_parseAlphaValue(scan));
-        return Ok(color);
-    } else
-        return Error::invalidData("expected comma before alpha channel");
+    if (auto alphaComponent = try$(_parseAlphaComponentModernSyntax(scan)))
+        return Ok(Gfx::hslToRgb(Gfx::Hsl{hue, sat, l, alphaComponent.unwrap()}));
+    else
+        return Ok(Gfx::hslToRgb(Gfx::Hsl{hue, sat, l, 0}));
 }
 
 static Res<Gfx::Color> _parseHSLLegacyFuncColor(Css::Sst const& s) {
@@ -467,8 +476,54 @@ static Res<Gfx::Color> _parseHSLLegacyFuncColor(Css::Sst const& s) {
         return Error::invalidData("expected comma before alpha channel");
 }
 
+// https://drafts.csswg.org/css-color-4/#predefined
+static Res<Gfx::Color> _parseColorFuncColor(Css::Sst const& s) {
+    Cursor<Css::Sst> scan = s.content;
+    eatWhitespace(scan);
+
+    if (scan.ended() or not(scan.peek() == Css::Token::IDENT))
+        return Error::invalidData("expected color-space identifier");
+
+    auto colorSpace = scan.next().token.data;
+    eatWhitespace(scan);
+
+    // FIXME: predefined-rgb
+    if (
+        colorSpace == "srgb" or colorSpace == "srgb-linear" or
+        colorSpace == "display-p3" or colorSpace == "a98-rgb" or
+        colorSpace == "prophoto-rgb" or colorSpace == "rec2020"
+    ) {
+        auto channels = try$(_parsePredefinedRGBParams(scan, 1));
+
+        Number r = channels[0];
+        Number g = channels[1];
+        Number b = channels[2];
+
+        eatWhitespace(scan);
+
+        if (scan.ended()) {
+            // FIXME: dispatch to constructor of colorSpace without alpha
+            return Ok(Gfx::Color::fromRgb(round(r * 255), round(g * 255), round(b * 255)));
+        }
+
+        if (auto alphaComponent = try$(_parseAlphaComponentModernSyntax(scan))) {
+            // FIXME: dispatch to constructor of colorSpace with alpha
+            return Ok(Gfx::Color::fromRgba(round(r * 255), round(g * 255), round(b * 255), alphaComponent.unwrap()));
+        } else {
+            // FIXME: correctly deal with missing alpha values
+            // FIXME: dispatch to constructor of colorSpace with missing alpha
+            return Ok(Gfx::Color::fromRgba(round(r * 255), round(g * 255), round(b * 255), 0));
+        }
+    } else {
+        logWarn("predefined color space not implemented: {}", colorSpace);
+        return Ok(Gfx::WHITE);
+    }
+}
+
 static Res<Gfx::Color> _parseFuncColor(Css::Sst const& s) {
-    if (s.prefix == Css::Token::function("rgb(") or s.prefix == Css::Token::function("rgba(")) {
+    if (s.prefix == Css::Token::function("color(")) {
+        return _parseColorFuncColor(s);
+    } else if (s.prefix == Css::Token::function("rgb(") or s.prefix == Css::Token::function("rgba(")) {
         auto modernColor = _parseSRGBModernFuncColor(s);
         if (modernColor)
             return modernColor;
