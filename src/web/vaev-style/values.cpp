@@ -113,6 +113,52 @@ Res<bool> ValueParser<bool>::parse(Cursor<Css::Sst>& c) {
 }
 
 // MARK: Border-Style
+static Res<CalcValue<Length>> _parseLineWidth(Cursor<Css::Sst>& c) {
+    if (c.peek() == Css::Token::ident("thin")) {
+        c.next();
+        return Ok(BorderProps::THIN);
+    }
+    if (c.peek() == Css::Token::ident("medium")) {
+        c.next();
+        return Ok(BorderProps::MEDIUM);
+    }
+    if (c.peek() == Css::Token::ident("thick")) {
+        c.next();
+        return Ok(BorderProps::THICK);
+    }
+
+    return parseValue<CalcValue<Length>>(c);
+}
+
+Res<Border> ValueParser<Border>::parse(Cursor<Css::Sst>& c) {
+    Border border;
+    while (not c.ended()) {
+        eatWhitespace(c);
+
+        auto width = _parseLineWidth(c);
+        if (width) {
+            border.width = width.unwrap();
+            continue;
+        }
+
+        auto color = parseValue<Color>(c);
+        if (color) {
+            border.color = color.unwrap();
+            continue;
+        }
+
+        auto style = parseValue<Gfx::BorderStyle>(c);
+        if (style) {
+            border.style = style.unwrap();
+            continue;
+        }
+
+        break;
+    }
+
+    return Ok(border);
+}
+
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 Res<Gfx::BorderStyle> ValueParser<Gfx::BorderStyle>::parse(Cursor<Css::Sst>& c) {
     if (c.ended())

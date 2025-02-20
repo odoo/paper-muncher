@@ -65,6 +65,11 @@ struct ValueParser<Gfx::BorderStyle> {
 };
 
 template <>
+struct ValueParser<Border> {
+    static Res<Border> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
 struct ValueParser<BorderCollapse> {
 
     static Res<BorderCollapse> parse(Cursor<Css::Sst>& c);
