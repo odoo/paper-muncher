@@ -32,17 +32,17 @@ static bool _paintBorders(Frag& frag, Gfx::Color currentColor, Gfx::Borders& bor
     return not borders.widths.zero();
 }
 
-static void _paintFrag(Frag& frag, Gfx::Color currentColor, Scene::Stack& stack) {
+static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
     auto const& cssBackground = frag.style().backgrounds;
 
     Gfx::Borders borders;
     Vec<Gfx::Fill> backgrounds;
-    auto color = resolve(cssBackground->color, currentColor);
+    auto color = resolve(cssBackground->color, frag.style().color);
     if (color.alpha != 0)
         backgrounds.pushBack(color);
 
-    bool hasBorders = _paintBorders(frag, currentColor, borders);
-    Math::Rectf bound = frag.metrics.borderBox().cast<f64>();
+    bool hasBorders = _paintBorders(frag, frag.style().color, borders);
+    Math::Rectf bound = frag.metrics.borderBox().cast<f64>().round();
 
     if (any(backgrounds) or hasBorders)
         stack.add(makeRc<Scene::Box>(bound, std::move(borders), std::move(backgrounds)));
@@ -52,13 +52,10 @@ static void _establishStackingContext(Frag& frag, Scene::Stack& stack);
 static void _paintStackingContext(Frag& frag, Scene::Stack& stack);
 
 static void _paintFrag(Frag& frag, Scene::Stack& stack) {
-    Gfx::Color currentColor = Gfx::BLACK;
-    currentColor = resolve(frag.style().color, currentColor);
-
-    _paintFrag(frag, currentColor, stack);
+    _paintFragBordersAndBackgrounds(frag, stack);
 
     if (auto prose = frag.box->content.is<Rc<Text::Prose>>()) {
-        (*prose)->_style.color = currentColor;
+        (*prose)->_style.color = frag.style().color;
 
         stack.add(makeRc<Scene::Text>(
             frag.metrics.borderBox().topStart().cast<f64>(),

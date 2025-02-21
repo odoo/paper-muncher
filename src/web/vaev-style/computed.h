@@ -26,7 +26,7 @@ namespace Vaev::Style {
 struct Computed {
     static Computed const& initial();
 
-    Color color;
+    Gfx::Color color;
     Number opacity;
     String content = ""s;
 
