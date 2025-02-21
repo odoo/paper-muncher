@@ -292,7 +292,7 @@ Output layout(Tree& tree, Box& box, Input input) {
             currFrag.metrics.position = input.position - borders.topStart() - padding.topStart();
             currFrag.metrics.borderSize = size;
             currFrag.metrics.padding = padding;
-            currFrag.metrics.borders = borders;
+            currFrag.metrics.borders = UsedValues::Border::buildUsedBorders(borders, *box.style->borders);
             currFrag.metrics.radii = _computeRadii(tree, box, size);
 
             parentFrag->add(std::move(currFrag));

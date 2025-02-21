@@ -287,9 +287,29 @@ struct Tree {
 
 // MARK: Fragment --------------------------------------------------------------
 
-struct Metrics {
+struct UsedValues {
+
+    struct Border {
+        Au width{};
+        Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
+        Color color = Color::CURRENT;
+
+        static Math::Insets<Border> buildUsedBorders(InsetsAu const& widhts, BorderProps const& borderProps) {
+            return Math::Insets<Border>{
+                {widhts.top, borderProps.top.style, borderProps.top.color},
+                {widhts.end, borderProps.end.style, borderProps.end.color},
+                {widhts.bottom, borderProps.bottom.style, borderProps.bottom.color},
+                {widhts.start, borderProps.start.style, borderProps.start.color},
+            };
+        }
+
+        void repr(Io::Emit& e) const {
+            e("({} {} {})", width, style, color);
+        }
+    };
+
     InsetsAu padding{};
-    InsetsAu borders{};
+    Math::Insets<Border> borders{};
     Vec2Au position; //< Position relative to the content box of the containing block
     Vec2Au borderSize;
     InsetsAu margin{};
@@ -305,7 +325,9 @@ struct Metrics {
     }
 
     RectAu paddingBox() const {
-        return borderBox().shrink(borders);
+        return borderBox().shrink(borders.map([](Border const& b) {
+            return b.width;
+        }));
     }
 
     RectAu contentBox() const {
@@ -319,7 +341,7 @@ struct Metrics {
 
 struct Frag {
     MutCursor<Box> box;
-    Metrics metrics;
+    UsedValues metrics;
     Vec<Frag> children;
 
     Frag(MutCursor<Box> box) : box{std::move(box)} {}

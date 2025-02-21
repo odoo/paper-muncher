@@ -12,22 +12,29 @@ static bool _paintBorders(Frag& frag, Gfx::Color currentColor, Gfx::Borders& bor
 
     borders.radii = frag.metrics.radii.cast<f64>();
 
-    auto bordersLayout = frag.metrics.borders;
+    auto bordersLayout = frag.metrics.borders.map([](UsedValues::Border const& b) {
+        return b.width;
+    });
     borders.widths.top = bordersLayout.top.cast<f64>();
+    borders.widths.end = bordersLayout.end.cast<f64>();
     borders.widths.bottom = bordersLayout.bottom.cast<f64>();
     borders.widths.start = bordersLayout.start.cast<f64>();
-    borders.widths.end = bordersLayout.end.cast<f64>();
 
-    auto bordersStyle = frag.style().borders;
-    borders.styles[0] = bordersStyle->top.style;
-    borders.styles[1] = bordersStyle->end.style;
-    borders.styles[2] = bordersStyle->bottom.style;
-    borders.styles[3] = bordersStyle->start.style;
+    auto bordersStyle = frag.metrics.borders.map([](UsedValues::Border const& b) {
+        return b.style;
+    });
+    borders.styles[0] = bordersStyle.top;
+    borders.styles[1] = bordersStyle.end;
+    borders.styles[2] = bordersStyle.bottom;
+    borders.styles[3] = bordersStyle.start;
 
-    borders.fills[0] = resolve(bordersStyle->top.color, currentColor);
-    borders.fills[1] = resolve(bordersStyle->end.color, currentColor);
-    borders.fills[2] = resolve(bordersStyle->bottom.color, currentColor);
-    borders.fills[3] = resolve(bordersStyle->start.color, currentColor);
+    auto bordersColors = frag.metrics.borders.map([](UsedValues::Border const& b) {
+        return b.color;
+    });
+    borders.fills[0] = resolve(bordersColors.top, currentColor);
+    borders.fills[1] = resolve(bordersColors.end, currentColor);
+    borders.fills[2] = resolve(bordersColors.bottom, currentColor);
+    borders.fills[3] = resolve(bordersColors.start, currentColor);
 
     return not borders.widths.zero();
 }
