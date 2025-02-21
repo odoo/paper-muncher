@@ -150,7 +150,7 @@ test$("test-httpipe-transfer-ok") {
     auto request = try$(Karm::Net::Http::Request::parse(scan));
 
     expectEq$(request.method, Net::Http::Method::POST);
-    expectEq$(request.headers.get("Transfer-Encoding"s), "chunked"s);
+    expectEq$(request.header.get("Transfer-Encoding"s), "chunked"s);
 
     url.path.rooted = false;
     expectEq$(request.path, url.path);

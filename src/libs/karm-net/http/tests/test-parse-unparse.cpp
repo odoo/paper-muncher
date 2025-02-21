@@ -21,9 +21,9 @@ test$("read-http-response-good-body") {
     expectEq$(response.version.major, expectedVersion.major);
     expectEq$(response.version.minor, expectedVersion.minor);
 
-    expectEq$(response.headers.len(), 2u);
-    expectEq$(response.headers.get("Server"s), "Apache"s);
-    expectEq$(response.headers.get("Content-Length"s), "3"s);
+    expectEq$(response.header.len(), 2u);
+    expectEq$(response.header.get("Server"s), "Apache"s);
+    expectEq$(response.header.get("Content-Length"s), "3"s);
 
     auto body = try$(response.readBody(br));
 
@@ -49,8 +49,8 @@ test$("read-http-response-body-content-length-mismatch") {
     expectEq$(response.version.major, expectedVersion.major);
     expectEq$(response.version.minor, expectedVersion.minor);
 
-    expectEq$(response.headers.len(), 1u);
-    expectEq$(response.headers.get("Content-Length"s), "100"s);
+    expectEq$(response.header.len(), 1u);
+    expectEq$(response.header.get("Content-Length"s), "100"s);
 
     auto body = response.readBody(br);
     expectNot$(body);
@@ -69,7 +69,7 @@ test$("read-http-response-body-empty-body") {
 
     expectEq$(response.code, Net::Http::Code{404});
 
-    expectEq$(response.headers.len(), 0u);
+    expectEq$(response.header.len(), 0u);
 
     auto body = try$(response.readBody(br));
     expectNot$(body);
