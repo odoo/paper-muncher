@@ -9,9 +9,9 @@ Res<Vec<String>> installedBundles() {
     auto [repo, format] = try$(Posix::repoRoot());
     Mime::Url repoRoot;
     if (format == Posix::RepoType::CUTEKIT) {
-        repoRoot = try$(Mime::parseUrlOrPath(repo));
+        repoRoot = Mime::parseUrlOrPath(repo);
     } else if (format == Posix::RepoType::PREFIX) {
-        repoRoot = try$(Mime::parseUrlOrPath(repo))
+        repoRoot = Mime::parseUrlOrPath(repo)
                        .join("share");
     } else {
         return Error::notFound("unknown repo type");

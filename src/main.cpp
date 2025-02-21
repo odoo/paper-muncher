@@ -230,10 +230,10 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             Mime::Url outputUrl = "fd:stdout"_url;
 
             if (inputArg.unwrap() != "-"s)
-                inputUrl = co_try$(Mime::parseUrlOrPath(inputArg));
+                inputUrl = Mime::parseUrlOrPath(inputArg);
 
             if (outputArg.unwrap() != "-"s)
-                outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
+                outputUrl = Mime::parseUrlOrPath(outputArg);
 
             if (outputMimeArg.unwrap() != ""s)
                 options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));
@@ -277,10 +277,10 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             Mime::Url outputUrl = "fd:stdout"_url;
 
             if (inputArg.unwrap() != "-"s)
-                inputUrl = co_try$(Mime::parseUrlOrPath(inputArg));
+                inputUrl = Mime::parseUrlOrPath(inputArg);
 
             if (outputArg.unwrap() != "-"s)
-                outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
+                outputUrl = Mime::parseUrlOrPath(outputArg);
 
             if (outputMimeArg.unwrap() != ""s)
                 options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));

@@ -142,15 +142,10 @@ void fetchStylesheets(Fetcher& fetcher, Gc::Ref<Dom::Node> node, Style::StyleBoo
                 return;
             }
 
-            auto url = Mime::parseUrlOrPath(*href);
-            if (not url) {
-                logWarn("link element href attribute is not a valid URL: {}", *href);
-                return;
-            }
-
-            auto sheet = fetchStylesheet(fetcher, url.take(), Style::Origin::AUTHOR);
+            auto url = Mime::parseUrlOrPath(*href, node->baseURI());
+            auto sheet = fetchStylesheet(fetcher, url, Style::Origin::AUTHOR);
             if (not sheet) {
-                logWarn("failed to fetch stylesheet: {}", sheet);
+                logWarn("failed to fetch stylesheet from {}: {}", url, sheet);
                 return;
             }
 

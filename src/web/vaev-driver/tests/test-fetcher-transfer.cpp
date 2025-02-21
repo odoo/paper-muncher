@@ -158,7 +158,7 @@ test$("test-httpipe-transfer-ok") {
     expectEq$(written, bw.bytes().len());
 
     auto expectedResponse =
-        "POST /pants/path HTTP/1.1\r\n"
+        "POST /fancy/pants/path HTTP/1.1\r\n"
         "Transfer-Encoding: chunked\r\n"
         "\r\n"
         "43\r\n"

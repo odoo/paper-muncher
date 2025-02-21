@@ -18,9 +18,9 @@ struct Url {
     String query;
     String fragment;
 
-    static Url parse(Io::SScan& s);
+    static Url parse(Io::SScan& s, Opt<Url> orgin = NONE);
 
-    static Url parse(Str str);
+    static Url parse(Str str, Opt<Url> orgin = NONE);
 
     static bool isUrl(Str str);
 
@@ -57,19 +57,19 @@ struct Url {
     auto operator<=>(Url const&) const = default;
 };
 
-Res<Url> parseUrlOrPath(Str str);
+Url parseUrlOrPath(Str str, Opt<Url> origin = NONE);
 
 } // namespace Karm::Mime
 
-inline auto operator""_url(char const* str, usize len) {
+inline Mime::Url operator""_url(char const* str, usize len) {
     return Karm::Mime::Url::parse({str, len});
 }
 
-inline auto operator/(Karm::Mime::Url const& url, Str path) {
+inline Mime::Url operator/(Karm::Mime::Url const& url, Str path) {
     return url.join(path);
 }
 
-inline auto operator/(Karm::Mime::Url const& url, Karm::Mime::Path const& path) {
+inline Mime::Url operator/(Karm::Mime::Url const& url, Karm::Mime::Path const& path) {
     return url.join(path);
 }
 
