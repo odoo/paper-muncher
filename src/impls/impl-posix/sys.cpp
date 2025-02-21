@@ -31,11 +31,11 @@ Res<Mime::Path> resolve(Mime::Url const& url) {
     if (url.scheme == "file") {
         resolved = url.path;
     } else if (url.scheme == "fd") {
-        if (url.host == "stdin") {
+        if (url.path == "stdin"_path) {
             resolved = "/dev/stdin"_path;
-        } else if (url.host == "stdout") {
+        } else if (url.path == "stdout"_path) {
             resolved = "/dev/stdout"_path;
-        } else if (url.host == "stderr") {
+        } else if (url.path == "stderr"_path) {
             resolved = "/dev/stderr"_path;
         } else {
             return Error::notFound("unknown fd");

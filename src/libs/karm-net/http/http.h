@@ -77,6 +77,8 @@ enum struct Code : u16 {
 #undef ITER
 };
 
+using enum Code;
+
 enum struct CodeClass : u8 {
     UNKNOWN = 0,
     INFORMATIONAL = 1,
@@ -164,6 +166,8 @@ struct Version {
 };
 
 struct Header : public Map<String, String> {
+    using Map<String, String>::Map;
+
     void add(Str const& key, Str value);
 
     Res<> parse(Io::SScan& s);

@@ -79,7 +79,7 @@ Res<> print(
 
     auto writer = try$(fetcher.transfer(output));
     try$(printer->write(*writer));
-    try$(writer->done());
+    try$(writer->close());
     return Ok();
 }
 
@@ -168,7 +168,7 @@ Res<> render(
 
     auto writer = try$(fetcher.transfer(output));
     try$(Image::save(image->pixels(), *writer));
-    try$(writer->done());
+    try$(writer->close());
     return Ok();
 }
 

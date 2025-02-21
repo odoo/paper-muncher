@@ -10,55 +10,40 @@
 
 namespace Vaev::Driver {
 
-struct ChunkedTransfer : public Io::Writer {
-    bool isDone = false;
-    Io::Writer& _out;
-
-    virtual Res<usize> _write(Bytes bytes) = 0;
-
-    Res<usize> write(Bytes bytes) override {
-        if (isDone)
-            return Error::brokenPipe("Cannot write to transfer after it is done.");
-        return _write(bytes);
-    }
-
-    virtual Res<usize> _done() = 0;
-
-    Res<usize> done() {
-        auto written = try$(_done());
-        isDone = true;
-        return Ok(written);
-    }
-
-    ChunkedTransfer(Io::Writer& out) : _out(out) {};
+struct Transfer : public Io::Writer {
+    virtual Res<> close() = 0;
 };
 
-struct FileChunkTransfer : public ChunkedTransfer {
+struct FileTransfer : public Transfer {
+    bool _closed = false;
+    Sys::FileWriter _out;
 
-    FileChunkTransfer(Io::Writer& out) : ChunkedTransfer(out) {}
+    FileTransfer(Sys::FileWriter&& out)
+        : _out(std::move(out)) {}
 
-    Res<usize> _write(Bytes bytes) override {
+    Res<usize> write(Bytes bytes) override {
+        if (_closed)
+            return Error::brokenPipe("transfer is closed");
         return _out.write(bytes);
     }
 
-    Res<usize> _done() override {
-        return Ok(0);
+    Res<> close() override {
+        return Ok();
     }
 };
 
 struct Fetcher {
+    Opt<Rc<Fetcher>> _next;
 
-    Opt<Rc<Fetcher>> fallback;
-
-    Fetcher(Opt<Rc<Fetcher>> fallback = NONE) : fallback(fallback) {}
+    Fetcher(Opt<Rc<Fetcher>> fallback = NONE)
+        : _next(fallback) {}
 
     virtual Res<String> fetch(Mime::Url const& url) = 0;
 
-    virtual Res<Rc<ChunkedTransfer>> transfer(Mime::Url const& url) = 0;
+    virtual Res<Rc<Transfer>> transfer(Mime::Url const& url) = 0;
 };
 
 struct FileFetcher : public Fetcher {
-
     virtual ~FileFetcher() = default;
 
     Res<String> fetch(Mime::Url const& url) override {
@@ -66,75 +51,80 @@ struct FileFetcher : public Fetcher {
         return Io::readAllUtf8(file);
     }
 
-    virtual Res<Rc<ChunkedTransfer>> transfer(Mime::Url const& url) override {
+    virtual Res<Rc<Transfer>> transfer(Mime::Url const& url) override {
         auto fileWriter = try$(Sys::File::create(url));
-        return Ok(makeRc<FileChunkTransfer>(fileWriter));
+        return Ok(makeRc<FileTransfer>(fileWriter));
     };
 };
 
-struct HttPipeTransfer : public ChunkedTransfer {
+struct HttPipeTransfer : public Transfer {
+    // NOTE: Fine-tuned for linux pipe buffer size
+    static constexpr usize const MAX_BUF_SIZE = Math::pow(2, 16);
 
-    inline static Buf<Byte> const lineSeparator = bytes("\r\n"s);
-    static usize const MAX_BUF_SIZE = 512;
+    Mime::Url _url;
+    Io::Writer& _chan;
+    bool _start = true;
+    Io::BufferWriter _buf;
 
-    Io::Count cntedOut;
-    Io::TextEncoder<Utf8> encoder;
-    Mime::Url const& url;
-
-    HttPipeTransfer(Io::Writer& out, Mime::Url const& url)
-        : ChunkedTransfer(out), cntedOut(out), encoder(cntedOut), url{url} {}
-
-    bool wroteHeader = false;
+    HttPipeTransfer(Mime::Url url, Io::Writer& chan)
+        : _url(url), _chan(chan) {}
 
     Res<> _writeHeader() {
-        Net::Http::Request req;
-        req.method = Karm::Net::Http::Method::POST;
-        req.path = url.path;
-        req.version = Net::Http::Version{.major = 1, .minor = 1};
-        req.header.add("Transfer-Encoding", "chunked");
+        Net::Http::Request req{
+            .method = Net::Http::Method::POST,
+            .path = _url.path,
+            .version = {.major = 1, .minor = 1},
+            .header = {
+                {"Transfer-Encoding"s, "chunked"s},
+            },
+        };
 
-        try$(req.unparse(encoder));
+        Io::TextEncoder<Utf8> enc{_chan};
+        try$(req.unparse(enc));
 
-        wroteHeader = true;
+        _start = true;
         return Ok();
     }
 
-    Io::BufferWriter bw;
-
-    Res<> flushBuffer() {
-        if (bw.bytes().len() == 0)
+    Res<> _flushBuffer() {
+        if (_buf.bytes().len() == 0)
             return Ok();
 
-        try$(Io::format(encoder, "{}", bw.bytes().len()));
-        try$(encoder.write(lineSeparator));
-        try$(cntedOut.write(bw.bytes()));
-        try$(encoder.write(lineSeparator));
-        bw.clear();
+        Io::TextEncoder<Utf8> enc{_chan};
+        try$(Io::format(enc, "{}", _buf.bytes().len()));
+        try$(enc.write("\r\n"_bytes));
+        try$(enc.write(_buf.bytes()));
+        try$(enc.write("\r\n"_bytes));
+        _buf.clear();
 
         return Ok();
     }
 
-    Res<usize> _write(Bytes b) override {
+    Res<usize> write(Bytes buf) override {
+        if (_start) {
+            try$(_writeHeader());
+            _start = false;
+        }
+
+        
+
         auto startWriterPos = cntedOut._pos;
-        if (not wroteHeader)
+        if (not _start)
             try$(_writeHeader());
 
         try$(bw.write(b));
-        if (bw.bytes().len() >= MAX_BUF_SIZE)
-            try$(flushBuffer());
+        if (_buf.startWriterPos().len() >= MAX_BUF_SIZE)
+            try$(_flushBuffer());
 
         return Ok(cntedOut._pos - startWriterPos);
     }
 
-    Res<usize> _done() override {
-        auto startWriterPos = cntedOut._pos;
-
-        try$(flushBuffer());
+    Res<> close() override {
+        try$(_flushBuffer());
         try$(encoder.write(bytes("0"s)));
-        try$(encoder.write(lineSeparator));
-        try$(encoder.write(lineSeparator));
-
-        return Ok(cntedOut._pos - startWriterPos);
+        try$(encoder.write(LINE_SEP));
+        try$(encoder.write(LINE_SEP));
+        return Ok();
     }
 };
 
@@ -151,14 +141,14 @@ struct HttpPipe : public Fetcher {
     virtual ~HttpPipe() = default;
 
     Res<String> _readFileFromResponse() {
-        auto response = try$(Karm::Net::Http::Response::read(input));
+        auto response = try$(Net::Http::Response::read(input));
         auto body = try$(response.readBody(input));
 
-        if (response.code != Karm::Net::Http::Code::OK)
-            return Error::invalidData("Unexpected HTTP code");
+        if (response.code != Net::Http::OK)
+            return Error::invalidData("unexpected HTTP code");
 
         if (not body)
-            return Error::invalidData("Body is expected");
+            return Error::invalidData("body is expected");
 
         Io::BufReader br{body.unwrap()};
         auto res = try$(Io::readAllUtf8(br));
@@ -167,8 +157,8 @@ struct HttpPipe : public Fetcher {
     }
 
     Res<> _sendFetchRequest(Mime::Url const& url) {
-        Karm::Net::Http::Request req;
-        req.method = Karm::Net::Http::Method::GET;
+        Net::Http::Request req;
+        req.method = Net::Http::Method::GET;
         req.path = url.path;
         req.version = Net::Http::Version{.major = 1, .minor = 1};
         try$(req.unparse(output));
@@ -178,10 +168,10 @@ struct HttpPipe : public Fetcher {
 
     Res<String> fetch(Mime::Url const& url) override {
         if (url.scheme != "file"s) {
-            if (not fallback)
-                return Error::invalidInput("Unsupported URL scheme");
+            if (not _next)
+                return Error::invalidInput("unsupported URL scheme");
 
-            return fallback.unwrap()->fetch(url);
+            return _next.unwrap()->fetch(url);
         }
 
         try$(_sendFetchRequest(url));
@@ -189,7 +179,7 @@ struct HttpPipe : public Fetcher {
         return Ok(buf);
     }
 
-    virtual Res<Rc<ChunkedTransfer>> transfer(Mime::Url const& url) override {
+    virtual Res<Rc<Transfer>> transfer(Mime::Url const& url) override {
         return Ok(makeRc<HttPipeTransfer>(output, url));
     };
 };

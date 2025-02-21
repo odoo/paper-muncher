@@ -29,11 +29,11 @@ def fetchMessage(args: model.TargetArgs, type: str) -> str:
 
 
 def compareImages(
-        lhs: bytes,
-        rhs: bytes,
-        lowEpsilon: float = 0.05,
-        highEpsilon: float = 0.1,
-        strict=False,
+    lhs: bytes,
+    rhs: bytes,
+    lowEpsilon: float = 0.05,
+    highEpsilon: float = 0.1,
+    strict=False,
 ) -> bool:
     if strict:
         return lhs == rhs
@@ -48,12 +48,10 @@ def compareImages(
     for i in range(len(lhs)):
         diff = abs(lhs[i] - rhs[i]) / 255
         if diff > highEpsilon:
-            # print(f"Image rejected with diff = {diff}")
             return False
         errorSum += diff > lowEpsilon
 
     if errorSum > len(lhs) // 100:
-        # print(f"Image reject with errorSum = {errorSum}")
         return False
 
     return True
@@ -61,7 +59,9 @@ def compareImages(
 
 class RefTestArgs(model.TargetArgs):
     glob: str = cli.arg("g", "glob")
-    headless: bool = cli.arg(None, "headless", "Run the tests without opening the report.")
+    headless: bool = cli.arg(
+        None, "headless", "Run the tests without opening the report."
+    )
     fast: str = cli.arg(
         None, "fast", "Proceed to the next test as soon as an error occurs."
     )
@@ -137,7 +137,7 @@ def _(args: RefTestArgs):
                 report += f"""
                 <div>
                     <div id="case-{counter}" class="test skipped">
-                        <h2>{props.get('name') or "Unamed"}</h2>
+                        <h2>{props.get("name") or "Unamed"}</h2>
                         <p>Test Skipped</p>
                     </div>
                 <div>
@@ -167,7 +167,7 @@ def _(args: RefTestArgs):
                     expected_image_url = ref_image
 
             for tag, info, rendering in re.findall(
-                    r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test
+                r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test
             ):
                 renderingProps = getInfo(info)
                 if "skip" in renderingProps:
@@ -178,6 +178,7 @@ def _(args: RefTestArgs):
                     continue
 
                 input_path = TEST_REPORT / f"{counter}.xhtml"
+                print(input_path)
 
                 update_temp_file(input_path, container, rendering)
 
@@ -210,7 +211,7 @@ def _(args: RefTestArgs):
                     if not expected_image:
                         expected_image = output_image
                         with (TEST_REPORT / f"{counter}.expected.bmp").open(
-                                "wb"
+                            "wb"
                         ) as imageWriter:
                             imageWriter.write(expected_image)
                         continue
@@ -241,19 +242,19 @@ def _(args: RefTestArgs):
                     print()
 
                 test_report += f"""
-                <div id="case-{counter}" class="test-case {ok and 'passed' or 'failed'}">
+                <div id="case-{counter}" class="test-case {ok and "passed" or "failed"}">
                     <div class="infoBar"></div>
                     <h2>{counter} - {tag}</h2>
                     <p>{help}</p>
                     <div class="outputs">
                         <div>
-                            <img class="actual" src="{TEST_REPORT / f'{counter}.bmp'}" />
+                            <img class="actual" src="{TEST_REPORT / f"{counter}.bmp"}" />
                             <figcaption>Actual</figcaption>
                         </div>
 
                         <div>
                             <img class="expected" src="{expected_image_url}" />
-                            <figcaption>{'Reference' if (tag == 'rendering') else 'Unexpected'}</figcaption>
+                            <figcaption>{"Reference" if (tag == "rendering") else "Unexpected"}</figcaption>
                         </div>
 
                         <div>
@@ -272,9 +273,9 @@ def _(args: RefTestArgs):
                     break
             report += f"""
                 <div class=wrapper>
-                    <div id="test-{counter}" class="test {failCount and 'failed' or 'passed'}">
-                        <h1>{props.get('name')}</h2>
-                        <p>{props.get('help') or ""}</p>
+                    <div id="test-{counter}" class="test {failCount and "failed" or "passed"}">
+                        <h1>{props.get("name")}</h2>
+                        <p>{props.get("help") or ""}</p>
                         <a href="{file}">Source</a>
                         <span>{passCount} passed, {failCount} failed and {skippedCount} skipped</span>
                     </div>
@@ -283,7 +284,7 @@ def _(args: RefTestArgs):
                 """
     report += f"""
         <footer>
-        <p class="witty">{fetchMessage(args, 'witty' if failed else 'nice')}</p>
+        <p class="witty">{fetchMessage(args, "witty" if failed else "nice")}</p>
         <p> Failed {failed} tests, Passed {passed} tests, Skipped {skipped}</p>
         </footer>
     """
