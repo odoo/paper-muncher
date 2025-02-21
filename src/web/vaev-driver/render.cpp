@@ -14,15 +14,15 @@ namespace Vaev::Driver {
 
 static constexpr bool DEBUG_RENDER = false;
 
-RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media, Layout::Viewport viewport) {
+RenderResult render(Fetcher& fetcher, Gc::Ref<Dom::Document> dom, Style::Media const& media, Layout::Viewport viewport) {
     Style::StyleBook stylebook;
     stylebook.add(
-        fetchStylesheet("bundle://vaev-driver/html.css"_url, Style::Origin::USER_AGENT)
+        fetchStylesheet(fetcher, "bundle://vaev-driver/html.css"_url, Style::Origin::USER_AGENT)
             .take("user agent stylesheet not available")
     );
 
     auto start = Sys::now();
-    fetchStylesheets(dom, stylebook);
+    fetchStylesheets(fetcher, dom, stylebook);
     auto elapsed = Sys::now() - start;
     logDebugIf(DEBUG_RENDER, "style collection time: {}", elapsed);
 

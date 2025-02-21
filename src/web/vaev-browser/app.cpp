@@ -57,6 +57,7 @@ struct Navigate {
 };
 
 struct State {
+    Driver::Fetcher& fetcher;
     Gc::Heap& heap;
     usize currentIndex = 0;
     Vec<Navigate> history;
@@ -65,8 +66,8 @@ struct State {
     InspectState inspect = {};
     bool wireframe = false;
 
-    State(Gc::Heap& heap, Navigate nav, Res<Gc::Root<Dom::Document>> dom)
-        : heap(heap), history{nav}, dom{dom} {}
+    State(Driver::Fetcher& fetcher, Gc::Heap& heap, Navigate nav, Res<Gc::Root<Dom::Document>> dom)
+        : fetcher(fetcher), heap(heap), history{nav}, dom{dom} {}
 
     bool canGoBack() const {
         return currentIndex > 0;
@@ -105,7 +106,7 @@ Ui::Task<Action> reduce(State& s, Action a) {
             if (object.action == Mime::Uti::PUBLIC_MODIFY) {
                 s.dom = Vaev::Driver::viewSource(s.heap, object.url);
             } else {
-                s.dom = Vaev::Driver::fetchDocument(s.heap, object.url);
+                s.dom = Vaev::Driver::fetchDocument(s.fetcher, s.heap, object.url);
             }
         },
         [&](GoBack) {
@@ -148,10 +149,10 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
         Kr::contextMenuItem(
             not s.dom
                 ? Ui::OnPress{NONE}
-                : [dom = s.dom.unwrap()](auto& n) {
+                : [&fetcher = s.fetcher, dom = s.dom.unwrap()](auto& n) {
                       Ui::showDialog(
                           n,
-                          View::printDialog(dom)
+                          View::printDialog(fetcher, dom)
                       );
                   },
             Mdi::PRINTER, "Print..."
@@ -289,7 +290,7 @@ Ui::Child webview(State const& s) {
     if (not s.dom)
         return alert(s, "The page could not be loaded"s, Io::toStr(s.dom));
 
-    return Vaev::View::view(s.dom.unwrap(), {.wireframe = s.wireframe}) |
+    return Vaev::View::view(s.fetcher, s.dom.unwrap(), {.wireframe = s.wireframe}) |
            Ui::vscroll() |
            Ui::box({
                .backgroundFill = Gfx::WHITE,
@@ -308,9 +309,10 @@ Ui::Child appContent(State const& s) {
     );
 }
 
-export Ui::Child app(Gc::Heap& heap, Mime::Url url, Res<Gc::Ref<Vaev::Dom::Document>> dom) {
+export Ui::Child app(Driver::Fetcher& fetcher, Gc::Heap& heap, Mime::Url url, Res<Gc::Ref<Vaev::Dom::Document>> dom) {
     return Ui::reducer<Model>(
         {
+            fetcher,
             heap,
             Navigate{url},
             dom,
