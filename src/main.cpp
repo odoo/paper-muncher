@@ -224,14 +224,14 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             Opt<Sys::FileReader> inputFile;
             if (inputArg.unwrap() != "-"s) {
-                inputUrl = co_try$(Mime::parseUrlOrPath(inputArg));
+                inputUrl = Mime::parseUrlOrPath(inputArg);
                 inputFile = co_try$(Sys::File::open(inputUrl));
                 input = &inputFile.unwrap();
             }
 
             Opt<Sys::FileWriter> outputFile;
             if (outputArg.unwrap() != "-"s) {
-                auto outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
+                auto outputUrl = Mime::parseUrlOrPath(outputArg);
                 outputFile = co_try$(Sys::File::create(outputUrl));
                 output = &outputFile.unwrap();
             }
@@ -278,14 +278,14 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             Opt<Sys::FileReader> inputFile;
             if (inputArg.unwrap() != "-"s) {
-                inputUrl = co_try$(Mime::parseUrlOrPath(inputArg));
+                inputUrl = Mime::parseUrlOrPath(inputArg);
                 inputFile = co_try$(Sys::File::open(inputUrl));
                 input = &inputFile.unwrap();
             }
 
             Opt<Sys::FileWriter> outputFile;
             if (outputArg.unwrap() != "-"s) {
-                auto outputUrl = co_try$(Mime::parseUrlOrPath(outputArg));
+                auto outputUrl = Mime::parseUrlOrPath(outputArg);
                 outputFile = co_try$(Sys::File::create(outputUrl));
                 output = &outputFile.unwrap();
             }

@@ -11,11 +11,21 @@ static auto const RE_COMPONENT =
         Re::alnum() | '+'_re | '-'_re | '.'_re
     );
 
-Url Url::parse(Io::SScan& s) {
+static auto const RE_SCHEME = RE_COMPONENT & ':'_re;
+
+Url Url::parse(Io::SScan& s, Opt<Url> origin) {
     Url url;
 
-    url.scheme = s.token(RE_COMPONENT);
-    s.skip(':');
+    if (s.ahead(RE_SCHEME)) {
+        url.scheme = s.token(RE_COMPONENT);
+        s.skip(':');
+    } else if (origin) {
+        url.scheme = origin->scheme;
+        url.authority = origin->authority;
+        url.host = origin->host;
+        url.port = origin->port;
+        url.path = origin->path;
+    }
 
     if (s.skip("//")) {
         auto maybeHost = s.token(RE_COMPONENT);
@@ -33,6 +43,8 @@ Url Url::parse(Io::SScan& s) {
     }
 
     url.path = Path::parse(s, true);
+    if (not url.path.rooted and origin)
+        url.path = origin->path.join(url.path);
 
     if (s.skip('?'))
         url.query = s.token(Re::until('#'_re));
@@ -43,9 +55,9 @@ Url Url::parse(Io::SScan& s) {
     return url;
 }
 
-Url Url::parse(Str str) {
+Url Url::parse(Str str, Opt<Url> origin) {
     Io::SScan s{str};
-    return parse(s);
+    return parse(s, origin);
 }
 
 bool Url::isUrl(Str str) {
@@ -116,15 +128,15 @@ String Url::str() const {
     return writer.str();
 }
 
-Res<Url> parseUrlOrPath(Str str) {
+Url parseUrlOrPath(Str str, Opt<Url> origin) {
     if (Url::isUrl(str)) {
-        return Ok(Url::parse(str));
+        return Url::parse(str, origin);
     }
 
-    Url url;
-    url.scheme = "file"s;
-    url.path = Path::parse(str);
-    return Ok(url);
+    Url url = origin.unwrapOr("file:"_url);
+    url.path = url.path.join(Path::parse(str));
+
+    return url;
 }
 
 } // namespace Karm::Mime
