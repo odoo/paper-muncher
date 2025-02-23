@@ -7,7 +7,7 @@ namespace Vaev {
 
 template <typename T>
 struct CalcValue {
-    enum struct OpCode {
+    enum struct OpCode : u8 {
         NOP,
         ADD,
         SUBSTRACT,
@@ -20,7 +20,7 @@ struct CalcValue {
         _LEN0
     };
 
-    enum struct OpType {
+    enum struct OpType : u8 {
         FIXED,  // a single value
         SINGLE, // 1 value + 1 OP
         CALC,   // 2 values + 1 OP
@@ -32,9 +32,9 @@ struct CalcValue {
 
     using Value = Union<None, T, Leaf, Number>;
     OpType type;
+    OpCode op = OpCode::NOP;
     Value lhs = NONE;
     Value rhs = NONE;
-    OpCode op = OpCode::NOP;
 
     constexpr CalcValue()
         : CalcValue(T{}) {
@@ -49,11 +49,11 @@ struct CalcValue {
     }
 
     constexpr CalcValue(Value lhs, OpCode op)
-        : type(OpType::SINGLE), lhs(lhs), op(op) {
+        : type(OpType::SINGLE), op(op), lhs(lhs) {
     }
 
     constexpr CalcValue(Value lhs, OpCode op, Value rhs)
-        : type(OpType::CALC), lhs(lhs), rhs(rhs), op(op) {
+        : type(OpType::CALC), op(op), lhs(lhs), rhs(rhs) {
     }
 
     constexpr bool operator==(OpType type2) const {

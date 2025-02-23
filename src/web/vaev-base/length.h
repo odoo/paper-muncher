@@ -10,7 +10,7 @@ namespace Vaev {
 // https://drafts.csswg.org/css-values/#lengths
 
 struct Length {
-    enum struct Unit : u16 {
+    enum struct Unit : u8 {
 #define LENGTH(NAME, ...) NAME,
 #include "defs/lengths.inc"
 #undef LENGTH
