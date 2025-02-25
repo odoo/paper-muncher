@@ -361,9 +361,13 @@ struct Input {
     /// Parent fragment where the layout will be attached.
     MutCursor<Frag> fragment = nullptr;
     IntrinsicSize intrinsic = IntrinsicSize::AUTO;
-    Math::Vec2<Opt<Au>> knownSize = {};
-    Vec2Au position = {};
-    Vec2Au availableSpace = {};
+
+    InsetsAu computedBorders{}, computedPadding{};
+
+    Math::Vec2<Opt<Au>> knownBorderBoxSize = {};
+    Math::Vec2<Opt<Au>> knownContentBoxSize = {};
+    Vec2Au borderBoxPosition = {};
+    Vec2Au borderBoxAvailableSpace = {};
     Vec2Au containingBlock = {};
 
     BreakpointTraverser breakpointTraverser = {};
@@ -373,7 +377,41 @@ struct Input {
 
     // TODO: instead of stringing this around, maybe change this (and check method of fragmentainer) to a
     // "availableSpaceInFragmentainer" parameter
-    Au pendingVerticalSizes = {};
+    Au borderBoxPendingVerticalSizes = {};
+
+    Math::Vec2<Opt<Au>> contentBoxSize() const {
+        Math::Vec2<Opt<Au>> contentBoxSize;
+
+        if (not knownContentBoxSize.width) {
+            contentBoxSize.width = knownBorderBoxSize.width.map([=, this](auto s) {
+                return max(0_au, s - computedPadding.horizontal() - computedBorders.horizontal());
+            });
+        } else
+            contentBoxSize.width = knownContentBoxSize.width;
+
+        if (not knownContentBoxSize.height) {
+            contentBoxSize.height = knownBorderBoxSize.height.map([&](auto s) {
+                return max(0_au, s - computedPadding.vertical() - computedBorders.vertical());
+            });
+        } else
+            contentBoxSize.height = knownContentBoxSize.height;
+
+        return contentBoxSize;
+    }
+
+    Vec2Au contentBoxPosition() const {
+        return borderBoxPosition + computedBorders.topStart() + computedPadding.topStart();
+    }
+
+    Vec2Au contentBoxAvailableSpace() const {
+        return (borderBoxAvailableSpace - computedPadding.all() - computedBorders.all()).map([](auto x) {
+            return max(0_au, x);
+        });
+    }
+
+    Au contentBoxPendingVerticalSizes() const {
+        return borderBoxPendingVerticalSizes - computedPadding.bottom - computedBorders.bottom;
+    }
 
     Input withFragment(MutCursor<Frag> f) const {
         auto copy = *this;
@@ -387,25 +425,25 @@ struct Input {
         return copy;
     }
 
-    Input withKnownSize(Math::Vec2<Opt<Au>> size) const {
+    Input withKnownBorderBoxSize(Math::Vec2<Opt<Au>> size) const {
         auto copy = *this;
-        copy.knownSize = size;
+        copy.knownBorderBoxSize = size;
         return copy;
     }
 
-    Input withPosition(Vec2Au pos) const {
+    Input withBorderBoxPosition(Vec2Au pos) const {
         auto copy = *this;
-        copy.position = pos;
+        copy.borderBoxPosition = pos;
         return copy;
     }
 
-    Input withAvailableSpace(Vec2Au space) const {
+    Input withBorderBoxAvailableSpace(Vec2Au space) const {
         auto copy = *this;
-        copy.availableSpace = space;
+        copy.borderBoxAvailableSpace = space;
         return copy;
     }
 
-    Input withContainingBlock(Vec2Au block) const {
+    Input withBorderBoxContainingBlock(Vec2Au block) const {
         auto copy = *this;
         copy.containingBlock = block;
         return copy;
@@ -417,9 +455,9 @@ struct Input {
         return copy;
     }
 
-    Input addPendingVerticalSize(Au newPendingVerticalSize) const {
+    Input addBorderBoxPendingVerticalSize(Au newPendingVerticalSize) const {
         auto copy = *this;
-        copy.pendingVerticalSizes += newPendingVerticalSize;
+        copy.borderBoxPendingVerticalSizes += newPendingVerticalSize;
         return copy;
     }
 };

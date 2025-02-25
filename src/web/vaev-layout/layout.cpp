@@ -197,29 +197,24 @@ Output layout(Tree& tree, Box& box, Input input) {
     auto padding = _computePaddings(tree, box, input.containingBlock);
     auto sizing = box.style->sizing;
 
-    if (input.knownSize.width == NONE) {
+    input.computedBorders = borders;
+    input.computedPadding = padding;
+
+    if (input.knownBorderBoxSize.width == NONE) {
         auto specifiedWidth = _computeSpecifiedSize(tree, box, sizing->width, input.containingBlock, true);
-        input.knownSize.width = specifiedWidth;
+        if (sizing->boxSizing == BoxSizing::BORDER_BOX)
+            input.knownBorderBoxSize.width = specifiedWidth;
+        else
+            input.knownContentBoxSize.width = specifiedWidth;
     }
 
-    input.knownSize.width = input.knownSize.width.map([&](auto s) {
-        return max(0_au, s - padding.horizontal() - borders.horizontal());
-    });
-
-    if (input.knownSize.height == NONE) {
+    if (input.knownBorderBoxSize.height == NONE) {
         auto specifiedHeight = _computeSpecifiedSize(tree, box, sizing->height, input.containingBlock, false);
-        input.knownSize.height = specifiedHeight;
+        if (sizing->boxSizing == BoxSizing::BORDER_BOX)
+            input.knownBorderBoxSize.height = specifiedHeight;
+        else
+            input.knownContentBoxSize.height = specifiedHeight;
     }
-
-    input.knownSize.height = input.knownSize.height.map([&](auto s) {
-        return max(0_au, s - padding.vertical() - borders.vertical());
-    });
-
-    input.availableSpace.height = max(0_au, input.availableSpace.height - padding.vertical() - borders.vertical());
-    input.availableSpace.width = max(0_au, input.availableSpace.width - padding.horizontal() - borders.horizontal());
-
-    input.position = input.position + borders.topStart() + padding.topStart();
-    input.pendingVerticalSizes += borders.bottom + padding.bottom;
 
     bool isMonolithicDisplay =
         box.style->display == Display::Inside::FLEX or
