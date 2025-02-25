@@ -284,7 +284,7 @@ struct [[nodiscard]] Opt {
         }
     }
 
-    always_inline constexpr auto map(auto f) -> Opt<decltype(f(unwrap()))> {
+    always_inline constexpr auto map(auto f) const -> Opt<decltype(f(unwrap()))> {
         if (_present) {
             return {f(unwrap())};
         }
