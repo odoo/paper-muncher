@@ -477,8 +477,8 @@ struct FlexItem {
             speculateValues(
                 tree,
                 {
-                    .knownSize = fa.extractMainAxisAndFillOptOther(usedSize, elementSpeculativeCrossSize),
-                    .availableSpace = availableSpaceInFlexContainer,
+                    .knownBorderBoxSize = fa.extractMainAxisAndFillOptOther(usedSize, elementSpeculativeCrossSize),
+                    .borderBoxAvailableSpace = availableSpaceInFlexContainer,
                 }
             );
         }
@@ -659,8 +659,8 @@ struct FlexFormatingContext : public FormatingContext {
         Tree& t, Input input
     ) {
         availableSpace = {
-            input.knownSize.x.unwrapOr(input.availableSpace.x),
-            input.knownSize.y.unwrapOr(input.availableSpace.y),
+            input.contentBoxSize().x.unwrapOr(input.borderBoxAvailableSpace.x),
+            input.contentBoxSize().y.unwrapOr(input.borderBoxAvailableSpace.y),
         };
 
         if (isMinMaxIntrinsicSize(input.intrinsic))
@@ -684,8 +684,8 @@ struct FlexFormatingContext : public FormatingContext {
             i.speculateValues(
                 tree,
                 {
-                    .knownSize = fa.extractMainAxisAndFillOptOther(i.flexBaseSize),
-                    .availableSpace = availableSpace,
+                    .knownBorderBoxSize = fa.extractMainAxisAndFillOptOther(i.flexBaseSize),
+                    .borderBoxAvailableSpace = availableSpace,
                 }
             );
         }
@@ -804,8 +804,8 @@ struct FlexFormatingContext : public FormatingContext {
     void _determineMainSize(Tree& t, Input input, Box& box) {
         _usedMainSize =
             _flex.isRowOriented()
-                ? input.knownSize.x.unwrapOr(0_au)
-                : input.knownSize.y.unwrapOr(0_au);
+                ? input.contentBoxSize().x.unwrapOr(0_au)
+                : input.contentBoxSize().y.unwrapOr(0_au);
 
         if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
             if (fa.isRowOriented) {
@@ -1077,8 +1077,8 @@ struct FlexFormatingContext : public FormatingContext {
             i.speculateValues(
                 tree,
                 {
-                    .knownSize = fa.extractMainAxisAndFillOptOther(i.usedSize),
-                    .availableSpace = fa.extractMainAxisAndFillOther(i.usedSize, availableCrossSpace),
+                    .knownBorderBoxSize = fa.extractMainAxisAndFillOptOther(i.usedSize),
+                    .borderBoxAvailableSpace = fa.extractMainAxisAndFillOther(i.usedSize, availableCrossSpace),
                 }
             );
         }
@@ -1117,8 +1117,8 @@ struct FlexFormatingContext : public FormatingContext {
 
     // https://www.w3.org/TR/css-flexbox-1/#algo-cross-line
     void _calculateCrossSizeOfEachFlexLineNonIntrinsicSize(Input input) {
-        if (_lines.len() == 1 and fa.crossAxis(input.knownSize)) {
-            first(_lines).crossSize = fa.crossAxis(input.knownSize).unwrap();
+        if (_lines.len() == 1 and fa.crossAxis(input.contentBoxSize())) {
+            first(_lines).crossSize = fa.crossAxis(input.contentBoxSize()).unwrap();
             return;
         }
 
@@ -1173,7 +1173,7 @@ struct FlexFormatingContext : public FormatingContext {
         // FIXME: If the flex container has a definite cross size <=?=> f.style->sizing->height.type != Size::Type::AUTO
         if (
             not(input.intrinsic == IntrinsicSize::MIN_CONTENT) and
-            (fa.crossAxis(box.style->sizing).type != Size::Type::AUTO or fa.crossAxis(input.knownSize)) and
+            (fa.crossAxis(box.style->sizing).type != Size::Type::AUTO or fa.crossAxis(input.contentBoxSize())) and
             box.style->aligns.alignContent == Style::Align::STRETCH
         ) {
             Au sumOfCrossSizes{0};
@@ -1382,8 +1382,8 @@ struct FlexFormatingContext : public FormatingContext {
         if (isMinMaxIntrinsicSize(input.intrinsic) or
             fa.crossAxis(box.style->sizing) == Size::Type::AUTO)
             _usedCrossSize = _usedCrossSizeByLines;
-        else if (fa.crossAxis(input.knownSize))
-            _usedCrossSize = fa.crossAxis(input.knownSize).unwrap();
+        else if (fa.crossAxis(input.contentBoxSize()))
+            _usedCrossSize = fa.crossAxis(input.contentBoxSize()).unwrap();
         else
             _usedCrossSize = _usedCrossSizeByLines;
 
@@ -1473,16 +1473,16 @@ struct FlexFormatingContext : public FormatingContext {
         //       the sizes, and will be done only when committing
         for (auto& flexLine : _lines) {
             for (auto& flexItem : flexLine.items) {
-                flexItem.position = flexItem.position + flexLine.position + input.position;
+                flexItem.position = flexItem.position + flexLine.position + input.contentBoxPosition();
 
                 auto out = layout(
                     tree,
                     *flexItem.box,
                     {
                         .fragment = input.fragment,
-                        .knownSize = {flexItem.usedSize.x, flexItem.usedSize.y},
-                        .position = flexItem.position,
-                        .availableSpace = availableSpace,
+                        .knownBorderBoxSize = {flexItem.usedSize.x, flexItem.usedSize.y},
+                        .borderBoxPosition = flexItem.position,
+                        .borderBoxAvailableSpace = availableSpace,
                     }
                 );
                 flexItem.commit(input.fragment);

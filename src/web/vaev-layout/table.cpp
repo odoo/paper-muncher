@@ -793,7 +793,7 @@ struct TableFormatingContext : public FormatingContext {
                     *cell.box,
                     {
                         .intrinsic = IntrinsicSize::MIN_CONTENT,
-                        .knownSize = {colWidth[j], NONE},
+                        .knownBorderBoxSize = {colWidth[j], NONE},
                     }
                 );
 
@@ -845,7 +845,7 @@ struct TableFormatingContext : public FormatingContext {
         Au capmin;
 
         CacheParametersFromInput(Input const& i)
-            : availableXSpace(i.availableSpace.x),
+            : availableXSpace(i.contentBoxAvailableSpace().x),
               containingBlockX(i.containingBlock.x),
               capmin(i.capmin.unwrap()) {}
 
@@ -962,13 +962,13 @@ struct TableFormatingContext : public FormatingContext {
             *cell.box,
             {
                 .fragment = input.fragment,
-                .knownSize = {
+                .knownBorderBoxSize = {
                     colWidthPref.query(j, j + colSpan - 1) + spacing.x * Au{colSpan - 1},
                     verticalSize,
                 },
-                .position = {currPositionX, startPositionY},
+                .borderBoxPosition = {currPositionX, startPositionY},
                 .breakpointTraverser = breakpointsForCell,
-                .pendingVerticalSizes = input.pendingVerticalSizes,
+                .borderBoxPendingVerticalSizes = input.contentBoxPendingVerticalSizes(),
             }
         );
 
@@ -1161,7 +1161,7 @@ struct TableFormatingContext : public FormatingContext {
             rowBreakpoint = Breakpoint();
 
             if (shouldRepeatHeaderAndFooter)
-                input = input.addPendingVerticalSize(footerSize.y);
+                input = input.addBorderBoxPendingVerticalSize(footerSize.y);
         }
 
         for (usize i = startAt; i < stopAt; i++) {
@@ -1239,8 +1239,8 @@ struct TableFormatingContext : public FormatingContext {
             max(headerSize.y, footerSize.y) * 4_au <= tree.fc.size().y and
             headerSize.y + footerSize.y * 2_au <= tree.fc.size().y;
 
-        Au currPositionX{input.position.x};
-        Au currPositionY{input.position.y};
+        Au currPositionX{input.contentBoxPosition().x};
+        Au currPositionY{input.contentBoxPosition().y};
         Au startingPositionY = currPositionY;
         currPositionY += spacing.y;
 

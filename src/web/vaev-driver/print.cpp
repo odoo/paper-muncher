@@ -27,9 +27,9 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
     auto [_, topLeftMarginCornerFrag] = Layout::layoutCreateFragment(
         topLeftMarginCornerTree,
         {
-            .knownSize = topLeftMarginCornerRect.size().cast<Opt<Au>>(),
-            .position = topLeftMarginCornerRect.topStart(),
-            .availableSpace = topLeftMarginCornerRect.size(),
+            .knownBorderBoxSize = topLeftMarginCornerRect.size().cast<Opt<Au>>(),
+            .borderBoxPosition = topLeftMarginCornerRect.topStart(),
+            .borderBoxAvailableSpace = topLeftMarginCornerRect.size(),
             .containingBlock = topLeftMarginCornerRect.size(),
         }
     );
@@ -49,9 +49,9 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
     auto [_, topRightMarginCornerFrag] = Layout::layoutCreateFragment(
         topRightMarginCornerTree,
         {
-            .knownSize = topRightMarginCornerRect.size().cast<Opt<Au>>(),
-            .position = topRightMarginCornerRect.topStart(),
-            .availableSpace = topRightMarginCornerRect.size(),
+            .knownBorderBoxSize = topRightMarginCornerRect.size().cast<Opt<Au>>(),
+            .borderBoxPosition = topRightMarginCornerRect.topStart(),
+            .borderBoxAvailableSpace = topRightMarginCornerRect.size(),
             .containingBlock = topRightMarginCornerRect.size(),
         }
     );
@@ -71,9 +71,9 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
     auto [_, bottomLeftMarginCornerFrag] = Layout::layoutCreateFragment(
         bottomLeftMarginCornerTree,
         {
-            .knownSize = bottomLeftMarginCornerRect.size().cast<Opt<Au>>(),
-            .position = bottomLeftMarginCornerRect.topStart(),
-            .availableSpace = bottomLeftMarginCornerRect.size(),
+            .knownBorderBoxSize = bottomLeftMarginCornerRect.size().cast<Opt<Au>>(),
+            .borderBoxPosition = bottomLeftMarginCornerRect.topStart(),
+            .borderBoxAvailableSpace = bottomLeftMarginCornerRect.size(),
             .containingBlock = bottomLeftMarginCornerRect.size(),
         }
     );
@@ -93,9 +93,9 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
     auto [_, bottomRightMarginCornerFrag] = Layout::layoutCreateFragment(
         bottomRightMarginCornerTree,
         {
-            .knownSize = bottomRightMarginCornerRect.size().cast<Opt<Au>>(),
-            .position = bottomRightMarginCornerRect.topStart(),
-            .availableSpace = bottomRightMarginCornerRect.size(),
+            .knownBorderBoxSize = bottomRightMarginCornerRect.size().cast<Opt<Au>>(),
+            .borderBoxPosition = bottomRightMarginCornerRect.topStart(),
+            .borderBoxAvailableSpace = bottomRightMarginCornerRect.size(),
             .containingBlock = bottomRightMarginCornerRect.size(),
         }
     );
@@ -121,9 +121,9 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
     auto [_, topFrag] = Layout::layoutCreateFragment(
         topTree,
         {
-            .knownSize = topRect.size().cast<Opt<Au>>(),
-            .position = topRect.topStart(),
-            .availableSpace = topRect.size(),
+            .knownBorderBoxSize = topRect.size().cast<Opt<Au>>(),
+            .borderBoxPosition = topRect.topStart(),
+            .borderBoxAvailableSpace = topRect.size(),
             .containingBlock = topRect.size(),
         }
     );
@@ -149,9 +149,9 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
     auto [_, bottomFrag] = Layout::layoutCreateFragment(
         bottomTree,
         {
-            .knownSize = bottomRect.size().cast<Opt<Au>>(),
-            .position = bottomRect.topStart(),
-            .availableSpace = bottomRect.size(),
+            .knownBorderBoxSize = bottomRect.size().cast<Opt<Au>>(),
+            .borderBoxPosition = bottomRect.topStart(),
+            .borderBoxAvailableSpace = bottomRect.size(),
             .containingBlock = bottomRect.size(),
         }
     );
@@ -177,9 +177,9 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
     auto [_, leftFrag] = Layout::layoutCreateFragment(
         leftTree,
         {
-            .knownSize = leftRect.size().cast<Opt<Au>>(),
-            .position = leftRect.topStart(),
-            .availableSpace = leftRect.size(),
+            .knownBorderBoxSize = leftRect.size().cast<Opt<Au>>(),
+            .borderBoxPosition = leftRect.topStart(),
+            .borderBoxAvailableSpace = leftRect.size(),
             .containingBlock = leftRect.size(),
         }
     );
@@ -206,9 +206,9 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
     auto [_, rightFrag] = Layout::layoutCreateFragment(
         rightTree,
         {
-            .knownSize = rightRect.size().cast<Opt<Au>>(),
-            .position = rightRect.topStart(),
-            .availableSpace = rightRect.size(),
+            .knownBorderBoxSize = rightRect.size().cast<Opt<Au>>(),
+            .borderBoxPosition = rightRect.topStart(),
+            .borderBoxAvailableSpace = rightRect.size(),
             .containingBlock = rightRect.size(),
         }
     );
@@ -336,9 +336,9 @@ Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& 
             _paintMargins(*pageStyle, pageRect, pageContent, *pageStack);
 
         Layout::Input pageLayoutInput{
-            .knownSize = {pageContent.width, NONE},
-            .position = pageContent.topStart(),
-            .availableSpace = pageContent.size(),
+            .knownBorderBoxSize = {pageContent.width, NONE},
+            .borderBoxPosition = pageContent.topStart(),
+            .borderBoxAvailableSpace = pageContent.size(),
             .containingBlock = pageContent.size(),
         };
 

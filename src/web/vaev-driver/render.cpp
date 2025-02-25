@@ -43,8 +43,8 @@ RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media, Layou
     auto [outDiscovery, root] = Layout::layoutCreateFragment(
         tree,
         {
-            .knownSize = {viewport.small.width, NONE},
-            .availableSpace = {viewport.small.width, 0_au},
+            .knownBorderBoxSize = {viewport.small.width, NONE},
+            .borderBoxAvailableSpace = {viewport.small.width, 0_au},
             .containingBlock = {viewport.small.width, viewport.small.height},
         }
     );

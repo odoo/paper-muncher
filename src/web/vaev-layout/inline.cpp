@@ -7,22 +7,23 @@ struct InlineFormatingContext : public FormatingContext {
         // NOTE: We are not supposed to get there if the content is not a prose
         auto& prose = *box.content.unwrap<Rc<Text::Prose>>("inlineLayout");
 
-        auto inlineSize = input.knownSize.x.unwrapOrElse([&] {
+        auto contentBoxSize = input.contentBoxSize();
+        auto inlineSize = contentBoxSize.x.unwrapOrElse([&] {
             if (input.intrinsic == IntrinsicSize::MIN_CONTENT) {
                 return 0_au;
             } else if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
                 return Limits<Au>::MAX;
             } else {
-                return input.availableSpace.x;
+                return input.contentBoxAvailableSpace().x;
             }
         });
 
         auto size = prose.layout(inlineSize);
 
         if (tree.fc.allowBreak() and not tree.fc.acceptsFit(
-                                         input.position.y,
+                                         input.contentBoxPosition().y,
                                          size.y,
-                                         input.pendingVerticalSizes
+                                         input.contentBoxPendingVerticalSizes()
                                      )) {
             return {
                 .size = {},
