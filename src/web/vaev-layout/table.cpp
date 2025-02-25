@@ -787,6 +787,30 @@ struct TableFormatingContext : public FormatingContext {
                         rowHeight[i + k] = max(rowHeight[i + k], Au{computedHeight / Au{rowSpan}});
                     }
                 }
+            }
+        }
+
+        // FIXME: Since we are borders, we assumed the height above was content-box
+        for (usize i = 0; i < grid.size.y; ++i) {
+            Au rowBorderHeight{0};
+            for (usize j = 0; j < grid.size.x; ++j) {
+                auto cellVertBorder = bordersGrid.get(i, j).vertical();
+                rowBorderHeight = max(rowBorderHeight, cellVertBorder);
+            }
+            rowHeight[i] += rowBorderHeight;
+        }
+
+        for (usize i = 0; i < grid.size.y; ++i) {
+            for (usize j = 0; j < grid.size.x; ++j) {
+                auto cell = grid.get(j, i);
+
+                if (not(cell.anchorIdx == Math::Vec2u{j, i}))
+                    continue;
+
+                // [A] CSS 2.2 does not specify how cells that span more than one row affect row height calculations except
+                // that the sum of the row heights involved must be great enough to encompass the cell spanning the rows.
+
+                auto rowSpan = cell.box->attrs.rowSpan;
 
                 auto cellOutput = layout(
                     tree,
@@ -801,15 +825,6 @@ struct TableFormatingContext : public FormatingContext {
                     rowHeight[i + k] = max(rowHeight[i + k], Au{cellOutput.size.y / Au{rowSpan}});
                 }
             }
-        }
-
-        for (usize i = 0; i < grid.size.y; ++i) {
-            Au rowBorderHeight{0};
-            for (usize j = 0; j < grid.size.x; ++j) {
-                auto cellVertBorder = bordersGrid.get(i, j).vertical();
-                rowBorderHeight = max(rowBorderHeight, cellVertBorder);
-            }
-            rowHeight[i] += rowBorderHeight;
         }
     }
 
