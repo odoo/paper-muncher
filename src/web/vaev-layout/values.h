@@ -44,52 +44,58 @@ struct Resolver {
     // MARK: Eval --------------------------------------------------------------
 
     template <typename T>
-    Resolved<T> _resolveInfix(typename CalcValue<T>::OpCode op, Resolved<T> lhs, Resolved<T> rhs) {
+    Resolved<T> _resolveUnary(CalcOp, Resolved<T>) {
+        notImplemented();
+    }
+
+    template <typename T>
+    Resolved<T> _resolveInfix(CalcOp op, Resolved<T> lhs, Resolved<T> rhs) {
         switch (op) {
-        case CalcValue<T>::OpCode::ADD:
+        case CalcOp::ADD:
             return lhs + rhs;
-        case CalcValue<T>::OpCode::SUBSTRACT:
+        case CalcOp::SUBSTRACT:
             return lhs - rhs;
-        case CalcValue<T>::OpCode::MULTIPLY:
+        case CalcOp::MULTIPLY:
             return lhs * rhs;
-        case CalcValue<T>::OpCode::DIVIDE:
+        case CalcOp::DIVIDE:
             return lhs / rhs;
         default:
-            return lhs;
+            panic("unexpected operator");
         }
     }
 
     template <typename T, typename... Args>
-    auto resolve(CalcValue<T> const& value, Args... args) -> Resolved<T> {
-        if (value.type == CalcValue<T>::OpType::FIXED) {
-            return resolve(value.lhs.template unwrap<T>(), args...);
-        } else if (value.type == CalcValue<T>::OpType::SINGLE) {
-            // TODO: compute result of funtion here with the resolved value
-            return resolve(value.lhs.template unwrap<T>(), args...);
-        } else if (value.type == CalcValue<T>::OpType::CALC) {
-            auto resolveUnion = Visitor{
-                [&](T const& v) {
-                    return resolve<T>(v, args...);
-                },
-                [&](CalcValue<T>::Leaf const& v) {
-                    return resolve<T>(*v, args...);
-                },
-                [&](Number const& v) {
-                    return Math::i24f8{v};
-                },
-                [&](None const&) -> Resolved<T> {
-                    panic("invalid value in calc expression");
-                }
-            };
+    auto resolve(CalcValue<T> const& calc, Args... args) -> Resolved<T> {
+        auto resolveUnion = Visitor{
+            [&](T const& v) {
+                return resolve(v, args...);
+            },
+            [&](CalcValue<T>::Leaf const& v) {
+                return resolve<T>(*v, args...);
+            },
+            [&](Number const& v) {
+                return Math::i24f8{v};
+            }
+        };
 
-            return _resolveInfix<T>(
-                value.op,
-                value.lhs.visit(resolveUnion),
-                value.rhs.visit(resolveUnion)
-            );
-        }
-
-        unreachable();
+        return calc.visit(Visitor{
+            [&](CalcValue<T>::Value const& v) {
+                return v.visit(resolveUnion);
+            },
+            [&](CalcValue<T>::Unary const& u) {
+                return _resolveUnary<T>(
+                    u.op,
+                    u.val.visit(resolveUnion)
+                );
+            },
+            [&](CalcValue<T>::Binary const& b) {
+                return _resolveInfix<T>(
+                    b.op,
+                    b.lhs.visit(resolveUnion),
+                    b.rhs.visit(resolveUnion)
+                );
+            }
+        });
     }
 };
 

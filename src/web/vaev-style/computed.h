@@ -31,12 +31,13 @@ struct Computed {
     String content = ""s;
 
     AlignProps aligns;
-    Math::Vec2<CalcValue<PercentOr<Length>>> gaps;
+    Cow<Gaps> gaps;
 
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
     Cow<Margin> margin;
     Cow<Padding> padding;
+    BoxSizing boxSizing;
     Cow<SizingProps> sizing;
     Overflows overflows;
 

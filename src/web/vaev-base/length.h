@@ -9,7 +9,7 @@ namespace Vaev {
 // 6. MARK: Distance Units: the <length> type
 // https://drafts.csswg.org/css-values/#lengths
 
-struct Length {
+struct [[gnu::packed]] Length {
     enum struct Unit : u8 {
 #define LENGTH(NAME, ...) NAME,
 #include "defs/lengths.inc"

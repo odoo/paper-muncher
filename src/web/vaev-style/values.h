@@ -106,14 +106,14 @@ struct ValueParser<CalcValue<T>> {
                     content.next();
                 }
                 auto rhs = try$(parseVal(content));
-                return Ok(CalcValue<T>{lhs, op.unwrap(), rhs});
+                return Ok(CalcValue<T>{op.unwrap(), lhs, rhs});
             }
         }
 
         return Ok(try$(parseValue<T>(c)));
     }
 
-    static Res<typename CalcValue<T>::OpCode> parseOp(Cursor<Css::Sst>& c) {
+    static Res<CalcOp> parseOp(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -124,16 +124,16 @@ struct ValueParser<CalcValue<T>> {
 
         if (c.peek().token.data == "+") {
             c.next();
-            return Ok(CalcValue<T>::OpCode::ADD);
+            return Ok(CalcOp::ADD);
         } else if (c.peek().token.data == "-") {
             c.next();
-            return Ok(CalcValue<T>::OpCode::SUBSTRACT);
+            return Ok(CalcOp::SUBSTRACT);
         } else if (c.peek().token.data == "*") {
             c.next();
-            return Ok(CalcValue<T>::OpCode::MULTIPLY);
+            return Ok(CalcOp::MULTIPLY);
         } else if (c.peek().token.data == "/") {
             c.next();
-            return Ok(CalcValue<T>::OpCode::DIVIDE);
+            return Ok(CalcOp::DIVIDE);
         }
         return Error::invalidData("unexpected operator");
     }

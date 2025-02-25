@@ -161,11 +161,11 @@ struct RowGapProp {
     static constexpr PercentOr<Length> initial() { return {}; }
 
     void apply(Computed& c) const {
-        c.gaps.y = value;
+        c.gaps.cow().y = value;
     }
 
     static CalcValue<PercentOr<Length>> load(Computed const& c) {
-        return c.gaps.y;
+        return c.gaps->y;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
@@ -183,11 +183,11 @@ struct ColumnGapProp {
     static constexpr PercentOr<Length> initial() { return {}; }
 
     void apply(Computed& c) const {
-        c.gaps.x = value;
+        c.gaps.cow().x = value;
     }
 
     static CalcValue<PercentOr<Length>> load(Computed& c) {
-        return c.gaps.x;
+        return c.gaps->x;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
@@ -2389,11 +2389,11 @@ struct BoxSizingProp {
     static constexpr BoxSizing initial() { return BoxSizing::CONTENT_BOX; }
 
     void apply(Computed& c) const {
-        c.sizing.cow().boxSizing = value;
+        c.boxSizing = value;
     }
 
     static BoxSizing load(Computed const& c) {
-        return c.sizing->boxSizing;
+        return c.boxSizing;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
