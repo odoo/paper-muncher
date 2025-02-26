@@ -1,7 +1,7 @@
 #include <karm-net/http/http.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Print::Tests {
+namespace Karm::Net::Tests {
 
 test$("read-http-response-good-body") {
     auto rawResponse =
@@ -18,8 +18,7 @@ test$("read-http-response-good-body") {
     expectEq$(response.code, Net::Http::Code{200});
 
     auto expectedVersion = Net::Http::Version{1u, 1u};
-    expectEq$(response.version.major, expectedVersion.major);
-    expectEq$(response.version.minor, expectedVersion.minor);
+    expectEq$(response.version, expectedVersion);
 
     expectEq$(response.header.len(), 2u);
     expectEq$(response.header.get("Server"s), "Apache"s);
@@ -46,8 +45,7 @@ test$("read-http-response-body-content-length-mismatch") {
     expectEq$(response.code, Net::Http::Code{500});
 
     auto expectedVersion = Net::Http::Version{1u, 2u};
-    expectEq$(response.version.major, expectedVersion.major);
-    expectEq$(response.version.minor, expectedVersion.minor);
+    expectEq$(response.version, expectedVersion);
 
     expectEq$(response.header.len(), 1u);
     expectEq$(response.header.get("Content-Length"s), "100"s);
@@ -67,7 +65,7 @@ test$("read-http-response-body-empty-body") {
 
     auto response = try$(Net::Http::Response::read(br));
 
-    expectEq$(response.code, Net::Http::Code{404});
+    expectEq$(response.code, Http::NOT_FOUND);
 
     expectEq$(response.header.len(), 0u);
 
@@ -86,11 +84,10 @@ test$("parse-unparse-http-request-no-header") {
     auto request = try$(Net::Http::Request::parse(s));
 
     expectEq$(request.path, ""_path);
-    expectEq$(request.method, Net::Http::Method::GET);
+    expectEq$(request.method, Net::Http::GET);
 
     auto expectedVersion = Net::Http::Version{1u, 1u};
-    expectEq$(request.version.major, expectedVersion.major);
-    expectEq$(request.version.minor, expectedVersion.minor);
+    expectEq$(request.version, expectedVersion);
 
     Io::StringWriter sw;
     try$(request.unparse(sw));
@@ -113,7 +110,7 @@ test$("parse-unparse-http-request-with-header") {
     auto request = try$(Net::Http::Request::parse(s));
 
     expectEq$(request.path, ""_path);
-    expectEq$(request.method, Net::Http::Method::POST);
+    expectEq$(request.method, Net::Http::POST);
 
     auto expectedVersion = Net::Http::Version{1u, 2u};
     expectEq$(request.version.major, expectedVersion.major);
@@ -135,4 +132,4 @@ test$("parse-unparse-http-request-with-header") {
     return Ok();
 }
 
-} // namespace Karm::Print::Tests
+} // namespace Karm::Net::Tests

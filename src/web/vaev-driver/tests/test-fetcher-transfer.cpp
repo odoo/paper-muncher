@@ -140,22 +140,19 @@ test$("test-httpipe-transfer-ok") {
     auto url = "fancy/pants/path"_url;
     auto transfer = try$(fetcher.transfer(url));
 
-    usize written = 0;
-    written += try$(transfer->write(bytes("Ofc: Hello, world!\n"s)));
-    written += try$(transfer->write(bytes("and some weird stuff\n"s)));
-    written += try$(transfer->write(Buf<Byte>({0, 2, 1})));
-    written += try$(transfer->done());
+    try$(transfer->write(bytes("Ofc: Hello, world!\n"s)));
+    try$(transfer->write(bytes("and some weird stuff\n"s)));
+    try$(transfer->write(Array<Byte, 3>{0, 2, 1}));
+    try$(transfer->close());
 
     Io::SScan scan{bw.bytes().cast<char>()};
     auto request = try$(Karm::Net::Http::Request::parse(scan));
 
-    expectEq$(request.method, Net::Http::Method::POST);
+    expectEq$(request.method, Net::Http::POST);
     expectEq$(request.header.get("Transfer-Encoding"s), "chunked"s);
 
     url.path.rooted = false;
     expectEq$(request.path, url.path);
-
-    expectEq$(written, bw.bytes().len());
 
     auto expectedResponse =
         "POST /fancy/pants/path HTTP/1.1\r\n"
@@ -188,7 +185,7 @@ test$("test-transfer-after-done") {
     auto url = ""_url;
     auto transfer = try$(fetcher.transfer(url));
 
-    try$(transfer->done());
+    try$(transfer->close());
     auto error = transfer->write(bytes("oh no!"s)).none();
 
     expectEq$(error.code(), Error::brokenPipe().code());

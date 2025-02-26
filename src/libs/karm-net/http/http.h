@@ -136,6 +136,8 @@ enum struct Method : u8 {
 #undef ITER
 };
 
+using enum Method;
+
 static inline Res<Method> parseMethod(Io::SScan& s) {
 #define ITER(NAME)     \
     if (s.skip(#NAME)) \
@@ -163,6 +165,10 @@ struct Version {
     static Res<Version> parse(Io::SScan& s);
 
     Res<> unparse(Io::TextWriter& w);
+
+    bool operator==(Version const& other) const = default;
+
+    auto operator<=>(Version const& other) const = default;
 };
 
 struct Header : public Map<String, String> {
