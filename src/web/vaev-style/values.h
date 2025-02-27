@@ -12,6 +12,7 @@
 #include <vaev-base/font.h>
 #include <vaev-base/insets.h>
 #include <vaev-base/length.h>
+#include <vaev-base/line.h>
 #include <vaev-base/media.h>
 #include <vaev-base/numbers.h>
 #include <vaev-base/overflow.h>
@@ -277,6 +278,11 @@ struct ValueParser<Math::Insets<T>> {
 template <>
 struct ValueParser<Length> {
     static Res<Length> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
+struct ValueParser<LineHeight> {
+    static Res<LineHeight> parse(Cursor<Css::Sst>& c);
 };
 
 template <>

@@ -1744,24 +1744,8 @@ struct LineHeightProp {
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        if (c.skip(Css::Token::ident("normal"))) {
-            value = LineHeight::NORMAL;
-            return Ok();
-        }
-
-        auto maybeNumber = parseValue<Number>(c);
-        if (maybeNumber) {
-            value = maybeNumber.unwrap();
-            return Ok();
-        }
-
-        auto maybeLength = parseValue<PercentOr<Length>>(c);
-        if (maybeLength) {
-            value = maybeLength.unwrap();
-            return Ok();
-        }
-
-        return Error::invalidData("expected line height");
+        value = try$(parseValue<LineHeight>(c));
+        return Ok();
     }
 };
 

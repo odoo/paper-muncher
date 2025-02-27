@@ -796,6 +796,26 @@ Res<Length> ValueParser<Length>::parse(Cursor<Css::Sst>& c) {
     return Error::invalidData("expected length");
 }
 
+Res<LineHeight> ValueParser<LineHeight>::parse(Cursor<Css::Sst>& c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c.skip(Css::Token::ident("normal"))) {
+        return Ok(LineHeight::NORMAL);
+    }
+
+    {
+        auto rb = c.rollbackPoint();
+        auto maybeNumber = parseValue<Number>(c);
+        if (maybeNumber) {
+            rb.disarm();
+            return Ok(maybeNumber.unwrap());
+        }
+    }
+
+    return Ok(LineHeight{try$(parseValue<PercentOr<Length>>(c))});
+}
+
 // MARL: MarginWidth
 // https://drafts.csswg.org/css-values/#margin-width
 
