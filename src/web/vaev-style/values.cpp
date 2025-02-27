@@ -1531,6 +1531,38 @@ Res<ReducedData> ValueParser<ReducedData>::parse(Cursor<Css::Sst>& c) {
         return Error::invalidData("expected reduced data value");
 }
 
+// MARK: Url
+// https://www.w3.org/TR/css-values-4/#urls
+Res<Mime::Url> ValueParser<Mime::Url>::parse(Cursor<Css::Sst>& c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c.peek() == Css::Token::URL) {
+        auto urlSize = c.peek().token.data.len() - 5; // "url()" takes 5 chars
+        auto urlValue = sub(c.next().token.data, Range<usize>{4u, urlSize});
+        return Ok(urlValue);
+    } else if (c.peek() != Css::Sst::FUNC or c.peek().prefix != Css::Token::function("url("))
+        return Error::invalidData("expected url function");
+
+    auto urlFunc = c.next();
+    Cursor<Css::Sst> scanUrl{urlFunc.content};
+    eatWhitespace(scanUrl);
+
+    if (scanUrl.ended() or not(scanUrl.peek() == Css::Token::STRING))
+        return Error::invalidData("expected base url string");
+
+    auto url = Mime::parseUrlOrPath(try$(parseValue<String>(scanUrl)), NONE);
+
+    // TODO: it is unclear what url-modifiers are and how they are used
+
+    // NOTE: Even if the url path doesnt have a '.' and is schemaless, it is relative, so we override the parsed
+    // 'rooted' value
+    if (url.scheme == "file")
+        url.path.rooted = false;
+
+    return Ok(url);
+}
+
 // MARK: ZIndex
 // https://drafts.csswg.org/css2/#z-index
 
