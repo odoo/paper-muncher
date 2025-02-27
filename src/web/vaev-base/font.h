@@ -1,6 +1,7 @@
 #pragma once
 
 #include <karm-mime/url.h>
+#include <karm-text/base.h>
 
 #include "angle.h"
 #include "length.h"
@@ -286,11 +287,15 @@ struct FontVariation {
 };
 
 struct FontSource {
-    Mime::Url url;
+    Union<Mime::Url, Text::Family> identifier;
     Opt<String> format;
 
+    FontSource(Mime::Url url) : identifier(url) {}
+
+    FontSource(Text::Family family) : identifier(family) {}
+
     void repr(Io::Emit& e) const {
-        e("(font-source {}", url);
+        e("(font-source {}", identifier);
         if (format)
             e(" format({})", *format);
         e(")");
@@ -298,7 +303,7 @@ struct FontSource {
 };
 
 struct FontProps {
-    Vec<String> families;
+    Vec<Text::Family> families;
     FontWeight weight;
     FontWidth width;
     FontStyle style;

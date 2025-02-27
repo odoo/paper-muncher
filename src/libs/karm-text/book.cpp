@@ -208,10 +208,10 @@ FontStyle _pickFontStyle(FontStyle curr, FontStyle best, FontStyle desired) {
     return best;
 }
 
-Str FontBook::_resolveFamily(Family family) const {
+Str FontBook::_resolveFamily(Family const& family) const {
     if (auto gf = family.is<GenericFamily>())
         return _genericFamily[toUnderlyingType(*gf)];
-    return family.unwrap<Str>();
+    return family.unwrap<String>();
 }
 
 Opt<Rc<Fontface>> FontBook::queryExact(FontQuery query) const {

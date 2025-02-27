@@ -1554,11 +1554,11 @@ struct ClearProp {
 
 // https://www.w3.org/TR/css-fonts-4/#font-family-prop
 struct FontFamilyProp {
-    Vec<String> value = initial();
+    Vec<Text::Family> value = initial();
 
     static constexpr Str name() { return "font-family"; }
 
-    static Array<String, 1> initial() { return {"sans-serif"s}; }
+    static Array<Text::Family, 1> initial() { return {Text::GenericFamily::SANS_SERIF}; }
 
     static void inherit(Computed const& parent, Computed& child) {
         if (not child.font.sameInstance(parent.font))
@@ -1569,29 +1569,15 @@ struct FontFamilyProp {
         c.font.cow().families = value;
     }
 
-    static Vec<String> load(Computed const& c) {
+    static Vec<Text::Family> load(Computed const& c) {
         return c.font->families;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
+        value = {};
         eatWhitespace(c);
         while (not c.ended()) {
-            if (c.skip(Css::Token::ident("serif")))
-                value.pushBack("serif"s);
-            else if (c.skip(Css::Token::ident("sans-serif")))
-                value.pushBack("sans-serif"s);
-            else if (c.skip(Css::Token::ident("cursive")))
-                value.pushBack("cursive"s);
-            else if (c.skip(Css::Token::ident("fantasy")))
-                value.pushBack("fantasy"s);
-            else if (c.skip(Css::Token::ident("monospace")))
-                value.pushBack("monospace"s);
-            else if (c.skip(Css::Token::ident("system-ui")))
-                value.pushBack("system-ui"s);
-            else if (c.skip(Css::Token::ident("math")))
-                value.pushBack("math"s);
-            else
-                value.pushBack(try$(parseValue<String>(c)));
+            value.pushBack(try$(parseValue<Text::Family>(c)));
 
             eatWhitespace(c);
             c.skip(Css::Token::comma());

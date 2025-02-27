@@ -45,7 +45,7 @@ struct FontBook {
 
     Vec<String> families() const;
 
-    Str _resolveFamily(Family family) const;
+    Str _resolveFamily(Family const& family) const;
 
     Opt<Rc<Fontface>> queryExact(FontQuery query) const;
 
