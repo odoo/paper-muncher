@@ -222,6 +222,11 @@ struct ValueParser<FontWidth> {
 };
 
 template <>
+struct ValueParser<Text::Family> {
+    static Res<Text::Family> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
 struct ValueParser<Float> {
     static Res<Float> parse(Cursor<Css::Sst>& c);
 };

@@ -643,6 +643,35 @@ Res<FontStyle> ValueParser<FontStyle>::parse(Cursor<Css::Sst>& c) {
     return Error::invalidData("expected font style");
 }
 
+Res<Text::Family> ValueParser<Text::Family>::parse(Cursor<Css::Sst>& c) {
+    eatWhitespace(c);
+
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c.peek() == Css::Token::STRING)
+        return Ok(Text::Family::parse(try$(parseValue<String>(c))));
+
+    StringBuilder familyStrBuilder;
+    usize amountOfIdents = 0;
+
+    if (c.peek() == Css::Token::IDENT) {
+        while (not c.ended() and c.peek() == Css::Token::IDENT) {
+            if (++amountOfIdents > 1)
+                familyStrBuilder.append(' ');
+            familyStrBuilder.append(c.next().token.data);
+            eatWhitespace(c);
+        }
+    } else {
+        return Error::invalidData("expected font family name");
+    }
+
+    if (amountOfIdents > 1)
+        return Ok(familyStrBuilder.take());
+
+    return Ok(Text::Family::parse(familyStrBuilder.take()));
+}
+
 // MARK: FontWeight
 // https://www.w3.org/TR/css-fonts-4/#font-weight-absolute-values
 

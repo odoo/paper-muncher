@@ -185,7 +185,39 @@ enum struct GenericFamily {
     _LEN,
 };
 
-using Family = Union<GenericFamily, Str>;
+using _Family = Union<GenericFamily, String>;
+
+struct Family : _Family {
+    using _Family::_Family;
+
+    static Family parse(String const& familyName) {
+        Str familyNameView = familyName.str();
+        if (eqCi(familyNameView, "serif"s))
+            return GenericFamily::SERIF;
+        else if (eqCi(familyNameView, "sans-serif"s))
+            return GenericFamily::SANS_SERIF;
+        else if (eqCi(familyNameView, "monospace"s))
+            return GenericFamily::MONOSPACE;
+        else if (eqCi(familyNameView, "cursive"s))
+            return GenericFamily::CURSIVE;
+        else if (eqCi(familyNameView, "fantasy"s))
+            return GenericFamily::FANTASY;
+        else if (eqCi(familyNameView, "system"s))
+            return GenericFamily::SYSTEM;
+        else if (eqCi(familyNameView, "emoji"s))
+            return GenericFamily::EMOJI;
+        else if (eqCi(familyNameView, "math"s))
+            return GenericFamily::MATH;
+        else if (eqCi(familyNameView, "fangsong"s))
+            return GenericFamily::FANGSONG;
+
+        return familyName;
+    }
+
+    void repr(Io::Emit& e) const {
+        e("{}", static_cast<Union<GenericFamily, String>>(*this));
+    }
+};
 
 // MARK: FontAttrs -------------------------------------------------------------
 

@@ -57,7 +57,7 @@ static Opt<Rc<Karm::Text::Fontface>> _regularFontface = NONE;
 static Opt<Rc<Karm::Text::Fontface>> _boldFontface = NONE;
 
 static Rc<Karm::Text::Fontface> _lookupFontface(Style::Computed& style) {
-    if (contains(style.font->families, "monospace"s)) {
+    if (contains(style.font->families, Text::GenericFamily::MONOSPACE)) {
         if (not _monospaceFontface)
             _monospaceFontface = Karm::Text::loadFontfaceOrFallback("bundle://fonts-fira-code/fonts/FiraCode-Regular.ttf"_url).unwrap();
         return *_monospaceFontface;
