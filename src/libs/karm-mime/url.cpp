@@ -133,7 +133,7 @@ Url parseUrlOrPath(Str str, Opt<Url> origin) {
         return Url::parse(str, origin);
     }
 
-    Url url = origin.unwrapOr("file:"_url);
+    Url url = origin.unwrapOr(""_url);
     url.path = url.path.join(Path::parse(str));
 
     return url;

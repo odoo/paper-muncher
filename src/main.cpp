@@ -4,6 +4,7 @@
 #include <karm-print/file-printer.h>
 #include <karm-sys/entry.h>
 #include <karm-sys/file.h>
+#include <karm-sys/proc.h>
 #include <vaev-driver/fetcher.h>
 #include <vaev-driver/print.h>
 #include <vaev-driver/render.h>
@@ -224,14 +225,14 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             Opt<Sys::FileReader> inputFile;
             if (inputArg.unwrap() != "-"s) {
-                inputUrl = Mime::parseUrlOrPath(inputArg);
+                inputUrl = Mime::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
                 inputFile = co_try$(Sys::File::open(inputUrl));
                 input = &inputFile.unwrap();
             }
 
             Opt<Sys::FileWriter> outputFile;
             if (outputArg.unwrap() != "-"s) {
-                auto outputUrl = Mime::parseUrlOrPath(outputArg);
+                auto outputUrl = Mime::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
                 outputFile = co_try$(Sys::File::create(outputUrl));
                 output = &outputFile.unwrap();
             }
@@ -278,14 +279,14 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             Opt<Sys::FileReader> inputFile;
             if (inputArg.unwrap() != "-"s) {
-                inputUrl = Mime::parseUrlOrPath(inputArg);
+                inputUrl = Mime::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
                 inputFile = co_try$(Sys::File::open(inputUrl));
                 input = &inputFile.unwrap();
             }
 
             Opt<Sys::FileWriter> outputFile;
             if (outputArg.unwrap() != "-"s) {
-                auto outputUrl = Mime::parseUrlOrPath(outputArg);
+                auto outputUrl = Mime::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
                 outputFile = co_try$(Sys::File::create(outputUrl));
                 output = &outputFile.unwrap();
             }
