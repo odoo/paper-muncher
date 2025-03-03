@@ -11,16 +11,16 @@ namespace Karm::Mime {
 
 struct Url {
     String scheme;
-    String authority;
+    String userInfo;
     String host;
     Opt<usize> port;
     Path path;
     String query;
     String fragment;
 
-    static Url parse(Io::SScan& s, Opt<Url> orgin = NONE);
+    static Url parse(Io::SScan& s, Opt<Url> baseUrl = NONE);
 
-    static Url parse(Str str, Opt<Url> orgin = NONE);
+    static Url parse(Str str, Opt<Url> baseUrl = NONE);
 
     static bool isUrl(Str str);
 
@@ -57,7 +57,7 @@ struct Url {
     auto operator<=>(Url const&) const = default;
 };
 
-Url parseUrlOrPath(Str str, Opt<Url> origin = NONE);
+Url parseUrlOrPath(Str str, Opt<Url> baseUrl = NONE);
 
 } // namespace Karm::Mime
 
