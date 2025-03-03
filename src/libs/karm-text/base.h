@@ -82,6 +82,42 @@ struct FontWeight : public Distinct<u16, struct _FontWeightTag> {
             return (other - *this).value();
         return (*this - other).value();
     }
+
+    FontWeight lighter() const {
+        if (value() < 100)
+            return FontWeight{value()};
+        if (value() < 350)
+            return FontWeight::THIN;
+        if (value() < 550)
+            return FontWeight::THIN;
+        if (value() < 750)
+            return FontWeight::REGULAR;
+        if (value() < 900)
+            return FontWeight::BOLD;
+        return FontWeight::BOLD;
+    }
+
+    FontWeight bolder() const {
+        if (value() < 100)
+            return FontWeight::REGULAR;
+        if (value() < 350)
+            return FontWeight::REGULAR;
+        if (value() < 550)
+            return FontWeight::BOLD;
+        if (value() < 750)
+            return FontWeight::BLACK;
+        if (value() < 900)
+            return FontWeight::BLACK;
+        return FontWeight{value()};
+    }
+
+    FontWeight operator+(FontWeight const& other) const {
+        return FontWeight(value() + other.value());
+    }
+
+    FontWeight operator-(FontWeight const& other) const {
+        return FontWeight(value() - other.value());
+    }
 };
 
 constexpr FontWeight FontWeight::THIN{100};

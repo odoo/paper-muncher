@@ -17,7 +17,7 @@ struct FontFace {
 
     Union<None, FontStyle, Range<Angle>> style = FontStyle{FontStyle::NORMAL};
 
-    Opt<Range<FontWeight>> weight = FontWeight::NORMAL;
+    Opt<Range<Text::FontWeight>> weight = Text::FontWeight::REGULAR;
     Opt<Range<FontWidth>> width = FontWidth::NORMAL;
 
     Vec<Range<Rune>> unicodeRange;
@@ -122,11 +122,11 @@ struct FontStyleDesc {
 // MARK: font-weight
 // https://www.w3.org/TR/css-fonts-4/#font-weight-desc
 struct FontWeightDesc {
-    Opt<Range<FontWeight>> value;
+    Opt<Range<Text::FontWeight>> value;
 
     static Str name() { return "font-weight"; }
 
-    static auto initial() { return FontWeight::NORMAL; }
+    static auto initial() { return Text::FontWeight::REGULAR; }
 
     void apply(FontFace& f) const {
         f.weight = value;
@@ -139,14 +139,22 @@ struct FontWeightDesc {
         }
 
         auto weight = try$(parseValue<FontWeight>(c));
+        if (weight.isRelative())
+            return Error::invalidData("font weight desciptors should use absolute font weight values");
 
         auto val = parseValue<FontWeight>(c);
         if (not val) {
-            value = weight;
+            value = weight.unwrap<Text::FontWeight>();
             return Ok();
         }
 
-        value = Range<FontWeight>::fromStartEnd(weight, val.unwrap());
+        if (val.unwrap().isRelative())
+            return Error::invalidData("font weight desciptors should use absolute font weight values");
+
+        value = Range<Text::FontWeight>::fromStartEnd(
+            weight.unwrap<Text::FontWeight>(),
+            val.unwrap().unwrap<Text::FontWeight>()
+        );
 
         return Ok();
     }

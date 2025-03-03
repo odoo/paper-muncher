@@ -1593,15 +1593,19 @@ struct FontWeightProp {
 
     static constexpr Str name() { return "font-weight"; }
 
-    static constexpr FontWeight initial() { return FontWeight::NORMAL; }
+    static FontWeight initial() { return Text::FontWeight::REGULAR; }
 
     static void inherit(Computed const& parent, Computed& child) {
         if (not child.font.sameInstance(parent.font))
             child.font.cow().weight = parent.font->weight;
     }
 
-    void apply(Computed& c) const {
-        c.font.cow().weight = value;
+    void apply(Computed& child) const {
+        child.font.cow().weight = value.resolve();
+    }
+
+    void apply(Computed const& parent, Computed& child) const {
+        child.font.cow().weight = value.resolve(parent.font->weight);
     }
 
     static FontWeight load(Computed const& c) {
@@ -1664,6 +1668,73 @@ struct FontStyleProp {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         value = try$(parseValue<FontStyle>(c));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-fonts-4/#font-prop
+struct FontProp {
+    FontProps value;
+    Opt<FontWeight> unresolvedWeight;
+
+    static constexpr Str name() { return "font"; }
+
+    static void inherit(Computed const& parent, Computed& child) {
+        child.font.cow() = *parent.font;
+    }
+
+    void apply(Computed& c) const {
+        c.font.cow() = value;
+        if (unresolvedWeight)
+            c.font.cow().weight = unresolvedWeight->resolve();
+    }
+
+    void apply(Computed const& parent, Computed& child) const {
+        child.font.cow() = value;
+        if (unresolvedWeight)
+            child.font.cow().weight = unresolvedWeight->resolve(parent.font->weight);
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        // TODO: system family name
+
+        while (true) {
+            auto fontStyle = parseValue<FontStyle>(c);
+            if (fontStyle) {
+                value.style = fontStyle.unwrap();
+                continue;
+            }
+
+            auto fontWeight = parseValue<FontWeight>(c);
+            if (fontWeight) {
+                unresolvedWeight = fontWeight.unwrap();
+                continue;
+            }
+
+            // TODO: font variant https://www.w3.org/TR/css-fonts-4/#font-variant-css21-values
+
+            auto fontWidth = parseValue<FontWidth>(c);
+            if (fontWidth) {
+                value.width = fontWidth.unwrap();
+                continue;
+            }
+
+            auto fontSize = parseValue<FontSize>(c);
+            if (fontSize) {
+                value.size = fontSize.unwrap();
+                break;
+            }
+
+            return Error::invalidData("expected font-style, font-weight, font-width or font-size");
+        }
+
+        if (c.skip(Css::Token::delim("/"))) {
+            auto lh = Ok(parseValue<LineHeight>(c));
+            // TODO: use lineheight parsed value
+        }
+
+        value.families = {try$(parseValue<Text::Family>(c))};
+
         return Ok();
     }
 };
@@ -2941,6 +3012,7 @@ using _StyleProp = Union<
     FontWidthProp,
     FontStyleProp,
     FontSizeProp,
+    FontProp,
 
     // Line
     LineHeightProp,

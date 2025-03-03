@@ -62,7 +62,7 @@ static Rc<Karm::Text::Fontface> _lookupFontface(Style::Computed& style) {
             _monospaceFontface = Karm::Text::loadFontfaceOrFallback("bundle://fonts-fira-code/fonts/FiraCode-Regular.ttf"_url).unwrap();
         return *_monospaceFontface;
     } else if (style.font->style != FontStyle::NORMAL) {
-        if (style.font->weight != FontWeight::NORMAL) {
+        if (style.font->weight != Text::FontWeight::REGULAR) {
             if (not _boldFontface)
                 _boldFontface = Karm::Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-BoldItalic.ttf"_url).unwrap();
             return *_boldFontface;
@@ -72,7 +72,7 @@ static Rc<Karm::Text::Fontface> _lookupFontface(Style::Computed& style) {
             return *_regularFontface;
         }
     } else {
-        if (style.font->weight != FontWeight::NORMAL) {
+        if (style.font->weight != Text::FontWeight::REGULAR) {
             if (not _boldFontface)
                 _boldFontface = Karm::Text::loadFontfaceOrFallback("bundle://fonts-inter/fonts/Inter-Bold.ttf"_url).unwrap();
             return *_boldFontface;
