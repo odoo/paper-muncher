@@ -13,25 +13,25 @@ static auto const RE_COMPONENT =
 
 static auto const RE_SCHEME = RE_COMPONENT & ':'_re;
 
-Url Url::parse(Io::SScan& s, Opt<Url> origin) {
+Url Url::parse(Io::SScan& s, Opt<Url> baseUrl) {
     Url url;
 
     if (s.ahead(RE_SCHEME)) {
         url.scheme = s.token(RE_COMPONENT);
         s.skip(':');
-    } else if (origin) {
-        url.scheme = origin->scheme;
-        url.authority = origin->authority;
-        url.host = origin->host;
-        url.port = origin->port;
-        url.path = origin->path;
+    } else if (baseUrl) {
+        url.scheme = baseUrl->scheme;
+        url.userInfo = baseUrl->userInfo;
+        url.host = baseUrl->host;
+        url.port = baseUrl->port;
+        url.path = baseUrl->path;
     }
 
     if (s.skip("//")) {
         auto maybeHost = s.token(RE_COMPONENT);
 
         if (s.skip('@')) {
-            url.authority = maybeHost;
+            url.userInfo = maybeHost;
             maybeHost = s.token(RE_COMPONENT);
         }
 
@@ -43,8 +43,8 @@ Url Url::parse(Io::SScan& s, Opt<Url> origin) {
     }
 
     url.path = Path::parse(s, true);
-    if (not url.path.rooted and origin)
-        url.path = origin->path.join(url.path);
+    if (not url.path.rooted and baseUrl)
+        url.path = baseUrl->path.join(url.path);
 
     if (s.skip('?'))
         url.query = s.token(Re::until('#'_re));
@@ -99,11 +99,11 @@ Res<> Url::unparse(Io::TextWriter& writer) const {
     if (scheme.len() > 0)
         try$(Io::format(writer, "{}:", scheme));
 
-    if (authority.len() > 0 or host.len() > 0)
+    if (userInfo.len() > 0 or host.len() > 0)
         try$(writer.writeStr("//"s));
 
-    if (authority.len() > 0)
-        try$(Io::format(writer, "{}@", authority));
+    if (userInfo.len() > 0)
+        try$(Io::format(writer, "{}@", userInfo));
 
     if (host.len() > 0)
         try$(writer.writeStr(host.str()));
@@ -128,12 +128,12 @@ String Url::str() const {
     return writer.str();
 }
 
-Url parseUrlOrPath(Str str, Opt<Url> origin) {
+Url parseUrlOrPath(Str str, Opt<Url> baseUrl) {
     if (Url::isUrl(str)) {
-        return Url::parse(str, origin);
+        return Url::parse(str, baseUrl);
     }
 
-    Url url = origin.unwrapOr(""_url);
+    Url url = baseUrl.unwrapOr(""_url);
     url.path = url.path.join(Path::parse(str));
 
     return url;

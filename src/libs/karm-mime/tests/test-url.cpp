@@ -8,7 +8,7 @@ test$("karm-mime-url-parse") {
     auto url = "http://example.com:1234/home"_url;
 
     expectEq$(url.scheme, "http"s);
-    expectEq$(url.authority, ""s);
+    expectEq$(url.userInfo, ""s);
     expectEq$(url.host, "example.com"s);
     expectEq$(url.port, 1234uz);
     expectEq$(url.path.str(), "/home"s);
@@ -18,7 +18,7 @@ test$("karm-mime-url-parse") {
     auto url2 = "http://example.com:1234/home?query#fragment"_url;
 
     expectEq$(url2.scheme, "http"s);
-    expectEq$(url2.authority, ""s);
+    expectEq$(url2.userInfo, ""s);
     expectEq$(url2.host, "example.com"s);
     expectEq$(url2.port, 1234uz);
     expectEq$(url2.path.str(), "/home"s);
@@ -28,7 +28,7 @@ test$("karm-mime-url-parse") {
     auto url3 = "ftp://user@example.com:1234/home?query#fragment"_url;
 
     expectEq$(url3.scheme, "ftp"s);
-    expectEq$(url3.authority, "user"s);
+    expectEq$(url3.userInfo, "user"s);
     expectEq$(url3.host, "example.com"s);
     expectEq$(url3.port, 1234uz);
     expectEq$(url3.path.str(), "/home"s);
@@ -38,7 +38,7 @@ test$("karm-mime-url-parse") {
     auto url4 = "./home"_url;
 
     expectEq$(url4.scheme, ""s);
-    expectEq$(url4.authority, ""s);
+    expectEq$(url4.userInfo, ""s);
     expectEq$(url4.host, ""s);
     expectEq$(url4.port, NONE);
     expectEq$(url4.path.str(), "./home"s);
