@@ -680,15 +680,17 @@ Res<FontWeight> ValueParser<FontWeight>::parse(Cursor<Css::Sst>& c) {
         return Error::invalidData("unexpected end of input");
 
     if (c.skip(Css::Token::ident("normal"))) {
-        return Ok(FontWeight::NORMAL);
+        return Ok(Text::FontWeight::REGULAR);
     } else if (c.skip(Css::Token::ident("bold"))) {
-        return Ok(FontWeight::BOLD);
+        return Ok(Text::FontWeight::BOLD);
     } else if (c.skip(Css::Token::ident("bolder"))) {
-        return Ok(FontWeight::BOLDER);
+        return Ok(RelativeFontWeight::BOLDER);
     } else if (c.skip(Css::Token::ident("lighter"))) {
-        return Ok(FontWeight::LIGHTER);
+        return Ok(RelativeFontWeight::LIGHTER);
     } else {
-        return Ok(try$(parseValue<Integer>(c)));
+        return Ok(Text::FontWeight{
+            static_cast<u16>(clamp(try$(parseValue<Integer>(c)), 0, 1000))
+        });
     }
 }
 
