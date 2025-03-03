@@ -12,7 +12,7 @@
 
 namespace Vaev::Driver {
 
-static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, RectAu pageContent, Scene::Stack& stack) {
+static void _paintMargins(Text::FontBook& fontBook, Style::PageComputedStyle& pageStyle, RectAu pageRect, RectAu pageContent, Scene::Stack& stack) {
     // MARK: Top Left Corner ---------------------------------------------------
 
     auto topLeftMarginCornerRect = RectAu::fromTwoPoint(
@@ -20,7 +20,7 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
         pageContent.topStart()
     );
     Layout::Tree topLeftMarginCornerTree{
-        .root = Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::TOP_LEFT_CORNER)),
+        .root = Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::TOP_LEFT_CORNER)),
         .viewport = Layout::Viewport{.small = topLeftMarginCornerRect.size()}
     };
 
@@ -42,7 +42,7 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
         pageContent.topEnd()
     );
     Layout::Tree topRightMarginCornerTree{
-        .root = Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::TOP_RIGHT_CORNER)),
+        .root = Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::TOP_RIGHT_CORNER)),
         .viewport = Layout::Viewport{.small = topRightMarginCornerRect.size()}
     };
 
@@ -64,7 +64,7 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
         pageContent.bottomStart()
     );
     Layout::Tree bottomLeftMarginCornerTree{
-        .root = Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::BOTTOM_LEFT_CORNER)),
+        .root = Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::BOTTOM_LEFT_CORNER)),
         .viewport = Layout::Viewport{.small = bottomLeftMarginCornerRect.size()}
     };
 
@@ -86,7 +86,7 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
         pageContent.bottomEnd()
     );
     Layout::Tree bottomRightMarginCornerTree{
-        .root = Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::BOTTOM_RIGHT_CORNER)),
+        .root = Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::BOTTOM_RIGHT_CORNER)),
         .viewport = Layout::Viewport{.small = bottomRightMarginCornerRect.size()}
     };
 
@@ -108,10 +108,10 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
         topRightMarginCornerRect.bottomStart()
     );
 
-    auto topBox = Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::TOP));
-    topBox.add(Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::TOP_LEFT)));
-    topBox.add(Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::TOP_CENTER)));
-    topBox.add(Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::TOP_RIGHT)));
+    auto topBox = Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::TOP));
+    topBox.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::TOP_LEFT)));
+    topBox.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::TOP_CENTER)));
+    topBox.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::TOP_RIGHT)));
 
     Layout::Tree topTree{
         .root = std::move(topBox),
@@ -136,10 +136,10 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
         bottomRightMarginCornerRect.bottomStart()
     );
 
-    auto bottomBox = Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::BOTTOM));
-    bottomBox.add(Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::BOTTOM_LEFT)));
-    bottomBox.add(Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::BOTTOM_CENTER)));
-    bottomBox.add(Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::BOTTOM_RIGHT)));
+    auto bottomBox = Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::BOTTOM));
+    bottomBox.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::BOTTOM_LEFT)));
+    bottomBox.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::BOTTOM_CENTER)));
+    bottomBox.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::BOTTOM_RIGHT)));
 
     Layout::Tree bottomTree{
         .root = std::move(bottomBox),
@@ -164,10 +164,10 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
         bottomLeftMarginCornerRect.topStart()
     );
 
-    auto leftBox = Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::LEFT));
-    leftBox.add(Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::LEFT_TOP)));
-    leftBox.add(Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::LEFT_MIDDLE)));
-    leftBox.add(Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::LEFT_BOTTOM)));
+    auto leftBox = Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::LEFT));
+    leftBox.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::LEFT_TOP)));
+    leftBox.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::LEFT_MIDDLE)));
+    leftBox.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::LEFT_BOTTOM)));
 
     Layout::Tree leftTree{
         .root = std::move(leftBox),
@@ -193,10 +193,10 @@ static void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, 
         bottomRightMarginCornerRect.topStart()
     );
 
-    auto rightBox = Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::RIGHT));
-    rightBox.add(Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::RIGHT_TOP)));
-    rightBox.add(Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::RIGHT_MIDDLE)));
-    rightBox.add(Layout::buildForPseudoElement(pageStyle.area(Style::PageArea::RIGHT_BOTTOM)));
+    auto rightBox = Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::RIGHT));
+    rightBox.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::RIGHT_TOP)));
+    rightBox.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::RIGHT_MIDDLE)));
+    rightBox.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::RIGHT_BOTTOM)));
 
     Layout::Tree rightTree{
         .root = std::move(rightBox),
@@ -338,7 +338,7 @@ Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& 
         contentTree.fc = {pageContent.size()};
 
         if (settings.headerFooter and settings.margins != Print::Margins::NONE)
-            _paintMargins(*pageStyle, pageRect, pageContent, *pageStack);
+            _paintMargins(fontBook, *pageStyle, pageRect, pageContent, *pageStack);
 
         Layout::Input pageLayoutInput{
             .knownSize = {pageContent.width, NONE},

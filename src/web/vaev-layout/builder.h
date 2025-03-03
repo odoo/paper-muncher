@@ -8,6 +8,6 @@ namespace Vaev::Layout {
 
 Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc);
 
-Box buildForPseudoElement(Rc<Style::Computed> style);
+Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::Computed> style);
 
 } // namespace Vaev::Layout
