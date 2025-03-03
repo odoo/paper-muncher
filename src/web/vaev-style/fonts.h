@@ -4,6 +4,7 @@
 #include <vaev-base/font.h>
 #include <vaev-css/parser.h>
 
+#include "base.h"
 #include "values.h"
 
 namespace Vaev::Style {
@@ -76,6 +77,70 @@ struct SrcDesc {
 
     static auto initial() {
         return Vec<FontSource>{};
+    }
+
+    void apply(FontFace& f) {
+        f.sources = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        Vec<FontSource> fontSrcs;
+        while (true) {
+            eatWhitespace(c);
+            if (c.ended())
+                return Error::invalidData("unexpected end of input");
+
+            if (c.peek() == Css::Sst::FUNC and c.peek().prefix == Css::Token::function("local(")) {
+                auto func = c.next();
+                auto localFuncScan = Cursor<Css::Sst>{func.content};
+                auto familyName = try$(parseValue<Text::Family>(localFuncScan));
+                fontSrcs.pushBack(familyName);
+                continue;
+            }
+
+            auto fontSrc = fontSrcs.emplaceBack(try$(parseValue<Mime::Url>(c)));
+            eatWhitespace(c);
+
+            if (not c.ended() and c.peek() == Css::Sst::FUNC and c.peek().prefix == Css::Token::function("format(")) {
+                auto formatScan = Cursor<Css::Sst>{c.next().content};
+
+                eatWhitespace(formatScan);
+
+                if (formatScan.ended())
+                    return Error::invalidData("unexpected end of input");
+
+                if (formatScan.peek() == Css::Token::STRING) {
+                    fontSrc.format = formatScan.next().token.data;
+                } else if (
+                    formatScan.peek() == Css::Token::ident("collection") or
+                    formatScan.peek() == Css::Token::ident("opentype") or
+                    formatScan.peek() == Css::Token::ident("svg") or
+                    formatScan.peek() == Css::Token::ident("truetype") or
+                    formatScan.peek() == Css::Token::ident("embedded-opentype") or
+                    formatScan.peek() == Css::Token::ident("woff") or
+                    formatScan.peek() == Css::Token::ident("woff2")
+                ) {
+                    fontSrc.format = formatScan.next().token.data;
+                }
+            }
+
+            eatWhitespace(c);
+
+            if (not c.ended() and c.peek() == Css::Sst::FUNC and c.peek().prefix == Css::Token::function("tech")) {
+                // TODO: https://www.w3.org/TR/css-fonts-4/#font-tech-values
+            }
+
+            eatWhitespace(c);
+            if (c.ended())
+                break;
+
+            if (not c.skip(Css::Token::Type::COMMA))
+                return Error::invalidData("expected comma separating font srcs");
+        }
+
+        value = std::move(fontSrcs);
+
+        return Ok();
     }
 
     void apply(FontFace& f) const {
