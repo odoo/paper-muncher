@@ -1366,7 +1366,7 @@ Res<Size> ValueParser<Size>::parse(Cursor<Css::Sst>& c) {
         return Error::invalidData("unexpected end of input");
 
     if (c.peek() == Css::Token::IDENT) {
-        auto data = c.next().token.data;
+        Str data = c.next().token.data;
         if (data == "auto") {
             return Ok(Size::AUTO);
         } else if (data == "none") {
