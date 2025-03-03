@@ -42,6 +42,8 @@ fi
 if [ -z "$CUTEKIT_PYTHON" ]; then
     if command -v python3.11 &> /dev/null; then
         export CUTEKIT_PYTHON="python3.11"
+    elif command -v python3.12 &> /dev/null; then
+        export CUTEKIT_PYTHON="python3.12"
     else
         export CUTEKIT_PYTHON="python3"
     fi
