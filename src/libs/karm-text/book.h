@@ -39,7 +39,7 @@ struct FontBook {
         _faces.pushBack(info);
     }
 
-    Rc<Fontface> load(Mime::Url url, Opt<FontAttrs> attrs = NONE);
+    Res<> load(Mime::Url const& url, Opt<FontAttrs> attrs = NONE);
 
     Res<> loadAll();
 

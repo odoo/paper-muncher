@@ -270,9 +270,14 @@ Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& 
 
     fetchStylesheets(dom, stylebook);
 
+    Text::FontBook fontBook;
+    if (not fontBook.loadAll())
+        logWarn("not all fonts were properly loaded into fontbook");
+
     Style::Computer computer{
-        media, stylebook
+        media, stylebook, fontBook
     };
+    computer.loadFontFaces();
 
     // MARK: Page and Margins --------------------------------------------------
 

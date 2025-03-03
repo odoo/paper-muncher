@@ -1,5 +1,6 @@
 #include <karm-scene/stack.h>
 #include <karm-sys/time.h>
+#include <karm-text/book.h>
 #include <vaev-layout/builder.h>
 #include <vaev-layout/layout.h>
 #include <vaev-layout/paint.h>
@@ -28,7 +29,13 @@ RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media, Layou
 
     start = Sys::now();
 
-    Style::Computer computer{media, stylebook};
+    Text::FontBook fontBook;
+    if (not fontBook.loadAll())
+        logWarn("not all fonts were properly loaded into fontbook");
+
+    Style::Computer computer{media, stylebook, fontBook};
+    computer.loadFontFaces();
+
     Layout::Tree tree = {
         Layout::build(computer, dom),
         viewport,
