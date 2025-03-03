@@ -59,4 +59,56 @@ test$("karm-mime-url-parent-of") {
     return Ok();
 }
 
+test$("karm-mime-url-resolution-reference") {
+    auto base = "http://a/b/c/d;p?q"_url;
+
+    // https://datatracker.ietf.org/doc/html/rfc3986#section-5.4.1
+    expectEq$(Url::resolveReference(base, "g:h"_url).take(), "g:h"_url);
+    expectEq$(Url::resolveReference(base, "g"_url).take(), "http://a/b/c/g"_url);
+    expectEq$(Url::resolveReference(base, "./g"_url).take(), "http://a/b/c/g"_url);
+    expectEq$(Url::resolveReference(base, "g/"_url).take(), "http://a/b/c/g/"_url);
+    expectEq$(Url::resolveReference(base, "//g"_url).take(), "http://g"_url);
+    expectEq$(Url::resolveReference(base, "?y"_url).take(), "http://a/b/c/d;p?y"_url);
+    expectEq$(Url::resolveReference(base, "g?y"_url).take(), "http://a/b/c/g?y"_url);
+    expectEq$(Url::resolveReference(base, "#s"_url).take(), "http://a/b/c/d;p?q#s"_url);
+    expectEq$(Url::resolveReference(base, "g#s"_url).take(), "http://a/b/c/g#s"_url);
+    expectEq$(Url::resolveReference(base, "g?y#s"_url).take(), "http://a/b/c/g?y#s"_url);
+    expectEq$(Url::resolveReference(base, ";x"_url).take(), "http://a/b/c/;x"_url);
+    expectEq$(Url::resolveReference(base, "g;x"_url).take(), "http://a/b/c/g;x"_url);
+    expectEq$(Url::resolveReference(base, "g;x?y#s"_url).take(), "http://a/b/c/g;x?y#s"_url);
+    expectEq$(Url::resolveReference(base, ""_url).take(), "http://a/b/c/d;p?q"_url);
+    expectEq$(Url::resolveReference(base, "."_url).take(), "http://a/b/c/"_url);
+    expectEq$(Url::resolveReference(base, "./"_url).take(), "http://a/b/c/"_url);
+    expectEq$(Url::resolveReference(base, ".."_url).take(), "http://a/b/"_url);
+    expectEq$(Url::resolveReference(base, "../"_url).take(), "http://a/b/"_url);
+    expectEq$(Url::resolveReference(base, "../g"_url).take(), "http://a/b/g"_url);
+    expectEq$(Url::resolveReference(base, "../.."_url).take(), "http://a/"_url);
+    expectEq$(Url::resolveReference(base, "../../"_url).take(), "http://a/"_url);
+    expectEq$(Url::resolveReference(base, "../../g"_url).take(), "http://a/g"_url);
+
+    // https://datatracker.ietf.org/doc/html/rfc3986#section-5.4.2
+    expectEq$(Url::resolveReference(base, "../../../g"_url).take(), "http://a/g"_url);
+    expectEq$(Url::resolveReference(base, "../../../../g"_url).take(), "http://a/g"_url);
+    expectEq$(Url::resolveReference(base, "/./g"_url).take(), "http://a/g"_url);
+    expectEq$(Url::resolveReference(base, "/../g"_url).take(), "http://a/g"_url);
+    expectEq$(Url::resolveReference(base, "g."_url).take(), "http://a/b/c/g."_url);
+    expectEq$(Url::resolveReference(base, ".g"_url).take(), "http://a/b/c/.g"_url);
+    expectEq$(Url::resolveReference(base, "g.."_url).take(), "http://a/b/c/g.."_url);
+    expectEq$(Url::resolveReference(base, "..g"_url).take(), "http://a/b/c/..g"_url);
+    expectEq$(Url::resolveReference(base, "./../g"_url).take(), "http://a/b/g"_url);
+    expectEq$(Url::resolveReference(base, "./g/."_url).take(), "http://a/b/c/g/"_url);
+    expectEq$(Url::resolveReference(base, "g/./h"_url).take(), "http://a/b/c/g/h"_url);
+    expectEq$(Url::resolveReference(base, "g/../h"_url).take(), "http://a/b/c/h"_url);
+    expectEq$(Url::resolveReference(base, "g;x=1/./y"_url).take(), "http://a/b/c/g;x=1/y"_url);
+    expectEq$(Url::resolveReference(base, "g;x=1/../y"_url).take(), "http://a/b/c/y"_url);
+    expectEq$(Url::resolveReference(base, "g?y/./x"_url).take(), "http://a/b/c/g?y/./x"_url);
+    expectEq$(Url::resolveReference(base, "g?y/../x"_url).take(), "http://a/b/c/g?y/../x"_url);
+    expectEq$(Url::resolveReference(base, "g#s/./x"_url).take(), "http://a/b/c/g#s/./x"_url);
+    expectEq$(Url::resolveReference(base, "g#s/../x"_url).take(), "http://a/b/c/g#s/../x"_url);
+    expectEq$(Url::resolveReference(base, "http:g"_url, true).take(), "http:g"_url);
+    expectEq$(Url::resolveReference(base, "http:g"_url, false).take(), "http://a/b/c/g"_url);
+
+    return Ok();
+}
+
 } // namespace Karm::Mime::Tests

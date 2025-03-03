@@ -55,6 +55,12 @@ struct Url {
     }
 
     auto operator<=>(Url const&) const = default;
+
+    bool isRelative() const {
+        return not scheme;
+    }
+
+    static Res<Url> resolveReference(Url const& baseUrl, Url const& referenceUrl, bool strict = true);
 };
 
 Url parseUrlOrPath(Str str, Opt<Url> baseUrl = NONE);

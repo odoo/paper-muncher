@@ -19,12 +19,6 @@ Url Url::parse(Io::SScan& s, Opt<Url> baseUrl) {
     if (s.ahead(RE_SCHEME)) {
         url.scheme = s.token(RE_COMPONENT);
         s.skip(':');
-    } else if (baseUrl) {
-        url.scheme = baseUrl->scheme;
-        url.userInfo = baseUrl->userInfo;
-        url.host = baseUrl->host;
-        url.port = baseUrl->port;
-        url.path = baseUrl->path;
     }
 
     if (s.skip("//")) {
@@ -43,8 +37,6 @@ Url Url::parse(Io::SScan& s, Opt<Url> baseUrl) {
     }
 
     url.path = Path::parse(s, true);
-    if (not url.path.rooted and baseUrl)
-        url.path = baseUrl->path.join(url.path);
 
     if (s.skip('?'))
         url.query = s.token(Re::until('#'_re));
@@ -52,7 +44,11 @@ Url Url::parse(Io::SScan& s, Opt<Url> baseUrl) {
     if (s.skip('#'))
         url.fragment = s.token(Re::until(Re::eof()));
 
-    return url;
+    if (not baseUrl)
+        return url;
+
+    auto resolvedRef = resolveReference(baseUrl.unwrap(), url);
+    return resolvedRef.unwrapOr(url);
 }
 
 Url Url::parse(Str str, Opt<Url> origin) {
@@ -65,6 +61,53 @@ bool Url::isUrl(Str str) {
 
     return s.skip(RE_COMPONENT) and
            s.skip(':');
+}
+
+static Path _mergePaths(Url const& baseUrl, Url const& referenceUrl) {
+    if (baseUrl.host and baseUrl.path.len() == 0) {
+        Path path = referenceUrl.path;
+        path.rooted = true;
+        return path;
+    }
+
+    return baseUrl.path.parent(1).join(referenceUrl.path);
+}
+
+// https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.2
+Res<Url> Url::resolveReference(Url const& baseUrl, Url const& referenceUrl, bool strict) {
+    if (baseUrl.isRelative())
+        return Error::invalidInput("base url must not be a relative url");
+
+    bool undefineReferenceSchema = not strict and referenceUrl.scheme == baseUrl.scheme;
+    if (referenceUrl.scheme and not undefineReferenceSchema) {
+        Url targetUrl = referenceUrl;
+        targetUrl.path.normalize();
+        return Ok(targetUrl);
+    }
+
+    if (referenceUrl.host) {
+        Url targetUrl = referenceUrl;
+        targetUrl.scheme = baseUrl.scheme;
+        targetUrl.path.normalize();
+        return Ok(targetUrl);
+    }
+
+    Url targetUrl = baseUrl;
+    if (referenceUrl.path.len() == 0) {
+        if (referenceUrl.query)
+            targetUrl.query = referenceUrl.query;
+    } else {
+        if (referenceUrl.path.rooted)
+            targetUrl.path = referenceUrl.path;
+        else
+            targetUrl.path = _mergePaths(baseUrl, referenceUrl);
+        targetUrl.query = referenceUrl.query;
+    }
+
+    targetUrl.fragment = referenceUrl.fragment;
+    targetUrl.path.normalize();
+
+    return Ok(targetUrl);
 }
 
 Url Url::join(Path const& other) const {
