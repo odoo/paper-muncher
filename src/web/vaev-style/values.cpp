@@ -1250,11 +1250,6 @@ Res<Mime::Url> ValueParser<Mime::Url>::parse(Cursor<Css::Sst>& c) {
 
     // TODO: it is unclear what url-modifiers are and how they are used
 
-    // NOTE: Even if the url path doesnt have a '.' and is schemaless, it is relative, so we override the parsed
-    // 'rooted' value
-    if (url.scheme == "file")
-        url.path.rooted = false;
-
     return Ok(url);
 }
 
