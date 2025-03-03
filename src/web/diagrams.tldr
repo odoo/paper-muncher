@@ -8403,8 +8403,8 @@
 			"typeName": "binding"
 		},
 		{
-			"x": 173.17837330428551,
-			"y": 300.78278298077043,
+			"x": 192.18280332581594,
+			"y": 306.1768780230343,
 			"rotation": 0,
 			"isLocked": false,
 			"opacity": 1,
@@ -9148,7 +9148,7 @@
 				"fill": "none",
 				"color": "black",
 				"labelColor": "black",
-				"bend": 288.5035305522979,
+				"bend": 274.18668978506946,
 				"start": {
 					"x": -443.2405150923744,
 					"y": -602.051622518436
@@ -11498,17 +11498,15 @@
 		{
 			"id": "pointer:pointer",
 			"typeName": "pointer",
-			"x": -1281.4314955148282,
-			"y": 37.96690667149312,
-			"lastActivityTimestamp": 1739192960390,
+			"x": 120.77531314922089,
+			"y": 891.1809939387009,
+			"lastActivityTimestamp": 1740991794488,
 			"meta": {}
 		},
 		{
 			"followingUserId": null,
 			"opacityForNextShape": 1,
-			"stylesForNextShape": {
-				"tldraw:color": "black"
-			},
+			"stylesForNextShape": {},
 			"brush": null,
 			"scribbles": [],
 			"cursor": {
@@ -11522,8 +11520,8 @@
 			"screenBounds": {
 				"x": 0,
 				"y": 0,
-				"w": 1586.4000244140625,
-				"h": 1153.2000732421875
+				"w": 1486.564697265625,
+				"h": 1024.113525390625
 			},
 			"insets": [
 				false,
@@ -11538,7 +11536,7 @@
 			"isChatting": false,
 			"highlightedUserIds": [],
 			"isFocused": true,
-			"devicePixelRatio": 1.6666666269302368,
+			"devicePixelRatio": 1.249861478805542,
 			"isCoarsePointer": false,
 			"isHoveringCanvas": true,
 			"openMenus": [],
@@ -11554,7 +11552,7 @@
 			"editingShapeId": null,
 			"croppingShapeId": null,
 			"selectedShapeIds": [
-				"shape:CVefcgchzsbbShi23CgXo"
+				"shape:aIR5H01qXmP5LLzTIh44C"
 			],
 			"hoveredShapeId": null,
 			"erasingShapeIds": [],
@@ -11566,9 +11564,9 @@
 			"typeName": "instance_page_state"
 		},
 		{
-			"x": 2726.2688809449605,
-			"y": 137.27898659075493,
-			"z": 0.6374614517140547,
+			"x": 1534.4070192511158,
+			"y": 44.91348574499566,
+			"z": 0.6591544947445426,
 			"meta": {},
 			"id": "camera:page:aUg0fJIE46xD7B3LRQITy",
 			"typeName": "camera"

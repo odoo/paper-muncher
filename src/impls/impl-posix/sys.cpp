@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -446,6 +447,32 @@ Res<> exit(i32 res) {
 
 void hardenSandbox() {
     logError("could not harden sandbox");
+}
+
+// MARK: Addr ------------------------------------------------------------------
+
+Async::Task<Vec<Ip>> ipLookupAsync(Str host) {
+    struct addrinfo hints = {};
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    struct addrinfo* res;
+    if (getaddrinfo(host.buf(), nullptr, &hints, &res) < 0)
+        co_return Posix::fromLastErrno();
+
+    Vec<Ip> ips;
+    for (auto* p = res; p; p = p->ai_next) {
+        if (p->ai_family == AF_INET) {
+            struct sockaddr_in* addr = (struct sockaddr_in*)p->ai_addr;
+            ips.pushBack(Ip4::fromRaw(addr->sin_addr.s_addr));
+        } else if (p->ai_family == AF_INET6) {
+            struct sockaddr_in6* addr = (struct sockaddr_in6*)p->ai_addr;
+            ips.pushBack(Ip6::fromRaw(addr->sin6_addr));
+        }
+    }
+
+    freeaddrinfo(res);
+    co_return Ok(ips);
 }
 
 } // namespace Karm::Sys::_Embed

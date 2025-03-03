@@ -11,17 +11,45 @@
 
 namespace Vaev {
 
-enum struct BorderEdge {
-    ALL,
+struct LineWidth {
+    enum struct Named {
+        THIN,
+        MEDIUM,
+        THICK,
 
-    TOP,
-    END,
-    BOTTOM,
-    START,
+        _LEN,
+    };
+
+    static constexpr Length THIN_VALUE = 1_au;
+    static constexpr Length MEDIUM_VALUE = 3_au;
+    static constexpr Length THICK_VALUE = 5_au;
+
+    using enum Named;
+
+    using Inner = Union<CalcValue<Length>, Named>;
+
+    Inner _inner;
+
+    template <Meta::Convertible<Inner> T>
+    constexpr LineWidth(T&& value)
+        : _inner(std::forward<T>(value)) {
+    }
+
+    auto visit(this auto& self, auto&& visitor) {
+        return self._inner.visit(std::forward<decltype(visitor)>(visitor));
+    }
+
+    void repr(Io::Emit& e) const {
+        e("{}", _inner);
+    }
+
+    bool operator==(LineWidth const&) const = default;
+
+    auto operator<=>(LineWidth const&) const = default;
 };
 
 struct Border {
-    CalcValue<Length> width;
+    LineWidth width;
     Gfx::BorderStyle style;
     Color color = Color::CURRENT;
 
@@ -31,35 +59,11 @@ struct Border {
 };
 
 struct BorderProps {
-    static constexpr Length THIN = 1_au;
-    static constexpr Length MEDIUM = 3_au;
-    static constexpr Length THICK = 5_au;
-
     Border top, start, bottom, end;
     Math::Radii<CalcValue<PercentOr<Length>>> radii;
 
     void all(Border b) {
         top = start = bottom = end = b;
-    }
-
-    void set(BorderEdge edge, Border b) {
-        switch (edge) {
-        case BorderEdge::ALL:
-            all(b);
-            break;
-        case BorderEdge::TOP:
-            top = b;
-            break;
-        case BorderEdge::START:
-            start = b;
-            break;
-        case BorderEdge::BOTTOM:
-            bottom = b;
-            break;
-        case BorderEdge::END:
-            end = b;
-            break;
-        }
     }
 
     void repr(Io::Emit& e) const {

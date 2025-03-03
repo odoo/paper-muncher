@@ -129,9 +129,8 @@ String Url::str() const {
 }
 
 Url parseUrlOrPath(Str str, Opt<Url> origin) {
-    if (Url::isUrl(str)) {
+    if (Url::isUrl(str))
         return Url::parse(str, origin);
-    }
 
     Url url = origin.unwrapOr("file:"_url);
     url.path = url.path.join(Path::parse(str));

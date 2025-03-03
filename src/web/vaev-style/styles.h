@@ -675,61 +675,61 @@ struct BorderBottomStyleProp {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 struct BorderTopWidthProp {
-    CalcValue<Length> value = initial();
+    LineWidth value = initial();
 
     static constexpr Str name() { return "border-top-width"; }
 
-    static constexpr Length initial() { return BorderProps::MEDIUM; }
+    static constexpr LineWidth initial() { return LineWidth::MEDIUM; }
 
     void apply(Computed& c) const {
         c.borders.cow().top.width = value;
     }
 
-    static CalcValue<Length> load(Computed const& c) {
+    static LineWidth load(Computed const& c) {
         return c.borders->top.width;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<Length>>(c));
+        value = try$(parseValue<LineWidth>(c));
         return Ok();
     }
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 struct BorderRightWidthProp {
-    CalcValue<Length> value = initial();
+    LineWidth value = initial();
 
     static constexpr Str name() { return "border-right-width"; }
 
-    static constexpr Length initial() { return BorderProps::MEDIUM; }
+    static constexpr LineWidth initial() { return LineWidth::MEDIUM; }
 
     void apply(Computed& c) const {
         c.borders.cow().end.width = value;
     }
 
-    static CalcValue<Length> load(Computed const& c) {
+    static LineWidth load(Computed const& c) {
         return c.borders->end.width;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<Length>>(c));
+        value = try$(parseValue<LineWidth>(c));
         return Ok();
     }
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 struct BorderBottomWidthProp {
-    CalcValue<Length> value = initial();
+    LineWidth value = initial();
 
     static constexpr Str name() { return "border-bottom-width"; }
 
-    static constexpr Length initial() { return BorderProps::MEDIUM; }
+    static constexpr LineWidth initial() { return LineWidth::MEDIUM; }
 
     void apply(Computed& c) const {
         c.borders.cow().bottom.width = value;
     }
 
-    static CalcValue<Length> load(Computed const& c) {
+    static LineWidth load(Computed const& c) {
         return c.borders->bottom.width;
     }
 
@@ -741,17 +741,17 @@ struct BorderBottomWidthProp {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 struct BorderLeftWidthProp {
-    CalcValue<Length> value = initial();
+    LineWidth value = initial();
 
     static constexpr Str name() { return "border-left-width"; }
 
-    static constexpr Length initial() { return BorderProps::MEDIUM; }
+    static constexpr LineWidth initial() { return LineWidth::MEDIUM; }
 
     void apply(Computed& c) const {
         c.borders.cow().start.width = value;
     }
 
-    static CalcValue<Length> load(Computed const& c) {
+    static LineWidth load(Computed const& c) {
         return c.borders->start.width;
     }
 
@@ -1122,18 +1122,19 @@ struct BorderProp {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 struct BorderWidthProp {
-    Math::Insets<CalcValue<Length>> value;
+    Math::Insets<LineWidth> value;
 
     static constexpr Str name() { return "border-width"; }
 
     void apply(Computed& c) const {
-        c.borders.cow().start.width = value.start;
-        c.borders.cow().end.width = value.end;
-        c.borders.cow().top.width = value.top;
-        c.borders.cow().bottom.width = value.bottom;
+        auto& borders = c.borders.cow();
+        borders.start.width = value.start;
+        borders.end.width = value.end;
+        borders.top.width = value.top;
+        borders.bottom.width = value.bottom;
     }
 
-    static Math::Insets<CalcValue<Length>> load(Computed const& c) {
+    static Math::Insets<LineWidth> load(Computed const& c) {
         return {
             c.borders->start.width,
             c.borders->end.width,
@@ -1143,7 +1144,7 @@ struct BorderWidthProp {
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Math::Insets<CalcValue<Length>>>(c));
+        value = try$(parseValue<Math::Insets<LineWidth>>(c));
 
         return Ok();
     }

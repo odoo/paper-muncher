@@ -10,13 +10,13 @@
 namespace Karm::Mime {
 
 struct Url {
-    String scheme;
-    String authority;
-    String host;
-    Opt<usize> port;
+    String scheme = ""s;
+    String authority = ""s;
+    String host = ""s;
+    Opt<usize> port = NONE;
     Path path;
-    String query;
-    String fragment;
+    String query = ""s;
+    String fragment = ""s;
 
     static Url parse(Io::SScan& s, Opt<Url> orgin = NONE);
 

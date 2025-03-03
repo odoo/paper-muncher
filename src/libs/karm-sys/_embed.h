@@ -5,6 +5,7 @@
 #include <karm-base/tuple.h>
 #include <karm-mime/uti.h>
 
+#include "addr.h"
 #include "async.h"
 #include "dir.h"
 #include "fd.h"
@@ -100,6 +101,10 @@ Res<> exit(i32);
 // MARK: Sandboxing ------------------------------------------------------------
 
 void hardenSandbox();
+
+// MARK: Addr ------------------------------------------------------------------
+
+Async::Task<Vec<Ip>> ipLookupAsync(Str host);
 
 // MARK: Asynchronous I/O ------------------------------------------------------
 

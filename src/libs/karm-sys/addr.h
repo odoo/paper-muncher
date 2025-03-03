@@ -1,5 +1,6 @@
 #pragma once
 
+#include <karm-async/task.h>
 #include <karm-base/array.h>
 #include <karm-base/endian.h>
 #include <karm-io/aton.h>
@@ -9,6 +10,8 @@ namespace Karm::Sys {
 
 struct SocketAddr;
 
+// MARK: IP v4 -----------------------------------------------------------------
+
 union Ip4 {
     struct {
         u8 a, b, c, d;
@@ -16,6 +19,15 @@ union Ip4 {
 
     Array<u8, 4> bytes;
     Be<u32> _raw;
+
+    static Ip4 fromRaw(u32 raw) {
+        return {
+            u8(raw >> 24),
+            u8(raw >> 16),
+            u8(raw >> 8),
+            u8(raw),
+        };
+    }
 
     constexpr Ip4(u8 a, u8 b, u8 c, u8 d)
         : a(a), b(b), c(c), d(d) {}
@@ -71,6 +83,8 @@ union Ip4 {
     }
 };
 
+// MARK: IP v6 -----------------------------------------------------------------
+
 union Ip6 {
     struct {
         u16 a, b, c, d, e, f, g, h;
@@ -119,7 +133,7 @@ union Ip6 {
         return parse(s);
     }
 
-    std::strong_ordering operator<=>(Ip6 const& b) const {
+    auto operator<=>(Ip6 const& b) const {
         return _raw <=> b._raw;
     }
 
@@ -127,6 +141,8 @@ union Ip6 {
         return _raw == b._raw;
     }
 };
+
+// MARK: IP --------------------------------------------------------------------
 
 struct Ip : public Union<Ip4, Ip6> {
     using Union<Ip4, Ip6>::Union;
@@ -147,11 +163,15 @@ struct Ip : public Union<Ip4, Ip6> {
         return Error::invalidInput("invalid IP address");
     }
 
+    static Async::Task<Vec<Ip>> lookupAsync(Str host);
+
     static Res<Ip> parse(Str str) {
         auto s = Io::SScan(str);
         return parse(s);
     }
 };
+
+// MARK: Socket Address --------------------------------------------------------
 
 struct SocketAddr {
     Ip addr;
