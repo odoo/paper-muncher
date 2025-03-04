@@ -54,11 +54,11 @@ struct TtfGlyphInfoAdapter {
             u16 idRangeOffset = s.skip(segCountX2).peekU16be();
 
             if (idRangeOffset == 0) {
-                for (u16 code = startCode; code <= endCode; ++code) {
+                for (u32 code = startCode; code <= endCode; ++code) {
                     codeMappings.put(code, (u16)((code + idDelta) & 0xFFFF));
                 }
             } else {
-                for (u16 code = startCode; code <= endCode; ++code) {
+                for (u32 code = startCode; code <= endCode; ++code) {
                     auto offset = idRangeOffset + (code - startCode) * 2;
                     codeMappings.put(code, s.skip(offset).nextU16be());
                 }
