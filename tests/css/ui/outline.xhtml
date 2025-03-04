@@ -1,0 +1,389 @@
+<test name="outline">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                div {
+                    position: absolute;
+                    top: 10px;
+                    left: 10px;
+                    width: 100px;
+                    height: 100px;
+                    box-sizing: border-box;
+                }
+            </style>
+        </head>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline-width: 3px;
+                outline-color: red;
+                outline-style: solid;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                top: 7px;
+                left: 7px;
+                width: 106px;
+                height: 106px;
+                border-width: 3px;
+                border-color: red;
+                border-style: solid;
+            }
+        </style>
+    </rendering>
+
+
+    <error>
+        <div />
+        <style>
+            div {
+                border-width: 3px;
+                border-color: red;
+                border-style: solid;
+            }
+        </style>
+    </error>
+
+    <error>
+        <div />
+        <style>
+            div {
+                outline-width: 10px;
+                outline-color: red;
+                outline-style: solid;
+            }
+        </style>
+    </error>
+
+    <error>
+    </error>
+</test>
+<test name="outline-offset">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                div {
+                    position: absolute;
+                    top: 10px;
+                    left: 10px;
+                    width: 100px;
+                    height: 100px;
+                    box-sizing: border-box;
+                }
+            </style>
+        </head>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline-width: 3px;
+                outline-color: red;
+                outline-style: solid;
+                outline-offset: 5px;
+                border: 1px solid black;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <div />
+        <div id="outline" />
+        <style>
+            #outline {
+                top: 2px;
+                left: 2px;
+                width: 116px;
+                height: 116px;
+                border-width: 3px;
+                border-color: red;
+                border-style: solid;
+            }
+
+            div {
+                border: 1px solid black;
+            }
+        </style>
+    </rendering>
+</test>
+<test name="outline-offset-radius">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                div {
+                    position: absolute;
+                    top: 10px;
+                    left: 10px;
+                    width: 100px;
+                    height: 100px;
+                    box-sizing: border-box;
+                }
+            </style>
+        </head>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline-width: 3px;
+                outline-color: red;
+                outline-style: solid;
+                outline-offset: 5px;
+                border: 1px solid black;
+                border-radius: 3px;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <div />
+        <div id="outline" />
+        <style>
+            #outline {
+                top: 2px;
+                left: 2px;
+                width: 116px;
+                height: 116px;
+                border-width: 3px;
+                border-color: red;
+                border-style: solid;
+                border-radius: 11px;
+            }
+
+            div {
+                border: 1px solid black;
+                border-radius: 3px;
+            }
+        </style>
+    </rendering>
+</test>
+<test name="outline-double-auto">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                div {
+                    width: 100px;
+                    height: 100px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline-width: 3px;
+                outline-color: AccentColor;
+                outline-style: solid;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline-width: 3px;
+                outline-color: auto;
+                outline-style: auto;
+            }
+        </style>
+    </rendering>
+</test>
+<test name="outline-single-auto">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                div {
+                    width: 100px;
+                    height: 100px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline-width: 3px;
+                outline-color: currentColor;
+                outline-style: solid;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline-width: 3px;
+                outline-color: auto;
+                outline-style: solid;
+            }
+        </style>
+    </rendering>
+</test>
+<test name="outline-oneline-auto">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                div {
+                    width: 100px;
+                    height: 100px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline-width: 3px;
+                outline-color: auto;
+                outline-style: solid;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline: 3px auto solid;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline: auto 3px solid;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline: solid auto 3px;
+            }
+        </style>
+    </rendering>
+</test>
+<test name="outline-oneline-auto">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                div {
+                    width: 100px;
+                    height: 100px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline-width: 3px;
+                outline-color: auto;
+                outline-style: auto;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <div />
+        <style>
+            div {
+                outline: 3px auto;
+            }
+        </style>
+    </rendering>
+</test>

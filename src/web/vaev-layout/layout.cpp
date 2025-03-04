@@ -294,6 +294,8 @@ Output layout(Tree& tree, Box& box, Input input) {
             currFrag.metrics.padding = padding;
             currFrag.metrics.borders = borders;
             currFrag.metrics.radii = _computeRadii(tree, box, size);
+            currFrag.metrics.outlineOffset = resolve(tree, box, box.style->outline->offset);
+            currFrag.metrics.outlineWidth = resolve(tree, box, box.style->outline->width);
 
             parentFrag->add(std::move(currFrag));
         }

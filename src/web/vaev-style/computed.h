@@ -13,6 +13,7 @@
 #include <vaev-base/insets.h>
 #include <vaev-base/line.h>
 #include <vaev-base/numbers.h>
+#include <vaev-base/outline.h>
 #include <vaev-base/overflow.h>
 #include <vaev-base/sizing.h>
 #include <vaev-base/table.h>
@@ -36,6 +37,7 @@ struct Computed {
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
     Cow<Margin> margin;
+    Cow<Outline> outline;
     Cow<Padding> padding;
     BoxSizing boxSizing;
     Cow<SizingProps> sizing;

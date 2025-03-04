@@ -2044,6 +2044,154 @@ struct OpacityProp {
     }
 };
 
+// MARK: Outline --------------------------------------------------------------
+
+// https://drafts.csswg.org/css-ui/#outline
+struct OutlineProp {
+    Outline value;
+
+    static Str name() { return "outline"; }
+
+    void apply(Computed& c) const {
+        c.outline.cow() = value;
+    }
+
+    static Outline load(Computed const& c) {
+        return *c.outline;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        bool styleSet = false;
+        while (not c.ended()) {
+            auto width = parseValue<CalcValue<Length>>(c);
+            if (width) {
+                value.width = width.unwrap();
+                continue;
+            }
+
+            auto color = parseValue<Color>(c);
+            if (color) {
+                value.color = color.unwrap();
+                continue;
+            }
+
+            auto style = parseValue<Gfx::BorderStyle>(c);
+            if (style) {
+                value.style = style.unwrap();
+                styleSet = true;
+                continue;
+            }
+
+            if (c.skip(Css::Token::ident("auto"))) {
+                if (not styleSet)
+                    value.style = Keywords::Auto{};
+                value.color = Keywords::Auto{};
+                continue;
+            }
+
+            break;
+        }
+
+        return Ok();
+    }
+};
+
+// https://drafts.csswg.org/css-ui/#outline-width
+struct OutlineWidthProp {
+    CalcValue<Length> value = initial();
+
+    static Str name() { return "outline-width"; }
+
+    static Length initial() { return BorderProps::MEDIUM; }
+
+    void apply(Computed& c) const {
+        c.outline.cow().width = value;
+    }
+
+    static CalcValue<Length> load(Computed const& c) {
+        return c.outline->width;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<CalcValue<Length>>(c));
+        return Ok();
+    }
+};
+
+// https://drafts.csswg.org/css-ui/#outline-style
+struct OutlineStyleProp {
+    Union<Keywords::Auto, Gfx::BorderStyle> value = initial();
+
+    static Str name() { return "outline-style"; }
+
+    static Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
+
+    void apply(Computed& c) const {
+        c.outline.cow().style = value;
+    }
+
+    static Union<Keywords::Auto, Gfx::BorderStyle> load(Computed const& c) {
+        return c.outline->style;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        if (c.skip(Css::Token::ident("auto"))) {
+            value = Keywords::Auto{};
+        } else {
+            value = try$(parseValue<Gfx::BorderStyle>(c));
+        }
+        return Ok();
+    }
+};
+
+// https://drafts.csswg.org/css-ui/#outline-color
+struct OutlineColorProp {
+    Union<Keywords::Auto, Color> value = initial();
+
+    static Str name() { return "outline-color"; }
+
+    static Keywords::Auto initial() { return Keywords::Auto{}; }
+
+    void apply(Computed& c) const {
+        c.outline.cow().color = value;
+    }
+
+    static Union<Keywords::Auto, Color> load(Computed const& c) {
+        return c.outline->color;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        if (c.skip(Css::Token::ident("auto"))) {
+            value = Keywords::Auto{};
+        } else {
+            value = try$(parseValue<Color>(c));
+        }
+        return Ok();
+    }
+};
+
+// https://drafts.csswg.org/css-ui/#outline-offset
+struct OutlineOffsetProp {
+    CalcValue<Length> value = initial();
+
+    static Str name() { return "outline-offset"; }
+
+    static Length initial() { return 0_au; }
+
+    void apply(Computed& c) const {
+        c.outline.cow().offset = value;
+    }
+
+    static CalcValue<Length> load(Computed const& c) {
+        return c.outline->offset;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<CalcValue<Length>>(c));
+        return Ok();
+    }
+};
+
 // MARK: Overflow --------------------------------------------------------------
 
 // https://www.w3.org/TR/css-overflow/#overflow-control
@@ -2858,6 +3006,13 @@ using _StyleProp = Union<
     MarginBlockStartProp,
     MarginBlockEndProp,
     MarginBlockProp,
+
+    // Outline
+    OutlineProp,
+    OutlineColorProp,
+    OutlineOffsetProp,
+    OutlineStyleProp,
+    OutlineWidthProp,
 
     // Overflow
     OverflowXProp,
