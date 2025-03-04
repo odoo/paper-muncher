@@ -8,44 +8,77 @@
 namespace Vaev::Layout {
 
 static bool _paintBorders(Frag& frag, Gfx::Color currentColor, Gfx::Borders& borders) {
+    borders.radii = frag.metrics.radii.cast<f64>(); // This value is needed for the outline
+
+    if (frag.metrics.borders.zero())
+        return false;
+
     currentColor = resolve(frag.style().color, currentColor);
 
-    borders.radii = frag.metrics.radii.cast<f64>();
-
-    auto bordersLayout = frag.metrics.borders;
+    auto const& bordersLayout = frag.metrics.borders;
     borders.widths.top = bordersLayout.top.cast<f64>();
     borders.widths.bottom = bordersLayout.bottom.cast<f64>();
     borders.widths.start = bordersLayout.start.cast<f64>();
     borders.widths.end = bordersLayout.end.cast<f64>();
 
-    auto bordersStyle = frag.style().borders;
-    borders.styles[0] = bordersStyle->top.style;
-    borders.styles[1] = bordersStyle->end.style;
-    borders.styles[2] = bordersStyle->bottom.style;
-    borders.styles[3] = bordersStyle->start.style;
+    auto const& bordersStyle = *frag.style().borders;
+    borders.styles[0] = bordersStyle.top.style;
+    borders.styles[1] = bordersStyle.end.style;
+    borders.styles[2] = bordersStyle.bottom.style;
+    borders.styles[3] = bordersStyle.start.style;
 
-    borders.fills[0] = resolve(bordersStyle->top.color, currentColor);
-    borders.fills[1] = resolve(bordersStyle->end.color, currentColor);
-    borders.fills[2] = resolve(bordersStyle->bottom.color, currentColor);
-    borders.fills[3] = resolve(bordersStyle->start.color, currentColor);
+    borders.fills[0] = resolve(bordersStyle.top.color, currentColor);
+    borders.fills[1] = resolve(bordersStyle.end.color, currentColor);
+    borders.fills[2] = resolve(bordersStyle.bottom.color, currentColor);
+    borders.fills[3] = resolve(bordersStyle.start.color, currentColor);
 
-    return not borders.widths.zero();
+    return true;
+}
+
+static bool _paintOutline(Frag& frag, Gfx::Color currentColor, Gfx::Outline& outline) {
+    if (frag.metrics.outlineWidth == 0_au)
+        return false;
+
+    outline.width = frag.metrics.outlineWidth.cast<f64>();
+    outline.offset = frag.metrics.outlineOffset.cast<f64>();
+
+    auto const& outlineStyle = *frag.style().outline;
+    if (outlineStyle.style.is<Keywords::Auto>()) {
+        outline.style = Gfx::BorderStyle::SOLID;
+    } else {
+        outline.style = outlineStyle.style.unwrap<Gfx::BorderStyle>();
+    }
+
+    if (outlineStyle.color.is<Keywords::Auto>()) {
+        if (outlineStyle.style.is<Keywords::Auto>()) {
+            outline.fill = resolve(Color(SystemColor::ACCENT_COLOR), currentColor);
+        } else {
+            outline.fill = currentColor;
+        }
+    } else {
+        outline.fill = resolve(outlineStyle.color.unwrap<Color>(), currentColor);
+    }
+
+    return true;
 }
 
 static void _paintFrag(Frag& frag, Gfx::Color currentColor, Scene::Stack& stack) {
     auto const& cssBackground = frag.style().backgrounds;
 
     Gfx::Borders borders;
+    Gfx::Outline outline;
+
     Vec<Gfx::Fill> backgrounds;
     auto color = resolve(cssBackground->color, currentColor);
     if (color.alpha != 0)
         backgrounds.pushBack(color);
 
     bool hasBorders = _paintBorders(frag, currentColor, borders);
+    bool hasOutline = _paintOutline(frag, currentColor, outline);
     Math::Rectf bound = frag.metrics.borderBox().cast<f64>();
 
-    if (any(backgrounds) or hasBorders)
-        stack.add(makeRc<Scene::Box>(bound, std::move(borders), std::move(backgrounds)));
+    if (any(backgrounds) or hasBorders or hasOutline)
+        stack.add(makeRc<Scene::Box>(bound, std::move(borders), std::move(outline), std::move(backgrounds)));
 }
 
 static void _establishStackingContext(Frag& frag, Scene::Stack& stack);

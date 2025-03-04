@@ -11,6 +11,7 @@
 #include <vaev-base/float.h>
 #include <vaev-base/font.h>
 #include <vaev-base/insets.h>
+#include <vaev-base/keywords.h>
 #include <vaev-base/length.h>
 #include <vaev-base/media.h>
 #include <vaev-base/numbers.h>
@@ -271,6 +272,21 @@ struct ValueParser<Math::Insets<T>> {
         return Ok(Math::Insets<T>{
             top.take(), right.take(), bottom.take(), left.take()
         });
+    }
+};
+
+template <StrLit K>
+struct ValueParser<Keyword<K>> {
+    static Res<Keyword<K>> parse(Cursor<Css::Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c->token == Css::Token::ident(K)) {
+            c.next();
+            return Ok(Keyword<K>{});
+        }
+
+        return Error::invalidData("expected keyword");
     }
 };
 

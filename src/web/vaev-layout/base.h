@@ -290,6 +290,8 @@ struct Tree {
 struct Metrics {
     InsetsAu padding{};
     InsetsAu borders{};
+    Au outlineOffset{};
+    Au outlineWidth{};
     Vec2Au position; //< Position relative to the content box of the containing block
     Vec2Au borderSize;
     InsetsAu margin{};
