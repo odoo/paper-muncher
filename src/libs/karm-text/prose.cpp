@@ -87,7 +87,14 @@ void Prose::_wrapLines(Au width) {
     Au adv = 0_au;
     for (usize i = 0; i < _blocks.len(); i++) {
         auto& block = _blocks[i];
-        if (adv + block.width > width and _style.wordwrap and _style.multiline and not first) {
+
+        bool overflow = adv + block.width > width;
+        bool overflowWithoutSpace =
+            block.spaces()
+                ? (adv + block.width - last(block.cells()).adv > width)
+                : overflow;
+
+        if (overflowWithoutSpace and _style.wordwrap and _style.multiline and not first) {
             _lines.pushBack(line);
             line = {this, block.runeRange, {i, 1}};
             adv = block.width;
@@ -105,7 +112,7 @@ void Prose::_wrapLines(Au width) {
             line.blockRange.size++;
             line.runeRange.end(block.runeRange.end());
 
-            if (block.newline() and _style.multiline) {
+            if (_style.multiline and (block.newline() or (overflow and _style.wordwrap))) {
                 _lines.pushBack(line);
                 line = {
                     this,
