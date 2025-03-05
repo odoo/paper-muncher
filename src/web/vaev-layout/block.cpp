@@ -85,12 +85,12 @@ Res<None, Output> processBreakpointsBeforeChild(usize endAt, Vec2Au currentSize,
 
 Output fragmentEmptyBox(Tree& tree, Input input) {
     // put this here instead of in layout.py since we want to know if its the empty box case
-    Vec2Au knownSize{input.knownSize.x.unwrapOr(0_au), input.knownSize.y.unwrapOr(0_au)};
+    Vec2Au knownSize{input.contentBoxSize().x.unwrapOr(0_au), input.contentBoxSize().y.unwrapOr(0_au)};
     if (tree.fc.isDiscoveryMode()) {
         if (tree.fc.acceptsFit(
-                input.position.y,
+                input.contentBoxPosition().y,
                 knownSize.y,
-                input.pendingVerticalSizes
+                input.contentBoxPendingVerticalSizes()
             )) {
             return Output{
                 .size = knownSize,
@@ -106,7 +106,7 @@ Output fragmentEmptyBox(Tree& tree, Input input) {
     } else {
         // FIXME: we should be breaking empty boxes using pixels or percentages, this behaviour is not compliant
         Au verticalSpaceLeft = tree.fc.leftVerticalSpace(
-            input.position.y, input.pendingVerticalSizes
+            input.contentBoxPosition().y, input.contentBoxPendingVerticalSizes()
         );
         return Output{
             .size = {knownSize.x, min(knownSize.y, verticalSpaceLeft)},
@@ -124,7 +124,7 @@ struct BlockFormatingContext : public FormatingContext {
                 auto margin = computeMargins(
                     tree, c,
                     {
-                        .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_au)},
+                        .containingBlock = {inlineSize, input.contentBoxSize().y.unwrapOr(0_au)},
                     }
                 );
 
@@ -144,7 +144,7 @@ struct BlockFormatingContext : public FormatingContext {
 
     Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
         Au blockSize = 0_au;
-        Au inlineSize = input.knownSize.width.unwrapOr(0_au);
+        Au inlineSize = input.contentBoxSize().width.unwrapOr(0_au);
 
         if (box.children().len() == 0) {
             return fragmentEmptyBox(tree, input);
@@ -152,7 +152,7 @@ struct BlockFormatingContext : public FormatingContext {
 
         // NOTE: Our parent has no clue about our width but wants us to commit,
         //       we need to compute it first
-        if (input.fragment and not input.knownSize.width)
+        if (input.fragment and not input.contentBoxSize().width)
             inlineSize = run(tree, box, input.withFragment(nullptr), startAt, stopAt).width();
 
         Breakpoint currentBreakpoint;
@@ -180,10 +180,10 @@ struct BlockFormatingContext : public FormatingContext {
             Input childInput = {
                 .fragment = input.fragment,
                 .intrinsic = input.intrinsic,
-                .availableSpace = {input.availableSpace.x, 0_au},
-                .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_au)},
+                .borderBoxAvailableSpace = {input.contentBoxAvailableSpace().x, 0_au},
+                .containingBlock = {inlineSize, input.contentBoxSize().y.unwrapOr(0_au)},
                 .breakpointTraverser = input.breakpointTraverser.traverseInsideUsingIthChild(i),
-                .pendingVerticalSizes = input.pendingVerticalSizes,
+                .borderBoxPendingVerticalSizes = input.contentBoxPendingVerticalSizes(),
             };
 
             auto margin = computeMargins(tree, c, childInput);
@@ -195,11 +195,11 @@ struct BlockFormatingContext : public FormatingContext {
 
             if (c.style->position != Position::ABSOLUTE) {
                 blockSize += margin.top;
-                if (input.fragment or input.knownSize.x)
-                    childInput.knownSize.width = childInlineSize;
+                if (input.fragment or input.contentBoxSize().x)
+                    childInput.knownBorderBoxSize.width = childInlineSize;
             }
 
-            childInput.position = input.position + Vec2Au{margin.start, blockSize};
+            childInput.borderBoxPosition = input.contentBoxPosition() + Vec2Au{margin.start, blockSize};
 
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
             //       and avoid duplicating the layout code

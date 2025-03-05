@@ -13,9 +13,9 @@ struct ReplacedFormatingContext : public FormatingContext {
         }
 
         if (tree.fc.allowBreak() and not tree.fc.acceptsFit(
-                                         input.position.y,
+                                         input.contentBoxPosition().y,
                                          size.y,
-                                         input.pendingVerticalSizes
+                                         input.contentBoxPendingVerticalSizes()
                                      )) {
             return {
                 .size = {},

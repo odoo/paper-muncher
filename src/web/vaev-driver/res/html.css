@@ -181,6 +181,7 @@ dd {
 /* https://html.spec.whatwg.org/multipage/rendering.html#tables-2 */
 
 table {
+    box-sizing: border-box;
     display: table;
 }
 

@@ -122,7 +122,7 @@ Vec2Au computeIntrinsicSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Vec2A
         box,
         {
             .intrinsic = intrinsic,
-            .knownSize = {NONE, NONE},
+            .knownBorderBoxSize = {NONE, NONE},
         },
         0, NONE
     );
@@ -158,9 +158,9 @@ static Opt<Au> _computeSpecifiedSize(Tree& tree, Box& box, Size size, Vec2Au con
 
 static Res<None, Output> _shouldAbortFragmentingBeforeLayout(Fragmentainer& fc, Input input) {
     if (not fc.acceptsFit(
-            input.position.y,
+            input.contentBoxPosition().y,
             0_au,
-            input.pendingVerticalSizes
+            input.contentBoxPendingVerticalSizes()
         ))
         return Output{
             .size = Vec2Au{0_au, 0_au},
@@ -197,29 +197,24 @@ Output layout(Tree& tree, Box& box, Input input) {
     auto padding = _computePaddings(tree, box, input.containingBlock);
     auto sizing = box.style->sizing;
 
-    if (input.knownSize.width == NONE) {
+    input.computedBorders = borders;
+    input.computedPadding = padding;
+
+    if (input.knownBorderBoxSize.width == NONE) {
         auto specifiedWidth = _computeSpecifiedSize(tree, box, sizing->width, input.containingBlock, true);
-        input.knownSize.width = specifiedWidth;
+        if (sizing->boxSizing == BoxSizing::BORDER_BOX)
+            input.knownBorderBoxSize.width = specifiedWidth;
+        else
+            input.knownContentBoxSize.width = specifiedWidth;
     }
 
-    input.knownSize.width = input.knownSize.width.map([&](auto s) {
-        return max(0_au, s - padding.horizontal() - borders.horizontal());
-    });
-
-    if (input.knownSize.height == NONE) {
+    if (input.knownBorderBoxSize.height == NONE) {
         auto specifiedHeight = _computeSpecifiedSize(tree, box, sizing->height, input.containingBlock, false);
-        input.knownSize.height = specifiedHeight;
+        if (sizing->boxSizing == BoxSizing::BORDER_BOX)
+            input.knownBorderBoxSize.height = specifiedHeight;
+        else
+            input.knownContentBoxSize.height = specifiedHeight;
     }
-
-    input.knownSize.height = input.knownSize.height.map([&](auto s) {
-        return max(0_au, s - padding.vertical() - borders.vertical());
-    });
-
-    input.availableSpace.height = max(0_au, input.availableSpace.height - padding.vertical() - borders.vertical());
-    input.availableSpace.width = max(0_au, input.availableSpace.width - padding.horizontal() - borders.horizontal());
-
-    input.position = input.position + borders.topStart() + padding.topStart();
-    input.pendingVerticalSizes += borders.bottom + padding.bottom;
 
     bool isMonolithicDisplay =
         box.style->display == Display::Inside::FLEX or
@@ -242,9 +237,9 @@ Output layout(Tree& tree, Box& box, Input input) {
             panic("if it was not completely laid out, there should be a breakpoint");
 
         auto size = out.size;
-        size.width = input.knownSize.width.unwrapOr(size.width);
+        size.width = input.contentBoxSize().width.unwrapOr(size.width);
         if (out.completelyLaidOut and not input.breakpointTraverser.prevIteration) {
-            size.height = input.knownSize.height.unwrapOr(size.height);
+            size.height = input.contentBoxSize().height.unwrapOr(size.height);
         }
 
         // TODO: Class C breakpoint
@@ -278,9 +273,9 @@ Output layout(Tree& tree, Box& box, Input input) {
         auto out = _contentLayout(tree, box, input, startAt, stopAt);
 
         auto size = out.size;
-        size.width = input.knownSize.width.unwrapOr(size.width);
+        size.width = input.contentBoxSize().width.unwrapOr(size.width);
         if ((not tree.fc.allowBreak()) or (out.completelyLaidOut and not input.breakpointTraverser.prevIteration)) {
-            size.height = input.knownSize.height.unwrapOr(size.height);
+            size.height = input.contentBoxSize().height.unwrapOr(size.height);
         }
 
         if (isMonolithicDisplay)
@@ -289,7 +284,7 @@ Output layout(Tree& tree, Box& box, Input input) {
         size = size + padding.all() + borders.all();
 
         if (parentFrag) {
-            currFrag.metrics.position = input.position - borders.topStart() - padding.topStart();
+            currFrag.metrics.position = input.borderBoxPosition;
             currFrag.metrics.borderSize = size;
             currFrag.metrics.padding = padding;
             currFrag.metrics.borders = borders;

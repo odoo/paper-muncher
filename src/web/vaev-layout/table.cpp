@@ -787,22 +787,10 @@ struct TableFormatingContext : public FormatingContext {
                         rowHeight[i + k] = max(rowHeight[i + k], Au{computedHeight / Au{rowSpan}});
                     }
                 }
-
-                auto cellOutput = layout(
-                    tree,
-                    *cell.box,
-                    {
-                        .intrinsic = IntrinsicSize::MIN_CONTENT,
-                        .knownSize = {colWidth[j], NONE},
-                    }
-                );
-
-                for (usize k = 0; k < rowSpan; k++) {
-                    rowHeight[i + k] = max(rowHeight[i + k], Au{cellOutput.size.y / Au{rowSpan}});
-                }
             }
         }
 
+        // FIXME: Since we are borders, we assumed the height above was content-box
         for (usize i = 0; i < grid.size.y; ++i) {
             Au rowBorderHeight{0};
             for (usize j = 0; j < grid.size.x; ++j) {
@@ -810,6 +798,33 @@ struct TableFormatingContext : public FormatingContext {
                 rowBorderHeight = max(rowBorderHeight, cellVertBorder);
             }
             rowHeight[i] += rowBorderHeight;
+        }
+
+        for (usize i = 0; i < grid.size.y; ++i) {
+            for (usize j = 0; j < grid.size.x; ++j) {
+                auto cell = grid.get(j, i);
+
+                if (not(cell.anchorIdx == Math::Vec2u{j, i}))
+                    continue;
+
+                // [A] CSS 2.2 does not specify how cells that span more than one row affect row height calculations except
+                // that the sum of the row heights involved must be great enough to encompass the cell spanning the rows.
+
+                auto rowSpan = cell.box->attrs.rowSpan;
+
+                auto cellOutput = layout(
+                    tree,
+                    *cell.box,
+                    {
+                        .intrinsic = IntrinsicSize::MIN_CONTENT,
+                        .knownBorderBoxSize = {colWidth[j], NONE},
+                    }
+                );
+
+                for (usize k = 0; k < rowSpan; k++) {
+                    rowHeight[i + k] = max(rowHeight[i + k], Au{cellOutput.size.y / Au{rowSpan}});
+                }
+            }
         }
     }
 
@@ -845,7 +860,7 @@ struct TableFormatingContext : public FormatingContext {
         Au capmin;
 
         CacheParametersFromInput(Input const& i)
-            : availableXSpace(i.availableSpace.x),
+            : availableXSpace(i.contentBoxAvailableSpace().x),
               containingBlockX(i.containingBlock.x),
               capmin(i.capmin.unwrap()) {}
 
@@ -962,13 +977,13 @@ struct TableFormatingContext : public FormatingContext {
             *cell.box,
             {
                 .fragment = input.fragment,
-                .knownSize = {
+                .knownBorderBoxSize = {
                     colWidthPref.query(j, j + colSpan - 1) + spacing.x * Au{colSpan - 1},
                     verticalSize,
                 },
-                .position = {currPositionX, startPositionY},
+                .borderBoxPosition = {currPositionX, startPositionY},
                 .breakpointTraverser = breakpointsForCell,
-                .pendingVerticalSizes = input.pendingVerticalSizes,
+                .borderBoxPendingVerticalSizes = input.contentBoxPendingVerticalSizes(),
             }
         );
 
@@ -1161,7 +1176,7 @@ struct TableFormatingContext : public FormatingContext {
             rowBreakpoint = Breakpoint();
 
             if (shouldRepeatHeaderAndFooter)
-                input = input.addPendingVerticalSize(footerSize.y);
+                input = input.addBorderBoxPendingVerticalSize(footerSize.y);
         }
 
         for (usize i = startAt; i < stopAt; i++) {
@@ -1239,8 +1254,8 @@ struct TableFormatingContext : public FormatingContext {
             max(headerSize.y, footerSize.y) * 4_au <= tree.fc.size().y and
             headerSize.y + footerSize.y * 2_au <= tree.fc.size().y;
 
-        Au currPositionX{input.position.x};
-        Au currPositionY{input.position.y};
+        Au currPositionX{input.contentBoxPosition().x};
+        Au currPositionY{input.contentBoxPosition().y};
         Au startingPositionY = currPositionY;
         currPositionY += spacing.y;
 
