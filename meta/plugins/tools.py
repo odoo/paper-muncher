@@ -148,15 +148,15 @@ def _():
     everythingIsOk = everythingIsOk & moduleIsAvailable("graphviz")
     everythingIsOk = everythingIsOk & moduleIsAvailable("magic")
     everythingIsOk = everythingIsOk & moduleIsAvailable("cutekit")
-    everythingIsOk = everythingIsOk & commandIsAvailable("clang", versionExpected=(18,))
+    everythingIsOk = everythingIsOk & commandIsAvailable("clang", versionExpected=(20,))
     everythingIsOk = everythingIsOk & commandIsAvailable(
-        "clang++", versionExpected=(16,)
+        "clang++", versionExpected=(20,)
     )
     everythingIsOk = everythingIsOk & commandIsAvailable(
-        "llvm-ar", versionExpected=(16,)
+        "llvm-ar", versionExpected=(20,)
     )
     everythingIsOk = everythingIsOk & commandIsAvailable(
-        "ld.lld", versionExpected=(16,)
+        "ld.lld", versionExpected=(20,)
     )
     everythingIsOk = everythingIsOk & commandIsAvailable("nasm")
     everythingIsOk = everythingIsOk & commandIsAvailable("ninja")
