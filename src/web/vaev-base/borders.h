@@ -23,7 +23,7 @@ enum struct BorderEdge {
 struct Border {
     CalcValue<Length> width;
     Gfx::BorderStyle style;
-    Color color = CURRENT_COLOR;
+    Color color = Keywords::CURRENT_COLOR;
 
     void repr(Io::Emit& e) const {
         e("(border {} {} {})", width, style, color);
@@ -36,7 +36,7 @@ struct BorderProps {
     static constexpr Length THICK = 5_au;
 
     Border top, start, bottom, end;
-    Math::Radii<CalcValue<PercentOr<Length>>> radii;
+    Math::Radii<CalcValue<PercentOr<Length>>> radii = {Length(0_au)};
 
     void all(Border b) {
         top = start = bottom = end = b;

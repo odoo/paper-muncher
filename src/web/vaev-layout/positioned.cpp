@@ -22,17 +22,17 @@ export void layoutPositioned(Tree& tree, Frag& frag, RectAu containingBlock) {
         auto start = metrics.position.x;
 
         auto topOffset = style.offsets->top;
-        if (topOffset != Width::AUTO) {
+        if (topOffset.is<Keywords::Auto>()) {
             top = origin.y + resolve(tree, *frag.box, topOffset, containingBlock.height);
         }
 
         auto startOffset = style.offsets->start;
-        if (startOffset != Width::AUTO) {
+        if (startOffset.is<Keywords::Auto>()) {
             start = origin.x + resolve(tree, *frag.box, startOffset, containingBlock.width);
         }
 
         auto endOffset = frag.style().offsets->end;
-        if (endOffset != Width::AUTO) {
+        if (endOffset.is<Keywords::Auto>()) {
             start = (origin.x + containingBlock.width) - resolve(tree, *frag.box, endOffset, containingBlock.width) - metrics.borderSize.width;
         }
 

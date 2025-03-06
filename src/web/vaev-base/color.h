@@ -5,6 +5,8 @@
 #include <karm-logger/logger.h>
 #include <vaev-base/percent.h>
 
+#include "keywords.h"
+
 // https://www.w3.org/TR/css-color-4
 
 namespace Vaev {
@@ -179,19 +181,11 @@ enum struct SystemColor : u8 {
     _LEN
 };
 
-struct CurrentColor {
-    void repr(Io::Emit& e) const {
-        e("currentcolor");
-    }
-};
-
-constexpr static inline auto CURRENT_COLOR = CurrentColor{};
-
 struct ColorMix;
 
 using Color = Union<
     Gfx::Color,
-    CurrentColor,
+    Keywords::CurrentColor,
     SystemColor,
     Box<ColorMix>>;
 

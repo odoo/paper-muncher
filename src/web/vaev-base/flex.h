@@ -1,5 +1,7 @@
 #pragma once
 
+#include "vaev-base/keywords.h"
+#include "vaev-base/sizing.h"
 #include "width.h"
 
 namespace Vaev {
@@ -21,36 +23,10 @@ enum struct FlexWrap {
     _LEN
 };
 
-struct FlexBasis {
-    enum struct Type {
-        CONTENT,
-        WIDTH,
-    };
-
-    using enum Type;
-
-    Type type;
-    Width width = Width::AUTO;
-
-    constexpr FlexBasis(Type type)
-        : type(type) {
-    }
-
-    FlexBasis(Width width)
-        : type(Type::WIDTH), width(width) {
-    }
-
-    void repr(Io::Emit& e) const {
-        if (type == Type::CONTENT) {
-            e("content");
-        } else {
-            e("{}", width);
-        }
-    }
-};
+using FlexBasis = FlatUnion<Keywords::Auto, Keywords::Content, Size>;
 
 struct FlexItemProps {
-    FlexBasis flexBasis;
+    FlexBasis flexBasis = Keywords::Auto{};
     Number flexGrow, flexShrink;
 
     void repr(Io::Emit& e) const {
@@ -64,7 +40,7 @@ struct FlexProps {
     FlexWrap wrap = FlexWrap::NOWRAP;
 
     // FlexItem
-    FlexBasis basis = Width{Width::AUTO};
+    FlexBasis basis = Keywords::Auto{};
     Number grow = 0;
     Number shrink = 1;
 
