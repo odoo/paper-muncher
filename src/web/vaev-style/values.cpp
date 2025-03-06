@@ -882,6 +882,22 @@ Res<Display> ValueParser<Display>::parse(Cursor<Css::Sst>& c) {
     });
 }
 
+// MARK: FitContent
+// https://drafts.csswg.org/css-sizing-3/#preferred-size-properties
+
+Res<FitContent> ValueParser<FitContent>::parse(Cursor<Css::Sst>& c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c->prefix == Css::Token::function("fit-content(")) {
+        FitContent result;
+        Cursor<Css::Sst> scan = c->content;
+        result.value = try$(parseValue<PercentOr<Length>>(scan));
+        return Ok(result);
+    }
+    return Error::invalidData("invalid fit-content");
+}
+
 // MARK: FlexDirection
 // https://drafts.csswg.org/css-flexbox-1/#flex-direction-property
 Res<FlexDirection> ValueParser<FlexDirection>::parse(Cursor<Css::Sst>& c) {
@@ -914,18 +930,6 @@ Res<FlexWrap> ValueParser<FlexWrap>::parse(Cursor<Css::Sst>& c) {
         return Ok(FlexWrap::WRAP_REVERSE);
     else
         return Error::invalidData("expected flex wrap");
-}
-
-// MARK: FlexBasis
-// https://drafts.csswg.org/css-flexbox-1/#flex-basis-property
-Res<FlexBasis> ValueParser<FlexBasis>::parse(Cursor<Css::Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
-
-    if (c.skip(Css::Token::ident("content")))
-        return Ok(FlexBasis{FlexBasis::CONTENT});
-
-    return Ok(try$(parseValue<Width>(c)));
 }
 
 // MARK: FontSize
@@ -1181,21 +1185,6 @@ Res<LineHeight> ValueParser<LineHeight>::parse(Cursor<Css::Sst>& c) {
     return Ok(LineHeight{try$(parseValue<PercentOr<Length>>(c))});
 }
 
-// MARL: MarginWidth
-// https://drafts.csswg.org/css-values/#margin-width
-
-Res<Width> ValueParser<Width>::parse(Cursor<Css::Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
-
-    if (c->token == Css::Token::ident("auto")) {
-        c.next();
-        return Ok(Width::AUTO);
-    }
-
-    return Ok(try$(parseValue<PercentOr<Length>>(c)));
-}
-
 // MARK: MediaType
 // https://drafts.csswg.org/mediaqueries/#media-types
 
@@ -1405,33 +1394,6 @@ Res<Scan> ValueParser<Scan>::parse(Cursor<Css::Sst>& c) {
         return Ok(Scan::PROGRESSIVE);
     else
         return Error::invalidData("expected scan value");
-}
-
-// MARK: Size
-// https://drafts.csswg.org/css-sizing-4/#sizing-values
-
-Res<Size> ValueParser<Size>::parse(Cursor<Css::Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
-
-    if (c.peek() == Css::Token::IDENT) {
-        Str data = c.next().token.data;
-        if (data == "auto") {
-            return Ok(Size::AUTO);
-        } else if (data == "none") {
-            return Ok(Size::NONE);
-        } else if (data == "min-content") {
-            return Ok(Size::MIN_CONTENT);
-        } else if (data == "max-content") {
-            return Ok(Size::MAX_CONTENT);
-        } else if (data == "fit-content") {
-            return Ok(Size::FIT_CONTENT);
-        } else {
-            return Error::invalidData("unknown size value");
-        }
-    } else {
-        return Ok(try$(parseValue<CalcValue<PercentOr<Length>>>(c)));
-    }
 }
 
 // MARK: String

@@ -7,6 +7,8 @@
 #include "keywords.h"
 #include "percent.h"
 
+#include "keywords.h"
+
 // https://www.w3.org/TR/css-color-4
 
 namespace Vaev {

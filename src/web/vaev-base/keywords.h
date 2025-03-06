@@ -15,19 +15,34 @@ struct Keyword {
 namespace Keywords {
 
 using Auto = Keyword<"auto">;
-static constexpr Auto AUTO{};
+static constexpr inline Auto AUTO{};
 
-using Medium = Keyword<"medium">;
-static constexpr Medium MEDIUM{};
-
-using Thick = Keyword<"thick">;
-static constexpr Thick THICK{};
-
-using Thin = Keyword<"thin">;
-static constexpr Thin THIN{};
+using Content = Keyword<"content">;
+static constexpr inline Content CONTENT{};
 
 using CurrentColor = Keyword<"currentcolor">;
-static constexpr CurrentColor CURRENT_COLOR{};
+static constexpr inline CurrentColor CURRENT_COLOR{};
+
+using MaxContent = Keyword<"max-content">;
+static constexpr inline MaxContent MAX_CONTENT{};
+
+using Medium = Keyword<"medium">;
+static constexpr inline Medium MEDIUM{};
+
+using MinContent = Keyword<"min-content">;
+static constexpr inline MinContent MIN_CONTENT{};
+
+using None = Keyword<"none">;
+static constexpr inline None NONE{};
+
+using Normal = Keyword<"normal">;
+static constexpr inline Normal NORMAL{};
+
+using Thick = Keyword<"thick">;
+static constexpr inline Thick THICK{};
+
+using Thin = Keyword<"thin">;
+static constexpr inline Thin THIN{};
 
 } // namespace Keywords
 
