@@ -216,6 +216,7 @@ struct BlockFormatingContext : public FormatingContext {
             );
             if (c.style->position != Position::ABSOLUTE) {
                 blockSize += output.size.y + margin.bottom;
+                lastMarginBottom = margin.bottom;
             }
 
             maybeProcessChildBreakpoint(
@@ -240,9 +241,6 @@ struct BlockFormatingContext : public FormatingContext {
             }
 
             inlineSize = max(inlineSize, output.size.x + margin.horizontal());
-
-            if (c.style->position != Position::ABSOLUTE)
-                lastMarginBottom = margin.bottom;
         }
 
         return {

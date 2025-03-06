@@ -23,7 +23,7 @@ enum struct BorderEdge {
 struct Border {
     CalcValue<Length> width;
     Gfx::BorderStyle style;
-    Color color = Color::CURRENT;
+    Color color = CURRENT_COLOR;
 
     void repr(Io::Emit& e) const {
         e("(border {} {} {})", width, style, color);

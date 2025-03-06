@@ -2,8 +2,8 @@
 
 #include <karm-gfx/colors.h>
 #include <karm-io/emit.h>
-
-#include "karm-logger/logger.h"
+#include <karm-logger/logger.h>
+#include <vaev-base/percent.h>
 
 // https://www.w3.org/TR/css-color-4
 
@@ -105,7 +105,7 @@ struct ColorSpace {
     }
 
     template <typename Polar>
-    void _preparePolar(Polar& a, Polar& b) {
+    void _preparePolar(Polar& a, Polar& b) const {
         auto delta = b.hue - a.hue;
         if (interpolation == SHORTER) {
             if (delta > 180.f)
@@ -127,14 +127,14 @@ struct ColorSpace {
     }
 
     template <typename Polar>
-    Polar _interpolatePolar(Polar a, Polar b, f64 t) {
+    Polar _interpolatePolar(Polar a, Polar b, f64 t) const {
         _preparePolar(a, b);
         return a.lerpWith(b, t);
     }
 
     // https://drafts.csswg.org/css-color-4/#interpolation
     // Not compliant regarding missing or carried values
-    Gfx::Color interpolate(Gfx::Color a, Gfx::Color b, f64 t) {
+    Gfx::Color interpolate(Gfx::Color a, Gfx::Color b, f64 t) const {
         a = a.premultiply();
         b = b.premultiply();
 
@@ -142,20 +142,26 @@ struct ColorSpace {
             switch (rectangular) {
             case _Rectangular::SRGB:
                 return a.lerpWith(b, t).unpremultiply();
+
             default:
                 logWarn("interpolation method is not supported: {}", rectangular);
-                return Gfx::WHITE;
+                return Gfx::FUCHSIA;
             }
         } else if (type == _Type::POLAR) {
             switch (polar) {
             case _Polar::HSL:
                 return Gfx::hslToRgb(
-                           _interpolatePolar<Gfx::Hsl>(Gfx::rgbToHsl(a), Gfx::rgbToHsl(b), t)
+                           _interpolatePolar<Gfx::Hsl>(
+                               Gfx::rgbToHsl(a),
+                               Gfx::rgbToHsl(b),
+                               t
+                           )
                 )
                     .unpremultiply();
+
             default:
                 logWarn("interpolation method is not supported: {}", polar);
-                return Gfx::WHITE;
+                return Gfx::FUCHSIA;
             }
         }
 
@@ -173,87 +179,40 @@ enum struct SystemColor : u8 {
     _LEN
 };
 
-struct Color {
-    enum struct Type {
-        SRGB,
-        SYSTEM,
-        CURRENT, // currentColor
-        MIX,
-    };
+struct CurrentColor {
+    void repr(Io::Emit& e) const {
+        e("currentcolor");
+    }
+};
 
-    using enum Type;
+constexpr static inline auto CURRENT_COLOR = CurrentColor{};
 
-    Type type;
+struct ColorMix;
 
-    struct ColorMix {
-        ColorSpace colorSpace;
-        Box<Color> colorA, colorB;
-        Opt<i8> percA, percB;
+using Color = Union<
+    Gfx::Color,
+    CurrentColor,
+    SystemColor,
+    Box<ColorMix>>;
+
+struct ColorMix {
+    struct Side {
+        Color color;
+        Opt<Percent> perc;
 
         void repr(Io::Emit& e) const {
-            e("{} {}, {} {}", colorA, percA, colorB, percB);
+            e("{}", color);
+            if (perc)
+                e(" {}", *perc);
         }
     };
 
-    using Value = Union<None, Gfx::Color, SystemColor, ColorMix>;
-    Value _color;
-
-    Color() : type(Type::SRGB), _color(Gfx::Color{Gfx::ALPHA}) {}
-
-    static Value defaultColorValue(Type type) {
-        switch (type) {
-        case Type::SRGB:
-            return Gfx::Color{Gfx::ALPHA};
-        case Type::SYSTEM:
-            return SystemColor{};
-        case Type::CURRENT:
-            return NONE;
-        case Type::MIX:
-            panic("No default color value for color-mix type");
-        }
-    }
-
-    Color(Type type) : type(type), _color(defaultColorValue(type)) {}
-
-    Color(Gfx::Color srgb) : type(Type::SRGB), _color(srgb) {}
-
-    Color(SystemColor system) : type(Type::SYSTEM), _color(system) {}
-
-    Color(ColorSpace colorSpace, Color&& colorA, Color&& colorB, Opt<i8> percA, Opt<i8> percB)
-        : type(Type::MIX),
-          _color(ColorMix{
-              .colorSpace = colorSpace,
-              .colorA = std::move(colorA),
-              .colorB = std::move(colorB),
-              .percA = percA,
-              .percB = percB
-          }) {}
+    ColorSpace colorSpace;
+    Side lhs;
+    Side rhs;
 
     void repr(Io::Emit& e) const {
-        switch (type) {
-        case Type::SRGB: {
-            auto srgb = _color.unwrap<Gfx::Color>();
-            e("#{02x}{02x}{02x}{02x}", srgb.red, srgb.green, srgb.blue, srgb.alpha);
-            break;
-        }
-
-        case Type::SYSTEM: {
-            auto system = _color.unwrap<SystemColor>();
-            e("{}", system);
-            break;
-        }
-
-        case Type::CURRENT:
-            e("currentColor");
-            break;
-
-        case Type::MIX: {
-            auto colorMix = _color.unwrap<ColorMix>();
-            e("color-mix(");
-            colorMix.repr(e);
-            e(")");
-        }
-        }
+        e("(color-mix {} {} {})", colorSpace, lhs, rhs);
     }
 };
 
@@ -268,6 +227,6 @@ Opt<Color> parseNamedColor(Str name);
 
 Opt<SystemColor> parseSystemColor(Str name);
 
-Gfx::Color resolve(Color c, Gfx::Color currentColor);
+Gfx::Color resolve(Color const& c, Gfx::Color currentColor);
 
 } // namespace Vaev
