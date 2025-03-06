@@ -193,6 +193,11 @@ struct ValueParser<CaptionSide> {
 };
 
 template <>
+struct ValueParser<FitContent> {
+    static Res<FitContent> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
 struct ValueParser<FlexDirection> {
     static Res<FlexDirection> parse(Cursor<Css::Sst>& c);
 };
@@ -200,11 +205,6 @@ struct ValueParser<FlexDirection> {
 template <>
 struct ValueParser<FlexWrap> {
     static Res<FlexWrap> parse(Cursor<Css::Sst>& c);
-};
-
-template <>
-struct ValueParser<FlexBasis> {
-    static Res<FlexBasis> parse(Cursor<Css::Sst>& c);
 };
 
 template <>
@@ -301,6 +301,23 @@ struct ValueParser<Keyword<K>> {
     }
 };
 
+template <typename T>
+concept ValueParseable = requires(T a, Cursor<Css::Sst> c) {
+    parseValue<T>(c);
+};
+
+template <ValueParseable... Ts>
+struct ValueParser<Union<Ts...>> {
+    static Res<Union<Ts...>> parse(Cursor<Css::Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        return Meta::any<Ts...>([&c]<typename T>(Meta::Type<T>) -> Res<Union<Ts...>> {
+            return Ok(try$(parseValue<T>(c)));
+        });
+    }
+};
+
 template <>
 struct ValueParser<Length> {
     static Res<Length> parse(Cursor<Css::Sst>& c);
@@ -382,11 +399,6 @@ struct ValueParser<Resolution> {
 template <>
 struct ValueParser<Scan> {
     static Res<Scan> parse(Cursor<Css::Sst>& c);
-};
-
-template <>
-struct ValueParser<Size> {
-    static Res<Size> parse(Cursor<Css::Sst>& c);
 };
 
 template <>

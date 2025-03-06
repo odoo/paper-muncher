@@ -190,7 +190,7 @@ struct BlockFormatingContext : public FormatingContext {
             auto margin = computeMargins(tree, c, childInput);
 
             Opt<Au> childInlineSize = NONE;
-            if (c.style->sizing->width == Size::AUTO) {
+            if (c.style->sizing->width.is<Keywords::Auto>()) {
                 childInlineSize = inlineSize - margin.horizontal();
             }
 

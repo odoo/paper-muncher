@@ -14,6 +14,10 @@ struct Keyword {
 
 namespace Keywords {
 using Auto = Keyword<"auto">;
+using None = Keyword<"none">;
+using MaxContent = Keyword<"max-content">;
+using MinContent = Keyword<"min-content">;
+using Content = Keyword<"content">;
 } // namespace Keywords
 
 } // namespace Vaev

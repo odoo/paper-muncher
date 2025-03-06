@@ -1266,7 +1266,7 @@ struct FlexBasisProp {
 
     static constexpr Str name() { return "flex-basis"; }
 
-    static FlexBasis initial() { return Width{Width::AUTO}; }
+    static FlexBasis initial() { return Keywords::Auto{}; }
 
     void apply(Computed& c) const {
         c.flex.cow().basis = value;
@@ -1429,7 +1429,7 @@ struct FlexProp {
 
     static FlexItemProps initial() {
         return {
-            Width{Width::AUTO},
+            Keywords::Auto{},
             0,
             1,
         };
@@ -1456,14 +1456,14 @@ struct FlexProp {
 
         if (c.skip(Css::Token::ident("none"))) {
             value = {
-                Width{Width::AUTO},
+                Keywords::Auto{},
                 0,
                 0,
             };
             return Ok();
         } else if (c.skip(Css::Token::ident("initial"))) {
             value = {
-                Width{Width::AUTO},
+                Keywords::Auto{},
                 0,
                 1,
             };
@@ -1472,7 +1472,7 @@ struct FlexProp {
 
         // deafult values if these parameters are omitted
         value.flexGrow = value.flexShrink = 1;
-        value.flexBasis = FlexBasis(Width(Length(0, Length::Unit::PX)));
+        value.flexBasis = CalcValue<PercentOr<Length>>(Length(0_au));
 
         auto parseGrowShrink = [](Cursor<Css::Sst>& c, FlexItemProps& value) -> Res<> {
             auto grow = parseValue<Number>(c);
@@ -2144,7 +2144,8 @@ struct OutlineWidthProp {
 
 // https://drafts.csswg.org/css-ui/#outline-style
 struct OutlineStyleProp {
-    Union<Keywords::Auto, Gfx::BorderStyle> value = initial();
+    using Value = Union<Keywords::Auto, Gfx::BorderStyle>;
+    Value value = initial();
 
     static Str name() { return "outline-style"; }
 
@@ -2154,23 +2155,20 @@ struct OutlineStyleProp {
         c.outline.cow().style = value;
     }
 
-    static Union<Keywords::Auto, Gfx::BorderStyle> load(Computed const& c) {
+    static Value load(Computed const& c) {
         return c.outline->style;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        if (c.skip(Css::Token::ident("auto"))) {
-            value = Keywords::Auto{};
-        } else {
-            value = try$(parseValue<Gfx::BorderStyle>(c));
-        }
+        value = try$(parseValue<Value>(c));
         return Ok();
     }
 };
 
 // https://drafts.csswg.org/css-ui/#outline-color
 struct OutlineColorProp {
-    Union<Keywords::Auto, Color> value = initial();
+    using Value = Union<Keywords::Auto, Color>;
+    Value value = initial();
 
     static Str name() { return "outline-color"; }
 
@@ -2180,16 +2178,12 @@ struct OutlineColorProp {
         c.outline.cow().color = value;
     }
 
-    static Union<Keywords::Auto, Color> load(Computed const& c) {
+    static Value load(Computed const& c) {
         return c.outline->color;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        if (c.skip(Css::Token::ident("auto"))) {
-            value = Keywords::Auto{};
-        } else {
-            value = try$(parseValue<Color>(c));
-        }
+        value = try$(parseValue<Value>(c));
         return Ok();
     }
 };
@@ -2587,7 +2581,7 @@ struct WidthProp {
 
     static constexpr Str name() { return "width"; }
 
-    static Size initial() { return Size::AUTO; }
+    static Size initial() { return Keywords::Auto{}; }
 
     void apply(Computed& c) const {
         c.sizing.cow().width = value;
@@ -2610,7 +2604,7 @@ struct HeightProp {
 
     static constexpr Str name() { return "height"; }
 
-    static Size initial() { return Size::AUTO; }
+    static Size initial() { return Keywords::Auto{}; }
 
     void apply(Computed& c) const {
         c.sizing.cow().height = value;
@@ -2633,7 +2627,7 @@ struct MinWidthProp {
 
     static constexpr Str name() { return "min-width"; }
 
-    static Size initial() { return Size::AUTO; }
+    static Size initial() { return Keywords::Auto{}; }
 
     void apply(Computed& c) const {
         c.sizing.cow().minWidth = value;
@@ -2656,7 +2650,7 @@ struct MinHeightProp {
 
     static constexpr Str name() { return "min-height"; }
 
-    static Size initial() { return Size::AUTO; }
+    static Size initial() { return Keywords::Auto{}; }
 
     void apply(Computed& c) const {
         c.sizing.cow().minHeight = value;
@@ -2675,22 +2669,22 @@ struct MinHeightProp {
 // https://www.w3.org/TR/css-sizing-3/#propdef-max-width
 
 struct MaxWidthProp {
-    Size value = initial();
+    MaxSize value = initial();
 
     static constexpr Str name() { return "max-width"; }
 
-    static Size initial() { return Size::NONE; }
+    static MaxSize initial() { return Keywords::None{}; }
 
     void apply(Computed& c) const {
         c.sizing.cow().maxWidth = value;
     }
 
-    static Size load(Computed const& c) {
+    static MaxSize load(Computed const& c) {
         return c.sizing->maxWidth;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Size>(c));
+        value = try$(parseValue<MaxSize>(c));
         return Ok();
     }
 };
@@ -2698,22 +2692,22 @@ struct MaxWidthProp {
 // https://www.w3.org/TR/css-sizing-3/#propdef-max-height
 
 struct MaxHeightProp {
-    Size value = initial();
+    MaxSize value = initial();
 
     static constexpr Str name() { return "max-height"; }
 
-    static Size initial() { return Size::NONE; }
+    static MaxSize initial() { return Keywords::None{}; }
 
     void apply(Computed& c) const {
         c.sizing.cow().maxHeight = value;
     }
 
-    static Size load(Computed const& c) {
+    static MaxSize load(Computed const& c) {
         return c.sizing->maxHeight;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Size>(c));
+        value = try$(parseValue<MaxSize>(c));
         return Ok();
     }
 };
