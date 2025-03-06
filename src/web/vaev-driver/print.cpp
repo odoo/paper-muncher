@@ -1,3 +1,5 @@
+module;
+
 #include <karm-print/page.h>
 #include <karm-scene/transform.h>
 #include <karm-sys/time.h>
@@ -7,8 +9,9 @@
 #include <vaev-layout/values.h>
 #include <vaev-style/page.h>
 
-#include "fetcher.h"
-#include "print.h"
+export module Vaev.Driver:print;
+
+import :fetcher;
 
 namespace Vaev::Driver {
 
@@ -255,7 +258,7 @@ static Style::Media _constructMedia(Print::Settings const& settings) {
     };
 }
 
-Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
+export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
     auto media = _constructMedia(settings);
 
     Style::StyleBook stylebook;

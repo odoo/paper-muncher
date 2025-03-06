@@ -1,3 +1,5 @@
+module;
+
 #include <karm-scene/stack.h>
 #include <karm-sys/time.h>
 #include <karm-text/book.h>
@@ -8,14 +10,22 @@
 #include <vaev-layout/values.h>
 #include <vaev-style/computer.h>
 
-#include "fetcher.h"
-#include "render.h"
+export module Vaev.Driver:render;
+
+import :fetcher;
 
 namespace Vaev::Driver {
 
 static constexpr bool DEBUG_RENDER = false;
 
-RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media, Layout::Viewport viewport) {
+export struct RenderResult {
+    Style::StyleBook style;
+    Rc<Layout::Box> layout;
+    Rc<Scene::Node> scenes;
+    Rc<Layout::Frag> frag;
+};
+
+export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media, Layout::Viewport viewport) {
     Style::StyleBook stylebook;
     stylebook.add(
         fetchStylesheet("bundle://vaev-driver/html.css"_url, Style::Origin::USER_AGENT)

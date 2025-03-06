@@ -1,5 +1,6 @@
 module;
 
+#include <karm-gc/heap.h>
 #include <karm-gc/root.h>
 #include <karm-kira/context-menu.h>
 #include <karm-kira/dialog.h>
@@ -35,13 +36,13 @@ module;
 #include <mdi/surfing.h>
 #include <mdi/tune-variant.h>
 #include <mdi/web.h>
-#include <vaev-driver/fetcher.h>
 #include <vaev-view/dialog.h>
 #include <vaev-view/view.h>
 
 export module Vaev.Browser:app;
 
 import :inspect;
+import Vaev.Driver;
 
 namespace Vaev::Browser {
 

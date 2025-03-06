@@ -1,8 +1,9 @@
 #include <karm-ui/view.h>
-#include <vaev-driver/render.h>
 #include <vaev-layout/paint.h>
 
 #include "view.h"
+
+import Vaev.Driver;
 
 namespace Vaev::View {
 

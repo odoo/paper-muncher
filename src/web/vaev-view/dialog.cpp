@@ -1,7 +1,8 @@
 #include <karm-kira/print-dialog.h>
-#include <vaev-driver/print.h>
 
 #include "dialog.h"
+
+import Vaev.Driver;
 
 namespace Vaev::View {
 
