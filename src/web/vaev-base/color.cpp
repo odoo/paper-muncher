@@ -31,60 +31,51 @@ static Array<Gfx::Color, static_cast<usize>(SystemColor::_LEN)> SYSTEM_COLOR = {
 #undef COLOR
 };
 
-Gfx::Color resolve(Color c, Gfx::Color currentColor) {
-    switch (c.type) {
-    case Color::Type::SRGB:
-        return c._color.unwrap<Gfx::Color>();
+Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor) {
+    Gfx::Color lhsColor = resolve(cm.lhs.color, currentColor);
+    Percent lhsPerc = cm.lhs.perc.unwrapOrElse([&] {
+        return Percent{100} - cm.rhs.perc.unwrapOr(Percent{50});
+    });
 
-    case Color::Type::SYSTEM:
-        return SYSTEM_COLOR[static_cast<usize>(c._color.unwrap<SystemColor>())];
+    Gfx::Color rhsColor = resolve(cm.rhs.color, currentColor);
+    Percent rhsPerc = cm.rhs.perc.unwrapOrElse([&] {
+        return Percent{100} - cm.lhs.perc.unwrapOr(Percent{50});
+    });
 
-    case Color::Type::CURRENT:
-        return currentColor;
-
-    case Color::Type::MIX: {
-        // https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/color-mix#percentage
-        Color::ColorMix& cm = c._color.unwrap<Color::ColorMix>();
-
-        auto resolvedColorA = resolve(*cm.colorA, currentColor);
-        auto resolvedColorB = resolve(*cm.colorB, currentColor);
-
-        i8 percA, percB;
-
-        if (cm.percA == NONE and cm.percB == NONE) {
-            percA = percB = 50;
-        } else if (cm.percA == NONE and cm.percB) {
-            percB = cm.percB.unwrap();
-            percA = 100 - percB;
-        } else if (cm.percA and cm.percB == NONE) {
-            percA = cm.percA.unwrap();
-            percB = 100 - percA;
-        } else {
-            percA = cm.percA.unwrap();
-            percB = cm.percB.unwrap();
-        }
-
-        if (percA == percB and percA == 0) {
-            logWarn("cannot mix colors when both have zero percentages");
-            return Gfx::WHITE;
-        }
-
-        f64 normPercB = percB;
-
-        if (percA + percB != 100)
-            normPercB = normPercB / (percA + percB);
-        else
-            normPercB /= 100;
-
-        auto finalColor = cm.colorSpace.interpolate(resolvedColorA, resolvedColorB, normPercB);
-        if (percA + percB < 100)
-            finalColor.alpha = percA + percB;
-        return finalColor;
+    if (lhsPerc == rhsPerc and lhsPerc == Percent{0}) {
+        logWarn("cannot mix colors when both have zero percentages");
+        return Gfx::WHITE;
     }
 
-    default:
-        panic("Invalid color type");
-    }
+    Percent rhsPercNorm = rhsPerc;
+
+    if (lhsPerc + rhsPerc != Percent{100})
+        rhsPercNorm = rhsPercNorm / (lhsPerc + rhsPerc);
+    else
+        rhsPercNorm /= Percent{100};
+
+    Gfx::Color resColor = cm.colorSpace.interpolate(lhsColor, rhsColor, rhsPercNorm.value());
+    if (lhsPerc + rhsPerc < Percent{100})
+        resColor = resColor.withOpacity((lhsPerc + rhsPerc).value() / 100.0);
+
+    return resColor;
+}
+
+Gfx::Color resolve(Color const& c, Gfx::Color currentColor) {
+    return c.visit(Visitor{
+        [&](Gfx::Color const& srgb) {
+            return srgb;
+        },
+        [&](CurrentColor) {
+            return currentColor;
+        },
+        [&](SystemColor const& system) {
+            return SYSTEM_COLOR[static_cast<usize>(system)];
+        },
+        [&](ColorMix const& mix) {
+            return resolve(mix, currentColor);
+        },
+    });
 }
 
 } // namespace Vaev

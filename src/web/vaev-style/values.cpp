@@ -473,10 +473,10 @@ static Res<Gfx::Color> _parseHSLModernFuncColor(Css::Sst const& s) {
     if (scan.ended())
         return Ok(Gfx::hslToRgb(Gfx::Hsl{hue, sat, l}));
 
-    if (auto alphaComponent = try$(_parseAlphaComponentModernSyntax(scan)))
-        return Ok(Gfx::hslToRgb(Gfx::Hsl{hue, sat, l, alphaComponent.unwrap()}));
-    else
-        return Ok(Gfx::hslToRgb(Gfx::Hsl{hue, sat, l, 0}));
+    auto alpha = try$(_parseAlphaComponentModernSyntax(scan))
+                     .unwrapOr(255);
+    auto color = Gfx::hslToRgb(Gfx::Hsl{hue, sat, l});
+    return Ok(color.withAlpha(alpha));
 }
 
 static Res<Gfx::Color> _parseHSLLegacyFuncColor(Css::Sst const& s) {
@@ -512,14 +512,19 @@ static Res<Gfx::Color> _parseHSLLegacyFuncColor(Css::Sst const& s) {
     auto l = try$(parseValue<Percent>(scan)).value() / 100.0f;
     eatWhitespace(scan);
 
-    if (scan.ended())
-        return Ok(Gfx::hslToRgb(Gfx::Hsl{hue, sat, l}));
+    if (scan.ended()) {
+        auto color = Gfx::hslToRgb(Gfx::Hsl{hue, sat, l});
+        return Ok(color);
+    }
 
     if (scan.skip(Css::Token::COMMA)) {
         eatWhitespace(scan);
-        return Ok(Gfx::hslToRgb(Gfx::Hsl{hue, sat, l, try$(_parseAlphaValue(scan))}));
-    } else
-        return Error::invalidData("expected comma before alpha channel");
+        auto alpha = try$(_parseAlphaValue(scan));
+        auto color = Gfx::hslToRgb(Gfx::Hsl{hue, sat, l});
+        return Ok(color.withAlpha(alpha));
+    }
+
+    return Error::invalidData("expected comma before alpha channel");
 }
 
 // https://drafts.csswg.org/css-color-4/#predefined
@@ -586,6 +591,34 @@ static Res<Gfx::Color> _parseFuncColor(Css::Sst const& s) {
     }
 }
 
+Res<ColorMix::Side> _parseColorMixSide(Cursor<Css::Sst>& s) {
+    Opt<Percent> percent;
+
+    eatWhitespace(s);
+
+    if (s.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (s.peek() == Css::Token::Type::PERCENTAGE) {
+        percent = try$(parseValue<Percent>(s));
+        eatWhitespace(s);
+        return Ok(ColorMix::Side{
+            try$(parseValue<Color>(s)),
+            percent,
+        });
+    }
+
+    Color color = try$(parseValue<Color>(s));
+    eatWhitespace(s);
+    if (not s.ended() and s.peek() == Css::Token::Type::PERCENTAGE)
+        percent = try$(parseValue<Percent>(s)).value();
+
+    return Ok(ColorMix::Side{
+        std::move(color),
+        percent,
+    });
+}
+
 Res<Color> _parseColorMixFunc(Css::Sst const& s) {
     Cursor<Css::Sst> scan = s.content;
 
@@ -607,38 +640,18 @@ Res<Color> _parseColorMixFunc(Css::Sst const& s) {
         return Error::invalidData("expected comma separting color mix arguments");
 
     eatWhitespace(scan);
-    Array<Tuple<Color, Opt<i8>>, 2> colors;
-    for (usize i = 0; i < 2; ++i) {
+    auto lhs = try$(_parseColorMixSide(scan));
+    eatWhitespace(scan);
+    if (not scan.skip(Css::Token::Type::COMMA))
+        return Error::invalidData("expected comma");
 
-        eatWhitespace(scan);
+    auto rhs = try$(_parseColorMixSide(scan));
 
-        if (scan.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (scan.peek() == Css::Token::Type::PERCENTAGE) {
-            colors[i].v1 = try$(parseValue<Percent>(scan)).value();
-            eatWhitespace(scan);
-            colors[i].v0 = try$(parseValue<Color>(scan));
-        } else {
-            colors[i].v0 = try$(parseValue<Color>(scan));
-            eatWhitespace(scan);
-            if (not scan.ended() and scan.peek() == Css::Token::Type::PERCENTAGE)
-                colors[i].v1 = try$(parseValue<Percent>(scan)).value();
-        }
-
-        eatWhitespace(scan);
-        if (i == 0 and not scan.skip(Css::Token::Type::COMMA)) {
-            return Error::invalidData("expected comma");
-        }
-    }
-
-    return Ok(Color{
+    return Ok(makeBox<ColorMix>(
         ColorSpace::fromStr(colorSpace),
-        std::move(colors[0].v0),
-        std::move(colors[1].v0),
-        colors[0].v1,
-        colors[1].v1,
-    });
+        std::move(lhs),
+        std::move(rhs)
+    ));
 }
 
 Res<Color> ValueParser<Color>::parse(Cursor<Css::Sst>& c) {
@@ -654,7 +667,7 @@ Res<Color> ValueParser<Color>::parse(Cursor<Css::Sst>& c) {
 
         if (eqCi(data, "currentcolor"s)) {
             c.next();
-            return Ok(Color::CURRENT);
+            return Ok(CURRENT_COLOR);
         }
 
         if (eqCi(data, "transparent"s)) {
