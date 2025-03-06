@@ -4,7 +4,13 @@
 
 namespace Karm::Gfx {
 
-static Tuple<f64, f64, f64> _rgbToHueValueChroma(Color color) {
+struct HueValueChroma {
+    f64 hue;
+    f64 value;
+    f64 chroma;
+};
+
+static HueValueChroma _rgbToHueValueChroma(Color color) {
     f64 r = color.red / 255.0;
     f64 g = color.green / 255.0;
     f64 b = color.blue / 255.0;
@@ -33,27 +39,7 @@ static Tuple<f64, f64, f64> _rgbToHueValueChroma(Color color) {
     return {hue, rgbMax, delta};
 }
 
-Hsv rgbToHsv(Color color) {
-    auto [hue, value, chroma] = _rgbToHueValueChroma(color);
-
-    f64 saturation = value == 0.0f ? 0.0f : chroma / value;
-
-    return {hue, saturation, value};
-}
-
-Hsl rgbToHsl(Color color) {
-    auto [hue, value, chroma] = _rgbToHueValueChroma(color);
-
-    f64 lightness = value - chroma / 2.0f;
-    f64 saturation =
-        lightness == 0.0f or lightness == 1.0f
-            ? 0.0f
-            : (value - lightness) / ::min(lightness, 1.0f - lightness);
-
-    return {hue, saturation, lightness, color.alpha};
-}
-
-static Color _chromaHueMinCompAlphaToRgba(f64 c, f64 h, f64 m, u8 alpha) {
+static Color _chromaHueMinCompToRgb(f64 c, f64 h, f64 m) {
     f64 x = c * (1.0f - Math::abs(fmod(h / 60.0f, 2.0f) - 1.0f));
 
     f64 r = 0.0f;
@@ -84,8 +70,27 @@ static Color _chromaHueMinCompAlphaToRgba(f64 c, f64 h, f64 m, u8 alpha) {
         static_cast<u8>(round((r + m) * 255.0f)),
         static_cast<u8>(round((g + m) * 255.0f)),
         static_cast<u8>(round((b + m) * 255.0f)),
-        alpha,
     };
+}
+
+Hsv rgbToHsv(Color color) {
+    auto [hue, value, chroma] = _rgbToHueValueChroma(color);
+
+    f64 saturation = value == 0.0f ? 0.0f : chroma / value;
+
+    return {hue, saturation, value};
+}
+
+Hsl rgbToHsl(Color color) {
+    auto [hue, value, chroma] = _rgbToHueValueChroma(color);
+
+    f64 lightness = value - chroma / 2.0f;
+    f64 saturation =
+        lightness == 0.0f or lightness == 1.0f
+            ? 0.0f
+            : (value - lightness) / ::min(lightness, 1.0f - lightness);
+
+    return {hue, saturation, lightness};
 }
 
 Color hsvToRgb(Hsv hsv) {
@@ -96,7 +101,7 @@ Color hsvToRgb(Hsv hsv) {
     f64 c = v * s;
     f64 minComp = v - c;
 
-    return _chromaHueMinCompAlphaToRgba(c, h, minComp, 255);
+    return _chromaHueMinCompToRgb(c, h, minComp).withOpacity(1);
 }
 
 Color hslToRgb(Hsl hsl) {
@@ -107,7 +112,7 @@ Color hslToRgb(Hsl hsl) {
     f64 c = (1.0f - Math::abs(2.0f * l - 1.0f)) * s;
     f64 minComp = l - c / 2.0f;
 
-    return _chromaHueMinCompAlphaToRgba(c, h, minComp, hsl.alpha);
+    return _chromaHueMinCompToRgb(c, h, minComp);
 }
 
 } // namespace Karm::Gfx

@@ -128,6 +128,15 @@ struct Color {
         };
     }
 
+    always_inline constexpr Color withAlpha(u8 const alpha) const {
+        return {
+            static_cast<u8>(red),
+            static_cast<u8>(green),
+            static_cast<u8>(blue),
+            alpha,
+        };
+    }
+
     always_inline constexpr operator Math::Vec4u() const {
         return {
             static_cast<u32>(red),
@@ -186,24 +195,22 @@ Color hsvToRgb(Hsv hsv);
 
 struct Hsl {
     f64 hue, saturation, lightness;
-    u8 alpha;
 
-    Hsl(f64 hue, f64 saturation, f64 lightness, u8 alpha = 255)
+    Hsl(f64 hue, f64 saturation, f64 lightness)
         : hue(fmod(hue, 360.0f)),
           saturation(clamp01(saturation)),
-          lightness(clamp01(lightness)),
-          alpha(alpha) {}
+          lightness(clamp01(lightness)) {}
 
     Hsl withHue(f64 hue) const {
-        return {hue, saturation, lightness, alpha};
+        return {hue, saturation, lightness};
     }
 
     Hsl withSaturation(f64 saturation) const {
-        return {hue, saturation, lightness, alpha};
+        return {hue, saturation, lightness};
     }
 
     Hsl withLightness(f64 lightness) const {
-        return {hue, saturation, lightness, alpha};
+        return {hue, saturation, lightness};
     }
 
     always_inline Hsl lerpWith(Hsl const other, f64 const t) const {
@@ -211,7 +218,6 @@ struct Hsl {
             fmod(hue + (other.hue - hue) * t, 360.0f),
             saturation + (other.saturation - saturation) * t,
             lightness + (other.lightness - lightness) * t,
-            static_cast<u8>(alpha + (other.alpha - alpha) * t),
         };
     }
 
