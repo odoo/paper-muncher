@@ -14,15 +14,6 @@ import :writing;
 
 namespace Vaev::Layout {
 
-export template <typename T>
-concept Resolvable = requires {
-    typename T::Resolved;
-};
-
-export template <typename T>
-using Resolved = Meta::Cond<Resolvable<T>, typename T::Resolved, T>;
-static_assert(Resolvable<PercentOr<Length>>);
-
 export struct Resolver {
     f64 userFontSize = 16;   /// Font size of the user agent
     f64 parentFontSize = 16; /// Font size of the parent box
@@ -267,15 +258,15 @@ export struct Resolver {
     }
 
     Au resolve(PercentOr<Length> const& value, Au relative) {
-        if (value.resolved())
-            return resolve(value.value());
-        return Au{relative.cast<f64>() * (value.percent().value() / 100.)};
+        if (value.is<Length>())
+            return resolve(value.unwrap<Length>());
+        return Au{relative.cast<f64>() * (value.unwrap<Percent>().value() / 100.)};
     }
 
     Au resolve(Width const& value, Au relative) {
-        if (value == Width::Type::AUTO)
+        if (value.is<Keywords::Auto>())
             return 0_au;
-        return resolve(value.value, relative);
+        return resolve(value.unwrap<CalcValue<PercentOr<Length>>>(), relative);
     }
 
     Au resolve(FontSize const& value) {

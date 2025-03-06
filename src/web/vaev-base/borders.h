@@ -24,7 +24,7 @@ struct Border {
 
 struct BorderProps {
     Border top, start, bottom, end;
-    Math::Radii<CalcValue<PercentOr<Length>>> radii;
+    Math::Radii<CalcValue<PercentOr<Length>>> radii = {Length(0_au)};
 
     void all(Border b) {
         top = start = bottom = end = b;
