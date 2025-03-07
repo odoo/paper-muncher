@@ -21,7 +21,8 @@
 #include <vaev-base/sizing.h>
 #include <vaev-base/table.h>
 #include <vaev-base/z-index.h>
-#include <vaev-css/parser.h>
+
+#include "css/parser.h"
 
 namespace Vaev::Style {
 

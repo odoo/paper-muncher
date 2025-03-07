@@ -1,6 +1,6 @@
 #include <vaev-style/decls.h>
 
-#include "styles.h"
+#include "props.h"
 
 namespace Vaev::Style {
 

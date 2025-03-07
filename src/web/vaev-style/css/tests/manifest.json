@@ -1,12 +1,12 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "id": "vaev-css.tests",
+    "id": "vaev-style.css.tests",
     "type": "lib",
     "props": {
         "cpp-excluded": true
     },
     "requires": [
-        "vaev-css",
+        "vaev-style",
         "karm-test"
     ],
     "injects": [

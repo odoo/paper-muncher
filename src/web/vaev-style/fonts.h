@@ -2,9 +2,9 @@
 
 #include <karm-mime/url.h>
 #include <vaev-base/font.h>
-#include <vaev-css/parser.h>
 
 #include "base.h"
+#include "css/parser.h"
 #include "values.h"
 
 namespace Vaev::Style {

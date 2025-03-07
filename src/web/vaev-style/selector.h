@@ -3,8 +3,9 @@
 #include <karm-base/box.h>
 #include <karm-base/vec.h>
 #include <karm-io/fmt.h>
-#include <vaev-css/parser.h>
 #include <vaev-dom/element.h>
+
+#include "css/parser.h"
 
 namespace Vaev::Style {
 

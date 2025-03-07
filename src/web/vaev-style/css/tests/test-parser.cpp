@@ -1,5 +1,6 @@
 #include <karm-test/macros.h>
-#include <vaev-css/parser.h>
+
+#include "../parser.h"
 
 namespace Vaev::Css::Tests {
 

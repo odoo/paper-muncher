@@ -6,7 +6,8 @@
 #include <vaev-base/media.h>
 #include <vaev-base/numbers.h>
 #include <vaev-base/resolution.h>
-#include <vaev-css/parser.h>
+
+#include "css/parser.h"
 
 namespace Vaev::Style {
 
