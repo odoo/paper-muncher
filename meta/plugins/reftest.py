@@ -65,6 +65,9 @@ class RefTestArgs(model.TargetArgs):
     fast: str = cli.arg(
         None, "fast", "Proceed to the next test as soon as an error occurs."
     )
+    runSkipped: bool = cli.arg(
+        None, "run-skipped", "Run the skipped tests nonetheless"
+    )
 
 
 @cli.command(None, "reftests", "Manage the reftests")
@@ -100,6 +103,7 @@ def _(args: RefTestArgs):
         </header>
 """
 
+
     def update_temp_file(path, container, rendering):
         # write xhtml into the temporary file
         xhtml = re.sub(r"<slot\s*/>", rendering, container) if container else rendering
@@ -130,7 +134,7 @@ def _(args: RefTestArgs):
         for info, test in re.findall(r"""<test([^>]*)>([\w\W]+?)</test>""", content):
             props = getInfo(info)
             print(f"{vt100.WHITE}Test {props.get('name')!r}{vt100.RESET}")
-            if "skip" in props:
+            if "skip" in props and not args.runSkipped:
                 skippedCount += 1
                 skipped += 1
 
@@ -170,7 +174,7 @@ def _(args: RefTestArgs):
                     r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test
             ):
                 renderingProps = getInfo(info)
-                if "skip" in renderingProps:
+                if "skip" in renderingProps and not args.runSkipped:
                     skippedCount += 1
                     skipped += 1
 
