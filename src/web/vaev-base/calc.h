@@ -80,7 +80,7 @@ struct CalcValue {
             },
             [&](Box<Binary> const& b) {
                 return visitor(*b);
-            }
+            },
         });
     }
 
@@ -94,7 +94,7 @@ struct CalcValue {
             },
             [&](Binary const& b) {
                 e("(calc {} {} {})", b.op, b.lhs, b.rhs);
-            }
+            },
         });
     }
 };

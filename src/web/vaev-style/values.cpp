@@ -647,11 +647,7 @@ Res<Color> _parseColorMixFunc(Css::Sst const& s) {
 
     auto rhs = try$(_parseColorMixSide(scan));
 
-    return Ok(makeBox<ColorMix>(
-        ColorSpace::fromStr(colorSpace),
-        std::move(lhs),
-        std::move(rhs)
-    ));
+    return Ok(makeBox<ColorMix>(ColorSpace::fromStr(colorSpace), std::move(lhs), std::move(rhs)));
 }
 
 Res<Color> ValueParser<Color>::parse(Cursor<Css::Sst>& c) {
@@ -1024,9 +1020,7 @@ Res<FontWeight> ValueParser<FontWeight>::parse(Cursor<Css::Sst>& c) {
     } else if (c.skip(Css::Token::ident("lighter"))) {
         return Ok(RelativeFontWeight::LIGHTER);
     } else {
-        return Ok(Text::FontWeight{
-            static_cast<u16>(clamp(try$(parseValue<Integer>(c)), 0, 1000))
-        });
+        return Ok(Text::FontWeight{static_cast<u16>(clamp(try$(parseValue<Integer>(c)), 0, 1000))});
     }
 }
 

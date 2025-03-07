@@ -1,6 +1,15 @@
-#include "block.h"
+module;
 
-#include "layout.h"
+#include <karm-math/au.h>
+#include <vaev-base/break.h>
+#include <vaev-base/display.h>
+#include <vaev-base/insets.h>
+#include <vaev-base/sizing.h>
+
+export module Vaev.Layout:block;
+
+import :base;
+import :layout;
 
 namespace Vaev::Layout {
 
@@ -251,7 +260,7 @@ struct BlockFormatingContext : public FormatingContext {
     }
 };
 
-Rc<FormatingContext> constructBlockFormatingContext(Box&) {
+export Rc<FormatingContext> constructBlockFormatingContext(Box&) {
     return makeRc<BlockFormatingContext>();
 }
 

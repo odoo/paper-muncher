@@ -1,16 +1,17 @@
 module;
 
+#include <karm-base/rc.h>
+#include <karm-math/au.h>
 #include <karm-print/page.h>
 #include <karm-scene/transform.h>
 #include <karm-sys/time.h>
-#include <vaev-layout/builder.h>
-#include <vaev-layout/layout.h>
-#include <vaev-layout/paint.h>
-#include <vaev-layout/values.h>
-#include <vaev-style/page.h>
+#include <karm-text/book.h>
+#include <vaev-dom/document.h>
+#include <vaev-style/computer.h>
 
 export module Vaev.Driver:print;
 
+import Vaev.Layout;
 import :fetcher;
 
 namespace Vaev::Driver {
@@ -22,6 +23,7 @@ static void _paintMargins(Text::FontBook& fontBook, Style::PageComputedStyle& pa
         pageRect.topStart(),
         pageContent.topStart()
     );
+
     Layout::Tree topLeftMarginCornerTree{
         .root = Layout::buildForPseudoElement(fontBook, pageStyle.area(Style::PageArea::TOP_LEFT_CORNER)),
         .viewport = Layout::Viewport{.small = topLeftMarginCornerRect.size()}

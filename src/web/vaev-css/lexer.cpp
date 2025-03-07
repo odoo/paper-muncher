@@ -141,11 +141,15 @@ static auto const RE_NUMBER = Re::chain(
         ),
         Re::chain(Re::single('.'), RE_DIGIT)
     ),
-    Re::zeroOrOne(Re::chain(
-        Re::either(Re::single('e'), Re::single('E')),
-        RE_OPERATOR,
-        RE_DIGIT
-    ))
+    Re::zeroOrOne(
+        Re::chain(
+            Re::either(
+                Re::single('e'),
+                Re::single('E')
+            ),
+            RE_OPERATOR, RE_DIGIT
+        )
+    )
 );
 
 // string token description

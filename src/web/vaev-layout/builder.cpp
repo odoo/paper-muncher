@@ -1,8 +1,14 @@
+module;
+
 #include <karm-image/loader.h>
 #include <karm-text/loader.h>
+#include <karm-text/prose.h>
+#include <vaev-dom/document.h>
+#include <vaev-style/computer.h>
 
-#include "builder.h"
-#include "values.h"
+export module Vaev.Layout:builder;
+
+import :values;
 
 namespace Vaev::Layout {
 
@@ -291,14 +297,14 @@ static void _buildNode(Style::Computer& c, Gc::Ref<Dom::Node> node, Box& parent)
     }
 }
 
-Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc) {
+export Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc) {
     auto style = makeRc<Style::Computed>(Style::Computed::initial());
     Box root = {style, _lookupFontface(c.fontBook, *style)};
     _buildNode(c, doc, root);
     return root;
 }
 
-Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::Computed> style) {
+export Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::Computed> style) {
     auto fontFace = _lookupFontface(fontBook, *style);
 
     // FIXME: We should pass this around from the top in order to properly resolve rems

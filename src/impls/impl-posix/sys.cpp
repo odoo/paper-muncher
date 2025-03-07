@@ -454,10 +454,7 @@ Res<Mime::Url> pwd() {
         buf.resize(buf.len() * 2);
     }
 
-    return Ok(Mime::parseUrlOrPath(
-        Str::fromNullterminated(buf.buf()),
-        "file:"_url
-    ));
+    return Ok(Mime::parseUrlOrPath(Str::fromNullterminated(buf.buf()), "file:"_url));
 }
 
 // MARK: Sandboxing ------------------------------------------------------------

@@ -1,9 +1,15 @@
+module;
+
 #include <karm-scene/box.h>
 #include <karm-scene/image.h>
+#include <karm-scene/stack.h>
 #include <karm-scene/text.h>
+#include <vaev-style/computer.h>
 
-#include "base.h"
-#include "paint.h"
+export module Vaev.Layout:paint;
+
+import :base;
+import :values;
 
 namespace Vaev::Layout {
 
@@ -13,7 +19,7 @@ static bool _paintBorders(Frag& frag, Gfx::Color currentColor, Gfx::Borders& bor
     if (frag.metrics.borders.zero())
         return false;
 
-    currentColor = resolve(frag.style().color, currentColor);
+    currentColor = Vaev::resolve(frag.style().color, currentColor);
 
     auto const& bordersLayout = frag.metrics.borders;
     borders.widths.top = bordersLayout.top.cast<f64>();
@@ -27,10 +33,10 @@ static bool _paintBorders(Frag& frag, Gfx::Color currentColor, Gfx::Borders& bor
     borders.styles[2] = bordersStyle.bottom.style;
     borders.styles[3] = bordersStyle.start.style;
 
-    borders.fills[0] = resolve(bordersStyle.top.color, currentColor);
-    borders.fills[1] = resolve(bordersStyle.end.color, currentColor);
-    borders.fills[2] = resolve(bordersStyle.bottom.color, currentColor);
-    borders.fills[3] = resolve(bordersStyle.start.color, currentColor);
+    borders.fills[0] = Vaev::resolve(bordersStyle.top.color, currentColor);
+    borders.fills[1] = Vaev::resolve(bordersStyle.end.color, currentColor);
+    borders.fills[2] = Vaev::resolve(bordersStyle.bottom.color, currentColor);
+    borders.fills[3] = Vaev::resolve(bordersStyle.start.color, currentColor);
 
     return true;
 }
@@ -69,11 +75,11 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
     Gfx::Outline outline;
 
     Vec<Gfx::Fill> backgrounds;
-    auto color = resolve(cssBackground->color, frag.style().color);
+    auto color = Vaev::resolve(cssBackground->color, frag.style().color);
     if (color.alpha != 0)
         backgrounds.pushBack(color);
 
-    auto currentColor = resolve(frag.style().color, color);
+    auto currentColor = Vaev::resolve(frag.style().color, color);
     bool hasBorders = _paintBorders(frag, currentColor, borders);
     bool hasOutline = _paintOutline(frag, currentColor, outline);
     Math::Rectf bound = frag.metrics.borderBox().cast<f64>();
@@ -91,15 +97,9 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
     if (auto prose = frag.box->content.is<Rc<Text::Prose>>()) {
         (*prose)->_style.color = frag.style().color;
 
-        stack.add(makeRc<Scene::Text>(
-            frag.metrics.borderBox().topStart().cast<f64>(),
-            *prose
-        ));
+        stack.add(makeRc<Scene::Text>(frag.metrics.borderBox().topStart().cast<f64>(), *prose));
     } else if (auto image = frag.box->content.is<Karm::Image::Picture>()) {
-        stack.add(makeRc<Scene::Image>(
-            frag.metrics.borderBox().cast<f64>(),
-            *image
-        ));
+        stack.add(makeRc<Scene::Image>(frag.metrics.borderBox().cast<f64>(), *image));
     }
 }
 
@@ -170,11 +170,11 @@ static void _establishStackingContext(Frag& frag, Scene::Stack& stack) {
     stack.add(std::move(innerStack));
 }
 
-void paint(Frag& frag, Scene::Stack& stack) {
+export void paint(Frag& frag, Scene::Stack& stack) {
     _paintStackingContext(frag, stack);
 }
 
-void wireframe(Frag& frag, Gfx::Canvas& g) {
+export void wireframe(Frag& frag, Gfx::Canvas& g) {
     for (auto& c : frag.children)
         wireframe(c, g);
 

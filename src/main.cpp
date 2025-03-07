@@ -7,10 +7,10 @@
 #include <karm-sys/entry.h>
 #include <karm-sys/file.h>
 #include <karm-sys/proc.h>
-#include <vaev-layout/paint.h>
-#include <vaev-layout/values.h>
+#include <vaev-style/computer.h>
 
 import Vaev.Driver;
+import Vaev.Layout;
 
 namespace PaperMuncher {
 
@@ -58,12 +58,9 @@ Res<> print(
         .headerFooter = true,
         .backgroundGraphics = true,
     };
-    auto printer = try$(Print::FilePrinter::create(
-        options.outputFormat,
-        {
-            .density = options.density.toDppx(),
-        }
-    ));
+    auto printer = try$(Print::FilePrinter::create(options.outputFormat, {
+                                                                             .density = options.density.toDppx(),
+                                                                         }));
 
     Vaev::Driver::print(
         *dom,

@@ -1,9 +1,10 @@
 #include <karm-ui/view.h>
-#include <vaev-layout/paint.h>
+#include <vaev-style/media.h>
 
 #include "view.h"
 
 import Vaev.Driver;
+import Vaev.Layout;
 
 namespace Vaev::View {
 

@@ -581,25 +581,21 @@ struct MediaQuery {
     }
 
     bool match(Media const& media) const {
-        return _store.visit(Visitor{
-            [&](auto const& value) {
-                return value.match(media);
-            },
-            [](None) {
-                return true;
-            }
-        });
+        return _store.visit(Visitor{[&](auto const& value) {
+                                        return value.match(media);
+                                    },
+                                    [](None) {
+                                        return true;
+                                    }});
     }
 
     void repr(Io::Emit& e) const {
-        _store.visit(Visitor{
-            [&](auto const& value) {
-                e("{}", value);
-            },
-            [&](None) {
-                e("all");
-            }
-        });
+        _store.visit(Visitor{[&](auto const& value) {
+                                 e("{}", value);
+                             },
+                             [&](None) {
+                                 e("all");
+                             }});
     }
 };
 
