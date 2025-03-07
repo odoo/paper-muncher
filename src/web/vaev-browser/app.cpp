@@ -36,13 +36,13 @@ module;
 #include <mdi/surfing.h>
 #include <mdi/tune-variant.h>
 #include <mdi/web.h>
-#include <vaev-view/dialog.h>
-#include <vaev-view/view.h>
+#include <vaev-dom/document.h>
 
 export module Vaev.Browser:app;
 
-import :inspect;
+import Vaev.View;
 import Vaev.Driver;
+import :inspect;
 
 namespace Vaev::Browser {
 
