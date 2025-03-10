@@ -13,7 +13,22 @@ struct Keyword {
 };
 
 namespace Keywords {
+
 using Auto = Keyword<"auto">;
+static constexpr Auto AUTO{};
+
+using Medium = Keyword<"medium">;
+static constexpr Medium MEDIUM{};
+
+using Thick = Keyword<"thick">;
+static constexpr Thick THICK{};
+
+using Thin = Keyword<"thin">;
+static constexpr Thin THIN{};
+
+using CurrentColor = Keyword<"currentcolor">;
+static constexpr CurrentColor CURRENT_COLOR{};
+
 } // namespace Keywords
 
 } // namespace Vaev

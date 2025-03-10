@@ -73,13 +73,17 @@ struct ValueParser<Border> {
 
 template <>
 struct ValueParser<BorderCollapse> {
-
     static Res<BorderCollapse> parse(Cursor<Css::Sst>& c);
 };
 
 template <>
 struct ValueParser<BorderSpacing> {
     static Res<BorderSpacing> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
+struct ValueParser<LineWidth> {
+    static Res<LineWidth> parse(Cursor<Css::Sst>& c);
 };
 
 template <>

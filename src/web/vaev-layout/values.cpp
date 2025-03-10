@@ -3,6 +3,7 @@ module;
 #include <karm-text/font.h>
 #include <vaev-base/color.h>
 #include <vaev-base/font.h>
+#include <vaev-base/line-width.h>
 #include <vaev-base/width.h>
 #include <vaev-base/writing.h>
 
@@ -248,6 +249,23 @@ export struct Resolver {
         }
     }
 
+    Au resolve(LineWidth const& value) {
+        return value.visit(Visitor{
+            [](Keywords::Thin const&) {
+                return THIN_VALUE;
+            },
+            [](Keywords::Medium const&) {
+                return MEDIUM_VALUE;
+            },
+            [](Keywords::Thick const&) {
+                return THICK_VALUE;
+            },
+            [&](auto const& length) {
+                return resolve(length);
+            },
+        });
+    }
+
     Au resolve(PercentOr<Length> const& value, Au relative) {
         if (value.resolved())
             return resolve(value.value());
@@ -361,6 +379,10 @@ export Au resolve(Tree const& tree, Box const& box, PercentOr<Length> const& val
 
 export Au resolve(Tree const& tree, Box const& box, Width const& value, Au relative) {
     return Resolver::from(tree, box).resolve(value, relative);
+}
+
+export Au resolve(Tree const& tree, Box const& box, LineWidth const& value) {
+    return Resolver::from(tree, box).resolve(value);
 }
 
 export Au resolve(Tree const& tree, Box const& box, FontSize const& value) {

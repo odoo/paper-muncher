@@ -113,29 +113,12 @@ Res<bool> ValueParser<bool>::parse(Cursor<Css::Sst>& c) {
 }
 
 // MARK: Border-Style
-static Res<CalcValue<Length>> _parseLineWidth(Cursor<Css::Sst>& c) {
-    if (c.peek() == Css::Token::ident("thin")) {
-        c.next();
-        return Ok(BorderProps::THIN);
-    }
-    if (c.peek() == Css::Token::ident("medium")) {
-        c.next();
-        return Ok(BorderProps::MEDIUM);
-    }
-    if (c.peek() == Css::Token::ident("thick")) {
-        c.next();
-        return Ok(BorderProps::THICK);
-    }
-
-    return parseValue<CalcValue<Length>>(c);
-}
-
 Res<Border> ValueParser<Border>::parse(Cursor<Css::Sst>& c) {
     Border border;
     while (not c.ended()) {
         eatWhitespace(c);
 
-        auto width = _parseLineWidth(c);
+        auto width = parseValue<LineWidth>(c);
         if (width) {
             border.width = width.unwrap();
             continue;
@@ -222,6 +205,27 @@ Res<BorderSpacing> ValueParser<BorderSpacing>::parse(Cursor<Css::Sst>& c) {
     }
 
     return Error::invalidData("expected border spacing value");
+}
+
+// MARK: line-width
+Res<LineWidth> ValueParser<LineWidth>::parse(Cursor<Css::Sst>& c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c.peek() == Css::Token::ident("thin")) {
+        c.next();
+        return Ok(Keywords::THIN);
+    }
+    if (c.peek() == Css::Token::ident("medium")) {
+        c.next();
+        return Ok(Keywords::MEDIUM);
+    }
+    if (c.peek() == Css::Token::ident("thick")) {
+        c.next();
+        return Ok(Keywords::THICK);
+    }
+
+    return Ok(try$(parseValue<CalcValue<Length>>(c)));
 }
 
 // MARK: BreakAfter & BreakBefore
@@ -663,7 +667,7 @@ Res<Color> ValueParser<Color>::parse(Cursor<Css::Sst>& c) {
 
         if (eqCi(data, "currentcolor"s)) {
             c.next();
-            return Ok(CURRENT_COLOR);
+            return Ok(Keywords::CURRENT_COLOR);
         }
 
         if (eqCi(data, "transparent"s)) {
