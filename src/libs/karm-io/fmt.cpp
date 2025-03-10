@@ -1,5 +1,8 @@
 #include <karm-io/expr.h>
-#include <karm-math/funcs.h>
+
+#ifndef __ck_freestanding__
+#    include <karm-math/funcs.h>
+#endif
 
 #include "aton.h"
 #include "emit.h"
