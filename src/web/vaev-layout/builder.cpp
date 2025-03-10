@@ -201,7 +201,9 @@ static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& paren
     auto font = _lookupFontface(c.fontBook, *style);
 
     auto src = el->getAttribute(Html::SRC_ATTR).unwrapOr(""s);
-    auto url = Mime::parseUrlOrPath(src, el->baseURI());
+    auto url = Mime::Url::resolveReference(el->baseURI(), Mime::parseUrlOrPath(src))
+                   .unwrapOr("bundle://vaev-driver/missing.qoi"_url);
+
     auto img = Karm::Image::load(url).unwrapOrElse([] {
         return Karm::Image::loadOrFallback("bundle://vaev-driver/missing.qoi"_url).unwrap();
     });

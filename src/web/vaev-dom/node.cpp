@@ -9,7 +9,7 @@ Mime::Url Node::baseURI() {
     auto document = ownerDocument();
     if (not document)
         panic("node has no owner document");
-    return document->url().parent(1);
+    return document->url();
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dom-node-ownerdocument%E2%91%A0

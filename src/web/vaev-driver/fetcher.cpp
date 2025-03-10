@@ -142,8 +142,13 @@ export void fetchStylesheets(Gc::Ref<Dom::Node> node, Style::StyleBook& sb) {
                 return;
             }
 
-            auto url = Mime::parseUrlOrPath(*href, node->baseURI());
-            auto sheet = fetchStylesheet(url, Style::Origin::AUTHOR);
+            auto url = Mime::Url::resolveReference(node->baseURI(), Mime::parseUrlOrPath(*href));
+            if (not url) {
+                logWarn("failed to resolve stylesheet url: {}", url);
+                return;
+            }
+
+            auto sheet = fetchStylesheet(url.unwrap(), Style::Origin::AUTHOR);
             if (not sheet) {
                 logWarn("failed to fetch stylesheet from {}: {}", url, sheet);
                 return;
