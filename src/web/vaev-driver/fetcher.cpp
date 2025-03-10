@@ -123,7 +123,7 @@ export Res<Style::StyleSheet> fetchStylesheet(Mime::Url url, Style::Origin origi
     auto file = try$(Sys::File::open(url));
     auto buf = try$(Io::readAllUtf8(file));
     Io::SScan s{buf};
-    return Ok(Style::StyleSheet::parse(s, origin));
+    return Ok(Style::StyleSheet::parse(s, url, origin));
 }
 
 export void fetchStylesheets(Gc::Ref<Dom::Node> node, Style::StyleBook& sb) {
@@ -131,7 +131,7 @@ export void fetchStylesheets(Gc::Ref<Dom::Node> node, Style::StyleBook& sb) {
     if (el and el->tagName == Html::STYLE) {
         auto text = el->textContent();
         Io::SScan textScan{text};
-        auto sheet = Style::StyleSheet::parse(textScan);
+        auto sheet = Style::StyleSheet::parse(textScan, node->baseURI());
         sb.add(std::move(sheet));
     } else if (el and el->tagName == Html::LINK) {
         auto rel = el->getAttribute(Html::REL_ATTR);
