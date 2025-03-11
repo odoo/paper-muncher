@@ -250,8 +250,8 @@ struct FlexItem {
 
             // from now on flex basis is width
 
-            if (flexItemProps.basis.is<CalcValue<PercentOr<Length>>>())
-                return flexItemProps.basis.unwrap<CalcValue<PercentOr<Length>>>();
+            if (auto basisCalc = flexItemProps.basis.is<CalcValue<PercentOr<Length>>>())
+                return *basisCalc;
 
             if (not fa.mainAxis(box->style->sizing).is<CalcValue<PercentOr<Length>>>())
                 return NONE;
@@ -301,11 +301,11 @@ struct FlexItem {
 
         Opt<Au> definiteMaxMainSize;
         auto maxMainSize = box->style->sizing->maxSize(fa.isRowOriented ? Axis::HORIZONTAL : Axis::VERTICAL);
-        if (maxMainSize.is<CalcValue<PercentOr<Length>>>()) {
+        if (auto maxMainSizeCalc = maxMainSize.is<CalcValue<PercentOr<Length>>>()) {
             definiteMaxMainSize = resolve(
                 tree,
                 *box,
-                maxMainSize.unwrap<CalcValue<PercentOr<Length>>>(),
+                *maxMainSizeCalc,
                 fa.mainAxis(containerSize)
             );
         }
@@ -315,11 +315,12 @@ struct FlexItem {
         if (definiteMaxMainSize)
             contentSizeSuggestion = min(contentSizeSuggestion, definiteMaxMainSize.unwrap());
 
-        if (fa.mainAxis(box->style->sizing).is<CalcValue<PercentOr<Length>>>()) {
+        auto mainAxis = fa.mainAxis(box->style->sizing);
+        if (auto mainAxisCalc = mainAxis.is<CalcValue<PercentOr<Length>>>()) {
             Au specifiedSizeSuggestion = resolve(
                 tree,
                 *box,
-                fa.mainAxis(box->style->sizing).unwrap<CalcValue<PercentOr<Length>>>(),
+                *mainAxisCalc,
                 fa.mainAxis(containerSize)
             );
 
@@ -379,13 +380,14 @@ struct FlexItem {
     Au getMainSizeMinMaxContentContribution(Tree& tree, bool isMin, Vec2Au containerSize) {
         Au contentContribution = fa.mainAxis(isMin ? minContentSize : maxContentSize) + getMargin(BOTH_MAIN);
 
-        if (fa.mainAxis(box->style->sizing).is<CalcValue<PercentOr<Length>>>()) {
+        auto mainAxis = fa.mainAxis(box->style->sizing);
+        if (auto mainAxisCalc = mainAxis.is<CalcValue<PercentOr<Length>>>()) {
             contentContribution = max(
                 contentContribution,
                 resolve(
                     tree,
                     *box,
-                    fa.mainAxis(box->style->sizing).unwrap<CalcValue<PercentOr<Length>>>(),
+                    *mainAxisCalc,
                     fa.mainAxis(containerSize)
                 ) + getMargin(BOTH_MAIN)
             );
@@ -423,13 +425,14 @@ struct FlexItem {
                     : maxContentSize
             );
 
-        if (fa.crossAxis(box->style->sizing).is<CalcValue<PercentOr<Length>>>()) {
+        auto crossAxis = fa.crossAxis(box->style->sizing);
+        if (auto crossAxisCalc = crossAxis.is<CalcValue<PercentOr<Length>>>()) {
             contentContribution = max(
                 contentContribution,
                 resolve(
                     tree,
                     *box,
-                    fa.crossAxis(box->style->sizing).unwrap<CalcValue<PercentOr<Length>>>(),
+                    *crossAxisCalc,
                     fa.crossAxis(containerSize)
                 ) + getMargin(BOTH_CROSS)
             );
