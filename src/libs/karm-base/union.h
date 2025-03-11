@@ -109,6 +109,14 @@ struct Union {
         return *reinterpret_cast<T const*>(_buf);
     }
 
+    template <Meta::Contains<Ts...> T>
+    always_inline T const& unwrapOr(T const& fallback) const lifetimebound {
+        if (_index != Meta::indexOf<T, Ts...>())
+            return fallback;
+
+        return *reinterpret_cast<T const*>(_buf);
+    }
+
     template <typename T, typename... Args>
     always_inline T& emplace(Args&&... args) {
         if (_index != Meta::indexOf<T, Ts...>()) {

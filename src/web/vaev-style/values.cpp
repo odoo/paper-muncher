@@ -1549,19 +1549,4 @@ Res<Mime::Url> ValueParser<Mime::Url>::parse(Cursor<Css::Sst>& c) {
     return Ok(url);
 }
 
-// MARK: ZIndex
-// https://drafts.csswg.org/css2/#z-index
-
-Res<ZIndex> ValueParser<ZIndex>::parse(Cursor<Css::Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
-
-    if (c->token == Css::Token::ident("auto")) {
-        c.next();
-        return Ok(ZIndex::AUTO);
-    }
-
-    return Ok(try$(parseValue<Integer>(c)));
-}
-
 } // namespace Vaev::Style

@@ -10,6 +10,11 @@ struct Keyword {
     void repr(Io::Emit& e) const {
         e("(keyword {})", K);
     }
+
+    template <Karm::StrLit L>
+    constexpr bool operator==(Keyword<L> const&) const {
+        return K == L;
+    }
 };
 
 namespace Keywords {
