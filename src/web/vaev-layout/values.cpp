@@ -258,8 +258,8 @@ export struct Resolver {
     }
 
     Au resolve(PercentOr<Length> const& value, Au relative) {
-        if (value.is<Length>())
-            return resolve(value.unwrap<Length>());
+        if (auto valueLength = value.is<Length>())
+            return resolve(*valueLength);
         return Au{relative.cast<f64>() * (value.unwrap<Percent>().value() / 100.)};
     }
 
