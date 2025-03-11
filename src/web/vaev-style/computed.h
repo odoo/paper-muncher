@@ -76,7 +76,7 @@ struct Computed {
     Clear clear = Clear::NONE;
 
     // https://drafts.csswg.org/css2/#z-index
-    ZIndex zIndex = ZIndex::AUTO;
+    ZIndex zIndex = Keywords::AUTO;
 
     void inherit(Computed const& parent);
 

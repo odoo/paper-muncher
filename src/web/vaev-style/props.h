@@ -2841,7 +2841,7 @@ struct ZIndexProp {
 
     static constexpr Str name() { return "z-index"; }
 
-    static constexpr ZIndex initial() { return ZIndex::AUTO; }
+    static constexpr ZIndex initial() { return Keywords::AUTO; }
 
     void apply(Computed& c) const {
         c.zIndex = value;

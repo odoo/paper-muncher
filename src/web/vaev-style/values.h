@@ -493,9 +493,4 @@ struct ValueParser<Mime::Url> {
     static Res<Mime::Url> parse(Cursor<Css::Sst>& c);
 };
 
-template <>
-struct ValueParser<ZIndex> {
-    static Res<ZIndex> parse(Cursor<Css::Sst>& c);
-};
-
 } // namespace Vaev::Style
