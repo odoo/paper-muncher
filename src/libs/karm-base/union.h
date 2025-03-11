@@ -8,6 +8,8 @@
 
 namespace Karm {
 
+struct Monostate {};
+
 template <typename... Ts>
 struct Union {
     static_assert(sizeof...(Ts) <= 255, "Union can only hold up to 255 types");
@@ -15,7 +17,9 @@ struct Union {
     alignas(max(alignof(Ts)...)) char _buf[max(sizeof(Ts)...)];
     u8 _index;
 
-    always_inline Union() = delete("union must be initialized with a value");
+    always_inline Union()
+        requires(Meta::Contains<Monostate, Ts...>)
+        : Union(Monostate{}) {}
 
     template <Meta::Contains<Ts...> T>
     always_inline Union(T const& value)
