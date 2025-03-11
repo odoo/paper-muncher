@@ -1,11 +1,9 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "id": "karm-net",
+    "id": "karm-aio",
     "type": "lib",
-    "description": "Networking library",
+    "description": "Base traits for asynchroneous IO",
     "requires": [
-        "karm-json",
-        "karm-net.dns",
-        "karm-net.tls"
+        "karm-io"
     ]
 }

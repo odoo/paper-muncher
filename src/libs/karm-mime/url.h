@@ -15,8 +15,8 @@ struct Url {
     String host;
     Opt<usize> port;
     Path path;
-    String query;
-    String fragment;
+    String query = ""s;
+    String fragment = ""s;
 
     static Url parse(Io::SScan& s, Opt<Url> baseUrl = NONE);
 
