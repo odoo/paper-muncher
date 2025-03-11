@@ -1,6 +1,20 @@
 #include "computed.h"
 
+#include "props.h"
+
 namespace Vaev::Style {
+
+Computed const& Computed::initial() {
+    static Computed computed = [] {
+        Computed res{};
+        StyleProp::any([&]<typename T>(Meta::Type<T>) {
+            if constexpr (requires { T::initial(); })
+                T{}.apply(res);
+        });
+        return res;
+    }();
+    return computed;
+}
 
 void Computed::inherit(Computed const& parent) {
     color = parent.color;
