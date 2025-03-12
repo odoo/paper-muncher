@@ -17,7 +17,7 @@ enum struct BoxSizing : u8 {
 };
 
 struct FitContent {
-    CalcValue<PercentOr<Length>> value = CalcValue<PercentOr<Length>>(Length{});
+    CalcValue<PercentOr<Length>> value = {Length{}};
 
     void repr(Io::Emit& e) const {
         e("(fit-content {})", value);

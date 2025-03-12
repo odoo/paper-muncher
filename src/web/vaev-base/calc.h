@@ -43,7 +43,6 @@ struct CalcValue {
         Value rhs;
     };
 
-    // Flattening it would lessen struct size by 8, but it brings lots of problems
     using Inner = Union<
         Value,
         Box<Unary>,
