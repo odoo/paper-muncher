@@ -15,9 +15,15 @@ export struct Body : public Aio::Reader {
 
     static Rc<Body> from(Buf<Byte>);
 
-    static Rc<Body> empty();
+    static Rc<Body> empty() {
+        struct EmptyBody : public Body {
+            Async::Task<usize> readAsync(MutBytes) override {
+                co_return Ok(0);
+            }
+        };
 
-    virtual ~Body() = default;
+        return makeRc<EmptyBody>();
+    }
 };
 
 } // namespace Karm::Http

@@ -22,7 +22,8 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto resp = co_trya$(Http::getAsync(url));
     auto body = resp->body.unwrapOr(Http::Body::empty());
 
-    co_trya$(Aio::copyAsync(body, Aio::adapt(Sys::out())));
+    auto adaptedOut = Aio::adapt(Sys::out());
+    co_trya$(Aio::copyAsync(*body, adaptedOut));
 
     co_return Ok();
 }

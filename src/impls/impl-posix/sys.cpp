@@ -480,13 +480,13 @@ Async::Task<Vec<Ip>> ipLookupAsync(Str host) {
     for (auto* p = res; p; p = p->ai_next) {
         if (p->ai_family == AF_INET) {
             struct sockaddr_in* addr = (struct sockaddr_in*)p->ai_addr;
-            ips.pushBack(Ip4::fromRaw(addr->sin_addr.s_addr));
+            ips.pushBack(Ip4::fromRaw(bswap(addr->sin_addr.s_addr)));
         } else if (p->ai_family == AF_INET6) {
             struct sockaddr_in6* addr = (struct sockaddr_in6*)p->ai_addr;
             u128 raw = 0;
             auto* buf = addr->sin6_addr.s6_addr16;
             for (usize i = 0; i < 8; i++) {
-                raw |= buf[i];
+                raw |= bswap(buf[i]);
                 raw <<= 16;
             }
             ips.pushBack(Ip6::fromRaw(raw));
