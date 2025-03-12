@@ -2268,3 +2268,75 @@
 
     </rendering>
 </test>
+
+<test name="flex: nested flexes" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body{
+                    margin: 0;
+                }
+                #a{ 
+                    background-color: brown;
+                }
+                #b{
+                    background-color: pink;
+                }
+                #c{
+                    background-color: green;
+                }
+                #d{
+                    background-color: blue;
+                }
+                
+                .pad{
+                    padding: 10px;
+                }
+
+                .fli{
+                    flex: 1;
+                }
+
+                .flc{
+                    display: flex;
+                }
+
+                .pr{
+                    padding-right: 10px;
+                }
+
+                .h{
+                    height: 30px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+    <rendering>
+        <div style="position: absolute; top: 0px; left: 0px; height: 70px; width: 300px;">
+            <div style="position: absolute; top: 0px; left: 0px; height: 70px; width: 300px;" id="a">
+               <div style="position: absolute; top: 10px; left: 10px; height: 50px; width: 280px;" id="b">
+                  <div style="position: absolute; top: 10px; left: 10px; height: 30px; width: 10px;" id="c"></div>
+                  <div style="position: absolute; top: 10px; left: 20px; height: 30px; width: 250px;" id="d"></div>
+               </div>
+            </div>
+         </div>
+    </rendering>
+    <rendering>
+        <div style="width: 300px;">
+            <div id="a" class="pad flc">
+                <div id="b" class="pad flc fli">
+                    <div id="c" class="pr"></div>
+                    <div id="d" class="fli h"></div>
+                </div>
+            </div>
+        </div>
+    </rendering>
+</test>

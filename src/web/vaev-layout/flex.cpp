@@ -155,6 +155,7 @@ struct FlexItem {
 
     FlexItem(Tree& tree, Box& box, bool isRowOriented, Vec2Au containingBlock)
         : box(&box), flexItemProps(*box.style->flex), fa(isRowOriented) {
+        // FIXME: check if really needed
         speculateValues(tree, Input{.containingBlock = containingBlock});
         // TODO: not always we will need min/max content sizes,
         //       this can be lazy computed for performance gains
@@ -227,13 +228,8 @@ struct FlexItem {
         return flexBaseSize * Au{flexItemProps.shrink};
     }
 
-    void _speculateValues(Tree& tree, Input input, Vec2Au& speculativeSize) {
-        Output out = layout(tree, *box, input);
-        speculativeSize = out.size;
-    }
-
     void speculateValues(Tree& t, Input input) {
-        _speculateValues(t, input, speculativeSize);
+        speculativeSize = layout(t, *box, input).size;
         speculativeMargin = computeMargins(
             t,
             *box,
@@ -631,6 +627,17 @@ struct FlexFormatingContext : public FormatingContext {
     // https://www.w3.org/TR/css-flexbox-1/#layout-algorithm
     FlexFormatingContext(FlexProps flex) : _flex(flex) {}
 
+    // 0. Mark: Empty Container ------------------------------------------------------
+
+    Res<None, Output> returnIfEmptyContainer(Box& box, Input input) {
+        if (box.children())
+            return Ok(NONE);
+
+        return Output::fromSize(
+            {input.knownSize.x.unwrapOr(0_au), input.knownSize.y.unwrapOr(0_au)}
+        );
+    }
+
     // 1. MARK: Generate anonymous flex items ----------------------------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-anon-box
 
@@ -973,9 +980,15 @@ struct FlexFormatingContext : public FormatingContext {
                     }
 
                     for (auto* flexItem : unfrozenItems) {
-                        Au ratio = flexItem->getScaledFlexShrinkFactor() / sumScaledFlexShrinkFactor;
-                        fa.mainAxis(flexItem->usedSize) =
-                            flexItem->flexBaseSize - ratio * Au{Math::abs(freeSpace)};
+                        // NOTE: sumScaledFlexShrinkFactor = 0 is not covered in spec, but implemented by WeasyPrint
+                        // https://github.com/Kozea/WeasyPrint/blob/c74b4780149589ed801282e97a4a947362e20d6d/weasyprint/layout/flex.py#L411C29-L412C78
+                        if (sumScaledFlexShrinkFactor == 0_au) {
+                            fa.mainAxis(flexItem->usedSize) = flexItem->flexBaseSize;
+                        } else {
+                            Au ratio = flexItem->getScaledFlexShrinkFactor() / sumScaledFlexShrinkFactor;
+                            fa.mainAxis(flexItem->usedSize) =
+                                flexItem->flexBaseSize - ratio * Au{Math::abs(freeSpace)};
+                        }
                     }
                 }
 
@@ -1487,6 +1500,8 @@ struct FlexFormatingContext : public FormatingContext {
         // HACK: Quick reset for formating context reuse.
         //       Proper reset logic to be implemented in a future commit.
         *this = {*box.style->flex};
+
+        try$(returnIfEmptyContainer(box, input));
 
         // 1. Generate anonymous flex items
         _generateAnonymousFlexItems(tree, box, input.containingBlock);
