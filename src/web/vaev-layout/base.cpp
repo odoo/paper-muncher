@@ -232,10 +232,70 @@ export struct BreakpointTraverser {
 export struct FormatingContext;
 export struct Box;
 
+export struct InlineContent {
+    /* NOTE:
+    This is a sketch implementation of the data model for InlineContent. We should be able to:
+        -   add different inline elements to it, from different types (Prose, Image, inline-block)
+        -   retrieve the added data to be displayed in the same Inline Formatting Context (break lines and display
+            into line boxes)
+        -   respect different styling for the same line (font, fontsize, color, etc)
+    */
+    Rc<Text::Prose> _prose;
+    Opt<Rc<Style::Computed>> _style;
+
+    InlineContent() : _prose(makeRc<Text::Prose>(Text::ProseStyle{
+                          .font = {
+                              Text::Fontface::fallback(),
+                              16,
+                          },
+                          .multiline = true,
+                      })) {}
+
+    InlineContent(Rc<Text::Prose> prose) : _prose(prose) {}
+
+    void add(Rc<Text::Prose> prose, Rc<Style::Computed> style, Rc<Text::Fontface>) {
+        // FIXME: ugly workaround while we dont fix the Prose data structure
+        if (_prose->_runes.len() == 0) {
+            _prose->_style = prose->_style;
+            _prose->_style.color = NONE;
+        }
+        _prose->pushSpan();
+        _prose->append(prose->_runes);
+        _prose->spanColor(style->color);
+        _prose->popSpan();
+
+        _style = style;
+    }
+
+    void breakLine() {
+        _prose->append('\n');
+    }
+
+    void add(Karm::Image::Picture, Rc<Style::Computed>, Rc<Text::Fontface>) {}
+
+    void add(Box&&, Rc<Style::Computed>, Rc<Text::Fontface>) {}
+
+    bool active() {
+        return _prose->_runes.len();
+    }
+
+    void clear() {
+        _prose = makeRc<Text::Prose>(Text::ProseStyle{
+            .font = {
+                Text::Fontface::fallback(),
+                16,
+            },
+            .multiline = true,
+        });
+    }
+
+    static void savePendingInline(Box& parent, InlineContent& ic);
+};
+
 export using Content = Union<
     None,
     Vec<Box>,
-    Rc<Text::Prose>,
+    InlineContent,
     Karm::Image::Picture>;
 
 export struct Attrs {
@@ -298,6 +358,14 @@ struct Box : public Meta::NoCopy {
         }
     }
 };
+
+void InlineContent::savePendingInline(Box& parent, InlineContent& ic) {
+    if (not ic.active())
+        return;
+
+    parent.add({ic._style.unwrap(), parent.fontFace, ic});
+    ic.clear();
+}
 
 export struct Viewport {
     Resolution dpi = Resolution::fromDpi(96);
