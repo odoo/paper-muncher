@@ -598,8 +598,6 @@ static Res<Gfx::Color> _parseFuncColor(Css::Sst const& s) {
 Res<ColorMix::Side> _parseColorMixSide(Cursor<Css::Sst>& s) {
     Opt<Percent> percent;
 
-    eatWhitespace(s);
-
     if (s.ended())
         return Error::invalidData("unexpected end of input");
 
@@ -984,8 +982,6 @@ Res<FontStyle> ValueParser<FontStyle>::parse(Cursor<Css::Sst>& c) {
 }
 
 Res<Text::Family> ValueParser<Text::Family>::parse(Cursor<Css::Sst>& c) {
-    eatWhitespace(c);
-
     if (c.ended())
         return Error::invalidData("unexpected end of input");
 
