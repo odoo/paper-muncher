@@ -1,6 +1,6 @@
 #include <karm-test/macros.h>
 
-#include "../lexer.h"
+import Vaev.Style;
 
 namespace Vaev::Css::Tests {
 

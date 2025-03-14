@@ -13,9 +13,10 @@ module;
 #include <vaev-dom/document-type.h>
 #include <vaev-dom/document.h>
 #include <vaev-dom/element.h>
-#include <vaev-style/props.h>
 
 export module Vaev.Browser:inspect;
+
+import Vaev.Style;
 
 namespace Vaev::Browser {
 
