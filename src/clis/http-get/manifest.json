@@ -1,0 +1,10 @@
+{
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+    "id": "http-get",
+    "description": "Send an HTTP GET request",
+    "type": "exe",
+    "requires": [
+        "karm-http",
+        "karm-cli"
+    ]
+}
