@@ -1,13 +1,19 @@
 module;
 
 #include <karm-image/loader.h>
+#include <karm-text/book.h>
 #include <karm-text/loader.h>
 #include <karm-text/prose.h>
+#include <vaev-base/display.h>
+#include <vaev-base/table.h>
+#include <vaev-base/text.h>
 #include <vaev-dom/document.h>
-#include <vaev-style/computer.h>
+#include <vaev-dom/tags.h>
+#include <vaev-dom/text.h>
 
 export module Vaev.Layout:builder;
 
+import Vaev.Style;
 import :values;
 
 namespace Vaev::Layout {
