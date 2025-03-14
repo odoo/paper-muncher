@@ -1,5 +1,13 @@
+#include <karm-base/box.h>
+#include <karm-logger/logger.h>
+#include <karm-print/paper.h>
 #include <karm-test/macros.h>
-#include <vaev-style/media.h>
+#include <vaev-base/length.h>
+#include <vaev-base/media.h>
+#include <vaev-base/numbers.h>
+#include <vaev-base/resolution.h>
+
+import Vaev.Style;
 
 namespace Vaev::Style::Tests {
 

@@ -1,6 +1,6 @@
 #include <karm-test/macros.h>
-#include <vaev-style/matcher.h>
-#include <vaev-style/selector.h>
+
+import Vaev.Style;
 
 namespace Vaev::Style::Tests {
 test$("selector-formatting") {
