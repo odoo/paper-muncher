@@ -1,6 +1,7 @@
 #pragma once
 
 #include <karm-base/string.h>
+#include <karm-base/union.h>
 #include <karm-io/emit.h>
 
 namespace Vaev {
@@ -52,3 +53,8 @@ static constexpr inline Thin THIN{};
 } // namespace Keywords
 
 } // namespace Vaev
+
+template <Karm::StrLit K>
+struct Karm::_Empty<Vaev::Keyword<K>> {
+    static constexpr bool value = true;
+};
