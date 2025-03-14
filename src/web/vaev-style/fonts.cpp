@@ -1,17 +1,20 @@
-#pragma once
+module;
 
+#include <karm-logger/logger.h>
 #include <karm-mime/url.h>
 #include <vaev-base/font.h>
 
-#include "base.h"
-#include "css/parser.h"
-#include "values.h"
+export module Vaev.Style:fonts;
+
+import Vaev.Style.Css;
+import :base;
+import :values;
 
 namespace Vaev::Style {
 
 // MARK: FontFace --------------------------------------------------------------
 
-struct FontFace {
+export struct FontFace {
     String family;
 
     Vec<FontSource> sources;
@@ -44,7 +47,7 @@ struct FontFace {
 
 // MARK: font-family
 // https://www.w3.org/TR/css-fonts-4/#font-family-desc
-struct FontFamilyDesc {
+export struct FontFamilyDesc {
     String value = initial();
 
     static Str name() { return "font-family"; }
@@ -70,7 +73,7 @@ struct FontFamilyDesc {
 
 // MARK: src
 // https://www.w3.org/TR/css-fonts-4/#src-desc
-struct SrcDesc {
+export struct SrcDesc {
     Vec<FontSource> value;
 
     static Str name() { return "src"; }
@@ -150,7 +153,7 @@ struct SrcDesc {
 
 // MARK: font-style
 // https://www.w3.org/TR/css-fonts-4/#font-style-desc
-struct FontStyleDesc {
+export struct FontStyleDesc {
     Union<None, FontStyle, Range<Angle>> value;
 
     static Str name() { return "font-style"; }
@@ -186,7 +189,7 @@ struct FontStyleDesc {
 
 // MARK: font-weight
 // https://www.w3.org/TR/css-fonts-4/#font-weight-desc
-struct FontWeightDesc {
+export struct FontWeightDesc {
     Opt<Range<Text::FontWeight>> value;
 
     static Str name() { return "font-weight"; }
@@ -227,7 +230,7 @@ struct FontWeightDesc {
 
 // MARK: font-width
 // https://www.w3.org/TR/css-fonts-4/#font-width-prop
-struct FontWidthDesc {
+export struct FontWidthDesc {
     Opt<Range<FontWidth>> value = initial();
 
     static Str name() { return "font-width"; }
@@ -260,7 +263,7 @@ struct FontWidthDesc {
 
 // MARK: unicode-range
 // https://www.w3.org/TR/css-fonts-4/#unicode-range-desc
-struct UnicodeRangeDesc {
+export struct UnicodeRangeDesc {
     Vec<Range<Rune>> value;
 
     static Str name() { return "unicode-range"; }
@@ -276,7 +279,7 @@ struct UnicodeRangeDesc {
 
 // MARK: font-feature-settings
 // https://www.w3.org/TR/css-fonts-4/#font-rend-desc
-struct FontFeatureSettingsDesc {
+export struct FontFeatureSettingsDesc {
     Vec<FontFeature> value;
 
     static Str name() { return "font-feature-settings"; }
@@ -290,7 +293,7 @@ struct FontFeatureSettingsDesc {
 
 // MARK: font-variation-settings
 // https://www.w3.org/TR/css-fonts-4/#font-rend-desc
-struct FontVariationSettingsDesc {
+export struct FontVariationSettingsDesc {
     Vec<FontVariation> value;
 
     static Str name() { return "font-variation-settings"; }
@@ -304,7 +307,7 @@ struct FontVariationSettingsDesc {
 
 // MARK: font-named-instance
 // https://www.w3.org/TR/css-fonts-4/#font-named-instance
-struct FontNamedInstanceDesc {
+export struct FontNamedInstanceDesc {
     Opt<String> value = initial();
 
     static Str name() { return "font-named-instance"; }
@@ -328,7 +331,7 @@ struct FontNamedInstanceDesc {
 
 // MARK: font-display
 // https://www.w3.org/TR/css-fonts-4/#font-display-desc
-struct FontDisplayDesc {
+export struct FontDisplayDesc {
     FontDisplay value = initial();
 
     static Str name() { return "font-display"; }
@@ -361,7 +364,7 @@ struct FontDisplayDesc {
 
 // MARK: ascent-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
-struct AscentOverrideDesc {
+export struct AscentOverrideDesc {
     Opt<Percent> value = initial();
 
     static Str name() { return "ascent-override"; }
@@ -386,7 +389,7 @@ struct AscentOverrideDesc {
 
 // MARK: descent-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
-struct DescentOverrideStyleProp {
+export struct DescentOverrideStyleProp {
     Opt<Percent> value = initial();
 
     static Str name() { return "descent-override"; }
@@ -411,7 +414,7 @@ struct DescentOverrideStyleProp {
 
 // MARK: line-gap-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
-struct LineGapOverrideDesc {
+export struct LineGapOverrideDesc {
     Opt<Percent> value = initial();
 
     static Str name() { return "line-gap-override"; }
@@ -435,7 +438,7 @@ struct LineGapOverrideDesc {
 
 // MARK: size-adjust
 // https://www.w3.org/TR/css-fonts-5/#size-adjust-desc
-struct SizeAdjustDesc {
+export struct SizeAdjustDesc {
     Percent value = initial();
 
     static Str name() { return "size-adjust"; }
@@ -475,7 +478,7 @@ using _FontDesc = Union<
     /**/
     >;
 
-struct FontDesc : public _FontDesc {
+export struct FontDesc : public _FontDesc {
     using _FontDesc::_FontDesc;
 
     static constexpr Array LEGACY_ALIAS = {

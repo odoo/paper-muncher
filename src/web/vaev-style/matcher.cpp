@@ -1,9 +1,18 @@
-#include "matcher.h"
+module;
+
+#include <karm-base/vec.h>
+#include <karm-logger/logger.h>
+#include <vaev-dom/element.h>
+
+export module Vaev.Style:matcher;
+
+import :selector;
 
 namespace Vaev::Style {
 
 static constexpr bool DEBUG_MATCHING = false;
 
+export Opt<Spec> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el);
 static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el);
 
 // https://www.w3.org/TR/selectors-4/#descendant-combinators

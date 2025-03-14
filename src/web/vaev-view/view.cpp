@@ -1,13 +1,16 @@
 module;
 
 #include <karm-gc/root.h>
+#include <karm-print/paper.h>
 #include <karm-ui/node.h>
 #include <karm-ui/view.h>
+#include <vaev-base/media.h>
+#include <vaev-base/resolution.h>
 #include <vaev-dom/document.h>
-#include <vaev-style/media.h>
 
 export module Vaev.View:view;
 
+import Vaev.Style;
 import Vaev.Driver;
 import Vaev.Layout;
 

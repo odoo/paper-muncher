@@ -2,9 +2,11 @@ module;
 
 #include <karm-image/picture.h>
 #include <karm-text/prose.h>
-#include <vaev-style/computer.h>
+#include <vaev-base/resolution.h>
 
 export module Vaev.Layout:base;
+
+import Vaev.Style;
 
 namespace Vaev::Layout {
 

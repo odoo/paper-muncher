@@ -4,10 +4,15 @@ module;
 #include <karm-scene/image.h>
 #include <karm-scene/stack.h>
 #include <karm-scene/text.h>
-#include <vaev-style/computer.h>
+#include <vaev-base/color.h>
+#include <vaev-base/display.h>
+#include <vaev-base/float.h>
+#include <vaev-base/insets.h>
+#include <vaev-base/visibility.h>
 
 export module Vaev.Layout:paint;
 
+import Vaev.Style;
 import :base;
 import :values;
 
