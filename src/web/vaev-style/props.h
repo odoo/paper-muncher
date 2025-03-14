@@ -253,7 +253,7 @@ struct BackgroundImageProp {
 
     static constexpr Str name() { return "background-image"; }
 
-    static Array<Image, 0> initial() { return {}; }
+    static Vec<Image> initial() { return {}; }
 
     void apply(Computed&) const {
         // TODO
@@ -275,7 +275,7 @@ struct BackgroundPositionProp {
 
     static constexpr Str name() { return "background-position"; }
 
-    static constexpr Array<BackgroundPosition, 0> initial() {
+    static constexpr Vec<BackgroundPosition> initial() {
         return {};
     }
 
