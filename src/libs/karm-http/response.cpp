@@ -44,6 +44,9 @@ export struct Response {
         return Ok(res);
     }
 
+    static Res<Response> parseRaw(Cursor<Bytes> buf) {
+    }
+
     static Res<Response> read(Io::Reader& r) {
         Io::BufferWriter bw;
         while (true) {

@@ -33,13 +33,15 @@ export struct Client {
 
                 co_trya$(conn.writeAsync(req.bytes()));
 
-                if (auto body = request->body) {
+                if (auto body = request->body)
                     co_trya$(Aio::copyAsync(**body, conn));
-                }
 
-                auto response = makeRc<Response>();
+                Array<u8, 4096> buf;
+                Cursor<Byte> cur = co_trya$(conn.writeAsync(buf));
 
-                co_return Ok(response);
+                auto response = co_try$(Response::parseRaw(sub(buf, 0, bufLen)));
+
+                co_return Ok(makeRc<Response>(std::move(response)));
             }
         };
 
