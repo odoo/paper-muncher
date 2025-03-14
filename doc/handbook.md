@@ -40,7 +40,7 @@ As a team we believe that building exceptional software requires strong opinions
 ## Essential Resources
 
 * [Cppreference](https://en.cppreference.com/w/)
-* [CSS Snapshot 2023](https://www.w3.org/TR/CSS)
+* [CSS Latest Snapshot](https://www.w3.org/TR/CSS)
 * [HTML Living Standard](https://html.spec.whatwg.org/multipage/)
 * [SVG 2](https://www.w3.org/TR/SVG2/)
 * [MathML 3](https://www.w3.org/TR/MathML3/)
