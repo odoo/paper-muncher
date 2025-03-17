@@ -12,7 +12,7 @@ template <typename... Ts>
 struct Union {
     static_assert(sizeof...(Ts) <= 255, "Union can only hold up to 255 types");
 
-    alignas(max(alignof(Ts)...)) char _buf[max(sizeof(Ts)...)];
+    alignas(max(alignof(Ts)...)) char _buf[max(Meta::zeroableSizeOf<Ts>()...)];
     u8 _index;
 
     always_inline Union()
