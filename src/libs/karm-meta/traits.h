@@ -2,10 +2,6 @@
 
 #include "decl.h"
 
-namespace Karm {
-struct Bool;
-} // namespace Karm
-
 namespace Karm::Meta {
 
 // MARK: Primary type categories -----------------------------------------------
@@ -27,9 +23,6 @@ inline constexpr bool _Boolean = false;
 
 template <>
 inline constexpr bool _Boolean<bool> = true;
-
-template <>
-inline constexpr bool _Boolean<Karm::Bool> = true;
 
 template <typename T>
 concept Boolean = _Boolean<T>;
