@@ -83,6 +83,12 @@ export struct Header : public Map<String, String> {
 
         return Ok();
     }
+
+    Opt<usize> contentLength() {
+        if (auto value = tryGet("Content-Length"s))
+            return Io::atou(value->str());
+        return NONE;
+    }
 };
 
 } // namespace Karm::Http

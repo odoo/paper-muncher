@@ -58,9 +58,15 @@ Res<> print(
         .headerFooter = true,
         .backgroundGraphics = true,
     };
-    auto printer = try$(Print::FilePrinter::create(options.outputFormat, {
-                                                                             .density = options.density.toDppx(),
-                                                                         }));
+
+    auto printer = try$(
+        Print::FilePrinter::create(
+            options.outputFormat,
+            {
+                .density = options.density.toDppx(),
+            }
+        )
+    );
 
     Vaev::Driver::print(
         *dom,
