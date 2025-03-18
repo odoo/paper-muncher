@@ -129,21 +129,10 @@ struct Union {
     }
 
     template <Meta::Contains<Ts...> T>
-    always_inline Opt<T> take() {
-        if (_index != Meta::indexOf<T, Ts...>()) {
-            return NONE;
-        }
-
+    always_inline T take() {
+        if (_index != Meta::indexOf<T, Ts...>())
+            panic("taking wrong type");
         return std::move(*reinterpret_cast<T*>(_buf));
-    }
-
-    template <Meta::Contains<Ts...> T>
-    always_inline Opt<T> take() const {
-        if (_index != Meta::indexOf<T, Ts...>()) {
-            return NONE;
-        }
-
-        return *reinterpret_cast<T const*>(_buf);
     }
 
     always_inline auto visit(auto visitor) {
