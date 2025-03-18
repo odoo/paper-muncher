@@ -17,63 +17,8 @@ struct TtfGlyphInfoAdapter {
     TtfGlyphInfoAdapter(Rc<Text::TtfFontface> font, Map<u16, u16> mappings)
         : _font{font}, codeMappings{mappings} {}
 
-    Map<u16, u16> static extractMappingForType12(Rc<Text::TtfFontface> font) {
-        Map<u16, u16> codeMappings;
-
-        auto s = font->_parser._cmapTable.begin().skip(12);
-        u32 nGroups = s.nextU32be();
-
-        for (u32 i = 0; i < nGroups; i++) {
-            u32 startCode = s.nextU32be();
-            u32 endCode = s.nextU32be();
-
-            u32 glyphOffset = s.nextU32be();
-
-            for (u32 r = startCode; r <= endCode; ++r) {
-                codeMappings.put(r, (r - startCode) + glyphOffset);
-            }
-        }
-        return codeMappings;
-    }
-
-    Map<u16, u16> static extractMappingForType4(Rc<Text::TtfFontface> font) {
-        Map<u16, u16> codeMappings;
-
-        u16 segCountX2 = font->_parser._cmapTable.begin().skip(6).nextU16be();
-        u16 segCount = segCountX2 / 2;
-
-        for (u16 i = 0; i < segCount; i++) {
-            auto s = font->_parser._cmapTable.begin().skip(14);
-
-            u16 endCode = s.skip(i * 2).peekU16be();
-
-            // + 2 for reserved padding
-            u16 startCode = s.skip(segCountX2 + 2).peekU16be();
-
-            u16 idDelta = s.skip(segCountX2).peekI16be();
-            u16 idRangeOffset = s.skip(segCountX2).peekU16be();
-
-            if (idRangeOffset == 0) {
-                for (u16 code = startCode; code <= endCode; ++code) {
-                    codeMappings.put(code, (u16)((code + idDelta) & 0xFFFF));
-                }
-            } else {
-                for (u16 code = startCode; code <= endCode; ++code) {
-                    auto offset = idRangeOffset + (code - startCode) * 2;
-                    codeMappings.put(code, s.skip(offset).nextU16be());
-                }
-            }
-        }
-
-        return codeMappings;
-    }
-
     static TtfGlyphInfoAdapter build(Rc<Text::TtfFontface> font) {
-        Map<u16, u16> codeMappings;
-        if (font->_parser._cmapTable.type == 4)
-            codeMappings = extractMappingForType4(font);
-        else if (font->_parser._cmapTable.type == 12)
-            codeMappings = extractMappingForType12(font);
+        Map<u16, u16> codeMappings = font->_parser._cmapTable.extractMapping();
         return TtfGlyphInfoAdapter{font, codeMappings};
     }
 
