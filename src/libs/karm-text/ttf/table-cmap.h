@@ -27,13 +27,13 @@ struct Cmap : public Io::BChunk {
             auto s = begin().skip(12);
             u32 nGroups = s.nextU32be();
 
-            for (u32 i = 0; i < nGroups; i++) {
+            for (usize i = 0; i < nGroups; i++) {
                 u32 startCode = s.nextU32be();
                 u32 endCode = s.nextU32be();
 
                 u32 glyphOffset = s.nextU32be();
 
-                for (u32 r = startCode; r <= endCode; ++r) {
+                for (usize r = startCode; r <= endCode; ++r) {
                     codeMappings.put(r, (r - startCode) + glyphOffset);
                 }
             }
@@ -79,7 +79,7 @@ struct Cmap : public Io::BChunk {
             u16 segCountX2 = begin().skip(6).nextU16be();
             u16 segCount = segCountX2 / 2;
 
-            for (u16 i = 0; i < segCount; i++) {
+            for (usize i = 0; i < segCount; i++) {
                 auto s = begin().skip(14);
 
                 u16 endCode = s.skip(i * 2).peekU16be();
@@ -91,11 +91,11 @@ struct Cmap : public Io::BChunk {
                 u16 idRangeOffset = s.skip(segCountX2).peekU16be();
 
                 if (idRangeOffset == 0) {
-                    for (u16 code = startCode; code <= endCode; ++code) {
+                    for (usize code = startCode; code <= endCode; code++) {
                         codeMappings.put(code, (u16)((code + idDelta) & 0xFFFF));
                     }
                 } else {
-                    for (u16 code = startCode; code <= endCode; ++code) {
+                    for (usize code = startCode; code <= endCode; code++) {
                         auto offset = idRangeOffset + (code - startCode) * 2;
                         codeMappings.put(code, s.skip(offset).nextU16be());
                     }
@@ -109,7 +109,7 @@ struct Cmap : public Io::BChunk {
             auto s = begin().skip(12);
             u32 nGroups = s.nextU32be();
 
-            for (u32 i = 0; i < nGroups; i++) {
+            for (usize i = 0; i < nGroups; i++) {
                 u32 startCode = s.nextU32be();
                 u32 endCode = s.nextU32be();
                 u32 glyphOffset = s.nextU32be();
