@@ -164,7 +164,7 @@ Async::Task<> renderAsync(
     };
 
     auto media = constructMediaForRender(options.scale, imageSize);
-    auto [style, layout, paint, frags] = Vaev::Driver::render(*dom, media, {.small = imageSize});
+    auto [style, layout, paint, frags, canvasColor] = Vaev::Driver::render(*dom, media, {.small = imageSize});
 
     auto image = Gfx::Surface::alloc(
         imageSize.cast<isize>() * options.density.toDppx(),
@@ -173,7 +173,15 @@ Async::Task<> renderAsync(
 
     Gfx::CpuCanvas g;
     g.begin(*image);
-    g.clear(Gfx::WHITE);
+
+    if (canvasColor.alpha < 255) {
+        g.clear(Gfx::WHITE);
+        auto rectangle = Math::Rectf{0, 0, options.width._val, options.height._val};
+        g.fillStyle(canvasColor);
+        g.fill(rectangle.cast<i64>(), Math::Radiif{0});
+    } else
+        g.clear(canvasColor);
+
     g.scale(options.density.toDppx());
     paint->paint(g);
     if (options.wireframe)
