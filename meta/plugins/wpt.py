@@ -50,10 +50,7 @@ def _(args: WptArgs):
         "--webdriver-binary",
         "paper_muncher_webdriver",
         "--test-type=reftest",
-        # "--log-wptreport ${{ runner.temp }}/wpt_report_${{ matrix.current-chunk }}.json",
         "--no-fail-on-unexpected",
-        "--include-file",
-        str(Path("meta/wpt/whitelist").absolute()),
     ] + args.args
 
     # Run the WPTs
