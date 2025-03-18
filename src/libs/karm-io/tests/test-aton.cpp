@@ -9,10 +9,14 @@ test$("atoi") {
     expectEq$(Io::atoi("1"s), 1);
     expectEq$(Io::atoi("10"s), 10);
     expectEq$(Io::atoi("100"s), 100);
+    expectEq$(Io::atoi("+100"s), 100);
 
     expectEq$(Io::atoi("-1"s), -1);
     expectEq$(Io::atoi("-10"s), -10);
     expectEq$(Io::atoi("-100"s), -100);
+
+    expectNot$(Io::atoi("+-100"s));
+    expectNot$(Io::atoi("-+100"s));
 
     return Ok();
 }
@@ -21,6 +25,7 @@ test$("atof") {
     expect$(Math::epsilonEq(try$(Io::atof("0.0"s)), 0.0));
     expect$(Math::epsilonEq(try$(Io::atof("0.1"s)), 0.1));
     expect$(Math::epsilonEq(try$(Io::atof("0.5"s)), 0.5));
+    expect$(Math::epsilonEq(try$(Io::atof("+0.5"s)), 0.5));
 
     expect$(Math::epsilonEq(try$(Io::atof(".0"s)), 0.0));
     expect$(Math::epsilonEq(try$(Io::atof(".1"s)), 0.1));
@@ -55,6 +60,8 @@ test$("atof") {
     expect$(Math::epsilonEq(try$(Io::atof("3e0"s)), 3.0));
     expect$(Math::epsilonEq(try$(Io::atof("-7.89e2"s)), -789.0));
     expect$(Math::epsilonEq(try$(Io::atof("5.00e-3"s)), 0.005));
+
+    expectNot$(Io::atoi("-+100"s));
 
     return Ok();
 }
