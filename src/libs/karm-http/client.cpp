@@ -5,6 +5,7 @@ module;
 #include <karm-logger/logger.h>
 #include <karm-mime/url.h>
 #include <karm-sys/chan.h>
+#include <karm-sys/file.h>
 #include <karm-sys/lookup.h>
 #include <karm-sys/socket.h>
 
@@ -124,6 +125,9 @@ struct SimpleClient : public Client {
 
     Async::Task<Rc<Response>> doAsync(Rc<Request> request) override {
         auto& url = request->url;
+        if (url.scheme != "http")
+            co_return Error::invalidInput("unsupported scheme");
+
         auto ips = co_trya$(Sys::lookupAsync(url.host));
         auto port = url.port.unwrapOr(80);
         Sys::SocketAddr addr{first(ips), (u16)port};
@@ -135,6 +139,65 @@ struct SimpleClient : public Client {
 
 export Rc<Client> simpleClient() {
     return makeRc<SimpleClient>();
+}
+
+// MARK: Local -----------------------------------------------------------------
+
+struct LocalClient : public Client {
+    Res<Rc<Body>> _load(Mime::Url url) {
+        if (try$(Sys::isFile(url)))
+            return Ok(Body::from(try$(Sys::File::open(url))));
+
+        auto dir = try$(Sys::Dir::open(url));
+        Io::StringWriter sw;
+        Io::Emit e{sw};
+        e("<html><body><h1>Index of {}</h1><ul>", url.path);
+        for (auto& diren : dir.entries()) {
+            if (diren.hidden())
+                continue;
+            e("<li><a href=\"{}\">{}</a></li>", url.join(diren.name), diren.name);
+        }
+        e("</ul></body></html>");
+        return Ok(Body::from(sw.take()));
+    }
+
+    Async::Task<Rc<Response>> doAsync(Rc<Request> request) override {
+        auto response = makeRc<Response>();
+
+        response->code = Code::OK;
+        response->header.add("Content-Type", "text/html");
+
+        if (request->method == Method::GET)
+            response->body = co_try$(_load(request->url));
+
+        co_return Ok(response);
+    }
+};
+
+export Rc<Client> localClient() {
+    return makeRc<LocalClient>();
+}
+
+// MARK: Fallback --------------------------------------------------------------
+
+struct FallbackClient : public Client {
+    Vec<Rc<Client>> _clients;
+
+    FallbackClient(Vec<Rc<Client>> clients) : _clients(std::move(clients)) {}
+
+    Async::Task<Rc<Response>> doAsync(Rc<Request> request) override {
+        for (auto& client : _clients) {
+            auto res = co_await client->doAsync(request);
+            if (res)
+                co_return res.unwrap();
+        }
+
+        co_return Error::notFound("no client could handle the request");
+    }
+};
+
+export Rc<Client> fallbackClient(Vec<Rc<Client>> clients) {
+    return makeRc<FallbackClient>(std::move(clients));
 }
 
 // MARK: Clientless ------------------------------------------------------------
