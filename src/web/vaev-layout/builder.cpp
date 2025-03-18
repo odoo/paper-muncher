@@ -275,6 +275,7 @@ static void _buildElement(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& par
     }
 
     auto style = c.computeFor(*parent.style, el);
+
     auto font = _lookupFontface(c.fontBook, *style);
 
     auto display = style->display;
@@ -295,12 +296,11 @@ static void _buildNode(Style::Computer& c, Gc::Ref<Dom::Node> node, Box& parent)
         _buildElement(c, *el, parent);
     } else if (auto text = node->is<Dom::Text>()) {
         _buildRun(c, *text, parent);
-    } else if (auto doc = node->is<Dom::Document>()) {
-        _buildChildren(c, *doc, parent);
     }
 }
 
 export Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc) {
+
     if (auto el = doc->documentElement()) {
         auto style = c.computeFor(Style::Computed::initial(), *el);
         auto font = _lookupFontface(c.fontBook, *style);
