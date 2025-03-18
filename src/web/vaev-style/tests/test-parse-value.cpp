@@ -1,7 +1,9 @@
+#include <karm-math/insets.h>
 #include <karm-test/macros.h>
-#include <vaev-style/decls.h>
-#include <vaev-style/props.h>
-#include <vaev-style/values.h>
+#include <vaev-base/display.h>
+#include <vaev-base/insets.h>
+
+import Vaev.Style;
 
 namespace Vaev::Style::Tests {
 

@@ -1,6 +1,7 @@
 module;
 
 #include <karm-gc/heap.h>
+#include <karm-logger/logger.h>
 #include <karm-mime/mime.h>
 #include <karm-mime/url.h>
 #include <karm-sys/dir.h>
@@ -8,9 +9,10 @@ module;
 #include <vaev-dom/document.h>
 #include <vaev-dom/html/parser.h>
 #include <vaev-dom/xml/parser.h>
-#include <vaev-style/stylesheet.h>
 
 export module Vaev.Driver:fetcher;
+
+import Vaev.Style;
 
 namespace Vaev::Driver {
 
