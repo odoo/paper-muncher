@@ -189,7 +189,9 @@ struct Prose : public Meta::Pinned {
 
     void pushSpan() {
         _spans.pushBack(makeBox<Span>(_currentSpan));
+        auto parentSpan = _currentSpan;
         _currentSpan = &*last(_spans);
+        _currentSpan->parent = parentSpan;
     }
 
     void spanColor(Gfx::Color color) {
@@ -203,6 +205,8 @@ struct Prose : public Meta::Pinned {
         if (_currentSpan)
             _currentSpan = _currentSpan->parent;
     }
+
+    void copySpanStack(Prose const& prose);
 
     // MARK: Layout ------------------------------------------------------------
 
