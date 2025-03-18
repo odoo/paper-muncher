@@ -180,7 +180,7 @@ static void _buildRun(Style::Computer& c, Gc::Ref<Dom::Text> node, Box& parent) 
         }
     }
 
-    parent.add({style, fontFace, std::move(prose)});
+    parent.add({style, fontFace, std::move(prose), nullptr});
 }
 
 // MARK: Build Input -----------------------------------------------------------
@@ -201,7 +201,7 @@ static void _buildInput(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& paren
         value = el->getAttribute(Html::PLACEHOLDER_ATTR).unwrap();
 
     auto prose = makeRc<Text::Prose>(proseStyle, value);
-    parent.add({style, font, prose});
+    parent.add({style, font, prose, el});
 }
 
 // MARK: Build Block -----------------------------------------------------------
@@ -214,7 +214,7 @@ void _buildChildren(Style::Computer& c, Gc::Ref<Dom::Node> node, Box& parent) {
 
 static void _buildBlock(Style::Computer& c, Rc<Style::Computed> style, Gc::Ref<Dom::Element> el, Box& parent) {
     auto font = _lookupFontface(c.fontBook, *style);
-    Box box = {style, font};
+    Box box = {style, font, el};
     _buildChildren(c, el, box);
     box.attrs = _parseDomAttr(el);
     parent.add(std::move(box));
@@ -233,7 +233,7 @@ static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& paren
     auto img = Karm::Image::load(url).unwrapOrElse([] {
         return Karm::Image::loadOrFallback("bundle://vaev-driver/missing.qoi"_url).unwrap();
     });
-    parent.add({style, font, img});
+    parent.add({style, font, img, el});
 }
 
 // MARK: Build Table -----------------------------------------------------------
@@ -242,6 +242,7 @@ static void _buildTableChildren(Style::Computer& c, Gc::Ref<Dom::Node> node, Box
     Box tableBox{
         tableBoxStyle,
         tableWrapperBox.fontFace,
+        node->is<Dom::Element>()
     };
 
     tableBox.style->display = Display::Internal::TABLE_BOX;
@@ -285,7 +286,7 @@ static void _buildTable(Style::Computer& c, Rc<Style::Computed> style, Gc::Ref<D
     wrapperStyle->display = style->display;
     wrapperStyle->margin = style->margin;
 
-    Box wrapper = {wrapperStyle, font};
+    Box wrapper = {wrapperStyle, font, el};
     _buildTableChildren(c, el, wrapper, style);
     wrapper.attrs = _parseDomAttr(el);
 
@@ -324,8 +325,6 @@ static void _buildNode(Style::Computer& c, Gc::Ref<Dom::Node> node, Box& parent)
         _buildElement(c, *el, parent);
     } else if (auto text = node->is<Dom::Text>()) {
         _buildRun(c, *text, parent);
-    } else if (auto doc = node->is<Dom::Document>()) {
-        _buildChildren(c, *doc, parent);
     }
 }
 
@@ -333,7 +332,7 @@ export Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc) {
     if (auto el = doc->documentElement()) {
         auto style = c.computeFor(Style::Computed::initial(), *el);
         auto font = _lookupFontface(c.fontBook, *style);
-        Box root = {style, _lookupFontface(c.fontBook, *style)};
+        Box root = {style, _lookupFontface(c.fontBook, *style), el};
         _buildChildren(c, *el, root);
         return root;
     }
@@ -342,6 +341,7 @@ export Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc) {
     return {
         style,
         _lookupFontface(c.fontBook, *style),
+        nullptr
     };
 }
 
@@ -364,10 +364,10 @@ export Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::Computed> s
     auto prose = makeRc<Text::Prose>(proseStyle);
     if (style->content) {
         prose->append(style->content.str());
-        return {style, fontFace, prose};
+        return {style, fontFace, prose, nullptr};
     }
 
-    return {style, fontFace};
+    return {style, fontFace, nullptr};
 }
 
 } // namespace Vaev::Layout

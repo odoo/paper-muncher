@@ -1,0 +1,109 @@
+<test name="html-body-bg">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    height: 100svh;
+                    width: 100vw;
+                    margin: 0;
+                }
+
+                html {
+                    height: 100svh;
+                    width: 100vw;
+                }
+
+                #ref {
+                    height: 100svh;
+                    width: 100vw;
+                    background-color: #b98af1;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot/>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div id="ref" style="height: 100svh;width: 100vw;background-color: #b98af1;"></div>
+    </rendering>
+
+    <rendering>
+        <style>
+            html {
+                background-color: #b98af1;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <style>
+            body {
+                background-color: #b98af1;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <style>
+            html {
+                background-color: #b98af1;
+            }
+
+            body {
+                background-color: #ff2b8d;
+                display: none;
+            }
+        </style>
+    </rendering>
+</test>
+<test name="html-body-bg-delete-bg">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            body {
+                height: 100svh;
+                width: 100vw;
+                margin: 0;
+            }
+
+            html {
+                height: 100svh;
+                width: 100vw;
+            }
+
+            #ref {
+                height: 100svh;
+                width: 100vw;
+                background-color: rgba(185, 138, 241, 0.4);
+            }
+        </style>
+    </head>
+
+    <body>
+    <slot/>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div id="ref" style="height: 100svh;width: 100vw"></div>
+</rendering>
+
+<rendering>
+    <style>
+        body {
+            background-color: rgba(185, 138, 241, 0.4);
+        }
+    </style>
+</rendering>
+</test>
