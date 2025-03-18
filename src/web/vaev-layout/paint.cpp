@@ -82,7 +82,7 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
     auto currentColor = Vaev::resolve(frag.style().color, color);
     bool hasBorders = _paintBorders(frag, currentColor, borders);
     bool hasOutline = _paintOutline(frag, currentColor, outline);
-    Math::Rectf bound = frag.metrics.borderBox().cast<f64>();
+    Math::Rectf bound = frag.metrics.borderBox().round().cast<f64>();
 
     if (any(backgrounds) or hasBorders or hasOutline)
         stack.add(makeRc<Scene::Box>(bound, std::move(borders), std::move(outline), std::move(backgrounds)));
