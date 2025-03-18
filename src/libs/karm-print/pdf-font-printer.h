@@ -44,6 +44,8 @@ struct TtfGlyphInfoAdapter {
 
     Pdf::Array widths() {
         // 9.7.4.3 Glyph metrics in CIDFonts
+        // FIXME: (perf) when flushing, currGroupW can be empty only in the call outside of the loop
+        // FIXME: (perf) setting currGroupStart, happens either after flushing or in the first loop iteration
 
         Pdf::Array allWidths;
 
@@ -54,17 +56,15 @@ struct TtfGlyphInfoAdapter {
             if (currGroupW.len() == 0)
                 return;
             allWidths.pushBack(usize{currGroupStart});
-            allWidths.pushBack(Pdf::Array{currGroupW});
+            allWidths.pushBack(std::move(currGroupW));
             currGroupW = {};
         };
 
         Opt<u16> prevCid;
         for (auto const& [cid, gid] : codeMappings.iter()) {
 
-            if (prevCid and prevCid.unwrap() + 1 != cid) {
+            if (prevCid and prevCid.unwrap() + 1 != cid)
                 flushCollectedWidths();
-                continue;
-            }
 
             if (currGroupW.len() == 0)
                 currGroupStart = cid;
