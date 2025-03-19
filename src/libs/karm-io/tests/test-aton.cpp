@@ -64,10 +64,13 @@ test$("atof") {
     expect$(Math::epsilonEq(try$(Io::atof("5.00e-3"s)), 0.005));
 
     expectEq$(Io::atof("+"s), NONE);
+    expectEq$(Io::atof("."s), NONE);
     expectEq$(Io::atof("+."s), NONE);
     expectEq$(Io::atof("-"s), NONE);
     expectEq$(Io::atof("-+100"s), NONE);
     expectEq$(Io::atof("+-100"s), NONE);
+
+    expect$(Math::epsilonEq(try$(Io::atof("1px"s)), 1.0));
 
     return Ok();
 }

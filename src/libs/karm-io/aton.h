@@ -87,17 +87,18 @@ static inline Opt<isize> atoi(_SScan<E>& s, AtoxOptions options = {}) {
 
 template <StaticEncoding E>
 static inline Opt<f64> atof(_SScan<E>& s, AtoxOptions const& options = {}) {
-    i64 ipart = 0.0;
+    Opt<i64> ipart;
     f64 fpart = 0.0;
     i64 exp = 0;
     bool neg = false;
+    bool hasFpart = false;
 
     auto rollback = s.rollbackPoint();
 
     if (not s.skip('+'))
         neg = s.skip('-');
 
-    if (s.peek(0) != '.' or not _parseDigit(s.peek(1), options)) {
+    if (s.peek(0) != '.' and _parseDigit(s.peek(0), options)) {
         ipart = try$(atoi(s, options));
     }
 
@@ -107,6 +108,7 @@ static inline Opt<f64> atof(_SScan<E>& s, AtoxOptions const& options = {}) {
             auto maybeDigit = _nextDigit(s, options);
             if (not maybeDigit)
                 break;
+            hasFpart = true;
             fpart += maybeDigit.unwrap() * multiplier;
             multiplier /= options.base;
         }
@@ -118,7 +120,10 @@ static inline Opt<f64> atof(_SScan<E>& s, AtoxOptions const& options = {}) {
             exp = maybeExp.unwrap();
     }
 
-    auto result = (ipart + fpart) * pow(options.base, exp);
+    if (not ipart and not hasFpart)
+        return NONE;
+
+    auto result = (ipart.unwrapOr(0) + fpart) * pow(options.base, exp);
     if (neg)
         result = -result;
 
