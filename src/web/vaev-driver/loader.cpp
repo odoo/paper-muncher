@@ -28,7 +28,10 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url
     if (not mime.has())
         co_return Error::invalidInput("cannot determine MIME type");
 
-    auto respBody = co_try$(resp->body);
+    if (not resp->body)
+        co_return Error::invalidInput("response body is missing");
+    auto respBody = resp->body.unwrap();
+
     auto buf = co_trya$(Aio::readAllUtf8Async(*respBody));
 
     if (mime->is("text/html"_mime)) {
@@ -57,7 +60,9 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url
 
 export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http::Client& client, Mime::Url const& url) {
     auto resp = co_trya$(client.getAsync(url));
-    auto respBody = co_try$(resp->body);
+    if (not resp->body)
+        co_return Error::invalidInput("response body is missing");
+    auto respBody = resp->body.unwrap();
     auto buf = co_trya$(Aio::readAllUtf8Async(*respBody));
 
     auto dom = heap.alloc<Dom::Document>(url);

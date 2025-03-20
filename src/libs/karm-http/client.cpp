@@ -116,7 +116,7 @@ struct SimpleClient : public Client {
 
         if (auto contentLength = response.header.contentLength()) {
             response.body = makeRc<ContentBody>(reader.bytes(), std::move(conn), contentLength.unwrap());
-        } else if (auto transferEncoding = response.header.get("Transfer-Encoding"s)) {
+        } else if (auto transferEncoding = response.header.tryGet("Transfer-Encoding"s)) {
             logWarn("Transfer-Encoding: {} not supported", transferEncoding);
         } else {
             // NOTE: When there is no content length, and no transfer encoding,
