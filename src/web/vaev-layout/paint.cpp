@@ -2,6 +2,7 @@ module;
 
 #include <karm-scene/box.h>
 #include <karm-scene/image.h>
+#include <karm-scene/clip.h>
 #include <karm-scene/text.h>
 #include <vaev-style/computer.h>
 
@@ -68,7 +69,7 @@ static bool _paintOutline(Frag& frag, Gfx::Color currentColor, Gfx::Outline& out
 }
 
 static bool _needsNewStackingContext(Frag const& frag) {
-    return frag.style().zIndex != Keywords::AUTO;
+    return frag.style().zIndex != Keywords::AUTO || frag.style().clip.has();
 }
 
 static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
@@ -170,8 +171,63 @@ static void _paintStackingContext(Frag& frag, Scene::Stack& stack) {
     });
 }
 
+static Math::Path _resolveClip(const Frag& frag) {
+    Math::Path result;
+    auto& clip = frag.style().clip.unwrap();
+
+    // TODO: handle SVG cases (https://drafts.fxtf.org/css-masking/#typedef-geometry-box)
+    RectAu referenceBox = clip.referenceBox.visit(Visitor {
+        [&](const Keywords::BorderBox&) {
+            return frag.metrics.borderBox();
+        },
+        [&](const Keywords::PaddingBox&) {
+            return frag.metrics.paddingBox();
+        },
+        [&](const Keywords::ContentBox&) {
+            return frag.metrics.contentBox();
+        },
+        [&](const Keywords::MarginBox&) {
+            return frag.metrics.marginBox();
+        },
+        [&](const Keywords::FillBox&) {
+            return frag.metrics.contentBox();
+        },
+        [&](const Keywords::StrokeBox&) {
+            return frag.metrics.borderBox();
+        },
+        [&](const Keywords::ViewBox&) {
+            return frag.metrics.borderBox();
+        },
+    });
+
+    if (not clip.shape) {
+        result.rect(referenceBox.round().cast<f64>());
+        return result;
+    }
+
+    return clip.shape.unwrap().visit(Visitor {
+        [&](const Polygon& polygon) {
+            // TODO: handle fill rule
+            auto resolver = Resolver();
+            const auto it = begin(polygon.points);
+            result.moveTo(Math::Vec2f(
+                    resolver.resolve(it->v0, referenceBox.width).cast<f64>(),
+                    resolver.resolve(it->v1, referenceBox.height).cast<f64>()
+            ));
+            for (auto& point : Slice(it+1, end(polygon.points))) {
+                result.lineTo(Math::Vec2f(
+                    resolver.resolve(point.v0, referenceBox.width).cast<f64>(),
+                    resolver.resolve(point.v1, referenceBox.height).cast<f64>()
+                ));
+            }
+
+            return result;
+        }
+    });
+}
+
 static void _establishStackingContext(Frag& frag, Scene::Stack& stack) {
-    auto innerStack = makeRc<Scene::Stack>();
+    Rc<Scene::Stack> innerStack = frag.style().clip.has() ? makeRc<Scene::Clip>(_resolveClip(frag)) : makeRc<Scene::Stack>();
     innerStack->zIndex = frag.style().zIndex.unwrapOr<isize>(0);
     _paintStackingContext(frag, *innerStack);
     stack.add(std::move(innerStack));
