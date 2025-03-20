@@ -20,7 +20,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
     auto dom = co_await Vaev::Driver::fetchDocumentAsync(heap, *client, url);
 
-    co_return Ui::runApp(
+    co_return co_await Ui::runAsync(
         ctx,
         Vaev::Browser::app(heap, *client, url, dom)
     );
