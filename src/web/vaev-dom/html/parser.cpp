@@ -1162,8 +1162,34 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
     }
 
     // TODO: An end tag whose tag name is "br"
-
     // TODO: A start tag whose tag name is one of: "area", "br", "embed", "img", "keygen", "wbr"
+    else if (
+        t.name == "br" or
+        (t.type == HtmlToken::START_TAG and
+         (t.name == "area" or t.name == "br" or t.name == "embed" or t.name == "img" or t.name == "keygen" or t.name == "wbr")
+        )
+    ) {
+        if (t.type == HtmlToken::END_TAG) {
+            // Parse error.
+            _raise();
+
+            // Drop the attributes from the token, and act as described in the next entry; i.e. act as if
+            // this was a "br" start tag token with no attributes, rather than the end tag token that it actually is.
+            // FIXME: cannot drop attributes since token is const
+        }
+
+        // Reconstruct the active formatting elements, if any.
+        _reconstructActiveFormattingElements();
+
+        // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
+        _insertHtmlElement(t);
+        _openElements.popBack();
+
+        // TODO: Acknowledge the token's self-closing flag, if it is set.
+
+        // Set the frameset-ok flag to "not ok".
+        _framesetOk = false;
+    }
 
     // A start tag whose tag name is "input"
     else if (t.type == HtmlToken::START_TAG and t.name == "input") {
