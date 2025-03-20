@@ -12,7 +12,10 @@ import :values;
 
 namespace Vaev::Layout {
 
-static void _buildNode(Style::Computer& c, Gc::Ref<Dom::Node> node, Box& parent);
+static void _buildBlockLevelBox(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::Computed> style, Box& parent, Display display);
+static void _buildTable(Style::Computer& c, Rc<Style::Computed> style, Gc::Ref<Dom::Element> el, Box& parent);
+static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::Computed> parentStyle, InlineBox& rootInlineBox);
+static void _buildChildInternalDisplay(Style::Computer& c, Gc::Ref<Dom::Element> child, Rc<Style::Computed> childStyle, Box& parent);
 
 // MARK: Attributes ------------------------------------------------------------
 
@@ -84,17 +87,12 @@ static Rc<Karm::Text::Fontface> _lookupFontface(Text::FontBook& fontBook, Style:
     return Text::Fontface::fallback();
 }
 
-auto RE_SEGMENT_BREAK = Re::single('\n', '\r', '\f', '\v');
+bool isSegmentBreak(Rune rune) {
+    return rune == '\n' or rune == '\r' or rune == '\f' or rune == '\v';
+}
 
-static void _buildRun(Style::Computer& c, Gc::Ref<Dom::Text> node, Box& parent) {
-    auto style = makeRc<Style::Computed>(Style::Computed::initial());
-    style->inherit(*parent.style);
-
-    auto fontFace = _lookupFontface(c.fontBook, *style);
-    Io::SScan scan{node->data()};
-    scan.eat(Re::space());
-    if (scan.ended())
-        return;
+Text::ProseStyle _buildProseStyle(Style::Computer& c, Rc<Style::Computed> parentStyle) {
+    auto fontFace = _lookupFontface(c.fontBook, *parentStyle);
 
     // FIXME: We should pass this around from the top in order to properly resolve rems
     Resolver resolver{
@@ -104,12 +102,13 @@ static void _buildRun(Style::Computer& c, Gc::Ref<Dom::Text> node, Box& parent) 
     Text::ProseStyle proseStyle{
         .font = {
             fontFace,
-            resolver.resolve(style->font->size).cast<f64>(),
+            resolver.resolve(parentStyle->font->size).cast<f64>(),
         },
+        .color = parentStyle->color,
         .multiline = true,
     };
 
-    switch (style->text->align) {
+    switch (parentStyle->text->align) {
     case TextAlign::START:
     case TextAlign::LEFT:
         proseStyle.align = Text::TextAlign::LEFT;
@@ -129,75 +128,292 @@ static void _buildRun(Style::Computer& c, Gc::Ref<Dom::Text> node, Box& parent) 
         break;
     }
 
-    auto prose = makeRc<Text::Prose>(proseStyle);
-    auto whitespace = style->text->whiteSpace;
+    return proseStyle;
+}
+
+void _transformAndAppendRuneToProse(Rc<Text::Prose> prose, Rune rune, TextTransform transform) {
+    switch (transform) {
+    case TextTransform::UPPERCASE:
+        prose->append(toAsciiUpper(rune));
+        break;
+
+    case TextTransform::LOWERCASE:
+        prose->append(toAsciiLower(rune));
+        break;
+
+    case TextTransform::NONE:
+    default:
+        prose->append(rune);
+        break;
+    }
+}
+
+// https://www.w3.org/TR/css-text-3/#white-space-phase-1
+// https://www.w3.org/TR/css-text-3/#white-space-phase-2
+void _appendTextToInlineBox(Io::SScan scan, Rc<Style::Computed> parentStyle, Rc<Text::Prose> prose) {
+    auto whitespace = parentStyle->text->whiteSpace;
+    bool whiteSpacesAreCollapsible =
+        whitespace == WhiteSpace::NORMAL or
+        whitespace == WhiteSpace::NOWRAP or
+        whitespace == WhiteSpace::PRE_LINE;
+
+    // A sequence of collapsible spaces at the beginning of a line is removed.
+    if (not prose->_runes.len())
+        scan.eat(Re::space());
 
     while (not scan.ended()) {
-        switch (style->text->transform) {
-        case TextTransform::UPPERCASE:
-            prose->append(toAsciiUpper(scan.next()));
-            break;
+        auto rune = scan.next();
 
-        case TextTransform::LOWERCASE:
-            prose->append(toAsciiLower(scan.next()));
-            break;
-
-        case TextTransform::NONE:
-            prose->append(scan.next());
-            break;
-
-        default:
-            break;
+        if (not isAsciiSpace(rune)) {
+            _transformAndAppendRuneToProse(prose, rune, parentStyle->text->transform);
+            continue;
         }
 
-        if (whitespace == WhiteSpace::PRE) {
-            auto tok = scan.token(Re::space());
-            if (tok)
-                prose->append(tok);
-        } else if (whitespace == WhiteSpace::PRE_LINE) {
-            bool hasBlank = false;
-            if (scan.eat(Re::blank())) {
-                hasBlank = true;
+        // https://www.w3.org/TR/css-text-3/#collapse
+        if (whiteSpacesAreCollapsible) {
+            // Any sequence of collapsible spaces and tabs immediately preceding or following a segment break is removed.
+            bool visitedSegmentBreak = false;
+            while (true) {
+                if (isSegmentBreak(rune))
+                    visitedSegmentBreak = true;
+
+                if (scan.ended() or not isAsciiSpace(scan.peek()))
+                    break;
+
+                rune = scan.next();
             }
 
-            if (scan.eat(RE_SEGMENT_BREAK)) {
+            // Any collapsible space immediately following another collapsible space—​even one outside the boundary
+            // of the inline containing that space, provided both spaces are within the same inline formatting
+            // context—​is collapsed to have zero advance width. (It is invisible, but retains its soft wrap
+            // opportunity, if any.)
+            // TODO: not compliant regarding wrap opportunity
+
+            // https://www.w3.org/TR/css-text-3/#valdef-white-space-pre-line
+            // Collapsible segment breaks are transformed for rendering according to the segment
+            // break transformation rules.
+            if (whitespace == WhiteSpace::PRE_LINE and visitedSegmentBreak)
                 prose->append('\n');
-                scan.eat(Re::blank());
-                hasBlank = false;
-            }
-
-            if (hasBlank)
+            else
                 prose->append(' ');
+        } else if (whitespace == WhiteSpace::PRE) {
+            prose->append(rune);
         } else {
-            // NORMAL
-            if (scan.eat(Re::space()))
-                prose->append(' ');
+            panic("unimplemented whitespace case");
+        }
+    }
+}
+
+void _buildText(Gc::Ref<Dom::Text> node, Rc<Style::Computed> parentStyle, InlineBox& rootInlineBox) {
+    Io::SScan scan{node->data()};
+    scan.eat(Re::space());
+    if (scan.ended())
+        return;
+
+    _appendTextToInlineBox(node->data(), parentStyle, rootInlineBox.prose);
+}
+
+// https://www.w3.org/TR/css-inline-3/#model
+void _flushRootInlineBoxIntoAnonymousBox(Box& parent, InlineBox& rootInlineBox) {
+    if (not rootInlineBox.active())
+        return;
+
+    // The root inline box inherits from its parent block container, but is otherwise unstyleable.
+    auto style = makeRc<Style::Computed>(Style::Computed::initial());
+    style->inherit(*parent.style);
+    style->display = Display{Display::Inside::FLOW, Display::Outside::BLOCK};
+
+    parent.add({style, parent.fontFace, rootInlineBox});
+
+    rootInlineBox.clear();
+}
+
+// Similar abstraction to https://webkit.org/blog/115/webcore-rendering-ii-blocks-and-inlines/
+export struct InlineFlowBuilder {
+    Box& rootBox;
+    InlineBox& rootInlineBox;
+
+    InlineFlowBuilder(Box& rootBox, InlineBox& rootInlineBox)
+        : rootBox(rootBox), rootInlineBox(rootInlineBox) {}
+
+    // https://www.w3.org/TR/css-display-3/#box-generation
+    void _buildChildBoxDisplay(Style::Computer& c, Gc::Ref<Dom::Element> child, Rc<Style::Computed> childStyle, Display display) {
+        if (display == Display::NONE)
+            return;
+        else
+            _buildChildren(c, child, childStyle);
+    }
+
+    void _buildChildDefaultDisplay(Style::Computer& c, Gc::Ref<Dom::Element> child, Rc<Style::Computed> childStyle, Display display);
+
+    // Dispatching children from block-level context based on their node type and display property in case of element
+    // https://www.w3.org/TR/css-display-3/#the-display-properties
+    void _buildChildren(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::Computed> style) {
+        for (auto child = el->firstChild(); child; child = child->nextSibling()) {
+            if (auto el = child->is<Dom::Element>()) {
+                auto childStyle = c.computeFor(*style, *el);
+                auto display = childStyle->display;
+
+                if (display.type() == Display::Type::BOX) {
+                    _buildChildBoxDisplay(c, *el, style, display);
+                } else if (display.type() == Display::Type::INTERNAL) {
+                    _buildChildInternalDisplay(c, *el, childStyle, rootBox);
+                } else {
+                    _buildChildDefaultDisplay(c, *el, childStyle, display);
+                }
+            } else if (auto text = child->is<Dom::Text>()) {
+                _buildText(*text, style, rootInlineBox);
+            }
         }
     }
 
-    parent.add({style, fontFace, std::move(prose)});
-}
-
-// MARK: Build Block -----------------------------------------------------------
-
-void _buildChildren(Style::Computer& c, Gc::Ref<Dom::Node> node, Box& parent) {
-    for (auto child = node->firstChild(); child; child = child->nextSibling()) {
-        _buildNode(c, *child, parent);
+    void buildFromElement(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::Computed>& style) {
+        if (el->tagName == Html::IMG) {
+            _buildImage(c, *el, rootBox.style, rootInlineBox);
+        } else if (el->tagName == Html::BR) {
+            _flushRootInlineBoxIntoAnonymousBox(rootBox, rootInlineBox);
+        } else {
+            auto proseStyle = _buildProseStyle(c, style);
+            rootInlineBox.startInlineBox(proseStyle);
+            _buildChildren(c, el, style);
+            rootInlineBox.endInlineBox();
+        }
     }
+};
+
+export struct BlockFlowBuilder {
+    Box& box;
+    InlineBox rootInlineBox;
+
+    BlockFlowBuilder(Style::Computer& c, Box& box)
+        : box(box), rootInlineBox(_buildProseStyle(c, box.style)) {}
+
+    // https://www.w3.org/TR/css-display-3/#box-generation
+    void _buildChildBoxDisplay(Style::Computer& c, Gc::Ref<Dom::Node> child, Display display) {
+        if (display == Display::NONE)
+            return;
+        else
+            _buildChildren(c, child);
+    }
+
+    // Dispatching children from an Inline Flow context based on their outer and inner roles
+    // https://www.w3.org/TR/css-display-3/#outer-role
+    // https://www.w3.org/TR/css-display-3/#inner-model
+    void _buildChildDefaultDisplay(Style::Computer& c, Gc::Ref<Dom::Element> child, Rc<Style::Computed> childStyle, Display display) {
+        if (display != Display::Outside::INLINE) {
+            _flushRootInlineBoxIntoAnonymousBox(box, rootInlineBox);
+            _buildBlockLevelBox(c, child, childStyle, box, display);
+            return;
+        }
+
+        if (display == Display::Inside::FLOW) {
+            InlineFlowBuilder{box, rootInlineBox}.buildFromElement(c, child, childStyle);
+        } else if (display == Display::Inside::FLOW_ROOT) {
+            BlockFlowBuilder::fromElement(c, box, childStyle, child);
+        } else {
+            // FIXME: fallback to FLOW since not implemented
+            InlineFlowBuilder{box, rootInlineBox}.buildFromElement(c, child, childStyle);
+        }
+    }
+
+    // Dispatching children from block-level context based on their node type and display property in case of element
+    // https://www.w3.org/TR/css-display-3/#the-display-properties
+    void _buildChildren(Style::Computer& c, Gc::Ref<Dom::Node> parent) {
+        for (auto child = parent->firstChild(); child; child = child->nextSibling()) {
+            if (auto el = child->is<Dom::Element>()) {
+                auto childStyle = c.computeFor(*box.style, *el);
+                auto display = childStyle->display;
+
+                if (display.type() == Display::Type::BOX) {
+                    _buildChildBoxDisplay(c, *el, display);
+                } else if (display.type() == Display::Type::INTERNAL) {
+                    _buildChildInternalDisplay(c, *el, childStyle, box);
+                } else {
+                    _buildChildDefaultDisplay(c, *el, childStyle, display);
+                }
+            } else if (auto text = child->is<Dom::Text>()) {
+                _buildText(*text, box.style, rootInlineBox);
+            }
+        }
+    }
+
+    void _finalizeParentBoxAndFlushInline(Box& parent, InlineBox& rootInlineBox) {
+        if (not rootInlineBox.active())
+            return;
+
+        if (parent.children()) {
+            _flushRootInlineBoxIntoAnonymousBox(parent, rootInlineBox);
+            return;
+        }
+
+        parent.content = rootInlineBox;
+        rootInlineBox.clear();
+    }
+
+    void buildFromElement(Style::Computer& c, Gc::Ref<Dom::Element> el) {
+        if (el->tagName == Html::IMG) {
+            _buildImage(c, *el, box.style, rootInlineBox);
+        } else if (el->tagName == Html::SVG) {
+            // TODO: _buildSVG
+        } else if (el->tagName == Html::BR) {
+            // do nothing
+        } else {
+            _buildChildren(c, el);
+        }
+        _finalizeParentBoxAndFlushInline(box, rootInlineBox);
+    }
+
+    void build(Style::Computer& c, Gc::Ref<Dom::Node> node) {
+        if (auto el = node->is<Dom::Element>()) {
+            buildFromElement(c, *el);
+            return;
+        }
+
+        _buildChildren(c, node);
+        _finalizeParentBoxAndFlushInline(box, rootInlineBox);
+    }
+
+    static void fromElement(Style::Computer& c, Box& parent, Rc<Style::Computed> style, Gc::Ref<Dom::Element> el) {
+        auto font = _lookupFontface(c.fontBook, *style);
+        Box box = {style, font};
+        BlockFlowBuilder{c, box}.buildFromElement(c, el);
+
+        box.attrs = _parseDomAttr(el);
+        parent.add(std::move(box));
+    }
+};
+
+// https://www.w3.org/TR/css-display-3/#layout-specific-display
+void _buildChildInternalDisplay(Style::Computer& c, Gc::Ref<Dom::Element> child, Rc<Style::Computed> childStyle, Box& parent) {
+    // FIXME: We should create wrapping boxes related to table or ruby, following the FC specification. However, for now,
+    // we just wrap it in a single box.
+    BlockFlowBuilder::fromElement(c, parent, childStyle, child);
 }
 
-static void _buildBlock(Style::Computer& c, Rc<Style::Computed> style, Gc::Ref<Dom::Element> el, Box& parent) {
-    auto font = _lookupFontface(c.fontBook, *style);
-    Box box = {style, font};
-    _buildChildren(c, el, box);
-    box.attrs = _parseDomAttr(el);
-    parent.add(std::move(box));
+// Dispatching children from an Inline Flow context based on their outer and inner roles
+// https://www.w3.org/TR/css-display-3/#outer-role
+// https://www.w3.org/TR/css-display-3/#inner-model
+void InlineFlowBuilder::_buildChildDefaultDisplay(Style::Computer& c, Gc::Ref<Dom::Element> child, Rc<Style::Computed> childStyle, Display display) {
+    if (display != Display::Outside::INLINE) {
+        _flushRootInlineBoxIntoAnonymousBox(rootBox, rootInlineBox);
+        _buildBlockLevelBox(c, child, childStyle, rootBox, display);
+        return;
+    }
+
+    if (display == Display::Inside::FLOW) {
+        buildFromElement(c, child, childStyle);
+    } else if (display == Display::Inside::FLOW_ROOT) {
+        BlockFlowBuilder::fromElement(c, rootBox, childStyle, child);
+    } else {
+        // FIXME: fallback to FLOW since not implemented
+        buildFromElement(c, child, childStyle);
+    }
 }
 
 // MARK: Build Replace ---------------------------------------------------------
 
-static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& parent) {
-    auto style = c.computeFor(*parent.style, el);
+static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::Computed> parentStyle, InlineBox& rootInlineBox) {
+    auto style = c.computeFor(*parentStyle, el);
     auto font = _lookupFontface(c.fontBook, *style);
 
     auto src = el->getAttribute(Html::SRC_ATTR).unwrapOr(""s);
@@ -207,7 +423,8 @@ static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& paren
     auto img = Karm::Image::load(url).unwrapOrElse([] {
         return Karm::Image::loadOrFallback("bundle://vaev-driver/missing.qoi"_url).unwrap();
     });
-    parent.add({style, font, img});
+
+    rootInlineBox.add({style, font});
 }
 
 // MARK: Build Table -----------------------------------------------------------
@@ -226,7 +443,10 @@ static void _buildTableChildren(Style::Computer& c, Gc::Ref<Dom::Node> node, Box
         for (auto child = node->firstChild(); child; child = child->nextSibling()) {
             if (auto el = child->is<Dom::Element>()) {
                 if (el->tagName == Html::CAPTION) {
-                    _buildNode(c, *el, tableWrapperBox);
+                    BlockFlowBuilder::fromElement(
+                        c, tableWrapperBox,
+                        c.computeFor(*tableWrapperBox.style, *el), *el
+                    );
                 }
             }
         }
@@ -235,7 +455,10 @@ static void _buildTableChildren(Style::Computer& c, Gc::Ref<Dom::Node> node, Box
     for (auto child = node->firstChild(); child; child = child->nextSibling()) {
         if (auto el = child->is<Dom::Element>()) {
             if (el->tagName != Html::CAPTION) {
-                _buildNode(c, *el, tableBox);
+                BlockFlowBuilder::fromElement(
+                    c, tableBox,
+                    c.computeFor(*tableBox.style, *el), *el
+                );
             }
         }
     }
@@ -245,10 +468,25 @@ static void _buildTableChildren(Style::Computer& c, Gc::Ref<Dom::Node> node, Box
         for (auto child = node->firstChild(); child; child = child->nextSibling()) {
             if (auto el = child->is<Dom::Element>()) {
                 if (el->tagName == Html::CAPTION) {
-                    _buildNode(c, *el, tableWrapperBox);
+                    BlockFlowBuilder::fromElement(
+                        c, tableWrapperBox,
+                        c.computeFor(*tableWrapperBox.style, *el), *el
+                    );
                 }
             }
         }
+    }
+}
+
+// https://www.w3.org/TR/css-display-3/#outer-role
+static void _buildBlockLevelBox(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::Computed> style, Box& parent, Display display) {
+    if (display == Display::Inside::TABLE) {
+        _buildTable(c, style, el, parent);
+    } else if (display == Display::Inside::FLOW or display == Display::Inside::FLEX) {
+        BlockFlowBuilder::fromElement(c, parent, style, el);
+    } else {
+        // FIXME: fallback to FLOW since not implemented
+        BlockFlowBuilder::fromElement(c, parent, style, el);
     }
 }
 
@@ -268,44 +506,13 @@ static void _buildTable(Style::Computer& c, Rc<Style::Computed> style, Gc::Ref<D
 
 // MARK: Build -----------------------------------------------------------------
 
-static void _buildElement(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& parent) {
-    if (el->tagName == Html::IMG) {
-        _buildImage(c, el, parent);
-        return;
-    }
-
-    auto style = c.computeFor(*parent.style, el);
-    auto font = _lookupFontface(c.fontBook, *style);
-
-    auto display = style->display;
-
-    if (display == Display::NONE) {
-        // Do nothing
-    } else if (display == Display::CONTENTS) {
-        _buildChildren(c, el, parent);
-    } else if (display == Display::TABLE) {
-        _buildTable(c, style, el, parent);
-    } else {
-        _buildBlock(c, style, el, parent);
-    }
-}
-
-static void _buildNode(Style::Computer& c, Gc::Ref<Dom::Node> node, Box& parent) {
-    if (auto el = node->is<Dom::Element>()) {
-        _buildElement(c, *el, parent);
-    } else if (auto text = node->is<Dom::Text>()) {
-        _buildRun(c, *text, parent);
-    } else if (auto doc = node->is<Dom::Document>()) {
-        _buildChildren(c, *doc, parent);
-    }
-}
-
 export Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc) {
     if (auto el = doc->documentElement()) {
         auto style = c.computeFor(Style::Computed::initial(), *el);
         auto font = _lookupFontface(c.fontBook, *style);
-        Box root = {style, _lookupFontface(c.fontBook, *style)};
-        _buildChildren(c, *el, root);
+
+        Box root = {style, font};
+        BlockFlowBuilder{c, root}.build(c, doc);
         return root;
     }
     // NOTE: Fallback in case of an empty document
@@ -335,7 +542,7 @@ export Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::Computed> s
     auto prose = makeRc<Text::Prose>(proseStyle);
     if (style->content) {
         prose->append(style->content.str());
-        return {style, fontFace, prose};
+        return {style, fontFace, InlineBox{prose}};
     }
 
     return {style, fontFace};

@@ -46,8 +46,28 @@ void Prose::clear() {
     _cells.clear();
     _blocks.clear();
     _blocksMeasured = false;
-    _beginBlock();
     _lines.clear();
+
+    _beginBlock();
+}
+
+void Prose::copySpanStack(Prose const& prose) {
+    Vec<Box<Text::Prose::Span>> spans;
+    auto currSpan = prose._currentSpan;
+    while (currSpan) {
+        spans.pushBack(*currSpan);
+        currSpan = currSpan->parent;
+    }
+
+    reverse(mutSub(spans));
+    _spans = std::move(spans);
+
+    for (usize i = 0; i + 1 < _spans.len(); ++i) {
+        _spans[i + 1]->parent = &*_spans[i];
+    }
+
+    if (_spans.len())
+        _currentSpan = &*last(_spans);
 }
 
 void Prose::append(Slice<Rune> runes) {
