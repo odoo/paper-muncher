@@ -10,6 +10,7 @@
 #include <vaev-base/flex.h>
 #include <vaev-base/float.h>
 #include <vaev-base/font.h>
+#include <vaev-base/geometry.h>
 #include <vaev-base/insets.h>
 #include <vaev-base/line.h>
 #include <vaev-base/numbers.h>
@@ -43,6 +44,7 @@ struct Computed {
     BoxSizing boxSizing;
     Cow<SizingProps> sizing;
     Overflows overflows;
+    Opt<BasicShape> clip;
 
     // 9.3 Positioning schemes
     // https://www.w3.org/TR/CSS22/visuren.html#positioning-scheme

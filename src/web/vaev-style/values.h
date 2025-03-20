@@ -10,6 +10,7 @@
 #include <vaev-base/flex.h>
 #include <vaev-base/float.h>
 #include <vaev-base/font.h>
+#include <vaev-base/geometry.h>
 #include <vaev-base/insets.h>
 #include <vaev-base/keywords.h>
 #include <vaev-base/length.h>
@@ -54,6 +55,16 @@ struct ValueParser<Align> {
 template <>
 struct ValueParser<Angle> {
     static Res<Angle> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
+struct ValueParser<BasicShape> {
+    static Res<BasicShape> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
+struct ValueParser<Polygon> {
+    static Res<Polygon> parse(Cursor<Css::Sst>& c);
 };
 
 template <>
