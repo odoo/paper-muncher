@@ -87,7 +87,9 @@ static Rc<Karm::Text::Fontface> _lookupFontface(Text::FontBook& fontBook, Style:
     return Text::Fontface::fallback();
 }
 
-auto RE_SEGMENT_BREAK = Re::single('\n', '\r', '\f', '\v');
+bool isSegmentBreak(Rune rune) {
+    return rune == '\n' or rune == '\r' or rune == '\f' or rune == '\v';
+}
 
 Text::ProseStyle _buildProseStyle(Style::Computer& c, Rc<Style::Computed> parentStyle) {
     auto fontFace = _lookupFontface(c.fontBook, *parentStyle);
@@ -129,48 +131,75 @@ Text::ProseStyle _buildProseStyle(Style::Computer& c, Rc<Style::Computed> parent
     return proseStyle;
 }
 
+void _transformAndAppendRuneToProse(Rc<Text::Prose> prose, Rune rune, TextTransform transform) {
+    switch (transform) {
+    case TextTransform::UPPERCASE:
+        prose->append(toAsciiUpper(rune));
+        break;
+
+    case TextTransform::LOWERCASE:
+        prose->append(toAsciiLower(rune));
+        break;
+
+    case TextTransform::NONE:
+    default:
+        prose->append(rune);
+        break;
+    }
+}
+
+// https://www.w3.org/TR/css-text-3/#white-space-phase-1
+// https://www.w3.org/TR/css-text-3/#white-space-phase-2
 void _appendTextToInlineBox(Io::SScan scan, Rc<Style::Computed> parentStyle, Rc<Text::Prose> prose) {
     auto whitespace = parentStyle->text->whiteSpace;
+    bool whiteSpacesAreCollapsible =
+        whitespace == WhiteSpace::NORMAL or
+        whitespace == WhiteSpace::NOWRAP or
+        whitespace == WhiteSpace::PRE_LINE;
+
+    // A sequence of collapsible spaces at the beginning of a line is removed.
+    if (not prose->_runes.len())
+        scan.eat(Re::space());
+
     while (not scan.ended()) {
-        switch (parentStyle->text->transform) {
-        case TextTransform::UPPERCASE:
-            prose->append(toAsciiUpper(scan.next()));
-            break;
+        auto rune = scan.next();
 
-        case TextTransform::LOWERCASE:
-            prose->append(toAsciiLower(scan.next()));
-            break;
-
-        case TextTransform::NONE:
-            prose->append(scan.next());
-            break;
-
-        default:
-            break;
+        if (not isAsciiSpace(rune)) {
+            _transformAndAppendRuneToProse(prose, rune, parentStyle->text->transform);
+            continue;
         }
 
-        if (whitespace == WhiteSpace::PRE) {
-            auto tok = scan.token(Re::space());
-            if (tok)
-                prose->append(tok);
-        } else if (whitespace == WhiteSpace::PRE_LINE) {
-            bool hasBlank = false;
-            if (scan.eat(Re::blank())) {
-                hasBlank = true;
+        // https://www.w3.org/TR/css-text-3/#collapse
+        if (whiteSpacesAreCollapsible) {
+            // Any sequence of collapsible spaces and tabs immediately preceding or following a segment break is removed.
+            bool visitedSegmentBreak = false;
+            while (true) {
+                if (isSegmentBreak(rune))
+                    visitedSegmentBreak = true;
+
+                if (scan.ended() or not isAsciiSpace(scan.peek()))
+                    break;
+
+                rune = scan.next();
             }
 
-            if (scan.eat(RE_SEGMENT_BREAK)) {
+            // Any collapsible space immediately following another collapsible space—​even one outside the boundary
+            // of the inline containing that space, provided both spaces are within the same inline formatting
+            // context—​is collapsed to have zero advance width. (It is invisible, but retains its soft wrap
+            // opportunity, if any.)
+            // TODO: not compliant regarding wrap opportunity
+
+            // https://www.w3.org/TR/css-text-3/#valdef-white-space-pre-line
+            // Collapsible segment breaks are transformed for rendering according to the segment
+            // break transformation rules.
+            if (whitespace == WhiteSpace::PRE_LINE and visitedSegmentBreak)
                 prose->append('\n');
-                scan.eat(Re::blank());
-                hasBlank = false;
-            }
-
-            if (hasBlank)
+            else
                 prose->append(' ');
+        } else if (whitespace == WhiteSpace::PRE) {
+            prose->append(rune);
         } else {
-            // NORMAL
-            if (scan.eat(Re::space()))
-                prose->append(' ');
+            panic("unimplemented whitespace case");
         }
     }
 }
@@ -181,7 +210,7 @@ void _buildText(Gc::Ref<Dom::Text> node, Rc<Style::Computed> parentStyle, Inline
     if (scan.ended())
         return;
 
-    _appendTextToInlineBox(scan, parentStyle, rootInlineBox.prose);
+    _appendTextToInlineBox(node->data(), parentStyle, rootInlineBox.prose);
 }
 
 // https://www.w3.org/TR/css-inline-3/#model
