@@ -7,6 +7,7 @@
 
 #include "base.h"
 #include "computed.h"
+#include "vaev-base/geometry.h"
 #include "values.h"
 
 // https://www.w3.org/TR/CSS22/propidx.html
@@ -1229,6 +1230,35 @@ struct ContentProp {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         value = try$(parseValue<String>(c));
+        return Ok();
+    }
+};
+
+// MARK: Clip Path -------------------------------------------------------------
+
+struct ClipPathProp {
+    using Value = Union</* Url, */ BasicShape, Keywords::None>;
+    Value value = initial();
+
+    static constexpr Str name() { return "clip-path"; }
+
+    static Keywords::None initial() { return Keywords::NONE; }
+
+    void apply(Computed& c) const {
+        if (auto clipShape = value.is<BasicShape>())
+            c.clip = *clipShape;
+        else
+            c.clip = NONE;
+    }
+
+    static Value load(Computed const& c) {
+        if (c.clip.has())
+            return c.clip.unwrap();
+        return Keywords::NONE;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<Value>(c));
         return Ok();
     }
 };
@@ -3127,6 +3157,9 @@ using _StyleProp = Union<
     // Borders - Table
     BorderCollapseProp,
     BorderSpacingProp,
+
+    // Clip
+    ClipPathProp,
 
     // Content
     ContentProp,

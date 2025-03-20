@@ -105,6 +105,68 @@ Res<Angle> ValueParser<Angle>::parse(Cursor<Css::Sst>& c) {
     return Error::invalidData("expected angle");
 }
 
+// MARK: BasicShape = [ <basic-shape> || <geometry-box> ]
+// https://drafts.fxtf.org/css-masking/#the-clip-path
+Res<BasicShape> ValueParser<BasicShape>::parse(Cursor<Css::Sst>& c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    BasicShape resultShape;
+    auto box = parseValue<GeometryBox>(c);
+    auto shape = parseValue<BasicShapeFunction>(c);
+
+    if (shape and not box)
+        box = parseValue<GeometryBox>(c);
+
+    if (not shape and not box)
+        return Error::invalidData("expected basic shape or geometry box");
+
+    resultShape.referenceBox = box.unwrapOr(Keywords::BORDER_BOX);
+
+    if (shape)
+        resultShape.shape = shape.unwrap();
+
+    return Ok(resultShape);
+}
+
+// https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-polygon
+Res<Polygon> ValueParser<Polygon>::parse(Cursor<Css::Sst>& c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c->prefix == Css::Token::function("polygon(")) {
+        Polygon result;
+        Cursor<Css::Sst> scan = c->content;
+
+        bool begin = true;
+        if (auto fill = parseValue<FillRule>(scan)) {
+            result.fillRule = fillRuleToGfx(fill.unwrap());
+            begin = false;
+        }
+
+        while ((begin or scan.skip(Css::Token::COMMA)) and not scan.ended()) {
+            begin = false;
+
+            eatWhitespace(scan);
+            auto x = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
+            eatWhitespace(scan);
+            auto y = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
+            eatWhitespace(scan);
+            result.points.emplaceBack(
+                x,
+                y
+            );
+        }
+
+        if (not result.points)
+            return Error::invalidData("expected points in polygon");
+
+        c.next();
+        return Ok(result);
+    }
+    return Error::invalidData("invalid polygon");
+}
+
 // MARK: Boolean
 // https://drafts.csswg.org/mediaqueries/#grid
 Res<bool> ValueParser<bool>::parse(Cursor<Css::Sst>& c) {
@@ -911,6 +973,7 @@ Res<FitContent> ValueParser<FitContent>::parse(Cursor<Css::Sst>& c) {
         FitContent result;
         Cursor<Css::Sst> scan = c->content;
         result.value = try$(parseValue<PercentOr<Length>>(scan));
+        c.next();
         return Ok(result);
     }
     return Error::invalidData("invalid fit-content");
