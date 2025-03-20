@@ -116,8 +116,12 @@ struct SimpleClient : public Client {
 
         if (auto contentLength = response.header.contentLength()) {
             response.body = makeRc<ContentBody>(reader.bytes(), std::move(conn), contentLength.unwrap());
+        } else if (auto transferEncoding = response.header.get("Transfer-Encoding"s)) {
+            logWarn("Transfer-Encoding: {} not supported", transferEncoding);
         } else {
-            response.body = NONE;
+            // NOTE: When there is no content length, and no transfer encoding,
+            //       we read until the server closes the socket.
+            response.body = makeRc<ContentBody>(reader.bytes(), std::move(conn), Limits<usize>::MAX);
         }
 
         co_return Ok(makeRc<Response>(std::move(response)));
@@ -127,6 +131,8 @@ struct SimpleClient : public Client {
         auto& url = request->url;
         if (url.scheme != "http")
             co_return Error::invalidInput("unsupported scheme");
+
+        logDebug("{} {}", request->method, url);
 
         auto ips = co_trya$(Sys::lookupAsync(url.host));
         auto port = url.port.unwrapOr(80);
