@@ -11,6 +11,7 @@
 #include <vaev-base/flex.h>
 #include <vaev-base/float.h>
 #include <vaev-base/font.h>
+#include <vaev-base/geometry.h>
 #include <vaev-base/insets.h>
 #include <vaev-base/line.h>
 #include <vaev-base/numbers.h>
@@ -44,6 +45,7 @@ struct ComputedStyle {
     BoxSizing boxSizing;
     Cow<SizingProps> sizing;
     Overflows overflows;
+    Opt<BasicShape> clip;
 
     // CSS Inline Layout Module Level 3
     // https://drafts.csswg.org/css-inline-3/
