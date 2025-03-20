@@ -30,6 +30,7 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url
 
     if (not resp->body)
         co_return Error::invalidInput("response body is missing");
+
     auto respBody = resp->body.unwrap();
 
     auto buf = co_trya$(Aio::readAllUtf8Async(*respBody));

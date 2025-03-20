@@ -171,7 +171,6 @@ struct LocalClient : public Client {
         auto response = makeRc<Response>();
 
         response->code = Code::OK;
-        response->header.add("Content-Type", "text/html");
 
         if (request->method == Method::GET)
             response->body = co_try$(_load(request->url));
