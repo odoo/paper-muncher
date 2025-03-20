@@ -11,6 +11,7 @@
 
 import Vaev.Driver;
 import Vaev.Layout;
+import Karm.Http;
 
 namespace PaperMuncher {
 
@@ -24,15 +25,18 @@ struct PrintOption {
     Mime::Uti outputFormat = Mime::Uti::PUBLIC_PDF;
 };
 
-Res<> print(
-    Mime::Url const& url,
-    Io::Reader& input,
+Async::Task<> printAsync(
+    Mime::Url const& input,
     Io::Writer& output,
     PrintOption options = {}
 ) {
     Gc::Heap heap;
-    auto mime = Mime::sniffSuffix(url.path.suffix()).unwrapOr("application/xhtml+xml"_mime);
-    auto dom = try$(Vaev::Driver::loadDocument(heap, url, mime, input));
+    auto client = Http::fallbackClient({
+        Http::simpleClient(),
+        Http::localClient(),
+    });
+
+    auto dom = co_trya$(Vaev::Driver::fetchDocumentAsync(heap, *client, input));
 
     Vaev::Layout::Resolver resolver;
     resolver.viewport.dpi = options.scale;
@@ -59,7 +63,7 @@ Res<> print(
         .backgroundGraphics = true,
     };
 
-    auto printer = try$(
+    auto printer = co_try$(
         Print::FilePrinter::create(
             options.outputFormat,
             {
@@ -80,7 +84,7 @@ Res<> print(
         );
     });
 
-    return printer->write(output);
+    co_return printer->write(output);
 }
 
 Vaev::Style::Media constructMediaForRender(Vaev::Resolution scale, Vec2Au size) {
@@ -131,15 +135,18 @@ struct RenderOption {
     bool wireframe = false;
 };
 
-Res<> render(
+Async::Task<> renderAsync(
     Mime::Url const& input,
-    Io::Reader& reader,
     Io::Writer& output,
     RenderOption options = {}
 ) {
     Gc::Heap heap;
-    auto mime = Mime::sniffSuffix(input.path.suffix()).unwrapOr("application/xhtml+xml"_mime);
-    auto dom = try$(Vaev::Driver::loadDocument(heap, input, mime, reader));
+    auto client = Http::fallbackClient({
+        Http::simpleClient(),
+        Http::localClient(),
+    });
+
+    auto dom = co_trya$(Vaev::Driver::fetchDocumentAsync(heap, *client, input));
 
     Vaev::Layout::Resolver resolver;
     resolver.viewport.dpi = options.scale;
@@ -166,9 +173,9 @@ Res<> render(
         Vaev::Layout::wireframe(*frags, g);
     g.end();
 
-    try$(Image::save(image->pixels(), output));
+    co_try$(Image::save(image->pixels(), output));
 
-    return Ok();
+    co_return Ok();
 }
 
 } // namespace PaperMuncher
@@ -245,7 +252,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
                 options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));
             }
 
-            co_return PaperMuncher::print(inputUrl, *input, *output, options);
+            co_return co_await PaperMuncher::printAsync(inputUrl, *output, options);
         }
     );
 
@@ -299,7 +306,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
                 options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));
             }
 
-            co_return PaperMuncher::render(inputUrl, *input, *output, options);
+            co_return co_await PaperMuncher::renderAsync(inputUrl, *output, options);
         }
     );
 
