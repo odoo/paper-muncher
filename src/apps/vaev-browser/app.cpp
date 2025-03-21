@@ -6,6 +6,7 @@ module;
 #include <karm-kira/dialog.h>
 #include <karm-kira/error-page.h>
 #include <karm-kira/print-dialog.h>
+#include <karm-kira/progress.h>
 #include <karm-kira/resizable.h>
 #include <karm-kira/scaffold.h>
 #include <karm-kira/side-panel.h>
@@ -119,7 +120,7 @@ using Action = Union<
     Navigate>;
 
 Async::_Task<Opt<Action>> navigateAsync(Gc::Heap& heap, Http::Client& client, Navigate nav) {
-    (void)co_await Sys::globalSched().sleepAsync(Sys::instant() + 500_ms);
+    (void)co_await Sys::globalSched().sleepAsync(Sys::instant() + 300_ms);
 
     if (nav.action == Mime::Uti::PUBLIC_MODIFY) {
         co_return Loaded{co_await Vaev::Driver::viewSourceAsync(heap, client, nav.url)};
@@ -230,6 +231,18 @@ Ui::Child addressMenu() {
     });
 }
 
+Ui::Child reloadButton(State const& s) {
+    return (
+               s.status == Status::LOADING
+                   ? Kr::progress()
+                   : Ui::icon(Mdi::REFRESH)
+           ) |
+           Ui::insets(6) |
+           Ui::center() |
+           Ui::minSize({36, 36}) |
+           Ui::button(Model::bind<Reload>(), Ui::ButtonStyle::subtle());
+}
+
 Ui::Child addressBar(State const& s) {
     return Ui::hflow(
                Ui::button(
@@ -241,8 +254,7 @@ Ui::Child addressBar(State const& s) {
                Ui::input(Ui::TextStyles::labelMedium(), s.currentUrl().url.str(), NONE) |
                    Ui::vcenter() |
                    Ui::hscroll() |
-                   Ui::grow(),
-               Ui::button(Model::bind<Reload>(), Ui::ButtonStyle::subtle(), s.status == Status::LOADING ? Mdi::LOADING : Mdi::REFRESH)
+                   Ui::grow()
            ) |
            Ui::box({
                .padding = {0, 0, 0, 0},
@@ -363,6 +375,7 @@ export Ui::Child app(Gc::Heap& heap, Http::Client& client, Mime::Url url, Res<Gc
                     return {
                         Ui::button(Model::bindIf<GoBack>(s.canGoBack()), Ui::ButtonStyle::subtle(), Mdi::ARROW_LEFT),
                         Ui::button(Model::bindIf<GoForward>(s.canGoForward()), Ui::ButtonStyle::subtle(), Mdi::ARROW_RIGHT),
+                        reloadButton(s),
                     };
                 },
                 .middleTools = [&] -> Ui::Children {
