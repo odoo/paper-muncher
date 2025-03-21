@@ -31,10 +31,8 @@ Async::Task<> printAsync(
     PrintOption options = {}
 ) {
     Gc::Heap heap;
-    auto client = Http::fallbackClient({
-        Http::simpleClient(),
-        Http::localClient(),
-    });
+    auto client = Http::defaultClient();
+    client->userAgent = "Paper-Muncher/" stringify$(__ck_version_value) ""s;
 
     auto dom = co_trya$(Vaev::Driver::fetchDocumentAsync(heap, *client, input));
 
@@ -141,10 +139,8 @@ Async::Task<> renderAsync(
     RenderOption options = {}
 ) {
     Gc::Heap heap;
-    auto client = Http::fallbackClient({
-        Http::simpleClient(),
-        Http::localClient(),
-    });
+    auto client = Http::defaultClient();
+    client->userAgent = "Paper-Muncher/1.0"s;
 
     auto dom = co_trya$(Vaev::Driver::fetchDocumentAsync(heap, *client, input));
 
@@ -230,15 +226,11 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             options.orientation = co_try$(Vaev::Style::parseValue<Print::Orientation>(orientationArg.unwrap()));
 
-            Mime::Url inputUrl = "about:stdin"_url;
-            MutCursor<Io::Reader> input = &Sys::in();
+            Mime::Url inputUrl = "fd:stdin"_url;
             MutCursor<Io::Writer> output = &Sys::out();
 
-            Opt<Sys::FileReader> inputFile;
             if (inputArg.unwrap() != "-"s) {
                 inputUrl = Mime::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
-                inputFile = co_try$(Sys::File::open(inputUrl));
-                input = &inputFile.unwrap();
             }
 
             Opt<Sys::FileWriter> outputFile;
@@ -284,15 +276,11 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             options.wireframe = wireframeArg.unwrap();
 
-            Mime::Url inputUrl = "about:stdin"_url;
-            MutCursor<Io::Reader> input = &Sys::in();
+            Mime::Url inputUrl = "fd:stdin"_url;
             MutCursor<Io::Writer> output = &Sys::out();
 
-            Opt<Sys::FileReader> inputFile;
             if (inputArg.unwrap() != "-"s) {
                 inputUrl = Mime::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
-                inputFile = co_try$(Sys::File::open(inputUrl));
-                input = &inputFile.unwrap();
             }
 
             Opt<Sys::FileWriter> outputFile;

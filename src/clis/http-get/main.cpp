@@ -19,11 +19,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     co_trya$(cmd.execAsync(ctx));
 
     auto url = Mime::parseUrlOrPath(urlArg, co_try$(Sys::pwd()));
-    auto client = Http::fallbackClient({
-        Http::simpleClient(),
-        Http::localClient(),
-    });
-    auto resp = co_trya$(client->getAsync(url));
+    auto resp = co_trya$(Http::getAsync(url));
     if (not resp->body)
         co_return Error::invalidData("no body in response");
 

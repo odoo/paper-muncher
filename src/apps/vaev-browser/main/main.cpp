@@ -13,10 +13,8 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
                    ? Mime::parseUrlOrPath(args[0], co_try$(Sys::pwd()))
                    : "about:start"_url;
     Gc::Heap heap;
-    auto client = Http::fallbackClient({
-        Http::simpleClient(),
-        Http::localClient(),
-    });
+    auto client = Http::defaultClient();
+    client->userAgent = "Vaev-Browser/" stringify$(__ck_version_value) ""s;
 
     auto dom = co_await Vaev::Driver::fetchDocumentAsync(heap, *client, url);
 
