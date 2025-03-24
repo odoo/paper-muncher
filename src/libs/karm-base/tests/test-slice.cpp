@@ -79,6 +79,18 @@ test$("slice-contains") {
     expectNot$(contains("Hello, world!"s, "Hello, world! "s));
     expectNot$(contains("Hello, world!"s, "bruh"s));
 
+    auto customCmp = [](Rune a, Rune b) {
+        return toAsciiLower(a) == toAsciiLower(b);
+    };
+
+    expect$(contains("Ab"s, "ab"s, customCmp));
+    expect$(contains("ab"s, "Ab"s, customCmp));
+    expectNot$(contains("Ab"s, "ab"s));
+    expectNot$(contains("ab"s, "Ab"s));
+
+    return Ok();
+}
+
     return Ok();
 }
 

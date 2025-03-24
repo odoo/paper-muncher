@@ -496,9 +496,7 @@ always_inline constexpr bool contains(T const& slice, Meta::Equatable<U> auto co
     return indexOf(slice, needle).has();
 }
 
-always_inline constexpr bool contains(Sliceable auto const& slice, Sliceable auto const& needle)
-    requires Meta::Equatable<decltype(slice[0]), decltype(needle[0])>
-{
+always_inline constexpr bool contains(Sliceable auto const& slice, Sliceable auto const& needle, auto const cmp) {
     if (needle.len() == 0)
         return true;
 
@@ -508,7 +506,7 @@ always_inline constexpr bool contains(Sliceable auto const& slice, Sliceable aut
     for (usize i = 0; i < slice.len() - needle.len() + 1; i++) {
         bool found = true;
         for (usize j = 0; j < needle.len(); j++) {
-            if (slice[i + j] != needle[j]) {
+            if (not cmp(slice[i + j], needle[j])) {
                 found = false;
                 break;
             }
@@ -518,6 +516,15 @@ always_inline constexpr bool contains(Sliceable auto const& slice, Sliceable aut
     }
 
     return false;
+}
+
+template <Sliceable T1, Sliceable T2, typename U1 = T1::Inner, typename U2 = T2::Inner>
+always_inline constexpr bool contains(T1 const& slice, T2 const& needle)
+    requires Meta::Equatable<U1, U2>
+{
+    return contains(slice, needle, [](U1 const& a, U2 const& b) {
+        return a == b;
+    });
 }
 
 template <Sliceable T, typename U = T::Inner>
@@ -628,12 +635,12 @@ enum struct Match {
     YES,     //< The pattern is the input.
 };
 
-always_inline Match startWith(Sliceable auto const& slice, Sliceable auto const& prefix) {
+always_inline Match startWith(Sliceable auto const& slice, Sliceable auto const& prefix, auto cmp) {
     if (slice.len() < prefix.len())
         return Match::NO;
 
     for (usize i = 0; i < prefix.len(); i++)
-        if (slice[i] != prefix[i])
+        if (not cmp(slice[i], prefix[i]))
             return Match::NO;
 
     if (slice.len() != prefix.len())
@@ -642,18 +649,34 @@ always_inline Match startWith(Sliceable auto const& slice, Sliceable auto const&
     return Match::YES;
 }
 
-always_inline Match endWith(Sliceable auto const& slice, Sliceable auto const& suffix) {
+template <Sliceable T1, Sliceable T2, typename U1 = T1::Inner, typename U2 = T2::Inner>
+    requires Meta::Equatable<U1, U2>
+always_inline Match startWith(T1 const& slice, T2 const& prefix) {
+    return startWith(slice, prefix, [](U1 const& a, U2 const& b) {
+        return a == b;
+    });
+}
+
+always_inline Match endWith(Sliceable auto const& slice, Sliceable auto const& suffix, auto cmp) {
     if (slice.len() < suffix.len())
         return Match::NO;
 
     for (usize i = 0; i < suffix.len(); i++)
-        if (slice[slice.len() - suffix.len() + i] != suffix[i])
+        if (not cmp(slice[slice.len() - suffix.len() + i], suffix[i]))
             return Match::NO;
 
     if (slice.len() != suffix.len())
         return Match::PARTIAL;
 
     return Match::YES;
+}
+
+template <Sliceable T1, Sliceable T2, typename U1 = T1::Inner, typename U2 = T2::Inner>
+    requires Meta::Equatable<U1, U2>
+always_inline Match endWith(T1 const& slice, T2 const& suffix) {
+    return endWith(slice, suffix, [](U1 const& a, U2 const& b) {
+        return a == b;
+    });
 }
 
 #pragma clang unsafe_buffer_usage end
