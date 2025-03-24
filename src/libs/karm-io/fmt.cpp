@@ -447,7 +447,7 @@ Res<> NumberFormatter::formatSigned(Io::TextWriter& writer, isize val) {
 Res<> NumberFormatter::formatFloat(Io::TextWriter& writer, f64 val) {
     NumberFormatter formatter;
     isize ipart = (isize)val;
-    f64 fpart = abs(val - (f64)ipart);
+    f64 fpart = Math::abs(val - (f64)ipart);
     u64 ifpart = (u64)(fpart * Math::pow(10uz, precision));
 
     if (val < 0) {
