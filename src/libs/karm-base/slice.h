@@ -493,24 +493,15 @@ always_inline constexpr Opt<usize> indexOf(T const& slice, Meta::Equatable<U> au
 
 template <Sliceable T, typename U = T::Inner>
 Generator<Slice<U>> split(T const& slice, Meta::Equatable<U> auto const& delim) {
-    usize start = 0;
-
-    while (start < slice.len()) {
-        auto indexInSuffix = indexOf(Slice<U>(slice.begin() + start, slice.end()), delim);
-
-        if (not indexInSuffix) {
-            co_yield Slice<U>(slice.begin() + start, slice.end());
-            co_return;
-        } else {
-            auto indexInFullStr = indexInSuffix.unwrap() + start;
-            auto foundSlice = Slice<U>(slice.begin() + start, slice.begin() + indexInFullStr);
-            co_yield foundSlice;
-            start = indexInFullStr + 1;
-        }
+    Slice<U> curr = sub(slice);
+    while (curr) {
+        auto end = indexOf(curr, delim);
+        if (not end)
+            break;
+        co_yield sub(curr, 0, end.unwrap());
+        curr = next(curr, end.unwrap() + 1);
     }
-
-    // if we have an empty string or the suffix is a delim, we'll have an empty slice at the split end
-    co_yield Slice<U>{};
+    co_yield curr;
 }
 
 template <Sliceable T, typename U = T::Inner>
