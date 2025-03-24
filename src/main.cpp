@@ -27,7 +27,7 @@ struct PrintOption {
 
 Async::Task<> printAsync(
     Mime::Url const& input,
-    Io::Writer& output,
+    Mime::Url const& output,
     PrintOption options = {}
 ) {
     Gc::Heap heap;
@@ -82,7 +82,18 @@ Async::Task<> printAsync(
         );
     });
 
-    co_return printer->write(output);
+    Io::BufferWriter bw;
+    co_try$(printer->write(bw));
+
+    co_trya$(client->doAsync(
+        Http::Request::from(
+            Http::Method::PUT,
+            output,
+            Http::Body::from(bw.take())
+        )
+    ));
+
+    co_return Ok();
 }
 
 Vaev::Style::Media constructMediaForRender(Vaev::Resolution scale, Vec2Au size) {
@@ -135,7 +146,7 @@ struct RenderOption {
 
 Async::Task<> renderAsync(
     Mime::Url const& input,
-    Io::Writer& output,
+    Mime::Url const& output,
     RenderOption options = {}
 ) {
     Gc::Heap heap;
@@ -169,7 +180,22 @@ Async::Task<> renderAsync(
         Vaev::Layout::wireframe(*frags, g);
     g.end();
 
-    co_try$(Image::save(image->pixels(), output));
+    Io::BufferWriter bw;
+    co_try$(
+        Image::save(
+            image->pixels(),
+            bw,
+            {
+                .format = options.outputFormat,
+            }
+        )
+    );
+
+    auto req = makeRc<Http::Request>();
+    req->method = Http::Method::PUT;
+    req->url = output;
+    req->body = Http::Body::from(bw.take());
+    co_trya$(client->doAsync(req));
 
     co_return Ok();
 }
@@ -226,25 +252,21 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             options.orientation = co_try$(Vaev::Style::parseValue<Print::Orientation>(orientationArg.unwrap()));
 
-            Mime::Url inputUrl = "fd:stdin"_url;
-            MutCursor<Io::Writer> output = &Sys::out();
-
+            Mime::Url input = "fd:stdin"_url;
             if (inputArg.unwrap() != "-"s) {
-                inputUrl = Mime::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
+                input = Mime::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
             }
 
-            Opt<Sys::FileWriter> outputFile;
+            Mime::Url output = "fd:stdout"_url;
             if (outputArg.unwrap() != "-"s) {
-                auto outputUrl = Mime::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
-                outputFile = co_try$(Sys::File::create(outputUrl));
-                output = &outputFile.unwrap();
+                output = Mime::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
             }
 
             if (outputMimeArg.unwrap() != ""s) {
                 options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));
             }
 
-            co_return co_await PaperMuncher::printAsync(inputUrl, *output, options);
+            co_return co_await PaperMuncher::printAsync(input, output, options);
         }
     );
 
@@ -276,25 +298,21 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             options.wireframe = wireframeArg.unwrap();
 
-            Mime::Url inputUrl = "fd:stdin"_url;
-            MutCursor<Io::Writer> output = &Sys::out();
-
+            Mime::Url input = "fd:stdin"_url;
             if (inputArg.unwrap() != "-"s) {
-                inputUrl = Mime::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
+                input = Mime::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
             }
 
-            Opt<Sys::FileWriter> outputFile;
+            Mime::Url output = "fd:stdout"_url;
             if (outputArg.unwrap() != "-"s) {
-                auto outputUrl = Mime::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
-                outputFile = co_try$(Sys::File::create(outputUrl));
-                output = &outputFile.unwrap();
+                output = Mime::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
             }
 
             if (outputMimeArg.unwrap() != ""s) {
-                options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));
+                options.outputFormat = co_try$(Mime::Uti::fromMime({outputMimeArg}));
             }
 
-            co_return co_await PaperMuncher::renderAsync(inputUrl, *output, options);
+            co_return co_await PaperMuncher::renderAsync(input, output, options);
         }
     );
 

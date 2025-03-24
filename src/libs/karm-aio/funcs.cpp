@@ -11,7 +11,7 @@ import :traits;
 namespace Karm::Aio {
 
 export Async::Task<usize> copyAsync(AsyncReadable auto& reader, AsyncWritable auto& writer) {
-    Array<Byte, 4096> buffer;
+    Array<Byte, 4096> buffer = {};
     usize result = 0;
     while (true) {
         auto read = co_trya$(reader.readAsync(mutBytes(buffer)));
@@ -28,7 +28,7 @@ export Async::Task<usize> copyAsync(AsyncReadable auto& reader, AsyncWritable au
 
 export Async::Task<String> readAllUtf8Async(AsyncReadable auto& reader) {
     Io::StringWriter writer;
-    Array<Utf8::Unit, 512> buf;
+    Array<Utf8::Unit, 512> buf = {};
     while (true) {
         usize read = co_trya$(reader.readAsync(buf.mutBytes()));
         if (read == 0)

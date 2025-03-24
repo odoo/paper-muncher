@@ -487,7 +487,6 @@ struct Command {
                 co_return co_await cmd->execAsync(ctx, c);
             }
 
-            logError("unknown subcommand '{}'", value);
             co_return Error::invalidInput("unknown subcommand");
         }
         co_return Ok();
