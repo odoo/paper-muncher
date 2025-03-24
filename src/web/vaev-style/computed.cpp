@@ -7,7 +7,7 @@ namespace Vaev::Style {
 Computed const& Computed::initial() {
     static Computed computed = [] {
         Computed res{};
-        StyleProp::any([&]<typename T>(Meta::Type<T>) {
+        StyleProp::any([&]<typename T>() {
             if constexpr (requires { T::initial(); })
                 T{}.apply(res);
         });
