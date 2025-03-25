@@ -1,6 +1,9 @@
 #pragma once
 
 #include <karm-io/emit.h>
+#include <vaev-base/keywords.h>
+#include <vaev-base/length.h>
+#include <vaev-base/percent.h>
 
 namespace Vaev {
 
@@ -50,10 +53,34 @@ enum struct WhiteSpace {
     _LEN,
 };
 
+// MARK: Word spacing ------------------------------------------------------------
+// https://www.w3.org/TR/css-text-4/#word-spacing-property
+
+struct WordSpacing {
+    Union<PercentOr<Length>, Keywords::Normal> _value;
+
+    WordSpacing(Keywords::Normal) : _value(Keywords::NORMAL) {}
+
+    WordSpacing(PercentOr<Length> value) : _value(value) {}
+
+    Opt<PercentOr<Length>> value() const {
+        if (_value.is<Keywords::Normal>())
+            return NONE;
+        return _value.unwrap<PercentOr<Length>>();
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(word-spacing: ");
+        e("{}", _value);
+        e(")");
+    }
+};
+
 struct TextProps {
     TextAlign align = TextAlign::START;
     TextTransform transform = TextTransform::NONE;
     WhiteSpace whiteSpace = WhiteSpace::NORMAL;
+    WordSpacing wordSpacing = Keywords::NORMAL;
 
     void repr(Io::Emit& e) const {
         e("(text");

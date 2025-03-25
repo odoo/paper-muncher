@@ -2865,6 +2865,33 @@ struct WhiteSpaceProp {
     }
 };
 
+// https://drafts.csswg.org/css-text/#word-spacing-property
+struct WordSpacingProp {
+    WordSpacing value = initial();
+
+    static constexpr Str name() { return "word-spacing"; }
+
+    static WordSpacing initial() { return Keywords::NORMAL; }
+
+    void apply(Computed& c) const {
+        c.text.cow().wordSpacing = value;
+    }
+
+    static WordSpacing load(Computed const& c) {
+        return c.text->wordSpacing;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        if (c.skip(Css::Token::ident("normal"))) {
+            value = Keywords::NORMAL;
+        } else {
+            value = try$(parseValue<PercentOr<Length>>(c));
+        }
+
+        return Ok();
+    }
+};
+
 // https://drafts.csswg.org/css2/#z-index
 
 struct ZIndexProp {
@@ -3109,6 +3136,7 @@ using _StyleProp = Union<
     TextAlignProp,
     TextTransformProp,
     WhiteSpaceProp,
+    WordSpacingProp,
 
     // ZIndex
     ZIndexProp,

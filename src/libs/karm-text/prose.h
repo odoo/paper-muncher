@@ -16,6 +16,11 @@ enum struct TextAlign {
 struct ProseStyle {
     Font font;
     TextAlign align = TextAlign::LEFT;
+
+    // https://drafts.csswg.org/css-text/#word-spacing-property
+    // Specifies extra spacing in addition to the intrinsic inter-word spacing defined by the font.
+    Opt<Au> wordSpacing = NONE;
+
     Opt<Gfx::Color> color = NONE;
     bool wordwrap = true;
     bool multiline = false;

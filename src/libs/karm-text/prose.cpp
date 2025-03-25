@@ -72,6 +72,9 @@ void Prose::_measureBlocks() {
 
             cell.pos = adv;
             cell.adv = Au{_style.font.advance(cell.glyph)};
+            if (cell.space() and _style.wordSpacing)
+                cell.adv += _style.wordSpacing.unwrap();
+
             adv += cell.adv;
             prev = cell.glyph;
         }
