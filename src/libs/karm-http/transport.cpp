@@ -42,7 +42,7 @@ struct ContentBody : public Body {
     Async::Task<usize> readAsync(MutBytes buf) override {
         if (_resumesPos < _resumes.len()) {
             usize n = min(buf.len(), _resumes.len() - _resumesPos);
-            copy(sub(_resumes, _resumesPos, n), buf);
+            copy(sub(_resumes, _resumesPos, _resumesPos + n), buf);
             _resumesPos += n;
             co_return n;
         }

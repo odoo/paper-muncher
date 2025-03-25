@@ -27,15 +27,15 @@ export Async::Task<usize> copyAsync(AsyncReadable auto& reader, AsyncWritable au
 }
 
 export Async::Task<String> readAllUtf8Async(AsyncReadable auto& reader) {
-    Io::StringWriter writer;
+    Io::StringWriter w;
     Array<Utf8::Unit, 512> buf = {};
     while (true) {
         usize read = co_trya$(reader.readAsync(buf.mutBytes()));
         if (read == 0)
             break;
-        co_try$(writer.writeUnit({buf.buf(), read}));
+        co_try$(w.writeUnit(sub(buf, 0, read)));
     }
-    co_return Ok(writer.take());
+    co_return Ok(w.take());
 }
 
 } // namespace Karm::Aio

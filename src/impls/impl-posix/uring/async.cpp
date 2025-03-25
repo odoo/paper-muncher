@@ -79,7 +79,13 @@ struct UringSched : public Sys::Sched {
                 : _fd(fd), _buf(buf) {}
 
             void submit(io_uring_sqe* sqe) override {
-                io_uring_prep_read(sqe, _fd->handle().value(), _buf.buf(), _buf.len(), 0);
+                io_uring_prep_read(
+                    sqe,
+                    _fd->handle().value(),
+                    _buf.buf(),
+                    _buf.len(),
+                    -1
+                );
             }
 
             void complete(io_uring_cqe* cqe) override {
