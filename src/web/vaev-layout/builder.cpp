@@ -96,16 +96,25 @@ static void _buildRun(Style::Computer& c, Gc::Ref<Dom::Text> node, Box& parent) 
     if (scan.ended())
         return;
 
+    Resolver resolver;
+    auto fontSize = resolver.resolve(style->font->size).cast<f64>();
+
+    auto lineheight = resolver.resolve(style->font->lineheight.unwrap<PercentOr<Length>>(), Au{fontSize});
+
     // FIXME: We should pass this around from the top in order to properly resolve rems
-    Resolver resolver{
-        .rootFont = Text::Font{fontFace, 16},
-        .boxFont = Text::Font{fontFace, 16},
-    };
+    resolver.rootFont = Text::Font{fontFace, fontSize};
+    resolver.boxFont = Text::Font{fontFace, fontSize};
+
+    auto wordSpacing = style->text->wordSpacing.value()
+                           ? Opt<Au>{resolver.resolve(style->text->wordSpacing.value().unwrap())}
+                           : NONE;
+
     Text::ProseStyle proseStyle{
         .font = {
             fontFace,
             resolver.resolve(style->font->size).cast<f64>(),
         },
+        .wordSpacing = wordSpacing,
         .multiline = true,
     };
 
@@ -319,16 +328,23 @@ export Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc) {
 export Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::Computed> style) {
     auto fontFace = _lookupFontface(fontBook, *style);
 
+    Resolver resolver;
+    auto fontSize = resolver.resolve(style->font->size).cast<f64>();
+
     // FIXME: We should pass this around from the top in order to properly resolve rems
-    Resolver resolver{
-        .rootFont = Text::Font{fontFace, 16},
-        .boxFont = Text::Font{fontFace, 16},
-    };
+    resolver.rootFont = Text::Font{fontFace, fontSize};
+    resolver.boxFont = Text::Font{fontFace, fontSize};
+
+    auto wordSpacing = style->text->wordSpacing.value()
+                           ? Opt<Au>{resolver.resolve(style->text->wordSpacing.value().unwrap())}
+                           : NONE;
+
     Text::ProseStyle proseStyle{
         .font = {
             fontFace,
             resolver.resolve(style->font->size).cast<f64>(),
         },
+        .wordSpacing = wordSpacing,
         .multiline = true,
     };
 

@@ -24,13 +24,16 @@ export struct Resolver {
     Axis boxAxis = Axis::HORIZONTAL;                 /// Inline axis of the current box
 
     static Resolver from(Tree const& tree, Box const& box) {
-        Au fontSize{16};
-
         Resolver resolver;
-        resolver.rootFont = Text::Font{tree.root.fontFace, fontSize.cast<f64>()};
-        resolver.boxFont = Text::Font{box.fontFace, fontSize.cast<f64>()};
         resolver.viewport = tree.viewport;
         resolver.boxAxis = mainAxis(box);
+
+        Au fontSize{
+            resolver.resolve(box.style->font->size)
+        };
+
+        resolver.rootFont = Text::Font{tree.root.fontFace, fontSize.cast<f64>()};
+        resolver.boxFont = Text::Font{box.fontFace, fontSize.cast<f64>()};
         return resolver;
     }
 
