@@ -316,7 +316,6 @@ struct SdlHost : Host {
         switch (sdlEvent.type) {
         case SDL_WINDOWEVENT:
             switch (sdlEvent.window.event) {
-
             case SDL_WINDOWEVENT_RESIZED:
                 _shouldLayout = true;
                 break;
@@ -328,6 +327,8 @@ struct SdlHost : Host {
             break;
 
         case SDL_KEYDOWN: {
+            if (sdlEvent.key.repeat)
+                return;
             auto ev = _fromSdlKeyboardEvent(sdlEvent.key);
             ev.type = App::KeyboardEvent::PRESS;
             event<App::KeyboardEvent>(*this, ev);

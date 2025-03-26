@@ -164,7 +164,11 @@ Ui::Task<Action> reduce(State& s, Action a) {
             return NONE;
         },
         [&](SidePanel p) -> Ui::Task<Action> {
-            s.sidePanel = p;
+            if (s.sidePanel == p) {
+                s.sidePanel = SidePanel::CLOSE;
+            } else {
+                s.sidePanel = p;
+            }
             return NONE;
         },
         [&](InspectorAction a) -> Ui::Task<Action> {
@@ -389,8 +393,9 @@ Ui::Child webview(State const& s) {
 }
 
 Ui::Child appContent(State const& s) {
-    if (s.sidePanel == SidePanel::CLOSE)
+    if (s.sidePanel == SidePanel::CLOSE) {
         return webview(s);
+    }
     return Ui::hflow(
         webview(s) | Ui::grow(),
         sidePanel(s) | Kr::resizable(Kr::ResizeHandle::START, {320}, NONE)
@@ -406,13 +411,15 @@ export Ui::Child app(Gc::Heap& heap, Http::Client& client, Mime::Url url, Res<Gc
             dom,
         },
         [](State const& s) {
-            return Kr::scaffold({
+            auto scaffold = Kr::scaffold({
                 .icon = Mdi::SURFING,
                 .title = "Vaev"s,
                 .startTools = [&] -> Ui::Children {
                     return {
-                        Ui::button(Model::bindIf<GoBack>(s.canGoBack()), Ui::ButtonStyle::subtle(), Mdi::ARROW_LEFT),
-                        Ui::button(Model::bindIf<GoForward>(s.canGoForward()), Ui::ButtonStyle::subtle(), Mdi::ARROW_RIGHT),
+                        Ui::button(Model::bindIf<GoBack>(s.canGoBack()), Ui::ButtonStyle::subtle(), Mdi::ARROW_LEFT) | Ui::keyboardShortcut(App::Key::LEFT, App::KeyMod::ALT, Model::bind<GoBack>()) |
+                            Ui::keyboardShortcut(App::Key::LEFT, App::KeyMod::ALT),
+                        Ui::button(Model::bindIf<GoForward>(s.canGoForward()), Ui::ButtonStyle::subtle(), Mdi::ARROW_RIGHT) |
+                            Ui::keyboardShortcut(App::Key::RIGHT, App::KeyMod::ALT),
                         reloadButton(s),
                     };
                 },
@@ -435,6 +442,20 @@ export Ui::Child app(Gc::Heap& heap, Http::Client& client, Mime::Url url, Res<Gc
                 },
                 .compact = true,
             });
+            return scaffold |
+                   Ui::keyboardShortcut(App::Key::R, App::KeyMod::CTRL, Model::bind<Reload>()) |
+                   Ui::keyboardShortcut(App::Key::F5, Model::bind<Reload>()) |
+                   Ui::keyboardShortcut(App::Key::F12, Model::bind(SidePanel::DEVELOPER_TOOLS)) |
+                   Ui::keyboardShortcut(App::Key::B, App::KeyMod::CTRL, Model::bind(SidePanel::BOOKMARKS)) |
+                   Ui::keyboardShortcut(App::Key::P, App::KeyMod::CTRL, [&](auto& n) {
+                       if (not s.dom) {
+                           return;
+                       }
+                       Ui::showDialog(
+                           n,
+                           View::printDialog(s.dom.unwrap())
+                       );
+                   });
         }
     );
 }
