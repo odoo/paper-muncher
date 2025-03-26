@@ -176,32 +176,32 @@ static Rc<Scene::Clip> _resolveClip(const Frag& frag) {
     auto& clip = frag.style().clip.unwrap();
 
     // TODO: handle SVG cases (https://drafts.fxtf.org/css-masking/#typedef-geometry-box)
-    RectAu referenceBox = clip.referenceBox.visit(Visitor {
-        [&](const Keywords::BorderBox&) {
-            return frag.metrics.borderBox();
+    auto [referenceBox, radii] = clip.referenceBox.visit(Visitor {
+        [&](const Keywords::BorderBox&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.borderBox(), frag.metrics.radii};
         },
-        [&](const Keywords::PaddingBox&) {
-            return frag.metrics.paddingBox();
+        [&](const Keywords::PaddingBox&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.paddingBox(), {0_au}};
         },
-        [&](const Keywords::ContentBox&) {
-            return frag.metrics.contentBox();
+        [&](const Keywords::ContentBox&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.contentBox(), {0_au}};
         },
-        [&](const Keywords::MarginBox&) {
-            return frag.metrics.marginBox();
+        [&](const Keywords::MarginBox&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.marginBox(), {0_au}};
         },
-        [&](const Keywords::FillBox&) {
-            return frag.metrics.contentBox();
+        [&](const Keywords::FillBox&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.contentBox(), {0_au}};
         },
-        [&](const Keywords::StrokeBox&) {
-            return frag.metrics.borderBox();
+        [&](const Keywords::StrokeBox&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.borderBox(), frag.metrics.radii};
         },
-        [&](const Keywords::ViewBox&) {
-            return frag.metrics.borderBox();
+        [&](const Keywords::ViewBox&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.borderBox(), {0_au}};
         },
     });
 
     if (not clip.shape) {
-        result.rect(referenceBox.round().cast<f64>());
+        result.rect(referenceBox.round().cast<f64>(), radii.cast<f64>());
         return makeRc<Scene::Clip>(result);
     }
 
