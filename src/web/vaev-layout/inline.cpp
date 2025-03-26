@@ -11,7 +11,7 @@ namespace Vaev::Layout {
 struct InlineFormatingContext : public FormatingContext {
     virtual Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
         // NOTE: We are not supposed to get there if the content is not a prose
-        auto& prose = *box.content.unwrap<Rc<Text::Prose>>("inlineLayout");
+        auto& prose = box.content.unwrap<InlineBox>("inlineLayout").prose;
 
         auto inlineSize = input.knownSize.x.unwrapOrElse([&] {
             if (input.intrinsic == IntrinsicSize::MIN_CONTENT) {
@@ -23,7 +23,7 @@ struct InlineFormatingContext : public FormatingContext {
             }
         });
 
-        auto size = prose.layout(inlineSize);
+        auto size = prose->layout(inlineSize);
 
         if (tree.fc.allowBreak() and not tree.fc.acceptsFit(
                                          input.position.y,

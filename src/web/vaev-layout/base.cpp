@@ -232,10 +232,51 @@ export struct BreakpointTraverser {
 export struct FormatingContext;
 export struct Box;
 
+export struct InlineBox {
+    /* NOTE:
+    This is a sketch implementation of the data model for InlineBox. We should be able to:
+        -   add different inline elements to it, from different types (Prose, Image, inline-block)
+        -   retrieve the added data to be displayed in the same Inline Formatting Context (break lines and display
+            into line boxes)
+        -   respect different styling for the same line (font, fontsize, color, etc)
+    */
+    Text::ProseStyle const _style;
+    Rc<Text::Prose> prose;
+
+    InlineBox(Text::ProseStyle style) : _style(style), prose(makeRc<Text::Prose>(_style)) {}
+
+    InlineBox(Rc<Text::Prose> prose) : _style(prose->_style), prose(prose) {}
+
+    void startInlineBox(Text::ProseStyle proseStyle) {
+        // FIXME: ugly workaround while we dont fix the Prose data structure
+        prose->pushSpan();
+        if (proseStyle.color)
+            prose->spanColor(proseStyle.color.unwrap());
+    }
+
+    void endInlineBox() {
+        prose->popSpan();
+    }
+
+    void add(Box&&) {}
+
+    bool active() {
+        return prose->_runes.len();
+    }
+
+    void clear() {
+        auto oldProse = prose;
+
+        prose = makeRc<Text::Prose>(_style);
+
+        prose->copySpanStack(*oldProse);
+    }
+};
+
 export using Content = Union<
     None,
     Vec<Box>,
-    Rc<Text::Prose>,
+    InlineBox,
     Karm::Image::Picture>;
 
 export struct Attrs {
