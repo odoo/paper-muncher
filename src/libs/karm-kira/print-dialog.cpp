@@ -1,5 +1,8 @@
 #include <karm-app/form-factor.h>
+#include <karm-print/file-printer.h>
 #include <karm-print/paper.h>
+#include <karm-sys/file.h>
+#include <karm-sys/proc.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/popover.h>
 #include <karm-ui/reducer.h>
@@ -14,6 +17,11 @@
 namespace Karm::Kira {
 
 // MARK: Model -----------------------------------------------------------------
+
+enum struct PrintAction {
+    PRINT,
+    STOP
+};
 
 struct State {
     PrintPreview preview;
@@ -47,7 +55,10 @@ using Action = Union<
     ChangeMargin,
     ToggleHeaderFooter,
     ToggleBackgroundGraphics,
-    ChangeScale>;
+    ChangeScale,
+    PrintAction>;
+
+void _printPDF(State const& s);
 
 static Ui::Task<Action> reduce(State& s, Action a) {
     bool shouldUpdatePreview = false;
@@ -70,6 +81,8 @@ static Ui::Task<Action> reduce(State& s, Action a) {
     } else if (auto changeScale = a.is<ChangeScale>()) {
         s.settings.scale = clamp(changeScale->scale, 0.1, 10.);
         shouldUpdatePreview = true;
+    } else if (a.is<PrintAction>()) {
+        _printPDF(s);
     }
 
     if (shouldUpdatePreview) {
@@ -173,6 +186,24 @@ Ui::Child _printPreview(State const& s) {
                    .backgroundFill = Ui::GRAY950,
                }
            );
+}
+
+void _printPDF(State const& s) {
+    auto const output = Mime::parseUrlOrPath("./output.pdf", Sys::pwd().unwrap());
+    Mime::Uti const outputFormat = Mime::Uti::PUBLIC_PDF;
+
+    auto printer = Karm::Print::FilePrinter::create(outputFormat).unwrap();
+
+    for (usize i = 0; i < s.pages.len(); ++i) {
+        auto page = s.pages[i];
+        page.print(*printer, {s.settings.backgroundGraphics});
+    }
+
+    Io::BufferWriter bw;
+    printer->write(bw).unwrap();
+
+    auto file = Sys::File::openOrCreate(output).take();
+    file.write(bw.bytes()).unwrap();
 }
 
 Ui::Child _destinationSelect() {
@@ -358,7 +389,7 @@ Ui::Child _printDialog(State const& s) {
         Ui::separator(),
         dialogFooter({
             dialogCancel(),
-            dialogAction(Ui::NOP, "Print"s),
+            dialogAction(Model::bind(PrintAction::PRINT), "Print"s),
         }),
     });
 }
@@ -378,7 +409,7 @@ Ui::Child _printDialogMobile(State const& s) {
         Ui::separator(),
         dialogFooter({
             dialogCancel(),
-            dialogAction(Ui::NOP, "Print"s),
+            dialogAction(Model::bind(PrintAction::PRINT), "Print"s),
         }),
     });
 }

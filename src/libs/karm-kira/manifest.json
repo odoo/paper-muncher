@@ -5,6 +5,7 @@
     "description": "A beautiful components library",
     "requires": [
         "karm-ui",
-        "fonts-core"
+        "fonts-core",
+        "karm-print"
     ]
 }
