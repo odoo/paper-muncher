@@ -157,7 +157,11 @@ Ui::Task<Action> reduce(State& s, Action a) {
             return NONE;
         },
         [&](SidePanel p) -> Ui::Task<Action> {
-            s.sidePanel = p;
+            if (s.sidePanel == p) {
+                s.sidePanel = SidePanel::CLOSE;
+            } else {
+                s.sidePanel = p;
+            }
             return NONE;
         },
         [&](InspectorAction a) -> Ui::Task<Action> {
@@ -372,9 +376,43 @@ Ui::Child webview(State const& s) {
            });
 }
 
+void intent(Ui::Node& n, App::Event& e, State const& s) {
+    if (auto k = e.is<App::KeyboardEvent>()) {
+        if (k->type != App::KeyboardEvent::PRESS) {
+            e.accept();
+            return;
+        }
+
+        if (k->key == App::Key::F5) {
+            Model::bubble<Reload>(n);
+            e.accept();
+        } else if (k->key == App::Key::F12) {
+            Model::bubble(n, SidePanel::DEVELOPER_TOOLS);
+            e.accept();
+        } else if (k->key == App::Key::P and static_cast<bool>(k->mods & App::KeyMod::CTRL)) {
+            if (not s.dom) {
+                e.accept();
+                return;
+            }
+            Ui::showDialog(
+                n,
+                View::printDialog(s.dom.unwrap())
+            );
+            e.accept();
+        } else if (k->key == App::Key::B and static_cast<bool>(k->mods & App::KeyMod::CTRL)) {
+            Model::bubble(n, SidePanel::BOOKMARKS);
+            e.accept();
+        } else if (k->key == App::Key::R and static_cast<bool>(k->mods & App::KeyMod::CTRL)) {
+            Model::bubble<Reload>(n);
+            e.accept();
+        }
+    }
+}
+
 Ui::Child appContent(State const& s) {
-    if (s.sidePanel == SidePanel::CLOSE)
+    if (s.sidePanel == SidePanel::CLOSE) {
         return webview(s);
+    }
     return Ui::hflow(
         webview(s) | Ui::grow(),
         sidePanel(s) | Kr::resizable(Kr::ResizeHandle::START, {320}, NONE)
@@ -391,34 +429,38 @@ export Ui::Child app(Gc::Heap& heap, Http::Client& client, Mime::Url url, Res<Gc
         },
         [](State const& s) {
             return Kr::scaffold({
-                .icon = Mdi::SURFING,
-                .title = "Vaev"s,
-                .startTools = [&] -> Ui::Children {
-                    return {
-                        Ui::button(Model::bindIf<GoBack>(s.canGoBack()), Ui::ButtonStyle::subtle(), Mdi::ARROW_LEFT),
-                        Ui::button(Model::bindIf<GoForward>(s.canGoForward()), Ui::ButtonStyle::subtle(), Mdi::ARROW_RIGHT),
-                        reloadButton(s),
-                    };
-                },
-                .middleTools = [&] -> Ui::Children {
-                    return {addressBar(s) | Ui::grow()};
-                },
-                .endTools = [&] -> Ui::Children {
-                    return {
-                        Ui::button(
-                            [&](Ui::Node& n) {
-                                Ui::showPopover(n, n.bound().bottomEnd(), mainMenu(s));
-                            },
-                            Ui::ButtonStyle::subtle(),
-                            Mdi::DOTS_HORIZONTAL
-                        ),
-                    };
-                },
-                .body = [&] {
-                    return appContent(s);
-                },
-                .compact = true,
-            });
+                       .icon = Mdi::SURFING,
+                       .title = "Vaev"s,
+                       .startTools = [&] -> Ui::Children {
+                           return {
+                               Ui::button(Model::bindIf<GoBack>(s.canGoBack()), Ui::ButtonStyle::subtle(), Mdi::ARROW_LEFT),
+                               Ui::button(Model::bindIf<GoForward>(s.canGoForward()), Ui::ButtonStyle::subtle(), Mdi::ARROW_RIGHT),
+                               reloadButton(s),
+                           };
+                       },
+                       .middleTools = [&] -> Ui::Children {
+                           return {addressBar(s) | Ui::grow()};
+                       },
+                       .endTools = [&] -> Ui::Children {
+                           return {
+                               Ui::button(
+                                   [&](Ui::Node& n) {
+                                       Ui::showPopover(n, n.bound().bottomEnd(), mainMenu(s));
+                                   },
+                                   Ui::ButtonStyle::subtle(),
+                                   Mdi::DOTS_HORIZONTAL
+                               ),
+                           };
+                       },
+                       .body = [&] {
+                           return appContent(s);
+                       },
+                       .compact = true,
+                   }) |
+                   Ui::intent([&](auto& n, auto& e) {
+                       intent(n, e, s);
+                   });
+            ;
         }
     );
 }

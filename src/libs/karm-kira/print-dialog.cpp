@@ -1,9 +1,11 @@
 #include <karm-app/form-factor.h>
+#include <karm-gc/ptr.h>
 #include <karm-print/paper.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/popover.h>
 #include <karm-ui/reducer.h>
 #include <karm-ui/scroll.h>
+#include <vaev-dom/document.h>
 
 #include "checkbox.h"
 #include "dialog.h"
@@ -11,14 +13,39 @@
 #include "row.h"
 #include "select.h"
 
+import Vaev.Driver;
+
 namespace Karm::Kira {
 
 // MARK: Model -----------------------------------------------------------------
+
+enum struct PrintAction {
+    PRINT,
+    STOP
+};
+
+struct DocumentPrinter {
+    enum struct STATUS {
+        IDLE,
+        PRINTING,
+        PRINTED
+    };
+
+    Gc::Ref<Vaev::Dom::Document> dom;
+    Print::Settings const& settings;
+    STATUS status = STATUS::IDLE;
+
+    DocumentPrinter(Gc::Ref<Vaev::Dom::Document> dom, Print::Settings const& settings)
+        : dom(dom), settings(settings) {}
+};
 
 struct State {
     PrintPreview preview;
     Print::Settings settings = {};
     Vec<Print::Page> pages = preview(settings);
+    DocumentPrinter printer;
+
+    State(PrintPreview preview) : preview(preview), printer(Gc::Ref<Vaev::Dom::Document>{}, settings) {}
 };
 
 struct ChangePaper {
@@ -47,7 +74,8 @@ using Action = Union<
     ChangeMargin,
     ToggleHeaderFooter,
     ToggleBackgroundGraphics,
-    ChangeScale>;
+    ChangeScale,
+    PrintAction>;
 
 static Ui::Task<Action> reduce(State& s, Action a) {
     bool shouldUpdatePreview = false;
@@ -70,6 +98,9 @@ static Ui::Task<Action> reduce(State& s, Action a) {
     } else if (auto changeScale = a.is<ChangeScale>()) {
         s.settings.scale = clamp(changeScale->scale, 0.1, 10.);
         shouldUpdatePreview = true;
+    } else if (a.is<PrintAction>()) {
+        yap("ME PRIIINNNTING");
+        s.printer.status = DocumentPrinter::STATUS::PRINTING;
     }
 
     if (shouldUpdatePreview) {
@@ -347,6 +378,11 @@ Ui::Child _printControls(State const& s) {
            Ui::minSize({320, Ui::UNCONSTRAINED});
 }
 
+static void _printDocument(Ui::Node& node) {
+    yap("printing !");
+    Model::bubble(node, PrintAction::PRINT);
+}
+
 Ui::Child _printDialog(State const& s) {
     return dialogContent({
         dialogTitleBar("Print"s),
@@ -358,7 +394,7 @@ Ui::Child _printDialog(State const& s) {
         Ui::separator(),
         dialogFooter({
             dialogCancel(),
-            dialogAction(Ui::NOP, "Print"s),
+            dialogAction(_printDocument, "Print"s),
         }),
     });
 }
@@ -378,7 +414,7 @@ Ui::Child _printDialogMobile(State const& s) {
         Ui::separator(),
         dialogFooter({
             dialogCancel(),
-            dialogAction(Ui::NOP, "Print"s),
+            dialogAction(_printDocument, "Print"s),
         }),
     });
 }
