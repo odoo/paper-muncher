@@ -72,11 +72,15 @@ void CpuCanvas::transform(Math::Trans2f trans) {
 
 void CpuCanvas::_fillImpl(auto fill, auto format, FillRule fillRule) {
     _rast.fill(_poly, current().clip, fillRule, [&](CpuRast::Frag frag) {
+        u8 mask = current().clipMask.has() ? current().clipMask.unwrap()->pixels().load(frag.xy).red : 255;
+        if (mask == 0)
+            return;
+
         auto pixels = mutPixels();
         auto* pixel = pixels.pixelUnsafe(frag.xy);
         auto color = fill.sample(frag.uv);
         auto c = format.load(pixel);
-        c = color.withOpacity(frag.a).blendOver(c);
+        c = color.withOpacity(frag.a * (mask / 255.0)).blendOver(c);
         format.store(pixel, c);
     });
 }
@@ -88,10 +92,14 @@ void CpuCanvas::_FillSmoothImpl(auto fill, auto format, FillRule fillRule) {
         last = pos;
 
         _rast.fill(_poly, current().clip, fillRule, [&](CpuRast::Frag frag) {
+            u8 mask = current().clipMask.has() ? current().clipMask.unwrap()->pixels().load(frag.xy).red : 255;
+            if (mask == 0)
+                return;
+
             u8* pixel = static_cast<u8*>(mutPixels().pixelUnsafe(frag.xy));
             auto color = fill.sample(frag.uv);
             auto c = format.load(pixel);
-            c = color.withOpacity(frag.a).blendOverComponent(c, comp);
+            c = color.withOpacity(frag.a * (mask / 255.0)).blendOverComponent(c, comp);
             format.store(pixel, c);
         });
     };
@@ -186,8 +194,19 @@ void CpuCanvas::stroke() {
     _fill(current().stroke.fill);
 }
 
-void CpuCanvas::clip(FillRule) {
-    notImplemented();
+void CpuCanvas::clip(FillRule rule) {
+    Rc<Surface> newClipMask = current().clipMask.has() ? makeRc<Surface>(*current().clipMask.unwrap()) : Surface::alloc(pixels().size(), Gfx::GREYSCALE8);
+
+    Math::Polyf poly;
+    createSolid(poly, _path);
+    poly.transform(current().trans);
+
+    _rast.fill(poly, current().clip, rule, [&](CpuRast::Frag frag) {
+        const u8 parentPixel = current().clipMask.has() ? current().clipMask.unwrap()->pixels().load(frag.xy).red : 255;
+        newClipMask->mutPixels().store(frag.xy, Color::fromRgb(parentPixel * frag.a, 0, 0));
+    });
+
+    current().clipMask = newClipMask;
 }
 
 // MARK: Shape Operations ------------------------------------------------------
