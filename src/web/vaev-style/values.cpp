@@ -1168,7 +1168,7 @@ Res<LineHeight> ValueParser<LineHeight>::parse(Cursor<Css::Sst>& c) {
         return Error::invalidData("unexpected end of input");
 
     if (c.skip(Css::Token::ident("normal"))) {
-        return Ok(LineHeight::NORMAL);
+        return Ok(Keywords::NORMAL);
     }
 
     {
@@ -1180,7 +1180,7 @@ Res<LineHeight> ValueParser<LineHeight>::parse(Cursor<Css::Sst>& c) {
         }
     }
 
-    return Ok(LineHeight{try$(parseValue<PercentOr<Length>>(c))});
+    return Ok(try$(parseValue<PercentOr<Length>>(c)));
 }
 
 // MARK: MediaType

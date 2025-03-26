@@ -2,27 +2,19 @@
 
 #include <karm-base/union.h>
 
+#include "keywords.h"
 #include "length.h"
 #include "numbers.h"
 #include "percent.h"
 
 namespace Vaev {
 
-struct LineHeight {
-    struct _Normal {};
+using LineHeight = Union<Keywords::Normal, PercentOr<Length>, Number>;
 
-    static constexpr _Normal NORMAL = {};
-    Union<PercentOr<Length>, Number> _value;
-
-    LineHeight(_Normal) : _value(1.2) {}
-
-    LineHeight(PercentOr<Length> value) : _value(value) {}
-
-    LineHeight(Number value) : _value(value) {}
-
-    void repr(Io::Emit& e) const {
-        e("{}", _value);
-    }
-};
+LineHeight resolveToComputedValue(LineHeight const& lh) {
+    if (lh == Keywords::NORMAL)
+        return Number{1.2};
+    return lh;
+}
 
 } // namespace Vaev

@@ -5,6 +5,7 @@
 
 #include "angle.h"
 #include "length.h"
+#include "line.h"
 #include "percent.h"
 
 namespace Vaev {
@@ -277,6 +278,7 @@ struct FontProps {
     FontWidth width = FontWidth::NORMAL;
     FontStyle style = FontStyle::NORMAL;
     FontSize size = FontSize::MEDIUM;
+    LineHeight lineheight = Keywords::NORMAL;
 
     void repr(Io::Emit& e) const {
         e("(font");

@@ -1693,15 +1693,23 @@ struct FontProp {
     }
 
     void apply(Computed& c) const {
-        c.font.cow() = value;
+        auto& font = c.font.cow();
+
+        font = value;
+        font.lineheight = resolveToComputedValue(font.lineheight);
+
         if (unresolvedWeight)
-            c.font.cow().weight = unresolvedWeight->resolve();
+            font.weight = unresolvedWeight->resolve();
     }
 
     void apply(Computed const& parent, Computed& child) const {
-        child.font.cow() = value;
+        auto& font = child.font.cow();
+
+        font = value;
+        font.lineheight = resolveToComputedValue(font.lineheight);
+
         if (unresolvedWeight)
-            child.font.cow().weight = unresolvedWeight->resolve(parent.font->weight);
+            font.weight = unresolvedWeight->resolve(parent.font->weight);
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
@@ -1737,10 +1745,8 @@ struct FontProp {
             return Error::invalidData("expected font-style, font-weight, font-width or font-size");
         }
 
-        if (c.skip(Css::Token::delim("/"))) {
-            auto lh = Ok(parseValue<LineHeight>(c));
-            // TODO: use lineheight parsed value
-        }
+        if (c.skip(Css::Token::delim("/")))
+            value.lineheight = try$(parseValue<LineHeight>(c));
 
         value.families = {try$(parseValue<Text::Family>(c))};
 
@@ -1782,7 +1788,7 @@ struct LineHeightProp {
 
     static constexpr Str name() { return "line-height"; }
 
-    static LineHeight initial() { return LineHeight::NORMAL; }
+    static LineHeight initial() { return Keywords::NORMAL; }
 
     void apply(Computed&) const {
         // TODO
