@@ -171,7 +171,7 @@ static void _paintStackingContext(Frag& frag, Scene::Stack& stack) {
     });
 }
 
-static Math::Path _resolveClip(const Frag& frag) {
+static Rc<Scene::Clip> _resolveClip(const Frag& frag) {
     Math::Path result;
     auto& clip = frag.style().clip.unwrap();
 
@@ -202,12 +202,11 @@ static Math::Path _resolveClip(const Frag& frag) {
 
     if (not clip.shape) {
         result.rect(referenceBox.round().cast<f64>());
-        return result;
+        return makeRc<Scene::Clip>(result);
     }
 
     return clip.shape.unwrap().visit(Visitor {
         [&](const Polygon& polygon) {
-            // TODO: handle fill rule
             auto resolver = Resolver();
             const auto it = begin(polygon.points);
             result.moveTo(Math::Vec2f(
@@ -221,13 +220,13 @@ static Math::Path _resolveClip(const Frag& frag) {
                 ));
             }
 
-            return result;
+            return makeRc<Scene::Clip>(result, polygon.fillRule);
         }
     });
 }
 
 static void _establishStackingContext(Frag& frag, Scene::Stack& stack) {
-    Rc<Scene::Stack> innerStack = frag.style().clip.has() ? makeRc<Scene::Clip>(_resolveClip(frag)) : makeRc<Scene::Stack>();
+    Rc<Scene::Stack> innerStack = frag.style().clip.has() ? _resolveClip(frag) : makeRc<Scene::Stack>();
     innerStack->zIndex = frag.style().zIndex.unwrapOr<isize>(0);
     _paintStackingContext(frag, *innerStack);
     stack.add(std::move(innerStack));
