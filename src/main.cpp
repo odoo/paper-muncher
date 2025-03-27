@@ -57,8 +57,6 @@ Async::Task<> printAsync(
     Print::Settings settings = {
         .paper = paper,
         .scale = options.scale.toDppx(),
-        .headerFooter = true,
-        .backgroundGraphics = true,
     };
 
     auto printer = co_try$(
@@ -191,11 +189,13 @@ Async::Task<> renderAsync(
         )
     );
 
-    auto req = makeRc<Http::Request>();
-    req->method = Http::Method::PUT;
-    req->url = output;
-    req->body = Http::Body::from(bw.take());
-    co_trya$(client->doAsync(req));
+    co_trya$(client->doAsync(
+        Http::Request::from(
+            Http::Method::PUT,
+            output,
+            Http::Body::from(bw.take())
+        )
+    ));
 
     co_return Ok();
 }
@@ -210,10 +210,10 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     Cli::Command cmd{
         "paper-munch"s,
         NONE,
-        "A next generation document generation tool"s,
+        "Munch the web into crisp documents"s,
     };
 
-    auto scaleArg = Cli::option<Str>(NONE, "scale"s, "Scale of the output document in css units (e.g. 1x)"s, "1x"s);
+    auto scaleArg = Cli::option<Str>(NONE, "scale"s, "Scale of the input document in css units (e.g. 1x)"s, "1x"s);
     auto densityArg = Cli::option<Str>(NONE, "density"s, "Density of the output document in css units (e.g. 96dpi)"s, "1x"s);
     auto widthArg = Cli::option<Str>('w', "width"s, "Width of the output document in css units (e.g. 800px)"s, ""s);
     auto heightArg = Cli::option<Str>('h', "height"s, "Height of the output document in css units (e.g. 600px)"s, ""s);
@@ -224,17 +224,19 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     cmd.subCommand(
         "print"s,
         'p',
-        "Render document for printing"s,
+        "Render a web page into a printable document"s,
         {
             inputArg,
             outputArg,
             outputMimeArg,
-            scaleArg,
             densityArg,
-            widthArg,
-            heightArg,
+
             paperArg,
             orientationArg,
+
+            widthArg,
+            heightArg,
+            scaleArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::PrintOption options;
@@ -249,22 +251,18 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
                 options.height = co_try$(Vaev::Style::parseValue<Vaev::Length>(heightArg.unwrap()));
 
             options.paper = co_try$(Print::findPaperStock(paperArg.unwrap()));
-
             options.orientation = co_try$(Vaev::Style::parseValue<Print::Orientation>(orientationArg.unwrap()));
 
             Mime::Url input = "fd:stdin"_url;
-            if (inputArg.unwrap() != "-"s) {
+            if (inputArg.unwrap() != "-"s)
                 input = Mime::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
-            }
 
             Mime::Url output = "fd:stdout"_url;
-            if (outputArg.unwrap() != "-"s) {
+            if (outputArg.unwrap() != "-"s)
                 output = Mime::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
-            }
 
-            if (outputMimeArg.unwrap() != ""s) {
+            if (outputMimeArg.unwrap() != ""s)
                 options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));
-            }
 
             co_return co_await PaperMuncher::printAsync(input, output, options);
         }
@@ -273,15 +271,17 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     cmd.subCommand(
         "render"s,
         'r',
-        "Render document to image"s,
+        "Render a web page into an image"s,
         {
             inputArg,
             outputArg,
-            scaleArg,
+            outputMimeArg,
             densityArg,
+
             widthArg,
             heightArg,
-            outputMimeArg,
+            scaleArg,
+
             wireframeArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
@@ -299,18 +299,15 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             options.wireframe = wireframeArg.unwrap();
 
             Mime::Url input = "fd:stdin"_url;
-            if (inputArg.unwrap() != "-"s) {
+            if (inputArg.unwrap() != "-"s)
                 input = Mime::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
-            }
 
             Mime::Url output = "fd:stdout"_url;
-            if (outputArg.unwrap() != "-"s) {
+            if (outputArg.unwrap() != "-"s)
                 output = Mime::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
-            }
 
-            if (outputMimeArg.unwrap() != ""s) {
+            if (outputMimeArg.unwrap() != ""s)
                 options.outputFormat = co_try$(Mime::Uti::fromMime({outputMimeArg}));
-            }
 
             co_return co_await PaperMuncher::renderAsync(input, output, options);
         }
