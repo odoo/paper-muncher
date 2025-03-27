@@ -20,7 +20,7 @@ As a team we believe that building exceptional software requires strong opinions
 
 ## Essential Tools
 
-* [VSCode](https://code.visualstudio.com/) (zed or neovim work too)
+* Any text editor or IDE that support clangd (e.g., VSCode, CLion, etc.)
 * [Clangd for VSCode](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)
 * [tldraw for VSCode](https://marketplace.visualstudio.com/items?itemName=tldraw-org.tldraw-vscode)
 
@@ -58,7 +58,7 @@ We've adopted a specific C++ style to help us avoid common pitfalls and write ma
 * **Structs over classes:** Used by default since there's little practical difference in C++.
 * **No private/public:** Private variables are prefixed with `_` to indicate visibility. This simplifies testing.
 * **Short names for common things:** Frequently used types/functions have concise names (e.g., `Io::Scan` instead of `Io::PlainTextScanner`).
-- See [karmism](../src/libs/doc/karmism.md) for more details.
+* See [karmism](../src/libs/doc/karmism.md) for more details.
 
 ## Testing
 
@@ -75,7 +75,7 @@ We've adopted a specific C++ style to help us avoid common pitfalls and write ma
 
 ## Remote Work
 
-We are at GR2 on Wednesdays and Thursdays, and remote otherwise.
+We are at GR2 on Mondays, Wednesdays, and Thursdays, and remote otherwise.
 
 ## Remember
 
