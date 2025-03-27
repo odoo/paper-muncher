@@ -1,0 +1,7 @@
+nav a {
+    margin-inline: 8px;
+}
+
+nav a:first-child {
+    margin-inline-start: 0;
+}

@@ -1,107 +1,63 @@
 # Usage
 
-**Paper-Muncher** is a next-generation document generation tool designed for rendering documents to different formats, including PDFs and images. While there is no official way to install it yet, users who wish to use it will need to build it from the source code. 
+**Paper-Muncher** is a document rendering tool that converts web documents into high-quality **PDFs** or **rasterized images** using the Vaev layout engine. It supports HTTP and local I/O, and CSS units for layout configuration.
 
-## Available Commands
+## Commands
 
-1. **Printing to PDF:**
+---
 
-   ```
-   paper-muncher print <input> -o <output> [options]
-   ```
+### `print`
 
-   This command renders the specified document to a PDF file. It accepts several options for inspecting various internal states during rendering:
+```
+paper-munch print <input> -o <output> [options]
+```
 
-   - `-s, --dump-style`: Dumps the stylesheet that was applied during rendering.
-   - `-d, --dump-dom`: Dumps the DOM tree of the document.
-   - `-l, --dump-layout`: Dumps the layout tree after the document is laid out.
-   - `-p, --dump-paint`: Dumps the paint tree, showing how the document would be rendered visually.
+Renders a web document to a print-ready file (typically PDF).
 
-   **Examples:**
-   - Basic usage:
-     ```
-     paper-muncher print document.html -o output.pdf
-     ```
-   - Inspecting layout during PDF generation:
-     ```
-     paper-muncher print document.html -o output.pdf --dump-layout
-     ```
+**Options:**
 
-2. **Rendering to Image:**
+- `--scale <scale>`: Logical resolution (default: `1x`)
+- `--density <density>`: Output pixel density (default: `1x`)
+- `--paper <name>`: Paper stock (default: `A4`)
+- `--orientation <orientation>`: `portrait` or `landscape` (default: `portrait`)
+- `--width <length>`: Override paper width (e.g. `210mm`, `8.5in`)
+- `--height <length>`: Override paper height
+- `--output-mime <mime>`: Output format (default: `application/pdf`)
+- `-o <output>`: Output file or URL (default: stdout)
 
-   ```
-   paper-muncher render <input> -o <output> [options]
-   ```
+**Examples:**
 
-   This command renders the specified document to an image format such as PNG. It accepts additional options for setting the output dimensions and inspecting various internal states:
+```sh
+paper-munch print article.html -o out.pdf
+paper-munch print article.html -o out.pdf --paper Letter --orientation landscape
+paper-munch print article.html -o https://example.com/doc.pdf --output-mime application/pdf
+```
 
-   - `-w, --width`: Sets the width of the output image. Default is 800 pixels.
-   - `-h, --height`: Sets the height of the output image. Default is 600 pixels.
-   - `-s, --dump-style`: Dumps the stylesheet that was applied during rendering.
-   - `-d, --dump-dom`: Dumps the DOM tree of the document.
-   - `-l, --dump-layout`: Dumps the layout tree after the document is laid out.
-   - `-p, --dump-paint`: Dumps the paint tree, showing how the document would be rendered visually.
+---
 
-   **Examples:**
-   - Basic usage:
-     ```
-     paper-muncher render document.html -o output.png
-     ```
-   - Custom image dimensions:
-     ```
-     paper-muncher render document.html -o output.png --width 1024 --height 768
-     ```
+### `render`
 
-3. **CSS Commands:**
+```
+paper-munch render <input> -o <output> [options]
+```
 
-   Paper-Muncher provides tools to inspect and debug CSS files:
+Renders a web document to a raster image (BMP, PNG, etc.).
 
-   - **Dump Stylesheet:**
-     ```
-     paper-muncher css dump-stylesheet <input>
-     ```
-     Dumps the complete stylesheet of the input file.
+**Options:**
 
-   - **Dump Style Syntax Tree (SST):**
-     ```
-     paper-muncher css dump-sst <input>
-     ```
-     Dumps the parsed syntax tree of the stylesheet.
+- `--scale <scale>`: CSS resolution (default: `96dpi`)
+- `--density <density>`: Pixel density (default: `96dpi`)
+- `--width <length>`: Viewport width (default: `800px`)
+- `--height <length>`: Viewport height (default: `600px`)
+- `--output-mime <mime>`: Output format (default: `image/bmp`)
+- `--wireframe`: Show wireframe overlay of the layout
+- `-o <output>`: Output file or URL (default: stdout)
 
-   - **Dump CSS Tokens:**
-     ```
-     paper-muncher css dump-tokens <input>
-     ```
-     Displays individual CSS tokens parsed from the input file.
+**Examples:**
 
-4. **Style Commands:**
+```sh
+paper-munch render page.html -o out.bmp
+paper-munch render page.html -o out.png --width 1024px --height 768px --density 192dpi
+paper-munch render page.html -o out.png --wireframe
+```
 
-   - **List Style Properties:**
-     ```
-     paper-muncher style list-props
-     ```
-     Lists all the style properties that are recognized and supported by Paper-Muncher.
-
-5. **Markup Commands:**
-
-   Commands to debug and inspect HTML or XML-based documents:
-
-   - **Dump DOM:**
-     ```
-     paper-muncher markup dump-dom <input>
-     ```
-     Dumps the DOM tree of the input document.
-
-   - **Dump Markup Tokens:**
-     ```
-     paper-muncher markup dump-tokens <input>
-     ```
-     Displays individual tokens parsed from the markup input.
-
-6. **Inspector Mode:**
-
-   ```
-   paper-muncher inspect <input>
-   ```
-
-   Launches a UI-based inspector for visual debugging of the document. This allows you to see the rendered result, inspect individual elements, and debug layout and styling issues interactively.

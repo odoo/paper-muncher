@@ -27,7 +27,7 @@
         },
         "cute-engineering/cat": {
             "git": "https://github.com/cute-engineering/cat.git",
-            "tag": "v0.8.0"
+            "tag": "v0.9.1"
         },
         "cute-engineering/ce-targets": {
             "git": "https://github.com/cute-engineering/ce-targets.git",

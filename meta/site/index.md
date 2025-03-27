@@ -2,14 +2,16 @@
 <style>
     #munchkin {
         float: right;
-        width: 8rlh;
-        height: 8rlh;
-        margin-left: 0.5ch;
+        width: 6rlh;
+        height: 6rlh;
+        margin-left: 1rem;
     }
 </style>
 
-# Fast, Accurate, Easy To Use
+# Munch the web into crisp documents
 
 **Paper-Muncher** is a next-generation document generation tool tailor made for business applications.
 
-This project is currently in an experimental, proof-of-concept phase. Our focus is on exploring new ideas, optimizing performance, and developing core features for potential future integration with Odoo. Please note that we're not yet ready to commit to specific features, timelines, or release dates, and the project's direction may evolve based on our findings. Remember, this is an early-stage project, so please temper your expectations.
+---
+
+Paper-Muncher is now in early alpha. We're currently focused on improving stability and ensuring compliance. While it's still early days, the project is functional enough to try out, and we're actively looking for feedback. The direction may still evolve, but you can already get a feel for where we're headed. Let us know what you think in the github issues!

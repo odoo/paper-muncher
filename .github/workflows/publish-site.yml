@@ -37,7 +37,7 @@ jobs:
 
       - name: Build with cat
         run: |
-          python -m cutekit cat build --theme=doc
+          python -m cutekit cat build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

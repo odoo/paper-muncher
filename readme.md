@@ -6,7 +6,7 @@
 <img src="doc/assets/logo-dark.png#gh-dark-mode-only" width="280" />
 </p>
 <p align="center">
-    An experimental document-generation tool
+    Munch the web into crisp documents
 </p>
 
 <br/>
@@ -14,7 +14,7 @@
 
 # Status
 
-This project is currently in an experimental, proof-of-concept phase. Our focus is on exploring new ideas, optimizing performance, and developing core features for potential future integration with Odoo. Please note that we're not yet ready to commit to specific features, timelines, or release dates, and the project's direction may evolve based on our findings. Remember, this is an early-stage project, so please temper your expectations.
+Paper-Muncher is now in early alpha. We're currently focused on improving stability and ensuring compliance. While it's still early days, the project is functional enough to try out, and we're actively looking for feedback. The direction may still evolve, but you can already get a feel for where we're headed. Let us know what you think in the github issues!
 
 # Introduction
 
@@ -26,23 +26,26 @@ From the ashes of frustration, a new tool rose. Forged in the fires of programme
 
 The reign of wkhtmltopdf is over. The Paper Muncher has come. Let its name be etched in the annals of document creation, a beacon of hope for the weary PDF wranglers.  Prepare to be Munched!
 
-# Trying it out
+# Installation
 
 > **⚠ Warning**<br> Paper Muncher is currently in the early stages of development and is not yet ready for use. Here be dragons! 🐉
 
 ```sh
-# On Linux or MacOS
+# Clone the repository
+git clone https://github.com/odoo/paper-muncher
 
-# View a document in the inspector
-./ck run --release vaev-browser -- <input document>
+# Build and install the project
+cd paper-muncher
+./ck package install --release --prefix=$HOME/.local
 
-# Render a document to an image
-./ck run --release paper-muncher -- render index.xhtml -o image.bmp
+# Add the binary to your PATH, add this to your .bashrc to make it permanent
+export PATH=$PATH:$HOME/.local/bin
 
-# Print a document to a PDF
-./ck run --release paper-muncher -- print index.xhtml -o document.pdf
+# Render a webpage to PDF
+paper-muncher print index.html -o output.pdf
 
-# Windows support comming soon'ish
+# For more options, run
+paper-muncher --help
 ```
 
 ## License
