@@ -1,6 +1,7 @@
 module;
 
 #include <karm-image/picture.h>
+#include <karm-text/font.h>
 #include <karm-text/prose.h>
 #include <vaev-style/computer.h>
 
@@ -515,6 +516,36 @@ export struct Input {
     }
 };
 
+// https://drafts.csswg.org/css-align-3/#baseline-set
+// https://drafts.csswg.org/css-writing-modes-3/#baseline
+// https://www.w3.org/TR/css-inline-3/#baseline-types
+// https://www.w3.org/TR/css-inline-3/#dominant-baseline-property
+// NOTE: positions are relative to box top, not absolute
+export struct BaselinePositionsSet {
+    Au alphabetic;
+    Au xHeight;
+    Au xMiddle;
+    Au capHeight;
+
+    BaselinePositionsSet translate(Au delta) const {
+        return {
+            alphabetic + delta,
+            xHeight + delta,
+            xMiddle + delta,
+            capHeight + delta,
+        };
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(baselineset ");
+        e(" alphabetic {}", alphabetic);
+        e(" xHeight {}", xHeight);
+        e(" xMiddle {}", xMiddle);
+        e(" capHeight {}", capHeight);
+        e(")\n");
+    }
+};
+
 export struct Output {
     // size of subtree maximizing displayed content while respecting
     // - endchild constraint or
@@ -533,6 +564,8 @@ export struct Output {
 
     // only to be used in discovery mode
     Opt<Breakpoint> breakpoint = NONE;
+
+    BaselinePositionsSet const baselineSet = {};
 
     static Output fromSize(Vec2Au size) {
         return {
@@ -554,6 +587,44 @@ export struct Output {
 
 struct FormatingContext {
     virtual ~FormatingContext() = default;
+
+    // https://drafts.csswg.org/css-inline-3/#valdef-baseline-source-auto
+    // https://drafts.csswg.org/css-inline-3/#valdef-baseline-source-first
+    void considerFirstBaseline(
+        Box& b,
+        BaselinePositionsSet& parentBaselineSet,
+        BaselinePositionsSet const& childBaselineSet,
+        Au childPosition,
+        Au parentPosition
+    ) {
+        if (b.style->baseline->source == Keywords::LAST_LINE)
+            return;
+        if (
+            b.style->baseline->source == Keywords::AUTO and
+            b.style->display == Display::INLINE and b.style->display == Display::BLOCK
+        )
+            return;
+
+        parentBaselineSet = childBaselineSet.translate(childPosition - parentPosition);
+    }
+
+    // https://drafts.csswg.org/css-inline-3/#valdef-baseline-source-auto
+    // https://drafts.csswg.org/css-inline-3/#valdef-baseline-source-last
+    void considerLastBaseline(
+        Box& b,
+        BaselinePositionsSet& parentBaselineSet,
+        BaselinePositionsSet const& childBaselineSet,
+        Au childPosition,
+        Au parentPosition
+    ) {
+        if (
+            b.style->baseline->source == Keywords::LAST_LINE or
+            (b.style->baseline->source == Keywords::AUTO and
+             b.style->display == Display::INLINE and b.style->display == Display::BLOCK)
+        ) {
+            parentBaselineSet = childBaselineSet.translate(childPosition - parentPosition);
+        }
+    }
 
     virtual void build(Tree&, Box&) {};
     virtual Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) = 0;
