@@ -86,16 +86,7 @@ static Rc<Karm::Text::Fontface> _lookupFontface(Text::FontBook& fontBook, Style:
 
 auto RE_SEGMENT_BREAK = Re::single('\n', '\r', '\f', '\v');
 
-static void _buildRun(Style::Computer& c, Gc::Ref<Dom::Text> node, Box& parent) {
-    auto style = makeRc<Style::Computed>(Style::Computed::initial());
-    style->inherit(*parent.style);
-
-    auto fontFace = _lookupFontface(c.fontBook, *style);
-    Io::SScan scan{node->data()};
-    scan.eat(Re::space());
-    if (scan.ended())
-        return;
-
+static Text::ProseStyle _proseStyleFomStyle(Style::Computed& style, Rc<Text::Fontface> fontFace) {
     // FIXME: We should pass this around from the top in order to properly resolve rems
     Resolver resolver{
         .rootFont = Text::Font{fontFace, 16},
@@ -104,12 +95,12 @@ static void _buildRun(Style::Computer& c, Gc::Ref<Dom::Text> node, Box& parent) 
     Text::ProseStyle proseStyle{
         .font = {
             fontFace,
-            resolver.resolve(style->font->size).cast<f64>(),
+            resolver.resolve(style.font->size).cast<f64>(),
         },
         .multiline = true,
     };
 
-    switch (style->text->align) {
+    switch (style.text->align) {
     case TextAlign::START:
     case TextAlign::LEFT:
         proseStyle.align = Text::TextAlign::LEFT;
@@ -129,6 +120,20 @@ static void _buildRun(Style::Computer& c, Gc::Ref<Dom::Text> node, Box& parent) 
         break;
     }
 
+    return proseStyle;
+}
+
+static void _buildRun(Style::Computer& c, Gc::Ref<Dom::Text> node, Box& parent) {
+    auto style = makeRc<Style::Computed>(Style::Computed::initial());
+    style->inherit(*parent.style);
+
+    auto fontFace = _lookupFontface(c.fontBook, *style);
+    Io::SScan scan{node->data()};
+    scan.eat(Re::space());
+    if (scan.ended())
+        return;
+
+    auto proseStyle = _proseStyleFomStyle(*style, fontFace);
     auto prose = makeRc<Text::Prose>(proseStyle);
     auto whitespace = style->text->whiteSpace;
 
@@ -176,6 +181,27 @@ static void _buildRun(Style::Computer& c, Gc::Ref<Dom::Text> node, Box& parent) 
     }
 
     parent.add({style, fontFace, std::move(prose)});
+}
+
+// MARK: Build Input -----------------------------------------------------------
+
+static void _buildInput(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& parent) {
+    auto style = c.computeFor(*parent.style, el);
+    auto font = _lookupFontface(c.fontBook, *style);
+    Resolver resolver{
+        .rootFont = Text::Font{font, 16},
+        .boxFont = Text::Font{font, 16},
+    };
+    Text::ProseStyle proseStyle = _proseStyleFomStyle(*style, font);
+
+    auto value = ""s;
+    if (el->hasAttribute(Html::VALUE_ATTR))
+        value = el->getAttribute(Html::VALUE_ATTR).unwrap();
+    else if (el->hasAttribute(Html::PLACEHOLDER_ATTR))
+        value = el->getAttribute(Html::PLACEHOLDER_ATTR).unwrap();
+
+    auto prose = makeRc<Text::Prose>(proseStyle, value);
+    parent.add({style, font, prose});
 }
 
 // MARK: Build Block -----------------------------------------------------------
@@ -271,6 +297,9 @@ static void _buildTable(Style::Computer& c, Rc<Style::Computed> style, Gc::Ref<D
 static void _buildElement(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& parent) {
     if (el->tagName == Html::IMG) {
         _buildImage(c, el, parent);
+        return;
+    } else if (el->tagName == Html::INPUT) {
+        _buildInput(c, el, parent);
         return;
     }
 
