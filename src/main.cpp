@@ -208,7 +208,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto outputMimeArg = Cli::option<Str>(NONE, "output-mime"s, "Overide the output MIME type"s, ""s);
 
     Cli::Command cmd{
-        "paper-munch"s,
+        "paper-muncher"s,
         NONE,
         "Munch the web into crisp documents"s,
     };
