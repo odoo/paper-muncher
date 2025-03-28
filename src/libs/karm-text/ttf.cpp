@@ -24,6 +24,16 @@ FontMetrics TtfFontface::metrics() const {
     };
 }
 
+BaselineSet TtfFontface::baselineSet() {
+    auto xHeight = _parser.glyphMetrics(glyph('x')).y;
+    return {
+        .alphabetic = 0,
+        .xHeight = xHeight,
+        .xMiddle = xHeight / 2,
+        .capHeight = _parser.glyphMetrics(glyph('H')).y,
+    };
+}
+
 FontAttrs TtfFontface::attrs() const {
     FontAttrs attrs;
 

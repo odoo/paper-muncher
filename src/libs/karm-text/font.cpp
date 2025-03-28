@@ -32,6 +32,17 @@ FontMetrics Font::metrics() const {
     return m;
 }
 
+BaselineSet Font::baselineSet() {
+    auto bs = fontface->baselineSet();
+
+    bs.alphabetic *= fontsize;
+    bs.xHeight *= fontsize;
+    bs.xMiddle *= fontsize;
+    bs.capHeight *= fontsize;
+
+    return bs;
+}
+
 Glyph Font::glyph(Rune rune) {
     return fontface->glyph(rune);
 }
