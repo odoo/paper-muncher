@@ -265,12 +265,15 @@ Output layout(Tree& tree, Box& box, Input input) {
             out.breakpoint
         );
 
-        out.size = size + padding.all() + borders.all();
-
         if (isMonolithicDisplay)
             tree.fc.leaveMonolithicBox();
 
-        return out;
+        return {
+            .size = size + padding.all() + borders.all(),
+            .completelyLaidOut = out.completelyLaidOut,
+            .breakpoint = out.breakpoint,
+            .baselineSet = out.baselineSet.translate(padding.top + borders.top),
+        };
     } else {
         Opt<usize> stopAt = tree.fc.allowBreak()
                                 ? input.breakpointTraverser.getEnd()
@@ -310,7 +313,8 @@ Output layout(Tree& tree, Box& box, Input input) {
 
         return Output{
             .size = size,
-            .completelyLaidOut = out.completelyLaidOut
+            .completelyLaidOut = out.completelyLaidOut,
+            .baselineSet = out.baselineSet.translate(padding.top + borders.top),
         };
     }
 }

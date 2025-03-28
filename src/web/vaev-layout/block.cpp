@@ -1,6 +1,8 @@
 module;
 
+#include <karm-base/func.h>
 #include <karm-math/au.h>
+#include <karm-text/prose.h>
 #include <vaev-base/break.h>
 #include <vaev-base/display.h>
 #include <vaev-base/insets.h>
@@ -152,6 +154,7 @@ struct BlockFormatingContext : public FormatingContext {
     }
 
     Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
+        // logDebug("oiiiiiiiiiiiiiiiiiiiiiiii1");
         Au blockSize = 0_au;
         Au inlineSize = input.knownSize.width.unwrapOr(0_au);
 
@@ -165,13 +168,16 @@ struct BlockFormatingContext : public FormatingContext {
             inlineSize = run(tree, box, input.withFragment(nullptr), startAt, stopAt).width();
 
         Breakpoint currentBreakpoint;
+        BaselinePositionsSet baselineSet;
 
+        // logDebug("oiiiiiiiiiiiiiiiiiiiiiiii2");
         usize endChildren = stopAt.unwrapOr(box.children().len());
 
         bool blockWasCompletelyLaidOut = false;
 
         Au lastMarginBottom = 0_au;
         for (usize i = startAt; i < endChildren; ++i) {
+            // logDebug("oiiiiiiiiiiiiiiiiiiiiiiii3");
             auto& c = box.children()[i];
 
             try$(
@@ -236,6 +242,11 @@ struct BlockFormatingContext : public FormatingContext {
                 output.breakpoint
             );
 
+            if (i == startAt)
+                considerFirstBaseline(box, baselineSet, output.baselineSet, childInput.position.y, input.position.y);
+            considerLastBaseline(box, baselineSet, output.baselineSet, childInput.position.y, input.position.y);
+
+            // logDebug("oiiiiiii5");
             try$(processBreakpointsAfterChild(
                 tree.fc,
                 currentBreakpoint,
@@ -250,12 +261,17 @@ struct BlockFormatingContext : public FormatingContext {
             }
 
             inlineSize = max(inlineSize, output.size.x + margin.horizontal());
+
+            // logDebug("oiiiiiii4");
         }
+
+        // logDebug("found baseline set of {}", baselineSet);
 
         return {
             .size = Vec2Au{inlineSize, blockSize},
             .completelyLaidOut = blockWasCompletelyLaidOut,
-            .breakpoint = currentBreakpoint
+            .breakpoint = currentBreakpoint,
+            .baselineSet = baselineSet,
         };
     }
 };
