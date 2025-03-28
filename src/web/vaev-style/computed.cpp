@@ -31,6 +31,7 @@ void Computed::repr(Io::Emit& e) const {
     e(" aligns: {}", aligns);
     e(" gaps: {}", gaps);
     e(" backgrounds: {}", backgrounds);
+    e(" baseline: {}", baseline);
     e(" borders: {}", borders);
     e(" margin: {}", margin);
     e(" padding: {}", padding);
