@@ -1,14 +1,21 @@
-#pragma once
+module;
 
-#include "base.h"
-#include "css/parser.h"
-#include "props.h"
+#include <karm-base/cursor.h>
+#include <karm-base/res.h>
+#include <karm-base/vec.h>
+#include <karm-logger/logger.h>
+
+export module Vaev.Style:decls;
+
+import Vaev.Style.Css;
+import :base;
+import :props;
 
 namespace Vaev::Style {
 
-static bool DEBUG_DECL = false;
+static constexpr bool DEBUG_DECL = false;
 
-template <typename T>
+export template <typename T>
 Res<T> parseDeclarationValue(Cursor<Css::Sst>& c) {
     if constexpr (requires { T{}.parse(c); }) {
         T t;
@@ -21,7 +28,7 @@ Res<T> parseDeclarationValue(Cursor<Css::Sst>& c) {
     }
 }
 
-static inline Important _consumeImportant(Cursor<Css::Sst>& c, bool eatEverything) {
+inline Important _consumeImportant(Cursor<Css::Sst>& c, bool eatEverything) {
     eatWhitespace(c);
     while (not c.ended()) {
         if (c.skip(Css::Token::delim("!")) and
@@ -39,7 +46,7 @@ static inline Important _consumeImportant(Cursor<Css::Sst>& c, bool eatEverythin
 }
 
 template <typename P>
-static inline P _deferProperty(Css::Sst const& sst) {
+inline P _deferProperty(Css::Sst const& sst) {
     P prop = DeferredProp{sst.token.data, sst.content};
     if constexpr (requires { P::important; }) {
         Cursor<Css::Sst> content = sst.content;
@@ -49,7 +56,7 @@ static inline P _deferProperty(Css::Sst const& sst) {
 }
 
 template <typename P, typename T>
-static inline Res<P> _parseDeclaration(Css::Sst const& sst) {
+inline Res<P> _parseDeclaration(Css::Sst const& sst) {
     Cursor<Css::Sst> content = sst.content;
 
     eatWhitespace(content);
@@ -65,7 +72,7 @@ static inline Res<P> _parseDeclaration(Css::Sst const& sst) {
 }
 
 template <typename P>
-static inline Res<P> _parseDefaulted(Css::Sst const& sst) {
+inline Res<P> _parseDefaulted(Css::Sst const& sst) {
     Cursor<Css::Sst> content = sst.content;
     Res<P> res = Error::invalidData("unknown declaration");
     if (content.skip(Css::Token::ident("initial"))) {
@@ -80,7 +87,7 @@ static inline Res<P> _parseDefaulted(Css::Sst const& sst) {
     return res;
 }
 
-template <typename P>
+export template <typename P>
 Res<P> parseDeclaration(Css::Sst const& sst, bool allowDeferred = true) {
     if (sst != Css::Sst::DECL)
         panic("expected declaration");
@@ -133,7 +140,7 @@ Res<P> parseDeclaration(Css::Sst const& sst, bool allowDeferred = true) {
     return resDecl;
 }
 
-template <typename P>
+export template <typename P>
 Vec<P> parseDeclarations(Css::Content const& sst, bool allowDeferred = true) {
     Vec<P> res;
 
@@ -155,12 +162,12 @@ Vec<P> parseDeclarations(Css::Content const& sst, bool allowDeferred = true) {
     return res;
 }
 
-template <typename P>
+export template <typename P>
 Vec<P> parseDeclarations(Css::Sst const& sst, bool allowDeferred = true) {
     return parseDeclarations<P>(sst.content, allowDeferred);
 }
 
-template <typename P>
+export template <typename P>
 Vec<P> parseDeclarations(Str style, bool allowDeferred = true) {
     Css::Lexer lex{style};
     auto sst = Css::consumeDeclarationList(lex, true);
