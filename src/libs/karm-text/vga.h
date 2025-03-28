@@ -26,6 +26,16 @@ struct VgaFontface : public Fontface {
         };
     }
 
+    BaselineSet baselineSet() override {
+        return UnresolvedBaselineSet{
+            .alphabetic = 0 / UNIT_PER_EM,
+            .xHeight = 6 / UNIT_PER_EM,
+            .capHeight = 10 / UNIT_PER_EM,
+            .xMiddle = 3 / UNIT_PER_EM,
+        }
+            .resolve();
+    }
+
     FontAttrs attrs() const override {
         return {
             .family = "IBM VGA8"s,

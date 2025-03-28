@@ -298,4 +298,57 @@ struct FontAttrs {
     }
 };
 
+// MARK: Baseline -------------------------------------------------------------
+
+struct BaselineSet {
+    f64 alphabetic;
+    f64 xHeight;
+    f64 xMiddle;
+    f64 capHeight;
+
+    BaselineSet combine(BaselineSet other) {
+        return {
+            .alphabetic = ::max(alphabetic, other.alphabetic),
+            .xHeight = ::max(xHeight, other.xHeight),
+            .xMiddle = ::max(xMiddle, other.xMiddle),
+            .capHeight = ::max(capHeight, other.capHeight),
+        };
+    }
+
+    BaselineSet scale(f64 factor) {
+        return {
+            .alphabetic = alphabetic * factor,
+            .xHeight = xHeight * factor,
+            .xMiddle = xMiddle * factor,
+            .capHeight = capHeight * factor,
+        };
+    }
+};
+
+// https://drafts.csswg.org/css-align-3/#baseline-set
+// https://www.w3.org/TR/css-inline-3/#baseline-types
+// FIXME: add missing baseline types
+struct UnresolvedBaselineSet {
+    f64 alphabetic;
+    f64 xHeight;
+    f64 capHeight;
+
+    Opt<f64> xMiddle = NONE;
+
+    f64 _resolveXMiddle() const {
+        if (xMiddle)
+            return xMiddle.unwrap();
+        return (alphabetic + xHeight) / 2;
+    }
+
+    BaselineSet resolve() const {
+        return {
+            .alphabetic = alphabetic,
+            .xHeight = xHeight,
+            .xMiddle = _resolveXMiddle(),
+            .capHeight = capHeight,
+        };
+    }
+};
+
 } // namespace Karm::Text

@@ -22,6 +22,8 @@ struct TtfFontface : public Fontface {
 
     FontMetrics metrics() const override;
 
+    BaselineSet baselineSet() override;
+
     FontAttrs attrs() const override;
 
     Glyph glyph(Rune rune) override;
