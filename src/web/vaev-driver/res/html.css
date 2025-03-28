@@ -232,25 +232,12 @@ th {
 
 /* 15.3.10 MARK: Form controls ---------------------------------------------- */
 
-input {
-    /* NOSPEC: Input appearance */
-    border: 1px solid #ccc;
-    border-radius: 3px;
-}
-
 input[type="reset" i],
 input[type="button" i],
 input[type="submit" i],
 button {
     text-align: center;
-
-    /* NOSPEC: Button appearance */
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    color: #333;
 }
-
 
 input,
 button {
