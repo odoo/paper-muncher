@@ -63,14 +63,48 @@ struct Prose : public Meta::Pinned {
         Opt<Gfx::Color> color;
     };
 
+    struct CellContent {
+        virtual Glyph glyph() const = 0;
+
+        virtual ~CellContent() {};
+    };
+
+    struct StrutCell : public CellContent {
+        always_inline Glyph glyph() const override {
+            return Glyph::TOFU;
+        }
+    };
+
+    struct RuneCell : public CellContent {
+        Glyph _glyph;
+
+        RuneCell(Glyph glyph) : _glyph(glyph) {}
+
+        always_inline Glyph glyph() const override {
+            return _glyph;
+        }
+    };
+
     struct Cell {
         MutCursor<Prose> prose;
         MutCursor<Span> span;
 
         urange runeRange;
-        Glyph glyph;
         Au pos = 0_au; //< Position of the glyph within the block
         Au adv = 0_au; //< Advance of the glyph
+
+        Rc<CellContent> _content;
+
+        void measureAdvance(auto measureStrut) {
+            if (_content.is<RuneCell>())
+                adv = Au{prose->_style.font.advance(_content->glyph())};
+            else
+                adv = measureStrut(_content);
+        }
+
+        Glyph glyph() const {
+            return _content->glyph();
+        }
 
         MutSlice<Rune> runes() {
             return mutSub(prose->_runes, runeRange);
@@ -150,6 +184,7 @@ struct Prose : public Meta::Pinned {
 
     Vec<Rune> _runes;
     Vec<Cell> _cells;
+    Vec<usize> _structCellsIndexes;
     Vec<Block> _blocks;
     Vec<Line> _lines;
 
@@ -180,7 +215,9 @@ struct Prose : public Meta::Pinned {
             append(rune);
     }
 
+    void _append(Cell&& cell);
     void append(Slice<Rune> runes);
+    void append(Rc<StrutCell> strut);
 
     // MARK: Span --------------------------------------------------------------
 
@@ -208,9 +245,38 @@ struct Prose : public Meta::Pinned {
 
     void copySpanStack(Prose const& prose);
 
+    // MARK: Strut ------------------------------------------------------------
+
+    // FIXME: can be a generator
+    Vec<MutCursor<Cell>> cellsWithStruts() {
+        Vec<MutCursor<Cell>> cells;
+        for (auto i : _structCellsIndexes)
+            cells.pushBack(&_cells[i]);
+        return cells;
+    }
+
     // MARK: Layout ------------------------------------------------------------
 
-    void _measureBlocks();
+    void _measureBlocks(auto measureStrut) {
+        for (auto& block : _blocks) {
+            auto adv = 0_au;
+            bool first = true;
+            Glyph prev = Glyph::TOFU;
+            for (auto& cell : block.cells()) {
+                if (not first)
+                    adv += Au{_style.font.kern(prev, cell.glyph())};
+                else
+                    first = false;
+
+                cell.pos = adv;
+                cell.measureAdvance(measureStrut);
+
+                adv += cell.adv;
+                prev = cell.glyph();
+            }
+            block.width = adv;
+        }
+    }
 
     void _wrapLines(Au width);
 
@@ -218,7 +284,29 @@ struct Prose : public Meta::Pinned {
 
     Au _layoutHorizontaly(Au width);
 
-    Vec2Au layout(Au width);
+    Vec2Au layout(Au width, auto measureStrut) {
+        if (isEmpty(_blocks))
+            return {};
+
+        // Blocks measurements can be reused between layouts changes
+        // only line wrapping need to be re-done
+        if (not _blocksMeasured) {
+            _measureBlocks(measureStrut);
+            _blocksMeasured = true;
+        }
+
+        _wrapLines(width);
+        auto textHeight = _layoutVerticaly();
+        auto textWidth = _layoutHorizontaly(width);
+        _size = {textWidth, textHeight};
+        return {textWidth, textHeight};
+    }
+
+    Vec2Au layout(Au width) {
+        return layout(width, [](Rc<CellContent>) {
+            return 0_au;
+        });
+    }
 
     // MARK: Paint -------------------------------------------------------------
 
