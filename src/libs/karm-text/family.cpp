@@ -71,6 +71,14 @@ FontMetrics FontFamily::metrics() const {
     return metrics;
 }
 
+BaselineSet FontFamily::baselineSet() {
+    BaselineSet bs = {};
+
+    // FIXME
+
+    return bs;
+}
+
 FontAttrs FontFamily::attrs() const {
     FontAttrs attrs;
 

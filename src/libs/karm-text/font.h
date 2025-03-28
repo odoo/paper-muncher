@@ -46,6 +46,15 @@ struct FontMetrics {
     }
 };
 
+// https://drafts.csswg.org/css-align-3/#baseline-set
+// https://www.w3.org/TR/css-inline-3/#baseline-types
+struct BaselineSet {
+    f64 alphabetic;
+    f64 xHeight;
+    f64 xMiddle;
+    f64 capHeight;
+};
+
 struct FontMeasure {
     Math::Rectf capbound;
     Math::Rectf linebound;
@@ -58,6 +67,8 @@ struct Fontface {
     virtual ~Fontface() = default;
 
     virtual FontMetrics metrics() const = 0;
+
+    virtual BaselineSet baselineSet() = 0;
 
     virtual FontAttrs attrs() const = 0;
 
@@ -78,6 +89,7 @@ struct Font {
     static Font fallback();
 
     FontMetrics metrics() const;
+    BaselineSet baselineSet();
 
     Glyph glyph(Rune rune);
 
