@@ -20,6 +20,23 @@ void Prose::_beginBlock() {
     });
 }
 
+void Prose::append(Rc<StrutCell> strut) {
+    _beginBlock();
+
+    // FIXME: _append encasulates _cell but we are using its size to find the index
+    _structCellsIndexes.pushBack(_cells.len());
+    _cells.pushBack({
+        .prose = this,
+        .span = _currentSpan,
+        .runeRange = {_runes.len(), 1},
+        ._content = strut,
+    });
+
+    _runes.pushBack(0);
+    last(_blocks).cellRange.size++;
+    last(_blocks).runeRange.end(_runes.len());
+}
+
 void Prose::append(Rune rune) {
     if (any(_blocks) and last(_blocks).newline())
         _beginBlock();
@@ -33,10 +50,11 @@ void Prose::append(Rune rune) {
         .prose = this,
         .span = _currentSpan,
         .runeRange = {_runes.len(), 1},
-        .glyph = glyph,
+        ._content = makeRc<RuneCell>(glyph),
     });
 
     _runes.pushBack(rune);
+
     last(_blocks).cellRange.size++;
     last(_blocks).runeRange.end(_runes.len());
 }
@@ -78,26 +96,6 @@ void Prose::append(Slice<Rune> runes) {
 }
 
 // MARK: Layout -------------------------------------------------------------
-
-void Prose::_measureBlocks() {
-    for (auto& block : _blocks) {
-        auto adv = 0_au;
-        bool first = true;
-        Glyph prev = Glyph::TOFU;
-        for (auto& cell : block.cells()) {
-            if (not first)
-                adv += Au{_style.font.kern(prev, cell.glyph)};
-            else
-                first = false;
-
-            cell.pos = adv;
-            cell.adv = Au{_style.font.advance(cell.glyph)};
-            adv += cell.adv;
-            prev = cell.glyph;
-        }
-        block.width = adv;
-    }
-}
 
 void Prose::_wrapLines(Au width) {
     _lines.clear();
@@ -188,24 +186,6 @@ Au Prose::_layoutHorizontaly(Au width) {
     }
 
     return maxWidth;
-}
-
-Vec2Au Prose::layout(Au width) {
-    if (isEmpty(_blocks))
-        return {};
-
-    // Blocks measurements can be reused between layouts changes
-    // only line wrapping need to be re-done
-    if (not _blocksMeasured) {
-        _measureBlocks();
-        _blocksMeasured = true;
-    }
-
-    _wrapLines(width);
-    auto textHeight = _layoutVerticaly();
-    auto textWidth = _layoutHorizontaly(width);
-    _size = {textWidth, textHeight};
-    return {textWidth, textHeight};
 }
 
 } // namespace Karm::Text
