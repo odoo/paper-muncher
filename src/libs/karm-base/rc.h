@@ -242,7 +242,7 @@ struct _Rc {
 
         if (not Meta::Same<T, U> and
             not Meta::Derive<T, U> and
-            not _cell->id() == Meta::idOf<U>()) {
+            not(_cell->id() == Meta::idOf<U>())) {
             return nullptr;
         }
 
