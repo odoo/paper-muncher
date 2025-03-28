@@ -309,7 +309,13 @@ export struct BlockFlowBuilder {
         if (display == Display::Inside::FLOW) {
             InlineFlowBuilder{box, rootInlineBox}.buildFromElement(c, child, childStyle);
         } else if (display == Display::Inside::FLOW_ROOT) {
-            BlockFlowBuilder::fromElement(c, box, childStyle, child);
+            auto font = _lookupFontface(c.fontBook, *childStyle);
+            Box box = {childStyle, font};
+            BlockFlowBuilder{c, box}.buildFromElement(c, child);
+
+            box.attrs = _parseDomAttr(child);
+
+            rootInlineBox->add(std::move(box));
         } else {
             // FIXME: fallback to FLOW since not implemented
             InlineFlowBuilder{box, rootInlineBox}.buildFromElement(c, child, childStyle);
@@ -404,7 +410,13 @@ void InlineFlowBuilder::_buildChildDefaultDisplay(Style::Computer& c, Gc::Ref<Do
     if (display == Display::Inside::FLOW) {
         buildFromElement(c, child, childStyle);
     } else if (display == Display::Inside::FLOW_ROOT) {
-        BlockFlowBuilder::fromElement(c, rootBox, childStyle, child);
+        auto font = _lookupFontface(c.fontBook, *childStyle);
+        Box box = {childStyle, font};
+        BlockFlowBuilder{c, box}.buildFromElement(c, child);
+
+        box.attrs = _parseDomAttr(child);
+
+        rootInlineBox->add(std::move(box));
     } else {
         // FIXME: fallback to FLOW since not implemented
         buildFromElement(c, child, childStyle);

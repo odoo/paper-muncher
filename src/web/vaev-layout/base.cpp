@@ -260,6 +260,12 @@ export struct InlineBox {
         prose->popSpan();
     }
 
+    struct BoxStrutCell : Text::Prose::StrutCell {
+        usize boxIndex;
+
+        BoxStrutCell(usize boxIndex) : boxIndex(boxIndex) {}
+    };
+
     void add(Box&& b);
 
     bool active() {
@@ -361,6 +367,7 @@ struct Box : public Meta::NoCopy {
 };
 
 void InlineBox::add(Box&& b) {
+    prose->append(makeRc<BoxStrutCell>(atomicBoxes.len()));
     atomicBoxes.pushBack(makeBox<Box>(std::move(b)));
 }
 
