@@ -20,6 +20,25 @@ void Prose::_beginBlock() {
     });
 }
 
+void Prose::append(Rc<StrutCell> strut) {
+    if (_blocks.len() and not last(_blocks).empty())
+        _beginBlock();
+
+    _strutCellsIndexes.pushBack(_cells.len());
+    _cells.pushBack({
+        .prose = this,
+        .span = _currentSpan,
+        .runeRange = {_runes.len(), 1},
+        .glyph = Glyph::TOFU,
+        .strutContent = strut,
+    });
+
+    _runes.pushBack(0);
+
+    last(_blocks).cellRange.size++;
+    last(_blocks).runeRange.end(_runes.len());
+}
+
 void Prose::append(Rune rune) {
     if (any(_blocks) and last(_blocks).newline())
         _beginBlock();
@@ -91,7 +110,8 @@ void Prose::_measureBlocks() {
                 first = false;
 
             cell.pos = adv;
-            cell.adv = Au{_style.font.advance(cell.glyph)};
+            cell.measureAdvance();
+
             adv += cell.adv;
             prev = cell.glyph;
         }
@@ -145,13 +165,34 @@ void Prose::_wrapLines(Au width) {
 
 Au Prose::_layoutVerticaly() {
     auto m = _style.font.metrics();
-    Au baseline = Au{Math::ceil(m.linegap / 2)};
+
+    // NOTE: applying ceiling so fonts are pixel aligned
+    f64 halfFontLineGap = m.linegap / 2;
+    Au fontAscent = Au{Math::ceil(m.ascend + halfFontLineGap)};
+    Au fontDescend = Au{Math::ceil(m.descend + halfFontLineGap)};
+
+    Au currHeight = 0_au;
     for (auto& line : _lines) {
-        baseline += Au{Math::ceil(m.ascend)};
-        line.baseline = baseline;
-        baseline += Au{Math::ceil(m.linegap + m.descend)};
+        Au lineTop = currHeight;
+
+        Au maxAscent = 0_au;
+        Au maxDescend = 0_au;
+        for (auto& block : line.blocks()) {
+            if (block.strut()) {
+                Au baseline{block.strut().unwrap()->getBaseline()};
+                maxAscent = max(maxAscent, baseline);
+                maxDescend = max(maxDescend, block.strut().unwrap()->getSize().y - baseline);
+            } else {
+                maxAscent = max(maxAscent, fontAscent);
+                maxDescend = max(maxDescend, fontDescend);
+            }
+        }
+
+        line.baseline = lineTop + maxAscent;
+        currHeight += maxAscent + maxDescend;
     }
-    return baseline - Au{Math::ceil(m.linegap / 2)};
+
+    return currHeight;
 }
 
 Au Prose::_layoutHorizontaly(Au width) {
