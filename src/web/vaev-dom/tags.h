@@ -2,6 +2,7 @@
 
 #include <karm-base/string.h>
 #include <karm-io/emit.h>
+#include <karm-logger/logger.h>
 
 namespace Vaev {
 
@@ -227,6 +228,8 @@ struct AttrName {
         if (result) {
             return *result;
         }
+
+        logWarn("unknown attribute name {} in {} namespace", name, ns);
         return AttrName{0, ns};
     }
 
