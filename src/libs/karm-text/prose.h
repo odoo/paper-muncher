@@ -63,6 +63,33 @@ struct Prose : public Meta::Pinned {
         Opt<Gfx::Color> color;
     };
 
+    struct StrutCell {
+        Opt<Vec2Au> _size;
+
+        // NOTE: baseline is distance from strut's top to the considered baseline
+        Opt<Au> _baseline;
+
+        always_inline Vec2Au getSize() const {
+            if (not _size)
+                panic("size of strut cell still not set");
+            return _size.unwrap();
+        }
+
+        always_inline Au getBaseline() const {
+            if (not _baseline)
+                panic("baseline of strut cell still not set");
+            return _baseline.unwrap();
+        }
+
+        always_inline void setSize(Vec2Au size) {
+            _size = size;
+        }
+
+        always_inline void setBaseline(Au baseline) {
+            _baseline = baseline;
+        }
+    };
+
     struct Cell {
         MutCursor<Prose> prose;
         MutCursor<Span> span;
@@ -71,6 +98,16 @@ struct Prose : public Meta::Pinned {
         Glyph glyph;
         Au pos = 0_au; //< Position of the glyph within the block
         Au adv = 0_au; //< Advance of the glyph
+
+        Opt<Rc<StrutCell>> strutContent = NONE;
+
+        void measureAdvance() {
+            if (strut()) {
+                adv = strutContent.unwrap()->getSize().x;
+            } else {
+                adv = Au{prose->_style.font.advance(glyph)};
+            }
+        }
 
         MutSlice<Rune> runes() {
             return mutSub(prose->_runes, runeRange);
@@ -92,6 +129,17 @@ struct Prose : public Meta::Pinned {
             if (not r)
                 return false;
             return last(r) == '\n' or isAsciiSpace(last(r));
+        }
+
+        Opt<Rc<StrutCell>> strut() const {
+            return strutContent;
+        }
+
+        Au Yposition(Au dominantBaselineYPosition) const {
+            if (strut() == NONE)
+                return dominantBaselineYPosition;
+
+            return dominantBaselineYPosition - strutContent->unwrap().getBaseline();
         }
     };
 
@@ -127,6 +175,12 @@ struct Prose : public Meta::Pinned {
                 return false;
             return last(cells()).newline();
         }
+
+        Opt<Rc<StrutCell>> strut() const {
+            if (empty())
+                return NONE;
+            return last(cells()).strut();
+        }
     };
 
     struct Line {
@@ -150,6 +204,7 @@ struct Prose : public Meta::Pinned {
 
     Vec<Rune> _runes;
     Vec<Cell> _cells;
+    Vec<usize> _strutCellsIndexes;
     Vec<Block> _blocks;
     Vec<Line> _lines;
 
@@ -181,6 +236,7 @@ struct Prose : public Meta::Pinned {
     }
 
     void append(Slice<Rune> runes);
+    void append(Rc<StrutCell> strut);
 
     // MARK: Span --------------------------------------------------------------
 
@@ -207,6 +263,16 @@ struct Prose : public Meta::Pinned {
     }
 
     void overrideSpanStackWith(Prose const& prose);
+
+    // MARK: Strut ------------------------------------------------------------
+
+    Vec<MutCursor<Cell>> cellsWithStruts() {
+        // FIXME: Vec of MutCursor of length 1 is bad design, try to use Generator
+        Vec<MutCursor<Cell>> cells;
+        for (auto i : _strutCellsIndexes)
+            cells.pushBack(&_cells[i]);
+        return cells;
+    }
 
     // MARK: Layout ------------------------------------------------------------
 
@@ -306,12 +372,12 @@ struct Prose : public Meta::Pinned {
         if (ci >= block.cells().len()) {
             // Handle the case where the rune is the last of the text
             auto& cell = last(block.cells());
-            return {block.pos + cell.pos + cell.adv, line.baseline};
+            return {block.pos + cell.pos + cell.adv, cell.Yposition(line.baseline)};
         }
 
         auto& cell = block.cells()[ci];
 
-        return {block.pos + cell.pos, line.baseline};
+        return {block.pos + cell.pos, cell.Yposition(line.baseline)};
     }
 };
 
