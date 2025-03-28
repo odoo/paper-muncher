@@ -243,6 +243,7 @@ export struct InlineBox {
     */
     Text::ProseStyle const _style;
     Rc<Text::Prose> prose;
+    Vec<::Box<Box>> atomicBoxes;
 
     InlineBox(Text::ProseStyle style) : _style(style), prose(makeRc<Text::Prose>(_style)) {}
 
@@ -259,7 +260,7 @@ export struct InlineBox {
         prose->popSpan();
     }
 
-    void add(Box&&) {}
+    void add(Box&& b);
 
     bool active() {
         return prose->_runes.len();
@@ -358,6 +359,10 @@ struct Box : public Meta::NoCopy {
         }
     }
 };
+
+void InlineBox::add(Box&& b) {
+    atomicBoxes.pushBack(makeBox<Box>(std::move(b)));
+}
 
 export struct Viewport {
     Resolution dpi = Resolution::fromDpi(96);
