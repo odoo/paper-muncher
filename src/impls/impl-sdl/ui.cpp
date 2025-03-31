@@ -39,6 +39,7 @@ struct SdlHost :
         SDL_Surface* s = SDL_GetWindowSurface(_window);
         if (not s)
             panic("Failed to get window surface");
+        SDL_LockSurface(s);
 
         return {
             s->pixels,
@@ -49,6 +50,11 @@ struct SdlHost :
     }
 
     void flip(Slice<Math::Recti>) override {
+        SDL_Surface* s = SDL_GetWindowSurface(_window);
+        if (not s)
+            panic("Failed to get window surface");
+        SDL_UnlockSurface(s);
+
         SDL_UpdateWindowSurface(_window);
     }
 
