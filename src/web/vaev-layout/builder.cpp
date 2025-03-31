@@ -284,6 +284,9 @@ export struct InlineFlowBuilder {
                 auto childStyle = c.computeFor(*style, *el);
                 auto display = childStyle->display;
 
+                if (childStyle->overflows.x == Overflow::HIDDEN or childStyle->overflows.y == Overflow::HIDDEN)
+                    continue;
+
                 if (display.type() == Display::Type::BOX) {
                     _buildChildBoxDisplay(c, *el, style, display);
                 } else if (display.type() == Display::Type::INTERNAL) {
@@ -352,6 +355,9 @@ export struct BlockFlowBuilder {
             if (auto el = child->is<Dom::Element>()) {
                 auto childStyle = c.computeFor(*box.style, *el);
                 auto display = childStyle->display;
+
+                if (childStyle->overflows.x == Overflow::HIDDEN or childStyle->overflows.y == Overflow::HIDDEN)
+                    continue;
 
                 if (display.type() == Display::Type::BOX) {
                     _buildChildBoxDisplay(c, *el, display);
@@ -532,6 +538,10 @@ static void _buildFlexChildren(Style::Computer& c, Gc::Ref<Dom::Element> flexCon
         if (auto el = child->is<Dom::Element>()) {
             auto childStyle = c.computeFor(*flexContainer.style, *el);
             auto display = childStyle->display;
+
+
+            if (childStyle->overflows.x == Overflow::HIDDEN or childStyle->overflows.y == Overflow::HIDDEN)
+                continue;
 
             if (display.type() == Display::Type::BOX) {
                 _buildFlexChildBoxDisplay(c, *el, display, flexContainer);
