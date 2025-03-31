@@ -355,7 +355,6 @@ struct SimpleInput : public View<SimpleInput> {
 
     void reconcile(SimpleInput& o) override {
         _style = o._style;
-        _model = o._model;
         _onChange = std::move(o._onChange);
 
         // NOTE: The model might have changed,

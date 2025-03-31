@@ -6,8 +6,8 @@
 
 namespace Karm::Kira {
 
-Ui::Child input(Mdi::Icon icon, String placeholder, String text);
+Ui::Child input(Mdi::Icon icon, String placeholder, String text, Ui::OnChange<String> onChange = NONE);
 
-Ui::Child input(String placeholder, String text);
+Ui::Child input(String placeholder, String text, Ui::OnChange<String> onChange = NONE);
 
 } // namespace Karm::Kira

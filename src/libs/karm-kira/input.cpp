@@ -6,14 +6,14 @@
 
 namespace Karm::Kira {
 
-Ui::Child input(Mdi::Icon icon, String placeholder, String text) {
+Ui::Child input(Mdi::Icon icon, String placeholder, String text, Ui::OnChange<String> onChange) {
     return Ui::hflow(
                8,
                Math::Align::VCENTER | Math::Align::START,
                Ui::icon(icon),
                Ui::stack(
                    text ? Ui::empty() : Ui::labelMedium(Gfx::ZINC600, placeholder),
-                   Ui::input(Ui::TextStyles::labelMedium(), text, NONE)
+                   Ui::input(Ui::TextStyles::labelMedium(), text, onChange)
                ) | Ui::grow()
            ) |
            Ui::box({
@@ -26,13 +26,13 @@ Ui::Child input(Mdi::Icon icon, String placeholder, String text) {
            Ui::focusable();
 }
 
-Ui::Child input(String placeholder, String text) {
+Ui::Child input(String placeholder, String text, Ui::OnChange<String> onChange) {
     return Ui::hflow(
                8,
                Math::Align::VCENTER | Math::Align::START,
                Ui::stack(
                    text ? Ui::empty() : Ui::labelMedium(Gfx::ZINC600, placeholder),
-                   Ui::input(Ui::TextStyles::labelMedium(), text, NONE)
+                   Ui::input(Ui::TextStyles::labelMedium(), text, onChange)
                ) | Ui::grow()
            ) |
            Ui::box({

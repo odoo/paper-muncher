@@ -48,6 +48,13 @@ struct Model {
     static void event(Node& n, X value = {}) {
         Ui::event<Action>(n, Action{std::move(value)});
     }
+
+    template <typename X>
+    static auto map() {
+        return []<typename... Args>(Node& n, Args... value) {
+            Ui::bubble<X>(n, X{std::forward<Args>(value)...});
+        };
+    }
 };
 
 template <typename Model>
