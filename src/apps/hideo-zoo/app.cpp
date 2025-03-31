@@ -13,6 +13,7 @@
 #include "page-color-input.h"
 #include "page-context-menu.h"
 #include "page-dialog.h"
+#include "page-file-dialog.h"
 #include "page-focusable.h"
 #include "page-hsv-square.h"
 #include "page-input.h"
@@ -43,6 +44,7 @@ static Array PAGES = {
     &PAGE_COLOR_INPUT,
     &PAGE_CONTEXT_MENU,
     &PAGE_DIALOG,
+    &PAGE_FILE_DIALOG,
     &PAGE_FOCUS,
     &PAGE_HSV_SQUARE,
     &PAGE_INPUT,
