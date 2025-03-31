@@ -2377,6 +2377,41 @@ struct OverflowInlineProp {
     }
 };
 
+// https://www.w3.org/TR/css-overflow-3/#propdef-overflow
+struct OverflowProp {
+    Pair<Overflow> value = initial();
+
+    static Str name() { return "overflow"; }
+
+    static Pair<Overflow> initial() { return {Overflow::VISIBLE, Overflow::VISIBLE}; }
+
+    void apply(ComputedStyle& c) const {
+        c.overflows.x = value.v0;
+        c.overflows.y = value.v1;
+    }
+
+    static Pair<Overflow> load(ComputedStyle const& c) {
+        return {c.overflows.x, c.overflows.y};
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        eatWhitespace(c);
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        value.v0 = try$(parseValue<Overflow>(c));
+
+        eatWhitespace(c);
+        if (c.ended()) {
+            value.v1 = value.v0;
+        } else {
+            value.v1 = try$(parseValue<Overflow>(c));
+        }
+
+        return Ok();
+    }
+};
+
 // MARK: Padding ---------------------------------------------------------------
 
 // https://www.w3.org/TR/css-box-3/#propdef-padding
@@ -3152,6 +3187,7 @@ using _StyleProp = Union<
     OverflowYProp,
     OverflowBlockProp,
     OverflowInlineProp,
+    OverflowProp,
 
     OpacityProp,
 
