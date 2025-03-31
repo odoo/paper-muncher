@@ -2,8 +2,8 @@
 
 namespace Hideo::Zoo {
 
-Ui::Task<Action> reduce(State& s, Action action) {
-    action.visit(
+Ui::Task<Action> reduce(State& s, Action a) {
+    a.visit(
         [&](Switch action) {
             s.page = action.page;
         }
