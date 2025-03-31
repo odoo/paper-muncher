@@ -177,6 +177,43 @@ Ui::Task<Action> reduce(State& s, Action a) {
 
 using Model = Ui::Model<State, Action, reduce>;
 
+#ifdef __ck_host__
+
+Ui::Child openInDefaultBrowser(State const& s) {
+    return Kr::contextMenuItem(
+        [&](auto& n) {
+            auto url = s.currentUrl().url;
+            if (url.scheme != "http" and url.scheme != "https" and url.scheme != "file") {
+                Ui::showDialog(
+                    n,
+                    Kr::alert(
+                        "Could not open in default browser"s,
+                        Io::format("Only http, https and file urls can be opened in the default browser.")
+                    )
+                );
+                return;
+            }
+
+            auto res = Sys::launch({
+                .action = Mime::Uti::PUBLIC_OPEN,
+                .objects = {s.currentUrl().url},
+            });
+
+            if (not res)
+                Ui::showDialog(
+                    n,
+                    Kr::alert(
+                        "Could not open in default browser"s,
+                        Io::format("Failed to open in default browser\n\n{}", res)
+                    )
+                );
+        },
+        Mdi::WEB, "Open in default browser..."
+    );
+}
+
+#endif
+
 Ui::Child mainMenu([[maybe_unused]] State const& s) {
     return Kr::contextMenuContent({
         Kr::contextMenuItem(
@@ -197,22 +234,7 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
             Mdi::PRINTER, "Print..."
         ),
 #ifdef __ck_host__
-        Kr::contextMenuItem([&](auto& n) {
-            auto res = Sys::launch({
-                .action = Mime::Uti::PUBLIC_OPEN,
-                .objects = {s.currentUrl().url},
-            });
-
-            if (not res)
-                Ui::showDialog(
-                    n,
-                    Kr::alert(
-                        "Error"s,
-                        Io::format("Failed to open in default browser\n\n{}", res)
-                    )
-                );
-        },
-                            Mdi::WEB, "Open in default browser..."),
+        openInDefaultBrowser(s),
 #endif
         Ui::separator(),
         Kr::contextMenuItem(Model::bind(SidePanel::DEVELOPER_TOOLS), Mdi::CODE_TAGS, "Developer Tools"),
