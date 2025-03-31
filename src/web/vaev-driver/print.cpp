@@ -286,7 +286,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
 
     // MARK: Page and Margins --------------------------------------------------
 
-    Style::Computed initialStyle = Style::Computed::initial();
+    Style::ComputedStyle initialStyle = Style::ComputedStyle::initial();
     initialStyle.color = Gfx::BLACK;
     initialStyle.setCustomProp("-vaev-url", {Css::Token::string(Io::format("\"{}\"", dom->url()))});
     initialStyle.setCustomProp("-vaev-title", {Css::Token::string(Io::format("\"{}\"", dom->title()))});

@@ -64,7 +64,7 @@ Vec<PageSelector> PageSelector::parseList(Cursor<Css::Sst>& c) {
 
 // MARK: Page Margin Rule ------------------------------------------------------
 
-void PageAreaRule::apply(Computed& c) const {
+void PageAreaRule::apply(ComputedStyle& c) const {
     for (auto const& prop : props) {
         prop.apply(c, c);
     }

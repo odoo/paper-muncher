@@ -62,7 +62,7 @@ static Opt<Rc<Karm::Text::Fontface>> _monospaceFontface = NONE;
 static Opt<Rc<Karm::Text::Fontface>> _regularFontface = NONE;
 static Opt<Rc<Karm::Text::Fontface>> _boldFontface = NONE;
 
-static Rc<Karm::Text::Fontface> _lookupFontface(Text::FontBook& fontBook, Style::Computed& style) {
+static Rc<Karm::Text::Fontface> _lookupFontface(Text::FontBook& fontBook, Style::ComputedStyle& style) {
     Text::FontQuery fq{
         .weight = style.font->weight,
         .style = style.font->style.val,
@@ -86,7 +86,7 @@ static Rc<Karm::Text::Fontface> _lookupFontface(Text::FontBook& fontBook, Style:
 
 auto RE_SEGMENT_BREAK = Re::single('\n', '\r', '\f', '\v');
 
-static Text::ProseStyle _proseStyleFomStyle(Style::Computed& style, Rc<Text::Fontface> fontFace) {
+static Text::ProseStyle _proseStyleFomStyle(Style::ComputedStyle& style, Rc<Text::Fontface> fontFace) {
     // FIXME: We should pass this around from the top in order to properly resolve rems
     Resolver resolver{
         .rootFont = Text::Font{fontFace, 16},
@@ -124,7 +124,7 @@ static Text::ProseStyle _proseStyleFomStyle(Style::Computed& style, Rc<Text::Fon
 }
 
 static void _buildRun(Style::Computer& c, Gc::Ref<Dom::Text> node, Box& parent) {
-    auto style = makeRc<Style::Computed>(Style::Computed::initial());
+    auto style = makeRc<Style::ComputedStyle>(Style::ComputedStyle::initial());
     style->inherit(*parent.style);
 
     auto fontFace = _lookupFontface(c.fontBook, *style);
@@ -212,7 +212,7 @@ void _buildChildren(Style::Computer& c, Gc::Ref<Dom::Node> node, Box& parent) {
     }
 }
 
-static void _buildBlock(Style::Computer& c, Rc<Style::Computed> style, Gc::Ref<Dom::Element> el, Box& parent) {
+static void _buildBlock(Style::Computer& c, Rc<Style::ComputedStyle> style, Gc::Ref<Dom::Element> el, Box& parent) {
     auto font = _lookupFontface(c.fontBook, *style);
     Box box = {style, font, el};
     _buildChildren(c, el, box);
@@ -238,7 +238,7 @@ static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& paren
 
 // MARK: Build Table -----------------------------------------------------------
 
-static void _buildTableChildren(Style::Computer& c, Gc::Ref<Dom::Node> node, Box& tableWrapperBox, Rc<Style::Computed> tableBoxStyle) {
+static void _buildTableChildren(Style::Computer& c, Gc::Ref<Dom::Node> node, Box& tableWrapperBox, Rc<Style::ComputedStyle> tableBoxStyle) {
     Box tableBox{
         tableBoxStyle,
         tableWrapperBox.fontFace,
@@ -279,10 +279,10 @@ static void _buildTableChildren(Style::Computer& c, Gc::Ref<Dom::Node> node, Box
     }
 }
 
-static void _buildTable(Style::Computer& c, Rc<Style::Computed> style, Gc::Ref<Dom::Element> el, Box& parent) {
+static void _buildTable(Style::Computer& c, Rc<Style::ComputedStyle> style, Gc::Ref<Dom::Element> el, Box& parent) {
     auto font = _lookupFontface(c.fontBook, *style);
 
-    auto wrapperStyle = makeRc<Style::Computed>(Style::Computed::initial());
+    auto wrapperStyle = makeRc<Style::ComputedStyle>(Style::ComputedStyle::initial());
     wrapperStyle->display = style->display;
     wrapperStyle->margin = style->margin;
 
@@ -330,14 +330,14 @@ static void _buildNode(Style::Computer& c, Gc::Ref<Dom::Node> node, Box& parent)
 
 export Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc) {
     if (auto el = doc->documentElement()) {
-        auto style = c.computeFor(Style::Computed::initial(), *el);
+        auto style = c.computeFor(Style::ComputedStyle::initial(), *el);
         auto font = _lookupFontface(c.fontBook, *style);
         Box root = {style, _lookupFontface(c.fontBook, *style), el};
         _buildChildren(c, *el, root);
         return root;
     }
     // NOTE: Fallback in case of an empty document
-    auto style = makeRc<Style::Computed>(Style::Computed::initial());
+    auto style = makeRc<Style::ComputedStyle>(Style::ComputedStyle::initial());
     return {
         style,
         _lookupFontface(c.fontBook, *style),
@@ -345,7 +345,7 @@ export Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc) {
     };
 }
 
-export Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::Computed> style) {
+export Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::ComputedStyle> style) {
     auto fontFace = _lookupFontface(fontBook, *style);
 
     // FIXME: We should pass this around from the top in order to properly resolve rems

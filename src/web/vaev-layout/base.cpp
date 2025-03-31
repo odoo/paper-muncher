@@ -249,18 +249,18 @@ export struct Attrs {
 };
 
 struct Box : public Meta::NoCopy {
-    Rc<Style::Computed> style;
+    Rc<Style::ComputedStyle> style;
     Rc<Text::Fontface> fontFace;
     Content content = NONE;
     Attrs attrs;
     Opt<Rc<FormatingContext>> formatingContext = NONE;
     Gc::Ptr<Dom::Element> origin;
 
-    Box(Rc<Style::Computed> style, Rc<Text::Fontface> font, Gc::Ptr<Dom::Element> og)
-        : style{std::move(style)}, fontFace{font} , origin{og} {}
+    Box(Rc<Style::ComputedStyle> style, Rc<Text::Fontface> font, Gc::Ptr<Dom::Element> og)
+        : style{std::move(style)}, fontFace{font}, origin{og} {}
 
-    Box(Rc<Style::Computed> style, Rc<Text::Fontface> font, Content content, Gc::Ptr<Dom::Element> og)
-        : style{std::move(style)}, fontFace{font}, content{std::move(content)} , origin{og} {}
+    Box(Rc<Style::ComputedStyle> style, Rc<Text::Fontface> font, Content content, Gc::Ptr<Dom::Element> og)
+        : style{std::move(style)}, fontFace{font}, content{std::move(content)}, origin{og} {}
 
     Slice<Box> children() const {
         if (auto children = content.is<Vec<Box>>())
@@ -359,7 +359,7 @@ export struct Frag {
 
     Frag() : box{nullptr} {}
 
-    Style::Computed const& style() const {
+    Style::ComputedStyle const& style() const {
         return *box->style;
     }
 
