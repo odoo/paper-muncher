@@ -106,6 +106,27 @@ static constexpr inline Nonzero NONZERO{};
 using Evenodd = Keyword<"evenodd">;
 static constexpr inline Evenodd EVENODD{};
 
+using Left = Keyword<"left">;
+static constexpr inline Left LEFT{};
+
+using Right = Keyword<"right">;
+static constexpr inline Right RIGHT{};
+
+using Top = Keyword<"top">;
+static constexpr inline Top TOP{};
+
+using Bottom = Keyword<"bottom">;
+static constexpr inline Bottom BOTTOM{};
+
+using Center = Keyword<"center">;
+static constexpr inline Center CENTER{};
+
+using ClosestSide = Keyword<"closest-side">;
+static constexpr inline ClosestSide CLOSEST_SIDE{};
+
+using FarthestSide = Keyword<"farthest-side">;
+static constexpr inline FarthestSide FARTHEST_SIDE{};
+
 } // namespace Keywords
 
 } // namespace Vaev

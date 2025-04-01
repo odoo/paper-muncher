@@ -2,6 +2,7 @@
 
 #include <karm-print/paper.h>
 #include <vaev-base/align.h>
+#include <vaev-base/background.h>
 #include <vaev-base/borders.h>
 #include <vaev-base/break.h>
 #include <vaev-base/calc.h>
@@ -21,8 +22,8 @@
 #include <vaev-base/resolution.h>
 #include <vaev-base/sizing.h>
 #include <vaev-base/table.h>
-#include <vaev-base/z-index.h>
 
+#include "base.h"
 #include "css/parser.h"
 
 namespace Vaev::Style {
@@ -58,6 +59,11 @@ struct ValueParser<Angle> {
 };
 
 template <>
+struct ValueParser<BackgroundPosition> {
+    static Res<BackgroundPosition> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
 struct ValueParser<BasicShape> {
     static Res<BasicShape> parse(Cursor<Css::Sst>& c);
 };
@@ -65,6 +71,36 @@ struct ValueParser<BasicShape> {
 template <>
 struct ValueParser<Polygon> {
     static Res<Polygon> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
+struct ValueParser<Circle> {
+    static Res<Circle> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
+struct ValueParser<Inset> {
+    static Res<Inset> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
+struct ValueParser<Xywh> {
+    static Res<Xywh> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
+struct ValueParser<Rect> {
+    static Res<Rect> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
+struct ValueParser<Ellipse> {
+    static Res<Ellipse> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
+struct ValueParser<Path> {
+    static Res<Path> parse(Cursor<Css::Sst>& c);
 };
 
 template <>
@@ -433,8 +469,10 @@ struct ValueParser<Math::Radii<T>> {
         // 2 values-- > 1 = top - start + bottom - end 2 = the others
         // 3 values-- > 1 = top - start, 2 = top - end + bottom - start, 3 = bottom - end
         // 4 values-- > 1 = top - start, 2 = top - end 3 = bottom - end, 4 = bottom - start
+        eatWhitespace(c);
         if (not c.ended() and c.peek().token.data == "/"s) {
             c.next();
+            eatWhitespace(c);
             auto value1 = parseValue<PercentOr<Length>>(c);
             if (not value1) {
                 return radii;
@@ -449,6 +487,7 @@ struct ValueParser<Math::Radii<T>> {
                 return radii;
             }
 
+            eatWhitespace(c);
             auto value3 = parseValue<PercentOr<Length>>(c);
             if (not value3) {
                 radii.a = value1.take();
@@ -458,6 +497,7 @@ struct ValueParser<Math::Radii<T>> {
                 return radii;
             }
 
+            eatWhitespace(c);
             auto value4 = parseValue<PercentOr<Length>>(c);
             if (not value4) {
                 radii.a = value1.take();

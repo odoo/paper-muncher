@@ -162,6 +162,10 @@ struct Path {
     bool evalSvg(Str svg);
 
     static Path fromSvg(Str svg);
+
+    void repr(Io::Emit& e) const {
+        e("(path {})", _verts);
+    }
 };
 
 FlagsEnum$(Path::Flags);
