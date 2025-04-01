@@ -15,6 +15,7 @@ namespace Vaev::View {
 
 export struct ViewProps {
     bool wireframe = false;
+    Opt<Gc::Ref<Dom::Node>> selected = NONE;
 };
 
 struct View : public Ui::View<View> {
@@ -94,8 +95,12 @@ struct View : public Ui::View<View> {
             g.clear(paintRect, canvasColor);
 
         paint->paint(g, paintRect.cast<f64>());
+
         if (_props.wireframe)
             Layout::wireframe(*frag, g);
+
+        if (_props.selected)
+            Layout::overlay(*frag, g, *_props.selected);
 
         g.pop();
     }

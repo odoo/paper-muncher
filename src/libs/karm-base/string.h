@@ -108,7 +108,7 @@ struct _String {
 
     static constexpr Array<Unit, 1> _EMPTY = {0};
 
-    Unit * _buf = nullptr;
+    Unit* _buf = nullptr;
     usize _len = 0;
 
     constexpr _String() = default;

@@ -27,8 +27,4 @@ Ui::Child toolbar(State const& s);
 
 Ui::Child alert(State const& s, String title, String body);
 
-// MARK:  Dialogs  -------------------------------------------------------------
-
-
-
 } // namespace Hideo::Files

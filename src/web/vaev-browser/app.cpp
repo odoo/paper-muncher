@@ -362,7 +362,7 @@ Ui::Child webview(State const& s) {
     if (not s.dom)
         return alert(s, "The page could not be loaded"s, Io::toStr(s.dom));
 
-    return Vaev::View::view(s.dom.unwrap(), {.wireframe = s.wireframe}) |
+    return Vaev::View::view(s.dom.unwrap(), {.wireframe = s.wireframe, .selected = s.inspect.selectedNode}) |
            Ui::vscroll() |
            Ui::box({
                .backgroundFill = Gfx::WHITE,
