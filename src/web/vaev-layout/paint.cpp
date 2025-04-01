@@ -1,8 +1,8 @@
 module;
 
 #include <karm-scene/box.h>
-#include <karm-scene/image.h>
 #include <karm-scene/clip.h>
+#include <karm-scene/image.h>
 #include <karm-scene/text.h>
 #include <vaev-style/computer.h>
 
@@ -171,62 +171,55 @@ static void _paintStackingContext(Frag& frag, Scene::Stack& stack) {
     });
 }
 
-static Rc<Scene::Clip> _resolveClip(const Frag& frag) {
+static Math::Path _resolveClip(Frag const& frag) {
     Math::Path result;
     auto& clip = frag.style().clip.unwrap();
 
     // TODO: handle SVG cases (https://drafts.fxtf.org/css-masking/#typedef-geometry-box)
-    auto [referenceBox, radii] = clip.referenceBox.visit(Visitor {
-        [&](const Keywords::BorderBox&) -> Pair<RectAu, RadiiAu> {
-            return {frag.metrics.borderBox(), frag.metrics.radii};
+    RectAu referenceBox = clip.referenceBox.visit(Visitor{
+        [&](Keywords::BorderBox const&) {
+            return frag.metrics.borderBox();
         },
-        [&](const Keywords::PaddingBox&) -> Pair<RectAu, RadiiAu> {
-            return {frag.metrics.paddingBox(), {0_au}};
+        [&](Keywords::PaddingBox const&) {
+            return frag.metrics.paddingBox();
         },
-        [&](const Keywords::ContentBox&) -> Pair<RectAu, RadiiAu> {
-            return {frag.metrics.contentBox(), {0_au}};
+        [&](Keywords::ContentBox const&) {
+            return frag.metrics.contentBox();
         },
-        [&](const Keywords::MarginBox&) -> Pair<RectAu, RadiiAu> {
-            return {frag.metrics.marginBox(), {0_au}};
+        [&](Keywords::MarginBox const&) {
+            return frag.metrics.marginBox();
         },
-        [&](const Keywords::FillBox&) -> Pair<RectAu, RadiiAu> {
-            return {frag.metrics.contentBox(), {0_au}};
+        [&](Keywords::FillBox const&) {
+            return frag.metrics.contentBox();
         },
-        [&](const Keywords::StrokeBox&) -> Pair<RectAu, RadiiAu> {
-            return {frag.metrics.borderBox(), frag.metrics.radii};
+        [&](Keywords::StrokeBox const&) {
+            return frag.metrics.borderBox();
         },
-        [&](const Keywords::ViewBox&) -> Pair<RectAu, RadiiAu> {
-            return {frag.metrics.borderBox(), {0_au}};
+        [&](Keywords::ViewBox const&) {
+            return frag.metrics.borderBox();
         },
     });
 
     if (not clip.shape) {
-        result.rect(referenceBox.round().cast<f64>(), radii.cast<f64>());
-        return makeRc<Scene::Clip>(result);
+        result.rect(referenceBox.round().cast<f64>());
+        return result;
     }
 
-    return clip.shape.unwrap().visit(Visitor {
-        [&](const Polygon& polygon) {
-            auto resolver = Resolver();
-            const auto it = begin(polygon.points);
-            result.moveTo(Math::Vec2f(
-                    resolver.resolve(it->v0, referenceBox.width).cast<f64>(),
-                    resolver.resolve(it->v1, referenceBox.height).cast<f64>()
-            ));
-            for (auto& point : Slice(it+1, end(polygon.points))) {
-                result.lineTo(Math::Vec2f(
-                    resolver.resolve(point.v0, referenceBox.width).cast<f64>(),
-                    resolver.resolve(point.v1, referenceBox.height).cast<f64>()
-                ));
-            }
-
-            return makeRc<Scene::Clip>(result, polygon.fillRule);
+    return clip.shape.unwrap().visit(Visitor{[&](Polygon const& polygon) {
+        // TODO: handle fill rule
+        auto resolver = Resolver();
+        auto const it = begin(polygon.points);
+        result.moveTo(Math::Vec2f(resolver.resolve(it->v0, referenceBox.width).cast<f64>(), resolver.resolve(it->v1, referenceBox.height).cast<f64>()));
+        for (auto& point : Slice(it + 1, end(polygon.points))) {
+            result.lineTo(Math::Vec2f(resolver.resolve(point.v0, referenceBox.width).cast<f64>(), resolver.resolve(point.v1, referenceBox.height).cast<f64>()));
         }
-    });
+
+        return result;
+    }});
 }
 
 static void _establishStackingContext(Frag& frag, Scene::Stack& stack) {
-    Rc<Scene::Stack> innerStack = frag.style().clip.has() ? _resolveClip(frag) : makeRc<Scene::Stack>();
+    Rc<Scene::Stack> innerStack = frag.style().clip.has() ? makeRc<Scene::Clip>(_resolveClip(frag)) : makeRc<Scene::Stack>();
     innerStack->zIndex = frag.style().zIndex.unwrapOr<isize>(0);
     _paintStackingContext(frag, *innerStack);
     stack.add(std::move(innerStack));
