@@ -13,6 +13,7 @@ import :values;
 namespace Vaev::Layout {
 
 static void _createAndBuildBlockLevelBox(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, Box& parent, Display display);
+static void _createAndBuildInlineLevelBox(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, InlineBox& rootInlineBox, Display display);
 static Box _createTableWrapperAndBuildTable(Style::Computer& c, Rc<Style::ComputedStyle> tableStyle, Gc::Ref<Dom::Element> tableBoxEl);
 static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> parentStyle, InlineBox& rootInlineBox);
 static void _buildChildInternalDisplay(Style::Computer& c, Gc::Ref<Dom::Element> child, Rc<Style::ComputedStyle> childStyle, Box& parent);
@@ -339,7 +340,7 @@ export struct InlineFlowBuilder {
                 buildFromElement(c, child, childStyle);
                 return;
             }
-            _createAndBuildBlockLevelBox(c, child, childStyle, rootBox, display);
+            _createAndBuildInlineLevelBox(c, child, childStyle, parentBlockBuilder->rootInlineBox, display);
         }
     }
 
@@ -391,7 +392,7 @@ void BlockFlowBuilder::_buildChildDefaultDisplay(Style::Computer& c, Gc::Ref<Dom
             InlineFlowBuilder{box, this}.buildFromElement(c, child, childStyle);
             return;
         }
-        _createAndBuildBlockLevelBox(c, child, childStyle, box, display);
+        _createAndBuildInlineLevelBox(c, child, childStyle, rootInlineBox, display);
     }
 }
 
@@ -416,6 +417,20 @@ static void _createAndBuildBlockLevelBox(Style::Computer& c, Gc::Ref<Dom::Elemen
     }
 }
 
+// https://www.w3.org/TR/css-display-3/#outer-role
+static void _createAndBuildInlineLevelBox(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, InlineBox& rootInlineBox, Display display) {
+    if (display == Display::Inside::TABLE) {
+        auto wrapper = _createTableWrapperAndBuildTable(c, style, el);
+        rootInlineBox.add(std::move(wrapper));
+    } else {
+        // FLOW-ROOT and fallback
+        auto font = _lookupFontface(c.fontBook, *style);
+        Box box = {style, font, el};
+        BlockFlowBuilder{c, box}.buildFromElement(c, el);
+        box.attrs = _parseDomAttr(el);
+        rootInlineBox.add(std::move(box));
+    }
+}
 
 // MARK: Build Replace ---------------------------------------------------------
 
