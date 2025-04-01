@@ -1,10 +1,10 @@
 #include <karm-gc/heap.h>
 #include <karm-test/macros.h>
-#include <vaev-dom/document.h>
-#include <vaev-style/media.h>
 #include <karm-text/prose.h>
 #include <vaev-base/display.h>
+#include <vaev-dom/document.h>
 #include <vaev-dom/html/parser.h>
+#include <vaev-style/media.h>
 
 import Vaev.Driver;
 import Vaev.Layout;
@@ -46,58 +46,26 @@ static Style::Media const TEST_MEDIA = {
     .deviceAspectRatio = 16.0 / 9.0,
 };
 
-struct FakeBox {
-    bool stablishesInline;
-    bool isBlockLevel;
-    Vec<FakeBox> children{};
+struct FakeBox;
 
-    bool matches(Box const& b) {
-        if (not b.style->display.is(Display::Type::DEFAULT))
-            return false;
+struct FakeInlineBox {
+    Vec<FakeBox> atomicBoxes{};
+    Vec<FakeInlineBox> children{};
 
-        bool boxStablishesInline = b.content.is<Layout::InlineBox>();
-        bool boxIsBlockLevel = (b.style->display.outside() == Display::Outside::BLOCK);
+    struct ComparableInlineBox {
+        Vec<ComparableInlineBox> children{};
 
-        // logDebug("box: {} {}, expected: {} {}", boxStablishesInline, boxIsBlockLevel, stablishesInline, isBlockLevel);
-
-        if (boxIsBlockLevel != isBlockLevel)
-            return false;
-
-        if (boxStablishesInline != stablishesInline)
-            return false;
-
-        if (boxStablishesInline) {
-            if (children.len() != 1)
-                return false;
-            auto rootInlineBox = FakeInlineBox::fromInlineBoxSpanTree(b.content.unwrap<Layout::InlineBox>().prose->_spans);
-            return children[0].matches(rootInlineBox);
-        } else {
-            // logDebug("box children: {} expected children: {}", b.children().len(), children.len());
-            if (children.len() != b.children().len())
-                return false;
-
-            for (usize i = 0; i < children.len(); ++i) {
-                if (not children[i].matches(b.children()[i]))
-                    return false;
-            }
-            return true;
-        }
-    }
-
-    struct FakeInlineBox {
-        Vec<FakeInlineBox> children{};
-
-        FakeInlineBox& add(FakeInlineBox&& box) {
+        ComparableInlineBox& add(ComparableInlineBox&& box) {
             children.pushBack(std::move(box));
             return last(children);
         }
 
-        static FakeInlineBox fromInlineBoxSpanTree(Vec<::Rc<Text::Prose::Span>> const& spans) {
-            FakeInlineBox inlineBoxTree;
+        static ComparableInlineBox fromInlineBox(Layout::InlineBox const& inlineBox) {
+            ComparableInlineBox comparableInlineBox;
 
-            Vec<MutCursor<FakeInlineBox>> stackInlineBoxes = {&inlineBoxTree};
+            Vec<MutCursor<ComparableInlineBox>> stackInlineBoxes = {&comparableInlineBox};
             Vec<Opt<Rc<Text::Prose::Span>>> stackSpans = {NONE};
-            for (auto& span : spans) {
+            for (auto& span : inlineBox.prose->_spans) {
                 while (true) {
                     if (span->parent == NONE) {
                         if (last(stackSpans) == NONE)
@@ -115,30 +83,71 @@ struct FakeBox {
                 }
 
                 stackSpans.pushBack(span);
-                stackInlineBoxes.pushBack(&last(stackInlineBoxes)->add(FakeInlineBox{}));
+                stackInlineBoxes.pushBack(&last(stackInlineBoxes)->add(ComparableInlineBox{}));
             }
 
-            return inlineBoxTree;
+            return comparableInlineBox;
         }
     };
 
-    bool matches(FakeInlineBox const& b) {
-        // FIXME: fix this when we have support to inline-block
-        if (isBlockLevel or not stablishesInline)
-            return false;
-
-        if (children.len() != b.children.len())
+    bool _matches(ComparableInlineBox const& cib) {
+        if (children.len() != cib.children.len())
             return false;
 
         for (usize i = 0; i < children.len(); ++i) {
-            if (not children[i].matches(b.children[i]))
+            if (not children[i]._matches(cib.children[i]))
                 return false;
         }
+
         return true;
     }
 
-
+    bool matches(InlineBox const& inlineBox);
 };
+
+struct FakeBox {
+    Union<FakeInlineBox, Vec<FakeBox>> content = Vec<FakeBox>{};
+
+    bool matches(Box const& b) {
+        if (not b.style->display.is(Display::Type::DEFAULT))
+            return false;
+
+        bool fakeBoxStablishesInline = content.is<FakeInlineBox>();
+        bool boxStablishesInline = b.content.is<Layout::InlineBox>();
+
+        // logDebug("box: {} {}, expected: {} {}", boxStablishesInline, boxIsBlockLevel, stablishesInline, isBlockLevel);
+
+        if (boxStablishesInline != fakeBoxStablishesInline)
+            return false;
+
+        if (boxStablishesInline) {
+            return content.unwrap<FakeInlineBox>().matches(b.content.unwrap<Layout::InlineBox>());
+        } else {
+            auto& children = content.unwrap<Vec<FakeBox>>();
+            // logDebug("box children: {} expected children: {}", b.children().len(), children.len());
+            if (children.len() != b.children().len())
+                return false;
+
+            for (usize i = 0; i < children.len(); ++i) {
+                if (not children[i].matches(b.children()[i]))
+                    return false;
+            }
+            return true;
+        }
+    }
+};
+
+bool FakeInlineBox::matches(InlineBox const& inlineBox) {
+    if (atomicBoxes.len() != inlineBox.atomicBoxes.len())
+        return false;
+
+    for (usize i = 0; i < atomicBoxes.len(); ++i) {
+        if (not atomicBoxes[i].matches(*inlineBox.atomicBoxes[i]))
+            return false;
+    }
+
+    return _matches(ComparableInlineBox::fromInlineBox(inlineBox));
+}
 
 test$("empty-body") {
     Gc::Heap gc;
@@ -153,8 +162,6 @@ test$("empty-body") {
     auto expectedBodySubtree =
         FakeBox{
             // body
-            .stablishesInline = false,
-            .isBlockLevel = true,
         };
 
     auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
@@ -178,14 +185,8 @@ test$("no span") {
     auto expectedBodySubtree =
         FakeBox{
             // body
-            .stablishesInline = true,
-            .isBlockLevel = true,
-            .children{
-                FakeBox{
-                    // root inline with "hello, world"
-                    .stablishesInline = true,
-                    .isBlockLevel = false,
-                }
+            .content = FakeInlineBox{
+                // root inline with "hello, world"
             }
         };
 
@@ -210,32 +211,18 @@ test$("no span") {
     auto expectedBodySubtree =
         FakeBox{
             // body
-            .stablishesInline = false,
-            .isBlockLevel = true,
-            .children{
+            .content = Vec<FakeBox>{
                 FakeBox{
                     // anon box for hello,
-                    .stablishesInline = true,
-                    .isBlockLevel = true,
-                    .children{
-                        FakeBox{
-                            // root inline with "hello,"
-                            .stablishesInline = true,
-                            .isBlockLevel = false,
-                        },
-                    }
+                    .content = FakeInlineBox{
+                        // root inline with "hello,"
+                    },
                 },
                 FakeBox{
                     // anon box brrrrr world
-                    .stablishesInline = true,
-                    .isBlockLevel = true,
-                    .children{
-                        FakeBox{
-                            // root inline with "brrrrr world"
-                            .stablishesInline = true,
-                            .isBlockLevel = false,
-                        },
-                    }
+                    .content = FakeInlineBox{
+                        // root inline with "brrrrr world"
+                    },
                 },
             }
         };
@@ -261,44 +248,22 @@ test$("no span, breaking block") {
     auto expectedBodySubtree =
         FakeBox{
             // body
-            .stablishesInline = false,
-            .isBlockLevel = true,
-            .children = {
+            .content = Vec<FakeBox>{
                 FakeBox{
                     // anon block
-                    .stablishesInline = true,
-                    .isBlockLevel = true,
-                    .children{
-                        FakeBox{
-                            // root inline with "hello, "
-                            .stablishesInline = true,
-                            .isBlockLevel = false,
-                        }
+                    .content = FakeInlineBox{
+                        // root inline with "hello, "
                     }
                 },
-                FakeBox{
-                    // div block
-                    .stablishesInline = true,
-                    .isBlockLevel = true,
-                    .children{
-                        FakeBox{
+                FakeBox{// div block
+                        .content = FakeInlineBox{
                             // root inline with "cruel"
-                            .stablishesInline = true,
-                            .isBlockLevel = false,
                         }
-                    }
                 },
-                FakeBox{
-                    // anon block
-                    .stablishesInline = true,
-                    .isBlockLevel = true,
-                    .children{
-                        FakeBox{
+                FakeBox{// anon block
+                        .content = FakeInlineBox{
                             // root inline with "world"
-                            .stablishesInline = true,
-                            .isBlockLevel = false,
                         }
-                    }
                 },
             }
         };
@@ -331,70 +296,44 @@ test$("span and breaking block 1") {
     auto expectedBodySubtree =
         FakeBox{
             // body
-            .stablishesInline = false,
-            .isBlockLevel = true,
-            .children = {
+            .content = Vec<FakeBox>{
                 FakeBox{
                     // anon div for inlines
-                    .stablishesInline = true,
-                    .isBlockLevel = true,
-                    .children{
-                        FakeBox{
-                            // root inline box
-                            .stablishesInline = true,
-                            .isBlockLevel = false,
-                            .children{
-                                FakeBox{
-                                    // span with hello
-                                    .stablishesInline = true,
-                                    .isBlockLevel = false,
-                                    .children = {
-                                        FakeBox{
-                                            // span with cruel
-                                            .stablishesInline = true,
-                                            .isBlockLevel = false,
-                                            .children = {
-                                                FakeBox{
-                                                    // span with world
-                                                    .stablishesInline = true,
-                                                    .isBlockLevel = false,
-                                                },
+                    .content = FakeInlineBox{
+                        // root inline box
+                        .children = {
+                            FakeInlineBox{
+                                // span with hello
+                                .children = {
+                                    FakeInlineBox{
+                                        // span with cruel
+                                        .children = {
+                                            FakeInlineBox{
+                                                // span with world
                                             },
-                                        },
+                                        }
                                     },
-                                },
+                                }
                             },
-                        },
+                        }
                     },
                 },
                 FakeBox{
                     // div block
-                    .stablishesInline = false,
-                    .isBlockLevel = true,
                 },
                 FakeBox{
-                    .stablishesInline = true,
-                    .isBlockLevel = true,
-                    .children = {
-                        FakeBox{
-                            // root inline box
-                            .stablishesInline = true,
-                            .isBlockLevel = false,
-                            .children = {
-                                FakeBox{
-                                    // span that had hello
-                                    .stablishesInline = true,
-                                    .isBlockLevel = false,
-                                    .children = {
-                                        FakeBox{
-                                            // span that had cruel
-                                            .stablishesInline = true,
-                                            .isBlockLevel = false,
-                                            .children = {FakeBox{
+                    .content = FakeInlineBox{
+                        // root inline box
+                        .children = {
+                            FakeInlineBox{
+                                // span that had hello
+                                .children = {
+                                    FakeInlineBox{
+                                        // span that had cruel
+                                        .children = {
+                                            FakeInlineBox{
                                                 // span that had world
-                                                .stablishesInline = true,
-                                                .isBlockLevel = false,
-                                            }},
+                                            },
                                         },
                                     },
                                 },
@@ -403,7 +342,7 @@ test$("span and breaking block 1") {
                         },
                     },
                 },
-            }
+            },
         };
 
     auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
@@ -435,34 +374,20 @@ test$("span and breaking block 2") {
     auto expectedBodySubtree =
         FakeBox{
             // body
-            .stablishesInline = false,
-            .isBlockLevel = true,
-            .children = {
+            .content = Vec<FakeBox>{
                 FakeBox{
                     // anon div for inlines
-                    .stablishesInline = true,
-                    .isBlockLevel = true,
-                    .children{
-                        FakeBox{
-                            // root inline box
-                            .stablishesInline = true,
-                            .isBlockLevel = false,
-                            .children{
-                                FakeBox{
-                                    // hello
-                                    .stablishesInline = true,
-                                    .isBlockLevel = false,
-                                    .children = {
-                                        FakeBox{
-                                            // cruel
-                                            .stablishesInline = true,
-                                            .isBlockLevel = false,
-                                            .children = {
-                                                FakeBox{
-                                                    // world
-                                                    .stablishesInline = true,
-                                                    .isBlockLevel = false,
-                                                },
+                    .content = FakeInlineBox{
+                        // root inline box
+                        .children{
+                            FakeInlineBox{
+                                // hello
+                                .children = {
+                                    FakeInlineBox{
+                                        // cruel
+                                        .children = {
+                                            FakeInlineBox{
+                                                // world
                                             },
                                         },
                                     },
@@ -473,34 +398,20 @@ test$("span and breaking block 2") {
                 },
                 FakeBox{
                     // misplaced div 1
-                    .stablishesInline = false,
-                    .isBlockLevel = true,
                 },
                 FakeBox{
                     // anon div for inline
-                    .stablishesInline = true,
-                    .isBlockLevel = true,
-                    .children = {
-                        FakeBox{
-                            // root inline box
-                            .stablishesInline = true,
-                            .isBlockLevel = false,
-                            .children = {
-                                FakeBox{
-                                    // span with hello
-                                    .stablishesInline = true,
-                                    .isBlockLevel = false,
-                                    .children = {
-                                        FakeBox{
-                                            // span with cruel
-                                            .stablishesInline = true,
-                                            .isBlockLevel = false,
-                                            .children = {
-                                                FakeBox{
-                                                    // span with melancholy
-                                                    .stablishesInline = true,
-                                                    .isBlockLevel = false,
-                                                },
+                    .content = FakeInlineBox{
+                        // root inline box
+                        .children = {
+                            FakeInlineBox{
+                                // span with hello
+                                .children = {
+                                    FakeInlineBox{
+                                        // span with cruel
+                                        .children = {
+                                            FakeInlineBox{
+                                                // span with melancholy
                                             },
                                         },
                                     },
@@ -511,33 +422,19 @@ test$("span and breaking block 2") {
                 },
                 FakeBox{
                     // misplaced div 2
-                    .stablishesInline = true,
-                    .isBlockLevel = true,
-                    .children = {
-                        FakeBox{
-                            // root inline box with "kidding"
-                            .stablishesInline = true,
-                            .isBlockLevel = false,
-                        },
+                    .content = FakeInlineBox{
+                        // root inline box with "kidding"
                     },
                 },
                 FakeBox{
                     // anon div for inline
-                    .stablishesInline = true,
-                    .isBlockLevel = true,
-                    .children = {
-                        FakeBox{
-                            // root inline box
-                            .stablishesInline = true,
-                            .isBlockLevel = false,
-                            .children = {
-                                FakeBox{
-                                    // span that had "hello"
-                                    .stablishesInline = true,
-                                    .isBlockLevel = false,
-                                },
-                                // root inline with have good vibes in the end
+                    .content = FakeInlineBox{
+                        // root inline box
+                        .children = {
+                            FakeInlineBox{
+                                // span that had "hello"
                             },
+                            // root inline with have good vibes in the end
                         },
                     },
                 },
@@ -552,4 +449,59 @@ test$("span and breaking block 2") {
     return Ok();
 }
 
+test$("inline-block") {
+    Gc::Heap gc;
+
+    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    Dom::HtmlParser parser{gc, dom};
+
+    parser.write(
+        "<html><body>"
+        "   A <span>X</span>"
+        "   <div id=\"banana\" style=\"display:inline-block\">"
+        "       B"
+        "       <div id=\"apple\" style=\"display:inline-block\">"
+        "           C"
+        "       </div>"
+        "   </div>"
+        "   D"
+        "</body></html>"
+    );
+
+    auto expectedBodySubtree =
+        FakeBox{
+            // body
+            .content = FakeInlineBox{
+                // root inline box with A, strut for bana and D
+                .atomicBoxes = {
+                    FakeBox{
+                        // banana div
+                        .content = FakeInlineBox{
+                            // root inline with B and strut for apple div
+                            .atomicBoxes = {
+                                FakeBox{
+                                    // apple div
+                                    .content = FakeInlineBox{
+                                        // root inline box with C
+                                    }
+                                },
+                            },
+                        }
+                    },
+                },
+                .children = {
+                    FakeInlineBox{
+                        // span X
+                    },
+                }
+            }
+        };
+
+    auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
+    auto const& bodyBox = rootBox->children()[0];
+
+    expect$(expectedBodySubtree.matches(bodyBox));
+
+    return Ok();
+}
 } // namespace Vaev::Layout::Tests
