@@ -71,4 +71,12 @@ test$("fixed-abs") {
     return Ok();
 }
 
+test$("frac+fixed") {
+    using P = i24f8;
+
+    expectEq$(P(1) / P(2) + P(2), P(3) / P(2));
+
+    return Ok();
+}
+
 } // namespace Karm::Math::Tests

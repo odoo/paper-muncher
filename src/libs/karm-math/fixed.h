@@ -3,6 +3,8 @@
 #include <karm-base/checked.h>
 #include <karm-io/fmt.h>
 
+#include "funcs.h"
+
 namespace Karm::Math {
 
 template <typename T>
@@ -159,7 +161,7 @@ struct _Fixed {
 
     constexpr _Frac<_Fixed> operator/(_Fixed const& rhs) const;
 
-    constexpr _Fixed operator/(_Frac<_Fixed> const& rhs) const;
+    constexpr _Frac<_Fixed> operator/(_Frac<_Fixed> const& rhs) const;
 
     constexpr _Fixed& operator+=(_Fixed const& rhs) {
         return *this = *this + rhs;
@@ -175,6 +177,10 @@ struct _Fixed {
 
     constexpr _Frac<_Fixed>& operator/=(_Fixed const& rhs) {
         return *this = *this / rhs;
+    }
+
+    constexpr bool operator==(_Frac<_Fixed> const& rhs) const {
+        return _Fixed(rhs) == *this;
     }
 
     constexpr bool operator==(_Fixed const& rhs) const = default;
@@ -194,8 +200,25 @@ struct _Frac {
     _Frac(I num, I deno = 1)
         : _num(num), _deno(deno) {}
 
+    constexpr _Frac operator+(T const& rhs) const {
+        return _Frac(_num + (rhs * _deno), _deno);
+    }
+
+    constexpr _Frac operator/(T const& rhs) const {
+        return _Frac(_num, _deno * rhs);
+    }
+
+    constexpr bool operator==(_Frac const& rhs) const {
+        auto common = gcd(_deno._val, rhs._deno._val);
+        return _num._val / (_num._val / common) == rhs._num._val / (rhs._num._val / common);
+    }
+
     constexpr operator T() const {
         return _num.loosyDiv(_deno);
+    }
+
+    void repr(Io::Emit& e) const {
+        e("{}/{}", _num, _deno);
     }
 };
 
@@ -205,8 +228,8 @@ constexpr _Frac<_Fixed<T, F>> _Fixed<T, F>::operator/(_Fixed<T, F> const& rhs) c
 }
 
 template <Meta::SignedIntegral T, usize F>
-constexpr _Fixed<T, F> _Fixed<T, F>::operator/(_Frac<_Fixed<T, F>> const& rhs) const {
-    return fromRaw(saturatingDiv(_val, rhs._num) * rhs._deno);
+constexpr _Frac<_Fixed<T, F>> _Fixed<T, F>::operator/(_Frac<_Fixed<T, F>> const& rhs) const {
+    return _Frac<_Fixed<T, F>>{fromRaw(_val) * rhs._deno, rhs._num};
 }
 
 using i24f8 = _Fixed<i32, 8>;

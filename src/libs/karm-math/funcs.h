@@ -2,6 +2,7 @@
 
 #include <karm-base/clamp.h>
 #include <karm-base/limits.h>
+#include <karm-base/panic.h>
 
 #include "const.h"
 
@@ -21,6 +22,16 @@ constexpr auto lerp(auto a, auto b, auto p) {
 template <typename T>
 constexpr bool epsilonEq(T lhs, T rhs, T epsilon = Limits<T>::EPSILON) {
     return abs(lhs - rhs) < epsilon;
+}
+
+template <Meta::Integral T>
+constexpr T gcd(T a, T b) {
+    while (b != 0) {
+        T tmp = a % b;
+        a = b;
+        b = tmp;
+    }
+    return a;
 }
 
 // MARK: Floats ----------------------------------------------------------------
@@ -200,17 +211,26 @@ constexpr T pow(T a, T b) {
 
 template <typename T>
 auto sqrt(T x) -> T {
-    if (x < 0.0)
-        return NAN;
+    if (x < T(0.0)) {
+        if constexpr (Meta::Float<T>)
+            return NAN;
+        else
+            panic("Invalid sqrt");
+    }
 
-    if (x == 0.0 or isNan(x) or isInf(x))
+    if (x == T(0.0))
         return x;
 
-    auto guess = x / 2;
-    auto last = guess + 1;
+    if constexpr (Meta::Float<T>) {
+        if (isNan(x) or isInf(x))
+            return x;
+    }
+
+    auto guess = x / T(2);
+    auto last = guess + T(1);
     while (guess != last) {
         last = guess;
-        guess = (guess + x / guess) / 2;
+        guess = (guess + x / guess) / T(2);
     }
     return guess;
 }

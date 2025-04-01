@@ -113,7 +113,7 @@ union Vec2 {
 
     constexpr T angleWith(Vec2 other) const {
         auto r = unit().dot(other.unit());
-        auto sign = (x * other.y < y * other.x) ? -1.0 : 1.0;
+        auto sign = (x * other.y < y * other.x) ? T(-1.0) : T(1.0);
         return sign * acos(r);
     }
 

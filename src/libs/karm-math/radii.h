@@ -95,7 +95,7 @@ struct Radii {
     Radii reduceOverlap(Vec2<T> size) const {
         auto res = *this;
         auto scaleAll = [&](T factor) {
-            if (factor >= 1)
+            if (factor >= T(1))
                 return;
             for (auto& radii : res.radii)
                 radii *= factor;
@@ -105,16 +105,16 @@ struct Radii {
             r = max(r, T{});
 
         auto sumTop = res.b + res.c;
-        scaleAll(sumTop > T{} ? size.width / sumTop : 1);
+        scaleAll(sumTop > T{} ? size.width / sumTop : T(1));
 
         auto sumEnd = res.d + res.e;
-        scaleAll(sumEnd > T{} ? size.height / sumEnd : 1);
+        scaleAll(sumEnd > T{} ? size.height / sumEnd : T(1));
 
         auto sumBottom = res.f + res.g;
-        scaleAll(sumBottom > T{} ? size.width / sumBottom : 1);
+        scaleAll(sumBottom > T{} ? size.width / sumBottom : T(1));
 
         auto sumStart = res.h + res.a;
-        scaleAll(sumStart > T{} ? size.height / sumStart : 1);
+        scaleAll(sumStart > T{} ? size.height / sumStart : T(1));
         return res;
     }
 

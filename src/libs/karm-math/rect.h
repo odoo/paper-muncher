@@ -80,8 +80,8 @@ union Rect {
 
     always_inline static constexpr Rect<T> fromCenter(Vec2<T> center, Vec2<T> size) {
         return {
-            center.x - size.x / 2,
-            center.y - size.y / 2,
+            center.x - size.x / T(2),
+            center.y - size.y / T(2),
             size.x,
             size.y,
         };
@@ -125,15 +125,15 @@ union Rect {
 
     always_inline constexpr Vec2<T> bottomEnd() const { return {x + width, y + height}; }
 
-    always_inline constexpr Vec2<T> center() const { return {x + width / 2, y + height / 2}; }
+    always_inline constexpr Vec2<T> center() const { return {x + width / T(2), y + height / T(2)}; }
 
-    always_inline constexpr Vec2<T> topCenter() const { return {x + width / 2, y}; }
+    always_inline constexpr Vec2<T> topCenter() const { return {x + width / T(2), y}; }
 
-    always_inline constexpr Vec2<T> bottomCenter() const { return {x + width / 2, y + height}; }
+    always_inline constexpr Vec2<T> bottomCenter() const { return {x + width / T(2), y + height}; }
 
-    always_inline constexpr Vec2<T> startCenter() const { return {x, y + height / 2}; }
+    always_inline constexpr Vec2<T> startCenter() const { return {x, y + height / T(2)}; }
 
-    always_inline constexpr Vec2<T> endCenter() const { return {x + width, y + height / 2}; }
+    always_inline constexpr Vec2<T> endCenter() const { return {x + width, y + height / T(2)}; }
 
     always_inline constexpr Array<Vec2<T>, 4> vertices() const {
         return {
@@ -183,20 +183,20 @@ union Rect {
 
     always_inline constexpr Rect fit(Rect<T> r) const {
         auto scale = (r.size() / size().template cast<f64>()).min();
-        Rect result{0, 0, static_cast<T>(width * scale), static_cast<T>(height * scale)};
+        Rect result{T(0), T(0), static_cast<T>(width * scale), static_cast<T>(height * scale)};
         result.xy = r.center() - result.center();
         return result;
     }
 
     always_inline constexpr Rect cover(Rect<T> r) const {
         f64 scale = (r.size() / size().template cast<f64>()).max();
-        Rect result{0, 0, static_cast<T>(width * scale), static_cast<T>(height * scale)};
+        Rect result{T(0), T(0), static_cast<T>(width * scale), static_cast<T>(height * scale)};
         result.xy = r.center() - result.center();
         return result;
     }
 
     always_inline constexpr Rect center(Rect<T> r) const {
-        Rect result{0, 0, width, height};
+        Rect result{T(0), T(0), width, height};
         result.xy = center() - r.center();
         return result;
     }
@@ -343,7 +343,7 @@ template <typename T>
 Rect<T> const Rect<T>::ZERO = {};
 
 template <typename T>
-Rect<T> const Rect<T>::ONE = {1, 1};
+Rect<T> const Rect<T>::ONE = {T(1), T(1)};
 
 template <typename T>
 Rect<T> const Rect<T>::MAX = {Limits<T>::MAX, Limits<T>::MAX};
