@@ -14,8 +14,12 @@ namespace Vaev::Layout {
 
 static void _createAndBuildBlockLevelBox(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, Box& parent, Display display);
 static void _createAndBuildInlineLevelBox(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, InlineBox& rootInlineBox, Display display);
+
 static Box _createTableWrapperAndBuildTable(Style::Computer& c, Rc<Style::ComputedStyle> tableStyle, Gc::Ref<Dom::Element> tableBoxEl);
+static Box _createFlexContainerAndBuildFlex(Style::Computer& c, Gc::Ref<Dom::Element> flexContainerEl, Rc<Style::ComputedStyle> flexContainerStyle);
+
 static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> parentStyle, InlineBox& rootInlineBox);
+
 static void _buildChildInternalDisplay(Style::Computer& c, Gc::Ref<Dom::Element> child, Rc<Style::ComputedStyle> childStyle, Box& parent);
 
 // MARK: Attributes ------------------------------------------------------------
@@ -208,13 +212,14 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedStyle> parentStyle
     }
 }
 
-void _buildText(Gc::Ref<Dom::Text> node, Rc<Style::ComputedStyle> parentStyle, InlineBox& rootInlineBox) {
+bool _buildText(Gc::Ref<Dom::Text> node, Rc<Style::ComputedStyle> parentStyle, InlineBox& rootInlineBox) {
     Io::SScan scan{node->data()};
     scan.eat(Re::space());
     if (scan.ended())
-        return;
+        return false;
 
-    _appendTextToInlineBox(scan, parentStyle, rootInlineBox);
+    _appendTextToInlineBox(node->data(), parentStyle, rootInlineBox);
+    return true;
 }
 
 // MARK: Build Input -----------------------------------------------------------
@@ -437,6 +442,9 @@ static void _createAndBuildBlockLevelBox(Style::Computer& c, Gc::Ref<Dom::Elemen
     if (display == Display::Inside::TABLE) {
         auto wrapper = _createTableWrapperAndBuildTable(c, style, el);
         parent.add(std::move(wrapper));
+    } else if (display == Display::Inside::FLEX) {
+        auto container = _createFlexContainerAndBuildFlex(c, el, style);
+        parent.add(std::move(container));
     } else if (display == Display::Inside::FLOW) {
         BlockFlowBuilder::createBoxAndBuildfromElement(c, parent, style, el);
     } else {
@@ -450,6 +458,9 @@ static void _createAndBuildInlineLevelBox(Style::Computer& c, Gc::Ref<Dom::Eleme
     if (display == Display::Inside::TABLE) {
         auto wrapper = _createTableWrapperAndBuildTable(c, style, el);
         rootInlineBox.add(std::move(wrapper));
+    } else if (display == Display::Inside::FLEX) {
+        auto container = _createFlexContainerAndBuildFlex(c, el, style);
+        rootInlineBox.add(std::move(container));
     } else {
         // FLOW-ROOT and fallback
         auto font = _lookupFontface(c.fontBook, *style);
@@ -475,6 +486,74 @@ static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::
     });
 
     rootInlineBox.add({style, font, el});
+}
+
+// MARK: Build Flex -----------------------------------------------------------
+
+static void _buildFlexChildren(Style::Computer& c, Gc::Ref<Dom::Element> flexContainerEl, Box& flexContainer);
+
+static void _buildFlexChildBoxDisplay(Style::Computer& c, Gc::Ref<Dom::Element> child, Display display, Box& flexContainer) {
+    if (display == Display::NONE)
+        return;
+    else
+        _buildFlexChildren(c, child, flexContainer);
+}
+
+static void _buildFlexChildDefaultDisplay(Style::Computer& c, Gc::Ref<Dom::Element> child, Rc<Style::ComputedStyle> childStyle, Display display, Box& flexContainer) {
+    // The display value of a flex item is blockified: if the specified display of an in-flow child of an element
+    // generating a flex container is an inline-level value, it computes to its block-level equivalent.
+    childStyle->display = childStyle->display.blockify();
+    _createAndBuildBlockLevelBox(c, child, childStyle, flexContainer, display);
+}
+
+// https://www.w3.org/TR/css-flexbox-1/#flex-items
+static void _buildFlexTextNodeChild(Style::Computer& c, Gc::Ref<Dom::Text> text, Box& flexContainer) {
+    // // Each in-flow child of a flex container becomes a flex item,
+    // and each contiguous sequence of child text runs is wrapped in an anonymous block container flex item.
+    auto anonymousBoxStyle = makeRc<Style::ComputedStyle>(Style::ComputedStyle::initial());
+    anonymousBoxStyle->inherit(*flexContainer.style);
+    anonymousBoxStyle->display = anonymousBoxStyle->display.blockify();
+
+    Box textBox{anonymousBoxStyle, flexContainer.fontFace, nullptr};
+    InlineBox rootInlineBox{_proseStyleFomStyle(c, *anonymousBoxStyle)};
+
+    // However, if the entire sequence of child text runs contains only white space
+    // (i.e. characters that can be affected by the white-space property) it is instead not rendered
+    // (just as if its text nodes were display:none).
+    if (not _buildText(*text, textBox.style, rootInlineBox))
+        return;
+
+    textBox.content = std::move(rootInlineBox);
+    flexContainer.add(std::move(textBox));
+}
+
+static void _buildFlexChildren(Style::Computer& c, Gc::Ref<Dom::Element> flexContainerEl, Box& flexContainer) {
+    for (auto child = flexContainerEl->firstChild(); child; child = child->nextSibling()) {
+        if (auto el = child->is<Dom::Element>()) {
+            auto childStyle = c.computeFor(*flexContainer.style, *el);
+            auto display = childStyle->display;
+
+            if (display.type() == Display::Type::BOX) {
+                _buildFlexChildBoxDisplay(c, *el, display, flexContainer);
+            } else if (display.type() == Display::Type::INTERNAL) {
+                _buildChildInternalDisplay(c, *el, childStyle, flexContainer);
+            } else {
+                _buildFlexChildDefaultDisplay(c, *el, childStyle, display, flexContainer);
+            }
+        } else if (auto text = child->is<Dom::Text>()) {
+            _buildFlexTextNodeChild(c, *text, flexContainer);
+        }
+    }
+}
+
+static Box _createFlexContainerAndBuildFlex(Style::Computer& c, Gc::Ref<Dom::Element> flexContainerEl, Rc<Style::ComputedStyle> flexContainerStyle) {
+    auto font = _lookupFontface(c.fontBook, *flexContainerStyle);
+
+    Box flexContainer = {flexContainerStyle, font, flexContainerEl};
+    _buildFlexChildren(c, flexContainerEl, flexContainer);
+    flexContainer.attrs = _parseDomAttr(flexContainerEl);
+
+    return flexContainer;
 }
 
 // MARK: Build Table -----------------------------------------------------------
