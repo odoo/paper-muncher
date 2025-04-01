@@ -5,7 +5,7 @@
 
 #include "lexer.h"
 
-namespace Vaev::Css {
+namespace Vive::Css {
 
 // MARK: Token -----------------------------------------------------------------
 
@@ -257,4 +257,4 @@ Token Lexer::_next(Io::SScan& s) const {
     }
 }
 
-} // namespace Vaev::Css
+} // namespace Vive::Css

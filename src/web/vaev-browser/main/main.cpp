@@ -14,12 +14,12 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
                    : "about:start"_url;
     Gc::Heap heap;
     auto client = Http::defaultClient();
-    client->userAgent = "Vaev-Browser/" stringify$(__ck_version_value) ""s;
+    client->userAgent = "Vive-Browser/" stringify$(__ck_version_value) ""s;
 
-    auto dom = co_await Vaev::Driver::fetchDocumentAsync(heap, *client, url);
+    auto dom = co_await Vive::Driver::fetchDocumentAsync(heap, *client, url);
 
     co_return co_await Ui::runAsync(
         ctx,
-        Vaev::Browser::app(heap, *client, url, dom)
+        Vive::Browser::app(heap, *client, url, dom)
     );
 }

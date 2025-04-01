@@ -7,7 +7,7 @@
 #include "../document.h"
 #include "../element.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 struct XmlParser {
     Gc::Heap& _heap;

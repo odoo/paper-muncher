@@ -2,7 +2,7 @@
 
 #include <karm-base/distinct.h>
 
-namespace Vaev {
+namespace Vive {
 
 using Integer = isize;
 

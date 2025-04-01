@@ -6,7 +6,7 @@
 #include "numbers.h"
 #include "percent.h"
 
-namespace Vaev {
+namespace Vive {
 
 struct LineHeight {
     struct _Normal {};

@@ -3,7 +3,7 @@
 #include <karm-base/base.h>
 #include <karm-io/emit.h>
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 struct [[gnu::packed]] Align {
     enum Prefix : u8 {

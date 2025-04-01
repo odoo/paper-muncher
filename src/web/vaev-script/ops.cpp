@@ -2,7 +2,7 @@
 
 #include "object.h"
 
-namespace Vaev::Script {
+namespace Vive::Script {
 
 // MARK: Abstract Operations ---------------------------------------------------
 // https://tc39.es/ecma262/#sec-abstract-operations
@@ -195,4 +195,4 @@ Completion throwException(Value exception) {
     return Completion::throw_(exception);
 }
 
-} // namespace Vaev::Script
+} // namespace Vive::Script

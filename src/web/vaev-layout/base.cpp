@@ -6,7 +6,7 @@ module;
 
 export module Vaev.Layout:base;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 // MARK: Fragmentainer ---------------------------------------------------------
 
@@ -501,4 +501,4 @@ struct FormatingContext {
     virtual Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) = 0;
 };
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

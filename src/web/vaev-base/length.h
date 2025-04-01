@@ -6,7 +6,7 @@
 
 #include "resolved.h"
 
-namespace Vaev {
+namespace Vive {
 
 // 6. MARK: Distance Units: the <length> type
 // https://drafts.csswg.org/css-values/#lengths

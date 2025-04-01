@@ -2,7 +2,7 @@
 
 #include "document.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 // https://dom.spec.whatwg.org/#ref-for-dom-node-baseuri%E2%91%A0
 Mime::Url Node::baseURI() {
@@ -32,4 +32,4 @@ void Node::repr(Io::Emit& e) const {
     e(")\n");
 }
 
-} // namespace Vaev::Dom
+} // namespace Vive::Dom

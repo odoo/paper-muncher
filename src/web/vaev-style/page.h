@@ -3,7 +3,7 @@
 #include "origin.h"
 #include "props.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 // https://drafts.csswg.org/css-page-3/#margin-at-rules
 #define FOREACH_PAGE_AREA(ITER)                      \

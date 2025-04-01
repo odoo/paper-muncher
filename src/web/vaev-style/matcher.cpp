@@ -1,6 +1,6 @@
 #include "matcher.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 static constexpr bool DEBUG_MATCHING = false;
 
@@ -338,4 +338,4 @@ Opt<Spec> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el) {
     return NONE;
 }
 
-} // namespace Vaev::Style
+} // namespace Vive::Style

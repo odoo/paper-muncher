@@ -3,7 +3,7 @@
 #include <karm-io/emit.h>
 #include <karm-math/const.h>
 
-namespace Vaev {
+namespace Vive {
 
 // 7.1. MARK: Angle Units: the <angle> type and deg, grad, rad, turn units
 // https://drafts.csswg.org/css-values/#angles

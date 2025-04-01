@@ -24,7 +24,7 @@
 
 #include "css/parser.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 struct ComputedStyle {
     static ComputedStyle const& initial();

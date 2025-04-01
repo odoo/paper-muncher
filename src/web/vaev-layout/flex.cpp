@@ -11,7 +11,7 @@ export module Vaev.Layout:flex;
 import :layout;
 import :values;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 // FIXME: refrain from saving this on every flex item/line to decrease their sizes
 struct FlexAxis {
@@ -1563,4 +1563,4 @@ export Rc<FormatingContext> constructFlexFormatingContext(Box& box) {
     return makeRc<FlexFormatingContext>(*box.style->flex);
 }
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

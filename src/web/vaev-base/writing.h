@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Vaev {
+namespace Vive {
 
 // https://drafts.csswg.org/css-writing-modes-4/#inline-axis
 // https://drafts.csswg.org/css-writing-modes-4/#block-axis

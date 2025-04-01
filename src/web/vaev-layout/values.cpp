@@ -12,7 +12,7 @@ export module Vaev.Layout:values;
 import :base;
 import :writing;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 export struct Resolver {
     f64 userFontSize = 16;   /// Font size of the user agent
@@ -385,4 +385,4 @@ auto resolve(Tree const& tree, Box const& box, CalcValue<T> const& value, Args..
     return Resolver::from(tree, box).resolve(value, args...);
 }
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

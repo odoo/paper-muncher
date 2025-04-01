@@ -6,7 +6,7 @@ export module Vaev.Layout:writing;
 
 import :base;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 // https://drafts.csswg.org/css-writing-modes-4/#inline-axis
 export Axis mainAxis(Box const&) {
@@ -22,4 +22,4 @@ export Axis crossAxis(Box const&) {
     return Axis::VERTICAL;
 }
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

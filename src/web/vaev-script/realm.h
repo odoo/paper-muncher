@@ -4,7 +4,7 @@
 #include "completion.h"
 #include "value.h"
 
-namespace Vaev::Script {
+namespace Vive::Script {
 
 // https://tc39.es/ecma262/#realm
 struct Realm {

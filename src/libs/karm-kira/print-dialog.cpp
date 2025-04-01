@@ -31,11 +31,11 @@ struct DocumentPrinter {
         PRINTED
     };
 
-    Gc::Ref<Vaev::Dom::Document> dom;
+    Gc::Ref<Vive::Dom::Document> dom;
     Print::Settings const& settings;
     STATUS status = STATUS::IDLE;
 
-    DocumentPrinter(Gc::Ref<Vaev::Dom::Document> dom, Print::Settings const& settings)
+    DocumentPrinter(Gc::Ref<Vive::Dom::Document> dom, Print::Settings const& settings)
         : dom(dom), settings(settings) {}
 };
 
@@ -45,7 +45,7 @@ struct State {
     Vec<Print::Page> pages = preview(settings);
     DocumentPrinter printer;
 
-    State(PrintPreview preview) : preview(preview), printer(Gc::Ref<Vaev::Dom::Document>{}, settings) {}
+    State(PrintPreview preview) : preview(preview), printer(Gc::Ref<Vive::Dom::Document>{}, settings) {}
 };
 
 struct ChangePaper {

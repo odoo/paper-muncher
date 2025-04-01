@@ -2,7 +2,7 @@
 
 #include "element.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 String Document::title() const {
     String res = ""s;
@@ -25,4 +25,4 @@ Gc::Ptr<Dom::Element> Document::documentElement() const {
     return nullptr;
 }
 
-} // namespace Vaev::Dom
+} // namespace Vive::Dom

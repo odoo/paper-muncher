@@ -3,7 +3,7 @@
 #include "node.h"
 #include "tags.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 // https://dom.spec.whatwg.org/#interface-attr
 

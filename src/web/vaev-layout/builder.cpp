@@ -10,7 +10,7 @@ export module Vaev.Layout:builder;
 
 import :values;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 static void _buildNode(Style::Computer& c, Gc::Ref<Dom::Node> node, Box& parent);
 
@@ -370,4 +370,4 @@ export Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::ComputedSty
     return {style, fontFace, nullptr};
 }
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

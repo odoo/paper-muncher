@@ -4,7 +4,7 @@
 
 #include "parser.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 // 2 MARK: Documents
 // https://www.w3.org/TR/xml/#sec-documents
@@ -642,4 +642,4 @@ Res<> XmlParser::_parseExternalId(Io::SScan& s, DocumentType& docType) {
     }
 }
 
-} // namespace Vaev::Dom
+} // namespace Vive::Dom

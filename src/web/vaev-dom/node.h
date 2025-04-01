@@ -5,7 +5,7 @@
 #include "_forward.h"
 #include "tree.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 #define FOREACH_NODE_TYPE(TYPE)     \
     TYPE(ELEMENT, 1)                \

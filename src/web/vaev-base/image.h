@@ -8,7 +8,7 @@
 
 // https://www.w3.org/TR/css-images-4/
 
-namespace Vaev {
+namespace Vive {
 
 struct Image;
 

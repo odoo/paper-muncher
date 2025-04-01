@@ -17,7 +17,7 @@ module;
 
 export module Vaev.Browser:inspect;
 
-namespace Vaev::Browser {
+namespace Vive::Browser {
 
 export struct ExpandNode {
     Gc::Ref<Dom::Node> node;
@@ -178,11 +178,11 @@ Ui::Child computedStyles() {
            Ui::pinSize(128);
 }
 
-export Ui::Child inspect(Gc::Ref<Vaev::Dom::Document> n, InspectState const& s, Ui::Action<InspectorAction> a) {
+export Ui::Child inspect(Gc::Ref<Vive::Dom::Document> n, InspectState const& s, Ui::Action<InspectorAction> a) {
     return Ui::vflow(
         node(n, s, a) | Ui::vscroll() | Ui::grow(),
         computedStyles() | Kr::resizable(Kr::ResizeHandle::TOP, {128}, NONE)
     );
 }
 
-} // namespace Vaev::Browser
+} // namespace Vive::Browser

@@ -4,7 +4,7 @@
 #include "../document-type.h"
 #include "parser.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 static constexpr bool DEBUG_HTML_PARSER = false;
 
@@ -256,7 +256,7 @@ Gc::Ref<Element> HtmlParser::_insertAForeignElement(HtmlToken const& t, Ns ns, b
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-an-html-element
 Gc::Ref<Element> HtmlParser::_insertHtmlElement(HtmlToken const& t) {
-    return _insertAForeignElement(t, Vaev::HTML, false);
+    return _insertAForeignElement(t, Vive::HTML, false);
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-character
@@ -542,7 +542,7 @@ void HtmlParser::_handleBeforeHtml(HtmlToken const& t) {
 
     // A start tag whose tag name is "html"
     else if (t.type == HtmlToken::START_TAG and t.name == "html") {
-        auto el = _createElementFor(t, Vaev::HTML);
+        auto el = _createElementFor(t, Vive::HTML);
         _document->appendChild(el);
         _openElements.pushBack(el);
         _switchTo(Mode::BEFORE_HEAD);
@@ -696,7 +696,7 @@ void HtmlParser::_handleInHead(HtmlToken const& t) {
         // 2. Create an element for the token in the HTML namespace, with
         //    the intended parent being the element in which the adjusted
         //    insertion location finds itself.
-        auto el = _createElementFor(t, Vaev::HTML);
+        auto el = _createElementFor(t, Vive::HTML);
 
         // 3. Set the element's parser document to the Document, and set
         //    the element's force async to false.
@@ -1259,7 +1259,7 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
         // namespaced attributes, in particular XLink in SVG.)
 
         // Insert a foreign element for the token, with SVG namespace and false.
-        _insertAForeignElement(t, Vaev::SVG, false);
+        _insertAForeignElement(t, Vive::SVG, false);
 
         // If the token has its self-closing flag set, pop the current node
         // off the stack of open elements and acknowledge the token's self-closing flag.
@@ -1435,7 +1435,7 @@ void HtmlParser::_handleInTable(HtmlToken const& t) {
         HtmlToken colGroupToken;
         colGroupToken.type = HtmlToken::START_TAG;
         colGroupToken.name = String{"colgroup"};
-        _insertAForeignElement(colGroupToken, Vaev::HTML);
+        _insertAForeignElement(colGroupToken, Vive::HTML);
         _switchTo(Mode::IN_COLUMN_GROUP);
 
         // Reprocess the current token.
@@ -1463,7 +1463,7 @@ void HtmlParser::_handleInTable(HtmlToken const& t) {
         HtmlToken TableBodyToken;
         TableBodyToken.type = HtmlToken::START_TAG;
         TableBodyToken.name = "tbody"s;
-        _insertAForeignElement(TableBodyToken, Vaev::HTML);
+        _insertAForeignElement(TableBodyToken, Vive::HTML);
         _switchTo(Mode::IN_TABLE_BODY);
 
         // Reprocess the current token.
@@ -1590,7 +1590,7 @@ void HtmlParser::_handleInTable(HtmlToken const& t) {
         formToken.type = HtmlToken::START_TAG;
         formToken.name = "form"s;
 
-        _formElement = _insertAForeignElement(formToken, Vaev::HTML);
+        _formElement = _insertAForeignElement(formToken, Vive::HTML);
 
         // Pop that form element off the stack of open elements.
         _openElements.popBack();
@@ -1694,7 +1694,7 @@ void HtmlParser::_handleInTableBody(HtmlToken const& t) {
         HtmlToken tableRowToken;
         tableRowToken.type = HtmlToken::START_TAG;
         tableRowToken.name = "tr"s;
-        _insertAForeignElement(tableRowToken, Vaev::HTML);
+        _insertAForeignElement(tableRowToken, Vive::HTML);
 
         _switchTo(Mode::IN_ROW);
 
@@ -1705,7 +1705,7 @@ void HtmlParser::_handleInTableBody(HtmlToken const& t) {
         // If the stack of open elements does not have an element in table scope that is an HTML element with the same
         // tag name as the token, this is a parse error; ignore the token.
 
-        if (not _hasElementInTableScope(TagName::make(t.name, Vaev::HTML))) {
+        if (not _hasElementInTableScope(TagName::make(t.name, Vive::HTML))) {
             _raise();
             return;
         }
@@ -1845,7 +1845,7 @@ void HtmlParser::_handleInTableRow(HtmlToken const& t) {
         // If the stack of open elements does not have an element in table scope that is an HTML element with the same
         // tag name as the token,
 
-        if (not _hasElementInTableScope(TagName::make(t.name, Vaev::HTML))) {
+        if (not _hasElementInTableScope(TagName::make(t.name, Vive::HTML))) {
             // this is a parse error; ignore the token.
             _raise();
             return;
@@ -1909,7 +1909,7 @@ void HtmlParser::_handleInCell(HtmlToken const& t) {
     if (t.type == HtmlToken::END_TAG and (t.name == "td" or t.name == "th")) {
         // If the stack of open elements does not have an element in table scope that is an HTML element with the same
         // tag name as that of the token,
-        TagName tokenTagName{TagName::make(t.name, Vaev::HTML)};
+        TagName tokenTagName{TagName::make(t.name, Vive::HTML)};
 
         if (not _hasElementInTableScope(tokenTagName)) {
             // this is a parse error; ignore the token.
@@ -1973,7 +1973,7 @@ void HtmlParser::_handleInCell(HtmlToken const& t) {
 
         // If the stack of open elements does not have an element in table scope that is an HTML element with the same
         // tag name as the token,
-        if (not _hasElementInTableScope(TagName::make(t.name, Vaev::HTML))) {
+        if (not _hasElementInTableScope(TagName::make(t.name, Vive::HTML))) {
             // this is a parse error; ignore the token.
             _raise();
             return;
@@ -2101,7 +2101,7 @@ void HtmlParser::_handleInForeignContent(HtmlToken const& t) {
             //  - or an element in the HTML namespace
             if (_isMathMlTextIntegrationPoint(*el) and
                 _isHtmlIntegrationPoint(*el) and
-                el->tagName.ns == Vaev::HTML) {
+                el->tagName.ns == Vive::HTML) {
                 break;
             }
 
@@ -2117,7 +2117,7 @@ void HtmlParser::_handleInForeignContent(HtmlToken const& t) {
     // Any other start tag
     else if (t.type == HtmlToken::START_TAG) {
         // If the adjusted current node is an element in the MathML namespace, ...
-        if (_currentElement()->tagName.ns == Vaev::MathML) {
+        if (_currentElement()->tagName.ns == Vive::MathML) {
             // TODO: ...adjust MathML attributes for the token. (This fixes the case of MathML attributes that are not all lowercase.)
         }
 
@@ -2334,4 +2334,4 @@ void HtmlParser::accept(HtmlToken const& t) {
     }
 }
 
-} // namespace Vaev::Dom
+} // namespace Vive::Dom

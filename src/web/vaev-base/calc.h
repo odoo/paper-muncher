@@ -5,7 +5,7 @@
 #include "length.h"
 #include "numbers.h"
 
-namespace Vaev {
+namespace Vive {
 
 enum struct CalcOp {
     NOP,

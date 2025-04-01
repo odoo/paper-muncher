@@ -7,7 +7,7 @@
 #include "css/parser.h"
 #include "values.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 // MARK: FontFace --------------------------------------------------------------
 

@@ -5,7 +5,7 @@
 #include "keywords.h"
 #include "numbers.h"
 
-namespace Vaev {
+namespace Vive {
 
 using ZIndex = FlatUnion<Keywords::Auto, Integer>;
 

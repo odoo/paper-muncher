@@ -3,7 +3,7 @@
 #include "base.h"
 #include "values.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 // MARK: Parser ----------------------------------------------------------------
 
@@ -1547,4 +1547,4 @@ Res<Mime::Url> ValueParser<Mime::Url>::parse(Cursor<Css::Sst>& c) {
     return Ok(url);
 }
 
-} // namespace Vaev::Style
+} // namespace Vive::Style

@@ -11,7 +11,7 @@ export module Vaev.View:view;
 import Vaev.Driver;
 import Vaev.Layout;
 
-namespace Vaev::View {
+namespace Vive::View {
 
 export struct ViewProps {
     bool wireframe = false;
@@ -121,4 +121,4 @@ export Ui::Child view(Gc::Root<Dom::Document> dom, ViewProps props) {
     return makeRc<View>(dom, props);
 }
 
-} // namespace Vaev::View
+} // namespace Vive::View

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Vaev {
+namespace Vive {
 
 // MARK: Media Types -----------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#media-types

@@ -3,7 +3,7 @@
 #include <karm-base/string.h>
 #include <karm-io/emit.h>
 
-namespace Vaev {
+namespace Vive {
 
 template <marK::StrLit K>
 struct Keyword {

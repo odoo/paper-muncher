@@ -4,7 +4,7 @@
 #include <karm-io/emit.h>
 #include <karm-logger/logger.h>
 
-namespace Vaev {
+namespace Vive {
 
 namespace Html {
 

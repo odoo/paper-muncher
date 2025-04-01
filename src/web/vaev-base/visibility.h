@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Vaev {
+namespace Vive {
 
 enum struct Visibility {
     VISIBLE,

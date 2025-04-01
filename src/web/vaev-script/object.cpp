@@ -2,7 +2,7 @@
 
 #include "ops.h"
 
-namespace Vaev::Script {
+namespace Vive::Script {
 
 // MARK: Ordinary Object Ordinary Methods --------------------------------------
 // https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots
@@ -270,4 +270,4 @@ void Object::repr(Io::Emit& e) const {
     e("[object Object]");
 }
 
-} // namespace Vaev::Script
+} // namespace Vive::Script

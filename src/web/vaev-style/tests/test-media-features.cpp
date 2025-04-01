@@ -246,4 +246,4 @@ test$("feature-device-aspect-ratio") {
     return Ok();
 }
 
-} // namespace Vaev::Style::Tests
+} // namespace Vive::Style::Tests

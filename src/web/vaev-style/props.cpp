@@ -2,7 +2,7 @@
 
 #include "props.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 static bool DEBUG_PROPS = false;
 
@@ -153,4 +153,4 @@ void StyleProp::repr(Io::Emit& e) const {
     e(")");
 }
 
-} // namespace Vaev::Style
+} // namespace Vive::Style

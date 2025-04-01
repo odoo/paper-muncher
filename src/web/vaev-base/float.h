@@ -2,7 +2,7 @@
 
 #include "length.h"
 
-namespace Vaev {
+namespace Vive {
 
 enum struct Float {
     NONE,

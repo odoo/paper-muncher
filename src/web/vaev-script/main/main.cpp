@@ -2,7 +2,7 @@
 #include <vaev-script/object.h>
 #include <vaev-script/realm.h>
 
-using namespace Vaev;
+using namespace Vive;
 
 Async::Task<> entryPointAsync(Sys::Context&) {
     Gc::Heap heap;
@@ -16,7 +16,7 @@ Async::Task<> entryPointAsync(Sys::Context&) {
     (void)object1->defineOwnProperty(
         Script::PropertyKey::from(u"foo"_s16),
         {
-            .value = Vaev::Script::Number{42.},
+            .value = Vive::Script::Number{42.},
         }
     );
 

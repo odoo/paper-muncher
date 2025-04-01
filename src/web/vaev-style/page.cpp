@@ -2,7 +2,7 @@
 
 #include "decls.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 static bool DEBUG_PAGE = false;
 
@@ -168,4 +168,4 @@ PageRule PageRule::parse(Css::Sst const& sst) {
     return res;
 }
 
-} // namespace Vaev::Style
+} // namespace Vive::Style

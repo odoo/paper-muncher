@@ -6,7 +6,7 @@ export module Vaev.Layout:inline_;
 
 import :base;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 struct InlineFormatingContext : public FormatingContext {
     virtual Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
@@ -48,4 +48,4 @@ export Rc<FormatingContext> constructInlineFormatingContext(Box&) {
     return makeRc<InlineFormatingContext>();
 }
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

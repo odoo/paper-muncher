@@ -2,7 +2,7 @@
 
 #include "props.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 ComputedStyle const& ComputedStyle::initial() {
     static ComputedStyle computed = [] {
@@ -67,4 +67,4 @@ Css::Content ComputedStyle::getCustomProp(Str varName) const {
         return *value;
     return {};
 }
-} // namespace Vaev::Style
+} // namespace Vive::Style

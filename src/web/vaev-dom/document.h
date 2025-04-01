@@ -4,7 +4,7 @@
 
 #include "node.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 enum struct QuirkMode {
     NO,

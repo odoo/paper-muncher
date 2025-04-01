@@ -76,4 +76,4 @@ test$("logical-only") {
     return Ok();
 }
 
-} // namespace Vaev::Style::Tests
+} // namespace Vive::Style::Tests

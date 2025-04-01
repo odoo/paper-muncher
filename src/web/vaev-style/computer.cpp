@@ -2,7 +2,7 @@
 
 #include "computer.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 void Computer::_evalRule(Rule const& rule, Gc::Ref<Dom::Element> el, MatchingRules& matches) {
     rule.visit(Visitor{
@@ -165,4 +165,4 @@ void Computer::loadFontFaces() {
     }
 }
 
-} // namespace Vaev::Style
+} // namespace Vive::Style

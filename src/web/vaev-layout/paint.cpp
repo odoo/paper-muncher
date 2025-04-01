@@ -11,7 +11,7 @@ export module Vaev.Layout:paint;
 import :base;
 import :values;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 static bool _paintBorders(Frag& frag, Gfx::Color currentColor, Gfx::Borders& borders) {
     borders.radii = frag.metrics.radii.cast<f64>(); // This value is needed for the outline
@@ -19,7 +19,7 @@ static bool _paintBorders(Frag& frag, Gfx::Color currentColor, Gfx::Borders& bor
     if (frag.metrics.borders.zero())
         return false;
 
-    currentColor = Vaev::resolve(frag.style().color, currentColor);
+    currentColor = Vive::resolve(frag.style().color, currentColor);
 
     auto const& bordersLayout = frag.metrics.borders;
     borders.widths.top = bordersLayout.top.cast<f64>();
@@ -33,10 +33,10 @@ static bool _paintBorders(Frag& frag, Gfx::Color currentColor, Gfx::Borders& bor
     borders.styles[2] = bordersStyle.bottom.style;
     borders.styles[3] = bordersStyle.start.style;
 
-    borders.fills[0] = Vaev::resolve(bordersStyle.top.color, currentColor);
-    borders.fills[1] = Vaev::resolve(bordersStyle.end.color, currentColor);
-    borders.fills[2] = Vaev::resolve(bordersStyle.bottom.color, currentColor);
-    borders.fills[3] = Vaev::resolve(bordersStyle.start.color, currentColor);
+    borders.fills[0] = Vive::resolve(bordersStyle.top.color, currentColor);
+    borders.fills[1] = Vive::resolve(bordersStyle.end.color, currentColor);
+    borders.fills[2] = Vive::resolve(bordersStyle.bottom.color, currentColor);
+    borders.fills[3] = Vive::resolve(bordersStyle.start.color, currentColor);
 
     return true;
 }
@@ -79,11 +79,11 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
     Gfx::Outline outline;
 
     Vec<Gfx::Fill> backgrounds;
-    auto color = Vaev::resolve(cssBackground->color, frag.style().color);
+    auto color = Vive::resolve(cssBackground->color, frag.style().color);
     if (color.alpha != 0)
         backgrounds.pushBack(color);
 
-    auto currentColor = Vaev::resolve(frag.style().color, color);
+    auto currentColor = Vive::resolve(frag.style().color, color);
     bool hasBorders = _paintBorders(frag, currentColor, borders);
     bool hasOutline = _paintOutline(frag, currentColor, outline);
     Math::Rectf bound = frag.metrics.borderBox().round().cast<f64>();
@@ -197,4 +197,4 @@ export void wireframe(Frag& frag, Gfx::Canvas& g) {
     g.stroke(frag.metrics.borderBox().cast<f64>());
 }
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

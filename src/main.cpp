@@ -16,10 +16,10 @@ import Karm.Http;
 namespace PaperMuncher {
 
 struct PrintOption {
-    Vaev::Resolution scale = Vaev::Resolution::fromDppx(1);
-    Vaev::Resolution density = Vaev::Resolution::fromDppx(1);
-    Opt<Vaev::Length> width = NONE;
-    Opt<Vaev::Length> height = NONE;
+    Vive::Resolution scale = Vive::Resolution::fromDppx(1);
+    Vive::Resolution density = Vive::Resolution::fromDppx(1);
+    Opt<Vive::Length> width = NONE;
+    Opt<Vive::Length> height = NONE;
     Print::PaperStock paper = Print::A4;
     Print::Orientation orientation = Print::Orientation::PORTRAIT;
     Mime::Uti outputFormat = Mime::Uti::PUBLIC_PDF;
@@ -34,9 +34,9 @@ Async::Task<> printAsync(
     auto client = Http::defaultClient();
     client->userAgent = "Paper-Muncher/" stringify$(__ck_version_value) ""s;
 
-    auto dom = co_trya$(Vaev::Driver::fetchDocumentAsync(heap, *client, input));
+    auto dom = co_trya$(Vive::Driver::fetchDocumentAsync(heap, *client, input));
 
-    Vaev::Layout::Resolver resolver;
+    Vive::Layout::Resolver resolver;
     resolver.viewport.dpi = options.scale;
 
     auto paper = options.paper;
@@ -68,7 +68,7 @@ Async::Task<> printAsync(
         )
     );
 
-    Vaev::Driver::print(
+    Vive::Driver::print(
         *dom,
         settings
     ) | forEach([&](Print::Page& page) {
@@ -94,50 +94,50 @@ Async::Task<> printAsync(
     co_return Ok();
 }
 
-Vaev::Style::Media constructMediaForRender(Vaev::Resolution scale, Vec2Au size) {
+Vive::Style::Media constructMediaForRender(Vive::Resolution scale, Vec2Au size) {
     return {
-        .type = Vaev::MediaType::SCREEN,
+        .type = Vive::MediaType::SCREEN,
         .width = size.width,
         .height = size.height,
-        .aspectRatio = (Vaev::Number)size.width / (Vaev::Number)size.height,
+        .aspectRatio = (Vive::Number)size.width / (Vive::Number)size.height,
         .orientation = Print::Orientation::PORTRAIT,
 
         .resolution = scale,
-        .scan = Vaev::Scan::PROGRESSIVE,
+        .scan = Vive::Scan::PROGRESSIVE,
         .grid = false,
-        .update = Vaev::Update::NONE,
+        .update = Vive::Update::NONE,
 
-        .overflowBlock = Vaev::OverflowBlock::NONE,
-        .overflowInline = Vaev::OverflowInline::NONE,
+        .overflowBlock = Vive::OverflowBlock::NONE,
+        .overflowInline = Vive::OverflowInline::NONE,
 
         .color = 8,
         .colorIndex = 0,
         .monochrome = 0,
-        .colorGamut = Vaev::ColorGamut::SRGB,
-        .pointer = Vaev::Pointer::NONE,
-        .hover = Vaev::Hover::NONE,
-        .anyPointer = Vaev::Pointer::NONE,
-        .anyHover = Vaev::Hover::NONE,
+        .colorGamut = Vive::ColorGamut::SRGB,
+        .pointer = Vive::Pointer::NONE,
+        .hover = Vive::Hover::NONE,
+        .anyPointer = Vive::Pointer::NONE,
+        .anyHover = Vive::Hover::NONE,
 
-        .prefersReducedMotion = Vaev::ReducedMotion::REDUCE,
-        .prefersReducedTransparency = Vaev::ReducedTransparency::REDUCE,
-        .prefersContrast = Vaev::Contrast::NO_PREFERENCE,
-        .forcedColors = Vaev::Colors::NONE,
-        .prefersColorScheme = Vaev::ColorScheme::LIGHT,
-        .prefersReducedData = Vaev::ReducedData::NO_PREFERENCE,
+        .prefersReducedMotion = Vive::ReducedMotion::REDUCE,
+        .prefersReducedTransparency = Vive::ReducedTransparency::REDUCE,
+        .prefersContrast = Vive::Contrast::NO_PREFERENCE,
+        .forcedColors = Vive::Colors::NONE,
+        .prefersColorScheme = Vive::ColorScheme::LIGHT,
+        .prefersReducedData = Vive::ReducedData::NO_PREFERENCE,
 
         // NOTE: Deprecated Media Features
         .deviceWidth = size.width,
         .deviceHeight = size.height,
-        .deviceAspectRatio = (Vaev::Number)size.width / (Vaev::Number)size.height,
+        .deviceAspectRatio = (Vive::Number)size.width / (Vive::Number)size.height,
     };
 }
 
 struct RenderOption {
-    Vaev::Resolution scale = Vaev::Resolution::fromDpi(96);
-    Vaev::Resolution density = Vaev::Resolution::fromDpi(96);
-    Vaev::Length width = 800_au;
-    Vaev::Length height = 600_au;
+    Vive::Resolution scale = Vive::Resolution::fromDpi(96);
+    Vive::Resolution density = Vive::Resolution::fromDpi(96);
+    Vive::Length width = 800_au;
+    Vive::Length height = 600_au;
     Mime::Uti outputFormat = Mime::Uti::PUBLIC_BMP;
     bool wireframe = false;
 };
@@ -151,9 +151,9 @@ Async::Task<> renderAsync(
     auto client = Http::defaultClient();
     client->userAgent = "Paper-Muncher/1.0"s;
 
-    auto dom = co_trya$(Vaev::Driver::fetchDocumentAsync(heap, *client, input));
+    auto dom = co_trya$(Vive::Driver::fetchDocumentAsync(heap, *client, input));
 
-    Vaev::Layout::Resolver resolver;
+    Vive::Layout::Resolver resolver;
     resolver.viewport.dpi = options.scale;
 
     Vec2Au imageSize = {
@@ -162,7 +162,7 @@ Async::Task<> renderAsync(
     };
 
     auto media = constructMediaForRender(options.scale, imageSize);
-    auto [style, layout, paint, frags, canvasColor] = Vaev::Driver::render(*dom, media, {.small = imageSize});
+    auto [style, layout, paint, frags, canvasColor] = Vive::Driver::render(*dom, media, {.small = imageSize});
 
     auto image = Gfx::Surface::alloc(
         imageSize.cast<isize>() * options.density.toDppx(),
@@ -183,7 +183,7 @@ Async::Task<> renderAsync(
     g.scale(options.density.toDppx());
     paint->paint(g);
     if (options.wireframe)
-        Vaev::Layout::wireframe(*frags, g);
+        Vive::Layout::wireframe(*frags, g);
     g.end();
 
     Io::BufferWriter bw;
@@ -249,17 +249,17 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::PrintOption options;
 
-            options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
-            options.density = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(densityArg.unwrap()));
+            options.scale = co_try$(Vive::Style::parseValue<Vive::Resolution>(scaleArg.unwrap()));
+            options.density = co_try$(Vive::Style::parseValue<Vive::Resolution>(densityArg.unwrap()));
 
             if (widthArg.unwrap())
-                options.width = co_try$(Vaev::Style::parseValue<Vaev::Length>(widthArg.unwrap()));
+                options.width = co_try$(Vive::Style::parseValue<Vive::Length>(widthArg.unwrap()));
 
             if (heightArg.unwrap())
-                options.height = co_try$(Vaev::Style::parseValue<Vaev::Length>(heightArg.unwrap()));
+                options.height = co_try$(Vive::Style::parseValue<Vive::Length>(heightArg.unwrap()));
 
             options.paper = co_try$(Print::findPaperStock(paperArg.unwrap()));
-            options.orientation = co_try$(Vaev::Style::parseValue<Print::Orientation>(orientationArg.unwrap()));
+            options.orientation = co_try$(Vive::Style::parseValue<Print::Orientation>(orientationArg.unwrap()));
 
             Mime::Url input = "fd:stdin"_url;
             if (inputArg.unwrap() != "-"s)
@@ -295,14 +295,14 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::RenderOption options{};
 
-            options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
-            options.density = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(densityArg.unwrap()));
+            options.scale = co_try$(Vive::Style::parseValue<Vive::Resolution>(scaleArg.unwrap()));
+            options.density = co_try$(Vive::Style::parseValue<Vive::Resolution>(densityArg.unwrap()));
 
             if (widthArg.unwrap())
-                options.width = co_try$(Vaev::Style::parseValue<Vaev::Length>(widthArg.unwrap()));
+                options.width = co_try$(Vive::Style::parseValue<Vive::Length>(widthArg.unwrap()));
 
             if (heightArg.unwrap())
-                options.height = co_try$(Vaev::Style::parseValue<Vaev::Length>(heightArg.unwrap()));
+                options.height = co_try$(Vive::Style::parseValue<Vive::Length>(heightArg.unwrap()));
 
             options.wireframe = wireframeArg.unwrap();
 

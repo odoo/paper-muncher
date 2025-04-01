@@ -2,7 +2,7 @@
 
 #include "css/parser.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 static void eatWhitespace(Cursor<Css::Sst>& c) {
     while (not c.ended() and c.peek() == Css::Token::WHITESPACE)

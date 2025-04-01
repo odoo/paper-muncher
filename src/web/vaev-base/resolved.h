@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Vaev {
+namespace Vive {
 
 template <typename T>
 struct _Resolved {

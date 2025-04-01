@@ -2,7 +2,7 @@
 
 #include "width.h"
 
-namespace Vaev {
+namespace Vive {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-position
 enum struct Position {

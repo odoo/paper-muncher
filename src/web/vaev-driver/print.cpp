@@ -14,7 +14,7 @@ export module Vaev.Driver:print;
 import Vaev.Layout;
 import :loader;
 
-namespace Vaev::Driver {
+namespace Vive::Driver {
 
 static void _paintMargins(Text::FontBook& fontBook, Style::PageComputedStyle& pageStyle, RectAu pageRect, RectAu pageContent, Scene::Stack& stack) {
     // MARK: Top Left Corner ---------------------------------------------------
@@ -381,4 +381,4 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
     }
 }
 
-} // namespace Vaev::Driver
+} // namespace Vive::Driver

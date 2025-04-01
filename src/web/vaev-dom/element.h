@@ -6,7 +6,7 @@
 #include "text.h"
 #include "token-list.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 // https://dom.spec.whatwg.org/#interface-element
 struct Element : public Node {

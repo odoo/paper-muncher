@@ -7,7 +7,7 @@
 #include "length.h"
 #include "percent.h"
 
-namespace Vaev {
+namespace Vive {
 
 enum struct FontDisplay {
     AUTO,

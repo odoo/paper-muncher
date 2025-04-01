@@ -2,7 +2,7 @@
 
 #include "lexer.h"
 
-namespace Vaev::Css {
+namespace Vive::Css {
 
 // MARK: Sst -------------------------------------------------------------------
 

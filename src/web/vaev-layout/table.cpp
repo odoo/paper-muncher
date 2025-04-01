@@ -12,7 +12,7 @@ export module Vaev.Layout:table;
 import :layout;
 import :values;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 void advanceUntil(MutCursor<Box>& cursor, auto pred) {
     while (not cursor.ended() and not pred(cursor->style->display))
@@ -288,7 +288,7 @@ struct TableFormatingContext : public FormatingContext {
             MutCursor<Box> columnGroupCursor = {columnGroupChildren};
 
             advanceUntil(columnGroupCursor, [](Display d) {
-                return d == Vaev::Display::TABLE_COLUMN;
+                return d == Vive::Display::TABLE_COLUMN;
             });
 
             if (not columnGroupCursor.ended()) {
@@ -303,7 +303,7 @@ struct TableFormatingContext : public FormatingContext {
 
                     columnGroupCursor.next();
                     advanceUntil(columnGroupCursor, [](Display d) {
-                        return d == Vaev::Display::TABLE_COLUMN;
+                        return d == Vive::Display::TABLE_COLUMN;
                     });
                 }
 
@@ -1319,4 +1319,4 @@ Rc<FormatingContext> constructTableFormatingContext(Box&) {
     return makeRc<TableFormatingContext>();
 }
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

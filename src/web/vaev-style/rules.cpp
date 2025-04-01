@@ -3,7 +3,7 @@
 #include "decls.h"
 #include "matcher.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 static bool DEBUG_RULE = false;
 
@@ -162,4 +162,4 @@ Rule Rule::parse(Css::Sst const& sst, Origin origin) {
         return StyleRule::parse(sst, origin);
 }
 
-} // namespace Vaev::Style
+} // namespace Vive::Style

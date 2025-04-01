@@ -3,7 +3,7 @@
 #include <karm-base/string.h>
 #include <karm-base/vec.h>
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 // https://dom.spec.whatwg.org/#domtokenlist
 struct TokenList {

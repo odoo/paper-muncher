@@ -2,7 +2,7 @@
 
 #include "node.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 // https://dom.spec.whatwg.org/#interface-characterdata
 struct CharacterData : public Node {

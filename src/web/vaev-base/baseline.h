@@ -5,7 +5,7 @@
 
 #include "keywords.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 // https://www.w3.org/TR/css-inline-3/#baseline-source
 using BaselineSource = Union<Keywords::Auto, Keywords::First, Keywords::Last>;

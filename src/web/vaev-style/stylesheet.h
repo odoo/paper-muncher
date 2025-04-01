@@ -4,7 +4,7 @@
 
 #include "rules.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 // https://www.w3.org/TR/cssom-1/#css-style-sheets
 struct StyleSheet {

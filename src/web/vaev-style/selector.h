@@ -7,7 +7,7 @@
 
 #include "css/parser.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 // 17. Calculating a selector’s specificity
 // https://www.w3.org/TR/selectors-4/#specificity-rules

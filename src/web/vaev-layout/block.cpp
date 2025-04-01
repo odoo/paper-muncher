@@ -11,7 +11,7 @@ export module Vaev.Layout:block;
 import :base;
 import :layout;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 void maybeProcessChildBreakpoint(Fragmentainer& fc, Breakpoint& currentBreakpoint, usize childIndex, bool currBoxIsBreakAvoid, Opt<Breakpoint> maybeChildBreakpoint) {
     if (not fc.isDiscoveryMode())
@@ -264,4 +264,4 @@ export Rc<FormatingContext> constructBlockFormatingContext(Box&) {
     return makeRc<BlockFormatingContext>();
 }
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

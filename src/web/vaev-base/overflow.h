@@ -2,7 +2,7 @@
 
 #include <karm-io/emit.h>
 
-namespace Vaev {
+namespace Vive {
 
 // https://www.w3.org/TR/css-overflow/#overflow-control
 enum struct Overflow {

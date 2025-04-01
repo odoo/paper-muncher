@@ -7,7 +7,7 @@ export module Vaev.View:dialog;
 
 import Vaev.Driver;
 
-namespace Vaev::View {
+namespace Vive::View {
 
 export Ui::Child printDialog(Gc::Ref<Dom::Document> dom) {
     return Kr::printDialog([dom](Print::Settings const& settings) -> Vec<Print::Page> {
@@ -15,4 +15,4 @@ export Ui::Child printDialog(Gc::Ref<Dom::Document> dom) {
     });
 }
 
-} // namespace Vaev::View
+} // namespace Vive::View

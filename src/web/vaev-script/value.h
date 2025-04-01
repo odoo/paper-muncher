@@ -8,7 +8,7 @@
 
 struct Agent;
 
-namespace Vaev::Script {
+namespace Vive::Script {
 
 // https://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type
 struct Undefined {

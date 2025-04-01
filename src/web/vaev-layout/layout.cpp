@@ -6,7 +6,7 @@ export module Vaev.Layout:layout;
 
 import :base;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 export InsetsAu computeMargins(Tree& tree, Box& box, Input input);
 
@@ -20,4 +20,4 @@ export Output layout(Tree& tree, Input input);
 
 export Tuple<Output, Frag> layoutCreateFragment(Tree& tree, Input input);
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

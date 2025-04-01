@@ -1,6 +1,6 @@
 #include "parser.h"
 
-namespace Vaev::Css {
+namespace Vive::Css {
 
 // MARK: Sst -------------------------------------------------------------------
 
@@ -331,4 +331,4 @@ Content consumeSelector(Lexer& lex) {
     return value;
 }
 
-} // namespace Vaev::Css
+} // namespace Vive::Css

@@ -2,7 +2,7 @@
 
 #include "character-data.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 // https://dom.spec.whatwg.org/#text
 struct Text : public CharacterData {

@@ -5,7 +5,7 @@
 #include "length.h"
 #include "percent.h"
 
-namespace Vaev {
+namespace Vive {
 
 using Width = FlatUnion<Keywords::Auto, CalcValue<PercentOr<Length>>>;
 

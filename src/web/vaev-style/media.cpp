@@ -3,7 +3,7 @@
 #include "base.h"
 #include "values.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 static Pair<RangePrefix, Str> _explodeFeatureName(Io::SScan s) {
     if (s.skip("min-"))
@@ -104,4 +104,4 @@ MediaQuery parseMediaQuery(Cursor<Css::Sst>& c) {
     return lhs;
 }
 
-} // namespace Vaev::Style
+} // namespace Vive::Style

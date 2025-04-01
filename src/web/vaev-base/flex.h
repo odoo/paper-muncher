@@ -3,7 +3,7 @@
 #include "keywords.h"
 #include "sizing.h"
 
-namespace Vaev {
+namespace Vive {
 
 enum struct FlexDirection {
     ROW,

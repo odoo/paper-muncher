@@ -4,7 +4,7 @@
 #include "percent.h"
 #include "width.h"
 
-namespace Vaev {
+namespace Vive {
 
 enum struct TableLayout {
     AUTO,

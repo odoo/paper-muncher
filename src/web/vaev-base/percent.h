@@ -5,7 +5,7 @@
 
 #include "resolved.h"
 
-namespace Vaev {
+namespace Vive {
 
 using Percent = Distinct<f64, struct _PercentTag>;
 
@@ -20,8 +20,8 @@ struct _Resolved<PercentOr<T>> {
 } // namespace Vaev
 
 template <>
-struct marK::Io::Repr<Vaev::Percent> {
-    static void repr(Io::Emit& e, Vaev::Percent const& v) {
+struct marK::Io::Repr<Vive::Percent> {
+    static void repr(Io::Emit& e, Vive::Percent const& v) {
         e("{}%", v.value());
     }
 };

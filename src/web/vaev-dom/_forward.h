@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 struct Node;
 struct Document;

@@ -5,7 +5,7 @@
 #include "properties.h"
 #include "value.h"
 
-namespace Vaev::Script {
+namespace Vive::Script {
 
 // MARK: Abstract Operations ===================================================
 // https://tc39.es/ecma262/#sec-abstract-operations

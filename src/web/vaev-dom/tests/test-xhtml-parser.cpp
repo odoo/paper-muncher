@@ -7,7 +7,7 @@ test$("parse-empty-document") {
     Gc::Heap gc;
     auto s = Io::SScan(""s);
     XmlParser p{gc};
-    expect$(not p._parseElement(s, Vaev::HTML)); // An empty document is invalid
+    expect$(not p._parseElement(s, Vive::HTML)); // An empty document is invalid
     return Ok();
 }
 
@@ -15,7 +15,7 @@ test$("parse-open-close-tag") {
     Gc::Heap gc;
     XmlParser p{gc};
     auto s = Io::SScan("<html></html>");
-    auto root = try$(p._parseElement(s, Vaev::HTML));
+    auto root = try$(p._parseElement(s, Vive::HTML));
 
     auto el = root->is<Element>();
     expectNe$(el, nullptr);
@@ -28,7 +28,7 @@ test$("parse-empty-tag") {
     Gc::Heap gc;
     XmlParser p{gc};
     auto s = Io::SScan("<html/>");
-    try$(p._parseElement(s, Vaev::HTML));
+    try$(p._parseElement(s, Vive::HTML));
     return Ok();
 }
 
@@ -36,7 +36,7 @@ test$("parse-attr") {
     Gc::Heap gc;
     XmlParser p{gc};
     auto s = Io::SScan("<html lang=\"en\"/>");
-    auto root = try$(p._parseElement(s, Vaev::HTML));
+    auto root = try$(p._parseElement(s, Vive::HTML));
 
     auto el = root->is<Element>();
     expectNe$(el, nullptr);
@@ -51,7 +51,7 @@ test$("parse-text") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html>text</html>");
-    auto root = try$(p._parseElement(s, Vaev::HTML));
+    auto root = try$(p._parseElement(s, Vive::HTML));
 
     auto el = root->is<Element>();
     expectNe$(el, nullptr);
@@ -69,7 +69,7 @@ test$("parse-text-before-tag") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html>text<div/></html>");
-    auto root = try$(p._parseElement(s, Vaev::HTML));
+    auto root = try$(p._parseElement(s, Vive::HTML));
 
     auto el = root->is<Element>();
     expectNe$(el, nullptr);
@@ -91,7 +91,7 @@ test$("parse-text-after-tag") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html><div/>text</html>");
-    auto root = try$(p._parseElement(s, Vaev::HTML));
+    auto root = try$(p._parseElement(s, Vive::HTML));
 
     auto el = root->is<Element>();
     expectNe$(el, nullptr);
@@ -113,7 +113,7 @@ test$("parse-text-between-tags") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html><div/>text<div/></html>");
-    auto root = try$(p._parseElement(s, Vaev::HTML));
+    auto root = try$(p._parseElement(s, Vive::HTML));
 
     auto el = root->is<Element>();
     expectNe$(el, nullptr);
@@ -142,7 +142,7 @@ test$("parse-text-between-tags-and-before") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html>test2<div>text</div></html>");
-    auto root = try$(p._parseElement(s, Vaev::HTML));
+    auto root = try$(p._parseElement(s, Vive::HTML));
     auto el = root->is<Element>();
     expectNe$(el, nullptr);
     expect$(el->hasChildren());
@@ -170,7 +170,7 @@ test$("parse-nested-tags") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html><head></head><body></body></html>");
-    auto root = try$(p._parseElement(s, Vaev::HTML));
+    auto root = try$(p._parseElement(s, Vive::HTML));
 
     auto el = root->is<Element>();
     expectNe$(el, nullptr);
@@ -194,7 +194,7 @@ test$("parse-comment") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html><!-- comment --></html>");
-    auto root = try$(p._parseElement(s, Vaev::HTML));
+    auto root = try$(p._parseElement(s, Vive::HTML));
 
     auto el = root->is<Element>();
     expectNe$(el, nullptr);
@@ -215,7 +215,7 @@ test$("parse-doctype") {
     auto s = Io::SScan("<!DOCTYPE html><html></html>");
 
     auto dom = gc.alloc<Dom::Document>(Mime::Url());
-    try$(p.parse(s, Vaev::HTML, *dom));
+    try$(p.parse(s, Vive::HTML, *dom));
     expect$(dom->hasChildren());
 
     auto doctype = dom->firstChild()->is<DocumentType>();
@@ -231,7 +231,7 @@ test$("parse-title") {
 
     auto s = Io::SScan("<title>the title</title>");
     auto dom = gc.alloc<Dom::Document>(Mime::Url());
-    try$(p.parse(s, Vaev::HTML, *dom));
+    try$(p.parse(s, Vive::HTML, *dom));
     expect$(dom->title() == "the title");
     return Ok();
 }
@@ -245,7 +245,7 @@ test$("parse-comment-with-gt-symb") {
         "<!-- a b <meta> c d -->"
     );
     auto dom = gc.alloc<Dom::Document>(Mime::Url());
-    try$(p.parse(s, Vaev::HTML, *dom));
+    try$(p.parse(s, Vive::HTML, *dom));
 
     expect$(dom->hasChildren());
     auto title = dom->firstChild()->is<Element>();
@@ -268,11 +268,11 @@ test$("parse-xml-decl") {
 
     auto s = Io::SScan("<?xml version='1.0' encoding='UTF-8'?><html></html>");
     auto dom = gc.alloc<Dom::Document>(Mime::Url());
-    try$(p.parse(s, Vaev::HTML, *dom));
+    try$(p.parse(s, Vive::HTML, *dom));
     expect$(dom->xmlVersion == "1.0");
     expect$(dom->xmlEncoding == "UTF-8");
     expect$(dom->xmlStandalone == "no");
     return Ok();
 }
 
-} // namespace Vaev::Dom::Tests
+} // namespace Vive::Dom::Tests

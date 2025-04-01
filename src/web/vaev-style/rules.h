@@ -7,7 +7,7 @@
 #include "props.h"
 #include "selector.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 struct Rule;
 

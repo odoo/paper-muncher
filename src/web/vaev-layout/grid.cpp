@@ -6,10 +6,10 @@ export module Vaev.Layout:grid;
 
 import :block;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 export Rc<FormatingContext> constructGridFormatingContext(Box& box) {
     return constructBlockFormatingContext(box);
 }
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

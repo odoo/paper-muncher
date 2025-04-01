@@ -2,7 +2,7 @@
 
 #include "karm-logger/logger.h"
 
-namespace Vaev {
+namespace Vive {
 
 Opt<Color> parseNamedColor(Str name) {
 
@@ -10,6 +10,7 @@ Opt<Color> parseNamedColor(Str name) {
     if (eqCi(name, #NAME ""s)) \
         return ID;
 #include "defs/colors.inc"
+
 #undef COLOR
 
     return NONE;
@@ -20,6 +21,7 @@ Opt<SystemColor> parseSystemColor(Str name) {
     if (name == #NAME)       \
         return SystemColor::ID;
 #include "defs/system-colors.inc"
+
 #undef COLOR
 
     return NONE;
@@ -28,6 +30,7 @@ Opt<SystemColor> parseSystemColor(Str name) {
 static Array<Gfx::Color, static_cast<usize>(SystemColor::_LEN)> SYSTEM_COLOR = {
 #define COLOR(NAME, _, VALUE) Gfx::Color::fromHex(VALUE),
 #include "defs/system-colors.inc"
+
 #undef COLOR
 };
 
@@ -78,4 +81,4 @@ Gfx::Color resolve(Color const& c, Gfx::Color currentColor) {
     });
 }
 
-} // namespace Vaev
+} // namespace Vive

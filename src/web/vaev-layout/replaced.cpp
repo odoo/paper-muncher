@@ -7,7 +7,7 @@ export module Vaev.Layout:replaced;
 
 import :base;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 struct ReplacedFormatingContext : public FormatingContext {
     Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
@@ -42,4 +42,4 @@ export Rc<FormatingContext> constructReplacedFormatingContext(Box&) {
     return makeRc<ReplacedFormatingContext>();
 }
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

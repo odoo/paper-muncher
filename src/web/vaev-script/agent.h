@@ -3,7 +3,7 @@
 #include <karm-base/res.h>
 #include <karm-gc/heap.h>
 
-namespace Vaev::Script {
+namespace Vive::Script {
 
 // https://tc39.es/ecma262/#agent
 struct Agent {

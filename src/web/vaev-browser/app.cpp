@@ -49,7 +49,7 @@ import Vaev.Driver;
 import Karm.Http;
 import :inspect;
 
-namespace Vaev::Browser {
+namespace Vive::Browser {
 
 enum struct SidePanel {
     CLOSE,
@@ -123,9 +123,9 @@ Async::_Task<Opt<Action>> navigateAsync(Gc::Heap& heap, Http::Client& client, Na
     (void)co_await Sys::globalSched().sleepAsync(Sys::instant() + 300_ms);
 
     if (nav.action == Mime::Uti::PUBLIC_MODIFY) {
-        co_return Loaded{co_await Vaev::Driver::viewSourceAsync(heap, client, nav.url)};
+        co_return Loaded{co_await Vive::Driver::viewSourceAsync(heap, client, nav.url)};
     } else {
-        co_return Loaded{co_await Vaev::Driver::fetchDocumentAsync(heap, client, nav.url)};
+        co_return Loaded{co_await Vive::Driver::fetchDocumentAsync(heap, client, nav.url)};
     }
 }
 
@@ -319,7 +319,7 @@ Ui::Child inspectorContent(State const& s) {
                Ui::center();
     }
 
-    return Vaev::Browser::inspect(
+    return Vive::Browser::inspect(
         s.dom.unwrap(),
         s.inspect,
         [&](auto& n, auto a) {
@@ -366,7 +366,7 @@ Ui::Child webview(State const& s) {
     if (not s.dom)
         return alert(s, "The page could not be loaded"s, Io::toStr(s.dom));
 
-    return Vaev::View::view(s.dom.unwrap(), {.wireframe = s.wireframe}) |
+    return Vive::View::view(s.dom.unwrap(), {.wireframe = s.wireframe}) |
            Ui::vscroll() |
            Ui::box({
                .backgroundFill = Gfx::WHITE,
@@ -419,7 +419,7 @@ Ui::Child appContent(State const& s) {
     );
 }
 
-export Ui::Child app(Gc::Heap& heap, Http::Client& client, Mime::Url url, Res<Gc::Ref<Vaev::Dom::Document>> dom) {
+export Ui::Child app(Gc::Heap& heap, Http::Client& client, Mime::Url url, Res<Gc::Ref<Vive::Dom::Document>> dom) {
     return Ui::reducer<Model>(
         {
             heap,
@@ -430,7 +430,7 @@ export Ui::Child app(Gc::Heap& heap, Http::Client& client, Mime::Url url, Res<Gc
         [](State const& s) {
             return Kr::scaffold({
                        .icon = Mdi::SURFING,
-                       .title = "Vaev"s,
+                       .title = "Vive"s,
                        .startTools = [&] -> Ui::Children {
                            return {
                                Ui::button(Model::bindIf<GoBack>(s.canGoBack()), Ui::ButtonStyle::subtle(), Mdi::ARROW_LEFT),
@@ -465,4 +465,4 @@ export Ui::Child app(Gc::Heap& heap, Http::Client& client, Mime::Url url, Res<Gc
     );
 }
 
-} // namespace Vaev::Browser
+} // namespace Vive::Browser

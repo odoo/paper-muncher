@@ -3,7 +3,7 @@
 #include "object.h"
 #include "value.h"
 
-namespace Vaev::Script {
+namespace Vive::Script {
 
 // MARK: Numeric Types ---------------------------------------------------------
 // https://tc39.es/ecma262/#sec-ecmascript-language-types-number-type
@@ -108,4 +108,4 @@ void Value::repr(Io::Emit& e) const {
     e("{}", store);
 }
 
-} // namespace Vaev::Script
+} // namespace Vive::Script

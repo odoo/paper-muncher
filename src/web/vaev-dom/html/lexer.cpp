@@ -2,7 +2,7 @@
 
 #include "lexer.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 static constexpr bool DEBUG_HTML_LEXER = false;
 
@@ -3678,4 +3678,4 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
     }
 }
 
-} // namespace Vaev::Dom
+} // namespace Vive::Dom

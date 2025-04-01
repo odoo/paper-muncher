@@ -4,7 +4,7 @@
 #include "keywords.h"
 #include "length.h"
 
-namespace Vaev {
+namespace Vive {
 
 static constexpr Au THIN_VALUE = 1_au;
 static constexpr Au MEDIUM_VALUE = 3_au;

@@ -7,7 +7,7 @@
 #include "color.h"
 #include "line-width.h"
 
-namespace Vaev {
+namespace Vive {
 
 // https://drafts.csswg.org/css-ui/#outline
 struct Outline {

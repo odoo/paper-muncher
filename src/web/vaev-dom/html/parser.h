@@ -6,7 +6,7 @@
 #include "../element.h"
 #include "lexer.h"
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 #define FOREACH_INSERTION_MODE(MODE) \
     MODE(INITIAL)                    \

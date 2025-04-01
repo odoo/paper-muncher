@@ -10,7 +10,7 @@ export module Vaev.Layout:backgroundCanvas;
 
 import :values;
 
-namespace Vaev::Layout {
+namespace Vive::Layout {
 
 // NOTE This handle only Gfx::Colors but there's a lot more to handle eg Images, Gradients, etc.
 Gfx::Color _colorToGfx(Color color) {
@@ -62,4 +62,4 @@ export Gfx::Color fixupBackgrounds(Style::Computer& c, Gc::Ref<Dom::Document> do
     return Gfx::WHITE;
 }
 
-} // namespace Vaev::Layout
+} // namespace Vive::Layout

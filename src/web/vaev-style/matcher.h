@@ -5,7 +5,7 @@
 
 #include "selector.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 Opt<Spec> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el);
 

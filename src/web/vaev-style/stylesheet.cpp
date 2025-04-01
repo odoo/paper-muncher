@@ -1,6 +1,6 @@
 #include "stylesheet.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 // MARK: StyleSheet ------------------------------------------------------------
 
@@ -51,4 +51,4 @@ void StyleBook::add(StyleSheet&& sheet) {
     styleSheets.pushBack(std::move(sheet));
 }
 
-} // namespace Vaev::Style
+} // namespace Vive::Style

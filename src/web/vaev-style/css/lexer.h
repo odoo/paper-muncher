@@ -9,7 +9,7 @@
 #include <karm-io/fmt.h>
 #include <karm-logger/logger.h>
 
-namespace Vaev::Css {
+namespace Vive::Css {
 
 #define FOREACH_TOKEN(TOKEN)                                         \
     TOKEN(NIL, nil)                                 /* no a token */ \

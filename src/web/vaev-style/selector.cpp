@@ -2,7 +2,7 @@
 
 #include "values.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 static constexpr bool DEBUG_SELECTORS = false;
 
 // MARK: Selector Specificity ---------------------------------------------------
@@ -224,7 +224,7 @@ static Res<Selector> _parseSelectorElement(Cursor<Css::Sst>& cur, OpCode current
             val = IdSelector{next(cur->token.data, 1)};
             break;
         case Css::Token::IDENT:
-            val = TypeSelector{TagName::make(cur->token.data, Vaev::HTML)};
+            val = TypeSelector{TagName::make(cur->token.data, Vive::HTML)};
             break;
         case Css::Token::DELIM:
             if (cur->token.data == ".") {
@@ -388,4 +388,4 @@ Res<Selector> Selector::parse(Str input) {
     Io::SScan s{input};
     return parse(s);
 };
-} // namespace Vaev::Style
+} // namespace Vive::Style

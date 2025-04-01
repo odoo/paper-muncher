@@ -10,7 +10,7 @@
 #include "line-width.h"
 #include "percent.h"
 
-namespace Vaev {
+namespace Vive {
 
 struct Border {
     LineWidth width = Keywords::MEDIUM;

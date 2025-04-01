@@ -4,7 +4,7 @@
 #include <karm-gc/ptr.h>
 #include <karm-meta/nocopy.h>
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 enum struct Iter {
     CONTINUE,

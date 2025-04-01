@@ -4,7 +4,7 @@
 
 #include "numbers.h"
 
-namespace Vaev {
+namespace Vive {
 
 // 3.1. Breaks Between Boxes: the break-before and break-after properties
 // https://www.w3.org/TR/css-break-3/#break-between

@@ -3,7 +3,7 @@
 #include <karm-io/emit.h>
 #include <karm-math/const.h>
 
-namespace Vaev {
+namespace Vive {
 
 // 7.4. MARK: Resolution Units: the <resolution> type and dpi, dpcm, dppx units
 // https://drafts.csswg.org/css-values/#resolution

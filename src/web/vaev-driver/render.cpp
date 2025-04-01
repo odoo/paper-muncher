@@ -11,7 +11,7 @@ export module Vaev.Driver:render;
 import :loader;
 import Vaev.Layout;
 
-namespace Vaev::Driver {
+namespace Vive::Driver {
 
 static constexpr bool DEBUG_RENDER = false;
 
@@ -87,4 +87,4 @@ export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media
     };
 }
 
-} // namespace Vaev::Driver
+} // namespace Vive::Driver

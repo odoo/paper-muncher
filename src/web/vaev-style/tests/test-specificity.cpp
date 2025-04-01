@@ -56,7 +56,7 @@ test$("test-specificity-selector-list") {
     {
         Dom::Element elAnotherMatch{Dom::Element(Html::DIV)};
         elAnotherMatch.classList.add("b");
-        elAnotherMatch.setAttribute(AttrName::make("id"s, Vaev::HTML), "x"s);
+        elAnotherMatch.setAttribute(AttrName::make("id"s, Vive::HTML), "x"s);
 
         Vec<Tuple<Cursor<StyleRule>, Spec>> matchingRules;
         computer._evalRule(rule, elAnotherMatch, matchingRules);
@@ -67,7 +67,7 @@ test$("test-specificity-selector-list") {
         Dom::Element twoMatches{Dom::Element(Html::DIV)};
 
         twoMatches.classList.add("b");
-        twoMatches.setAttribute(AttrName::make("id"s, Vaev::HTML), "x"s);
+        twoMatches.setAttribute(AttrName::make("id"s, Vive::HTML), "x"s);
         twoMatches.classList.add("a");
 
         Vec<Tuple<Cursor<StyleRule>, Spec>> matchingRules;
@@ -232,4 +232,4 @@ test$("test-specificity-mixed-combinators") {
     return Ok();
 }
 
-} // namespace Vaev::Style::Tests
+} // namespace Vive::Style::Tests

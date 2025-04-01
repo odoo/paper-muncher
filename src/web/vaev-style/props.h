@@ -11,7 +11,7 @@
 
 // https://www.w3.org/TR/CSS22/propidx.html
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 // MARK: Props -----------------------------------------------------------------
 

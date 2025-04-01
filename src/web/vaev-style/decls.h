@@ -4,7 +4,7 @@
 #include "css/parser.h"
 #include "props.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 static bool DEBUG_DECL = false;
 

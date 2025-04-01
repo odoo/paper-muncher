@@ -6,7 +6,7 @@
 #include "computed.h"
 #include "stylesheet.h"
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 struct Computer {
     Media _media;

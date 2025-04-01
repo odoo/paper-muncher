@@ -2,7 +2,7 @@
 
 #include <karm-io/emit.h>
 
-namespace Vaev {
+namespace Vive {
 
 // CSS Text Module Level 4
 // https://drafts.csswg.org/css-text-4

@@ -2,7 +2,7 @@
 
 #include <karm-base/base.h>
 
-namespace Vaev::Style {
+namespace Vive::Style {
 
 // https://drafts.csswg.org/css-cascade/#origin
 enum struct Origin {

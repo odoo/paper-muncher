@@ -8,7 +8,7 @@
 #include "percent.h"
 #include "writing.h"
 
-namespace Vaev {
+namespace Vive {
 
 // https://www.w3.org/TR/css-sizing-3/#box-sizing
 enum struct BoxSizing : u8 {

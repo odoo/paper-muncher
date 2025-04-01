@@ -2,7 +2,7 @@
 
 #include <karm-io/emit.h>
 
-namespace Vaev::Dom {
+namespace Vive::Dom {
 
 #define FOREACH_TOKEN(TOKEN) \
     TOKEN(NIL)               \

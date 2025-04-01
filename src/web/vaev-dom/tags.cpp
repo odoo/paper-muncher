@@ -1,6 +1,6 @@
 #include "tags.h"
 
-namespace Vaev::Html {
+namespace Vive::Html {
 
 Str _tagName(TagId id) {
     switch (id) {
@@ -47,9 +47,9 @@ Opt<AttrId> _attrId(Str name) {
     return NONE;
 }
 
-} // namespace Vaev::Html
+} // namespace Vive::Html
 
-namespace Vaev::MathMl {
+namespace Vive::MathMl {
 
 Str _tagName(TagId id) {
     switch (id) {
@@ -96,9 +96,9 @@ Opt<AttrId> _attrId(Str name) {
     return NONE;
 }
 
-} // namespace Vaev::MathMl
+} // namespace Vive::MathMl
 
-namespace Vaev::Svg {
+namespace Vive::Svg {
 
 Str _tagName(TagId id) {
     switch (id) {
@@ -145,4 +145,4 @@ Opt<AttrId> _attrId(Str name) {
     return NONE;
 }
 
-} // namespace Vaev::Svg
+} // namespace Vive::Svg
