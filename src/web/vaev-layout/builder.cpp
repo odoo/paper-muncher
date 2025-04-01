@@ -310,6 +310,7 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node);
 
 // Dispatch from outer roles using inner display
 static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, Display display);
+static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, Display display);
 
 // Inner display FLOW
 static Box createAndBuildBlockFlowfromElement(BuilderContext bc, Rc<Style::ComputedStyle> style, Gc::Ref<Dom::Element> el);
@@ -401,7 +402,7 @@ static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> c
             createAndBuildInlineFlowfromElement(bc, childStyle, child);
             return;
         }
-        _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
+        _innerDisplayDispatchCreationOfInlineLevelBox(bc, child, childStyle, display);
     }
 }
 
@@ -428,6 +429,18 @@ static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::
         // FIXME: fallback to FLOW since not implemented
         auto blockBox = createAndBuildBlockFlowfromElement(bc, style, el);
         bc.addToParentBox(std::move(blockBox));
+    }
+}
+
+// https://www.w3.org/TR/css-display-3/#outer-role
+static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, Display display) {
+    if (display == Display::Inside::TABLE) {
+        auto wrapper = _createTableWrapperAndBuildTable(bc, style, el);
+        bc.addToInlineRoot(std::move(wrapper));
+    } else {
+        // FLOW-ROOT and fallback
+        auto blockBox = createAndBuildBlockFlowfromElement(bc, style, el);
+        bc.addToInlineRoot(std::move(blockBox));
     }
 }
 
