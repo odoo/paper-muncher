@@ -52,7 +52,7 @@ struct Model {
     template <typename X>
     static auto map() {
         return []<typename... Args>(Node& n, Args... value) {
-            Ui::bubble<X>(n, X{std::forward<Args>(value)...});
+            Ui::bubble<Action>(n, X{std::forward<Args>(value)...});
         };
     }
 };

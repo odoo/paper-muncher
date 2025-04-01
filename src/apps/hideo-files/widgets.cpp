@@ -284,8 +284,4 @@ Ui::Child toolbar(State const& s) {
     });
 }
 
-// MARK:  Dialogs  -------------------------------------------------------------
-
-
-
 } // namespace Hideo::Files
