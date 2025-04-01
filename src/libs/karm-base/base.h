@@ -64,6 +64,22 @@ always_inline constexpr T toBe(T value) {
 }
 #endif
 
+static constexpr bool isLittleEndian() {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    return true;
+#else
+    return false;
+#endif
+}
+
+static constexpr bool isBigEndian() {
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    return true;
+#else
+    return false;
+#endif
+}
+
 template <typename T>
 always_inline constexpr usize popcount(T value) {
     usize count = 0;

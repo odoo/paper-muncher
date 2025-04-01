@@ -33,9 +33,9 @@ struct Clock : public Ui::View<Clock> {
         g.fillStyle(Ui::GRAY800);
         g.fill(Math::Ellipsef{bound().center().cast<f64>(), size / 2.});
 
-        _drawHand(g, -_time.hour / 12.0 * 2 * M_PI, size / 2 * 0.5, Ui::GRAY500, size / 32.);
-        _drawHand(g, -_time.minute / 60.0 * 2 * M_PI, size / 2 * 0.8, Ui::GRAY500, size / 32.);
-        _drawHand(g, -_time.second / 60.0 * 2 * M_PI, size / 2 * 0.9, Ui::ACCENT500, size / 64.);
+        _drawHand(g, -_time.hour / 12.0 * 2 * Math::PI, size / 2 * 0.5, Ui::GRAY500, size / 32.);
+        _drawHand(g, -_time.minute / 60.0 * 2 * Math::PI, size / 2 * 0.8, Ui::GRAY500, size / 32.);
+        _drawHand(g, -_time.second / 60.0 * 2 * Math::PI, size / 2 * 0.9, Ui::ACCENT500, size / 64.);
 
         g.fillStyle(Ui::GRAY600);
         g.fill(Math::Ellipsef{bound().center().cast<f64>(), size / 32.});

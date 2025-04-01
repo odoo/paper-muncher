@@ -3,6 +3,8 @@
 #include <karm-base/checked.h>
 #include <karm-io/fmt.h>
 
+#include "funcs.h"
+
 namespace Karm::Math {
 
 template <typename T>
@@ -46,7 +48,7 @@ struct Fixed {
     template <Meta::Float F>
     static constexpr Fixed fromFloatNearest(F val) {
         T raw = 0;
-        if (not isnan(val))
+        if (not isNan(val))
             raw = clampTo<T>(val * _DENO);
         return fromRaw(raw);
     }
@@ -215,6 +217,13 @@ constexpr Fixed<T, F> Fixed<T, F>::operator/(Frac<Fixed<T, F>> const& rhs) const
 using i24f8 = Fixed<i32, 8>;
 using i16f16 = Fixed<i32, 16>;
 using i8f24 = Fixed<i32, 24>;
+
+// MARK: Functions -------------------------------------------------------------
+
+template <Meta::SignedIntegral T, usize _F>
+constexpr Fixed<T, _F> abs(Fixed<T, _F> const& val) {
+    return val < Fixed<T, _F>{0} ? -val : val;
+}
 
 } // namespace Karm::Math
 
