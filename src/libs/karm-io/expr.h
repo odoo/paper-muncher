@@ -6,7 +6,7 @@
 
 #include "sscan.h"
 
-namespace Karm::Re {
+namespace marK::Re {
 
 /// Match a string against an Expr
 ///
@@ -324,10 +324,10 @@ inline constexpr Expr auto optSeparator(Expr auto expr) {
 
 } // namespace Karm::Re
 
-inline constexpr Karm::Re::Expr auto operator""_re(char const* str, usize len) {
-    return Karm::Re::word(Str{str, len});
+inline constexpr marK::Re::Expr auto operator""_re(char const* str, usize len) {
+    return marK::Re::word(Str{str, len});
 }
 
-inline constexpr Karm::Re::Expr auto operator""_re(char c) {
-    return Karm::Re::single(c);
+inline constexpr marK::Re::Expr auto operator""_re(char c) {
+    return marK::Re::single(c);
 }

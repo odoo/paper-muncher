@@ -1,6 +1,6 @@
 #include "proc.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 static bool _sandboxed = false;
 
@@ -15,4 +15,4 @@ Res<> ensureUnrestricted() {
     return Ok();
 }
 
-} // namespace Karm::Sys
+} // namespace marK::Sys

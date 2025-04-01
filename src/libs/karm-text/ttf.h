@@ -6,7 +6,7 @@
 #include "font.h"
 #include "ttf/parser.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 struct TtfFontface : public Fontface {
     Sys::Mmap _mmap;

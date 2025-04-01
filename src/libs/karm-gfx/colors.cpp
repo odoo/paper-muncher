@@ -1,6 +1,6 @@
 #include "colors.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 Color randomColor(Math::Rand& rand) {
     return COLORS[rand.nextInt(COLORS.len())];
@@ -20,4 +20,4 @@ Gfx::Color rainbowColor() {
     return res;
 }
 
-} // namespace Karm::Gfx
+} // namespace marK::Gfx

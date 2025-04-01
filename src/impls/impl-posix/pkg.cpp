@@ -4,7 +4,7 @@
 
 #include "utils.h"
 
-namespace Karm::Pkg::_Embed {
+namespace marK::Pkg::_Embed {
 
 Res<Vec<String>> installedBundles() {
     auto [repo, format] = try$(Posix::repoRoot());
@@ -39,4 +39,4 @@ Res<String> currentBundle() {
     return Error::notFound("no bundle found");
 }
 
-} // namespace Karm::Pkg::_Embed
+} // namespace marK::Pkg::_Embed

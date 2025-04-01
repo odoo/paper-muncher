@@ -1,7 +1,7 @@
 #include <karm-base/sieve.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Base::Tests {
+namespace marK::Base::Tests {
 
 test$("sieve-access") {
     Sieve<int, int> cache{10};
@@ -72,4 +72,4 @@ test$("seive-evict") {
     return Ok();
 }
 
-} // namespace Karm::Base::Tests
+} // namespace marK::Base::Tests

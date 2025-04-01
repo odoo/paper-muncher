@@ -8,7 +8,7 @@ import :body;
 import :header;
 import :method;
 
-namespace Karm::Http {
+namespace marK::Http {
 
 export struct Request {
     Method method;
@@ -71,4 +71,4 @@ export struct Request {
     }
 };
 
-} // namespace Karm::Http
+} // namespace marK::Http

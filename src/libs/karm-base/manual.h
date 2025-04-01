@@ -4,7 +4,7 @@
 
 #include "base.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename T>
 struct Manual {

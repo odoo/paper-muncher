@@ -6,7 +6,7 @@
 
 #include "select.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child select(Ui::Child value, Ui::Slots slots) {
     return Ui::button(
@@ -71,4 +71,4 @@ Ui::Child selectGroup(Ui::Children children) {
     return Ui::vflow(children);
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

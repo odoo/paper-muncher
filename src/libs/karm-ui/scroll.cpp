@@ -2,7 +2,7 @@
 
 #include "anim.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 // MARK: Scroll ----------------------------------------------------------------
 
@@ -253,4 +253,4 @@ Child vclip(Child child) {
     return makeRc<Clip>(child, Math::Orien::VERTICAL);
 }
 
-} // namespace Karm::Ui
+} // namespace marK::Ui

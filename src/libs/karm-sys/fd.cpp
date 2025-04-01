@@ -2,7 +2,7 @@
 
 #include "_embed.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 Res<Rc<Fd>> Fd::unpack(Io::PackScan& s) {
     return _Embed::unpackFd(s);
@@ -51,4 +51,4 @@ Res<> NullFd::pack(Io::PackEmit& e) {
     return Io::pack(e, INVALID);
 }
 
-} // namespace Karm::Sys
+} // namespace marK::Sys

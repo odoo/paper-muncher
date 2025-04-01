@@ -1,6 +1,6 @@
 #include "edit.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 static bool _isWord(Rune r) {
     return isAsciiAlphaNum(r) or r == '_';
@@ -569,4 +569,4 @@ void Model::reduce(Action const& a) {
     }
 }
 
-} // namespace Karm::Text
+} // namespace marK::Text

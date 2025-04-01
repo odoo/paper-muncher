@@ -4,7 +4,7 @@
 #include <karm-pdf/values.h>
 #include <karm-text/ttf.h>
 
-namespace Karm::Print {
+namespace marK::Print {
 
 struct TtfGlyphInfoAdapter {
 

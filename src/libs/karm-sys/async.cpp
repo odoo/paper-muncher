@@ -3,10 +3,10 @@
 #include "_embed.h"
 #include "async.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 Sched& globalSched() {
     return _Embed::globalSched();
 }
 
-} // namespace Karm::Sys
+} // namespace marK::Sys

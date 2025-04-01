@@ -8,7 +8,7 @@
 #include "emit.h"
 #include "fmt.h"
 
-namespace Karm::Io {
+namespace marK::Io {
 
 // MARK: Format ----------------------------------------------------------------
 
@@ -509,4 +509,4 @@ Res<> NumberFormatter::formatRune(Io::TextWriter& writer, Rune val) {
     return writer.writeRune(val);
 }
 
-} // namespace Karm::Io
+} // namespace marK::Io

@@ -2,7 +2,7 @@
 
 #include <karm-io/text.h>
 
-namespace Karm::Crypto {
+namespace marK::Crypto {
 
 Res<> hexEncode(Bytes bytes, Io::TextWriter& out);
 

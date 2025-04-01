@@ -7,7 +7,7 @@
 #include "traits.h"
 #include "types.h"
 
-namespace Karm::Io {
+namespace marK::Io {
 
 struct Sink : public Writer {
     Res<usize> write(Bytes bytes) override {

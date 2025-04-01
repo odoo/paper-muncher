@@ -5,7 +5,7 @@ module;
 
 export module Karm.Http:method;
 
-namespace Karm::Http {
+namespace marK::Http {
 
 #define FOREACH_METHOD(METHOD) \
     METHOD(GET)                \
@@ -46,11 +46,11 @@ export Str toStr(Method method) {
     return "UNKNOWN";
 }
 
-} // namespace Karm::Http
+} // namespace marK::Http
 
 template <>
-struct Karm::Io::Formatter<Karm::Http::Method> {
-    Res<> format(Io::TextWriter& writer, Karm::Http::Method method) {
-        return writer.writeStr(Karm::Http::toStr(method));
+struct marK::Io::Formatter<marK::Http::Method> {
+    Res<> format(Io::TextWriter& writer, marK::Http::Method method) {
+        return writer.writeStr(marK::Http::toStr(method));
     }
 };

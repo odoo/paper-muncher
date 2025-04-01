@@ -3,7 +3,7 @@
 #include <karm-math/const.h>
 #include <karm-math/funcs.h>
 
-namespace Karm::Math {
+namespace marK::Math {
 
 struct Easing {
     f64 (*_inner)(f64);

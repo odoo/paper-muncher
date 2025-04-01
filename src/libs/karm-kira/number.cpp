@@ -5,7 +5,7 @@
 
 #include "number.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child number(f64 value, Ui::OnChange<f64> onChange, f64 step) {
     return Ui::hflow(
@@ -33,4 +33,4 @@ Ui::Child number(f64 value, Ui::OnChange<f64> onChange, f64 step) {
            Ui::focusable();
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

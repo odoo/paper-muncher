@@ -5,7 +5,7 @@
 #include "book.h"
 #include "loader.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 // MARK: Font loading ----------------------------------------------------------
 
@@ -302,4 +302,4 @@ Vec<Rc<Fontface>> FontBook::queryFamily(String family) const {
     return res;
 }
 
-} // namespace Karm::Text
+} // namespace marK::Text

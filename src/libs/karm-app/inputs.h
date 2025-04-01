@@ -5,7 +5,7 @@
 
 #include "event.h"
 
-namespace Karm::App {
+namespace marK::App {
 
 // MARK: Keyboard --------------------------------------------------------------
 

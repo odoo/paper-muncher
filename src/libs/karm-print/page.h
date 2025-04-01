@@ -7,7 +7,7 @@
 #include "paper.h"
 #include "printer.h"
 
-namespace Karm::Print {
+namespace marK::Print {
 
 struct Page {
     PaperStock _paper;

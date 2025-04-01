@@ -4,7 +4,7 @@
 #include "ctype.h"
 #include "rune.h"
 
-namespace Karm {
+namespace marK {
 
 template <StaticEncoding E, typename U = typename E::Unit>
 struct _Str : public Slice<U> {
@@ -334,15 +334,15 @@ using StringBuilder = _StringBuilder<Utf8>;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wuser-defined-literals"
 
-inline constexpr Karm::Str operator""s(char const* buf, usize len) {
+inline constexpr marK::Str operator""s(char const* buf, usize len) {
     return {buf, len};
 }
 
-inline constexpr Karm::_Str<Karm::Utf8> operator""_s8(char const* buf, usize len) {
+inline constexpr marK::_Str<marK::Utf8> operator""_s8(char const* buf, usize len) {
     return {buf, len};
 }
 
-inline constexpr Karm::_Str<Karm::Utf16> operator""_s16(char16_t const* buf, usize len) {
+inline constexpr marK::_Str<marK::Utf16> operator""_s16(char16_t const* buf, usize len) {
     return {reinterpret_cast<u16 const*>(buf), len};
 }
 

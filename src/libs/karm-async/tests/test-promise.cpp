@@ -2,7 +2,7 @@
 #include <karm-async/task.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Async::Tests {
+namespace marK::Async::Tests {
 
 test$("karm-async-promise-one-future") {
     Opt<Async::_Future<int>> future;
@@ -39,4 +39,4 @@ test$("karm-async-promise-multiple-futures") {
     return Ok();
 }
 
-} // namespace Karm::Async::Tests
+} // namespace marK::Async::Tests

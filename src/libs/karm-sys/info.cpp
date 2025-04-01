@@ -3,7 +3,7 @@
 #include "_embed.h"
 #include "proc.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 Res<SysInfo> sysinfo() {
     try$(ensureUnrestricted());
@@ -38,4 +38,4 @@ Res<Vec<UserInfo>> usersinfo() {
     return Ok(infos);
 }
 
-} // namespace Karm::Sys
+} // namespace marK::Sys

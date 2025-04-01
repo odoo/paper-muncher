@@ -1,7 +1,7 @@
 #include <karm-io/sscan.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Io::Tests {
+namespace marK::Io::Tests {
 
 test$("sscan-ended") {
     SScan s{""s};
@@ -140,4 +140,4 @@ test$("sscan-ahead") {
     return Ok();
 }
 
-} // namespace Karm::Io::Tests
+} // namespace marK::Io::Tests

@@ -4,7 +4,7 @@
 
 #include "canvas.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 // MARK: Buffers ---------------------------------------------------------------
 
@@ -375,4 +375,4 @@ void CpuCanvas::apply(Filter filter, Math::Recti r) {
     filter.apply(mutPixels().clip(r));
 }
 
-} // namespace Karm::Gfx
+} // namespace marK::Gfx

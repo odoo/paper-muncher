@@ -9,7 +9,7 @@
 
 #include "bscan.h"
 
-namespace Karm::Io {
+namespace marK::Io {
 
 struct PackEmit : public BEmit {
     Vec<Sys::Handle> _handles;

@@ -7,7 +7,7 @@
 #include "buf.h"
 #include "cursor.h"
 
-namespace Karm {
+namespace marK {
 
 using Rune = u32;
 

@@ -5,7 +5,7 @@
 #include "limits.h"
 #include "res.h"
 
-namespace Karm {
+namespace marK {
 template <Meta::Integral T>
 always_inline constexpr bool willAddOverflow(T lhs, T rhs) {
     if (rhs > 0)

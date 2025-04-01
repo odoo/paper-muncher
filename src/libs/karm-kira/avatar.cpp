@@ -4,7 +4,7 @@
 
 #include "avatar.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child avatar() {
     return avatar(Mdi::ACCOUNT);
@@ -36,4 +36,4 @@ Ui::Child avatar(Mdi::Icon i) {
            Ui::box(boxStyle);
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

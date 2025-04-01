@@ -5,7 +5,7 @@
 
 #include "node.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 struct BoxStyle {
     Math::Insetsi margin{};

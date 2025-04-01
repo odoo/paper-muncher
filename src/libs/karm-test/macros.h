@@ -3,7 +3,7 @@
 #include "driver.h"
 #include "test.h"
 
-namespace Karm::Test {
+namespace marK::Test {
 
 #define test$(ID)                                                                     \
     static ::Karm::Res<> var$(func)([[maybe_unused]] ::Karm::Test::Driver & _driver); \

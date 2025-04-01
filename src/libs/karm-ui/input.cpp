@@ -6,7 +6,7 @@
 #include "layout.h"
 #include "view.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 // MARK: Button -----------------------------------------------------------------
 
@@ -506,4 +506,4 @@ Child intent(Func<void(Node&, App::Event& e)> map, Child child) {
     return makeRc<Intent>(std::move(map), std::move(child));
 }
 
-} // namespace Karm::Ui
+} // namespace marK::Ui

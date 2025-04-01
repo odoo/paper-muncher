@@ -3,7 +3,7 @@
 #include "string.h"
 #include "vec.h"
 
-namespace Karm {
+namespace marK {
 
 struct Backtrace {
     struct Frame {

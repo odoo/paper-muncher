@@ -5,7 +5,7 @@
 
 #include "font.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 struct VgaFontface : public Fontface {
     static constexpr isize WIDTH = 8;

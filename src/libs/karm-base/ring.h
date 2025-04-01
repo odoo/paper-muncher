@@ -4,7 +4,7 @@
 #include "panic.h"
 #include "slice.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename T>
 struct Ring {

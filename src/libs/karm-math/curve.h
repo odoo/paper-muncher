@@ -11,7 +11,7 @@
 #include "tri.h"
 #include "vec.h"
 
-namespace Karm::Math {
+namespace marK::Math {
 
 // Cubic Bezier curve
 template <typename T>

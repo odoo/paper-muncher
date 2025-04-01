@@ -3,7 +3,7 @@
 
 #include "filters.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 struct StackBlur {
     isize _radius;
@@ -256,4 +256,4 @@ void FilterChain::apply(MutPixels p) const {
     });
 }
 
-} // namespace Karm::Gfx
+} // namespace marK::Gfx

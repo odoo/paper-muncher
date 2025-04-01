@@ -2,7 +2,7 @@
 
 #include <karm-mime/url.h>
 
-namespace Karm::Pkg::_Embed {
+namespace marK::Pkg::_Embed {
 
 Res<Vec<String>> installedBundles();
 

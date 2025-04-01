@@ -15,7 +15,7 @@
 
 import Vaev.Driver;
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 // MARK: Model -----------------------------------------------------------------
 
@@ -428,4 +428,4 @@ Ui::Child printDialog(PrintPreview preview) {
     });
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

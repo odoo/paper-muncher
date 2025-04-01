@@ -2,7 +2,7 @@
 #include <karm-base/_embed.h>
 #include <karm-base/backtrace.h>
 
-namespace Karm::_Embed {
+namespace marK::_Embed {
 
 Backtrace captureBacktrace() {
     return forceCaptureBacktrace();
@@ -27,4 +27,4 @@ Backtrace forceCaptureBacktrace() {
     return bt;
 }
 
-} // namespace Karm::_Embed
+} // namespace marK::_Embed

@@ -8,7 +8,7 @@
 #include "_prelude.h"
 #include "driver.h"
 
-namespace Karm::Test {
+namespace marK::Test {
 
 struct Test : Meta::Pinned {
     enum struct Kind {

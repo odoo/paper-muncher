@@ -2,7 +2,7 @@
 
 #include "toolbar.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child toolbar(Ui::Children children) {
     return Ui::vflow(
@@ -22,4 +22,4 @@ Ui::Child bottombar(Ui::Children children) {
     );
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

@@ -6,7 +6,7 @@ export module Karm.Aio:pipe;
 
 import :traits;
 
-namespace Karm::Aio {
+namespace marK::Aio {
 
 export struct Pipe {
     bool _closed;
@@ -22,4 +22,4 @@ export struct Pipe {
 
 export Pair<Rc<Pipe::Writer>, Rc<Pipe::Reader>> pipe();
 
-} // namespace Karm::Aio
+} // namespace marK::Aio

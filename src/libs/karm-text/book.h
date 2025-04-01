@@ -7,7 +7,7 @@
 #include "base.h"
 #include "font.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 struct FontQuery {
     Family family = GenericFamily::SYSTEM;

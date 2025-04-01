@@ -2,7 +2,7 @@
 
 #include "_embed.h"
 
-namespace Karm::Pkg {
+namespace marK::Pkg {
 
 Res<BundleInfo> currentBundle() {
     auto id = try$(_Embed::currentBundle());
@@ -18,4 +18,4 @@ Res<Vec<BundleInfo>> installedBundles() {
     return Ok(bundles);
 }
 
-} // namespace Karm::Pkg
+} // namespace marK::Pkg

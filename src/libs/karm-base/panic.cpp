@@ -1,6 +1,6 @@
 #include "panic.h"
 
-namespace Karm {
+namespace marK {
 
 static PanicHandler panicHandler = nullptr;
 
@@ -17,4 +17,4 @@ void _panic(PanicKind kind, char const* msg) {
         __builtin_trap();
 }
 
-} // namespace Karm
+} // namespace marK

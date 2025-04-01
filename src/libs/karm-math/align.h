@@ -3,7 +3,7 @@
 #include "flow.h"
 #include "rect.h"
 
-namespace Karm::Math {
+namespace marK::Math {
 
 struct Align {
     static constexpr u16 NONE = (0);

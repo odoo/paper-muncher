@@ -1,6 +1,6 @@
 #include "args.h"
 
-namespace Karm::Cli {
+namespace marK::Cli {
 
 // MARK: Tokenizer -------------------------------------------------------------
 
@@ -68,4 +68,4 @@ Res<Str> ValueParser<Str>::parse(Cursor<Token>& c) {
     return Ok(c.next().value);
 }
 
-} // namespace Karm::Cli
+} // namespace marK::Cli

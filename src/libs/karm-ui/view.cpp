@@ -3,7 +3,7 @@
 #include "box.h"
 #include "view.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 // MARK: Text ------------------------------------------------------------------
 
@@ -221,13 +221,13 @@ Text::ProseStyle TextStyles::codeSmall() {
 }
 
 struct Text : public View<Text> {
-    Rc<Karm::Text::Prose> _prose;
+    Rc<marK::Text::Prose> _prose;
 
-    Text(Rc<Karm::Text::Prose> prose)
+    Text(Rc<marK::Text::Prose> prose)
         : _prose(std::move(prose)) {}
 
     Text(::Text::ProseStyle style, Str text)
-        : _prose(makeRc<Karm::Text::Prose>(style, text)) {}
+        : _prose(makeRc<marK::Text::Prose>(style, text)) {}
 
     void reconcile(Text& o) override {
         _prose = std::move(o._prose);
@@ -251,7 +251,7 @@ struct Text : public View<Text> {
     }
 };
 
-Child text(Karm::Text::ProseStyle style, Str text) {
+Child text(marK::Text::ProseStyle style, Str text) {
     return makeRc<Text>(style, text);
 }
 
@@ -259,7 +259,7 @@ Child text(Str text) {
     return makeRc<Text>(TextStyles::labelMedium(), text);
 }
 
-Child text(Rc<Karm::Text::Prose> prose) {
+Child text(Rc<marK::Text::Prose> prose) {
     return makeRc<Text>(prose);
 }
 
@@ -301,10 +301,10 @@ Child icon(Mdi::Icon i, f64 size, Opt<Gfx::Color> color) {
 // MARK: Image -----------------------------------------------------------------
 
 struct Image : public View<Image> {
-    Karm::Image::Picture _image;
+    marK::Image::Picture _image;
     Opt<Math::Radiif> _radii;
 
-    Image(Karm::Image::Picture image, Opt<Math::Radiif> radii = NONE)
+    Image(marK::Image::Picture image, Opt<Math::Radiif> radii = NONE)
         : _image(image), _radii(radii) {}
 
     void paint(Gfx::Canvas& g, Math::Recti) override {
@@ -325,11 +325,11 @@ struct Image : public View<Image> {
     }
 };
 
-Child image(Karm::Image::Picture image) {
+Child image(marK::Image::Picture image) {
     return makeRc<Image>(image);
 }
 
-Child image(Karm::Image::Picture image, Math::Radiif radii) {
+Child image(marK::Image::Picture image, Math::Radiif radii) {
     return makeRc<Image>(image, radii);
 }
 
@@ -460,4 +460,4 @@ Child foregroundFilter(Gfx::Filter f, Child child) {
     return makeRc<ForegroundFilter>(f, std::move(child));
 }
 
-} // namespace Karm::Ui
+} // namespace marK::Ui

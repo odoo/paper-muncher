@@ -5,7 +5,7 @@
 
 #include "font.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 enum struct TextAlign {
     LEFT,

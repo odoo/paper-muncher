@@ -2,7 +2,7 @@
 
 #include <karm-base/base.h>
 
-namespace Karm::Math {
+namespace marK::Math {
 
 inline constexpr f64 PI = 3.14159265358979323846;
 

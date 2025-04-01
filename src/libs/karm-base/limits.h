@@ -2,7 +2,7 @@
 
 #include <karm-base/base.h>
 
-namespace Karm {
+namespace marK {
 
 template <typename T>
 struct Limits {

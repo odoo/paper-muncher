@@ -3,7 +3,7 @@
 #include "checked.h"
 #include "slice.h"
 
-namespace Karm {
+namespace marK {
 
 using Hash = usize;
 

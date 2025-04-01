@@ -236,7 +236,7 @@ export using Content = Union<
     None,
     Vec<Box>,
     Rc<Text::Prose>,
-    Karm::Image::Picture>;
+    marK::Image::Picture>;
 
 export struct Attrs {
     usize span = 1;

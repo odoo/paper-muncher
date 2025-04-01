@@ -1,6 +1,6 @@
 #include "fill.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 static Color _lerp(Gradient::Stop lhs, Gradient::Stop rhs, f64 pos) {
     f64 t = (pos - lhs.v1) / (rhs.v1 - lhs.v1);
@@ -53,4 +53,4 @@ Gradient Gradient::Builder::bake() {
     return {_type, _start, _end, buf};
 }
 
-} // namespace Karm::Gfx
+} // namespace marK::Gfx

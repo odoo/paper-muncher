@@ -2,7 +2,7 @@
 
 #include "hex.h"
 
-namespace Karm::Crypto {
+namespace marK::Crypto {
 
 Res<> hexEncode(Bytes bytes, Io::TextWriter& out) {
     for (auto b : bytes) {
@@ -17,4 +17,4 @@ Res<String> hexEncode(Bytes bytes) {
     return Ok(out.str());
 }
 
-} // namespace Karm::Crypto
+} // namespace marK::Crypto

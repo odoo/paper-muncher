@@ -2,7 +2,7 @@
 
 #include <karm-gfx/colors.h>
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 static constexpr isize REM(f64 n) {
     return n * 16;

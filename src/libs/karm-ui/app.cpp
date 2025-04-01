@@ -9,7 +9,7 @@
 #include "app.h"
 #include "host.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 Async::Task<> runAsync(Sys::Context&, Child root) {
     auto host = co_try$(_Embed::makeHost(root));
@@ -26,4 +26,4 @@ void mountApp(Cli::Command& cmd, Slot rootSlot) {
     };
 }
 
-} // namespace Karm::Ui
+} // namespace marK::Ui

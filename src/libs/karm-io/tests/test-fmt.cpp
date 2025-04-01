@@ -3,7 +3,7 @@
 #include <karm-logger/logger.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Io::Tests {
+namespace marK::Io::Tests {
 
 template <typename T>
 Res<> testCase(Str expected, T const& value, Str format = "") {
@@ -99,8 +99,8 @@ enum struct MyEnum {
 };
 
 test$("fmt-enum") {
-    try$(testCase("(Karm::Io::Tests::MyEnum 0)", MyEnum::BAR));
-    try$(testCase("(Karm::Io::Tests::MyEnum 1)", MyEnum::BAZ));
+    try$(testCase("(marK::Io::Tests::MyEnum 0)", MyEnum::BAR));
+    try$(testCase("(marK::Io::Tests::MyEnum 1)", MyEnum::BAZ));
 
     return Ok();
 }
@@ -239,4 +239,4 @@ test$("fmt-tuple") {
     return Ok();
 }
 
-} // namespace Karm::Io::Tests
+} // namespace marK::Io::Tests

@@ -1,7 +1,7 @@
 #include <karm-base/set.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Base::Tests {
+namespace marK::Base::Tests {
 
 test$("set-put") {
     Set<int> set{};
@@ -93,4 +93,4 @@ test$("set-put-resize") {
     return Ok();
 }
 
-} // namespace Karm::Base::Tests
+} // namespace marK::Base::Tests

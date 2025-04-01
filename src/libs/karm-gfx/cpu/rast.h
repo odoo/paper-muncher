@@ -5,7 +5,7 @@
 
 #include "../types.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 struct CpuRast {
     static constexpr auto AA = 3;

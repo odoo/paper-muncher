@@ -7,7 +7,7 @@
 #include <karm-sys/dir.h>
 #include <karm-sys/file.h>
 
-namespace Karm::App::_Ember {
+namespace marK::App::_Ember {
 
 struct XdgConfigPrefs : public Prefs {
     Mime::Url _url;
@@ -65,4 +65,4 @@ Prefs& globalPrefs() {
     return *_globalPrefs;
 }
 
-} // namespace Karm::App::_Ember
+} // namespace marK::App::_Ember

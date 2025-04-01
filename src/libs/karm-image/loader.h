@@ -4,7 +4,7 @@
 
 #include "picture.h"
 
-namespace Karm::Image {
+namespace marK::Image {
 
 Res<Picture> load(Sys::Mmap&& map);
 

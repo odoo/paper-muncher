@@ -3,7 +3,7 @@
 #include "iter.h"
 #include "range.h"
 
-namespace Karm {
+namespace marK {
 
 #pragma clang unsafe_buffer_usage begin
 
@@ -696,7 +696,7 @@ always_inline Match endWith(T1 const& slice, T2 const& suffix) {
 
 } // namespace Karm
 
-static inline constexpr Karm::Bytes operator""_bytes(char const* buf, usize len) {
+static inline constexpr marK::Bytes operator""_bytes(char const* buf, usize len) {
     return Bytes{
         (Byte const*)(buf),
         len,

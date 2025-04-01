@@ -2,7 +2,7 @@
 #include <karm-async/task.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Async::Tests {
+namespace marK::Async::Tests {
 
 test$("karm-async-sender-one") {
     auto sender = Async::One<int>{10};
@@ -11,4 +11,4 @@ test$("karm-async-sender-one") {
     return Ok();
 }
 
-} // namespace Karm::Async::Tests
+} // namespace marK::Async::Tests

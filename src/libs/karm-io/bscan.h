@@ -5,7 +5,7 @@
 #include <karm-base/string.h>
 #include <karm-io/traits.h>
 
-namespace Karm::Io {
+namespace marK::Io {
 
 struct BScan {
     Cursor<u8> _start;

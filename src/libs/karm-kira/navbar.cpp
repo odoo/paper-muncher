@@ -2,7 +2,7 @@
 
 #include "navbar.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child navbarContent(Ui::Children children) {
     return Ui::vflow(
@@ -36,4 +36,4 @@ Ui::Child navbarItem(Ui::OnPress onPress, Mdi::Icon icon, Str text, bool selecte
            Ui::grow();
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

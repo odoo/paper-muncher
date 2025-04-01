@@ -2,7 +2,7 @@
 
 #include "string.h"
 
-namespace Karm {
+namespace marK {
 
 using _TimeVal = u64;
 

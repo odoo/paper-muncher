@@ -3,7 +3,7 @@
 #include "buf.h"
 #include "opt.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename S, typename T = typename S::Inner>
 struct _Vec {

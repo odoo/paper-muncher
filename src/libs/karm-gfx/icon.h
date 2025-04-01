@@ -5,7 +5,7 @@
 
 #include "canvas.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 struct Icon {
     Mdi::Icon _icon;

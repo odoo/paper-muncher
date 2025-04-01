@@ -4,7 +4,7 @@
 
 #include "limits.h"
 
-namespace Karm {
+namespace marK {
 
 /// Returns the maximum of a list of values.
 always_inline constexpr auto max(auto value) { return value; }

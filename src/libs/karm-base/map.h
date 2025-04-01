@@ -3,7 +3,7 @@
 #include "cursor.h"
 #include "vec.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename K, typename V>
 struct Map {

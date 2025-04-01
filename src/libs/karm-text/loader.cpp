@@ -5,7 +5,7 @@
 #include "loader.h"
 #include "ttf.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 Res<Rc<Fontface>> loadFontface(Sys::Mmap&& map) {
     return Ok(try$(TtfFontface::load(std::move(map))));
@@ -38,4 +38,4 @@ Res<Font> loadFontOrFallback(f64 size, Mime::Url url) {
     return Ok(Font::fallback());
 }
 
-} // namespace Karm::Text
+} // namespace marK::Text

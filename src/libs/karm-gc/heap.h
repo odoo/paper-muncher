@@ -2,7 +2,7 @@
 
 #include "ptr.h"
 
-namespace Karm::Gc {
+namespace marK::Gc {
 
 struct Cell {
     Cell* _next = nullptr;

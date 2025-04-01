@@ -4,7 +4,7 @@
 
 #include "sha2.h"
 
-namespace Karm::Crypto {
+namespace marK::Crypto {
 
 static constexpr Array<u32, 8> SHA224_INITIAL = {
     0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
@@ -270,4 +270,4 @@ Array<u8, SHA384_BYTES> sha384(Bytes bytes) {
     return Array<u8, SHA384_BYTES>::from(state.bytes());
 }
 
-} // namespace Karm::Crypto
+} // namespace marK::Crypto

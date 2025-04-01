@@ -1,6 +1,6 @@
 #include "ttf.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 Res<Rc<TtfFontface>> TtfFontface::load(Sys::Mmap&& mmap) {
     auto ttf = try$(Ttf::Parser::init(mmap.bytes()));
@@ -80,4 +80,4 @@ void TtfFontface::contour(Gfx::Canvas& g, Glyph glyph) const {
     g.scale(1.0 / _unitPerEm);
     _parser.glyphContour(g, glyph);
 }
-} // namespace Karm::Text
+} // namespace marK::Text

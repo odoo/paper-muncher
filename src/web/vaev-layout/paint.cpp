@@ -109,7 +109,7 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
         (*prose)->_style.color = frag.style().color;
 
         stack.add(makeRc<Scene::Text>(frag.metrics.borderBox().topStart().cast<f64>(), *prose));
-    } else if (auto image = frag.box->content.is<Karm::Image::Picture>()) {
+    } else if (auto image = frag.box->content.is<marK::Image::Picture>()) {
         stack.add(makeRc<Scene::Image>(frag.metrics.borderBox().cast<f64>(), *image));
     }
 }

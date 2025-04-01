@@ -1,7 +1,7 @@
 #include <karm-crypto/adler32.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Crypto::Tests {
+namespace marK::Crypto::Tests {
 
 test$("crypto-adler32") {
     auto testCase = [&](Str data, u32 expected) -> Res<> {
@@ -19,4 +19,4 @@ test$("crypto-adler32") {
     return Ok();
 }
 
-} // namespace Karm::Crypto::Tests
+} // namespace marK::Crypto::Tests

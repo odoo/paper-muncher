@@ -2,7 +2,7 @@
 #include <karm-mime/url.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Mime::Tests {
+namespace marK::Mime::Tests {
 
 test$("karm-mime-url-parse") {
     auto url = "http://example.com:1234/home"_url;
@@ -111,4 +111,4 @@ test$("karm-mime-url-resolution-reference") {
     return Ok();
 }
 
-} // namespace Karm::Mime::Tests
+} // namespace marK::Mime::Tests

@@ -4,7 +4,7 @@
 #include "clamp.h"
 #include "manual.h"
 
-namespace Karm {
+namespace marK {
 
 #pragma clang unsafe_buffer_usage begin
 

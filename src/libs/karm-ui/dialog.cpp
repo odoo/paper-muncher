@@ -3,7 +3,7 @@
 #include "anim.h"
 #include "funcs.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 void showDialog(Node& n, Child child) {
     bubble<ShowDialogEvent>(n, child);
@@ -155,4 +155,4 @@ Child dialogLayer(Child child) {
     return makeRc<DialogLayer>(child);
 }
 
-} // namespace Karm::Ui
+} // namespace marK::Ui

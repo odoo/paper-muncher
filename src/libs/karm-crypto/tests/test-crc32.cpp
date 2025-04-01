@@ -1,7 +1,7 @@
 #include <karm-crypto/crc32.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Crypto::Tests {
+namespace marK::Crypto::Tests {
 
 test$("crypto-crc32") {
     auto testCase = [&](Str data, u32 expected) -> Res<> {
@@ -17,4 +17,4 @@ test$("crypto-crc32") {
     return Ok();
 }
 
-} // namespace Karm::Crypto::Tests
+} // namespace marK::Crypto::Tests

@@ -10,7 +10,7 @@
 //
 #include "loader.h"
 
-namespace Karm::Image {
+namespace marK::Image {
 
 static Res<Picture> loadBmp(Bytes bytes) {
     auto bmp = try$(Bmp::Decoder::init(bytes));
@@ -84,4 +84,4 @@ Res<Picture> loadOrFallback(Mime::Url url) {
     return Ok(Gfx::Surface::fallback());
 }
 
-} // namespace Karm::Image
+} // namespace marK::Image

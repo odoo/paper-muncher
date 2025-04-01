@@ -4,7 +4,7 @@
 #include <karm-ui/_embed.h>
 #include <karm-ui/drag.h>
 
-namespace Karm::Ui::_Embed {
+namespace marK::Ui::_Embed {
 
 static SDL_HitTestResult _hitTestCallback(SDL_Window* window, SDL_Point const* area, void* data);
 
@@ -653,4 +653,4 @@ Res<Rc<Host>> makeHost(Child root) {
     return Ok(host);
 }
 
-} // namespace Karm::Ui::_Embed
+} // namespace marK::Ui::_Embed

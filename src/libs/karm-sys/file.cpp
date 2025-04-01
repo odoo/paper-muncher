@@ -3,7 +3,7 @@
 #include "_embed.h"
 #include "proc.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 Res<FileWriter> File::create(Mime::Url url) {
     try$(ensureUnrestricted());
@@ -23,4 +23,4 @@ Res<File> File::openOrCreate(Mime::Url url) {
     return Ok(File{fd, url});
 }
 
-} // namespace Karm::Sys
+} // namespace marK::Sys

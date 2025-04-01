@@ -1,6 +1,6 @@
 #include "glob.h"
 
-namespace Karm::Io {
+namespace marK::Io {
 
 bool _matchWildCard(SScan& glob, SScan& in);
 
@@ -97,4 +97,4 @@ bool matchGlob(Str glob, Str str) {
     return matchGlob(globScan, strScan);
 }
 
-} // namespace Karm::Io
+} // namespace marK::Io

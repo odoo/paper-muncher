@@ -5,7 +5,7 @@
 
 #include "base.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 /**
    _____       _             _                          <- ascend

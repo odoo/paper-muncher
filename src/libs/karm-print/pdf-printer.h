@@ -6,7 +6,7 @@
 #include "file-printer.h"
 #include "karm-print/pdf-font-printer.h"
 
-namespace Karm::Print {
+namespace marK::Print {
 
 struct PdfPage {
     PaperStock paper;

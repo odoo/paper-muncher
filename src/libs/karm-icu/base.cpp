@@ -1,5 +1,5 @@
 export module Karm.Icu:base;
 
-namespace Karm::Icu {
+namespace marK::Icu {
 
-} // namespace Karm::Icu
+} // namespace marK::Icu

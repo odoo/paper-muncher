@@ -7,7 +7,7 @@
 #include <karm-io/emit.h>
 #include <karm-io/expr.h>
 
-namespace Karm::Json {
+namespace marK::Json {
 
 struct Value;
 
@@ -337,10 +337,10 @@ Res<String> unparse(Value const& v);
 } // namespace Karm::Json
 
 template <>
-struct Karm::Io::Formatter<Karm::Json::Value> {
-    Res<> format(Io::TextWriter& writer, Karm::Json::Value value) {
+struct marK::Io::Formatter<marK::Json::Value> {
+    Res<> format(Io::TextWriter& writer, marK::Json::Value value) {
         Io::Emit emit{writer};
-        try$(Karm::Json::unparse(emit, value));
+        try$(marK::Json::unparse(emit, value));
         return Ok();
     }
 };

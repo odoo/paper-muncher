@@ -4,7 +4,7 @@
 
 #include "decl.h"
 
-namespace Karm::Meta {
+namespace marK::Meta {
 
 // MARK: Primary type categories -----------------------------------------------
 

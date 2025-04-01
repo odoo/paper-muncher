@@ -6,7 +6,7 @@
 
 #include "color.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 struct Rgba8888 {
     always_inline static Color load(void const* pixel) {

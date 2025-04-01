@@ -9,7 +9,7 @@
 
 #include "scaffold.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child mobilescaffold(Scaffold::State const& s, Scaffold const& scaffold) {
     Ui::Children body;
@@ -145,4 +145,4 @@ Ui::Child scaffold(Scaffold scaffold) {
     });
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

@@ -2,7 +2,7 @@
 
 #include <karm-base/slice.h>
 
-namespace Karm::Crypto {
+namespace marK::Crypto {
 
 u32 adler32(Bytes bytes);
 

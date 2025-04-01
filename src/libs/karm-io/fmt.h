@@ -15,7 +15,7 @@
 #include "sscan.h"
 #include "text.h"
 
-namespace Karm::Io {
+namespace marK::Io {
 
 template <typename T>
 struct Formatter;

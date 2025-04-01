@@ -3,7 +3,7 @@
 
 #include "slider.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child slider(f64 value, Ui::OnChange<f64> onChange, Mdi::Icon icon, Str text) {
     return Ui::hflow(
@@ -28,4 +28,4 @@ Ui::Child slider(f64 value, Ui::OnChange<f64> onChange, Mdi::Icon icon, Str text
            Ui::maxSize({Ui::UNCONSTRAINED, 36});
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

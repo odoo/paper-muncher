@@ -1,7 +1,7 @@
 #include <karm-mime/mime.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Mime::Tests {
+namespace marK::Mime::Tests {
 
 test$("karm-mime-mime-parse") {
     auto mime = "text/plain"_mime;
@@ -11,4 +11,4 @@ test$("karm-mime-mime-parse") {
     return Ok();
 }
 
-} // namespace Karm::Mime::Tests
+} // namespace marK::Mime::Tests

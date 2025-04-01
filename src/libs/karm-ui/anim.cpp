@@ -1,6 +1,6 @@
 #include "anim.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 // MARK: Slide In --------------------------------------------------------------
 
@@ -166,4 +166,4 @@ Child carousel(usize selected, Children children, Math::Flow flow) {
     return makeRc<Carousel>(selected, std::move(children), flow);
 }
 
-} // namespace Karm::Ui
+} // namespace marK::Ui

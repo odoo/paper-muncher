@@ -3,7 +3,7 @@
 #include <karm-gfx/canvas.h>
 #include <karm-io/emit.h>
 
-namespace Karm::Scene {
+namespace marK::Scene {
 
 struct PaintOptions {
     bool showBackgroundGraphics = true;

@@ -4,7 +4,7 @@
 
 #include "_embed.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 inline SystemTime now() {
     return _Embed::now();

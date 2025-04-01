@@ -1,7 +1,7 @@
 #include <karm-io/fmt.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Io::Tests {
+namespace marK::Io::Tests {
 
 struct {
     Align a;
@@ -23,4 +23,4 @@ test$("fmt-align") {
     return Ok();
 }
 
-} // namespace Karm::Io::Tests
+} // namespace marK::Io::Tests

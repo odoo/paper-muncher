@@ -6,7 +6,7 @@
 #include <karm-math/funcs.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Math::Tests {
+namespace marK::Math::Tests {
 
 test$("fixed-arithmethic-negation") {
     using P = i24f8;
@@ -71,4 +71,4 @@ test$("fixed-abs") {
     return Ok();
 }
 
-} // namespace Karm::Math::Tests
+} // namespace marK::Math::Tests

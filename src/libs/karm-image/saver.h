@@ -5,7 +5,7 @@
 #include <karm-mime/url.h>
 #include <karm-mime/uti.h>
 
-namespace Karm::Image {
+namespace marK::Image {
 
 struct Saver {
     Mime::Uti format = Mime::Uti::PUBLIC_BMP;

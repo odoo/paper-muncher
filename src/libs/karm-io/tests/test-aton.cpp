@@ -2,7 +2,7 @@
 #include <karm-math/funcs.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Io::Tests {
+namespace marK::Io::Tests {
 
 test$("atoi") {
     expectEq$(Io::atoi("0"s), 0);
@@ -75,4 +75,4 @@ test$("atof") {
     return Ok();
 }
 
-} // namespace Karm::Io::Tests
+} // namespace marK::Io::Tests

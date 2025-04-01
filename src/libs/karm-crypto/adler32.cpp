@@ -1,6 +1,6 @@
 #include "adler32.h"
 
-namespace Karm::Crypto {
+namespace marK::Crypto {
 
 static constexpr usize ADLER32_BASE = 65521;
 static constexpr usize ADLER32_NMAX = 5552;
@@ -64,4 +64,4 @@ u32 adler32(Bytes bytes) {
     return (s2 << 16) | s1;
 }
 
-} // namespace Karm::Crypto
+} // namespace marK::Crypto

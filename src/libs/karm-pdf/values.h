@@ -3,7 +3,7 @@
 #include <karm-base/map.h>
 #include <karm-io/emit.h>
 
-namespace Karm::Pdf {
+namespace marK::Pdf {
 
 struct Value;
 

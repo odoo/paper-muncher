@@ -1,7 +1,7 @@
 #include <karm-cli/args.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Cli::Tests {
+namespace marK::Cli::Tests {
 
 test$("karm-cli-args-tokenizer") {
     Array args = {
@@ -75,4 +75,4 @@ testAsync$("karm-cli-args-nested-command") {
     co_return Ok();
 }
 
-} // namespace Karm::Cli::Tests
+} // namespace marK::Cli::Tests

@@ -5,7 +5,7 @@ module;
 
 export module Karm.Http:code;
 
-namespace Karm::Http {
+namespace marK::Http {
 
 #define FOREACH_CODE(CODE)                     \
     CODE(0, UNKNOWN)                           \
@@ -121,11 +121,11 @@ export Str toStr(Code code) {
     return "UNKNOWN";
 }
 
-} // namespace Karm::Http
+} // namespace marK::Http
 
 template <>
-struct Karm::Io::Formatter<Karm::Http::Code> {
-    Res<> format(Io::TextWriter& writer, Karm::Http::Code code) {
-        return writer.writeStr(Karm::Http::toStr(code));
+struct marK::Io::Formatter<marK::Http::Code> {
+    Res<> format(Io::TextWriter& writer, marK::Http::Code code) {
+        return writer.writeStr(marK::Http::toStr(code));
     }
 };

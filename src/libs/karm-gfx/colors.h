@@ -5,7 +5,7 @@
 
 #include "color.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 static inline constexpr Color ALPHA = {0, 0, 0, 0};
 static inline constexpr Color BLACK = {0, 0, 0, 255};

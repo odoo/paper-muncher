@@ -3,7 +3,7 @@
 
 #include "url.h"
 
-namespace Karm::Mime {
+namespace marK::Mime {
 
 static auto const RE_COMPONENT =
     Re::alpha() &
@@ -182,4 +182,4 @@ Url parseUrlOrPath(Str str, Opt<Url> baseUrl) {
     return url;
 }
 
-} // namespace Karm::Mime
+} // namespace marK::Mime

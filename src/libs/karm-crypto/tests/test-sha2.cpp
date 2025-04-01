@@ -2,7 +2,7 @@
 #include <karm-crypto/sha2.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Crypto::Tests {
+namespace marK::Crypto::Tests {
 
 test$("crypto-sha224") {
     static constexpr Array<u8, SHA224_BYTES> EXPECTED_EMPTY = {
@@ -160,4 +160,4 @@ test$("crypto-sha512") {
 
     return Ok();
 }
-} // namespace Karm::Crypto::Tests
+} // namespace marK::Crypto::Tests

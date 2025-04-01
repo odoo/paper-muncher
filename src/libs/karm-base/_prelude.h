@@ -26,9 +26,9 @@
 
 #ifndef KARM_NO_TOP_LEVEL_USING
 
-namespace Karm {
+namespace marK {
 } // namespace Karm
 
-using namespace Karm;
+using namespace marK;
 
 #endif

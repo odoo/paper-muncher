@@ -2,7 +2,7 @@
 #include <karm-async/queue.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Async::Tests {
+namespace marK::Async::Tests {
 
 test$("karm-queue-enqueue-dequeue") {
     Queue<isize> q;
@@ -49,4 +49,4 @@ test$("karm-queue-dequeue-enqueue") {
     return Ok();
 }
 
-} // namespace Karm::Async::Tests
+} // namespace marK::Async::Tests

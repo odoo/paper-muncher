@@ -3,7 +3,7 @@
 #include "_embed.h"
 #include "time.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 static inline Res<> sleep(Duration span) {
     return _Embed::sleep(span);

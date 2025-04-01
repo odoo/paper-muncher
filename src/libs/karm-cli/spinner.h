@@ -3,7 +3,7 @@
 #include <karm-base/array.h>
 #include <karm-sys/time.h>
 
-namespace Karm::Cli {
+namespace marK::Cli {
 
 static constexpr Array SPINNER = {
     "⠋",

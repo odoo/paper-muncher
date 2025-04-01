@@ -1,6 +1,6 @@
 #include "resizable.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 struct Resizable : public Ui::ProxyNode<Resizable> {
     Math::Vec2i _size;
@@ -95,4 +95,4 @@ Ui::Child resizable(Ui::Child child, ResizeHandle handlePosition, Math::Vec2i si
     }
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

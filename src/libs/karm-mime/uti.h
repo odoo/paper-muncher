@@ -2,7 +2,7 @@
 
 #include <karm-io/fmt.h>
 
-namespace Karm::Mime {
+namespace marK::Mime {
 
 struct Mime;
 
@@ -45,5 +45,5 @@ struct Uti {
 } // namespace Karm::Mime
 
 inline auto operator""_uti(char const* str, usize len) {
-    return Karm::Mime::Uti::parse({str, len});
+    return marK::Mime::Uti::parse({str, len});
 }

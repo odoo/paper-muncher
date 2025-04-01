@@ -2,7 +2,7 @@
 
 #include <karm-io/emit.h>
 
-namespace Karm::Cli {
+namespace marK::Cli {
 
 enum Color {
     _COLOR_UNDEF = -1,
@@ -118,11 +118,11 @@ struct Style {
             e("\x1b[0m"s);
         }
 
-        if (_fg != Karm::Cli::_COLOR_UNDEF) {
+        if (_fg != marK::Cli::_COLOR_UNDEF) {
             e("\x1b[{}m", _fg + 30);
         }
 
-        if (_bg != Karm::Cli::_COLOR_UNDEF) {
+        if (_bg != marK::Cli::_COLOR_UNDEF) {
             e("\x1b[{}m", _bg + 40);
         }
 
@@ -172,8 +172,8 @@ inline auto styled(auto inner, Style style) {
 } // namespace Karm::Cli
 
 template <typename T>
-struct Karm::Io::Formatter<Karm::Cli::Styled<T>> {
-    Formatter<Karm::Cli::Style> _styleFmt{};
+struct marK::Io::Formatter<marK::Cli::Styled<T>> {
+    Formatter<marK::Cli::Style> _styleFmt{};
     Formatter<T> _innerFmt{};
 
     void parse(Io::SScan& scan) {
@@ -184,7 +184,7 @@ struct Karm::Io::Formatter<Karm::Cli::Styled<T>> {
         }
     }
 
-    Res<> format(Io::TextWriter& writer, Karm::Cli::Styled<T> const& val) {
+    Res<> format(Io::TextWriter& writer, marK::Cli::Styled<T> const& val) {
 #ifdef __ck_sys_terminal_ansi__
         try$(_styleFmt.format(writer, val._color));
         try$(_innerFmt.format(writer, val._inner));

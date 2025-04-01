@@ -9,7 +9,7 @@
 #include "stroke.h"
 #include "types.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 struct Canvas : Meta::NoCopy {
     // NOTE: Canvas is marked as NoCopy because it doesn't make sense to copy

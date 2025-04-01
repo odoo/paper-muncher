@@ -2,7 +2,7 @@
 
 #include <karm-base/rc.h>
 
-namespace Karm {
+namespace marK {
 
 template <typename T>
 struct Cow {

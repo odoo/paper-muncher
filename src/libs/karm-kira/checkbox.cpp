@@ -3,7 +3,7 @@
 
 #include "checkbox.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 struct Checkbox : public Ui::View<Checkbox> {
     bool _value = false;
@@ -62,4 +62,4 @@ Ui::Child checkbox(bool value, Ui::OnChange<bool> onChange) {
     return makeRc<Checkbox>(value, std::move(onChange));
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

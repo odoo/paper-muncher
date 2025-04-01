@@ -5,7 +5,7 @@
 #include "cvrp.h"
 #include "traits.h"
 
-namespace Karm::Meta {
+namespace marK::Meta {
 
 template <bool Cond>
 struct _VisitForwardLike {

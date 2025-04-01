@@ -11,7 +11,7 @@ import :body;
 import :code;
 import :header;
 
-namespace Karm::Http {
+namespace marK::Http {
 
 export struct Response {
     Version version;
@@ -77,4 +77,4 @@ export struct Response {
     }
 };
 
-} // namespace Karm::Http
+} // namespace marK::Http

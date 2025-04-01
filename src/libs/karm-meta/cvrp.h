@@ -2,7 +2,7 @@
 
 #include "cond.h"
 
-namespace Karm::Meta {
+namespace marK::Meta {
 
 // MARK: Const -----------------------------------------------------------------
 

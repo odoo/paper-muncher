@@ -3,7 +3,7 @@
 #include <karm-math/rect.h>
 #include <karm-math/vec.h>
 
-namespace Karm::Math {
+namespace marK::Math {
 
 enum struct Orien {
     NONE,

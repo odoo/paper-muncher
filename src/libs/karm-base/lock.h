@@ -6,7 +6,7 @@
 #include "atomic.h"
 #include "string.h"
 
-namespace Karm {
+namespace marK {
 
 struct [[nodiscard]] CriticalScope :
     private Meta::Pinned {

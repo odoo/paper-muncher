@@ -2,7 +2,7 @@
 
 #include <karm-base/string.h>
 
-namespace Karm {
+namespace marK {
 
 Str witty(usize seed);
 

@@ -7,7 +7,7 @@
 #include <karm-base/string.h>
 #include <karm-meta/callable.h>
 
-namespace Karm {
+namespace marK {
 
 namespace Io {
 template <StaticEncoding E>
@@ -24,7 +24,7 @@ concept Expr = requires(T expr, Io::_SScan<Utf8>& scan) {
 
 } // namespace Karm
 
-namespace Karm::Io {
+namespace marK::Io {
 
 template <StaticEncoding E>
 struct _SScan {

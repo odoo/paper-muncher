@@ -4,7 +4,7 @@
 #include "image-printer.h"
 #include "pdf-printer.h"
 
-namespace Karm::Print {
+namespace marK::Print {
 
 Res<Rc<FilePrinter>> FilePrinter::create(Mime::Uti uti, FilePrinterProps props) {
     if (uti == Mime::Uti::PUBLIC_PDF) {
@@ -26,4 +26,4 @@ Res<> FilePrinter::save(Mime::Url url) {
     return Ok();
 }
 
-} // namespace Karm::Print
+} // namespace marK::Print

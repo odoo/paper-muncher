@@ -2,7 +2,7 @@
 
 #include "mime.h"
 
-namespace Karm::Mime {
+namespace marK::Mime {
 
 Res<Uti> Uti::fromMime(Mime const& mime) {
 #define UTI(NAME, STR, MIME, ...) \
@@ -14,4 +14,4 @@ Res<Uti> Uti::fromMime(Mime const& mime) {
     return Error::invalidData("enknown mime type");
 }
 
-} // namespace Karm::Mime
+} // namespace marK::Mime

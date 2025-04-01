@@ -1,6 +1,6 @@
 #include "box.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 struct Box : public _Box<Box> {
     using _Box<Box>::_Box;
@@ -23,4 +23,4 @@ Child box(BoxStyle style, Child inner) {
     return makeRc<Box>(style, inner);
 }
 
-} // namespace Karm::Ui
+} // namespace marK::Ui

@@ -5,7 +5,7 @@
 #include "box.h"
 #include "rc.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename>
 struct Func;

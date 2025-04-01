@@ -2,7 +2,7 @@
 
 #include "rune.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename T>
 concept CType = requires(T c, Rune r) {

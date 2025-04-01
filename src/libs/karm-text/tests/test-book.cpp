@@ -1,7 +1,7 @@
 #include <karm-test/macros.h>
 #include <karm-text/book.h>
 
-namespace Karm::Text::Tests {
+namespace marK::Text::Tests {
 
 test$("karm-text-common-family") {
     expectEq$(commonFamily("Noto", "Noto"), "Noto");
@@ -14,4 +14,4 @@ test$("karm-text-common-family") {
     return Ok();
 }
 
-} // namespace Karm::Text::Tests
+} // namespace marK::Text::Tests

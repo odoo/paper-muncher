@@ -10,7 +10,7 @@
 #include <karm-sys/async.h>
 #include <karm-sys/time.h>
 
-namespace Karm::Sys::_Embed {
+namespace marK::Sys::_Embed {
 
 struct __kernel_timespec toKernelTimespec(Instant ts) {
     struct __kernel_timespec kts;
@@ -377,4 +377,4 @@ Sched& globalSched() {
     return sched;
 }
 
-} // namespace Karm::Sys::_Embed
+} // namespace marK::Sys::_Embed

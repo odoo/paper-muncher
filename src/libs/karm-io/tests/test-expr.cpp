@@ -1,7 +1,7 @@
 #include <karm-io/expr.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Io::Tests {
+namespace marK::Io::Tests {
 
 test$("expr-either") {
     expect$(Re::match('a'_re | 'b'_re, ""s) == Match::NO);
@@ -42,4 +42,4 @@ test$("expr-single") {
     return Ok();
 }
 
-} // namespace Karm::Io::Tests
+} // namespace marK::Io::Tests

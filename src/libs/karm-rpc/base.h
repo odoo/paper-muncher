@@ -9,7 +9,7 @@
 
 #include "hooks.h"
 
-namespace Karm::Rpc {
+namespace marK::Rpc {
 
 // MARK: Primitive Types -------------------------------------------------------
 

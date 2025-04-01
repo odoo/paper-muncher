@@ -3,7 +3,7 @@
 #include <karm-base/base.h>
 #include <karm-io/emit.h>
 
-namespace Karm::Gc {
+namespace marK::Gc {
 
 template <typename T>
 struct Ref {

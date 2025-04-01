@@ -4,7 +4,7 @@
 
 #include "addr.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 Async::Task<Vec<Ip>> lookupAsync(Str host);
 

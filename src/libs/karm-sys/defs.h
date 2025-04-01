@@ -2,7 +2,7 @@
 
 #include <karm-base/rune.h>
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 #ifdef __ck_sys_encoding_utf8__
 using Encoding = Utf8;

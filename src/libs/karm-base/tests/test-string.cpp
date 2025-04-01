@@ -1,7 +1,7 @@
 #include <karm-base/string.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Base::Tests {
+namespace marK::Base::Tests {
 
 test$("string-default-constructed-inline") {
     InlineString<16> str;
@@ -43,4 +43,4 @@ test$("string-value-constructed") {
     return Ok();
 }
 
-} // namespace Karm::Base::Tests
+} // namespace marK::Base::Tests

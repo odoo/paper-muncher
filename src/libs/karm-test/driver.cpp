@@ -9,7 +9,7 @@
 #include "driver.h"
 #include "test.h"
 
-namespace Karm::Test {
+namespace marK::Test {
 
 namespace {
 
@@ -92,4 +92,4 @@ Driver& driver() {
     return *driver;
 }
 
-} // namespace Karm::Test
+} // namespace marK::Test

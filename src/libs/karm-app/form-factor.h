@@ -2,7 +2,7 @@
 
 #include <karm-sys/context.h>
 
-namespace Karm::App {
+namespace marK::App {
 
 enum struct FormFactor {
     DESKTOP,

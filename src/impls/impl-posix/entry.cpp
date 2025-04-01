@@ -4,20 +4,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void __panicHandler(Karm::PanicKind kind, char const* msg) {
-    fprintf(stderr, "%s: %s\n", kind == Karm::PanicKind::PANIC ? "panic" : "debug", msg);
+void __panicHandler(marK::PanicKind kind, char const* msg) {
+    fprintf(stderr, "%s: %s\n", kind == marK::PanicKind::PANIC ? "panic" : "debug", msg);
 
     // NOTE: We hare calling backinto the framework here, it might cause another
     //       panic, this is why we are keeping track of nested panics
     static isize _panicDepth = 1;
     _panicDepth++;
     if (_panicDepth == 1) {
-        auto bt = Karm::Backtrace::capture();
-        if (bt.status() == Karm::Backtrace::Status::CAPTURED)
+        auto bt = marK::Backtrace::capture();
+        if (bt.status() == marK::Backtrace::Status::CAPTURED)
             Sys::println("backtrace:\n{}", bt);
     }
 
-    if (kind == Karm::PanicKind::PANIC) {
+    if (kind == marK::PanicKind::PANIC) {
         abort();
         __builtin_unreachable();
     }

@@ -2,7 +2,7 @@
 
 #include "opt.h"
 
-namespace Karm {
+namespace marK {
 
 // Align the nearest _lower_ aligned address
 // ex: 8 with align = 8 -> 8

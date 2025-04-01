@@ -4,7 +4,7 @@
 #include "hash.h"
 #include "manual.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename T>
 struct Set {

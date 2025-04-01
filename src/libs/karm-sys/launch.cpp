@@ -3,7 +3,7 @@
 #include "_embed.h"
 #include "proc.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 Res<> launch(Intent intent) {
     try$(ensureUnrestricted());
@@ -15,4 +15,4 @@ Async::Task<> launchAsync(Intent intent) {
     co_return co_await _Embed::launchAsync(intent);
 }
 
-} // namespace Karm::Sys
+} // namespace marK::Sys

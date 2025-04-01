@@ -9,7 +9,7 @@
 #include "impls.h"
 #include "text.h"
 
-namespace Karm::Io {
+namespace marK::Io {
 
 // MARK: Read ------------------------------------------------------------------
 

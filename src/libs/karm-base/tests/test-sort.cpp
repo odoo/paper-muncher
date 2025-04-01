@@ -1,7 +1,7 @@
 #include <karm-base/array.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Base {
+namespace marK::Base {
 
 struct Foo {
     isize value;
@@ -66,4 +66,4 @@ test$("stable-sort-small") {
     return Ok();
 }
 
-} // namespace Karm::Base
+} // namespace marK::Base

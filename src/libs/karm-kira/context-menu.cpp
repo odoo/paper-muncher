@@ -5,7 +5,7 @@
 #include "checkbox.h"
 #include "context-menu.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 struct ContextMenu : public Ui::ProxyNode<ContextMenu> {
     Ui::Slot _menu;
@@ -119,4 +119,4 @@ Ui::Child contextMenuIcon(Ui::OnPress onPress, Mdi::Icon i) {
     );
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

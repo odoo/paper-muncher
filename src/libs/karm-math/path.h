@@ -14,7 +14,7 @@
 #include "rect.h"
 #include "vec.h"
 
-namespace Karm::Math {
+namespace marK::Math {
 
 struct Path {
     enum Code {

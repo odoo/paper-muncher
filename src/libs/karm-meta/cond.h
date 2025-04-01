@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Karm::Meta {
+namespace marK::Meta {
 
 template <bool cond, typename TTrue, typename TFalse>
 struct _Cond {

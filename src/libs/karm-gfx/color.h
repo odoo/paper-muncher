@@ -3,7 +3,7 @@
 #include <karm-io/emit.h>
 #include <karm-math/vec.h>
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 struct Color {
     u8 red, green, blue, alpha;

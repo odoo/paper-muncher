@@ -5,7 +5,7 @@
 #include <karm-base/array.h>
 #include <karm-base/slice.h>
 
-namespace Karm::Crypto {
+namespace marK::Crypto {
 
 static Array<u32, 16> const CRC32_TAB = {
     0x00000000, 0x1DB71064, 0x3B6E20C8, 0x26D930AC, 0x76DC4190,

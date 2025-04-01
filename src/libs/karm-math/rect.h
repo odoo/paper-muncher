@@ -6,7 +6,7 @@
 #include "insets.h"
 #include "vec.h"
 
-namespace Karm::Math {
+namespace marK::Math {
 
 template <typename T>
 union Rect {

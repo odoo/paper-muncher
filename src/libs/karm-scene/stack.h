@@ -2,7 +2,7 @@
 
 #include "base.h"
 
-namespace Karm::Scene {
+namespace marK::Scene {
 
 struct Stack : public Node {
     Vec<Rc<Node>> _children;

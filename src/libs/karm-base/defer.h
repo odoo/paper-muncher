@@ -4,7 +4,7 @@
 
 #include "base.h"
 
-namespace Karm {
+namespace marK {
 
 /// Defer a computation until the end of the current scope.
 /// The computation is executed in the reverse order of the defer calls.

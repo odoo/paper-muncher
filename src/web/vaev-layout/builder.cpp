@@ -58,11 +58,11 @@ static Attrs _parseDomAttr(Gc::Ref<Dom::Element> el) {
 
 // MARK: Build Inline ----------------------------------------------------------
 
-static Opt<Rc<Karm::Text::Fontface>> _monospaceFontface = NONE;
-static Opt<Rc<Karm::Text::Fontface>> _regularFontface = NONE;
-static Opt<Rc<Karm::Text::Fontface>> _boldFontface = NONE;
+static Opt<Rc<marK::Text::Fontface>> _monospaceFontface = NONE;
+static Opt<Rc<marK::Text::Fontface>> _regularFontface = NONE;
+static Opt<Rc<marK::Text::Fontface>> _boldFontface = NONE;
 
-static Rc<Karm::Text::Fontface> _lookupFontface(Text::FontBook& fontBook, Style::ComputedStyle& style) {
+static Rc<marK::Text::Fontface> _lookupFontface(Text::FontBook& fontBook, Style::ComputedStyle& style) {
     Text::FontQuery fq{
         .weight = style.font->weight,
         .style = style.font->style.val,
@@ -230,8 +230,8 @@ static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& paren
     auto url = Mime::Url::resolveReference(el->baseURI(), Mime::parseUrlOrPath(src))
                    .unwrapOr("bundle://vaev-driver/missing.qoi"_url);
 
-    auto img = Karm::Image::load(url).unwrapOrElse([] {
-        return Karm::Image::loadOrFallback("bundle://vaev-driver/missing.qoi"_url).unwrap();
+    auto img = marK::Image::load(url).unwrapOrElse([] {
+        return marK::Image::loadOrFallback("bundle://vaev-driver/missing.qoi"_url).unwrap();
     });
     parent.add({style, font, img, el});
 }

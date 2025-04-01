@@ -5,7 +5,7 @@
 #include "base.h"
 #include "string.h"
 
-namespace Karm {
+namespace marK {
 
 template <Meta::Enum E>
 struct Flags {

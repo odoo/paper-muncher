@@ -9,7 +9,7 @@
 #include "about-dialog.h"
 #include "titlebar.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child titlebarTitle(Mdi::Icon icon, String title, bool compact) {
     if (compact) {
@@ -77,4 +77,4 @@ Ui::Child titlebar(Mdi::Icon icon, String title, Ui::Child middle, TitlebarStyle
     });
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

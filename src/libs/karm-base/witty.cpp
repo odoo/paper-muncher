@@ -1,6 +1,6 @@
 #include "witty.h"
 
-namespace Karm {
+namespace marK {
 
 namespace {
 
@@ -60,4 +60,4 @@ Str badEmoji(usize seed) {
     return BAD[seed % BAD.len()];
 }
 
-} // namespace Karm
+} // namespace marK

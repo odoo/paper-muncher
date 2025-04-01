@@ -6,7 +6,7 @@
 #include "funcs.h"
 #include "node.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 template <typename T>
 struct Eased {

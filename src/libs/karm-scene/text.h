@@ -4,13 +4,13 @@
 
 #include "base.h"
 
-namespace Karm::Scene {
+namespace marK::Scene {
 
 struct Text : public Node {
     Math::Vec2f _origin;
-    Rc<Karm::Text::Prose> _prose;
+    Rc<marK::Text::Prose> _prose;
 
-    Text(Math::Vec2f origin, Rc<Karm::Text::Prose> prose)
+    Text(Math::Vec2f origin, Rc<marK::Text::Prose> prose)
         : _origin(origin), _prose(prose) {}
 
     Math::Rectf bound() override {

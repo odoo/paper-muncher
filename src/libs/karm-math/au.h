@@ -7,7 +7,7 @@
 
 // NOTE: Not in the Karm::Math namespace because it's pretty commonly used
 //       and typing Math::Au is a bit too much.
-namespace Karm {
+namespace marK {
 
 // Au (aka Application Unit, Atomic Unit, Absurd Unit, Almighty Unit, Annoying Unit, Autistic Unit, Awesome Unit, Anarcho-Unit, Avocado Unit, Adorable Unit, etc...) is the fundamental
 // unit of measurement in Karm.
@@ -43,10 +43,10 @@ using RadiiAu = Math::Radii<Au>;
 
 } // namespace Karm
 
-constexpr Karm::Au operator""_au(unsigned long long val) {
-    return Karm::Au{val};
+constexpr marK::Au operator""_au(unsigned long long val) {
+    return marK::Au{val};
 }
 
-constexpr Karm::Au operator""_au(long double val) {
-    return Karm::Au{val};
+constexpr marK::Au operator""_au(long double val) {
+    return marK::Au{val};
 }

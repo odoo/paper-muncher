@@ -2,7 +2,7 @@
 
 #include "borders.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 struct Outline {
     f64 width;

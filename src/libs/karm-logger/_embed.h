@@ -2,7 +2,7 @@
 
 #include <karm-io/text.h>
 
-namespace Karm::Logger::_Embed {
+namespace marK::Logger::_Embed {
 
 void loggerLock();
 

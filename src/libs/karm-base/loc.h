@@ -2,7 +2,7 @@
 
 #include "string.h"
 
-namespace Karm {
+namespace marK {
 
 struct Loc {
     Str file{};

@@ -2,7 +2,7 @@
 
 #include "view.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 // MARK: Grow ------------------------------------------------------------------
 
@@ -681,4 +681,4 @@ Child grid(GridStyle style, Children children) {
     return makeRc<GridLayout>(style, children);
 }
 
-} // namespace Karm::Ui
+} // namespace marK::Ui

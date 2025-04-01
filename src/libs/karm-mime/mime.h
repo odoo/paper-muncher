@@ -5,7 +5,7 @@
 #include <karm-io/sscan.h>
 #include <mdi/_prelude.h>
 
-namespace Karm::Mime {
+namespace marK::Mime {
 
 struct Mime {
     String _buf;
@@ -57,5 +57,5 @@ Mdi::Icon iconFor(Mime const& mime);
 } // namespace Karm::Mime
 
 inline auto operator""_mime(char const* buf, usize len) {
-    return Karm::Mime::Mime(Str(buf, len));
+    return marK::Mime::Mime(Str(buf, len));
 }

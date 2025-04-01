@@ -2,7 +2,7 @@
 
 #include "file.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 struct Pipe {
     FileWriter in;

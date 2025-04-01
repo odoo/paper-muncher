@@ -2,7 +2,7 @@
 
 #include <karm-mime/url.h>
 
-namespace Karm::Pkg {
+namespace marK::Pkg {
 
 struct BundleInfo {
     String id;

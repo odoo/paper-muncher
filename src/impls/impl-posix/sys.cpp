@@ -26,7 +26,7 @@
 #include "fd.h"
 #include "utils.h"
 
-namespace Karm::Sys::_Embed {
+namespace marK::Sys::_Embed {
 
 Res<Mime::Path> resolve(Mime::Url const& url) {
     Mime::Path resolved;
@@ -505,4 +505,4 @@ Async::Task<Vec<Ip>> ipLookupAsync(Str host) {
     co_return Ok(ips);
 }
 
-} // namespace Karm::Sys::_Embed
+} // namespace marK::Sys::_Embed

@@ -20,7 +20,7 @@ struct _Resolved<PercentOr<T>> {
 } // namespace Vaev
 
 template <>
-struct Karm::Io::Repr<Vaev::Percent> {
+struct marK::Io::Repr<Vaev::Percent> {
     static void repr(Io::Emit& e, Vaev::Percent const& v) {
         e("{}%", v.value());
     }

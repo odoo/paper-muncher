@@ -1,7 +1,7 @@
 #include <karm-test/macros.h>
 #include <karm-text/edit.h>
 
-namespace Karm::Text::Tests {
+namespace marK::Text::Tests {
 
 test$("karm-text-model-moves") {
     Model mdl{"foo bar baz"};
@@ -21,4 +21,4 @@ test$("karm-text-model-moves") {
     return Ok();
 }
 
-} // namespace Karm::Text::Tests
+} // namespace marK::Text::Tests

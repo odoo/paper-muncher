@@ -5,7 +5,7 @@
 #include <karm-base/string.h>
 #include <karm-io/emit.h>
 
-namespace Karm::Text {
+namespace marK::Text {
 
 struct Prose;
 

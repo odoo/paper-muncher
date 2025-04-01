@@ -1,6 +1,6 @@
 #include "base.h"
 
-namespace Karm::Rpc {
+namespace marK::Rpc {
 
 static Endpoint* _globalEndpoint = nullptr;
 
@@ -25,4 +25,4 @@ Endpoint& globalEndpoint() {
     return *_globalEndpoint;
 }
 
-} // namespace Karm::Rpc
+} // namespace marK::Rpc

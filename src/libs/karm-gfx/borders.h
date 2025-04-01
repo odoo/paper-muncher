@@ -4,7 +4,7 @@
 
 #include "canvas.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 enum struct BorderStyle : u8 {
     NONE,

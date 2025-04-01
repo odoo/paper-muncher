@@ -9,7 +9,7 @@
 #include <karm-sys/chan.h>
 #include <karm-sys/context.h>
 
-namespace Karm::Cli {
+namespace marK::Cli {
 
 // MARK: Tokenizer -------------------------------------------------------------
 
@@ -343,7 +343,7 @@ struct Command : Meta::Pinned {
             try$(opt->usage(w));
         }
 
-        if (Karm::any(_commands)) {
+        if (marK::any(_commands)) {
             try$(format(w, "<command> [args...]"));
         }
 
@@ -365,7 +365,7 @@ struct Command : Meta::Pinned {
 
         try$(format(w, "Description:\n  {}\n\n", description));
 
-        if (Karm::any(options)) {
+        if (marK::any(options)) {
             try$(w.writeStr("Options:\n"s));
             for (auto& opt : options) {
                 if (opt->kind != OptionKind::OPTION)
@@ -380,7 +380,7 @@ struct Command : Meta::Pinned {
             try$(w.writeRune('\n'));
         }
 
-        if (Karm::any(_commands)) {
+        if (marK::any(_commands)) {
             try$(w.writeStr("Subcommands:\n"s));
             for (auto& cmd : _commands) {
                 try$(format(w, "  {c} {} - {}\n", cmd->shortName.unwrapOr(' '), cmd->longName, cmd->description));
@@ -468,7 +468,7 @@ struct Command : Meta::Pinned {
         if (callbackAsync)
             co_trya$(callbackAsync.unwrap()(ctx));
 
-        if (Karm::any(_commands) and c.ended()) {
+        if (marK::any(_commands) and c.ended()) {
             co_try$(_showUsage(Sys::out()));
             co_return Error::invalidInput("expected subcommand");
         }
@@ -477,7 +477,7 @@ struct Command : Meta::Pinned {
             if (c->kind != Token::OPERAND)
                 co_return Error::invalidInput("expected subcommand");
 
-            if (not Karm::any(_commands))
+            if (not marK::any(_commands))
                 co_return Error::invalidInput("unexpected subcommand");
 
             auto value = c->value;

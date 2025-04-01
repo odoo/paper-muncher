@@ -9,12 +9,12 @@ export module Karm.Http:client;
 
 import :transport;
 
-namespace Karm::Http {
+namespace marK::Http {
 
 static constexpr bool DEBUG_CLIENT = false;
 
 export struct Client : public Transport {
-    String userAgent = "Karm-Http/" stringify$(__ck_version_value) ""s;
+    String userAgent = "marK-Http/" stringify$(__ck_version_value) ""s;
     Rc<Transport> _transport;
 
     Client(Rc<Transport> transport)
@@ -87,4 +87,4 @@ export Async::Task<Rc<Response>> doAsync(Rc<Request> request) {
     co_return co_await client->doAsync(request);
 }
 
-} // namespace Karm::Http
+} // namespace marK::Http

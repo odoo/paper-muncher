@@ -2,7 +2,7 @@
 
 #include "_embed.h"
 
-namespace Karm::App {
+namespace marK::App {
 
 Async::Task<Json::Value> MockPrefs::loadAsync(String key, Json::Value defaultValue) {
     auto item = _store.access(key);
@@ -20,4 +20,4 @@ Prefs& globalPrefs() {
     return _Embed::globalPrefs();
 }
 
-} // namespace Karm::App
+} // namespace marK::App

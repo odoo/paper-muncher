@@ -6,7 +6,7 @@
 
 #include "_prelude.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child toolbar(Ui::Children children);
 

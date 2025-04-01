@@ -5,7 +5,7 @@
 
 #include "fill.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 enum StrokeAlign {
     CENTER_ALIGN,

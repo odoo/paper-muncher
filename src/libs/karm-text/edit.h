@@ -2,7 +2,7 @@
 
 #include <karm-app/inputs.h>
 
-namespace Karm::Text {
+namespace marK::Text {
 
 struct Action {
     enum struct _Op {

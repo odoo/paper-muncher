@@ -12,13 +12,13 @@
 #include "info.h"
 #include "types.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 struct Intent;
 
 } // namespace Karm::Sys
 
-namespace Karm::Sys::_Embed {
+namespace marK::Sys::_Embed {
 
 // MARK: Fd --------------------------------------------------------------------
 

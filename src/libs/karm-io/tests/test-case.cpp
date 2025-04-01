@@ -1,7 +1,7 @@
 #include <karm-io/fmt.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Io::Tests {
+namespace marK::Io::Tests {
 
 struct {
     Case c;
@@ -47,4 +47,4 @@ test$("case-change") {
     return Ok();
 }
 
-} // namespace Karm::Io::Tests
+} // namespace marK::Io::Tests

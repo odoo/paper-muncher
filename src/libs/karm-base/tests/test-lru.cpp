@@ -1,7 +1,7 @@
 #include <karm-base/lru.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Base::Tests {
+namespace marK::Base::Tests {
 
 test$("lru-access") {
     Lru<int, int> cache{10};
@@ -72,4 +72,4 @@ test$("lru-evict") {
     return Ok();
 }
 
-} // namespace Karm::Base::Tests
+} // namespace marK::Base::Tests

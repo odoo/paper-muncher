@@ -7,7 +7,7 @@ module;
 
 export module Karm.Http:header;
 
-namespace Karm::Http {
+namespace marK::Http {
 
 export struct Version {
     u8 major;
@@ -98,11 +98,11 @@ export struct Header : public Map<String, String> {
     }
 };
 
-} // namespace Karm::Http
+} // namespace marK::Http
 
 template <>
-struct Karm::Io::Formatter<Karm::Http::Version> {
-    Res<> format(Io::TextWriter& writer, Karm::Http::Version version) {
+struct marK::Io::Formatter<marK::Http::Version> {
+    Res<> format(Io::TextWriter& writer, marK::Http::Version version) {
         return Io::format(writer, "HTTP/{}.{}", version.major, version.minor);
     }
 };

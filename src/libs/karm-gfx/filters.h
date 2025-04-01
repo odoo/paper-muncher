@@ -7,7 +7,7 @@
 #include "buffer.h"
 #include "color.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 struct Unfiltered {
     static constexpr auto NAME = "unfiltered";

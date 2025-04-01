@@ -4,7 +4,7 @@
 #include <karm-image/saver.h>
 #include <karm-print/file-printer.h>
 
-namespace Karm::Print {
+namespace marK::Print {
 
 struct ImagePrinter : public FilePrinter {
     static constexpr isize GAPS = 16;

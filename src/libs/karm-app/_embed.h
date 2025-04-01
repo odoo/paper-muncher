@@ -1,12 +1,12 @@
 #pragma once
 
-namespace Karm::App {
+namespace marK::App {
 
 struct Prefs;
 
 } // namespace Karm::App
 
-namespace Karm::App::_Embed {
+namespace marK::App::_Embed {
 
 Prefs& globalPrefs();
 

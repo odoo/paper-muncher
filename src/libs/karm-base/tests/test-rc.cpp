@@ -1,7 +1,7 @@
 #include <karm-base/rc.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Base::Tests {
+namespace marK::Base::Tests {
 
 test$("strong-rc") {
     struct S {
@@ -13,4 +13,4 @@ test$("strong-rc") {
     return Ok();
 }
 
-} // namespace Karm::Base::Tests
+} // namespace marK::Base::Tests

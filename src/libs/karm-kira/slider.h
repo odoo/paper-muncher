@@ -4,7 +4,7 @@
 
 #include "_prelude.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child slider(f64 value, Ui::OnChange<f64> onChange, Mdi::Icon icon, Str text);
 

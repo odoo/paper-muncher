@@ -10,7 +10,7 @@
 
 #include "atoms.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 enum struct Hint {
     MIN,

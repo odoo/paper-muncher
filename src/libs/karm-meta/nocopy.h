@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Karm::Meta {
+namespace marK::Meta {
 
 /// A type that can't be copied.
 struct NoCopy {

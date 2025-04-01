@@ -6,7 +6,7 @@
 
 #include "base.h"
 
-namespace Karm::Scene {
+namespace marK::Scene {
 
 struct Box : public Node {
     Math::Rectf _bound;

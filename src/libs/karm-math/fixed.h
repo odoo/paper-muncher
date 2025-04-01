@@ -3,7 +3,7 @@
 #include <karm-base/checked.h>
 #include <karm-io/fmt.h>
 
-namespace Karm::Math {
+namespace marK::Math {
 
 template <typename T>
 struct Frac;
@@ -219,7 +219,7 @@ using i8f24 = Fixed<i32, 24>;
 } // namespace Karm::Math
 
 template <Meta::SignedIntegral T, usize F>
-struct Karm::Limits<Math::Fixed<T, F>> {
+struct marK::Limits<Math::Fixed<T, F>> {
     static constexpr Math::Fixed<T, F> MIN = Math::Fixed<T, F>::fromRaw(Limits<T>::MIN);
     static constexpr Math::Fixed<T, F> MAX = Math::Fixed<T, F>::fromRaw(Limits<T>::MAX);
     static constexpr Math::Fixed<T, F> EPSILON = Math::Fixed<T, F>::fromRaw(1);
@@ -227,14 +227,14 @@ struct Karm::Limits<Math::Fixed<T, F>> {
 };
 
 template <Meta::SignedIntegral T, usize F>
-struct Karm::Io::Formatter<Math::Fixed<T, F>> {
+struct marK::Io::Formatter<Math::Fixed<T, F>> {
     Res<> format(Io::TextWriter& writer, Math::Fixed<T, F> const& val) {
         return Io::format(writer, "{}", val.template cast<f64>());
     }
 };
 
 template <typename T>
-struct Karm::Io::Formatter<Math::Frac<T>> {
+struct marK::Io::Formatter<Math::Frac<T>> {
     Res<> format(Io::TextWriter& writer, Math::Frac<T> const& val) {
         return Io::format(writer, "{}/{}", val._num, val._deno);
     }

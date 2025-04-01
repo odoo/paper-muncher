@@ -8,7 +8,7 @@
 //
 #include "saver.h"
 
-namespace Karm::Image {
+namespace marK::Image {
 
 Res<> save(Gfx::Pixels pixels, Io::BEmit& e, Saver const& props) {
     if (props.format == Mime::Uti::PUBLIC_BMP) {
@@ -35,4 +35,4 @@ Res<> save(Gfx::Pixels pixels, Mime::Url const& url, Saver const& props) {
     return save(pixels, e, props);
 }
 
-} // namespace Karm::Image
+} // namespace marK::Image

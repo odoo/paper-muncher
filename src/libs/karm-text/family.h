@@ -6,7 +6,7 @@
 #include "book.h"
 #include "font.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 struct FontAdjust {
     f64 ascent = 1;

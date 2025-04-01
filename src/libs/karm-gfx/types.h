@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 enum struct FillRule {
     NONZERO,

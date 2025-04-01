@@ -3,7 +3,7 @@
 #include <karm-base/array.h>
 #include <karm-base/slice.h>
 
-namespace Karm::Crypto {
+namespace marK::Crypto {
 
 static constexpr usize SHA224_BYTES = 28;
 static constexpr usize SHA256_BYTES = 32;

@@ -1,9 +1,9 @@
 #pragma once
 
 #ifndef KARM_NO_TOP_LEVEL_USING
-namespace Karm::Test {
+namespace marK::Test {
 };
 
-using namespace Karm::Test;
+using namespace marK::Test;
 
 #endif

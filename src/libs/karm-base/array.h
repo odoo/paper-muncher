@@ -4,7 +4,7 @@
 
 #include "slice.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename T, usize N>
 struct Array {

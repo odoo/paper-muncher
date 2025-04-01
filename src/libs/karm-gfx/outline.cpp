@@ -1,6 +1,6 @@
 #include "outline.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 void Outline::paint(Gfx::Canvas& c, Math::Rectf rect, Math::Radiif radii) {
     Gfx::Borders borders;
@@ -19,4 +19,4 @@ void Outline::paint(Gfx::Canvas& c, Math::Rectf rect, Math::Radiif radii) {
     borders.paint(c, rect.grow(offsets));
 }
 
-} // namespace Karm::Gfx
+} // namespace marK::Gfx

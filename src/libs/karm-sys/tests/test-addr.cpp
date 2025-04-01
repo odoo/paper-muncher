@@ -1,7 +1,7 @@
 #include <karm-sys/addr.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Sys::Tests {
+namespace marK::Sys::Tests {
 
 test$("ip4-eq") {
     expectEq$(Ip4::localhost(), Ip4::localhost());
@@ -9,4 +9,4 @@ test$("ip4-eq") {
     return Ok();
 }
 
-} // namespace Karm::Sys::Tests
+} // namespace marK::Sys::Tests

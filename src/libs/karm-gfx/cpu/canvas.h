@@ -7,7 +7,7 @@
 #include "../stroke.h"
 #include "rast.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 struct LcdLayout {
     Math::Vec2f red;

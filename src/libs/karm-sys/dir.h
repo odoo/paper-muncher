@@ -6,7 +6,7 @@
 
 #include "stat.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 struct DirEntry {
     String name;

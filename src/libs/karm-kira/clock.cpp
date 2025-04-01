@@ -4,7 +4,7 @@ module;
 
 export module Karm.Kira:clock;
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 struct Clock : public Ui::View<Clock> {
     Time _time;
@@ -48,4 +48,4 @@ export Ui::Child clock(Time time) {
     return makeRc<Clock>(time);
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

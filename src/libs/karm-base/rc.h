@@ -6,7 +6,7 @@
 #include "lock.h"
 #include "opt.h"
 
-namespace Karm {
+namespace marK {
 
 /// A reference-counted object heap cell.
 template <typename L>

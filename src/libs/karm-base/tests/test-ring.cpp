@@ -1,7 +1,7 @@
 #include <karm-base/ring.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Base::Tests {
+namespace marK::Base::Tests {
 
 test$("ring-avoid-pop-back-underflow") {
     Ring<int> ring(5);
@@ -19,4 +19,4 @@ test$("ring-avoid-pop-back-underflow") {
     return Ok();
 }
 
-} // namespace Karm::Base::Tests
+} // namespace marK::Base::Tests

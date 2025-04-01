@@ -6,7 +6,7 @@
 #include "id.h"
 #include "traits.h"
 
-namespace Karm::Meta {
+namespace marK::Meta {
 
 template <typename T, typename... Ts>
 concept Contains = (Same<T, Ts> or ...);

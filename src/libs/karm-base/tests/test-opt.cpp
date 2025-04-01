@@ -1,7 +1,7 @@
 #include <karm-base/opt.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Base::Tests {
+namespace marK::Base::Tests {
 
 test$("opt-default-constructor") {
     Opt<int> opt{};
@@ -70,4 +70,4 @@ test$("opt-equal") {
     return Ok();
 }
 
-} // namespace Karm::Base::Tests
+} // namespace marK::Base::Tests

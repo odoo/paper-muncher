@@ -1,6 +1,6 @@
 #include "bigint.h"
 
-namespace Karm::Math {
+namespace marK::Math {
 
 // MARK: Unsigned Big Integer --------------------------------------------------
 
@@ -382,4 +382,4 @@ void _div(BigFrac& lhs, BigFrac const& rhs) {
     _mul(lhs._den, rhs._num.value());
 }
 
-} // namespace Karm::Math
+} // namespace marK::Math

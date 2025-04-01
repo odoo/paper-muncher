@@ -8,7 +8,7 @@ export module Karm.Aio:funcs;
 
 import :traits;
 
-namespace Karm::Aio {
+namespace marK::Aio {
 
 export Async::Task<usize> copyAsync(AsyncReadable auto& reader, AsyncWritable auto& writer) {
     Array<Byte, 4096> buffer = {};
@@ -38,4 +38,4 @@ export Async::Task<String> readAllUtf8Async(AsyncReadable auto& reader) {
     co_return Ok(w.take());
 }
 
-} // namespace Karm::Aio
+} // namespace marK::Aio

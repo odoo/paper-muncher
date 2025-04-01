@@ -5,13 +5,13 @@
 
 namespace Vaev {
 
-template <Karm::StrLit K>
+template <marK::StrLit K>
 struct Keyword {
     void repr(Io::Emit& e) const {
         e("(keyword {})", K);
     }
 
-    template <Karm::StrLit L>
+    template <marK::StrLit L>
     constexpr bool operator==(Keyword<L> const&) const {
         return K == L;
     }

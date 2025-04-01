@@ -2,7 +2,7 @@
 
 #include "ptr.h"
 
-namespace Karm::Gc {
+namespace marK::Gc {
 
 // FIXME: Proper handling of root references
 template <typename T>

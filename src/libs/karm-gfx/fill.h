@@ -8,7 +8,7 @@
 #include "color.h"
 #include "colors.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 struct Gradient {
     enum Type {

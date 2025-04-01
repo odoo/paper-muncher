@@ -2,7 +2,7 @@
 
 #include "canvas.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 struct BoxShadow {
     Gfx::Color fill;

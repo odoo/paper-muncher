@@ -4,7 +4,7 @@
 #include "font.h"
 #include "vga.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 Rc<Fontface> Fontface::fallback() {
     return makeRc<VgaFontface>();
@@ -75,4 +75,4 @@ f64 Font::lineHeight() {
     return metrics().lineheight();
 }
 
-} // namespace Karm::Text
+} // namespace marK::Text

@@ -6,7 +6,7 @@
 #include <karm-math/insets.h>
 #include <karm-math/vec.h>
 
-namespace Karm::Print {
+namespace marK::Print {
 
 static constexpr f64 UNIT = (1 / 25.4) * 96.0;
 

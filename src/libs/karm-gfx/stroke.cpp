@@ -1,6 +1,6 @@
 #include "stroke.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 // MARK: Common ----------------------------------------------------------------
 
@@ -210,4 +210,4 @@ void createSolid(Math::Polyf& poly, Math::Path const& path) {
     }
 }
 
-} // namespace Karm::Gfx
+} // namespace marK::Gfx

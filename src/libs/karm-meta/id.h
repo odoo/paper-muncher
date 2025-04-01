@@ -4,7 +4,7 @@
 
 #include "traits.h"
 
-namespace Karm::Meta {
+namespace marK::Meta {
 
 using Id = usize;
 

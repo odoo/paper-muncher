@@ -1,6 +1,6 @@
 #include "prose.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 Prose::Prose(ProseStyle style, Str str) : _style(style) {
     clear();
@@ -188,4 +188,4 @@ Vec2Au Prose::layout(Au width) {
     return {textWidth, textHeight};
 }
 
-} // namespace Karm::Text
+} // namespace marK::Text

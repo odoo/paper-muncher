@@ -2,7 +2,7 @@
 
 #include "sscan.h"
 
-namespace Karm::Io {
+namespace marK::Io {
 
 struct AtoxOptions {
     u8 base = 10;

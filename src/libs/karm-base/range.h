@@ -4,7 +4,7 @@
 #include "clamp.h"
 #include "tuple.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename T, typename TAG = struct _RangeTag>
 struct Range {

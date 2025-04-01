@@ -5,7 +5,7 @@
 
 #include "const.h"
 
-namespace Karm::Math {
+namespace marK::Math {
 
 // MARK: Other -----------------------------------------------------------------
 

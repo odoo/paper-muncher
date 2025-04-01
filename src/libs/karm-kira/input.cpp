@@ -4,7 +4,7 @@
 
 #include "input.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child input(Mdi::Icon icon, String placeholder, String text, Ui::OnChange<String> onChange) {
     return Ui::hflow(
@@ -45,4 +45,4 @@ Ui::Child input(String placeholder, String text, Ui::OnChange<String> onChange) 
            Ui::focusable();
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

@@ -2,7 +2,7 @@
 
 namespace Qoi {
 
-Karm::Res<Decoder> Decoder::init(Bytes slice) {
+marK::Res<Decoder> Decoder::init(Bytes slice) {
     if (slice.len() < 14) {
         return Error::invalidData("image too small");
     }

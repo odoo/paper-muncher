@@ -8,7 +8,7 @@ export module Karm.Http:server;
 import :request;
 import :response;
 
-namespace Karm::Http {
+namespace marK::Http {
 
 export struct Service {
     virtual ~Service() = default;
@@ -29,4 +29,4 @@ export Async::Task<> servAsync(Rc<Service> srv) {
     return Server::simple(srv)->serveAsync();
 }
 
-} // namespace Karm::Http
+} // namespace marK::Http

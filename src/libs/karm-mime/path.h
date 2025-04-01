@@ -8,7 +8,7 @@
 #include <karm-io/fmt.h>
 #include <karm-io/sscan.h>
 
-namespace Karm::Mime {
+namespace marK::Mime {
 
 // MARK: Path ------------------------------------------------------------------
 
@@ -76,20 +76,20 @@ struct Path {
 } // namespace Karm::Mime
 
 inline auto operator""_path(char const* str, usize len) {
-    return Karm::Mime::Path::parse({str, len});
+    return marK::Mime::Path::parse({str, len});
 }
 
-inline auto operator/(Karm::Mime::Path const& path, Karm::Mime::Path const& other) {
+inline auto operator/(marK::Mime::Path const& path, marK::Mime::Path const& other) {
     return path.join(other);
 }
 
-inline auto operator/(Karm::Mime::Path const& path, Str other) {
+inline auto operator/(marK::Mime::Path const& path, Str other) {
     return path.join(other);
 }
 
 template <>
-struct Karm::Io::Formatter<Karm::Mime::Path> {
-    Res<> format(Io::TextWriter& writer, Karm::Mime::Path const& path) {
+struct marK::Io::Formatter<marK::Mime::Path> {
+    Res<> format(Io::TextWriter& writer, marK::Mime::Path const& path) {
         return path.unparse(writer);
     }
 };

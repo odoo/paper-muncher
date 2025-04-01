@@ -7,7 +7,7 @@
 #include "color-input.h"
 #include "dialog.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 // MARK: Hsv Input -------------------------------------------------------------
 
@@ -331,4 +331,4 @@ Ui::Child colorInput(Gfx::Color color, Ui::OnChange<Gfx::Color>) {
            );
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

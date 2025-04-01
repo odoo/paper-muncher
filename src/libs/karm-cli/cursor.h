@@ -2,7 +2,7 @@
 
 #include <karm-io/emit.h>
 
-namespace Karm::Cli {
+namespace marK::Cli {
 
 struct Cmd {
     enum Type {

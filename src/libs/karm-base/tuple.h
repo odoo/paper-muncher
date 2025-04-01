@@ -2,7 +2,7 @@
 
 #include <karm-meta/id.h>
 
-namespace Karm {
+namespace marK {
 
 // It's not stupid if it works and it's fast.
 //

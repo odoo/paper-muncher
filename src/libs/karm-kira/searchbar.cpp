@@ -4,7 +4,7 @@
 
 #include "searchbar.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child searchbar(String text) {
     return Ui::hflow(
@@ -26,4 +26,4 @@ Ui::Child searchbar(String text) {
            Ui::focusable();
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

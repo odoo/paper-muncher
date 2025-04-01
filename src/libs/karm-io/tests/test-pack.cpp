@@ -1,7 +1,7 @@
 #include <karm-io/pack.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Io::Tests {
+namespace marK::Io::Tests {
 
 test$("pack-unpack") {
     auto testCase = [&]<typename T>(T const& input) -> Res<> {
@@ -25,4 +25,4 @@ test$("pack-unpack") {
     return Ok();
 }
 
-} // namespace Karm::Io::Tests
+} // namespace marK::Io::Tests

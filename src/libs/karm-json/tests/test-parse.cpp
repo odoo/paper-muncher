@@ -2,7 +2,7 @@
 #include <karm-math/funcs.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Json::Tests {
+namespace marK::Json::Tests {
 
 test$("json-parse-null") {
     auto val = "null"_json;
@@ -69,4 +69,4 @@ test$("json-parse-bool") {
     return Ok();
 }
 
-} // namespace Karm::Json::Tests
+} // namespace marK::Json::Tests

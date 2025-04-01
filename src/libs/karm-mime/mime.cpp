@@ -15,7 +15,7 @@
 
 #include "mime.h"
 
-namespace Karm::Mime {
+namespace marK::Mime {
 
 struct Suffix2Mime {
     Str suffix;
@@ -114,4 +114,4 @@ Mdi::Icon iconFor(Mime const& mime) {
     return icon;
 }
 
-} // namespace Karm::Mime
+} // namespace marK::Mime

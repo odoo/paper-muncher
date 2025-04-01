@@ -1,6 +1,6 @@
 #include <karm-test/macros.h>
 
-namespace Karm::Base {
+namespace marK::Base {
 
 auto needle(isize value) {
     return [value](auto x) {
@@ -165,4 +165,4 @@ test$("slice-split-empty") {
     return Ok();
 }
 
-} // namespace Karm::Base
+} // namespace marK::Base

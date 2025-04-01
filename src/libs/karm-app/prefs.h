@@ -3,7 +3,7 @@
 #include <karm-async/task.h>
 #include <karm-json/values.h>
 
-namespace Karm::App {
+namespace marK::App {
 
 struct Prefs {
     virtual ~Prefs() = default;

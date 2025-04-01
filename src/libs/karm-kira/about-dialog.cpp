@@ -7,7 +7,7 @@
 #include "badge.h"
 #include "dialog.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 static constexpr Str LICENSE = R"(This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
@@ -49,4 +49,4 @@ Ui::Child aboutDialog(String name) {
     });
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

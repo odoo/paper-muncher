@@ -1,7 +1,7 @@
 #include <karm-base/time.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Base::Tests {
+namespace marK::Base::Tests {
 
 test$("time-duration-builder") {
     auto ts = Duration::fromUSecs(2);
@@ -68,4 +68,4 @@ test$("time-instant") {
     return Ok();
 }
 
-} // namespace Karm::Base::Tests
+} // namespace marK::Base::Tests

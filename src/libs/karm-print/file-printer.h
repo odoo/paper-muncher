@@ -4,7 +4,7 @@
 #include <karm-mime/uti.h>
 #include <karm-print/printer.h>
 
-namespace Karm::Print {
+namespace marK::Print {
 
 struct FilePrinterProps {
     /// Pixel density for raster formats (ignored for vector formats)

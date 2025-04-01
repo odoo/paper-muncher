@@ -4,7 +4,7 @@
 #include <karm-base/try.h>
 #include <karm-meta/traits.h>
 
-namespace Karm::Io {
+namespace marK::Io {
 
 enum struct Whence {
     BEGIN,

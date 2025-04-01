@@ -4,7 +4,7 @@
 
 #include "base.h"
 
-namespace Karm::Scene {
+namespace marK::Scene {
 
 struct Image : public Node {
     Math::Rectf _bound;

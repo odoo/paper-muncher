@@ -2,7 +2,7 @@
 
 #include "base.h"
 
-namespace Karm {
+namespace marK {
 
 enum MemOrder {
     RELAXED = __ATOMIC_RELAXED,

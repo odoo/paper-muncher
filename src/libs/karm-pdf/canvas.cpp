@@ -3,7 +3,7 @@
 
 #include "canvas.h"
 
-namespace Karm::Pdf {
+namespace marK::Pdf {
 
 static constexpr bool DEBUG_CANVAS = false;
 
@@ -233,4 +233,4 @@ void Canvas::blit(Math::Recti, Math::Recti, Gfx::Pixels) {
     logDebugIf(DEBUG_CANVAS, "pdf: blit() operation not implemented");
 }
 
-} // namespace Karm::Pdf
+} // namespace marK::Pdf

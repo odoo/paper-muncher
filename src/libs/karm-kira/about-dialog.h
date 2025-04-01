@@ -4,7 +4,7 @@
 
 #include "_prelude.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child licenseDialog();
 

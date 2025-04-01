@@ -2,7 +2,7 @@
 
 #include "_embed.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 static In _in{_Embed::createIn().take()};
 
@@ -22,4 +22,4 @@ Err& err() {
     return _err;
 }
 
-} // namespace Karm::Sys
+} // namespace marK::Sys

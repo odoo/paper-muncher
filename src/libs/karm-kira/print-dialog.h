@@ -5,7 +5,7 @@
 
 #include "_prelude.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 using PrintPreview = SharedFunc<Vec<Print::Page>(Print::Settings const&)>;
 

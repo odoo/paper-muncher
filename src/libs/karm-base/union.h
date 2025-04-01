@@ -6,7 +6,7 @@
 #include "cursor.h"
 #include "opt.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename... Ts>
 struct Union {

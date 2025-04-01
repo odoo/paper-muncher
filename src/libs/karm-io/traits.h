@@ -6,7 +6,7 @@
 
 #include "types.h"
 
-namespace Karm::Io {
+namespace marK::Io {
 
 template <typename T>
 concept Writable = requires(T& writer, Bytes bytes) {

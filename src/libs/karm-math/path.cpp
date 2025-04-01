@@ -4,7 +4,7 @@
 #include "path.h"
 #include "trans.h"
 
-namespace Karm::Math {
+namespace marK::Math {
 
 Math::Rectf Path::bound() {
     if (isEmpty(_verts))
@@ -505,4 +505,4 @@ Path Path::fromSvg(Str svg) {
     return p;
 }
 
-} // namespace Karm::Math
+} // namespace marK::Math

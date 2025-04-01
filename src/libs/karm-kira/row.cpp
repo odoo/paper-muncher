@@ -14,7 +14,7 @@
 #include "slider.h"
 #include "toggle.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child rowContent(Ui::Child child) {
     return child |
@@ -200,4 +200,4 @@ Ui::Child treeRow(Opt<Ui::Slot> leading, String title, Opt<String> subtitle, Ui:
     return treeRow(std::move(leading), title, subtitle, std::move(slot));
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

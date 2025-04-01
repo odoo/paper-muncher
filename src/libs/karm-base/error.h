@@ -4,7 +4,7 @@
 #include "panic.h"
 #include "try.h"
 
-namespace Karm {
+namespace marK {
 
 #define FOREACH_ERROR(ERROR)                                  \
     ERROR(_OK, _ok)                                           \

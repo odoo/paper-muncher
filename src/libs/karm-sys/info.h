@@ -5,7 +5,7 @@
 #include <karm-base/vec.h>
 #include <karm-mime/url.h>
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 struct SysInfo {
     String sysName;

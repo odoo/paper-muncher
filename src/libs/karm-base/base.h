@@ -3,7 +3,7 @@
 #include "_prelude.h"
 #include "macros.h"
 
-namespace Karm {
+namespace marK {
 
 // MARK: Unsigned --------------------------------------------------------------
 

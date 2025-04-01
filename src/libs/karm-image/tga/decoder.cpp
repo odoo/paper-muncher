@@ -34,14 +34,14 @@ bool Decoder::sniff(Bytes slice) {
     return true;
 }
 
-Karm::Res<Decoder> Decoder::init(Bytes slice) {
+marK::Res<Decoder> Decoder::init(Bytes slice) {
     Io::BScan s{slice};
     Header header{};
     s.readTo(&header);
     return Ok(Decoder{header, slice});
 }
 
-Karm::Gfx::Color Decoder::readColor(Io::BScan& s, usize bpp) {
+marK::Gfx::Color Decoder::readColor(Io::BScan& s, usize bpp) {
     if (bpp == 8) {
         u8 d = s.nextU8le();
         return {d, d, d, 255};
@@ -71,11 +71,11 @@ Karm::Gfx::Color Decoder::readColor(Io::BScan& s, usize bpp) {
     }
 }
 
-Karm::usize Decoder::colorMapSize() const {
+marK::usize Decoder::colorMapSize() const {
     return _header.cmSize * (alignUp(_header.cmBpc, 8) / 8);
 }
 
-Karm::Res<> Decoder::readColorMap(Io::BScan& s) {
+marK::Res<> Decoder::readColorMap(Io::BScan& s) {
     if (not _header.clrmapType)
         return Ok();
     _hasColorMap = true;
@@ -84,7 +84,7 @@ Karm::Res<> Decoder::readColorMap(Io::BScan& s) {
     return Ok();
 }
 
-Karm::Gfx::Color Decoder::decodePixel(Io::BScan& s) {
+marK::Gfx::Color Decoder::decodePixel(Io::BScan& s) {
     if (_hasColorMap) {
         auto index = s.nextU8le();
         if (index >= _colorMap.len())
@@ -109,7 +109,7 @@ void Decoder::storePixel(Gfx::MutPixels pixels, isize index, Gfx::Color color) {
     storePixel(pixels, {index % width(), index / width()}, color);
 }
 
-Karm::Res<> Decoder::decodeUncompress(Io::BScan& s, Gfx::MutPixels pixels) {
+marK::Res<> Decoder::decodeUncompress(Io::BScan& s, Gfx::MutPixels pixels) {
     for (isize y = 0; y < height(); ++y)
         for (isize x = 0; x < width(); ++x)
             storePixel(pixels, {x, y}, decodePixel(s));
@@ -117,7 +117,7 @@ Karm::Res<> Decoder::decodeUncompress(Io::BScan& s, Gfx::MutPixels pixels) {
     return Ok();
 }
 
-Karm::Res<> Decoder::decodeRle(Io::BScan& s, Gfx::MutPixels pixels) {
+marK::Res<> Decoder::decodeRle(Io::BScan& s, Gfx::MutPixels pixels) {
     usize index = 0;
     usize end = _header.width * _header.height;
 
@@ -138,7 +138,7 @@ Karm::Res<> Decoder::decodeRle(Io::BScan& s, Gfx::MutPixels pixels) {
     return Ok();
 }
 
-Karm::Res<> Decoder::decode(Gfx::MutPixels pixels) {
+marK::Res<> Decoder::decode(Gfx::MutPixels pixels) {
     Io::BScan s{_data};
     s.skip(sizeof(Header));
     s.skip(_header.idLen);

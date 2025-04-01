@@ -3,7 +3,7 @@
 
 #include "canvas.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 // MARK: Context Operations ------------------------------------------------
 
@@ -170,4 +170,4 @@ void Canvas::apply(Filter filter, Math::Path const& region) {
     apply(filter);
 }
 
-} // namespace Karm::Gfx
+} // namespace marK::Gfx

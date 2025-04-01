@@ -2,7 +2,7 @@
 
 #include "karm-math/insets.h"
 
-namespace Karm::Math::Tests {
+namespace marK::Math::Tests {
 
 test$("insets-map-order") {
     u8 start = 1;
@@ -52,4 +52,4 @@ test$("insets-cast-order") {
     return Ok();
 }
 
-} // namespace Karm::Math::Tests
+} // namespace marK::Math::Tests

@@ -1,7 +1,7 @@
 #include <karm-ui/anim.h>
 #include <karm-ui/input.h>
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 struct Toggle : public Ui::View<Toggle> {
     static constexpr auto PADDING = 3;
@@ -82,4 +82,4 @@ Ui::Child toggle(bool value, Ui::OnChange<bool> onChange) {
     return makeRc<Toggle>(value, std::move(onChange));
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

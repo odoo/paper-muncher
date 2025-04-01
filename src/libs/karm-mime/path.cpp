@@ -2,7 +2,7 @@
 
 #include "url.h"
 
-namespace Karm::Mime {
+namespace marK::Mime {
 
 // MARK: Path ------------------------------------------------------------------
 
@@ -128,4 +128,4 @@ String Path::str() const {
     return writer.str();
 }
 
-} // namespace Karm::Mime
+} // namespace marK::Mime

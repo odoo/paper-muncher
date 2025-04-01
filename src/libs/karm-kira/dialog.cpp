@@ -6,7 +6,7 @@
 
 #include "dialog.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child dialogContent(Ui::Children children) {
     Ui::BoxStyle const boxStyle = {
@@ -95,4 +95,4 @@ Ui::Child alert(String title, String description) {
     });
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

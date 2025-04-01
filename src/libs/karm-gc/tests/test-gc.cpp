@@ -1,7 +1,7 @@
 #include <karm-gc/heap.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Gc::Tests {
+namespace marK::Gc::Tests {
 
 struct Foo {};
 
@@ -15,4 +15,4 @@ test$("gc-simple-lifetime") {
     return Ok();
 }
 
-} // namespace Karm::Gc::Tests
+} // namespace marK::Gc::Tests

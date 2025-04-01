@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Karm {
+namespace marK {
 
 #define lifetimebound [[clang::lifetimebound]]
 #define __concat$(LHS, RHS) LHS##RHS

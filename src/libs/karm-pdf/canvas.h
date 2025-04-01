@@ -5,7 +5,7 @@
 #include <karm-io/impls.h>
 #include <karm-text/font.h>
 
-namespace Karm::Pdf {
+namespace marK::Pdf {
 
 struct FontManager {
     // FIXME: using the address of the fontface since there is not comparison for the fontface obj

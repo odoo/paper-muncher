@@ -5,7 +5,7 @@
 #include <karm-io/aton.h>
 #include <karm-io/emit.h>
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 struct SocketAddr;
 
@@ -239,15 +239,15 @@ inline Res<Ip6> Ip6::parse(Str str) {
 } // namespace Karm::Sys
 
 template <>
-struct Karm::Io::Formatter<Karm::Sys::Ip4> {
-    Res<> format(Io::TextWriter& writer, Karm::Sys::Ip4 addr) {
+struct marK::Io::Formatter<marK::Sys::Ip4> {
+    Res<> format(Io::TextWriter& writer, marK::Sys::Ip4 addr) {
         return Io::format(writer, "{}.{}.{}.{}", addr.a, addr.b, addr.c, addr.d);
     }
 };
 
 template <>
-struct Karm::Io::Formatter<Karm::Sys::Ip6> {
-    Res<> format(Io::TextWriter& writer, Karm::Sys::Ip6 addr) {
+struct marK::Io::Formatter<marK::Sys::Ip6> {
+    Res<> format(Io::TextWriter& writer, marK::Sys::Ip6 addr) {
         return Io::format(
             writer,
             "{04x}:{04x}:{04x}:{04x}:{04x}:{04x}:{04x}:{04x}",
@@ -257,8 +257,8 @@ struct Karm::Io::Formatter<Karm::Sys::Ip6> {
 };
 
 template <>
-struct Karm::Io::Formatter<Karm::Sys::Ip> {
-    Res<> format(Io::TextWriter& writer, Karm::Sys::Ip addr) {
+struct marK::Io::Formatter<marK::Sys::Ip> {
+    Res<> format(Io::TextWriter& writer, marK::Sys::Ip addr) {
         return addr.visit([&](auto addr) {
             return Io::format(writer, "{}", addr);
         });
@@ -266,8 +266,8 @@ struct Karm::Io::Formatter<Karm::Sys::Ip> {
 };
 
 template <>
-struct Karm::Io::Formatter<Karm::Sys::SocketAddr> {
-    Res<> format(Io::TextWriter& writer, Karm::Sys::SocketAddr addr) {
+struct marK::Io::Formatter<marK::Sys::SocketAddr> {
+    Res<> format(Io::TextWriter& writer, marK::Sys::SocketAddr addr) {
         return Io::format(writer, "{}:{}", addr.addr, addr.port);
     }
 };

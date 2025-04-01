@@ -3,7 +3,7 @@
 #include "dialog.h"
 #include "funcs.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 struct ShowPopoverEvent {
     Math::Vec2i at;
@@ -128,4 +128,4 @@ Child popoverLayer(Child child) {
     return makeRc<PopoverLayer>(child);
 }
 
-} // namespace Karm::Ui
+} // namespace marK::Ui

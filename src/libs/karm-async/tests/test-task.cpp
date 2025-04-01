@@ -4,7 +4,7 @@
 #include <karm-async/task.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Async::Tests {
+namespace marK::Async::Tests {
 
 Async::_Task<int> taskValue() {
     co_return 42;
@@ -35,4 +35,4 @@ test$("karm-async-task-detach") {
     return Ok();
 }
 
-} // namespace Karm::Async::Tests
+} // namespace marK::Async::Tests

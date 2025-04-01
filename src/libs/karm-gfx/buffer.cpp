@@ -1,6 +1,6 @@
 #include "buffer.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 [[gnu::flatten]] void blitUnsafe(MutPixels dst, Pixels src) {
     if (dst.width() != src.width() or dst.height() != src.height()) [[unlikely]]
@@ -18,4 +18,4 @@ namespace Karm::Gfx {
     });
 }
 
-} // namespace Karm::Gfx
+} // namespace marK::Gfx

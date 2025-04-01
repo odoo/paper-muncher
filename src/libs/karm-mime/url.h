@@ -7,7 +7,7 @@
 
 #include "path.h"
 
-namespace Karm::Mime {
+namespace marK::Mime {
 
 struct Url {
     String scheme;
@@ -68,20 +68,20 @@ Url parseUrlOrPath(Str str, Opt<Url> baseUrl = NONE);
 } // namespace Karm::Mime
 
 inline Mime::Url operator""_url(char const* str, usize len) {
-    return Karm::Mime::Url::parse({str, len});
+    return marK::Mime::Url::parse({str, len});
 }
 
-inline Mime::Url operator/(Karm::Mime::Url const& url, Str path) {
+inline Mime::Url operator/(marK::Mime::Url const& url, Str path) {
     return url.join(path);
 }
 
-inline Mime::Url operator/(Karm::Mime::Url const& url, Karm::Mime::Path const& path) {
+inline Mime::Url operator/(marK::Mime::Url const& url, marK::Mime::Path const& path) {
     return url.join(path);
 }
 
 template <>
-struct Karm::Io::Formatter<Karm::Mime::Url> {
-    Res<> format(Io::TextWriter& writer, Karm::Mime::Url const& url) {
+struct marK::Io::Formatter<marK::Mime::Url> {
+    Res<> format(Io::TextWriter& writer, marK::Mime::Url const& url) {
         return url.unparse(writer);
     }
 };

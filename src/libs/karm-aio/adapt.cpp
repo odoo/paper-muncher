@@ -7,7 +7,7 @@ export module Karm.Aio:adapt;
 
 import :traits;
 
-namespace Karm::Aio {
+namespace marK::Aio {
 
 export template <typename T>
 struct Adapter : public Reader, public Writer {
@@ -38,4 +38,4 @@ Adapter<T> adapt(T& t) {
     return {t};
 }
 
-} // namespace Karm::Aio
+} // namespace marK::Aio

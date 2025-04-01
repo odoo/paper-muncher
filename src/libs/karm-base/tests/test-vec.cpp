@@ -1,7 +1,7 @@
 #include <karm-base/vec.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Base::Tests {
+namespace marK::Base::Tests {
 
 test$("vec-default-constructed") {
     Vec<int> vec;
@@ -28,4 +28,4 @@ test$("vec-push-front-slice") {
     return Ok();
 }
 
-} // namespace Karm::Base::Tests
+} // namespace marK::Base::Tests

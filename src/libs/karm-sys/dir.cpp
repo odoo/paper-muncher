@@ -3,7 +3,7 @@
 #include "_embed.h"
 #include "proc.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 Res<Dir> Dir::open(Mime::Url url) {
     try$(ensureUnrestricted());
@@ -15,4 +15,4 @@ Res<Dir> Dir::open(Mime::Url url) {
     return Ok(Dir{entries, url});
 }
 
-} // namespace Karm::Sys
+} // namespace marK::Sys

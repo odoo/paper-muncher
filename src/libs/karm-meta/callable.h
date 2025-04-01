@@ -5,7 +5,7 @@
 #include "cvrp.h"
 #include "decl.h"
 
-namespace Karm::Meta {
+namespace marK::Meta {
 
 template <typename>
 constexpr bool _Func = false;

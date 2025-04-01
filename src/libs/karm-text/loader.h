@@ -4,7 +4,7 @@
 
 #include "font.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 Res<Rc<Fontface>> loadFontface(Sys::Mmap&& map);
 

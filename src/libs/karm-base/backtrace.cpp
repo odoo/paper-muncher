@@ -2,7 +2,7 @@
 
 #include "_embed.h"
 
-namespace Karm {
+namespace marK {
 
 Backtrace Backtrace::capture() {
     return _Embed::captureBacktrace();
@@ -12,4 +12,4 @@ Backtrace Backtrace::forceCapture() {
     return _Embed::forceCaptureBacktrace();
 }
 
-} // namespace Karm
+} // namespace marK

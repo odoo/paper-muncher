@@ -2,7 +2,7 @@
 
 import Karm.Icu;
 
-namespace Karm::Icu {
+namespace marK::Icu {
 
 test$("bidi") {
     return Ok();
@@ -12,4 +12,4 @@ test$("bidi-character") {
     return Ok();
 }
 
-} // namespace Karm::Icu
+} // namespace marK::Icu

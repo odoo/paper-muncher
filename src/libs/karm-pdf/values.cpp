@@ -1,6 +1,6 @@
 #include "values.h"
 
-namespace Karm::Pdf {
+namespace marK::Pdf {
 
 void Name::write(Io::Emit& e) const {
     e("/{}", str());
@@ -71,7 +71,7 @@ Res<> File::write(Io::Writer& w) const {
     Io::TextEncoder<> enc{w};
     Io::Emit e{enc};
     e("%{}\n", header);
-    e("%Powered By Karm PDF 🐢🏳️‍⚧️🦔\n", header);
+    e("%Powered By marK PDF 🐢🏳️‍⚧️🦔\n", header);
 
     XRef xref;
 
@@ -108,4 +108,4 @@ void XRef::write(Io::Emit& e) const {
     }
 }
 
-} // namespace Karm::Pdf
+} // namespace marK::Pdf

@@ -1,7 +1,7 @@
 
 #include "base.h"
 
-namespace Karm::Scene {
+namespace marK::Scene {
 
 struct Viewbox : public Node {
     Rc<Node> _content;

@@ -5,7 +5,7 @@
 
 #include "paper.h"
 
-namespace Karm::Print {
+namespace marK::Print {
 
 struct Printer {
     virtual ~Printer() = default;

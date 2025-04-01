@@ -1,7 +1,7 @@
 #include <karm-base/checked.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Base::Tests {
+namespace marK::Base::Tests {
 
 test$("will-add-overflow") {
     expect$(willAddOverflow<u32>(0xFFFFFFFF, 1));
@@ -30,4 +30,4 @@ test$("will-sub-underflow") {
     return Ok();
 }
 
-} // namespace Karm::Base::Tests
+} // namespace marK::Base::Tests

@@ -1073,7 +1073,7 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
                 }
 
                 // 3. Pop elements from the stack of open elements until a dd element has been popped from the stack.
-                while (Karm::any(_openElements) and _openElements.popBack()->tagName != Html::DD) {
+                while (marK::any(_openElements) and _openElements.popBack()->tagName != Html::DD) {
                     // do nothing
                 }
 
@@ -1092,7 +1092,7 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
                 }
 
                 // 3. Pop elements from the stack of open elements until a dt element has been popped from the stack.
-                while (Karm::any(_openElements) and _openElements.popBack()->tagName != Html::DT) {
+                while (marK::any(_openElements) and _openElements.popBack()->tagName != Html::DT) {
                     // do nothing
                 }
 
@@ -1482,7 +1482,7 @@ void HtmlParser::_handleInTable(HtmlToken const& t) {
         // Otherwise:
 
         // Pop elements from this stack until a table element has been popped from the stack.
-        while (Karm::any(_openElements) and _openElements.popBack()->tagName != Html::TABLE) {
+        while (marK::any(_openElements) and _openElements.popBack()->tagName != Html::TABLE) {
             // do nothing
         }
 
@@ -1503,7 +1503,7 @@ void HtmlParser::_handleInTable(HtmlToken const& t) {
         }
 
         // Pop elements from this stack until a table element has been popped from the stack.
-        while (Karm::any(_openElements) and _openElements.popBack()->tagName != Html::TABLE) {
+        while (marK::any(_openElements) and _openElements.popBack()->tagName != Html::TABLE) {
             // do nothing
         }
 
@@ -1893,7 +1893,7 @@ void HtmlParser::_handleInCell(HtmlToken const& t) {
         }
 
         // Pop elements from the stack of open elements until a td element or a th element has been popped from the stack.
-        while (Karm::any(_openElements)) {
+        while (marK::any(_openElements)) {
             auto poppedEl = _openElements.popBack();
             if (poppedEl->tagName == Html::TD or poppedEl->tagName == Html::TH)
                 break;
@@ -1930,7 +1930,7 @@ void HtmlParser::_handleInCell(HtmlToken const& t) {
 
         // Pop elements from the stack of open elements until an HTML element with the same tag name as
         // the token has been popped from the stack.
-        while (Karm::any(_openElements) and _openElements.popBack()->tagName != tokenTagName) {
+        while (marK::any(_openElements) and _openElements.popBack()->tagName != tokenTagName) {
             // do nothing
         }
 

@@ -4,7 +4,7 @@
 #include "res.h"
 #include "vec.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename R = urange>
 struct Ranges {

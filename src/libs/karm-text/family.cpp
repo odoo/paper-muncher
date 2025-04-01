@@ -1,6 +1,6 @@
 #include "family.h"
 
-namespace Karm::Text {
+namespace marK::Text {
 
 FontAdjust FontAdjust::combine(FontAdjust other) const {
     return {
@@ -128,4 +128,4 @@ void FontFamily::contour(Gfx::Canvas& g, Glyph glyph) const {
     g.scale(_adjust.sizeAdjust * member.adjust.sizeAdjust);
     member.face->contour(g, glyph);
 }
-} // namespace Karm::Text
+} // namespace marK::Text

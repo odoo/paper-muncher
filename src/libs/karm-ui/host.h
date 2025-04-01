@@ -8,7 +8,7 @@
 
 #include "node.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 static constexpr auto FRAME_RATE = 60;
 static constexpr auto FRAME_TIME = 1.0 / FRAME_RATE;

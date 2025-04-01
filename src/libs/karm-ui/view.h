@@ -7,7 +7,7 @@
 
 #include "node.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 // MARK: Base ------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ Child text(Text::ProseStyle style, Str text);
 
 Child text(Str text);
 
-Child text(Rc<Karm::Text::Prose> prose);
+Child text(Rc<marK::Text::Prose> prose);
 
 template <typename... Args>
 inline Child text(Text::ProseStyle style, Str format, Args&&... args) {

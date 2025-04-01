@@ -5,7 +5,7 @@
 
 #include "funcs.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 struct FocusEvent {
     enum struct Type {

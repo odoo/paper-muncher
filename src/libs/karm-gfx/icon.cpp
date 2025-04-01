@@ -1,6 +1,6 @@
 #include "icon.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 void Icon::fill(Gfx::Canvas& g, Math::Vec2i pos) const {
     g.push();
@@ -25,4 +25,4 @@ void Icon::stroke(Gfx::Canvas& g, Math::Vec2i pos) const {
     g.pop();
 }
 
-} // namespace Karm::Gfx
+} // namespace marK::Gfx

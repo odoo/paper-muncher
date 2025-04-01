@@ -1,7 +1,7 @@
 #include <karm-io/glob.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Io::Tests {
+namespace marK::Io::Tests {
 
 test$("glob-match") {
     expect$(matchGlob("", ""));
@@ -48,4 +48,4 @@ test$("glob-match") {
     return Ok();
 }
 
-} // namespace Karm::Io::Tests
+} // namespace marK::Io::Tests

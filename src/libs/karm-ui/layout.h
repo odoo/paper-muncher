@@ -5,7 +5,7 @@
 
 #include "node.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 inline constexpr auto UNCONSTRAINED = -1;
 

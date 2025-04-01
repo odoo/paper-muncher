@@ -2,7 +2,7 @@
 
 #include "base.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename T, typename Tag>
 struct Distinct {

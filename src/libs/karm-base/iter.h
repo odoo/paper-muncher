@@ -3,7 +3,7 @@
 #include "clamp.h"
 #include "opt.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename Next>
 struct Iter {

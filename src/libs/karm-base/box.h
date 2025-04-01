@@ -4,7 +4,7 @@
 
 #include "opt.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename T>
 struct Box {

@@ -6,7 +6,7 @@
 #include "panic.h"
 #include "try.h"
 
-namespace Karm {
+namespace marK {
 
 template <typename T>
 struct Opt;

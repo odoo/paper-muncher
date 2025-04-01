@@ -3,7 +3,7 @@
 
 #include "badge.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child badge(Gfx::Color color, String t) {
     Ui::BoxStyle boxStyle = {
@@ -45,4 +45,4 @@ Ui::Child versionBadge() {
     return Ui::hflow(4, badges);
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

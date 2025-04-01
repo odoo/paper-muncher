@@ -4,7 +4,7 @@ module;
 
 export module Karm.Icu:bidi;
 
-namespace Karm::Icu {
+namespace marK::Icu {
 
 // Implementation of unicode bidi algorithm
 // https://unicode.org/reports/tr9/
@@ -62,4 +62,4 @@ export struct Bidi {
     }
 };
 
-} // namespace Karm::Icu
+} // namespace marK::Icu

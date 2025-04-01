@@ -4,7 +4,7 @@
 
 #include "_prelude.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 enum struct BadgeStyle {
     INFO,

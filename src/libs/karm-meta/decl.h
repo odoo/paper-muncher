@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Karm::Meta {
+namespace marK::Meta {
 
 template <typename T>
 T declval();

@@ -3,7 +3,7 @@
 #include "_embed.h"
 #include "proc.h"
 
-namespace Karm::Sys {
+namespace marK::Sys {
 
 Res<Pipe> Pipe::create() {
     try$(ensureUnrestricted());
@@ -14,4 +14,4 @@ Res<Pipe> Pipe::create() {
     });
 }
 
-} // namespace Karm::Sys
+} // namespace marK::Sys

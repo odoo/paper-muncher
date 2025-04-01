@@ -1,8 +1,8 @@
 export module Karm.Icu:ucd;
 
-namespace Karm::Icu {
+namespace marK::Icu {
 
 // Unicode Character Database
 // https://unicode.org/reports/tr44/
 
-} // namespace Karm::Icu
+} // namespace marK::Icu

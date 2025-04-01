@@ -7,7 +7,7 @@
 
 #include "side-nav.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child sidenav(Ui::Children children) {
     return Ui::vflow(8, children) |
@@ -78,4 +78,4 @@ Ui::Child sidenavTitle(String title) {
     return Ui::titleMedium(title) | Ui::insets({8, 12, 8, 8});
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

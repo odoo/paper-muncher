@@ -2,7 +2,7 @@
 #include <karm-math/funcs.h>
 #include <karm-test/macros.h>
 
-namespace Karm::Io::Tests {
+namespace marK::Io::Tests {
 
 test$("readline-ends-with-delim-len-1") {
 
@@ -95,4 +95,4 @@ test$("readline-ends-with-delim-len-5") {
     return Ok();
 }
 
-} // namespace Karm::Io::Tests
+} // namespace marK::Io::Tests

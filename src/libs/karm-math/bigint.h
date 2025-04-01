@@ -4,7 +4,7 @@
 #include <karm-base/res.h>
 #include <karm-base/vec.h>
 
-namespace Karm::Math {
+namespace marK::Math {
 
 // MARK: Unsigned Big Integer --------------------------------------------------
 // aka natural number

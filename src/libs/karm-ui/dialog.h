@@ -2,7 +2,7 @@
 
 #include "node.h"
 
-namespace Karm::Ui {
+namespace marK::Ui {
 
 struct ShowDialogEvent {
     Child child;

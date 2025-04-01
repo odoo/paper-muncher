@@ -2,7 +2,7 @@
 
 #include "traits.h"
 
-namespace Karm::Io {
+namespace marK::Io {
 
 struct TextWriter :
     public Writer,

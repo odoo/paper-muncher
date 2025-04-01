@@ -4,7 +4,7 @@
 
 #include "error-page.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child errorPageTitle(Mdi::Icon icon, String text) {
     return Ui::vflow(
@@ -49,4 +49,4 @@ Ui::Child errorPage(Mdi::Icon icon, String text, String body) {
     });
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

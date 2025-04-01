@@ -1,6 +1,6 @@
 #include "borders.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 Tuple<Math::Curvef, Math::Curvef, Math::Curvef, Math::Curvef> Borders::_computeCornerCurvers(Math::Radiif const& uncheckRadii, Math::Rectf const& rect) {
     auto radii = uncheckRadii.reduceOverlap(rect.size());
@@ -263,4 +263,4 @@ void Borders::paint(Gfx::Canvas& c, Math::Rectf rect) {
     _paintCurveEdges(c, rect);
 }
 
-} // namespace Karm::Gfx
+} // namespace marK::Gfx

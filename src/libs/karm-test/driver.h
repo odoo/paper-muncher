@@ -5,7 +5,7 @@
 #include <karm-logger/logger.h>
 #include <karm-sys/chan.h>
 
-namespace Karm::Test {
+namespace marK::Test {
 
 struct Test;
 

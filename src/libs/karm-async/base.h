@@ -6,7 +6,7 @@
 #include <karm-base/base.h>
 #include <karm-meta/traits.h>
 
-namespace Karm::Async {
+namespace marK::Async {
 
 struct Inline {};
 

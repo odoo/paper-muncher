@@ -2,7 +2,7 @@
 
 #include "color.h"
 
-namespace Karm::Gfx {
+namespace marK::Gfx {
 
 struct HueValueChroma {
     f64 hue;
@@ -115,4 +115,4 @@ Color hslToRgb(Hsl hsl) {
     return _chromaHueMinCompToRgb(c, h, minComp);
 }
 
-} // namespace Karm::Gfx
+} // namespace marK::Gfx

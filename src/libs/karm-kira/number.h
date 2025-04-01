@@ -4,7 +4,7 @@
 
 #include "_prelude.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child number(f64 value, Ui::OnChange<f64> onChange, f64 step = 1);
 

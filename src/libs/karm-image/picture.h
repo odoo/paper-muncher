@@ -3,7 +3,7 @@
 #include <karm-gfx/buffer.h>
 #include <karm-meta/nocopy.h>
 
-namespace Karm::Image {
+namespace marK::Image {
 
 struct Picture {
     Rc<Gfx::Surface const> _surface;

@@ -2,7 +2,7 @@
 
 #include <karm-io/sscan.h>
 
-namespace Karm::Io {
+namespace marK::Io {
 
 // Match a glob pattern against a string.
 // The glob pattern can contain the following special characters:

@@ -3,7 +3,7 @@
 
 #include "side-panel.h"
 
-namespace Karm::Kira {
+namespace marK::Kira {
 
 Ui::Child sidePanelContent(Ui::Children children) {
     return Ui::vflow(children) |
@@ -31,4 +31,4 @@ Ui::Child sidePanelTitle(Ui::OnPress onClose, Str title) {
            Ui::insets(6);
 }
 
-} // namespace Karm::Kira
+} // namespace marK::Kira

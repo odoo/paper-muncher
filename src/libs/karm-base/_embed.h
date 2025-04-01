@@ -1,10 +1,10 @@
 #pragma once
 
-namespace Karm {
+namespace marK {
 struct Backtrace;
 } // namespace Karm
 
-namespace Karm::_Embed {
+namespace marK::_Embed {
 
 // MARK: Backtrace -------------------------------------------------------------
 
