@@ -496,6 +496,18 @@ static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::
     }
 }
 
+// https://www.w3.org/TR/css-display-3/#outer-role
+static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, Display display) {
+    if (display == Display::Inside::TABLE) {
+        auto wrapper = _createTableWrapperAndBuildTable(bc, style, el);
+        bc.addToInlineRoot(std::move(wrapper));
+    } else {
+        // FLOW-ROOT and fallback
+        auto blockBox = createAndBuildBlockFlowfromElement(bc, style, el);
+        bc.addToInlineRoot(std::move(blockBox));
+    }
+}
+
 // MARK: Dispatching from Node to builder based on outside role ------------------------------------------------------
 
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent) {
@@ -530,7 +542,6 @@ static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> c
             createAndBuildInlineFlowfromElement(bc, childStyle, child);
             return;
         }
-        // FIXME: inline level box
         _innerDisplayDispatchCreationOfInlineLevelBox(bc, child, childStyle, display);
     }
 }
