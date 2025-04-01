@@ -242,6 +242,7 @@ export struct InlineBox {
         -   respect different styling for the same line (font, fontsize, color, etc)
     */
     Rc<Text::Prose> prose;
+    Vec<::Box<Box>> atomicBoxes;
 
     InlineBox(Text::ProseStyle style) : prose(makeRc<Text::Prose>(style)) {}
 
@@ -258,14 +259,27 @@ export struct InlineBox {
         prose->popSpan();
     }
 
-    void add(Box&&){}
+    struct BoxStrutCell : Text::Prose::StrutCell {
+        usize boxIndex;
+
+        BoxStrutCell(usize boxIndex) : boxIndex(boxIndex) {}
+    };
+
+    void add(Box&& b);
 
     bool active() {
         return prose->_runes.len();
     }
 
     void repr(Io::Emit& e) const {
-        e("(inline box {})", prose->_runes);
+        e("(inline box {}", prose->_runes);
+        e.indentNewline();
+        for (auto& c : atomicBoxes) {
+            e("{}", c);
+            e.newline();
+        }
+        e.deindent();
+        e(")");
     }
 
     static InlineBox fromInterruptedInlineBox(InlineBox const& inlineBox) {
@@ -351,6 +365,11 @@ struct Box : public Meta::NoCopy {
         }
     }
 };
+
+void InlineBox::add(Box&& b) {
+    prose->append(makeRc<BoxStrutCell>(atomicBoxes.len()));
+    atomicBoxes.pushBack(makeBox<Box>(std::move(b)));
+}
 
 export struct Viewport {
     Resolution dpi = Resolution::fromDpi(96);
