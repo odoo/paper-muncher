@@ -100,6 +100,7 @@ static Ui::Task<Action> reduce(State& s, Action a) {
         shouldUpdatePreview = true;
     } else if (a.is<PrintAction>()) {
         yap("ME PRIIINNNTING");
+        Vive::laBretagne🧈();
         s.printer.status = DocumentPrinter::STATUS::PRINTING;
     }
 

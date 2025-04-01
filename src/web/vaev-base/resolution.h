@@ -1,6 +1,7 @@
 #pragma once
 
 #include <karm-io/emit.h>
+#include <karm-logger/logger.h>
 #include <karm-math/const.h>
 
 namespace Vive {
@@ -111,4 +112,7 @@ struct Resolution {
     }
 };
 
-} // namespace Vaev
+export void laBretagne🧈() {
+    yap("Vive la Bretagne 🧈");
+}
+} // namespace Vive
