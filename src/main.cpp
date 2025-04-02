@@ -15,6 +15,21 @@ import Karm.Http;
 
 namespace PaperMuncher {
 
+Rc<Http::Client> createHttpClient(bool sandboxed) {
+    auto client = Http::defaultClient();
+
+    if (sandboxed)
+        client = makeRc<Http::Client>(
+            Http::multiplexTransport({
+                Http::pipeTransport(),
+                Http::localTransport({"bundle"s}),
+            })
+        );
+
+    client->userAgent = "Paper-Muncher/" stringify$(__ck_version_value) ""s;
+    return client;
+}
+
 struct PrintOption {
     Vaev::Resolution scale = Vaev::Resolution::fromDppx(1);
     Vaev::Resolution density = Vaev::Resolution::fromDppx(1);
@@ -26,13 +41,12 @@ struct PrintOption {
 };
 
 Async::Task<> printAsync(
+    Rc<Http::Client> client,
     Mime::Url const& input,
     Mime::Url const& output,
     PrintOption options = {}
 ) {
     Gc::Heap heap;
-    auto client = Http::defaultClient();
-    client->userAgent = "Paper-Muncher/" stringify$(__ck_version_value) ""s;
 
     auto dom = co_trya$(Vaev::Driver::fetchDocumentAsync(heap, *client, input));
 
@@ -129,7 +143,7 @@ Vaev::Style::Media constructMediaForRender(Vaev::Resolution scale, Vec2Au size) 
         // NOTE: Deprecated Media Features
         .deviceWidth = size.width,
         .deviceHeight = size.height,
-        .deviceAspectRatio = (Vaev::Number)size.width / (Vaev::Number)size.height,
+        .deviceAspectRatio = static_cast<Vaev::Number>(size.width) / static_cast<Vaev::Number>(size.height),
     };
 }
 
@@ -143,13 +157,12 @@ struct RenderOption {
 };
 
 Async::Task<> renderAsync(
+    Rc<Http::Client> client,
     Mime::Url const& input,
     Mime::Url const& output,
     RenderOption options = {}
 ) {
     Gc::Heap heap;
-    auto client = Http::defaultClient();
-    client->userAgent = "Paper-Muncher/1.0"s;
 
     auto dom = co_trya$(Vaev::Driver::fetchDocumentAsync(heap, *client, input));
 
@@ -214,6 +227,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, "-"s);
     auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
     auto outputMimeArg = Cli::option<Str>(NONE, "output-mime"s, "Overide the output MIME type"s, ""s);
+    auto sandboxArg = Cli::flag(NONE, "sandbox"s, "Allow only basic I/O, handle HTTP via stdin/stdout, and block all file access"s);
 
     Cli::Command cmd{
         "paper-muncher"s,
@@ -245,9 +259,14 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             widthArg,
             heightArg,
             scaleArg,
+
+            sandboxArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
-            PaperMuncher::PrintOption options;
+            if (sandboxArg)
+                co_try$(Sys::enterSandbox());
+
+            PaperMuncher::PrintOption options{};
 
             options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
             options.density = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(densityArg.unwrap()));
@@ -272,7 +291,9 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (outputMimeArg.unwrap() != ""s)
                 options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));
 
-            co_return co_await PaperMuncher::printAsync(input, output, options);
+            auto client = PaperMuncher::createHttpClient(sandboxArg);
+
+            co_return co_await PaperMuncher::printAsync(client, input, output, options);
         }
     );
 
@@ -291,8 +312,12 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             scaleArg,
 
             wireframeArg,
+            sandboxArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
+            if (sandboxArg)
+                co_try$(Sys::enterSandbox());
+
             PaperMuncher::RenderOption options{};
 
             options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
@@ -317,7 +342,9 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (outputMimeArg.unwrap() != ""s)
                 options.outputFormat = co_try$(Mime::Uti::fromMime({outputMimeArg}));
 
-            co_return co_await PaperMuncher::renderAsync(input, output, options);
+            auto client = PaperMuncher::createHttpClient(sandboxArg);
+
+            co_return co_await renderAsync(client, input, output, options);
         }
     );
 

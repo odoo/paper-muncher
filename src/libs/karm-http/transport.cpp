@@ -27,7 +27,7 @@ export struct Transport {
 
 static constexpr usize BUF_SIZE = 4096;
 
-struct ContentBody : public Body {
+struct ContentBody : Body {
     Buf<Byte> _resumes;
     usize _resumesPos = 0;
     Sys::TcpConnection _conn;
@@ -47,9 +47,8 @@ struct ContentBody : public Body {
             co_return n;
         }
 
-        if (_contentLength == 0) {
+        if (_contentLength == 0)
             co_return 0;
-        }
 
         usize n = min(buf.len(), _contentLength);
         n = co_trya$(_conn.readAsync(mutSub(buf, 0, n)));
@@ -58,7 +57,7 @@ struct ContentBody : public Body {
     }
 };
 
-struct ChunkedBody : public Body {
+struct ChunkedBody : Body {
     Buf<Byte> _buf;
     Sys::TcpConnection _conn;
 
@@ -66,7 +65,7 @@ struct ChunkedBody : public Body {
         : _buf(resumes), _conn(std::move(conn)) {}
 };
 
-struct HttpTransport : public Transport {
+struct HttpTransport : Transport {
     Async::Task<> _sendRequestAsync(Request& request, Sys::TcpConnection& conn) {
         Io::StringWriter req;
         request.version = Version{1, 1};
@@ -100,7 +99,7 @@ struct HttpTransport : public Transport {
     Async::Task<Rc<Response>> doAsync(Rc<Request> request) override {
         auto& url = request->url;
         if (url.scheme != "http")
-            co_return Error::invalidInput("unsupported scheme");
+            co_return Error::unsupported("unsupported scheme");
 
         auto ips = co_trya$(Sys::lookupAsync(url.host));
         auto port = url.port.unwrapOr(80);
@@ -115,9 +114,88 @@ export Rc<Transport> httpTransport() {
     return makeRc<HttpTransport>();
 }
 
+// MARK: Pipe Transport --------------------------------------------------------
+
+struct PipeBody : Body {
+    Buf<Byte> _resumes;
+    usize _resumesPos = 0;
+    usize _contentLength;
+
+    PipeBody(Bytes resumes, usize contentLength = Limits<usize>::MAX)
+        : _resumes(resumes), _resumesPos(0) {
+        if (contentLength != Limits<usize>::MAX)
+            _resumesPos = resumes.len() - contentLength;
+    }
+
+    Async::Task<usize> readAsync(MutBytes buf) override {
+        if (_resumesPos < _resumes.len()) {
+            usize n = min(buf.len(), _resumes.len() - _resumesPos);
+            copy(sub(_resumes, _resumesPos, _resumesPos + n), buf);
+            _resumesPos += n;
+            co_return n;
+        }
+
+        if (_contentLength == 0)
+            co_return 0;
+
+        usize n = min(buf.len(), _contentLength);
+        n = co_try$(Sys::in().read(mutSub(buf, 0, n)));
+        _contentLength -= n;
+
+        co_return 0;
+    }
+};
+
+struct PipeTransport : Transport {
+    Async::Task<> _sendRequest(Request& request) {
+        request.version = Version{1, 1};
+        co_try$(request.unparse(Sys::out()));
+
+        if (auto body = request.body) {
+            auto out = Aio::adapt(Sys::out());
+            co_trya$(Aio::copyAsync(**body, out));
+        }
+
+        co_return Ok();
+    }
+
+    Async::Task<Rc<Response>> _recvResponse() {
+        Array<u8, BUF_SIZE> buf = {};
+        Io::BufReader reader = sub(buf, 0, co_try$(Sys::in().read(buf)));
+        auto response = co_try$(Response::read(reader));
+        if (auto contentLength = response.header.contentLength()) {
+            response.body = makeRc<PipeBody>(reader.bytes(), contentLength.unwrap());
+        } else {
+            response.body = makeRc<PipeBody>(reader.bytes());
+        }
+
+        co_return Ok(makeRc<Response>(std::move(response)));
+    }
+
+    Async::Task<Rc<Response>> doAsync(Rc<Request> request) override {
+        auto& url = request->url;
+        if (url.scheme != "http")
+            co_return Error::unsupported("unsupported scheme");
+
+        co_trya$(_sendRequest(*request));
+        co_return co_trya$(_recvResponse());
+    }
+};
+
+export Rc<Transport> pipeTransport() {
+    return makeRc<PipeTransport>();
+}
+
 // MARK: Local -----------------------------------------------------------------
 
-struct LocalTransport : public Transport {
+struct LocalTransport : Transport {
+    Opt<Vec<String>> _allowed = NONE;
+
+    LocalTransport() {}
+
+    LocalTransport(Vec<String> allowed)
+        : _allowed(allowed) {}
+
     Res<Rc<Body>> _load(Mime::Url url) {
         if (try$(Sys::isFile(url)))
             return Ok(Body::from(try$(Sys::File::open(url))));
@@ -142,16 +220,18 @@ struct LocalTransport : public Transport {
     }
 
     Async::Task<Rc<Response>> doAsync(Rc<Request> request) override {
-        auto response = makeRc<Response>();
+        if (_allowed != NONE and not contains(*_allowed, request->url.scheme))
+            co_return Error::unsupported("unsupported scheme");
 
-        response->code = Code::OK;
+        auto response = makeRc<Response>();
+        response->code = OK;
 
         if (auto it = request->body;
-            it and (request->method == Method::PUT or
-                    request->method == Method::POST))
+            it and (request->method == PUT or
+                    request->method == POST))
             co_trya$(_saveAsync(request->url, *it));
 
-        if (request->method == Method::GET or request->method == Method::POST)
+        if (request->method == GET or request->method == POST)
             response->body = co_try$(_load(request->url));
 
         co_return Ok(response);
@@ -162,9 +242,13 @@ export Rc<Transport> localTransport() {
     return makeRc<LocalTransport>();
 }
 
+export Rc<Transport> localTransport(Vec<String> allowed) {
+    return makeRc<LocalTransport>(std::move(allowed));
+}
+
 // MARK: Fallback --------------------------------------------------------------
 
-struct MultiplexTransport : public Transport {
+struct MultiplexTransport : Transport {
     Vec<Rc<Transport>> _transports;
 
     MultiplexTransport(Vec<Rc<Transport>> transports)
@@ -175,6 +259,9 @@ struct MultiplexTransport : public Transport {
             auto res = co_await transport->doAsync(request);
             if (res)
                 co_return res.unwrap();
+
+            if (res.none() != Error::UNSUPPORTED)
+                co_return res.none();
         }
 
         co_return Error::notFound("no client could handle the request");

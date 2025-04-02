@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <seccomp.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
@@ -451,7 +452,7 @@ Res<> sleep(Duration span) {
 
 Res<> exit(i32 res) {
     ::exit(res);
-    return Ok();
+    return Error::other("reached the afterlife");
 }
 
 Res<Mime::Url> pwd() {
@@ -471,8 +472,40 @@ Res<Mime::Url> pwd() {
 
 // MARK: Sandboxing ------------------------------------------------------------
 
-void hardenSandbox() {
-    logError("could not harden sandbox");
+Res<> hardenSandbox() {
+    auto [repo, format] = try$(Posix::repoRoot());
+
+    if (chroot(repo.buf()) < 0)
+        return Posix::fromLastErrno();
+
+    if (chdir("/") < 0)
+        return Posix::fromLastErrno();
+
+    Posix::overrideRepo({"/"s, format});
+
+    scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL_PROCESS);
+    if (!ctx)
+        return Posix::fromLastErrno();
+    Defer cleanupSeccomp = [&] {
+        seccomp_release(ctx);
+    };
+
+    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 0); it < 0)
+        return Posix::fromErrno(-it);
+
+    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 0); it < 0)
+        return Posix::fromErrno(-it);
+
+    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 0); it < 0)
+        return Posix::fromErrno(-it);
+
+    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(open), 0); it < 0)
+        return Posix::fromErrno(-it);
+
+    if (seccomp_load(ctx) < 0)
+        return Posix::fromLastErrno();
+
+    return Ok();
 }
 
 // MARK: Addr ------------------------------------------------------------------

@@ -40,6 +40,12 @@
             "names": [
                 "liburing"
             ]
+        },
+        "secomp": {
+            "description": "Linux seccomp library",
+            "names": [
+                "libseccomp"
+            ]
         }
     }
 }

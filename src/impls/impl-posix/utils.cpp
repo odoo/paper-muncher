@@ -238,20 +238,25 @@ struct timespec toTimespec(SystemTime ts) {
     return pts;
 }
 
-struct timespec toTimespec(Duration ts) {
-    struct timespec pts;
+timespec toTimespec(Duration ts) {
+    timespec pts{};
     if (ts.isInfinite()) {
         pts.tv_sec = Limits<long>::MAX;
         pts.tv_nsec = 0;
         return pts;
-    } else {
-        pts.tv_sec = ts.val() / 1000000;
-        pts.tv_nsec = (ts.val() % 1000000) * 1000;
     }
+
+    pts.tv_sec = ts.val() / 1000000;
+    pts.tv_nsec = (ts.val() % 1000000) * 1000;
     return pts;
 }
 
+Opt<Tuple<Str, RepoType>> _repoOverride;
+
 Res<Tuple<Str, RepoType>> repoRoot() {
+    if (_repoOverride)
+        return Ok(*_repoOverride);
+
     auto* maybeRepo = getenv("CK_BUILDDIR");
     if (maybeRepo) {
         return Ok(Tuple<Str, RepoType>{
@@ -276,6 +281,10 @@ Res<Tuple<Str, RepoType>> repoRoot() {
 #endif
 
     return Error::notFound("SKIFT_BUNDLES not set");
+}
+
+void overrideRepo(Tuple<Str, RepoType> repo) {
+    _repoOverride = repo;
 }
 
 } // namespace Posix

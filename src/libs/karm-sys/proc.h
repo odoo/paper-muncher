@@ -19,7 +19,7 @@ static inline Res<Mime::Url> pwd() {
 
 // MARK: Sandboxing ------------------------------------------------------------
 
-void enterSandbox();
+Res<> enterSandbox();
 
 Res<> ensureUnrestricted();
 
