@@ -193,45 +193,43 @@ static Math::Vec2f _resolveBackgroundPosition(Resolver& resolver, BackgroundPosi
     return result;
 }
 
-static Math::Path _resolveClip(Frag const& frag) {
+static Rc<Scene::Clip> _resolveClip(Frag const& frag) {
     Math::Path result;
     auto& clip = frag.style().clip.unwrap();
 
     // TODO: handle SVG cases (https://drafts.fxtf.org/css-masking/#typedef-geometry-box)
-    RectAu referenceBox = clip.referenceBox.visit(Visitor{
-        [&](Keywords::BorderBox const&) {
-            return frag.metrics.borderBox();
+    auto [referenceBox, radii] = clip.referenceBox.visit(Visitor{
+        [&](Keywords::BorderBox const&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.borderBox(), frag.metrics.radii};
         },
-        [&](Keywords::PaddingBox const&) {
-            return frag.metrics.paddingBox();
+        [&](Keywords::PaddingBox const&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.paddingBox(), {0_au}};
         },
-        [&](Keywords::ContentBox const&) {
-            return frag.metrics.contentBox();
+        [&](Keywords::ContentBox const&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.contentBox(), {0_au}};
         },
-        [&](Keywords::MarginBox const&) {
-            return frag.metrics.marginBox();
+        [&](Keywords::MarginBox const&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.marginBox(), {0_au}};
         },
-        [&](Keywords::FillBox const&) {
-            return frag.metrics.contentBox();
+        [&](Keywords::FillBox const&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.contentBox(), {0_au}};
         },
-        [&](Keywords::StrokeBox const&) {
-            return frag.metrics.borderBox();
+        [&](Keywords::StrokeBox const&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.borderBox(), frag.metrics.radii};
         },
-        [&](Keywords::ViewBox const&) {
-            return frag.metrics.borderBox();
+        [&](Keywords::ViewBox const&) -> Pair<RectAu, RadiiAu> {
+            return {frag.metrics.borderBox(), {0_au}};
         },
     });
 
     if (not clip.shape) {
-        result.rect(referenceBox.round().cast<f64>());
-        return result;
+        result.rect(referenceBox.round().cast<f64>(), radii.cast<f64>());
+        return makeRc<Scene::Clip>(result);
     }
 
     auto resolver = Resolver();
     return clip.shape.unwrap().visit(Visitor{
         [&](Polygon const& polygon) {
-            // TODO: handle fill rule
-            auto resolver = Resolver();
             auto const it = begin(polygon.points);
             result.moveTo(Math::Vec2f(resolver.resolve(it->v0, referenceBox.width).cast<f64>(), resolver.resolve(it->v1, referenceBox.height).cast<f64>()));
             for (auto& point : Slice(it + 1, end(polygon.points))) {
@@ -368,7 +366,7 @@ static Math::Path _resolveClip(Frag const& frag) {
 }
 
 static void _establishStackingContext(Frag& frag, Scene::Stack& stack) {
-    Rc<Scene::Stack> innerStack = frag.style().clip.has() ? makeRc<Scene::Clip>(_resolveClip(frag)) : makeRc<Scene::Stack>();
+    Rc<Scene::Stack> innerStack = frag.style().clip.has() ? _resolveClip(frag) : makeRc<Scene::Stack>();
     innerStack->zIndex = frag.style().zIndex.unwrapOr<isize>(0);
     _paintStackingContext(frag, *innerStack);
     stack.add(std::move(innerStack));
