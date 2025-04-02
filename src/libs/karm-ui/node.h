@@ -5,7 +5,6 @@
 #include <karm-base/func.h>
 #include <karm-base/hash.h>
 #include <karm-gfx/canvas.h>
-#include <karm-logger/logger.h>
 #include <karm-sys/async.h>
 
 #include "atoms.h"

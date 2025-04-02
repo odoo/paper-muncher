@@ -227,7 +227,6 @@ static Rc<Scene::Clip> _resolveClip(Frag const& frag) {
 
     if (not clip.shape) {
         result.rect(referenceBox.round().cast<f64>(), radii.cast<f64>());
-        yap("{} {} {}", referenceBox, frag.metrics.borderSize, frag.metrics.margin);
         return makeRc<Scene::Clip>(result);
     }
 
