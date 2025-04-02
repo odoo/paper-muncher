@@ -195,7 +195,7 @@ void CpuCanvas::stroke() {
 }
 
 void CpuCanvas::clip(FillRule rule) {
-    Rc<Surface> newClipMask = current().clipMask.has() ? makeRc<Surface>(*current().clipMask.unwrap()) : Surface::alloc(pixels().size(), Gfx::GREYSCALE8);
+    Rc<Surface> newClipMask = Surface::alloc(pixels().size(), Gfx::GREYSCALE8);
 
     Math::Polyf poly;
     createSolid(poly, _path);
