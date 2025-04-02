@@ -9,6 +9,7 @@
 #include <karm-pkg/_embed.h>
 #include <karm-sys/dir.h>
 #include <karm-sys/file.h>
+#include <stdlib.h>
 
 namespace Karm::App::_Ember {
 
