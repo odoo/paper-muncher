@@ -3,6 +3,7 @@
 #include <karm-base/union.h>
 #include <karm-base/vec.h>
 #include <karm-gfx/types.h>
+#include <karm-math/path.h>
 #include <vaev-base/calc.h>
 #include <vaev-base/length.h>
 #include <vaev-base/percent.h>
