@@ -153,6 +153,10 @@ struct Path {
 
     void path(Math::Path const& path);
 
+    // MARK: Transform
+
+    void offset(Math::Vec2f offset);
+
     // MARK: Svg ---------------------------------------------------------------
 
     Opt<Math::Vec2f> _nextVec2f(Io::SScan& scan);
@@ -162,6 +166,8 @@ struct Path {
     bool evalSvg(Str svg);
 
     static Path fromSvg(Str svg);
+
+    // MARK: Format
 
     void repr(Io::Emit& e) const {
         e("(path {})", _verts);
