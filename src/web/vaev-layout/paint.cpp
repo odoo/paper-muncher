@@ -363,8 +363,7 @@ static Rc<Scene::Clip> _resolveClip(Frag const& frag) {
         },
         [&](Path const& path) {
             result.path(path.path);
-            for (auto& v : result._verts)
-                v = v + referenceBox.xy.cast<f64>();
+            result.offset(referenceBox.xy.cast<f64>());
             return makeRc<Scene::Clip>(result, path.fillRule);
         },
     });
