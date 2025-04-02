@@ -401,6 +401,13 @@ void Path::path(Math::Path const& path) {
     }
 }
 
+// MARK: Transform
+
+void Path::offset(Math::Vec2f offset) {
+    for (auto& v : _verts)
+        v = v + offset;
+}
+
 // MARK: Svg -------------------------------------------------------------------
 
 Opt<Math::Vec2f> _nextVec2f(Io::SScan& s) {
