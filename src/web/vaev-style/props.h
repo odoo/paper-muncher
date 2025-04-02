@@ -7,7 +7,7 @@
 
 #include "base.h"
 #include "computed.h"
-#include "vaev-base/geometry.h"
+#include "vaev-base/basic-shape.h"
 #include "values.h"
 
 // https://www.w3.org/TR/CSS22/propidx.html
