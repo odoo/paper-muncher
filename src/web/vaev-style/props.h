@@ -1244,14 +1244,14 @@ struct ClipPathProp {
 
     static Keywords::None initial() { return Keywords::NONE; }
 
-    void apply(Computed& c) const {
+    void apply(ComputedStyle& c) const {
         if (auto clipShape = value.is<BasicShape>())
             c.clip = *clipShape;
         else
             c.clip = NONE;
     }
 
-    static Value load(Computed const& c) {
+    static Value load(ComputedStyle const& c) {
         if (c.clip.has())
             return c.clip.unwrap();
         return Keywords::NONE;
