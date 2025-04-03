@@ -80,7 +80,7 @@ void CpuCanvas::_fillImpl(auto fill, auto format, FillRule fillRule) {
         auto* pixel = pixels.pixelUnsafe(frag.xy);
         auto color = fill.sample(frag.uv);
         auto c = format.load(pixel);
-        c = color.withOpacity(min(frag.a, (mask / 255.0))).blendOver(c);
+        c = color.withOpacity(frag.a * (mask / 255.0)).blendOver(c);
         format.store(pixel, c);
     });
 }
@@ -99,7 +99,7 @@ void CpuCanvas::_FillSmoothImpl(auto fill, auto format, FillRule fillRule) {
             u8* pixel = static_cast<u8*>(mutPixels().pixelUnsafe(frag.xy));
             auto color = fill.sample(frag.uv);
             auto c = format.load(pixel);
-            c = color.withOpacity(min(frag.a, (mask / 255.0))).blendOverComponent(c, comp);
+            c = color.withOpacity(frag.a * (mask / 255.0)).blendOverComponent(c, comp);
             format.store(pixel, c);
         });
     };
@@ -203,7 +203,7 @@ void CpuCanvas::clip(FillRule rule) {
 
     _rast.fill(poly, current().clip, rule, [&](CpuRast::Frag frag) {
         u8 const parentPixel = current().clipMask.has() ? current().clipMask.unwrap()->pixels().load(frag.xy).red : 255;
-        newClipMask->mutPixels().store(frag.xy, Color::fromRgb(min(parentPixel, frag.a * 255), 0, 0));
+        newClipMask->mutPixels().store(frag.xy, Color::fromRgb(parentPixel * frag.a, 0, 0));
     });
 
     current().clipMask = newClipMask;
