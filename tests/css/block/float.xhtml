@@ -36,9 +36,9 @@
         </head>
 
         <body>
-            <section>
-                <slot />
-            </section>
+        <section>
+            <slot/>
+        </section>
         </body>
 
         </html>
@@ -54,13 +54,18 @@
         </div>
     </rendering>
 
-    <rendering skip="true">
+    <rendering help="float with text" skip="true">
         <div>
-            <div class="blue item" style="float: left;"></div>what
-            <div class="pink item" style="float: left;"></div>what
-            <div class="white item" style="float: left;"></div>what
-            <div class="pink item" style="float: left;"></div>what
-            <div class="blue item" style="float: left;"></div>what
+            <div class="blue item" style="float: left;"></div>
+            what
+            <div class="pink item" style="float: left;"></div>
+            what
+            <div class="white item" style="float: left;"></div>
+            what
+            <div class="pink item" style="float: left;"></div>
+            what
+            <div class="blue item" style="float: left;"></div>
+            what
         </div>
     </rendering>
 
@@ -69,71 +74,71 @@
 </test>
 
 <test name="float-simple-right">
-    <container>
-        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 
-        <head>
+    <head>
 
-            <style>
-                body {
-                    margin: 0;
-                    padding: 0;
-                }
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
 
-                .white {
-                    background-color: #FFFFFF;
-                }
+            .white {
+                background-color: #FFFFFF;
+            }
 
-                .pink {
-                    background-color: #F5A9B8;
-                }
+            .pink {
+                background-color: #F5A9B8;
+            }
 
-                .blue {
-                    background-color: #5BCEFA;
-                }
+            .blue {
+                background-color: #5BCEFA;
+            }
 
-                .item {
-                    width: 25px;
-                    height: 100px;
-                }
+            .item {
+                width: 25px;
+                height: 100px;
+            }
 
-                section {
-                    width: 200px;
-                    height: 200px;
-                    background: #ddd;
-                }
-            </style>
-        </head>
+            section {
+                width: 200px;
+                height: 200px;
+                background: #ddd;
+            }
+        </style>
+    </head>
 
-        <body>
-            <section>
-                <slot />
-            </section>
-        </body>
+    <body>
+    <section>
+        <slot/>
+    </section>
+    </body>
 
-        </html>
-    </container>
+    </html>
+</container>
 
-    <rendering>
-        <div>
-            <div class="blue item" style="position: absolute; left: 75px; top: 0px;"></div>
-            <div class="pink item" style="position: absolute; left: 100px; top: 0px;"></div>
-            <div class="white item" style="position: absolute; left: 125px; top: 0px;"></div>
-            <div class="pink item" style="position: absolute; left: 150px; top: 0px;"></div>
-            <div class="blue item" style="position: absolute; left: 175px; top: 0px;"></div>
-        </div>
-    </rendering>
+<rendering>
+    <div>
+        <div class="blue item" style="position: absolute; left: 75px; top: 0px;"></div>
+        <div class="pink item" style="position: absolute; left: 100px; top: 0px;"></div>
+        <div class="white item" style="position: absolute; left: 125px; top: 0px;"></div>
+        <div class="pink item" style="position: absolute; left: 150px; top: 0px;"></div>
+        <div class="blue item" style="position: absolute; left: 175px; top: 0px;"></div>
+    </div>
+</rendering>
 
-    <rendering skip="true">
-        <div>
-            <div class="blue item" style="float: right;"></div>
-            <div class="pink item" style="float: right;"></div>
-            <div class="white item" style="float: right;"></div>
-            <div class="pink item" style="float: right;"></div>
-            <div class="blue item" style="float: right;"></div>
-        </div>
-    </rendering>
+<rendering help="float-right" skip="true">
+    <div>
+        <div class="blue item" style="float: right;"></div>
+        <div class="pink item" style="float: right;"></div>
+        <div class="white item" style="float: right;"></div>
+        <div class="pink item" style="float: right;"></div>
+        <div class="blue item" style="float: right;"></div>
+    </div>
+</rendering>
 
-    <error>
-    </error>
+<error>
+</error>
 </test>

@@ -21,7 +21,7 @@
         </head>
 
         <body>
-            <slot />
+        <slot/>
         </body>
 
         </html>
@@ -39,13 +39,13 @@
         <div style="--color:cornflowerblue;background: var(--color);"></div>
     </rendering>
 
-    <rendering help="using a default value" skip="true">
+    <rendering help="using a default value">
         <div style="background: var(--color, cornflowerblue);"></div>
     </rendering>
 
-    <rendering help="using a weird default value" skip="true">
+    <rendering help="using a weird default value">
         <div
-            style="background: var(                --color                       ,                     cornflowerblue               );">
+                style="background: var(                --color                       ,                     cornflowerblue               );">
         </div>
     </rendering>
 
@@ -59,39 +59,39 @@
 </test>
 
 <test name="custom-properties-basic-2" name="variables override">
-    <container>
-        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 
-        <head>
-            <style>
-                body {
-                    --bodyVar: cornflowerblue;
-                }
+    <head>
+        <style>
+            body {
+                --bodyVar: cornflowerblue;
+            }
 
-                div {
-                    width: 100px;
-                    height: 100px;
-                    border-radius: 7px;
-                }
-            </style>
-        </head>
+            div {
+                width: 100px;
+                height: 100px;
+                border-radius: 7px;
+            }
+        </style>
+    </head>
 
-        <body>
-            <slot />
-        </body>
+    <body>
+    <slot/>
+    </body>
 
-        </html>
-    </container>
+    </html>
+</container>
 
-    <rendering>
-        <div style="background:lightsalmon;"></div>
-    </rendering>
+<rendering>
+    <div style="background:lightsalmon;"></div>
+</rendering>
 
-    <rendering help="redefining a variable">
-        <div style="--bodyVar:lightsalmon;background: var(--bodyVar);"></div>
-    </rendering>
+<rendering help="redefining a variable">
+    <div style="--bodyVar:lightsalmon;background: var(--bodyVar);"></div>
+</rendering>
 
-    <rendering help="variable on !important">
-        <div id="foo" style="background: var(--bruh,lightsalmon) !important; background: red;"></div>
-    </rendering>
+<rendering help="variable on !important">
+    <div id="foo" style="background: var(--bruh,lightsalmon) !important; background: red;"></div>
+</rendering>
 </test>

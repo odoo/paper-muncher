@@ -29,7 +29,7 @@
         </head>
 
         <body>
-            <slot />
+        <slot/>
         </body>
 
         </html>
@@ -42,7 +42,7 @@
         </div>
     </rendering>
 
-    <rendering skip="true">
+    <rendering help="display block width %" skip="true">
         <div class="w-200">
             <div class="w-100 red" style="width: 50%;"></div>
             <div class="w-100 green"></div>
@@ -77,14 +77,14 @@
         </div>
     </error>
 
-    <rendering skip="true">
+    <rendering help="display block width % 2" skip="true">
         <div class="w-200">
             <div class="w-100 red"></div>
             <div class="w-100 green" style="width: 50%;"></div>
         </div>
     </rendering>
 
-    <rendering skip="true">
+    <rendering help="display block width % 3" skip="true">
         <div class="w-200">
             <div class="w-100 red" style="width: 50%;"></div>
             <div class="w-100 green" style="width: 50%;"></div>
@@ -98,7 +98,7 @@
         </div>
     </rendering>
 
-    <rendering skip="true">
+    <rendering help="display block position absolute" skip="true">
         <div class="w-200" style="position: relative;">
             <div class="w-100 green" style="position: absolute; top: 0; left: 100px;"></div>
             <div class="w-100 red"></div>
@@ -114,183 +114,183 @@
 </test>
 
 <test name="display: inline-block">
-    <container>
-        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 
-        <head>
-            <style>
-                div {
-                    width: 25px;
-                    height: 100px;
-                }
+    <head>
+        <style>
+            div {
+                width: 25px;
+                height: 100px;
+            }
 
-                div.w-200 {
-                    width: 200px;
-                    border: 1px solid black;
-                }
+            div.w-200 {
+                width: 200px;
+                border: 1px solid black;
+            }
 
-                div.w-100 {
-                    width: 100px;
-                }
+            div.w-100 {
+                width: 100px;
+            }
 
-                .red {
-                    background-color: red;
-                }
+            .red {
+                background-color: red;
+            }
 
-                .green {
-                    background-color: green;
-                }
+            .green {
+                background-color: green;
+            }
 
-                div.inline-block {
-                    display: inline-block;
-                }
-            </style>
-        </head>
+            div.inline-block {
+                display: inline-block;
+            }
+        </style>
+    </head>
 
-        <body>
-            <slot />
-        </body>
+    <body>
+    <slot/>
+    </body>
 
-        </html>
-    </container>
+    </html>
+</container>
 
-    <rendering>
-        <div class="w-200">
-            <div class="w-100 red"></div>
-            <div class="w-100 green"></div>
-        </div>
-    </rendering>
+<rendering>
+    <div class="w-200">
+        <div class="w-100 red"></div>
+        <div class="w-100 green"></div>
+    </div>
+</rendering>
 
-    <rendering>
-        <div class="w-200">
-            <div class="w-100 red"></div>
-            <div class="inline-block w-100 green"></div>
-        </div>
-    </rendering>
+<rendering>
+    <div class="w-200">
+        <div class="w-100 red"></div>
+        <div class="inline-block w-100 green"></div>
+    </div>
+</rendering>
 
-    <error skip="true">
-        <div class="w-200">
-            <div class="inline-block w-100 red"></div>
-            <div class="w-100 green"></div>
-        </div>
-    </error>
+<error skip="true">
+    <div class="w-200">
+        <div class="inline-block w-100 red"></div>
+        <div class="w-100 green"></div>
+    </div>
+</error>
 
-    <rendering>
-        <div class="w-200" style="line-height: 0;">
-            <div class="inline-block w-100 red"></div>
-            <div class="w-100 green"></div>
-        </div>
-    </rendering>
+<rendering>
+    <div class="w-200" style="line-height: 0;">
+        <div class="inline-block w-100 red"></div>
+        <div class="w-100 green"></div>
+    </div>
+</rendering>
 
-    <rendering>
-        <div class="w-200" style="font-size: 0;">
-            <div class="inline-block w-100 red"></div>
-            <div class="w-100 green"></div>
-        </div>
-    </rendering>
+<rendering>
+    <div class="w-200" style="font-size: 0;">
+        <div class="inline-block w-100 red"></div>
+        <div class="w-100 green"></div>
+    </div>
+</rendering>
 
-    <rendering>
-        <div class="w-200" style="position: relative;">
-            <div class="inline-block w-100 red"></div>
-            <div class="w-100 green" style="position: absolute; top: 100px;"></div>
-        </div>
-    </rendering>
+<rendering>
+    <div class="w-200" style="position: relative;">
+        <div class="inline-block w-100 red"></div>
+        <div class="w-100 green" style="position: absolute; top: 100px;"></div>
+    </div>
+</rendering>
 
-    <error skip="true">
-        <div class="w-200">
-            <div class="inline-block w-100 red"></div>
-            <div class="inline-block w-100 green"></div>
-        </div>
-    </error>
+<error skip="true">
+    <div class="w-200">
+        <div class="inline-block w-100 red"></div>
+        <div class="inline-block w-100 green"></div>
+    </div>
+</error>
 
-    <rendering>
-        <div class="w-200" style="line-height: 0;">
-            <div class="inline-block w-100 red"></div>
-            <div class="inline-block w-100 green"></div>
-        </div>
-    </rendering>
+<rendering>
+    <div class="w-200" style="line-height: 0;">
+        <div class="inline-block w-100 red"></div>
+        <div class="inline-block w-100 green"></div>
+    </div>
+</rendering>
 
-    <error skip="true">
-        <div class="w-200" style="font-size: 0;">
-            <div class="inline-block w-100 red"></div>
-            <div class="inline-block w-100 green"></div>
-        </div>
-    </error>
+<error skip="true">
+    <div class="w-200" style="font-size: 0;">
+        <div class="inline-block w-100 red"></div>
+        <div class="inline-block w-100 green"></div>
+    </div>
+</error>
 
-    <rendering>
-        <div class="w-200" style="line-height: 0; font-size: 1px;">
-            <div class="inline-block w-100 red"></div>
-            <div class="inline-block w-100 green"></div>
-        </div>
-    </rendering>
+<rendering>
+    <div class="w-200" style="line-height: 0; font-size: 1px;">
+        <div class="inline-block w-100 red"></div>
+        <div class="inline-block w-100 green"></div>
+    </div>
+</rendering>
 
-    <error help="The green blox should be on the same line when the font-size is null" skip="true">
-        <div class="w-200" style="line-height: 0; font-size: 0px;">
-            <div class="inline-block w-100 red"></div>
-            <div class="inline-block w-100 green"></div>
-        </div>
-    </error>
+<error help="The green blox should be on the same line when the font-size is null" skip="true">
+    <div class="w-200" style="line-height: 0; font-size: 0px;">
+        <div class="inline-block w-100 red"></div>
+        <div class="inline-block w-100 green"></div>
+    </div>
+</error>
 
-    <error skip="true">
-        <div class="w-200" style="line-height: 0; font-size: 1px; width: 201px;">
-            <div class="inline-block w-100 red"></div>
-            <div class="inline-block w-100 green"></div>
-        </div>
-    </error>
+<error skip="true">
+    <div class="w-200" style="line-height: 0; font-size: 1px; width: 201px;">
+        <div class="inline-block w-100 red"></div>
+        <div class="inline-block w-100 green"></div>
+    </div>
+</error>
 </test>
 
 <test name="display: inline" skip="true">
-    <container>
-        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 
-        <head>
-            <style>
-                div {
-                    width: 25px;
-                    height: 100px;
-                }
+    <head>
+        <style>
+            div {
+                width: 25px;
+                height: 100px;
+            }
 
-                div.w-200 {
-                    width: 200px;
-                    border: 1px solid black;
-                }
+            div.w-200 {
+                width: 200px;
+                border: 1px solid black;
+            }
 
-                div.w-100 {
-                    width: 100px;
-                }
+            div.w-100 {
+                width: 100px;
+            }
 
-                .red {
-                    background-color: red;
-                }
+            .red {
+                background-color: red;
+            }
 
-                .green {
-                    background-color: green;
-                }
+            .green {
+                background-color: green;
+            }
 
-                div.inline {
-                    display: inline;
-                }
-            </style>
-        </head>
+            div.inline {
+                display: inline;
+            }
+        </style>
+    </head>
 
-        <body>
-            <slot />
-        </body>
+    <body>
+    <slot/>
+    </body>
 
-        </html>
-    </container>
+    </html>
+</container>
 
-    <rendering>
-        <div class="w-200">
-            <div class="w-100 red"></div>
-            <div class="w-100 green"></div>
-        </div>
-    </rendering>
+<rendering>
+    <div class="w-200">
+        <div class="w-100 red"></div>
+        <div class="w-100 green"></div>
+    </div>
+</rendering>
 
-    <error>
-        <div class="w-200">
-            <div class="inline w-100 red"></div>
-            <div class="w-100 green"></div>
-        </div>
-    </error>
+<error>
+    <div class="w-200">
+        <div class="inline w-100 red"></div>
+        <div class="w-100 green"></div>
+    </div>
+</error>
 </test>
