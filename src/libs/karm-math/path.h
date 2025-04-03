@@ -170,7 +170,12 @@ struct Path {
     // MARK: Format
 
     void repr(Io::Emit& e) const {
-        e("(path {})", _verts);
+        e("(path");
+        e.indentNewline();
+        for (auto& contour : iterContours()) {
+            e("(contour {})\n", contour);
+        }
+        e(")");
     }
 };
 
