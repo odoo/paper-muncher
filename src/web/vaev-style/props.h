@@ -2,12 +2,12 @@
 
 #include <karm-io/emit.h>
 #include <karm-mime/url.h>
+#include <vaev-base/basic-shape.h>
 #include <vaev-base/color.h>
 #include <vaev-base/font.h>
 
 #include "base.h"
 #include "computed.h"
-#include "vaev-base/basic-shape.h"
 #include "values.h"
 
 // https://www.w3.org/TR/CSS22/propidx.html
@@ -1236,6 +1236,7 @@ struct ContentProp {
 
 // MARK: Clip Path -------------------------------------------------------------
 
+// https://drafts.fxtf.org/css-masking/#the-clip-path
 struct ClipPathProp {
     using Value = Union</* Url, */ BasicShape, Keywords::None>;
     Value value = initial();

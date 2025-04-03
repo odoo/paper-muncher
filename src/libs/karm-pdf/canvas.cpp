@@ -106,7 +106,7 @@ void Canvas::path(Math::Path const& path) {
     // FIXME: use list of ops
     for (auto& contour : path.iterContours()) {
         moveTo(contour[0], Math::Path::DEFAULT);
-        for (auto& vert : Slice(contour.begin() + 1, contour.end())) {
+        for (auto& vert : next(contour)) {
             lineTo(vert, Math::Path::DEFAULT);
         }
         closePath();

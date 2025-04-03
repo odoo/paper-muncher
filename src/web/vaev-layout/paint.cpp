@@ -69,7 +69,7 @@ static bool _paintOutline(Frag& frag, Gfx::Color currentColor, Gfx::Outline& out
 }
 
 static bool _needsNewStackingContext(Frag const& frag) {
-    return frag.style().zIndex != Keywords::AUTO || frag.style().clip.has();
+    return frag.style().zIndex != Keywords::AUTO or frag.style().clip.has();
 }
 
 static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
@@ -231,9 +231,21 @@ static Rc<Scene::Clip> _resolveClip(Frag const& frag) {
     return clip.shape.unwrap().visit(Visitor{
         [&](Polygon const& polygon) {
             auto const it = begin(polygon.points);
-            result.moveTo(Math::Vec2f(resolver.resolve(it->v0, referenceBox.width).cast<f64>(), resolver.resolve(it->v1, referenceBox.height).cast<f64>()));
+            result.moveTo(
+                referenceBox.xy.cast<f64>() +
+                Math::Vec2f(
+                    resolver.resolve(it->v0, referenceBox.width).cast<f64>(),
+                    resolver.resolve(it->v1, referenceBox.height).cast<f64>()
+                )
+            );
             for (auto& point : Slice(it + 1, end(polygon.points))) {
-                result.lineTo(Math::Vec2f(resolver.resolve(point.v0, referenceBox.width).cast<f64>(), resolver.resolve(point.v1, referenceBox.height).cast<f64>()));
+                result.lineTo(
+                    referenceBox.xy.cast<f64>() +
+                    Math::Vec2f(
+                        resolver.resolve(point.v0, referenceBox.width).cast<f64>(),
+                        resolver.resolve(point.v1, referenceBox.height).cast<f64>()
+                    )
+                );
             }
 
             return makeRc<Scene::Clip>(result, polygon.fillRule);
@@ -242,13 +254,29 @@ static Rc<Scene::Clip> _resolveClip(Frag const& frag) {
             auto center = _resolveBackgroundPosition(resolver, circle.position, referenceBox);
             f64 radius;
             if (circle.radius.is<Keywords::ClosestSide>()) {
-                radius = min(Math::abs(referenceBox.width.cast<f64>() - center.x), center.x, center.y, Math::abs(referenceBox.height.cast<f64>() - center.y));
+                radius = min(
+                    Math::abs(referenceBox.width.cast<f64>() - center.x),
+                    center.x,
+                    center.y,
+                    Math::abs(referenceBox.height.cast<f64>() - center.y)
+                );
             } else if (circle.radius.is<Keywords::FarthestSide>()) {
-                radius = max(Math::abs(referenceBox.width.cast<f64>() - center.x), center.x, center.y, Math::abs(referenceBox.height.cast<f64>() - center.y));
+                radius = max(
+                    Math::abs(referenceBox.width.cast<f64>() - center.x),
+                    center.x,
+                    center.y,
+                    Math::abs(referenceBox.height.cast<f64>() - center.y)
+                );
             } else {
                 radius = resolver.resolve(
                                      circle.radius.unwrap<CalcValue<PercentOr<Length>>>(),
-                                     Au(Math::sqrt(Math::pow2(referenceBox.height.cast<f64>()) + Math::pow2(referenceBox.height.cast<f64>())) / Math::sqrt(2.0))
+                                     Au(
+                                         Math::sqrt(
+                                             Math::pow2(referenceBox.height.cast<f64>()) +
+                                             Math::pow2(referenceBox.height.cast<f64>())
+                                         ) /
+                                         Math::sqrt(2.0)
+                                     )
                 )
                              .cast<f64>();
             }
