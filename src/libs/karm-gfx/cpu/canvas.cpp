@@ -200,7 +200,6 @@ void CpuCanvas::clip(FillRule rule) {
     _poly.transform(current().trans);
 
     auto clipBound = _poly.bound().ceil().cast<isize>().clipTo(pixels().bound());
-    yap("{}", clipBound);
 
     Rc<Surface> newClipMask = Surface::alloc(clipBound.wh, Gfx::GREYSCALE8);
 
