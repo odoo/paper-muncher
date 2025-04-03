@@ -30,6 +30,9 @@ union FloatBits<f16> {
     f16 d;
 };
 
+static_assert(sizeof(f16) == 2);
+static_assert(sizeof(FloatBits<f16>) == sizeof(f16));
+
 template <>
 union FloatBits<f32> {
     static constexpr int mantissaBits = 23;
@@ -52,6 +55,9 @@ union FloatBits<f32> {
 
     f32 d;
 };
+
+static_assert(sizeof(f32) == 4);
+static_assert(sizeof(FloatBits<f32>) == sizeof(f32));
 
 template <>
 union FloatBits<f64> {
@@ -76,6 +82,11 @@ union FloatBits<f64> {
     f64 d;
 };
 
+static_assert(sizeof(f64) == 8);
+static_assert(sizeof(FloatBits<f64>) == sizeof(f64));
+
+#ifdef __SIZEOF_FLOAT128__
+
 template <>
 union FloatBits<f128> {
     static constexpr int mantissaBits = 112;
@@ -85,25 +96,23 @@ union FloatBits<f128> {
     static constexpr unsigned exponentMax = 32767;
 
     struct [[gnu::packed]] {
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#    if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
         u128 sign : 1;
         u128 exponent : 15;
         u128 mantissa : 112;
-#else
+#    else
         u128 mantissa : 112;
         u128 exponent : 15;
         u128 sign : 1;
-#endif
+#    endif
     };
 
     f128 d;
 };
 
-static_assert(sizeof(f32) == 4);
-static_assert(sizeof(FloatBits<f32>) == sizeof(f32));
-static_assert(sizeof(f64) == 8);
-static_assert(sizeof(FloatBits<f64>) == sizeof(f64));
 static_assert(sizeof(f128) == 16);
 static_assert(sizeof(FloatBits<f128>) == sizeof(f128));
+
+#endif
 
 } // namespace Karm::Math

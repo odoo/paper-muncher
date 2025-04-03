@@ -127,7 +127,10 @@ using i128 = __int128_t;
 using f16 = __fp16;
 using f32 = float;
 using f64 = double;
+
+#ifdef __SIZEOF_FLOAT128__
 using f128 = long double;
+#endif
 
 // MARK: Tags ------------------------------------------------------------------
 

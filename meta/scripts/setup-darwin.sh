@@ -7,4 +7,5 @@ then
     exit 1
 fi
 
+brew update
 brew install libmagic lld llvm nasm ninja pkgconf python3 sdl2 ccache jq

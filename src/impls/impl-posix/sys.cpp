@@ -4,7 +4,6 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <seccomp.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
@@ -470,44 +469,6 @@ Res<Mime::Url> pwd() {
     return Ok(Mime::parseUrlOrPath(Str::fromNullterminated(buf.buf()), "file:"_url));
 }
 
-// MARK: Sandboxing ------------------------------------------------------------
-
-Res<> hardenSandbox() {
-    auto [repo, format] = try$(Posix::repoRoot());
-
-    if (chroot(repo.buf()) < 0)
-        return Posix::fromLastErrno();
-
-    if (chdir("/") < 0)
-        return Posix::fromLastErrno();
-
-    Posix::overrideRepo({"/"s, format});
-
-    scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL_PROCESS);
-    if (!ctx)
-        return Posix::fromLastErrno();
-    Defer cleanupSeccomp = [&] {
-        seccomp_release(ctx);
-    };
-
-    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 0); it < 0)
-        return Posix::fromErrno(-it);
-
-    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 0); it < 0)
-        return Posix::fromErrno(-it);
-
-    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 0); it < 0)
-        return Posix::fromErrno(-it);
-
-    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(open), 0); it < 0)
-        return Posix::fromErrno(-it);
-
-    if (seccomp_load(ctx) < 0)
-        return Posix::fromLastErrno();
-
-    return Ok();
-}
-
 // MARK: Addr ------------------------------------------------------------------
 
 Async::Task<Vec<Ip>> ipLookupAsync(Str host) {
@@ -527,7 +488,7 @@ Async::Task<Vec<Ip>> ipLookupAsync(Str host) {
         } else if (p->ai_family == AF_INET6) {
             struct sockaddr_in6* addr = (struct sockaddr_in6*)p->ai_addr;
             u128 raw = 0;
-            auto* buf = addr->sin6_addr.s6_addr16;
+            u16 const* buf = (u16 const*)addr->sin6_addr.s6_addr;
             for (usize i = 0; i < 8; i++)
                 raw |= (u128)buf[i] << (i * 16);
             ips.pushBack(Ip6::fromRaw(bswap(raw)));

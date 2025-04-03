@@ -1,4 +1,7 @@
 #include <execinfo.h>
+#include <stdlib.h>
+
+//
 #include <karm-base/_embed.h>
 #include <karm-base/backtrace.h>
 

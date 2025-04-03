@@ -68,6 +68,8 @@ inline auto& useArgs(Context& ctx = globalContext()) {
     return ctx.use<ArgsHook>();
 }
 
+using EntryPointAsync = Async::Task<>(Sys::Context&);
+
 } // namespace Karm::Sys
 
 Async::Task<> entryPointAsync(Sys::Context&);

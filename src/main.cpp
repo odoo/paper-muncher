@@ -189,7 +189,7 @@ Async::Task<> renderAsync(
         g.clear(Gfx::WHITE);
         auto rectangle = Math::Rectf{0, 0, options.width._val, options.height._val};
         g.fillStyle(canvasColor);
-        g.fill(rectangle.cast<i64>(), Math::Radiif{0});
+        g.fill(rectangle.cast<isize>(), Math::Radiif{0});
     } else
         g.clear(canvasColor);
 

@@ -188,7 +188,7 @@ Ui::Child openInDefaultBrowser(State const& s) {
                     n,
                     Kr::alert(
                         "Could not open in default browser"s,
-                        Io::format("Only http, https and file urls can be opened in the default browser.")
+                        Io::format("Only http, https, and file urls can be opened in the default browser.")
                     )
                 );
                 return;

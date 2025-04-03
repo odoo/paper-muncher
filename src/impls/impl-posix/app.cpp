@@ -1,3 +1,6 @@
+#include <stdlib.h>
+
+//
 #include <karm-app/_embed.h>
 #include <karm-app/prefs.h>
 #include <karm-json/parse.h>
