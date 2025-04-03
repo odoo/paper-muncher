@@ -9,6 +9,7 @@
 #include <vaev-base/percent.h>
 #include <vaev-style/selector.h>
 
+#include "background.h"
 #include "keywords.h"
 
 namespace Vaev {
@@ -24,12 +25,14 @@ using GeometryBox = FlatUnion<ShapeBox, Keywords::FillBox, Keywords::StrokeBox, 
 using FillRule = Union<Keywords::Nonzero, Keywords::Evenodd>;
 
 inline Gfx::FillRule fillRuleToGfx(FillRule rule) {
-    return rule.visit(Visitor{[](Keywords::Nonzero&) {
-                                  return Gfx::FillRule::NONZERO;
-                              },
-                              [](Keywords::Evenodd&) {
-                                  return Gfx::FillRule::EVENODD;
-                              }});
+    return rule.visit(Visitor{
+        [](Keywords::Nonzero&) {
+            return Gfx::FillRule::NONZERO;
+        },
+        [](Keywords::Evenodd&) {
+            return Gfx::FillRule::EVENODD;
+        },
+    });
 }
 
 using ShapeRadius = Union<CalcValue<PercentOr<Length>>, Keywords::ClosestSide, Keywords::FarthestSide>;

@@ -326,10 +326,7 @@ Res<Polygon> ValueParser<Polygon>::parse(Cursor<Css::Sst>& c) {
             eatWhitespace(scan);
             auto y = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
             eatWhitespace(scan);
-            result.points.emplaceBack(
-                x,
-                y
-            );
+            result.points.emplaceBack(x, y);
         }
 
         if (not result.points)

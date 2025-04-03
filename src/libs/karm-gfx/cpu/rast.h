@@ -1,7 +1,6 @@
 #pragma once
 
 #include <karm-base/range.h>
-#include <karm-logger/logger.h>
 #include <karm-math/poly.h>
 
 #include "../types.h"
@@ -16,7 +15,6 @@ struct CpuRast {
     struct Active {
         f64 x;
         isize sign;
-        bool clip = false;
     };
 
     struct Frag {

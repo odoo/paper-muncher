@@ -11,7 +11,7 @@ struct Stack : public Node {
         _children.pushBack(child);
     }
 
-    virtual void prepare() override {
+    void prepare() override {
         stableSort(_children, [](auto& a, auto& b) {
             return a->zIndex <=> b->zIndex;
         });
@@ -20,7 +20,7 @@ struct Stack : public Node {
             child->prepare();
     }
 
-    virtual Math::Rectf bound() override {
+    Math::Rectf bound() override {
         Math::Rectf rect;
         for (auto& child : _children)
             rect = rect.mergeWith(child->bound());
@@ -28,7 +28,7 @@ struct Stack : public Node {
         return rect;
     }
 
-    virtual void paint(Gfx::Canvas& g, Math::Rectf r, PaintOptions o) override {
+    void paint(Gfx::Canvas& g, Math::Rectf r, PaintOptions o) override {
         if (not bound().colide(r))
             return;
 
@@ -36,7 +36,7 @@ struct Stack : public Node {
             child->paint(g, r, o);
     }
 
-    virtual void repr(Io::Emit& e) const override {
+    void repr(Io::Emit& e) const override {
         e("(stack z:{}", zIndex);
         if (_children) {
             e.indentNewline();
