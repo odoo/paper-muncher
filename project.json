@@ -41,7 +41,7 @@
                 "liburing"
             ]
         },
-        "secomp": {
+        "seccomp": {
             "description": "Linux seccomp library",
             "names": [
                 "libseccomp"

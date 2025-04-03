@@ -1,5 +1,9 @@
-#include <karm-sys/_embed.h>
 #include <seccomp.h>
+
+//
+#include <karm-sys/_embed.h>
+
+#include "../utils.h"
 
 namespace Karm::Sys::_Embed {
 
