@@ -125,6 +125,8 @@ void Canvas::fill(Text::Prose& prose) {
     for (auto const& line : prose._lines) {
         for (auto& block : line.blocks()) {
             for (auto& cell : block.cells()) {
+                if (cell.strut())
+                    continue;
                 if (cell.span and cell.span->color) {
                     push();
                     fillStyle(*cell.span->color);
