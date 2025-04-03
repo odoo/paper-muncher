@@ -27,7 +27,14 @@ struct Clip : public Stack {
 
     void repr(Io::Emit& e) const override {
         e("(clip");
-        Stack::repr(e);
+        if (_children) {
+            e.indentNewline();
+            for (auto& child : _children) {
+                child->repr(e);
+                e.newline();
+            }
+            e.deindent();
+        }
         e(")");
     }
 };
