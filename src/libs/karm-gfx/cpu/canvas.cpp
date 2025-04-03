@@ -72,7 +72,7 @@ void CpuCanvas::transform(Math::Trans2f trans) {
 
 void CpuCanvas::_fillImpl(auto fill, auto format, FillRule fillRule) {
     _rast.fill(_poly, current().clip, fillRule, [&](CpuRast::Frag frag) {
-        u8 mask = current().clipMask.has() ? current().clipMask.unwrap()->pixels().load(frag.xy).red : 255;
+        u8 mask = current().clipMask.has() ? current().clipMask.unwrap()->pixels().load(frag.xy - current().clipBound.xy).red : 255;
         if (mask == 0)
             return;
 
@@ -92,7 +92,7 @@ void CpuCanvas::_FillSmoothImpl(auto fill, auto format, FillRule fillRule) {
         last = pos;
 
         _rast.fill(_poly, current().clip, fillRule, [&](CpuRast::Frag frag) {
-            u8 mask = current().clipMask.has() ? current().clipMask.unwrap()->pixels().load(frag.xy).red : 255;
+            u8 mask = current().clipMask.has() ? current().clipMask.unwrap()->pixels().load(frag.xy - current().clipBound.xy).red : 255;
             if (mask == 0)
                 return;
 
@@ -195,18 +195,23 @@ void CpuCanvas::stroke() {
 }
 
 void CpuCanvas::clip(FillRule rule) {
-    Rc<Surface> newClipMask = Surface::alloc(pixels().size(), Gfx::GREYSCALE8);
+    _poly.clear();
+    createSolid(_poly, _path);
+    _poly.transform(current().trans);
 
-    Math::Polyf poly;
-    createSolid(poly, _path);
-    poly.transform(current().trans);
+    auto clipBound = _poly.bound().ceil().cast<isize>().clipTo(pixels().bound());
+    yap("{}", clipBound);
 
-    _rast.fill(poly, current().clip, rule, [&](CpuRast::Frag frag) {
-        u8 const parentPixel = current().clipMask.has() ? current().clipMask.unwrap()->pixels().load(frag.xy).red : 255;
-        newClipMask->mutPixels().store(frag.xy, Color::fromRgb(parentPixel * frag.a, 0, 0));
+    Rc<Surface> newClipMask = Surface::alloc(clipBound.wh, Gfx::GREYSCALE8);
+
+    current().clip = current().clip.clipTo(clipBound);
+    _rast.fill(_poly, current().clip, rule, [&](CpuRast::Frag frag) {
+        u8 const parentPixel = current().clipMask.has() ? current().clipMask.unwrap()->pixels().load(frag.xy - current().clipBound.xy).red : 255;
+        newClipMask->mutPixels().store(frag.xy - clipBound.xy, Color::fromRgb(parentPixel * frag.a, 0, 0));
     });
 
     current().clipMask = newClipMask;
+    current().clipBound = clipBound;
 }
 
 // MARK: Shape Operations ------------------------------------------------------
