@@ -131,7 +131,7 @@ Ui::Child desktopscaffold(Scaffold::State const& s, Scaffold const& scaffold) {
 }
 
 Ui::Child scaffold(Scaffold scaffold) {
-    auto isMobile = App::useFormFactor() == App::FormFactor::MOBILE;
+    auto isMobile = App::formFactor == App::FormFactor::MOBILE;
 
     Scaffold::State state{
         .sidebarOpen = not isMobile,

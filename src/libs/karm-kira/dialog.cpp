@@ -51,7 +51,7 @@ Ui::Child dialogDescription(String text) {
 }
 
 Ui::Child dialogFooter(Ui::Children children) {
-    auto isMobile = App::useFormFactor() == App::FormFactor::MOBILE;
+    auto isMobile = App::formFactor == App::FormFactor::MOBILE;
     if (not isMobile)
         children.pushFront(Ui::grow(NONE));
     return Ui::flow(

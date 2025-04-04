@@ -110,7 +110,7 @@ Ui::Child _printPaper(State const& s, usize index) {
     if (s.settings.orientation == Print::Orientation::LANDSCAPE)
         paper = paper.landscape();
 
-    auto isMobile = App::useFormFactor() == App::FormFactor::MOBILE;
+    auto isMobile = App::formFactor == App::FormFactor::MOBILE;
     if (isMobile)
         scale = 0.5;
 
@@ -385,7 +385,7 @@ Ui::Child _printDialogMobile(State const& s) {
 
 Ui::Child printDialog(PrintPreview preview) {
     return Ui::reducer<Model>({preview}, [](State const& s) {
-        auto isMobile = App::useFormFactor() == App::FormFactor::MOBILE;
+        auto isMobile = App::formFactor == App::FormFactor::MOBILE;
         if (isMobile)
             return _printDialogMobile(s);
         return _printDialog(s) | Ui::popoverLayer();

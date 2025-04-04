@@ -7,35 +7,45 @@
 
 namespace Karm::Sys::_Embed {
 
+#define FOREACH_SYSCALLS(SYSCALL) \
+    SYSCALL(access)               \
+    SYSCALL(brk)                  \
+    SYSCALL(close)                \
+    SYSCALL(exit_group)           \
+    SYSCALL(fstat)                \
+    SYSCALL(futex)                \
+    SYSCALL(getcwd)               \
+    SYSCALL(getdents64)           \
+    SYSCALL(getrandom)            \
+    SYSCALL(io_uring_enter)       \
+    SYSCALL(io_uring_setup)       \
+    SYSCALL(epoll_ctl)            \
+    SYSCALL(epoll_pwait)          \
+    SYSCALL(lseek)                \
+    SYSCALL(mmap)                 \
+    SYSCALL(mprotect)             \
+    SYSCALL(munmap)               \
+    SYSCALL(newfstatat)           \
+    SYSCALL(openat)               \
+    SYSCALL(read)                 \
+    SYSCALL(write)
+
 Res<> hardenSandbox() {
-    auto [repo, format] = try$(Posix::repoRoot());
-
-    if (chroot(repo.buf()) < 0)
-        return Posix::fromLastErrno();
-
-    if (chdir("/") < 0)
-        return Posix::fromLastErrno();
-
-    Posix::overrideRepo({"/"s, format});
-
     scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL_PROCESS);
+
     if (!ctx)
         return Posix::fromLastErrno();
+
     Defer cleanupSeccomp = [&] {
         seccomp_release(ctx);
     };
 
-    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 0); it < 0)
-        return Posix::fromErrno(-it);
-
-    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 0); it < 0)
-        return Posix::fromErrno(-it);
-
-    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 0); it < 0)
-        return Posix::fromErrno(-it);
-
-    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(open), 0); it < 0)
-        return Posix::fromErrno(-it);
+#define ITER(SYSCALL)                                                                    \
+    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(SYSCALL), 0); it < 0) { \
+        return Posix::fromErrno(-it);                                                    \
+    }
+    FOREACH_SYSCALLS(ITER)
+#undef ITER
 
     if (seccomp_load(ctx) < 0)
         return Posix::fromLastErrno();

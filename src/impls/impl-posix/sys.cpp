@@ -173,7 +173,7 @@ Res<Vec<DirEntry>> readDir(Mime::Url const& url) {
         return Posix::fromLastErrno();
 
     Vec<DirEntry> entries;
-    struct dirent* entry;
+    dirent* entry;
     errno = 0;
     while ((entry = ::readdir(dir))) {
         try$(Posix::consumeErrno());

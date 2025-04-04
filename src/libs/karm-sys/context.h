@@ -31,8 +31,6 @@ struct Context :
     }
 };
 
-Context& globalContext();
-
 struct ArgsHook :
     public Service {
 
@@ -64,7 +62,7 @@ struct ArgsHook :
     }
 };
 
-inline auto& useArgs(Context& ctx = globalContext()) {
+inline auto& useArgs(Context& ctx) {
     return ctx.use<ArgsHook>();
 }
 
@@ -72,4 +70,4 @@ using EntryPointAsync = Async::Task<>(Sys::Context&);
 
 } // namespace Karm::Sys
 
-Async::Task<> entryPointAsync(Sys::Context&);
+[[gnu::used]] Async::Task<> entryPointAsync(Sys::Context&);

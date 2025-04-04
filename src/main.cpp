@@ -233,6 +233,14 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
         "paper-muncher"s,
         NONE,
         "Munch the web into crisp documents"s,
+        {sandboxArg},
+        [=](Sys::Context&) -> Async::Task<> {
+            if (sandboxArg) {
+                logInfo("running sandboxed");
+                co_try$(Sys::enterSandbox());
+            }
+            co_return Ok();
+        }
     };
 
     auto scaleArg = Cli::option<Str>(NONE, "scale"s, "Scale of the input document in css units (e.g. 1x)"s, "1x"s);
@@ -259,13 +267,8 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             widthArg,
             heightArg,
             scaleArg,
-
-            sandboxArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
-            if (sandboxArg)
-                co_try$(Sys::enterSandbox());
-
             PaperMuncher::PrintOption options{};
 
             options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
@@ -312,12 +315,8 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             scaleArg,
 
             wireframeArg,
-            sandboxArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
-            if (sandboxArg)
-                co_try$(Sys::enterSandbox());
-
             PaperMuncher::RenderOption options{};
 
             options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));

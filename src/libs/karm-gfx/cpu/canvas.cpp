@@ -1,5 +1,4 @@
 #include <karm-base/ring.h>
-#include <karm-logger/logger.h>
 #include <karm-math/funcs.h>
 
 #include "canvas.h"

@@ -1,9 +1,19 @@
 #pragma once
 
+#include <karm-sys/chan.h>
 #include <karm-sys/context.h>
 
-int __entryPointWraper(int argc, char const** argv, Sys::EntryPointAsync* entry);
+void __panicHandler(Karm::PanicKind kind, char const* msg);
 
 int main(int argc, char const** argv) {
-    return __entryPointWraper(argc, argv, entryPointAsync);
+    Karm::registerPanicHandler(__panicHandler);
+
+    Sys::Context ctx;
+    ctx.add<Sys::ArgsHook>(argc, argv);
+    Res<> code = Sys::run(entryPointAsync(ctx));
+    if (not code) {
+        Karm::Sys::errln("{}: {}", argv[0], code);
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
