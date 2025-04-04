@@ -1,0 +1,48 @@
+<test name="clip-path-child">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                #rect {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                    clip-path: xywh(40px 0 20px 100px);
+                }
+
+                #child {
+                    width: 100px;
+                    height: 100px;
+                    background-color: red;
+                    clip-path: xywh(0 40px 100px 20px);
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div id="rect">
+            <div id="child"></div>
+        </div>
+    </rendering>
+
+
+    <rendering>
+        <div style="background-color: green; width: 20px; height: 100px; top: 0; left: 40px; position: absolute"></div>
+        <div style="background-color: red; width: 20px; height: 20px; top: 40px; left: 40px; position: absolute"></div>
+    </rendering>
+
+
+</test>
