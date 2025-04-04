@@ -77,7 +77,7 @@ void CpuCanvas::_fillImpl(auto fill, auto format, FillRule fillRule) {
         auto pixels = mutPixels();
         auto* pixel = pixels.pixelUnsafe(frag.xy);
         auto color = fill.sample(frag.uv);
-        color.alpha = frag.a * mask;
+        color.alpha *= frag.a * (mask / 255.0);
         auto c = format.load(pixel);
         c = color.blendOver(c);
         format.store(pixel, c);
@@ -97,7 +97,7 @@ void CpuCanvas::_FillSmoothImpl(auto fill, auto format, FillRule fillRule) {
 
             u8* pixel = static_cast<u8*>(mutPixels().pixelUnsafe(frag.xy));
             auto color = fill.sample(frag.uv);
-            color.alpha = frag.a * mask;
+            color.alpha *= frag.a * (mask / 255.0);
             auto c = format.load(pixel);
             c = color.blendOverComponent(c, comp);
             format.store(pixel, c);
