@@ -1,7 +1,9 @@
 #pragma once
 
+#include <karm-gc/ptr.h>
 #include <karm-print/page.h>
 #include <karm-ui/input.h>
+#include <vaev-dom/document.h>
 
 #include "_prelude.h"
 

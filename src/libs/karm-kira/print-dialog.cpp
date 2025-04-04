@@ -1,5 +1,10 @@
 #include <karm-app/form-factor.h>
+#include <karm-gc/ptr.h>
+#include <karm-print/file-printer.h>
 #include <karm-print/paper.h>
+#include <karm-sys/_embed.h>
+#include <karm-sys/file.h>
+#include <karm-sys/proc.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/popover.h>
 #include <karm-ui/reducer.h>
@@ -15,10 +20,27 @@ namespace Karm::Kira {
 
 // MARK: Model -----------------------------------------------------------------
 
+enum struct PrintAction {
+    PRINT,
+    STOP
+};
+
+struct DocumentPrinter {
+    enum struct STATUS {
+        IDLE,
+        PRINTING
+    };
+
+    STATUS status = STATUS::IDLE;
+};
+
 struct State {
     PrintPreview preview;
     Print::Settings settings = {};
     Vec<Print::Page> pages = preview(settings);
+    DocumentPrinter printer = {};
+
+    State(PrintPreview preview) : preview(preview) {}
 };
 
 struct ChangePaper {
@@ -47,7 +69,10 @@ using Action = Union<
     ChangeMargin,
     ToggleHeaderFooter,
     ToggleBackgroundGraphics,
-    ChangeScale>;
+    ChangeScale,
+    PrintAction>;
+
+Action _printPDF(State const& s);
 
 static Ui::Task<Action> reduce(State& s, Action a) {
     bool shouldUpdatePreview = false;
@@ -70,6 +95,12 @@ static Ui::Task<Action> reduce(State& s, Action a) {
     } else if (auto changeScale = a.is<ChangeScale>()) {
         s.settings.scale = clamp(changeScale->scale, 0.1, 10.);
         shouldUpdatePreview = true;
+    } else if (a.is<PrintAction>()) {
+        if (s.printer.status == DocumentPrinter::STATUS::PRINTING)
+            return NONE;
+        s.printer.status = DocumentPrinter::STATUS::PRINTING;
+        _printPDF(s);
+        s.printer.status = DocumentPrinter::STATUS::IDLE;
     }
 
     if (shouldUpdatePreview) {
@@ -173,6 +204,37 @@ Ui::Child _printPreview(State const& s) {
                    .backgroundFill = Ui::GRAY950,
                }
            );
+}
+
+Action _printPDF(State const& s) {
+    auto const output = Mime::parseUrlOrPath("./output.pdf", Sys::pwd().unwrap());
+    Mime::Uti const outputFormat = Mime::Uti::PUBLIC_PDF;
+
+    auto printer = Print::FilePrinter::create(
+                       outputFormat,
+                       {
+                           .density = f64{1},
+                       }
+    )
+                       .unwrap();
+
+    for (usize i = 0; i < s.pages.len(); ++i) {
+        auto page = s.pages[i];
+        page.print(
+            *printer,
+            {
+                .showBackgroundGraphics = true,
+            }
+        );
+    }
+
+    Io::BufferWriter bw;
+    printer->write(bw).unwrap();
+
+    auto file = std::move(Sys::File::openOrCreate(output).unwrap());
+    file.write(bw.take()).unwrap();
+
+    return PrintAction::STOP;
 }
 
 Ui::Child _destinationSelect() {
@@ -347,6 +409,10 @@ Ui::Child _printControls(State const& s) {
            Ui::minSize({320, Ui::UNCONSTRAINED});
 }
 
+static void _printDocument(Ui::Node& node) {
+    Model::bubble(node, PrintAction::PRINT);
+}
+
 Ui::Child _printDialog(State const& s) {
     return dialogContent({
         dialogTitleBar("Print"s),
@@ -358,7 +424,7 @@ Ui::Child _printDialog(State const& s) {
         Ui::separator(),
         dialogFooter({
             dialogCancel(),
-            dialogAction(Ui::NOP, "Print"s),
+            dialogAction(_printDocument, "Print"s),
         }),
     });
 }
@@ -378,7 +444,7 @@ Ui::Child _printDialogMobile(State const& s) {
         Ui::separator(),
         dialogFooter({
             dialogCancel(),
-            dialogAction(Ui::NOP, "Print"s),
+            dialogAction(_printDocument, "Print"s),
         }),
     });
 }
