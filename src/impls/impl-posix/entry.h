@@ -2,7 +2,6 @@
 
 #include <karm-sys/chan.h>
 #include <karm-sys/context.h>
-#include <stdlib.h>
 
 #define EXIT_FAILURE 1 /* Failing exit status.  */
 #define EXIT_SUCCESS 0 /* Successful exit status.  */
