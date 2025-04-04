@@ -50,6 +50,7 @@ struct FontFamily : public Fontface {
     static Builder make(FontBook const& book);
 
     FontMetrics metrics() const override;
+    BaselineSet baselineSet() override;
 
     FontAttrs attrs() const override;
 
