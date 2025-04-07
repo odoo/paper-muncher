@@ -193,6 +193,19 @@ static Math::Vec2f _resolveBackgroundPosition(Resolver& resolver, BackgroundPosi
     return result;
 }
 
+static Math::Radiif _resolveRadii(Resolver& resolver, Math::Radii<CalcValue<PercentOr<Length>>> const& baseRadii, RectAu const& referenceBox) {
+    Math::Radiif radii;
+    radii.a = resolver.resolve(baseRadii.a, referenceBox.height).cast<f64>();
+    radii.b = resolver.resolve(baseRadii.b, referenceBox.width).cast<f64>();
+    radii.c = resolver.resolve(baseRadii.c, referenceBox.width).cast<f64>();
+    radii.d = resolver.resolve(baseRadii.d, referenceBox.height).cast<f64>();
+    radii.e = resolver.resolve(baseRadii.e, referenceBox.height).cast<f64>();
+    radii.f = resolver.resolve(baseRadii.f, referenceBox.width).cast<f64>();
+    radii.g = resolver.resolve(baseRadii.g, referenceBox.width).cast<f64>();
+    radii.h = resolver.resolve(baseRadii.h, referenceBox.height).cast<f64>();
+    return radii;
+}
+
 static Rc<Scene::Clip> _resolveClip(Frag const& frag) {
     Math::Path result;
     auto& clip = frag.style().clip.unwrap();
@@ -230,15 +243,14 @@ static Rc<Scene::Clip> _resolveClip(Frag const& frag) {
     auto resolver = Resolver();
     return clip.shape.unwrap().visit(Visitor{
         [&](Polygon const& polygon) {
-            auto const it = begin(polygon.points);
             result.moveTo(
                 referenceBox.xy.cast<f64>() +
                 Math::Vec2f(
-                    resolver.resolve(it->v0, referenceBox.width).cast<f64>(),
-                    resolver.resolve(it->v1, referenceBox.height).cast<f64>()
+                    resolver.resolve(first(polygon.points).v0, referenceBox.width).cast<f64>(),
+                    resolver.resolve(first(polygon.points).v1, referenceBox.height).cast<f64>()
                 )
             );
-            for (auto& point : Slice(it + 1, end(polygon.points))) {
+            for (auto& point : next(polygon.points)) {
                 result.lineTo(
                     referenceBox.xy.cast<f64>() +
                     Math::Vec2f(
@@ -268,15 +280,11 @@ static Rc<Scene::Clip> _resolveClip(Frag const& frag) {
                     Math::abs(referenceBox.height.cast<f64>() - center.y)
                 );
             } else {
+                auto hSquared = Math::pow2(referenceBox.height.cast<f64>());
+                auto wSquared = Math::pow2(referenceBox.width.cast<f64>());
                 radius = resolver.resolve(
                                      circle.radius.unwrap<CalcValue<PercentOr<Length>>>(),
-                                     Au(
-                                         Math::sqrt(
-                                             Math::pow2(referenceBox.height.cast<f64>()) +
-                                             Math::pow2(referenceBox.height.cast<f64>())
-                                         ) /
-                                         Math::sqrt(2.0)
-                                     )
+                                     Au(Math::sqrt(hSquared + wSquared) / Math::sqrt(2.0))
                 )
                              .cast<f64>();
             }
@@ -291,17 +299,9 @@ static Rc<Scene::Clip> _resolveClip(Frag const& frag) {
             resolved.top = resolver.resolve(inset.insets.top, referenceBox.height).cast<f64>();
             resolved.bottom = resolver.resolve(inset.insets.bottom, referenceBox.height).cast<f64>();
 
-            Math::Radiif radii;
-            radii.a = resolver.resolve(inset.borderRadius.a, referenceBox.height).cast<f64>();
-            radii.b = resolver.resolve(inset.borderRadius.b, referenceBox.width).cast<f64>();
-            radii.c = resolver.resolve(inset.borderRadius.c, referenceBox.width).cast<f64>();
-            radii.d = resolver.resolve(inset.borderRadius.d, referenceBox.height).cast<f64>();
-            radii.e = resolver.resolve(inset.borderRadius.e, referenceBox.height).cast<f64>();
-            radii.f = resolver.resolve(inset.borderRadius.f, referenceBox.width).cast<f64>();
-            radii.g = resolver.resolve(inset.borderRadius.g, referenceBox.width).cast<f64>();
-            radii.h = resolver.resolve(inset.borderRadius.h, referenceBox.height).cast<f64>();
+            Math::Radiif resolvedRadii = _resolveRadii(resolver, inset.borderRadius, referenceBox);
 
-            result.rect(referenceBox.cast<f64>().shrink(resolved), radii);
+            result.rect(referenceBox.cast<f64>().shrink(resolved), resolvedRadii);
 
             return makeRc<Scene::Clip>(result);
         },
@@ -312,15 +312,7 @@ static Rc<Scene::Clip> _resolveClip(Frag const& frag) {
             resolvedRect.width = resolver.resolve(xywh.rect.width, referenceBox.width).cast<f64>();
             resolvedRect.height = resolver.resolve(xywh.rect.height, referenceBox.height).cast<f64>();
 
-            Math::Radiif resolvedRadii;
-            resolvedRadii.a = resolver.resolve(xywh.borderRadius.a, referenceBox.height).cast<f64>();
-            resolvedRadii.b = resolver.resolve(xywh.borderRadius.b, referenceBox.width).cast<f64>();
-            resolvedRadii.c = resolver.resolve(xywh.borderRadius.c, referenceBox.width).cast<f64>();
-            resolvedRadii.d = resolver.resolve(xywh.borderRadius.d, referenceBox.height).cast<f64>();
-            resolvedRadii.e = resolver.resolve(xywh.borderRadius.e, referenceBox.height).cast<f64>();
-            resolvedRadii.f = resolver.resolve(xywh.borderRadius.f, referenceBox.width).cast<f64>();
-            resolvedRadii.g = resolver.resolve(xywh.borderRadius.g, referenceBox.width).cast<f64>();
-            resolvedRadii.h = resolver.resolve(xywh.borderRadius.h, referenceBox.height).cast<f64>();
+            Math::Radiif resolvedRadii = _resolveRadii(resolver, xywh.borderRadius, referenceBox);
 
             result.rect(resolvedRect.offset(referenceBox.xy.cast<f64>()), resolvedRadii);
 
@@ -333,15 +325,7 @@ static Rc<Scene::Clip> _resolveClip(Frag const& frag) {
             resolvedInsets.bottom = resolver.resolve(rect.insets.bottom, referenceBox.height).cast<f64>();
             resolvedInsets.start = resolver.resolve(rect.insets.start, referenceBox.width).cast<f64>();
 
-            Math::Radiif resolvedRadii;
-            resolvedRadii.a = resolver.resolve(rect.borderRadius.a, referenceBox.height).cast<f64>();
-            resolvedRadii.b = resolver.resolve(rect.borderRadius.b, referenceBox.width).cast<f64>();
-            resolvedRadii.c = resolver.resolve(rect.borderRadius.c, referenceBox.width).cast<f64>();
-            resolvedRadii.d = resolver.resolve(rect.borderRadius.d, referenceBox.height).cast<f64>();
-            resolvedRadii.e = resolver.resolve(rect.borderRadius.e, referenceBox.height).cast<f64>();
-            resolvedRadii.f = resolver.resolve(rect.borderRadius.f, referenceBox.width).cast<f64>();
-            resolvedRadii.g = resolver.resolve(rect.borderRadius.g, referenceBox.width).cast<f64>();
-            resolvedRadii.h = resolver.resolve(rect.borderRadius.h, referenceBox.height).cast<f64>();
+            Math::Radiif resolvedRadii = _resolveRadii(resolver, rect.borderRadius, referenceBox);
 
             auto resultBox = referenceBox.cast<f64>();
             resultBox.width = max(resolvedInsets.end - resolvedInsets.start, 0);
