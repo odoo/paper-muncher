@@ -71,17 +71,28 @@ void CpuCanvas::transform(Math::Trans2f trans) {
 // MARK: Path Operations -------------------------------------------------------
 
 void CpuCanvas::_fillImpl(auto fill, auto format, FillRule fillRule) {
-    _rast.fill(_poly, current().clip, fillRule, [&](CpuRast::Frag frag) {
-        u8 const mask = current().clipMask.has() ? current().clipMask.unwrap()->pixels().loadUnsafe(frag.xy - current().clipBound.xy).red : 255;
+    if (current().clipMask.has())
+        _rast.fill(_poly, current().clip, fillRule, [&](CpuRast::Frag frag) {
+            u8 const mask = current().clipMask.unwrap()->pixels().loadUnsafe(frag.xy - current().clipBound.xy).red;
 
-        auto pixels = mutPixels();
-        auto* pixel = pixels.pixelUnsafe(frag.xy);
-        auto color = fill.sample(frag.uv);
-        color.alpha *= frag.a * (mask / 255.0);
-        auto c = format.load(pixel);
-        c = color.blendOver(c);
-        format.store(pixel, c);
-    });
+            auto pixels = mutPixels();
+            auto* pixel = pixels.pixelUnsafe(frag.xy);
+            auto color = fill.sample(frag.uv);
+            color.alpha *= frag.a * (mask / 255.0);
+            auto c = format.load(pixel);
+            c = color.blendOver(c);
+            format.store(pixel, c);
+        });
+    else
+        _rast.fill(_poly, current().clip, fillRule, [&](CpuRast::Frag frag) {
+            auto pixels = mutPixels();
+            auto* pixel = pixels.pixelUnsafe(frag.xy);
+            auto color = fill.sample(frag.uv);
+            color.alpha *= frag.a;
+            auto c = format.load(pixel);
+            c = color.blendOver(c);
+            format.store(pixel, c);
+        });
 }
 
 void CpuCanvas::_FillSmoothImpl(auto fill, auto format, FillRule fillRule) {
@@ -90,18 +101,26 @@ void CpuCanvas::_FillSmoothImpl(auto fill, auto format, FillRule fillRule) {
         _poly.offset(pos - last);
         last = pos;
 
-        _rast.fill(_poly, current().clip, fillRule, [&](CpuRast::Frag frag) {
-            u8 mask = current().clipMask.has() ? current().clipMask.unwrap()->pixels().load(frag.xy - current().clipBound.xy).red : 255;
-            if (mask == 0)
-                return;
+        if (current().clipMask.has())
+            _rast.fill(_poly, current().clip, fillRule, [&](CpuRast::Frag frag) {
+                u8 mask = current().clipMask.unwrap()->pixels().loadUnsafe(frag.xy - current().clipBound.xy).red;
 
-            u8* pixel = static_cast<u8*>(mutPixels().pixelUnsafe(frag.xy));
-            auto color = fill.sample(frag.uv);
-            color.alpha *= frag.a * (mask / 255.0);
-            auto c = format.load(pixel);
-            c = color.blendOverComponent(c, comp);
-            format.store(pixel, c);
-        });
+                u8* pixel = static_cast<u8*>(mutPixels().pixelUnsafe(frag.xy));
+                auto color = fill.sample(frag.uv);
+                color.alpha *= frag.a * (mask / 255.0);
+                auto c = format.load(pixel);
+                c = color.blendOverComponent(c, comp);
+                format.store(pixel, c);
+            });
+        else
+            _rast.fill(_poly, current().clip, fillRule, [&](CpuRast::Frag frag) {
+                u8* pixel = static_cast<u8*>(mutPixels().pixelUnsafe(frag.xy));
+                auto color = fill.sample(frag.uv);
+                color.alpha *= frag.a;
+                auto c = format.load(pixel);
+                c = color.blendOverComponent(c, comp);
+                format.store(pixel, c);
+            });
     };
 
     fillComponent(Color::RED_COMPONENT, _lcdLayout.red);
