@@ -193,7 +193,6 @@ Res<BackgroundPosition> ValueParser<BackgroundPosition>::parse(Cursor<Css::Sst>&
 
     BackgroundPosition::VerticalAnchor vAnchor = Keywords::TOP;
     CalcValue<PercentOr<Length>> vValue = {Percent(0)};
-    bool vSet = false;
 
     usize secondPairIndex = 2;
 
@@ -220,7 +219,6 @@ Res<BackgroundPosition> ValueParser<BackgroundPosition>::parse(Cursor<Css::Sst>&
         },
         [&](Meta::Contains<Keywords::Top, Keywords::Bottom> auto& t) -> Res<> {
             vAnchor = t;
-            vSet = true;
 
             if (auto mesure = items[1].is<CalcValue<PercentOr<Length>>>()) {
                 vValue = *mesure;
