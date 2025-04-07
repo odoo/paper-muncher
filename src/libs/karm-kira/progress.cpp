@@ -2,7 +2,7 @@
 
 namespace Karm::Kira {
 
-struct Progress : public Ui::View<Progress> {
+struct Progress : Ui::View<Progress> {
     isize _size;
     f64 _spin = 0;
 

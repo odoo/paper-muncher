@@ -3235,7 +3235,7 @@ enum struct Important {
     YES,
 };
 
-struct StyleProp : public _StyleProp {
+struct StyleProp : _StyleProp {
     using _StyleProp::_StyleProp;
     Important important = Important::NO;
 

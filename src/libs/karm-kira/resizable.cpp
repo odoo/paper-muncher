@@ -2,7 +2,7 @@
 
 namespace Karm::Kira {
 
-struct Resizable : public Ui::ProxyNode<Resizable> {
+struct Resizable : Ui::ProxyNode<Resizable> {
     Math::Vec2i _size;
     Ui::OnChange<Math::Vec2i> _onChange;
 

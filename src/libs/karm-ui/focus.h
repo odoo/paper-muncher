@@ -44,7 +44,7 @@ struct FocusListener {
     }
 };
 
-struct Focusable : public ProxyNode<Focusable> {
+struct Focusable : ProxyNode<Focusable> {
     bool _focused = false;
 
     Focusable(Ui::Child child) : ProxyNode<Focusable>(std::move(child)) {

@@ -16,7 +16,7 @@ void closeDialog(Node& n) {
     bubble<CloseDialogEvent>(n);
 }
 
-struct DialogLayer : public LeafNode<DialogLayer> {
+struct DialogLayer : LeafNode<DialogLayer> {
     Easedf _visibility{};
 
     Child _child;

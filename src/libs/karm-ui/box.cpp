@@ -2,7 +2,7 @@
 
 namespace Karm::Ui {
 
-struct Box : public _Box<Box> {
+struct Box : _Box<Box> {
     using _Box<Box>::_Box;
     BoxStyle _style;
 

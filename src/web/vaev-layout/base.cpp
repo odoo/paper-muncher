@@ -248,7 +248,7 @@ export struct Attrs {
     }
 };
 
-struct Box : public Meta::NoCopy {
+struct Box : Meta::NoCopy {
     Rc<Style::ComputedStyle> style;
     Rc<Text::Fontface> fontFace;
     Content content = NONE;

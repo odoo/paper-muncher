@@ -37,7 +37,7 @@ struct __kernel_timespec toKernelTimespec(Duration ts) {
     return kts;
 }
 
-struct UringSched : public Sys::Sched {
+struct UringSched : Sys::Sched {
     static constexpr auto NCQES = 128;
 
     struct _Job {
@@ -69,7 +69,7 @@ struct UringSched : public Sys::Sched {
     }
 
     Async::Task<usize> readAsync(Rc<Fd> fd, MutBytes buf) override {
-        struct Job : public _Job {
+        struct Job : _Job {
             Rc<Fd> _fd;
             MutBytes _buf;
             Async::Promise<usize> _promise;
@@ -106,7 +106,7 @@ struct UringSched : public Sys::Sched {
     }
 
     Async::Task<usize> writeAsync(Rc<Fd> fd, Bytes buf) override {
-        struct Job : public _Job {
+        struct Job : _Job {
             Rc<Fd> _fd;
             Bytes _buf;
             Async::Promise<usize> _promise;
@@ -147,7 +147,7 @@ struct UringSched : public Sys::Sched {
     }
 
     Async::Task<> flushAsync(Rc<Fd> fd) override {
-        struct Job : public _Job {
+        struct Job : _Job {
             Rc<Fd> _fd;
             Async::Promise<> _promise;
 
@@ -177,7 +177,7 @@ struct UringSched : public Sys::Sched {
     }
 
     Async::Task<_Accepted> acceptAsync(Rc<Fd> fd) override {
-        struct Job : public _Job {
+        struct Job : _Job {
             Rc<Fd> _fd;
             sockaddr_in _addr{};
             unsigned _addrLen = sizeof(sockaddr_in);
@@ -214,7 +214,7 @@ struct UringSched : public Sys::Sched {
         if (handles.len() > 0)
             notImplemented(); // TODO: Implement handle passing on POSIX
 
-        struct Job : public _Job {
+        struct Job : _Job {
             Rc<Fd> _fd;
             Bytes _buf;
             iovec _iov;
@@ -255,7 +255,7 @@ struct UringSched : public Sys::Sched {
     }
 
     Async::Task<_Received> recvAsync(Rc<Fd> fd, MutBytes buf, MutSlice<Handle>) override {
-        struct Job : public _Job {
+        struct Job : _Job {
             Rc<Fd> _fd;
             MutBytes _buf;
             iovec _iov;
@@ -298,7 +298,7 @@ struct UringSched : public Sys::Sched {
     }
 
     Async::Task<> sleepAsync(Instant until) override {
-        struct Job : public _Job {
+        struct Job : _Job {
             Instant _until;
             Async::Promise<> _promise;
 

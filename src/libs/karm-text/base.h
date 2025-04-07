@@ -37,7 +37,7 @@ enum struct FontStyle {
 
 // MARK: Fonteight -------------------------------------------------------------
 
-struct FontWeight : public Distinct<u16, struct _FontWeightTag> {
+struct FontWeight : Distinct<u16, struct _FontWeightTag> {
     using Distinct::Distinct;
 
     static FontWeight const THIN;
@@ -134,7 +134,7 @@ constexpr FontWeight FontWeight::NO_MATCH{Limits<u16>::MAX};
 
 // MARK: FontStretch -----------------------------------------------------------
 
-struct FontStretch : public Distinct<u16, struct _FontStretchTag> {
+struct FontStretch : Distinct<u16, struct _FontStretchTag> {
     using Distinct::Distinct;
 
     static FontStretch const ULTRA_CONDENSED;

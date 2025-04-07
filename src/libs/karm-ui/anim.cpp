@@ -4,7 +4,7 @@ namespace Karm::Ui {
 
 // MARK: Slide In --------------------------------------------------------------
 
-struct SlideIn : public ProxyNode<SlideIn> {
+struct SlideIn : ProxyNode<SlideIn> {
     SlideFrom _from;
     Easedf _slide{};
 
@@ -70,7 +70,7 @@ Child slideIn(SlideFrom from, Ui::Child child) {
 
 // MARK: Scale In --------------------------------------------------------------
 
-struct ScaleIn : public ProxyNode<ScaleIn> {
+struct ScaleIn : ProxyNode<ScaleIn> {
     Easedf _scale{};
 
     ScaleIn(Ui::Child child)
@@ -110,7 +110,7 @@ Child scaleIn(Child child) {
 
 // MARK: Carousel --------------------------------------------------------------
 
-struct Carousel : public GroupNode<Carousel> {
+struct Carousel : GroupNode<Carousel> {
     usize _selected;
     Math::Flow _flow;
     Easedf _slide{};

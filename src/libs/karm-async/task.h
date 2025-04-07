@@ -89,7 +89,7 @@ struct [[nodiscard]] _Task {
 
     template <typename R>
     auto connect(R r) {
-        struct Operation : public Continuation<T> {
+        struct Operation : Continuation<T> {
             using Continuation<T>::value;
 
             _Task _t;

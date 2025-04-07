@@ -7,7 +7,7 @@
 
 namespace Karm::Text {
 
-struct VgaFontface : public Fontface {
+struct VgaFontface : Fontface {
     static constexpr isize WIDTH = 8;
     static constexpr isize HEIGHT = 8;
     static constexpr f64 UNIT_PER_EM = 8;

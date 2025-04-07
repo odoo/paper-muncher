@@ -28,7 +28,7 @@ using Visitor = Func<void(Node&)>;
 
 using Key = Opt<Hash>;
 
-struct Node : public App::Dispatch {
+struct Node : App::Dispatch {
     Key _key = NONE;
     bool _consumed = false;
 
@@ -93,7 +93,7 @@ always_inline auto operator|(Decorator auto decorator, Decorator auto decorator2
 // MARK: LeafNode --------------------------------------------------------------
 
 template <typename Crtp>
-struct LeafNode : public Node {
+struct LeafNode : Node {
     Node* _parent = nullptr;
 
     virtual void reconcile(Crtp&) {}
@@ -142,7 +142,7 @@ struct LeafNode : public Node {
 // MARK: GroupNode -------------------------------------------------------------
 
 template <typename Crtp>
-struct GroupNode : public LeafNode<Crtp> {
+struct GroupNode : LeafNode<Crtp> {
     Children _children;
     Math::Recti _bound{};
 
@@ -219,7 +219,7 @@ struct GroupNode : public LeafNode<Crtp> {
 // MARK: ProxyNode -------------------------------------------------------------
 
 template <typename Crtp>
-struct ProxyNode : public LeafNode<Crtp> {
+struct ProxyNode : LeafNode<Crtp> {
     Child _child;
 
     ProxyNode(Child child) : _child(child) {

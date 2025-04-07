@@ -15,7 +15,7 @@
 namespace Karm::Sys::_Embed {
 
 struct DarwinSched :
-    public Sys::Sched {
+    Sys::Sched {
 
     int _kqueue;
     usize _id = 0;

@@ -4,7 +4,7 @@
 
 namespace Karm::Scene {
 
-struct Transform : public Node {
+struct Transform : Node {
     Rc<Node> _content;
     Math::Trans2f _transform;
 

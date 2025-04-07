@@ -79,7 +79,7 @@ struct _Cell {
 };
 
 template <typename L, typename T>
-struct Cell : public _Cell<L> {
+struct Cell : _Cell<L> {
     Manual<T> _buf{};
 
     template <typename... Args>

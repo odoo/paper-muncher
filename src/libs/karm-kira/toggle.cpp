@@ -3,7 +3,7 @@
 
 namespace Karm::Kira {
 
-struct Toggle : public Ui::View<Toggle> {
+struct Toggle : Ui::View<Toggle> {
     static constexpr auto PADDING = 3;
     static constexpr auto SIZE = 18;
 

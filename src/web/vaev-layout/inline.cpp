@@ -8,7 +8,7 @@ import :base;
 
 namespace Vaev::Layout {
 
-struct InlineFormatingContext : public FormatingContext {
+struct InlineFormatingContext : FormatingContext {
     virtual Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
         // NOTE: We are not supposed to get there if the content is not a prose
         auto& prose = *box.content.unwrap<Rc<Text::Prose>>("inlineLayout");

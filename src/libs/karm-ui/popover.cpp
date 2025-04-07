@@ -20,7 +20,7 @@ void closePopover(Node& n) {
     bubble<ClosePopoverEvent>(n);
 }
 
-struct PopoverLayer : public ProxyNode<PopoverLayer> {
+struct PopoverLayer : ProxyNode<PopoverLayer> {
     Opt<Child> _popover;
     Opt<Child> _shouldPopover;
     bool _shouldPopoverClose = false;

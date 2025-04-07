@@ -3,7 +3,7 @@
 #include <karm-sys/context.h>
 #include <karm-sys/socket.h>
 
-struct ChannelHook : public Sys::Service {
+struct ChannelHook : Sys::Service {
     Sys::IpcConnection con;
 
     ChannelHook(Sys::IpcConnection con)

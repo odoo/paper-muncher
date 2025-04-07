@@ -7,7 +7,7 @@
 
 namespace Karm::Kira {
 
-struct ContextMenu : public Ui::ProxyNode<ContextMenu> {
+struct ContextMenu : Ui::ProxyNode<ContextMenu> {
     Ui::Slot _menu;
 
     ContextMenu(Ui::Child child, Ui::Slot menu)

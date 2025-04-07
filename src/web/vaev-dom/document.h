@@ -13,7 +13,7 @@ enum struct QuirkMode {
 };
 
 // https://dom.spec.whatwg.org/#interface-document
-struct Document : public Node {
+struct Document : Node {
     static constexpr auto TYPE = NodeType::DOCUMENT;
 
     Mime::Url _url;

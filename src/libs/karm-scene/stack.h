@@ -4,7 +4,7 @@
 
 namespace Karm::Scene {
 
-struct Stack : public Node {
+struct Stack : Node {
     Vec<Rc<Node>> _children;
 
     void add(Rc<Node> child) {

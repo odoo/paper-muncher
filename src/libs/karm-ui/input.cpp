@@ -180,7 +180,7 @@ ButtonStyle ButtonStyle::withMargin(Math::Insetsi insets) const {
     };
 }
 
-struct Button : public _Box<Button> {
+struct Button : _Box<Button> {
     OnPress _onPress;
     ButtonStyle _buttonStyle = ButtonStyle::regular();
     MouseListener _mouseListener;
@@ -270,7 +270,7 @@ Child button(OnPress onPress, Mdi::Icon i, Str t) {
 
 // MARK: Input -----------------------------------------------------------------
 
-struct Input : public View<Input> {
+struct Input : View<Input> {
     Text::ProseStyle _style;
 
     Rc<Text::Model> _model;
@@ -339,7 +339,7 @@ Child input(Rc<Text::Model> text, OnChange<Text::Action> onChange) {
     return makeRc<Input>(TextStyles::bodyMedium(), text, std::move(onChange));
 }
 
-struct SimpleInput : public View<SimpleInput> {
+struct SimpleInput : View<SimpleInput> {
     Text::ProseStyle _style;
     String _text;
     OnChange<String> _onChange;
@@ -422,7 +422,7 @@ Child input(Text::ProseStyle style, String text, OnChange<String> onChange) {
 
 // MARK: Slider -----------------------------------------------------------------
 
-struct Slider : public ProxyNode<Slider> {
+struct Slider : ProxyNode<Slider> {
     f64 _value = 0.0f;
     OnChange<f64> _onChange;
     Math::Recti _bound;
@@ -476,7 +476,7 @@ Child slider(f64 value, OnChange<f64> onChange, Child child) {
 
 // MARK: Intent ----------------------------------------------------------------
 
-struct Intent : public ProxyNode<Intent> {
+struct Intent : ProxyNode<Intent> {
     Func<void(Node&, App::Event& e)> _map;
 
     Intent(Func<void(Node&, App::Event& e)> map, Child child)

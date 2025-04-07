@@ -6,7 +6,7 @@
 
 namespace Karm::Scene {
 
-struct Shape : public Node {
+struct Shape : Node {
     Math::Path _path;
     Opt<Gfx::Stroke> _stroke;
     Opt<Gfx::Fill> _fill;

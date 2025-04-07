@@ -17,7 +17,7 @@ struct FontAdjust {
     FontAdjust combine(FontAdjust other) const;
 };
 
-struct FontFamily : public Fontface {
+struct FontFamily : Fontface {
     struct Member {
         FontAdjust adjust;
         Rc<Fontface> face;

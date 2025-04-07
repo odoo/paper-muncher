@@ -620,7 +620,7 @@ struct FlexLine {
     }
 };
 
-struct FlexFormatingContext : public FormatingContext {
+struct FlexFormatingContext : FormatingContext {
     FlexProps _flex;
     FlexAxis fa{_flex.isRowOriented()};
 

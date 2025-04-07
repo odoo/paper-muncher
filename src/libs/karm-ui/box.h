@@ -101,7 +101,7 @@ struct BoxStyle {
 };
 
 template <typename Crtp>
-struct _Box : public ProxyNode<Crtp> {
+struct _Box : ProxyNode<Crtp> {
     _Box(Child child)
         : ProxyNode<Crtp>(child) {}
 

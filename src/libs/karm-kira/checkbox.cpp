@@ -5,7 +5,7 @@
 
 namespace Karm::Kira {
 
-struct Checkbox : public Ui::View<Checkbox> {
+struct Checkbox : Ui::View<Checkbox> {
     bool _value = false;
     Ui::OnChange<bool> _onChange;
     Ui::MouseListener _mouseListener;

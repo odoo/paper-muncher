@@ -12,7 +12,7 @@ namespace Karm::Ui {
 // MARK: Base ------------------------------------------------------------------
 
 template <typename Crtp>
-struct View : public LeafNode<Crtp> {
+struct View : LeafNode<Crtp> {
     Math::Recti _bound;
 
     Math::Recti bound() override {

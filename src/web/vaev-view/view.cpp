@@ -18,7 +18,7 @@ export struct ViewProps {
     Opt<Gc::Ref<Dom::Node>> selected = NONE;
 };
 
-struct View : public Ui::View<View> {
+struct View : Ui::View<View> {
     Gc::Root<Dom::Document> _dom;
     ViewProps _props;
     Opt<Driver::RenderResult> _renderResult;

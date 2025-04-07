@@ -32,7 +32,7 @@ struct Context :
 };
 
 struct ArgsHook :
-    public Service {
+    Service {
 
     usize _argc;
     char const** _argv;

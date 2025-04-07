@@ -6,7 +6,7 @@ namespace Karm::Ui {
 
 // MARK: Scroll ----------------------------------------------------------------
 
-struct Scroll : public ProxyNode<Scroll> {
+struct Scroll : ProxyNode<Scroll> {
     static constexpr isize SCROLL_BAR_WIDTH = 4;
 
     bool _mouseIn = false;
@@ -192,7 +192,7 @@ Child vscroll(Child child) {
 
 // MARK: Clip ------------------------------------------------------------------
 
-struct Clip : public ProxyNode<Clip> {
+struct Clip : ProxyNode<Clip> {
     static constexpr isize SCROLL_BAR_WIDTH = 4;
 
     Math::Orien _orient{};

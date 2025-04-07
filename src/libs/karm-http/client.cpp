@@ -13,7 +13,7 @@ namespace Karm::Http {
 
 static constexpr bool DEBUG_CLIENT = false;
 
-export struct Client : public Transport {
+export struct Client : Transport {
     String userAgent = "Karm-Http/" stringify$(__ck_version_value) ""s;
     Rc<Transport> _transport;
 

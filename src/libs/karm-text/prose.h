@@ -57,7 +57,7 @@ struct ProseStyle {
     }
 };
 
-struct Prose : public Meta::Pinned {
+struct Prose : Meta::Pinned {
     struct Span {
         MutCursor<Span> parent = nullptr;
         Opt<Gfx::Color> color;

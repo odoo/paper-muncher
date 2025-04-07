@@ -6,7 +6,7 @@ namespace Karm::Ui {
 
 // MARK: Grow ------------------------------------------------------------------
 
-struct Grow : public ProxyNode<Grow> {
+struct Grow : ProxyNode<Grow> {
     isize _grow;
 
     Grow(Child child)
@@ -39,7 +39,7 @@ Child grow(isize grow, Opt<Child> child) {
 
 // MARK: Empty -----------------------------------------------------------------
 
-struct Empty : public View<Empty> {
+struct Empty : View<Empty> {
     Math::Vec2i _size;
 
     Empty(Math::Vec2i size)
@@ -68,7 +68,7 @@ Child cond(bool cond, Child child) {
 
 // MARK: Bound -----------------------------------------------------------------
 
-struct Bound : public ProxyNode<Bound> {
+struct Bound : ProxyNode<Bound> {
     Math::Recti _bound;
 
     Bound(Child child)
@@ -92,7 +92,7 @@ Child bound(Child child) {
     return makeRc<Bound>(child);
 }
 
-struct Placed : public ProxyNode<Placed> {
+struct Placed : ProxyNode<Placed> {
     Math::Recti _bound;
     Math::Recti _place;
 
@@ -126,7 +126,7 @@ Child placed(Math::Recti place, Child child) {
 
 // MARK: Separator -------------------------------------------------------------
 
-struct Separator : public View<Separator> {
+struct Separator : View<Separator> {
     Math::Vec2i size(Math::Vec2i, Hint) override {
         return {1};
     }
@@ -145,7 +145,7 @@ Child separator() {
 
 // MARK: Align -----------------------------------------------------------------
 
-struct Align : public ProxyNode<Align> {
+struct Align : ProxyNode<Align> {
     Math::Align _align;
 
     Align(Math::Align align, Child child) : ProxyNode(child), _align(align) {}
@@ -214,7 +214,7 @@ Child vcenterFill(Child child) {
 
 // MARK: Sizing ----------------------------------------------------------------
 
-struct Sizing : public ProxyNode<Sizing> {
+struct Sizing : ProxyNode<Sizing> {
     Math::Vec2i _min;
     Math::Vec2i _max;
     Math::Recti _rect;
@@ -290,7 +290,7 @@ Child pinSize(isize size, Child child) {
 
 // MARK: Insets ---------------------------------------------------------------
 
-struct Insets : public ProxyNode<Insets> {
+struct Insets : ProxyNode<Insets> {
     Math::Insetsi _insets;
 
     Insets(Math::Insetsi insets, Child child)
@@ -324,7 +324,7 @@ Child insets(Math::Insetsi s, Child child) {
 
 // MARK: Aspect Ratio ----------------------------------------------------------
 
-struct AspectRatio : public ProxyNode<AspectRatio> {
+struct AspectRatio : ProxyNode<AspectRatio> {
     f64 _ratio;
 
     AspectRatio(f64 ratio, Child child)
@@ -357,7 +357,7 @@ Child aspectRatio(f64 ratio, Child child) {
 
 // MARK: Stack -----------------------------------------------------------------
 
-struct StackLayout : public GroupNode<StackLayout> {
+struct StackLayout : GroupNode<StackLayout> {
     using GroupNode::GroupNode;
 
     void event(App::Event& e) override {
@@ -391,7 +391,7 @@ Child stack(Children children) {
 
 // MARK: Flow ------------------------------------------------------------------
 
-struct FlowLayout : public GroupNode<FlowLayout> {
+struct FlowLayout : GroupNode<FlowLayout> {
     using GroupNode::GroupNode;
 
     FlowStyle _style;
@@ -477,7 +477,7 @@ Child flow(FlowStyle style, Children children) {
 
 // MARK: Grid ------------------------------------------------------------------
 
-struct Cell : public ProxyNode<Cell> {
+struct Cell : ProxyNode<Cell> {
     Math::Vec2i _start{};
     Math::Vec2i _end{};
 
@@ -501,7 +501,7 @@ Child cell(Math::Vec2i start, Math::Vec2i end, Child child) {
     return makeRc<Cell>(start, end, child);
 }
 
-struct GridLayout : public GroupNode<GridLayout> {
+struct GridLayout : GroupNode<GridLayout> {
     struct _Dim {
         isize start;
         isize size;

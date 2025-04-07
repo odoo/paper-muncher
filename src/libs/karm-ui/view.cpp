@@ -220,7 +220,7 @@ Text::ProseStyle TextStyles::codeSmall() {
     };
 }
 
-struct Text : public View<Text> {
+struct Text : View<Text> {
     Rc<Karm::Text::Prose> _prose;
 
     Text(Rc<Karm::Text::Prose> prose)
@@ -265,7 +265,7 @@ Child text(Rc<Karm::Text::Prose> prose) {
 
 // MARK: Icon ------------------------------------------------------------------
 
-struct Icon : public View<Icon> {
+struct Icon : View<Icon> {
     Gfx::Icon _icon;
     Opt<Gfx::Color> _color;
 
@@ -300,7 +300,7 @@ Child icon(Mdi::Icon i, f64 size, Opt<Gfx::Color> color) {
 
 // MARK: Image -----------------------------------------------------------------
 
-struct Image : public View<Image> {
+struct Image : View<Image> {
     Karm::Image::Picture _image;
     Opt<Math::Radiif> _radii;
 
@@ -335,7 +335,7 @@ Child image(Karm::Image::Picture image, Math::Radiif radii) {
 
 // MARK: Canvas ----------------------------------------------------------------
 
-struct Canvas : public View<Canvas> {
+struct Canvas : View<Canvas> {
     OnPaint _onPaint;
 
     Canvas(OnPaint onPaint)
@@ -365,7 +365,7 @@ Child canvas(OnPaint onPaint) {
     return makeRc<Canvas>(std::move(onPaint));
 }
 
-struct SceneCanvas : public View<SceneCanvas> {
+struct SceneCanvas : View<SceneCanvas> {
     Rc<Scene::Node> _scene;
     Scene::PaintOptions _options;
 
@@ -410,7 +410,7 @@ Child canvas(Rc<Scene::Node> child, Scene::PaintOptions options) {
 
 // MARK: Filter ----------------------------------------------------------------
 
-struct BackgroundFilter : public ProxyNode<BackgroundFilter> {
+struct BackgroundFilter : ProxyNode<BackgroundFilter> {
     Gfx::Filter _filter;
 
     BackgroundFilter(Gfx::Filter filter, Child child)
@@ -435,7 +435,7 @@ Child backgroundFilter(Gfx::Filter f, Child child) {
     return makeRc<BackgroundFilter>(f, std::move(child));
 }
 
-struct ForegroundFilter : public ProxyNode<ForegroundFilter> {
+struct ForegroundFilter : ProxyNode<ForegroundFilter> {
     Gfx::Filter _filter;
 
     ForegroundFilter(Gfx::Filter filter, Child child)

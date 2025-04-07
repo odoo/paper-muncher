@@ -13,7 +13,7 @@ namespace Karm::Ui {
 static constexpr auto FRAME_RATE = 60;
 static constexpr auto FRAME_TIME = 1.0 / FRAME_RATE;
 
-struct Host : public Node {
+struct Host : Node {
     Child _root;
     Opt<Res<>> _res;
     Gfx::CpuCanvas _g;

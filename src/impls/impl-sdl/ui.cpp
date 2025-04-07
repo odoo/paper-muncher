@@ -8,8 +8,7 @@ namespace Karm::Ui::_Embed {
 
 static SDL_HitTestResult _hitTestCallback(SDL_Window* window, SDL_Point const* area, void* data);
 
-struct SdlHost :
-    public Host {
+struct SdlHost : Host {
     SDL_Window* _window{};
 
     Math::Vec2i _lastMousePos{};

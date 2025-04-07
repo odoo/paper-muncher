@@ -59,7 +59,7 @@ struct Model {
 
 template <typename Model>
 struct Reducer :
-    public LeafNode<Reducer<Model>> {
+    LeafNode<Reducer<Model>> {
 
     using State = typename Model::State;
     using Action = typename Model::Action;

@@ -8,7 +8,7 @@
 
 namespace Karm::Text {
 
-struct TtfFontface : public Fontface {
+struct TtfFontface : Fontface {
     Sys::Mmap _mmap;
     Ttf::Parser _parser;
     Map<Rune, Glyph> _cachedEntries;

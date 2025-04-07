@@ -9,9 +9,9 @@ namespace Karm::Sys {
 // MARK: Abstract Socket -------------------------------------------------------
 
 struct _Connection :
-    public Io::Reader,
-    public Io::Writer,
-    public Io::Flusher,
+    Io::Reader,
+    Io::Writer,
+    Io::Flusher,
     Meta::NoCopy {
 
     virtual Async::Task<usize> readAsync(MutBytes buf) = 0;
@@ -22,7 +22,7 @@ struct _Connection :
 };
 
 struct Connection :
-    public _Connection {
+    _Connection {
 
     Rc<Sys::Fd> _fd;
 
@@ -117,7 +117,7 @@ struct UdpConnection :
 // MARK: Tcp Socket ------------------------------------------------------------
 
 struct TcpConnection :
-    public Connection {
+    Connection {
 
     SocketAddr _addr;
 
@@ -132,7 +132,7 @@ struct TcpConnection :
 };
 
 struct TcpListener :
-    public _Listener<TcpConnection> {
+    _Listener<TcpConnection> {
 
     SocketAddr _addr;
 

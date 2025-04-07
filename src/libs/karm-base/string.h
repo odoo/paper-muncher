@@ -7,7 +7,7 @@
 namespace Karm {
 
 template <StaticEncoding E, typename U = typename E::Unit>
-struct _Str : public Slice<U> {
+struct _Str : Slice<U> {
     using Encoding = E;
     using Unit = U;
 

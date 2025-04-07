@@ -11,7 +11,7 @@ namespace Karm::Kira {
 
 // MARK: Hsv Input -------------------------------------------------------------
 
-struct HsvSquare : public Ui::View<HsvSquare> {
+struct HsvSquare : Ui::View<HsvSquare> {
     Gfx::Hsv _value;
     Ui::OnChange<Gfx::Hsv> _onChange;
     Ui::MouseListener _mouseListener;

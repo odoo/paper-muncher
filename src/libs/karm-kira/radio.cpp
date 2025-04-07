@@ -2,7 +2,7 @@
 
 namespace Karm::Kira {
 
-struct Radio : public Ui::View<Radio> {
+struct Radio : Ui::View<Radio> {
     bool _value = false;
     Ui::OnChange<bool> _onChange;
     Ui::MouseListener _mouseListener;

@@ -125,7 +125,7 @@ Output fragmentEmptyBox(Tree& tree, Input input) {
 }
 
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
-struct BlockFormatingContext : public FormatingContext {
+struct BlockFormatingContext : FormatingContext {
     Au _computeCapmin(Tree& tree, Box& box, Input input, Au inlineSize) {
         Au capmin{};
         for (auto& c : box.children()) {

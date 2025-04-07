@@ -6,7 +6,7 @@ export module Karm.Kira:clock;
 
 namespace Karm::Kira {
 
-struct Clock : public Ui::View<Clock> {
+struct Clock : Ui::View<Clock> {
     Time _time;
 
     Clock(Time time) : _time(time) {}

@@ -5,7 +5,7 @@
 namespace Vaev::Dom {
 
 // https://dom.spec.whatwg.org/#interface-characterdata
-struct CharacterData : public Node {
+struct CharacterData : Node {
     StringBuilder _data;
 
     CharacterData() = default;

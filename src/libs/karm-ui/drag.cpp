@@ -5,7 +5,7 @@ namespace Karm::Ui {
 // MARK: Dismisable ------------------------------------------------------------
 
 struct Dismisable :
-    public ProxyNode<Dismisable> {
+    ProxyNode<Dismisable> {
 
     OnDismis _onDismis;
     DismisDir _dir;
@@ -121,7 +121,7 @@ Child dismisable(OnDismis onDismis, DismisDir dir, f64 threshold, Ui::Child chil
 
 // MARK: Drag Region -----------------------------------------------------------
 
-struct DragRegion : public ProxyNode<DragRegion> {
+struct DragRegion : ProxyNode<DragRegion> {
     bool _grabbed{};
     Math::Vec2i _dir;
 
