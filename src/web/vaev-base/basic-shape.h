@@ -16,8 +16,6 @@ namespace Vaev {
 
 // https://drafts.fxtf.org/css-masking/#typedef-geometry-box
 
-// using Box = Union<Keywords::BorderBox, Keywords::PaddingBox, Keywords::ContentBox>;
-
 using ShapeBox = FlatUnion<Keywords::BorderBox, Keywords::PaddingBox, Keywords::ContentBox, Keywords::MarginBox>;
 
 using GeometryBox = FlatUnion<ShapeBox, Keywords::FillBox, Keywords::StrokeBox, Keywords::ViewBox>;
