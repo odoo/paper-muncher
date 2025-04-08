@@ -220,6 +220,10 @@ struct HtmlParser : HtmlSink {
 
     void _handleInTableText(HtmlToken const& t);
 
+    void _handleInCaption(HtmlToken const& t);
+
+    void _handleInColumnGroup(HtmlToken const& t);
+
     void _handleInTableBody(HtmlToken const& t);
 
     void _handleInTableRow(HtmlToken const& t);
