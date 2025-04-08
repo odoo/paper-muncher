@@ -1,11 +1,5 @@
 /* Vaev's User Agent Stylesheet */
 
-/* 16.0 MARK: Obsolete features ------------------------------------ */
-/* https://html.spec.whatwg.org/multipage/obsolete.html#center */
-center {
-    text-align: center;
-}
-
 /* 15.3.1 MARK: Hidden elements  -------------------------------------------- */
 /* https://html.spec.whatwg.org/multipage/rendering.html#hidden-elements */
 
@@ -248,4 +242,11 @@ button {
 input,
 button {
     display: inline-block;
+}
+
+/* 16.0 MARK: Obsolete features ------------------------------------ */
+/* https://html.spec.whatwg.org/multipage/obsolete.html#center */
+
+center {
+    text-align: -vaev-center;
 }
