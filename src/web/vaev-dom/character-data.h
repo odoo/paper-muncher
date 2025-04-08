@@ -14,7 +14,7 @@ struct CharacterData : Node {
         : _data(std::move(data)) {
     }
 
-    void appendData(String const& s) {
+    void appendData(Str s) {
         _data.append(s);
     }
 

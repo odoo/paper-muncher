@@ -50,6 +50,11 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url
         co_try$(parser.parse(scan, HTML, *dom));
 
         co_return Ok(dom);
+    } else if (mime->is("text/plain"_mime)) {
+        auto text = heap.alloc<Dom::Text>();
+        text->appendData(buf);
+        dom->appendChild(text);
+        co_return Ok(dom);
     } else if (mime->is("image/svg+xml"_mime)) {
         Io::SScan scan{buf};
         Dom::XmlParser parser{heap};

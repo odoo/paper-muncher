@@ -76,13 +76,14 @@ struct State {
     Res<Gc::Root<Dom::Document>> dom;
     SidePanel sidePanel = SidePanel::CLOSE;
     InspectState inspect = {};
+    String location;
     bool wireframe = false;
 
     State(Gc::Heap& heap, Http::Client& client, Navigate nav, Res<Gc::Root<Dom::Document>> dom)
         : heap{heap},
           client{client},
           history{nav},
-          dom{dom} {}
+          dom{dom}, location(dom ? dom.unwrap()->url().str() : String{}) {}
 
     bool canGoBack() const {
         return currentIndex > 0;
@@ -109,6 +110,13 @@ struct GoForward {};
 
 struct ToggleWireframe {};
 
+struct UpdateLocation {
+    String location;
+};
+
+struct NavigateLocation {
+};
+
 using Action = Union<
     Reload,
     Loaded,
@@ -117,11 +125,11 @@ using Action = Union<
     ToggleWireframe,
     SidePanel,
     InspectorAction,
-    Navigate>;
+    Navigate,
+    UpdateLocation,
+    NavigateLocation>;
 
 Async::_Task<Opt<Action>> navigateAsync(Gc::Heap& heap, Http::Client& client, Navigate nav) {
-    (void)co_await Sys::globalSched().sleepAsync(Sys::instant() + 300_ms);
-
     if (nav.action == Mime::Uti::PUBLIC_MODIFY) {
         co_return Loaded{co_await Vaev::Driver::viewSourceAsync(heap, client, nav.url)};
     } else {
@@ -135,6 +143,7 @@ Ui::Task<Action> reduce(State& s, Action a) {
             if (s.status == Status::LOADING)
                 return NONE;
             s.status = Status::LOADING;
+            s.location = s.currentUrl().url.str();
             return navigateAsync(s.heap, s.client, s.currentUrl());
         },
         [&](Loaded l) -> Ui::Task<Action> {
@@ -144,13 +153,11 @@ Ui::Task<Action> reduce(State& s, Action a) {
         },
         [&](GoBack) -> Ui::Task<Action> {
             s.currentIndex--;
-            reduce(s, Reload{}).unwrap();
-            return NONE;
+            return reduce(s, Reload{});
         },
         [&](GoForward) -> Ui::Task<Action> {
             s.currentIndex++;
-            reduce(s, Reload{}).unwrap();
-            return NONE;
+            return reduce(s, Reload{});
         },
         [&](ToggleWireframe) -> Ui::Task<Action> {
             s.wireframe = not s.wireframe;
@@ -165,10 +172,17 @@ Ui::Task<Action> reduce(State& s, Action a) {
             return NONE;
         },
         [&](Navigate n) -> Ui::Task<Action> {
+            s.history.trunc(s.currentIndex + 1);
             s.history.pushBack(n);
             s.currentIndex++;
-            reduce(s, Reload{}).unwrap();
+            return reduce(s, Reload{});
+        },
+        [&](UpdateLocation u) -> Ui::Task<Action> {
+            s.location = u.location;
             return NONE;
+        },
+        [&](NavigateLocation) -> Ui::Task<Action> {
+            return reduce(s, Navigate{Mime::Url::parse(s.location)});
         },
     });
 
@@ -273,7 +287,7 @@ Ui::Child addressBar(State const& s) {
                    },
                    Ui::ButtonStyle::subtle(), Mdi::TUNE_VARIANT
                ),
-               Ui::input(Ui::TextStyles::labelMedium(), s.currentUrl().url.str(), NONE) |
+               Ui::input(Ui::TextStyles::labelMedium(), s.location, Model::map<UpdateLocation>()) |
                    Ui::vcenter() |
                    Ui::hscroll() |
                    Ui::grow()
@@ -284,7 +298,9 @@ Ui::Child addressBar(State const& s) {
                .borderWidth = 1,
                .backgroundFill = Ui::GRAY800,
            }) |
-           Ui::focusable();
+           Ui::keyboardShortcut(App::Key::ENTER, Model::bind<NavigateLocation>()) |
+           Ui::focusable() |
+           Ui::keyboardShortcut(App::Key::L, App::KeyMod::CTRL);
 }
 
 Ui::Child contextMenu(State const& s) {
