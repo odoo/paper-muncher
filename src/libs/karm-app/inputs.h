@@ -26,6 +26,7 @@ enum struct KeyMod : u16 {
     MODE = 1 << 10,
     SCROLL = 1 << 11,
 
+    // Either left or right modifier
     SHIFT = 1 << 12,
     CTRL = 1 << 13,
     ALT = 1 << 14,
@@ -35,27 +36,35 @@ enum struct KeyMod : u16 {
 FlagsEnum$(KeyMod);
 
 static inline bool match(KeyMod in, KeyMod mods) {
+    KeyMod either = KeyMod::NONE;
+    KeyMod mask = KeyMod::NONE;
+
     if (static_cast<bool>(in & KeyMod::LSHIFT) or
         static_cast<bool>(in & KeyMod::RSHIFT)) {
-        in |= KeyMod::SHIFT;
+        either |= KeyMod::SHIFT;
+        mask |= KeyMod::LSHIFT | KeyMod::RSHIFT;
     }
 
     if (static_cast<bool>(in & KeyMod::LCTRL) or
         static_cast<bool>(in & KeyMod::RCTRL)) {
-        in |= KeyMod::CTRL;
+        either |= KeyMod::CTRL;
+        mask |= KeyMod::LCTRL | KeyMod::RCTRL;
     }
 
     if (static_cast<bool>(in & KeyMod::LALT) or
         static_cast<bool>(in & KeyMod::RALT)) {
-        in |= KeyMod::ALT;
+        either |= KeyMod::ALT;
+        mask |= KeyMod::LALT | KeyMod::RALT;
     }
 
     if (static_cast<bool>(in & KeyMod::LSUPER) or
         static_cast<bool>(in & KeyMod::RSUPER)) {
-        in |= KeyMod::SUPER;
+        either |= KeyMod::SUPER;
+        mask |= KeyMod::LSUPER | KeyMod::RSUPER;
     }
 
-    return (in & mods) == mods;
+    return (((in | either) & mods) == mods) and
+           ((in & (mods | mask)) == in);
 }
 
 enum struct KeyMotion {
