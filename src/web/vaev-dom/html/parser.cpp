@@ -1226,8 +1226,8 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
         _switchTo(Mode::IN_TABLE);
     }
 
-    // TODO: An end tag whose tag name is "br"
-    // TODO: A start tag whose tag name is one of: "area", "br", "embed", "img", "keygen", "wbr"
+    // An end tag whose tag name is "br"
+    // A start tag whose tag name is one of: "area", "br", "embed", "img", "keygen", "wbr"
     else if (
         t.name == "br" or
         (t.type == HtmlToken::START_TAG and
@@ -1250,7 +1250,8 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
         _insertHtmlElement(t);
         _openElements.popBack();
 
-        // TODO: Acknowledge the token's self-closing flag, if it is set.
+        // Acknowledge the token's self-closing flag, if it is set.
+        _acknowledgeSelfClosingFlag(t);
 
         // Set the frameset-ok flag to "not ok".
         _framesetOk = false;
@@ -1341,7 +1342,7 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
         _insertHtmlElement(t);
     }
 
-    // TODO: Any other end tag
+    // Any other end tag
     else if (t.type == HtmlToken::END_TAG) {
         // loop:
         usize curr = _openElements.len();
@@ -1769,7 +1770,6 @@ void HtmlParser::_handleInTableBody(HtmlToken const& t) {
     else if (t.type == HtmlToken::END_TAG and (t.name == "tbody" or t.name == "tfoot" or t.name == "thead")) {
         // If the stack of open elements does not have an element in table scope that is an HTML element with the same
         // tag name as the token, this is a parse error; ignore the token.
-
         if (not _hasElementInTableScope(TagName::make(t.name, Vaev::HTML))) {
             _raise();
             return;
@@ -1825,6 +1825,7 @@ void HtmlParser::_handleInTableBody(HtmlToken const& t) {
         _raise();
     }
 
+    // Anything else
     else {
         // Process the token using the rules for the "in table" insertion mode.
         _acceptIn(Mode::IN_TABLE, t);
@@ -2218,7 +2219,7 @@ void HtmlParser::_handleInForeignContent(HtmlToken const& t) {
     }
 
     // An end tag whose tag name is "script", if the current node is an SVG script element
-    else if (t.type == HtmlToken::END_TAG and t.name == "script") {
+    else if (t.type == HtmlToken::END_TAG and _currentElement()->tagName == Html::SCRIPT) {
         handleScript();
     }
 
