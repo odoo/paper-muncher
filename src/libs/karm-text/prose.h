@@ -227,8 +227,34 @@ struct Prose : Meta::Pinned {
         g.beginPath();
         g.moveTo(cs);
         g.lineTo(ce);
-        g.strokeStyle(Gfx::stroke(color).withAlign(Gfx::CENTER_ALIGN).withWidth(1));
+        g.strokeStyle({
+            .fill = color,
+            .width = 1.0,
+            .align = Gfx::INSIDE_ALIGN,
+        });
         g.stroke();
+    }
+
+    void paintSelection(Gfx::Canvas& g, usize start, usize end, Gfx::Color color) const {
+        if (start == end)
+            return;
+
+        if (not _style.multiline) {
+            auto ps = queryPosition(start);
+            auto pe = queryPosition(end);
+            auto m = _style.font.metrics();
+
+            auto rect =
+                RectAu::fromTwoPoint(
+                    ps + Vec2Au{0_au, Au{m.descend}},
+                    pe - Vec2Au{0_au, Au{m.ascend}}
+                )
+                    .cast<f64>();
+
+            g.fillStyle(color);
+            g.fill(rect);
+            return;
+        }
     }
 
     struct Lbc {

@@ -273,6 +273,7 @@ Child button(OnPress onPress, Mdi::Icon i, Str t) {
 struct Input : View<Input> {
     Text::ProseStyle _style;
 
+    FocusListener _focus;
     Rc<Text::Model> _model;
     OnChange<Text::Action> _onChange;
 
@@ -306,7 +307,13 @@ struct Input : View<Input> {
 
         auto& text = _ensureText();
 
-        text.paintCaret(g, _model->_cur.head, _style.color.unwrapOr(Ui::GRAY100));
+        if (_focus) {
+            g.push();
+            text.paintSelection(g, _model->_cur.head, _model->_cur.tail, Ui::ACCENT500.withOpacity(0.5));
+            text.paintCaret(g, _model->_cur.head, _style.color.unwrapOr(Ui::GRAY100));
+            g.pop();
+        }
+
         g.fill(text);
 
         g.pop();
@@ -356,6 +363,11 @@ struct SimpleInput : View<SimpleInput> {
     void reconcile(SimpleInput& o) override {
         _style = o._style;
         _onChange = std::move(o._onChange);
+        if (_text != o._text) {
+            _text = o._text;
+            _model = NONE;
+            _prose = NONE;
+        }
 
         // NOTE: The model might have changed,
         //       so we need to invalidate the presentation.
@@ -383,8 +395,13 @@ struct SimpleInput : View<SimpleInput> {
 
         auto& text = _ensureText();
 
-        if (_focus)
+        if (_focus) {
+            g.push();
+            text.paintSelection(g, _model->_cur.head, _model->_cur.tail, Ui::ACCENT500.withOpacity(0.5));
             text.paintCaret(g, _ensureModel()._cur.head, _style.color.unwrapOr(Ui::GRAY100));
+            g.pop();
+        }
+
         g.fill(text);
 
         g.pop();

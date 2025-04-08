@@ -4,6 +4,7 @@
 #include <karm-ui/node.h>
 
 #include "funcs.h"
+#include "input.h"
 
 namespace Karm::Ui {
 
@@ -47,7 +48,8 @@ struct FocusListener {
 struct Focusable : ProxyNode<Focusable> {
     bool _focused = false;
 
-    Focusable(Ui::Child child) : ProxyNode<Focusable>(std::move(child)) {
+    Focusable(Ui::Child child)
+        : ProxyNode<Focusable>(std::move(child)) {
     }
 
     void paint(Gfx::Canvas& g, Math::Recti r) override {
@@ -57,6 +59,13 @@ struct Focusable : ProxyNode<Focusable> {
             g.strokeStyle(Gfx::stroke(ACCENT600).withWidth(2).withAlign(Gfx::INSIDE_ALIGN));
             g.stroke(bound().cast<f64>(), 4);
         }
+    }
+
+    void _stealFocus() {
+        bubble<FocusEvent>(*this, FocusEvent::STEAL);
+        _focused = true;
+        shouldRepaint(*this);
+        event<FocusEvent>(*_child, FocusEvent::ENTER);
     }
 
     void event(App::Event& e) override {
@@ -72,16 +81,16 @@ struct Focusable : ProxyNode<Focusable> {
             passthrough = true;
             if (me->type == App::MouseEvent::PRESS) {
                 if (bound().contains(me->pos) and not _focused) {
-                    bubble<FocusEvent>(*this, FocusEvent::STEAL);
-                    _focused = true;
-                    shouldRepaint(*this);
-                    event<FocusEvent>(*_child, FocusEvent::ENTER);
+                    _stealFocus();
                 } else if (not bound().contains(me->pos) and _focused) {
                     _focused = false;
                     shouldRepaint(*this);
                     event<FocusEvent>(*_child, FocusEvent::LEAVE);
                 }
             }
+        } else if (auto it = e.is<KeyboardShortcutActivated>()) {
+            _stealFocus();
+            e.accept();
         }
 
         if (_focused or passthrough)
