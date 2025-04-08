@@ -1335,7 +1335,17 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
         }
     }
 
-    // TODO: A start tag whose tag name is one of: "caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"
+    // A start tag whose tag name is one of: "caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"
+    else if (
+        t.type == HtmlToken::START_TAG and
+        (t.name == "caption" or t.name == "col" or t.name == "colgroup" or t.name == "frame" or
+         t.name == "head" or t.name == "tbody" or t.name == "td" or t.name == "tfoot" or
+         t.name == "th" or t.name == "thead" or t.name == "tr"
+        )
+    ) {
+        // Parse error. Ignore the token.
+        _raise();
+    }
 
     else if (t.type == HtmlToken::START_TAG) {
         _reconstructActiveFormattingElements();
@@ -1720,6 +1730,174 @@ void HtmlParser::_handleInTableText(HtmlToken const& t) {
 
         // Switch the insertion mode to the original insertion mode and reprocess the token.
         _switchTo(_originalInsertionMode);
+        accept(t);
+    }
+}
+
+// 13.2.6.4.11 MARK: The "in caption" insertion mode
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-incaption
+void HtmlParser::_handleInCaption(HtmlToken const& t) {
+    auto _closeTheCaption = [&]() {
+        // If the stack of open elements does not have a caption element in table scope,
+        if (not _hasElementInTableScope(Html::CAPTION)) {
+            // this is a parse error; ignore the token. (fragment case)
+            _raise();
+            return false;
+        }
+
+        // Otherwise:
+
+        // Generate implied end tags.
+        _generateImpliedEndTags(*this);
+
+        // Now, if the current node is not a caption element, then this is a parse error.
+        if (_currentElement()->tagName != Html::CAPTION)
+            _raise();
+
+        // Pop elements from this stack until a caption element has been popped from the stack.
+        while (Karm::any(_openElements) and _openElements.popBack()->tagName != Html::CAPTION) {
+            // do nothing
+        }
+
+        // TODO: Clear the list of active formatting elements up to the last marker.
+
+        // Switch the insertion mode to "in table".
+        _switchTo(Mode::IN_TABLE);
+
+        return true;
+    };
+
+    // An end tag whose tag name is "caption"
+    if (t.type == HtmlToken::END_TAG and t.name == "caption") {
+        _closeTheCaption();
+    }
+
+    // A start tag whose tag name is one of: "caption", "col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr"
+    // An end tag whose tag name is "table"
+    else if (
+        (t.type == HtmlToken::START_TAG and
+         (t.name == "caption" or t.name == "col" or t.name == "colgroup" or t.name == "tbody" or t.name == "td" or
+          t.name == "tfoot" or t.name == "th" or t.name == "thead" or t.name == "tr"
+         )) or
+        (t.type == HtmlToken::END_TAG and t.name == "table")
+    ) {
+        if (_closeTheCaption()) {
+            // Reprocess the token.
+            accept(t);
+        }
+    }
+
+    // An end tag whose tag name is one of: "body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"
+    else if (t.type == HtmlToken::END_TAG and
+             (t.name == "body" or t.name == "col" or t.name == "colgroup" or t.name == "html" or t.name == "tbody" or
+              t.name == "td" or t.name == "tfoot" or t.name == "th" or t.name == "thead" or t.name == "tr"
+             )) {
+        // Parse error. Ignore the token.
+        _raise();
+    }
+
+    // Anything else
+    else {
+        // Process the token using the rules for the "in body" insertion mode.
+        _acceptIn(Mode::IN_BODY, t);
+    }
+}
+
+// 13.2.6.4.12 MARK: The "in column group" insertion modeMARK:
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-incolgroup
+void HtmlParser::_handleInColumnGroup(HtmlToken const& t) {
+    // A character token that is one of U+0009 CHARACTER TABULATION, U+000A LINE FEED (LF), U+000C FORM FEED (FF),
+    // U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
+    if (
+        t.type == HtmlToken::CHARACTER and
+        (t.rune == '\t' or t.rune == '\n' or t.rune == '\f' or t.rune == '\r' or t.rune == ' ')
+    ) {
+        // Insert the character.
+        _insertACharacter(t.rune);
+    }
+
+    // A comment token
+    else if (t.type == HtmlToken::COMMENT) {
+        // Insert a comment.
+        _insertAComment(t);
+    }
+
+    // A DOCTYPE token
+    else if (t.type == HtmlToken::DOCTYPE) {
+        // Parse error. Ignore the token.
+        _raise();
+    }
+
+    // A start tag whose tag name is "html"
+    else if (t.type == HtmlToken::START_TAG and t.name == "html") {
+        // Process the token using the rules for the "in body" insertion mode.
+        _acceptIn(Mode::IN_BODY, t);
+    }
+
+    // A start tag whose tag name is "col"
+    else if (t.type == HtmlToken::START_TAG and t.name == "col") {
+        // Insert an HTML element for the token.
+        _insertHtmlElement(t);
+
+        // Immediately pop the current node off the stack of open elements.
+        _openElements.popBack();
+
+        // Acknowledge the token's self-closing flag, if it is set.
+        _acknowledgeSelfClosingFlag(t);
+    }
+
+    // An end tag whose tag name is "colgroup"
+    else if (t.type == HtmlToken::END_TAG and t.name == "colgroup") {
+        // If the current node is not a colgroup element,
+        if (_currentElement()->tagName != Html::COLGROUP) {
+            // then this is a parse error;
+            _raise();
+            // ignore the token.
+            return;
+        }
+
+        // Otherwise, pop the current node from the stack of open elements.
+        _openElements.popBack();
+
+        // Switch the insertion mode to "in table".
+        _switchTo(Mode::IN_TABLE);
+    }
+
+    // An end tag whose tag name is "col"
+    else if (t.type == HtmlToken::END_TAG and t.name == "col") {
+        // Parse error. Ignore the token.
+        _raise();
+    }
+
+    // A start tag whose tag name is "template"
+    // An end tag whose tag name is "template"
+    else if ((t.type == HtmlToken::START_TAG or t.type == HtmlToken::END_TAG) and t.name == "template") {
+        // Process the token using the rules for the "in head" insertion mode.
+        _acceptIn(Mode::IN_HEAD, t);
+    }
+
+    // An end-of-file token
+    else if (t.type == HtmlToken::END_OF_FILE) {
+        // Process the token using the rules for the "in body" insertion mode.
+        _acceptIn(Mode::IN_BODY, t);
+    }
+
+    // Anything else
+    else {
+        // If the current node is not a colgroup element,
+        if (_currentElement()->tagName != Html::COLGROUP) {
+            // then this is a parse error; ignore the token.
+            _raise();
+            return;
+        }
+
+        // Otherwise, pop the current node from the stack of open elements.
+        _openElements.popBack();
+
+        // Switch the insertion mode to "in table".
+        _switchTo(Mode::IN_TABLE);
+
+        // Reprocess the token.
         accept(t);
     }
 }
@@ -2314,12 +2492,12 @@ void HtmlParser::_acceptIn(Mode mode, HtmlToken const& t) {
         _handleInTableText(t);
         break;
 
-    // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-incaption
     case Mode::IN_CAPTION:
+        _handleInCaption(t);
         break;
 
-    // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-incolumngroup
     case Mode::IN_COLUMN_GROUP:
+        _handleInColumnGroup(t);
         break;
 
     case Mode::IN_TABLE_BODY:
