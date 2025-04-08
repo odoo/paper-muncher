@@ -68,6 +68,7 @@ struct UringSched : Sys::Sched {
         io_uring_submit(&_ring);
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<usize> readAsync(Rc<Fd> fd, MutBytes buf) override {
         struct Job : _Job {
             Rc<Fd> _fd;
@@ -105,6 +106,7 @@ struct UringSched : Sys::Sched {
         return Async::makeTask(job->future());
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<usize> writeAsync(Rc<Fd> fd, Bytes buf) override {
         struct Job : _Job {
             Rc<Fd> _fd;
@@ -146,6 +148,7 @@ struct UringSched : Sys::Sched {
         return Async::makeTask(job->future());
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<> flushAsync(Rc<Fd> fd) override {
         struct Job : _Job {
             Rc<Fd> _fd;
@@ -176,6 +179,7 @@ struct UringSched : Sys::Sched {
         return Async::makeTask(job->future());
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<_Accepted> acceptAsync(Rc<Fd> fd) override {
         struct Job : _Job {
             Rc<Fd> _fd;
@@ -210,6 +214,7 @@ struct UringSched : Sys::Sched {
         return Async::makeTask(job->future());
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<_Sent> sendAsync(Rc<Fd> fd, Bytes buf, Slice<Handle> handles, SocketAddr addr) override {
         if (handles.len() > 0)
             notImplemented(); // TODO: Implement handle passing on POSIX
@@ -254,6 +259,7 @@ struct UringSched : Sys::Sched {
         return Async::makeTask(job->future());
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<_Received> recvAsync(Rc<Fd> fd, MutBytes buf, MutSlice<Handle>) override {
         struct Job : _Job {
             Rc<Fd> _fd;
@@ -297,6 +303,7 @@ struct UringSched : Sys::Sched {
         return Async::makeTask(job->future());
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<> sleepAsync(Instant until) override {
         struct Job : _Job {
             Instant _until;

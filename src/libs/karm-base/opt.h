@@ -218,6 +218,7 @@ struct [[nodiscard]] Opt {
         return f();
     }
 
+    [[clang::coro_wrapper]]
     always_inline constexpr T take(char const* msg = "unwraping none") {
         if (not _present) [[unlikely]]
             panic(msg);

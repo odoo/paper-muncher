@@ -52,6 +52,7 @@ struct FileReader :
         return _fd->read(bytes);
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<usize> readAsync(MutBytes bytes, Sched& sched = globalSched()) {
         return sched.readAsync(_fd, bytes);
     }
@@ -67,6 +68,7 @@ struct FileWriter :
         return _fd->write(bytes);
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<usize> writeAsync(Bytes bytes, Sched& sched = globalSched()) {
         return sched.writeAsync(_fd, bytes);
     }

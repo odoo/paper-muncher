@@ -27,6 +27,7 @@ export struct Client : Transport {
         co_return Ok(resp);
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<Rc<Response>> getAsync(Mime::Url url) {
         auto req = makeRc<Request>();
         req->method = Method::GET;
@@ -36,6 +37,7 @@ export struct Client : Transport {
         return doAsync(req);
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<Rc<Response>> headAsync(Mime::Url url) {
         auto req = makeRc<Request>();
         req->method = Method::HEAD;
@@ -45,6 +47,7 @@ export struct Client : Transport {
         return doAsync(req);
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<Rc<Response>> postAsync(Mime::Url url, Rc<Body> body) {
         auto req = makeRc<Request>();
         req->method = Method::POST;

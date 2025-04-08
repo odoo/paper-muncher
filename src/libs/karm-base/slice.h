@@ -492,7 +492,7 @@ always_inline constexpr Opt<usize> indexOf(T const& slice, Meta::Equatable<U> au
 }
 
 template <Sliceable T, typename U = T::Inner>
-Generator<Slice<U>> split(T const& slice, Meta::Equatable<U> auto const& delim) {
+Generator<Slice<U>> split(T const& slice, Meta::Equatable<U> auto const delim) {
     Slice<U> curr = sub(slice);
     while (curr) {
         auto end = indexOf(curr, delim);
