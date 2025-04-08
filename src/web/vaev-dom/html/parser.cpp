@@ -1036,7 +1036,30 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
         _insertHtmlElement(t);
     }
 
-    // TODO: A start tag whose tag name is one of: "h1", "h2", "h3", "h4", "h5", "h6"
+    // A start tag whose tag name is one of: "h1", "h2", "h3", "h4", "h5", "h6"
+    else if (
+        t.type == HtmlToken::START_TAG and
+        (t.name == "h1" or t.name == "h2" or t.name == "h3" or t.name == "h4" or
+         t.name == "h5" or t.name == "h6"
+        )
+    ) {
+        // If the stack of open elements has a p element in button scope, then close a p element.
+        closePElementIfInButtonScope();
+
+        // If the current node is an HTML element whose tag name is one of "h1", "h2", "h3", "h4", "h5", or "h6",
+        // then this is a parse error; pop the current node off the stack of open elements.
+        if (
+            _currentElement()->tagName == Html::H1 or _currentElement()->tagName == Html::H2 or
+            _currentElement()->tagName == Html::H3 or _currentElement()->tagName == Html::H4 or
+            _currentElement()->tagName == Html::H5 or _currentElement()->tagName == Html::H6
+        ) {
+            _raise();
+            _openElements.popBack();
+        }
+
+        // Insert an HTML element for the token.
+        _insertHtmlElement(t);
+    }
 
     // TODO: A start tag whose tag name is one of: "pre", "listing"
 
@@ -1128,7 +1151,49 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
 
     // TODO: An end tag whose tag name is one of: "dd", "dt"
 
-    // TODO: An end tag whose tag name is one of: "h1", "h2", "h3", "h4", "h5", "h6"
+    // An end tag whose tag name is one of: "h1", "h2", "h3", "h4", "h5", "h6"
+    else if (
+        t.type == HtmlToken::END_TAG and
+        (t.name == "h1" or t.name == "h2" or t.name == "h3" or t.name == "h4" or
+         t.name == "h5" or t.name == "h6"
+        )
+    ) {
+        // If the stack of open elements does not have an element in scope that is an HTML element and whose tag name is
+        // one of "h1", "h2", "h3", "h4", "h5", or "h6",
+        if (not _hasElementInScope(Html::H1) and
+            not _hasElementInScope(Html::H2) and
+            not _hasElementInScope(Html::H3) and
+            not _hasElementInScope(Html::H4) and
+            not _hasElementInScope(Html::H5) and
+            not _hasElementInScope(Html::H6)) {
+            // then this is a parse error; ignore the token.
+            _raise();
+            return;
+        }
+
+        // Otherwise, run these steps:
+
+        // 1. Generate implied end tags.
+        _generateImpliedEndTags(*this);
+
+        // 2. If the current node is not an HTML element with the same tag name as that of the token, then this is a parse error.
+        if (_currentElement()->tagName != TagName::make(t.name, Vaev::HTML)) {
+            // then this is a parse error.
+            _raise();
+        }
+
+        // 3. Pop elements from the stack of open elements until an HTML element whose tag name is one of "h1", "h2",
+        // "h3", "h4", "h5", or "h6" has been popped from the stack.
+        while (Karm::any(_openElements)) {
+            auto poppedEl = _openElements.popBack();
+            if (
+                poppedEl->tagName == Html::H1 or poppedEl->tagName == Html::H2 or
+                poppedEl->tagName == Html::H3 or poppedEl->tagName == Html::H4 or
+                poppedEl->tagName == Html::H5 or poppedEl->tagName == Html::H6
+            )
+                break;
+        }
+    }
 
     // TODO: An end tag whose tag name is "sarcasm"
     //       This state machine is not equipped to handle sarcasm
