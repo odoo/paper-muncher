@@ -191,22 +191,26 @@ static inline auto intent(Filter filter) {
 
 static inline auto keyboardShortcut(App::Key key, App::KeyMod mods, OnPress onPress) {
     return intent([=](Ui::Node& n, App::Event& e) {
-        if (auto k = e.is<App::KeyboardEvent>()) {
-            if (k->type != App::KeyboardEvent::PRESS)
-                return;
-
-            if (k->key == key and match(k->mods, mods)) {
-                onPress(n);
-                e.accept();
-            }
+        if (auto it = e.is<App::KeyboardEvent>();
+            it and it->type == App::KeyboardEvent::PRESS and it->key == key and match(it->mods, mods)) {
+            onPress(n);
+            e.accept();
         }
     });
 }
 
+static inline auto keyboardShortcut(App::Key key, OnPress onPress) {
+    return keyboardShortcut(
+        key, App::KeyMod::NONE, onPress
+    );
+}
+
 static inline auto keyboardShortcut(App::Key key, App::KeyMod mods = App::KeyMod::NONE) {
-    return keyboardShortcut(key, mods, [=](Ui::Node& n) {
-        event<KeyboardShortcutActivated>(n);
-    });
+    return keyboardShortcut(
+        key, mods, [=](Ui::Node& n) {
+            event<KeyboardShortcutActivated>(n);
+        }
+    );
 }
 
 } // namespace Karm::Ui

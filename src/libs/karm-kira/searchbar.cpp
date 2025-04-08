@@ -23,7 +23,8 @@ Ui::Child searchbar(String text) {
                .borderFill = Ui::GRAY800,
            }) |
            Ui::minSize({Ui::UNCONSTRAINED, 36}) |
-           Ui::focusable();
+           Ui::focusable() |
+           Ui::keyboardShortcut(App::Key::F, App::KeyMod::CTRL);
 }
 
 } // namespace Karm::Kira

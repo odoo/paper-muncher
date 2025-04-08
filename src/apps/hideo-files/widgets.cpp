@@ -217,7 +217,8 @@ Ui::Child breadcrumb(State const& s) {
                    refreshTool()
                )
            ) |
-           Ui::focusable();
+           Ui::focusable() |
+           Ui::keyboardShortcut(App::Key::L, App::KeyMod::CTRL);
 }
 
 Ui::Child goBackTool(State const& s) {
