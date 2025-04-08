@@ -219,7 +219,7 @@ struct Button : _Box<Button> {
         if (e.accepted())
             return;
 
-        if (_onPress and _mouseListener.listen(*this, e)) {
+        if (_onPress and (_mouseListener.listen(*this, e) or e.is<KeyboardShortcutActivated>())) {
             _onPress(*this);
         }
     };

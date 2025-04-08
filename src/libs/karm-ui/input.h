@@ -17,6 +17,8 @@ using OnChange = Meta::Cond<
 template <typename T>
 static inline auto IGNORE(Ui::Node&, T) {}
 
+struct KeyboardShortcutActivated {};
+
 // MARK: Button ----------------------------------------------------------------
 
 struct MouseListener {
@@ -125,7 +127,7 @@ struct ButtonStyle {
     ButtonStyle withMargin(Math::Insetsi insets) const;
 };
 
-using OnPress = Opt<Func<void(Node&)>>;
+using OnPress = Opt<SharedFunc<void(Node&)>>;
 
 static inline auto NOP(Ui::Node&) {}
 
@@ -185,6 +187,26 @@ static inline auto intent(Filter filter) {
     return [filter = std::move(filter)](Child child) mutable {
         return intent(std::move(filter), std::move(child));
     };
+}
+
+static inline auto keyboardShortcut(App::Key key, App::KeyMod mods, OnPress onPress) {
+    return intent([=](Ui::Node& n, App::Event& e) {
+        if (auto k = e.is<App::KeyboardEvent>()) {
+            if (k->type != App::KeyboardEvent::PRESS)
+                return;
+
+            if (k->key == key and match(k->mods, mods)) {
+                onPress(n);
+                e.accept();
+            }
+        }
+    });
+}
+
+static inline auto keyboardShortcut(App::Key key, App::KeyMod mods = App::KeyMod::NONE) {
+    return keyboardShortcut(key, mods, [=](Ui::Node& n) {
+        event<KeyboardShortcutActivated>(n);
+    });
 }
 
 } // namespace Karm::Ui

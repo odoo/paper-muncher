@@ -10,7 +10,7 @@ namespace Karm::Kira {
 struct Scaffold : Meta::NoCopy {
     Mdi::Icon icon;
     String title;
-    Kr::TitlebarStyle titlebar = Kr::TitlebarStyle::DEFAULT;
+    TitlebarStyle titlebar = TitlebarStyle::DEFAULT;
 
     Opt<Ui::Slots> startTools = NONE;
     Opt<Ui::Slots> middleTools = NONE;

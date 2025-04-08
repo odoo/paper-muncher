@@ -36,7 +36,8 @@ Ui::Child mobilescaffold(Scaffold::State const& s, Scaffold const& scaffold) {
                 s.sidebarOpen
                     ? Mdi::MENU_OPEN
                     : Mdi::MENU
-            )
+            ) |
+            Ui::keyboardShortcut(App::Key::M, App::KeyMod::ALT)
         );
 
     if (scaffold.startTools)
@@ -78,7 +79,8 @@ Ui::Child desktopscaffold(Scaffold::State const& s, Scaffold const& scaffold) {
                 Scaffold::Model::bind<Scaffold::ToggleSidebar>(),
                 Ui::ButtonStyle::subtle(),
                 s.sidebarOpen ? Mdi::MENU_OPEN : Mdi::MENU
-            )
+            ) |
+            Ui::keyboardShortcut(App::Key::M, App::KeyMod::ALT)
         );
 
     if (scaffold.startTools)

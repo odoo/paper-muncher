@@ -222,34 +222,38 @@ Ui::Child breadcrumb(State const& s) {
 
 Ui::Child goBackTool(State const& s) {
     return Ui::button(
-        Model::bindIf<GoBack>(s.canGoBack()),
-        Ui::ButtonStyle::subtle(),
-        Mdi::ARROW_LEFT
-    );
+               Model::bindIf<GoBack>(s.canGoBack()),
+               Ui::ButtonStyle::subtle(),
+               Mdi::ARROW_LEFT
+           ) |
+           Ui::keyboardShortcut(App::Key::LEFT, App::KeyMod::ALT);
 }
 
 Ui::Child goForwardTool(State const& s) {
     return Ui::button(
-        Model::bindIf<GoForward>(s.canGoForward()),
-        Ui::ButtonStyle::subtle(),
-        Mdi::ARROW_RIGHT
-    );
+               Model::bindIf<GoForward>(s.canGoForward()),
+               Ui::ButtonStyle::subtle(),
+               Mdi::ARROW_RIGHT
+           ) |
+           Ui::keyboardShortcut(App::Key::RIGHT, App::KeyMod::ALT);
 }
 
 Ui::Child goParentTool(State const& s) {
     return Ui::button(
-        Model::bindIf<GoParent>(s.canGoParent(), 1),
-        Ui::ButtonStyle::subtle(),
-        Mdi::ARROW_UP
-    );
+               Model::bindIf<GoParent>(s.canGoParent(), 1),
+               Ui::ButtonStyle::subtle(),
+               Mdi::ARROW_UP
+           ) |
+           Ui::keyboardShortcut(App::Key::UP, App::KeyMod::ALT);
 }
 
 Ui::Child refreshTool() {
     return Ui::button(
-        Model::bind<Refresh>(),
-        Ui::ButtonStyle::subtle(),
-        Mdi::REFRESH
-    );
+               Model::bind<Refresh>(),
+               Ui::ButtonStyle::subtle(),
+               Mdi::REFRESH
+           ) |
+           Ui::keyboardShortcut(App::Key::R, App::KeyMod::ALT);
 }
 
 Ui::Child mainMenu([[maybe_unused]] State const& s) {
