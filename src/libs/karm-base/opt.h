@@ -340,7 +340,7 @@ struct [[nodiscard]] Opt<T> {
         Niche<T>::Content _content;
     };
 
-    static_assert(sizeof(T) == sizeof(typename Niche<T>::Content));
+    static_assert(sizeof(T) >= sizeof(typename Niche<T>::Content));
 
     always_inline constexpr Opt()
         : _content() {
@@ -376,9 +376,10 @@ struct [[nodiscard]] Opt<T> {
     always_inline constexpr Opt(Opt&& other)
         requires(Meta::MoveConstructible<T>)
     {
-        if (other.has())
+        if (other.has()) {
             std::construct_at(&_value, other.take());
-        else
+            _content.setupValue();
+        } else
             std::construct_at(&_content);
     }
 
@@ -386,18 +387,20 @@ struct [[nodiscard]] Opt<T> {
     always_inline constexpr Opt(Opt<U> const& other)
         requires(Meta::CopyConstructible<T, U>)
     {
-        if (other.has())
+        if (other.has()) {
             std::construct_at(&_value, other.unwrap());
-        else
+            _content.setupValue();
+        } else
             std::construct_at(&_content);
     }
 
     template <typename U>
         requires(Meta::MoveConstructible<T, U>)
     always_inline constexpr Opt(Opt<U>&& other) {
-        if (other.has())
+        if (other.has()) {
             std::construct_at(&_value, other.take());
-        else
+            _content.setupValue();
+        } else
             std::construct_at(&_content);
     }
 
@@ -657,6 +660,41 @@ struct [[nodiscard]] Opt<T> {
         return std::partial_ordering::unordered;
     }
 };
+
+template <>
+struct Niche<bool> {
+    struct Content {
+        u8 data;
+
+        constexpr Content() : data(2) {}
+
+        constexpr bool has() const {
+            return data != 2;
+        }
+
+        constexpr void setupValue() {}
+    };
+};
+
+template <Meta::Enum T>
+    requires requires { T::_LEN; }
+struct Niche<T> {
+    struct Content {
+        using IntType = Meta::UnderlyingType<T>;
+        IntType data;
+
+        constexpr Content() : data(IntType(T::_LEN) + 1) {}
+
+        constexpr bool has() const {
+            return data != (IntType(T::_LEN) + 1);
+        }
+
+        constexpr void setupValue() {}
+    };
+};
+
+inline constexpr char _NONE_VALUE = 'e';
+inline char const* _NONE_PTR = &_NONE_VALUE;
 
 static_assert(Tryable<Opt<isize>>);
 

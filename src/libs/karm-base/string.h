@@ -43,6 +43,11 @@ struct _Str : Slice<U> {
     }
 };
 
+template <StaticEncoding E, typename U>
+struct Niche<_Str<E, U>> {
+    struct Content : public Niche<Slice<U>>::Content {};
+};
+
 template <StaticEncoding E, usize N>
 struct _InlineString {
     using Encoding = E;
@@ -95,6 +100,12 @@ struct _InlineString {
     always_inline constexpr explicit operator bool() const {
         return _len > 0;
     }
+};
+
+template <StaticEncoding E, usize N>
+    requires Nicheable<Array<typename E::Unit, N>>
+struct Niche<_InlineString<E, N>> {
+    struct Content : public Niche<Array<typename E::Unit, N>>::Content {};
 };
 
 template <usize N>
@@ -190,6 +201,22 @@ struct _String {
     always_inline constexpr explicit operator bool() const {
         return _len > 0;
     }
+};
+
+template <StaticEncoding E>
+struct Niche<_String<E>> {
+    struct Content {
+        char const* ptr;
+        usize _len;
+
+        always_inline constexpr Content() : ptr(_NONE_PTR) {}
+
+        always_inline constexpr bool has() const {
+            return ptr != _NONE_PTR;
+        }
+
+        always_inline constexpr void setupValue() {}
+    };
 };
 
 template <
