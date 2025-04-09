@@ -40,11 +40,44 @@ void PageSelector::repr(Io::Emit& e) const {
     e("({} pseudos: {})", name, pseudos);
 }
 
+static Res<PagePseudo> _parsePagePseudo(Cursor<Css::Sst>& c) {
+    auto rollback = c.rollbackPoint();
+
+    if (not c.skip(Css::Token::COLON))
+        return Error::invalidData("expected ':'");
+
+    eatWhitespace(c);
+
+    if (c.peek() != Css::Token::IDENT)
+        return Error::invalidData("expected page pseudo");
+
+    rollback.disarm();
+    auto name = c.next().token.data;
+    if (name == "first") {
+        return Ok(PagePseudo::FIRST);
+    } else if (name == "blank") {
+        return Ok(PagePseudo::BLANK);
+    } else if (name == "left") {
+        return Ok(PagePseudo::LEFT);
+    } else if (name == "right") {
+        return Ok(PagePseudo::RIGHT);
+    } else {
+        rollback.arm();
+        return Error::invalidData("unknown page pseudo");
+    }
+}
+
 PageSelector PageSelector::parse(Cursor<Css::Sst>& c) {
     PageSelector res;
 
     if (c.peek() == Css::Token::IDENT) {
         res.name = c.next().token.data;
+    }
+
+    eatWhitespace(c);
+    while (auto it = _parsePagePseudo(c)) {
+        res.pseudos.pushBack(it.take());
+        eatWhitespace(c);
     }
 
     return res;
