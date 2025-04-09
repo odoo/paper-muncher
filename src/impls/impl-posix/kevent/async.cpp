@@ -37,6 +37,7 @@ struct DarwinSched :
         return Posix::toTimespec(delta);
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<> waitFor(struct kevent64_s ev) {
         usize id = _id++;
         auto promise = Async::Promise<>();
