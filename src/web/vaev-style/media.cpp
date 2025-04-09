@@ -78,6 +78,8 @@ MediaQuery _parseMediaQueryLeaf(Cursor<Css::Sst>& c) {
 
 MediaQuery _parseMediaQueryInfix(Cursor<Css::Sst>& c) {
     auto lhs = _parseMediaQueryLeaf(c);
+
+    eatWhitespace(c);
     while (not c.ended()) {
         if (c.skip(Css::Token::ident("and"))) {
             lhs = MediaQuery::combineAnd(lhs, _parseMediaQueryLeaf(c));
