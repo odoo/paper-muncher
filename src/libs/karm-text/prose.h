@@ -59,13 +59,13 @@ struct ProseStyle {
 
 struct Prose : Meta::Pinned {
     struct Span {
-        MutCursor<Span> parent = nullptr;
+        Opt<Rc<Span>> parent;
         Opt<Gfx::Color> color;
     };
 
     struct Cell {
         MutCursor<Prose> prose;
-        MutCursor<Span> span;
+        Opt<Rc<Span>> span;
 
         urange runeRange;
         Glyph glyph;
@@ -184,24 +184,34 @@ struct Prose : Meta::Pinned {
 
     // MARK: Span --------------------------------------------------------------
 
-    Vec<Box<Span>> _spans;
-    MutCursor<Span> _currentSpan = nullptr;
+    Vec<Rc<Span>> _spans;
+    Opt<Rc<Span>> _currentSpan = NONE;
 
     void pushSpan() {
-        _spans.pushBack(makeBox<Span>(_currentSpan));
-        _currentSpan = &*last(_spans);
+        if (_currentSpan == NONE)
+            _spans.pushBack(makeRc<Span>(Span{}));
+        else
+            _spans.pushBack(makeRc<Span>(_currentSpan->unwrap()));
+
+        last(_spans)->parent = _currentSpan;
+        
+        auto refToLast = last(_spans);
+        _currentSpan = refToLast;
     }
 
     void spanColor(Gfx::Color color) {
         if (not _currentSpan)
             return;
 
-        _currentSpan->color = color;
+        _currentSpan.unwrap()->color = color;
     }
 
     void popSpan() {
-        if (_currentSpan)
-            _currentSpan = _currentSpan->parent;
+        if (not _currentSpan)
+            return;
+
+        auto newCurr = _currentSpan.unwrap()->parent;
+        _currentSpan = newCurr;
     }
 
     // MARK: Layout ------------------------------------------------------------
