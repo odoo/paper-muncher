@@ -214,6 +214,8 @@ struct Prose : Meta::Pinned {
         _currentSpan = newCurr;
     }
 
+    void overrideSpanStackWith(Prose const& prose);
+
     // MARK: Layout ------------------------------------------------------------
 
     void _measureBlocks();

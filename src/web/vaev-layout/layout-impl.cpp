@@ -24,7 +24,7 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
 
     if (box.content.is<Karm::Image::Picture>()) {
         return constructReplacedFormatingContext(box);
-    } else if (box.content.is<Rc<Text::Prose>>()) {
+    } else if (box.content.is<InlineBox>()) {
         return constructInlineFormatingContext(box);
     } else if (
         display == Display::FLOW or
