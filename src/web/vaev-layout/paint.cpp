@@ -104,10 +104,8 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
 
     _paintFragBordersAndBackgrounds(frag, stack);
 
-    if (auto prose = frag.box->content.is<Rc<Text::Prose>>()) {
-        (*prose)->_style.color = frag.style().color;
-
-        stack.add(makeRc<Scene::Text>(frag.metrics.borderBox().topStart().cast<f64>(), *prose));
+    if (auto ic = frag.box->content.is<InlineBox>()) {
+        stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
     } else if (auto image = frag.box->content.is<Karm::Image::Picture>()) {
         stack.add(makeRc<Scene::Image>(frag.metrics.borderBox().cast<f64>(), *image));
     }
