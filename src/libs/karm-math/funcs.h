@@ -34,7 +34,7 @@ constexpr bool epsilonEq(T lhs, T rhs, T epsilon = Limits<T>::EPSILON) {
 
 // MARK: Floats ----------------------------------------------------------------
 
-static constexpr bool isNan(Meta::Float auto x) {
+constexpr bool isNan(Meta::Float auto x) {
     return __builtin_isnan(x);
 }
 

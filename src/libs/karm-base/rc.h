@@ -371,4 +371,19 @@ constexpr static Arc<T> makeArc(Args&&... args) {
     return {MOVE, new Cell<Lock, T>(std::forward<Args>(args)...)};
 }
 
+template <typename L, typename T>
+struct Niche<_Rc<L, T>> {
+    struct Content {
+        void* ptr;
+
+        constexpr Content() : ptr(nullptr) {}
+
+        constexpr bool has() const {
+            return ptr != nullptr;
+        }
+
+        constexpr void setupValue() {}
+    };
+};
+
 } // namespace Karm

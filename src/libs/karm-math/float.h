@@ -2,6 +2,8 @@
 
 #include <karm-base/base.h>
 
+#include "const.h"
+
 namespace Karm::Math {
 
 template <typename T>
@@ -116,3 +118,26 @@ static_assert(sizeof(FloatBits<f128>) == sizeof(f128));
 #endif
 
 } // namespace Karm::Math
+
+template <typename T>
+    requires requires { Math::FloatBits<T>::mantissaBits; }
+struct Karm::Niche<T> {
+    struct Content {
+        Math::FloatBits<T> bits;
+
+        constexpr Content() {
+            bits.d = Math::NAN;
+            bits.mantissa &= ~1;
+        }
+
+        constexpr bool has() const {
+            return not __builtin_isnan(bits.d) or bits.mantissa & 1;
+        }
+
+        constexpr void setupValue() {
+            if (__builtin_isnan(bits.d)) {
+                bits.mantissa |= 1;
+            }
+        }
+    };
+};
