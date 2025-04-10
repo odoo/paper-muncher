@@ -331,6 +331,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
         } else if (settings.margins == Print::Margins::CUSTOM) {
             pageMargin = settings.margins.custom.cast<Au>();
         } else if (settings.margins == Print::Margins::MINIMUM) {
+            // NOTE: No margins
         }
 
         RectAu pageContent = pageRect.shrink(pageMargin);

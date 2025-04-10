@@ -3,6 +3,7 @@ module;
 #include <karm-async/task.h>
 #include <karm-base/rc.h>
 #include <karm-logger/logger.h>
+#include <karm-mime/mime.h>
 #include <karm-mime/url.h>
 #include <karm-sys/chan.h>
 #include <karm-sys/file.h>
@@ -196,9 +197,12 @@ struct LocalTransport : Transport {
     LocalTransport(Vec<String> allowed)
         : _allowed(allowed) {}
 
-    Res<Rc<Body>> _load(Mime::Url url) {
-        if (try$(Sys::isFile(url)))
-            return Ok(Body::from(try$(Sys::File::open(url))));
+    Res<Pair<Rc<Body>, Mime::Mime>> _load(Mime::Url url) {
+        if (try$(Sys::isFile(url))) {
+            auto body = Body::from(try$(Sys::File::open(url)));
+            auto mime = Mime::sniffSuffix(url.path.suffix()).unwrapOr("application/octet-stream"_mime);
+            return Ok(Pair{body, mime});
+        }
 
         auto dir = try$(Sys::Dir::open(url));
         Io::StringWriter sw;
@@ -210,7 +214,7 @@ struct LocalTransport : Transport {
             e("<li><a href=\"{}\">{}</a></li>", url.join(diren.name), diren.name);
         }
         e("</ul></body></html>");
-        return Ok(Body::from(sw.take()));
+        return Ok(Pair{Body::from(sw.take()), "text/html"_mime});
     }
 
     Async::Task<> _saveAsync(Mime::Url url, Rc<Body> body) {
@@ -231,8 +235,11 @@ struct LocalTransport : Transport {
                     request->method == POST))
             co_trya$(_saveAsync(request->url, *it));
 
-        if (request->method == GET or request->method == POST)
-            response->body = co_try$(_load(request->url));
+        if (request->method == GET or request->method == POST) {
+            auto [body, mime] = co_try$(_load(request->url));
+            response->body = body;
+            response->header.add("Content-Type", mime.str());
+        }
 
         co_return Ok(response);
     }
