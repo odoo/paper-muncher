@@ -46,8 +46,25 @@ void Prose::clear() {
     _cells.clear();
     _blocks.clear();
     _blocksMeasured = false;
-    _beginBlock();
     _lines.clear();
+
+    _beginBlock();
+}
+
+void Prose::overrideSpanStackWith(Prose const& prose) {
+    _spans.clear();
+
+    for (auto currSpan = prose._currentSpan; currSpan != NONE; currSpan = currSpan.unwrap()->parent) {
+        Rc<Span> copySpanRc = currSpan.unwrap();
+        _spans.pushBack(copySpanRc);
+    }
+
+    reverse(mutSub(_spans));
+
+    if (_spans.len()) {
+        auto lastSpan = last(_spans);
+        _currentSpan = lastSpan;
+    }
 }
 
 void Prose::append(Slice<Rune> runes) {
