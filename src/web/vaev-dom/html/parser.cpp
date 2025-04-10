@@ -2132,7 +2132,7 @@ void HtmlParser::_handleInCell(HtmlToken const& t) {
         _generateImpliedEndTags(*this);
 
         // If the current node is not now a td element or a th element, then this is a parse error.
-        if (_currentElement()->tagName != Html::TD and _currentElement()->tagName != Html::TR) {
+        if (_currentElement()->tagName != Html::TD and _currentElement()->tagName != Html::TH) {
             _raise();
         }
 
