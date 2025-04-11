@@ -1,6 +1,7 @@
 module;
 
 #include <karm-image/picture.h>
+#include <karm-text/font.h>
 #include <karm-text/prose.h>
 #include <vaev-style/computer.h>
 
@@ -232,10 +233,63 @@ export struct BreakpointTraverser {
 export struct FormatingContext;
 export struct Box;
 
+export struct InlineBox {
+    /* NOTE:
+    This is a sketch implementation of the data model for InlineBox. We should be able to:
+        -   add different inline elements to it, from different types (Prose, Image, inline-block)
+        -   retrieve the added data to be displayed in the same Inline Formatting Context (break lines and display
+            into line boxes)
+        -   respect different styling for the same line (font, fontsize, color, etc)
+    */
+    Rc<Text::Prose> prose;
+    Vec<::Box<Box>> atomicBoxes;
+
+    InlineBox(Text::ProseStyle style) : prose(makeRc<Text::Prose>(style)) {}
+
+    InlineBox(Rc<Text::Prose> prose) : prose(prose) {}
+
+    void startInlineBox(Text::ProseStyle proseStyle) {
+        // FIXME: ugly workaround while we dont fix the Prose data structure
+        prose->pushSpan();
+        if (proseStyle.color)
+            prose->spanColor(proseStyle.color.unwrap());
+    }
+
+    void endInlineBox() {
+        prose->popSpan();
+    }
+
+    void add(Box&& b);
+
+    bool active() {
+        return prose->_runes.len();
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(inline box {}", prose->_runes);
+        e.indentNewline();
+        for (auto& c : atomicBoxes) {
+            e("{}", c);
+            e.newline();
+        }
+        e.deindent();
+        e(")");
+    }
+
+    static InlineBox fromInterruptedInlineBox(InlineBox const& inlineBox) {
+        auto oldProse = inlineBox.prose;
+
+        auto newInlineBox = InlineBox{oldProse->_style};
+        newInlineBox.prose->overrideSpanStackWith(*oldProse);
+
+        return newInlineBox;
+    }
+};
+
 export using Content = Union<
     None,
     Vec<Box>,
-    Rc<Text::Prose>,
+    InlineBox,
     Karm::Image::Picture>;
 
 export struct Attrs {
@@ -294,11 +348,22 @@ struct Box : Meta::NoCopy {
             }
             e.deindent();
             e(")");
+        } else if (content.is<InlineBox>()) {
+            e("(box {} {} {}", attrs, style->display, style->position);
+            e.indentNewline();
+            e("{}", content.unwrap<InlineBox>());
+            e.deindent();
+            e(")");
         } else {
             e("(box {} {} {})", attrs, style->display, style->position);
         }
     }
 };
+
+void InlineBox::add(Box&& b) {
+    prose->append(Text::Prose::StrutCell{atomicBoxes.len()});
+    atomicBoxes.pushBack(makeBox<Box>(std::move(b)));
+}
 
 export struct Viewport {
     Resolution dpi = Resolution::fromDpi(96);
@@ -457,6 +522,36 @@ export struct Input {
     }
 };
 
+// https://drafts.csswg.org/css-align-3/#baseline-set
+// https://drafts.csswg.org/css-writing-modes-3/#baseline
+// https://www.w3.org/TR/css-inline-3/#baseline-types
+// https://www.w3.org/TR/css-inline-3/#dominant-baseline-property
+// NOTE: positions are relative to box top, not absolute
+export struct BaselinePositionsSet {
+    Au alphabetic;
+    Au xHeight;
+    Au xMiddle;
+    Au capHeight;
+
+    BaselinePositionsSet translate(Au delta) const {
+        return {
+            alphabetic + delta,
+            xHeight + delta,
+            xMiddle + delta,
+            capHeight + delta,
+        };
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(baselineset ");
+        e(" alphabetic {}", alphabetic);
+        e(" xHeight {}", xHeight);
+        e(" xMiddle {}", xMiddle);
+        e(" capHeight {}", capHeight);
+        e(")\n");
+    }
+};
+
 export struct Output {
     // size of subtree maximizing displayed content while respecting
     // - endchild constraint or
@@ -475,6 +570,9 @@ export struct Output {
 
     // only to be used in discovery mode
     Opt<Breakpoint> breakpoint = NONE;
+
+    BaselinePositionsSet const firstBaselineSet = {};
+    BaselinePositionsSet const lastBaselineSet = {};
 
     static Output fromSize(Vec2Au size) {
         return {
