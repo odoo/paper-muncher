@@ -23,17 +23,20 @@ struct Shape : Node {
         if (not bound().colide(r))
             return;
 
-        g.path(_path);
+        if (not _fill and not _stroke)
+            return;
 
+        g.push();
+        g.path(_path);
         if (_fill)
             g.fill(*_fill, _rule);
-
         if (_stroke)
             g.stroke(*_stroke);
+        g.pop();
     }
 
     void repr(Io::Emit& e) const override {
-        e("(shape z:{} {})", zIndex);
+        e("(shape z:{} {})", zIndex, _path);
     }
 };
 

@@ -1,22 +1,25 @@
+module;
+
 #include <karm-ui/anim.h>
+#include <karm-ui/input.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/reducer.h>
 #include <karm-ui/scroll.h>
 #include <mdi/chevron-down.h>
 #include <mdi/chevron-up.h>
 
-#include "side-nav.h"
+export module Karm.Kira:sideNav;
 
 namespace Karm::Kira {
 
-Ui::Child sidenav(Ui::Children children) {
+export Ui::Child sidenav(Ui::Children children) {
     return Ui::vflow(8, children) |
            Ui::insets(8) |
            Ui::vscroll() |
            Ui::minSize({198, Ui::UNCONSTRAINED});
 }
 
-Ui::Child sidenavTree(Mdi::Icon icon, String title, Ui::Slot child) {
+export Ui::Child sidenavTree(Mdi::Icon icon, String title, Ui::Slot child) {
     return Ui::state(true, [=, child = std::move(child)](bool state, auto bind) {
         return Ui::vflow(
             Ui::button(
@@ -42,7 +45,7 @@ Ui::Child sidenavTree(Mdi::Icon icon, String title, Ui::Slot child) {
     });
 }
 
-Ui::Child sidenavItem(bool selected, Ui::OnPress onPress, Mdi::Icon icon, String title) {
+export Ui::Child sidenavItem(bool selected, Ui::OnPress onPress, Mdi::Icon icon, String title) {
     auto buttonStyle = Ui::ButtonStyle::regular();
 
     buttonStyle.idleStyle = {
@@ -74,7 +77,7 @@ Ui::Child sidenavItem(bool selected, Ui::OnPress onPress, Mdi::Icon icon, String
     );
 }
 
-Ui::Child sidenavTitle(String title) {
+export Ui::Child sidenavTitle(String title) {
     return Ui::titleMedium(title) | Ui::insets({8, 12, 8, 8});
 }
 

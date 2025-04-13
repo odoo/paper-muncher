@@ -1,7 +1,6 @@
 module;
 
-#include <karm-kira/resizable.h>
-#include <karm-kira/side-panel.h>
+#include <karm-ui/drag.h>
 #include <karm-ui/input.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/reducer.h>
@@ -16,6 +15,8 @@ module;
 #include <vaev-style/props.h>
 
 export module Vaev.Browser:inspect;
+
+import Karm.Kira;
 
 namespace Vaev::Browser {
 

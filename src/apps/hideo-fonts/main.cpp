@@ -1,12 +1,15 @@
-#include <karm-kira/badge.h>
-#include <karm-kira/scaffold.h>
 #include <karm-sys/entry.h>
 #include <karm-text/book.h>
 #include <karm-ui/app.h>
 #include <karm-ui/layout.h>
+#include <karm-ui/view.h>
+#include <karm-ui/input.h>
 #include <karm-ui/scroll.h>
+#include <karm-ui/reducer.h>
 #include <mdi/arrow-left.h>
 #include <mdi/format-font.h>
+
+import Karm.Kira;
 
 namespace Hideo::Fonts {
 

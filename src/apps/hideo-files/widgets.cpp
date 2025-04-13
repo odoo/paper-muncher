@@ -1,8 +1,7 @@
-#include <karm-kira/context-menu.h>
-#include <karm-kira/error-page.h>
-#include <karm-kira/scaffold.h>
-#include <karm-kira/toolbar.h>
+module;
+
 #include <karm-mime/mime.h>
+#include <karm-sys/dir.h>
 #include <karm-ui/dialog.h>
 #include <karm-ui/focus.h>
 #include <karm-ui/input.h>
@@ -40,14 +39,16 @@
 #include <mdi/refresh.h>
 #include <mdi/share.h>
 
-#include "model.h"
-#include "widgets.h"
+export module Hideo.Files:widgets;
+
+import Karm.Kira;
+import :model;
 
 namespace Hideo::Files {
 
 // MARK: Common Widgets --------------------------------------------------------
 
-Ui::Child alert(State const& state, String title, String body) {
+export Ui::Child alert(State const& state, String title, String body) {
     return Kr::errorPageContent({
         Kr::errorPageTitle(Mdi::ALERT_DECAGRAM, title),
         Kr::errorPageBody(body),
@@ -191,7 +192,16 @@ Ui::Child breadcrumbRoot(Mime::Url const& url) {
     );
 }
 
-Ui::Child breadcrumb(State const& s) {
+export Ui::Child refreshTool() {
+    return Ui::button(
+               Model::bind<Refresh>(),
+               Ui::ButtonStyle::subtle(),
+               Mdi::REFRESH
+           ) |
+           Ui::keyboardShortcut(App::Key::R, App::KeyMod::ALT);
+}
+
+export Ui::Child breadcrumb(State const& s) {
     Ui::Children items;
     items.pushBack(breadcrumbRoot(s.currentUrl()));
     s
@@ -221,7 +231,7 @@ Ui::Child breadcrumb(State const& s) {
            Ui::keyboardShortcut(App::Key::L, App::KeyMod::CTRL);
 }
 
-Ui::Child goBackTool(State const& s) {
+export Ui::Child goBackTool(State const& s) {
     return Ui::button(
                Model::bindIf<GoBack>(s.canGoBack()),
                Ui::ButtonStyle::subtle(),
@@ -230,7 +240,7 @@ Ui::Child goBackTool(State const& s) {
            Ui::keyboardShortcut(App::Key::LEFT, App::KeyMod::ALT);
 }
 
-Ui::Child goForwardTool(State const& s) {
+export Ui::Child goForwardTool(State const& s) {
     return Ui::button(
                Model::bindIf<GoForward>(s.canGoForward()),
                Ui::ButtonStyle::subtle(),
@@ -239,7 +249,7 @@ Ui::Child goForwardTool(State const& s) {
            Ui::keyboardShortcut(App::Key::RIGHT, App::KeyMod::ALT);
 }
 
-Ui::Child goParentTool(State const& s) {
+export Ui::Child goParentTool(State const& s) {
     return Ui::button(
                Model::bindIf<GoParent>(s.canGoParent(), 1),
                Ui::ButtonStyle::subtle(),
@@ -248,16 +258,7 @@ Ui::Child goParentTool(State const& s) {
            Ui::keyboardShortcut(App::Key::UP, App::KeyMod::ALT);
 }
 
-Ui::Child refreshTool() {
-    return Ui::button(
-               Model::bind<Refresh>(),
-               Ui::ButtonStyle::subtle(),
-               Mdi::REFRESH
-           ) |
-           Ui::keyboardShortcut(App::Key::R, App::KeyMod::ALT);
-}
-
-Ui::Child mainMenu([[maybe_unused]] State const& s) {
+export Ui::Child mainMenu([[maybe_unused]] State const& s) {
     return Kr::contextMenuContent({
         Kr::contextMenuItem(
             Ui::NOP,
@@ -269,7 +270,7 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
     });
 }
 
-Ui::Child moreTool(State const& s) {
+export Ui::Child moreTool(State const& s) {
     return Ui::button(
         [&](Ui::Node& n) {
             Ui::showPopover(n, n.bound().bottomEnd(), mainMenu(s));
@@ -279,7 +280,7 @@ Ui::Child moreTool(State const& s) {
     );
 }
 
-Ui::Child toolbar(State const& s) {
+export Ui::Child toolbar(State const& s) {
     return Kr::toolbar({
         goBackTool(s),
         goForwardTool(s),

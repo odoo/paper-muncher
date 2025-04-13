@@ -1,16 +1,19 @@
+module;
+
+#include <karm-ui/input.h>
 #include <karm-ui/layout.h>
 #include <mdi/close.h>
 
-#include "side-panel.h"
+export module Karm.Kira:sidePanel;
 
 namespace Karm::Kira {
 
-Ui::Child sidePanelContent(Ui::Children children) {
+export Ui::Child sidePanelContent(Ui::Children children) {
     return Ui::vflow(children) |
            Ui::pinSize({128, Ui::UNCONSTRAINED});
 }
 
-Ui::Child sidePanelTitle(Str title) {
+export Ui::Child sidePanelTitle(Str title) {
     return Ui::hflow(
                Ui::labelLarge(title),
                Ui::grow(NONE)
@@ -18,7 +21,7 @@ Ui::Child sidePanelTitle(Str title) {
            Ui::insets(6);
 }
 
-Ui::Child sidePanelTitle(Ui::OnPress onClose, Str title) {
+export Ui::Child sidePanelTitle(Ui::OnPress onClose, Str title) {
     return Ui::hflow(
                Ui::labelLarge(title),
                Ui::grow(NONE),

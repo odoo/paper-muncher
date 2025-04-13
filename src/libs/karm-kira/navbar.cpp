@@ -1,10 +1,13 @@
+module;
+
+#include <karm-ui/input.h>
 #include <karm-ui/layout.h>
 
-#include "navbar.h"
+export module Karm.Kira:navbar;
 
 namespace Karm::Kira {
 
-Ui::Child navbarContent(Ui::Children children) {
+export Ui::Child navbarContent(Ui::Children children) {
     return Ui::vflow(
         Ui::separator(),
         Ui::hflow(
@@ -18,7 +21,7 @@ Ui::Child navbarContent(Ui::Children children) {
     );
 }
 
-Ui::Child navbarItem(Ui::OnPress onPress, Mdi::Icon icon, Str text, bool selected) {
+export Ui::Child navbarItem(Ui::OnPress onPress, Mdi::Icon icon, Str text, bool selected) {
     return Ui::button(
                std::move(onPress),
                selected

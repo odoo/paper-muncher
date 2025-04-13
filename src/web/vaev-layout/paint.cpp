@@ -2,7 +2,6 @@ module;
 
 #include <karm-scene/box.h>
 #include <karm-scene/image.h>
-#include <karm-scene/stack.h>
 #include <karm-scene/text.h>
 #include <vaev-style/computer.h>
 

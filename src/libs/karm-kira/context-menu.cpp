@@ -1,9 +1,14 @@
+module;
+
+#include <karm-gfx/shadow.h>
 #include <karm-ui/anim.h>
+#include <karm-ui/input.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/popover.h>
 
-#include "checkbox.h"
-#include "context-menu.h"
+export module Karm.Kira:contextMenu;
+
+import :checkbox;
 
 namespace Karm::Kira {
 
@@ -37,11 +42,17 @@ struct ContextMenu : Ui::ProxyNode<ContextMenu> {
     }
 };
 
-Ui::Child contextMenu(Ui::Child child, Ui::Slot menu) {
+export Ui::Child contextMenu(Ui::Child child, Ui::Slot menu) {
     return makeRc<ContextMenu>(child, std::move(menu));
 }
 
-Ui::Child contextMenuContent(Ui::Children children) {
+export auto contextMenu(Ui::Slot menu) {
+    return [menu = std::move(menu)](Ui::Child child) mutable {
+        return contextMenu(child, std::move(menu));
+    };
+}
+
+export Ui::Child contextMenuContent(Ui::Children children) {
     return Ui::vflow(
                children
            ) |
@@ -57,7 +68,7 @@ Ui::Child contextMenuContent(Ui::Children children) {
            Ui::scaleIn();
 }
 
-Ui::Child contextMenuItem(Ui::OnPress onPress, Opt<Mdi::Icon> i, Str t) {
+export Ui::Child contextMenuItem(Ui::OnPress onPress, Opt<Mdi::Icon> i, Str t) {
     return Ui::hflow(
                12,
                Math::Align::CENTER,
@@ -76,7 +87,7 @@ Ui::Child contextMenuItem(Ui::OnPress onPress, Opt<Mdi::Icon> i, Str t) {
            Ui::insets(4);
 }
 
-Ui::Child contextMenuCheck(Ui::OnPress onPress, bool checked, Str t) {
+export Ui::Child contextMenuCheck(Ui::OnPress onPress, bool checked, Str t) {
     return Ui::hflow(
                12,
                Math::Align::CENTER,
@@ -95,7 +106,7 @@ Ui::Child contextMenuCheck(Ui::OnPress onPress, bool checked, Str t) {
            Ui::insets(4);
 }
 
-Ui::Child contextMenuDock(Ui::Children children) {
+export Ui::Child contextMenuDock(Ui::Children children) {
     return Ui::hflow(
                2,
                Math::Align::CENTER,
@@ -104,7 +115,7 @@ Ui::Child contextMenuDock(Ui::Children children) {
            Ui::insets(4);
 }
 
-Ui::Child contextMenuIcon(Ui::OnPress onPress, Mdi::Icon i) {
+export Ui::Child contextMenuIcon(Ui::OnPress onPress, Mdi::Icon i) {
     if (onPress) {
         onPress = [onPress = std::move(onPress)](auto& n) {
             onPress(n);

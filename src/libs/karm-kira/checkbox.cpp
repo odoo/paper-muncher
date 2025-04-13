@@ -1,7 +1,9 @@
+module;
+
 #include <karm-ui/input.h>
 #include <mdi/check-bold.h>
 
-#include "checkbox.h"
+export module Karm.Kira:checkbox;
 
 namespace Karm::Kira {
 
@@ -58,7 +60,7 @@ struct Checkbox : Ui::View<Checkbox> {
     }
 };
 
-Ui::Child checkbox(bool value, Ui::OnChange<bool> onChange) {
+export Ui::Child checkbox(bool value, Ui::OnChange<bool> onChange) {
     return makeRc<Checkbox>(value, std::move(onChange));
 }
 

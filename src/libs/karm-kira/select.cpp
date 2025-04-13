@@ -1,14 +1,17 @@
+module;
+
 #include <karm-ui/anim.h>
+#include <karm-ui/input.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/popover.h>
 #include <karm-ui/scroll.h>
 #include <mdi/chevron-down.h>
 
-#include "select.h"
+export module Karm.Kira:select;
 
 namespace Karm::Kira {
 
-Ui::Child select(Ui::Child value, Ui::Slots slots) {
+export Ui::Child select(Ui::Child value, Ui::Slots slots) {
     return Ui::button(
         [slots = std::move(slots)](auto& n) {
             Ui::showPopover(
@@ -40,16 +43,16 @@ Ui::Child select(Ui::Child value, Ui::Slots slots) {
     );
 }
 
-Ui::Child selectValue(String text) {
+export Ui::Child selectValue(String text) {
     return Ui::labelMedium(text);
 }
 
-Ui::Child selectLabel(String text) {
+export Ui::Child selectLabel(String text) {
     return Ui::labelMedium(Ui::GRAY400, text) |
            Ui::insets({12, 6, 3, 14});
 }
 
-Ui::Child selectItem(Ui::OnPress onPress, String t) {
+export Ui::Child selectItem(Ui::OnPress onPress, String t) {
     return Ui::hflow(
                12,
                Math::Align::CENTER,
@@ -67,7 +70,7 @@ Ui::Child selectItem(Ui::OnPress onPress, String t) {
            Ui::insets(4);
 }
 
-Ui::Child selectGroup(Ui::Children children) {
+export Ui::Child selectGroup(Ui::Children children) {
     return Ui::vflow(children);
 }
 

@@ -1,20 +1,24 @@
+module;
+
 #include <karm-app/form-factor.h>
 #include <karm-print/file-printer.h>
+#include <karm-print/page.h>
 #include <karm-print/paper.h>
 #include <karm-sys/file.h>
 #include <karm-sys/proc.h>
+#include <karm-ui/box.h>
+#include <karm-ui/input.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/popover.h>
 #include <karm-ui/reducer.h>
 #include <karm-ui/scroll.h>
+#include <karm-ui/view.h>
 
-#include "checkbox.h"
-#include "dialog.h"
-#include "print-dialog.h"
-#include "row.h"
-#include "select.h"
+export module Hideo.Printers:dialog;
 
-namespace Karm::Kira {
+import Karm.Kira;
+
+namespace Hideo::Printers {
 
 // MARK: Model -----------------------------------------------------------------
 
@@ -22,6 +26,8 @@ enum struct PrintAction {
     PRINT,
     STOP
 };
+
+export using PrintPreview = SharedFunc<Vec<Print::Page>(Print::Settings const&)>;
 
 struct State {
     PrintPreview preview;
@@ -103,7 +109,7 @@ Ui::Child _printSelect(State const& s, usize index) {
     return Ui::hflow(
                8,
                Math::Align::CENTER,
-               checkbox(true, NONE),
+               Kr::checkbox(true, NONE),
                Ui::labelMedium("Page {} of {}", index + 1, s.pages.len())
            ) |
            Ui::box({
@@ -207,23 +213,23 @@ void _printPDF(State const& s) {
 }
 
 Ui::Child _destinationSelect() {
-    return select(
-        selectValue("Save as PDF"s),
+    return Kr::select(
+        Kr::selectValue("Save as PDF"s),
         [] -> Ui::Children {
             return {
-                selectGroup({
-                    selectLabel("Save as"s),
-                    selectItem(Ui::NOP, "Save as PDF"s),
-                    selectItem(Ui::NOP, "Save as Image"s),
+                Kr::selectGroup({
+                    Kr::selectLabel("Save as"s),
+                    Kr::selectItem(Ui::NOP, "Save as PDF"s),
+                    Kr::selectItem(Ui::NOP, "Save as Image"s),
                 }),
                 Ui::separator(),
-                selectGroup({
-                    selectLabel("Printers"s),
-                    selectItem(Ui::NOP, "Epson ET-8550"s),
-                    selectItem(Ui::NOP, "HP DeskJet 2700"s),
+                Kr::selectGroup({
+                    Kr::selectLabel("Printers"s),
+                    Kr::selectItem(Ui::NOP, "Epson ET-8550"s),
+                    Kr::selectItem(Ui::NOP, "HP DeskJet 2700"s),
                 }),
                 Ui::separator(),
-                selectItem(Ui::NOP, "Add printer..."s)
+                Kr::selectItem(Ui::NOP, "Add printer..."s)
 
             };
         }
@@ -231,20 +237,20 @@ Ui::Child _destinationSelect() {
 }
 
 Ui::Child _paperSelect(State const& s) {
-    return select(selectValue(s.settings.paper.name), [] -> Ui::Children {
+    return Kr::select(Kr::selectValue(s.settings.paper.name), [] -> Ui::Children {
         Vec<Ui::Child> groups;
 
         bool first = false;
         for (auto& serie : Print::SERIES) {
             Vec<Ui::Child> items;
-            items.pushBack(selectLabel(serie.name));
+            items.pushBack(Kr::selectLabel(serie.name));
             for (auto const& stock : serie.stocks) {
-                items.pushBack(selectItem(Model::bind<ChangePaper>(stock), stock.name));
+                items.pushBack(Kr::selectItem(Model::bind<ChangePaper>(stock), stock.name));
             }
 
             if (not first)
                 groups.pushBack(Ui::separator());
-            groups.pushBack(selectGroup(std::move(items)));
+            groups.pushBack(Kr::selectGroup(std::move(items)));
 
             first = false;
         }
@@ -255,94 +261,93 @@ Ui::Child _paperSelect(State const& s) {
 
 Ui::Child _printSettings(State const& s) {
     return Ui::vflow(
-        rowContent(
+        Kr::rowContent(
             NONE,
             "Destination"s,
             NONE,
             _destinationSelect()
         ),
-        selectRow(
-            selectValue("1"s),
+        Kr::selectRow(
+            Kr::selectValue("1"s),
             [] -> Ui::Children {
                 return {
-                    selectItem(Ui::NOP, "1"s),
-                    selectItem(Ui::NOP, "2"s),
-                    selectItem(Ui::NOP, "3"s),
-                    selectItem(Ui::NOP, "4"s),
-                    selectItem(Ui::NOP, "5"s),
+                    Kr::selectItem(Ui::NOP, "1"s),
+                    Kr::selectItem(Ui::NOP, "2"s),
+                    Kr::selectItem(Ui::NOP, "3"s),
+                    Kr::selectItem(Ui::NOP, "4"s),
+                    Kr::selectItem(Ui::NOP, "5"s),
                 };
             },
             "Copies"s
         ),
-        selectRow(
-            selectValue("All"s),
+        Kr::selectRow(
+            Kr::selectValue("All"s),
             [] -> Ui::Children {
                 return {
-                    selectItem(Ui::NOP, "All"s),
-                    selectItem(Ui::NOP, "Odd pages only"s),
-                    selectItem(Ui::NOP, "Even pages only"s),
-                    selectItem(Ui::NOP, "Custom"s),
-
+                    Kr::selectItem(Ui::NOP, "All"s),
+                    Kr::selectItem(Ui::NOP, "Odd pages only"s),
+                    Kr::selectItem(Ui::NOP, "Even pages only"s),
+                    Kr::selectItem(Ui::NOP, "Custom"s),
                 };
             },
             "Pages"s
         ),
-        selectRow(
-            selectValue(
+        Kr::selectRow(
+            Kr::selectValue(
                 s.settings.orientation == Print::Orientation::PORTRAIT
                     ? "Portrait"s
                     : "Landscape"s
             ),
             [] -> Ui::Children {
                 return {
-                    selectItem(Model::bind<ChangeOrientation>(Print::Orientation::PORTRAIT), "Portrait"s),
-                    selectItem(Model::bind<ChangeOrientation>(Print::Orientation::LANDSCAPE), "Landscape"s),
+                    Kr::selectItem(Model::bind<ChangeOrientation>(Print::Orientation::PORTRAIT), "Portrait"s),
+                    Kr::selectItem(Model::bind<ChangeOrientation>(Print::Orientation::LANDSCAPE), "Landscape"s),
 
                 };
             },
             "Orientation"s
         ),
         Ui::separator(),
-        treeRow(
+        Kr::treeRow(
             NONE,
             "More settings"s,
             NONE,
             Ui::Slots{[&] -> Ui::Children {
                 return {
-                    rowContent(
+                    Kr::rowContent(
                         NONE,
                         "Paper"s,
                         NONE,
                         _paperSelect(s)
                     ),
-                    selectRow(
-                        selectValue("1"s),
+                    Kr::selectRow(
+                        Kr::selectValue("1"s),
                         [] -> Ui::Children {
                             return {
-                                selectItem(Ui::NOP, "1"s),
-                                selectItem(Ui::NOP, "2"s),
-                                selectItem(Ui::NOP, "4"s),
-                                selectItem(Ui::NOP, "6"s),
-                                selectItem(Ui::NOP, "9"s),
-                                selectItem(Ui::NOP, "16"s),
+                                Kr::selectItem(Ui::NOP, "1"s),
+                                Kr::selectItem(Ui::NOP, "2"s),
+                                Kr::selectItem(Ui::NOP, "4"s),
+                                Kr::selectItem(Ui::NOP, "6"s),
+                                Kr::selectItem(Ui::NOP, "9"s),
+                                Kr::selectItem(Ui::NOP, "16"s),
                             };
                         },
                         "Page per sheet"s
                     ),
-                    selectRow(
-                        selectValue(Io::format("{}", Io::cased(s.settings.margins, Io::Case::CAPITAL))),
+                    Kr::selectRow(
+                        Kr::selectValue(Io::format("{}", Io::cased(s.settings.margins, Io::Case::CAPITAL))),
                         [] -> Ui::Children {
                             return {
-                                selectItem(Model::bind<ChangeMargin>(Print::Margins::NONE), "None"s),
-                                selectItem(Model::bind<ChangeMargin>(Print::Margins::MINIMUM), "Minimum"s),
-                                selectItem(Model::bind<ChangeMargin>(Print::Margins::DEFAULT), "Default"s),
-                                selectItem(Model::bind<ChangeMargin>(Print::Margins::CUSTOM), "Custom"s),
+                                Kr::selectItem(Model::bind<ChangeMargin>(Print::Margins::NONE), "None"s),
+                                Kr::selectItem(Model::bind<ChangeMargin>(Print::Margins::MINIMUM), "Minimum"s),
+                                Kr::selectItem(Model::bind<ChangeMargin>(Print::Margins::DEFAULT), "Default"s),
+                                Kr::selectItem(Model::bind<ChangeMargin>(Print::Margins::CUSTOM), "Custom"s),
                             };
                         },
                         "Margins"s
                     ),
 
-                    numberRow(
+                    Kr::numberRow(
                         s.settings.scale,
                         [](auto& n, f64 scale) {
                             Model::bubble<ChangeScale>(n, ChangeScale{scale});
@@ -351,14 +356,14 @@ Ui::Child _printSettings(State const& s) {
                         "Scale"s
                     ),
 
-                    checkboxRow(
+                    Kr::checkboxRow(
                         s.settings.headerFooter,
                         [&](auto& n, ...) {
                             Model::bubble<ToggleHeaderFooter>(n);
                         },
                         "Header and footers"s
                     ),
-                    checkboxRow(
+                    Kr::checkboxRow(
                         s.settings.backgroundGraphics,
                         [&](auto& n, ...) {
                             Model::bubble<ToggleBackgroundGraphics>(n);
@@ -379,42 +384,42 @@ Ui::Child _printControls(State const& s) {
 }
 
 Ui::Child _printDialog(State const& s) {
-    return dialogContent({
-        dialogTitleBar("Print"s),
+    return Kr::dialogContent({
+        Kr::dialogTitleBar("Print"s),
         Ui::hflow(
             _printPreview(s),
             _printControls(s) | Ui::grow()
         ) | Ui::maxSize({Ui::UNCONSTRAINED, 500}) |
             Ui::grow(),
         Ui::separator(),
-        dialogFooter({
-            dialogCancel(),
-            dialogAction(Model::bind(PrintAction::PRINT), "Print"s),
+        Kr::dialogFooter({
+            Kr::dialogCancel(),
+            Kr::dialogAction(Model::bind(PrintAction::PRINT), "Print"s),
         }),
     });
 }
 
 Ui::Child _printDialogMobile(State const& s) {
-    return dialogContent({
-        dialogTitleBar("Print"s),
+    return Kr::dialogContent({
+        Kr::dialogTitleBar("Print"s),
         Ui::separator(),
         Ui::vflow(
             _printPreviewMobile(s),
             Ui::separator(),
-            titleRow("Settings"s),
+            Kr::titleRow("Settings"s),
             _printSettings(s)
         ) | Ui::minSize(500) |
             Ui::vscroll() |
             Ui::grow(),
         Ui::separator(),
-        dialogFooter({
-            dialogCancel(),
-            dialogAction(Model::bind(PrintAction::PRINT), "Print"s),
+        Kr::dialogFooter({
+            Kr::dialogCancel(),
+            Kr::dialogAction(Model::bind(PrintAction::PRINT), "Print"s),
         }),
     });
 }
 
-Ui::Child printDialog(PrintPreview preview) {
+export Ui::Child printDialog(PrintPreview preview) {
     return Ui::reducer<Model>({preview}, [](State const& s) {
         auto isMobile = App::formFactor == App::FormFactor::MOBILE;
         if (isMobile)
@@ -423,4 +428,4 @@ Ui::Child printDialog(PrintPreview preview) {
     });
 }
 
-} // namespace Karm::Kira
+} // namespace Hideo::Printers

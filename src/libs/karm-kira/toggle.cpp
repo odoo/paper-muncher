@@ -1,9 +1,13 @@
+module;
+
 #include <karm-ui/anim.h>
 #include <karm-ui/input.h>
 
+export module Karm.Kira:toggle;
+
 namespace Karm::Kira {
 
-struct Toggle : Ui::View<Toggle> {
+export struct Toggle : Ui::View<Toggle> {
     static constexpr auto PADDING = 3;
     static constexpr auto SIZE = 18;
 
@@ -78,7 +82,7 @@ struct Toggle : Ui::View<Toggle> {
     }
 };
 
-Ui::Child toggle(bool value, Ui::OnChange<bool> onChange) {
+export Ui::Child toggle(bool value, Ui::OnChange<bool> onChange) {
     return makeRc<Toggle>(value, std::move(onChange));
 }
 

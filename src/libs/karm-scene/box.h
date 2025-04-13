@@ -14,7 +14,10 @@ struct Box : Node {
     Gfx::Outline _outline;
     Vec<Gfx::Fill> _backgrounds;
 
-    Box(Math::Rectf bound, Gfx::Borders borders, Gfx::Outline outline, Vec<Gfx::Fill> backgrounds)
+    Box(Math::Rectf bound,
+        Gfx::Borders borders,
+        Gfx::Outline outline,
+        Vec<Gfx::Fill> backgrounds)
         : _bound(bound), _borders(borders), _outline(outline), _backgrounds(backgrounds) {
     }
 

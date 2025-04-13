@@ -1,11 +1,14 @@
+module;
+
 #include <karm-ui/dialog.h>
 #include <karm-ui/drag.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/reducer.h>
 #include <karm-ui/scroll.h>
 
-#include "color-input.h"
-#include "dialog.h"
+export module Karm.Kira:colorInput;
+
+import :dialog;
 
 namespace Karm::Kira {
 
@@ -103,7 +106,7 @@ struct HsvSquare : Ui::View<HsvSquare> {
     }
 };
 
-Ui::Child hsvSquare(Gfx::Hsv value, Ui::OnChange<Gfx::Hsv> onChange) {
+export Ui::Child hsvSquare(Gfx::Hsv value, Ui::OnChange<Gfx::Hsv> onChange) {
     return makeRc<HsvSquare>(value, std::move(onChange));
 }
 
@@ -126,7 +129,7 @@ static Ui::Child _sliderThumb(Gfx::Color color) {
            Ui::dragRegion();
 }
 
-Ui::Child hsvValueSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChange) {
+export Ui::Child hsvValueSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChange) {
     auto background =
         Gfx::Gradient::hlinear()
             .withColors(
@@ -150,7 +153,7 @@ Ui::Child hsvValueSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChange) {
            Ui::maxSize({Ui::UNCONSTRAINED, 18});
 }
 
-Ui::Child hsvSaturationSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChange) {
+export Ui::Child hsvSaturationSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChange) {
     auto background =
         Gfx::Gradient::hlinear()
             .withColors(
@@ -182,7 +185,7 @@ Ui::Child hsvSaturationSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChange) {
            Ui::maxSize({Ui::UNCONSTRAINED, 18});
 }
 
-Ui::Child hsvHueSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChange) {
+export Ui::Child hsvHueSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChange) {
     return _sliderThumb(Gfx::hsvToRgb(hsv.withSaturation(1).withValue(1))) |
            Ui::end() |
            Ui::slider(hsv.hue / 360, [hsv, onChange](auto& n, auto v) {
@@ -243,7 +246,7 @@ Gfx::Color pickColor(Gfx::Color c) {
     return Gfx::WHITE;
 }
 
-Ui::Child colorPickerDialog() {
+export Ui::Child colorPickerDialog() {
     return Ui::reducer<Model>(
         {
             .hsv = Gfx::rgbToHsv(Gfx::BLUE),
@@ -267,38 +270,27 @@ Ui::Child colorPickerDialog() {
                 Ui::vflow(
                     8,
                     preview,
-                    Kr::hsvHueSlider(
+                    hsvHueSlider(
                         s.hsv,
-                        [](auto& n, auto v) {
-                            Model::bubble<UpdateHsv>(n, v);
-                        }
+                        Model::map<UpdateHsv>()
                     ),
-                    Kr::hsvSaturationSlider(
+                    hsvSaturationSlider(
                         s.hsv,
-                        [](auto& n, auto v) {
-                            Model::bubble<UpdateHsv>(n, v);
-                        }
+                        Model::map<UpdateHsv>()
                     ),
-                    Kr::hsvValueSlider(
+                    hsvValueSlider(
                         s.hsv,
-                        [](auto& n, auto v) {
-                            Model::bubble<UpdateHsv>(n, v);
-                        }
+                        Model::map<UpdateHsv>()
                     )
                 ) |
                 Ui::minSize({256, Ui::UNCONSTRAINED});
-
-            return Kr::dialogContent({
-
-                Kr::dialogTitleBar("Color Picker"s),
-                content |
-                    Ui::insets({8, 16}),
-                Kr::dialogFooter(
-                    {
-                        Kr::dialogCancel(),
-                        Kr::dialogAction(Ui::NOP, "Ok"s),
-                    }
-                )
+            return dialogContent({
+                dialogTitleBar("Color Picker"s),
+                content | Ui::insets({8, 16}),
+                dialogFooter({
+                    dialogCancel(),
+                    dialogAction(Ui::NOP, "Ok"s),
+                }),
             });
         }
     );
@@ -306,7 +298,7 @@ Ui::Child colorPickerDialog() {
 
 // MARK: Color Input -----------------------------------------------------------
 
-Ui::Child colorInput(Gfx::Color color, Ui::OnChange<Gfx::Color>) {
+export Ui::Child colorInput(Gfx::Color color, Ui::OnChange<Gfx::Color>) {
     auto colorPreview =
         Ui::empty({18, 18}) |
         Ui::box({

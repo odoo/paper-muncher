@@ -1,6 +1,18 @@
-#include "resizable.h"
+module;
+
+#include <karm-ui/drag.h>
+#include <karm-ui/input.h>
+
+export module Karm.Kira:resizable;
 
 namespace Karm::Kira {
+
+export enum struct ResizeHandle {
+    TOP,
+    START,
+    BOTTOM,
+    END
+};
 
 struct Resizable : Ui::ProxyNode<Resizable> {
     Math::Vec2i _size;
@@ -43,8 +55,14 @@ struct Resizable : Ui::ProxyNode<Resizable> {
     }
 };
 
-Ui::Child resizable(Ui::Child child, Math::Vec2i size, Ui::OnChange<Math::Vec2i> onChange) {
+export Ui::Child resizable(Ui::Child child, Math::Vec2i size, Ui::OnChange<Math::Vec2i> onChange) {
     return makeRc<Resizable>(child, size, std::move(onChange));
+}
+
+export auto resizable(Math::Vec2i size, Ui::OnChange<Math::Vec2i> onChange) {
+    return [size, onChange = std::move(onChange)](Ui::Child child) mutable -> Ui::Child {
+        return resizable(child, size, std::move(onChange));
+    };
 }
 
 static Ui::Child _resizeHandle(Math::Vec2i dir) {
@@ -55,7 +73,7 @@ static Ui::Child _resizeHandle(Math::Vec2i dir) {
            Ui::dragRegion(dir);
 }
 
-Ui::Child resizable(Ui::Child child, ResizeHandle handlePosition, Math::Vec2i size, Ui::OnChange<Math::Vec2i> onChange) {
+export Ui::Child resizable(Ui::Child child, ResizeHandle handlePosition, Math::Vec2i size, Ui::OnChange<Math::Vec2i> onChange) {
     if (handlePosition == ResizeHandle::TOP) {
         return Ui::stack(
                    child,
@@ -93,6 +111,12 @@ Ui::Child resizable(Ui::Child child, ResizeHandle handlePosition, Math::Vec2i si
     } else {
         unreachable();
     }
+}
+
+export auto resizable(ResizeHandle handlePosition, Math::Vec2i size, Ui::OnChange<Math::Vec2i> onChange) {
+    return [handlePosition, size, onChange = std::move(onChange)](Ui::Child child) mutable -> Ui::Child {
+        return resizable(child, handlePosition, size, std::move(onChange));
+    };
 }
 
 } // namespace Karm::Kira

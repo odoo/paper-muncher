@@ -2,14 +2,6 @@ module;
 
 #include <karm-gc/heap.h>
 #include <karm-gc/root.h>
-#include <karm-kira/context-menu.h>
-#include <karm-kira/dialog.h>
-#include <karm-kira/error-page.h>
-#include <karm-kira/print-dialog.h>
-#include <karm-kira/progress.h>
-#include <karm-kira/resizable.h>
-#include <karm-kira/scaffold.h>
-#include <karm-kira/side-panel.h>
 #include <karm-mime/mime.h>
 #include <karm-sys/async.h>
 #include <karm-sys/file.h>
@@ -20,6 +12,7 @@ module;
 #include <karm-ui/input.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/popover.h>
+#include <karm-ui/reducer.h>
 #include <karm-ui/scroll.h>
 #include <mdi/alert-decagram.h>
 #include <mdi/arrow-left.h>
@@ -47,6 +40,7 @@ export module Vaev.Browser:app;
 import Vaev.View;
 import Vaev.Driver;
 import Karm.Http;
+import Karm.Kira;
 import :inspect;
 
 namespace Vaev::Browser {
@@ -204,7 +198,7 @@ Ui::Child openInDefaultBrowser(State const& s) {
             if (url.scheme != "http" and url.scheme != "https" and url.scheme != "file") {
                 Ui::showDialog(
                     n,
-                    Kr::alert(
+                    Kr::alertDialog(
                         "Could not open in default browser"s,
                         Io::format("Only http, https, and file urls can be opened in the default browser.")
                     )
@@ -220,7 +214,7 @@ Ui::Child openInDefaultBrowser(State const& s) {
             if (not res)
                 Ui::showDialog(
                     n,
-                    Kr::alert(
+                    Kr::alertDialog(
                         "Could not open in default browser"s,
                         Io::format("Failed to open in default browser\n\n{}", res)
                     )
@@ -448,9 +442,9 @@ export Ui::Child app(Gc::Heap& heap, Http::Client& client, Mime::Url url, Res<Gc
                    Ui::keyboardShortcut(App::Key::F12, Model::bind(SidePanel::DEVELOPER_TOOLS)) |
                    Ui::keyboardShortcut(App::Key::B, App::KeyMod::CTRL, Model::bind(SidePanel::BOOKMARKS)) |
                    Ui::keyboardShortcut(App::Key::P, App::KeyMod::CTRL, [&](auto& n) {
-                       if (not s.dom) {
+                       if (not s.dom)
                            return;
-                       }
+
                        Ui::showDialog(
                            n,
                            View::printDialog(s.dom.unwrap())

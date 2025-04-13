@@ -1,12 +1,14 @@
+module;
+
 #include <karm-ui/focus.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/view.h>
 
-#include "input.h"
+export module Karm.Kira:input;
 
 namespace Karm::Kira {
 
-Ui::Child input(Mdi::Icon icon, String placeholder, String text, Ui::OnChange<String> onChange) {
+export Ui::Child input(Mdi::Icon icon, String placeholder, String text, Ui::OnChange<String> onChange) {
     return Ui::hflow(
                8,
                Math::Align::VCENTER | Math::Align::START,
@@ -26,7 +28,7 @@ Ui::Child input(Mdi::Icon icon, String placeholder, String text, Ui::OnChange<St
            Ui::focusable();
 }
 
-Ui::Child input(String placeholder, String text, Ui::OnChange<String> onChange) {
+export Ui::Child input(String placeholder, String text, Ui::OnChange<String> onChange) {
     return Ui::hflow(
                8,
                Math::Align::VCENTER | Math::Align::START,

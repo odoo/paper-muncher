@@ -1,7 +1,9 @@
+module;
+
 #include <karm-ui/box.h>
 #include <karm-ui/layout.h>
 
-#include "card.h"
+export module Karm.Kira:card;
 
 namespace Karm::Kira {
 
@@ -17,6 +19,16 @@ Ui::Child card(Ui::Child child) {
 
 Ui::Child card(Ui::Children children) {
     return card(Ui::vflow(children));
+}
+
+export auto card() {
+    return [](Ui::Child child) {
+        return card(child);
+    };
+}
+
+export Ui::Child card(Ui::Child child, Meta::Same<Ui::Child> auto... children) {
+    return card({child, children...});
 }
 
 } // namespace Karm::Kira

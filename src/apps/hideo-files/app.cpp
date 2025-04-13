@@ -1,8 +1,9 @@
-#include <karm-kira/scaffold.h>
-#include <karm-kira/searchbar.h>
-#include <karm-kira/side-nav.h>
+module;
+
+#include <karm-sys/dir.h>
 #include <karm-ui/dialog.h>
 #include <karm-ui/layout.h>
+#include <karm-ui/reducer.h>
 #include <mdi/disc.h>
 #include <mdi/download.h>
 #include <mdi/file-document.h>
@@ -15,8 +16,11 @@
 #include <mdi/sd.h>
 #include <mdi/usb.h>
 
-#include "model.h"
-#include "widgets.h"
+export module Hideo.Files:app;
+
+import Karm.Kira;
+import :model;
+import :widgets;
 
 namespace Hideo::Files {
 
@@ -56,7 +60,7 @@ Ui::Child pageContent(State const& state) {
     return listing | Ui::grow();
 }
 
-Ui::Child app() {
+export Ui::Child app() {
     return Ui::reducer<Model>("location://home"_url, [](State const& s) {
         return Kr::scaffold({
             .icon = Mdi::FOLDER,

@@ -1,4 +1,8 @@
-#include "radio.h"
+module;
+
+#include <karm-ui/input.h>
+
+export module Karm.Kira:radio;
 
 namespace Karm::Kira {
 
@@ -53,7 +57,7 @@ struct Radio : Ui::View<Radio> {
     }
 };
 
-Ui::Child radio(bool value, Ui::OnChange<bool> onChange) {
+export Ui::Child radio(bool value, Ui::OnChange<bool> onChange) {
     return makeRc<Radio>(value, std::move(onChange));
 }
 

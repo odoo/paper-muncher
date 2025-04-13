@@ -1,4 +1,9 @@
-#include "progress.h"
+module;
+
+#include <karm-ui/funcs.h>
+#include <karm-ui/view.h>
+
+export module Karm.Kira:progress;
 
 namespace Karm::Kira {
 
@@ -54,7 +59,7 @@ struct Progress : Ui::View<Progress> {
     }
 };
 
-Ui::Child progress(isize size) {
+export Ui::Child progress(isize size = 16) {
     return makeRc<Progress>(size);
 }
 

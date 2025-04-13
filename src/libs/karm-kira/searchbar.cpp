@@ -1,12 +1,14 @@
+module;
+
 #include <karm-ui/focus.h>
 #include <karm-ui/layout.h>
 #include <mdi/magnify.h>
 
-#include "searchbar.h"
+export module Karm.Kira:searchbar;
 
 namespace Karm::Kira {
 
-Ui::Child searchbar(String text) {
+export Ui::Child searchbar(String text) {
     return Ui::hflow(
                8,
                Math::Align::VCENTER | Math::Align::START,

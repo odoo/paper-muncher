@@ -1,12 +1,20 @@
-#include <karm-kira/dialog.h>
-#include <karm-ui/layout.h>
+module;
 
-#include "dialogs.h"
-#include "widgets.h"
+#include <karm-sys/dir.h>
+#include <karm-ui/layout.h>
+#include <karm-ui/reducer.h>
+
+export module Hideo.Files:dialogs;
+
+import Karm.Kira;
+
+import :widgets;
 
 namespace Hideo::Files {
 
-Ui::Child openDialog(OnFile onFile) {
+export using OnFile = SharedFunc<void(Ui::Node&, Mime::Url)>;
+
+export Ui::Child openDialog(OnFile onFile) {
     return Ui::reducer<Model>(
         {"location://home"_url},
         [onFile](State const& s) {
@@ -39,7 +47,7 @@ Ui::Child openDialog(OnFile onFile) {
     );
 }
 
-Ui::Child saveDialog(OnFile onFile) {
+export Ui::Child saveDialog(OnFile onFile) {
     return Ui::reducer<Model>(
         {"location://home"_url},
         [onFile](State const& s) {
@@ -72,7 +80,7 @@ Ui::Child saveDialog(OnFile onFile) {
     );
 }
 
-Ui::Child directoryDialog(OnFile onFile) {
+export Ui::Child directoryDialog(OnFile onFile) {
     return Ui::reducer<Model>(
         {"location://home"_url},
         [onFile](auto const& d) {
