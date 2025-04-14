@@ -155,9 +155,9 @@ inline auto button(OnPress onPress) {
 
 Child button(OnPress onPress, Str t);
 
-Child button(OnPress onPress, Mdi::Icon i);
+Child button(OnPress onPress, Gfx::Icon i);
 
-Child button(OnPress onPress, Mdi::Icon i, Str t);
+Child button(OnPress onPress, Gfx::Icon i, Str t);
 
 // MARK: Input -----------------------------------------------------------------
 

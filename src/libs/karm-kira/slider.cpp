@@ -7,7 +7,7 @@ export module Karm.Kira:slider;
 
 namespace Karm::Kira {
 
-export Ui::Child slider(f64 value, Ui::OnChange<f64> onChange, Mdi::Icon icon, Str text) {
+export Ui::Child slider(f64 value, Ui::OnChange<f64> onChange, Gfx::Icon icon, Str text) {
     return Ui::hflow(
                0,
                Math::Align::CENTER,
@@ -31,7 +31,7 @@ export Ui::Child slider(f64 value, Ui::OnChange<f64> onChange, Mdi::Icon icon, S
 }
 
 export template <typename T>
-Ui::Child slider(T value, Range<T> range, Ui::OnChange<T> onChange, Mdi::Icon icon, Str text) {
+Ui::Child slider(T value, Range<T> range, Ui::OnChange<T> onChange, Gfx::Icon icon, Str text) {
     return slider(
         (value - range.start) / (f64)(range.end() - range.start),
         [=](Ui::Node& n, f64 v) {

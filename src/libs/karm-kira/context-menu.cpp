@@ -68,7 +68,7 @@ export Ui::Child contextMenuContent(Ui::Children children) {
            Ui::scaleIn();
 }
 
-export Ui::Child contextMenuItem(Ui::OnPress onPress, Opt<Mdi::Icon> i, Str t) {
+export Ui::Child contextMenuItem(Ui::OnPress onPress, Opt<Gfx::Icon> i, Str t) {
     return Ui::hflow(
                12,
                Math::Align::CENTER,
@@ -115,7 +115,7 @@ export Ui::Child contextMenuDock(Ui::Children children) {
            Ui::insets(4);
 }
 
-export Ui::Child contextMenuIcon(Ui::OnPress onPress, Mdi::Icon i) {
+export Ui::Child contextMenuIcon(Ui::OnPress onPress, Gfx::Icon i) {
     if (onPress) {
         onPress = [onPress = std::move(onPress)](auto& n) {
             onPress(n);

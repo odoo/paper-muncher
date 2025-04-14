@@ -6,8 +6,6 @@ module;
 #include <karm-ui/reducer.h>
 #include <karm-ui/scroll.h>
 #include <karm-ui/view.h>
-#include <mdi/chevron-down.h>
-#include <mdi/chevron-right.h>
 #include <vaev-dom/comment.h>
 #include <vaev-dom/document-type.h>
 #include <vaev-dom/document.h>
@@ -17,6 +15,7 @@ module;
 export module Vaev.Browser:inspect;
 
 import Karm.Kira;
+import Mdi;
 
 namespace Vaev::Browser {
 

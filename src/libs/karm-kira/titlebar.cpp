@@ -4,12 +4,10 @@ module;
 #include <karm-ui/dialog.h>
 #include <karm-ui/drag.h>
 #include <karm-ui/layout.h>
-#include <mdi/close.h>
-#include <mdi/crop-square.h>
-#include <mdi/minus.h>
 
 export module Karm.Kira:titlebar;
 
+import Mdi;
 import :aboutDialog;
 
 namespace Karm::Kira {
@@ -20,7 +18,7 @@ export enum struct TitlebarStyle {
     DIALOG
 };
 
-export Ui::Child titlebarTitle(Mdi::Icon icon, String title, bool compact = false) {
+export Ui::Child titlebarTitle(Gfx::Icon icon, String title, bool compact = false) {
     if (compact) {
         return Ui::button(
             [=](Ui::Node& n) {
@@ -70,7 +68,7 @@ export Ui::Child titlebarContent(Ui::Children children) {
            Ui::box({.backgroundFill = Ui::GRAY900});
 }
 
-export Ui::Child titlebar(Mdi::Icon icon, String title, TitlebarStyle style = TitlebarStyle::DEFAULT) {
+export Ui::Child titlebar(Gfx::Icon icon, String title, TitlebarStyle style = TitlebarStyle::DEFAULT) {
     return titlebarContent({
         titlebarTitle(icon, title),
         Ui::grow(NONE),
@@ -78,7 +76,7 @@ export Ui::Child titlebar(Mdi::Icon icon, String title, TitlebarStyle style = Ti
     });
 }
 
-export Ui::Child titlebar(Mdi::Icon icon, String title, Ui::Child middle, TitlebarStyle style = TitlebarStyle::DEFAULT) {
+export Ui::Child titlebar(Gfx::Icon icon, String title, Ui::Child middle, TitlebarStyle style = TitlebarStyle::DEFAULT) {
     return titlebarContent({
         titlebarTitle(icon, title),
         middle | Ui::grow(),

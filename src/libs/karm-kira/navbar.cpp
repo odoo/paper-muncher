@@ -21,7 +21,7 @@ export Ui::Child navbarContent(Ui::Children children) {
     );
 }
 
-export Ui::Child navbarItem(Ui::OnPress onPress, Mdi::Icon icon, Str text, bool selected) {
+export Ui::Child navbarItem(Ui::OnPress onPress, Gfx::Icon icon, Str text, bool selected) {
     return Ui::button(
                std::move(onPress),
                selected

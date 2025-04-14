@@ -109,7 +109,7 @@ DEF_STYLE(codeSmall)
 
 Child icon(Gfx::Icon icon, Opt<Gfx::Color> color = NONE);
 
-Child icon(Mdi::Icon icon, f64 size, Opt<Gfx::Color> color = NONE);
+Child icon(Gfx::Icon icon, isize size, Opt<Gfx::Color> color = NONE);
 
 // MARK: Image -----------------------------------------------------------------
 

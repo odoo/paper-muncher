@@ -8,56 +8,10 @@ module;
 #include <karm-ui/layout.h>
 #include <karm-ui/reducer.h>
 #include <karm-ui/scroll.h>
-#include <mdi/account-circle.h>
-#include <mdi/account.h>
-#include <mdi/alarm.h>
-#include <mdi/alert.h>
-#include <mdi/card.h>
-#include <mdi/cat.h>
-#include <mdi/checkbox-marked.h>
-#include <mdi/clock-outline.h>
-#include <mdi/clock.h>
-#include <mdi/content-copy.h>
-#include <mdi/content-cut.h>
-#include <mdi/content-paste.h>
-#include <mdi/counter.h>
-#include <mdi/cursor-text.h>
-#include <mdi/delete.h>
-#include <mdi/dock-bottom.h>
-#include <mdi/dock-left.h>
-#include <mdi/dock-right.h>
-#include <mdi/dock-top.h>
-#include <mdi/duck.h>
-#include <mdi/email.h>
-#include <mdi/file-search.h>
-#include <mdi/form-select.h>
-#include <mdi/form-textbox.h>
-#include <mdi/format-list-bulleted-type.h>
-#include <mdi/gradient-horizontal.h>
-#include <mdi/information-outline.h>
-#include <mdi/information.h>
-#include <mdi/loading.h>
-#include <mdi/lock.h>
-#include <mdi/menu.h>
-#include <mdi/open-in-app.h>
-#include <mdi/palette.h>
-#include <mdi/pencil.h>
-#include <mdi/printer.h>
-#include <mdi/radiobox-marked.h>
-#include <mdi/rectangle.h>
-#include <mdi/share.h>
-#include <mdi/target.h>
-#include <mdi/text-box.h>
-#include <mdi/timer-outline.h>
-#include <mdi/timer-sand.h>
-#include <mdi/toggle-switch-outline.h>
-#include <mdi/toggle-switch.h>
-#include <mdi/tree.h>
-#include <mdi/tune-variant.h>
-#include <mdi/view-compact.h>
 
 export module Hideo.Zoo:pages;
 
+import Mdi;
 import Karm.Kira;
 import Hideo.Files;
 import Hideo.Printers;
@@ -524,14 +478,13 @@ Page PAGE_RICHTEXT{
     },
 };
 
-
 Page PAGE_ROWS{
     Mdi::FORMAT_LIST_BULLETED_TYPE,
     "Settings Rows",
     "A collection of rows that can be used to display settings.",
     [] {
         auto button = Kr::buttonRow(
-            [](auto&n){
+            [](auto& n) {
                 Ui::showDialog(n, Kr::alertDialog("Message"s, "This is a message"s));
             },
             "Cool duck app"s,

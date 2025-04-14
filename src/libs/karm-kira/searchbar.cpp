@@ -2,9 +2,10 @@ module;
 
 #include <karm-ui/focus.h>
 #include <karm-ui/layout.h>
-#include <mdi/magnify.h>
 
 export module Karm.Kira:searchbar;
+
+import Mdi;
 
 namespace Karm::Kira {
 

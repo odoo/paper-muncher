@@ -1,30 +1,21 @@
 module;
 
+#include <karm-gfx/icon.h>
 #include <karm-sys/dir.h>
 #include <karm-ui/dialog.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/reducer.h>
-#include <mdi/disc.h>
-#include <mdi/download.h>
-#include <mdi/file-document.h>
-#include <mdi/film.h>
-#include <mdi/folder.h>
-#include <mdi/home.h>
-#include <mdi/image.h>
-#include <mdi/laptop.h>
-#include <mdi/music.h>
-#include <mdi/sd.h>
-#include <mdi/usb.h>
 
 export module Hideo.Files:app;
 
+import Mdi;
 import Karm.Kira;
 import :model;
 import :widgets;
 
 namespace Hideo::Files {
 
-Ui::Child sidenavItem(State const& s, Mdi::Icon icon, String title, Mime::Url url) {
+Ui::Child sidenavItem(State const& s, Gfx::Icon icon, String title, Mime::Url url) {
     bool selected = url.isParentOf(s.currentUrl());
     return Kr::sidenavItem(selected, Model::bind<GoTo>(url), icon, title);
 }

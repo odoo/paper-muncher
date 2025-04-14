@@ -260,11 +260,11 @@ Child button(OnPress onPress, Str t) {
     return button(std::move(onPress), ButtonStyle::regular(), t);
 }
 
-Child button(OnPress onPress, Mdi::Icon i) {
+Child button(OnPress onPress, Gfx::Icon i) {
     return button(std::move(onPress), ButtonStyle::regular(), i);
 }
 
-Child button(OnPress onPress, Mdi::Icon i, Str t) {
+Child button(OnPress onPress, Gfx::Icon i, Str t) {
     return button(std::move(onPress), ButtonStyle::regular(), i, t);
 }
 

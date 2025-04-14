@@ -8,7 +8,7 @@ export module Karm.Kira:input;
 
 namespace Karm::Kira {
 
-export Ui::Child input(Mdi::Icon icon, String placeholder, String text, Ui::OnChange<String> onChange) {
+export Ui::Child input(Gfx::Icon icon, String placeholder, String text, Ui::OnChange<String> onChange) {
     return Ui::hflow(
                8,
                Math::Align::VCENTER | Math::Align::START,

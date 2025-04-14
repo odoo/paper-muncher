@@ -5,10 +5,10 @@ module;
 #include <karm-ui/layout.h>
 #include <karm-ui/reducer.h>
 #include <karm-ui/scroll.h>
-#include <mdi/chevron-down.h>
-#include <mdi/chevron-up.h>
 
 export module Karm.Kira:sideNav;
+
+import Mdi;
 
 namespace Karm::Kira {
 
@@ -19,7 +19,7 @@ export Ui::Child sidenav(Ui::Children children) {
            Ui::minSize({198, Ui::UNCONSTRAINED});
 }
 
-export Ui::Child sidenavTree(Mdi::Icon icon, String title, Ui::Slot child) {
+export Ui::Child sidenavTree(Gfx::Icon icon, String title, Ui::Slot child) {
     return Ui::state(true, [=, child = std::move(child)](bool state, auto bind) {
         return Ui::vflow(
             Ui::button(
@@ -45,7 +45,7 @@ export Ui::Child sidenavTree(Mdi::Icon icon, String title, Ui::Slot child) {
     });
 }
 
-export Ui::Child sidenavItem(bool selected, Ui::OnPress onPress, Mdi::Icon icon, String title) {
+export Ui::Child sidenavItem(bool selected, Ui::OnPress onPress, Gfx::Icon icon, String title) {
     auto buttonStyle = Ui::ButtonStyle::regular();
 
     buttonStyle.idleStyle = {

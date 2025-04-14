@@ -2,9 +2,10 @@ module;
 
 #include <karm-ui/input.h>
 #include <karm-ui/layout.h>
-#include <mdi/close.h>
 
 export module Karm.Kira:sidePanel;
+
+import Mdi;
 
 namespace Karm::Kira {
 

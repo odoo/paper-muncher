@@ -14,29 +14,11 @@ module;
 #include <karm-ui/popover.h>
 #include <karm-ui/reducer.h>
 #include <karm-ui/scroll.h>
-#include <mdi/alert-decagram.h>
-#include <mdi/arrow-left.h>
-#include <mdi/arrow-right.h>
-#include <mdi/bookmark-outline.h>
-#include <mdi/bookmark.h>
-#include <mdi/button-cursor.h>
-#include <mdi/close.h>
-#include <mdi/code-tags.h>
-#include <mdi/cog.h>
-#include <mdi/dots-horizontal.h>
-#include <mdi/google-downasaur.h>
-#include <mdi/home.h>
-#include <mdi/loading.h>
-#include <mdi/lock.h>
-#include <mdi/printer.h>
-#include <mdi/refresh.h>
-#include <mdi/surfing.h>
-#include <mdi/tune-variant.h>
-#include <mdi/web.h>
 #include <vaev-dom/document.h>
 
 export module Vaev.Browser:app;
 
+import Mdi;
 import Vaev.View;
 import Vaev.Driver;
 import Karm.Http;

@@ -3,11 +3,11 @@ module;
 #include <karm-ui/layout.h>
 #include <karm-ui/reducer.h>
 #include <karm-ui/view.h>
-#include <mdi/duck.h>
 
 export module Hideo.Zoo:app;
 
 import Karm.Kira;
+import Mdi;
 import :pages;
 import :model;
 

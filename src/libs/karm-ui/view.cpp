@@ -267,10 +267,11 @@ Child text(Rc<Karm::Text::Prose> prose) {
 
 struct Icon : View<Icon> {
     Gfx::Icon _icon;
+    isize _size;
     Opt<Gfx::Color> _color;
 
-    Icon(Gfx::Icon icon, Opt<Gfx::Color> color)
-        : _icon(icon), _color(color) {}
+    Icon(Gfx::Icon icon, isize size, Opt<Gfx::Color> color = NONE)
+        : _icon(icon), _size(size), _color(color) {}
 
     void reconcile(Icon& o) override {
         _icon = o._icon;
@@ -281,21 +282,21 @@ struct Icon : View<Icon> {
         g.push();
         if (_color)
             g.fillStyle(_color.unwrap());
-        _icon.fill(g, bound().topStart());
+        _icon.fill(g, bound().topStart().cast<f64>(), _size);
         g.pop();
     }
 
     Math::Vec2i size(Math::Vec2i, Hint) override {
-        return _icon.bound().size().cast<isize>();
+        return Math::Vec2i{_size, _size};
     }
 };
 
 Child icon(Gfx::Icon icon, Opt<Gfx::Color> color) {
-    return makeRc<Icon>(icon, color);
+    return makeRc<Icon>(icon, 18, color);
 }
 
-Child icon(Mdi::Icon i, f64 size, Opt<Gfx::Color> color) {
-    return icon(Gfx::Icon{i, size}, color);
+Child icon(Gfx::Icon i, isize size, Opt<Gfx::Color> color) {
+    return makeRc<Icon>(i, size, color);
 }
 
 // MARK: Image -----------------------------------------------------------------

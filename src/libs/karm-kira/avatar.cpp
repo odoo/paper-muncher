@@ -3,9 +3,10 @@ module;
 #include <karm-ui/box.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/view.h>
-#include <mdi/account.h>
 
 export module Karm.Kira:avatar;
+
+import Mdi;
 
 namespace Karm::Kira {
 
@@ -22,7 +23,7 @@ export Ui::Child avatar(String t) {
            Ui::box(boxStyle);
 }
 
-export Ui::Child avatar(Mdi::Icon i) {
+export Ui::Child avatar(Gfx::Icon i) {
     Ui::BoxStyle boxStyle = {
         .borderRadii = 99,
         .backgroundFill = Ui::GRAY800,

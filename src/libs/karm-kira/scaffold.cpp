@@ -6,18 +6,17 @@ module;
 #include <karm-ui/layout.h>
 #include <karm-ui/popover.h>
 #include <karm-ui/reducer.h>
-#include <mdi/menu-open.h>
-#include <mdi/menu.h>
 
 export module Karm.Kira:scaffold;
 
+import Mdi;
 import :titlebar;
 import :toolbar;
 
 namespace Karm::Kira {
 
 export struct Scaffold : Meta::NoCopy {
-    Mdi::Icon icon;
+    Gfx::Icon icon;
     String title;
     TitlebarStyle titlebar = TitlebarStyle::DEFAULT;
 

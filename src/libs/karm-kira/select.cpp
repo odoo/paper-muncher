@@ -5,9 +5,10 @@ module;
 #include <karm-ui/layout.h>
 #include <karm-ui/popover.h>
 #include <karm-ui/scroll.h>
-#include <mdi/chevron-down.h>
 
 export module Karm.Kira:select;
+
+import Mdi;
 
 namespace Karm::Kira {
 

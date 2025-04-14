@@ -1,14 +1,14 @@
 module;
 
+#include <karm-gfx/icon.h>
 #include <karm-ui/reducer.h>
-#include <mdi/_prelude.h>
 
 export module Hideo.Zoo:model;
 
 namespace Hideo::Zoo {
 
 struct Page {
-    Mdi::Icon icon;
+    Gfx::Icon icon;
     Str name;
     Str description;
     Func<Ui::Child()> build;

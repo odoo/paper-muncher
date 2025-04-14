@@ -4,12 +4,10 @@ module;
 #include <karm-ui/input.h>
 #include <karm-ui/layout.h>
 #include <karm-ui/reducer.h>
-#include <mdi/chevron-down.h>
-#include <mdi/chevron-up.h>
-#include <mdi/drag-vertical-variant.h>
 
 export module Karm.Kira:row;
 
+import Mdi;
 import :checkbox;
 import :colorInput;
 import :number;
@@ -82,7 +80,7 @@ export Ui::Child pressableRow(Ui::OnPress onPress, Opt<Ui::Child> leading, Strin
     );
 }
 
-export Ui::Child buttonRow(Ui::OnPress onPress, Mdi::Icon i, String title, String subtitle) {
+export Ui::Child buttonRow(Ui::OnPress onPress, Gfx::Icon i, String title, String subtitle) {
     return button(
         std::move(onPress),
         Ui::ButtonStyle::subtle(),

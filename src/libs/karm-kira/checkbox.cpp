@@ -1,9 +1,10 @@
 module;
 
 #include <karm-ui/input.h>
-#include <mdi/check-bold.h>
 
 export module Karm.Kira:checkbox;
+
+import Mdi;
 
 namespace Karm::Kira {
 
@@ -29,7 +30,7 @@ struct Checkbox : Ui::View<Checkbox> {
             g.fill(bound(), 4);
 
             g.fillStyle(Gfx::GRAY50);
-            Gfx::Icon{Mdi::CHECK_BOLD, 18}.fill(g, bound().topStart());
+            Gfx::Icon{Mdi::CHECK_BOLD}.fill(g, bound().topStart().cast<f64>(), 18);
 
             if (_mouseListener.isPress()) {
                 g.strokeStyle(Gfx::stroke(Ui::ACCENT600).withWidth(1).withAlign(Gfx::INSIDE_ALIGN));

@@ -8,7 +8,7 @@ export module Karm.Kira:errorPage;
 
 namespace Karm::Kira {
 
-export Ui::Child errorPageTitle(Mdi::Icon icon, String text) {
+export Ui::Child errorPageTitle(Gfx::Icon icon, String text) {
     return Ui::vflow(
         0,
         Math::Align::CENTER,
@@ -43,7 +43,7 @@ export Ui::Child errorPageFooter(Ui::Children children) {
            Ui::insets({8, 0, 0, 0});
 }
 
-export Ui::Child errorPage(Mdi::Icon icon, String text, String body) {
+export Ui::Child errorPage(Gfx::Icon icon, String text, String body) {
     return errorPageContent({
         errorPageTitle(icon, "An error occurred."s),
         errorPageSubTitle(text),

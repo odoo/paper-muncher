@@ -2,10 +2,10 @@ module;
 
 #include <karm-ui/focus.h>
 #include <karm-ui/layout.h>
-#include <mdi/minus.h>
-#include <mdi/plus.h>
 
 export module Karm.Kira:number;
+
+import Mdi;
 
 namespace Karm::Kira {
 

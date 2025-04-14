@@ -4,9 +4,10 @@ module;
 #include <karm-ui/dialog.h>
 #include <karm-ui/drag.h>
 #include <karm-ui/input.h>
-#include <mdi/close.h>
 
 export module Karm.Kira:dialog;
+
+import Mdi;
 
 namespace Karm::Kira {
 

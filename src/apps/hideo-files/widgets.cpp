@@ -8,43 +8,61 @@ module;
 #include <karm-ui/layout.h>
 #include <karm-ui/popover.h>
 #include <karm-ui/scroll.h>
-#include <mdi/alert-decagram.h>
-#include <mdi/alert-outline.h>
-#include <mdi/arrow-left.h>
-#include <mdi/arrow-right.h>
-#include <mdi/arrow-up.h>
-#include <mdi/bookmark-outline.h>
-#include <mdi/bookmark.h>
-#include <mdi/checkbox-blank-outline.h>
-#include <mdi/checkbox-marked.h>
-#include <mdi/chevron-right.h>
-#include <mdi/content-copy.h>
-#include <mdi/content-cut.h>
-#include <mdi/content-paste.h>
-#include <mdi/delete-outline.h>
-#include <mdi/dots-horizontal.h>
-#include <mdi/download.h>
-#include <mdi/file-document.h>
-#include <mdi/film.h>
-#include <mdi/folder.h>
-#include <mdi/form-textbox.h>
-#include <mdi/harddisk.h>
-#include <mdi/home.h>
-#include <mdi/image.h>
-#include <mdi/information-outline.h>
-#include <mdi/laptop.h>
-#include <mdi/magnify.h>
-#include <mdi/music.h>
-#include <mdi/pencil.h>
-#include <mdi/refresh.h>
-#include <mdi/share.h>
 
 export module Hideo.Files:widgets;
 
 import Karm.Kira;
+import Mdi;
 import :model;
 
 namespace Hideo::Files {
+
+struct Mime2Icon {
+    Str type;
+    Str subtype;
+    Gfx::Icon icon;
+};
+
+static Array MIME2ICON = {
+    Mime2Icon{"text", "", Mdi::FILE_DOCUMENT},
+    Mime2Icon{"text", "html", Mdi::LANGUAGE_HTML5},
+    Mime2Icon{"text", "css", Mdi::LANGUAGE_CSS3},
+    Mime2Icon{"text", "javascript", Mdi::LANGUAGE_JAVASCRIPT},
+    Mime2Icon{"text", "plain", Mdi::FILE_DOCUMENT},
+
+    Mime2Icon{"image", "", Mdi::IMAGE},
+    Mime2Icon{"image", "jpeg", Mdi::FILE_JPG_BOX},
+    Mime2Icon{"image", "png", Mdi::FILE_PNG_BOX},
+
+    Mime2Icon{"video", "", Mdi::FILMSTRIP},
+
+    Mime2Icon{"font", "", Mdi::FORMAT_FONT},
+
+    Mime2Icon{"application", "pdf", Mdi::FILE_PDF_BOX},
+    Mime2Icon{"application", "json", Mdi::CODE_JSON},
+    Mime2Icon{"application", "zip", Mdi::ZIP_BOX},
+    Mime2Icon{"application", "tar", Mdi::ZIP_BOX},
+    Mime2Icon{"application", "gz", Mdi::ZIP_BOX},
+    Mime2Icon{"application", "bz2", Mdi::ZIP_BOX},
+    Mime2Icon{"application", "7z-compressed", Mdi::ZIP_BOX},
+    Mime2Icon{"application", "rar", Mdi::ZIP_BOX},
+    Mime2Icon{"application", "x-xz", Mdi::ZIP_BOX},
+    Mime2Icon{"application", "x-msdownload", Mdi::COG_BOX},
+};
+
+Gfx::Icon iconFor(Mime::Mime const& mime) {
+    Gfx::Icon icon = Mdi::FILE;
+
+    for (auto const& m : MIME2ICON) {
+        if (m.type == mime.type() and m.subtype == mime.subtype())
+            return m.icon;
+
+        if (m.type == mime.type() and m.subtype == "")
+            icon = m.icon;
+    }
+
+    return icon;
+}
 
 // MARK: Common Widgets --------------------------------------------------------
 
@@ -104,7 +122,7 @@ Ui::Child directorEntry(Sys::DirEntry const& entry, bool odd) {
                itemStyle(odd),
                entry.type == Sys::Type::DIR
                    ? Mdi::FOLDER
-                   : Mime::iconFor(Mime::sniffSuffix(Mime::suffixOf(entry.name)).unwrapOr("file"s)),
+                   : iconFor(Mime::sniffSuffix(Mime::suffixOf(entry.name)).unwrapOr("file"s)),
                entry.name
            ) |
            Kr::contextMenu(directoryContextMenu);
@@ -137,7 +155,7 @@ Ui::Child breadcrumbItem(Str text, isize index) {
     );
 }
 
-Mdi::Icon iconForLocation(Str loc) {
+Gfx::Icon iconForLocation(Str loc) {
     if (eqCi(loc, "home"s))
         return Mdi::HOME;
 
@@ -159,7 +177,7 @@ Mdi::Icon iconForLocation(Str loc) {
     return Mdi::FOLDER;
 }
 
-Mdi::Icon iconForUrl(Mime::Url const& url) {
+Gfx::Icon iconForUrl(Mime::Url const& url) {
     if (url.scheme == "location")
         return iconForLocation(url.host);
 
