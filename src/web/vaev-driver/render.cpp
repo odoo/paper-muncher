@@ -2,6 +2,7 @@ module;
 
 #include <karm-base/box.h>
 #include <karm-scene/base.h>
+#include <karm-scene/clear.h>
 #include <karm-sys/time.h>
 #include <karm-text/book.h>
 #include <vaev-style/computer.h>
@@ -20,7 +21,6 @@ export struct RenderResult {
     Rc<Layout::Box> layout;
     Rc<Scene::Node> scenes;
     Rc<Layout::Frag> frag;
-    Gfx::Color canvasColor;
 };
 
 export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media, Layout::Viewport viewport) {
@@ -81,9 +81,8 @@ export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media
     return {
         std::move(stylebook),
         makeRc<Layout::Box>(std::move(tree.root)),
-        sceneRoot,
+        makeRc<Scene::Clear>(sceneRoot, canvasColor),
         makeRc<Layout::Frag>(std::move(root)),
-        canvasColor
     };
 }
 

@@ -14,8 +14,9 @@ struct Clear : Proxy {
         if (not bound().colide(r))
             return;
 
-        if (o.showBackgroundGraphics)
-            g.clear(color);
+        if (o.showBackgroundGraphics) {
+            g.clear(color.blendOver(Gfx::WHITE));
+        }
         _node->paint(g, r, o);
     }
 

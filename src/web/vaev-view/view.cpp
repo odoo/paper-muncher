@@ -84,16 +84,8 @@ struct View : Ui::View<View> {
         g.origin(bound().xy.cast<f64>());
         g.clip(viewport);
 
-        auto [_, layout, paint, frag, canvasColor] = *_renderResult;
+        auto [_, layout, paint, frag] = *_renderResult;
         auto paintRect = rect.offset(-bound().xy);
-
-        if (canvasColor.alpha < 255) {
-            g.clear(paintRect, Gfx::WHITE);
-            g.rect(paintRect.cast<f64>());
-            g.fill(canvasColor);
-        } else
-            g.clear(paintRect, canvasColor);
-
         paint->paint(g, paintRect.cast<f64>());
 
         if (_props.wireframe)
@@ -113,7 +105,7 @@ struct View : Ui::View<View> {
     Math::Vec2i size(Math::Vec2i size, Ui::Hint) override {
         // FIXME: This is wasteful, we should cache the result
         auto media = _constructMedia(size);
-        auto [_, layout, _, frag, _] = Driver::render(*_dom, media, {.small = size.cast<Au>()});
+        auto [_, layout, _, frag] = Driver::render(*_dom, media, {.small = size.cast<Au>()});
 
         return {
             frag->metrics.borderBox().width.cast<isize>(),
