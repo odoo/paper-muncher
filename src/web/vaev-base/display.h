@@ -221,6 +221,59 @@ struct Display {
             unreachable();
         }
     }
+
+    // https://www.w3.org/TR/css-display-3/#blockify
+    Display blockify() {
+        if (_type == BOX)
+            return *this;
+
+        if (_type == INTERNAL) {
+            // If a layout-internal box is blockified, its inner display type converts to flow so that it becomes
+            // a block container.
+            // FIXME: in our representation, layout-internal does not have an inner display property
+            panic("cannot blockify layout-internal display");
+        }
+
+        if (_outside == BLOCK)
+            return *this;
+
+        if (_inside == FLOW_ROOT) {
+            return {
+                FLOW,
+                BLOCK,
+                _item,
+            };
+        } else {
+            return {
+                _inside,
+                BLOCK,
+                _item,
+            };
+        }
+    }
+
+    // https://www.w3.org/TR/css-display-3/#inlinify
+    Display inlinify() {
+        if (_type != DEFAULT)
+            return *this;
+
+        if (_outside == INLINE)
+            return *this;
+
+        if (_inside == FLOW) {
+            return {
+                FLOW,
+                BLOCK,
+                _item,
+            };
+        } else {
+            return {
+                _inside,
+                BLOCK,
+                _item,
+            };
+        }
+    }
 };
 
 } // namespace Vaev
