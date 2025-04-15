@@ -625,7 +625,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Switch to the script data escape start state. Emit a U+003C
         // LESS-THAN SIGN character token and a U+0021 EXCLAMATION MARK
         // character token.
-        if (rune == '!') {
+        else if (rune == '!') {
             _switchTo(State::SCRIPT_DATA_ESCAPE_START);
             _emit('<');
             _emit('!');
@@ -696,6 +696,7 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // Otherwise, treat it as per the "anything else" entry below.
         else if (rune == '>' and _isAppropriateEndTagToken()) {
             _switchTo(State::DATA);
+            _ensure().name = _builder.take();
             _emit();
         }
 
@@ -3652,11 +3653,12 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
             Pair{0x9Fu, 0x0178uz},
         };
 
-        for (auto& conv : CONV)
+        for (auto& conv : CONV) {
             if (conv.v0 == _currChar) {
                 _currChar = conv.v1;
                 break;
             }
+        }
 
         // Set the temporary buffer to the empty string. Append a code point
         // equal to the character reference code to the temporary buffer.
