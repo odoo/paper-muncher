@@ -204,15 +204,16 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedStyle> parentStyle
     }
 }
 
-void _buildText(Gc::Ref<Dom::Text> node, Rc<Style::ComputedStyle> parentStyle, InlineBox& rootInlineBox, bool skipIfWhitespace) {
+bool _buildText(Gc::Ref<Dom::Text> node, Rc<Style::ComputedStyle> parentStyle, InlineBox& rootInlineBox, bool skipIfWhitespace) {
     if (skipIfWhitespace) {
         Io::SScan scan{node->data()};
         scan.eat(Re::space());
         if (scan.ended())
-            return;
+            return false;
     }
 
     _appendTextToInlineBox(node->data(), parentStyle, rootInlineBox);
+    return true;
 }
 
 // MARK: Build Block -----------------------------------------------------------
@@ -221,6 +222,7 @@ struct BuilderContext {
     enum struct From {
         BLOCK,
         INLINE,
+        FLEX
     };
 
     Style::Computer& computer;
@@ -317,6 +319,18 @@ struct BuilderContext {
         };
     }
 
+    // NOTE: although all inline elements from FLEX containers are blockified, its less complex to have a
+    // rootInlineBox setted for it and then calling `_flushRootInlineBoxIntoAnonymousBox` right after a text is added
+    BuilderContext toFlexContext(Box& parent, InlineBox& rootInlineBox) {
+        return {
+            computer,
+            From::FLEX,
+            parent.style,
+            parent,
+            &rootInlineBox,
+        };
+    }
+
     BuilderContext toBlockContextWithoutRootInline(Box& parent) {
         return {
             computer,
@@ -347,7 +361,27 @@ static void _buildText(BuilderContext bc, Gc::Ref<Dom::Text> node, Rc<Style::Com
     if (not bc.assertForRootInlineBox())
         return;
 
-    _buildText(node, parentStyle, bc.rootInlineBox(), bc.from == BuilderContext::From::BLOCK);
+    // https://www.w3.org/TR/css-flexbox-1/#flex-items
+    // However, if the entire sequence of child text runs contains only white space
+    // (i.e. characters that can be affected by the white-space property) it is instead not rendered
+    // (just as if its text nodes were display:none).
+    
+    bool shouldSkipWhitespace = 
+        bc.from == BuilderContext::From::FLEX or 
+        bc.from == BuilderContext::From::BLOCK;
+
+    bool addedNonWhitespace = _buildText(node, parentStyle, bc.rootInlineBox(), shouldSkipWhitespace);
+
+    // https://www.w3.org/TR/css-flexbox-1/#algo-anon-box
+    // https://www.w3.org/TR/css-flexbox-1/#flex-items
+    // Each in-flow child of a flex container becomes a flex item,
+    // and each contiguous sequence of child text runs is wrapped in an anonymous block container flex item.
+    // However, if the entire sequence of child text runs contains only white space
+    // (i.e. characters that can be affected by the white-space property) it is instead not rendered
+    // (just as if its text nodes were display:none).
+    if (addedNonWhitespace and bc.from == BuilderContext::From::FLEX) {
+        bc.flushRootInlineBoxIntoAnonymousBox();
+    }
 }
 
 static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> parentStyle, InlineBox& rootInlineBox) {
@@ -431,12 +465,16 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
     bc.finalizeParentBoxAndFlushInline();
 }
 
-static Box createAndBuildBlockFlowfromElement(BuilderContext bc, Rc<Style::ComputedStyle> style, Gc::Ref<Dom::Element> el) {
+static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::ComputedStyle> style, Gc::Ref<Dom::Element> el, Display display) {
     auto font = _lookupFontface(bc.computer.fontBook, *style);
     Box box = {style, font, el};
     InlineBox rootInlineBox{_proseStyleFomStyle(bc.computer, *style)};
 
-    buildBlockFlowFromElement(bc.toBlockContext(box, rootInlineBox), el);
+    auto newBc = display == Display::Inside::FLEX
+                     ? bc.toFlexContext(box, rootInlineBox)
+                     : bc.toBlockContext(box, rootInlineBox);
+
+    buildBlockFlowFromElement(newBc, el);
 
     box.attrs = _parseDomAttr(el);
     return box;
@@ -517,13 +555,10 @@ static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::
     if (display == Display::Inside::TABLE) {
         auto wrapper = _createTableWrapperAndBuildTable(bc, style, el);
         bc.addToParentBox(std::move(wrapper));
-    } else if (display == Display::Inside::FLOW) {
-        auto blockBox = createAndBuildBlockFlowfromElement(bc, style, el);
-        bc.addToParentBox(std::move(blockBox));
     } else {
-        // FIXME: fallback to FLOW since not implemented
-        auto blockBox = createAndBuildBlockFlowfromElement(bc, style, el);
-        bc.addToParentBox(std::move(blockBox));
+        // NOTE: FLOW-ROOT, FLEX and fallback
+        auto box = createAndBuildBoxFromElement(bc, style, el, display);
+        bc.addToParentBox(std::move(box));
     }
 }
 
@@ -533,9 +568,9 @@ static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc:
         auto wrapper = _createTableWrapperAndBuildTable(bc, style, el);
         bc.addToInlineRoot(std::move(wrapper));
     } else {
-        // FLOW-ROOT and fallback
-        auto blockBox = createAndBuildBlockFlowfromElement(bc, style, el);
-        bc.addToInlineRoot(std::move(blockBox));
+        // NOTE: FLOW, FLOW-ROOT, FLEX and fallback
+        auto box = createAndBuildBoxFromElement(bc, style, el, display);
+        bc.addToInlineRoot(std::move(box));
     }
 }
 
@@ -565,6 +600,14 @@ static void _buildChildInternalDisplay(BuilderContext bc, Gc::Ref<Dom::Element> 
 }
 
 static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::ComputedStyle> childStyle, Display display) {
+    if (bc.from == BuilderContext::From::FLEX) {
+        display = childStyle->display = childStyle->display.blockify();
+        _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
+        return;
+    }
+
+    // NOTE: Flow for From::BLOCK and From::INLINE
+    // FIXME: but also Table, which shouldnt be the case
     if (display == Display::Outside::BLOCK) {
         bc.flushRootInlineBoxIntoAnonymousBox();
         _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);

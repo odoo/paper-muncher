@@ -504,4 +504,56 @@ test$("inline-block") {
 
     return Ok();
 }
+
+test$("flex-blockify") {
+    Gc::Heap gc;
+
+    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    Dom::HtmlParser parser{gc, dom};
+
+    parser.write(
+        "<html><body><div style=\"display:flex\">"
+        "hello"
+        "<div style=\"display:inline-block\">hi</div>"
+        "goodbye"
+        "<div style=\"display:block\">hi</div>"
+        "</div></body></html>"
+    );
+
+    auto expectedBodySubtree =
+        FakeBox{
+            // body
+            .content = Vec<FakeBox>{
+                FakeBox{
+                    // flex
+                    .content = Vec<FakeBox>{
+                        FakeBox{
+                            // block for hello
+                            .content = FakeInlineBox{}
+                        },
+                        FakeBox{
+                            // blockifyed <div ib>hi</div>, same as a <div>hi</div>
+                            .content = FakeInlineBox{}
+                        },
+                        FakeBox{
+                            // block for goodbye
+                            .content = FakeInlineBox{}
+                        },
+                        FakeBox{
+                            // block for <div>hi</div>
+                            .content = FakeInlineBox{}
+                        },
+                    }
+                }
+            }
+        };
+
+    auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
+    auto const& bodyBox = rootBox->children()[0];
+
+    expect$(expectedBodySubtree.matches(bodyBox));
+
+    return Ok();
+}
+
 } // namespace Vaev::Layout::Tests
