@@ -3,6 +3,7 @@
 #include <karm-app/host.h>
 #include <karm-base/ring.h>
 #include <karm-gfx/cpu/canvas.h>
+#include <karm-logger/logger.h>
 #include <karm-sys/time.h>
 #include <karm-text/loader.h>
 
