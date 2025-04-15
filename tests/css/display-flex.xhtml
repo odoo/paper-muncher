@@ -999,6 +999,10 @@
                     align-content: flex-start;
                 }
 
+                .main-bg {
+                    background: #eee;
+                }
+
                 .main {
                     display: flex;
                     width: 100px;
@@ -1006,7 +1010,6 @@
                     flex-wrap: wrap;
                     flex-direction: row;
                     height: 60px;
-                    background: #eee;
                 }
 
                 .child {
@@ -1027,37 +1030,37 @@
     <rendering>
         <section style="position: relative;">
             <div xmlns="http://www.w3.org/1999/xhtml">
-                <div class="main" style="position: absolute; top: 0px; left: 0px; height: 60px; width: 100px;">
+                <div class="main-bg" style="position: absolute; top: 0px; left: 0px; height: 60px; width: 100px;">
                     <div class="child" style="position: absolute; top: 24px; left: 17.5px; height: 18px; width: 65px;">
                     </div>
                     <div class="child" style="position: absolute; top: 42px; left: 17.5px; height: 18px; width: 65px;">
                     </div>
                 </div>
-                <div class="main" style="position: absolute; top: 60px; left: 0px; height: 60px; width: 100px;">
+                <div class="main-bg" style="position: absolute; top: 60px; left: 0px; height: 60px; width: 100px;">
                     <div class="child" style="position: absolute; top: 6px; left: 17.5px; height: 18px; width: 65px;">
                     </div>
                     <div class="child" style="position: absolute; top: 36px; left: 17.5px; height: 18px; width: 65px;">
                     </div>
                 </div>
-                <div class="main" style="position: absolute; top: 120px; left: 0px; height: 60px; width: 100px;">
+                <div class="main-bg" style="position: absolute; top: 120px; left: 0px; height: 60px; width: 100px;">
                     <div class="child" style="position: absolute; top: 12px; left: 17.5px; height: 18px; width: 65px;">
                     </div>
                     <div class="child" style="position: absolute; top: 30px; left: 17.5px; height: 18px; width: 65px;">
                     </div>
                 </div>
-                <div class="main" style="position: absolute; top: 180px; left: 0px; height: 60px; width: 100px;">
+                <div class="main-bg" style="position: absolute; top: 180px; left: 0px; height: 60px; width: 100px;">
                     <div class="child" style="position: absolute; top: 6px; left: 17.5px; height: 18px; width: 65px;">
                     </div>
                     <div class="child" style="position: absolute; top: 36px; left: 17.5px; height: 18px; width: 65px;">
                     </div>
                 </div>
-                <div class="main" style="position: absolute; top: 240px; left: 0px; height: 60px; width: 100px;">
+                <div class="main-bg" style="position: absolute; top: 240px; left: 0px; height: 60px; width: 100px;">
                     <div class="child" style="position: absolute; top: 0px; left: 17.5px; height: 18px; width: 65px;">
                     </div>
                     <div class="child" style="position: absolute; top: 42px; left: 17.5px; height: 18px; width: 65px;">
                     </div>
                 </div>
-                <div class="main" style="position: absolute; top: 300px; left: 0px; height: 60px; width: 100px;">
+                <div class="main-bg" style="position: absolute; top: 300px; left: 0px; height: 60px; width: 100px;">
                     <div class="child" style="position: absolute; top: 0px; left: 17.5px; height: 18px; width: 65px;">
                     </div>
                     <div class="child" style="position: absolute; top: 18px; left: 17.5px; height: 18px; width: 65px;">
@@ -1069,7 +1072,7 @@
 
     <rendering>
         <section>
-            <div id="p0" class="main">
+            <div id="p0" class="main main-bg">
                 <div class="child">
                     <div style="height:18px;"></div>
                 </div>
@@ -1077,7 +1080,7 @@
                     <div style="height:18px;"></div>
                 </div>
             </div>
-            <div id="p1" class="main">
+            <div id="p1" class="main main-bg">
                 <div class="child">
                     <div style="height:18px;"></div>
                 </div>
@@ -1085,7 +1088,7 @@
                     <div style="height:18px;"></div>
                 </div>
             </div>
-            <div id="p2" class="main">
+            <div id="p2" class="main main-bg">
                 <div class="child">
                     <div style="height:18px;"></div>
                 </div>
@@ -1093,7 +1096,7 @@
                     <div style="height:18px;"></div>
                 </div>
             </div>
-            <div id="p3" class="main">
+            <div id="p3" class="main main-bg">
                 <div class="child">
                     <div style="height:18px;"></div>
                 </div>
@@ -1101,7 +1104,7 @@
                     <div style="height:18px;"></div>
                 </div>
             </div>
-            <div id="p4" class="main">
+            <div id="p4" class="main main-bg">
                 <div class="child">
                     <div style="height:18px;"></div>
                 </div>
@@ -1109,7 +1112,7 @@
                     <div style="height:18px;"></div>
                 </div>
             </div>
-            <div id="p5" class="main">
+            <div id="p5" class="main main-bg">
                 <div class="child">
                     <div style="height:18px;"></div>
                 </div>
