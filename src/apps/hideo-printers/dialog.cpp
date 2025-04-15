@@ -195,21 +195,17 @@ Ui::Child _printPreview(State const& s) {
 }
 
 void _printPDF(State const& s) {
-    auto const output = Mime::parseUrlOrPath("./output.pdf", Sys::pwd().unwrap());
-    Mime::Uti const outputFormat = Mime::Uti::PUBLIC_PDF;
-
-    auto printer = Karm::Print::FilePrinter::create(outputFormat).unwrap();
-
+    auto printer = Print::FilePrinter::create(Mime::Uti::PUBLIC_PDF).unwrap();
     for (usize i = 0; i < s.pages.len(); ++i) {
         auto page = s.pages[i];
-        page.print(*printer, {s.settings.backgroundGraphics});
+        page.print(
+            *printer,
+            {
+                s.settings.backgroundGraphics,
+            }
+        );
     }
-
-    Io::BufferWriter bw;
-    printer->write(bw).unwrap();
-
-    auto file = Sys::File::openOrCreate(output).take();
-    file.write(bw.bytes()).unwrap();
+    printer->save(Mime::parseUrlOrPath("./output.pdf", Sys::pwd().unwrap())).unwrap();
 }
 
 Ui::Child _destinationSelect() {
@@ -230,7 +226,6 @@ Ui::Child _destinationSelect() {
                 }),
                 Ui::separator(),
                 Kr::selectItem(Ui::NOP, "Add printer..."s)
-
             };
         }
     );
