@@ -262,7 +262,7 @@ export struct InlineBox {
     void add(Box&& b);
 
     bool active() {
-        return prose->_runes.len();
+        return prose->_runes.len() or atomicBoxes.len();
     }
 
     void repr(Io::Emit& e) const {
