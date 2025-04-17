@@ -10,6 +10,7 @@ export import :layout;
 export import :paint;
 export import :positioned;
 export import :replaced;
+export import :svg;
 export import :table;
 export import :values;
 export import :writing;

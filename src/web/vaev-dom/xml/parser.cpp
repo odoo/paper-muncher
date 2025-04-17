@@ -364,7 +364,7 @@ Res<Gc::Ref<Element>> XmlParser::_parseElement(Io::SScan& s, Ns ns) {
 
     if (auto r = _parseStartTag(s, ns)) {
         auto el = r.unwrap();
-        try$(_parseContent(s, ns, *el));
+        try$(_parseContent(s, el->tagName.ns, *el));
         try$(_parseEndTag(s, *el));
 
         rollback.disarm();
@@ -385,10 +385,11 @@ Res<Gc::Ref<Element>> XmlParser::_parseStartTag(Io::SScan& s, Ns ns) {
         return Error::invalidData("expected '<'");
 
     auto name = try$(_parseName(s));
-
-    auto el = _heap.alloc<Element>(TagName::make(name, ns));
-
     try$(_parseS(s));
+
+    ns = try$(_parseElementsNamespace(s, ns));
+    
+    auto el = _heap.alloc<Element>(TagName::make(name, ns));
 
     while (not s.skip('>') and not s.ended()) {
         try$(_parseAttribute(s, ns, *el));
@@ -640,6 +641,31 @@ Res<> XmlParser::_parseExternalId(Io::SScan& s, DocumentType& docType) {
     } else {
         return Error::invalidData("expected 'SYSTEM' or 'PUBLIC'");
     }
+}
+
+
+// XX MARK: 6.2 Namespace Defaulting
+// https://www.w3.org/TR/xml-names/#dt-defaultNS
+// https://www.w3.org/TR/xml-names/#scoping-defaulting
+Res<Ns> XmlParser::_parseElementsNamespace(Io::SScan& s, Ns originalNs) {
+    auto rollback = s.rollbackPoint();
+    while (not s.skip('>') and not s.ended()) {
+
+        auto name = try$(_parseName(s));
+
+        if (not s.skip('='))
+            return Error::invalidData("expected '='");
+
+        auto value = try$(_parseAttValue(s));
+
+        if (name == "xmlns") {
+            if (auto ns = Ns::fromUrl(value))
+                return Ok(*ns);
+        }
+
+        try$(_parseS(s));
+    }
+    return Ok(originalNs);
 }
 
 } // namespace Vaev::Dom

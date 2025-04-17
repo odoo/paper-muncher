@@ -108,6 +108,8 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
         stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
     } else if (auto image = frag.box->content.is<Karm::Image::Picture>()) {
         stack.add(makeRc<Scene::Image>(frag.metrics.borderBox().cast<f64>(), *image));
+    } else if(auto svg = frag.box->content.is<Karm::Scene::Stack>()) {
+        stack.add(makeRc<Scene::Stack>(std::move(*svg)));
     }
 }
 

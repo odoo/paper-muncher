@@ -9,6 +9,7 @@ module;
 export module Vaev.Layout:builder;
 
 import :values;
+import :svg;
 
 namespace Vaev::Layout {
 
@@ -277,6 +278,10 @@ struct BuilderContext {
         rootInlineBox().endInlineBox();
     }
 
+    Content& content() {
+        return _parent.content;
+    }
+
     BuilderContext toBlockContext(Box& parent, InlineBox& rootInlineBox) {
         return {
             computer,
@@ -334,9 +339,9 @@ static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::
     rootInlineBox.add({style, font, el});
 }
 
-static void _buildInputProse(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& parent) {
-    auto style = c.computeFor(*parent.style, el);
-    auto font = _lookupFontface(c.fontBook, *style);
+static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
+    auto style = bc.computer.computeFor(*bc.parentStyle, el);
+    auto font = _lookupFontface(bc.computer.fontBook, *style);
     Resolver resolver{
         .rootFont = Text::Font{font, 16},
         .boxFont = Text::Font{font, 16},
@@ -352,18 +357,20 @@ static void _buildInputProse(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& 
     auto prose = makeRc<Text::Prose>(proseStyle, value);
 
     // FIXME: we should guarantee that input has no children (not added before nor to add after)
-    parent.content = InlineBox{prose};
+    bc.content() = InlineBox{prose};
 }
 
-always_inline static bool isVoidElement(Gc::Ref<Dom::Element> el) {
-    return contains(Html::VOID_TAGS, el->tagName);
+always_inline static bool isBoxLeaf(Gc::Ref<Dom::Element> el) {
+    return contains(Html::VOID_TAGS, el->tagName) or el->tagName == Svg::SVG;
 }
 
-static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
+static void _buildBoxLeaf(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     if (el->tagName == Html::INPUT) {
-        _buildInputProse(bc.computer, el, bc._parent);
+        _buildInputProse(bc, el);
     } else if (el->tagName == Html::IMG) {
         _buildImage(bc.computer, *el, bc.parentStyle, bc.rootInlineBox());
+    } else if (el->tagName == Svg::SVG) {
+        bc.content() = buildSVG(el);
     }
 }
 
@@ -377,8 +384,8 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Com
         return;
     }
 
-    if (isVoidElement(el)) {
-        _buildVoidElement(bc, el);
+    if (isBoxLeaf(el)) {
+        _buildBoxLeaf(bc, el);
         return;
     }
 
@@ -392,8 +399,8 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Com
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     if (el->tagName == Html::BR) {
         // do nothing
-    } else if (isVoidElement(el)) {
-        _buildVoidElement(bc, el);
+    } else if (isBoxLeaf(el)) {
+        _buildBoxLeaf(bc, el);
     } else {
         _buildChildren(bc, el);
     }

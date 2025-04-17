@@ -1,6 +1,7 @@
 module;
 
 #include <karm-image/picture.h>
+#include <karm-scene/base.h>
 #include <karm-text/font.h>
 #include <karm-text/prose.h>
 #include <vaev-style/computer.h>
@@ -290,7 +291,8 @@ export using Content = Union<
     None,
     Vec<Box>,
     InlineBox,
-    Karm::Image::Picture>;
+    Karm::Image::Picture,
+    Karm::Scene::Stack>;
 
 export struct Attrs {
     usize span = 1;
@@ -339,24 +341,22 @@ struct Box : Meta::NoCopy {
     }
 
     void repr(Io::Emit& e) const {
+        e("(box {} {} {}", attrs, style->display, style->position);
         if (children()) {
-            e("(box {} {} {}", attrs, style->display, style->position);
             e.indentNewline();
             for (auto& c : children()) {
                 c.repr(e);
                 e.newline();
             }
             e.deindent();
-            e(")");
         } else if (content.is<InlineBox>()) {
-            e("(box {} {} {}", attrs, style->display, style->position);
             e.indentNewline();
             e("{}", content.unwrap<InlineBox>());
             e.deindent();
-            e(")");
-        } else {
-            e("(box {} {} {})", attrs, style->display, style->position);
+        } else if(content.is<Karm::Scene::Stack>()){
+            e(" SVG ");
         }
+        e(")");
     }
 };
 
