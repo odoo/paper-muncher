@@ -202,7 +202,7 @@ struct BuilderContext {
     MutCursor<InlineBox> _rootInlineBox;
 
     // https://www.w3.org/TR/css-inline-3/#model
-    void _flushRootInlineBoxIntoAnonymousBox() {
+    void flushRootInlineBoxIntoAnonymousBox() {
         if (not assertForRootInlineBox())
             return;
 
@@ -219,7 +219,7 @@ struct BuilderContext {
         *_rootInlineBox = std::move(newInlineBox);
     }
 
-    void _finalizeParentBoxAndFlushInline() {
+    void finalizeParentBoxAndFlushInline() {
         if (not assertForRootInlineBox())
             return;
 
@@ -227,7 +227,7 @@ struct BuilderContext {
             return;
 
         if (_parent.children()) {
-            _flushRootInlineBoxIntoAnonymousBox();
+            flushRootInlineBoxIntoAnonymousBox();
             return;
         }
 
@@ -373,7 +373,7 @@ static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent);
 
 static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::ComputedStyle> style, Gc::Ref<Dom::Element> el) {
     if (el->tagName == Html::BR) {
-        bc._flushRootInlineBoxIntoAnonymousBox();
+        bc.flushRootInlineBoxIntoAnonymousBox();
         return;
     }
 
@@ -397,7 +397,7 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
     } else {
         _buildChildren(bc, el);
     }
-    bc._finalizeParentBoxAndFlushInline();
+    bc.finalizeParentBoxAndFlushInline();
 }
 
 static Box createAndBuildBlockFlowfromElement(BuilderContext bc, Rc<Style::ComputedStyle> style, Gc::Ref<Dom::Element> el) {
@@ -535,7 +535,7 @@ static void _buildChildInternalDisplay(BuilderContext bc, Gc::Ref<Dom::Element> 
 
 static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::ComputedStyle> childStyle, Display display) {
     if (display == Display::Outside::BLOCK) {
-        bc._flushRootInlineBoxIntoAnonymousBox();
+        bc.flushRootInlineBoxIntoAnonymousBox();
         _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
     } else {
         if (display == Display::Inside::FLOW) {
