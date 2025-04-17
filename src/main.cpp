@@ -175,7 +175,7 @@ Async::Task<> renderAsync(
     };
 
     auto media = constructMediaForRender(options.scale, imageSize);
-    auto [style, layout, paint, frags] = Vaev::Driver::render(*dom, media, {.small = imageSize});
+    auto [layout, paint, frags] = Vaev::Driver::render(*dom, media, {.small = imageSize});
 
     auto image = Gfx::Surface::alloc(
         imageSize.cast<isize>() * options.density.toDppx(),

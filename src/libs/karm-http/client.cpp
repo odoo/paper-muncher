@@ -22,7 +22,13 @@ export struct Client : Transport {
 
     Async::Task<Rc<Response>> doAsync(Rc<Request> request) override {
         request->header.add("User-Agent", userAgent);
-        auto resp = co_trya$(_transport->doAsync(request));
+        auto maybeResp = co_await _transport->doAsync(request);
+        if (not maybeResp) {
+            logDebugIf(DEBUG_CLIENT, "\"{} {}\" {}", request->method, request->url, maybeResp.none());
+            co_return maybeResp.none();
+        }
+
+        auto resp = maybeResp.unwrap();
         logDebugIf(DEBUG_CLIENT, "\"{} {}\" {} {}", request->method, request->url, toUnderlyingType(resp->code), resp->code);
         co_return Ok(resp);
     }

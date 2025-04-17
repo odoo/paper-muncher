@@ -10,7 +10,7 @@ namespace Vaev::Style {
 
 struct Computer {
     Media _media;
-    StyleBook const& _styleBook;
+    StyleSheetList const& _styleBook;
     Text::FontBook& fontBook;
 
     using MatchingRules = Vec<Tuple<Cursor<StyleRule>, Spec>>;

@@ -84,7 +84,7 @@ struct View : Ui::View<View> {
         g.origin(bound().xy.cast<f64>());
         g.clip(viewport);
 
-        auto [_, layout, paint, frag] = *_renderResult;
+        auto [layout, paint, frag] = *_renderResult;
         auto paintRect = rect.offset(-bound().xy);
         paint->paint(g, paintRect.cast<f64>());
 
@@ -105,7 +105,7 @@ struct View : Ui::View<View> {
     Math::Vec2i size(Math::Vec2i size, Ui::Hint) override {
         // FIXME: This is wasteful, we should cache the result
         auto media = _constructMedia(size);
-        auto [_, layout, _, frag] = Driver::render(*_dom, media, {.small = size.cast<Au>()});
+        auto [layout, _, frag] = Driver::render(*_dom, media, {.small = size.cast<Au>()});
 
         return {
             frag->metrics.borderBox().width.cast<isize>(),

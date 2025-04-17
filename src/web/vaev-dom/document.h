@@ -4,6 +4,12 @@
 
 #include "node.h"
 
+namespace Vaev::Style {
+
+struct StyleSheetList;
+
+} // namespace Vaev::Style
+
 namespace Vaev::Dom {
 
 enum struct QuirkMode {
@@ -22,6 +28,8 @@ struct Document : Node {
     String xmlVersion;
     String xmlEncoding;
     String xmlStandalone = "no"s; // https://www.w3.org/TR/xml/#NT-SDDecl
+
+    Gc::Ptr<Style::StyleSheetList> styleSheets;
 
     Document(Mime::Url url)
         : _url(url) {
