@@ -11,7 +11,7 @@ Io::TextWriter& loggerOut() {
     struct LoggerOut : Io::TextEncoderBase<> {
         Res<usize> write(Bytes buf) override {
             if (fwrite(buf.buf(), 1, buf.len(), stderr) < buf.len()) {
-                return Error::other("could not write to stdout");
+                return Error::other("could not write to stderr");
             }
             return Ok(buf.len());
         }

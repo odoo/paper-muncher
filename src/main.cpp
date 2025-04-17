@@ -228,7 +228,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
         [=](Sys::Context&) -> Async::Task<> {
             if (sandboxArg) {
                 logInfo("running sandboxed");
-                // co_try$(Sys::enterSandbox());
+                co_try$(Sys::enterSandbox());
             }
             co_return Ok();
         }

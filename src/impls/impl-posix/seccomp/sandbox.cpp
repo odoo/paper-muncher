@@ -26,6 +26,7 @@ namespace Karm::Sys::_Embed {
     SYSCALL(mprotect)             \
     SYSCALL(munmap)               \
     SYSCALL(newfstatat)           \
+    SYSCALL(fstat)                \
     SYSCALL(openat)               \
     SYSCALL(read)                 \
     SYSCALL(write)
