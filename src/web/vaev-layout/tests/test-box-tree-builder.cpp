@@ -4,6 +4,7 @@
 #include <vaev-base/display.h>
 #include <vaev-dom/document.h>
 #include <vaev-dom/html/parser.h>
+#include <vaev-dom/xml/parser.h>
 #include <vaev-style/media.h>
 
 import Vaev.Driver;
@@ -106,16 +107,18 @@ struct FakeInlineBox {
 };
 
 struct FakeBox {
+    bool isInternal = false;
     Union<FakeInlineBox, Vec<FakeBox>> content = Vec<FakeBox>{};
 
     bool matches(Box const& b) {
-        if (not b.style->display.is(Display::Type::DEFAULT))
+        if (not (b.style->display.is(Display::Type::DEFAULT) 
+        or (isInternal and b.style->display.is(Display::Type::INTERNAL))))
             return false;
 
         bool fakeBoxStablishesInline = content.is<FakeInlineBox>();
         bool boxStablishesInline = b.content.is<Layout::InlineBox>();
 
-        // logDebug("box: {} {}, expected: {} {}", boxStablishesInline, boxIsBlockLevel, stablishesInline, isBlockLevel);
+        // logDebug("box: {}, expected: {}", boxStablishesInline, fakeBoxStablishesInline);
 
         if (boxStablishesInline != fakeBoxStablishesInline)
             return false;
@@ -555,5 +558,97 @@ test$("flex-blockify") {
 
     return Ok();
 }
+
+test$("table-fixup-1") {
+    Gc::Heap gc;
+
+    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+
+    Io::SScan scan{
+        "<html><body><table>"
+        "wrap me!"
+        "<td>wrap me also! and in the same row!</td>"
+        "<tr><td>dont wrap me!</td></tr>"
+        "<td>wrap mi</td>"
+        "<tr>wrap me!</tr>"
+        "</table></body></html>"
+    };
+
+    auto expectedBodySubtree =
+        FakeBox{
+            // body
+            .content = Vec<FakeBox>{
+                FakeBox{
+                    // table
+                    .content = Vec<FakeBox>{
+                        FakeBox{
+                            // table-box
+                            .isInternal = true,
+                            .content = Vec<FakeBox>{
+                                FakeBox{
+                                    // anon row for "wrap me!" and "wrap me also! and in the same row!"
+                                    .isInternal = true,
+                                    .content = Vec<FakeBox>{
+                                        FakeBox{
+                                            // anon cell for "wrap me!"
+                                            .isInternal = true,
+                                            .content = FakeInlineBox{}
+                                        },
+                                        FakeBox{
+                                            // cell for "wrap me also! and in the same row!"
+                                            .isInternal = true,
+                                            .content = FakeInlineBox{}
+                                        }
+                                    }
+                                },
+                                FakeBox{
+                                    // row for "dont wrap me!"
+                                    .isInternal = true,
+                                    .content = Vec<FakeBox>{
+                                        FakeBox{
+                                            .isInternal = true,
+                                            .content = FakeInlineBox{}
+                                        },
+                                    }
+                                },
+                                FakeBox{
+                                    // anon row for "wrap mi"
+                                    .isInternal = true,
+                                    .content = Vec<FakeBox>{
+                                        FakeBox{
+                                            .isInternal = true,
+                                            .content = FakeInlineBox{}
+                                        },
+                                    }
+                                },
+                                FakeBox{
+                                    // row for "wrap me!"
+                                    .isInternal = true,
+                                    .content = Vec<FakeBox>{
+                                        FakeBox{
+                                            // anon cell for "wrap me!"
+                                            .isInternal = true,
+                                            .content = FakeInlineBox{}
+                                        },
+                                    }
+                                },
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+    Dom::XmlParser parser{gc};
+    try$(parser.parse(scan, HTML, *dom));
+
+    auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
+    auto const& bodyBox = rootBox->children()[0];
+
+    expect$(expectedBodySubtree.matches(bodyBox));
+
+    return Ok();
+}
+
 
 } // namespace Vaev::Layout::Tests

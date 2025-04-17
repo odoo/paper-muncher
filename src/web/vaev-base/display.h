@@ -222,6 +222,43 @@ struct Display {
         }
     }
 
+    always_inline bool isTableTrack() const {
+        if (not is(Type::INTERNAL))
+            return false;
+        return _internal == TABLE_ROW or _internal == TABLE_COLUMN;
+    }
+
+    always_inline bool isTableTrackGroup() const {
+        if (not is(Type::INTERNAL))
+            return false;
+        return _internal == TABLE_ROW_GROUP or _internal == TABLE_HEADER_GROUP or
+               _internal == TABLE_FOOTER_GROUP or _internal == TABLE_COLUMN_GROUP;
+    }
+
+    always_inline bool isProperTableChild() const {
+        if (not is(Type::INTERNAL))
+            return false;
+        return _internal == TABLE_CAPTION or isTableTrack() or isTableTrackGroup();
+    }
+
+    static Array constexpr const INTERNAL_TABLE = {
+        TABLE_ROW_GROUP,
+        TABLE_HEADER_GROUP,
+        TABLE_FOOTER_GROUP,
+        TABLE_ROW,
+        TABLE_CELL,
+        TABLE_COLUMN_GROUP,
+        TABLE_COLUMN,
+        TABLE_CAPTION,
+        TABLE_BOX
+    };
+
+    bool isTableInternal() const {
+        if (type() != INTERNAL)
+            return false;
+        return contains(INTERNAL_TABLE, _internal);
+    }
+
     // https://www.w3.org/TR/css-display-3/#blockify
     Display blockify() {
         if (_type == BOX)
