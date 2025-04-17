@@ -123,9 +123,8 @@ struct PipeBody : Body {
     usize _contentLength;
 
     PipeBody(Bytes resumes, usize contentLength = Limits<usize>::MAX)
-        : _resumes(resumes), _resumesPos(0) {
-        if (contentLength != Limits<usize>::MAX)
-            _resumesPos = resumes.len() - contentLength;
+        : _resumes(resumes),
+          _contentLength(contentLength - resumes.len()) {
     }
 
     Async::Task<usize> readAsync(MutBytes buf) override {
@@ -143,7 +142,7 @@ struct PipeBody : Body {
         n = co_try$(Sys::in().read(mutSub(buf, 0, n)));
         _contentLength -= n;
 
-        co_return 0;
+        co_return n;
     }
 };
 
