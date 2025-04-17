@@ -222,7 +222,8 @@ struct BuilderContext {
     enum struct From {
         BLOCK,
         INLINE,
-        FLEX
+        FLEX,
+        TABLE
     };
 
     Style::Computer& computer;
@@ -235,9 +236,6 @@ struct BuilderContext {
 
     // https://www.w3.org/TR/css-inline-3/#model
     void flushRootInlineBoxIntoAnonymousBox() {
-        if (not assertForRootInlineBox())
-            return;
-
         if (not rootInlineBox().active())
             return;
 
@@ -252,9 +250,6 @@ struct BuilderContext {
     }
 
     void finalizeParentBoxAndFlushInline() {
-        if (not assertForRootInlineBox())
-            return;
-
         if (not rootInlineBox().active())
             return;
 
@@ -276,36 +271,22 @@ struct BuilderContext {
         _parent.add(std::move(box));
     }
 
-    // FIXME: currently its a recoverable error since table is not correctly implemented, but should be a panic
-    // once table build is properly done
-    bool assertForRootInlineBox() {
-        if (_rootInlineBox == nullptr) {
-            logError("expected root inline box");
-            return false;
-        }
-        return true;
-    }
-
     InlineBox& rootInlineBox() {
+        if (_rootInlineBox == nullptr)
+            panic("no root inline box set for the current builder context");
         return *_rootInlineBox;
     }
 
     void addToInlineRoot(Box&& box) {
-        if (not assertForRootInlineBox())
-            return;
         rootInlineBox().add(std::move(box));
     }
 
     // FIXME: find me a better name
     void startInlineBox(Text::ProseStyle proseStyle) {
-        if (not assertForRootInlineBox())
-            return;
         rootInlineBox().startInlineBox(proseStyle);
     }
 
     void endInlineBox() {
-        if (not assertForRootInlineBox())
-            return;
         rootInlineBox().endInlineBox();
     }
 
@@ -350,6 +331,29 @@ struct BuilderContext {
             _rootInlineBox,
         };
     }
+
+    // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
+    // SPEC: All inline elements are wrapped by cell boxes. Thus, only the cell table content will have a inline box
+    // set, while other internal table contexts won't have a inline box
+    BuilderContext toTableContent(Box& parent) {
+        return {
+            computer,
+            From::TABLE,
+            parent.style,
+            parent,
+            nullptr,
+        };
+    }
+
+    BuilderContext toTableCellContent(Box& parent, InlineBox& rootInlineBox) {
+        return {
+            computer,
+            From::TABLE,
+            parent.style,
+            parent,
+            &rootInlineBox,
+        };
+    }
 };
 
 static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node);
@@ -358,16 +362,17 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node);
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace#how_does_css_process_whitespace/
 static void _buildText(BuilderContext bc, Gc::Ref<Dom::Text> node, Rc<Style::ComputedStyle> parentStyle) {
-    if (not bc.assertForRootInlineBox())
-        return;
+    // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
+    // TODO: For tables, the default case is to skip whitespace text, but there are some extra checks to be done
 
     // https://www.w3.org/TR/css-flexbox-1/#flex-items
     // However, if the entire sequence of child text runs contains only white space
     // (i.e. characters that can be affected by the white-space property) it is instead not rendered
     // (just as if its text nodes were display:none).
-    
-    bool shouldSkipWhitespace = 
-        bc.from == BuilderContext::From::FLEX or 
+
+    bool shouldSkipWhitespace =
+        bc.from == BuilderContext::From::TABLE or
+        bc.from == BuilderContext::From::FLEX or
         bc.from == BuilderContext::From::BLOCK;
 
     bool addedNonWhitespace = _buildText(node, parentStyle, bc.rootInlineBox(), shouldSkipWhitespace);
@@ -482,52 +487,218 @@ static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::ComputedSty
 
 // MARK: Build Table -----------------------------------------------------------
 
-static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, Display display);
+static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, Display display);
 
-static void _buildTableChildren(BuilderContext bc, Gc::Ref<Dom::Node> node, Rc<Style::ComputedStyle> tableBoxStyle) {
-    bool captionsOnTop = tableBoxStyle->table->captionSide == CaptionSide::TOP;
+struct AnonymousTableBoxWrapper {
+    Opt<Box> rowBox, cellBox;
+    Opt<InlineBox> rootInlineBoxForCell;
 
-    Box tableBox{
-        tableBoxStyle,
-        bc._parent.fontFace,
-        node->is<Dom::Element>()
+    BuilderContext& bc;
+
+    AnonymousTableBoxWrapper(BuilderContext& bc) : bc(bc) {}
+
+    void createRowIfNone(Rc<Style::ComputedStyle> style) {
+        if (rowBox)
+            return;
+
+        auto rowStyle = makeRc<Style::ComputedStyle>(Style::ComputedStyle::initial());
+        rowStyle->inherit(*style);
+        rowStyle->display = Display::Internal::TABLE_ROW;
+
+        rowBox = Box{rowStyle, _lookupFontface(bc.computer.fontBook, *style), nullptr};
+    }
+
+    void createCellIfNone(Rc<Style::ComputedStyle> style) {
+        if (cellBox)
+            return;
+
+        auto cellStyle = makeRc<Style::ComputedStyle>(Style::ComputedStyle::initial());
+        cellStyle->inherit(*style);
+        cellStyle->display = Display::Internal::TABLE_CELL;
+
+        cellBox = Box{cellStyle, _lookupFontface(bc.computer.fontBook, *style), nullptr};
+        rootInlineBoxForCell = InlineBox{_proseStyleFomStyle(bc.computer, *style)};
+    }
+
+    void finalizeAndResetCell() {
+        if (not cellBox)
+            return;
+
+        cellBuilderContext().finalizeParentBoxAndFlushInline();
+        if (cellBox->content != NONE) {
+            if (rowBox)
+                bc.toTableContent(*rowBox).addToParentBox(std::move(*cellBox));
+            else
+                bc.addToParentBox(std::move(*cellBox));
+        }
+
+        cellBox = NONE;
+    }
+
+    void finalizeAndResetRow() {
+        if (not rowBox)
+            return;
+
+        if (rowBox->content != NONE)
+            bc.addToParentBox(std::move(*rowBox));
+
+        rowBox = NONE;
+    }
+
+    BuilderContext cellBuilderContext() {
+        return bc.toTableCellContent(*cellBox, *rootInlineBoxForCell);
+    }
+
+    BuilderContext rowBuilderContext() {
+        return bc.toTableContent(*rowBox);
+    }
+};
+
+static void _buildNodeWrappedByCell(BuilderContext cellBuilderContext, Gc::Ref<Dom::Element> wrappedEl) {
+    _buildNode(cellBuilderContext, *wrappedEl);
+}
+
+static void _buildCell(BuilderContext rowBuilderContext, Gc::Ref<Dom::Element> cellEl) {
+    _buildNode(rowBuilderContext, *cellEl);
+}
+
+static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, bool skipCaption, auto predForAccepted) {
+    AnonymousTableBoxWrapper anonTableWrapper{bc};
+
+    for (auto child = el->firstChild(); child; child = child->nextSibling()) {
+        if (auto el = child->is<Dom::Element>()) {
+            auto childStyle = bc.computer.computeFor(*style, *el);
+            auto display = childStyle->display;
+
+            if (skipCaption and display == Display::Internal::TABLE_CAPTION)
+                continue;
+
+            if (predForAccepted(display)) {
+                anonTableWrapper.finalizeAndResetCell();
+                anonTableWrapper.finalizeAndResetRow();
+
+                if (display == Display::Internal::TABLE_CELL) {
+                    _buildCell(bc, *el);
+                } else {
+                    _buildTableInternal(bc, *el, childStyle, display);
+                }
+            } else {
+                // Unexpected display type for children, it will be wrapped by anonymous box
+                // First dispatching based on the parent's display type
+                if (bc.parentStyle->display == Display::Internal::TABLE_ROW) {
+                    anonTableWrapper.createCellIfNone(style);
+                    _buildNodeWrappedByCell(anonTableWrapper.cellBuilderContext(), *el);
+                } else {
+                    if (display == Display::Internal::TABLE_CELL) {
+                        anonTableWrapper.finalizeAndResetCell();
+                        anonTableWrapper.createRowIfNone(style);
+
+                        _buildCell(anonTableWrapper.rowBuilderContext(), *el);
+                    } else {
+                        anonTableWrapper.createRowIfNone(style);
+                        anonTableWrapper.createCellIfNone(style);
+
+                        _buildNodeWrappedByCell(anonTableWrapper.cellBuilderContext(), *el);
+                    }
+                }
+            }
+        } else if (auto text = child->is<Dom::Text>()) {
+            if (bc.parentStyle->display != Display::Internal::TABLE_ROW)
+                anonTableWrapper.createRowIfNone(style);
+            anonTableWrapper.createCellIfNone(style);
+            _buildText(anonTableWrapper.cellBuilderContext(), *text, style);
+        }
+    }
+
+    anonTableWrapper.finalizeAndResetCell();
+    anonTableWrapper.finalizeAndResetRow();
+}
+
+// https://www.w3.org/TR/css-tables-3/#fixup-algorithm
+static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> style, Display display) {
+    auto font = _lookupFontface(bc.computer.fontBook, *style);
+    Box tableInternalBox = {style, font, el};
+    tableInternalBox.attrs = _parseDomAttr(el);
+
+    switch (display.internal()) {
+    case Display::Internal::TABLE_HEADER_GROUP:
+    case Display::Internal::TABLE_FOOTER_GROUP:
+    case Display::Internal::TABLE_ROW_GROUP: {
+        // An anonymous table-row box must be generated around each sequence of consecutive children of a
+        // table-row-group box which are not table-row boxes.
+        _buildTableChildrenWhileWrappingIntoAnonymousBox(bc.toTableContent(tableInternalBox), el, style, false, [](Display const& display) {
+            return display == Display::Internal::TABLE_ROW;
+        });
+        break;
+    }
+    case Display::Internal::TABLE_COLUMN_GROUP: {
+        // "Children of a table-column-group which are not a table-column." should be discarded
+        for (auto child = el->firstChild(); child; child = child->nextSibling()) {
+            if (auto el = child->is<Dom::Element>()) {
+                auto childStyle = bc.computer.computeFor(*style, *el);
+                if (childStyle->display != Display::Internal::TABLE_COLUMN)
+                    continue;
+                _buildTableInternal(bc.toTableContent(tableInternalBox), *el, childStyle, display);
+            }
+        }
+        break;
+    }
+    case Display::Internal::TABLE_ROW: {
+        // An anonymous table-cell box must be generated around each sequence of consecutive children of a
+        // table-row box which are not table-cell boxes.
+        _buildTableChildrenWhileWrappingIntoAnonymousBox(bc.toTableContent(tableInternalBox), el, style, false, [](Display const& display) {
+            return display == Display::Internal::TABLE_CELL;
+        });
+    }
+    case Display::Internal::TABLE_COLUMN: {
+        // "Children of a table-column." should be discarded
+        // do nothing
+        break;
+    }
+    case Display::Internal::TABLE_BOX:
+    case Display::Internal::TABLE_CAPTION:
+    case Display::Internal::TABLE_CELL: {
+        panic("table internal display in wrong flow");
+        break;
+    }
+    default:
+        panic("non-table internal display in wrong flow");
+    }
+
+    bc.addToParentBox(std::move(tableInternalBox));
+}
+
+static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> tableBoxStyle) {
+    auto searchAndBuildCaption = [&]() {
+        for (auto child = el->firstChild(); child; child = child->nextSibling()) {
+            if (auto childEl = child->is<Dom::Element>()) {
+                auto childStyle = tableWrapperBc.computer.computeFor(*tableBoxStyle, *childEl);
+                if (childStyle->display != Display::Internal::TABLE_CAPTION)
+                    continue;
+                _buildNode(tableWrapperBc, *childEl);
+            }
+        }
     };
 
-    tableBox.style->display = Display::Internal::TABLE_BOX;
+    tableBoxStyle->display = Display::Internal::TABLE_BOX;
+    auto font = _lookupFontface(tableWrapperBc.computer.fontBook, *tableBoxStyle);
+    Box tableBox = {tableBoxStyle, font, el};
+    tableBox.attrs = _parseDomAttr(el);
 
+    bool captionsOnTop = tableBoxStyle->table->captionSide == CaptionSide::TOP;
     if (captionsOnTop) {
-        for (auto child = node->firstChild(); child; child = child->nextSibling()) {
-            if (auto el = child->is<Dom::Element>()) {
-                if (el->tagName == Html::CAPTION) {
-                    _buildNode(bc, *el);
-                }
-            }
-        }
+        searchAndBuildCaption();
     }
 
-    for (auto child = node->firstChild(); child; child = child->nextSibling()) {
-        if (auto el = child->is<Dom::Element>()) {
-            if (el->tagName != Html::CAPTION) {
-                // FIXME: table internal elements should not have the same code-path as blocks
-                auto childStyle = bc.computer.computeFor(*tableBoxStyle, *el);
-                _innerDisplayDispatchCreationOfBlockLevelBox(
-                    bc.toBlockContextWithoutRootInline(tableBox), *el,
-                    childStyle, childStyle->display
-                );
-            }
-        }
-    }
-
-    bc.addToParentBox(std::move(tableBox));
+    // An anonymous table-row box must be generated around each sequence of consecutive children of a table-root
+    // box which are not proper table child boxes.
+    _buildTableChildrenWhileWrappingIntoAnonymousBox(tableWrapperBc.toTableContent(tableBox), *el, tableBoxStyle, true, [](Display const& display) {
+        return display.isProperTableChild();
+    });
+    tableWrapperBc.addToParentBox(std::move(tableBox));
 
     if (not captionsOnTop) {
-        for (auto child = node->firstChild(); child; child = child->nextSibling()) {
-            if (auto el = child->is<Dom::Element>()) {
-                if (el->tagName == Html::CAPTION) {
-                    _buildNode(bc, *el);
-                }
-            }
-        }
+        searchAndBuildCaption();
     }
 }
 
@@ -542,7 +713,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
     InlineBox rootInlineBox{_proseStyleFomStyle(bc.computer, *wrapperStyle)};
 
     // SPEC: The table wrapper box establishes a block formatting context.
-    _buildTableChildren(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, tableStyle);
+    _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, tableStyle);
     wrapper.attrs = _parseDomAttr(tableBoxEl);
 
     return wrapper;
@@ -594,8 +765,6 @@ static void _buildChildBoxDisplay(BuilderContext bc, Gc::Ref<Dom::Node> node, Di
 static void _buildChildInternalDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::ComputedStyle> childStyle) {
     // FIXME: We should create wrapping boxes related to table or ruby, following the FC specification. However, for now,
     // we just wrap it in a single box.
-    // FIXME: since table internal elements' code-path is the same than normal blocks, this method is also used in a
-    // correctly formed table
     _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, childStyle->display);
 }
 
@@ -607,7 +776,6 @@ static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> c
     }
 
     // NOTE: Flow for From::BLOCK and From::INLINE
-    // FIXME: but also Table, which shouldnt be the case
     if (display == Display::Outside::BLOCK) {
         bc.flushRootInlineBoxIntoAnonymousBox();
         _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
