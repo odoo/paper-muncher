@@ -1,10 +1,11 @@
 module;
 
-#include <karm-ui/box.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/view.h>
+#include <karm-gfx/icon.h>
+#include <karm-math/align.h>
 
 export module Karm.Kira:errorPage;
+
+import Karm.Ui;
 
 namespace Karm::Kira {
 

@@ -1,10 +1,12 @@
 module;
 
-#include <karm-ui/focus.h>
-#include <karm-ui/layout.h>
+#include <karm-app/inputs.h>
+#include <karm-base/string.h>
+#include <karm-math/align.h>
 
 export module Karm.Kira:searchbar;
 
+import Karm.Ui;
 import Mdi;
 
 namespace Karm::Kira {
@@ -14,8 +16,8 @@ export Ui::Child searchbar(String text) {
                8,
                Math::Align::VCENTER | Math::Align::START,
                Ui::stack(
-                   text ? Ui::empty() : Ui::labelMedium(Gfx::ZINC600, "Search…"),
-                   Ui::input(Ui::TextStyles::labelMedium(), text, NONE)
+                   text ? Ui::empty() : Ui::labelMedium(Ui::GRAY600, "Search…"),
+                   Ui::input(Ui::TextStyles::labelMedium(), text, Ui::SINK<String>)
                ) | Ui::grow(),
                Ui::icon(Mdi::MAGNIFY)
            ) |

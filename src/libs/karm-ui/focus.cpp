@@ -1,14 +1,17 @@
-#pragma once
+module;
 
 #include <karm-app/inputs.h>
-#include <karm-ui/node.h>
+#include <karm-gfx/canvas.h>
 
-#include "funcs.h"
-#include "input.h"
+export module Karm.Ui:focus;
+
+import :funcs;
+import :atoms;
+import :intent;
 
 namespace Karm::Ui {
 
-struct FocusEvent {
+export struct FocusEvent {
     enum struct Type {
         STEAL,
         ENTER,
@@ -16,12 +19,9 @@ struct FocusEvent {
     };
     using enum Type;
     Type type;
-
-    FocusEvent(Type type) : type(type) {
-    }
 };
 
-struct FocusListener {
+export struct FocusListener {
     bool _focused = false;
 
     void event(Ui::Node& n, App::Event& e) {
@@ -98,11 +98,11 @@ struct Focusable : ProxyNode<Focusable> {
     }
 };
 
-static inline Ui::Child focusable(Ui::Child child) {
+export Ui::Child focusable(Ui::Child child) {
     return makeRc<Focusable>(std::move(child));
 }
 
-static inline auto focusable() {
+export auto focusable() {
     return [](Ui::Child child) {
         return focusable(std::move(child));
     };

@@ -1,9 +1,10 @@
 module;
 
-#include <karm-ui/box.h>
-#include <karm-ui/layout.h>
+#include <karm-meta/traits.h>
 
 export module Karm.Kira:card;
+
+import Karm.Ui;
 
 namespace Karm::Kira {
 

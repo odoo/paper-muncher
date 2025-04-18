@@ -1,8 +1,17 @@
+module;
+
 #include <SDL.h>
+#include <karm-app/host.h>
+#include <karm-app/inputs.h>
+#include <karm-gfx/canvas.h>
 #include <karm-image/loader.h>
+#include <karm-logger/logger.h>
 #include <karm-pkg/bundle.h>
-#include <karm-ui/_embed.h>
-#include <karm-ui/drag.h>
+#include <karm-sys/time.h>
+
+module Karm.Ui:_embed;
+
+import Karm.Ui;
 
 namespace Karm::Ui::_Embed {
 
@@ -600,8 +609,8 @@ static SDL_HitTestResult _hitTestCallback(SDL_Window* window, SDL_Point const* a
 static Res<> _setWindowIcon(SDL_Window* window) {
     auto url = try$(Pkg::currentBundle()).url() / "images/icon.qoi"_path;
     auto defaultUrl = "bundle://karm-ui/images/icon.qoi"_url;
-    auto image = Image::load(url).unwrapOrElse([&] {
-        return Image::loadOrFallback(defaultUrl).take();
+    auto image = Karm::Image::load(url).unwrapOrElse([&] {
+        return Karm::Image::loadOrFallback(defaultUrl).take();
     });
 
     auto* surface = SDL_CreateRGBSurface(0, image.width(), image.height(), 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);

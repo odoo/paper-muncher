@@ -1,16 +1,14 @@
 module;
 
+#include <karm-app/inputs.h>
+#include <karm-gfx/icon.h>
+#include <karm-math/align.h>
 #include <karm-mime/mime.h>
 #include <karm-sys/dir.h>
-#include <karm-ui/dialog.h>
-#include <karm-ui/focus.h>
-#include <karm-ui/input.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/popover.h>
-#include <karm-ui/scroll.h>
 
 export module Hideo.Files:widgets;
 
+import Karm.Ui;
 import Karm.Kira;
 import Mdi;
 import :model;
@@ -99,20 +97,20 @@ Ui::ButtonStyle itemStyle(bool odd) {
 Ui::Child directoryContextMenu() {
     return Kr::contextMenuContent({
         Kr::contextMenuDock({
-            Kr::contextMenuIcon(Ui::NOP, Mdi::CONTENT_COPY),
-            Kr::contextMenuIcon(Ui::NOP, Mdi::CONTENT_CUT),
-            // Kr::contextMenuIcon(Ui::NOP, Mdi::CONTENT_PASTE),
-            Kr::contextMenuIcon(Ui::NOP, Mdi::FORM_TEXTBOX),
+            Kr::contextMenuIcon(Ui::SINK<>, Mdi::CONTENT_COPY),
+            Kr::contextMenuIcon(Ui::SINK<>, Mdi::CONTENT_CUT),
+            // Kr::contextMenuIcon(Ui::SINK, Mdi::CONTENT_PASTE),
+            Kr::contextMenuIcon(Ui::SINK<>, Mdi::FORM_TEXTBOX),
             Ui::grow(NONE),
             Ui::separator(),
-            Kr::contextMenuIcon(Ui::NOP, Mdi::DELETE_OUTLINE),
+            Kr::contextMenuIcon(Ui::SINK<>, Mdi::DELETE_OUTLINE),
         }),
         Ui::separator(),
-        Kr::contextMenuItem(Ui::NOP, Mdi::MAGNIFY, "Preview"),
-        Kr::contextMenuItem(Ui::NOP, Mdi::PENCIL, "Modify"),
-        Kr::contextMenuItem(Ui::NOP, Mdi::SHARE, "Interact…"),
+        Kr::contextMenuItem(Ui::SINK<>, Mdi::MAGNIFY, "Preview"),
+        Kr::contextMenuItem(Ui::SINK<>, Mdi::PENCIL, "Modify"),
+        Kr::contextMenuItem(Ui::SINK<>, Mdi::SHARE, "Interact…"),
         Ui::separator(),
-        Kr::contextMenuItem(Ui::NOP, Mdi::INFORMATION_OUTLINE, "Properties"),
+        Kr::contextMenuItem(Ui::SINK<>, Mdi::INFORMATION_OUTLINE, "Properties"),
     });
 }
 
@@ -279,10 +277,10 @@ export Ui::Child goParentTool(State const& s) {
 export Ui::Child mainMenu([[maybe_unused]] State const& s) {
     return Kr::contextMenuContent({
         Kr::contextMenuItem(
-            Ui::NOP,
+            Ui::SINK<>,
             Mdi::BOOKMARK_OUTLINE, "Add bookmark..."
         ),
-        Kr::contextMenuItem(Ui::NOP, Mdi::BOOKMARK, "Bookmarks"),
+        Kr::contextMenuItem(Ui::SINK<>, Mdi::BOOKMARK, "Bookmarks"),
         Ui::separator(),
         Kr::contextMenuCheck(Model::bind<ToggleHidden>(), s.showHidden, "Show hidden"),
     });

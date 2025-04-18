@@ -2,14 +2,12 @@ module;
 
 #include <karm-gfx/icon.h>
 #include <karm-sys/dir.h>
-#include <karm-ui/dialog.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/reducer.h>
 
 export module Hideo.Files:app;
 
 import Mdi;
 import Karm.Kira;
+import Karm.Ui;
 import :model;
 import :widgets;
 

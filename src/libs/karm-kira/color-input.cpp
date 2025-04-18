@@ -1,13 +1,13 @@
 module;
 
-#include <karm-ui/dialog.h>
-#include <karm-ui/drag.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/reducer.h>
-#include <karm-ui/scroll.h>
+#include <karm-app/inputs.h>
+#include <karm-gfx/canvas.h>
+#include <karm-gfx/shadow.h>
+#include <karm-math/align.h>
 
 export module Karm.Kira:colorInput;
 
+import Karm.Ui;
 import :dialog;
 
 namespace Karm::Kira {
@@ -16,10 +16,10 @@ namespace Karm::Kira {
 
 struct HsvSquare : Ui::View<HsvSquare> {
     Gfx::Hsv _value;
-    Ui::OnChange<Gfx::Hsv> _onChange;
+    Ui::Send<Gfx::Hsv> _onChange;
     Ui::MouseListener _mouseListener;
 
-    HsvSquare(Gfx::Hsv value, Ui::OnChange<Gfx::Hsv> onChange)
+    HsvSquare(Gfx::Hsv value, Ui::Send<Gfx::Hsv> onChange)
         : _value{value}, _onChange{std::move(onChange)} {}
 
     void reconcile(HsvSquare& o) override {
@@ -94,9 +94,7 @@ struct HsvSquare : Ui::View<HsvSquare> {
 
         if (_mouseListener.isPress() and e.is<App::MouseEvent>()) {
             _value = sampleHsv(_mouseListener.pos());
-            if (_onChange)
-                _onChange(*this, _value);
-
+            _onChange(*this, _value);
             Ui::shouldRepaint(*this);
         }
     }
@@ -106,7 +104,7 @@ struct HsvSquare : Ui::View<HsvSquare> {
     }
 };
 
-export Ui::Child hsvSquare(Gfx::Hsv value, Ui::OnChange<Gfx::Hsv> onChange) {
+export Ui::Child hsvSquare(Gfx::Hsv value, Ui::Send<Gfx::Hsv> onChange) {
     return makeRc<HsvSquare>(value, std::move(onChange));
 }
 
@@ -129,7 +127,7 @@ static Ui::Child _sliderThumb(Gfx::Color color) {
            Ui::dragRegion();
 }
 
-export Ui::Child hsvValueSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChange) {
+export Ui::Child hsvValueSlider(Gfx::Hsv hsv, Ui::Send<Gfx::Hsv> onChange) {
     auto background =
         Gfx::Gradient::hlinear()
             .withColors(
@@ -153,7 +151,7 @@ export Ui::Child hsvValueSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChange) {
            Ui::maxSize({Ui::UNCONSTRAINED, 18});
 }
 
-export Ui::Child hsvSaturationSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChange) {
+export Ui::Child hsvSaturationSlider(Gfx::Hsv hsv, Ui::Send<Gfx::Hsv> onChange) {
     auto background =
         Gfx::Gradient::hlinear()
             .withColors(
@@ -185,7 +183,7 @@ export Ui::Child hsvSaturationSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChan
            Ui::maxSize({Ui::UNCONSTRAINED, 18});
 }
 
-export Ui::Child hsvHueSlider(Gfx::Hsv hsv, Ui::OnChange<Gfx::Hsv> onChange) {
+export Ui::Child hsvHueSlider(Gfx::Hsv hsv, Ui::Send<Gfx::Hsv> onChange) {
     return _sliderThumb(Gfx::hsvToRgb(hsv.withSaturation(1).withValue(1))) |
            Ui::end() |
            Ui::slider(hsv.hue / 360, [hsv, onChange](auto& n, auto v) {
@@ -289,7 +287,7 @@ export Ui::Child colorPickerDialog() {
                 content | Ui::insets({8, 16}),
                 dialogFooter({
                     dialogCancel(),
-                    dialogAction(Ui::NOP, "Ok"s),
+                    dialogAction(Ui::SINK<>, "Ok"s),
                 }),
             });
         }
@@ -298,7 +296,7 @@ export Ui::Child colorPickerDialog() {
 
 // MARK: Color Input -----------------------------------------------------------
 
-export Ui::Child colorInput(Gfx::Color color, Ui::OnChange<Gfx::Color>) {
+export Ui::Child colorInput(Gfx::Color color, Ui::Send<Gfx::Color>) {
     auto colorPreview =
         Ui::empty({18, 18}) |
         Ui::box({

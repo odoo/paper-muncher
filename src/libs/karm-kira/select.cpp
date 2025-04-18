@@ -1,13 +1,11 @@
 module;
 
-#include <karm-ui/anim.h>
-#include <karm-ui/input.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/popover.h>
-#include <karm-ui/scroll.h>
+#include <karm-gfx/shadow.h>
+#include <karm-math/align.h>
 
 export module Karm.Kira:select;
 
+import Karm.Ui;
 import Mdi;
 
 namespace Karm::Kira {
@@ -53,7 +51,7 @@ export Ui::Child selectLabel(String text) {
            Ui::insets({12, 6, 3, 14});
 }
 
-export Ui::Child selectItem(Ui::OnPress onPress, String t) {
+export Ui::Child selectItem(Opt<Ui::Send<>> onPress, String t) {
     return Ui::hflow(
                12,
                Math::Align::CENTER,

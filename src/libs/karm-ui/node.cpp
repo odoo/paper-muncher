@@ -1,4 +1,4 @@
-#pragma once
+module;
 
 #include <karm-app/event.h>
 #include <karm-base/checked.h>
@@ -8,25 +8,31 @@
 #include <karm-logger/logger.h>
 #include <karm-sys/async.h>
 
-#include "atoms.h"
+export module Karm.Ui:node;
 
 namespace Karm::Ui {
 
-enum struct Hint {
+export enum struct Hint {
     MIN,
     PREFERRED,
     MAX,
 };
 
-struct Node;
+export struct Node;
 
-using Child = Rc<Node>;
-using Children = Vec<Child>;
-using Visitor = Func<void(Node&)>;
+export using Child = Rc<Node>;
+export using Children = Vec<Child>;
+export using Visitor = Func<void(Node&)>;
 
 // MARK: Node ------------------------------------------------------------------
 
-using Key = Opt<Hash>;
+export using Key = Opt<Hash>;
+
+export template <typename... Ts>
+using Send = SharedFunc<void(Node&, Ts...)>;
+
+export template <typename... Ts>
+auto SINK(Ui::Node&, Ts&&...) {}
 
 struct Node : App::Dispatch {
     Key _key = NONE;
@@ -64,27 +70,27 @@ struct Node : App::Dispatch {
     virtual void detach(Node*) {}
 };
 
-inline auto key(Hashable auto const& key) {
+export auto key(Hashable auto const& key) {
     return [key](Child child) {
         child->_key = hash(key);
         return child;
     };
 }
 
-template <typename T>
+export template <typename T>
 concept Decorator = requires(T& t, Child& c) {
     { t(c) } -> Meta::Same<Child>;
 };
 
-always_inline Child operator|(Child child, Decorator auto decorator) {
+export Child operator|(Child child, Decorator auto decorator) {
     return decorator(child);
 }
 
-always_inline Child& operator|=(Child& child, Decorator auto decorator) {
+export Child& operator|=(Child& child, Decorator auto decorator) {
     return child = decorator(child);
 }
 
-always_inline auto operator|(Decorator auto decorator, Decorator auto decorator2) {
+export auto operator|(Decorator auto decorator, Decorator auto decorator2) {
     return [=](Child child) {
         return decorator2(decorator(child));
     };
@@ -92,7 +98,7 @@ always_inline auto operator|(Decorator auto decorator, Decorator auto decorator2
 
 // MARK: LeafNode --------------------------------------------------------------
 
-template <typename Crtp>
+export template <typename Crtp>
 struct LeafNode : Node {
     Node* _parent = nullptr;
 
@@ -141,7 +147,7 @@ struct LeafNode : Node {
 
 // MARK: GroupNode -------------------------------------------------------------
 
-template <typename Crtp>
+export template <typename Crtp>
 struct GroupNode : LeafNode<Crtp> {
     Children _children;
     Math::Recti _bound{};
@@ -218,7 +224,7 @@ struct GroupNode : LeafNode<Crtp> {
 
 // MARK: ProxyNode -------------------------------------------------------------
 
-template <typename Crtp>
+export template <typename Crtp>
 struct ProxyNode : LeafNode<Crtp> {
     Child _child;
 
@@ -268,8 +274,8 @@ struct ProxyNode : LeafNode<Crtp> {
     }
 };
 
-using Slot = Func<Child()>;
+export using Slot = Func<Child()>;
 
-using Slots = Func<Children()>;
+export using Slots = Func<Children()>;
 
 } // namespace Karm::Ui

@@ -1,6 +1,14 @@
-#include "scroll.h"
+module;
 
-#include "anim.h"
+#include <karm-app/inputs.h>
+#include <karm-gfx/canvas.h>
+#include <karm-math/flow.h>
+
+export module Karm.Ui:scroll;
+
+import :anim;
+import :node;
+import :atoms;
 
 namespace Karm::Ui {
 
@@ -178,16 +186,34 @@ struct Scroll : ProxyNode<Scroll> {
     }
 };
 
-Child vhscroll(Child child) {
+export Child vhscroll(Child child) {
     return makeRc<Scroll>(child, Math::Orien::BOTH);
 }
 
-Child hscroll(Child child) {
+export auto vhscroll() {
+    return [](Child child) {
+        return vhscroll(child);
+    };
+}
+
+export Child hscroll(Child child) {
     return makeRc<Scroll>(child, Math::Orien::HORIZONTAL);
 }
 
-Child vscroll(Child child) {
+export auto hscroll() {
+    return [](Child child) {
+        return hscroll(child);
+    };
+}
+
+export Child vscroll(Child child) {
     return makeRc<Scroll>(child, Math::Orien::VERTICAL);
+}
+
+export auto vscroll() {
+    return [](Child child) {
+        return vscroll(child);
+    };
 }
 
 // MARK: Clip ------------------------------------------------------------------
@@ -241,16 +267,34 @@ struct Clip : ProxyNode<Clip> {
     }
 };
 
-Child vhclip(Child child) {
+export Child vhclip(Child child) {
     return makeRc<Clip>(child, Math::Orien::BOTH);
 }
 
-Child hclip(Child child) {
+export auto vhclip() {
+    return [](Child child) {
+        return vhclip(child);
+    };
+}
+
+export Child hclip(Child child) {
     return makeRc<Clip>(child, Math::Orien::HORIZONTAL);
 }
 
-Child vclip(Child child) {
+export auto hclip() {
+    return [](Child child) {
+        return hclip(child);
+    };
+}
+
+export Child vclip(Child child) {
     return makeRc<Clip>(child, Math::Orien::VERTICAL);
+}
+
+export auto vclip() {
+    return [](Child child) {
+        return vclip(child);
+    };
 }
 
 } // namespace Karm::Ui

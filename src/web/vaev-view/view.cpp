@@ -1,15 +1,15 @@
 module;
 
 #include <karm-gc/root.h>
-#include <karm-ui/node.h>
-#include <karm-ui/view.h>
 #include <vaev-dom/document.h>
 #include <vaev-style/media.h>
+#include <karm-gfx/canvas.h>
 
 export module Vaev.View:view;
 
 import Vaev.Driver;
 import Vaev.Layout;
+import Karm.Ui;
 
 namespace Vaev::View {
 
@@ -55,7 +55,7 @@ struct View : Ui::View<View> {
             .prefersReducedTransparency = ReducedTransparency::NO_PREFERENCE,
             .prefersContrast = Contrast::NO_PREFERENCE,
             .forcedColors = Colors::NONE,
-            .prefersColorScheme = Ui::darkMode ? ColorScheme::DARK : ColorScheme::LIGHT,
+            .prefersColorScheme = Ui::DARK_MODE ? ColorScheme::DARK : ColorScheme::LIGHT,
             .prefersReducedData = ReducedData::NO_PREFERENCE,
 
             // NOTE: Deprecated Media Features

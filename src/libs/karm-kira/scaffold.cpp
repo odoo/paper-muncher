@@ -1,15 +1,13 @@
 module;
 
 #include <karm-app/form-factor.h>
-#include <karm-ui/dialog.h>
-#include <karm-ui/drag.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/popover.h>
-#include <karm-ui/reducer.h>
+#include <karm-app/inputs.h>
+#include <karm-gfx/icon.h>
 
 export module Karm.Kira:scaffold;
 
 import Mdi;
+import Karm.Ui;
 import :titlebar;
 import :toolbar;
 

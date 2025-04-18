@@ -251,7 +251,7 @@ struct Prose : Meta::Pinned {
             _spans.pushBack(makeRc<Span>(_currentSpan->unwrap()));
 
         last(_spans)->parent = _currentSpan;
-        
+
         auto refToLast = last(_spans);
         _currentSpan = refToLast;
     }

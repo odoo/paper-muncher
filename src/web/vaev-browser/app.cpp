@@ -1,19 +1,13 @@
 module;
 
+#include <karm-app/inputs.h>
 #include <karm-gc/heap.h>
 #include <karm-gc/root.h>
-#include <karm-mime/mime.h>
+#include <karm-gfx/colors.h>
 #include <karm-sys/async.h>
 #include <karm-sys/file.h>
 #include <karm-sys/launch.h>
 #include <karm-sys/time.h>
-#include <karm-ui/dialog.h>
-#include <karm-ui/focus.h>
-#include <karm-ui/input.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/popover.h>
-#include <karm-ui/reducer.h>
-#include <karm-ui/scroll.h>
 #include <vaev-dom/document.h>
 
 export module Vaev.Browser:app;
@@ -23,6 +17,7 @@ import Vaev.View;
 import Vaev.Driver;
 import Karm.Http;
 import Karm.Kira;
+import Karm.Ui;
 import :inspect;
 
 namespace Vaev::Browser {
@@ -211,14 +206,14 @@ Ui::Child openInDefaultBrowser(State const& s) {
 Ui::Child mainMenu([[maybe_unused]] State const& s) {
     return Kr::contextMenuContent({
         Kr::contextMenuItem(
-            Ui::NOP,
+            Ui::SINK<>,
             Mdi::BOOKMARK_OUTLINE, "Add bookmark..."
         ),
         Kr::contextMenuItem(Model::bind(SidePanel::BOOKMARKS), Mdi::BOOKMARK, "Bookmarks"),
         Ui::separator(),
         Kr::contextMenuItem(
             not s.dom
-                ? Ui::OnPress{NONE}
+                ? Opt<Ui::Send<>>{NONE}
                 : [dom = s.dom.unwrap()](auto& n) {
                       Ui::showDialog(
                           n,
@@ -234,7 +229,7 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
         Kr::contextMenuItem(Model::bind(SidePanel::DEVELOPER_TOOLS), Mdi::CODE_TAGS, "Developer Tools"),
         Kr::contextMenuCheck(Model::bind<ToggleWireframe>(), s.wireframe, "Show wireframe"),
         Ui::separator(),
-        Kr::contextMenuItem(Ui::NOP, Mdi::COG, "Settings"),
+        Kr::contextMenuItem(Ui::SINK<>, Mdi::COG, "Settings"),
     });
 }
 
@@ -242,7 +237,7 @@ Ui::Child addressMenu() {
     return Kr::contextMenuContent({
         Kr::contextMenuDock({
             Ui::labelMedium("Your are viewing a secure page") | Ui::insets(8),
-            Kr::contextMenuIcon(Ui::NOP, Mdi::CLOSE),
+            Kr::contextMenuIcon(Ui::SINK<>, Mdi::CLOSE),
         }),
     });
 }
@@ -374,7 +369,7 @@ Ui::Child appContent(State const& s) {
     }
     return Ui::hflow(
         webview(s) | Ui::grow(),
-        sidePanel(s) | Kr::resizable(Kr::ResizeHandle::START, {320}, NONE)
+        sidePanel(s) | Kr::resizable(Kr::ResizeHandle::START, {320}, Ui::SINK<Math::Vec2i>)
     );
 }
 

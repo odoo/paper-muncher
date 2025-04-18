@@ -1,48 +1,52 @@
-#pragma once
+module;
 
 #include <karm-app/inputs.h>
+#include <karm-base/func.h>
+#include <karm-math/rect.h>
 
-#include "node.h"
+export module Karm.Ui:funcs;
+
+import :node;
 
 namespace Karm::Ui {
 
 // MARK: Utilities -------------------------------------------------------------
 
-template <typename E, typename... Args>
-inline void event(Node& n, Args&&... args) {
+export template <typename E, typename... Args>
+void event(Node& n, Args&&... args) {
     auto e = App::makeEvent<E>(std::forward<Args>(args)...);
     n.event(*e);
 }
 
-template <typename E, typename... Args>
-inline void bubble(Node& n, Args&&... args) {
+export template <typename E, typename... Args>
+void bubble(Node& n, Args&&... args) {
     auto e = App::makeEvent<E>(std::forward<Args>(args)...);
     n.bubble(*e);
 }
 
-template <typename E, typename... Args>
-inline auto bindEvent(Args&&... args) {
+export template <typename E, typename... Args>
+auto bindEvent(Args&&... args) {
     return [args...](Node& n) {
         event<E>(n, args...);
     };
 }
 
-template <typename E, typename... Args>
-inline auto bindBubble(Args&&... args) {
+export template <typename E, typename... Args>
+auto bindBubble(Args&&... args) {
     return [args...](Node& n) {
         bubble<E>(n, args...);
     };
 }
 
-template <typename E, typename... Args>
-inline Opt<Func<void(Node&)>> bindEventIf(bool cond, Args&&... args) {
+export template <typename E, typename... Args>
+Opt<Func<void(Node&)>> bindEventIf(bool cond, Args&&... args) {
     if (not cond)
         return NONE;
     return bindEvent<E>(args...);
 }
 
-template <typename E, typename... Args>
-inline Opt<Func<void(Node&)>> bindBubbleIf(bool cond, Args&&... args) {
+export template <typename E, typename... Args>
+Opt<Func<void(Node&)>> bindBubbleIf(bool cond, Args&&... args) {
     if (not cond)
         return NONE;
     return bindBubble<E>(args...);
@@ -50,27 +54,27 @@ inline Opt<Func<void(Node&)>> bindBubbleIf(bool cond, Args&&... args) {
 
 // MARK: Helpers ---------------------------------------------------------------
 
-inline void shouldRepaint(Node& n) {
+export void shouldRepaint(Node& n) {
     bubble<Node::PaintEvent>(n, n.bound());
 }
 
-inline void shouldRepaint(Node& n, Math::Recti bound) {
+export void shouldRepaint(Node& n, Math::Recti bound) {
     bubble<Node::PaintEvent>(n, bound);
 }
 
-inline void shouldLayout(Node& n) {
+export void shouldLayout(Node& n) {
     bubble<Node::LayoutEvent>(n);
 }
 
-inline void shouldAnimate(Node& n) {
+export void shouldAnimate(Node& n) {
     bubble<Node::AnimateEvent>(n, .0);
 }
 
-inline void mouseLeave(Node& n) {
+export void mouseLeave(Node& n) {
     event<App::MouseLeaveEvent>(n);
 }
 
-inline void mouseLeave(Children& children) {
+export void mouseLeave(Children& children) {
     for (auto& c : children) {
         mouseLeave(*c);
     }

@@ -1,9 +1,11 @@
 module;
 
-#include <karm-ui/funcs.h>
-#include <karm-ui/view.h>
+#include <karm-app/event.h>
+#include <karm-gfx/canvas.h>
 
 export module Karm.Kira:progress;
+
+import Karm.Ui;
 
 namespace Karm::Kira {
 

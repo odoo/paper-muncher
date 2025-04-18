@@ -1,11 +1,11 @@
 module;
 
-#include <karm-ui/box.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/view.h>
+#include <karm-base/string.h>
+#include <karm-gfx/icon.h>
 
 export module Karm.Kira:avatar;
 
+import Karm.Ui;
 import Mdi;
 
 namespace Karm::Kira {

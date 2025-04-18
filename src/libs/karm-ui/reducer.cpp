@@ -1,15 +1,23 @@
-#pragma once
+module;
 
-#include "funcs.h"
+#include <karm-app/event.h>
+#include <karm-async/run.h>
+#include <karm-async/task.h>
+#include <karm-base/func.h>
+#include <karm-gfx/canvas.h>
+
+export module Karm.Ui:reducer;
+
+import :funcs;
 
 namespace Karm::Ui {
 
 // MARK: Reducer ---------------------------------------------------------------
 
-template <typename A>
+export template <typename A>
 using Task = Opt<Async::_Task<Opt<A>>>;
 
-template <typename S, typename A, Task<A> (*R)(S&, A)>
+export template <typename S, typename A, Task<A> (*R)(S&, A)>
 struct Model {
     using State = S;
     using Action = A;
@@ -165,8 +173,8 @@ struct Reducer :
     }
 };
 
-template <typename Model>
-inline Child reducer(
+export template <typename Model>
+Child reducer(
     typename Model::State init,
     Func<Child(typename Model::State const&)> build
 ) {
@@ -174,15 +182,15 @@ inline Child reducer(
     return makeRc<Reducer<Model>>(std::move(init), std::move(build));
 }
 
-template <typename Model>
-inline Child reducer(Func<Child(typename Model::State const&)> build) {
+export template <typename Model>
+Child reducer(Func<Child(typename Model::State const&)> build) {
     return makeRc<Reducer<Model>>(typename Model::State{}, std::move(build));
 }
 
 // MARK: State -----------------------------------------------------------------
 
-template <typename T>
-inline Child state(T init, auto build) {
+export template <typename T>
+Child state(T init, auto build) {
     auto reduce = [](T& s, T v) -> Task<T> {
         s = v;
         return NONE;
@@ -197,12 +205,12 @@ inline Child state(T init, auto build) {
     });
 }
 
-template <typename T>
-inline Child state(auto build) {
+export template <typename T>
+Child state(auto build) {
     return state<T>({}, std::move(build));
 }
 
-template <typename T>
+export template <typename T>
 using Action = SharedFunc<void(Ui::Node&, T const&)>;
 
 } // namespace Karm::Ui

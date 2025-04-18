@@ -1,13 +1,11 @@
 module;
 
-#include <karm-ui/anim.h>
-#include <karm-ui/input.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/reducer.h>
-#include <karm-ui/scroll.h>
+#include <karm-base/opt.h>
+#include <karm-gfx/icon.h>
 
 export module Karm.Kira:sideNav;
 
+import Karm.Ui;
 import Mdi;
 
 namespace Karm::Kira {
@@ -45,7 +43,7 @@ export Ui::Child sidenavTree(Gfx::Icon icon, String title, Ui::Slot child) {
     });
 }
 
-export Ui::Child sidenavItem(bool selected, Ui::OnPress onPress, Gfx::Icon icon, String title) {
+export Ui::Child sidenavItem(bool selected, Opt<Ui::Send<>> onPress, Gfx::Icon icon, String title) {
     auto buttonStyle = Ui::ButtonStyle::regular();
 
     buttonStyle.idleStyle = {

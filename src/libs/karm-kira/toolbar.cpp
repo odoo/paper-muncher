@@ -1,9 +1,6 @@
-module;
-
-#include <karm-ui/input.h>
-#include <karm-ui/layout.h>
-
 export module Karm.Kira:toolbar;
+
+import Karm.Ui;
 
 namespace Karm::Kira {
 

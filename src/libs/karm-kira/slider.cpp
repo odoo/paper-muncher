@@ -1,13 +1,15 @@
 module;
 
-#include <karm-ui/drag.h>
-#include <karm-ui/input.h>
+#include <karm-gfx/icon.h>
+#include <karm-math/align.h>
 
 export module Karm.Kira:slider;
 
+import Karm.Ui;
+
 namespace Karm::Kira {
 
-export Ui::Child slider(f64 value, Ui::OnChange<f64> onChange, Gfx::Icon icon, Str text) {
+export Ui::Child slider(f64 value, Ui::Send<f64> onChange, Gfx::Icon icon, Str text) {
     return Ui::hflow(
                0,
                Math::Align::CENTER,
@@ -31,7 +33,7 @@ export Ui::Child slider(f64 value, Ui::OnChange<f64> onChange, Gfx::Icon icon, S
 }
 
 export template <typename T>
-Ui::Child slider(T value, Range<T> range, Ui::OnChange<T> onChange, Gfx::Icon icon, Str text) {
+Ui::Child slider(T value, Range<T> range, Ui::Send<T> onChange, Gfx::Icon icon, Str text) {
     return slider(
         (value - range.start) / (f64)(range.end() - range.start),
         [=](Ui::Node& n, f64 v) {

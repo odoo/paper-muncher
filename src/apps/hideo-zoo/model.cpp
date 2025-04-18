@@ -1,9 +1,10 @@
 module;
 
 #include <karm-gfx/icon.h>
-#include <karm-ui/reducer.h>
 
 export module Hideo.Zoo:model;
+
+import Karm.Ui;
 
 namespace Hideo::Zoo {
 
@@ -11,7 +12,7 @@ struct Page {
     Gfx::Icon icon;
     Str name;
     Str description;
-    Func<Ui::Child()> build;
+    Ui::Slot build;
 };
 
 struct State {

@@ -1,10 +1,10 @@
 module;
 
-#include <karm-ui/box.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/view.h>
+#include <karm-gfx/colors.h>
 
 export module Karm.Kira:badge;
+
+import Karm.Ui;
 
 namespace Karm::Kira {
 

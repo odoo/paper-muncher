@@ -2,9 +2,10 @@ module;
 
 #include <karm-sys/info.h>
 #include <karm-sys/launch.h>
-#include <karm-ui/reducer.h>
 
 export module Hideo.Files:model;
+
+import Karm.Ui;
 
 namespace Hideo::Files {
 

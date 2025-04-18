@@ -1,19 +1,24 @@
-#pragma once
+module;
 
 #include <karm-app/host.h>
 #include <karm-base/ring.h>
 #include <karm-gfx/cpu/canvas.h>
+#include <karm-logger/logger.h>
 #include <karm-sys/time.h>
 #include <karm-text/loader.h>
 
-#include "node.h"
+export module Karm.Ui:host;
+
+import :node;
+import :atoms;
 
 namespace Karm::Ui {
 
-static constexpr auto FRAME_RATE = 60;
-static constexpr auto FRAME_TIME = 1.0 / FRAME_RATE;
+// FIXME: Don't hardcode this
+export auto FRAME_RATE = 60;
+export auto FRAME_TIME = 1.0 / FRAME_RATE;
 
-struct Host : Node {
+export struct Host : Node {
     Child _root;
     Opt<Res<>> _res;
     Gfx::CpuCanvas _g;

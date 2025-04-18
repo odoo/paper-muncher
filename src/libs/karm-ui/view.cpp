@@ -1,9 +1,32 @@
-#include <karm-text/loader.h>
+module;
 
-#include "box.h"
-#include "view.h"
+#include <karm-base/func.h>
+#include <karm-gfx/icon.h>
+#include <karm-image/picture.h>
+#include <karm-scene/base.h>
+#include <karm-text/loader.h>
+#include <karm-text/prose.h>
+
+export module Karm.Ui:view;
+
+import :node;
 
 namespace Karm::Ui {
+
+// MARK: Base ------------------------------------------------------------------
+
+export template <typename Crtp>
+struct View : LeafNode<Crtp> {
+    Math::Recti _bound;
+
+    Math::Recti bound() override {
+        return _bound;
+    }
+
+    void layout(Math::Recti bound) override {
+        _bound = bound;
+    }
+};
 
 // MARK: Text ------------------------------------------------------------------
 
@@ -52,173 +75,179 @@ Rc<Text::Fontface> codeFontface() {
     return *_codeFontface;
 }
 
-Text::ProseStyle TextStyles::displayLarge() {
-    return {
-        .font = Text::Font{
-            regularFontface(),
-            57,
-        },
-    };
-}
+export struct TextStyles {
+private:
+    TextStyles() = default;
 
-Text::ProseStyle TextStyles::displayMedium() {
-    return {
-        .font = Text::Font{
-            regularFontface(),
-            45,
-        },
-    };
-}
+public:
+    static Text::ProseStyle displayLarge() {
+        return {
+            .font = Text::Font{
+                regularFontface(),
+                57,
+            },
+        };
+    }
 
-Text::ProseStyle TextStyles::displaySmall() {
-    return {
-        .font = Text::Font{
-            regularFontface(),
-            36,
-        },
-    };
-}
+    static Text::ProseStyle displayMedium() {
+        return {
+            .font = Text::Font{
+                regularFontface(),
+                45,
+            },
+        };
+    }
 
-Text::ProseStyle TextStyles::headlineLarge() {
-    return {
-        .font = Text::Font{
-            regularFontface(),
-            32,
-        },
-    };
-}
+    static Text::ProseStyle displaySmall() {
+        return {
+            .font = Text::Font{
+                regularFontface(),
+                36,
+            },
+        };
+    }
 
-Text::ProseStyle TextStyles::headlineMedium() {
-    return {
-        .font = Text::Font{
-            regularFontface(),
-            28,
-        },
-    };
-}
+    static Text::ProseStyle headlineLarge() {
+        return {
+            .font = Text::Font{
+                regularFontface(),
+                32,
+            },
+        };
+    }
 
-Text::ProseStyle TextStyles::headlineSmall() {
-    return {
-        .font = Text::Font{
-            regularFontface(),
-            24,
-        },
-    };
-}
+    static Text::ProseStyle headlineMedium() {
+        return {
+            .font = Text::Font{
+                regularFontface(),
+                28,
+            },
+        };
+    }
 
-Text::ProseStyle TextStyles::titleLarge() {
-    return {
-        .font = Text::Font{
-            regularFontface(),
-            22,
-        },
-    };
-}
+    static Text::ProseStyle headlineSmall() {
+        return {
+            .font = Text::Font{
+                regularFontface(),
+                24,
+            },
+        };
+    }
 
-Text::ProseStyle TextStyles::titleMedium() {
-    return {
-        .font = Text::Font{
-            mediumFontface(),
-            16,
-        },
-    };
-}
+    static Text::ProseStyle titleLarge() {
+        return {
+            .font = Text::Font{
+                regularFontface(),
+                22,
+            },
+        };
+    }
 
-Text::ProseStyle TextStyles::titleSmall() {
-    return {
-        .font = Text::Font{
-            mediumFontface(),
-            14,
-        },
-    };
-}
+    static Text::ProseStyle titleMedium() {
+        return {
+            .font = Text::Font{
+                mediumFontface(),
+                16,
+            },
+        };
+    }
 
-Text::ProseStyle TextStyles::labelLarge() {
-    return {
-        .font = Text::Font{
-            mediumFontface(),
-            14,
-        },
-    };
-}
+    static Text::ProseStyle titleSmall() {
+        return {
+            .font = Text::Font{
+                mediumFontface(),
+                14,
+            },
+        };
+    }
 
-Text::ProseStyle TextStyles::labelMedium() {
-    return {
-        .font = Text::Font{
-            mediumFontface(),
-            12,
-        },
-    };
-}
+    static Text::ProseStyle labelLarge() {
+        return {
+            .font = Text::Font{
+                mediumFontface(),
+                14,
+            },
+        };
+    }
 
-Text::ProseStyle TextStyles::labelSmall() {
-    return {
-        .font = Text::Font{
-            mediumFontface(),
-            11,
-        },
-    };
-}
+    static Text::ProseStyle labelMedium() {
+        return {
+            .font = Text::Font{
+                mediumFontface(),
+                12,
+            },
+        };
+    }
 
-Text::ProseStyle TextStyles::bodyLarge() {
-    return {
-        .font = Text::Font{
-            regularFontface(),
-            16,
-        },
-        .multiline = true,
-    };
-}
+    static Text::ProseStyle labelSmall() {
+        return {
+            .font = Text::Font{
+                mediumFontface(),
+                11,
+            },
+        };
+    }
 
-Text::ProseStyle TextStyles::bodyMedium() {
-    return {
-        .font = Text::Font{
-            regularFontface(),
-            14,
-        },
-        .multiline = true,
-    };
-}
+    static Text::ProseStyle bodyLarge() {
+        return {
+            .font = Text::Font{
+                regularFontface(),
+                16,
+            },
+            .multiline = true,
+        };
+    }
 
-Text::ProseStyle TextStyles::bodySmall() {
-    return {
-        .font = Text::Font{
-            regularFontface(),
-            12,
-        },
-        .multiline = true,
-    };
-}
+    static Text::ProseStyle bodyMedium() {
+        return {
+            .font = Text::Font{
+                regularFontface(),
+                14,
+            },
+            .multiline = true,
+        };
+    }
 
-Text::ProseStyle TextStyles::codeLarge() {
-    return {
-        .font = Text::Font{
-            codeFontface(),
-            16,
-        },
-        .multiline = true,
-    };
-}
+    static Text::ProseStyle bodySmall() {
+        return {
+            .font = Text::Font{
+                regularFontface(),
+                12,
+            },
+            .multiline = true,
+        };
+    }
 
-Text::ProseStyle TextStyles::codeMedium() {
-    return {
-        .font = Text::Font{
-            codeFontface(),
-            14,
-        },
-        .multiline = true,
-    };
-}
+    static Text::ProseStyle codeLarge() {
+        return {
+            .font = Text::Font{
+                codeFontface(),
+                16,
+            },
+            .multiline = true,
+        };
+    }
 
-Text::ProseStyle TextStyles::codeSmall() {
-    return {
-        .font = Text::Font{
-            codeFontface(),
-            12,
-        },
-        .multiline = true,
-    };
-}
+    static Text::ProseStyle codeMedium() {
+        return {
+            .font = Text::Font{
+                codeFontface(),
+                14,
+            },
+            .multiline = true,
+        };
+    }
+
+    static Text::ProseStyle codeSmall() {
+        return {
+            .font = Text::Font{
+                codeFontface(),
+                12,
+            },
+            .multiline = true,
+        };
+    }
+};
 
 struct Text : View<Text> {
     Rc<Karm::Text::Prose> _prose;
@@ -251,17 +280,60 @@ struct Text : View<Text> {
     }
 };
 
-Child text(Karm::Text::ProseStyle style, Str text) {
+export Child text(Karm::Text::ProseStyle style, Str text) {
     return makeRc<Text>(style, text);
 }
 
-Child text(Str text) {
+export Child text(Str text) {
     return makeRc<Text>(TextStyles::labelMedium(), text);
 }
 
-Child text(Rc<Karm::Text::Prose> prose) {
+export Child text(Rc<Karm::Text::Prose> prose) {
     return makeRc<Text>(prose);
 }
+
+export template <typename... Args>
+Child text(Karm::Text::ProseStyle style, Str format, Args&&... args) {
+    return text(style, Io::format(format, std::forward<Args>(args)...));
+}
+
+export template <typename... Args>
+Child text(Str format, Args&&... args) {
+    return text(Io::format(format, std::forward<Args>(args)...));
+}
+
+#define DEF_STYLE(STYLE)                                                                                                  \
+    export Child STYLE(Str text) { return Karm::Ui::text(TextStyles::STYLE(), text); }                                    \
+    export Child STYLE(Gfx::Color color, Str text) { return Karm::Ui::text(TextStyles::STYLE().withColor(color), text); } \
+    export template <typename... Args>                                                                                    \
+    inline Child STYLE(Str format, Args&&... args) {                                                                      \
+        return text(TextStyles::STYLE(), format, std::forward<Args>(args)...);                                            \
+    }                                                                                                                     \
+    export template <typename... Args>                                                                                    \
+    inline Child STYLE(Gfx::Color color, Str format, Args&&... args) {                                                    \
+        return text(TextStyles::STYLE().withColor(color), format, std::forward<Args>(args)...);                           \
+    }
+
+DEF_STYLE(displayLarge)
+DEF_STYLE(displayMedium)
+DEF_STYLE(displaySmall)
+DEF_STYLE(headlineLarge)
+DEF_STYLE(headlineMedium)
+DEF_STYLE(headlineSmall)
+DEF_STYLE(titleLarge)
+DEF_STYLE(titleMedium)
+DEF_STYLE(titleSmall)
+DEF_STYLE(labelLarge)
+DEF_STYLE(labelMedium)
+DEF_STYLE(labelSmall)
+DEF_STYLE(bodyLarge)
+DEF_STYLE(bodyMedium)
+DEF_STYLE(bodySmall)
+DEF_STYLE(codeLarge)
+DEF_STYLE(codeMedium)
+DEF_STYLE(codeSmall)
+
+#undef DEF_STYLE
 
 // MARK: Icon ------------------------------------------------------------------
 
@@ -291,11 +363,11 @@ struct Icon : View<Icon> {
     }
 };
 
-Child icon(Gfx::Icon icon, Opt<Gfx::Color> color) {
+export Child icon(Gfx::Icon icon, Opt<Gfx::Color> color = NONE) {
     return makeRc<Icon>(icon, 18, color);
 }
 
-Child icon(Gfx::Icon i, isize size, Opt<Gfx::Color> color) {
+export Child icon(Gfx::Icon i, isize size, Opt<Gfx::Color> color = NONE) {
     return makeRc<Icon>(i, size, color);
 }
 
@@ -326,15 +398,17 @@ struct Image : View<Image> {
     }
 };
 
-Child image(Karm::Image::Picture image) {
+export Child image(Karm::Image::Picture image) {
     return makeRc<Image>(image);
 }
 
-Child image(Karm::Image::Picture image, Math::Radiif radii) {
+export Child image(Karm::Image::Picture image, Math::Radiif radii) {
     return makeRc<Image>(image, radii);
 }
 
 // MARK: Canvas ----------------------------------------------------------------
+
+export using OnPaint = Func<void(Gfx::Canvas& g, Math::Vec2i size)>;
 
 struct Canvas : View<Canvas> {
     OnPaint _onPaint;
@@ -362,7 +436,7 @@ struct Canvas : View<Canvas> {
     }
 };
 
-Child canvas(OnPaint onPaint) {
+export Child canvas(OnPaint onPaint) {
     return makeRc<Canvas>(std::move(onPaint));
 }
 
@@ -405,11 +479,11 @@ struct SceneCanvas : View<SceneCanvas> {
     }
 };
 
-Child canvas(Rc<Scene::Node> child, Scene::PaintOptions options) {
+export Child canvas(Rc<Scene::Node> child, Scene::PaintOptions options) {
     return makeRc<SceneCanvas>(std::move(child), options);
 }
 
-// MARK: Filter ----------------------------------------------------------------
+// MARK: Blur ------------------------------------------------------------------
 
 struct BackgroundFilter : ProxyNode<BackgroundFilter> {
     Gfx::Filter _filter;
@@ -432,8 +506,14 @@ struct BackgroundFilter : ProxyNode<BackgroundFilter> {
     }
 };
 
-Child backgroundFilter(Gfx::Filter f, Child child) {
+export Child backgroundFilter(Gfx::Filter f, Child child) {
     return makeRc<BackgroundFilter>(f, std::move(child));
+}
+
+export auto backgroundFilter(Gfx::Filter f) {
+    return [=](Child child) {
+        return backgroundFilter(f, child);
+    };
 }
 
 struct ForegroundFilter : ProxyNode<ForegroundFilter> {
@@ -457,8 +537,14 @@ struct ForegroundFilter : ProxyNode<ForegroundFilter> {
     }
 };
 
-Child foregroundFilter(Gfx::Filter f, Child child) {
+export Child foregroundFilter(Gfx::Filter f, Child child) {
     return makeRc<ForegroundFilter>(f, std::move(child));
+}
+
+export auto foregroundFilter(Gfx::Filter f) {
+    return [=](Child child) {
+        return foregroundFilter(f, child);
+    };
 }
 
 } // namespace Karm::Ui

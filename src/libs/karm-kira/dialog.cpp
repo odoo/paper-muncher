@@ -1,12 +1,13 @@
 module;
 
 #include <karm-app/form-factor.h>
-#include <karm-ui/dialog.h>
-#include <karm-ui/drag.h>
-#include <karm-ui/input.h>
+#include <karm-app/inputs.h>
+#include <karm-gfx/shadow.h>
+#include <karm-math/align.h>
 
 export module Karm.Kira:dialog;
 
+import Karm.Ui;
 import Mdi;
 
 namespace Karm::Kira {
@@ -68,7 +69,7 @@ export Ui::Child dialogFooter(Ui::Children children) {
            Ui::insets({8, 16, 16, 16});
 }
 
-export Ui::Child dialogAction(Ui::OnPress onPress, String text) {
+export Ui::Child dialogAction(Opt<Ui::Send<>> onPress, String text) {
     return Ui::button(
                [onPress = std::move(onPress)](auto& n) {
                    onPress(n);
@@ -94,7 +95,7 @@ export Ui::Child alertDialog(String title, String description) {
             dialogDescription(description),
         }),
         dialogFooter({
-            dialogAction(Ui::NOP, "Ok"s),
+            dialogAction(Ui::SINK<>, "Ok"s),
         }),
     });
 }

@@ -1,13 +1,10 @@
+#include <karm-math/align.h>
 #include <karm-sys/entry.h>
 #include <karm-text/book.h>
-#include <karm-ui/app.h>
-#include <karm-ui/input.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/reducer.h>
-#include <karm-ui/scroll.h>
-#include <karm-ui/view.h>
+#include <karm-text/prose.h>
 
 import Karm.Kira;
+import Karm.Ui;
 import Mdi;
 
 namespace Hideo::Fonts {

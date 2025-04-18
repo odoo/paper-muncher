@@ -1,8 +1,11 @@
 module;
 
-#include <karm-ui/view.h>
+#include <karm-base/time.h>
+#include <karm-gfx/canvas.h>
 
 export module Karm.Kira:clock;
+
+import Karm.Ui;
 
 namespace Karm::Kira {
 

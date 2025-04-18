@@ -1,12 +1,11 @@
 module;
 
-#include <karm-ui/anim.h>
-#include <karm-ui/input.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/reducer.h>
+#include <karm-gfx/icon.h>
+#include <karm-math/align.h>
 
 export module Karm.Kira:row;
 
+import Karm.Ui;
 import Mdi;
 import :checkbox;
 import :colorInput;
@@ -67,7 +66,7 @@ export Ui::Child titleRow(String t) {
            Ui::insets({16, 12, 8, 12});
 }
 
-export Ui::Child pressableRow(Ui::OnPress onPress, Opt<Ui::Child> leading, String title, Opt<String> subtitle, Opt<Ui::Child> trailing) {
+export Ui::Child pressableRow(Opt<Ui::Send<>> onPress, Opt<Ui::Child> leading, String title, Opt<String> subtitle, Opt<Ui::Child> trailing) {
     return button(
         std::move(onPress),
         Ui::ButtonStyle::subtle(),
@@ -80,7 +79,7 @@ export Ui::Child pressableRow(Ui::OnPress onPress, Opt<Ui::Child> leading, Strin
     );
 }
 
-export Ui::Child buttonRow(Ui::OnPress onPress, Gfx::Icon i, String title, String subtitle) {
+export Ui::Child buttonRow(Opt<Ui::Send<>> onPress, Gfx::Icon i, String title, String subtitle) {
     return button(
         std::move(onPress),
         Ui::ButtonStyle::subtle(),
@@ -93,7 +92,7 @@ export Ui::Child buttonRow(Ui::OnPress onPress, Gfx::Icon i, String title, Strin
     );
 }
 
-export Ui::Child buttonRow(Ui::OnPress onPress, String title, String text) {
+export Ui::Child buttonRow(Opt<Ui::Send<>> onPress, String title, String text) {
     return rowContent(
         NONE,
         title,
@@ -102,7 +101,7 @@ export Ui::Child buttonRow(Ui::OnPress onPress, String title, String text) {
     );
 }
 
-export Ui::Child toggleRow(bool value, Ui::OnChange<bool> onChange, String title) {
+export Ui::Child toggleRow(bool value, Ui::Send<bool> onChange, String title) {
     return rowContent(
         NONE,
         title,
@@ -111,7 +110,7 @@ export Ui::Child toggleRow(bool value, Ui::OnChange<bool> onChange, String title
     );
 }
 
-export Ui::Child checkboxRow(bool value, Ui::OnChange<bool> onChange, String title) {
+export Ui::Child checkboxRow(bool value, Ui::Send<bool> onChange, String title) {
     return rowContent(
         NONE,
         title,
@@ -120,7 +119,7 @@ export Ui::Child checkboxRow(bool value, Ui::OnChange<bool> onChange, String tit
     );
 }
 
-export Ui::Child radioRow(bool value, Ui::OnChange<bool> onChange, String title) {
+export Ui::Child radioRow(bool value, Ui::Send<bool> onChange, String title) {
     return rowContent(
         radio(value, std::move(onChange)),
         title,
@@ -129,7 +128,7 @@ export Ui::Child radioRow(bool value, Ui::OnChange<bool> onChange, String title)
     );
 }
 
-export Ui::Child sliderRow(f64 value, Ui::OnChange<f64> onChange, String title) {
+export Ui::Child sliderRow(f64 value, Ui::Send<f64> onChange, String title) {
     return rowContent(
         NONE,
         title,
@@ -152,7 +151,7 @@ export Ui::Child selectRow(Ui::Child value, Ui::Slots options, String title) {
     );
 }
 
-export Ui::Child colorRow(Gfx::Color c, Ui::OnChange<Gfx::Color> onChange, String title) {
+export Ui::Child colorRow(Gfx::Color c, Ui::Send<Gfx::Color> onChange, String title) {
     return rowContent(
         NONE,
         title,
@@ -161,7 +160,7 @@ export Ui::Child colorRow(Gfx::Color c, Ui::OnChange<Gfx::Color> onChange, Strin
     );
 }
 
-export Ui::Child numberRow(f64 value, Ui::OnChange<f64> onChange, f64 step, String title) {
+export Ui::Child numberRow(f64 value, Ui::Send<f64> onChange, f64 step, String title) {
     return rowContent(
         NONE,
         title,

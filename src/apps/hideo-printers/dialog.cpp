@@ -1,22 +1,18 @@
 module;
 
 #include <karm-app/form-factor.h>
+#include <karm-base/func.h>
+#include <karm-math/align.h>
 #include <karm-print/file-printer.h>
 #include <karm-print/page.h>
 #include <karm-print/paper.h>
 #include <karm-sys/file.h>
 #include <karm-sys/proc.h>
-#include <karm-ui/box.h>
-#include <karm-ui/input.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/popover.h>
-#include <karm-ui/reducer.h>
-#include <karm-ui/scroll.h>
-#include <karm-ui/view.h>
 
 export module Hideo.Printers:dialog;
 
 import Karm.Kira;
+import Karm.Ui;
 
 namespace Hideo::Printers {
 
@@ -109,7 +105,7 @@ Ui::Child _printSelect(State const& s, usize index) {
     return Ui::hflow(
                8,
                Math::Align::CENTER,
-               Kr::checkbox(true, NONE),
+               Kr::checkbox(true, Ui::SINK<bool>),
                Ui::labelMedium("Page {} of {}", index + 1, s.pages.len())
            ) |
            Ui::box({
@@ -215,17 +211,17 @@ Ui::Child _destinationSelect() {
             return {
                 Kr::selectGroup({
                     Kr::selectLabel("Save as"s),
-                    Kr::selectItem(Ui::NOP, "Save as PDF"s),
-                    Kr::selectItem(Ui::NOP, "Save as Image"s),
+                    Kr::selectItem(Ui::SINK<>, "Save as PDF"s),
+                    Kr::selectItem(Ui::SINK<>, "Save as Image"s),
                 }),
                 Ui::separator(),
                 Kr::selectGroup({
                     Kr::selectLabel("Printers"s),
-                    Kr::selectItem(Ui::NOP, "Epson ET-8550"s),
-                    Kr::selectItem(Ui::NOP, "HP DeskJet 2700"s),
+                    Kr::selectItem(Ui::SINK<>, "Epson ET-8550"s),
+                    Kr::selectItem(Ui::SINK<>, "HP DeskJet 2700"s),
                 }),
                 Ui::separator(),
-                Kr::selectItem(Ui::NOP, "Add printer..."s)
+                Kr::selectItem(Ui::SINK<>, "Add printer..."s)
             };
         }
     );
@@ -266,11 +262,11 @@ Ui::Child _printSettings(State const& s) {
             Kr::selectValue("1"s),
             [] -> Ui::Children {
                 return {
-                    Kr::selectItem(Ui::NOP, "1"s),
-                    Kr::selectItem(Ui::NOP, "2"s),
-                    Kr::selectItem(Ui::NOP, "3"s),
-                    Kr::selectItem(Ui::NOP, "4"s),
-                    Kr::selectItem(Ui::NOP, "5"s),
+                    Kr::selectItem(Ui::SINK<>, "1"s),
+                    Kr::selectItem(Ui::SINK<>, "2"s),
+                    Kr::selectItem(Ui::SINK<>, "3"s),
+                    Kr::selectItem(Ui::SINK<>, "4"s),
+                    Kr::selectItem(Ui::SINK<>, "5"s),
                 };
             },
             "Copies"s
@@ -279,10 +275,10 @@ Ui::Child _printSettings(State const& s) {
             Kr::selectValue("All"s),
             [] -> Ui::Children {
                 return {
-                    Kr::selectItem(Ui::NOP, "All"s),
-                    Kr::selectItem(Ui::NOP, "Odd pages only"s),
-                    Kr::selectItem(Ui::NOP, "Even pages only"s),
-                    Kr::selectItem(Ui::NOP, "Custom"s),
+                    Kr::selectItem(Ui::SINK<>, "All"s),
+                    Kr::selectItem(Ui::SINK<>, "Odd pages only"s),
+                    Kr::selectItem(Ui::SINK<>, "Even pages only"s),
+                    Kr::selectItem(Ui::SINK<>, "Custom"s),
                 };
             },
             "Pages"s
@@ -319,12 +315,12 @@ Ui::Child _printSettings(State const& s) {
                         Kr::selectValue("1"s),
                         [] -> Ui::Children {
                             return {
-                                Kr::selectItem(Ui::NOP, "1"s),
-                                Kr::selectItem(Ui::NOP, "2"s),
-                                Kr::selectItem(Ui::NOP, "4"s),
-                                Kr::selectItem(Ui::NOP, "6"s),
-                                Kr::selectItem(Ui::NOP, "9"s),
-                                Kr::selectItem(Ui::NOP, "16"s),
+                                Kr::selectItem(Ui::SINK<>, "1"s),
+                                Kr::selectItem(Ui::SINK<>, "2"s),
+                                Kr::selectItem(Ui::SINK<>, "4"s),
+                                Kr::selectItem(Ui::SINK<>, "6"s),
+                                Kr::selectItem(Ui::SINK<>, "9"s),
+                                Kr::selectItem(Ui::SINK<>, "16"s),
                             };
                         },
                         "Page per sheet"s

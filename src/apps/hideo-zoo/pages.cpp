@@ -1,18 +1,15 @@
 module;
 
+#include <karm-math/align.h>
 #include <karm-print/page.h>
 #include <karm-print/printer.h>
-#include <karm-ui/dialog.h>
-#include <karm-ui/focus.h>
-#include <karm-ui/input.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/reducer.h>
-#include <karm-ui/scroll.h>
+#include <karm-logger/logger.h>
 
 export module Hideo.Zoo:pages;
 
 import Mdi;
 import Karm.Kira;
+import Karm.Ui;
 import Hideo.Files;
 import Hideo.Printers;
 import :model;
@@ -35,7 +32,7 @@ export Page PAGE_ALERT{
                                }),
                                Kr::dialogFooter({
                                    Kr::dialogCancel(),
-                                   Kr::dialogAction(Ui::NOP, "Continue"s),
+                                   Kr::dialogAction(Ui::SINK<>, "Continue"s),
                                }),
                            })
                        );
@@ -101,7 +98,7 @@ Page PAGE_CHECKBOX{
     [] {
         return Kr::checkbox(
                    true,
-                   NONE
+                   Ui::SINK<bool>
                ) |
                Ui::center();
     },
@@ -125,7 +122,7 @@ Page PAGE_COLOR_INPUT{
     [] {
         return Kr::colorInput(
                    Gfx::RED,
-                   NONE
+                   Ui::SINK<Gfx::Color>
                ) |
                Ui::center();
     },
@@ -141,19 +138,19 @@ Page PAGE_CONTEXT_MENU{
                Ui::bound() |
                Kr::contextMenu([] {
                    return Kr::contextMenuContent({
-                       Kr::contextMenuItem(Ui::NOP, Mdi::OPEN_IN_APP, "Open"),
-                       Kr::contextMenuItem(Ui::NOP, Mdi::PENCIL, "Edit"),
+                       Kr::contextMenuItem(Ui::SINK<>, Mdi::OPEN_IN_APP, "Open"),
+                       Kr::contextMenuItem(Ui::SINK<>, Mdi::PENCIL, "Edit"),
                        Ui::separator(),
-                       Kr::contextMenuItem(Ui::NOP, Mdi::CONTENT_COPY, "Copy"),
-                       Kr::contextMenuItem(Ui::NOP, Mdi::CONTENT_CUT, "Cut"),
-                       Kr::contextMenuItem(Ui::NOP, Mdi::CONTENT_PASTE, "Paste"),
+                       Kr::contextMenuItem(Ui::SINK<>, Mdi::CONTENT_COPY, "Copy"),
+                       Kr::contextMenuItem(Ui::SINK<>, Mdi::CONTENT_CUT, "Cut"),
+                       Kr::contextMenuItem(Ui::SINK<>, Mdi::CONTENT_PASTE, "Paste"),
                        Ui::separator(),
-                       Kr::contextMenuItem(Ui::NOP, Mdi::SHARE, "Interact…"),
-                       Kr::contextMenuItem(Ui::NOP, Mdi::CURSOR_TEXT, "Rename…"),
+                       Kr::contextMenuItem(Ui::SINK<>, Mdi::SHARE, "Interact…"),
+                       Kr::contextMenuItem(Ui::SINK<>, Mdi::CURSOR_TEXT, "Rename…"),
                        Ui::separator(),
-                       Kr::contextMenuItem(Ui::NOP, Mdi::DELETE, "Delete"),
+                       Kr::contextMenuItem(Ui::SINK<>, Mdi::DELETE, "Delete"),
                        Ui::separator(),
-                       Kr::contextMenuItem(Ui::NOP, Mdi::INFORMATION_OUTLINE, "Properties…"),
+                       Kr::contextMenuItem(Ui::SINK<>, Mdi::INFORMATION_OUTLINE, "Properties…"),
                    });
                });
     },
@@ -245,7 +242,7 @@ Page PAGE_HSV_SQUARE{
     "HSV Square",
     "A control that allows the user to pick a color using a square.",
     [] {
-        return Kr::hsvSquare({}, Ui::IGNORE<Gfx::Hsv>) |
+        return Kr::hsvSquare({}, Ui::SINK<Gfx::Hsv>) |
                Ui::box({
                    .borderWidth = 1,
                    .borderFill = Ui::GRAY800,
@@ -411,7 +408,13 @@ Page PAGE_PROGRESS{
     "Progress",
     "A loading indicator that spins to indicate that the application is busy.",
     [] {
-        return Ui::hflow(8, Kr::progress(12), Kr::progress(18), Kr::progress(24), Kr::progress(48)) |
+        return Ui::hflow(
+                   8,
+                   Kr::progress(12),
+                   Kr::progress(18),
+                   Kr::progress(24),
+                   Kr::progress(48)
+               ) |
                Ui::center();
     },
 };
@@ -423,7 +426,7 @@ Page PAGE_RADIO{
     [] {
         return Kr::radio(
                    true,
-                   NONE
+                   Ui::SINK<bool>
                ) |
                Ui::center();
     },
@@ -435,9 +438,9 @@ Page PAGE_RESIZABLE{
     "A control that allows the user to resize an element.",
     [] {
         return Ui::hflow(
-            Ui::labelMedium("One") | Ui::center() | Kr::resizable(Kr::ResizeHandle::END, 200, NONE),
+            Ui::labelMedium("One") | Ui::center() | Kr::resizable(Kr::ResizeHandle::END, 200, Ui::SINK<Math::Vec2i>),
             Ui::vflow(
-                Ui::labelMedium("Two") | Ui::center() | Kr::resizable(Kr::ResizeHandle::BOTTOM, 200, NONE),
+                Ui::labelMedium("Two") | Ui::center() | Kr::resizable(Kr::ResizeHandle::BOTTOM, 200, Ui::SINK<Math::Vec2i>),
                 Ui::labelMedium("Three") | Ui::center() | Ui::grow()
             ) | Ui::grow()
         );
@@ -449,7 +452,7 @@ Page PAGE_RICHTEXT{
     "Rich Text"s,
     "An area that displays text with various styles and formatting options.",
     [] {
-        auto prose = makeRc<Text::Prose>(Ui::TextStyles::bodyMedium());
+        auto prose = makeRc<Karm::Text::Prose>(Ui::TextStyles::bodyMedium());
 
         prose->append("This is a simple text with no formatting.\n"s);
 
@@ -504,9 +507,9 @@ Page PAGE_ROWS{
                 NONE,
                 Ui::Slots{[&] -> Ui::Children {
                     return {
-                        Kr::toggleRow(true, NONE, "Some property"s),
-                        Kr::toggleRow(true, NONE, "Some property"s),
-                        Kr::toggleRow(true, NONE, "Some property"s),
+                        Kr::toggleRow(true, Ui::SINK<bool>, "Some property"s),
+                        Kr::toggleRow(true, Ui::SINK<bool>, "Some property"s),
+                        Kr::toggleRow(true, Ui::SINK<bool>, "Some property"s),
                     };
                 }}
             ),
@@ -520,9 +523,9 @@ Page PAGE_ROWS{
                 NONE,
                 Ui::Slots{[&] -> Ui::Children {
                     return {
-                        Kr::checkboxRow(true, NONE, "Some property"s),
-                        Kr::checkboxRow(false, NONE, "Some property"s),
-                        Kr::checkboxRow(false, NONE, "Some property"s),
+                        Kr::checkboxRow(true, Ui::SINK<bool>, "Some property"s),
+                        Kr::checkboxRow(false, Ui::SINK<bool>, "Some property"s),
+                        Kr::checkboxRow(false, Ui::SINK<bool>, "Some property"s),
                     };
                 }}
             ),
@@ -536,16 +539,16 @@ Page PAGE_ROWS{
                 NONE,
                 Ui::Slots{[&] -> Ui::Children {
                     return {
-                        Kr::radioRow(true, NONE, "Some property"s),
-                        Kr::radioRow(false, NONE, "Some property"s),
-                        Kr::radioRow(false, NONE, "Some property"s)
+                        Kr::radioRow(true, Ui::SINK<bool>, "Some property"s),
+                        Kr::radioRow(false, Ui::SINK<bool>, "Some property"s),
+                        Kr::radioRow(false, Ui::SINK<bool>, "Some property"s)
                     };
                 }}
             ),
             Ui::separator(),
             Kr::sliderRow(
                 0.5,
-                NONE,
+                Ui::SINK<f64>,
                 "Some property"s
             )
         );
@@ -569,23 +572,23 @@ Page PAGE_SELECT{
                        return {
                            Kr::selectGroup({
                                Kr::selectLabel("Fruits"s),
-                               Kr::selectItem(Ui::NOP, "Apple"s),
-                               Kr::selectItem(Ui::NOP, "Banana"s),
-                               Kr::selectItem(Ui::NOP, "Cherry"s),
+                               Kr::selectItem(Ui::SINK<>, "Apple"s),
+                               Kr::selectItem(Ui::SINK<>, "Banana"s),
+                               Kr::selectItem(Ui::SINK<>, "Cherry"s),
                            }),
                            Ui::separator(),
                            Kr::selectGroup({
                                Kr::selectLabel("Vegetables"s),
-                               Kr::selectItem(Ui::NOP, "Carrot"s),
-                               Kr::selectItem(Ui::NOP, "Cucumber"s),
-                               Kr::selectItem(Ui::NOP, "Tomato"s),
+                               Kr::selectItem(Ui::SINK<>, "Carrot"s),
+                               Kr::selectItem(Ui::SINK<>, "Cucumber"s),
+                               Kr::selectItem(Ui::SINK<>, "Tomato"s),
                            }),
                            Ui::separator(),
                            Kr::selectGroup({
                                Kr::selectLabel("Meat"s),
-                               Kr::selectItem(Ui::NOP, "Beef"s),
-                               Kr::selectItem(Ui::NOP, "Chicken"s),
-                               Kr::selectItem(Ui::NOP, "Pork"s),
+                               Kr::selectItem(Ui::SINK<>, "Beef"s),
+                               Kr::selectItem(Ui::SINK<>, "Chicken"s),
+                               Kr::selectItem(Ui::SINK<>, "Pork"s),
                            }),
                        };
                    }
@@ -602,16 +605,16 @@ Page PAGE_SIDENAV{
         return Ui::hflow(
             Kr::sidenav({
                 Kr::sidenavTitle("Navigation"s),
-                Kr::sidenavItem(true, Ui::NOP, Mdi::DUCK, "Item 1"s),
+                Kr::sidenavItem(true, Ui::SINK<>, Mdi::DUCK, "Item 1"s),
                 Kr::sidenavTree(Mdi::TREE, "Item 2"s, [] {
                     return Ui::vflow(
                         8,
-                        Kr::sidenavItem(false, Ui::NOP, Mdi::DUCK, "Subitem 1"s),
-                        Kr::sidenavItem(false, Ui::NOP, Mdi::DUCK, "Subitem 2"s),
-                        Kr::sidenavItem(false, Ui::NOP, Mdi::DUCK, "Subitem 3"s)
+                        Kr::sidenavItem(false, Ui::SINK<>, Mdi::DUCK, "Subitem 1"s),
+                        Kr::sidenavItem(false, Ui::SINK<>, Mdi::DUCK, "Subitem 2"s),
+                        Kr::sidenavItem(false, Ui::SINK<>, Mdi::DUCK, "Subitem 3"s)
                     );
                 }),
-                Kr::sidenavItem(false, Ui::NOP, Mdi::DUCK, "Item 3"s),
+                Kr::sidenavItem(false, Ui::SINK<>, Mdi::DUCK, "Item 3"s),
             }),
             Ui::separator()
         );
@@ -653,7 +656,7 @@ Page PAGE_SLIDER{
     [] {
         return Kr::slider(
                    0.5,
-                   NONE,
+                   Ui::SINK<f64>,
                    Mdi::CAT,
                    "Cuteness"
                ) |
@@ -678,7 +681,7 @@ Page PAGE_TOGGLE{
     [] {
         return Kr::toggle(
                    true,
-                   NONE
+                   Ui::SINK<bool>
                ) |
                Ui::center();
     },

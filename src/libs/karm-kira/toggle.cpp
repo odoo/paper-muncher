@@ -1,9 +1,11 @@
 module;
 
-#include <karm-ui/anim.h>
-#include <karm-ui/input.h>
+#include <karm-app/event.h>
+#include <karm-gfx/canvas.h>
 
 export module Karm.Kira:toggle;
+
+import Karm.Ui;
 
 namespace Karm::Kira {
 
@@ -13,10 +15,10 @@ export struct Toggle : Ui::View<Toggle> {
 
     bool _value = false;
     Ui::Easedf _anim;
-    Ui::OnChange<bool> _onChange;
+    Ui::Send<bool> _onChange;
     Ui::MouseListener _mouseListener;
 
-    Toggle(bool value, Ui::OnChange<bool> onChange)
+    Toggle(bool value, Ui::Send<bool> onChange)
         : _value(value), _onChange(std::move(onChange)) {
         _anim.set(*this, _value ? 1.0 : 0.0);
     }
@@ -82,7 +84,7 @@ export struct Toggle : Ui::View<Toggle> {
     }
 };
 
-export Ui::Child toggle(bool value, Ui::OnChange<bool> onChange) {
+export Ui::Child toggle(bool value, Ui::Send<bool> onChange) {
     return makeRc<Toggle>(value, std::move(onChange));
 }
 

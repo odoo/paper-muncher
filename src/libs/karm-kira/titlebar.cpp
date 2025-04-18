@@ -1,12 +1,11 @@
 module;
 
 #include <karm-app/host.h>
-#include <karm-ui/dialog.h>
-#include <karm-ui/drag.h>
-#include <karm-ui/layout.h>
+#include <karm-gfx/icon.h>
 
 export module Karm.Kira:titlebar;
 
+import Karm.Ui;
 import Mdi;
 import :aboutDialog;
 

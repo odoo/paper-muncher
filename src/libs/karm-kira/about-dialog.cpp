@@ -1,12 +1,11 @@
 module;
 
-#include <karm-ui/dialog.h>
-#include <karm-ui/input.h>
-#include <karm-ui/layout.h>
-#include <karm-ui/scroll.h>
+#include <karm-base/string.h>
+#include <karm-math/align.h>
 
 export module Karm.Kira:aboutDialog;
 
+import Karm.Ui;
 import :badge;
 import :dialog;
 
@@ -47,7 +46,7 @@ export Ui::Child aboutDialog(String name) {
                 showDialog(n, licenseDialog());
             },
                    Ui::ButtonStyle::regular(), "License"),
-            dialogAction(Ui::NOP, "Ok"s),
+            dialogAction(Ui::SINK<>, "Ok"s),
         }),
     });
 }

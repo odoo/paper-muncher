@@ -1,10 +1,11 @@
 module;
 
-#include <karm-ui/input.h>
-#include <karm-ui/layout.h>
+#include <karm-base/opt.h>
+#include <karm-base/string.h>
 
 export module Karm.Kira:sidePanel;
 
+import Karm.Ui;
 import Mdi;
 
 namespace Karm::Kira {
@@ -22,12 +23,12 @@ export Ui::Child sidePanelTitle(Str title) {
            Ui::insets(6);
 }
 
-export Ui::Child sidePanelTitle(Ui::OnPress onClose, Str title) {
+export Ui::Child sidePanelTitle(Opt<Ui::Send<>> onClose, Str title) {
     return Ui::hflow(
                Ui::labelLarge(title),
                Ui::grow(NONE),
                Ui::button(
-                   std::move(onClose),
+                   onClose,
                    Ui::ButtonStyle::subtle(),
                    Ui::icon(Mdi::CLOSE) | Ui::center()
                )
