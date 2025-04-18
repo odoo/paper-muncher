@@ -8,13 +8,19 @@
 <p align="center">
     Munch the web into crisp documents
 </p>
+<p align="center">
+<a href="https://odoo.github.io/paper-muncher/">Website</a> -
+<a href="https://discord.gg/4GC9nQnAvY">Discord</a> -
+<a href="https://odoo.github.io/paper-muncher/usage.html">Documentation</a>
+</p>
 
 <br/>
 <br/>
 
 # Status
 
-Paper-Muncher is now in early alpha. We're currently focused on improving stability and ensuring compliance. While it's still early days, the project is functional enough to try out, and we're actively looking for feedback. The direction may still evolve, but you can already get a feel for where we're headed. Let us know what you think in the github issues!
+Paper-Muncher is now in early alpha. We're currently focused on improving stability and ensuring compliance. While it's still early days, the project is functional enough to try out, and we're actively looking for feedback. The direction may still evolve, but you can already get a feel for where we're headed. Let us know what you think on [Discord](https://discord.gg/4GC9nQnAvY).
+
 
 # Introduction
 
@@ -47,6 +53,10 @@ paper-muncher print index.html -o output.pdf
 # For more options, run
 paper-muncher --help
 ```
+
+## Contributing
+
+We welcome contributions to the Paper Muncher project! If you have ideas, suggestions, or bug reports, please open an issue on our GitHub repository. If you're interested in contributing code, please fork the repository and submit a pull request.
 
 ## License
 
