@@ -125,19 +125,16 @@ struct Karm::Niche<T> {
     struct Content {
         Math::FloatBits<T> bits;
 
-        constexpr Content() {
-            bits.d = Math::NAN;
-            bits.mantissa &= ~1;
-        }
+        static constexpr Math::FloatBits<T> _none = {
+            .sign = 1,
+            .exponent = Math::FloatBits<T>::exponentMax,
+            .mantissa = static_cast<decltype(Math::FloatBits<T>::mantissaMax)>(0b11) << (Math::FloatBits<T>::mantissaBits - 2)
+        };
+
+        constexpr Content() : bits(_none) {}
 
         constexpr bool has() const {
-            return not __builtin_isnan(bits.d) or bits.mantissa & 1;
-        }
-
-        constexpr void setupValue() {
-            if (__builtin_isnan(bits.d)) {
-                bits.mantissa |= 1;
-            }
+            return not(bits.sign == _none.sign and bits.exponent == _none.exponent and bits.mantissa == _none.mantissa);
         }
     };
 };
