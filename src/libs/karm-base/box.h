@@ -1,6 +1,7 @@
 #pragma once
 
 #include <karm-meta/traits.h>
+#include <stdio.h>
 
 #include "opt.h"
 
@@ -118,8 +119,6 @@ struct Niche<Box<T>> {
         always_inline constexpr bool has() const {
             return ptr != _NONE_PTR;
         }
-
-        always_inline constexpr void setupValue() {}
     };
 };
 
