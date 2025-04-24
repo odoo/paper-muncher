@@ -71,6 +71,8 @@ struct XmlParser {
     Res<Rune> _parseReference(Io::SScan& s);
 
     Res<> _parseExternalId(Io::SScan& s, DocumentType& docType);
+
+    Res<Ns> _parseElementsNamespace(Io::SScan& s, Ns originalNs);
 };
 
 } // namespace Vaev::Dom
