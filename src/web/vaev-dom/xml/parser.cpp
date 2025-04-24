@@ -364,7 +364,7 @@ Res<Gc::Ref<Element>> XmlParser::_parseElement(Io::SScan& s, Ns ns) {
 
     if (auto r = _parseStartTag(s, ns)) {
         auto el = r.unwrap();
-        try$(_parseContent(s, ns, *el));
+        try$(_parseContent(s, el->tagName.ns, *el));
         try$(_parseEndTag(s, *el));
 
         rollback.disarm();
@@ -385,10 +385,11 @@ Res<Gc::Ref<Element>> XmlParser::_parseStartTag(Io::SScan& s, Ns ns) {
         return Error::invalidData("expected '<'");
 
     auto name = try$(_parseName(s));
+    try$(_parseS(s));
+
+    ns = try$(_parseElementsNamespace(s, ns));
 
     auto el = _heap.alloc<Element>(TagName::make(name, ns));
-
-    try$(_parseS(s));
 
     while (not s.skip('>') and not s.ended()) {
         try$(_parseAttribute(s, ns, *el));
@@ -411,7 +412,11 @@ Res<> XmlParser::_parseAttribute(Io::SScan& s, Ns ns, Element& el) {
 
     auto value = try$(_parseAttValue(s));
 
-    el.setAttribute(AttrName::make(name, ns), value);
+    // FIXME: the parsing allows rollback so it can be that a warning is emitted when setting an attribute of an element
+    // that won't compose the final dom (due to a rollback after a failed parsing)
+    // FIXME: this is not a fully compliant XML parser and thus we skip adding xmlns as an attribute to the DOM
+    if (name != "xmlns")
+        el.setAttribute(AttrName::make(name, ns), value);
 
     rollback.disarm();
     return Ok();
@@ -640,6 +645,31 @@ Res<> XmlParser::_parseExternalId(Io::SScan& s, DocumentType& docType) {
     } else {
         return Error::invalidData("expected 'SYSTEM' or 'PUBLIC'");
     }
+}
+
+// XX MARK: 6.2 Namespace Defaulting
+// https://www.w3.org/TR/xml-names/#dt-defaultNS
+// https://www.w3.org/TR/xml-names/#scoping-defaulting
+// NOTE: Basically same code as attribute parsing, but we need to check for the namespace before parsing the attributes
+Res<Ns> XmlParser::_parseElementsNamespace(Io::SScan& s, Ns originalNs) {
+    auto rollback = s.rollbackPoint();
+    while (not s.skip('>') and not s.ended()) {
+
+        auto name = try$(_parseName(s));
+
+        if (not s.skip('='))
+            return Error::invalidData("expected '='");
+
+        auto value = try$(_parseAttValue(s));
+
+        if (name == "xmlns") {
+            if (auto ns = Ns::fromUrl(value))
+                return Ok(*ns);
+        }
+
+        try$(_parseS(s));
+    }
+    return Ok(originalNs);
 }
 
 } // namespace Vaev::Dom
