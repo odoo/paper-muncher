@@ -219,13 +219,23 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
     auto outputMimeArg = Cli::option<Str>(NONE, "output-mime"s, "Overide the output MIME type"s, ""s);
     auto sandboxArg = Cli::flag(NONE, "sandbox"s, "Allow only basic I/O, handle HTTP via stdin/stdout, and block all file access"s);
+    auto logLevelArg = Cli::option<Str>(NONE, "log-level"s, "Set lowest log level authorized : print, yappin', debug, info, warn, error, or fatal (default: print)"s);
 
     Cli::Command cmd{
         "paper-muncher"s,
         NONE,
         "Munch the web into crisp documents"s,
-        {sandboxArg},
+        {sandboxArg, logLevelArg},
         [=](Sys::Context&) -> Async::Task<> {
+            if (Str setLevel = logLevelArg) {
+                for (auto& level : {PRINT, YAP, DEBUG, INFO, WARNING, ERROR, FATAL}) {
+                    if (startWith(Str(level.name), setLevel) != Match::NO) {
+                        setLogLevel(level);
+                        break;
+                    }
+                }
+            }
+
             if (sandboxArg) {
                 logInfo("running sandboxed");
                 co_try$(Sys::enterSandbox());
