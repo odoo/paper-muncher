@@ -1766,6 +1766,19 @@ Res<OverflowInline> ValueParser<OverflowInline>::parse(Cursor<Css::Sst>& c) {
         return Error::invalidData("expected overflow inline value");
 }
 
+// MARK: Paint
+// https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
+
+Res<Paint> ValueParser<Paint>::parse(Cursor<Css::Sst>& c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c.skip(Css::Token::ident("none")))
+        return Ok(NONE);
+
+    return Ok(try$(parseValue<Color>(c)));
+}
+
 // MARK: Percentage
 // https://drafts.csswg.org/css-values/#percentages
 

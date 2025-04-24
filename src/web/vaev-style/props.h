@@ -3022,6 +3022,194 @@ struct ZIndexProp {
     }
 };
 
+// MARK: SVG ----------------------------------------------------------------
+
+// https://svgwg.org/svg2-draft/geometry.html#XProperty
+struct SVGXProp {
+    PercentOr<Length> value = initial();
+
+    static constexpr Str name() { return "x"; }
+
+    static constexpr Length initial() { return Length{0_au}; }
+
+    void apply(ComputedStyle& c) const {
+        c.svg.cow().x = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<PercentOr<Length>>(c));
+        return Ok();
+    }
+};
+
+// https://svgwg.org/svg2-draft/geometry.html#YProperty
+struct SVGYProp {
+    PercentOr<Length> value = initial();
+
+    static constexpr Str name() { return "y"; }
+
+    static constexpr Length initial() { return Length{0_au}; }
+
+    void apply(ComputedStyle& c) const {
+        c.svg.cow().y = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<PercentOr<Length>>(c));
+        return Ok();
+    }
+};
+
+// https://svgwg.org/svg2-draft/geometry.html#CXProperty
+struct SVGCXProp {
+    PercentOr<Length> value = initial();
+
+    static constexpr Str name() { return "cx"; }
+
+    static constexpr Length initial() { return Length{0_au}; }
+
+    void apply(ComputedStyle& c) const {
+        c.svg.cow().cx = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<PercentOr<Length>>(c));
+        return Ok();
+    }
+};
+
+// https://svgwg.org/svg2-draft/geometry.html#CYProperty
+struct SVGCYProp {
+    PercentOr<Length> value = initial();
+
+    static constexpr Str name() { return "cy"; }
+
+    static constexpr Length initial() { return Length{0_au}; }
+
+    void apply(ComputedStyle& c) const {
+        c.svg.cow().cy = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<PercentOr<Length>>(c));
+        return Ok();
+    }
+};
+
+// https://svgwg.org/svg2-draft/geometry.html#RProperty
+struct SVGRProp {
+    PercentOr<Length> value = initial();
+
+    static constexpr Str name() { return "r"; }
+
+    static constexpr Length initial() { return Length{0_au}; }
+
+    void apply(ComputedStyle& c) const {
+        c.svg.cow().r = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<PercentOr<Length>>(c));
+        return Ok();
+    }
+};
+
+// https://svgwg.org/svg2-draft/painting.html#FillProperty
+struct SVGFillProp {
+    Paint value = initial();
+
+    static constexpr Str name() { return "fill"; }
+
+    static constexpr Paint initial() { return Color{Gfx::BLACK}; }
+
+    void apply(ComputedStyle& c) const {
+        c.svg.cow().fill = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<Paint>(c));
+        return Ok();
+    }
+};
+
+// https://svgwg.org/svg2-draft/paths.html#TheDProperty
+struct SVGDProp {
+    Union<String, None> value = initial();
+
+    static constexpr Str name() { return "d"; }
+
+    static constexpr Union<String, None> initial() { return NONE; }
+
+    void apply(ComputedStyle& c) const {
+        c.svg.cow().d = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        eatWhitespace(c);
+        if(c.peek() != Css::Sst::FUNC or c.peek().prefix != Css::Token::function("path(")){
+            return Error::invalidData("expected path function");
+        }
+
+        auto pathFunc = c.next();
+        Cursor<Css::Sst> scanPath{pathFunc.content};
+        value = try$(parseValue<String>(scanPath));
+
+        return Ok();
+    }
+};
+
+// https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
+struct SVGViewBoxProp {
+    Opt<ViewBox> value = initial();
+
+    static constexpr Str name() { return "viewBox"; }
+
+    static Opt<ViewBox> initial() { return NONE; }
+
+    void apply(ComputedStyle& c) const {
+        c.svg.cow().viewBox = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        ViewBox viewBox;
+
+        viewBox.minX = try$(parseValue<Number>(c));
+
+        c.skip(Css::Token::comma());
+        viewBox.minY = try$(parseValue<Number>(c));
+
+        c.skip(Css::Token::comma());
+        viewBox.width = try$(parseValue<Number>(c));
+
+        c.skip(Css::Token::comma());
+        viewBox.height = try$(parseValue<Number>(c));
+
+        logDebug("a {}", viewBox);
+
+        value = std::move(viewBox);
+
+        return Ok();
+    }
+};
+
+// https://svgwg.org/svg2-draft/painting.html#SpecifyingStrokePaint
+struct SVGStrokeProp {
+    Paint value = initial();
+
+    static constexpr Str name() { return "stroke"; }
+
+    static Paint initial() { return NONE; }
+
+    void apply(ComputedStyle& c) const {
+        c.svg.cow().stroke = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<Paint>(c));
+        return Ok();
+    }
+};
+
 // MARK: OTHER -----------------------------------------------------------------
 // These are no specs or behave differently than the others, you can find more details for each one in the comments.
 
@@ -3259,10 +3447,35 @@ using _StyleProp = Union<
     // Other
     CustomProp,
     DeferredProp,
-    DefaultedProp
+    DefaultedProp,
+
+    // SVG
+    SVGXProp,
+    SVGYProp,
+    SVGCXProp,
+    SVGCYProp,
+    SVGRProp,
+    SVGFillProp,
+    SVGDProp,
+    SVGStrokeProp,
+    SVGViewBoxProp
 
     /**/
     >;
+
+// FIXME
+using SVGStyleProp = Union<
+    SVGXProp,
+    SVGYProp,
+    SVGFillProp,
+    SVGDProp,
+    SVGCXProp,
+    SVGCYProp,
+    SVGRProp,
+    SVGStrokeProp,
+    SVGViewBoxProp,
+    HeightProp,
+    WidthProp>;
 
 enum struct Important {
     NO,
