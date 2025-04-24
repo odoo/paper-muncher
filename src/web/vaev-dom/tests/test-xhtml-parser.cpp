@@ -275,4 +275,29 @@ test$("parse-xml-decl") {
     return Ok();
 }
 
+test$("parse-xml-different-namespace") {
+    Gc::Heap gc;
+    XmlParser p{gc};
+
+    auto s = Io::SScan(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 0 0\">"
+        "<rect/>"
+        "</svg>"
+    );
+    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    try$(p.parse(s, Vaev::HTML, *dom));
+
+    auto svg = dom->firstChild()->is<Element>();
+    expectNe$(svg, nullptr);
+    expect$(svg->tagName == Svg::SVG);
+    expect$(svg->countChildren() == 1);
+    expect$(svg->hasAttribute(Svg::VIEW_BOX_ATTR));
+
+    auto rect = svg->firstChild()->is<Element>();
+    expectNe$(rect, nullptr);
+    expect$(rect->tagName == Svg::RECT);
+
+    return Ok();
+}
+
 } // namespace Vaev::Dom::Tests
