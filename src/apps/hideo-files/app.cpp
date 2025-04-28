@@ -27,7 +27,7 @@ Ui::Child sidebar(State const& s) {
         sidenavItem(s, Mdi::MUSIC, "Music"s, "location://music"_url),
         sidenavItem(s, Mdi::FILM, "Videos"s, "location://videos"_url),
         sidenavItem(s, Mdi::DOWNLOAD, "Downloads"s, "location://downloads"_url),
-        Ui::separator(),
+        Kr::separator(),
         sidenavItem(s, Mdi::LAPTOP, "This Device"s, "file:/"_url),
         sidenavItem(s, Mdi::USB, "USB"s, "device://usb"_url),
         sidenavItem(s, Mdi::SD, "SD Card"s, "device://sdcard"_url),
@@ -38,13 +38,14 @@ Ui::Child sidebar(State const& s) {
 Ui::Child pageContent(State const& state) {
     auto url = state.currentUrl();
     auto dir = Sys::Dir::open(url);
-    auto listing = dir
-                       ? directoryListing(state, dir.unwrap()) | Ui::grow()
-                       : alert(
-                             state,
-                             "Can't access this location"s,
-                             Io::toStr(dir.none())
-                         );
+    auto listing =
+        dir
+            ? directoryListing(state, dir.unwrap()) | Ui::grow()
+            : alert(
+                  state,
+                  "Can't access this location"s,
+                  Io::toStr(dir.none())
+              );
 
     return listing | Ui::grow();
 }

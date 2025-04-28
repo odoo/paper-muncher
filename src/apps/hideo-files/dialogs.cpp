@@ -28,7 +28,7 @@ export Ui::Child openDialog(Ui::Send<Mime::Url> onFile) {
                            Io::toStr(maybeDir.none())
                        )
                 ) | Ui::pinSize({400, 260}),
-                Ui::separator(),
+                Kr::separator(),
                 Kr::dialogFooter({
                     Ui::grow(NONE),
                     Kr::dialogCancel(),
@@ -61,7 +61,7 @@ export Ui::Child saveDialog(Ui::Send<Mime::Url> onFile) {
                            Io::toStr(maybeDir.none())
                        )
                 ) | Ui::pinSize({400, 260}),
-                Ui::separator(),
+                Kr::separator(),
                 Kr::dialogFooter({
                     Ui::grow(NONE),
                     Kr::dialogCancel(),
@@ -94,7 +94,7 @@ export Ui::Child directoryDialog(Ui::Send<Mime::Url> onFile) {
                            Io::toStr(maybeDir.none())
                        )
                 ) | Ui::pinSize({400, 260}),
-                Ui::separator(),
+                Kr::separator(),
                 Kr::dialogFooter({
                     Ui::grow(NONE),
                     Kr::dialogCancel(),

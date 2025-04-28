@@ -48,7 +48,7 @@ export struct InspectState {
 auto guide() {
     return Ui::hflow(
         Ui::empty(8),
-        Ui::separator(),
+        Kr::separator(),
         Ui::empty(9)
     );
 }
@@ -161,13 +161,16 @@ Ui::Child computedStyles() {
 
     Style::StyleProp::any([&]<typename T>() {
         if constexpr (requires { T::initial(); }) {
-            children.pushBack(Ui::text(Ui::TextStyles::codeSmall(), "{}: {}", T::name(), T::initial()) | Ui::insets({4, 8}));
+            children.pushBack(
+                Ui::text(Ui::TextStyles::codeSmall(), "{}: {}", T::name(), T::initial()) |
+                Ui::insets({4, 8})
+            );
         }
     });
 
     return Ui::vflow(
                Kr::sidePanelTitle("Computed Styles") | Ui::dragRegion({0, -1}),
-               Ui::separator(),
+               Kr::separator(),
                Ui::vflow(children) | Ui::vscroll() | Ui::grow()
            ) |
            Ui::pinSize(128);

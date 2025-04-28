@@ -1,5 +1,6 @@
 module;
 
+#include <karm-app/form-factor.h>
 #include <karm-gfx/shadow.h>
 #include <karm-math/align.h>
 
@@ -13,23 +14,35 @@ namespace Karm::Kira {
 export Ui::Child select(Ui::Child value, Ui::Slots slots) {
     return Ui::button(
         [slots = std::move(slots)](auto& n) {
-            Ui::showPopover(
-                n,
-                n.bound().bottomStart(),
+            auto popover =
                 Ui::vflow(
                     slots()
                 ) |
-                    Ui::vscroll() |
-                    Ui::sizing({n.bound().width, Ui::UNCONSTRAINED}, {Ui::UNCONSTRAINED, 160}) |
-                    Ui::box({
-                        .borderRadii = 6,
-                        .borderWidth = 1,
-                        .borderFill = Ui::GRAY800,
-                        .backgroundFill = Ui::GRAY900,
-                        .shadowStyle = Gfx::BoxShadow::elevated(4),
-                    }) |
-                    Ui::scaleIn()
-            );
+                Ui::vscroll() |
+                Ui::box({
+                    .borderRadii = 6,
+                    .borderWidth = 1,
+                    .borderFill = Ui::GRAY800,
+                    .backgroundFill = Ui::GRAY900,
+                    .shadowStyle = Gfx::BoxShadow::elevated(4),
+                }) |
+                Ui::scaleIn();
+
+            if (App::formFactor == App::FormFactor::DESKTOP) {
+                Ui::showPopover(
+                    n,
+                    n.bound().bottomStart(),
+                    popover |
+                        Ui::sizing({n.bound().width, Ui::UNCONSTRAINED}, {Ui::UNCONSTRAINED, 160})
+                );
+            } else {
+                Ui::showDialog(
+                    n,
+                    popover |
+                        Ui::sizing({240, Ui::UNCONSTRAINED}, {Ui::UNCONSTRAINED, 320}) |
+                        Ui::center()
+                );
+            }
         },
         Ui::ButtonStyle::outline(),
         Ui::hflow(

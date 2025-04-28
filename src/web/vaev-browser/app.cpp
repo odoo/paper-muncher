@@ -210,7 +210,7 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
             Mdi::BOOKMARK_OUTLINE, "Add bookmark..."
         ),
         Kr::contextMenuItem(Model::bind(SidePanel::BOOKMARKS), Mdi::BOOKMARK, "Bookmarks"),
-        Ui::separator(),
+        Kr::separator(),
         Kr::contextMenuItem(
             not s.dom
                 ? Opt<Ui::Send<>>{NONE}
@@ -225,10 +225,10 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
 #ifdef __ck_host__
         openInDefaultBrowser(s),
 #endif
-        Ui::separator(),
+        Kr::separator(),
         Kr::contextMenuItem(Model::bind(SidePanel::DEVELOPER_TOOLS), Mdi::CODE_TAGS, "Developer Tools"),
         Kr::contextMenuCheck(Model::bind<ToggleWireframe>(), s.wireframe, "Show wireframe"),
-        Ui::separator(),
+        Kr::separator(),
         Kr::contextMenuItem(Ui::SINK<>, Mdi::COG, "Settings"),
     });
 }
@@ -285,7 +285,7 @@ Ui::Child contextMenu(State const& s) {
             Kr::contextMenuIcon(Model::bindIf<GoForward>(s.canGoForward()), Mdi::ARROW_RIGHT),
             Kr::contextMenuIcon(Model::bind<Reload>(), Mdi::REFRESH),
         }),
-        Ui::separator(),
+        Kr::separator(),
         Kr::contextMenuItem(
             Model::bind<Navigate>(
                 s.currentUrl().url,
@@ -320,7 +320,7 @@ Ui::Child sidePanel(State const& s) {
     case SidePanel::BOOKMARKS:
         return Kr::sidePanelContent({
             Kr::sidePanelTitle(Model::bind(SidePanel::CLOSE), "Bookmarks"),
-            Ui::separator(),
+            Kr::separator(),
             Ui::labelMedium(Ui::GRAY500, "No bookmarks") |
                 Ui::center() |
                 Ui::grow(),
@@ -329,7 +329,7 @@ Ui::Child sidePanel(State const& s) {
     case SidePanel::DEVELOPER_TOOLS:
         return Kr::sidePanelContent({
             Kr::sidePanelTitle(Model::bind(SidePanel::CLOSE), "Developer Tools"),
-            Ui::separator(),
+            Kr::separator(),
             inspectorContent(s) | Ui::grow(),
         });
 

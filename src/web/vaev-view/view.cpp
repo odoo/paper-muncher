@@ -1,9 +1,9 @@
 module;
 
 #include <karm-gc/root.h>
+#include <karm-gfx/canvas.h>
 #include <vaev-dom/document.h>
 #include <vaev-style/media.h>
-#include <karm-gfx/canvas.h>
 
 export module Vaev.View:view;
 

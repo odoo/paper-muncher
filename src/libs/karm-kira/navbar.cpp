@@ -7,12 +7,13 @@ module;
 export module Karm.Kira:navbar;
 
 import Karm.Ui;
+import :separator;
 
 namespace Karm::Kira {
 
 export Ui::Child navbarContent(Ui::Children children) {
     return Ui::vflow(
-        Ui::separator(),
+        separator(),
         Ui::hflow(
             4,
             children

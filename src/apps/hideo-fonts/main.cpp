@@ -151,7 +151,7 @@ Ui::Child familyContent(State const& s) {
 
     return Ui::vflow(
         header,
-        Ui::separator(),
+        Kr::separator(),
         Ui::vflow(8, children) | Ui::insets(16) | Ui::vscroll() | Ui::grow()
     );
 }
@@ -187,7 +187,7 @@ Ui::Child fontfaceContent(State const& s) {
             Ui::labelSmall(attrs.normal() ? "{}" : "{}  · ", attrs.family),
             fontfaceTags(attrs)
         ) | Ui::insets({6, 16}),
-        Ui::separator(),
+        Kr::separator(),
         pangrams(fontface)
     );
 }

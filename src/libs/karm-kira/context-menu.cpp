@@ -1,5 +1,6 @@
 module;
 
+#include <karm-app/form-factor.h>
 #include <karm-app/inputs.h>
 #include <karm-gfx/icon.h>
 #include <karm-gfx/shadow.h>
@@ -35,7 +36,11 @@ struct ContextMenu : Ui::ProxyNode<ContextMenu> {
             if (e->type == App::MouseEvent::PRESS and
                 e->button == App::MouseButton::RIGHT and
                 bound().contains(e->pos)) {
-                Ui::showPopover(*this, e->pos, _menu());
+                if (App::formFactor == App::FormFactor::DESKTOP) {
+                    Ui::showPopover(*this, e->pos, _menu());
+                } else {
+                    Ui::showDialog(*this, _menu() | Ui::center());
+                }
                 event.accept();
             }
         }

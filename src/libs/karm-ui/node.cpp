@@ -90,12 +90,6 @@ export Child& operator|=(Child& child, Decorator auto decorator) {
     return child = decorator(child);
 }
 
-export auto operator|(Decorator auto decorator, Decorator auto decorator2) {
-    return [=](Child child) {
-        return decorator2(decorator(child));
-    };
-}
-
 // MARK: LeafNode --------------------------------------------------------------
 
 export template <typename Crtp>

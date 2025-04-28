@@ -10,6 +10,7 @@ import Mdi;
 import Karm.Ui;
 import :titlebar;
 import :toolbar;
+import :separator;
 
 namespace Karm::Kira {
 
@@ -146,14 +147,14 @@ static Ui::Child _desktopScaffold(Scaffold::State const& s, Scaffold const& scaf
         );
     else
         body.pushBack(
-            Ui::separator()
+            separator()
         );
 
     if (s.sidebarOpen and scaffold.sidebar) {
         body.pushBack(
             hflow(
                 scaffold.sidebar().unwrap(),
-                Ui::separator(),
+                separator(),
                 scaffold.body() | Ui::grow()
             ) |
             Ui::grow()

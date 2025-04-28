@@ -102,14 +102,14 @@ Ui::Child directoryContextMenu() {
             // Kr::contextMenuIcon(Ui::SINK, Mdi::CONTENT_PASTE),
             Kr::contextMenuIcon(Ui::SINK<>, Mdi::FORM_TEXTBOX),
             Ui::grow(NONE),
-            Ui::separator(),
+            Kr::separator(),
             Kr::contextMenuIcon(Ui::SINK<>, Mdi::DELETE_OUTLINE),
         }),
-        Ui::separator(),
+        Kr::separator(),
         Kr::contextMenuItem(Ui::SINK<>, Mdi::MAGNIFY, "Preview"),
         Kr::contextMenuItem(Ui::SINK<>, Mdi::PENCIL, "Modify"),
         Kr::contextMenuItem(Ui::SINK<>, Mdi::SHARE, "Interact…"),
-        Ui::separator(),
+        Kr::separator(),
         Kr::contextMenuItem(Ui::SINK<>, Mdi::INFORMATION_OUTLINE, "Properties"),
     });
 }
@@ -281,7 +281,7 @@ export Ui::Child mainMenu([[maybe_unused]] State const& s) {
             Mdi::BOOKMARK_OUTLINE, "Add bookmark..."
         ),
         Kr::contextMenuItem(Ui::SINK<>, Mdi::BOOKMARK, "Bookmarks"),
-        Ui::separator(),
+        Kr::separator(),
         Kr::contextMenuCheck(Model::bind<ToggleHidden>(), s.showHidden, "Show hidden"),
     });
 }

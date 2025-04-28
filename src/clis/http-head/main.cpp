@@ -3,6 +3,7 @@
 #include <karm-sys/proc.h>
 
 import Karm.Http;
+import Karm.Aio;
 
 Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto urlArg = Cli::operand<Str>("url"s, "URL to fetch"s, "localhost"s);

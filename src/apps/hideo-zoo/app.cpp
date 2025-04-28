@@ -40,7 +40,7 @@ export Ui::Child app() {
                         Ui::empty(4),
                         Ui::bodySmall(page->description)
                     ) | Ui::insets(16),
-                    Ui::separator(),
+                    Kr::separator(),
                     page->build() | Ui::grow()
                 );
             },

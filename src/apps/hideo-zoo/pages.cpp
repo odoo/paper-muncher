@@ -1,9 +1,9 @@
 module;
 
+#include <karm-logger/logger.h>
 #include <karm-math/align.h>
 #include <karm-print/page.h>
 #include <karm-print/printer.h>
-#include <karm-logger/logger.h>
 
 export module Hideo.Zoo:pages;
 
@@ -140,16 +140,16 @@ Page PAGE_CONTEXT_MENU{
                    return Kr::contextMenuContent({
                        Kr::contextMenuItem(Ui::SINK<>, Mdi::OPEN_IN_APP, "Open"),
                        Kr::contextMenuItem(Ui::SINK<>, Mdi::PENCIL, "Edit"),
-                       Ui::separator(),
+                       Kr::separator(),
                        Kr::contextMenuItem(Ui::SINK<>, Mdi::CONTENT_COPY, "Copy"),
                        Kr::contextMenuItem(Ui::SINK<>, Mdi::CONTENT_CUT, "Cut"),
                        Kr::contextMenuItem(Ui::SINK<>, Mdi::CONTENT_PASTE, "Paste"),
-                       Ui::separator(),
+                       Kr::separator(),
                        Kr::contextMenuItem(Ui::SINK<>, Mdi::SHARE, "Interact…"),
                        Kr::contextMenuItem(Ui::SINK<>, Mdi::CURSOR_TEXT, "Rename…"),
-                       Ui::separator(),
+                       Kr::separator(),
                        Kr::contextMenuItem(Ui::SINK<>, Mdi::DELETE, "Delete"),
-                       Ui::separator(),
+                       Kr::separator(),
                        Kr::contextMenuItem(Ui::SINK<>, Mdi::INFORMATION_OUTLINE, "Properties…"),
                    });
                });
@@ -188,7 +188,7 @@ Page PAGE_FILE_DIALOG{
                        [](auto& n) {
                            Ui::showDialog(
                                n,
-                               Hideo::Files::openDialog([](auto&, auto url) {
+                               Files::openDialog([](auto&, auto url) {
                                    logInfo("selected file: {}", url);
                                })
                            );
@@ -498,7 +498,7 @@ Page PAGE_ROWS{
 
         auto list = Kr::card(
             button,
-            Ui::separator(),
+            Kr::separator(),
             Kr::treeRow(
                 [&] -> Ui::Child {
                     return Ui::icon(Mdi::TOGGLE_SWITCH);
@@ -514,7 +514,7 @@ Page PAGE_ROWS{
                 }}
             ),
 
-            Ui::separator(),
+            Kr::separator(),
             Kr::treeRow(
                 [&] -> Ui::Child {
                     return Ui::icon(Mdi::CHECKBOX_MARKED);
@@ -530,7 +530,7 @@ Page PAGE_ROWS{
                 }}
             ),
 
-            Ui::separator(),
+            Kr::separator(),
             Kr::treeRow(
                 [&] -> Ui::Child {
                     return Ui::icon(Mdi::RADIOBOX_MARKED);
@@ -545,7 +545,7 @@ Page PAGE_ROWS{
                     };
                 }}
             ),
-            Ui::separator(),
+            Kr::separator(),
             Kr::sliderRow(
                 0.5,
                 Ui::SINK<f64>,
@@ -576,14 +576,14 @@ Page PAGE_SELECT{
                                Kr::selectItem(Ui::SINK<>, "Banana"s),
                                Kr::selectItem(Ui::SINK<>, "Cherry"s),
                            }),
-                           Ui::separator(),
+                           Kr::separator(),
                            Kr::selectGroup({
                                Kr::selectLabel("Vegetables"s),
                                Kr::selectItem(Ui::SINK<>, "Carrot"s),
                                Kr::selectItem(Ui::SINK<>, "Cucumber"s),
                                Kr::selectItem(Ui::SINK<>, "Tomato"s),
                            }),
-                           Ui::separator(),
+                           Kr::separator(),
                            Kr::selectGroup({
                                Kr::selectLabel("Meat"s),
                                Kr::selectItem(Ui::SINK<>, "Beef"s),
@@ -616,7 +616,7 @@ Page PAGE_SIDENAV{
                 }),
                 Kr::sidenavItem(false, Ui::SINK<>, Mdi::DUCK, "Item 3"s),
             }),
-            Ui::separator()
+            Kr::separator()
         );
     },
 };
@@ -637,10 +637,10 @@ Page PAGE_SIDE_PANEL{
 
             return Ui::hflow(
                 content,
-                Ui::separator(),
+                Kr::separator(),
                 Kr::sidePanelContent({
                     Kr::sidePanelTitle(bind(false), "Side Panel"),
-                    Ui::separator(),
+                    Kr::separator(),
                     Ui::labelMedium(Ui::GRAY500, "This is a side panel.") |
                         Ui::center() | Ui::grow(),
                 })
@@ -687,6 +687,47 @@ Page PAGE_TOGGLE{
     },
 };
 
+static inline Page PAGE_TYPOGRAPHY{
+    Mdi::TEXT,
+    "Typography",
+    "A set of different typography level",
+    [] {
+        return Ui::vflow(
+                   Ui::displayLarge("Display Large"),
+                   Ui::displayMedium("Display Medium"),
+                   Ui::displaySmall("Display Small"),
+                   Ui::empty(32),
+
+                   Ui::headlineLarge("Headline Large"),
+                   Ui::headlineMedium("Headline Medium"),
+                   Ui::headlineSmall("Headline Small"),
+                   Ui::empty(32),
+
+                   Ui::titleLarge("Title Large"),
+                   Ui::titleMedium("Title Medium"),
+                   Ui::titleSmall("Title Small"),
+                   Ui::empty(32),
+
+                   Ui::labelLarge("Label Large"),
+                   Ui::labelMedium("Label Medium"),
+                   Ui::labelSmall("Label Small"),
+                   Ui::empty(32),
+
+                   Ui::bodyLarge("Body Large"),
+                   Ui::bodyMedium("Body Medium"),
+                   Ui::bodySmall("Body Small"),
+                   Ui::empty(32),
+
+                   Ui::codeLarge("Code Large"),
+                   Ui::codeMedium("Code Medium"),
+                   Ui::codeSmall("Code Small"),
+                   Ui::empty(32)
+               ) |
+               Ui::insets(16) |
+               Ui::vscroll();
+    },
+};
+
 export Array PAGES = {
     &PAGE_ALERT,
     &PAGE_AVATAR,
@@ -715,6 +756,7 @@ export Array PAGES = {
     &PAGE_SLIDER,
     &PAGE_TITLEBAR,
     &PAGE_TOGGLE,
+    &PAGE_TYPOGRAPHY,
 };
 
 } // namespace Hideo::Zoo

@@ -27,7 +27,8 @@ struct Shape : Node {
             return;
 
         g.push();
-        g.path(_path);
+        g.beginPath()
+            g.path(_path);
         if (_fill)
             g.fill(*_fill, _rule);
         if (_stroke)

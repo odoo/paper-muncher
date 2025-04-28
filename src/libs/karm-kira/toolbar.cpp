@@ -2,6 +2,8 @@ export module Karm.Kira:toolbar;
 
 import Karm.Ui;
 
+import :separator;
+
 namespace Karm::Kira {
 
 export Ui::Child toolbar(Ui::Children children) {
@@ -9,13 +11,13 @@ export Ui::Child toolbar(Ui::Children children) {
         Ui::hflow(4, children) |
             Ui::insets(8) |
             Ui::box({.backgroundFill = Ui::GRAY900}),
-        Ui::separator()
+        separator()
     );
 }
 
 export Ui::Child bottombar(Ui::Children children) {
     return Ui::vflow(
-        Ui::separator(),
+        separator(),
         Ui::hflow(4, children) |
             Ui::insets(8) |
             Ui::box({.backgroundFill = Ui::GRAY900})

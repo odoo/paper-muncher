@@ -27,7 +27,7 @@ export struct DragEvent {
 
 // MARK: Dismisable ------------------------------------------------------------
 
-enum struct DismisDir {
+export enum struct DismisDir {
     LEFT = 1 << 0,
     RIGHT = 1 << 1,
     TOP = 1 << 2,

@@ -9,6 +9,7 @@ export module Karm.Kira:dialog;
 
 import Karm.Ui;
 import Mdi;
+import :separator;
 
 namespace Karm::Kira {
 
@@ -36,7 +37,7 @@ export Ui::Child dialogTitleBar(String title) {
             Ui::button(Ui::closeDialog, Ui::ButtonStyle::subtle(), Mdi::CLOSE)
         ) |
             Ui::insets({4, 4, 4, 16}),
-        Ui::separator()
+        separator()
     );
 }
 

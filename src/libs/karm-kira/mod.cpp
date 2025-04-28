@@ -22,10 +22,12 @@ export import :searchbar;
 export import :select;
 export import :sideNav;
 export import :sidePanel;
+export import :handle;
 export import :slider;
 export import :titlebar;
 export import :toggle;
 export import :toolbar;
+export import :separator;
 
 namespace Karm {
 namespace Kira {}

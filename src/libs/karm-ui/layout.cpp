@@ -120,25 +120,6 @@ export auto placed(Math::Recti bound) {
     };
 }
 
-// MARK: Separator -------------------------------------------------------------
-
-struct Separator : View<Separator> {
-    Math::Vec2i size(Math::Vec2i, Hint) override {
-        return {1};
-    }
-
-    void paint(Gfx::Canvas& g, Math::Recti) override {
-        g.push();
-        g.fillStyle(GRAY800);
-        g.fill(bound());
-        g.pop();
-    }
-};
-
-export Child separator() {
-    return makeRc<Separator>();
-}
-
 // MARK: Grow ------------------------------------------------------------------
 
 struct Grow : ProxyNode<Grow> {
@@ -698,7 +679,7 @@ export Child vflow(isize gaps, Math::Align align, Children children) {
 
 // MARK: Grid ------------------------------------------------------------------
 
-struct GridUnit {
+export struct GridUnit {
     enum _Unit {
         AUTO,
         FIXED,
@@ -730,7 +711,7 @@ struct GridUnit {
     }
 };
 
-struct GridStyle {
+export struct GridStyle {
     Vec<GridUnit> rows;
     Vec<GridUnit> columns;
 

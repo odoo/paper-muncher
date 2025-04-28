@@ -214,13 +214,13 @@ Ui::Child _destinationSelect() {
                     Kr::selectItem(Ui::SINK<>, "Save as PDF"s),
                     Kr::selectItem(Ui::SINK<>, "Save as Image"s),
                 }),
-                Ui::separator(),
+                Kr::separator(),
                 Kr::selectGroup({
                     Kr::selectLabel("Printers"s),
                     Kr::selectItem(Ui::SINK<>, "Epson ET-8550"s),
                     Kr::selectItem(Ui::SINK<>, "HP DeskJet 2700"s),
                 }),
-                Ui::separator(),
+                Kr::separator(),
                 Kr::selectItem(Ui::SINK<>, "Add printer..."s)
             };
         }
@@ -240,7 +240,7 @@ Ui::Child _paperSelect(State const& s) {
             }
 
             if (not first)
-                groups.pushBack(Ui::separator());
+                groups.pushBack(Kr::separator());
             groups.pushBack(Kr::selectGroup(std::move(items)));
 
             first = false;
@@ -298,7 +298,7 @@ Ui::Child _printSettings(State const& s) {
             },
             "Orientation"s
         ),
-        Ui::separator(),
+        Kr::separator(),
         Kr::treeRow(
             NONE,
             "More settings"s,
@@ -382,7 +382,7 @@ Ui::Child _printDialog(State const& s) {
             _printControls(s) | Ui::grow()
         ) | Ui::maxSize({Ui::UNCONSTRAINED, 500}) |
             Ui::grow(),
-        Ui::separator(),
+        Kr::separator(),
         Kr::dialogFooter({
             Kr::dialogCancel(),
             Kr::dialogAction(Model::bind(PrintAction::PRINT), "Print"s),
@@ -393,16 +393,16 @@ Ui::Child _printDialog(State const& s) {
 Ui::Child _printDialogMobile(State const& s) {
     return Kr::dialogContent({
         Kr::dialogTitleBar("Print"s),
-        Ui::separator(),
+        Kr::separator(),
         Ui::vflow(
             _printPreviewMobile(s),
-            Ui::separator(),
+            Kr::separator(),
             Kr::titleRow("Settings"s),
             _printSettings(s)
         ) | Ui::minSize(500) |
             Ui::vscroll() |
             Ui::grow(),
-        Ui::separator(),
+        Kr::separator(),
         Kr::dialogFooter({
             Kr::dialogCancel(),
             Kr::dialogAction(Model::bind(PrintAction::PRINT), "Print"s),
