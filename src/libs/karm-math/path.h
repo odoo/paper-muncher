@@ -63,6 +63,8 @@ struct Path {
 
         Op(Code code, Math::Vec2f radii, f64 angle, Math::Vec2f p, Flags flags = DEFAULT)
             : code(code), flags(flags), radii(radii), angle(angle), p(p) {}
+
+        void repr(Io::Emit& e) const;
     };
 
     struct Contour {
