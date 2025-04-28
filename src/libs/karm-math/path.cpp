@@ -6,6 +6,56 @@
 
 namespace Karm::Math {
 
+void Path::Op::repr(Io::Emit& e) const {
+    e("(Op");
+    switch (code) {
+    case Code::NOP:
+        e(" NOP");
+        break;
+    case Code::CLEAR:
+        e(" CLEAR");
+        break;
+    case Code::CLOSE:
+        e(" CLOSE");
+        break;
+    case Code::MOVE_TO:
+        e(" MOVE_TO p:{}", p);
+        break;
+    case Code::LINE_TO:
+        e(" LINE_TO {}", p);
+        break;
+    case Code::HLINE_TO:
+        e(" HLINE_TO {}", p);
+        break;
+    case Code::VLINE_TO:
+        e(" VLINE_TO {}", p);
+        break;
+    case Code::CUBIC_TO:
+        e(" CUBIC_TO cp1: {} cp2: {} p: {}", cp1, cp2, p);
+        break;
+    case Code::QUAD_TO:
+        e(" QUAD_TO cp: {} p: {}", cp2, p);
+        break;
+    case Code::ARC_TO:
+        e(" ARC_TO radii: {} angle: {} p: {}", radii, angle, p);
+        break;
+    }
+
+    if (flags & LARGE)
+        e(" LARGE");
+
+    if (flags & RELATIVE)
+        e(" RELATIVE");
+
+    if (flags & SWEEP)
+        e(" SWEEP");
+
+    if (flags & SMOOTH)
+        e(" SMOOTH");
+
+    e(")");
+}
+
 Math::Rectf Path::bound() {
     if (isEmpty(_verts))
         return {};
