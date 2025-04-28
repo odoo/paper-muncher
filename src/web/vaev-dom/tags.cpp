@@ -1,3 +1,5 @@
+#include <karm-base/string.h>
+
 #include "tags.h"
 
 namespace Vaev::Html {
@@ -143,6 +145,28 @@ Opt<AttrId> _attrId(Str name) {
 #undef ATTR
 
     return NONE;
+}
+
+Str attrCased(Str name) {
+#define ATTR(IDENT, NAME)       \
+    if (eqCi(Str(#NAME), name)) \
+        return Str(#NAME);
+
+#include "defs/ns-svg-attr-names.inc"
+#undef ATTR
+
+    return "unknown";
+}
+
+Str tagNameCased(Str name) {
+#define TAG(IDENT, NAME)        \
+    if (eqCi(Str(#NAME), name)) \
+        return Str(#NAME);
+
+#include "defs/ns-svg-tag-names.inc"
+#undef TAG
+
+    return "unknown";
 }
 
 } // namespace Vaev::Svg

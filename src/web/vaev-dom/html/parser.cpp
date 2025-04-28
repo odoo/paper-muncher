@@ -190,13 +190,30 @@ Gc::Ref<Element> HtmlParser::_createElementFor(HtmlToken const& t, Ns ns) {
     //    localName, given namespace, null, and is. If will execute script
     //    is true, set the synchronous custom elements flag; otherwise,
     //    leave it unset.
-    auto tag = TagName::make(t.name, ns);
+
+    // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inforeign
+    // If the adjusted current node is an element in the SVG namespace, and the token's tag name is one of the ones
+    // in the first column of the following table, change the tag name to the name given in the corresponding cell
+    // in the second column. (This fixes the case of SVG elements that are not all lowercase.)
+    auto tag = TagName::make(
+        ns == SVG ? Svg::tagNameCased(t.name) : t.name.str(), ns
+    );
+
     logDebugIf(DEBUG_HTML_PARSER, "Creating element: {} {}", t.name, tag);
     auto el = _heap.alloc<Element>(tag);
 
     // 10. Append each attribute in the given token to element.
     for (auto& [name, value] : t.attrs) {
-        el->setAttribute(AttrName::make(name, ns), value);
+        el->setAttribute(
+            AttrName::make(
+                ns == SVG
+                    // https://html.spec.whatwg.org/multipage/parsing.html#adjust-svg-attributes
+                    ? Svg::attrCased(name)
+                    : name.str(),
+                ns
+            ),
+            value
+        );
     }
 
     // 11. If will execute script is true, then:
@@ -1318,8 +1335,9 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
         // Reconstruct the active formatting elements, if any.
         _reconstructActiveFormattingElements();
 
-        // TODO: Adjust SVG attributes for the token. (This fixes the case of
+        // Adjust SVG attributes for the token. (This fixes the case of
         // SVG attributes that are not all lowercase.)
+        // NOTE: we dont do this here since Token is const, we do it when creating the element
 
         // TODO: Adjust foreign attributes for the token. (This fixes the use of
         // namespaced attributes, in particular XLink in SVG.)
@@ -2367,12 +2385,14 @@ void HtmlParser::_handleInForeignContent(HtmlToken const& t) {
 
         // If the adjusted current node is an element in the SVG namespace
         if (_adjustedCurrentElement()->tagName.ns == SVG) {
-            // TODO: and the token's tag name is one of the ones in the first column of the following table, change the tag name to the name given in the corresponding cell in the second column. (This fixes the case of SVG elements that are not all lowercase.)
+            // and the token's tag name is one of the ones in the first column of the following table, change the tag name to the name given in the corresponding cell in the second column. (This fixes the case of SVG elements that are not all lowercase.)
+            // NOTE: we dont do this here since Token is const, we do it when creating the element
         }
 
         // If the adjusted current node is an element in the SVG namespace, ...
         if (_adjustedCurrentElement()->tagName.ns == SVG) {
-            // TODO: ...adjust foreign attributes for the token. (This fixes the use of namespaced attributes, in particular XLink in SVG.)
+            // ...adjust foreign attributes for the token. (This fixes the use of namespaced attributes, in particular XLink in SVG.)
+            // NOTE: we dont do this here since Token is const, we do it when creating the element
         }
 
         // Insert a foreign element for the token, with adjusted current node's namespace and false.
