@@ -500,12 +500,16 @@ test$("flex-blockify") {
     Gc::Heap gc;
 
     auto dom = gc.alloc<Dom::Document>(Mime::Url());
-    buildHtmlTestCase(gc, dom, "<body><div style=\"display:flex\">"
-                               "hello"
-                               "<div style=\"display:inline-block\">hi</div>"
-                               "goodbye"
-                               "<div style=\"display:block\">hi</div>"
-                               "</div></body>");
+    buildHtmlTestCase(
+        gc,
+        dom,
+        "<body><div style=\"display:flex\">"
+        "hello"
+        "<div style=\"display:inline-block\">hi</div>"
+        "goodbye"
+        "<div style=\"display:block\">hi</div>"
+        "</div></body>"
+    );
 
     auto expectedBodySubtree =
         FakeBox{
@@ -597,26 +601,35 @@ test$("table-fixup") {
                                         }
                                     }
                                 },
-                                FakeBox{// row for "dont wrap me!"
-                                        .isInternal = true,
-                                        .content = Vec<FakeBox>{
-                                            FakeBox{.isInternal = true, .content = FakeInlineBox{}},
-                                        }
+                                FakeBox{
+                                    // row for "dont wrap me!"
+                                    .isInternal = true,
+                                    .content = Vec<FakeBox>{
+                                        FakeBox{
+                                            .isInternal = true,
+                                            .content = FakeInlineBox{},
+                                        },
+                                    },
                                 },
                                 FakeBox{// anon row for "wrap mi"
                                         .isInternal = true,
                                         .content = Vec<FakeBox>{
-                                            FakeBox{.isInternal = true, .content = FakeInlineBox{}},
-                                        }
-                                },
-                                FakeBox{// row for "wrap me!"
-                                        .isInternal = true,
-                                        .content = Vec<FakeBox>{
-                                            FakeBox{// anon cell for "wrap me!"
-                                                    .isInternal = true,
-                                                    .content = FakeInlineBox{}
+                                            FakeBox{
+                                                .isInternal = true,
+                                                .content = FakeInlineBox{},
                                             },
                                         }
+                                },
+                                FakeBox{
+                                    // row for "wrap me!"
+                                    .isInternal = true,
+                                    .content = Vec<FakeBox>{
+                                        FakeBox{
+                                            // anon cell for "wrap me!"
+                                            .isInternal = true,
+                                            .content = FakeInlineBox{},
+                                        },
+                                    },
                                 },
                             }
                         }
