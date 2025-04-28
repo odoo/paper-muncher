@@ -205,6 +205,7 @@ void Path::evalOp(Op op) {
         break;
 
     case CLOSE:
+        op.p = _verts[last(_contours).start];
         _flattenClose();
         break;
 
@@ -504,7 +505,9 @@ bool Path::evalSvg(Str svg) {
 
 Path Path::fromSvg(Str svg) {
     Path p;
-    p.evalSvg(svg);
+    if (not p.evalSvg(svg)) {
+        logWarn("couldn't create SVG from input");
+    }
     return p;
 }
 
