@@ -310,6 +310,9 @@ void Path::curve(Math::Curvef curve) {
 }
 
 void Path::rect(Math::Rectf rect, Math::Radiif radii) {
+    if (Math::epsilonEq(min(rect.width, rect.height), 0.0, 0.001))
+        return;
+
     if (radii.zero()) {
         moveTo(rect.topStart());
         lineTo(rect.topEnd());
