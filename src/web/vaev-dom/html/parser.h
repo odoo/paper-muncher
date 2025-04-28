@@ -100,7 +100,7 @@ struct HtmlParser : HtmlSink {
 
     void _reconstructActiveFormattingElements();
 
-    void _acknowledgeSelfClosingFlag(HtmlToken const&);
+    void _acknowledgeSelfClosingFlag(HtmlToken &);
 
     struct AdjustedInsertionLocation {
         Gc::Ptr<Element> parent;
@@ -122,21 +122,21 @@ struct HtmlParser : HtmlSink {
 
     AdjustedInsertionLocation _apropriatePlaceForInsertingANode(Gc::Ptr<Element> overrideTarget = nullptr);
 
-    Gc::Ref<Element> _createElementFor(HtmlToken const& t, Ns ns);
+    Gc::Ref<Element> _createElementFor(HtmlToken & t, Ns ns);
 
-    Gc::Ref<Element> _insertAForeignElement(HtmlToken const& t, Ns ns, bool onlyAddToElementStack = false);
+    Gc::Ref<Element> _insertAForeignElement(HtmlToken & t, Ns ns, bool onlyAddToElementStack = false);
 
-    Gc::Ref<Element> _insertHtmlElement(HtmlToken const& t);
+    Gc::Ref<Element> _insertHtmlElement(HtmlToken & t);
 
     void _insertACharacter(Rune c);
 
-    void _insertAComment(HtmlToken const& t);
+    void _insertAComment(HtmlToken & t);
 
     void _resetTheInsertionModeAppropriately();
 
-    void _parseRawTextElement(HtmlToken const& t);
+    void _parseRawTextElement(HtmlToken & t);
 
-    void _parseRcDataElement(HtmlToken const& t);
+    void _parseRcDataElement(HtmlToken & t);
 
     // MARK: Utilities
 
@@ -198,47 +198,47 @@ struct HtmlParser : HtmlSink {
 
     // MARK: Modes
 
-    void _handleInitialMode(HtmlToken const& t);
+    void _handleInitialMode(HtmlToken & t);
 
-    void _handleBeforeHtml(HtmlToken const& t);
+    void _handleBeforeHtml(HtmlToken & t);
 
-    void _handleBeforeHead(HtmlToken const& t);
+    void _handleBeforeHead(HtmlToken & t);
 
-    void _handleInHead(HtmlToken const& t);
+    void _handleInHead(HtmlToken & t);
 
-    void _handleInHeadNoScript(HtmlToken const& t);
+    void _handleInHeadNoScript(HtmlToken & t);
 
-    void _handleAfterHead(HtmlToken const& t);
+    void _handleAfterHead(HtmlToken & t);
 
-    void _handleInBody(HtmlToken const& t);
+    void _handleInBody(HtmlToken & t);
 
-    void _handleText(HtmlToken const& t);
+    void _handleText(HtmlToken & t);
 
-    void _inTableModeAnythingElse(HtmlToken const& t);
+    void _inTableModeAnythingElse(HtmlToken & t);
 
-    void _handleInTable(HtmlToken const& t);
+    void _handleInTable(HtmlToken & t);
 
-    void _handleInTableText(HtmlToken const& t);
+    void _handleInTableText(HtmlToken & t);
 
-    void _handleInCaption(HtmlToken const& t);
+    void _handleInCaption(HtmlToken & t);
 
-    void _handleInColumnGroup(HtmlToken const& t);
+    void _handleInColumnGroup(HtmlToken & t);
 
-    void _handleInTableBody(HtmlToken const& t);
+    void _handleInTableBody(HtmlToken & t);
 
-    void _handleInTableRow(HtmlToken const& t);
+    void _handleInTableRow(HtmlToken & t);
 
-    void _handleInCell(HtmlToken const& t);
+    void _handleInCell(HtmlToken & t);
 
-    void _handleAfterBody(HtmlToken const& t);
+    void _handleAfterBody(HtmlToken & t);
 
-    void _handleInForeignContent(HtmlToken const& t);
+    void _handleInForeignContent(HtmlToken & t);
 
     void _switchTo(Mode mode);
 
-    void _acceptIn(Mode mode, HtmlToken const& t);
+    void _acceptIn(Mode mode, HtmlToken & t);
 
-    void accept(HtmlToken const& t) override;
+    void accept(HtmlToken & t) override;
 
     void write(Str str) {
         for (auto r : iterRunes(str))
