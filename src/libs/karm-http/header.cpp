@@ -79,9 +79,6 @@ export struct Header : Map<String, String> {
         for (auto& [key, value] : iter()) {
             try$(Io::format(w, "{}: {}\r\n", key, value));
         }
-
-        try$(w.writeStr("\r\n"s));
-
         return Ok();
     }
 
