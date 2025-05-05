@@ -1,7 +1,6 @@
 #pragma once
 
 #include <karm-meta/traits.h>
-#include <stdio.h>
 
 #include "opt.h"
 

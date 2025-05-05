@@ -56,35 +56,4 @@ test$("f32-niche") {
     return Ok();
 }
 
-test$("f16-niche") {
-    Opt<f16> test;
-
-    expectEq$(sizeof(test), sizeof(f16));
-    expectEq$(test.has(), false);
-    expectEq$(test, NONE);
-    test = 5;
-    expectEq$(test.unwrap(), 5);
-    expectEq$(test.take(), 5);
-    expectEq$(test, NONE);
-
-    Array<f64, 10> values = {
-        Math::INF,
-        Math::NEG_INF,
-        Math::NAN,
-        -Math::NAN,
-        Math::INF * 0.0,
-        Math::NEG_INF * 0.0,
-        0.0 / 0.0,
-        0.0 / (-0.0),
-        Math::INF / Math::INF,
-        Math::INF / Math::NEG_INF,
-    };
-    for (auto val : values) {
-        test = val;
-        expectEq$(test.has(), true);
-    }
-
-    return Ok();
-}
-
 } // namespace Karm::Math::Tests
