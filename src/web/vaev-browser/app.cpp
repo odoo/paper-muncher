@@ -411,7 +411,6 @@ export Ui::Child app(Gc::Heap& heap, Http::Client& client, Mime::Url url, Res<Gc
                 .body = [&] {
                     return appContent(s);
                 },
-                .compact = true,
             });
             return scaffold |
                    Ui::keyboardShortcut(App::Key::R, App::KeyMod::CTRL, Model::bind<Reload>()) |
