@@ -8,4 +8,4 @@ then
 fi
 
 brew update
-brew install libmagic lld llvm nasm ninja pkgconf python3 sdl2 ccache jq
+brew install libmagic lld llvm nasm ninja pkgconf python3 sdl2 ccache jq uv

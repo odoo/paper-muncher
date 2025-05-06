@@ -8,6 +8,7 @@ git clone https://github.com/odoo/paper-muncher
 
 # Build and install the project
 cd paper-muncher
+./ck tools setup
 ./ck package install --release --prefix=$HOME/.local
 
 # Add the binary to your PATH, add this to your .bashrc to make it permanent
