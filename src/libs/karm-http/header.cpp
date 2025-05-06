@@ -34,7 +34,7 @@ export struct Version {
 };
 
 export struct Header : Map<String, String> {
-    using Map<String, String>::Map;
+    using Map::Map;
 
     void add(Str const& key, Str value) {
         put(key, std::move(value));
