@@ -198,7 +198,7 @@ struct TagName {
     constexpr bool operator==(TagName const& other) const = default;
 
     void repr(Io::Emit& e) const {
-        e("{}", name());
+        e("{}::{}", ns, name());
     }
 };
 
