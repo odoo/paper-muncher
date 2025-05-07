@@ -1,4 +1,5 @@
 #include <karm-logger/_embed.h>
+#include <stdio.h>
 
 namespace Karm::Logger::_Embed {
 
