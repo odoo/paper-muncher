@@ -111,7 +111,7 @@ static bool _match(Nfix const& s, Gc::Ref<Dom::Element> el) {
 // 5.1. Type (tag name) selector
 // https://www.w3.org/TR/selectors-4/#type
 static bool _match(TypeSelector const& s, Gc::Ref<Dom::Element> el) {
-    return el->tagName == s.type;
+    return el->tagName.name() == s.elementName;
 }
 
 static bool _match(IdSelector const& s, Gc::Ref<Dom::Element> el) {
