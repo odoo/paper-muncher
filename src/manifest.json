@@ -11,6 +11,7 @@
         "karm-sys",
         "karm-image",
         "vaev-driver",
+        "vaev-loader",
         "fonts-all"
     ],
     "provides": [

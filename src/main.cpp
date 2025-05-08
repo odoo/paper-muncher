@@ -11,6 +11,7 @@
 
 import Vaev.Driver;
 import Vaev.Layout;
+import Vaev.Loader;
 import Karm.Http;
 
 namespace PaperMuncher {
@@ -48,7 +49,7 @@ Async::Task<> printAsync(
 ) {
     Gc::Heap heap;
 
-    auto dom = co_trya$(Vaev::Driver::fetchDocumentAsync(heap, *client, input));
+    auto dom = co_trya$(Vaev::Loader::fetchDocumentAsync(heap, *client, input));
 
     Vaev::Layout::Resolver resolver;
     resolver.viewport.dpi = options.scale;
@@ -164,7 +165,7 @@ Async::Task<> renderAsync(
 ) {
     Gc::Heap heap;
 
-    auto dom = co_trya$(Vaev::Driver::fetchDocumentAsync(heap, *client, input));
+    auto dom = co_trya$(Vaev::Loader::fetchDocumentAsync(heap, *client, input));
 
     Vaev::Layout::Resolver resolver;
     resolver.viewport.dpi = options.scale;

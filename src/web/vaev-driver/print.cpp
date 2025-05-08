@@ -12,7 +12,6 @@ module;
 export module Vaev.Driver:print;
 
 import Vaev.Layout;
-import :loader;
 
 namespace Vaev::Driver {
 
