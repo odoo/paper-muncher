@@ -134,11 +134,13 @@ struct Nfix {
     bool operator==(Nfix const&) const;
 };
 
+// https://www.w3.org/TR/selectors-3/#typenmsp
 struct TypeSelector {
-    TagName type;
+    // NOTE: We currently assume always case `E` with no default namespace (which fallsback to `*|E`)
+    String elementName;
 
     void repr(Io::Emit& e) const {
-        e("{}", type);
+        e("{}", elementName);
     }
 
     bool operator==(TypeSelector const&) const = default;
