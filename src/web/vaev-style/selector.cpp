@@ -227,7 +227,7 @@ static Res<Selector> _parseSelectorElement(Cursor<Css::Sst>& cur, OpCode current
             val = IdSelector{next(cur->token.data, 1)};
             break;
         case Css::Token::IDENT:
-            val = TypeSelector{TagName::make(cur->token.data, Vaev::HTML)};
+            val = TypeSelector{cur->token.data};
             break;
         case Css::Token::DELIM:
             if (cur->token.data == ".") {
