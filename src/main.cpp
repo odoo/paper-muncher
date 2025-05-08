@@ -16,18 +16,24 @@ import Karm.Http;
 
 namespace PaperMuncher {
 
-Rc<Http::Client> createHttpClient(bool sandboxed) {
-    auto client = Http::defaultClient();
+Rc<Http::Client> createHttpClient(bool unsecure) {
+    Vec<Rc<Http::Transport>> transports;
 
-    if (sandboxed)
-        client = makeRc<Http::Client>(
-            Http::multiplexTransport({
-                Http::pipeTransport(),
-                Http::localTransport({"bundle"s}),
-            })
-        );
+    transports.pushBack(Http::pipeTransport());
 
+    if (unsecure) {
+        transports.pushBack(Http::httpTransport());
+        transports.pushBack(Http::localTransport());
+    } else {
+        // NOTE: Only allow access to bundle assets and standard input/output.
+        transports.pushBack(Http::localTransport({"bundle"s, "fd"s}));
+    }
+
+    auto client = makeRc<Http::Client>(
+        Http::multiplexTransport(std::move(transports))
+    );
     client->userAgent = "Paper-Muncher/" stringify$(__ck_version_value) ""s;
+
     return client;
 }
 
@@ -176,7 +182,7 @@ Async::Task<> renderAsync(
     };
 
     auto media = constructMediaForRender(options.scale, imageSize);
-    auto [layout, paint, frags] = Vaev::Driver::render(*dom, media, {.small = imageSize});
+    auto [layout, scene, frags] = Vaev::Driver::render(*dom, media, {.small = imageSize});
 
     auto image = Gfx::Surface::alloc(
         imageSize.cast<isize>() * options.density.toDppx(),
@@ -186,7 +192,7 @@ Async::Task<> renderAsync(
     Gfx::CpuCanvas g;
     g.begin(*image);
     g.scale(options.density.toDppx());
-    paint->paint(g);
+    scene->paint(g);
     if (options.wireframe)
         Vaev::Layout::wireframe(*frags, g);
     g.end();
@@ -218,29 +224,19 @@ Async::Task<> renderAsync(
 Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, "-"s);
     auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
-    auto outputMimeArg = Cli::option<Str>(NONE, "output-mime"s, "Overide the output MIME type"s, ""s);
-    auto sandboxArg = Cli::flag(NONE, "sandbox"s, "Allow only basic I/O, handle HTTP via stdin/stdout, and block all file access"s);
-    auto logLevelArg = Cli::option<Str>(NONE, "log-level"s, "Set lowest log level authorized : print, yappin', debug, info, warn, error, or fatal (default: print)"s);
+    auto formatArg = Cli::option<Str>('f', "format"s, "Override the output file format"s, ""s);
+    auto unsecureArg = Cli::flag(NONE, "unsecure"s, "Allow local file and http access"s);
+    auto verboseArg = Cli::flag('v', "verbose"s, "Set lowest log level authorized : print, yappin', debug, info, warn, error, or fatal (default: print)"s);
 
     Cli::Command cmd{
         "paper-muncher"s,
         NONE,
         "Munch the web into crisp documents"s,
-        {sandboxArg, logLevelArg},
+        {unsecureArg, verboseArg},
         [=](Sys::Context&) -> Async::Task<> {
-            if (Str setLevel = logLevelArg) {
-                for (auto& level : {PRINT, YAP, DEBUG, INFO, WARNING, ERROR, FATAL}) {
-                    if (startWith(Str(level.name), setLevel) != Match::NO) {
-                        setLogLevel(level);
-                        break;
-                    }
-                }
-            }
-
-            if (sandboxArg) {
-                logInfo("running sandboxed");
+            setLogLevel(verboseArg ? PRINT : ERROR);
+            if (not unsecureArg)
                 co_try$(Sys::enterSandbox());
-            }
             co_return Ok();
         }
     };
@@ -260,7 +256,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
         {
             inputArg,
             outputArg,
-            outputMimeArg,
+            formatArg,
             densityArg,
 
             paperArg,
@@ -293,11 +289,10 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (outputArg.unwrap() != "-"s)
                 output = Mime::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
 
-            if (outputMimeArg.unwrap() != ""s)
-                options.outputFormat = co_try$(Mime::Uti::fromMime(Mime::Mime{outputMimeArg}));
+            if (formatArg.unwrap() != ""s)
+                options.outputFormat = co_try$(Mime::Uti::fromMime({formatArg}));
 
-            auto client = PaperMuncher::createHttpClient(sandboxArg);
-
+            auto client = PaperMuncher::createHttpClient(unsecureArg);
             co_return co_await PaperMuncher::printAsync(client, input, output, options);
         }
     );
@@ -309,7 +304,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
         {
             inputArg,
             outputArg,
-            outputMimeArg,
+            formatArg,
             densityArg,
 
             widthArg,
@@ -340,10 +335,10 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (outputArg.unwrap() != "-"s)
                 output = Mime::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
 
-            if (outputMimeArg.unwrap() != ""s)
-                options.outputFormat = co_try$(Mime::Uti::fromMime({outputMimeArg}));
+            if (formatArg.unwrap() != ""s)
+                options.outputFormat = co_try$(Mime::Uti::fromMime({formatArg}));
 
-            auto client = PaperMuncher::createHttpClient(sandboxArg);
+            auto client = PaperMuncher::createHttpClient(unsecureArg);
 
             co_return co_await renderAsync(client, input, output, options);
         }

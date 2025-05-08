@@ -103,7 +103,6 @@ def _(args: RefTestArgs):
         </header>
 """
 
-
     def update_temp_file(path, container, rendering):
         # write xhtml into the temporary file
         xhtml = re.sub(r"<slot\s*/>", rendering, container) if container else rendering
@@ -195,6 +194,8 @@ def _(args: RefTestArgs):
                     ysize = "600"
 
                 paperMuncher.popen(
+                    "--verbose",
+                    "--unsecure",
                     "render",
                     "--width",
                     xsize + "px",
