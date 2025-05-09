@@ -52,6 +52,10 @@ Opt<TagId> _tagId(Str name);
 
 Opt<AttrId> _attrId(Str name);
 
+Str attrCased(Str name);
+
+Str tagNameCased(Str name);
+
 } // namespace Svg
 
 namespace MathMl {
@@ -194,7 +198,7 @@ struct TagName {
     constexpr bool operator==(TagName const& other) const = default;
 
     void repr(Io::Emit& e) const {
-        e("{}", name());
+        e("{}::{}", ns, name());
     }
 };
 

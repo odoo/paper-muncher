@@ -10,17 +10,17 @@ test$("vaev-style-parse-simple-selectors") {
 
     expectEq$(
         try$(Selector::parse("html")),
-        TypeSelector{Html::HTML}
+        TypeSelector{"html"s}
     );
 
     expectEq$(
         try$(Selector::parse("html ")),
-        TypeSelector{Html::HTML}
+        TypeSelector{"html"s}
     );
 
     expectEq$(
         try$(Selector::parse(" html")),
-        TypeSelector{Html::HTML}
+        TypeSelector{"html"s}
     );
 
     expectEq$(
@@ -45,7 +45,7 @@ test$("vaev-style-parse-nfix-selectors") {
     expectEq$(
         try$(Selector::parse("html,.className")),
         Selector::or_({
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             ClassSelector{"className"s},
         })
     );
@@ -53,7 +53,7 @@ test$("vaev-style-parse-nfix-selectors") {
     expectEq$(
         try$(Selector::parse("html,.className , \n #idName")),
         Selector::or_({
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             ClassSelector{"className"s},
             IdSelector{"idName"s},
         })
@@ -62,7 +62,7 @@ test$("vaev-style-parse-nfix-selectors") {
     expectEq$(
         try$(Selector::parse("html,.className , \n #idName,*")),
         Selector::or_({
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             ClassSelector{"className"s},
             IdSelector{"idName"s},
             UniversalSelector{},
@@ -72,7 +72,7 @@ test$("vaev-style-parse-nfix-selectors") {
     expectEq$(
         try$(Selector::parse("html.className")),
         Selector::and_({
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             ClassSelector{"className"s},
         })
     );
@@ -84,7 +84,7 @@ test$("vaev-style-parse-infix-selectors") {
     expectEq$(
         try$(Selector::parse("html .className")),
         Selector::descendant(
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             ClassSelector{"className"s}
         )
     );
@@ -92,7 +92,7 @@ test$("vaev-style-parse-infix-selectors") {
     expectEq$(
         try$(Selector::parse("html>.className")),
         Selector::child(
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             ClassSelector{"className"s}
         )
     );
@@ -100,7 +100,7 @@ test$("vaev-style-parse-infix-selectors") {
     expectEq$(
         try$(Selector::parse("html > .className")),
         Selector::child(
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             ClassSelector{"className"s}
         )
     );
@@ -109,7 +109,7 @@ test$("vaev-style-parse-infix-selectors") {
         try$(Selector::parse("html > .className #idName")),
         Selector::descendant(
             Selector::child(
-                TypeSelector{Html::HTML},
+                TypeSelector{"html"s},
                 ClassSelector{"className"s}
             ),
             IdSelector{"idName"s}
@@ -128,7 +128,7 @@ test$("vaev-style-parse-adjacent-selectors") {
     expectEq$(
         try$(Selector::parse("html +.className")),
         Selector::adjacent(
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             ClassSelector{"className"s}
         )
     );
@@ -140,7 +140,7 @@ test$("vaev-style-parse-subsequent-selectors") {
     expectEq$(
         try$(Selector::parse("html~.className")),
         Selector::subsequent(
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             ClassSelector{"className"s}
         )
     );
@@ -152,7 +152,7 @@ test$("vaev-style-parse-mixed-selectors") {
     expectEq$(
         try$(Selector::parse("html > .className#idName")),
         Selector::child(
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             Selector::and_({
                 ClassSelector{"className"s},
                 IdSelector{"idName"s},
@@ -164,7 +164,7 @@ test$("vaev-style-parse-mixed-selectors") {
         try$(Selector::parse("html#idName .className")),
         Selector::descendant(
             Selector::and_({
-                TypeSelector{Html::HTML},
+                TypeSelector{"html"s},
                 IdSelector{"idName"s},
             }),
             ClassSelector{"className"s}
@@ -179,24 +179,24 @@ test$("vaev-style-parse-mixed-selectors") {
     expectEq$(
         try$(Selector::parse("tr:not(:last-child) th:not(:first-child)")),
         Selector::descendant(
-            Selector::and_({TypeSelector{Html::TR}, Selector::not_(Pseudo{Pseudo::LAST_CHILD})}),
-            Selector::and_({TypeSelector{Html::TH}, {Selector::not_(Pseudo{Pseudo::FIRST_CHILD})}})
+            Selector::and_({TypeSelector{"tr"s}, Selector::not_(Pseudo{Pseudo::LAST_CHILD})}),
+            Selector::and_({TypeSelector{"th"s}, {Selector::not_(Pseudo{Pseudo::FIRST_CHILD})}})
         )
     );
 
     expectEq$(
         try$(Selector::parse("td, .o_content .o .o_table th ")),
         Selector::or_(
-            {TypeSelector{Html::TD},
-             Selector::descendant(Selector::descendant(Selector::descendant(ClassSelector{"o_content"s}, ClassSelector{"o"s}), ClassSelector{"o_table"s}), TypeSelector{Html::TH})}
+            {TypeSelector{"td"s},
+             Selector::descendant(Selector::descendant(Selector::descendant(ClassSelector{"o_content"s}, ClassSelector{"o"s}), ClassSelector{"o_table"s}), TypeSelector{"th"s})}
         )
     );
 
     expectEq$(
         try$(Selector::parse("td, .o_content .o_table th ")),
         Selector::or_(
-            {TypeSelector{Html::TD},
-             Selector::descendant(Selector::descendant(ClassSelector{"o_content"s}, ClassSelector{"o_table"s}), TypeSelector{Html::TH})}
+            {TypeSelector{"td"s},
+             Selector::descendant(Selector::descendant(ClassSelector{"o_content"s}, ClassSelector{"o_table"s}), TypeSelector{"th"s})}
         )
     );
 
@@ -206,11 +206,11 @@ test$("vaev-style-parse-mixed-selectors") {
             Selector::child(
                 Selector::descendant(
                     ClassSelector{"o_content"s},
-                    Selector::child(ClassSelector{"o_table"s}, TypeSelector{Html::THEAD})
+                    Selector::child(ClassSelector{"o_table"s}, TypeSelector{"thead"s})
                 ),
-                Selector::and_({TypeSelector{Html::TR}, Selector::not_(Pseudo{Pseudo::LAST_CHILD})})
+                Selector::and_({TypeSelector{"tr"s}, Selector::not_(Pseudo{Pseudo::LAST_CHILD})})
             ),
-            Selector::and_({TypeSelector{Html::TH}, {Selector::not_(Pseudo{Pseudo::FIRST_CHILD})}})
+            Selector::and_({TypeSelector{"th"s}, {Selector::not_(Pseudo{Pseudo::FIRST_CHILD})}})
         )
     );
 
@@ -254,7 +254,7 @@ test$("vaev-style-parse-pseudo-selectors") {
     expectEq$(
         try$(Selector::parse("html:hover")),
         Selector::and_({
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             Pseudo{Pseudo::HOVER},
         })
     );
@@ -264,7 +264,7 @@ test$("vaev-style-parse-pseudo-selectors") {
     expectEq$(
         try$(Selector::parse("html:after")),
         Selector::and_({
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             Pseudo{Pseudo::AFTER},
         })
     );
@@ -272,19 +272,19 @@ test$("vaev-style-parse-pseudo-selectors") {
     expectEq$(
         try$(Selector::parse("html::after")),
         Selector::and_({
-            TypeSelector{Html::HTML},
+            TypeSelector{"html"s},
             Pseudo{Pseudo::AFTER},
         })
     );
 
     expectEq$(
         try$(Selector::parse("div::not(.foo)")),
-        Selector::and_({TypeSelector{Html::DIV}, Selector::not_(ClassSelector{"foo"s})})
+        Selector::and_({TypeSelector{"div"s}, Selector::not_(ClassSelector{"foo"s})})
     );
 
     expectEq$(
         try$(Selector::parse("div::not(.foo, .bar)")),
-        Selector::and_({TypeSelector{Html::DIV}, Selector::not_(Selector::or_({ClassSelector{"foo"s}, ClassSelector{"bar"s}}))})
+        Selector::and_({TypeSelector{"div"s}, Selector::not_(Selector::or_({ClassSelector{"foo"s}, ClassSelector{"bar"s}}))})
     );
 
     return Ok();

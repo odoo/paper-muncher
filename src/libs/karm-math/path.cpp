@@ -6,6 +6,46 @@
 
 namespace Karm::Math {
 
+void Path::Op::repr(Io::Emit& e) const {
+    e("(Op");
+    switch (code) {
+    case Code::NOP:
+        e(" NOP");
+        break;
+    case Code::CLEAR:
+        e(" CLEAR");
+        break;
+    case Code::CLOSE:
+        e(" CLOSE");
+        break;
+    case Code::MOVE_TO:
+        e(" MOVE_TO p:{}", p);
+        break;
+    case Code::LINE_TO:
+        e(" LINE_TO {}", p);
+        break;
+    case Code::HLINE_TO:
+        e(" HLINE_TO {}", p);
+        break;
+    case Code::VLINE_TO:
+        e(" VLINE_TO {}", p);
+        break;
+    case Code::CUBIC_TO:
+        e(" CUBIC_TO cp1: {} cp2: {} p: {}", cp1, cp2, p);
+        break;
+    case Code::QUAD_TO:
+        e(" QUAD_TO cp: {} p: {}", cp2, p);
+        break;
+    case Code::ARC_TO:
+        e(" ARC_TO radii: {} angle: {} p: {}", radii, angle, p);
+        break;
+    }
+    // TODO: pretty print of remaining flags
+    if (isRelative())
+        e(" RELATIVE");
+    e(")");
+}
+
 Math::Rectf Path::bound() {
     if (isEmpty(_verts))
         return {};
@@ -189,7 +229,7 @@ void Path::evalOp(Op op) {
         return;
     }
 
-    if (op.flags & RELATIVE) {
+    if (op.isRelative()) {
         op.cp1 = _lastP + op.cp1;
         op.cp2 = _lastP + op.cp2;
         op.p = _lastP + op.p;
