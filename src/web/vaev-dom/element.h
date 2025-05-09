@@ -55,7 +55,7 @@ struct Element : Node {
     }
 
     void setAttribute(AttrName name, String value) {
-        if (name == Html::CLASS_ATTR) {
+        if (name == Html::CLASS_ATTR or name == Svg::CLASS_ATTR) {
             for (auto class_ : iterSplit(value, ' ')) {
                 this->classList.add(class_);
             }

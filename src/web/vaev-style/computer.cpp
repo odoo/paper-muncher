@@ -97,6 +97,20 @@ Rc<ComputedStyle> Computer::_evalCascade(ComputedStyle const& parent, MatchingRu
     return computed;
 }
 
+// https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
+Vec<Style::StyleProp> considerPresentationAttributes(Gc::Ref<Dom::Element> el) {
+    if (el->tagName.ns != SVG)
+        return {};
+
+    Vec<Style::StyleProp> styleProps;
+    for (auto [attr, attrValue] : el->attributes.iter()) {
+
+        parseSVGPresentationAttribute(attr.name(), attrValue->value, styleProps);
+    }
+
+    return styleProps;
+}
+
 // https://drafts.csswg.org/css-cascade/#cascade-origin
 Rc<ComputedStyle> Computer::computeFor(ComputedStyle const& parent, Gc::Ref<Dom::Element> el) {
     MatchingRules matchingRules;
@@ -107,13 +121,25 @@ Rc<ComputedStyle> Computer::computeFor(ComputedStyle const& parent, Gc::Ref<Dom:
             _evalRule(rule, el, matchingRules);
 
     // Get the style attribute if any
-    auto styleAttr = el->getAttribute(Html::STYLE_ATTR);
+    auto styleAttr = el->tagName.ns == HTML
+                         ? el->getAttribute(Html::STYLE_ATTR)
+                         : el->getAttribute(Svg::STYLE_ATTR);
 
     StyleRule styleRule{
         .props = parseDeclarations<StyleProp>(styleAttr ? *styleAttr : ""),
         .origin = Origin::INLINE,
     };
     matchingRules.pushBack({&styleRule, INLINE_SPEC});
+
+    // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
+    // Presentation attributes contribute to the author level of the cascade, followed by all other author-level
+    // style sheets, and have specificity 0.
+    // FIXME: not in if scope because matchingRules takes ref
+    StyleRule presentationAttributes{
+        .props = considerPresentationAttributes(el),
+        .origin = Origin::AUTHOR,
+    };
+    matchingRules.pushBack({&presentationAttributes, PRESENTATION_ATTR_SPEC});
 
     return _evalCascade(parent, matchingRules);
 }
