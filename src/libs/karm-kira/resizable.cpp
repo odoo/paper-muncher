@@ -26,7 +26,9 @@ struct Resizable : Ui::ProxyNode<Resizable> {
           _onChange(std::move(onChange)) {}
 
     void reconcile(Resizable& o) override {
-        _size = o._size;
+        if (o._onChange) {
+            _size = o._size;
+        }
         _onChange = std::move(o._onChange);
         ProxyNode<Resizable>::reconcile(o);
     }
