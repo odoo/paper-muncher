@@ -12,6 +12,9 @@ template <typename T>
 union Trans2 {
     using Scalar = T;
 
+    static constexpr const T ZERO = T{};
+    static constexpr const T ONE = T{1};
+
     struct
     {
         T xx;
@@ -38,30 +41,30 @@ union Trans2 {
         return {
             c, -s,
             s, c,
-            0, 0
+            ZERO, ZERO
         };
     }
 
     static constexpr Trans2 makeSkew(Vec2<T> v) {
         return {
-            1, v.x,
-            v.y, 1,
-            0, 0
+            ONE, v.x,
+            v.y, ONE,
+            ZERO, ZERO
         };
     }
 
     static constexpr Trans2 makeScale(Vec2<T> v) {
         return {
-            v.x, 0,
-            0, v.y,
-            0, 0
+            v.x, ZERO,
+            ZERO, v.y,
+            ZERO, ZERO
         };
     }
 
     static constexpr Trans2 makeTranslate(Vec2<T> v) {
         return {
-            1, 0,
-            0, 1,
+            ONE, ZERO,
+            ZERO, ONE,
             v.x, v.y
         };
     }
@@ -69,19 +72,19 @@ union Trans2 {
     Array<T, 6> _els{};
 
     bool rotated() const {
-        return xx * yy - xy * yx < 0;
+        return xx * yy - xy * yx < ZERO;
     }
 
     bool skewed() const {
-        return xx * yy - xy * yx != 1;
+        return xx * yy - xy * yx != ONE;
     }
 
     bool scaled() const {
-        return xx != 1 or yy != 1;
+        return xx != ONE or yy != ONE;
     }
 
     bool translated() const {
-        return ox != 0 or oy != 0;
+        return ox != ZERO or oy != ZERO;
     }
 
     bool simple() const {
@@ -90,9 +93,9 @@ union Trans2 {
 
     constexpr Trans2()
         : _els{
-              1, 0,
-              0, 1,
-              0, 0
+              ONE, ZERO,
+              ZERO, ONE,
+              ZERO, ZERO
           } {}
 
     constexpr Trans2(T xx, T xy, T yx, T yy, T ox, T oy)
@@ -144,15 +147,15 @@ union Trans2 {
     constexpr Trans2 multiply(Trans2 const& other) const {
         Trans2 res = {
             xx * other.xx,
-            0.0,
-            0.0,
+            ZERO,
+            ZERO,
             yy * other.yy,
             ox * other.xx + other.ox,
             oy * other.yy + other.oy,
         };
 
-        if (xy != 0.0 or yx != 0.0 or
-            other.xy != 0.0 or other.yx != 0.0) {
+        if (xy != ZERO or yx != ZERO or
+            other.xy != ZERO or other.yx != ZERO) {
             res.xx += xy * other.yx;
             res.xy += xx * other.xy + xy * other.yy;
             res.yx += yx * other.xx + yy * other.yx;
@@ -191,12 +194,12 @@ union Trans2 {
     }
 
     constexpr bool isIdentity(T epsilon = Limits<T>::EPSILON) const {
-        return epsilonEq(xx, T{1}, epsilon) and
-               epsilonEq(yx, T{}, epsilon) and
-               epsilonEq(xy, T{}, epsilon) and
-               epsilonEq(yy, T{1}, epsilon) and
-               epsilonEq(ox, T{}, epsilon) and
-               epsilonEq(oy, T{}, epsilon);
+        return epsilonEq(xx, ONE, epsilon) and
+               epsilonEq(yx, ZERO, epsilon) and
+               epsilonEq(xy, ZERO, epsilon) and
+               epsilonEq(yy, ONE, epsilon) and
+               epsilonEq(ox, ZERO, epsilon) and
+               epsilonEq(oy, ZERO, epsilon);
     }
 
     constexpr bool hasNan() const {
@@ -207,6 +210,18 @@ union Trans2 {
         return {xx, xy};
     }
 
+    template <typename U>
+    constexpr Trans2<U> cast() const {
+        return {
+            static_cast<U>(xx),
+            static_cast<U>(xy),
+            static_cast<U>(yx),
+            static_cast<U>(yy),
+            static_cast<U>(ox),
+            static_cast<U>(oy),
+        };
+    }
+
     void repr(Io::Emit& e) const {
         e("(trans {} {} {} {} {} {})", xx, xy, yx, yy, ox, oy);
     }
@@ -214,9 +229,9 @@ union Trans2 {
 
 template <typename T>
 Trans2<T> const Trans2<T>::IDENTITY = {
-    1, 0,
-    0, 1,
-    0, 0
+    ONE, ZERO,
+    ZERO, ONE,
+    ZERO, ZERO
 };
 
 using Trans2i = Trans2<isize>;
