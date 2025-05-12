@@ -1389,8 +1389,12 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         }
 
         // Anything else
-        // Append the current input character to the current attribute's
-        // name. When the user agent leaves the attribute name state (and
+        // Append the current input character to the current attribute's name.
+        else {
+            _builder.append(rune);
+        }
+
+        // TODO: When the user agent leaves the attribute name state (and
         // before emitting the tag token, if appropriate), the complete
         // attribute's name must be compared to the other attributes on the
         // same token; if there is already an attribute on the token with
@@ -1401,10 +1405,6 @@ void HtmlLexer::consume(Rune rune, bool isEof) {
         // by the parser, and are therefore effectively discarded. Removing
         // the attribute in this way does not change its status as the
         // "current attribute" for the purposes of the lexer, however.
-        else if (isAsciiLower(rune)) {
-            _builder.append(rune);
-        }
-
         break;
     }
 
