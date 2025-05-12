@@ -213,29 +213,29 @@ template <typename... Ts>
 Visitor(Ts...) -> Visitor<Ts...>;
 
 template <typename T, typename... Ts>
-struct _UnionFlatten {
-    using type = T;
+struct _FlattenUnion {
+    using Type = T;
 };
 
 // If the type is already in the Union we discard it
 template <typename... Ts, Meta::Contains<Ts...> A, typename... Us>
-struct _UnionFlatten<Union<Ts...>, A, Us...> {
-    using type = _UnionFlatten<Union<Ts...>, Us...>::type;
+struct _FlattenUnion<Union<Ts...>, A, Us...> {
+    using Type = _FlattenUnion<Union<Ts...>, Us...>::Type;
 };
 
 // Else we add it to the Union
 template <typename... Ts, typename A, typename... Us>
-struct _UnionFlatten<Union<Ts...>, A, Us...> {
-    using type = _UnionFlatten<Union<Ts..., A>, Us...>::type;
+struct _FlattenUnion<Union<Ts...>, A, Us...> {
+    using Type = _FlattenUnion<Union<Ts..., A>, Us...>::Type;
 };
 
 template <typename... Ts, typename... Us, typename... Vs>
-struct _UnionFlatten<Union<Ts...>, Union<Us...>, Vs...> {
-    using type = _UnionFlatten<Union<Ts...>, Us..., Vs...>::type;
+struct _FlattenUnion<Union<Ts...>, Union<Us...>, Vs...> {
+    using Type = _FlattenUnion<Union<Ts...>, Us..., Vs...>::Type;
 };
 
 template <typename... Ts>
-using FlatUnion = _UnionFlatten<Union<>, Ts...>::type;
+using FlatUnion = _FlattenUnion<Union<>, Ts...>::Type;
 
 template <typename... Ts>
     requires(sizeof...(Ts) <= 254)

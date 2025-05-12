@@ -183,10 +183,10 @@ struct Niche<Slice<T>> {
         char const* ptr;
         usize _len;
 
-        always_inline constexpr Content() : ptr(_NONE_PTR) {}
+        always_inline constexpr Content() : ptr(NICHE_PTR) {}
 
         always_inline constexpr bool has() const {
-            return ptr != _NONE_PTR;
+            return ptr != NICHE_PTR;
         }
     };
 };
