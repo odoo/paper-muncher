@@ -4,7 +4,7 @@
 #include <karm-gfx/borders.h>
 #include <karm-gfx/outline.h>
 
-#include "base.h"
+#include "node.h"
 
 namespace Karm::Scene {
 

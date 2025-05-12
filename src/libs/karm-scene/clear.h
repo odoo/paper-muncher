@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base.h"
+#include "proxy.h"
 
 namespace Karm::Scene {
 

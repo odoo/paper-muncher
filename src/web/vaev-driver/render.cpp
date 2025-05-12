@@ -1,9 +1,7 @@
 module;
 
-#include <karm-base/box.h>
-#include <karm-scene/base.h>
 #include <karm-scene/clear.h>
-#include <karm-sys/time.h>
+#include <karm-scene/stack.h>
 #include <karm-text/book.h>
 #include <vaev-style/computer.h>
 

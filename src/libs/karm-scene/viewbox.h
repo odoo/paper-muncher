@@ -1,5 +1,5 @@
 
-#include "base.h"
+#include "node.h"
 
 namespace Karm::Scene {
 
@@ -25,9 +25,7 @@ struct Viewbox : Node {
         g.push();
         g.origin(_viewbox.xy);
         g.clip(_viewbox);
-
         _content->paint(g, r, o);
-
         g.pop();
     }
 

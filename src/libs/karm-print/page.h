@@ -1,6 +1,7 @@
 #pragma once
 
-#include <karm-scene/base.h>
+#include <karm-scene/node.h>
+#include <karm-scene/stack.h>
 #include <karm-scene/viewbox.h>
 
 #include "paper.h"
@@ -19,7 +20,7 @@ struct Page {
         return makeRc<Scene::Viewbox>(_paper.size(), _content);
     }
 
-    void print(Print::Printer& doc, Scene::PaintOptions o = {.showBackgroundGraphics = false}) {
+    void print(Printer& doc, Scene::PaintOptions o = {.showBackgroundGraphics = false}) {
         auto& canvas = doc.beginPage(_paper);
         content()->paint(canvas, _paper.size().cast<f64>(), o);
     }

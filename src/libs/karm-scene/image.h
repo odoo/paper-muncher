@@ -2,7 +2,7 @@
 
 #include <karm-image/picture.h>
 
-#include "base.h"
+#include "node.h"
 
 namespace Karm::Scene {
 

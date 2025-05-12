@@ -160,7 +160,6 @@ struct RenderOption {
     Vaev::Length width = 800_au;
     Vaev::Length height = 600_au;
     Mime::Uti outputFormat = Mime::Uti::PUBLIC_BMP;
-    bool wireframe = false;
 };
 
 Async::Task<> renderAsync(
@@ -184,23 +183,12 @@ Async::Task<> renderAsync(
     auto media = constructMediaForRender(options.scale, imageSize);
     auto [layout, scene, frags] = Vaev::Driver::render(*dom, media, {.small = imageSize});
 
-    auto image = Gfx::Surface::alloc(
-        imageSize.cast<isize>() * options.density.toDppx(),
-        Gfx::RGBA8888
-    );
-
-    Gfx::CpuCanvas g;
-    g.begin(*image);
-    g.scale(options.density.toDppx());
-    scene->paint(g);
-    if (options.wireframe)
-        Vaev::Layout::wireframe(*frags, g);
-    g.end();
+    auto surface = scene->snapshot(imageSize.cast<f64>(), options.density.toDppx());
 
     Io::BufferWriter bw;
     co_try$(
         Image::save(
-            image->pixels(),
+            *surface,
             bw,
             {
                 .format = options.outputFormat,
@@ -247,7 +235,6 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto heightArg = Cli::option<Str>('h', "height"s, "Height of the output document in css units (e.g. 600px)"s, ""s);
     auto paperArg = Cli::option<Str>(NONE, "paper"s, "Paper size for printing (default: A4)"s, "A4"s);
     auto orientationArg = Cli::option<Str>(NONE, "orientation"s, "Page orientation (default: portrait)"s, "portrait"s);
-    auto wireframeArg = Cli::flag(NONE, "wireframe"s, "Render wireframe of the layout"s);
 
     cmd.subCommand(
         "print"s,
@@ -310,8 +297,6 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             widthArg,
             heightArg,
             scaleArg,
-
-            wireframeArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::RenderOption options{};
@@ -324,8 +309,6 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             if (heightArg.unwrap())
                 options.height = co_try$(Vaev::Style::parseValue<Vaev::Length>(heightArg.unwrap()));
-
-            options.wireframe = wireframeArg.unwrap();
 
             Mime::Url input = "fd:stdin"_url;
             if (inputArg.unwrap() != "-"s)

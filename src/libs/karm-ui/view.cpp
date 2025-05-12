@@ -3,7 +3,7 @@ module;
 #include <karm-base/func.h>
 #include <karm-gfx/icon.h>
 #include <karm-image/picture.h>
-#include <karm-scene/base.h>
+#include <karm-scene/node.h>
 #include <karm-text/loader.h>
 #include <karm-text/prose.h>
 

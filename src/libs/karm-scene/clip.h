@@ -1,10 +1,10 @@
 #pragma once
 
-#include "base.h"
+#include "stack.h"
 
 namespace Karm::Scene {
 
-struct Clip : public Stack {
+struct Clip : Stack {
     Math::Path _path;
     Gfx::FillRule _rule;
 

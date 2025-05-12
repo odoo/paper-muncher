@@ -2,7 +2,7 @@
 
 #include <karm-text/prose.h>
 
-#include "base.h"
+#include "node.h"
 
 namespace Karm::Scene {
 

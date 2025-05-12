@@ -3,6 +3,7 @@ module;
 #include <karm-base/rc.h>
 #include <karm-math/au.h>
 #include <karm-print/page.h>
+#include <karm-scene/stack.h>
 #include <karm-scene/transform.h>
 #include <karm-sys/time.h>
 #include <karm-text/book.h>
