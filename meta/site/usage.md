@@ -60,4 +60,3 @@ paper-munch render page.html -o out.bmp
 paper-munch render page.html -o out.png --width 1024px --height 768px --density 192dpi
 paper-munch render page.html -o out.png --wireframe
 ```
-
