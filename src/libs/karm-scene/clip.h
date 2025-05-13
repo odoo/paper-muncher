@@ -5,20 +5,27 @@
 namespace Karm::Scene {
 
 struct Clip : Stack {
-    Math::Path _path;
+    Union<Math::Path, Math::Rectf> _clipArea;
     Gfx::FillRule _rule;
 
     Clip() = delete;
 
     Clip(Math::Path path, Gfx::FillRule rule = Gfx::FillRule::NONZERO)
-        : Stack(), _path(path), _rule(rule) {}
+        : Stack(), _clipArea(path), _rule(rule) {}
+
+    Clip(Math::Rectf rect)
+        : Stack(), _clipArea(rect), _rule(Gfx::FillRule::NONZERO) {}
 
     void paint(Gfx::Canvas& g, Math::Rectf r, PaintOptions o) override {
         g.push();
 
-        g.beginPath();
-        g.path(_path);
-        g.clip(_rule);
+        if (auto path = _clipArea.is<Math::Path>()) {
+            g.beginPath();
+            g.path(*path);
+            g.clip(_rule);
+        } else if (auto rect = _clipArea.is<Math::Rectf>()) {
+            g.clip(*rect);
+        }
 
         Stack::paint(g, r, o);
 
