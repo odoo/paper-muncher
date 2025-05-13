@@ -388,51 +388,53 @@ inline bool Nfix::operator==(Nfix const&) const = default;
 Spec spec(Selector const& sel);
 
 inline void unparse(Selector const& sel, Io::Emit& e) {
-    sel.visit(Visitor{[&](Nfix const& s) {
-                          if (s.type == Nfix::OR) {
-                              for (usize i = 0; i < s.inners.len(); i++) {
-                                  if (i != s.inners.len() - 1) {
-                                      e("{},", s.inners[i]);
-                                  } else {
-                                      e("{}", s.inners[i]);
-                                      ;
-                                  }
-                              }
-                          } else if (s.type == Nfix::AND) {
-                              for (usize i = 0; i < s.inners.len(); i++) {
-                                  e("{}", s.inners[i]);
-                                  ;
-                              }
-                          } else {
-                              e("{}", s);
-                          }
-                      },
-                      [&](Meta::Contains<UniversalSelector, ClassSelector, IdSelector, TypeSelector> auto const& s) -> void {
-                          e("{}", s);
-                      },
-                      [&](Infix const& s) -> void {
-                          if (s.type == Infix::DESCENDANT) {
-                              e("{} {}", s.lhs, s.rhs);
-                          } else if (s.type == Infix::CHILD) {
-                              e("{}>{}", s.lhs, s.rhs);
-                          } else if (s.type == Infix::ADJACENT) {
-                              e("{}+{}", s.lhs, s.rhs);
-                          } else if (s.type == Infix::SUBSEQUENT) {
-                              e("{}~{}", s.lhs, s.rhs);
-                              ;
-                          } else {
-                              e("{}", s);
-                          }
-                      },
-                      [&](Pseudo const& s) -> void {
-                          e("{}", s);
-                      },
-                      [&](AttributeSelector const& s) {
-                          e("{}", s);
-                      },
-                      [&](auto const& s) -> void {
-                          e("{}", s);
-                      }});
+    sel.visit(Visitor{
+        [&](Nfix const& s) {
+            if (s.type == Nfix::OR) {
+                for (usize i = 0; i < s.inners.len(); i++) {
+                    if (i != s.inners.len() - 1) {
+                        e("{},", s.inners[i]);
+                    } else {
+                        e("{}", s.inners[i]);
+                        ;
+                    }
+                }
+            } else if (s.type == Nfix::AND) {
+                for (usize i = 0; i < s.inners.len(); i++) {
+                    e("{}", s.inners[i]);
+                    ;
+                }
+            } else {
+                e("{}", s);
+            }
+        },
+        [&](Meta::Contains<UniversalSelector, ClassSelector, IdSelector, TypeSelector> auto const& s) -> void {
+            e("{}", s);
+        },
+        [&](Infix const& s) -> void {
+            if (s.type == Infix::DESCENDANT) {
+                e("{} {}", s.lhs, s.rhs);
+            } else if (s.type == Infix::CHILD) {
+                e("{}>{}", s.lhs, s.rhs);
+            } else if (s.type == Infix::ADJACENT) {
+                e("{}+{}", s.lhs, s.rhs);
+            } else if (s.type == Infix::SUBSEQUENT) {
+                e("{}~{}", s.lhs, s.rhs);
+                ;
+            } else {
+                e("{}", s);
+            }
+        },
+        [&](Pseudo const& s) -> void {
+            e("{}", s);
+        },
+        [&](AttributeSelector const& s) {
+            e("{}", s);
+        },
+        [&](auto const& s) -> void {
+            e("{}", s);
+        },
+    });
 }
 
 } // namespace Vaev::Style
