@@ -4,23 +4,19 @@
 
 namespace Vaev::Dom {
 
-String Document::title() const {
-    String res = ""s;
-    iterDepthFirst([&](auto& node) {
-        if (auto element = node.template is<Element>()) {
+String Document::title() {
+    for (auto node : iterDepthFirst()) {
+        if (auto element = node->is<Element>())
             if (element->tagName == Html::TITLE) {
-                res = element->textContent();
-                return Iter::BREAK;
+                return element->textContent();
             }
-        }
-        return Iter::CONTINUE;
-    });
-    return res;
+    }
+    return ""s;
 }
 
 Gc::Ptr<Dom::Element> Document::documentElement() const {
     for (auto child = firstChild(); child; child = child->nextSibling())
-        if (auto el = child->is<Dom::Element>())
+        if (auto el = child->is<Element>())
             return el;
     return nullptr;
 }

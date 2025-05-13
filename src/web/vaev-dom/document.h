@@ -39,13 +39,13 @@ struct Document : Node {
         return TYPE;
     }
 
-    String title() const;
+    String title();
 
     Mime::Url const& url() const {
         return _url;
     }
 
-    Gc::Ptr<Dom::Element> documentElement() const;
+    Gc::Ptr<Element> documentElement() const;
 };
 
 } // namespace Vaev::Dom

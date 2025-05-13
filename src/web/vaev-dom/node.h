@@ -38,7 +38,7 @@ struct Node : Tree<Node> {
     }
 
     template <typename T>
-    Cursor<T> is() const {
+    Gc::Ptr<T> is() const {
         if (nodeType() != T::TYPE)
             return nullptr;
         return static_cast<T const*>(this);

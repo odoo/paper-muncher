@@ -154,14 +154,11 @@ struct Tree : Meta::Pinned {
 
     // Iteration ---------------------------------------------------------------
 
-    Iter iterDepthFirst(this auto& self, auto f) {
-        if (f(self) == Iter::BREAK)
-            return Iter::BREAK;
-
+    Generator<Gc::Ref<Node>> iterDepthFirst(this auto& self) {
+        co_yield Gc::Ref(self);
         for (auto child = self.firstChild(); child; child = child->nextSibling())
-            if (child->iterDepthFirst(f) == Iter::BREAK)
-                return Iter::BREAK;
-        return Iter::CONTINUE;
+            for (auto i : child->iterDepthFirst())
+                co_yield i;
     }
 };
 

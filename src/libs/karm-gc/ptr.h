@@ -54,6 +54,9 @@ struct Ref {
     }
 };
 
+template <typename T>
+Ref(T) -> Ref<T>;
+
 // Nullable reference
 template <typename T>
 struct Ptr {
@@ -61,8 +64,7 @@ struct Ptr {
 
     Ptr() = default;
 
-    Ptr(std::nullptr_t) : _ptr{nullptr} {
-    }
+    Ptr(std::nullptr_t) {}
 
     template <Meta::Derive<T> U>
     Ptr(U& ref) : _ptr{&ref} {
@@ -148,7 +150,7 @@ struct Ptr {
         return _ptr == other._ptr;
     }
 
-    Gc::Ref<T> upgrade() const {
+    Ref<T> upgrade() const {
         if (not _ptr)
             panic("trying to upgrade a null pointer");
         return {MOVE, _ptr};
@@ -162,5 +164,8 @@ struct Ptr {
         return _ptr == other._ptr;
     }
 };
+
+template <typename T>
+Ptr(T) -> Ptr<T>;
 
 } // namespace Karm::Gc
