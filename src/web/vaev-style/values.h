@@ -21,6 +21,7 @@
 #include <vaev-base/overflow.h>
 #include <vaev-base/resolution.h>
 #include <vaev-base/sizing.h>
+#include <vaev-base/svg.h>
 #include <vaev-base/table.h>
 
 #include "base.h"
@@ -400,6 +401,11 @@ struct ValueParser<OverflowBlock> {
 template <>
 struct ValueParser<OverflowInline> {
     static Res<OverflowInline> parse(Cursor<Css::Sst>& c);
+};
+
+template <>
+struct ValueParser<Paint> {
+    static Res<Paint> parse(Cursor<Css::Sst>& c);
 };
 
 template <>

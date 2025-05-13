@@ -22,6 +22,8 @@ void ComputedStyle::inherit(ComputedStyle const& parent) {
     text = parent.text;
     variables = parent.variables;
     visibility = parent.visibility;
+
+    svg = parent.svg;
 }
 
 void ComputedStyle::repr(Io::Emit& e) const {
@@ -52,6 +54,7 @@ void ComputedStyle::repr(Io::Emit& e) const {
     e(" break: {}", break_);
     e(" float: {}", float_);
     e(" clear: {}", clear);
+    e(" svg: {}", svg);
     e(" zIndex: {}", zIndex);
     e(" variables: {}", variables);
     e(")");

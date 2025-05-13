@@ -1,5 +1,6 @@
 export module Vaev.Layout;
 
+export import :svg;
 export import :base;
 export import :block;
 export import :builder;

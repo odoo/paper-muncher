@@ -4,6 +4,7 @@ module;
 #include <karm-scene/clip.h>
 #include <karm-scene/image.h>
 #include <karm-scene/text.h>
+#include <karm-scene/transform.h>
 #include <vaev-style/computer.h>
 
 export module Vaev.Layout:paint;
@@ -109,6 +110,21 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
         stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
     } else if (auto image = frag.box->content.is<Karm::Image::Picture>()) {
         stack.add(makeRc<Scene::Image>(frag.metrics.borderBox().cast<f64>(), *image));
+    } else if (auto svgRoot = frag.box->content.is<SVGRoot>()) {
+        if(min(frag.metrics.borderSize.x, frag.metrics.borderSize.y) == 0_au)
+            return;
+
+        auto transf = s.svg->viewBox
+                          ? SVG::computeEquivalentTransformOfSVGViewport(*s.svg->viewBox, frag.metrics.position, frag.metrics.borderSize)
+                          : SVG::computeTransformOfSVGViewportNoViewBox(frag.metrics.position);
+
+        auto borderSizeInVPCoord = transf.inverse().applyVector(frag.metrics.borderSize);
+
+        auto svg = svgRoot->toSceneStack(borderSizeInVPCoord, s.color);
+
+        auto clip = makeRc<Scene::Clip>(frag.metrics.contentBox().cast<f64>());
+        clip->add(makeRc<Scene::Transform>(makeRc<Scene::Stack>(std::move(svg)), transf.cast<f64>()));
+        stack.add(clip);
     }
 }
 

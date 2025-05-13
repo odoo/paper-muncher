@@ -22,7 +22,7 @@ namespace Vaev::Layout {
 static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     auto display = box.style->display;
 
-    if (box.content.is<Karm::Image::Picture>()) {
+    if (box.content.is<Karm::Image::Picture>() or box.content.is<SVGRoot>()) {
         return constructReplacedFormatingContext(box);
     } else if (box.content.is<InlineBox>()) {
         return constructInlineFormatingContext(box);

@@ -1,11 +1,13 @@
 module;
 
 #include <karm-image/picture.h>
+#include <karm-scene/stack.h>
 #include <karm-text/font.h>
 #include <karm-text/prose.h>
 #include <vaev-style/computer.h>
 
 export module Vaev.Layout:base;
+import :svg;
 
 namespace Vaev::Layout {
 
@@ -286,11 +288,50 @@ export struct InlineBox {
     }
 };
 
+struct SVGRoot {
+    using Element = Union<SVG::Shape, SVG::ForeignObject, SVGRoot>;
+    Vec<Element> elements;
+
+    Vec<Box> foreignObjectBoxes;
+
+    void add(Element&& element);
+    void add(Box&& box);
+
+    Opt<ViewBox> viewBox;
+
+    Scene::Stack toSceneStack(Vec2Au relativeTo, Gfx::Color currentColor) const {
+        Scene::Stack stack;
+
+        if (viewBox)
+            relativeTo = {
+                Au{viewBox->width}, Au{viewBox->height}
+            };
+
+        for (auto const& element : elements) {
+            if (auto shape = element.is<SVG::Shape>()) {
+                stack.add(shape->toSceneNode(relativeTo, currentColor));
+            }
+        }
+        return stack;
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(SVG");
+        e.indentNewline();
+        for (auto const& el : elements) {
+            e("{}", el);
+            e.newline();
+        }
+        e(")");
+    }
+};
+
 export using Content = Union<
     None,
     Vec<Box>,
     InlineBox,
-    Karm::Image::Picture>;
+    Karm::Image::Picture,
+    SVGRoot>;
 
 export struct Attrs {
     usize span = 1;
@@ -339,26 +380,35 @@ struct Box : Meta::NoCopy {
     }
 
     void repr(Io::Emit& e) const {
+        e("(box {} {} {}", attrs, style->display, style->position);
         if (children()) {
-            e("(box {} {} {}", attrs, style->display, style->position);
             e.indentNewline();
             for (auto& c : children()) {
                 c.repr(e);
                 e.newline();
             }
             e.deindent();
-            e(")");
         } else if (content.is<InlineBox>()) {
-            e("(box {} {} {}", attrs, style->display, style->position);
             e.indentNewline();
             e("{}", content.unwrap<InlineBox>());
             e.deindent();
-            e(")");
-        } else {
-            e("(box {} {} {})", attrs, style->display, style->position);
+        } else if (content.is<SVGRoot>()) {
+            e.indentNewline();
+            e("{}", content.unwrap<SVGRoot>());
+            e.deindent();
         }
+        e(")");
     }
 };
+
+void SVGRoot::add(Box&& box) {
+    elements.pushBack(SVG::ForeignObject{foreignObjectBoxes.len()});
+    foreignObjectBoxes.pushBack(std::move(box));
+}
+
+void SVGRoot::add(Element&& element) {
+    elements.pushBack(std::move(element));
+}
 
 void InlineBox::add(Box&& b) {
     prose->append(Text::Prose::StrutCell{atomicBoxes.len()});

@@ -18,6 +18,7 @@
 #include <vaev-base/outline.h>
 #include <vaev-base/overflow.h>
 #include <vaev-base/sizing.h>
+#include <vaev-base/svg.h>
 #include <vaev-base/table.h>
 #include <vaev-base/text.h>
 #include <vaev-base/visibility.h>
@@ -84,6 +85,8 @@ struct ComputedStyle {
 
     // https://drafts.csswg.org/css2/#z-index
     ZIndex zIndex = Keywords::AUTO;
+
+    Cow<SVGProps> svg;
 
     void inherit(ComputedStyle const& parent);
 

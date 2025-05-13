@@ -9,6 +9,7 @@ module;
 export module Vaev.Layout:builder;
 
 import :values;
+import :svg;
 
 namespace Vaev::Layout {
 
@@ -290,6 +291,10 @@ struct BuilderContext {
         rootInlineBox().endInlineBox();
     }
 
+    Content& content() {
+        return _parent.content;
+    }
+
     BuilderContext toBlockContext(Box& parent, InlineBox& rootInlineBox) {
         return {
             computer,
@@ -389,24 +394,20 @@ static void _buildText(BuilderContext bc, Gc::Ref<Dom::Text> node, Rc<Style::Com
     }
 }
 
-static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> parentStyle, InlineBox& rootInlineBox) {
-    auto style = c.computeFor(*parentStyle, el);
-    auto font = _lookupFontface(c.fontBook, *style);
+static Karm::Image::Picture _buildImage(Gc::Ref<Dom::Element> el) {
 
     auto src = el->getAttribute(Html::SRC_ATTR).unwrapOr(""s);
     auto url = Mime::Url::resolveReference(el->baseURI(), Mime::parseUrlOrPath(src))
                    .unwrapOr("bundle://vaev-driver/missing.qoi"_url);
 
-    auto img = Karm::Image::load(url).unwrapOrElse([] {
+    return Karm::Image::load(url).unwrapOrElse([] {
         return Karm::Image::loadOrFallback("bundle://vaev-driver/missing.qoi"_url).unwrap();
     });
-
-    rootInlineBox.add({style, font, img, el});
 }
 
-static void _buildInputProse(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& parent) {
-    auto style = c.computeFor(*parent.style, el);
-    auto font = _lookupFontface(c.fontBook, *style);
+static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
+    auto style = bc.computer.computeFor(*bc.parentStyle, el);
+    auto font = _lookupFontface(bc.computer.fontBook, *style);
     Resolver resolver{
         .rootFont = Text::Font{font, 16},
         .boxFont = Text::Font{font, 16},
@@ -422,18 +423,64 @@ static void _buildInputProse(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& 
     auto prose = makeRc<Text::Prose>(proseStyle, value);
 
     // FIXME: we should guarantee that input has no children (not added before nor to add after)
-    parent.content = InlineBox{prose};
+    bc.content() = InlineBox{prose};
 }
 
-always_inline static bool isVoidElement(Gc::Ref<Dom::Element> el) {
+void buildSVGChildren(Style::Computer& computer, Rc<Style::ComputedStyle> parentStyle, Gc::Ref<Dom::Element> el, SVGRoot& svgRoot);
+
+void buildSVGElement(Style::Computer& computer, Rc<Style::ComputedStyle> parentStyle, Gc::Ref<Dom::Element> el, SVGRoot& svgRoot) {
+    auto style = computer.computeFor(*parentStyle, *el);
+
+    if (SVG::isShape(el->tagName)) {
+        svgRoot.add(SVG::Shape::build(style, el->tagName));
+    } else if (el->tagName == Svg::G) {
+        buildSVGChildren(computer, style, el, svgRoot);
+    } else {
+        // TODO
+        logWarn("cannot build element into svg tree: {}", el->tagName);
+    }
+}
+
+void buildSVGChildren(Style::Computer& computer, Rc<Style::ComputedStyle> parentStyle, Gc::Ref<Dom::Element> el, SVGRoot& svgRoot) {
+    for (auto child = el->firstChild(); child; child = child->nextSibling()) {
+        if (auto el = child->is<Dom::Element>()) {
+            buildSVGElement(computer, parentStyle, *el, svgRoot);
+        }
+        // TODO: process text into svg tree
+    }
+}
+
+SVGRoot _buildSVG(Style::Computer& computer, Gc::Ref<Dom::Element> el, Rc<Style::ComputedStyle> rootStyle) {
+    SVGRoot svgRoot;
+    svgRoot.viewBox = rootStyle->svg->viewBox;
+    buildSVGChildren(computer, rootStyle, el, svgRoot);
+    return svgRoot;
+}
+
+always_inline static bool isBoxLeaf(Gc::Ref<Dom::Element> el) {
     return contains(Html::VOID_TAGS, el->tagName);
 }
 
-static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
+
+static void _buildBoxLeaf(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     if (el->tagName == Html::INPUT) {
-        _buildInputProse(bc.computer, el, bc._parent);
-    } else if (el->tagName == Html::IMG) {
-        _buildImage(bc.computer, *el, bc.parentStyle, bc.rootInlineBox());
+        _buildInputProse(bc, el);
+    }
+}
+
+// FIXME: better abstraction, naming
+// SVG and IMG should not be treated as a SPAN and should be inside a strut, so it is similar to a inline-block
+// where we always create a box to wrap it around
+// these 2 elements similarly do not have a internal display value, but IMG is replaced whereas SVG is not
+bool _elementIgnoresDisplayInside(Gc::Ref<Dom::Element> el){
+    return el->tagName == Html::IMG or el->tagName == Svg::SVG;
+}
+
+void _buildToContentCase(BuilderContext bc, Gc::Ref<Dom::Element> el){
+    if (el->tagName == Html::IMG) {
+        bc.content() = _buildImage(el);
+    } else if (el->tagName == Svg::SVG) {
+        bc.content() = _buildSVG(bc.computer, el, bc.parentStyle);
     }
 }
 
@@ -447,8 +494,8 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Com
         return;
     }
 
-    if (isVoidElement(el)) {
-        _buildVoidElement(bc, el);
+    if (isBoxLeaf(el)) {
+        _buildBoxLeaf(bc.toInlineContext(style), el);
         return;
     }
 
@@ -462,9 +509,11 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Com
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     if (el->tagName == Html::BR) {
         // do nothing
-    } else if (isVoidElement(el)) {
-        _buildVoidElement(bc, el);
-    } else {
+    } else if (isBoxLeaf(el)) {
+        _buildBoxLeaf(bc, el);
+    } else if(_elementIgnoresDisplayInside(el)){
+        _buildToContentCase(bc, el);
+    }else {
         _buildChildren(bc, el);
     }
     bc.finalizeParentBoxAndFlushInline();
@@ -780,7 +829,9 @@ static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> c
         bc.flushRootInlineBoxIntoAnonymousBox();
         _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
     } else {
-        if (display == Display::Inside::FLOW) {
+        // NOTE: <img> and <svg>, for example, should always be treated as inline-block
+        // instead of inline-flow (spans)
+        if (not _elementIgnoresDisplayInside(child) and display == Display::Inside::FLOW) {
             createAndBuildInlineFlowfromElement(bc, childStyle, child);
             return;
         }
