@@ -55,6 +55,10 @@ struct Borders {
         styles = {style, style, style, style};
         return *this;
     }
+
+    void repr(Io::Emit& e) const {
+        e("(Borders radii:{} widths:{} fills:{} styles:{})", radii, widths, fills, styles);
+    }
 };
 
 } // namespace Karm::Gfx
