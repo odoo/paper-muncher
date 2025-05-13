@@ -135,15 +135,15 @@ struct Union {
         return std::move(*reinterpret_cast<T*>(_buf));
     }
 
-    always_inline auto visit(auto visitor) {
+    auto visit(auto visitor) {
         return Meta::indexCast<Ts...>(_index, _buf, visitor);
     }
 
-    always_inline auto visit(auto visitor) const {
+    auto visit(auto visitor) const {
         return Meta::indexCast<Ts...>(_index, _buf, visitor);
     }
 
-    always_inline static auto any(auto visitor) {
+    static auto any(auto visitor) {
         return Meta::any<Ts...>(visitor);
     }
 
