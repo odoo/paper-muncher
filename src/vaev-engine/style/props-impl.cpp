@@ -16,8 +16,9 @@ static bool DEBUG_PROPS = false;
 
 bool DeferredProp::_expandVariable(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out) {
     if (not(c->type == Css::Sst::FUNC and
-            c->prefix == Css::Token::function("var(")))
+            c->prefix == Css::Token::function("var("))) {
         return false;
+    }
 
     Cursor<Css::Sst> content = c->content;
 

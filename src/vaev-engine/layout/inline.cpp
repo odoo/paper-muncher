@@ -7,6 +7,7 @@ import Karm.Core;
 import :values;
 import :layout.base;
 import :layout.layout;
+import :layout.positioned;
 
 namespace Vaev::Layout {
 
@@ -52,6 +53,7 @@ struct InlineFormatingContext : FormatingContext {
         auto& prose = inlineBox.prose;
 
         for (auto strutCell : prose->cellsWithStruts()) {
+
             auto& boxStrutCell = *strutCell->strut();
 
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
@@ -70,6 +72,8 @@ struct InlineFormatingContext : FormatingContext {
                     },
                 }
             );
+
+            lookForRunningPosition(input, atomicBox);
 
             if (not impliesRemovingFromFlow(atomicBox.style->position)) {
                 boxStrutCell.size = atomicBoxOutput.size;
@@ -93,6 +97,8 @@ struct InlineFormatingContext : FormatingContext {
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
 
             Math::Vec2<Opt<Au>> knownSize;
+            lookForRunningPosition(input, atomicBox);
+
             if (not impliesRemovingFromFlow(atomicBox.style->position)) {
                 knownSize = {
                     boxStrutCell.size.x,

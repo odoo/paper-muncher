@@ -183,6 +183,7 @@ Rc<Scene::Node> _paintSVGRoot(SVGRootFrag& svgRoot, Gfx::Color currentColor) {
 
 static void _paintFrag(Frag& frag, Scene::Stack& stack) {
     auto& s = frag.style();
+
     if (s.visibility == Visibility::HIDDEN)
         return;
 
@@ -231,7 +232,7 @@ static void _paintChildren(Frag& frag, Scene::Stack& stack, auto predicate) {
 
         // NOTE: Positioned elements act as if they establish a stacking context
         auto position = s.position;
-        if (position != Position::STATIC) {
+        if (position != Keywords::STATIC) {
             if (predicate(s))
                 _paintStackingContext(c, stack);
             continue;
@@ -634,22 +635,22 @@ static void _paintStackingContext(Frag& frag, Scene::Stack& stack) {
 
     // 3. the in-flow, non-inline-level, non-positioned descendants.
     _paintChildren(frag, stack, [](Style::SpecifiedValues const& s) {
-        return s.zIndex == Keywords::AUTO and s.display != Display::INLINE and s.position == Position::STATIC;
+        return s.zIndex == Keywords::AUTO and s.display != Display::INLINE and s.position == Keywords::STATIC;
     });
 
     // 4. the non-positioned floats.
     _paintChildren(frag, stack, [](Style::SpecifiedValues const& s) {
-        return s.zIndex == Keywords::AUTO and s.position == Position::STATIC and s.float_ != Float::NONE;
+        return s.zIndex == Keywords::AUTO and s.position == Keywords::STATIC and s.float_ != Float::NONE;
     });
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     _paintChildren(frag, stack, [](Style::SpecifiedValues const& s) {
-        return s.zIndex == Keywords::AUTO and s.display == Display::INLINE and s.position == Position::STATIC;
+        return s.zIndex == Keywords::AUTO and s.display == Display::INLINE and s.position == Keywords::STATIC;
     });
 
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     _paintChildren(frag, stack, [](Style::SpecifiedValues const& s) {
-        return s.zIndex.unwrapOr<isize>(0) == 0 and s.position != Position::STATIC;
+        return s.zIndex.unwrapOr<isize>(0) == 0 and s.position != Keywords::STATIC;
     });
 
     // 7. the child stacking contexts with positive stack levels (least positive first).

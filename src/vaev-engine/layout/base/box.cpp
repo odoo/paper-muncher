@@ -86,6 +86,7 @@ struct Group {
 
 struct SVGRoot : SVG::Group {
     Opt<ViewBox> viewBox;
+
     SVGRoot(Rc<Style::SpecifiedValues> style)
         : SVG::Group(style), viewBox(style->svg->viewBox) {}
 
@@ -117,7 +118,7 @@ export using Content = Union<
     Rc<Scene::Node>,
     SVGRoot>;
 
-struct Box : Meta::NoCopy {
+struct Box {
     Rc<Style::SpecifiedValues> style;
     Content content = NONE;
     Opt<Rc<FormatingContext>> formatingContext = NONE;
