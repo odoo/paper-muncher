@@ -352,7 +352,7 @@ export struct Attrs {
     }
 };
 
-struct Box : Meta::NoCopy {
+struct Box {
     Rc<Style::SpecifiedValues> style;
     Rc<Text::Fontface> fontFace;
     Content content = NONE;
@@ -658,6 +658,21 @@ void SVG::GroupFrag::computeBoundingBoxes(SVG::GroupFrag* group) {
     group->_strokeBoundingBox = strokeBoundingBox;
 }
 
+// MARK: RunningPos ------------------------------------------------------------
+
+export struct RunningPositionInfo {
+    usize page;
+    RunningPosition running;
+    Box structure;
+
+    RunningPositionInfo(usize page, RunningPosition running, Box structure) : page(page), running(running), structure(structure) {
+    }
+
+    void repr(Io::Emit& e) const {
+        e("runningPosInfos '\nrunning:{} \npage:{} \nstructure:{}'", running, page, structure);
+    }
+};
+
 // MARK: Input & Output --------------------------------------------------------
 
 export enum struct IntrinsicSize {
@@ -680,6 +695,12 @@ export struct Input {
     Vec2Au position = {};
     Vec2Au availableSpace = {};
     Vec2Au containingBlock = {};
+    MutCursor<Map<String, Vec<RunningPositionInfo>>> runningPosition = nullptr;
+    Style::Page page = {
+        .name = ""s,
+        .number = 0,
+        .blank = false,
+    };
 
     BreakpointTraverser breakpointTraverser = {};
 

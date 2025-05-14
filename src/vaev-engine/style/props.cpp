@@ -1216,24 +1216,25 @@ export struct BorderWidthProp {
 
 // MARK: Content ---------------------------------------------------------------
 
+// https://www.w3.org/TR/css-gcpm-3/
 // https://drafts.csswg.org/css-content/#content-property
 export struct ContentProp {
-    String value = initial();
+    Content value = initial();
 
     static constexpr Str name() { return "content"; }
 
-    static String initial() { return ""s; }
+    static constexpr Content initial() { return Keywords::NORMAL; }
 
     void apply(SpecifiedValues& c) const {
         c.content = value;
     }
 
-    static String load(SpecifiedValues const& c) {
+    static Content load(SpecifiedValues const& c) {
         return c.content;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<String>(c));
+        value = try$(parseValue<Content>(c));
         return Ok();
     }
 };
@@ -2585,7 +2586,7 @@ export struct PositionProp {
 
     static Str name() { return "position"; }
 
-    static Position initial() { return Position::STATIC; }
+    static Position initial() { return Keywords::STATIC; }
 
     void apply(SpecifiedValues& c) const {
         c.position = value;
@@ -3409,6 +3410,8 @@ export struct DeferredProp {
     static bool _expandVariable(Cursor<Css::Sst>& c, Map<String, Css::Content> const& env, Css::Content& out);
 
     static bool _expandFunction(Cursor<Css::Sst>& c, Map<String, Css::Content> const& env, Css::Content& out);
+
+    static bool _expandElement(Cursor<Css::Sst>& c, Map<String, Css::Content> const& env, Css::Content& out);
 
     static void _expandContent(Cursor<Css::Sst>& c, Map<String, Css::Content> const& env, Css::Content& out);
 

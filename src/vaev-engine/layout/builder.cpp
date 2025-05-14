@@ -1,8 +1,8 @@
 module;
 
+#include <karm-logger/logger.h>
 #include <karm-text/loader.h>
 #include <karm-text/prose.h>
-#include <karm-logger/logger.h>
 
 export module Vaev.Engine:layout.builder;
 
@@ -383,7 +383,6 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
         value = el->getAttribute(Html::PLACEHOLDER_ATTR).unwrap();
 
     auto prose = makeRc<Text::Prose>(proseStyle, value);
-
     // FIXME: we should guarantee that input has no children (not added before nor to add after)
     bc.content() = InlineBox{prose};
 }
@@ -854,15 +853,94 @@ export Box build(Gc::Ref<Dom::Document> doc) {
     };
 }
 
-export Box buildForPseudoElement(Dom::PseudoElement& el) {
+Vec<RunningPositionInfo> searchPage(Vec<RunningPositionInfo> list, usize page) {
+    // binary search of all running positions that match the page
+    Vec<RunningPositionInfo> result;
+    usize left = 0;
+    usize right = list.len() - 1;
+    while (left <= right) {
+        usize mid = (left + right) / 2;
+        if (list[mid].page == page) {
+            result.pushBack(list[mid]);
+            // search left side
+            usize l = mid;
+            while (l > 0 and list[l - 1].page == page) {
+                l--;
+                result.pushFront(list[l]);
+            }
+            // search right side
+            usize r = mid;
+            while (r < list.len() - 1 and list[r + 1].page == page) {
+                r++;
+                result.pushBack(list[r]);
+            }
+            break;
+        } else if (list[mid].page < page) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    if (result.len() == 0) {
+        // if no running position found, return the first one
+        result.pushBack(list[0]);
+    }
+    return result;
+}
+
+// https://www.w3.org/TR/css-gcpm-3/#using-named-strings
+RunningPositionInfo matchElementContent(Vec<RunningPositionInfo> list, ElementContent::Target target = ElementContent::UNDEFINED, usize currentPage = 0) {
+
+    switch (target) {
+    case ElementContent::UNDEFINED:
+        return list[0];
+        break;
+    case ElementContent::START:
+        for (usize i = 0; i < list.len(); i++) {
+            auto elt = list[i];
+            if (elt.page == currentPage) {
+                return list[i - 1];
+            }
+        }
+        return list[0];
+    case ElementContent::FIRST:
+    case ElementContent::FIRST_EXCEPT: {
+        auto elements = searchPage(list, currentPage);
+        return elements[0];
+    }
+    case ElementContent::LAST: {
+        auto elements = searchPage(list, currentPage);
+        return elements[elements.len() - 1];
+    }
+    }
+}
+
+export Box buildForPseudoElement(Dom::PseudoElement& el, usize& currentPage, Map<String, Vec<RunningPositionInfo>>& runningPos) {
     auto proseStyle = _proseStyleFomStyle(*el.specifiedValues(), el.computedValues()->fontFace);
 
-    auto prose = makeRc<Text::Prose>(proseStyle);
-    if (el.specifiedValues()->content) {
-        prose->append(el.specifiedValues()->content.str());
+    if (el.specifiedValues()->content.is<String>()) {
+        auto prose = makeRc<Text::Prose>(proseStyle);
+
+        prose->append(el.specifiedValues()->content.unwrap<String>().str());
         return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};
+    } else if (el.specifiedValues()->content.is<ElementContent>()) {
+        auto elt = el.specifiedValues()->content.unwrap<ElementContent>();
+        auto id = elt.customIdent;
+        if (runningPos.has(id)) {
+            auto box = matchElementContent(runningPos.get(id), elt.target, currentPage).structure;
+            return box;
+        }
     }
 
+    else if (el.specifiedValues()->content.is<Counter>()) {
+        auto elt = el.specifiedValues()->content.unwrap<Counter>();
+        if (elt.type == Counter::TYPE::PAGE) {
+            auto prose = makeRc<Text::Prose>(proseStyle);
+
+            prose->append(Io::toStr(currentPage + 1).str());
+            return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};
+        }
+    }
     return {el.specifiedValues(), el.computedValues()->fontFace, nullptr};
 }
 
