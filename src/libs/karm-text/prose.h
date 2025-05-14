@@ -68,6 +68,10 @@ struct Prose : Meta::Pinned {
         Vec2Au size{};
         // NOTE: baseline is distance from strut's top to the considered baseline
         Au baseline{};
+
+        void repr(Io::Emit& e) const {
+            e("(StrutCell id: {} size: {} baseline: {})", id, size, baseline);
+        }
     };
 
     struct Cell {

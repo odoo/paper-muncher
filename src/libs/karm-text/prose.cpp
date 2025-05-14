@@ -41,10 +41,7 @@ void Prose::append(StrutCell&& strut) {
 }
 
 void Prose::append(Rune rune) {
-    if (any(_blocks) and last(_blocks).newline())
-        _beginBlock();
-
-    if (any(_blocks) and last(_blocks).spaces())
+    if (any(_blocks) and (last(_blocks).newline() or last(_blocks).spaces() or last(_blocks).strut()))
         _beginBlock();
 
     auto glyph = _style.font.glyph(rune == '\n' ? ' ' : rune);
