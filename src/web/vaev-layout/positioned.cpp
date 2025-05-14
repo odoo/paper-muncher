@@ -13,9 +13,9 @@ export void layoutPositioned(Tree& tree, Frag& frag, RectAu containingBlock) {
     auto& style = frag.style();
     auto& metrics = frag.metrics;
 
-    if (style.position == Position::ABSOLUTE or style.position == Position::RELATIVE) {
+    if (style.position == Keywords::ABSOLUTE or style.position == Keywords::RELATIVE) {
         auto origin = containingBlock.topStart();
-        if (style.position == Position::RELATIVE)
+        if (style.position == Keywords::RELATIVE)
             origin = metrics.position;
 
         auto top = metrics.position.y;

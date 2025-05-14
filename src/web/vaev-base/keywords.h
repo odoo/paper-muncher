@@ -127,6 +127,21 @@ static constexpr inline ClosestSide CLOSEST_SIDE{};
 using FarthestSide = Keyword<"farthest-side">;
 static constexpr inline FarthestSide FARTHEST_SIDE{};
 
+using Relative = Keyword<"relative">;
+static constexpr inline Relative RELATIVE{};
+
+using Static = Keyword<"static">;
+static constexpr inline Static STATIC{};
+
+using Absolute = Keyword<"absolute">;
+static constexpr inline Absolute ABSOLUTE{};
+
+using Fixed = Keyword<"fixed">;
+static constexpr inline Fixed FIXED{};
+
+using Sticky = Keyword<"sticky">;
+static constexpr inline Sticky STICKY{};
+
 } // namespace Keywords
 
 } // namespace Vaev

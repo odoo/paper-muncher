@@ -2582,7 +2582,7 @@ struct PositionProp {
 
     static Str name() { return "position"; }
 
-    static Position initial() { return Position::STATIC; }
+    static Position initial() { return Keywords::STATIC; }
 
     void apply(ComputedStyle& c) const {
         c.position = value;

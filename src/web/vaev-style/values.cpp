@@ -1801,20 +1801,28 @@ Res<Pointer> ValueParser<Pointer>::parse(Cursor<Css::Sst>& c) {
 // MARK: Position
 // https://drafts.csswg.org/css-position-3/#propdef-position
 Res<Position> ValueParser<Position>::parse(Cursor<Css::Sst>& c) {
+
     if (c.ended())
         return Error::invalidData("unexpected end of input");
 
     if (c.skip(Css::Token::ident("static")))
-        return Ok(Position::STATIC);
+        return Ok(Keywords::Static{});
     else if (c.skip(Css::Token::ident("relative")))
-        return Ok(Position::RELATIVE);
+        return Ok(Keywords::RELATIVE);
     else if (c.skip(Css::Token::ident("absolute")))
-        return Ok(Position::ABSOLUTE);
+        return Ok(Keywords::ABSOLUTE);
     else if (c.skip(Css::Token::ident("fixed")))
-        return Ok(Position::FIXED);
+        return Ok(Keywords::FIXED);
     else if (c.skip(Css::Token::ident("sticky")))
-        return Ok(Position::STICKY);
-    else
+        return Ok(Keywords::STICKY);
+    else if (c->type == Css::Sst::FUNC and c->prefix == Css::Token::function("running(")) {
+        yap("yap {}", c);
+        Cursor<Css::Sst> cur = c->content;
+        auto content = try$(parseValue<String>(cur));
+        c.next();
+        return Ok(RunningPosition{content});
+
+    } else
         return Error::invalidData("expected position");
 }
 

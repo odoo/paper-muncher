@@ -4,17 +4,18 @@
 
 namespace Vaev {
 
-// https://www.w3.org/TR/CSS22/visuren.html#propdef-position
-enum struct Position {
-    STATIC,
+struct RunningPosition {
+    Str customIdent;
 
-    RELATIVE,
-    ABSOLUTE,
-    FIXED,
-    STICKY,
+    explicit RunningPosition(Str customIdent) : customIdent(customIdent) {}
 
-    _LEN,
+    void repr(Io::Emit& e) const {
+        e("running '{}'", customIdent);
+    }
 };
+
+// https://www.w3.org/TR/CSS22/visuren.html#propdef-position
+using Position = Union<Keywords::Static, Keywords::Relative, Keywords::Absolute, Keywords::Fixed, Keywords::Sticky, RunningPosition>;
 
 using Margin = Math::Insets<Width>;
 
