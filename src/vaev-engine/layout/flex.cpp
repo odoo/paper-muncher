@@ -617,6 +617,16 @@ struct FlexLine {
     }
 };
 
+static void lookForRunningPosition(Input& input, Box& box) {
+    if (not input.runningPosition)
+        return;
+
+    if (box.style->position.is<RunningPosition>()) {
+        auto& runningMap = input.runningPosition.peek();
+        runningMap.add(input.pageNumber, box);
+    }
+}
+
 struct FlexFormatingContext : FormatingContext {
     FlexProps _flex;
     FlexAxis fa{_flex.isRowOriented()};
@@ -627,10 +637,12 @@ struct FlexFormatingContext : FormatingContext {
     // XX. MARK: Generate flex items ----------------------------------
     Vec<FlexItem> _items = {};
 
-    void _generateFlexItems(Tree& tree, Box& box, Vec2Au containingBlock) {
+    void _generateFlexItems(Input input, Tree& tree, Box& box, Vec2Au containingBlock) {
         // NOTE: we assume all children are non-absolute positioned for fast mem allocation
         _items.ensure(box.children().len());
         for (auto& c : box.children()) {
+            lookForRunningPosition(input, c);
+
             if (impliesRemovingFromFlow(c.style->position))
                 continue;
             _items.emplaceBack(tree, c, _flex.isRowOriented(), containingBlock);
@@ -1450,7 +1462,7 @@ struct FlexFormatingContext : FormatingContext {
         // NOTE: Done during box building phase
 
         // XX. Populate flex items list
-        _generateFlexItems(tree, box, input.containingBlock);
+        _generateFlexItems(input, tree, box, input.containingBlock);
 
         // XX. Handle absolute positioned children
         _layoutAbsolutePositionedChildren();

@@ -2,6 +2,8 @@ module;
 
 #include <karm-text/prose.h>
 
+#include "karm-logger/logger.h"
+
 export module Vaev.Engine:layout.inline_;
 
 import :values;
@@ -35,6 +37,16 @@ struct InlineFormatingContext : FormatingContext {
         };
     }
 
+    static void lookForRunningPosition(Input& input, Box& box) {
+        if (not input.runningPosition)
+            return;
+
+        if (box.style->position.is<RunningPosition>()) {
+            auto& runningMap = input.runningPosition.peek();
+            runningMap.add(input.pageNumber, box);
+        }
+    }
+
     virtual Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
         // NOTE: We are not supposed to get there if the content is not a prose
         auto& inlineBox = box.content.unwrap<InlineBox>("inlineLayout");
@@ -52,6 +64,7 @@ struct InlineFormatingContext : FormatingContext {
         auto& prose = inlineBox.prose;
 
         for (auto strutCell : prose->cellsWithStruts()) {
+
             auto& boxStrutCell = *strutCell->strut();
 
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
@@ -70,6 +83,8 @@ struct InlineFormatingContext : FormatingContext {
                     },
                 }
             );
+
+            lookForRunningPosition(input, atomicBox);
 
             if (not impliesRemovingFromFlow(atomicBox.style->position)) {
                 boxStrutCell.size = atomicBoxOutput.size;
@@ -93,6 +108,8 @@ struct InlineFormatingContext : FormatingContext {
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
 
             Math::Vec2<Opt<Au>> knownSize;
+            lookForRunningPosition(input, atomicBox);
+
             if (not impliesRemovingFromFlow(atomicBox.style->position)) {
                 knownSize = {
                     boxStrutCell.size.x,

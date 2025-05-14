@@ -99,6 +99,14 @@ struct ValueParser<String> {
 
 struct CustomIdent {
     Symbol _symbol;
+
+    bool operator==(CustomIdent const& other) const = default;
+
+    auto operator<=>(CustomIdent const& other) const = default;
+
+    void repr(Io::Emit& e) const {
+        e("custom-ident '{}'", _symbol);
+    }
 };
 
 export template <>

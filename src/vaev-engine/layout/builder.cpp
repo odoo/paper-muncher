@@ -1,8 +1,8 @@
 module;
 
+#include <karm-logger/logger.h>
 #include <karm-text/loader.h>
 #include <karm-text/prose.h>
-#include <karm-logger/logger.h>
 
 export module Vaev.Engine:layout.builder;
 
@@ -68,7 +68,7 @@ bool isSegmentBreak(Rune rune) {
     return rune == '\n' or rune == '\r' or rune == '\f' or rune == '\v';
 }
 
-static Text::ProseStyle _proseStyleFomStyle(Style::SpecifiedValues& style, Rc<Text::Fontface> fontFace) {
+static Text::ProseStyle _proseStyleFromStyle(Style::SpecifiedValues& style, Rc<Text::Fontface> fontFace) {
     // FIXME: We should pass this around from the top in order to properly resolve rems
     Resolver resolver{
         .rootFont = Text::Font{fontFace, 16},
@@ -376,7 +376,7 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
         .rootFont = Text::Font{font, 16},
         .boxFont = Text::Font{font, 16},
     };
-    Text::ProseStyle proseStyle = _proseStyleFomStyle(*el->specifiedValues(), font);
+    Text::ProseStyle proseStyle = _proseStyleFromStyle(*el->specifiedValues(), font);
 
     auto value = ""s;
     if (el->hasAttribute(Html::VALUE_ATTR))
@@ -385,7 +385,6 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
         value = el->getAttribute(Html::PLACEHOLDER_ATTR).unwrap();
 
     auto prose = makeRc<Text::Prose>(proseStyle, value);
-
     // FIXME: we should guarantee that input has no children (not added before nor to add after)
     bc.content() = InlineBox{prose};
 }
@@ -407,7 +406,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group* group) {
     } else if (el->qualifiedName == Svg::FOREIGN_OBJECT_TAG) {
         Box box{el->specifiedValues(), el->computedValues()->fontFace, el};
 
-        InlineBox rootInlineBox{_proseStyleFomStyle(
+        InlineBox rootInlineBox{_proseStyleFromStyle(
             *el->specifiedValues(),
             el->computedValues()->fontFace
         )};
@@ -479,7 +478,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
         return;
     }
 
-    auto proseStyle = _proseStyleFomStyle(*style, el->computedValues()->fontFace);
+    auto proseStyle = _proseStyleFromStyle(*style, el->computedValues()->fontFace);
 
     bc.startInlineBox(proseStyle);
     _buildChildren(bc.toInlineContext(style), el);
@@ -501,7 +500,7 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
 
 static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::SpecifiedValues> style, Gc::Ref<Dom::Element> el, Display display) {
     Box box = {style, el->computedValues()->fontFace, el};
-    InlineBox rootInlineBox{_proseStyleFomStyle(*style, el->computedValues()->fontFace)};
+    InlineBox rootInlineBox{_proseStyleFromStyle(*style, el->computedValues()->fontFace)};
 
     auto newBc = display == Display::Inside::FLEX
                      ? bc.toFlexContext(box, rootInlineBox)
@@ -545,7 +544,7 @@ struct AnonymousTableBoxWrapper {
         cellStyle->display = Display::Internal::TABLE_CELL;
 
         cellBox = Box{cellStyle, fontFace, nullptr};
-        rootInlineBoxForCell = InlineBox{_proseStyleFomStyle(*style, fontFace)};
+        rootInlineBoxForCell = InlineBox{_proseStyleFromStyle(*style, fontFace)};
     }
 
     void finalizeAndResetCell() {
@@ -734,7 +733,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Specifi
     wrapperStyle->margin = tableStyle->margin;
 
     Box wrapper = {wrapperStyle, tableBoxEl->computedValues()->fontFace, tableBoxEl};
-    InlineBox rootInlineBox{_proseStyleFomStyle(*wrapperStyle, tableBoxEl->computedValues()->fontFace)};
+    InlineBox rootInlineBox{_proseStyleFromStyle(*wrapperStyle, tableBoxEl->computedValues()->fontFace)};
 
     // SPEC: The table wrapper box establishes a block formatting context.
     _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, tableStyle);
@@ -844,8 +843,8 @@ export Box build(Gc::Ref<Dom::Document> doc) {
     };
 
     if (auto el = doc->documentElement()) {
-         root = {el->specifiedValues(), el->computedValues()->fontFace, el};
-        InlineBox rootInlineBox{_proseStyleFomStyle(*el->specifiedValues(), el->computedValues()->fontFace)};
+        Box root = {el->specifiedValues(), el->computedValues()->fontFace, el};
+        InlineBox rootInlineBox{_proseStyleFromStyle(*el->specifiedValues(), el->computedValues()->fontFace)};
 
         BuilderContext bc{
             BuilderContext::From::BLOCK,
@@ -862,15 +861,28 @@ export Box build(Gc::Ref<Dom::Document> doc) {
     return root;
 }
 
-export Box buildForPseudoElement(Dom::PseudoElement& el) {
-    auto proseStyle = _proseStyleFomStyle(*el.specifiedValues(), el.computedValues()->fontFace);
+export Box buildForPseudoElement(Dom::PseudoElement& el, usize currentPage, RunningPositionMap& runningPos) {
+    auto proseStyle = _proseStyleFromStyle(*el.specifiedValues(), el.computedValues()->fontFace);
 
-    auto prose = makeRc<Text::Prose>(proseStyle);
-    if (el.specifiedValues()->content) {
-        prose->append(el.specifiedValues()->content.str());
+    if (el.specifiedValues()->content.is<String>()) {
+        auto prose = makeRc<Text::Prose>(proseStyle);
+
+        prose->append(el.specifiedValues()->content.unwrap<String>().str());
         return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};
-    }
+    } else if (el.specifiedValues()->content.is<ElementContent>()) {
+        auto elt = el.specifiedValues()->content.unwrap<ElementContent>();
+        if (auto box = runningPos.match(elt, currentPage)) {
+            return box.unwrap().structure;
+        }
+    } else if (el.specifiedValues()->content.is<Counter>()) {
+        auto elt = el.specifiedValues()->content.unwrap<Counter>();
+        if (elt.type == Counter::Type::PAGE) {
+            auto prose = makeRc<Text::Prose>(proseStyle);
 
+            prose->append(Io::toStr(currentPage + 1).str());
+            return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};
+        }
+    }
     return {el.specifiedValues(), el.computedValues()->fontFace, nullptr};
 }
 

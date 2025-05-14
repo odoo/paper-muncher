@@ -32,7 +32,7 @@ export struct SpecifiedValues {
 
     Gfx::Color color;
     Number opacity;
-    String content = ""s;
+    Content content = Keywords::NORMAL;
 
     AlignProps aligns;
     Cow<Gaps> gaps;
@@ -53,7 +53,7 @@ export struct SpecifiedValues {
 
     // 9.3 Positioning schemes
     // https://www.w3.org/TR/CSS22/visuren.html#positioning-scheme
-    Position position;
+    Position position = Keywords::STATIC;
     Cow<Offsets> offsets = makeCow<Offsets>(Width(Keywords::AUTO)); // FIXME
 
     // CSS Writing Modes Level 3
@@ -147,5 +147,4 @@ export struct SpecifiedValues {
         e(")");
     }
 };
-
 } // namespace Vaev::Style

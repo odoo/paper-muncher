@@ -11,22 +11,24 @@ import :layout.values;
 namespace Vaev::Layout {
 
 Vec2Au _resolveOrigin(Vec2Au fragPosition, Vec2Au containingBlockOrigin, Position position) {
-    if (position == Position::RELATIVE) {
+    if (position == Keywords::RELATIVE) {
         return fragPosition;
-    } else if (position == Position::ABSOLUTE) {
+    } else if (position == Keywords::ABSOLUTE) {
         return containingBlockOrigin;
     } else {
         return {0_au, 0_au};
     }
 }
 
-export void layoutPositioned(Tree& tree, Frag& frag, RectAu containingBlock) {
+export void layoutPositioned(Tree& tree, Frag& frag, RectAu containingBlock, Input input) {
+
     auto& style = frag.style();
+
     auto& metrics = frag.metrics;
 
-    if (impliesRemovingFromFlow(style.position) or style.position == Position::RELATIVE) {
+    if (impliesRemovingFromFlow(style.position) or style.position == Keywords::RELATIVE) {
         auto origin = _resolveOrigin(metrics.position, containingBlock.topStart(), style.position);
-        auto relativeTo = style.position == Position::FIXED
+        auto relativeTo = style.position == Keywords::FIXED
                               ? tree.viewport.small
                               : containingBlock;
 
@@ -55,7 +57,7 @@ export void layoutPositioned(Tree& tree, Frag& frag, RectAu containingBlock) {
     }
 
     for (auto& c : frag.children()) {
-        layoutPositioned(tree, c, containingBlock);
+        layoutPositioned(tree, c, containingBlock, input);
     }
 }
 
