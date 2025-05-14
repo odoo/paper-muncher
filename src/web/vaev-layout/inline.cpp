@@ -29,10 +29,10 @@ struct InlineFormatingContext : FormatingContext {
         auto baselineSet = inlineBox.prose->_style.font.baselineSet();
 
         return BaselinePositionsSet{
-            .alphabetic = Au{baselineSet.alphabetic} + baselinePosition,
-            .xHeight = Au{baselineSet.xHeight} + baselinePosition,
-            .xMiddle = Au{baselineSet.xMiddle} + baselinePosition,
-            .capHeight = Au{baselineSet.capHeight} + baselinePosition,
+            Au{baselineSet.alphabetic} + baselinePosition,
+            Au{baselineSet.xHeight} + baselinePosition,
+            Au{baselineSet.xMiddle} + baselinePosition,
+            Au{baselineSet.capHeight} + baselinePosition,
         };
     }
 

@@ -533,6 +533,14 @@ export struct BaselinePositionsSet {
     Au xMiddle;
     Au capHeight;
 
+    BaselinePositionsSet() = default;
+
+    BaselinePositionsSet(Au alphabetic, Au xHeight, Au xMiddle, Au capHeight)
+     :alphabetic(alphabetic), xHeight(xHeight), xMiddle(xMiddle), capHeight(capHeight) {}
+
+    BaselinePositionsSet(Au pos)
+     :alphabetic(pos), xHeight(pos), xMiddle(pos), capHeight(pos) {}
+
     BaselinePositionsSet translate(Au delta) const {
         return {
             alphabetic + delta,
