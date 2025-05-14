@@ -10,8 +10,7 @@ import :style.props;
 
 namespace Vaev::Style {
 
-[[gnu::used]]
-static bool DEBUG_DECL = false;
+static bool DEBUG_DECL = true;
 
 template <typename T>
 Res<T> _parseDeclarationValue(Cursor<Css::Sst>& c) {

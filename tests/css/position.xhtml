@@ -36,9 +36,9 @@
         </head>
 
         <body>
-            <section>
-                <slot />
-            </section>
+        <section>
+            <slot/>
+        </section>
         </body>
 
         </html>
@@ -200,7 +200,8 @@
         <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
     </rendering>
 
-    <rendering help="The absolutely positioned box remained in the document flow for the undefined top position." skip="true">
+    <rendering help="The absolutely positioned box remained in the document flow for the undefined top position."
+               skip="true">
         <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
         <div style="position: absolute; top: -40px; left: 55px; padding-left: 25px;">
             <div></div>
@@ -267,7 +268,8 @@
         <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
     </error>
 
-    <rendering help="The absolutely positioned box remained in the document flow for the undefined top position." skip="true">
+    <rendering help="The absolutely positioned box remained in the document flow for the undefined top position."
+               skip="true">
         <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
         <div style="position: absolute; top: -40px; left: 60px;">
             <div></div>
@@ -284,105 +286,105 @@
 
 </test>
 
-<test skip="1" name="position: absolute with float top and left position">
-    <container>
-        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<test name="position: absolute with float top and left position">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 
-        <head>
-            <style>
-                body {
-                    margin: 0px;
-                }
+    <head>
+        <style>
+            body {
+                margin: 0px;
+            }
 
-                section {
-                    width: 200px;
-                    height: 200px;
-                    padding: 5px;
-                    background: #ddd;
-                    position: relative;
-                }
+            section {
+                width: 200px;
+                height: 200px;
+                padding: 5px;
+                background: #ddd;
+                position: relative;
+            }
 
-                div {
-                    width: 50px;
-                    height: 50px;
-                }
+            div {
+                width: 50px;
+                height: 50px;
+            }
 
-                .red {
-                    background-color: red;
-                }
+            .red {
+                background-color: red;
+            }
 
-                .green {
-                    background-color: green;
-                }
+            .green {
+                background-color: green;
+            }
 
-                .blue {
-                    background-color: blue;
-                }
-            </style>
-        </head>
+            .blue {
+                background-color: blue;
+            }
+        </style>
+    </head>
 
-        <body>
-            <section>
-                <slot />
-            </section>
-        </body>
+    <body>
+    <section>
+        <slot/>
+    </section>
+    </body>
 
-        </html>
-    </container>
+    </html>
+</container>
 
-    <rendering>
-        <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
-        <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
-        <div class="blue" style="position: absolute; top: 50px; left: 50px;"></div>
-    </rendering>
+<rendering>
+    <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
+    <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
+    <div class="blue" style="position: absolute; top: 50px; left: 50px;"></div>
+</rendering>
 
-    <rendering help="Use the same values">
-        <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
-        <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
-        <div class="blue" style="position: absolute; top: 50px; left: 50px;"></div>
-    </rendering>
+<rendering help="Use the same values">
+    <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
+    <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
+    <div class="blue" style="position: absolute; top: 50px; left: 50px;"></div>
+</rendering>
 
-    <error help="Change 1px">
-        <div class="red" style="position: absolute; top: 11.5666px; left: 10.9999px;"></div>
-        <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
-        <div class="blue" style="position: absolute; top: 50px; left: 50px;"></div>
-    </error>
+<error help="Change 1px">
+    <div class="red" style="position: absolute; top: 11.5666px; left: 10.9999px;"></div>
+    <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
+    <div class="blue" style="position: absolute; top: 50px; left: 50px;"></div>
+</error>
 
-    <rendering>
-        <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
-        <div class="green" style="position: absolute; top: 10.5666px; left: 25.0000px;"></div>
-        <div class="blue" style="position: absolute; top: 50px; left: 50px;"></div>
-    </rendering>
+<rendering>
+    <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
+    <div class="green" style="position: absolute; top: 10.5666px; left: 25.0000px;"></div>
+    <div class="blue" style="position: absolute; top: 50px; left: 50px;"></div>
+</rendering>
 
-    <rendering>
-        <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
-        <div class="green" style="position: absolute; top: 10.5666px; left: 25px;"></div>
-        <div class="blue" style="position: absolute; top: 50px; left: 50px;"></div>
-    </rendering>
+<rendering>
+    <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
+    <div class="green" style="position: absolute; top: 10.5666px; left: 25px;"></div>
+    <div class="blue" style="position: absolute; top: 50px; left: 50px;"></div>
+</rendering>
 
-    <rendering help="+ 0.0001px">
-        <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
-        <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
-        <div class="blue" style="position: absolute; top: 50px; left: 50.0001px;"></div>
-    </rendering>
+<rendering help="+ 0.0001px">
+    <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
+    <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
+    <div class="blue" style="position: absolute; top: 50px; left: 50.0001px;"></div>
+</rendering>
 
-    <rendering help="+ 0.001px">
-        <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
-        <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
-        <div class="blue" style="position: absolute; top: 50px; left: 50.001px;"></div>
-    </rendering>
+<rendering help="+ 0.001px">
+    <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
+    <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
+    <div class="blue" style="position: absolute; top: 50px; left: 50.001px;"></div>
+</rendering>
 
-    <error help="+ 0.01px">
-        <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
-        <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
-        <div class="blue" style="position: absolute; top: 50px; left: 50.01px;"></div>
-    </error>
+<error help="+ 0.01px" skip="true">
+    <div class="red" style="position: absolute; top: 10.5666px; left: 10.9999px;"></div>
+    <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
+    <div class="blue" style="position: absolute; top: 50px; left: 50.01px;"></div>
+</error>
 
-    <rendering help="- 0.0001px from 0.9999">
-        <div class="red" style="position: absolute; top: 10.5666px; left: 11px;"></div>
-        <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
-        <div class="blue" style="position: absolute; top: 50px; left: 50px;"></div>
-    </rendering>
+<rendering help="- 0.0001px from 0.9999">
+    <div class="red" style="position: absolute; top: 10.5666px; left: 11px;"></div>
+    <div class="green" style="position: absolute; top: 10.5666px; left: 25.0001px;"></div>
+    <div class="blue" style="position: absolute; top: 50px; left: 50px;"></div>
+</rendering>
 
 </test>
 

@@ -29,11 +29,11 @@ def fetchMessage(args: model.TargetArgs, type: str) -> str:
 
 
 def compareImages(
-    lhs: bytes,
-    rhs: bytes,
-    lowEpsilon: float = 0.05,
-    highEpsilon: float = 0.1,
-    strict=False,
+        lhs: bytes,
+        rhs: bytes,
+        lowEpsilon: float = 0.05,
+        highEpsilon: float = 0.1,
+        strict=False,
 ) -> bool:
     if strict:
         return lhs == rhs
@@ -117,6 +117,7 @@ def _(args: RefTestArgs):
     passed = 0
     failed = 0
     skipped = 0
+    skipped_passing = []
 
     counter = 0
     for file in TESTS_DIR.glob(args.glob or "**/*.xhtml"):
@@ -170,7 +171,7 @@ def _(args: RefTestArgs):
                     expected_image_url = ref_image
 
             for tag, info, rendering in re.findall(
-                r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test
+                    r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test
             ):
                 renderingProps = getInfo(info)
                 if "skip" in renderingProps and not args.runSkipped:
@@ -215,7 +216,7 @@ def _(args: RefTestArgs):
                     if not expected_image:
                         expected_image = output_image
                         with (TEST_REPORT / f"{counter}.expected.bmp").open(
-                            "wb"
+                                "wb"
                         ) as imageWriter:
                             imageWriter.write(expected_image)
                         continue
@@ -233,6 +234,11 @@ def _(args: RefTestArgs):
                 help = renderingProps.get("help")
 
                 if ok:
+                    if args.runSkipped:
+                        if "skip" in props:
+                            skipped_passing.append(
+                                f"{counter}: {renderingProps.get('help')}\n"
+                            )
                     passed += 1
                     print(f"{counter}: {help}: {vt100.GREEN}Passed{vt100.RESET}")
                 else:
@@ -286,7 +292,17 @@ def _(args: RefTestArgs):
                     {test_report}
                 </div>
                 """
-    report += f"""
+
+    if args.runSkipped:
+        report += f"""
+        <footer>
+        <p class="witty">{fetchMessage(args, "witty" if failed else "nice")}</p>
+        <p> Failed {failed} tests, Passed {passed} tests, Skipped {skipped}</p>
+        <p> Skipped tests that were working : {skipped_passing} </p>
+        </footer>
+    """
+    else:
+        report += f"""
         <footer>
         <p class="witty">{fetchMessage(args, "witty" if failed else "nice")}</p>
         <p> Failed {failed} tests, Passed {passed} tests, Skipped {skipped}</p>

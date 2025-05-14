@@ -30,9 +30,22 @@ struct TransformProps {
 export struct SpecifiedValues {
     static SpecifiedValues const& initial();
 
+
+struct RunningPositionInfo {
+    usize page;
+    RunningPosition running;
+    Str structure;
+
+    RunningPositionInfo(RunningPosition running) : page(0), running(running), structure("") {
+    }
+};
+
+struct SpecifiedStyle {
+    static SpecifiedStyle const& initial();
+
     Gfx::Color color;
     Number opacity;
-    String content = ""s;
+    Content content = Keywords::NORMAL;
 
     AlignProps aligns;
     Cow<Gaps> gaps;
@@ -47,13 +60,15 @@ export struct SpecifiedValues {
     Overflows overflows;
     Opt<BasicShape> clip;
 
+    Gc::Ref<Map<Str, Vec<RunningPositionInfo>>> runningPositions;
+
     // CSS Inline Layout Module Level 3
     // https://drafts.csswg.org/css-inline-3/
     Cow<Baseline> baseline;
 
     // 9.3 Positioning schemes
     // https://www.w3.org/TR/CSS22/visuren.html#positioning-scheme
-    Position position;
+    Position position = Keywords::STATIC;
     Cow<Offsets> offsets = makeCow<Offsets>(Width(Keywords::AUTO)); // FIXME
 
     // CSS Writing Modes Level 3

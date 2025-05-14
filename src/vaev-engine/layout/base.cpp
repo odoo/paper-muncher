@@ -268,6 +268,7 @@ export struct InlineBox {
     }
 
     void repr(Io::Emit& e) const {
+        yap("prose: {}", prose->_runes.len());
         e("(inline box {}", prose->_runes);
         e.indentNewline();
         for (auto& c : atomicBoxes) {

@@ -215,7 +215,7 @@ static void _paintChildren(Frag& frag, Scene::Stack& stack, auto predicate) {
 
         // NOTE: Positioned elements act as if they establish a stacking context
         auto position = s.position;
-        if (position != Position::STATIC) {
+        if (position != Keywords::STATIC) {
             if (predicate(s))
                 _paintStackingContext(c, stack);
             continue;

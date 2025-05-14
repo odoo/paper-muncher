@@ -382,7 +382,6 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
         value = el->getAttribute(Html::PLACEHOLDER_ATTR).unwrap();
 
     auto prose = makeRc<Text::Prose>(proseStyle, value);
-
     // FIXME: we should guarantee that input has no children (not added before nor to add after)
     bc.content() = InlineBox{prose};
 }
@@ -853,13 +852,47 @@ export Box build(Gc::Ref<Dom::Document> doc) {
     };
 }
 
+Style::RunningPositionInfo matchElementContent(Vec<Style::RunningPositionInfo> list, ElementContent::Target target = ElementContent::UNDEFINED, usize currentPage = 0) {
+    switch (target) {
+    case ElementContent::UNDEFINED:
+        return list[0];
+    case ElementContent::FIRST:
+    case ElementContent::START:
+    case ElementContent::FIRST_EXCEPT:
+    case ElementContent::LAST:
+        yap("{}", currentPage);
+        return list[0];
+    }
+}
+
+export Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::SpecifiedStyle> style) {
+    auto fontFace = _lookupFontface(fontBook, *style);
+
+    // FIXME: We should pass this around from the top in order to properly resolve rems
+    Resolver resolver{
+        .rootFont = Text::Font{fontFace, 16},
+        .boxFont = Text::Font{fontFace, 16},
+    };
+
+    auto proseStyle = _proseStyleFomStyle(*style, fontFace);
 export Box buildForPseudoElement(Dom::PseudoElement& el) {
     auto proseStyle = _proseStyleFomStyle(*el.specifiedValues(), el.computedValues()->fontFace);
 
     auto prose = makeRc<Text::Prose>(proseStyle);
     if (el.specifiedValues()->content) {
-        prose->append(el.specifiedValues()->content.str());
-        return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};
+        if (el.specifiedValues()->content->content.is<String>()) {
+            yap("building content {}", el.specifiedValues()->content->content.unwrap<String>());
+
+            prose->append(el.specifiedValues()->content.str());
+            return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};
+        } else if (el.specifiedValues()->content.is<ElementContent>()) {
+            auto elt = style->content.unwrap<ElementContent>();
+            auto id = elt.customIdent;
+            yap("elementContentFound {}", style->content.unwrap<ElementContent>());
+            if (style->runningPositions->has(id)) {
+                prose->append(matchElementContent(style->runningPositions->take(id), elt.target).structure);
+            }
+        }
     }
 
     return {el.specifiedValues(), el.computedValues()->fontFace, nullptr};

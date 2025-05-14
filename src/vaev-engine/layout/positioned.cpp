@@ -23,7 +23,21 @@ Vec2Au _resolveOrigin(Vec2Au fragPosition, Vec2Au containingBlockOrigin, Positio
 export void layoutPositioned(Tree& tree, Frag& frag, RectAu containingBlock) {
     auto& style = frag.style();
     auto& metrics = frag.metrics;
+    if (auto pos = style.position.is<RunningPosition>()) {
+        auto position = pos.peek();
+        Style::RunningPositionInfo info = position;
+        auto& style2 = frag.box->style->runningPositions;
+        yap("POOOO {}", position);
+        if (style2->has(position.customIdent)) {
+            yap("it exists");
+            style2->take(position.customIdent).pushBack(info);
+        } else {
+            yap("it doesnt exists");
+            style2->put(position.customIdent, {info});
+        }
 
+        yap("running position {}", style.position.unwrap<RunningPosition>().customIdent);
+    }
     if (impliesRemovingFromFlow(style.position) or style.position == Position::RELATIVE) {
         auto origin = _resolveOrigin(metrics.position, containingBlock.topStart(), style.position);
         auto relativeTo = style.position == Position::FIXED
