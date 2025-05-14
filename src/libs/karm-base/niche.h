@@ -33,15 +33,14 @@ struct Niche<T> {
         Underlying data;
 
         constexpr Content()
-            : data(IntType(T::_LEN) + 1) {}
+            : data(Underlying(T::_LEN) + 1) {}
 
         constexpr bool has() const {
-            return data != (IntType(T::_LEN) + 1);
+            return data != (Underlying(T::_LEN) + 1);
         }
     };
 };
 
-inline constexpr char _NICHE_VALUE = 'e';
-inline char const* NICHE_PTR = &_NICHE_VALUE;
+inline char const* NICHE_PTR = reinterpret_cast<char const*>(0x1);
 
 } // namespace Karm
