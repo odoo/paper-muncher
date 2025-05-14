@@ -52,6 +52,10 @@ Opt<TagId> _tagId(Str name);
 
 Opt<AttrId> _attrId(Str name);
 
+Opt<Str> attrCased(Str name);
+
+Str tagNameCased(Str name);
+
 } // namespace Svg
 
 namespace MathMl {

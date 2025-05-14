@@ -473,4 +473,42 @@ test$("parse-table-element-create-body-tr-scope") {
     return Ok();
 }
 
+test$("parse-svg-case-fix") {
+    Gc::Heap gc;
+    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    Dom::HtmlParser parser{gc, dom};
+
+    parser.write(
+        "<html><svg viewbox=\"0 0 0 0\"><foreignobject></foreignobject></svg></html>"s
+    );
+
+    expect$(dom->nodeType() == NodeType::DOCUMENT);
+    expect$(dom->hasChildren());
+
+    auto html = dom->firstChild()->is<Element>();
+    expectNe$(html, nullptr);
+    expect$(html->tagName == Html::HTML);
+    expect$(html->hasChildren());
+
+    auto head = html->firstChild()->is<Element>();
+    expectNe$(head, nullptr);
+    expect$(head->tagName == Html::HEAD);
+
+    auto body = head->nextSibling()->is<Element>();
+    expectNe$(body, nullptr);
+    expect$(body->tagName == Html::BODY);
+
+    auto svg = body->firstChild()->is<Element>();
+    expectNe$(svg, nullptr);
+    expect$(svg->tagName == Svg::SVG);
+    expect$(svg->countChildren() == 1);
+    expect$(svg->hasAttribute(Svg::VIEW_BOX_ATTR));
+
+    auto foreignObject = svg->firstChild()->is<Element>();
+    expectNe$(foreignObject, nullptr);
+    expect$(foreignObject->tagName == Svg::FOREIGN_OBJECT);
+
+    return Ok();
+}
+
 } // namespace Vaev::Dom::Tests

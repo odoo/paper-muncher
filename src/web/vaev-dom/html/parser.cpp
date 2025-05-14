@@ -478,7 +478,7 @@ static QuirkMode _whichQuirkMode(HtmlToken const&) {
     return QuirkMode::NO;
 }
 
-void HtmlParser::_handleInitialMode(HtmlToken const& t) {
+void HtmlParser::_handleInitialMode(HtmlToken & t) {
     // A character token that is one of U+0009 CHARACTER TABULATION,
     // U+000A LINE FEED (LF), U+000C FORM FEED (FF),
     // U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
@@ -517,7 +517,7 @@ void HtmlParser::_handleInitialMode(HtmlToken const& t) {
 
 // 13.2.6.4.2 MARK: The "before html" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#the-before-html-insertion-mode
-void HtmlParser::_handleBeforeHtml(HtmlToken const& t) {
+void HtmlParser::_handleBeforeHtml(HtmlToken & t) {
     // A DOCTYPE token
     if (t.type == HtmlToken::DOCTYPE) {
         // ignore
@@ -567,7 +567,7 @@ void HtmlParser::_handleBeforeHtml(HtmlToken const& t) {
 
 // 13.2.6.4.3 MARK: The "before head" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#the-before-head-insertion-mode
-void HtmlParser::_handleBeforeHead(HtmlToken const& t) {
+void HtmlParser::_handleBeforeHead(HtmlToken & t) {
     // A character token that is one of U+0009 CHARACTER TABULATION,
     // U+000A LINE FEED (LF), U+000C FORM FEED (FF),
     // U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
@@ -623,7 +623,7 @@ void HtmlParser::_handleBeforeHead(HtmlToken const& t) {
 
 // 13.2.6.4.4 MARK: The "in head" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inhead
-void HtmlParser::_handleInHead(HtmlToken const& t) {
+void HtmlParser::_handleInHead(HtmlToken & t) {
     auto anythingElse = [&] {
         _openElements.popBack();
         _switchTo(Mode::AFTER_HEAD);
@@ -758,7 +758,7 @@ void HtmlParser::_handleInHead(HtmlToken const& t) {
 
 // 13.2.6.4.5 MARK: The "in head noscript" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inheadnoscript
-void HtmlParser::_handleInHeadNoScript(HtmlToken const& t) {
+void HtmlParser::_handleInHeadNoScript(HtmlToken & t) {
     auto anythingElse = [&] {
         _raise();
         _openElements.popBack();
@@ -823,7 +823,7 @@ void HtmlParser::_handleInHeadNoScript(HtmlToken const& t) {
 
 // 13.2.6.4.6 MARK: The "after head" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#the-after-head-insertion-mode
-void HtmlParser::_handleAfterHead(HtmlToken const& t) {
+void HtmlParser::_handleAfterHead(HtmlToken & t) {
     auto anythingElse = [&] {
         HtmlToken bodyToken;
         bodyToken.type = HtmlToken::START_TAG;
@@ -913,7 +913,7 @@ void HtmlParser::_handleAfterHead(HtmlToken const& t) {
 
 // 13.2.6.4.7 MARK: The "in body" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inbody
-void HtmlParser::_handleInBody(HtmlToken const& t) {
+void HtmlParser::_handleInBody(HtmlToken & t) {
     auto closePElementIfInButtonScope = [&]() {
         // https://html.spec.whatwg.org/#close-a-p-element
         // If the stack of open elements has a p element in button scope, then close a p element.
@@ -1318,8 +1318,12 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
         // Reconstruct the active formatting elements, if any.
         _reconstructActiveFormattingElements();
 
-        // TODO: Adjust SVG attributes for the token. (This fixes the case of
+        // Adjust SVG attributes for the token. (This fixes the case of
         // SVG attributes that are not all lowercase.)
+        for (auto& [name, value] : t.attrs) {
+            if(auto fixedName = Svg::attrCased(name))
+            name = fixedName.unwrap();
+        }
 
         // TODO: Adjust foreign attributes for the token. (This fixes the use of
         // namespaced attributes, in particular XLink in SVG.)
@@ -1425,7 +1429,7 @@ void HtmlParser::_handleText(HtmlToken const& t) {
     // FIXME: Implement the rest of the rules
 }
 
-void HtmlParser::_inTableModeAnythingElse(HtmlToken const& t) {
+void HtmlParser::_inTableModeAnythingElse(HtmlToken & t) {
     // Parse error.
     _raise();
 
@@ -1441,7 +1445,7 @@ void HtmlParser::_inTableModeAnythingElse(HtmlToken const& t) {
 
 // 13.2.6.4.9 MARK: The "in table" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intable
-void HtmlParser::_handleInTable(HtmlToken const& t) {
+void HtmlParser::_handleInTable(HtmlToken & t) {
     auto _clearTheStackBackToATableContext = [&]() {
         while (_currentElement()->tagName != Html::TABLE and
                _currentElement()->tagName != Html::TEMPLATE and
@@ -1686,7 +1690,7 @@ void HtmlParser::_handleInTable(HtmlToken const& t) {
 
 // 13.2.6.4.10 MARK: The "in table text" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intabletext
-void HtmlParser::_handleInTableText(HtmlToken const& t) {
+void HtmlParser::_handleInTableText(HtmlToken & t) {
 
     // A character token that is U+0000 NULL
     if (t.type == HtmlToken::CHARACTER and t.rune == '\0') {
@@ -1718,7 +1722,7 @@ void HtmlParser::_handleInTableText(HtmlToken const& t) {
         if (hasNonWhitespace) {
             // reprocess the character tokens in the pending table character tokens list using the rules given in
             // the "anything else" entry in the "in table" insertion mode.
-            for (auto const& token : _pendingTableCharacterTokens) {
+            for (auto & token : _pendingTableCharacterTokens) {
                 _inTableModeAnythingElse(token);
             }
         } else {
@@ -1736,7 +1740,7 @@ void HtmlParser::_handleInTableText(HtmlToken const& t) {
 
 // 13.2.6.4.11 MARK: The "in caption" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-incaption
-void HtmlParser::_handleInCaption(HtmlToken const& t) {
+void HtmlParser::_handleInCaption(HtmlToken & t) {
     auto _closeTheCaption = [&]() {
         // If the stack of open elements does not have a caption element in table scope,
         if (not _hasElementInTableScope(Html::CAPTION)) {
@@ -1805,7 +1809,7 @@ void HtmlParser::_handleInCaption(HtmlToken const& t) {
 
 // 13.2.6.4.12 MARK: The "in column group" insertion modeMARK:
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-incolgroup
-void HtmlParser::_handleInColumnGroup(HtmlToken const& t) {
+void HtmlParser::_handleInColumnGroup(HtmlToken & t) {
     // A character token that is one of U+0009 CHARACTER TABULATION, U+000A LINE FEED (LF), U+000C FORM FEED (FF),
     // U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
     if (
@@ -1904,7 +1908,7 @@ void HtmlParser::_handleInColumnGroup(HtmlToken const& t) {
 
 // 13.2.6.4.13 MARK: The "in table body" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intbody
-void HtmlParser::_handleInTableBody(HtmlToken const& t) {
+void HtmlParser::_handleInTableBody(HtmlToken & t) {
     auto _clearTheStackBackToATableBodyContext = [&]() {
         while (
             _currentElement()->tagName != Html::TBODY and
@@ -2012,7 +2016,7 @@ void HtmlParser::_handleInTableBody(HtmlToken const& t) {
 
 // 13.2.6.4.14 MARK: The "in row" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intr
-void HtmlParser::_handleInTableRow(HtmlToken const& t) {
+void HtmlParser::_handleInTableRow(HtmlToken & t) {
     auto _clearTheStackBackToATableRowContext = [&]() {
         while (_currentElement()->tagName != Html::TR and
                _currentElement()->tagName != Html::TEMPLATE and
@@ -2126,7 +2130,7 @@ void HtmlParser::_handleInTableRow(HtmlToken const& t) {
 
 // 13.2.6.4.15 MARK: The "in cell" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intd
-void HtmlParser::_handleInCell(HtmlToken const& t) {
+void HtmlParser::_handleInCell(HtmlToken & t) {
     auto _closeTheCell = [&]() {
         // Generate implied end tags.
         _generateImpliedEndTags(*this);
@@ -2236,7 +2240,7 @@ void HtmlParser::_handleInCell(HtmlToken const& t) {
 
 // 3.2.6.4.22 MARK: The "after after body" insertion mode
 // https://html.spec.whatwg.org/multipage/parsing.html#the-after-after-body-insertion-mode
-void HtmlParser::_handleAfterBody(HtmlToken const& t) {
+void HtmlParser::_handleAfterBody(HtmlToken & t) {
     // A comment token
     if (t.type == HtmlToken::COMMENT) {
         // Insert a comment.
@@ -2266,7 +2270,7 @@ void HtmlParser::_handleAfterBody(HtmlToken const& t) {
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inforeign
-void HtmlParser::_handleInForeignContent(HtmlToken const& t) {
+void HtmlParser::_handleInForeignContent(HtmlToken & t) {
 
     auto handleScript = [&] {
         // TODO
@@ -2367,12 +2371,17 @@ void HtmlParser::_handleInForeignContent(HtmlToken const& t) {
 
         // If the adjusted current node is an element in the SVG namespace
         if (_adjustedCurrentElement()->tagName.ns == SVG) {
-            // TODO: and the token's tag name is one of the ones in the first column of the following table, change the tag name to the name given in the corresponding cell in the second column. (This fixes the case of SVG elements that are not all lowercase.)
+            // and the token's tag name is one of the ones in the first column of the following table, change the tag name to the name given in the corresponding cell in the second column. (This fixes the case of SVG elements that are not all lowercase.)
+            t.name = Svg::tagNameCased(t.name);
         }
 
         // If the adjusted current node is an element in the SVG namespace, ...
         if (_adjustedCurrentElement()->tagName.ns == SVG) {
-            // TODO: ...adjust foreign attributes for the token. (This fixes the use of namespaced attributes, in particular XLink in SVG.)
+            // ...adjust foreign attributes for the token. (This fixes the use of namespaced attributes, in particular XLink in SVG.)
+            for (auto& [name, value] : t.attrs) {
+                if(auto fixedName = Svg::attrCased(name))
+                name = fixedName.unwrap();
+            }
         }
 
         // Insert a foreign element for the token, with adjusted current node's namespace and false.
@@ -2446,7 +2455,7 @@ void HtmlParser::_switchTo(Mode mode) {
     _insertionMode = mode;
 }
 
-void HtmlParser::_acceptIn(Mode mode, HtmlToken const& t) {
+void HtmlParser::_acceptIn(Mode mode, HtmlToken& t) {
     if (t.type != HtmlToken::CHARACTER)
         logDebugIf(DEBUG_HTML_PARSER, "Parsing {} in {}", t, mode);
 
@@ -2550,7 +2559,7 @@ void HtmlParser::_acceptIn(Mode mode, HtmlToken const& t) {
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#tree-construction
-void HtmlParser::accept(HtmlToken const& t) {
+void HtmlParser::accept(HtmlToken & t) {
     // If the stack of open elements is empty
     // If the adjusted current node is an element in the HTML namespace
     // If the adjusted current node is a MathML text integration point and the token is a start tag whose tag name is neither "mglyph" nor "malignmark"
