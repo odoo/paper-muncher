@@ -10,6 +10,7 @@ import Karm.Core;
 import :values;
 import :layout.base;
 import :layout.layout;
+import :layout.positioned;
 
 namespace Vaev::Layout {
 
@@ -172,8 +173,10 @@ struct BlockFormatingContext : FormatingContext {
         bool blockWasCompletelyLaidOut = false;
 
         Au lastMarginBottom = 0_au;
+
         for (usize i = startAt; i < endChildren; ++i) {
             auto& c = box.children()[i];
+            lookForRunningPosition(input, c);
 
             try$(
                 processBreakpointsBeforeChild(
@@ -193,6 +196,8 @@ struct BlockFormatingContext : FormatingContext {
                 .intrinsic = input.intrinsic,
                 .availableSpace = {input.availableSpace.x, 0_au},
                 .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_au)},
+                .runningPosition = input.runningPosition,
+                .pageNumber = input.pageNumber,
                 .breakpointTraverser = input.breakpointTraverser.traverseInsideUsingIthChild(i),
                 .pendingVerticalSizes = input.pendingVerticalSizes,
             };

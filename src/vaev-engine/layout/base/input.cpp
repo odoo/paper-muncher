@@ -2,6 +2,7 @@ export module Vaev.Engine:layout.input;
 
 import :layout.breaks;
 import :layout.fragment;
+import :layout.runningPosition;
 
 namespace Vaev::Layout {
 
@@ -25,6 +26,8 @@ export struct Input {
     Vec2Au position = {};
     Vec2Au availableSpace = {};
     Vec2Au containingBlock = {};
+    MutCursor<RunningPositionMap> runningPosition = nullptr;
+    usize pageNumber = 0;
 
     BreakpointTraverser breakpointTraverser = {};
 

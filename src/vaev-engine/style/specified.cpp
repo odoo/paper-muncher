@@ -57,7 +57,7 @@ export struct SpecifiedValues {
     ZIndex zIndex = Keywords::AUTO;
     Overflows overflows;
     Gfx::Color color;
-    String content = ""s;
+    Content content = Keywords::NORMAL;
     Integer order;
     AlignProps aligns;
     Display display;
@@ -69,7 +69,7 @@ export struct SpecifiedValues {
     Visibility visibility;
     WritingMode writingMode;
     Direction direction;
-    Position position;
+    Position position = Keywords::STATIC;
     BoxSizing boxSizing;
 
     void inherit(SpecifiedValues const& parent) {
@@ -136,5 +136,4 @@ export struct SpecifiedValues {
         e(")");
     }
 };
-
 } // namespace Vaev::Style
