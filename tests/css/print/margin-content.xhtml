@@ -1,0 +1,288 @@
+<test name="margin-content-pageNumber" type="print">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    /*margin because of a bug in the layout/pagination code*/
+                    margin: 1px 0;
+                }
+
+                .fakepage {
+                    height: 100svh;
+                    width: 100%;
+                    display: flex;
+                    align-items: flex-end
+                }
+
+                .fakefooter {
+                    height: calc(3rem + 1px);
+                    width: 100vw;
+                    display: flex;
+                    justify-content: center;
+                }
+
+            </style>
+            <slot/>
+
+        </head>
+
+        <body>
+        <div class="fakepage">
+            <div class="fakefooter">1</div>
+        </div>
+        <div class="fakepage">
+            <div class="fakefooter">2</div>
+        </div>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <style>
+            @page {
+                size: A5;
+                margin: 0;
+            }
+        </style>
+
+    </rendering>
+
+    <rendering help="multipage numbering">
+        <style>
+            @page {
+                size: A5;
+                @bottom-center {
+                    content: counter(page);
+                }
+            }
+
+            .fakefooter {
+                display: none;
+            }
+        </style>
+
+    </rendering>
+</test>
+
+<test name="margin-content-element" type="print">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            body {
+                /*margin because of a bug in the layout/pagination code*/
+                margin: 1px 0;
+            }
+
+            .fakepage {
+                height: 100svh;
+                width: 100%;
+                display: flex;
+                align-items: flex-end
+            }
+
+            .fakefooter {
+                height: calc(3rem + 1px);
+                width: 100vw;
+                display: flex;
+                justify-content: center;
+            }
+
+            .elt {
+                background: #3b82f6;
+                width: 4rem;
+                height: 2rem;
+            }
+
+            .refchild {
+                background: #f6bb3b;
+                height: 2rem;
+                width: 2rem;
+                border-radius: 50%;
+            }
+
+            .elt.test {
+                position: running(footer);
+            }
+
+            .elt.second {
+                background: #1b3865;
+            }
+
+            .elt.second .refchild {
+                background: #dcdbd8;
+            }
+        </style>
+        <slot/>
+
+    </head>
+
+    <body>
+    <div class="elt test first">
+        <div class="refchild"></div>
+    </div>
+    <div class="fakepage">
+        <div class="fakefooter">
+            <div class="elt">
+                <div class="refchild"></div>
+            </div>
+        </div>
+    </div>
+    <div class="elt test second">
+        <div class="refchild"></div>
+    </div>
+    <div class="fakepage">
+        <div class="fakefooter">
+            <div class="elt">
+                <div class="refchild second"></div>
+            </div>
+        </div>
+    </div>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <style>
+        @page {
+            size: A5;
+            margin: 0;
+        }
+    </style>
+
+</rendering>
+
+<rendering help="multipage content: element()">
+    <style>
+        @page {
+            size: A5;
+            @bottom-center {
+                display: flex;
+                justify-content: center;
+                content: element(footer);
+            }
+        }
+
+        .fakefooter {
+            display: none;
+        }
+    </style>
+
+</rendering>
+</test>
+
+<test name="margin-content-element-complex" type="print">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            body {
+                /*margin because of a bug in the layout/pagination code*/
+                margin: 1px 0;
+            }
+
+            .fakepage {
+                height: 100svh;
+                width: 100%;
+                display: flex;
+                align-items: flex-end
+            }
+
+            .fakefooter {
+                height: calc(3rem + 1px);
+                width: 100vw;
+                display: flex;
+                justify-content: center;
+            }
+
+            .elt {
+                background: #3b82f6;
+                width: 4rem;
+                height: 2rem;
+            }
+
+            .refchild {
+                background: #f6bb3b;
+                height: 2rem;
+                width: 2rem;
+                border-radius: 50%;
+            }
+
+            .elt.test {
+                position: running(footer);
+            }
+
+            .elt.second {
+                background: #1b3865;
+            }
+
+            .elt.second .refchild {
+                background: #dcdbd8;
+            }
+
+
+        </style>
+        <slot/>
+
+    </head>
+
+    <body>
+    <div class="elt test first">
+        <div class="refchild"></div>
+    </div>
+    <div class="fakepage">
+        <div class="fakefooter">
+            <div class="elt">
+                <div class="refchild"></div>
+            </div>
+        </div>
+    </div>
+    <div class="elt test second">
+        <div class="refchild"></div>
+    </div>
+    <div class="fakepage">
+        <div class="fakefooter">
+            <div class="elt second">
+                <div class="refchild"></div>
+            </div>
+        </div>
+    </div>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <style>
+        @page {
+            size: A5;
+            margin: 0;
+        }
+    </style>
+
+</rendering>
+
+<rendering help="multipage content: element(XXX, first)">
+    <style>
+        @page {
+            size: A5;
+            @bottom-center {
+                display: flex;
+                justify-content: center;
+                content: element(footer, first);
+            }
+        }
+
+        .fakefooter {
+            display: none;
+        }
+    </style>
+
+</rendering>
+</test>

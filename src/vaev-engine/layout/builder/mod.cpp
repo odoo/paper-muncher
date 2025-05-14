@@ -1,6 +1,7 @@
 module;
 
 #include <karm-core/macros.h>
+#include <utility>
 
 export module Vaev.Engine:layout.builder;
 
@@ -28,7 +29,7 @@ bool isSegmentBreak(Rune rune) {
     return rune == '\n' or rune == '\r' or rune == '\f' or rune == '\v';
 }
 
-static Gfx::ProseStyle _proseStyleFomStyle(Style::SpecifiedValues& style, Rc<Gfx::Fontface> fontFace) {
+static Gfx::ProseStyle _proseStyleFromStyle(Style::SpecifiedValues& style, Rc<Gfx::Fontface> fontFace) {
     // FIXME: We should pass this around from the top in order to properly resolve rems
     Resolver resolver{
         .rootFont = Gfx::Font{fontFace, 16},
@@ -330,7 +331,7 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
         .rootFont = Gfx::Font{font, 16},
         .boxFont = Gfx::Font{font, 16},
     };
-    Gfx::ProseStyle proseStyle = _proseStyleFomStyle(*el->specifiedValues(), font);
+    Gfx::ProseStyle proseStyle = _proseStyleFromStyle(*el->specifiedValues(), font);
 
     auto value = ""s;
     if (el->hasAttribute(Html::VALUE_ATTR))
@@ -361,7 +362,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group& group) {
     } else if (el->qualifiedName == Svg::FOREIGN_OBJECT_TAG) {
         Box box{el->specifiedValues(), el};
 
-        InlineBox rootInlineBox{_proseStyleFomStyle(
+        InlineBox rootInlineBox{_proseStyleFromStyle(
             *el->specifiedValues(),
             el->specifiedValues()->fontFace
         )};
@@ -433,7 +434,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
         return;
     }
 
-    auto proseStyle = _proseStyleFomStyle(*style, el->specifiedValues()->fontFace);
+    auto proseStyle = _proseStyleFromStyle(*style, el->specifiedValues()->fontFace);
 
     bc.startInlineBox(proseStyle);
     _buildChildren(bc.toInlineContext(style), el);
@@ -455,7 +456,7 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
 
 static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::SpecifiedValues> style, Gc::Ref<Dom::Element> el, Display display) {
     Box box = {style, el};
-    InlineBox rootInlineBox{_proseStyleFomStyle(*style, el->specifiedValues()->fontFace)};
+    InlineBox rootInlineBox{_proseStyleFromStyle(*style, el->specifiedValues()->fontFace)};
 
     auto newBc = display == Display::Inside::FLEX
                      ? bc.toFlexContext(box, rootInlineBox)
@@ -498,7 +499,7 @@ struct AnonymousTableBoxWrapper {
         cellStyle->display = Display::Internal::TABLE_CELL;
 
         cellBox = Box{cellStyle, nullptr};
-        rootInlineBoxForCell = InlineBox{_proseStyleFomStyle(*style, style->fontFace)};
+        rootInlineBoxForCell = InlineBox{_proseStyleFromStyle(*style, style->fontFace)};
     }
 
     void finalizeAndResetCell() {
@@ -685,7 +686,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Specifi
     wrapperStyle->margin = tableStyle->margin;
 
     Box wrapper = {wrapperStyle, tableBoxEl};
-    InlineBox rootInlineBox{_proseStyleFomStyle(*wrapperStyle, tableBoxEl->specifiedValues()->fontFace)};
+    InlineBox rootInlineBox{_proseStyleFromStyle(*wrapperStyle, tableBoxEl->specifiedValues()->fontFace)};
 
     // SPEC: The table wrapper box establishes a block formatting context.
     _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, tableStyle);
@@ -794,7 +795,7 @@ export Box build(Gc::Ref<Dom::Document> doc) {
 
     if (auto el = doc->documentElement()) {
         root = {el->specifiedValues(), el};
-        InlineBox rootInlineBox{_proseStyleFomStyle(*el->specifiedValues(), el->specifiedValues()->fontFace)};
+        InlineBox rootInlineBox{_proseStyleFromStyle(*el->specifiedValues(), el->specifiedValues()->fontFace)};
 
         BuilderContext bc{
             BuilderContext::From::BLOCK,
@@ -811,13 +812,48 @@ export Box build(Gc::Ref<Dom::Document> doc) {
     return root;
 }
 
-export Box buildForPseudoElement(Dom::PseudoElement& el) {
-    auto proseStyle = _proseStyleFomStyle(*el.specifiedValues(), el.specifiedValues()->fontFace);
+export Box buildElement(Gc::Ref<Dom::Element> elt) {
+    Box box = {elt->specifiedValues(), elt};
+    InlineBox rootInlineBox{_proseStyleFromStyle(*elt->specifiedValues(), elt->specifiedValues()->fontFace)};
 
-    auto prose = makeRc<Gfx::Prose>(proseStyle);
-    if (el.specifiedValues()->content) {
-        prose->append(el.specifiedValues()->content.str());
+    BuilderContext bc{
+        BuilderContext::From::BLOCK,
+        elt->specifiedValues(),
+        box,
+        &rootInlineBox,
+    };
+
+    buildBlockFlowFromElement(bc, *elt);
+
+    return box;
+}
+
+export Box buildForPseudoElement(Dom::PseudoElement& el, usize currentPage, RunningPositionMap& runningPos) {
+    auto proseStyle = _proseStyleFromStyle(*el.specifiedValues(), el.specifiedValues()->fontFace);
+
+    if (el.specifiedValues()->content.is<String>()) {
+        auto prose = makeRc<Gfx::Prose>(proseStyle);
+
+        prose->append(el.specifiedValues()->content.unwrap<String>().str());
         return {el.specifiedValues(), InlineBox{prose}, nullptr};
+    } else if (el.specifiedValues()->content.is<ElementContent>()) {
+        auto elt = el.specifiedValues()->content.unwrap<ElementContent>();
+        if (auto infos = runningPos.match(elt, currentPage)) {
+            Box marginBox = {el.specifiedValues(), nullptr};
+
+            Box box = buildElement(infos.unwrap().element);
+            box.style->position = Keywords::STATIC;
+            marginBox.add(std::move(box));
+            return marginBox;
+        }
+    } else if (el.specifiedValues()->content.is<Counter>()) {
+        auto elt = el.specifiedValues()->content.unwrap<Counter>();
+        if (elt.type == Counter::Type::PAGE) {
+            auto prose = makeRc<Gfx::Prose>(proseStyle);
+
+            prose->append(Io::toStr(currentPage + 1).str());
+            return {el.specifiedValues(), InlineBox{prose}, nullptr};
+        }
     }
 
     return {el.specifiedValues(), nullptr};

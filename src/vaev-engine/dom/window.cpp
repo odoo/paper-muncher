@@ -96,7 +96,7 @@ export struct Window {
     }
 
     [[clang::coro_wrapper]]
-    Generator<Print::Page> print(Print::Settings settings) const {
+    Generator<Print::Page> print(Print::Settings const& settings) const {
         return Driver::print(_document.upgrade(), settings);
     }
 };

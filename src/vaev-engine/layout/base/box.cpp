@@ -86,6 +86,7 @@ struct Group {
 
 struct SVGRoot : SVG::Group {
     Opt<ViewBox> viewBox;
+
     SVGRoot(Rc<Style::SpecifiedValues> style)
         : SVG::Group(style), viewBox(style->svg->viewBox) {}
 

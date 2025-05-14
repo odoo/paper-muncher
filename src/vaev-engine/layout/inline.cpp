@@ -7,6 +7,7 @@ import Karm.Core;
 import :values;
 import :layout.base;
 import :layout.layout;
+import :layout.positioned;
 
 namespace Vaev::Layout {
 
@@ -52,6 +53,7 @@ struct InlineFormatingContext : FormatingContext {
         auto& prose = inlineBox.prose;
 
         for (auto strutCell : prose->cellsWithStruts()) {
+
             auto& boxStrutCell = *strutCell->strut();
 
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
@@ -93,6 +95,11 @@ struct InlineFormatingContext : FormatingContext {
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
 
             Math::Vec2<Opt<Au>> knownSize;
+            // FIXME:
+            // Look for running position should be called at linebox generation.
+            // Here it could register multiple time the same box.
+            lookForRunningPosition(input, atomicBox);
+
             if (not impliesRemovingFromFlow(atomicBox.style->position)) {
                 knownSize = {
                     boxStrutCell.size.x,
@@ -111,6 +118,8 @@ struct InlineFormatingContext : FormatingContext {
                         input.knownSize.x.unwrapOr(0_au),
                         input.knownSize.y.unwrapOr(0_au)
                     },
+                    .runningPosition = input.runningPosition,
+                    .pageNumber = input.pageNumber,
                 }
             );
         }
