@@ -65,6 +65,10 @@ struct InlineFormatingContext : FormatingContext {
                 Input{
                     .knownSize = {NONE, NONE},
                     .availableSpace = {inlineSize, input.availableSpace.y},
+                    .containingBlock = {
+                        input.knownSize.x.unwrapOr(0_au),
+                        input.knownSize.y.unwrapOr(0_au)
+                    },
                 }
             );
 
