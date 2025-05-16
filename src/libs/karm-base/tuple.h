@@ -2,6 +2,8 @@
 
 #include <karm-meta/id.h>
 
+#include "hash.h"
+
 namespace Karm {
 
 // It's not stupid if it works and it's fast.
@@ -576,5 +578,14 @@ struct Tuple<_T0, _T1, _T2, _T3, _T4, _T5, _T6, _T7> {
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
 Tuple(T0, T1, T2, T3, T4, T5, T6, T7) -> Tuple<T0, T1, T2, T3, T4, T5, T6, T7>;
+
+template <typename... Ts>
+static constexpr u64 hash(Tuple<Ts...> const& v) {
+    auto res = hash(sizeof...(Ts));
+    v.apply([&](auto const& v) {
+        res = hash(res, v);
+    });
+    return res;
+}
 
 } // namespace Karm

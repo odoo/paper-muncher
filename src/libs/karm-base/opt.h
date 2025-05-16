@@ -639,6 +639,12 @@ struct [[nodiscard]] Opt<T> {
                 return _value <=> other._value;
         return std::partial_ordering::unordered;
     }
+
+    u64 hash() const {
+        if (has())
+            return hashCombine(hash(true), unwrap());
+        return hash(false);
+    }
 };
 
 } // namespace Karm

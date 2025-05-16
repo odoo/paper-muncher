@@ -57,6 +57,18 @@ constexpr bool operator==(T const& lhs, U const& rhs) {
     return true;
 }
 
+template <Sliceable T>
+static constexpr u64 hash(T const& v)
+    requires(not requires(T const t) {
+        { t.hash() } -> Meta::Same<u64>;
+    })
+{
+    u64 res = ::hash();
+    for (usize i = 0; i < v.len(); i++)
+        res = hash(res, v.buf()[i]);
+    return res;
+}
+
 template <typename T>
 struct Slice {
     using Inner = T;

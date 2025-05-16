@@ -202,6 +202,15 @@ struct Union {
             );
         return false;
     }
+
+    u64 hash() const {
+        return hash(
+            hash(_index),
+            visit([](auto const& v) {
+                return ::hash(v);
+            })
+        );
+    }
 };
 
 template <typename... Ts>

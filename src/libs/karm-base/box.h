@@ -106,6 +106,10 @@ struct Box {
             panic("deferencing moved from Box<T>");
         return *_ptr;
     }
+
+    constexpr u64 hash() const {
+        return hash(unwrap());
+    }
 };
 
 template <typename T>
