@@ -71,7 +71,7 @@ export Rc<Client> defaultClient() {
     return makeRc<Client>(
         multiplexTransport({
             httpTransport(),
-            localTransport(),
+            localTransport(LocalTransportPolicy::ALLOW_ALL),
         })
     );
 }

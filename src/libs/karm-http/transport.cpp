@@ -188,13 +188,20 @@ export Rc<Transport> pipeTransport() {
 
 // MARK: Local -----------------------------------------------------------------
 
-struct LocalTransport : Transport {
-    Opt<Vec<String>> _allowed = NONE;
+enum struct LocalTransportPolicy {
+    FILTER,
+    ALLOW_ALL, // Allow all local ressources access, this include file:, bundle:, and fd:.
+};
 
-    LocalTransport() {}
+struct LocalTransport : Transport {
+    LocalTransportPolicy _policy;
+    Vec<String> _allowed;
+
+    LocalTransport(LocalTransportPolicy policy)
+        : _policy(policy) {}
 
     LocalTransport(Vec<String> allowed)
-        : _allowed(allowed) {}
+        : _policy(LocalTransportPolicy::FILTER), _allowed(allowed) {}
 
     Res<Pair<Rc<Body>, Mime::Mime>> _load(Mime::Url url) {
         if (try$(Sys::isFile(url))) {
@@ -223,8 +230,11 @@ struct LocalTransport : Transport {
     }
 
     Async::Task<Rc<Response>> doAsync(Rc<Request> request) override {
-        if (_allowed != NONE and not contains(*_allowed, request->url.scheme))
-            co_return Error::unsupported("unsupported scheme");
+        if (_policy == LocalTransportPolicy::FILTER) {
+            if (not contains(_allowed, request->url.scheme)) {
+                co_return Error::permissionDenied("disallowed by policy");
+            }
+        }
 
         auto response = makeRc<Response>();
         response->code = OK;
@@ -244,8 +254,8 @@ struct LocalTransport : Transport {
     }
 };
 
-export Rc<Transport> localTransport() {
-    return makeRc<LocalTransport>();
+export Rc<Transport> localTransport(LocalTransportPolicy policy) {
+    return makeRc<LocalTransport>(policy);
 }
 
 export Rc<Transport> localTransport(Vec<String> allowed) {
