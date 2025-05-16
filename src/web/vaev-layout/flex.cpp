@@ -464,8 +464,7 @@ struct FlexItem {
             Au startOfBlock =
                 (lineCrossSize -
                  fa.crossAxis(usedSize) -
-                 getMargin(BOTH_CROSS)
-                ) /
+                 getMargin(BOTH_CROSS)) /
                 2_au;
             fa.crossAxis(position) = startOfBlock + getMargin(START_CROSS);
         }

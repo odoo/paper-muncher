@@ -198,47 +198,47 @@ struct HtmlParser : HtmlSink {
 
     // MARK: Modes
 
-    void _handleInitialMode(HtmlToken & t);
+    void _handleInitialMode(HtmlToken& t);
 
-    void _handleBeforeHtml(HtmlToken & t);
+    void _handleBeforeHtml(HtmlToken& t);
 
-    void _handleBeforeHead(HtmlToken & t);
+    void _handleBeforeHead(HtmlToken& t);
 
-    void _handleInHead(HtmlToken & t);
+    void _handleInHead(HtmlToken& t);
 
-    void _handleInHeadNoScript(HtmlToken & t);
+    void _handleInHeadNoScript(HtmlToken& t);
 
-    void _handleAfterHead(HtmlToken & t);
+    void _handleAfterHead(HtmlToken& t);
 
-    void _handleInBody(HtmlToken & t);
+    void _handleInBody(HtmlToken& t);
 
     void _handleText(HtmlToken const& t);
 
-    void _inTableModeAnythingElse(HtmlToken & t);
+    void _inTableModeAnythingElse(HtmlToken& t);
 
-    void _handleInTable(HtmlToken & t);
+    void _handleInTable(HtmlToken& t);
 
-    void _handleInTableText(HtmlToken & t);
+    void _handleInTableText(HtmlToken& t);
 
-    void _handleInCaption(HtmlToken & t);
+    void _handleInCaption(HtmlToken& t);
 
-    void _handleInColumnGroup(HtmlToken & t);
+    void _handleInColumnGroup(HtmlToken& t);
 
-    void _handleInTableBody(HtmlToken & t);
+    void _handleInTableBody(HtmlToken& t);
 
-    void _handleInTableRow(HtmlToken & t);
+    void _handleInTableRow(HtmlToken& t);
 
-    void _handleInCell(HtmlToken & t);
+    void _handleInCell(HtmlToken& t);
 
-    void _handleAfterBody(HtmlToken & t);
+    void _handleAfterBody(HtmlToken& t);
 
-    void _handleInForeignContent(HtmlToken & t);
+    void _handleInForeignContent(HtmlToken& t);
 
     void _switchTo(Mode mode);
 
-    void _acceptIn(Mode mode, HtmlToken & t);
+    void _acceptIn(Mode mode, HtmlToken& t);
 
-    void accept(HtmlToken & t) override;
+    void accept(HtmlToken& t) override;
 
     void write(Str str) {
         for (auto r : iterRunes(str))

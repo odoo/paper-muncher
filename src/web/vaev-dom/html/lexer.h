@@ -74,7 +74,7 @@ struct HtmlToken {
 
 struct HtmlSink {
     virtual ~HtmlSink() = default;
-    virtual void accept(HtmlToken & token) = 0;
+    virtual void accept(HtmlToken& token) = 0;
 };
 
 struct HtmlLexer {

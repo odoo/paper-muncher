@@ -188,8 +188,7 @@ export struct BreakpointTraverser {
     MutCursor<Breakpoint> traversePrev(usize i, usize j) {
         if (prevIteration and prevIteration->children.len() > 0 and
             (i + 1 == prevIteration->endIdx or
-             (prevIteration->advance == Breakpoint::Advance::WITH_CHILDREN and i == prevIteration->endIdx)
-            )) {
+             (prevIteration->advance == Breakpoint::Advance::WITH_CHILDREN and i == prevIteration->endIdx))) {
             if (prevIteration->children[j])
                 return &prevIteration->children[j].unwrap();
         }
