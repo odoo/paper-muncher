@@ -6,6 +6,7 @@ namespace Karm::Base::Tests {
 test$("set-put") {
     Set<int> set{};
     set.put(420);
+    expectEq$(set.len(), 1uz);
     expect$(set.has(420));
 
     return Ok();
@@ -49,13 +50,13 @@ test$("set-len") {
 
 test$("set-usage") {
     Set<int> set{10};
-    expectEq$(set._usage(), 0uz);
+    expectEq$(set.usage(), 0uz);
     set.put(420);
-    expectEq$(set._usage(), 10uz);
+    expectEq$(set.usage(), 10uz);
     set.put(69);
-    expectEq$(set._usage(), 20uz);
+    expectEq$(set.usage(), 20uz);
     set.del(420);
-    expectEq$(set._usage(), 10uz);
+    expectEq$(set.usage(), 10uz);
 
     return Ok();
 }
@@ -63,9 +64,9 @@ test$("set-usage") {
 test$("set-ensure") {
     Set<int> set{10};
     expectEq$(set._cap, 10uz);
-    set.ensure(20);
+    set.rehash(20);
     expectEq$(set._cap, 20uz);
-    set.ensure(10);
+    set.rehash(10);
     expectEq$(set._cap, 20uz);
 
     return Ok();
