@@ -85,7 +85,7 @@ Res<> Decoder::defineQuantizationTable(Io::BScan& x) {
     Io::BScan s = x.nextBytes(len - 2);
 
     while (not s.ended()) {
-        Byte infos = s.nextU8be();
+        u8 infos = s.nextU8be();
         u8 id = infos & 0x0F;
 
         // logDebug("jpeg: quantization table id: {}", id);
@@ -188,7 +188,7 @@ Res<> Decoder::defineHuffmanTable(Io::BScan& x) {
     Io::BScan s = x.nextBytes(len - 2);
 
     while (not s.ended()) {
-        Byte infos = s.nextU8be();
+        u8 infos = s.nextU8be();
         u8 id = infos & 0x0F;
         bool isAc = (infos >> 4) == 1;
 
@@ -340,7 +340,7 @@ Res<> Decoder::decodeHuffman(Io::BScan& s) {
 
         auto& acHuff = _acHuff[c.acHuffId].unwrap();
 
-        Byte len = try$(dcHuff.next(bs));
+        u8 len = try$(dcHuff.next(bs));
 
         if (len > 11) {
             logError("jpeg: invalid dc huffman code length: {}", len);
@@ -358,13 +358,13 @@ Res<> Decoder::decodeHuffman(Io::BScan& s) {
 
         usize k = 1;
         while (k < 64) {
-            Byte sym = try$(acHuff.next(bs));
+            u8 sym = try$(acHuff.next(bs));
 
             if (sym == 0) {
                 break;
             }
 
-            Byte numZeroes = sym >> 4;
+            u8 numZeroes = sym >> 4;
 
             if (sym == 0xF0) {
                 numZeroes = 16;
@@ -377,7 +377,7 @@ Res<> Decoder::decodeHuffman(Io::BScan& s) {
 
             k += numZeroes;
 
-            Byte len = sym & 0xF;
+            u8 len = sym & 0xF;
 
             if (len > 10) {
                 logError("jpeg: invalid ac huffman code length: {}", len);

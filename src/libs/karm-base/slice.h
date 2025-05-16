@@ -1,5 +1,6 @@
 #pragma once
 
+#include "hash.h"
 #include "iter.h"
 #include "range.h"
 #include "slice.h"
@@ -7,12 +8,6 @@
 namespace Karm {
 
 #pragma clang unsafe_buffer_usage begin
-
-using Byte = u8;
-
-inline constexpr Byte operator""_byte(unsigned long long arg) noexcept {
-    return static_cast<Byte>(arg);
-}
 
 template <typename T, typename U = typename T::Inner>
 concept Sliceable =
@@ -208,9 +203,9 @@ struct Niche<MutSlice<T>> {
     struct Content : public Niche<Slice<T>>::Content {};
 };
 
-using Bytes = Slice<Byte>;
+using Bytes = Slice<u8>;
 
-using MutBytes = MutSlice<Byte>;
+using MutBytes = MutSlice<u8>;
 
 template <Sliceable S, typename T = typename S::Inner>
 constexpr Slice<T> sub(S const& slice, usize start, usize end) {
@@ -267,7 +262,7 @@ MutSlice<T> mutNext(S& slice, usize start = 1) {
 template <Sliceable S>
 Bytes bytes(S const& slice) {
     return {
-        reinterpret_cast<Byte const*>(slice.buf()),
+        reinterpret_cast<u8 const*>(slice.buf()),
         slice.len() * sizeof(typename S::Inner),
     };
 }
@@ -275,7 +270,7 @@ Bytes bytes(S const& slice) {
 template <MutSliceable S>
 MutBytes mutBytes(S& slice) {
     return {
-        reinterpret_cast<Byte*>(slice.buf()),
+        reinterpret_cast<u8*>(slice.buf()),
         slice.len() * sizeof(typename S::Inner),
     };
 }
@@ -730,7 +725,7 @@ always_inline Match endWith(T1 const& slice, T2 const& suffix) {
 
 static inline constexpr Karm::Bytes operator""_bytes(char const* buf, usize len) {
     return Bytes{
-        (Byte const*)(buf),
+        (u8 const*)(buf),
         len,
     };
 }

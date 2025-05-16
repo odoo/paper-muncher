@@ -27,12 +27,12 @@ export struct Body : Aio::Reader {
         return makeRc<FileBody>(std::move(file));
     }
 
-    static Rc<Body> from(Buf<Byte> buf) {
+    static Rc<Body> from(Buf<u8> buf) {
         struct BufBody : Body {
-            Buf<Byte> _buf;
+            Buf<u8> _buf;
             Io::BufReader _reader{_buf};
 
-            BufBody(Buf<Byte> buf)
+            BufBody(Buf<u8> buf)
                 : _buf(std::move(buf)) {}
 
             Async::Task<usize> readAsync(MutBytes buf) override {

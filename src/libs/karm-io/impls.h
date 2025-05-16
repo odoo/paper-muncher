@@ -22,9 +22,9 @@ struct Zero : Reader {
 };
 
 struct Repeat : Reader {
-    Byte _byte;
+    u8 _byte;
 
-    Repeat(Byte byte) : _byte(byte) {}
+    Repeat(u8 byte) : _byte(byte) {}
 
     Res<usize> read(MutBytes bytes) override {
         return Ok(fill(bytes, _byte));
@@ -171,7 +171,7 @@ struct BufWriter :
 };
 
 struct BufferWriter : Writer, Flusher {
-    Buf<Byte> _buf;
+    Buf<u8> _buf;
 
     BufferWriter(usize cap = 16) : _buf(cap) {}
 
@@ -189,7 +189,7 @@ struct BufferWriter : Writer, Flusher {
         return Ok();
     }
 
-    Buf<Byte> take() {
+    Buf<u8> take() {
         return std::move(_buf);
     }
 

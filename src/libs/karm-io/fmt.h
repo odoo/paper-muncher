@@ -6,6 +6,7 @@
 #include <karm-base/enum.h>
 #include <karm-base/map.h>
 #include <karm-base/rc.h>
+#include <karm-base/symbol.h>
 #include <karm-base/time.h>
 #include <karm-base/tuple.h>
 #include <karm-base/vec.h>
@@ -764,6 +765,13 @@ struct Formatter<char const*> : StringFormatter<Utf8> {
     }
 };
 
+template <>
+struct Formatter<Symbol> : StringFormatter<Utf8> {
+    Res<> format(Io::TextWriter& writer, Symbol const& text) {
+        return StringFormatter::format(writer, text.str());
+    }
+};
+
 // MARK: Format Time -----------------------------------------------------------
 
 template <>
@@ -812,7 +820,6 @@ struct Formatter<DateTime> {
 
 template <typename Car, typename Cdr>
 struct Formatter<Pair<Car, Cdr>> {
-
     Res<> format(Io::TextWriter& writer, Pair<Car, Cdr> const& val) {
         try$(writer.writeRune('{'));
 

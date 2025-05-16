@@ -20,7 +20,7 @@ inline constexpr Array<usize, 64> ZIGZAG = {
 
 // MARK: Marker Constants ------------------------------------------------------
 
-enum Marker : Byte {
+enum Marker : u8 {
     NIL = 0x00,
 
     // Start of Frame markers, non-differential, Huffman coding
@@ -245,7 +245,7 @@ struct Huff {
 
     Array<usize, 256> const& codes();
 
-    Res<Byte> next(BitReader& bs);
+    Res<u8> next(BitReader& bs);
 
     bool getCode(u8 symbol, usize& code, usize& codeLength);
 };

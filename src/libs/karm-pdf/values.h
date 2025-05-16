@@ -39,7 +39,7 @@ struct Dict : Map<Name, Value> {
 
 struct Stream {
     Dict dict;
-    Buf<Byte> data;
+    Buf<u8> data;
 
     void write(Io::Emit& e) const;
 };

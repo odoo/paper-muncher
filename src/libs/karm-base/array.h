@@ -60,11 +60,11 @@ struct Array {
     }
 
     always_inline constexpr Bytes bytes() const {
-        return {reinterpret_cast<Byte const*>(buf()), len() * sizeof(T)};
+        return {reinterpret_cast<u8 const*>(buf()), len() * sizeof(T)};
     }
 
     always_inline constexpr MutBytes mutBytes() {
-        return {reinterpret_cast<Byte*>(buf()), len() * sizeof(T)};
+        return {reinterpret_cast<u8*>(buf()), len() * sizeof(T)};
     }
 };
 

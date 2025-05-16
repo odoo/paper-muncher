@@ -101,7 +101,7 @@ struct Header {
     }
 
     Bytes bytes() const {
-        return {(Byte const*)this, sizeof(*this)};
+        return {(u8 const*)this, sizeof(*this)};
     }
 };
 
@@ -116,7 +116,7 @@ struct Answer {
     Type type;
     Class class_;
     Duration ttl;
-    Buf<Byte> data;
+    Buf<u8> data;
 };
 
 Res<> encodeName(Io::BEmit& e, Str name) {
@@ -128,7 +128,7 @@ Res<> encodeName(Io::BEmit& e, Str name) {
     return Ok();
 }
 
-Res<usize> decodeName(Cursor<Byte> const start, Cursor<Byte> curr, StringBuilder& out) {
+Res<usize> decodeName(Cursor<u8> const start, Cursor<u8> curr, StringBuilder& out) {
     usize len = 0;
     while (not curr.ended()) {
         auto b = curr.next();
@@ -191,7 +191,7 @@ struct Packet {
         return hdr;
     }
 
-    static Res<Buf<Byte>> encode(Packet const& p) {
+    static Res<Buf<u8>> encode(Packet const& p) {
         Io::BufferWriter buf;
         Io::BEmit e(buf);
 
@@ -280,7 +280,7 @@ struct Client {
         try$(_conn.send(try$(Packet::encode(req)), _server));
 
         logDebug("waiting for dns response");
-        Array<Byte, 4096> buf;
+        Array<u8, 4096> buf;
         auto [len, addr] = try$(_conn.recv(buf));
 
         logDebug("received dns response from {}", addr);

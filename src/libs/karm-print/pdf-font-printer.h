@@ -83,8 +83,8 @@ struct TtfGlyphInfoAdapter {
         return allWidths;
     }
 
-    Buf<Byte> CIDToGIDMap() {
-        Buf<Byte> buf;
+    Buf<u8> CIDToGIDMap() {
+        Buf<u8> buf;
 
         u16 const BYTE_MASK = 255;
 

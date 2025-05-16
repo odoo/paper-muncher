@@ -9,13 +9,13 @@ namespace Karm::Kv {
 
 struct _Blob {
     usize len;
-    Byte buf[0];
+    u8 buf[0];
 };
 
 export struct Blob;
 
 export struct MutBlob {
-    using Inner = Byte;
+    using Inner = u8;
 
     Rc<_Blob> _buf;
     urange _slice;
@@ -69,7 +69,7 @@ export struct MutBlob {
 };
 
 export struct Blob {
-    using Inner = Byte;
+    using Inner = u8;
 
     Rc<_Blob> _buf;
     urange _slice;

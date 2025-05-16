@@ -231,7 +231,7 @@ struct UringSched : Sys::Sched {
                 : _fd(fd), _buf(buf), _addr(Posix::toSockAddr(addr)) {}
 
             void submit(io_uring_sqe* sqe) override {
-                _iov.iov_base = const_cast<Byte*>(_buf.begin());
+                _iov.iov_base = const_cast<u8*>(_buf.begin());
                 _iov.iov_len = _buf.len();
 
                 _msg.msg_name = &_addr;

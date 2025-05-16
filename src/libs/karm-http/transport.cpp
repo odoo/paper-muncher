@@ -29,7 +29,7 @@ export struct Transport {
 static constexpr usize BUF_SIZE = 4096;
 
 struct ContentBody : Body {
-    Buf<Byte> _resumes;
+    Buf<u8> _resumes;
     usize _resumesPos = 0;
     Sys::TcpConnection _conn;
     usize _contentLength;
@@ -59,7 +59,7 @@ struct ContentBody : Body {
 };
 
 struct ChunkedBody : Body {
-    Buf<Byte> _buf;
+    Buf<u8> _buf;
     Sys::TcpConnection _conn;
 
     ChunkedBody(Bytes resumes, Sys::TcpConnection conn)
@@ -118,7 +118,7 @@ export Rc<Transport> httpTransport() {
 // MARK: Pipe Transport --------------------------------------------------------
 
 struct PipeBody : Body {
-    Buf<Byte> _resumes;
+    Buf<u8> _resumes;
     usize _resumesPos = 0;
     usize _contentLength;
 
@@ -188,7 +188,7 @@ export Rc<Transport> pipeTransport() {
 
 // MARK: Local -----------------------------------------------------------------
 
-enum struct LocalTransportPolicy {
+export enum struct LocalTransportPolicy {
     FILTER,
     ALLOW_ALL, // Allow all local ressources access, this include file:, bundle:, and fd:.
 };

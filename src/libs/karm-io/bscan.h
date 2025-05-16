@@ -324,7 +324,7 @@ struct BEmit {
 
     template <Meta::TrivialyCopyable T>
     always_inline constexpr void writeFrom(T const& v) {
-        (void)_writer.write(Bytes{(Byte const*)&v, sizeof(v)});
+        (void)_writer.write(Bytes{(u8 const*)&v, sizeof(v)});
     }
 
     always_inline constexpr void writeU8be(u8be v) {
@@ -392,12 +392,12 @@ struct BEmit {
     }
 
     always_inline constexpr void writeStr(Str s) {
-        (void)_writer.write(Bytes{(Byte const*)s.buf(), s.len()});
+        (void)_writer.write(Bytes{(u8 const*)s.buf(), s.len()});
     }
 
     always_inline constexpr void writeCStr(Str s) {
-        (void)_writer.write(Bytes{(Byte const*)s.buf(), s.len()});
-        (void)_writer.write(Bytes{(Byte const*)"\0", 1});
+        (void)_writer.write(Bytes{(u8 const*)s.buf(), s.len()});
+        (void)_writer.write(Bytes{(u8 const*)"\0", 1});
     }
 
     always_inline constexpr void writeBytes(Bytes b) {

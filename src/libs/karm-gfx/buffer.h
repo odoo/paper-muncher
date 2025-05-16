@@ -152,13 +152,13 @@ struct _Pixels {
     }
 
     always_inline Bytes bytes() const {
-        return {static_cast<Byte const*>(_buf), _stride * _size.y};
+        return {static_cast<u8 const*>(_buf), _stride * _size.y};
     }
 
     always_inline MutBytes mutBytes()
         requires(MUT)
     {
-        return {static_cast<Byte*>(_buf), _stride * _size.y};
+        return {static_cast<u8*>(_buf), _stride * _size.y};
     }
 
     always_inline _Pixels<false> clip(Math::Recti rect) const {

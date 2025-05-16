@@ -345,7 +345,7 @@ Array<usize, 256> const& Huff::codes() {
     return *_codes;
 }
 
-Res<Byte> Huff::next(BitReader& bs) {
+Res<u8> Huff::next(BitReader& bs) {
     usize code = 0;
     for (usize i = 0; i < 16; ++i) {
         code = (code << 1) | try$(bs.nextBit());

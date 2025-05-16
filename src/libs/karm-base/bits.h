@@ -35,7 +35,7 @@ struct Bits {
     }
 
     void fill(bool value) {
-        ::fill(mutBytes(), value ? 0xff_byte : 0x00_byte);
+        ::fill<u8>(mutBytes(), value ? 0xff : 0x00);
     }
 
     usize len() const {

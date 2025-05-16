@@ -60,7 +60,7 @@ export struct Response {
         return parse(scan);
     }
 
-    Res<Opt<Buf<Byte>>> readBody(Io::Reader& r) {
+    Res<Opt<Buf<u8>>> readBody(Io::Reader& r) {
         auto contentLengthValue = header.tryGet("Content-Length"s);
         if (not contentLengthValue)
             return Ok(NONE);

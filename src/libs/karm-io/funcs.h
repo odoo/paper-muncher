@@ -18,8 +18,8 @@ static inline Res<usize> pread(Readable auto& reader, MutBytes bytes, Seek seek)
     return reader.read(bytes);
 }
 
-static inline Res<Byte> getByte(Readable auto& reader) {
-    Byte byte;
+static inline Res<u8> getByte(Readable auto& reader) {
+    u8 byte;
     try$(reader.read({&byte, 1}));
     return Ok(byte);
 }
@@ -44,7 +44,7 @@ static inline Res<usize> pwrite(Writable auto& writer, Bytes bytes, Seek seek) {
     return writer.write(bytes);
 }
 
-static inline Res<usize> putByte(Writable auto& writer, Byte byte) {
+static inline Res<usize> putByte(Writable auto& writer, u8 byte) {
     return writer.write({&byte, 1});
 }
 
@@ -81,7 +81,7 @@ static inline Res<usize> copy(Readable auto& reader, MutBytes bytes) {
 }
 
 static inline Res<usize> copy(Readable auto& reader, Writable auto& writer) {
-    Array<Byte, 4096> buffer;
+    Array<u8, 4096> buffer;
     usize result = 0;
     while (true) {
         auto read = try$(reader.read(mutBytes(buffer)));
@@ -97,7 +97,7 @@ static inline Res<usize> copy(Readable auto& reader, Writable auto& writer) {
 }
 
 static inline Res<usize> copy(Readable auto& reader, Writable auto& writer, usize size) {
-    Array<Byte, 4096> buf;
+    Array<u8, 4096> buf;
     usize result = 0;
     while (size > 0) {
         auto read = try$(reader.read(mutSub(buf, 0, size)));
@@ -119,9 +119,9 @@ static inline Res<Tuple<usize, bool>> readLine(Readable auto& reader, Writable a
     if (delim.len() > 16)
         panic("delimiter string too large");
 
-    Byte b;
+    u8 b;
     usize result = 0;
-    Ring<Byte> lastBytes{delim.len()};
+    Ring<u8> lastBytes{delim.len()};
 
     while (true) {
         auto read = try$(reader.read({&b, 1}));
