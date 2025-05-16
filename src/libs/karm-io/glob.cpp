@@ -1,5 +1,7 @@
 #include "glob.h"
 
+#include "expr.h"
+
 namespace Karm::Io {
 
 bool _matchWildCard(SScan& glob, SScan& in);
@@ -48,6 +50,12 @@ bool _matchWildCard(SScan& glob, SScan& in) {
 }
 
 bool matchGlob(SScan& glob, SScan& in) {
+    if (glob.remStr() == "*") {
+        glob.next();
+        in.skip(Re::any());
+        return true;
+    }
+
     while (not glob.ended() and !in.ended()) {
         auto op = glob.next();
 
