@@ -4,6 +4,8 @@
 "Add that to the highlight reel",
 "Big brain energy right here",
 "Big mood",
+"Brr Brr Patapim",
+"Call the mods, they are going to promote you",
 "Chat says you gyatt",
 "Clap back level 1000",
 "Congratulation",
