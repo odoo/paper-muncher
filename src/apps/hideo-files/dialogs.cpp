@@ -26,8 +26,8 @@ export Ui::Child openDialog(Ui::Send<Mime::Url> onFile) {
                            s,
                            "Can't access this location"s,
                            Io::toStr(maybeDir.none())
-                       )
-                ) | Ui::pinSize({400, 260}),
+                       )) |
+                    Ui::pinSize({400, 260}),
                 Kr::separator(),
                 Kr::dialogFooter({
                     Ui::grow(NONE),
@@ -59,8 +59,8 @@ export Ui::Child saveDialog(Ui::Send<Mime::Url> onFile) {
                            s,
                            "Can't access this location"s,
                            Io::toStr(maybeDir.none())
-                       )
-                ) | Ui::pinSize({400, 260}),
+                       )) |
+                    Ui::pinSize({400, 260}),
                 Kr::separator(),
                 Kr::dialogFooter({
                     Ui::grow(NONE),
@@ -92,8 +92,8 @@ export Ui::Child directoryDialog(Ui::Send<Mime::Url> onFile) {
                            d,
                            "Can't access this location"s,
                            Io::toStr(maybeDir.none())
-                       )
-                ) | Ui::pinSize({400, 260}),
+                       )) |
+                    Ui::pinSize({400, 260}),
                 Kr::separator(),
                 Kr::dialogFooter({
                     Ui::grow(NONE),

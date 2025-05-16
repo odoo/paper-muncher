@@ -5,7 +5,7 @@
 
 namespace Karm {
 
-using Hash = usize;
+using Hash = u64;
 
 template <typename T>
 struct Hasher;

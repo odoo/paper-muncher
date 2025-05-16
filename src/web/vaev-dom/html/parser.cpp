@@ -1026,8 +1026,7 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
          t.name == "div" or t.name == "dl" or t.name == "fieldset" or t.name == "figcaption" or
          t.name == "figure" or t.name == "footer" or t.name == "header" or t.name == "hgroup" or
          t.name == "main" or t.name == "menu" or t.name == "nav" or t.name == "ol" or
-         t.name == "p" or t.name == "search" or t.name == "section" or t.name == "summary" or t.name == "ul"
-        )
+         t.name == "p" or t.name == "search" or t.name == "section" or t.name == "summary" or t.name == "ul")
     ) {
         // If the stack of open elements has a p element in button scope, then close a p element.
         closePElementIfInButtonScope();
@@ -1040,8 +1039,7 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
     else if (
         t.type == HtmlToken::START_TAG and
         (t.name == "h1" or t.name == "h2" or t.name == "h3" or t.name == "h4" or
-         t.name == "h5" or t.name == "h6"
-        )
+         t.name == "h5" or t.name == "h6")
     ) {
         // If the stack of open elements has a p element in button scope, then close a p element.
         closePElementIfInButtonScope();
@@ -1155,8 +1153,7 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
     else if (
         t.type == HtmlToken::END_TAG and
         (t.name == "h1" or t.name == "h2" or t.name == "h3" or t.name == "h4" or
-         t.name == "h5" or t.name == "h6"
-        )
+         t.name == "h5" or t.name == "h6")
     ) {
         // If the stack of open elements does not have an element in scope that is an HTML element and whose tag name is
         // one of "h1", "h2", "h3", "h4", "h5", or "h6",
@@ -1231,8 +1228,7 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
     else if (
         t.name == "br" or
         (t.type == HtmlToken::START_TAG and
-         (t.name == "area" or t.name == "br" or t.name == "embed" or t.name == "img" or t.name == "keygen" or t.name == "wbr")
-        )
+         (t.name == "area" or t.name == "br" or t.name == "embed" or t.name == "img" or t.name == "keygen" or t.name == "wbr"))
     ) {
         if (t.type == HtmlToken::END_TAG) {
             // Parse error.
@@ -1340,8 +1336,7 @@ void HtmlParser::_handleInBody(HtmlToken const& t) {
         t.type == HtmlToken::START_TAG and
         (t.name == "caption" or t.name == "col" or t.name == "colgroup" or t.name == "frame" or
          t.name == "head" or t.name == "tbody" or t.name == "td" or t.name == "tfoot" or
-         t.name == "th" or t.name == "thead" or t.name == "tr"
-        )
+         t.name == "th" or t.name == "thead" or t.name == "tr")
     ) {
         // Parse error. Ignore the token.
         _raise();
@@ -1455,8 +1450,7 @@ void HtmlParser::_handleInTable(HtmlToken const& t) {
     if (t.type == HtmlToken::CHARACTER and
         (_currentElement()->tagName == Html::TABLE or _currentElement()->tagName == Html::TBODY or
          _currentElement()->tagName == Html::TEMPLATE or _currentElement()->tagName == Html::TFOOT or
-         _currentElement()->tagName == Html::THEAD or _currentElement()->tagName == Html::TR
-        )) {
+         _currentElement()->tagName == Html::THEAD or _currentElement()->tagName == Html::TR)) {
         // Let the pending table character tokens be an empty list of tokens.
         _pendingTableCharacterTokens.clear();
 
@@ -1592,8 +1586,7 @@ void HtmlParser::_handleInTable(HtmlToken const& t) {
              (t.name == "body" or t.name == "caption" or t.name == "col" or
               t.name == "colgroup" or t.name == "html" or t.name == "tbody" or
               t.name == "td" or t.name == "tfoot" or t.name == "th" or
-              t.name == "thead" or t.name == "tr"
-             )) {
+              t.name == "thead" or t.name == "tr")) {
         // Parse error. Ignore the token.
         _raise();
     }
@@ -1777,8 +1770,7 @@ void HtmlParser::_handleInCaption(HtmlToken const& t) {
     else if (
         (t.type == HtmlToken::START_TAG and
          (t.name == "caption" or t.name == "col" or t.name == "colgroup" or t.name == "tbody" or t.name == "td" or
-          t.name == "tfoot" or t.name == "th" or t.name == "thead" or t.name == "tr"
-         )) or
+          t.name == "tfoot" or t.name == "th" or t.name == "thead" or t.name == "tr")) or
         (t.type == HtmlToken::END_TAG and t.name == "table")
     ) {
         if (_closeTheCaption()) {
@@ -1790,8 +1782,7 @@ void HtmlParser::_handleInCaption(HtmlToken const& t) {
     // An end tag whose tag name is one of: "body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"
     else if (t.type == HtmlToken::END_TAG and
              (t.name == "body" or t.name == "col" or t.name == "colgroup" or t.name == "html" or t.name == "tbody" or
-              t.name == "td" or t.name == "tfoot" or t.name == "th" or t.name == "thead" or t.name == "tr"
-             )) {
+              t.name == "td" or t.name == "tfoot" or t.name == "th" or t.name == "thead" or t.name == "tr")) {
         // Parse error. Ignore the token.
         _raise();
     }
@@ -1996,8 +1987,7 @@ void HtmlParser::_handleInTableBody(HtmlToken const& t) {
         t.type == HtmlToken::END_TAG and
         (t.name == "body" or t.name == "caption" or t.name == "col" or
          t.name == "colgroup" or t.name == "html" or
-         t.name == "td" or t.name == "th" or t.name == "tr"
-        )
+         t.name == "td" or t.name == "th" or t.name == "tr")
     ) {
         // Parse error. Ignore the token.
         _raise();
@@ -2057,10 +2047,8 @@ void HtmlParser::_handleInTableRow(HtmlToken const& t) {
     // An end tag whose tag name is "table"
     else if ((t.type == HtmlToken::START_TAG and
               (t.name == "caption" or t.name == "col" or t.name == "colgroup" or
-               t.name == "tbody" or t.name == "tfoot" or t.name == "thead" or t.name == "tr"
-              )) or
-             (t.type == HtmlToken::END_TAG and t.name == "table"
-             )) {
+               t.name == "tbody" or t.name == "tfoot" or t.name == "thead" or t.name == "tr")) or
+             (t.type == HtmlToken::END_TAG and t.name == "table")) {
 
         // If the stack of open elements does not have a tr element in table scope,
         if (not _hasElementInTableScope(Html::TR)) {
@@ -2112,8 +2100,7 @@ void HtmlParser::_handleInTableRow(HtmlToken const& t) {
     else if (t.type == HtmlToken::END_TAG and
              (t.name == "body" or t.name == "caption" or t.name == "col" or
               t.name == "colgroup" or t.name == "html" or
-              t.name == "td" or t.name == "th"
-             )) {
+              t.name == "td" or t.name == "th")) {
         // Parse error. Ignore the token.
         _raise();
     }
@@ -2188,8 +2175,7 @@ void HtmlParser::_handleInCell(HtmlToken const& t) {
     else if (t.type == HtmlToken::START_TAG and
              (t.name == "caption" or t.name == "col" or t.name == "colgroup" or
               t.name == "tbody" or t.name == "td" or t.name == "tfoot" or
-              t.name == "th" or t.name == "thead" or t.name == "tr"
-             )) {
+              t.name == "th" or t.name == "thead" or t.name == "tr")) {
 
         // Assert: The stack of open elements has a td or th element in table scope.
         if (not _hasElementInTableScope(Html::TD) and not _hasElementInTableScope(Html::TR)) {
@@ -2205,8 +2191,7 @@ void HtmlParser::_handleInCell(HtmlToken const& t) {
     // An end tag whose tag name is one of: "body", "caption", "col", "colgroup", "html"
     else if (t.type == HtmlToken::END_TAG and
              (t.name == "body" or t.name == "caption" or t.name == "col" or
-              t.name == "colgroup" or t.name == "html"
-             )) {
+              t.name == "colgroup" or t.name == "html")) {
         // Parse error. Ignore the token.
         _raise();
     }

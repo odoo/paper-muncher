@@ -263,7 +263,8 @@ struct _Rc {
         return _Rc<L, U>(MOVE, _cell);
     }
 
-    auto operator<=>(_Rc const& other) const
+    template <typename UL, Meta::Comparable<T> U>
+    auto operator<=>(_Rc<UL, U> const& other) const
         requires Meta::Comparable<T>
     {
         if (_cell == other._cell)
@@ -271,7 +272,8 @@ struct _Rc {
         return unwrap() <=> other.unwrap();
     }
 
-    bool operator==(_Rc const& other) const
+    template <typename UL, Meta::Equatable<T> U>
+    bool operator==(_Rc<UL, U> const& other) const
         requires Meta::Equatable<T>
     {
         if (_cell == other._cell)
@@ -279,11 +281,11 @@ struct _Rc {
         return unwrap() == other.unwrap();
     }
 
-    auto operator<=>(T const& other) const {
+    auto operator<=>(Meta::Comparable<T> auto const& other) const {
         return unwrap() <=> other;
     }
 
-    bool operator==(T const& other) const {
+    bool operator==(Meta::Equatable<T> auto const& other) const {
         return unwrap() == other;
     }
 };

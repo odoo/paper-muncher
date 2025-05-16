@@ -23,7 +23,7 @@ Rc<Http::Client> createHttpClient(bool unsecure) {
 
     if (unsecure) {
         transports.pushBack(Http::httpTransport());
-        transports.pushBack(Http::localTransport());
+        transports.pushBack(Http::localTransport(Http::LocalTransportPolicy::ALLOW_ALL));
     } else {
         // NOTE: Only allow access to bundle assets and standard input/output.
         transports.pushBack(Http::localTransport({"bundle"s, "fd"s}));
