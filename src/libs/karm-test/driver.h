@@ -9,12 +9,17 @@ namespace Karm::Test {
 
 struct Test;
 
+struct RunOptions {
+    String glob = "*"s;
+    bool fast = false;
+};
+
 struct Driver {
     Vec<Test*> _tests;
 
     void add(Test* test);
 
-    Async::Task<> runAllAsync();
+    Async::Task<> runAllAsync(RunOptions options);
 
     Res<> unexpect(auto const& lhs, auto const& rhs, Str op, Loc loc = Loc::current()) {
         logError({"unexpected: {#} {} {#}", loc}, lhs, op, rhs);

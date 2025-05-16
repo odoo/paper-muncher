@@ -228,7 +228,6 @@ struct Command : Meta::Pinned {
     };
 
     String longName;
-    Opt<Rune> shortName;
     String description = ""s;
     Vec<Rc<_OptionImpl>> options;
     Opt<Callback> callbackAsync;
@@ -244,13 +243,11 @@ struct Command : Meta::Pinned {
 
     Command(
         String longName,
-        Opt<Rune> shortName = NONE,
         String description = ""s,
         Vec<Rc<_OptionImpl>> options = {},
         Opt<Callback> callbackAsync = NONE
     )
         : longName(std::move(longName)),
-          shortName(shortName),
           description(std::move(description)),
           options(std::move(options)),
           callbackAsync(std::move(callbackAsync)) {
@@ -261,14 +258,12 @@ struct Command : Meta::Pinned {
 
     Command& subCommand(
         String longName,
-        Opt<Rune> shortName = NONE,
         String description = ""s,
         Vec<Rc<_OptionImpl>> options = {},
         Opt<Callback> callbackAsync = NONE
     ) {
         auto cmd = makeRc<Command>(
             longName,
-            shortName,
             description,
             options,
             std::move(callbackAsync)
@@ -383,7 +378,7 @@ struct Command : Meta::Pinned {
         if (Karm::any(_commands)) {
             try$(w.writeStr("Subcommands:\n"s));
             for (auto& cmd : _commands) {
-                try$(format(w, "  {c} {} - {}\n", cmd->shortName.unwrapOr(' '), cmd->longName, cmd->description));
+                try$(format(w, "  {} - {}\n", cmd->longName, cmd->description));
             }
             try$(w.writeRune('\n'));
         }
@@ -484,13 +479,8 @@ struct Command : Meta::Pinned {
             c.next();
 
             for (auto& cmd : _commands) {
-
-                bool shortNameMatch = value.len() == 1 and iterRunes(value).first() == cmd->shortName;
-                bool longNameMatch = value == cmd->longName;
-
-                if (not(shortNameMatch or longNameMatch))
+                if (value != cmd->longName)
                     continue;
-
                 co_return co_await cmd->execAsync(ctx, c);
             }
 

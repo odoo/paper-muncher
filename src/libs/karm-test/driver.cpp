@@ -3,6 +3,7 @@
 #include <karm-cli/spinner.h>
 #include <karm-cli/style.h>
 #include <karm-gfx/buffer.h>
+#include <karm-io/glob.h>
 #include <karm-sys/chan.h>
 #include <karm-sys/time.h>
 
@@ -24,12 +25,19 @@ void Driver::add(Test* test) {
     _tests.pushBack(test);
 }
 
-Async::Task<> Driver::runAllAsync() {
+Async::Task<> Driver::runAllAsync(RunOptions options) {
     usize passed = 0, failed = 0, skipped = 0;
 
-    Sys::errln("Running {} tests...\n", _tests.len());
+    Sys::errln("Running {} tests...", _tests.len());
+    if (options.glob != "*")
+        Sys::errln("Matching glob: {#}", options.glob);
+
+    Sys::errln("");
 
     for (auto* test : _tests) {
+        if (not Io::matchGlob(options.glob, test->_name))
+            continue;
+
         Sys::err(
             "Running {}: {}... ",
             test->_loc.file,
@@ -42,6 +50,10 @@ Async::Task<> Driver::runAllAsync() {
             skipped++;
             Sys::errln("{}", Cli::styled("SKIP"s, Cli::style(Cli::YELLOW).bold()));
         } else if (not result) {
+            if (options.fast) {
+                Sys::errln("{}", Cli::styled("FAIL"s, Cli::style(Cli::RED).bold()));
+                co_return Error::other("test failed");
+            }
             failed++;
             Sys::errln("{}", Cli::styled(Io::cased(result, Io::Case::UPPER), Cli::style(Cli::RED).bold()));
         } else {

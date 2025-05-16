@@ -218,7 +218,6 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
     Cli::Command cmd{
         "paper-muncher"s,
-        NONE,
         "Munch the web into crisp documents"s,
         {unsecureArg, verboseArg},
         [=](Sys::Context&) -> Async::Task<> {
@@ -238,7 +237,6 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
     cmd.subCommand(
         "print"s,
-        'p',
         "Render a web page into a printable document"s,
         {
             inputArg,
@@ -286,7 +284,6 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
     cmd.subCommand(
         "render"s,
-        'r',
         "Render a web page into an image"s,
         {
             inputArg,

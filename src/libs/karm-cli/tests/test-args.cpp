@@ -41,7 +41,6 @@ test$("karm-cli-args-tokenizer") {
 testAsync$("karm-cli-args-simple-command") {
     Command cmd{
         "test"s,
-        NONE,
     };
 
     Vec<Str> args = {};
@@ -58,7 +57,6 @@ testAsync$("karm-cli-args-simple-command") {
 testAsync$("karm-cli-args-nested-command") {
     Command cmd{
         "test"s,
-        NONE,
     };
 
     auto& subCmd = cmd.subCommand("sub"s);
