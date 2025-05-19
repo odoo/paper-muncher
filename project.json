@@ -12,6 +12,10 @@
         "skift-org/hideo": {
             "git": "https://github.com/skift-org/hideo.git",
             "tag": "main"
+        },
+        "cute-engineering/cat": {
+            "git": "https://github.com/cute-engineering/cat.git",
+            "tag": "v0.9.1"
         }
     }
 }
