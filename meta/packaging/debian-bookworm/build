@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+rm -rf .cutekit/venv
+rm -rf .cutekit/tools-ready
+rm -rf sysroot/
+podman run \
+    --rm \
+    -v "$PWD:/src" \
+    -w "/src" \
+    -e CUTEKIT_ALLOW_ROOT=1 \
+    debian:bookworm \
+    bash -c " \
+        ./ck tools setup && \
+        ./ck package install --release --prefix=/opt/paper-muncher --sysroot=/src/sysroot paper-muncher && \
+        mkdir /deb && \
+        mkdir /deb/DEBIAN && \
+        cp -r /src/sysroot/* /deb && \
+        cp -r meta/packaging/debian-bookworm/debian/* /deb/DEBIAN && \
+        dpkg-deb --build /deb /src/paper-muncher_0.1.0_bookworm_amd64.deb"
