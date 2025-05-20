@@ -27,8 +27,8 @@
 
 namespace Vaev::Style {
 
-struct ComputedStyle {
-    static ComputedStyle const& initial();
+struct SpecifiedStyle {
+    static SpecifiedStyle const& initial();
 
     Gfx::Color color;
     Number opacity;
@@ -85,7 +85,7 @@ struct ComputedStyle {
     // https://drafts.csswg.org/css2/#z-index
     ZIndex zIndex = Keywords::AUTO;
 
-    void inherit(ComputedStyle const& parent);
+    void inherit(SpecifiedStyle const& parent);
 
     void repr(Io::Emit& e) const;
 

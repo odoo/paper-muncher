@@ -3,7 +3,7 @@
 #include <karm-text/book.h>
 #include <vaev-dom/element.h>
 
-#include "computed.h"
+#include "specified.h"
 #include "stylesheet.h"
 
 namespace Vaev::Style {
@@ -21,11 +21,11 @@ struct Computer {
 
     void _evalRule(Rule const& rule, Vec<FontFace>& fontFaces);
 
-    Rc<ComputedStyle> _evalCascade(ComputedStyle const& parent, MatchingRules& matches);
+    Rc<SpecifiedStyle> _evalCascade(SpecifiedStyle const& parent, MatchingRules& matches);
 
-    Rc<ComputedStyle> computeFor(ComputedStyle const& parent, Gc::Ref<Dom::Element> el);
+    Rc<SpecifiedStyle> computeFor(SpecifiedStyle const& parent, Gc::Ref<Dom::Element> el);
 
-    Rc<PageComputedStyle> computeFor(ComputedStyle const& parent, Page const& page);
+    Rc<PageComputedStyle> computeFor(SpecifiedStyle const& parent, Page const& page);
 
     void loadFontFaces();
 };

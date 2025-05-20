@@ -43,18 +43,18 @@ struct Page {
 };
 
 struct PageComputedStyle {
-    using Areas = Array<Rc<ComputedStyle>, toUnderlyingType(PageArea::_LEN)>;
+    using Areas = Array<Rc<SpecifiedStyle>, toUnderlyingType(PageArea::_LEN)>;
 
-    Rc<ComputedStyle> style;
+    Rc<SpecifiedStyle> style;
     Areas _areas;
 
-    PageComputedStyle(ComputedStyle const& initial)
-        : style(makeRc<ComputedStyle>(initial)),
+    PageComputedStyle(SpecifiedStyle const& initial)
+        : style(makeRc<SpecifiedStyle>(initial)),
           _areas(Areas::fill([&](...) {
-              return makeRc<ComputedStyle>(initial);
+              return makeRc<SpecifiedStyle>(initial);
           })) {}
 
-    Rc<ComputedStyle> area(PageArea margin) const {
+    Rc<SpecifiedStyle> area(PageArea margin) const {
         return _areas[toUnderlyingType(margin)];
     }
 };
@@ -92,7 +92,7 @@ struct PageAreaRule {
 
     static Opt<PageAreaRule> parse(Css::Sst const& sst);
 
-    void apply(ComputedStyle& c) const;
+    void apply(SpecifiedStyle& c) const;
 
     void repr(Io::Emit& e) const;
 };
