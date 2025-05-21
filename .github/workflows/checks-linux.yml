@@ -11,23 +11,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: '3.13'
-
       - name: Setup Build Environment
         run: ./ck tools setup && ./ck tools doctor
 
-
       - name: Build Libraries
-        run: ./ck builder build
+        run: ./ck build
 
       - name: Test Libraries
-        run: ./ck builder test
+        run: ./ck test
 
       - name: Run Reftests
         run: ./ck reftests run --headless
-
-      - name: Check for formatting errors
-        run: ./meta/scripts/style-check.sh || echo "Please run ./meta/scripts/style-format.sh"

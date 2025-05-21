@@ -134,7 +134,6 @@ def checkForSymbol(header: str, symbol: str) -> bool:
     )
 
 
-@cli.command("n", "tools/nuke", "Nuke the development tools")
 @cli.command("s", "tools/setup", "Setup the development environment")
 def _():
     raise RuntimeError("Don't use ck directly, use ./ck instead.")

@@ -8,13 +8,13 @@ podman run \
     -v "$PWD:/src" \
     -w "/src" \
     -e CUTEKIT_ALLOW_ROOT=1 \
-    ubuntu:jammy \
+    ubuntu:noble \
     bash -c " \
         ./ck tools setup && \
         ./ck install --release --prefix=/opt/${COMPONENT} --sysroot=/src/sysroot ${COMPONENT} && \
         mkdir /deb && \
         mkdir /deb/DEBIAN && \
         cp -r /src/sysroot/* /deb && \
-        cp -r meta/packaging/ubuntu-jammy/debian/* /deb/DEBIAN && \
+        cp -r meta/packaging/ubuntu-noble/debian/* /deb/DEBIAN && \
         mkdir -p /src/dist && \
-        dpkg-deb --build /deb /src/dist/${COMPONENT}_${VERSION}_jammy_amd64.deb"
+        dpkg-deb --build /deb /src/dist/${COMPONENT}_${VERSION}_noble_amd64.deb"

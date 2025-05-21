@@ -12,16 +12,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v3
-        with:
-            python-version: '3.13'
-
       - name: Setup Build Environment
         run: ./ck tools setup && ./ck tools doctor
 
       - name: Build Libraries (Host)
-        run: ./ck builder build
+        run: ./ck build
 
       - name: Test Libraries (Host)
-        run: ./ck builder test
+        run: ./ck test

@@ -32,7 +32,7 @@ From the ashes of frustration, a new tool rose. Forged in the fires of programme
 
 The reign of wkhtmltopdf is over. The Paper Muncher has come. Let its name be etched in the annals of document creation, a beacon of hope for the weary PDF wranglers.  Prepare to be Munched!
 
-# Installation
+# Building
 
 > **⚠ Warning**<br> Paper Muncher is currently in the early stages of development and is not yet ready for use. Here be dragons! 🐉
 
@@ -42,13 +42,14 @@ git clone https://github.com/odoo/paper-muncher
 
 # Build and install the project
 cd paper-muncher
-./ck package install --release --prefix=$HOME/.local
+./ck tools setup
+./ck install --release --prefix=$HOME/.local paper-muncher
 
 # Add the binary to your PATH, add this to your .bashrc to make it permanent
 export PATH=$PATH:$HOME/.local/bin
 
 # Render a webpage to PDF
-paper-muncher print index.html -o output.pdf
+paper-muncher --unsecure --timeout=10s print index.html -o output.pdf
 
 # For more options, run
 paper-muncher --help

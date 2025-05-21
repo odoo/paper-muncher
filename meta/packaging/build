@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -e
+
+meta/packaging/debian-bookworm/build
+meta/packaging/ubuntu-jammy/build
+meta/packaging/ubuntu-noble/build
