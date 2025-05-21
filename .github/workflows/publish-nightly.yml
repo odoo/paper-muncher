@@ -1,0 +1,38 @@
+
+name: Publish Nightly
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  nightly:
+    name: Publish nightly
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Setup Build Environment
+        run: ./ck tools setup
+
+      - name: Build Packages
+        run: |
+          meta/packaging/build
+        env:
+          VERSION: nightly
+          COMPONENT: paper-muncher
+
+      - name: Publish Release
+        run: |
+          gh release delete nightly || true
+          gh release create nightly dist/* --title "Nightly Build" --notes "This is a pre-build nightly snapshot of paper-muncher. It is meant for testing purposes only and should not be used in production." --prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
