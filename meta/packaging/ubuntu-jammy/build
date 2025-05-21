@@ -7,13 +7,14 @@ podman run \
     -v "$PWD:/src" \
     -w "/src" \
     -e CUTEKIT_ALLOW_ROOT=1 \
-    debian:bookworm \
+    -e CUTEKIT_PYTHON=python3.11 \
+    ubuntu:jammy \
     bash -c " \
         ./ck tools setup && \
         ./ck install --release --prefix=/opt/paper-muncher --sysroot=/src/sysroot paper-muncher && \
         mkdir /deb && \
         mkdir /deb/DEBIAN && \
         cp -r /src/sysroot/* /deb && \
-        cp -r meta/packaging/debian-bookworm/debian/* /deb/DEBIAN && \
+        cp -r meta/packaging/ubuntu-jammy/debian/* /deb/DEBIAN && \
         mkdir -p /src/dist && \
-        dpkg-deb --build /deb /src/dist/paper-muncher_$(CUTEKIT_VERSION)_bookworm_amd64.deb"
+        dpkg-deb --build /deb /src/dist/paper-muncher_$(CUTEKIT_VERSION)_jammy_amd64.deb"
