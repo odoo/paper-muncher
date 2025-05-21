@@ -21,6 +21,19 @@
 
 Paper-Muncher is now in early alpha. We're currently focused on improving stability and ensuring compliance. While it's still early days, the project is functional enough to try out, and we're actively looking for feedback. The direction may still evolve, but you can already get a feel for where we're headed. Let us know what you think on [Discord](https://discord.gg/4GC9nQnAvY).
 
+# Installation
+
+1. **Download** the prebuilt package for your distribution from the [nightly releases](https://github.com/odoo/paper-muncher/releases/tag/nightly).
+2. **Install** the package using your system's package manager.
+3. **Add** `/opt/paper-muncher/bin` to your `PATH` environment variable.
+4. **Verify** the installation by running `paper-muncher --help` to see available options.
+5. **Learn more** by visiting the [official documentation](https://odoo.github.io/paper-muncher/usage.html).
+
+# Basic usage
+
+```bash
+paper-muncher --unsecure print index.html -o output.pdf
+```
 
 # Introduction
 
