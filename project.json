@@ -15,7 +15,7 @@
         },
         "cute-engineering/cat": {
             "git": "https://github.com/cute-engineering/cat.git",
-            "tag": "v0.9.1"
+            "tag": "v0.10.0"
         }
     }
 }

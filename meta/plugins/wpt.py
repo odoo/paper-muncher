@@ -18,7 +18,7 @@ def _ensureWpts():
             raise RuntimeError(f"Failed to clone WPTs: {e}")
 
 
-@cli.command(None, "wpt", "Manage the WPTs")
+@cli.command("wpt", "Manage the WPTs")
 def _(): ...
 
 
@@ -26,7 +26,7 @@ class WptArgs:
     args: list[str] = cli.extra("args", "Args to pass to the WPTs")
 
 
-@cli.command("a", "wpt/exec", "Exec ./wpt")
+@cli.command("wpt/exec", "Exec ./wpt")
 def _(args: WptArgs):
     cmd = [
         "./wpt",
@@ -39,7 +39,7 @@ def _(args: WptArgs):
     )
 
 
-@cli.command("a", "wpt/run", "Run the WPTs")
+@cli.command("wpt/run", "Run the WPTs")
 def _(args: WptArgs):
     _ensureWpts()
 
