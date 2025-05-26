@@ -1,14 +1,9 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "id": "vaev-style",
+    "id": "vaev-css",
     "type": "lib",
-    "description": "The Stylish styling engine",
-    "subdirs": [
-        "css"
-    ],
     "requires": [
         "vaev-base",
-        "vaev-dom",
-        "vaev-css"
+        "vaev-dom"
     ]
 }

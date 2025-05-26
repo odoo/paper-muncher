@@ -1,6 +1,6 @@
 #pragma once
 
-#include "css/parser.h"
+#include <vaev-css/parser.h>
 
 namespace Vaev::Style {
 

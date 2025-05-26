@@ -1,13 +1,9 @@
 #pragma once
 
-#include <karm-base/ctype.h>
 #include <karm-base/func.h>
 #include <karm-base/res.h>
-#include <karm-base/string.h>
 #include <karm-base/vec.h>
 #include <karm-io/emit.h>
-#include <karm-io/fmt.h>
-#include <karm-logger/logger.h>
 
 namespace Vaev::Css {
 

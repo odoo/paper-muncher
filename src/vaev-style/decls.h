@@ -1,7 +1,8 @@
 #pragma once
 
+#include <vaev-css/parser.h>
+
 #include "base.h"
-#include "css/parser.h"
 #include "props.h"
 
 namespace Vaev::Style {

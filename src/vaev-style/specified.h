@@ -22,8 +22,7 @@
 #include <vaev-base/text.h>
 #include <vaev-base/visibility.h>
 #include <vaev-base/z-index.h>
-
-#include "css/parser.h"
+#include <vaev-css/parser.h>
 
 namespace Vaev::Style {
 

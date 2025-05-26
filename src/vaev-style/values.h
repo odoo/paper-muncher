@@ -22,9 +22,9 @@
 #include <vaev-base/resolution.h>
 #include <vaev-base/sizing.h>
 #include <vaev-base/table.h>
+#include <vaev-css/parser.h>
 
 #include "base.h"
-#include "css/parser.h"
 
 namespace Vaev::Style {
 
