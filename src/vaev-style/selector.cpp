@@ -9,44 +9,46 @@ static constexpr bool DEBUG_SELECTORS = false;
 
 // https://www.w3.org/TR/selectors-3/#specificity
 Spec spec(Selector const& s) {
-    return s.visit(Visitor{[](Nfix const& n) {
-                               // FIXME: missing other pseudo class selectors implemented as nfix
-                               if (n.type == Nfix::WHERE)
-                                   return Spec::ZERO;
+    return s.visit(Visitor{
+        [](Nfix const& n) {
+            // FIXME: missing other pseudo class selectors implemented as nfix
+            if (n.type == Nfix::WHERE)
+                return Spec::ZERO;
 
-                               Spec sum = Spec::ZERO;
-                               for (auto& inner : n.inners)
-                                   sum = sum + spec(inner);
-                               return sum;
-                           },
-                           [](Infix const& i) {
-                               return spec(*i.lhs) + spec(*i.rhs);
-                           },
-                           [](UniversalSelector const&) {
-                               return Spec::ZERO;
-                           },
-                           [](EmptySelector const&) {
-                               return Spec::ZERO;
-                           },
-                           [](IdSelector const&) {
-                               return Spec::A;
-                           },
-                           [](TypeSelector const&) {
-                               return Spec::C;
-                           },
-                           [](ClassSelector const&) {
-                               return Spec::B;
-                           },
-                           [](Pseudo const&) {
-                               return Spec::B;
-                           },
-                           [](AttributeSelector const&) {
-                               return Spec::B;
-                           },
-                           [](auto const& s) {
-                               logWarnIf(DEBUG_SELECTORS, "unimplemented selector: {}", s);
-                               return Spec::ZERO;
-                           }});
+            Spec sum = Spec::ZERO;
+            for (auto& inner : n.inners)
+                sum = sum + spec(inner);
+            return sum;
+        },
+        [](Infix const& i) {
+            return spec(*i.lhs) + spec(*i.rhs);
+        },
+        [](UniversalSelector const&) {
+            return Spec::ZERO;
+        },
+        [](EmptySelector const&) {
+            return Spec::ZERO;
+        },
+        [](IdSelector const&) {
+            return Spec::A;
+        },
+        [](TypeSelector const&) {
+            return Spec::C;
+        },
+        [](ClassSelector const&) {
+            return Spec::B;
+        },
+        [](Pseudo const&) {
+            return Spec::B;
+        },
+        [](AttributeSelector const&) {
+            return Spec::B;
+        },
+        [](auto const& s) {
+            logWarnIf(DEBUG_SELECTORS, "unimplemented selector: {}", s);
+            return Spec::ZERO;
+        },
+    });
 }
 
 // MARK: Parser ----------------------------------------------------------------
@@ -66,13 +68,13 @@ enum struct OpCode {
 };
 
 static Selector _parseAttributeSelector(Slice<Css::Sst> content) {
-    auto caze = AttributeSelector::INSENSITIVE;
+    auto case_ = AttributeSelector::INSENSITIVE;
     Str name = "";
     String value = ""s;
     auto match = AttributeSelector::PRESENT;
 
     usize step = 0;
-    Cursor<Css::Sst> cur = content;
+    Cursor cur = content;
 
     while (not cur.ended() and cur->token.data != "]"s) {
         if (cur.skip(Css::Token::WHITESPACE))
@@ -117,7 +119,7 @@ static Selector _parseAttributeSelector(Slice<Css::Sst> content) {
             break;
         case 3:
             if (cur->token.data == "s") {
-                caze = AttributeSelector::SENSITIVE;
+                case_ = AttributeSelector::SENSITIVE;
             }
             break;
         }
@@ -128,7 +130,7 @@ static Selector _parseAttributeSelector(Slice<Css::Sst> content) {
 
     return AttributeSelector{
         name,
-        caze,
+        case_,
         match,
         value,
     };
