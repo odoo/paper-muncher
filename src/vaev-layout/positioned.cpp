@@ -42,7 +42,7 @@ export void layoutPositioned(Tree& tree, Frag& frag, RectAu containingBlock) {
         containingBlock = metrics.contentBox();
     }
 
-    for (auto& c : frag.children) {
+    for (auto& c : frag.children()) {
         layoutPositioned(tree, c, containingBlock);
     }
 }

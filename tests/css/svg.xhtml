@@ -1,0 +1,476 @@
+<test name="sizing-of-svg" size="700">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+
+            #black {
+                background-color: black;
+                fill: black;
+            }
+
+            #red {
+                background-color: red;
+                fill: red;
+            }
+
+            #blue {
+                background-color: blue;
+                fill: blue;
+            }
+
+            #green {
+                background-color: green;
+                fill: green;
+            }
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="">
+            <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 150px; width: 300px;">
+                    <div id="black" style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;"></div>
+                    <div id="red" style="position: absolute; top: 0px; left: 25px; height: 75px; width: 100px;"></div>
+                    <div id="blue" style="position: absolute; top: 0px; left: 50px; height: 100px; width: 150px;"></div>
+                    <div id="green" style="position: absolute; top: 0px; left: 75px; height: 75px; width: 150px;"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 100px; left: 0px; height: 100px; width: 100px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;">
+                    <div id="black" style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;"></div>
+                    <div id="red" style="position: absolute; top: 0px; left: 25px; height: 50px; width: 25px;"></div>
+                    <div id="blue" style="position: absolute; top: 0px; left: 50px; height: 100px; width: 50px;"></div>
+                    <div id="green" style="position: absolute; top: 0px; left: 75px; height: 50px; width: 25px;"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 200px; left: 0px; height: 100px; width: 100px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;">
+                    <div id="black" style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;"></div>
+                    <div id="red" style="position: absolute; top: 0px; left: 25px; height: 50px; width: 25px;"></div>
+                    <div id="blue" style="position: absolute; top: 0px; left: 50px; height: 100px; width: 50px;"></div>
+                    <div id="green" style="position: absolute; top: 0px; left: 75px; height: 50px; width: 25px;"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 300px; left: 0px; height: 100px; width: 100px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;">
+                    <div id="black" style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;"></div>
+                    <div id="red" style="position: absolute; top: 0px; left: 25px; height: 50px; width: 25px;"></div>
+                    <div id="blue" style="position: absolute; top: 0px; left: 50px; height: 100px; width: 50px;"></div>
+                    <div id="green" style="position: absolute; top: 0px; left: 75px; height: 50px; width: 25px;"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 400px; left: 0px; height: 100px; width: 300px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 300px;">
+                    <div id="black" style="position: absolute; top: 0px; left: 100px; height: 100px; width: 200px;">
+                    </div>
+                    <div id="red" style="position: absolute; top: 0px; left: 150px; height: 50px; width: 50px;"></div>
+                    <div id="blue" style="position: absolute; top: 0px; left: 200px; height: 100px; width: 50px;"></div>
+                    <div id="green" style="position: absolute; top: 0px; left: 250px; height: 50px; width: 50px;"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 500px; left: 0px; height: 100px; width: 100px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 300px;">
+                    <div id="black" style="position: absolute; top: 0px; left: 100px; height: 100px; width: 200px;">
+                    </div>
+                    <div id="red" style="position: absolute; top: 0px; left: 150px; height: 50px; width: 50px;"></div>
+                    <div id="blue" style="position: absolute; top: 0px; left: 200px; height: 100px; width: 50px;"></div>
+                    <div id="green" style="position: absolute; top: 0px; left: 250px; height: 50px; width: 50px;"></div>
+                </div>
+            </div>
+        </div>
+
+    </rendering>
+
+    <rendering>
+        <div style="width: 100px;height: 100px;">
+            <svg xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="0" width="100" height="100" id="black" />
+                <rect x="25" y="0" width="100" height="50%" id="red" />
+                <rect x="50" y="0" width="50%" height="100" id="blue" />
+                <rect x="75" y="0" width="50%" height="50%" id="green" />
+            </svg>
+        </div>
+        <div style="width: 100px;height: 100px;">
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="0" width="100" height="100" id="black" />
+                <rect x="25" y="0" width="100" height="50%" id="red" />
+                <rect x="50" y="0" width="50%" height="100" id="blue" />
+                <rect x="75" y="0" width="50%" height="50%" id="green" />
+            </svg>
+        </div>
+        <div style="width: 100px;height: 100px;">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="0" width="100" height="100" id="black" />
+                <rect x="25" y="0" width="100" height="50%" id="red" />
+                <rect x="50" y="0" width="50%" height="100" id="blue" />
+                <rect x="75" y="0" width="50%" height="50%" id="green" />
+            </svg>
+        </div>
+        <div style="width: 100px;height: 100px;">
+            <svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="0" width="100" height="100" id="black" />
+                <rect x="25" y="0" width="100" height="50%" id="red" />
+                <rect x="50" y="0" width="50%" height="100" id="blue" />
+                <rect x="75" y="0" width="50%" height="50%" id="green" />
+            </svg>
+        </div>
+        <div style="width: 300px;height: 100px;">
+            <svg width="100%" height="100%" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="0" width="100" height="100" id="black" />
+                <rect x="25" y="0" width="100" height="50%" id="red" />
+                <rect x="50" y="0" width="50%" height="100" id="blue" />
+                <rect x="75" y="0" width="50%" height="50%" id="green" />
+            </svg>
+        </div>
+        <div style="width: 100px;height: 100px;">
+            <svg width="300" height="100" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="0" width="100" height="100" id="black" />
+                <rect x="25" y="0" width="100" height="50%" id="red" />
+                <rect x="50" y="0" width="50%" height="100" id="blue" />
+                <rect x="75" y="0" width="50%" height="50%" id="green" />
+            </svg>
+        </div>
+    </rendering>
+
+</test>
+
+
+<test name="svg-basic-shapes" size="300">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+            <g fill="lightblue" stroke="darkblue" stroke-width="2">
+                <circle cx="50" cy="50" r="30" />
+                <rect x="10" y="90" width="60" height="40" />
+            </g>
+
+            <path d="M 120 20 L 180 20 L 150 80 Z" fill="lightcoral" stroke="darkred" stroke-width="3" />
+
+            <rect x="120" y="90" width="70" height="30" fill="lightgreen" stroke="darkgreen" stroke-width="10" />
+        </svg>
+    </rendering>
+</test>
+
+<test name="svg-inline" size="300">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+
+
+        <div style="position: absolute; top: 0px; left: 0px; height: 300px; width: 300px;">
+            <div style="position: absolute; top: 36px; left: 0px; height: 17px; width: 150px;">
+                <div
+                    style="position: absolute; top: -36px; left: 0px; height: 50px; width: 50px;background-color: red;">
+
+                </div>
+                <div
+                    style="position: absolute; top: -36px; left: 50px; height: 50px; width: 50px;background-color: green;">
+
+                </div>
+                <div
+                    style="position: absolute; top: -36px; left: 100px; height: 50px; width: 50px;background-color: blue;">
+
+                </div>
+            </div>
+        </div>
+
+    </rendering>
+
+    <rendering>
+        <div style="width: 300px;height: 300px;">
+            <span>
+                <svg width="50px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" style="display: inline-block;">
+                    <rect x="0" y="0" width="20" height="20" fill="red" />
+                </svg><svg width="50px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                    style="display: inline-block;">
+                    <rect x="0" y="0" width="20" height="20" fill="green" />
+                </svg><svg width="50px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" style="display: inline;">
+                    <rect x="0" y="0" width="20" height="20" fill="blue" />
+                </svg>
+            </span>
+        </div>
+    </rendering>
+</test>
+
+
+<test name="svg-inside-svg-viewbox-init-coord" size="300">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div>
+            <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;background-color: red;">
+            </div>
+            <div style="position: absolute; top: 0px; left: 0px; height: 75px; width: 75px;background-color: green;">
+            </div>
+            <div style="position: absolute; top: 0px; left: 0px; height: 50px; width: 50px;background-color: blue;">
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="100" viewBox="0 0 100 100">
+                <rect x="0" y="0" width="100%" height="100%" fill="red" />
+                <svg width="100%" height="100%" viewBox="50 50 100 100">
+                    <rect x="25" y="25" width="100%" height="100%" fill="green" />
+                    <svg width="100%" height="100%" viewBox="50 50 100 100">
+                        <rect x="50" y="50" width="100%" height="100%" fill="blue" />
+                    </svg>
+                </svg>
+            </svg>
+        </div>
+    </rendering>
+</test>
+
+<test name="svg-inside-svg-viewbox-init-coord-2" size="300">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="350" viewBox="0 0 100 100">
+                <svg width="40" height="100%" viewBox="0 10 100 100">
+                    <svg width="45" height="100%" viewBox="10 10 100 100">
+                        <svg width="50" height="100%" viewBox="10 0 100 100">
+                            <rect x="40%" y="10%" width="20%" height="20%" fill="red" />
+                        </svg>
+                        <rect x="30%" y="20%" width="20%" height="20%" fill="green" />
+                    </svg>
+                    <rect x="20%" y="30%" width="20%" height="20%" fill="blue" />
+                </svg>
+                <rect x="10%" y="40%" width="20%" height="20%" fill="black" />
+            </svg>
+        </div>
+    </rendering>
+</test>
+
+<test name="svg-inside-svg-viewbox-no-init-coord" size="300">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="350" viewBox="0 0 100 100">
+                <svg width="40" height="100%" viewBox="0 0 100 100">
+                    <svg width="45" height="100%" viewBox="0 0 100 100">
+                        <svg width="50" height="100%" viewBox="0 0 100 100">
+                            <rect x="40%" y="10%" width="20%" height="20%" fill="red" />
+                        </svg>
+                        <rect x="30%" y="20%" width="20%" height="20%" fill="green" />
+                    </svg>
+                    <rect x="20%" y="30%" width="20%" height="20%" fill="blue" />
+                </svg>
+                <rect x="10%" y="40%" width="20%" height="20%" fill="black" />
+            </svg>
+        </div>
+    </rendering>
+</test>
+
+<test name="svg-inside-svg-no-viewbox" size="300">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="350" viewBox="0 0 100 100">
+                <svg width="40" height="100%">
+                    <svg width="45" height="100%">
+                        <svg width="50" height="100%">
+                            <rect x="40%" y="10%" width="20%" height="20%" fill="red" />
+                        </svg>
+                        <rect x="30%" y="20%" width="20%" height="20%" fill="green" />
+                    </svg>
+                    <rect x="20%" y="30%" width="20%" height="20%" fill="blue" />
+                </svg>
+                <rect x="10%" y="40%" width="20%" height="20%" fill="black" />
+            </svg>
+        </div>
+    </rendering>
+</test>
+
+<test name="svg-foreign-object" size="300">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width:20px;height:20px;background-color:green">
+        </div>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" viewBox="0 0 100 100">
+            <foreignObject x="0" y="0" width="100%" height="100%">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="width:20px;height:20px;background-color:green">
+                </div>
+            </foreignObject>
+        </svg>
+    </rendering>
+</test>
+
+<test name="svg-foreign-object-2" size="300">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width:100px;height:100px;background-color:green">
+        </div>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" viewBox="0 0 100 100">
+            <foreignObject x="0" y="0" width="100%" height="100%">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="width:100px;height:100px;background-color:green">
+                </div>
+            </foreignObject>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" width="200" viewBox="0 0 100 100">
+            <foreignObject x="0" y="0" width="50%" height="50%">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="width:200px;height:200px;background-color:green">
+                </div>
+            </foreignObject>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" viewBox="0 0 100 100">
+            <foreignObject x="0" y="0" width="100%" height="100%">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="width:100px;height:100px;background-color:red">
+                </div>
+            </foreignObject>
+            <svg width="100%" height="100%" viewBox="50 50 200 200">
+                <foreignObject x="50" y="50" width="200" height="200">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="width:200px;height:200px;background-color:green">
+                    </div>
+                </foreignObject>
+            </svg>
+        </svg>
+    </rendering>
+</test>

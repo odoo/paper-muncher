@@ -171,4 +171,64 @@ Vec<P> parseDeclarations(Str style, bool allowDeferred = true) {
     return parseDeclarations<P>(sst, allowDeferred);
 }
 
+inline String wrapPathAsCSSStyle(Str style) {
+    StringBuilder sb;
+    sb.append("path(\""s);
+    for (auto r : iterRunes(style)) {
+        if (r == '\n')
+            continue;
+        sb.append(r);
+    }
+    sb.append("\")"s);
+    return sb.take();
+}
+
+// https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
+void inline parseSVGPresentationAttribute(Str presentationAttr, Str style, Vec<StyleProp>& styleProps) {
+    SVGStyleProp::any(
+        Visitor{
+            [&]<Meta::Same<SVGDProp>>() -> bool {
+                if (presentationAttr != SVGDProp::name())
+                    return false;
+                SVGDProp d;
+
+                auto fixedStyle = wrapPathAsCSSStyle(style);
+                Css::Lexer lex{fixedStyle};
+                auto sst = Css::consumeDeclarationValue(lex);
+                Cursor<Css::Sst> content = sst;
+
+                if (d.parse(content))
+                    styleProps.pushBack(std::move(d));
+                return true;
+            },
+            [&]<typename T>() -> bool {
+                if (presentationAttr != T::name())
+                    return false;
+
+                Css::Lexer lex{style};
+                auto sst = Css::consumeDeclarationValue(lex);
+
+                Cursor<Css::Sst> content = sst;
+                if (auto prop = parseDeclarationValue<T>(content)) {
+                    styleProps.pushBack(std::move(prop.take()));
+                } else if (auto maybeNumber = parseValue<Number>(content)) {
+                    T propAsNumber;
+
+                    if constexpr (Meta::Constructible<decltype(propAsNumber.value), Length>) {
+                        propAsNumber.value = Length{Au{maybeNumber.take()}};
+                    } else if constexpr (Meta::Constructible<decltype(propAsNumber.value), CalcValue<PercentOr<Length>>>) {
+                        propAsNumber.value = CalcValue<PercentOr<Length>>{Length{Au{maybeNumber.take()}}};
+                    } else {
+                        return true;
+                    }
+
+                    styleProps.pushBack(std::move(propAsNumber));
+                }
+
+                return true;
+            }
+        }
+    );
+}
+
 } // namespace Vaev::Style

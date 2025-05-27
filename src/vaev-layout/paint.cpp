@@ -104,6 +104,33 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
 static void _establishStackingContext(Frag& frag, Scene::Stack& stack);
 static void _paintStackingContext(Frag& frag, Scene::Stack& stack);
 
+Rc<Scene::Node> _paintSVG(SVGRootFrag& svgRoot, Gfx::Color currentColor) {
+    Scene::Stack stack;
+    for (auto& element : svgRoot.elements) {
+        if (auto shape = element.is<SVG::ShapeFrag>()) {
+            stack.add(shape->toSceneNode(currentColor));
+        } else if (auto nestedRoot = element.is<SVGRootFrag>()) {
+            stack.add(
+                makeRc<Scene::Clip>(
+                    _paintSVG(*nestedRoot, currentColor),
+                    nestedRoot->boundingBox.toRect().cast<f64>()
+                )
+            );
+        } else if (auto foreignObject = element.is<::Box<Frag>>()) {
+            auto& frag = **foreignObject;
+            Scene::Stack nestedStack;
+            _paintStackingContext(frag, nestedStack);
+            stack.add(
+                makeRc<Scene::Clip>(
+                    makeRc<Scene::Stack>(std::move(nestedStack)),
+                    frag.metrics.borderBox().cast<f64>()
+                )
+            );
+        }
+    }
+    return makeRc<Scene::Transform>(makeRc<Scene::Stack>(std::move(stack)), svgRoot.transf);
+}
+
 static void _paintFrag(Frag& frag, Scene::Stack& stack) {
     auto& s = frag.style();
     if (s.visibility == Visibility::HIDDEN)
@@ -115,11 +142,21 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
         stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
     } else if (auto image = frag.box->content.is<Karm::Image::Picture>()) {
         stack.add(makeRc<Scene::Image>(frag.metrics.borderBox().cast<f64>(), *image));
+    } else if (auto svgRoot = frag.content.is<SVGRootFrag>()) {
+        if (min(frag.metrics.borderSize.x, frag.metrics.borderSize.y) == 0_au)
+            return;
+
+        stack.add(
+            makeRc<Scene::Clip>(
+                _paintSVG(*svgRoot, s.color),
+                frag.metrics.contentBox().cast<f64>()
+            )
+        );
     }
 }
 
 static void _paintChildren(Frag& frag, Scene::Stack& stack, auto predicate) {
-    for (auto& c : frag.children) {
+    for (auto& c : frag.children()) {
         auto& s = c.style();
 
         if (_needsNewStackingContext(c)) {
@@ -546,7 +583,7 @@ export void paint(Frag& frag, Scene::Stack& stack) {
 // MARK: Wireframe -------------------------------------------------------------
 
 export void wireframe(Frag& frag, Gfx::Canvas& g) {
-    for (auto& c : frag.children)
+    for (auto& c : frag.children())
         wireframe(c, g);
 
     g.strokeStyle({
@@ -587,7 +624,7 @@ export void overlay(Frag& frag, Gfx::Canvas& g, Gc::Ref<Dom::Node> node) {
         g.fill(frag.metrics.contentBox().cast<f64>());
     }
 
-    for (auto& c : frag.children)
+    for (auto& c : frag.children())
         overlay(c, g, node);
 }
 

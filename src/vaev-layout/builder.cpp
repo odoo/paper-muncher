@@ -13,6 +13,7 @@ module;
 export module Vaev.Layout:builder;
 
 import :values;
+import :svg;
 
 namespace Vaev::Layout {
 
@@ -388,6 +389,57 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     bc.content() = InlineBox{prose};
 }
 
+void buildSVGChildren(Gc::Ref<Dom::Element> el, SVGRoot& svgRoot);
+static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el);
+
+void buildSVGElement(Gc::Ref<Dom::Element> el, SVGRoot& svgRoot) {
+    if (SVG::isShape(el->tagName)) {
+        svgRoot.add(SVG::Shape::build(el->specifiedValues(), el->tagName));
+    } else if (el->tagName == Svg::G) {
+        buildSVGChildren(el, svgRoot);
+    } else if (el->tagName == Svg::SVG) {
+        SVGRoot newSvgRoot{el->specifiedValues()};
+        buildSVGChildren(el, newSvgRoot);
+        svgRoot.add(std::move(newSvgRoot));
+    } else if (el->tagName == Svg::FOREIGN_OBJECT) {
+        Box box{el->specifiedValues(), el->computedValues()->fontFace, el};
+
+        InlineBox rootInlineBox{_proseStyleFomStyle(
+            *el->specifiedValues(),
+            el->computedValues()->fontFace
+        )};
+
+        BuilderContext bc{
+            BuilderContext::From::BLOCK,
+            el->specifiedValues(),
+            box,
+            &rootInlineBox,
+        };
+
+        buildBlockFlowFromElement(bc, *el);
+
+        svgRoot.add(std::move(box));
+    } else {
+        // TODO
+        logWarn("cannot build element into svg tree: {}", el->tagName);
+    }
+}
+
+void buildSVGChildren(Gc::Ref<Dom::Element> el, SVGRoot& svgRoot) {
+    for (auto child = el->firstChild(); child; child = child->nextSibling()) {
+        if (auto el = child->is<Dom::Element>()) {
+            buildSVGElement(*el, svgRoot);
+        }
+        // TODO: process text into svg tree
+    }
+}
+
+SVGRoot _buildSVG(Gc::Ref<Dom::Element> el) {
+    SVGRoot svgRoot{el->specifiedValues()};
+    buildSVGChildren(el, svgRoot);
+    return svgRoot;
+}
+
 always_inline static bool isVoidElement(Gc::Ref<Dom::Element> el) {
     return contains(Html::VOID_TAGS, el->tagName);
 }
@@ -434,6 +486,8 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     if (el->tagName == Html::BR) {
         // do nothing
+    } else if (el->tagName == Svg::SVG) {
+        bc.content() = _buildSVG(el);
     } else if (isVoidElement(el)) {
         _buildVoidElement(bc, el);
     } else {
