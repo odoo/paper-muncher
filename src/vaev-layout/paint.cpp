@@ -4,6 +4,7 @@ module;
 #include <karm-scene/clip.h>
 #include <karm-scene/image.h>
 #include <karm-scene/text.h>
+#include <karm-scene/transform.h>
 #include <vaev-style/computer.h>
 
 export module Vaev.Layout:paint;
@@ -98,6 +99,31 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
 static void _establishStackingContext(Frag& frag, Scene::Stack& stack);
 static void _paintStackingContext(Frag& frag, Scene::Stack& stack);
 
+Rc<Scene::Node> _paintSVG(SVGRootFrag& svgRoot, Gfx::Color currentColor) {
+    Scene::Stack stack;
+    for (auto& element : svgRoot.elements) {
+        if (auto shape = element.is<SVG::ShapeFrag>()) {
+            stack.add(shape->toSceneNode(currentColor));
+        } else if (auto nestedRoot = element.is<SVGRootFrag>()) {
+            auto clip = makeRc<Scene::Clip>(
+                Math::Rect<Au>{
+                    nestedRoot->boundingBox.x, nestedRoot->boundingBox.y,
+                    nestedRoot->boundingBox.width, nestedRoot->boundingBox.height
+                }
+                    .cast<f64>()
+            );
+            clip->add(_paintSVG(*nestedRoot, currentColor));
+            stack.add(clip);
+        } else if (auto foreignObject = element.is<::Box<Frag>>()) {
+            auto& frag = **foreignObject;
+            Rc<Scene::Stack> clip = makeRc<Scene::Clip>(frag.metrics.borderBox().cast<f64>());
+            _paintStackingContext(frag, *clip);
+            stack.add(clip);
+        }
+    }
+    return makeRc<Scene::Transform>(makeRc<Scene::Stack>(std::move(stack)), svgRoot.transf);
+}
+
 static void _paintFrag(Frag& frag, Scene::Stack& stack) {
     auto& s = frag.style();
     if (s.visibility == Visibility::HIDDEN)
@@ -109,11 +135,18 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
         stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
     } else if (auto image = frag.box->content.is<Karm::Image::Picture>()) {
         stack.add(makeRc<Scene::Image>(frag.metrics.borderBox().cast<f64>(), *image));
+    } else if (auto svgRoot = frag.content.is<SVGRootFrag>()) {
+        if (min(frag.metrics.borderSize.x, frag.metrics.borderSize.y) == 0_au)
+            return;
+
+        auto clip = makeRc<Scene::Clip>(frag.metrics.contentBox().cast<f64>());
+        clip->add(_paintSVG(*svgRoot, s.color));
+        stack.add(clip);
     }
 }
 
 static void _paintChildren(Frag& frag, Scene::Stack& stack, auto predicate) {
-    for (auto& c : frag.children) {
+    for (auto& c : frag.children()) {
         auto& s = c.style();
 
         if (_needsNewStackingContext(c)) {
@@ -389,7 +422,7 @@ export void paint(Frag& frag, Scene::Stack& stack) {
 }
 
 export void wireframe(Frag& frag, Gfx::Canvas& g) {
-    for (auto& c : frag.children)
+    for (auto& c : frag.children())
         wireframe(c, g);
 
     g.strokeStyle({
@@ -428,7 +461,7 @@ export void overlay(Frag& frag, Gfx::Canvas& g, Gc::Ref<Dom::Node> node) {
         g.fill(frag.metrics.contentBox().cast<f64>());
     }
 
-    for (auto& c : frag.children)
+    for (auto& c : frag.children())
         overlay(c, g, node);
 }
 

@@ -9,6 +9,7 @@ module;
 export module Vaev.Layout:builder;
 
 import :values;
+import :svg;
 
 namespace Vaev::Layout {
 
@@ -425,6 +426,58 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     bc.content() = InlineBox{prose};
 }
 
+void buildSVGChildren(Style::Computer& computer, Rc<Style::SpecifiedStyle> parentStyle, Gc::Ref<Dom::Element> el, SVGRoot& svgRoot);
+static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el);
+
+void buildSVGElement(Style::Computer& computer, Rc<Style::SpecifiedStyle> parentStyle, Gc::Ref<Dom::Element> el, SVGRoot& svgRoot) {
+    auto style = computer.computeFor(*parentStyle, *el);
+
+    if (SVG::isShape(el->tagName)) {
+        svgRoot.add(SVG::Shape::build(style, el->tagName));
+    } else if (el->tagName == Svg::G) {
+        buildSVGChildren(computer, style, el, svgRoot);
+    } else if (el->tagName == Svg::SVG) {
+        SVGRoot newSvgRoot{style};
+        buildSVGChildren(computer, style, el, newSvgRoot);
+        svgRoot.add(std::move(newSvgRoot));
+    } else if (el->tagName == Svg::FOREIGN_OBJECT) {
+        auto font = _lookupFontface(computer.fontBook, *style);
+
+        Box box = {style, font, el};
+        InlineBox rootInlineBox{_proseStyleFomStyle(computer, *style)};
+
+        BuilderContext bc{
+            computer,
+            BuilderContext::From::BLOCK,
+            style,
+            box,
+            &rootInlineBox,
+        };
+
+        buildBlockFlowFromElement(bc, *el);
+
+        svgRoot.add(std::move(box));
+    } else {
+        // TODO
+        logWarn("cannot build element into svg tree: {}", el->tagName);
+    }
+}
+
+void buildSVGChildren(Style::Computer& computer, Rc<Style::SpecifiedStyle> parentStyle, Gc::Ref<Dom::Element> el, SVGRoot& svgRoot) {
+    for (auto child = el->firstChild(); child; child = child->nextSibling()) {
+        if (auto el = child->is<Dom::Element>()) {
+            buildSVGElement(computer, parentStyle, *el, svgRoot);
+        }
+        // TODO: process text into svg tree
+    }
+}
+
+SVGRoot _buildSVG(Style::Computer& computer, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedStyle> rootStyle) {
+    SVGRoot svgRoot{rootStyle};
+    buildSVGChildren(computer, rootStyle, el, svgRoot);
+    return svgRoot;
+}
+
 always_inline static bool isVoidElement(Gc::Ref<Dom::Element> el) {
     return contains(Html::VOID_TAGS, el->tagName);
 }
@@ -471,6 +524,8 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     if (el->tagName == Html::BR) {
         // do nothing
+    } else if (el->tagName == Svg::SVG) {
+        bc.content() = _buildSVG(bc.computer, el, bc.parentStyle);
     } else if (isVoidElement(el)) {
         _buildVoidElement(bc, el);
     } else {
