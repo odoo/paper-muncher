@@ -20,4 +20,6 @@ export Output layout(Tree& tree, Input input);
 
 export Tuple<Output, Frag> layoutCreateFragment(Tree& tree, Input input);
 
+export void fillKnownSizeWithSpecifiedSizeIfEmpty(Tree& tree, Box& box, Input& input);
+
 } // namespace Vaev::Layout

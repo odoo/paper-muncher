@@ -120,6 +120,44 @@ static Rc<Karm::Text::Fontface> _lookupFontface(Text::FontBook& fontBook, Style:
     return Text::Fontface::fallback();
 }
 
+// https://svgwg.org/specs/integration/#svg-css-sizing
+void _applySVGElementSizingRules(Gc::Ref<Dom::Element> svgEl, Vec<Style::StyleProp>& styleProps) {
+    if (auto parentEl = svgEl->parentNode()->is<Dom::Element>()) {
+        // **If we have an <svg> element inside a CSS context**
+        if (parentEl->tagName.ns == SVG)
+            return;
+
+        // To resolve 'auto' value on ‘svg’ element if the ‘viewBox’ attribute is not specified:
+        // - ...
+        // - If any of the sizing attributes are missing, resolve the missing ‘svg’ element width to '300px' and missing
+        // height to '150px' (using CSS 2.1 replaced elements size calculation).
+        if (not svgEl->hasAttribute(AttrName::make("viewBox", SVG))) {
+            if (not svgEl->hasAttribute(AttrName::make("width", SVG))) {
+                styleProps.pushBack(WidthProp{CalcValue<PercentOr<Length>>{PercentOr<Length>{Length{Au{300}}}}});
+            }
+            if (not svgEl->hasAttribute(AttrName::make("height", SVG))) {
+                styleProps.pushBack(HeightProp{CalcValue<PercentOr<Length>>{PercentOr<Length>{Length{Au{150}}}}});
+            }
+        }
+    }
+}
+
+// https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
+Vec<Style::StyleProp> _considerPresentationAttributes(Gc::Ref<Dom::Element> el) {
+    if (el->tagName.ns != SVG)
+        return {};
+
+    Vec<Style::StyleProp> styleProps;
+    for (auto [attr, attrValue] : el->attributes.iter()) {
+        parseSVGPresentationAttribute(attr.name(), attrValue->value, styleProps);
+    }
+
+    if (el->tagName == Svg::SVG)
+        _applySVGElementSizingRules(el, styleProps);
+
+    return styleProps;
+}
+
 // https://drafts.csswg.org/css-cascade/#cascade-origin
 Rc<SpecifiedValues> Computer::computeFor(SpecifiedValues const& parent, Gc::Ref<Dom::Element> el) {
     MatchingRules matchingRules;
@@ -130,13 +168,22 @@ Rc<SpecifiedValues> Computer::computeFor(SpecifiedValues const& parent, Gc::Ref<
             _evalRule(rule, el, matchingRules);
 
     // Get the style attribute if any
-    auto styleAttr = el->getAttribute(Html::STYLE_ATTR);
+    auto styleAttr = el->style();
 
     StyleRule styleRule{
         .props = parseDeclarations<StyleProp>(styleAttr ? *styleAttr : ""),
         .origin = Origin::INLINE,
     };
     matchingRules.pushBack({&styleRule, INLINE_SPEC});
+
+    // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
+    // Presentation attributes contribute to the author level of the cascade, followed by all other author-level
+    // style sheets, and have specificity 0.
+    StyleRule presentationAttributes{
+        .props = _considerPresentationAttributes(el),
+        .origin = Origin::AUTHOR,
+    };
+    matchingRules.pushBack({&presentationAttributes, PRESENTATION_ATTR_SPEC});
 
     return _evalCascade(parent, matchingRules);
 }
