@@ -6,6 +6,7 @@ module;
 #include <vaev-style/computer.h>
 
 export module Vaev.Layout:base;
+import :svg;
 
 namespace Vaev::Layout {
 
@@ -285,11 +286,39 @@ export struct InlineBox {
     }
 };
 
+struct SVGRoot {
+    using Element = Union<SVG::Shape, SVGRoot, ::Box<Box>>;
+    Vec<Element> elements;
+
+    Opt<ViewBox> viewBox;
+    Rc<Style::SpecifiedValues> style;
+
+    void add(Element&& element) {
+        elements.pushBack(std::move(element));
+    }
+
+    void add(Box&& box);
+
+    SVGRoot(Rc<Style::SpecifiedValues> style)
+        : viewBox(style->svg->viewBox), style(style) {}
+
+    void repr(Io::Emit& e) const {
+        e("(SVG {} viewBox:{}", SVG::buildRectangle(*style), viewBox);
+        e.indentNewline();
+        for (auto const& el : elements) {
+            e("{}", el);
+            e.newline();
+        }
+        e(")");
+    }
+};
+
 export using Content = Union<
     None,
     Vec<Box>,
     InlineBox,
-    Karm::Image::Picture>;
+    Karm::Image::Picture,
+    SVGRoot>;
 
 export struct Attrs {
     usize span = 1;
@@ -337,27 +366,35 @@ struct Box : Meta::NoCopy {
         }
     }
 
+    bool isReplaced() {
+        return content.is<Karm::Image::Picture>() or content.is<SVGRoot>();
+    }
+
     void repr(Io::Emit& e) const {
+        e("(box {} {} {}", attrs, style->display, style->position);
         if (children()) {
-            e("(box {} {} {}", attrs, style->display, style->position);
             e.indentNewline();
             for (auto& c : children()) {
                 c.repr(e);
                 e.newline();
             }
             e.deindent();
-            e(")");
         } else if (content.is<InlineBox>()) {
-            e("(box {} {} {}", attrs, style->display, style->position);
             e.indentNewline();
             e("{}", content.unwrap<InlineBox>());
             e.deindent();
-            e(")");
-        } else {
-            e("(box {} {} {})", attrs, style->display, style->position);
+        } else if (content.is<SVGRoot>()) {
+            e.indentNewline();
+            e("{}", content.unwrap<SVGRoot>());
+            e.deindent();
         }
+        e(")");
     }
 };
+
+void SVGRoot::add(Box&& box) {
+    add(makeBox<Box>(std::move(box)));
+}
 
 void InlineBox::add(Box&& b) {
     prose->append(Text::Prose::StrutCell{atomicBoxes.len()});
@@ -414,10 +451,51 @@ export struct Metrics {
     }
 };
 
+export struct Frag;
+
+struct SVGRootFrag {
+    using Element = Union<SVG::ShapeFrag, SVGRootFrag, ::Box<Frag>>;
+    Vec<Element> elements = {};
+
+    // NOTE: SVG viewports have these intrinsic transformations; choosing to store these transforms is more compliant
+    // and somewhat rendering-friendly but makes it harder to debug
+    Math::Trans2f transf;
+    SVG::Rectangle<Au> boundingBox;
+
+    static SVGRootFrag build(SVGRoot const& box, Vec2Au position, Vec2Au viewportSize) {
+        SVG::Rectangle<Karm::Au> rect{position.x, position.y, viewportSize.x, viewportSize.y};
+
+        Math::Trans2f transf =
+            box.viewBox ? SVG::computeEquivalentTransformOfSVGViewport(*box.viewBox, position, viewportSize)
+                        : Math::Trans2f::translate(position.cast<f64>());
+
+        return {{}, transf, rect};
+    }
+
+    void add(Element&& el) {
+        elements.pushBack(std::move(el));
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(SVGRootFrag)");
+    }
+
+    void offsetBoxFrags(Vec2Au d);
+
+    void offset(Vec2Au d) {
+        transf = transf.translated(d.cast<f64>());
+        offsetBoxFrags(d);
+    }
+};
+
+export using FragContent = Union<
+    Vec<Frag>,
+    SVGRootFrag>;
+
 export struct Frag {
     MutCursor<Box> box;
     Metrics metrics;
-    Vec<Frag> children;
+    FragContent content = Vec<Frag>{};
 
     Frag(MutCursor<Box> box) : box{std::move(box)} {}
 
@@ -430,15 +508,39 @@ export struct Frag {
     /// Offset the position of this fragment and its subtree.
     void offset(Vec2Au d) {
         metrics.position = metrics.position + d;
-        for (auto& c : children)
-            c.offset(d);
+
+        if (auto children = content.is<Vec<Frag>>()) {
+            for (auto& c : *children)
+                c.offset(d);
+        } else if (auto svg = content.is<SVGRootFrag>()) {
+            svg->offset(d);
+        }
+    }
+
+    MutSlice<Frag> children() {
+        if (auto children = content.is<Vec<Frag>>()) {
+            return *children;
+        }
+        return {};
     }
 
     /// Add a child fragment.
     void add(Frag&& frag) {
-        children.pushBack(std::move(frag));
+        if (auto children = content.is<Vec<Frag>>()) {
+            children->pushBack(std::move(frag));
+        }
     }
 };
+
+void SVGRootFrag::offsetBoxFrags(Vec2Au d) {
+    for (auto& element : elements) {
+        if (auto frag = element.is<::Box<Frag>>()) {
+            (*frag)->offset(d);
+        } else if (auto nestedRoot = element.is<SVGRootFrag>()) {
+            nestedRoot->offsetBoxFrags(d);
+        }
+    }
+}
 
 // MARK: Input & Output --------------------------------------------------------
 
@@ -531,6 +633,15 @@ export struct BaselinePositionsSet {
     Au xHeight;
     Au xMiddle;
     Au capHeight;
+
+    static BaselinePositionsSet fromSinglePosition(Au pos) {
+        return {
+            pos,
+            pos,
+            pos,
+            pos,
+        };
+    }
 
     BaselinePositionsSet translate(Au delta) const {
         return {

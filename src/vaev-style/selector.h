@@ -66,6 +66,7 @@ inline Spec const Spec::B = {0, 1, 0};
 inline Spec const Spec::C = {0, 0, 1};
 
 Spec const INLINE_SPEC = Spec::ZERO;
+Spec const PRESENTATION_ATTR_SPEC = Spec::ZERO;
 
 struct Selector;
 

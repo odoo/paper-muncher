@@ -31,7 +31,21 @@ struct Element : Node {
     static constexpr auto TYPE = NodeType::ELEMENT;
 
     Opt<Str> id() const {
-        return this->getAttribute(Html::ID_ATTR);
+        if (tagName.ns == HTML)
+            return this->getAttribute(Html::ID_ATTR);
+        else if (tagName.ns == SVG)
+            return this->getAttribute(Svg::ID_ATTR);
+        else
+            return NONE;
+    }
+
+    Opt<Str> style() const {
+        if (tagName.ns == HTML)
+            return this->getAttribute(Html::STYLE_ATTR);
+        else if (tagName.ns == SVG)
+            return this->getAttribute(Svg::STYLE_ATTR);
+        else
+            return NONE;
     }
 
     TagName tagName;
@@ -83,7 +97,7 @@ struct Element : Node {
     }
 
     void setAttribute(AttrName name, String value) {
-        if (name == Html::CLASS_ATTR) {
+        if (name == Html::CLASS_ATTR or name == Svg::CLASS_ATTR) {
             for (auto class_ : iterSplit(value, ' ')) {
                 this->classList.add(class_);
             }
