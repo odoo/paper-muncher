@@ -1,11 +1,11 @@
 module;
 
 #include <karm-text/font.h>
-#include <vaev-base/color.h>
-#include <vaev-base/font.h>
-#include <vaev-base/line-width.h>
-#include <vaev-base/width.h>
-#include <vaev-base/writing.h>
+#include <vaev-values/color.h>
+#include <vaev-values/font.h>
+#include <vaev-values/line-width.h>
+#include <vaev-values/width.h>
+#include <vaev-values/writing.h>
 
 export module Vaev.Layout:values;
 

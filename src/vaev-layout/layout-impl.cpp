@@ -3,8 +3,8 @@ module;
 #include <karm-gfx/borders.h>
 #include <karm-image/picture.h>
 #include <karm-text/prose.h>
-#include <vaev-base/display.h>
-#include <vaev-base/sizing.h>
+#include <vaev-values/display.h>
+#include <vaev-values/sizing.h>
 
 module Vaev.Layout:layout;
 

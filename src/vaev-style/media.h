@@ -2,11 +2,12 @@
 
 #include <karm-base/box.h>
 #include <karm-print/paper.h>
-#include <vaev-base/length.h>
-#include <vaev-base/media.h>
-#include <vaev-base/numbers.h>
-#include <vaev-base/resolution.h>
 #include <vaev-css/parser.h>
+#include <vaev-values/length.h>
+#include <vaev-values/media.h>
+#include <vaev-values/page.h>
+#include <vaev-values/primitives.h>
+#include <vaev-values/resolution.h>
 
 namespace Vaev::Style {
 

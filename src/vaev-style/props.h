@@ -2,13 +2,12 @@
 
 #include <karm-io/emit.h>
 #include <karm-mime/url.h>
-#include <vaev-base/basic-shape.h>
-#include <vaev-base/color.h>
-#include <vaev-base/font.h>
+#include <vaev-values/basic-shape.h>
+#include <vaev-values/color.h>
+#include <vaev-values/font.h>
 
 #include "base.h"
 #include "specified.h"
-#include "values.h"
 
 // https://www.w3.org/TR/CSS22/propidx.html
 

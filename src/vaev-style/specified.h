@@ -1,28 +1,27 @@
 #pragma once
 
 #include <karm-base/cow.h>
-#include <vaev-base/align.h>
-#include <vaev-base/background.h>
-#include <vaev-base/baseline.h>
-#include <vaev-base/basic-shape.h>
-#include <vaev-base/borders.h>
-#include <vaev-base/break.h>
-#include <vaev-base/color.h>
-#include <vaev-base/display.h>
-#include <vaev-base/flex.h>
-#include <vaev-base/float.h>
-#include <vaev-base/font.h>
-#include <vaev-base/insets.h>
-#include <vaev-base/line.h>
-#include <vaev-base/numbers.h>
-#include <vaev-base/outline.h>
-#include <vaev-base/overflow.h>
-#include <vaev-base/sizing.h>
-#include <vaev-base/table.h>
-#include <vaev-base/text.h>
-#include <vaev-base/visibility.h>
-#include <vaev-base/z-index.h>
 #include <vaev-css/parser.h>
+#include <vaev-values/align.h>
+#include <vaev-values/background.h>
+#include <vaev-values/baseline.h>
+#include <vaev-values/basic-shape.h>
+#include <vaev-values/borders.h>
+#include <vaev-values/break.h>
+#include <vaev-values/color.h>
+#include <vaev-values/display.h>
+#include <vaev-values/flex.h>
+#include <vaev-values/float.h>
+#include <vaev-values/font.h>
+#include <vaev-values/insets.h>
+#include <vaev-values/line.h>
+#include <vaev-values/outline.h>
+#include <vaev-values/overflow.h>
+#include <vaev-values/sizing.h>
+#include <vaev-values/table.h>
+#include <vaev-values/text.h>
+#include <vaev-values/visibility.h>
+#include <vaev-values/z-index.h>
 
 namespace Vaev::Style {
 

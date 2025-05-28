@@ -1,11 +1,10 @@
 #pragma once
 
 #include <karm-mime/url.h>
-#include <vaev-base/font.h>
 #include <vaev-css/parser.h>
+#include <vaev-values/font.h>
 
 #include "base.h"
-#include "values.h"
 
 namespace Vaev::Style {
 
@@ -351,7 +350,6 @@ struct FontDisplayDesc {
         } else if (c.skip(Css::Token::ident("optional"))) {
             value = FontDisplay::OPTIONAL;
         } else {
-            logWarn("expected font-display value");
             return Error::invalidData("expected font-display value");
         }
 

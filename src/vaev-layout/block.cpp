@@ -1,10 +1,10 @@
 module;
 
 #include <karm-math/au.h>
-#include <vaev-base/break.h>
-#include <vaev-base/display.h>
-#include <vaev-base/insets.h>
-#include <vaev-base/sizing.h>
+#include <vaev-values/break.h>
+#include <vaev-values/display.h>
+#include <vaev-values/insets.h>
+#include <vaev-values/sizing.h>
 
 export module Vaev.Layout:block;
 

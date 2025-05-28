@@ -1,8 +1,8 @@
 module;
 
 #include <karm-text/prose.h>
-#include <vaev-base/display.h>
-#include <vaev-base/keywords.h>
+#include <vaev-values/display.h>
+#include <vaev-values/keywords.h>
 
 export module Vaev.Layout:inline_;
 

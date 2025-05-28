@@ -1,6 +1,6 @@
-#include "selector.h"
+#include <vaev-values/primitives.h>
 
-#include "values.h"
+#include "selector.h"
 
 namespace Vaev::Style {
 static constexpr bool DEBUG_SELECTORS = false;

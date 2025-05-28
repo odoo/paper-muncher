@@ -1,13 +1,15 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "id": "vaev-style",
+    "id": "vaev-values.tests",
     "type": "lib",
-    "description": "The Stylish styling engine",
-    "subdirs": [
-        "css"
-    ],
+    "props": {
+        "cpp-excluded": true
+    },
     "requires": [
         "vaev-values",
-        "vaev-dom"
+        "karm-test"
+    ],
+    "injects": [
+        "__tests__"
     ]
 }

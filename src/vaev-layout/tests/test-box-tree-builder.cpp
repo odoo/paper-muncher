@@ -1,12 +1,12 @@
 #include <karm-gc/heap.h>
 #include <karm-test/macros.h>
 #include <karm-text/prose.h>
-#include <vaev-base/display.h>
 #include <vaev-dom/document.h>
 #include <vaev-dom/html/parser.h>
 #include <vaev-dom/xml/parser.h>
 #include <vaev-style/media.h>
 #include <vaev-style/stylesheet.h>
+#include <vaev-values/display.h>
 
 import Vaev.Driver;
 import Vaev.Layout;

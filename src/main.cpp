@@ -142,7 +142,7 @@ Vaev::Style::Media constructMediaForRender(Vaev::Resolution scale, Vec2Au size) 
 
         .prefersReducedMotion = Vaev::ReducedMotion::REDUCE,
         .prefersReducedTransparency = Vaev::ReducedTransparency::REDUCE,
-        .prefersContrast = Vaev::Contrast::NO_PREFERENCE,
+        .prefersContrast = Vaev::Contrast::MORE,
         .forcedColors = Vaev::Colors::NONE,
         .prefersColorScheme = Vaev::ColorScheme::LIGHT,
         .prefersReducedData = Vaev::ReducedData::NO_PREFERENCE,
@@ -254,17 +254,17 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::PrintOption options{};
 
-            options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
-            options.density = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(densityArg.unwrap()));
+            options.scale = co_try$(Vaev::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
+            options.density = co_try$(Vaev::parseValue<Vaev::Resolution>(densityArg.unwrap()));
 
             if (widthArg.unwrap())
-                options.width = co_try$(Vaev::Style::parseValue<Vaev::Length>(widthArg.unwrap()));
+                options.width = co_try$(Vaev::parseValue<Vaev::Length>(widthArg.unwrap()));
 
             if (heightArg.unwrap())
-                options.height = co_try$(Vaev::Style::parseValue<Vaev::Length>(heightArg.unwrap()));
+                options.height = co_try$(Vaev::parseValue<Vaev::Length>(heightArg.unwrap()));
 
             options.paper = co_try$(Print::findPaperStock(paperArg.unwrap()));
-            options.orientation = co_try$(Vaev::Style::parseValue<Print::Orientation>(orientationArg.unwrap()));
+            options.orientation = co_try$(Vaev::parseValue<Print::Orientation>(orientationArg.unwrap()));
 
             Mime::Url input = "fd:stdin"_url;
             if (inputArg.unwrap() != "-"s)
@@ -298,14 +298,14 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::RenderOption options{};
 
-            options.scale = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
-            options.density = co_try$(Vaev::Style::parseValue<Vaev::Resolution>(densityArg.unwrap()));
+            options.scale = co_try$(Vaev::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
+            options.density = co_try$(Vaev::parseValue<Vaev::Resolution>(densityArg.unwrap()));
 
             if (widthArg.unwrap())
-                options.width = co_try$(Vaev::Style::parseValue<Vaev::Length>(widthArg.unwrap()));
+                options.width = co_try$(Vaev::parseValue<Vaev::Length>(widthArg.unwrap()));
 
             if (heightArg.unwrap())
-                options.height = co_try$(Vaev::Style::parseValue<Vaev::Length>(heightArg.unwrap()));
+                options.height = co_try$(Vaev::parseValue<Vaev::Length>(heightArg.unwrap()));
 
             Mime::Url input = "fd:stdin"_url;
             if (inputArg.unwrap() != "-"s)
