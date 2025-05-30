@@ -2,6 +2,7 @@ module;
 
 #include <karm-text/prose.h>
 #include <vaev-values/display.h>
+#include <vaev-values/insets.h>
 #include <vaev-values/keywords.h>
 
 export module Vaev.Layout:inline_;
@@ -72,9 +73,11 @@ struct InlineFormatingContext : FormatingContext {
                 }
             );
 
-            boxStrutCell.size = atomicBoxOutput.size;
-            // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
-            boxStrutCell.baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
+            if (atomicBox.style->position != Position::ABSOLUTE) {
+                boxStrutCell.size = atomicBoxOutput.size;
+                // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
+                boxStrutCell.baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
+            }
         }
 
         // FIXME: prose has a ongoing state that is not reset between layout calls, but it should be
@@ -89,19 +92,27 @@ struct InlineFormatingContext : FormatingContext {
             auto positionInProse = prose->queryPosition(runeIdx);
 
             auto& boxStrutCell = *strutCell->strut();
+            auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
 
-            Math::Vec2<Opt<Au>> knownSize = {
-                boxStrutCell.size.x,
-                boxStrutCell.size.y
-            };
+            Math::Vec2<Opt<Au>> knownSize;
+            if (atomicBox.style->position != Position::ABSOLUTE) {
+                knownSize = {
+                    boxStrutCell.size.x,
+                    boxStrutCell.size.y
+                };
+            }
 
             layout(
                 tree,
-                inlineBox.atomicBoxes[boxStrutCell.id],
+                atomicBox,
                 Input{
                     .fragment = input.fragment,
                     .knownSize = knownSize,
                     .position = input.position + positionInProse,
+                    .containingBlock = {
+                        input.knownSize.x.unwrapOr(0_au),
+                        input.knownSize.y.unwrapOr(0_au)
+                    },
                 }
             );
         }
