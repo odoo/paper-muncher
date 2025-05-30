@@ -22,6 +22,12 @@ void SpecifiedStyle::inherit(SpecifiedStyle const& parent) {
     text = parent.text;
     variables = parent.variables;
     visibility = parent.visibility;
+
+    // FIXME: this is not clean and should be targeted by the styling refactor
+    svg.cow().fillOpacity = parent.svg->fillOpacity;
+    svg.cow().strokeWidth = parent.svg->strokeWidth;
+    svg.cow().fill = parent.svg->fill;
+    svg.cow().stroke = parent.svg->stroke;
 }
 
 void SpecifiedStyle::repr(Io::Emit& e) const {
@@ -52,6 +58,7 @@ void SpecifiedStyle::repr(Io::Emit& e) const {
     e(" break: {}", break_);
     e(" float: {}", float_);
     e(" clear: {}", clear);
+    e(" svg: {}", svg);
     e(" zIndex: {}", zIndex);
     e(" variables: {}", variables);
     e(")");

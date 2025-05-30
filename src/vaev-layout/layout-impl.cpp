@@ -22,7 +22,7 @@ namespace Vaev::Layout {
 static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     auto display = box.style->display;
 
-    if (box.content.is<Karm::Image::Picture>()) {
+    if (box.isReplaced()) {
         return constructReplacedFormatingContext(box);
     } else if (box.content.is<InlineBox>()) {
         return constructInlineFormatingContext(box);
@@ -198,11 +198,7 @@ static void _maybeSetMonolithicBreakpoint(Fragmentainer& fc, bool isMonolticDisp
     outputBreakpoint = bottomOfContentBreakForTopMonolitic;
 }
 
-Output layout(Tree& tree, Box& box, Input input) {
-
-    // FIXME: confirm how the preferred width/height parameters interacts with intrinsic size argument from input
-    auto borders = computeBorders(tree, box);
-    auto padding = _computePaddings(tree, box, input.containingBlock);
+void fillKnownSizeWithSpecifiedSizeIfEmpty(Tree& tree, Box& box, Input& input) {
     auto sizing = box.style->sizing;
 
     if (input.knownSize.width == NONE) {
@@ -210,14 +206,23 @@ Output layout(Tree& tree, Box& box, Input input) {
         input.knownSize.width = specifiedWidth;
     }
 
-    input.knownSize.width = input.knownSize.width.map([&](auto s) {
-        return max(0_au, s - padding.horizontal() - borders.horizontal());
-    });
-
     if (input.knownSize.height == NONE) {
         auto specifiedHeight = _computeSpecifiedSize(tree, box, sizing->height, input.containingBlock, false);
         input.knownSize.height = specifiedHeight;
     }
+}
+
+Output layout(Tree& tree, Box& box, Input input) {
+    // FIXME: confirm how the preferred width/height parameters interacts with intrinsic size argument from input
+
+    fillKnownSizeWithSpecifiedSizeIfEmpty(tree, box, input);
+
+    auto borders = computeBorders(tree, box);
+    auto padding = _computePaddings(tree, box, input.containingBlock);
+
+    input.knownSize.width = input.knownSize.width.map([&](auto s) {
+        return max(0_au, s - padding.horizontal() - borders.horizontal());
+    });
 
     input.knownSize.height = input.knownSize.height.map([&](auto s) {
         return max(0_au, s - padding.vertical() - borders.vertical());
@@ -324,7 +329,7 @@ Output layout(Tree& tree, Box& box, Input input) {
 Output layout(Tree& tree, Input input) {
     auto out = layout(tree, tree.root, input);
     if (input.fragment)
-        layoutPositioned(tree, input.fragment->children[0], input.containingBlock);
+        layoutPositioned(tree, input.fragment->children()[0], input.containingBlock);
     return out;
 }
 
@@ -332,7 +337,7 @@ Tuple<Output, Frag> layoutCreateFragment(Tree& tree, Input input) {
     auto root = Layout::Frag();
     input.fragment = &root;
     auto out = layout(tree, input);
-    return {out, std::move(root.children[0])};
+    return {out, std::move(root.children()[0])};
 }
 
 } // namespace Vaev::Layout
