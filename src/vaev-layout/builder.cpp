@@ -290,6 +290,10 @@ struct BuilderContext {
         rootInlineBox().endInlineBox();
     }
 
+    Content& content() {
+        return _parent.content;
+    }
+
     BuilderContext toBlockContext(Box& parent, InlineBox& rootInlineBox) {
         return {
             computer,
@@ -389,24 +393,20 @@ static void _buildText(BuilderContext bc, Gc::Ref<Dom::Text> node, Rc<Style::Spe
     }
 }
 
-static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedStyle> parentStyle, InlineBox& rootInlineBox) {
-    auto style = c.computeFor(*parentStyle, el);
-    auto font = _lookupFontface(c.fontBook, *style);
+static void _buildImage(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 
     auto src = el->getAttribute(Html::SRC_ATTR).unwrapOr(""s);
     auto url = Mime::Url::resolveReference(el->baseURI(), Mime::parseUrlOrPath(src))
                    .unwrapOr("bundle://vaev-driver/missing.qoi"_url);
 
-    auto img = Karm::Image::load(url).unwrapOrElse([] {
+    bc.content() = Karm::Image::load(url).unwrapOrElse([] {
         return Karm::Image::loadOrFallback("bundle://vaev-driver/missing.qoi"_url).unwrap();
     });
-
-    rootInlineBox.add({style, font, img, el});
 }
 
-static void _buildInputProse(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& parent) {
-    auto style = c.computeFor(*parent.style, el);
-    auto font = _lookupFontface(c.fontBook, *style);
+static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
+    auto style = bc.computer.computeFor(*bc.parentStyle, el);
+    auto font = _lookupFontface(bc.computer.fontBook, *style);
     Resolver resolver{
         .rootFont = Text::Font{font, 16},
         .boxFont = Text::Font{font, 16},
@@ -422,7 +422,7 @@ static void _buildInputProse(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& 
     auto prose = makeRc<Text::Prose>(proseStyle, value);
 
     // FIXME: we should guarantee that input has no children (not added before nor to add after)
-    parent.content = InlineBox{prose};
+    bc.content() = InlineBox{prose};
 }
 
 always_inline static bool isVoidElement(Gc::Ref<Dom::Element> el) {
@@ -431,10 +431,19 @@ always_inline static bool isVoidElement(Gc::Ref<Dom::Element> el) {
 
 static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     if (el->tagName == Html::INPUT) {
-        _buildInputProse(bc.computer, el, bc._parent);
+        _buildInputProse(bc, el);
     } else if (el->tagName == Html::IMG) {
-        _buildImage(bc.computer, *el, bc.parentStyle, bc.rootInlineBox());
+        _buildImage(bc, el);
     }
+}
+
+// NOTE: When inlines, <svg> and <img> should not be treated as inline-flow (<span>) and should thus be inside a strut,
+// that is, should be inline-block, where we always create a box to wrap around.
+// These els are special cases since all other els can take whichever display is set in their style. However, for these
+// els, an internal display value will never be valid. This relates to a somewhat "replaced" property from these
+// elements, but <img> is replaced whereas <svg> per se is not.
+bool _alwaysInlineBlock(Gc::Ref<Dom::Element> el) {
+    return el->tagName == Html::IMG or el->tagName == Svg::SVG;
 }
 
 // MARK: Build flow -------------------------------------------------------------------------------
@@ -780,11 +789,11 @@ static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> c
         bc.flushRootInlineBoxIntoAnonymousBox();
         _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
     } else {
-        if (display == Display::Inside::FLOW) {
+        // NOTE: <img> and <svg>, for example, should always be treated as inline-block instead of inline-flow (spans)
+        if (_alwaysInlineBlock(child) or display != Display::Inside::FLOW)
+            _innerDisplayDispatchCreationOfInlineLevelBox(bc, child, childStyle, display);
+        else
             createAndBuildInlineFlowfromElement(bc, childStyle, child);
-            return;
-        }
-        _innerDisplayDispatchCreationOfInlineLevelBox(bc, child, childStyle, display);
     }
 }
 
