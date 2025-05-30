@@ -21,20 +21,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
 
       - name: Setup Build Environment
-        run: ./ck tools setup && ./ck tools doctor
+        run: ./ck tools setup && ./ck tools doctor && ./ck model install
+
+      - name: Build Website with cat
+        run: |
+          ./ck cat build
 
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v4
-
-      - name: Build with cat
-        run: |
-          ./ck cat build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
