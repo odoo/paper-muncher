@@ -1,6 +1,5 @@
 #pragma once
 
-#include <karm-base/distinct.h>
 #include <karm-io/aton.h>
 #include <karm-io/emit.h>
 #include <karm-math/au.h>
@@ -160,7 +159,9 @@ struct ValueParser<Length> {
             c.next();
 
             return Ok(Length{value, unit});
-        } else if (c.skip(Css::Token::number("0"))) {
+        }
+
+        if (c.skip(Css::Token::number("0"))) {
             return Ok(Length{0.0, Length::Unit::PX});
         }
 

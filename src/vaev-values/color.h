@@ -282,13 +282,14 @@ struct ValueParser<Color> {
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (scan.skip(Css::Token::delim("/"))) {
-            eatWhitespace(scan);
-            if (scan.skip(Css::Token::ident("none")))
-                return Ok(NONE);
-            return Ok(try$(_parseAlphaValue(scan)));
-        } else
+        if (not scan.skip(Css::Token::delim("/")))
             return Error::invalidData("expected '/' before alpha channel");
+
+        eatWhitespace(scan);
+        if (scan.skip(Css::Token::ident("none")))
+            return Ok(NONE);
+
+        return Ok(try$(_parseAlphaValue(scan)));
     }
 
     static Res<Number> _parseNumPercNone(Cursor<Css::Sst>& scan, Number percOf, Number noneValue = 0) {
@@ -336,10 +337,8 @@ struct ValueParser<Color> {
         if (scan.ended())
             return Ok(Gfx::Color::fromRgb(r, g, b));
 
-        if (auto alphaComponent = try$(_parseAlphaComponentModernSyntax(scan)))
-            return Ok(Gfx::Color::fromRgba(r, g, b, alphaComponent.unwrap()));
-        else
-            return Ok(Gfx::Color::fromRgba(r, g, b, 0));
+        auto alphaComponent = try$(_parseAlphaComponentModernSyntax(scan));
+        return Ok(Gfx::Color::fromRgba(r, g, b, alphaComponent.unwrapOr(0)));
     }
 
     static Res<Gfx::Color> _parseSRGBLegacyFuncColor(Css::Sst const& s) {
@@ -353,7 +352,6 @@ struct ValueParser<Color> {
 
         Array<u8, 3> channels{};
         for (usize i = 0; i < 3; ++i) {
-
             if (scan.ended())
                 return Error::invalidData("unexpected end of input");
 
@@ -376,15 +374,14 @@ struct ValueParser<Color> {
         u8 b = channels[2];
 
         eatWhitespace(scan);
-
         if (scan.ended())
             return Ok(Gfx::Color::fromRgb(r, g, b));
 
-        if (scan.skip(Css::Token::COMMA)) {
-            eatWhitespace(scan);
-            return Ok(Gfx::Color::fromRgba(r, g, b, try$(_parseAlphaValue(scan))));
-        } else
+        if (not scan.skip(Css::Token::COMMA))
             return Error::invalidData("expected comma before alpha channel");
+
+        eatWhitespace(scan);
+        return Ok(Gfx::Color::fromRgba(r, g, b, try$(_parseAlphaValue(scan))));
     }
 
     // https://drafts.csswg.org/css-color/#funcdef-hsl
@@ -460,14 +457,13 @@ struct ValueParser<Color> {
             return Ok(color);
         }
 
-        if (scan.skip(Css::Token::COMMA)) {
-            eatWhitespace(scan);
-            auto alpha = try$(_parseAlphaValue(scan));
-            auto color = Gfx::hslToRgb(Gfx::Hsl{hue, sat, l});
-            return Ok(color.withAlpha(alpha));
-        }
+        if (not scan.skip(Css::Token::COMMA))
+            return Error::invalidData("expected comma before alpha channel");
 
-        return Error::invalidData("expected comma before alpha channel");
+        eatWhitespace(scan);
+        auto alpha = try$(_parseAlphaValue(scan));
+        auto color = Gfx::hslToRgb(Gfx::Hsl{hue, sat, l});
+        return Ok(color.withAlpha(alpha));
     }
 
     // https://drafts.csswg.org/css-color-4/#predefined
@@ -588,26 +584,19 @@ struct ValueParser<Color> {
             return Error::invalidData("expected 'in' keyword");
 
         eatWhitespace(scan);
-
         if (scan.ended() or not(scan.peek() == Css::Token::IDENT))
             return Error::invalidData("expected color-space identifier");
 
-        auto colorSpace = scan.next().token.data;
         // FIXME: not parsing interpolation method for polar spaces
-
-        eatWhitespace(scan);
-
-        if (not scan.skip(Css::Token::COMMA))
+        auto colorSpace = scan.next().token.data;
+        if (not skipOmmitableComma(scan))
             return Error::invalidData("expected comma separting color mix arguments");
 
-        eatWhitespace(scan);
         auto lhs = try$(_parseColorMixSide(scan));
-        eatWhitespace(scan);
-        if (not scan.skip(Css::Token::Type::COMMA))
+        if (not skipOmmitableComma(scan))
             return Error::invalidData("expected comma");
 
         auto rhs = try$(_parseColorMixSide(scan));
-
         return Ok(makeBox<ColorMix>(ColorSpace::fromStr(colorSpace), std::move(lhs), std::move(rhs)));
     }
 

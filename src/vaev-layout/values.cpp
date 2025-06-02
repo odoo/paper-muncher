@@ -269,6 +269,14 @@ export struct Resolver {
         return resolve(value.unwrap<CalcValue<PercentOr<Length>>>(), relative);
     }
 
+    Rad resolve(Angle const& value) {
+        return Rad{value.toRadian()};
+    }
+
+    Number resolve(Number const& value) {
+        return value;
+    }
+
     Au resolve(FontSize const& value) {
         switch (value.named()) {
         case FontSize::XX_SMALL:
@@ -324,7 +332,7 @@ export struct Resolver {
     }
 
     template <typename T, typename... Args>
-    auto resolve(CalcValue<T> const& calc, Args... args) -> Resolved<T> {
+    Resolved<T> resolve(CalcValue<T> const& calc, Args... args) {
         auto resolveUnion = Visitor{
             [&](T const& v) {
                 return resolve(v, args...);
@@ -332,22 +340,24 @@ export struct Resolver {
             [&](CalcValue<T>::Leaf const& v) {
                 return resolve<T>(*v, args...);
             },
-            [&](Number const& v) {
-                return Math::i24f8{v};
+            [&](Number const& v)
+                requires(not Meta::Same<T, Number>)
+            {
+                return Resolved<T>{v};
             }
-        };
+            };
 
         return calc.visit(Visitor{
-            [&](CalcValue<T>::Value const& v) {
+            [&](typename CalcValue<T>::Value const& v) {
                 return v.visit(resolveUnion);
             },
-            [&](CalcValue<T>::Unary const& u) {
+            [&](typename CalcValue<T>::Unary const& u) {
                 return _resolveUnary<T>(
                     u.op,
                     u.val.visit(resolveUnion)
                 );
             },
-            [&](CalcValue<T>::Binary const& b) {
+            [&](typename CalcValue<T>::Binary const& b) {
                 return _resolveInfix<T>(
                     b.op,
                     b.lhs.visit(resolveUnion),

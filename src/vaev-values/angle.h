@@ -5,11 +5,14 @@
 #include <karm-math/const.h>
 
 #include "base.h"
+#include "resolved.h"
 
 namespace Vaev {
 
 // 7.1. MARK: Angle Units: the <angle> type and deg, grad, rad, turn units
 // https://drafts.csswg.org/css-values/#angles
+
+using Rad = Distinct<f64, struct _RadTag>;
 
 struct Angle {
     enum struct Unit {
@@ -136,6 +139,11 @@ struct ValueParser<Angle> {
 
         return Error::invalidData("expected angle");
     }
+};
+
+template <>
+struct _Resolved<Angle> {
+    using Type = Rad;
 };
 
 } // namespace Vaev

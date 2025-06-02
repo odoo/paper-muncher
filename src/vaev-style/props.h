@@ -2929,6 +2929,81 @@ struct TextTransformProp {
     }
 };
 
+// MARK: Transform -------------------------------------------------------------
+// https://drafts.csswg.org/css-transforms/#transform-property
+
+// https://drafts.csswg.org/css-transforms/#transform-origin-property
+struct TransformOriginProp {
+    TransformOrigin value = initial();
+
+    static constexpr Str name() { return "transform-origin"; }
+
+    static TransformOrigin initial() {
+        return {
+            .xOffset = CalcValue<PercentOr<Length>>{Percent{50}},
+            .yOffset = CalcValue<PercentOr<Length>>{Percent{50}},
+        };
+    }
+
+    void apply(SpecifiedStyle& c) const {
+        c.transform.cow().origin = value;
+    }
+
+    static TransformOrigin load(SpecifiedStyle const& c) {
+        return c.transform->origin;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        debug("Parsing transform-origin");
+        value = try$(parseValue<TransformOrigin>(c));
+        return Ok();
+    }
+};
+
+// https://drafts.csswg.org/css-transforms/#transform-box
+struct TransformBoxProp {
+    TransformBox value = initial();
+
+    static constexpr Str name() { return "transform-box"; }
+
+    static TransformBox initial() { return Keywords::VIEW_BOX; }
+
+    void apply(SpecifiedStyle& c) const {
+        c.transform.cow().box = value;
+    }
+
+    static TransformBox load(SpecifiedStyle const& c) {
+        return c.transform->box;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<TransformBox>(c));
+        return Ok();
+    }
+};
+
+// https://drafts.csswg.org/css-transforms/#propdef-transform
+struct TransformProp {
+    Transform value = initial();
+
+    static constexpr Str name() { return "transform"; }
+
+    static Transform initial() { return Keywords::NONE; }
+
+    void apply(SpecifiedStyle& c) const {
+        c.transform.cow().transform = value;
+    }
+
+    static Transform load(SpecifiedStyle const& c) {
+        return c.transform->transform;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<Transform>(c));
+        return Ok();
+    }
+};
+
 // https://drafts.csswg.org/css-display/#visibility
 struct VisibilityProp {
     Visibility value = initial();
@@ -3120,6 +3195,13 @@ using _StyleProp = Union<
     DisplayProp,
     TableLayoutProp,
     CaptionSideProp,
+
+    // Transform
+    TransformOriginProp,
+    TransformBoxProp,
+    TransformProp,
+
+    // Visibility
     VisibilityProp,
 
     // Borders

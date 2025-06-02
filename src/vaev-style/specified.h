@@ -20,10 +20,24 @@
 #include <vaev-values/sizing.h>
 #include <vaev-values/table.h>
 #include <vaev-values/text.h>
+#include <vaev-values/transform.h>
 #include <vaev-values/visibility.h>
 #include <vaev-values/z-index.h>
 
 namespace Vaev::Style {
+
+struct TransformProps {
+    Transform transform = Keywords::NONE;
+    TransformOrigin origin = {
+        .xOffset = CalcValue<PercentOr<Length>>{Percent{0}},
+        .yOffset = CalcValue<PercentOr<Length>>{Percent{0}},
+    };
+    TransformBox box = Keywords::BORDER_BOX;
+
+    bool has() const {
+        return transform != Keywords::NONE;
+    }
+};
 
 struct SpecifiedStyle {
     static SpecifiedStyle const& initial();
@@ -64,6 +78,7 @@ struct SpecifiedStyle {
     Display display;
     Integer order;
     Visibility visibility;
+    Cow<TransformProps> transform;
     // https://w3.org/TR/css-tables-3/#table-structure
     Cow<TableProps> table;
 
