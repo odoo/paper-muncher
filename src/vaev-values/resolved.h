@@ -8,6 +8,6 @@ struct _Resolved {
 };
 
 template <typename T>
-using Resolved = _Resolved<T>::Type;
+using Resolved = typename _Resolved<T>::Type;
 
 } // namespace Vaev

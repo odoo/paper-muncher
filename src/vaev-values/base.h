@@ -9,6 +9,14 @@ static inline void eatWhitespace(Cursor<Css::Sst>& c) {
         c.next();
 }
 
+// https://www.w3.org/TR/css-values-4/#comb-comma
+static inline bool skipOmmitableComma(Cursor<Css::Sst>& c) {
+    eatWhitespace(c);
+    bool res = c.skip(Css::Token::COMMA);
+    eatWhitespace(c);
+    return res;
+}
+
 template <typename T>
 struct ValueParser;
 

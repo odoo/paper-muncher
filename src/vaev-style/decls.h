@@ -59,8 +59,10 @@ static inline Res<P> _parseDeclaration(Css::Sst const& sst) {
     if constexpr (requires { P::important; })
         prop.important = _consumeImportant(content, false);
 
-    if (not content.ended())
+    if (not content.ended()) {
+        logDebugIf(DEBUG_DECL, "unknown tokens in content: {}", content);
         return Error::invalidData("unknown tokens in content");
+    }
 
     return Ok(std::move(prop));
 }
@@ -105,15 +107,16 @@ Res<P> parseDeclaration(Css::Sst const& sst, bool allowDeferred = true) {
                 return false;
             },
             [&]<typename T>() -> bool {
-                if (sst.token != Css::Token::ident(T::name())) {
+                if (sst.token != Css::Token::ident(T::name()))
                     return false;
-                }
 
                 resDecl = _parseDeclaration<P, T>(sst);
 
                 if constexpr (Meta::Constructible<P, DefaultedProp>) {
                     if (not resDecl) {
-                        resDecl = _parseDefaulted<P>(sst);
+                        auto resDefault = _parseDefaulted<P>(sst);
+                        if (resDefault)
+                            resDecl = std::move(resDefault);
                     }
                 }
 
