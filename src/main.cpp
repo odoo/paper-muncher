@@ -16,7 +16,7 @@ import Karm.Http;
 
 namespace PaperMuncher {
 
-Rc<Http::Client> createHttpClient(bool unsecure) {
+static Rc<Http::Client> _createHttpClient(bool unsecure) {
     Vec<Rc<Http::Transport>> transports;
 
     transports.pushBack(Http::pipeTransport());
@@ -30,7 +30,7 @@ Rc<Http::Client> createHttpClient(bool unsecure) {
     }
 
     auto client = makeRc<Http::Client>(
-        Http::multiplexTransport(std::move(transports))
+        multiplexTransport(std::move(transports))
     );
     client->userAgent = "Paper-Muncher/" stringify$(__ck_version_value) ""s;
 
@@ -47,7 +47,7 @@ struct PrintOption {
     Mime::Uti outputFormat = Mime::Uti::PUBLIC_PDF;
 };
 
-Async::Task<> printAsync(
+static Async::Task<> printAsync(
     Rc<Http::Client> client,
     Mime::Url const& input,
     Mime::Url const& output,
@@ -115,7 +115,7 @@ Async::Task<> printAsync(
     co_return Ok();
 }
 
-Vaev::Style::Media constructMediaForRender(Vaev::Resolution scale, Vec2Au size) {
+static Vaev::Style::Media constructMediaForRender(Vaev::Resolution scale, Vec2Au size) {
     return {
         .type = Vaev::MediaType::SCREEN,
         .width = size.width,
@@ -162,7 +162,7 @@ struct RenderOption {
     Mime::Uti outputFormat = Mime::Uti::PUBLIC_BMP;
 };
 
-Async::Task<> renderAsync(
+static Async::Task<> renderAsync(
     Rc<Http::Client> client,
     Mime::Url const& input,
     Mime::Url const& output,
@@ -277,7 +277,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (formatArg.unwrap() != ""s)
                 options.outputFormat = co_try$(Mime::Uti::fromMime({formatArg}));
 
-            auto client = PaperMuncher::createHttpClient(unsecureArg);
+            auto client = PaperMuncher::_createHttpClient(unsecureArg);
             co_return co_await PaperMuncher::printAsync(client, input, output, options);
         }
     );
@@ -318,7 +318,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (formatArg.unwrap() != ""s)
                 options.outputFormat = co_try$(Mime::Uti::fromMime({formatArg}));
 
-            auto client = PaperMuncher::createHttpClient(unsecureArg);
+            auto client = PaperMuncher::_createHttpClient(unsecureArg);
 
             co_return co_await renderAsync(client, input, output, options);
         }
