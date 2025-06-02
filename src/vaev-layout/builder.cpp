@@ -845,13 +845,8 @@ export Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::SpecifiedSt
         .rootFont = Text::Font{fontFace, 16},
         .boxFont = Text::Font{fontFace, 16},
     };
-    Text::ProseStyle proseStyle{
-        .font = {
-            fontFace,
-            resolver.resolve(style->font->size).cast<f64>(),
-        },
-        .multiline = true,
-    };
+
+    auto proseStyle = _proseStyleFomStyle(*style, fontFace);
 
     auto prose = makeRc<Text::Prose>(proseStyle);
     if (style->content) {
