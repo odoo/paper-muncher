@@ -840,12 +840,6 @@ export Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc) {
 export Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::SpecifiedStyle> style) {
     auto fontFace = _lookupFontface(fontBook, *style);
 
-    // FIXME: We should pass this around from the top in order to properly resolve rems
-    Resolver resolver{
-        .rootFont = Text::Font{fontFace, 16},
-        .boxFont = Text::Font{fontFace, 16},
-    };
-
     auto proseStyle = _proseStyleFomStyle(*style, fontFace);
 
     auto prose = makeRc<Text::Prose>(proseStyle);
