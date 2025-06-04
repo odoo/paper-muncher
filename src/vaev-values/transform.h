@@ -155,7 +155,7 @@ struct ValueParser<MatrixTransform> {
         }
 
         c.next(); // consume the function token
-        return Ok(MatrixTransform{});
+        return Ok(MatrixTransform{std::move(values)});
     }
 };
 
@@ -238,7 +238,7 @@ struct ValueParser<ScaleTransform> {
             return Error::invalidData("unexpected content after scale function");
 
         c.next(); // consume the function token
-        return Ok(ScaleTransform{});
+        return Ok(ScaleTransform{std::move(x), std::move(y)});
     }
 };
 

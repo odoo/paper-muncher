@@ -1,0 +1,170 @@
+<test name="transforms-1" size="150">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="height: 100px; width: 100px; background-color: green;"></div>
+    </rendering>
+
+    <rendering>
+        <div style="height: 200px; width: 200px; background-color: green;transform: scale(0.5);transform-origin: 0 0;">
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="transform: translate(100px, 100px);">
+            <div style="height: 100px; width: 100px; background-color: green;transform: translate(-100px, -100px);">
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="transform: scale(2);width: 100px;">
+            <div style="height: 100px; width: 100px; background-color: green;transform: scale(0.5) rotate(90deg);">
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="height: 100px; width: 100px;transform: scale(2) skew(-10deg);">
+            <div style="height: 100px; width: 100px; background-color: green;transform: skew(10deg) scale(0.5) ;">
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div
+            style="width: 200px;height: 200px;background-color: green;transform: scale(0.5) translate(-100px,-100px); transform-origin: 50% 50%;">
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="transform: translate(-100px, -100px);">
+            <div
+                style="width: 200px;height: 200px;background-color: green;transform: scale(0.5) ; transform-origin: 100% 100%;">
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="height: 100px;"></div>
+        <div
+            style="width: 100px;height: 100px;background-color: green;transform: rotate(90deg); transform-origin: 100% 0%;">
+        </div>
+    </rendering>
+</test>
+
+
+<test name="transform-2" size="150">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="height: 100px; width: 100px; background-color: green;">
+            <div style="height: 50px; width: 50px; background-color: blue;"></div>
+        </div>
+    </rendering>
+
+    <div style="height: 100px; width: 100px; background-color: green;transform: rotate(90deg);">
+        <div style="height: 50px; width: 50px;"></div>
+        <div style="height: 50px; width: 50px; background-color: blue;"></div>
+    </div>
+
+    <rendering>
+        <div style="height: 100px; width: 100px; background-color: green;">
+            <div style="height: 50px; width: 50px;"></div>
+            <div style="height: 50px; width: 50px; background-color: blue; transform: translate(0px, -50px);"></div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="height: 100px; width: 100px; background-color: green;transform: matrix(0, 1, 1, 0, 0, 0);">
+            <div style="height: 100px; width: 100px;transform: matrix(0, -1, -1, 0, 0, 0); ">
+                <div style="height: 50px; width: 50px;"></div>
+                <div style="width: 100px;">
+                    <div style="height: 50px; width: 50px; display: inline-block;">
+                    </div>
+                    <div style="height: 50px; width: 50px; background-color: blue; display: inline-block;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </rendering>
+</test>
+
+<test name="transform-order" size="300">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+
+            .root {
+                width: 100px;
+                height: 100px;
+            }
+
+            .child {
+                width: 100%;
+                height: 100%;
+            }
+
+            .color {
+                background-color: green;
+            }
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="transform: translate(-10px, -20px) scale(2) rotate(45deg);" class="root">
+            <div class="child color">
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style=" transform: translate(-10px, -20px)" class="root">
+            <div style="transform: scale(2)" class="child">
+                <div style="transform: rotate(45deg)" class="child color">
+                </div>
+            </div>
+        </div>
+    </rendering>
+</test>
