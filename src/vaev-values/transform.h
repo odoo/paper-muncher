@@ -175,6 +175,29 @@ struct ValueParser<TranslateTransform> {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
+        if (c->prefix == Css::Token::function("translateX(")) {
+            Cursor<Css::Sst> content = c->content;
+            eatWhitespace(content);
+            auto tx = try$(parseValue<CalcValue<PercentOr<Length>>>(content));
+            eatWhitespace(content);
+            if (not content.ended()) {
+                return Error::invalidData("unexpected content after translateX function");
+            }
+            c.next(); // consume the function token
+            return Ok(TranslateTransform{std::move(tx), Length{0_au}});
+        }
+
+        if (c->prefix == Css::Token::function("translateY(")) {
+            Cursor<Css::Sst> content = c->content;
+            eatWhitespace(content);
+            auto ty = try$(parseValue<CalcValue<PercentOr<Length>>>(content));
+            eatWhitespace(content);
+            if (not content.ended())
+                return Error::invalidData("unexpected content after translateY function");
+            c.next(); // consume the function token
+            return Ok(TranslateTransform{Length{0_au}, std::move(ty)});
+        }
+
         if (c->prefix != Css::Token::function("translate("))
             return Error::invalidData("expected translate function");
 
@@ -215,6 +238,29 @@ struct ValueParser<ScaleTransform> {
     static Res<ScaleTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
+
+        if (c->prefix == Css::Token::function("scaleX(")) {
+            Cursor<Css::Sst> content = c->content;
+            eatWhitespace(content);
+            auto sx = try$(parseValue<CalcValue<Number>>(content));
+            eatWhitespace(content);
+            if (not content.ended()) {
+                return Error::invalidData("unexpected content after scaleX function");
+            }
+            c.next(); // consume the function token
+            return Ok(ScaleTransform{std::move(sx), Number{1}});
+        }
+
+        if (c->prefix == Css::Token::function("scaleY(")) {
+            Cursor<Css::Sst> content = c->content;
+            eatWhitespace(content);
+            auto sy = try$(parseValue<CalcValue<Number>>(content));
+            eatWhitespace(content);
+            if (not content.ended())
+                return Error::invalidData("unexpected content after scaleY function");
+            c.next(); // consume the function token
+            return Ok(ScaleTransform{Number{1}, std::move(sy)});
+        }
 
         if (c->prefix != Css::Token::function("scale("))
             return Error::invalidData("expected scale function");

@@ -7,7 +7,7 @@
 
 namespace Vaev::Style {
 
-static bool DEBUG_DECL = false;
+static bool DEBUG_DECL = true;
 
 template <typename T>
 Res<T> parseDeclarationValue(Cursor<Css::Sst>& c) {
