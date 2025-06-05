@@ -415,10 +415,8 @@ static Vec2Au _resolveTransformOrigin(RectAu referenceBox, TransformOrigin origi
 }
 
 static Math::Trans2f _resolveTransform(RectAu referenceBox, Vec2Au origin, Slice<TransformFunction> transforms) {
-    auto result = Math::Trans2f::identity().multiply(
-        Math::Trans2f::translate(
-            -origin.cast<f64>()
-        )
+    auto result = Math::Trans2f::translate(
+        origin.cast<f64>()
     );
     Resolver resolver{};
 
@@ -471,14 +469,10 @@ static Math::Trans2f _resolveTransform(RectAu referenceBox, Vec2Au origin, Slice
             }
         );
 
-        result = result.multiply(trans);
+        result = trans.multiply(result);
     }
 
-    return result.multiply(
-        Math::Trans2f::translate(
-            origin.cast<f64>()
-        )
-    );
+    return Math::Trans2f::translate(-origin.cast<f64>()).multiply(result);
 }
 
 static Rc<Scene::Node> _applyTransform(Frag const& frag, Rc<Scene::Node> content) {
