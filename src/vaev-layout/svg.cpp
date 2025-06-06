@@ -97,7 +97,8 @@ Rc<Scene::Node> rectToSceneNode(Rectangle<f64> rect, Opt<Gfx::Fill> fill, Opt<Gf
             Array<Gfx::BorderStyle, 4>::fill(Gfx::BorderStyle::SOLID),
         };
 
-        // NOTE: needed due to mismatch between SVG's and Scene's box model
+        // FIXME: needed due to mismatch between SVG's and Scene's box model
+        // svg's stroke's center is at the shape's edges
         rect.width += strokeWidth;
         rect.height += strokeWidth;
         rect.x -= strokeWidth / 2;
@@ -223,10 +224,20 @@ struct Shape {
 template <typename T>
 using _Shape = Union<Rectangle<T>, Circle<T>, Rc<Math::Path>>;
 
-struct ShapeFrag {
+struct Frag {
+    virtual ~Frag() = default;
+    virtual RectAu objectBoundingBox() = 0;
+    virtual RectAu strokeBoundingBox() = 0;
+    virtual Style::SpecifiedValues const& style() = 0;
+};
+
+struct ShapeFrag : Frag {
     _Shape<Au> shape;
     Karm::Cursor<Shape> box;
     Au strokeWidth;
+
+    ShapeFrag(_Shape<Au> shape, Cursor<Shape> box, Au strokeWidth)
+        : shape(shape), box(box), strokeWidth(strokeWidth) {}
 
     static ShapeFrag fromShape(Shape const& shape, Vec2Au relativeTo) {
         Au resolvedStrokeWidth = Vaev::Layout::resolve(shape.style->svg->strokeWidth, normalizedDiagonal(relativeTo));
@@ -274,6 +285,27 @@ struct ShapeFrag {
             return makeRc<Scene::Shape>(*(*path), resolvedStroke, resolvedFill);
         };
         unreachable();
+    }
+
+    RectAu objectBoundingBox() override {
+        if (auto rect = shape.is<Rectangle<Au>>()) {
+            return rect->toRect();
+        } else if (auto circle = shape.is<Circle<Au>>()) {
+            Math::Path path;
+            path.ellipse(Math::Ellipse{circle->cx, circle->cy, circle->r}.cast<f64>());
+            return path.bound().cast<Au>();
+        } else if (auto path = shape.is<Rc<Math::Path>>()) {
+            return (*path)->bound().cast<Au>();
+        };
+        unreachable();
+    }
+
+    RectAu strokeBoundingBox() override {
+        return objectBoundingBox().grow((Au)(strokeWidth / 2_au));
+    }
+
+    Style::SpecifiedValues const& style() override {
+        return *box->style;
     }
 
     void repr(Io::Emit& e) const {

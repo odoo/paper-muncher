@@ -286,21 +286,31 @@ export struct InlineBox {
     }
 };
 
-struct SVGRoot {
-    using Element = Union<SVG::Shape, SVGRoot, ::Box<Box>>;
-    Vec<Element> elements;
+struct SVGRoot;
 
-    Opt<ViewBox> viewBox;
+namespace SVG {
+
+struct Group {
+    using Element = Union<Shape, SVGRoot, Karm::Box<Vaev::Layout::Box>, Group>;
+    Vec<Element> elements = {};
+
     Rc<Style::SpecifiedValues> style;
 
-    void add(Element&& element) {
-        elements.pushBack(std::move(element));
-    }
+    Group(Rc<Style::SpecifiedValues> style)
+        : style(style) {}
 
-    void add(Box&& box);
+    void add(Element&& element);
+    void add(Vaev::Layout::Box&& box);
+
+    void repr(Io::Emit& e) const;
+};
+} // namespace SVG
+
+struct SVGRoot : SVG::Group {
+    Opt<ViewBox> viewBox;
 
     SVGRoot(Rc<Style::SpecifiedValues> style)
-        : viewBox(style->svg->viewBox), style(style) {}
+        : SVG::Group(style), viewBox(style->svg->viewBox) {}
 
     void repr(Io::Emit& e) const {
         e("(SVG {} viewBox:{}", SVG::buildRectangle(*style), viewBox);
@@ -312,6 +322,16 @@ struct SVGRoot {
         e(")");
     }
 };
+
+void SVG::Group::repr(Io::Emit& e) const {
+    e("(Group {} ");
+    e.indentNewline();
+    for (auto const& el : elements) {
+        e("{}", el);
+        e.newline();
+    }
+    e(")");
+}
 
 export using Content = Union<
     None,
@@ -392,8 +412,12 @@ struct Box : Meta::NoCopy {
     }
 };
 
-void SVGRoot::add(Box&& box) {
-    add(makeBox<Box>(std::move(box)));
+void SVG::Group::add(Element&& element) {
+    elements.pushBack(std::move(element));
+}
+
+void SVG::Group::add(Vaev::Layout::Box&& box) {
+    add(Element{makeBox<Vaev::Layout::Box>(std::move(box))});
 }
 
 void InlineBox::add(Box&& b) {
@@ -452,15 +476,53 @@ export struct Metrics {
 };
 
 export struct Frag;
+struct SVGRootFrag;
 
-struct SVGRootFrag {
-    using Element = Union<SVG::ShapeFrag, SVGRootFrag, ::Box<Frag>>;
+namespace SVG {
+
+struct GroupFrag : SVG::Frag {
+    using Element = Union<SVG::ShapeFrag, SVGRootFrag, ::Box<Vaev::Layout::Frag>, GroupFrag>;
     Vec<Element> elements = {};
 
+    RectAu _objectBoundingBox{};
+    RectAu _strokeBoundingBox{};
+
+    Karm::Cursor<Group> box;
+
+    GroupFrag(Karm::Cursor<Group> group)
+        : box(group) {}
+
+    static void computeBoundingBoxes(SVG::GroupFrag* group);
+
+    RectAu objectBoundingBox() override {
+        return _objectBoundingBox;
+    }
+
+    RectAu strokeBoundingBox() override {
+        return _strokeBoundingBox;
+    }
+
+    Style::SpecifiedValues const& style() override {
+        return *box->style;
+    }
+
+    void add(Element&& element);
+
+    void repr(Io::Emit& e) const {
+        e("(GroupFrag)");
+    }
+};
+} // namespace SVG
+
+struct SVGRootFrag : SVG::GroupFrag {
     // NOTE: SVG viewports have these intrinsic transformations; choosing to store these transforms is more compliant
     // and somewhat rendering-friendly but makes it harder to debug
     Math::Trans2f transf;
     SVG::Rectangle<Au> boundingBox;
+
+    SVGRootFrag(Karm::Cursor<SVG::Group> group, Math::Trans2f transf, SVG::Rectangle<Au> boundingBox)
+        : SVG::GroupFrag(group), transf(transf), boundingBox(boundingBox) {
+    }
 
     static SVGRootFrag build(SVGRoot const& box, Vec2Au position, Vec2Au viewportSize) {
         SVG::Rectangle<Karm::Au> rect{position.x, position.y, viewportSize.x, viewportSize.y};
@@ -469,11 +531,7 @@ struct SVGRootFrag {
             box.viewBox ? SVG::computeEquivalentTransformOfSVGViewport(*box.viewBox, position, viewportSize)
                         : Math::Trans2f::translate(position.cast<f64>());
 
-        return {{}, transf, rect};
-    }
-
-    void add(Element&& el) {
-        elements.pushBack(std::move(el));
+        return SVGRootFrag{&box, transf, rect};
     }
 
     void repr(Io::Emit& e) const {
@@ -532,14 +590,70 @@ export struct Frag {
     }
 };
 
+void SVG::GroupFrag::add(Element&& el) {
+    elements.pushBack(std::move(el));
+}
+
 void SVGRootFrag::offsetBoxFrags(Vec2Au d) {
     for (auto& element : elements) {
-        if (auto frag = element.is<::Box<Frag>>()) {
+        if (auto frag = element.is<::Box<Vaev::Layout::Frag>>()) {
             (*frag)->offset(d);
         } else if (auto nestedRoot = element.is<SVGRootFrag>()) {
             nestedRoot->offsetBoxFrags(d);
         }
     }
+}
+
+void SVG::GroupFrag::computeBoundingBoxes(SVG::GroupFrag* group) {
+    if(group->elements.len() == 0)
+        return;
+
+    // FIXME: this could be implemented in the Union type
+    auto upcast = [&](Element const& element, auto upcaster) {
+        return element.visit(upcaster);
+    };
+
+    auto toSVGFrag = [&]<typename T>(T const& el) -> SVG::Frag* {
+        if constexpr (Meta::Derive<T, SVG::Frag>) {
+            return (SVG::Frag*)(&el);
+        }
+        return nullptr;
+    };
+
+    auto toSVGGroupFrag = [&]<typename T>(T const& el) -> SVG::GroupFrag* {
+        if constexpr (Meta::Derive<T, SVG::GroupFrag>) {
+            return (SVG::GroupFrag*)(&el);
+        }
+        return nullptr;
+    };
+
+    auto getElementBoundingBoxes = [&](Element const& element) -> Pair<RectAu> {
+        if (auto frag = element.is<::Box<Vaev::Layout::Frag>>()) {
+            return {
+                (*frag)->metrics.borderBox(),
+                (*frag)->metrics.borderBox()
+            };
+        } else if (auto svgFrag = upcast(element, toSVGFrag)) {
+            if (auto svgGroupFrag = upcast(element, toSVGGroupFrag)) {
+                computeBoundingBoxes(svgGroupFrag);
+            }
+            return {
+                svgFrag->objectBoundingBox(),
+                svgFrag->strokeBoundingBox()
+            };
+        } else
+            unreachable();
+    };
+
+    auto [objectBoundingBox, strokeBoundingBox] = getElementBoundingBoxes(group->elements[0]);
+    for(usize i = 1; i < group->elements.len(); i++) {
+        auto [nextObjectBoundingBox, nextStrokeBoundingBox] = getElementBoundingBoxes(group->elements[i]);
+        objectBoundingBox = objectBoundingBox.mergeWith(nextObjectBoundingBox);
+        strokeBoundingBox = strokeBoundingBox.mergeWith(nextStrokeBoundingBox);
+    }
+
+    group->_objectBoundingBox = objectBoundingBox;
+    group->_strokeBoundingBox = strokeBoundingBox;
 }
 
 // MARK: Input & Output --------------------------------------------------------
