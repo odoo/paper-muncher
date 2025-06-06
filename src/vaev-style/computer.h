@@ -34,7 +34,7 @@ struct Computer {
 
     // MARK: Styling -----------------------------------------------------------
 
-    void styleElement(SpecifiedValues const& parent, Dom::Element& el);
+    void styleElement(SpecifiedValues const& parentSpecifiedValues, ComputedValues const& parentComputedValues, Dom::Element& el);
 
     void styleDocument(Dom::Document& doc);
 
