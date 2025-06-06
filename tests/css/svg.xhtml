@@ -474,3 +474,248 @@
         </svg>
     </rendering>
 </test>
+
+<test name="svg-transform-origin-0" size="300">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+        </style>
+
+        <body>
+            <section>
+                <div style="width: 100px;height: 100px;">
+                    <slot />
+                </div>
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width:100px;height:100px;background-color:green">
+        </div>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <g transform="scale(2)" transform-origin="0 0">
+                <rect x="0" y="0" width="50" height="50" fill="green"></rect>
+            </g>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <g transform="scale(2) scale(0.5)" transform-origin="0 0">
+                <rect x="0" y="0" width="100" height="100" fill="green"></rect>
+            </g>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <g transform="translate(-100, -100)" transform-origin="0 0">
+                <rect x="100" y="100" width="100" height="100" fill="green"></rect>
+            </g>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <g transform="scale(0.5)" transform-origin="0 0">
+                <rect x="0" y="0" width="100" height="100" fill="green" transform="scale(2)" transform-origin="0 0">
+                </rect>
+            </g>
+        </svg>
+    </rendering>
+
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <g transform="translate(-200, -200)" transform-origin="0 0">
+                <rect x="100" y="100" width="50" height="50" fill="green" transform="scale(2)" transform-origin="0 0">
+                </rect>
+            </g>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" transform="scale(2)" transform-origin="0 0">
+                <g transform="scale(0.5, 0.5)" transform-origin="0 0">
+                    <rect x="0" y="0" width="200" height="200" fill="green"></rect>
+                </g>
+            </svg>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="50 50 50 50" transform="scale(2)" transform-origin="50% 50%">
+            <g transform="translate(25, 25) scale(0.5, 0.5) " transform-origin="50% 50%">
+                <rect x="0" y="0" width="100" height="100" fill="green"></rect>
+            </g>
+        </svg>
+    </rendering>
+
+    <rendering skip="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <g transform="scale(2) scale(0.5)">
+                <rect x="0" y="0" width="100" height="100" fill="green"></rect>
+            </g>
+        </svg>
+    </rendering>
+
+</test>
+
+
+<test name="svg-transform-origin" size="300">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+        </style>
+
+        <body>
+            <section>
+                <div style="width: 100px;height: 100px;">
+                    <slot />
+                </div>
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width:50px;height:50px;background-color:green">
+        </div>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <g transform="rotate(180)" transform-origin="50% 50%">
+                <svg x="0" y="0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                    <g transform="scale(0.25) translate(200, 200)" transform-origin="0 0">
+                        <rect x="0" y="0" width="200" height="200" fill="green"></rect>
+                    </g>
+                </svg>
+            </g>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <g transform="rotate(180)" transform-origin="50% 50%">
+                <svg x="0" y="0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                    <g transform="scale(0.25) translate(200, 200)" transform-origin="0 0">
+                        <rect x="0" y="0" width="200" height="200" fill="green"></rect>
+                    </g>
+                </svg>
+            </g>
+        </svg>
+    </rendering>
+
+</test>
+
+
+<test name="svg-transform-box" size="300">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+
+            #a {
+                transform-box: fill-box;
+            }
+
+            #b {
+                transform-box: stroke-box;
+            }
+
+            #c {
+                transform-box: view-box;
+            }
+        </style>
+
+        <body>
+            <section>
+                <div style="width: 100px;height: 100px;">
+                    <slot />
+                </div>
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width:75px;height:75px;background-color:green">
+        </div>
+    </rendering>
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <g transform="translate(-25, -25)" transform-origin="0 0">
+                <rect id="a" x="50" y="50" width="50" height="50" fill="green" stroke="green" stroke-width="25"
+                    transform="scale(2)" transform-origin="0 0"></rect>
+            </g>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <g transform="translate(-37.5, -37.5)" transform-origin="0 0">
+                <rect id="b" x="50" y="50" width="50" height="50" fill="green" stroke="green" stroke-width="25"
+                    transform="scale(2)" transform-origin="0 0"></rect>
+            </g>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <g transform="translate(-75, -75)" transform-origin="0 0">
+                <rect id="c" x="50" y="50" width="50" height="50" fill="green" stroke="green" stroke-width="25"
+                    transform="scale(2)" transform-origin="0 0"></rect>
+            </g>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <g transform="translate(-25, -25)" transform-origin="0 0">
+                <g id="a" transform="scale(2)" transform-origin="0 0">
+                    <rect x="50" y="50" width="50" height="50" fill="green" stroke="green" stroke-width="25"></rect>
+                </g>
+            </g>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <g transform="translate(-37.5, -37.5)" transform-origin="0 0">
+                <g id="b" transform="scale(2)" transform-origin="0 0">
+                    <rect x="50" y="50" width="50" height="50" fill="green" stroke="green" stroke-width="25"></rect>
+                </g>
+            </g>
+        </svg>
+    </rendering>
+
+    <rendering>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <g transform="translate(-75, -75)" transform-origin="0 0">
+                <g id="c" transform="scale(2)" transform-origin="0 0">
+                    <rect x="50" y="50" width="50" height="50" fill="green" stroke="green" stroke-width="25"></rect>
+                </g>
+            </g>
+        </svg>
+    </rendering>
+
+
+</test>

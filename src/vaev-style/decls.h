@@ -183,10 +183,56 @@ inline String wrapPathAsCSSStyle(Str style) {
     return sb.take();
 }
 
+inline void fixTransformNumberToDimensions(Vec<Css::Sst>& sst) {
+    auto appendSuffix = [](String const& a, Str const& b) {
+        StringBuilder sb;
+        sb.append(a);
+        sb.append(b);
+        return sb.take();
+    };
+
+    for (auto& c : sst) {
+        if (c.prefix == Css::Token::function("translate(")) {
+            for (auto& tc : c.content) {
+                if (tc.token.type != Css::Token::NUMBER)
+                    continue;
+
+                tc.token = {Css::Token::DIMENSION, appendSuffix(tc.token.data, "px"s)};
+            }
+        } else if (
+            c.prefix == Css::Token::function("rotate(") or
+            c.prefix == Css::Token::function("skewX(") or
+            c.prefix == Css::Token::function("skewY(")
+        ) {
+            for (auto& tc : c.content) {
+                if (tc.token.type != Css::Token::NUMBER)
+                    continue;
+
+                tc.token = {Css::Token::DIMENSION, appendSuffix(tc.token.data, "deg"s)};
+            }
+        }
+    }
+}
+
 // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
 void inline parseSVGPresentationAttribute(Str presentationAttr, Str style, Vec<StyleProp>& styleProps) {
     SVGStyleProp::any(
         Visitor{
+            [&]<Meta::Same<TransformProp>>() -> bool {
+                if (presentationAttr != TransformProp::name())
+                    return false;
+
+                TransformProp t;
+
+                Css::Lexer lex{style};
+                auto sst = Css::consumeDeclarationValue(lex);
+                fixTransformNumberToDimensions(sst);
+                Cursor<Css::Sst> content = sst;
+
+                if (t.parse(content))
+                    styleProps.pushBack(std::move(t));
+                return true;
+            },
             [&]<Meta::Same<SVGDProp>>() -> bool {
                 if (presentationAttr != SVGDProp::name())
                     return false;

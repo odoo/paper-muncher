@@ -104,31 +104,78 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
 static void _establishStackingContext(Frag& frag, Scene::Stack& stack);
 static void _paintStackingContext(Frag& frag, Scene::Stack& stack);
 
-Rc<Scene::Node> _paintSVG(SVGRootFrag& svgRoot, Gfx::Color currentColor) {
-    Scene::Stack stack;
-    for (auto& element : svgRoot.elements) {
-        if (auto shape = element.is<SVG::ShapeFrag>()) {
-            stack.add(shape->toSceneNode(currentColor));
-        } else if (auto nestedRoot = element.is<SVGRootFrag>()) {
-            stack.add(
-                makeRc<Scene::Clip>(
-                    _paintSVG(*nestedRoot, currentColor),
-                    nestedRoot->boundingBox.toRect().cast<f64>()
-                )
-            );
-        } else if (auto foreignObject = element.is<::Box<Frag>>()) {
-            auto& frag = **foreignObject;
-            Scene::Stack nestedStack;
-            _paintStackingContext(frag, nestedStack);
-            stack.add(
-                makeRc<Scene::Clip>(
-                    makeRc<Scene::Stack>(std::move(nestedStack)),
-                    frag.metrics.borderBox().cast<f64>()
-                )
-            );
-        }
+Rc<Scene::Node> _paintSVGRoot(SVGRootFrag& svgRoot, Gfx::Color currentColor);
+Rc<Scene::Stack> _paintSVGAggregate(SVG::GroupFrag* group, Gfx::Color currentColor, RectAu viewBox);
+
+static RectAu _resolveTransformReferenceSVG(SVG::Frag* svgFrag, RectAu viewBox, TransformBox box);
+static Rc<Scene::Node> _applyTransform(Vaev::Style::TransformProps const& transform, RectAu referenceBox, Rc<Scene::Node> content);
+
+// FIXME: move this closer to transform painting?
+Rc<Scene::Node> _applyTransformIfNeeded(SVG::Frag* svgFrag, RectAu viewBox, Rc<Scene::Node> content) {
+    auto const& transform = *svgFrag->style().transform;
+    if (not transform.has())
+        return content;
+    auto referenceBox = _resolveTransformReferenceSVG(svgFrag, viewBox, transform.box);
+    return _applyTransform(transform, referenceBox, content);
+}
+
+Rc<Scene::Node> _paintSVGElement(SVG::GroupFrag::Element& element, Gfx::Color currentColor, RectAu viewBox) {
+    if (auto shape = element.is<SVG::ShapeFrag>()) {
+        return _applyTransformIfNeeded(
+            (SVG::Frag*)&*shape, viewBox,
+            shape->toSceneNode(currentColor)
+        );
+    } else if (auto nestedGroup = element.is<SVG::GroupFrag>()) {
+        return _applyTransformIfNeeded(
+            (SVG::Frag*)&*nestedGroup, viewBox,
+            _paintSVGAggregate(nestedGroup, currentColor, viewBox)
+        );
+    } else if (auto nestedRoot = element.is<SVGRootFrag>()) {
+        return _applyTransformIfNeeded(
+            (SVG::Frag*)&*nestedRoot, viewBox,
+            makeRc<Scene::Clip>(
+                _paintSVGRoot(*nestedRoot, currentColor),
+                nestedRoot->boundingBox.toRect().cast<f64>()
+            )
+        );
+    } else if (auto foreignObject = element.is<::Box<Frag>>()) {
+        auto& frag = **foreignObject;
+        Scene::Stack stackForeignObj;
+        _establishStackingContext(frag, stackForeignObj);
+
+        return makeRc<Scene::Clip>(
+            makeRc<Scene::Stack>(std::move(stackForeignObj)),
+            frag.metrics.borderBox().cast<f64>()
+        );
     }
-    return makeRc<Scene::Transform>(makeRc<Scene::Stack>(std::move(stack)), svgRoot.transf);
+    unreachable();
+}
+
+Rc<Scene::Stack> _paintSVGAggregate(SVG::GroupFrag* group, Gfx::Color currentColor, RectAu viewBox) {
+    // NOTE: A SVG group does not create a stacking context, but its easier to manipulate a group if itself is its own node
+    Scene::Stack stack;
+    for (auto& element : group->elements) {
+        stack.add(_paintSVGElement(element, currentColor, viewBox));
+    }
+    return makeRc<Scene::Stack>(std::move(stack));
+}
+
+Rc<Scene::Node> _paintSVGRoot(SVGRootFrag& svgRoot, Gfx::Color currentColor) {
+    auto& rootBox = *((SVGRoot*)(&*svgRoot.box));
+
+    // https://drafts.csswg.org/css-transforms/#transform-box
+    // SPEC: The reference box is positioned at the origin of the coordinate system established
+    // by the viewBox attribute.
+    // NOTE: Origin here was interpreted as (0, 0) instead of (minX, minY).
+    // NOTE: It is not clear whether '(SPEC) the nearest SVG viewport' includes the root's viewBox itself.
+    // We assume it doesn't.
+    RectAu viewBox =
+        rootBox.viewBox
+            ? Math::Rect<f64>{Math::Vec2<f64>{rootBox.viewBox->width, rootBox.viewBox->height}}.cast<Au>()
+            : svgRoot.boundingBox.toRect();
+
+    auto content = _paintSVGAggregate(&svgRoot, currentColor, viewBox);
+    return makeRc<Scene::Transform>(content, svgRoot.transf);
 }
 
 static void _paintFrag(Frag& frag, Scene::Stack& stack) {
@@ -148,7 +195,7 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
 
         stack.add(
             makeRc<Scene::Clip>(
-                _paintSVG(*svgRoot, s.color),
+                _paintSVGRoot(*svgRoot, s.color),
                 frag.metrics.contentBox().cast<f64>()
             )
         );
@@ -391,7 +438,35 @@ static Rc<Scene::Clip> _applyClip(Frag const& frag, Rc<Scene::Node> content) {
 
 // MARK: Transformations -------------------------------------------------------
 
-static RectAu _resolveTransformReferenceBox(Metrics const& metrics, TransformBox box) {
+// https://www.w3.org/TR/css-transforms-1/#transform-box
+static RectAu _resolveTransformReferenceSVG(SVG::Frag* svgFrag, RectAu viewBox, TransformBox box) {
+    // For SVG elements without associated CSS layout box, the used value
+    // for content-box is fill-box and for border-box is stroke-box.
+    return box.visit(
+        Visitor{
+            [&](Keywords::ContentBox const&) {
+                return svgFrag->objectBoundingBox();
+            },
+            [&](Keywords::BorderBox const&) {
+                return svgFrag->strokeBoundingBox();
+            },
+            [&](Keywords::FillBox const&) {
+                return svgFrag->objectBoundingBox();
+            },
+            [&](Keywords::StrokeBox const&) {
+                return svgFrag->strokeBoundingBox();
+            },
+            [&](Keywords::ViewBox const&) {
+                return viewBox;
+            },
+        }
+    );
+}
+
+// https://www.w3.org/TR/css-transforms-1/#transform-box
+static RectAu _resolveTransformReferenceCSS(Metrics const& metrics, TransformBox box) {
+    // For elements with associated CSS layout box, the used value for fill-box
+    // is content-box and for stroke-box and view-box is border-box.
     return box.visit(
         Visitor{
             [&](Keywords::ContentBox const&) {
@@ -401,13 +476,13 @@ static RectAu _resolveTransformReferenceBox(Metrics const& metrics, TransformBox
                 return metrics.borderBox();
             },
             [&](Keywords::FillBox const&) {
-                return metrics.contentBox(); // TODO: handle SVG cases
+                return metrics.contentBox();
             },
             [&](Keywords::StrokeBox const&) {
-                return metrics.borderBox(); // TODO: handle SVG cases
+                return metrics.borderBox();
             },
             [&](Keywords::ViewBox const&) {
-                return metrics.borderBox(); // TODO: handle SVG cases
+                return metrics.borderBox();
             },
         }
     );
@@ -514,13 +589,17 @@ static Math::Trans2f _resolveTransform(RectAu referenceBox, Vec2Au origin, Slice
     return Math::Trans2f::translate(-origin.cast<f64>()).multiply(result);
 }
 
-static Rc<Scene::Node> _applyTransform(Frag const& frag, Rc<Scene::Node> content) {
-    auto const& transform = *frag.style().transform;
-    auto referenceBox = _resolveTransformReferenceBox(frag.metrics, transform.box);
+static Rc<Scene::Node> _applyTransform(Vaev::Style::TransformProps const& transform, RectAu referenceBox, Rc<Scene::Node> content) {
     auto origin = _resolveTransformOrigin(referenceBox, transform.origin);
     auto const& transformFunctions = transform.transform.unwrap<Vec<TransformFunction>>();
     auto trans = _resolveTransform(referenceBox, origin, transformFunctions);
     return makeRc<Scene::Transform>(content, trans);
+}
+
+static Rc<Scene::Node> _applyTransform(Frag const& frag, Rc<Scene::Node> content) {
+    auto const& transform = *frag.style().transform;
+    auto referenceBox = _resolveTransformReferenceCSS(frag.metrics, transform.box);
+    return _applyTransform(transform, referenceBox, content);
 }
 
 // MARK: Stacking Context ------------------------------------------------------
