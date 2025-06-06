@@ -1,5 +1,6 @@
 #include <vaev-style/decls.h>
 
+#include "computed.h"
 #include "computer.h"
 
 namespace Vaev::Style {
@@ -56,7 +57,7 @@ void Computer::_evalRule(Rule const& rule, Vec<FontFace>& fontFaces) {
     });
 }
 
-Rc<SpecifiedStyle> Computer::_evalCascade(SpecifiedStyle const& parent, MatchingRules& matchingRules) {
+Rc<SpecifiedValues> Computer::_evalCascade(SpecifiedValues const& parent, MatchingRules& matchingRules) {
     // Sort origin and specificity
     stableSort(
         matchingRules,
@@ -68,7 +69,7 @@ Rc<SpecifiedStyle> Computer::_evalCascade(SpecifiedStyle const& parent, Matching
     );
 
     // Compute computed style
-    auto computed = makeRc<SpecifiedStyle>(SpecifiedStyle::initial());
+    auto computed = makeRc<SpecifiedValues>(SpecifiedValues::initial());
     computed->inherit(parent);
     Vec<Cursor<StyleProp>> importantProps;
 
@@ -97,8 +98,30 @@ Rc<SpecifiedStyle> Computer::_evalCascade(SpecifiedStyle const& parent, Matching
     return computed;
 }
 
+static Rc<Karm::Text::Fontface> _lookupFontface(Text::FontBook& fontBook, Style::SpecifiedValues& style) {
+    Text::FontQuery fq{
+        .weight = style.font->weight,
+        .style = style.font->style.val,
+    };
+
+    for (auto family : style.font->families) {
+        fq.family = family;
+        if (auto font = fontBook.queryClosest(fq))
+            return font.unwrap();
+    }
+
+    if (
+        auto font = fontBook.queryClosest({
+            .family = String{"Inter"s},
+        })
+    )
+        return font.unwrap();
+
+    return Text::Fontface::fallback();
+}
+
 // https://drafts.csswg.org/css-cascade/#cascade-origin
-Rc<SpecifiedStyle> Computer::computeFor(SpecifiedStyle const& parent, Gc::Ref<Dom::Element> el) {
+Rc<SpecifiedValues> Computer::computeFor(SpecifiedValues const& parent, Gc::Ref<Dom::Element> el) {
     MatchingRules matchingRules;
 
     // Collect matching styles rules
@@ -118,14 +141,36 @@ Rc<SpecifiedStyle> Computer::computeFor(SpecifiedStyle const& parent, Gc::Ref<Do
     return _evalCascade(parent, matchingRules);
 }
 
-Rc<PageComputedStyle> Computer::computeFor(SpecifiedStyle const& parent, Page const& page) {
+Rc<PageComputedStyle> Computer::computeFor(SpecifiedValues const& parent, Page const& page) {
     auto computed = makeRc<PageComputedStyle>(parent);
 
     for (auto const& sheet : _styleBook.styleSheets)
         for (auto const& rule : sheet.rules)
             _evalRule(rule, page, *computed);
 
+    for (auto& area : computed->_areas) {
+        auto font = _lookupFontface(fontBook, *area.specifiedValues());
+        area._computedValues = makeRc<ComputedValues>(font);
+    }
+
     return computed;
+}
+
+void Computer::styleElement(SpecifiedValues const& parent, Dom::Element& el) {
+    auto specifiedValues = computeFor(parent, el);
+    el._specifiedValues = specifiedValues;
+    auto font = _lookupFontface(fontBook, *specifiedValues);
+    el._computedValues = makeRc<ComputedValues>(font);
+
+    for (auto child = el.firstChild(); child; child = child->nextSibling()) {
+        if (auto el = child->is<Dom::Element>())
+            styleElement(*specifiedValues, *el);
+    }
+}
+
+void Computer::styleDocument(Dom::Document& doc) {
+    if (auto el = doc.documentElement())
+        styleElement(SpecifiedValues::initial(), *el);
 }
 
 void Computer::loadFontFaces() {

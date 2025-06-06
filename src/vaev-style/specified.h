@@ -39,8 +39,8 @@ struct TransformProps {
     }
 };
 
-struct SpecifiedStyle {
-    static SpecifiedStyle const& initial();
+struct SpecifiedValues {
+    static SpecifiedValues const& initial();
 
     Gfx::Color color;
     Number opacity;
@@ -98,7 +98,7 @@ struct SpecifiedStyle {
     // https://drafts.csswg.org/css2/#z-index
     ZIndex zIndex = Keywords::AUTO;
 
-    void inherit(SpecifiedStyle const& parent);
+    void inherit(SpecifiedValues const& parent);
 
     void repr(Io::Emit& e) const;
 

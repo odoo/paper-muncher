@@ -4,7 +4,11 @@ module;
 #include <karm-text/loader.h>
 #include <karm-text/prose.h>
 #include <vaev-dom/document.h>
-#include <vaev-style/computer.h>
+#include <vaev-dom/element.h>
+#include <vaev-style/computed.h>
+#include <vaev-values/display.h>
+#include <vaev-values/table.h>
+#include <vaev-values/text.h>
 
 export module Vaev.Layout:builder;
 
@@ -58,37 +62,11 @@ static Attrs _parseDomAttr(Gc::Ref<Dom::Element> el) {
 
 // MARK: Build Prose ----------------------------------------------------------
 
-static Opt<Rc<Karm::Text::Fontface>> _monospaceFontface = NONE;
-static Opt<Rc<Karm::Text::Fontface>> _regularFontface = NONE;
-static Opt<Rc<Karm::Text::Fontface>> _boldFontface = NONE;
-
-static Rc<Karm::Text::Fontface> _lookupFontface(Text::FontBook& fontBook, Style::SpecifiedStyle& style) {
-    Text::FontQuery fq{
-        .weight = style.font->weight,
-        .style = style.font->style.val,
-    };
-
-    for (auto family : style.font->families) {
-        fq.family = family;
-        if (auto font = fontBook.queryClosest(fq))
-            return font.unwrap();
-    }
-
-    if (
-        auto font = fontBook.queryClosest({
-            .family = String{"Inter"s},
-        })
-    )
-        return font.unwrap();
-
-    return Text::Fontface::fallback();
-}
-
 bool isSegmentBreak(Rune rune) {
     return rune == '\n' or rune == '\r' or rune == '\f' or rune == '\v';
 }
 
-static Text::ProseStyle _proseStyleFomStyle(Style::SpecifiedStyle& style, Rc<Text::Fontface> fontFace) {
+static Text::ProseStyle _proseStyleFomStyle(Style::SpecifiedValues& style, Rc<Text::Fontface> fontFace) {
     // FIXME: We should pass this around from the top in order to properly resolve rems
     Resolver resolver{
         .rootFont = Text::Font{fontFace, 16},
@@ -126,11 +104,6 @@ static Text::ProseStyle _proseStyleFomStyle(Style::SpecifiedStyle& style, Rc<Tex
     return proseStyle;
 }
 
-static Text::ProseStyle _proseStyleFomStyle(Style::Computer& c, Style::SpecifiedStyle& style) {
-    auto fontFace = _lookupFontface(c.fontBook, style);
-    return _proseStyleFomStyle(style, fontFace);
-}
-
 void _transformAndAppendRuneToProse(Rc<Text::Prose> prose, Rune rune, TextTransform transform) {
     switch (transform) {
     case TextTransform::UPPERCASE:
@@ -150,7 +123,7 @@ void _transformAndAppendRuneToProse(Rc<Text::Prose> prose, Rune rune, TextTransf
 
 // https://www.w3.org/TR/css-text-3/#white-space-phase-1
 // https://www.w3.org/TR/css-text-3/#white-space-phase-2
-void _appendTextToInlineBox(Io::SScan scan, Rc<Style::SpecifiedStyle> parentStyle, InlineBox& rootInlineBox) {
+void _appendTextToInlineBox(Io::SScan scan, Rc<Style::SpecifiedValues> parentStyle, InlineBox& rootInlineBox) {
     auto whitespace = parentStyle->text->whiteSpace;
     bool whiteSpacesAreCollapsible =
         whitespace == WhiteSpace::NORMAL or
@@ -204,7 +177,7 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::SpecifiedStyle> parentStyl
     }
 }
 
-bool _buildText(Gc::Ref<Dom::Text> node, Rc<Style::SpecifiedStyle> parentStyle, InlineBox& rootInlineBox, bool skipIfWhitespace) {
+bool _buildText(Gc::Ref<Dom::Text> node, Rc<Style::SpecifiedValues> parentStyle, InlineBox& rootInlineBox, bool skipIfWhitespace) {
     if (skipIfWhitespace) {
         Io::SScan scan{node->data()};
         scan.eat(Re::space());
@@ -226,10 +199,8 @@ struct BuilderContext {
         TABLE
     };
 
-    Style::Computer& computer;
-
     From const from;
-    Rc<Style::SpecifiedStyle> const parentStyle;
+    Rc<Style::SpecifiedValues> const parentStyle;
 
     Box& _parent;
     MutCursor<InlineBox> _rootInlineBox;
@@ -240,7 +211,7 @@ struct BuilderContext {
             return;
 
         // The root inline box inherits from its parent block container, but is otherwise unstyleable.
-        auto style = makeRc<Style::SpecifiedStyle>(Style::SpecifiedStyle::initial());
+        auto style = makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial());
         style->inherit(*parentStyle);
         style->display = Display{Display::Inside::FLOW, Display::Outside::BLOCK};
 
@@ -263,7 +234,7 @@ struct BuilderContext {
         *_rootInlineBox = std::move(newRootInlineBox);
     }
 
-    Rc<Style::SpecifiedStyle> style() {
+    Rc<Style::SpecifiedValues> style() {
         return parentStyle;
     }
 
@@ -292,7 +263,6 @@ struct BuilderContext {
 
     BuilderContext toBlockContext(Box& parent, InlineBox& rootInlineBox) {
         return {
-            computer,
             From::BLOCK,
             parent.style,
             parent,
@@ -304,7 +274,6 @@ struct BuilderContext {
     // rootInlineBox setted for it and then calling `_flushRootInlineBoxIntoAnonymousBox` right after a text is added
     BuilderContext toFlexContext(Box& parent, InlineBox& rootInlineBox) {
         return {
-            computer,
             From::FLEX,
             parent.style,
             parent,
@@ -314,7 +283,6 @@ struct BuilderContext {
 
     BuilderContext toBlockContextWithoutRootInline(Box& parent) {
         return {
-            computer,
             From::BLOCK,
             parent.style,
             parent,
@@ -322,9 +290,8 @@ struct BuilderContext {
         };
     }
 
-    BuilderContext toInlineContext(Rc<Style::SpecifiedStyle> parentStyle) {
+    BuilderContext toInlineContext(Rc<Style::SpecifiedValues> parentStyle) {
         return {
-            computer,
             From::INLINE,
             parentStyle,
             _parent,
@@ -337,7 +304,6 @@ struct BuilderContext {
     // set, while other internal table contexts won't have a inline box
     BuilderContext toTableContent(Box& parent) {
         return {
-            computer,
             From::TABLE,
             parent.style,
             parent,
@@ -347,7 +313,6 @@ struct BuilderContext {
 
     BuilderContext toTableCellContent(Box& parent, InlineBox& rootInlineBox) {
         return {
-            computer,
             From::TABLE,
             parent.style,
             parent,
@@ -361,7 +326,7 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node);
 // MARK: Build void/leaves ---------------------------------------------------------
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace#how_does_css_process_whitespace/
-static void _buildText(BuilderContext bc, Gc::Ref<Dom::Text> node, Rc<Style::SpecifiedStyle> parentStyle) {
+static void _buildText(BuilderContext bc, Gc::Ref<Dom::Text> node, Rc<Style::SpecifiedValues> parentStyle) {
     // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
     // TODO: For tables, the default case is to skip whitespace text, but there are some extra checks to be done
 
@@ -389,10 +354,7 @@ static void _buildText(BuilderContext bc, Gc::Ref<Dom::Text> node, Rc<Style::Spe
     }
 }
 
-static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedStyle> parentStyle, InlineBox& rootInlineBox) {
-    auto style = c.computeFor(*parentStyle, el);
-    auto font = _lookupFontface(c.fontBook, *style);
-
+static void _buildImage(Gc::Ref<Dom::Element> el, InlineBox& rootInlineBox) {
     auto src = el->getAttribute(Html::SRC_ATTR).unwrapOr(""s);
     auto url = Mime::Url::resolveReference(el->baseURI(), Mime::parseUrlOrPath(src))
                    .unwrapOr("bundle://vaev-driver/missing.qoi"_url);
@@ -401,17 +363,16 @@ static void _buildImage(Style::Computer& c, Gc::Ref<Dom::Element> el, Rc<Style::
         return Karm::Image::loadOrFallback("bundle://vaev-driver/missing.qoi"_url).unwrap();
     });
 
-    rootInlineBox.add({style, font, img, el});
+    rootInlineBox.add({el->specifiedValues(), el->computedValues()->fontFace, img, el});
 }
 
-static void _buildInputProse(Style::Computer& c, Gc::Ref<Dom::Element> el, Box& parent) {
-    auto style = c.computeFor(*parent.style, el);
-    auto font = _lookupFontface(c.fontBook, *style);
+static void _buildInputProse(Gc::Ref<Dom::Element> el, Box& parent) {
+    auto font = el->computedValues()->fontFace;
     Resolver resolver{
         .rootFont = Text::Font{font, 16},
         .boxFont = Text::Font{font, 16},
     };
-    Text::ProseStyle proseStyle = _proseStyleFomStyle(*style, font);
+    Text::ProseStyle proseStyle = _proseStyleFomStyle(*el->specifiedValues(), font);
 
     auto value = ""s;
     if (el->hasAttribute(Html::VALUE_ATTR))
@@ -431,9 +392,9 @@ always_inline static bool isVoidElement(Gc::Ref<Dom::Element> el) {
 
 static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     if (el->tagName == Html::INPUT) {
-        _buildInputProse(bc.computer, el, bc._parent);
+        _buildInputProse(el, bc._parent);
     } else if (el->tagName == Html::IMG) {
-        _buildImage(bc.computer, *el, bc.parentStyle, bc.rootInlineBox());
+        _buildImage(*el, bc.rootInlineBox());
     }
 }
 
@@ -441,7 +402,7 @@ static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent);
 
-static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::SpecifiedStyle> style, Gc::Ref<Dom::Element> el) {
+static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::SpecifiedValues> style, Gc::Ref<Dom::Element> el) {
     if (el->tagName == Html::BR) {
         bc.flushRootInlineBoxIntoAnonymousBox();
         return;
@@ -452,7 +413,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
         return;
     }
 
-    auto proseStyle = _proseStyleFomStyle(bc.computer, *style);
+    auto proseStyle = _proseStyleFomStyle(*style, el->computedValues()->fontFace);
 
     bc.startInlineBox(proseStyle);
     _buildChildren(bc.toInlineContext(style), el);
@@ -470,10 +431,9 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
     bc.finalizeParentBoxAndFlushInline();
 }
 
-static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::SpecifiedStyle> style, Gc::Ref<Dom::Element> el, Display display) {
-    auto font = _lookupFontface(bc.computer.fontBook, *style);
-    Box box = {style, font, el};
-    InlineBox rootInlineBox{_proseStyleFomStyle(bc.computer, *style)};
+static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::SpecifiedValues> style, Gc::Ref<Dom::Element> el, Display display) {
+    Box box = {style, el->computedValues()->fontFace, el};
+    InlineBox rootInlineBox{_proseStyleFomStyle(*style, el->computedValues()->fontFace)};
 
     auto newBc = display == Display::Inside::FLEX
                      ? bc.toFlexContext(box, rootInlineBox)
@@ -487,7 +447,7 @@ static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::SpecifiedSt
 
 // MARK: Build Table -----------------------------------------------------------
 
-static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedStyle> style, Display display);
+static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedValues> style, Display display);
 
 struct AnonymousTableBoxWrapper {
     Opt<Box> rowBox, cellBox;
@@ -497,27 +457,27 @@ struct AnonymousTableBoxWrapper {
 
     AnonymousTableBoxWrapper(BuilderContext& bc) : bc(bc) {}
 
-    void createRowIfNone(Rc<Style::SpecifiedStyle> style) {
+    void createRowIfNone(Rc<Style::SpecifiedValues> style, Rc<Text::Fontface> fontFace) {
         if (rowBox)
             return;
 
-        auto rowStyle = makeRc<Style::SpecifiedStyle>(Style::SpecifiedStyle::initial());
+        auto rowStyle = makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial());
         rowStyle->inherit(*style);
         rowStyle->display = Display::Internal::TABLE_ROW;
 
-        rowBox = Box{rowStyle, _lookupFontface(bc.computer.fontBook, *style), nullptr};
+        rowBox = Box{rowStyle, fontFace, nullptr};
     }
 
-    void createCellIfNone(Rc<Style::SpecifiedStyle> style) {
+    void createCellIfNone(Rc<Style::SpecifiedValues> style, Rc<Text::Fontface> fontFace) {
         if (cellBox)
             return;
 
-        auto cellStyle = makeRc<Style::SpecifiedStyle>(Style::SpecifiedStyle::initial());
+        auto cellStyle = makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial());
         cellStyle->inherit(*style);
         cellStyle->display = Display::Internal::TABLE_CELL;
 
-        cellBox = Box{cellStyle, _lookupFontface(bc.computer.fontBook, *style), nullptr};
-        rootInlineBoxForCell = InlineBox{_proseStyleFomStyle(bc.computer, *style)};
+        cellBox = Box{cellStyle, fontFace, nullptr};
+        rootInlineBoxForCell = InlineBox{_proseStyleFomStyle(*style, fontFace)};
     }
 
     void finalizeAndResetCell() {
@@ -562,12 +522,12 @@ static void _buildCell(BuilderContext rowBuilderContext, Gc::Ref<Dom::Element> c
     _buildNode(rowBuilderContext, *cellEl);
 }
 
-static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedStyle> style, bool skipCaption, auto predForAccepted) {
+static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, Gc::Ref<Dom::Element> parentEl, Rc<Style::SpecifiedValues> style, bool skipCaption, auto predForAccepted) {
     AnonymousTableBoxWrapper anonTableWrapper{bc};
 
-    for (auto child = el->firstChild(); child; child = child->nextSibling()) {
-        if (auto el = child->is<Dom::Element>()) {
-            auto childStyle = bc.computer.computeFor(*style, *el);
+    for (auto child = parentEl->firstChild(); child; child = child->nextSibling()) {
+        if (auto childEL = child->is<Dom::Element>()) {
+            auto childStyle = childEL->specifiedValues();
             auto display = childStyle->display;
 
             if (skipCaption and display == Display::Internal::TABLE_CAPTION)
@@ -578,34 +538,34 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
                 anonTableWrapper.finalizeAndResetRow();
 
                 if (display == Display::Internal::TABLE_CELL) {
-                    _buildCell(bc, *el);
+                    _buildCell(bc, *childEL);
                 } else {
-                    _buildTableInternal(bc, *el, childStyle, display);
+                    _buildTableInternal(bc, *childEL, childStyle, display);
                 }
             } else {
                 // Unexpected display type for children, it will be wrapped by anonymous box
                 // First dispatching based on the parent's display type
                 if (bc.parentStyle->display == Display::Internal::TABLE_ROW) {
-                    anonTableWrapper.createCellIfNone(style);
-                    _buildNodeWrappedByCell(anonTableWrapper.cellBuilderContext(), *el);
+                    anonTableWrapper.createCellIfNone(style, parentEl->computedValues()->fontFace);
+                    _buildNodeWrappedByCell(anonTableWrapper.cellBuilderContext(), *childEL);
                 } else {
                     if (display == Display::Internal::TABLE_CELL) {
                         anonTableWrapper.finalizeAndResetCell();
-                        anonTableWrapper.createRowIfNone(style);
+                        anonTableWrapper.createRowIfNone(style, parentEl->computedValues()->fontFace);
 
-                        _buildCell(anonTableWrapper.rowBuilderContext(), *el);
+                        _buildCell(anonTableWrapper.rowBuilderContext(), *childEL);
                     } else {
-                        anonTableWrapper.createRowIfNone(style);
-                        anonTableWrapper.createCellIfNone(style);
+                        anonTableWrapper.createRowIfNone(style, parentEl->computedValues()->fontFace);
+                        anonTableWrapper.createCellIfNone(style, parentEl->computedValues()->fontFace);
 
-                        _buildNodeWrappedByCell(anonTableWrapper.cellBuilderContext(), *el);
+                        _buildNodeWrappedByCell(anonTableWrapper.cellBuilderContext(), *childEL);
                     }
                 }
             }
         } else if (auto text = child->is<Dom::Text>()) {
             if (bc.parentStyle->display != Display::Internal::TABLE_ROW)
-                anonTableWrapper.createRowIfNone(style);
-            anonTableWrapper.createCellIfNone(style);
+                anonTableWrapper.createRowIfNone(style, parentEl->computedValues()->fontFace);
+            anonTableWrapper.createCellIfNone(style, parentEl->computedValues()->fontFace);
             _buildText(anonTableWrapper.cellBuilderContext(), *text, style);
         }
     }
@@ -615,9 +575,8 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
 }
 
 // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
-static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedStyle> style, Display display) {
-    auto font = _lookupFontface(bc.computer.fontBook, *style);
-    Box tableInternalBox = {style, font, el};
+static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedValues> style, Display display) {
+    Box tableInternalBox = {style, el->computedValues()->fontFace, el};
     tableInternalBox.attrs = _parseDomAttr(el);
 
     switch (display.internal()) {
@@ -635,7 +594,7 @@ static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<
         // "Children of a table-column-group which are not a table-column." should be discarded
         for (auto child = el->firstChild(); child; child = child->nextSibling()) {
             if (auto el = child->is<Dom::Element>()) {
-                auto childStyle = bc.computer.computeFor(*style, *el);
+                auto childStyle = el->specifiedValues();
                 if (childStyle->display != Display::Internal::TABLE_COLUMN)
                     continue;
                 _buildTableInternal(bc.toTableContent(tableInternalBox), *el, childStyle, display);
@@ -668,11 +627,11 @@ static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<
     bc.addToParentBox(std::move(tableInternalBox));
 }
 
-static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedStyle> tableBoxStyle) {
+static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedValues> tableBoxStyle) {
     auto searchAndBuildCaption = [&]() {
         for (auto child = el->firstChild(); child; child = child->nextSibling()) {
             if (auto childEl = child->is<Dom::Element>()) {
-                auto childStyle = tableWrapperBc.computer.computeFor(*tableBoxStyle, *childEl);
+                auto childStyle = childEl->specifiedValues();
                 if (childStyle->display != Display::Internal::TABLE_CAPTION)
                     continue;
                 _buildNode(tableWrapperBc, *childEl);
@@ -681,8 +640,7 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
     };
 
     tableBoxStyle->display = Display::Internal::TABLE_BOX;
-    auto font = _lookupFontface(tableWrapperBc.computer.fontBook, *tableBoxStyle);
-    Box tableBox = {tableBoxStyle, font, el};
+    Box tableBox = {tableBoxStyle, el->computedValues()->fontFace, el};
     tableBox.attrs = _parseDomAttr(el);
 
     bool captionsOnTop = tableBoxStyle->table->captionSide == CaptionSide::TOP;
@@ -702,15 +660,13 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
     }
 }
 
-static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::SpecifiedStyle> tableStyle, Gc::Ref<Dom::Element> tableBoxEl) {
-    auto font = _lookupFontface(bc.computer.fontBook, *tableStyle);
-
-    auto wrapperStyle = makeRc<Style::SpecifiedStyle>(Style::SpecifiedStyle::initial());
+static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::SpecifiedValues> tableStyle, Gc::Ref<Dom::Element> tableBoxEl) {
+    auto wrapperStyle = makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial());
     wrapperStyle->display = tableStyle->display;
     wrapperStyle->margin = tableStyle->margin;
 
-    Box wrapper = {wrapperStyle, font, tableBoxEl};
-    InlineBox rootInlineBox{_proseStyleFomStyle(bc.computer, *wrapperStyle)};
+    Box wrapper = {wrapperStyle, tableBoxEl->computedValues()->fontFace, tableBoxEl};
+    InlineBox rootInlineBox{_proseStyleFomStyle(*wrapperStyle, tableBoxEl->computedValues()->fontFace)};
 
     // SPEC: The table wrapper box establishes a block formatting context.
     _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, tableStyle);
@@ -722,7 +678,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Specifi
 // MARK: Dispatch based on outside role -------------------------------------------------------------------------------
 
 // https://www.w3.org/TR/css-display-3/#outer-role
-static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedStyle> style, Display display) {
+static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedValues> style, Display display) {
     if (display == Display::Inside::TABLE) {
         auto wrapper = _createTableWrapperAndBuildTable(bc, style, el);
         bc.addToParentBox(std::move(wrapper));
@@ -734,7 +690,7 @@ static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::
 }
 
 // https://www.w3.org/TR/css-display-3/#outer-role
-static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedStyle> style, Display display) {
+static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedValues> style, Display display) {
     if (display == Display::Inside::TABLE) {
         auto wrapper = _createTableWrapperAndBuildTable(bc, style, el);
         bc.addToInlineRoot(std::move(wrapper));
@@ -762,13 +718,13 @@ static void _buildChildBoxDisplay(BuilderContext bc, Gc::Ref<Dom::Node> node, Di
 }
 
 // https://www.w3.org/TR/css-display-3/#layout-specific-display
-static void _buildChildInternalDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::SpecifiedStyle> childStyle) {
+static void _buildChildInternalDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::SpecifiedValues> childStyle) {
     // FIXME: We should create wrapping boxes related to table or ruby, following the FC specification. However, for now,
     // we just wrap it in a single box.
     _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, childStyle->display);
 }
 
-static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::SpecifiedStyle> childStyle, Display display) {
+static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::SpecifiedValues> childStyle, Display display) {
     if (bc.from == BuilderContext::From::FLEX) {
         display = childStyle->display = childStyle->display.blockify();
         _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
@@ -792,7 +748,7 @@ static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> c
 static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
     logDebugIf(DEBUG_BUILDER, "building node {} at context {}", node, bc.from);
     if (auto el = node->is<Dom::Element>()) {
-        auto childStyle = bc.computer.computeFor(*bc.parentStyle, *el);
+        auto childStyle = el->specifiedValues();
         auto display = childStyle->display;
 
         if (display.type() == Display::Type::BOX) {
@@ -809,18 +765,14 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
 
 // MARK: Entry points -----------------------------------------------------------------
 
-export Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc) {
+export Box build(Gc::Ref<Dom::Document> doc) {
     if (auto el = doc->documentElement()) {
-        auto style = c.computeFor(Style::SpecifiedStyle::initial(), *el);
-        auto font = _lookupFontface(c.fontBook, *style);
-
-        Box root = {style, font, el};
-        InlineBox rootInlineBox{_proseStyleFomStyle(c, *style)};
+        Box root = {el->specifiedValues(), el->computedValues()->fontFace, el};
+        InlineBox rootInlineBox{_proseStyleFomStyle(*el->specifiedValues(), el->computedValues()->fontFace)};
 
         BuilderContext bc{
-            c,
             BuilderContext::From::BLOCK,
-            style,
+            el->specifiedValues(),
             root,
             &rootInlineBox,
         };
@@ -829,26 +781,23 @@ export Box build(Style::Computer& c, Gc::Ref<Dom::Document> doc) {
         return root;
     }
     // NOTE: Fallback in case of an empty document
-    auto style = makeRc<Style::SpecifiedStyle>(Style::SpecifiedStyle::initial());
     return {
-        style,
-        _lookupFontface(c.fontBook, *style),
+        makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial()),
+        Text::Fontface::fallback(),
         nullptr
     };
 }
 
-export Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::SpecifiedStyle> style) {
-    auto fontFace = _lookupFontface(fontBook, *style);
-
-    auto proseStyle = _proseStyleFomStyle(*style, fontFace);
+export Box buildForPseudoElement(Dom::PseudoElement& el) {
+    auto proseStyle = _proseStyleFomStyle(*el.specifiedValues(), el.computedValues()->fontFace);
 
     auto prose = makeRc<Text::Prose>(proseStyle);
-    if (style->content) {
-        prose->append(style->content.str());
-        return {style, fontFace, InlineBox{prose}, nullptr};
+    if (el.specifiedValues()->content) {
+        prose->append(el.specifiedValues()->content.str());
+        return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};
     }
 
-    return {style, fontFace, nullptr};
+    return {el.specifiedValues(), el.computedValues()->fontFace, nullptr};
 }
 
 } // namespace Vaev::Layout

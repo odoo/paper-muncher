@@ -28,11 +28,11 @@ struct AlignContentProp {
 
     static constexpr Align initial() { return Align::Keywords::STRETCH; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.aligns.alignContent = value;
     }
 
-    static Align load(SpecifiedStyle const& c) {
+    static Align load(SpecifiedValues const& c) {
         return c.aligns.alignContent;
     }
 
@@ -50,11 +50,11 @@ struct JustifyContentProp {
 
     static constexpr Align initial() { return Align::Keywords::FLEX_START; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.aligns.justifyContent = value;
     }
 
-    static Align load(SpecifiedStyle const& c) {
+    static Align load(SpecifiedValues const& c) {
         return c.aligns.justifyContent;
     }
 
@@ -72,11 +72,11 @@ struct JustifySelfProp {
 
     static constexpr Align initial() { return {}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.aligns.justifySelf = value;
     }
 
-    static Align load(SpecifiedStyle const& c) {
+    static Align load(SpecifiedValues const& c) {
         return c.aligns.justifySelf;
     }
 
@@ -94,11 +94,11 @@ struct AlignSelfProp {
 
     static constexpr Align initial() { return Align::Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.aligns.alignSelf = value;
     }
 
-    static Align load(SpecifiedStyle const& c) {
+    static Align load(SpecifiedValues const& c) {
         return c.aligns.alignSelf;
     }
 
@@ -116,11 +116,11 @@ struct JustifyItemsProp {
 
     static constexpr Align initial() { return {}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.aligns.justifyItems = value;
     }
 
-    static Align load(SpecifiedStyle const& c) {
+    static Align load(SpecifiedValues const& c) {
         return c.aligns.justifyItems;
     }
 
@@ -138,11 +138,11 @@ struct AlignItemsProp {
 
     static constexpr Align initial() { return Align::Keywords::STRETCH; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.aligns.alignItems = value;
     }
 
-    static Align load(SpecifiedStyle const& c) {
+    static Align load(SpecifiedValues const& c) {
         return c.aligns.alignItems;
     }
 
@@ -160,11 +160,11 @@ struct RowGapProp {
 
     static constexpr Keywords::Normal initial() { return Keywords::NORMAL; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.gaps.cow().y = value;
     }
 
-    static Gap load(SpecifiedStyle const& c) {
+    static Gap load(SpecifiedValues const& c) {
         return c.gaps->y;
     }
 
@@ -182,11 +182,11 @@ struct ColumnGapProp {
 
     static constexpr Keywords::Normal initial() { return Keywords::NORMAL; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.gaps.cow().x = value;
     }
 
-    static Gap load(SpecifiedStyle const& c) {
+    static Gap load(SpecifiedValues const& c) {
         return c.gaps->x;
     }
 
@@ -206,11 +206,11 @@ struct DominantBaselineProp {
 
     static constexpr Keywords::Auto initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.baseline.cow().dominant = value;
     }
 
-    static DominantBaseline load(SpecifiedStyle const& c) {
+    static DominantBaseline load(SpecifiedValues const& c) {
         return c.baseline->dominant;
     }
 
@@ -228,11 +228,11 @@ struct BaselineSourceProp {
 
     static constexpr Keywords::Auto initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.baseline.cow().source = value;
     }
 
-    static BaselineSource load(SpecifiedStyle const& c) {
+    static BaselineSource load(SpecifiedValues const& c) {
         return c.baseline->source;
     }
 
@@ -250,11 +250,11 @@ struct AlignmentBaselineProp {
 
     static constexpr Keywords::Baseline initial() { return Keywords::BASELINE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.baseline.cow().alignment = value;
     }
 
-    static AlignmentBaseline load(SpecifiedStyle const& c) {
+    static AlignmentBaseline load(SpecifiedValues const& c) {
         return c.baseline->alignment;
     }
 
@@ -274,11 +274,11 @@ struct BackgroundColorProp {
 
     static constexpr Color initial() { return TRANSPARENT; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.backgrounds.cow().color = value;
     }
 
-    static Color load(SpecifiedStyle const& c) {
+    static Color load(SpecifiedValues const& c) {
         return c.backgrounds->color;
     }
 
@@ -300,14 +300,14 @@ struct BackgroundAttachmentProp {
         return {BackgroundAttachment::SCROLL};
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         auto& layers = c.backgrounds.cow().layers;
         layers.resize(max(layers.len(), value.len()));
         for (usize i = 0; i < value.len(); ++i)
             layers[i].attachment = value[i];
     }
 
-    static Vec<BackgroundAttachment> load(SpecifiedStyle const& c) {
+    static Vec<BackgroundAttachment> load(SpecifiedValues const& c) {
         Vec<BackgroundAttachment> layers;
         for (auto const& l : c.backgrounds->layers)
             layers.pushBack(l.attachment);
@@ -323,11 +323,11 @@ struct BackgroundImageProp {
 
     static Vec<Image> initial() { return {}; }
 
-    void apply(SpecifiedStyle&) const {
+    void apply(SpecifiedValues&) const {
         // TODO
     }
 
-    static Vec<Image> load(SpecifiedStyle const&) {
+    static Vec<Image> load(SpecifiedValues const&) {
         return {};
     }
 
@@ -347,11 +347,11 @@ struct BackgroundPositionProp {
         return {};
     }
 
-    void apply(SpecifiedStyle&) const {
+    void apply(SpecifiedValues&) const {
         // TODO
     }
 
-    static Vec<BackgroundPosition> load(SpecifiedStyle const&) {
+    static Vec<BackgroundPosition> load(SpecifiedValues const&) {
         return {};
     }
 
@@ -371,11 +371,11 @@ struct BackgroundRepeatProp {
         return {BackgroundRepeat::REPEAT};
     }
 
-    void apply(SpecifiedStyle&) const {
+    void apply(SpecifiedValues&) const {
         // TODO
     }
 
-    static Vec<BackgroundRepeat> load(SpecifiedStyle const&) {
+    static Vec<BackgroundRepeat> load(SpecifiedValues const&) {
         return {};
     }
 
@@ -394,11 +394,11 @@ struct BackgroundProp {
 
     static BackgroundProps initial() { return {TRANSPARENT}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.backgrounds.cow() = value;
     }
 
-    static BackgroundProps load(SpecifiedStyle const& c) {
+    static BackgroundProps load(SpecifiedValues const& c) {
         return *c.backgrounds;
     }
 
@@ -416,19 +416,19 @@ struct ColorProp {
 
     static constexpr Color initial() { return BLACK; }
 
-    static void inherit(SpecifiedStyle const& parent, SpecifiedStyle& child) {
+    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
         child.color = parent.color;
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.color = resolve(value, Gfx::BLACK);
     }
 
-    void apply(SpecifiedStyle const& parent, SpecifiedStyle& c) const {
+    void apply(SpecifiedValues const& parent, SpecifiedValues& c) const {
         c.color = resolve(value, parent.color);
     }
 
-    static Color load(SpecifiedStyle const& c) {
+    static Color load(SpecifiedValues const& c) {
         return c.color;
     }
 
@@ -446,11 +446,11 @@ struct DisplayProp {
 
     static constexpr Display initial() { return {Display::FLOW, Display::INLINE}; }
 
-    void apply(SpecifiedStyle& s) const {
+    void apply(SpecifiedValues& s) const {
         s.display = value;
     }
 
-    static Display load(SpecifiedStyle const& s) {
+    static Display load(SpecifiedValues const& s) {
         return s.display;
     }
 
@@ -468,11 +468,11 @@ struct TableLayoutProp {
 
     static constexpr TableLayout initial() { return TableLayout::AUTO; }
 
-    void apply(SpecifiedStyle& s) const {
+    void apply(SpecifiedValues& s) const {
         s.table.cow().tableLayout = value;
     }
 
-    static TableLayout load(SpecifiedStyle const& s) {
+    static TableLayout load(SpecifiedValues const& s) {
         return s.table->tableLayout;
     }
 
@@ -490,11 +490,11 @@ struct CaptionSideProp {
 
     static constexpr CaptionSide initial() { return CaptionSide::TOP; }
 
-    void apply(SpecifiedStyle& s) const {
+    void apply(SpecifiedValues& s) const {
         s.table.cow().captionSide = value;
     }
 
-    static CaptionSide load(SpecifiedStyle const& s) {
+    static CaptionSide load(SpecifiedValues const& s) {
         return s.table->captionSide;
     }
 
@@ -514,11 +514,11 @@ struct BorderTopColorProp {
 
     static constexpr Color initial() { return BLACK; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().top.color = value;
     }
 
-    static Color load(SpecifiedStyle const& c) {
+    static Color load(SpecifiedValues const& c) {
         return c.borders->top.color;
     }
 
@@ -536,11 +536,11 @@ struct BorderRightColorProp {
 
     static constexpr Color initial() { return BLACK; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().end.color = value;
     }
 
-    static Color load(SpecifiedStyle const& c) {
+    static Color load(SpecifiedValues const& c) {
         return c.borders->end.color;
     }
 
@@ -558,11 +558,11 @@ struct BorderBottomColorProp {
 
     static constexpr Color initial() { return BLACK; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().bottom.color = value;
     }
 
-    static Color load(SpecifiedStyle const& c) {
+    static Color load(SpecifiedValues const& c) {
         return c.borders->bottom.color;
     }
 
@@ -580,11 +580,11 @@ struct BorderLeftColorProp {
 
     static constexpr Color initial() { return BLACK; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().start.color = value;
     }
 
-    static Color load(SpecifiedStyle const& c) {
+    static Color load(SpecifiedValues const& c) {
         return c.borders->start.color;
     }
 
@@ -601,7 +601,7 @@ struct BorderColorProp {
 
     static constexpr Math::Insets<Color> initial() { return {BLACK}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         auto& borders = c.borders.cow();
         borders.start.color = value.start;
         borders.end.color = value.end;
@@ -609,7 +609,7 @@ struct BorderColorProp {
         borders.bottom.color = value.bottom;
     }
 
-    static Math::Insets<Color> load(SpecifiedStyle const& c) {
+    static Math::Insets<Color> load(SpecifiedValues const& c) {
         return {
             c.borders->start.color,
             c.borders->end.color,
@@ -635,14 +635,14 @@ struct BorderStyle {
         return {Gfx::BorderStyle::NONE};
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().start.style = value.start;
         c.borders.cow().end.style = value.end;
         c.borders.cow().top.style = value.top;
         c.borders.cow().bottom.style = value.bottom;
     }
 
-    static Math::Insets<Gfx::BorderStyle> load(SpecifiedStyle const& c) {
+    static Math::Insets<Gfx::BorderStyle> load(SpecifiedValues const& c) {
         return {
             c.borders->start.style,
             c.borders->end.style,
@@ -665,11 +665,11 @@ struct BorderLeftStyleProp {
 
     static constexpr Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().start.style = value;
     }
 
-    static Gfx::BorderStyle load(SpecifiedStyle const& c) {
+    static Gfx::BorderStyle load(SpecifiedValues const& c) {
         return c.borders->start.style;
     }
 
@@ -687,11 +687,11 @@ struct BorderTopStyleProp {
 
     static constexpr Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().top.style = value;
     }
 
-    static Gfx::BorderStyle load(SpecifiedStyle const& c) {
+    static Gfx::BorderStyle load(SpecifiedValues const& c) {
         return c.borders->top.style;
     }
 
@@ -709,11 +709,11 @@ struct BorderRightStyleProp {
 
     static constexpr Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().end.style = value;
     }
 
-    static Gfx::BorderStyle load(SpecifiedStyle const& c) {
+    static Gfx::BorderStyle load(SpecifiedValues const& c) {
         return c.borders->end.style;
     }
 
@@ -731,11 +731,11 @@ struct BorderBottomStyleProp {
 
     static constexpr Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().bottom.style = value;
     }
 
-    static Gfx::BorderStyle load(SpecifiedStyle const& c) {
+    static Gfx::BorderStyle load(SpecifiedValues const& c) {
         return c.borders->bottom.style;
     }
 
@@ -753,11 +753,11 @@ struct BorderTopWidthProp {
 
     static constexpr LineWidth initial() { return Keywords::MEDIUM; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().top.width = value;
     }
 
-    static LineWidth load(SpecifiedStyle const& c) {
+    static LineWidth load(SpecifiedValues const& c) {
         return c.borders->top.width;
     }
 
@@ -775,11 +775,11 @@ struct BorderRightWidthProp {
 
     static constexpr LineWidth initial() { return Keywords::MEDIUM; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().end.width = value;
     }
 
-    static LineWidth load(SpecifiedStyle const& c) {
+    static LineWidth load(SpecifiedValues const& c) {
         return c.borders->end.width;
     }
 
@@ -797,11 +797,11 @@ struct BorderBottomWidthProp {
 
     static constexpr LineWidth initial() { return Keywords::MEDIUM; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().bottom.width = value;
     }
 
-    static LineWidth load(SpecifiedStyle const& c) {
+    static LineWidth load(SpecifiedValues const& c) {
         return c.borders->bottom.width;
     }
 
@@ -819,11 +819,11 @@ struct BorderLeftWidthProp {
 
     static constexpr LineWidth initial() { return Keywords::MEDIUM; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().start.width = value;
     }
 
-    static LineWidth load(SpecifiedStyle const& c) {
+    static LineWidth load(SpecifiedValues const& c) {
         return c.borders->start.width;
     }
 
@@ -843,12 +843,12 @@ struct BorderRadiusTopRight {
         return makeArray<CalcValue<PercentOr<Length>>, 2>(Length{});
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().radii.c = value[0];
         c.borders.cow().radii.d = value[1];
     }
 
-    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedStyle const& c) {
+    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedValues const& c) {
         return {
             c.borders->radii.c,
             c.borders->radii.d,
@@ -877,12 +877,12 @@ struct BorderRadiusTopLeft {
         return makeArray<CalcValue<PercentOr<Length>>, 2>(Length{});
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().radii.a = value[1];
         c.borders.cow().radii.b = value[0];
     }
 
-    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedStyle const& c) {
+    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedValues const& c) {
         return {
             c.borders->radii.a,
             c.borders->radii.b,
@@ -912,12 +912,12 @@ struct BorderRadiusBottomRight {
         return makeArray<CalcValue<PercentOr<Length>>, 2>(Length{});
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().radii.e = value[1];
         c.borders.cow().radii.f = value[0];
     }
 
-    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedStyle const& c) {
+    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedValues const& c) {
         return {
             c.borders->radii.e,
             c.borders->radii.f,
@@ -946,12 +946,12 @@ struct BorderRadiusBottomLeft {
         return makeArray<CalcValue<PercentOr<Length>>, 2>(Length{});
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().radii.g = value[0];
         c.borders.cow().radii.h = value[1];
     }
 
-    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedStyle const& c) {
+    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedValues const& c) {
         return {
             c.borders->radii.g,
             c.borders->radii.h,
@@ -978,11 +978,11 @@ struct BorderRadius {
 
     static Math::Radii<CalcValue<PercentOr<Length>>> initial() { return {CalcValue<PercentOr<Length>>(Length{})}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().radii = value;
     }
 
-    static Math::Radii<CalcValue<PercentOr<Length>>> load(SpecifiedStyle const& c) {
+    static Math::Radii<CalcValue<PercentOr<Length>>> load(SpecifiedValues const& c) {
         return c.borders->radii;
     }
 
@@ -998,11 +998,11 @@ struct BorderTopProp {
 
     static constexpr Str name() { return "border-top"; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().top = value;
     }
 
-    static Border load(SpecifiedStyle const& c) {
+    static Border load(SpecifiedValues const& c) {
         return c.borders->top;
     }
 
@@ -1039,11 +1039,11 @@ struct BorderRightProp {
 
     static constexpr Str name() { return "border-right"; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().end = value;
     }
 
-    static Border load(SpecifiedStyle const& c) {
+    static Border load(SpecifiedValues const& c) {
         return c.borders->end;
     }
 
@@ -1080,11 +1080,11 @@ struct BorderBottomProp {
 
     static constexpr Str name() { return "border-bottom"; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().bottom = value;
     }
 
-    static Border load(SpecifiedStyle const& c) {
+    static Border load(SpecifiedValues const& c) {
         return c.borders->bottom;
     }
 
@@ -1121,11 +1121,11 @@ struct BorderLeftProp {
 
     static constexpr Str name() { return "border-left"; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().start = value;
     }
 
-    static Border load(SpecifiedStyle const& c) {
+    static Border load(SpecifiedValues const& c) {
         return c.borders->start;
     }
 
@@ -1162,14 +1162,14 @@ struct BorderProp {
 
     static constexpr Str name() { return "border"; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.borders.cow().top = value;
         c.borders.cow().bottom = value;
         c.borders.cow().start = value;
         c.borders.cow().end = value;
     }
 
-    static Border load(SpecifiedStyle const& c) {
+    static Border load(SpecifiedValues const& c) {
         return c.borders->top;
     }
 
@@ -1185,7 +1185,7 @@ struct BorderWidthProp {
 
     static constexpr Str name() { return "border-width"; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         auto& borders = c.borders.cow();
         borders.start.width = value.start;
         borders.end.width = value.end;
@@ -1193,7 +1193,7 @@ struct BorderWidthProp {
         borders.bottom.width = value.bottom;
     }
 
-    static Math::Insets<LineWidth> load(SpecifiedStyle const& c) {
+    static Math::Insets<LineWidth> load(SpecifiedValues const& c) {
         return {
             c.borders->start.width,
             c.borders->end.width,
@@ -1219,11 +1219,11 @@ struct ContentProp {
 
     static String initial() { return ""s; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.content = value;
     }
 
-    static String load(SpecifiedStyle const& c) {
+    static String load(SpecifiedValues const& c) {
         return c.content;
     }
 
@@ -1244,14 +1244,14 @@ struct ClipPathProp {
 
     static Keywords::None initial() { return Keywords::NONE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         if (auto clipShape = value.is<BasicShape>())
             c.clip = *clipShape;
         else
             c.clip = NONE;
     }
 
-    static Value load(SpecifiedStyle const& c) {
+    static Value load(SpecifiedValues const& c) {
         if (c.clip.has())
             return c.clip.unwrap();
         return Keywords::NONE;
@@ -1273,11 +1273,11 @@ struct BorderCollapseProp {
 
     static constexpr BorderCollapse initial() { return BorderCollapse::SEPARATE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.table.cow().collapse = value;
     }
 
-    static BorderCollapse load(SpecifiedStyle const& c) {
+    static BorderCollapse load(SpecifiedValues const& c) {
         return c.table->collapse;
     }
 
@@ -1295,11 +1295,11 @@ struct BorderSpacingProp {
 
     static constexpr BorderSpacing initial() { return {0_au, 0_au}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.table.cow().spacing = value;
     }
 
-    static BorderSpacing load(SpecifiedStyle const& c) {
+    static BorderSpacing load(SpecifiedValues const& c) {
         return c.table->spacing;
     }
 
@@ -1319,7 +1319,7 @@ struct BreakAfterProp {
 
     static constexpr BreakBetween initial() { return BreakBetween::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.break_.cow().after = value;
     }
 
@@ -1337,7 +1337,7 @@ struct BreakBeforeProp {
 
     static constexpr BreakBetween initial() { return BreakBetween::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.break_.cow().before = value;
     }
 
@@ -1355,7 +1355,7 @@ struct BreakInsideProp {
 
     static constexpr BreakInside initial() { return BreakInside::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.break_.cow().inside = value;
     }
 
@@ -1375,11 +1375,11 @@ struct FlexBasisProp {
 
     static FlexBasis initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.flex.cow().basis = value;
     }
 
-    static FlexBasis load(SpecifiedStyle const& c) {
+    static FlexBasis load(SpecifiedValues const& c) {
         return c.flex->basis;
     }
 
@@ -1397,11 +1397,11 @@ struct FlexDirectionProp {
 
     static constexpr FlexDirection initial() { return FlexDirection::ROW; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.flex.cow().direction = value;
     }
 
-    static FlexDirection load(SpecifiedStyle const& c) {
+    static FlexDirection load(SpecifiedValues const& c) {
         return c.flex->direction;
     }
 
@@ -1419,11 +1419,11 @@ struct FlexGrowProp {
 
     static constexpr f64 initial() { return 0; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.flex.cow().grow = value;
     }
 
-    static Number load(SpecifiedStyle const& c) {
+    static Number load(SpecifiedValues const& c) {
         return c.flex->grow;
     }
 
@@ -1441,11 +1441,11 @@ struct FlexShrinkProp {
 
     static constexpr Number initial() { return 1; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.flex.cow().shrink = value;
     }
 
-    static Number load(SpecifiedStyle const& c) {
+    static Number load(SpecifiedValues const& c) {
         return c.flex->shrink;
     }
 
@@ -1463,11 +1463,11 @@ struct FlexWrapProp {
 
     static constexpr FlexWrap initial() { return FlexWrap::NOWRAP; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.flex.cow().wrap = value;
     }
 
-    static FlexWrap load(SpecifiedStyle const& c) {
+    static FlexWrap load(SpecifiedValues const& c) {
         return c.flex->wrap;
     }
 
@@ -1490,12 +1490,12 @@ struct FlexFlowProp {
 
     static constexpr Str name() { return "flex-flow"; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.flex.cow().direction = value.v0;
         c.flex.cow().wrap = value.v1;
     }
 
-    static Tuple<FlexDirection, FlexWrap> load(SpecifiedStyle const& c) {
+    static Tuple<FlexDirection, FlexWrap> load(SpecifiedValues const& c) {
         return {
             c.flex->direction,
             c.flex->wrap,
@@ -1542,14 +1542,14 @@ struct FlexProp {
         };
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         auto& flex = c.flex.cow();
         flex.basis = value.flexBasis;
         flex.grow = value.flexGrow;
         flex.shrink = value.flexShrink;
     }
 
-    static FlexItemProps load(SpecifiedStyle const& c) {
+    static FlexItemProps load(SpecifiedValues const& c) {
         return {
             c.flex->basis,
             c.flex->grow,
@@ -1622,11 +1622,11 @@ struct FloatProp {
 
     static Float initial() { return Float::NONE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.float_ = value;
     }
 
-    static Float load(SpecifiedStyle const& c) {
+    static Float load(SpecifiedValues const& c) {
         return c.float_;
     }
 
@@ -1643,11 +1643,11 @@ struct ClearProp {
 
     static Clear initial() { return Clear::NONE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.clear = value;
     }
 
-    static Clear load(SpecifiedStyle const& c) {
+    static Clear load(SpecifiedValues const& c) {
         return c.clear;
     }
 
@@ -1667,16 +1667,16 @@ struct FontFamilyProp {
 
     static Array<Text::Family, 1> initial() { return {Text::GenericFamily::SANS_SERIF}; }
 
-    static void inherit(SpecifiedStyle const& parent, SpecifiedStyle& child) {
+    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
         if (not child.font.sameInstance(parent.font))
             child.font.cow().families = parent.font->families;
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.font.cow().families = value;
     }
 
-    static Vec<Text::Family> load(SpecifiedStyle const& c) {
+    static Vec<Text::Family> load(SpecifiedValues const& c) {
         return c.font->families;
     }
 
@@ -1702,20 +1702,20 @@ struct FontWeightProp {
 
     static FontWeight initial() { return Text::FontWeight::REGULAR; }
 
-    static void inherit(SpecifiedStyle const& parent, SpecifiedStyle& child) {
+    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
         if (not child.font.sameInstance(parent.font))
             child.font.cow().weight = parent.font->weight;
     }
 
-    void apply(SpecifiedStyle& child) const {
+    void apply(SpecifiedValues& child) const {
         child.font.cow().weight = value.resolve();
     }
 
-    void apply(SpecifiedStyle const& parent, SpecifiedStyle& child) const {
+    void apply(SpecifiedValues const& parent, SpecifiedValues& child) const {
         child.font.cow().weight = value.resolve(parent.font->weight);
     }
 
-    static FontWeight load(SpecifiedStyle const& c) {
+    static FontWeight load(SpecifiedValues const& c) {
         return c.font->weight;
     }
 
@@ -1733,16 +1733,16 @@ struct FontWidthProp {
 
     static constexpr FontWidth initial() { return FontWidth::NORMAL; }
 
-    static void inherit(SpecifiedStyle const& parent, SpecifiedStyle& child) {
+    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
         if (not child.font.sameInstance(parent.font))
             child.font.cow().width = parent.font->width;
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.font.cow().width = value;
     }
 
-    static FontWidth load(SpecifiedStyle const& c) {
+    static FontWidth load(SpecifiedValues const& c) {
         return c.font->width;
     }
 
@@ -1760,16 +1760,16 @@ struct FontStyleProp {
 
     static constexpr FontStyle initial() { return FontStyle::NORMAL; }
 
-    static void inherit(SpecifiedStyle const& parent, SpecifiedStyle& child) {
+    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
         if (not child.font.sameInstance(parent.font))
             child.font.cow().style = parent.font->style;
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.font.cow().style = value;
     }
 
-    static FontStyle load(SpecifiedStyle const& c) {
+    static FontStyle load(SpecifiedValues const& c) {
         return c.font->style;
     }
 
@@ -1786,17 +1786,17 @@ struct FontProp {
 
     static constexpr Str name() { return "font"; }
 
-    static void inherit(SpecifiedStyle const& parent, SpecifiedStyle& child) {
+    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
         child.font.cow() = *parent.font;
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.font.cow() = value;
         if (unresolvedWeight)
             c.font.cow().weight = unresolvedWeight->resolve();
     }
 
-    void apply(SpecifiedStyle const& parent, SpecifiedStyle& child) const {
+    void apply(SpecifiedValues const& parent, SpecifiedValues& child) const {
         child.font.cow() = value;
         if (unresolvedWeight)
             child.font.cow().weight = unresolvedWeight->resolve(parent.font->weight);
@@ -1854,16 +1854,16 @@ struct FontSizeProp {
 
     static constexpr FontSize initial() { return FontSize::MEDIUM; }
 
-    static void inherit(SpecifiedStyle const& parent, SpecifiedStyle& child) {
+    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
         if (not child.font.sameInstance(parent.font))
             child.font.cow().size = parent.font->size;
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.font.cow().size = value;
     }
 
-    static FontSize load(SpecifiedStyle const& c) {
+    static FontSize load(SpecifiedValues const& c) {
         return c.font->size;
     }
 
@@ -1882,11 +1882,11 @@ struct LineHeightProp {
 
     static LineHeight initial() { return LineHeight::NORMAL; }
 
-    void apply(SpecifiedStyle&) const {
+    void apply(SpecifiedValues&) const {
         // TODO
     }
 
-    static LineHeight load(SpecifiedStyle const&) {
+    static LineHeight load(SpecifiedValues const&) {
         return initial(); // TODO
     }
 
@@ -1907,11 +1907,11 @@ struct MarginTopProp {
 
     static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.margin.cow().top = value;
     }
 
-    static Width load(SpecifiedStyle const& c) {
+    static Width load(SpecifiedValues const& c) {
         return c.margin->top;
     }
 
@@ -1928,11 +1928,11 @@ struct MarginRightProp {
 
     static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.margin.cow().end = value;
     }
 
-    static Width load(SpecifiedStyle const& c) {
+    static Width load(SpecifiedValues const& c) {
         return c.margin->end;
     }
 
@@ -1949,11 +1949,11 @@ struct MarginBottomProp {
 
     static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.margin.cow().bottom = value;
     }
 
-    static Width load(SpecifiedStyle const& c) {
+    static Width load(SpecifiedValues const& c) {
         return c.margin->bottom;
     }
 
@@ -1970,11 +1970,11 @@ struct MarginLeftProp {
 
     static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.margin.cow().start = value;
     }
 
-    static Width load(SpecifiedStyle const& c) {
+    static Width load(SpecifiedValues const& c) {
         return c.margin->start;
     }
 
@@ -1991,11 +1991,11 @@ struct MarginProp {
 
     static Math::Insets<Width> initial() { return {CalcValue<PercentOr<Length>>(Length{})}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.margin.cow() = value;
     }
 
-    static Math::Insets<Width> load(SpecifiedStyle const& c) {
+    static Math::Insets<Width> load(SpecifiedValues const& c) {
         return c.margin->start;
     }
 
@@ -2014,12 +2014,12 @@ struct MarginInlineStartProp {
 
     static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         // FIXME: Take writing mode into account
         c.margin.cow().start = value;
     }
 
-    static Width load(SpecifiedStyle const& c) {
+    static Width load(SpecifiedValues const& c) {
         return c.margin->start;
     }
 
@@ -2036,12 +2036,12 @@ struct MarginInlineEndProp {
 
     static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         // FIXME: Take writing mode into account
         c.margin.cow().end = value;
     }
 
-    static Width load(SpecifiedStyle const& c) {
+    static Width load(SpecifiedValues const& c) {
         return c.margin->end;
     }
 
@@ -2058,13 +2058,13 @@ struct MarginInlineProp {
 
     static Math::Insets<Width> initial() { return {CalcValue<PercentOr<Length>>(Length{})}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         // FIXME: Take writing mode into account
         c.margin.cow().start = value.start;
         c.margin.cow().end = value.end;
     }
 
-    static Math::Insets<Width> load(SpecifiedStyle const& c) {
+    static Math::Insets<Width> load(SpecifiedValues const& c) {
         return {
             c.margin->start,
             c.margin->end,
@@ -2084,12 +2084,12 @@ struct MarginBlockStartProp {
 
     static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         // FIXME: Take writing mode into account
         c.margin.cow().top = value;
     }
 
-    static Width load(SpecifiedStyle const& c) {
+    static Width load(SpecifiedValues const& c) {
         return c.margin->top;
     }
 
@@ -2106,12 +2106,12 @@ struct MarginBlockEndProp {
 
     static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         // FIXME: Take writing mode into account
         c.margin.cow().bottom = value;
     }
 
-    static Width load(SpecifiedStyle const& c) {
+    static Width load(SpecifiedValues const& c) {
         return c.margin->bottom;
     }
 
@@ -2128,13 +2128,13 @@ struct MarginBlockProp {
 
     static Math::Insets<Width> initial() { return {CalcValue<PercentOr<Length>>(Length{})}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         // FIXME: Take writing mode into account
         c.margin.cow().top = value.top;
         c.margin.cow().bottom = value.bottom;
     }
 
-    static Math::Insets<Width> load(SpecifiedStyle const& c) {
+    static Math::Insets<Width> load(SpecifiedValues const& c) {
         return {
             c.margin->top,
             c.margin->bottom,
@@ -2156,11 +2156,11 @@ struct OpacityProp {
 
     static f64 initial() { return 1; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.opacity = value;
     }
 
-    static f64 load(SpecifiedStyle const& c) {
+    static f64 load(SpecifiedValues const& c) {
         return c.opacity;
     }
 
@@ -2183,11 +2183,11 @@ struct OutlineProp {
 
     static Str name() { return "outline"; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.outline.cow() = value;
     }
 
-    static Outline load(SpecifiedStyle const& c) {
+    static Outline load(SpecifiedValues const& c) {
         return *c.outline;
     }
 
@@ -2235,11 +2235,11 @@ struct OutlineWidthProp {
 
     static LineWidth initial() { return Keywords::MEDIUM; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.outline.cow().width = value;
     }
 
-    static LineWidth load(SpecifiedStyle const& c) {
+    static LineWidth load(SpecifiedValues const& c) {
         return c.outline->width;
     }
 
@@ -2258,11 +2258,11 @@ struct OutlineStyleProp {
 
     static Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.outline.cow().style = value;
     }
 
-    static Value load(SpecifiedStyle const& c) {
+    static Value load(SpecifiedValues const& c) {
         return c.outline->style;
     }
 
@@ -2281,11 +2281,11 @@ struct OutlineColorProp {
 
     static Keywords::Auto initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.outline.cow().color = value;
     }
 
-    static Value load(SpecifiedStyle const& c) {
+    static Value load(SpecifiedValues const& c) {
         return c.outline->color;
     }
 
@@ -2303,11 +2303,11 @@ struct OutlineOffsetProp {
 
     static Length initial() { return 0_au; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.outline.cow().offset = value;
     }
 
-    static CalcValue<Length> load(SpecifiedStyle const& c) {
+    static CalcValue<Length> load(SpecifiedValues const& c) {
         return c.outline->offset;
     }
 
@@ -2327,11 +2327,11 @@ struct OverflowXProp {
 
     static Overflow initial() { return Overflow::VISIBLE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.overflows.x = value;
     }
 
-    static Overflow load(SpecifiedStyle const& c) {
+    static Overflow load(SpecifiedValues const& c) {
         return c.overflows.x;
     }
 
@@ -2349,11 +2349,11 @@ struct OverflowYProp {
 
     static Overflow initial() { return Overflow::VISIBLE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.overflows.y = value;
     }
 
-    static Overflow load(SpecifiedStyle const& c) {
+    static Overflow load(SpecifiedValues const& c) {
         return c.overflows.y;
     }
 
@@ -2371,11 +2371,11 @@ struct OverflowBlockProp {
 
     static Overflow initial() { return Overflow::VISIBLE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.overflows.block = value;
     }
 
-    static Overflow load(SpecifiedStyle const& c) {
+    static Overflow load(SpecifiedValues const& c) {
         return c.overflows.block;
     }
 
@@ -2393,11 +2393,11 @@ struct OverflowInlineProp {
 
     static Overflow initial() { return Overflow::VISIBLE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.overflows.inline_ = value;
     }
 
-    static Overflow load(SpecifiedStyle const& c) {
+    static Overflow load(SpecifiedValues const& c) {
         return c.overflows.inline_;
     }
 
@@ -2415,12 +2415,12 @@ struct OverflowProp {
 
     static Pair<Overflow> initial() { return {Overflow::VISIBLE, Overflow::VISIBLE}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.overflows.x = value.v0;
         c.overflows.y = value.v1;
     }
 
-    static Pair<Overflow> load(SpecifiedStyle const& c) {
+    static Pair<Overflow> load(SpecifiedValues const& c) {
         return {c.overflows.x, c.overflows.y};
     }
 
@@ -2453,11 +2453,11 @@ struct PaddingTopProp {
 
     static Length initial() { return Length{}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.padding.cow().top = value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedStyle const& c) {
+    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
         return c.padding->top;
     }
 
@@ -2474,11 +2474,11 @@ struct PaddingRightProp {
 
     static Length initial() { return Length{}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.padding.cow().end = value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedStyle const& c) {
+    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
         return c.padding->end;
     }
 
@@ -2495,11 +2495,11 @@ struct PaddingBottomProp {
 
     static Length initial() { return Length{}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.padding.cow().bottom = value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedStyle const& c) {
+    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
         return c.padding->bottom;
     }
 
@@ -2516,11 +2516,11 @@ struct PaddingLeftProp {
 
     static Length initial() { return {}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.padding.cow().start = value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedStyle const& c) {
+    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
         return c.padding->start;
     }
 
@@ -2537,11 +2537,11 @@ struct PaddingProp {
 
     static Math::Insets<CalcValue<PercentOr<Length>>> initial() { return {Length{}}; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.padding.cow() = value;
     }
 
-    static Math::Insets<CalcValue<PercentOr<Length>>> load(SpecifiedStyle const& c) {
+    static Math::Insets<CalcValue<PercentOr<Length>>> load(SpecifiedValues const& c) {
         return *c.padding;
     }
 
@@ -2559,11 +2559,11 @@ struct OrderProp {
 
     static Integer initial() { return 0; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.order = value;
     }
 
-    static Integer load(SpecifiedStyle const& c) {
+    static Integer load(SpecifiedValues const& c) {
         return c.order;
     }
 
@@ -2583,11 +2583,11 @@ struct PositionProp {
 
     static Position initial() { return Position::STATIC; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.position = value;
     }
 
-    static Position load(SpecifiedStyle const& c) {
+    static Position load(SpecifiedValues const& c) {
         return c.position;
     }
 
@@ -2605,11 +2605,11 @@ struct TopProp {
 
     static Width initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.offsets.cow().top = value;
     }
 
-    static Width load(SpecifiedStyle const& c) {
+    static Width load(SpecifiedValues const& c) {
         return c.offsets->top;
     }
 
@@ -2627,11 +2627,11 @@ struct RightProp {
 
     static Width initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.offsets.cow().end = value;
     }
 
-    static Width load(SpecifiedStyle const& c) {
+    static Width load(SpecifiedValues const& c) {
         return c.offsets->end;
     }
 
@@ -2649,11 +2649,11 @@ struct BottomProp {
 
     static Width initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.offsets.cow().bottom = value;
     }
 
-    static Width load(SpecifiedStyle const& c) {
+    static Width load(SpecifiedValues const& c) {
         return c.offsets->bottom;
     }
 
@@ -2671,11 +2671,11 @@ struct LeftProp {
 
     static Width initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.offsets.cow().start = value;
     }
 
-    static Width load(SpecifiedStyle const& c) {
+    static Width load(SpecifiedValues const& c) {
         return c.offsets->start;
     }
 
@@ -2696,11 +2696,11 @@ struct BoxSizingProp {
 
     static constexpr BoxSizing initial() { return BoxSizing::CONTENT_BOX; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.boxSizing = value;
     }
 
-    static BoxSizing load(SpecifiedStyle const& c) {
+    static BoxSizing load(SpecifiedValues const& c) {
         return c.boxSizing;
     }
 
@@ -2725,11 +2725,11 @@ struct WidthProp {
 
     static Size initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.sizing.cow().width = value;
     }
 
-    static Size load(SpecifiedStyle const& c) {
+    static Size load(SpecifiedValues const& c) {
         return c.sizing->width;
     }
 
@@ -2748,11 +2748,11 @@ struct HeightProp {
 
     static Size initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.sizing.cow().height = value;
     }
 
-    static Size load(SpecifiedStyle const& c) {
+    static Size load(SpecifiedValues const& c) {
         return c.sizing->height;
     }
 
@@ -2771,11 +2771,11 @@ struct MinWidthProp {
 
     static Size initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.sizing.cow().minWidth = value;
     }
 
-    static Size load(SpecifiedStyle const& c) {
+    static Size load(SpecifiedValues const& c) {
         return c.sizing->minWidth;
     }
 
@@ -2794,11 +2794,11 @@ struct MinHeightProp {
 
     static Size initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.sizing.cow().minHeight = value;
     }
 
-    static Size load(SpecifiedStyle const& c) {
+    static Size load(SpecifiedValues const& c) {
         return c.sizing->minHeight;
     }
 
@@ -2817,11 +2817,11 @@ struct MaxWidthProp {
 
     static MaxSize initial() { return Keywords::NONE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.sizing.cow().maxWidth = value;
     }
 
-    static MaxSize load(SpecifiedStyle const& c) {
+    static MaxSize load(SpecifiedValues const& c) {
         return c.sizing->maxWidth;
     }
 
@@ -2840,11 +2840,11 @@ struct MaxHeightProp {
 
     static MaxSize initial() { return Keywords::NONE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.sizing.cow().maxHeight = value;
     }
 
-    static MaxSize load(SpecifiedStyle const& c) {
+    static MaxSize load(SpecifiedValues const& c) {
         return c.sizing->maxHeight;
     }
 
@@ -2866,11 +2866,11 @@ struct TextAlignProp {
 
     static TextAlign initial() { return TextAlign::LEFT; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.text.cow().align = value;
     }
 
-    static TextAlign load(SpecifiedStyle const& c) {
+    static TextAlign load(SpecifiedValues const& c) {
         return c.text->align;
     }
 
@@ -2903,11 +2903,11 @@ struct TextTransformProp {
 
     static TextTransform initial() { return TextTransform::NONE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.text.cow().transform = value;
     }
 
-    static TextTransform load(SpecifiedStyle const& c) {
+    static TextTransform load(SpecifiedValues const& c) {
         return c.text->transform;
     }
 
@@ -2945,16 +2945,15 @@ struct TransformOriginProp {
         };
     }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.transform.cow().origin = value;
     }
 
-    static TransformOrigin load(SpecifiedStyle const& c) {
+    static TransformOrigin load(SpecifiedValues const& c) {
         return c.transform->origin;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        debug("Parsing transform-origin");
         value = try$(parseValue<TransformOrigin>(c));
         return Ok();
     }
@@ -2968,11 +2967,11 @@ struct TransformBoxProp {
 
     static TransformBox initial() { return Keywords::VIEW_BOX; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.transform.cow().box = value;
     }
 
-    static TransformBox load(SpecifiedStyle const& c) {
+    static TransformBox load(SpecifiedValues const& c) {
         return c.transform->box;
     }
 
@@ -2990,11 +2989,11 @@ struct TransformProp {
 
     static Transform initial() { return Keywords::NONE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.transform.cow().transform = value;
     }
 
-    static Transform load(SpecifiedStyle const& c) {
+    static Transform load(SpecifiedValues const& c) {
         return c.transform->transform;
     }
 
@@ -3012,11 +3011,11 @@ struct VisibilityProp {
 
     static Visibility initial() { return Visibility::VISIBLE; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.visibility = value;
     }
 
-    static void inherit(SpecifiedStyle const& parent, SpecifiedStyle& child) {
+    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
         child.visibility = parent.visibility;
     }
 
@@ -3044,11 +3043,11 @@ struct WhiteSpaceProp {
 
     static WhiteSpace initial() { return WhiteSpace::NORMAL; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.text.cow().whiteSpace = value;
     }
 
-    static WhiteSpace load(SpecifiedStyle const& c) {
+    static WhiteSpace load(SpecifiedValues const& c) {
         return c.text->whiteSpace;
     }
 
@@ -3082,11 +3081,11 @@ struct ZIndexProp {
 
     static constexpr ZIndex initial() { return Keywords::AUTO; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.zIndex = value;
     }
 
-    static ZIndex load(SpecifiedStyle const& c) {
+    static ZIndex load(SpecifiedValues const& c) {
         return c.zIndex;
     }
 
@@ -3111,7 +3110,7 @@ struct CustomProp {
 
     static constexpr Str name() { return "custom prop"; }
 
-    void apply(SpecifiedStyle& c) const {
+    void apply(SpecifiedValues& c) const {
         c.setCustomProp(varName, value);
     }
 
@@ -3138,7 +3137,7 @@ struct DeferredProp {
     //     child.variables = parent.variables;
     // }
 
-    void apply(SpecifiedStyle const& parent, SpecifiedStyle& c) const;
+    void apply(SpecifiedValues const& parent, SpecifiedValues& c) const;
 
     void repr(Io::Emit& e) const {
         e("(Deffered {#} = {})", propName, value);
@@ -3160,7 +3159,7 @@ struct DefaultedProp {
 
     static constexpr Str name() { return "defaulted prop"; }
 
-    void apply(SpecifiedStyle const& parent, SpecifiedStyle& c) const;
+    void apply(SpecifiedValues const& parent, SpecifiedValues& c) const;
 
     void repr(Io::Emit&) const;
 };
@@ -3363,9 +3362,9 @@ struct StyleProp : _StyleProp {
 
     Str name() const;
 
-    void inherit(SpecifiedStyle const& parent, SpecifiedStyle& child) const;
+    void inherit(SpecifiedValues const& parent, SpecifiedValues& child) const;
 
-    void apply(SpecifiedStyle const& parent, SpecifiedStyle& c) const;
+    void apply(SpecifiedValues const& parent, SpecifiedValues& c) const;
 
     void repr(Io::Emit& e) const;
 };

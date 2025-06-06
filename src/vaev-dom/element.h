@@ -6,7 +6,25 @@
 #include "text.h"
 #include "token-list.h"
 
+namespace Vaev::Style {
+struct ComputedValues;
+struct SpecifiedValues;
+} // namespace Vaev::Style
+
 namespace Vaev::Dom {
+
+struct PseudoElement {
+    Opt<Rc<Style::ComputedValues>> _computedValues = NONE;
+    Opt<Rc<Style::SpecifiedValues>> _specifiedValues = NONE;
+
+    Rc<Style::ComputedValues> computedValues() const {
+        return _computedValues.unwrap("unstyled pseudo-element");
+    }
+
+    Rc<Style::SpecifiedValues> specifiedValues() const {
+        return _specifiedValues.unwrap("unstyled pseudo-element");
+    }
+};
 
 // https://dom.spec.whatwg.org/#interface-element
 struct Element : Node {
@@ -19,6 +37,8 @@ struct Element : Node {
     TagName tagName;
     // NOSPEC: Should be a NamedNodeMap
     Map<AttrName, Rc<Attr>> attributes;
+    Opt<Rc<Style::ComputedValues>> _computedValues;
+    Opt<Rc<Style::SpecifiedValues>> _specifiedValues; // FIXME: We should not have this store here
     TokenList classList;
 
     Element(TagName tagName)
@@ -27,6 +47,14 @@ struct Element : Node {
 
     NodeType nodeType() const override {
         return TYPE;
+    }
+
+    Rc<Style::ComputedValues> computedValues() const {
+        return _computedValues.unwrap("unstyled element");
+    }
+
+    Rc<Style::SpecifiedValues> specifiedValues() const {
+        return _specifiedValues.unwrap("unstyled element");
     }
 
     String textContent() const {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <karm-text/book.h>
+#include <vaev-dom/document.h>
 #include <vaev-dom/element.h>
 
 #include "specified.h"
@@ -15,17 +16,27 @@ struct Computer {
 
     using MatchingRules = Vec<Tuple<Cursor<StyleRule>, Spec>>;
 
+    // MARK: Cascading ---------------------------------------------------------
+
     void _evalRule(Rule const& rule, Gc::Ref<Dom::Element> el, MatchingRules& matches);
 
     void _evalRule(Rule const& rule, Page const& page, PageComputedStyle& c);
 
     void _evalRule(Rule const& rule, Vec<FontFace>& fontFaces);
 
-    Rc<SpecifiedStyle> _evalCascade(SpecifiedStyle const& parent, MatchingRules& matches);
+    Rc<SpecifiedValues> _evalCascade(SpecifiedValues const& parent, MatchingRules& matches);
 
-    Rc<SpecifiedStyle> computeFor(SpecifiedStyle const& parent, Gc::Ref<Dom::Element> el);
+    // MARK: Computing ---------------------------------------------------------
 
-    Rc<PageComputedStyle> computeFor(SpecifiedStyle const& parent, Page const& page);
+    Rc<SpecifiedValues> computeFor(SpecifiedValues const& parent, Gc::Ref<Dom::Element> el);
+
+    Rc<PageComputedStyle> computeFor(SpecifiedValues const& parent, Page const& page);
+
+    // MARK: Styling -----------------------------------------------------------
+
+    void styleElement(SpecifiedValues const& parent, Dom::Element& el);
+
+    void styleDocument(Dom::Document& doc);
 
     void loadFontFaces();
 };

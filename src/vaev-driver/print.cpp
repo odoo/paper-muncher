@@ -16,9 +16,9 @@ import Vaev.Layout;
 
 namespace Vaev::Driver {
 
-void _paintCornerMargin(Text::FontBook& fontBook, Style::PageComputedStyle& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea area) {
+void _paintCornerMargin(Style::PageComputedStyle& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea area) {
     Layout::Tree tree{
-        .root = Layout::buildForPseudoElement(fontBook, pageStyle.area(area)),
+        .root = Layout::buildForPseudoElement(pageStyle.area(area)),
         .viewport = Layout::Viewport{.small = rect.size()}
     };
     auto [_, frag] = Layout::layoutCreateFragment(
@@ -33,10 +33,10 @@ void _paintCornerMargin(Text::FontBook& fontBook, Style::PageComputedStyle& page
     Layout::paint(frag, stack);
 }
 
-void _paintMainMargin(Text::FontBook& fontBook, Style::PageComputedStyle& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas) {
-    auto box = Layout::buildForPseudoElement(fontBook, pageStyle.area(mainArea));
+void _paintMainMargin(Style::PageComputedStyle& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas) {
+    auto box = Layout::buildForPseudoElement(pageStyle.area(mainArea));
     for (auto subArea : subAreas) {
-        box.add(Layout::buildForPseudoElement(fontBook, pageStyle.area(subArea)));
+        box.add(Layout::buildForPseudoElement(pageStyle.area(subArea)));
     }
     Layout::Tree tree{
         .root = std::move(box),
@@ -54,7 +54,7 @@ void _paintMainMargin(Text::FontBook& fontBook, Style::PageComputedStyle& pageSt
     Layout::paint(frag, stack);
 }
 
-void _paintMargins(Text::FontBook& fontBook, Style::PageComputedStyle& pageStyle, RectAu pageRect, RectAu pageContent, Scene::Stack& stack) {
+void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, RectAu pageContent, Scene::Stack& stack) {
     // Compute all corner rects
     auto topLeftMarginCornerRect = RectAu::fromTwoPoint(pageRect.topStart(), pageContent.topStart());
     auto topRightMarginCornerRect = RectAu::fromTwoPoint(pageRect.topEnd(), pageContent.topEnd());
@@ -62,10 +62,10 @@ void _paintMargins(Text::FontBook& fontBook, Style::PageComputedStyle& pageStyle
     auto bottomRightMarginCornerRect = RectAu::fromTwoPoint(pageRect.bottomEnd(), pageContent.bottomEnd());
 
     // Paint corners
-    _paintCornerMargin(fontBook, pageStyle, stack, topLeftMarginCornerRect, Style::PageArea::TOP_LEFT_CORNER);
-    _paintCornerMargin(fontBook, pageStyle, stack, topRightMarginCornerRect, Style::PageArea::TOP_RIGHT_CORNER);
-    _paintCornerMargin(fontBook, pageStyle, stack, bottomLeftMarginCornerRect, Style::PageArea::BOTTOM_LEFT_CORNER);
-    _paintCornerMargin(fontBook, pageStyle, stack, bottomRightMarginCornerRect, Style::PageArea::BOTTOM_RIGHT_CORNER);
+    _paintCornerMargin(pageStyle, stack, topLeftMarginCornerRect, Style::PageArea::TOP_LEFT_CORNER);
+    _paintCornerMargin(pageStyle, stack, topRightMarginCornerRect, Style::PageArea::TOP_RIGHT_CORNER);
+    _paintCornerMargin(pageStyle, stack, bottomLeftMarginCornerRect, Style::PageArea::BOTTOM_LEFT_CORNER);
+    _paintCornerMargin(pageStyle, stack, bottomRightMarginCornerRect, Style::PageArea::BOTTOM_RIGHT_CORNER);
 
     // Compute main area rects
     auto topRect = RectAu::fromTwoPoint(topLeftMarginCornerRect.topEnd(), topRightMarginCornerRect.bottomStart());
@@ -74,10 +74,10 @@ void _paintMargins(Text::FontBook& fontBook, Style::PageComputedStyle& pageStyle
     auto rightRect = RectAu::fromTwoPoint(topRightMarginCornerRect.bottomEnd(), bottomRightMarginCornerRect.topStart());
 
     // Paint main areas
-    _paintMainMargin(fontBook, pageStyle, stack, topRect, Style::PageArea::TOP, {Style::PageArea::TOP_LEFT, Style::PageArea::TOP_CENTER, Style::PageArea::TOP_RIGHT});
-    _paintMainMargin(fontBook, pageStyle, stack, bottomRect, Style::PageArea::BOTTOM, {Style::PageArea::BOTTOM_LEFT, Style::PageArea::BOTTOM_CENTER, Style::PageArea::BOTTOM_RIGHT});
-    _paintMainMargin(fontBook, pageStyle, stack, leftRect, Style::PageArea::LEFT, {Style::PageArea::LEFT_TOP, Style::PageArea::LEFT_MIDDLE, Style::PageArea::LEFT_BOTTOM});
-    _paintMainMargin(fontBook, pageStyle, stack, rightRect, Style::PageArea::RIGHT, {Style::PageArea::RIGHT_TOP, Style::PageArea::RIGHT_MIDDLE, Style::PageArea::RIGHT_BOTTOM});
+    _paintMainMargin(pageStyle, stack, topRect, Style::PageArea::TOP, {Style::PageArea::TOP_LEFT, Style::PageArea::TOP_CENTER, Style::PageArea::TOP_RIGHT});
+    _paintMainMargin(pageStyle, stack, bottomRect, Style::PageArea::BOTTOM, {Style::PageArea::BOTTOM_LEFT, Style::PageArea::BOTTOM_CENTER, Style::PageArea::BOTTOM_RIGHT});
+    _paintMainMargin(pageStyle, stack, leftRect, Style::PageArea::LEFT, {Style::PageArea::LEFT_TOP, Style::PageArea::LEFT_MIDDLE, Style::PageArea::LEFT_BOTTOM});
+    _paintMainMargin(pageStyle, stack, rightRect, Style::PageArea::RIGHT, {Style::PageArea::RIGHT_TOP, Style::PageArea::RIGHT_MIDDLE, Style::PageArea::RIGHT_BOTTOM});
 }
 
 static Style::Media _constructMedia(Print::Settings const& settings) {
@@ -130,10 +130,11 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
         media, *dom->styleSheets, fontBook
     };
     computer.loadFontFaces();
+    computer.styleDocument(*dom);
 
     // MARK: Page and Margins --------------------------------------------------
 
-    Style::SpecifiedStyle initialStyle = Style::SpecifiedStyle::initial();
+    Style::SpecifiedValues initialStyle = Style::SpecifiedValues::initial();
     initialStyle.color = Gfx::BLACK;
     initialStyle.setCustomProp("-vaev-url", {Css::Token::string(Io::format("\"{}\"", dom->url()))});
     initialStyle.setCustomProp("-vaev-title", {Css::Token::string(Io::format("\"{}\"", dom->title()))});
@@ -142,7 +143,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
     // MARK: Page Content ------------------------------------------------------
 
     Layout::Tree contentTree = {
-        Layout::build(computer, dom),
+        Layout::build(dom),
     };
 
     Layout::Breakpoint prevBreakpoint{
@@ -194,7 +195,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
         contentTree.fc = {pageContent.size()};
 
         if (settings.headerFooter and settings.margins != Print::Margins::NONE)
-            _paintMargins(fontBook, *pageStyle, pageRect, pageContent, *pageStack);
+            _paintMargins(*pageStyle, pageRect, pageContent, *pageStack);
 
         Layout::Input pageLayoutInput{
             .knownSize = {pageContent.width, NONE},

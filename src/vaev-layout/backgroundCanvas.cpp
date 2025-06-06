@@ -36,7 +36,7 @@ export Gfx::Color fixupBackgrounds(Style::Computer& c, Gc::Ref<Dom::Document> do
         return Gfx::WHITE;
     }
 
-    auto style = c.computeFor(Style::SpecifiedStyle::initial(), *el);
+    auto style = c.computeFor(Style::SpecifiedValues::initial(), *el);
     if (style->backgrounds->color != Gfx::ALPHA) {
         tree.root.style->backgrounds.cow().color = Gfx::ALPHA;
         return _colorToGfx(style->backgrounds->color);

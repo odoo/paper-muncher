@@ -24,9 +24,10 @@ export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media
 
     Style::Computer computer{media, *dom->styleSheets, fontBook};
     computer.loadFontFaces();
+    computer.styleDocument(*dom);
 
     Layout::Tree tree = {
-        Layout::build(computer, dom),
+        Layout::build(dom),
         viewport
     };
 

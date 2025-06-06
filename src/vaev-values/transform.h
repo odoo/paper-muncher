@@ -58,7 +58,6 @@ struct ValueParser<TransformOrigin> {
                 rollback.disarm();
                 return maybeTwoValues;
             }
-            logDebug("failed to parse two values for transform-origin: {}", maybeTwoValues);
         }
 
         auto singleValue = try$(parseValue<TransformOrigin::OneValue>(c));
