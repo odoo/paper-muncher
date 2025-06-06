@@ -389,18 +389,20 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     bc.content() = InlineBox{prose};
 }
 
-void buildSVGChildren(Gc::Ref<Dom::Element> el, SVGRoot& svgRoot);
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el);
+void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group* group);
 
-void buildSVGElement(Gc::Ref<Dom::Element> el, SVGRoot& svgRoot) {
+void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group* group) {
     if (SVG::isShape(el->tagName)) {
-        svgRoot.add(SVG::Shape::build(el->specifiedValues(), el->tagName));
+        group->add(SVG::Shape::build(el->specifiedValues(), el->tagName));
     } else if (el->tagName == Svg::G) {
-        buildSVGChildren(el, svgRoot);
+        SVG::Group nestedGroup{el->specifiedValues()};
+        buildSVGAggregate(el, &nestedGroup);
+        group->add(std::move(nestedGroup));
     } else if (el->tagName == Svg::SVG) {
         SVGRoot newSvgRoot{el->specifiedValues()};
-        buildSVGChildren(el, newSvgRoot);
-        svgRoot.add(std::move(newSvgRoot));
+        buildSVGAggregate(el, &newSvgRoot);
+        group->add(std::move(newSvgRoot));
     } else if (el->tagName == Svg::FOREIGN_OBJECT) {
         Box box{el->specifiedValues(), el->computedValues()->fontFace, el};
 
@@ -418,17 +420,17 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, SVGRoot& svgRoot) {
 
         buildBlockFlowFromElement(bc, *el);
 
-        svgRoot.add(std::move(box));
+        group->add(std::move(box));
     } else {
         // TODO
         logWarn("cannot build element into svg tree: {}", el->tagName);
     }
 }
 
-void buildSVGChildren(Gc::Ref<Dom::Element> el, SVGRoot& svgRoot) {
+void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group* group) {
     for (auto child = el->firstChild(); child; child = child->nextSibling()) {
         if (auto el = child->is<Dom::Element>()) {
-            buildSVGElement(*el, svgRoot);
+            buildSVGElement(*el, group);
         }
         // TODO: process text into svg tree
     }
@@ -436,7 +438,7 @@ void buildSVGChildren(Gc::Ref<Dom::Element> el, SVGRoot& svgRoot) {
 
 SVGRoot _buildSVG(Gc::Ref<Dom::Element> el) {
     SVGRoot svgRoot{el->specifiedValues()};
-    buildSVGChildren(el, svgRoot);
+    buildSVGAggregate(el, &svgRoot);
     return svgRoot;
 }
 

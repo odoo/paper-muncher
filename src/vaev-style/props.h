@@ -3597,7 +3597,9 @@ using SVGStyleProp = Union<
     HeightProp,
     FillOpacityProp,
     WidthProp,
-    StrokeWidthProp>;
+    StrokeWidthProp,
+    TransformProp,
+    TransformOriginProp>;
 
 enum struct Important {
     NO,
