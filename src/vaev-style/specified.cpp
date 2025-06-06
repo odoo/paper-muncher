@@ -4,9 +4,9 @@
 
 namespace Vaev::Style {
 
-SpecifiedStyle const& SpecifiedStyle::initial() {
-    static SpecifiedStyle computed = [] {
-        SpecifiedStyle res{};
+SpecifiedValues const& SpecifiedValues::initial() {
+    static SpecifiedValues computed = [] {
+        SpecifiedValues res{};
         StyleProp::any([&]<typename T>() {
             if constexpr (requires { T::initial(); })
                 T{}.apply(res);
@@ -16,7 +16,7 @@ SpecifiedStyle const& SpecifiedStyle::initial() {
     return computed;
 }
 
-void SpecifiedStyle::inherit(SpecifiedStyle const& parent) {
+void SpecifiedValues::inherit(SpecifiedValues const& parent) {
     color = parent.color;
     font = parent.font;
     text = parent.text;
@@ -24,7 +24,7 @@ void SpecifiedStyle::inherit(SpecifiedStyle const& parent) {
     visibility = parent.visibility;
 }
 
-void SpecifiedStyle::repr(Io::Emit& e) const {
+void SpecifiedValues::repr(Io::Emit& e) const {
     e("(computed");
     e(" color: {}", color);
     e(" opacity: {}", opacity);
@@ -57,11 +57,11 @@ void SpecifiedStyle::repr(Io::Emit& e) const {
     e(")");
 }
 
-void SpecifiedStyle::setCustomProp(Str varName, Css::Content value) {
+void SpecifiedValues::setCustomProp(Str varName, Css::Content value) {
     variables.cow().put(varName, value);
 }
 
-Css::Content SpecifiedStyle::getCustomProp(Str varName) const {
+Css::Content SpecifiedValues::getCustomProp(Str varName) const {
     auto value = variables->access(varName);
     if (value)
         return *value;

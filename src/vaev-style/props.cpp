@@ -65,7 +65,7 @@ void DeferredProp::_expandContent(Cursor<Css::Sst>& c, Map<String, Css::Content>
     }
 }
 
-void DeferredProp::apply(SpecifiedStyle const& parent, SpecifiedStyle& c) const {
+void DeferredProp::apply(SpecifiedValues const& parent, SpecifiedValues& c) const {
     Css::Sst decl{Css::Sst::DECL};
     decl.token = Css::Token::ident(propName);
     Cursor<Css::Sst> cursor = value;
@@ -82,7 +82,7 @@ void DeferredProp::apply(SpecifiedStyle const& parent, SpecifiedStyle& c) const 
 
 // MARK: DefaultedProp ---------------------------------------------------------
 
-void DefaultedProp::apply(SpecifiedStyle const& parent, SpecifiedStyle& c) const {
+void DefaultedProp::apply(SpecifiedValues const& parent, SpecifiedValues& c) const {
     if (value == Default::INITIAL) {
         StyleProp::any([&]<typename T>() {
             if (T::name() != propName)
@@ -126,14 +126,14 @@ Str StyleProp::name() const {
     });
 }
 
-void StyleProp::inherit(SpecifiedStyle const& parent, SpecifiedStyle& child) const {
+void StyleProp::inherit(SpecifiedValues const& parent, SpecifiedValues& child) const {
     visit([&](auto const& p) {
         if constexpr (requires { p.inherit(parent, child); })
             p.inherit(parent, child);
     });
 }
 
-void StyleProp::apply(SpecifiedStyle const& parent, SpecifiedStyle& c) const {
+void StyleProp::apply(SpecifiedValues const& parent, SpecifiedValues& c) const {
     visit([&](auto const& p) {
         if constexpr (requires { p.apply(c); })
             p.apply(c);

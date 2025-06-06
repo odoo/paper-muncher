@@ -201,7 +201,6 @@ struct Pseudo {
 
     static Pseudo make(Str name) {
         auto id = _Type(name);
-        // logDebug("make type {} {}", name, id);
         if (id) {
             auto result = Type{*id};
             return result;
