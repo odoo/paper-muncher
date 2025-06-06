@@ -39,6 +39,7 @@ struct TransformProps {
     }
 };
 
+// https://www.w3.org/TR/css-cascade/#specified
 struct SpecifiedValues {
     static SpecifiedValues const& initial();
 

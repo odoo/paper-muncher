@@ -156,21 +156,35 @@ Rc<PageComputedStyle> Computer::computeFor(SpecifiedValues const& parent, Page c
     return computed;
 }
 
-void Computer::styleElement(SpecifiedValues const& parent, Dom::Element& el) {
-    auto specifiedValues = computeFor(parent, el);
+void Computer::styleElement(SpecifiedValues const& parentSpecifiedValues, ComputedValues const& parentComputedValues, Dom::Element& el) {
+    auto specifiedValues = computeFor(parentSpecifiedValues, el);
     el._specifiedValues = specifiedValues;
-    auto font = _lookupFontface(fontBook, *specifiedValues);
-    el._computedValues = makeRc<ComputedValues>(font);
+
+    // HACK: This is basically nonsense to avoid doing too much font lookup,
+    //       and it should be remove once the style engine get refactored
+    //       and computed values are properly handled.
+    if (not parentSpecifiedValues.font.sameInstance(specifiedValues->font) and
+        (parentSpecifiedValues.font->families != specifiedValues->font->families or
+         parentSpecifiedValues.font->weight != specifiedValues->font->weight)) {
+        auto font = _lookupFontface(fontBook, *specifiedValues);
+        el._computedValues = makeRc<ComputedValues>(font);
+    } else {
+        el._computedValues = makeRc<ComputedValues>(parentComputedValues.fontFace);
+    }
 
     for (auto child = el.firstChild(); child; child = child->nextSibling()) {
-        if (auto el = child->is<Dom::Element>())
-            styleElement(*specifiedValues, *el);
+        if (auto childEl = child->is<Dom::Element>())
+            styleElement(*specifiedValues, *el.computedValues(), *childEl);
     }
 }
 
 void Computer::styleDocument(Dom::Document& doc) {
-    if (auto el = doc.documentElement())
-        styleElement(SpecifiedValues::initial(), *el);
+    if (auto el = doc.documentElement()) {
+        auto rootSpecifiedValues = makeRc<SpecifiedValues>(SpecifiedValues::initial());
+        auto font = _lookupFontface(fontBook, *rootSpecifiedValues);
+        auto rootComputedValues = makeRc<ComputedValues>(font);
+        styleElement(*rootSpecifiedValues, *rootComputedValues, *el);
+    }
 }
 
 void Computer::loadFontFaces() {
