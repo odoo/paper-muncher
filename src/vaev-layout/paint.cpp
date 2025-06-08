@@ -3,6 +3,7 @@ module;
 #include <karm-scene/box.h>
 #include <karm-scene/clip.h>
 #include <karm-scene/image.h>
+#include <karm-scene/opacity.h>
 #include <karm-scene/stack.h>
 #include <karm-scene/text.h>
 #include <karm-scene/transform.h>
@@ -73,7 +74,8 @@ static bool _paintOutline(Frag& frag, Gfx::Color currentColor, Gfx::Outline& out
 static bool _needsNewStackingContext(Frag const& frag) {
     return frag.style().zIndex != Keywords::AUTO or
            frag.style().clip.has() or
-           frag.style().transform->has();
+           frag.style().transform->has() or
+           frag.style().opacity != 1.0;
 }
 
 static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
@@ -531,6 +533,8 @@ static void _establishStackingContext(Frag& frag, Scene::Stack& stack) {
         out = _applyClip(frag, out);
     if (frag.style().transform->has())
         out = _applyTransform(frag, out);
+    if (frag.style().opacity != 1.0)
+        out = makeRc<Scene::Opacity>(out, frag.style().opacity);
 
     stack.add(std::move(out));
 }
