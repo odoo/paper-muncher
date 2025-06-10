@@ -3,8 +3,8 @@
 #include <karm-base/union.h>
 
 #include "length.h"
-#include "primitives.h"
 #include "percent.h"
+#include "primitives.h"
 
 namespace Vaev {
 

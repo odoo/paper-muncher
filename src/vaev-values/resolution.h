@@ -124,7 +124,6 @@ struct ValueParser<Resolution> {
             return Error::invalidData("unknown resolution unit");
     }
 
-
     static Res<Resolution> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

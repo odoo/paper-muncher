@@ -23,7 +23,7 @@ struct ValueParser<Overflow> {
 
         if (c.skip(Css::Token::ident("overlay")))
             // https://www.w3.org/TR/css-overflow/#valdef-overflow-overlay
-                return Ok(Overflow::AUTO);
+            return Ok(Overflow::AUTO);
         else if (c.skip(Css::Token::ident("visible")))
             return Ok(Overflow::VISIBLE);
         else if (c.skip(Css::Token::ident("hidden")))

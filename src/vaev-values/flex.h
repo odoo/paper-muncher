@@ -62,7 +62,6 @@ struct ValueParser<FlexWrap> {
         else
             return Error::invalidData("expected flex wrap");
     }
-
 };
 
 using FlexBasis = FlatUnion<Keywords::Auto, Keywords::Content, Size>;

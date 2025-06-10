@@ -62,7 +62,6 @@ struct ValueParser<BreakBetween> {
 
         return Error::invalidData("expected break between value");
     }
-
 };
 
 // 3.2. Breaks Within Boxes: the break-inside property

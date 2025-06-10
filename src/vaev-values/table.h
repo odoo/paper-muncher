@@ -44,7 +44,7 @@ enum struct CaptionSide {
 
 template <>
 struct ValueParser<CaptionSide> {
-    static Res<CaptionSide>parse(Cursor<Css::Sst>& c) {
+    static Res<CaptionSide> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 

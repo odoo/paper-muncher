@@ -53,7 +53,7 @@ enum struct Clear {
 
 template <>
 struct ValueParser<Clear> {
-    static Res<Clear>parse(Cursor<Css::Sst>& c) {
+    static Res<Clear> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
