@@ -2,7 +2,7 @@ name: Publish Release
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   nightly:
@@ -31,6 +31,6 @@ jobs:
 
       - name: Publish Release
         run: |
-          gh release create ${{ github.ref_name }} dist/* --title "Release ${{ github.ref_name }}" --notes "This is a pre-build nightly snapshot of paper-muncher. It is meant for testing purposes only and should not be used in production."
+          gh release create ${{ github.ref_name }} dist/* --title "Release ${{ github.ref_name }}" --notes "Prebuild packages for ${{ github.ref_name }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
