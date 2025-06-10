@@ -1,0 +1,36 @@
+name: Publish Release
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  nightly:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Setup Build Environment
+        run: ./ck tools setup
+
+      - name: Build Packages
+        run: |
+          meta/packaging/build
+        env:
+          VERSION: ${{ github.ref_name }}
+          COMPONENT: paper-muncher
+
+      - name: Publish Release
+        run: |
+          gh release create ${{ github.ref_name }} dist/* --title "Release ${{ github.ref_name }}" --notes "This is a pre-build nightly snapshot of paper-muncher. It is meant for testing purposes only and should not be used in production."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
