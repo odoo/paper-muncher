@@ -12,7 +12,7 @@ static constexpr bool DEBUG_HTML_PARSER = false;
 // https://html.spec.whatwg.org/multipage/parsing.html#parse-errors
 
 void HtmlParser::_raise(Str msg) {
-    logError("{}: {}", _insertionMode, msg);
+    logWarn("{}: {}", _insertionMode, msg);
 }
 
 // 13.2.4.2 MARK: The stack of open elements

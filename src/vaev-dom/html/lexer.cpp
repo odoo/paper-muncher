@@ -23,7 +23,7 @@ struct Entity {
 };
 
 void HtmlLexer::_raise(Str msg) {
-    logError("{}: {}", _state, msg);
+    logWarn("{}: {}", _state, msg);
 }
 
 void HtmlLexer::consume(Rune rune, bool isEof) {
