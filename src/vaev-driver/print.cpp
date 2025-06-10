@@ -9,6 +9,7 @@ module;
 #include <karm-text/book.h>
 #include <vaev-dom/document.h>
 #include <vaev-style/computer.h>
+#include <karm-scene/clear.h>
 
 export module Vaev.Driver:print;
 
@@ -145,6 +146,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
     Layout::Tree contentTree = {
         Layout::build(dom),
     };
+    auto canvasColor = fixupBackgrounds(computer, dom, contentTree);
 
     Layout::Breakpoint prevBreakpoint{
         .endIdx = 0,
@@ -225,7 +227,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
         Layout::paint(fragment, *pageStack);
         pageStack->prepare();
 
-        co_yield Print::Page(settings.paper, makeRc<Scene::Transform>(pageStack, Math::Trans2f::scale(media.resolution.toDppx())));
+        co_yield Print::Page(settings.paper,  makeRc<Scene::Clear>(makeRc<Scene::Transform>(pageStack, Math::Trans2f::scale(media.resolution.toDppx())), canvasColor));
 
         if (outReal.completelyLaidOut)
             break;
