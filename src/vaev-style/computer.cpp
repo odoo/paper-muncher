@@ -92,7 +92,7 @@ Rc<SpecifiedValues> Computer::_evalCascade(SpecifiedValues const& parent, Matchi
         }
     }
 
-    for (auto const& prop : iterRev(importantProps))
+    for (auto const& prop : importantProps)
         prop->apply(parent, *computed);
 
     return computed;
