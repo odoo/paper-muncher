@@ -214,7 +214,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
     auto formatArg = Cli::option<Str>('f', "format"s, "Override the output file format"s, ""s);
     auto unsecureArg = Cli::flag(NONE, "unsecure"s, "Allow local file and http access"s);
-    auto verboseArg = Cli::flag('v', "verbose"s, "Set lowest log level authorized : print, yappin', debug, info, warn, error, or fatal (default: print)"s);
+    auto verboseArg = Cli::flag('v', "verbose"s, "Makes paper-muncher be more talkative, it might yap about how its day's going"s);
 
     Cli::Command cmd{
         "paper-muncher"s,

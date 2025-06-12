@@ -7,5 +7,5 @@
 ## Contributing
 
 - [Handbook](./handbook.md) (for odooers)
-- [Karm'ism](./karmism.md)
+- [Karm'ism](https://github.com/skift-org/karm/blob/main/doc/karmism.md)
 

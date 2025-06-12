@@ -57,12 +57,12 @@ Most new web specs focus on turning the web into an application platform.  We're
 We're choosing pragmatism over ideals. C++ offers:
 
 * **Scalability:**  Ideal for large projects.
-* **Excellent Tooling:**  clangd, clang-tidy, clang-format, GCC, MSVC, Visual Studio, Clion, gdb, lldb, valgrin, etc.
+* **Excellent Tooling:**  clangd, clang-tidy, clang-format, GCC, MSVC, Visual Studio, Clion, gdb, lldb, valgrind, etc.
 * **Strong Typing:**  Enhances code safety and maintainability.
 * **Familiarity:**  Easy for developers experienced in C-like languages (Java, C#, etc.) to adopt.
 * **Safe Subset:**  We're using a carefully chosen subset of C++ to avoid common pitfalls.
 
-**"What about the crabs?"** (Rust)
+**"What about the crabs? 🦀"** (Rust)
 
 While Rust is intriguing, I have limited experience with it.  For this proof of concept, I need to move quickly without the learning curve of a new language.
 
