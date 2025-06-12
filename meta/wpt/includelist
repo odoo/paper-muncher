@@ -13,6 +13,9 @@ css/css-sizing
 css/css-syntax
 css/css-tables
 css/css-variables
+css/selectors
+css/css-values
+css/css-transforms
 css/CSS2/box-display
 css/CSS2/normal-flow
 css/CSS2/selector
@@ -24,6 +27,8 @@ css/CSS2/visuren
 css/CSS2/zindex
 css/CSS2/zorder
 css/CSS2/media
-css/selectors
-css/css-values
-css/css-transforms
+css/CSS2/cascade
+css/CSS2/values
+css/CSS2/backgrounds
+css/CSS2/colors
+css/CSS2/borders
