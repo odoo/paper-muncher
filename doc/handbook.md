@@ -6,13 +6,13 @@ We're genuinely excited to have you join us. Before you dive in, please take som
 
 ## About the Project
 
-Paper Muncher is the fruit of a long search for a wkhtmltopdf replacement (See our [FAQ](faq.md) to understand why other options like Weasyprint and Chrome were rejected). It's based on a toy browser engine that @sleepy-monax (a.k.a clvb) wrote on their freetime now called Vaev. It's composed of:
+Paper Muncher is the fruit of a long search for a wkhtmltopdf replacement (See our [FAQ](./faq.md) to understand why other options like Weasyprint and Chrome were rejected). It's based on a toy browser engine that @sleepy-monax (a.k.a clvb) wrote on their freetime now called Vaev. It's composed of:
  - Markup parser `vaev-dom` responsible for parsing HTML and XML into a DOM.
  - Style engine `vaev-style` responsible for parsing CSS into stylesheet objects, and computing styles.
  - Layout engine `vaev-layout` takes the computed style and DOM to build a fragment tree. This fragment tree is then laid out following the different formatting options offered by CSS (flex, grid, table, block and inline)
  - And a driver `vaev-driver` that ties all the other components together
 
-(See [the architecture diagram](../src/web/diagrams.tldr) for a visual representation of how these components interact)
+(See [the architecture diagram](./diagrams.tldr) for a visual representation of how these components interact)
 
 ## Team Values
 
@@ -58,7 +58,7 @@ We've adopted a specific C++ style to help us avoid common pitfalls and write ma
 * **Structs over classes:** Used by default since there's little practical difference in C++.
 * **No private/public:** Private variables are prefixed with `_` to indicate visibility. This simplifies testing.
 * **Short names for common things:** Frequently used types/functions have concise names (e.g., `Io::Scan` instead of `Io::PlainTextScanner`).
-* See [karmism](../src/libs/doc/karmism.md) for more details.
+* See [karmism](https://github.com/skift-org/karm/blob/main/doc/karmism.md) for more details.
 
 ## Testing
 
@@ -69,7 +69,7 @@ We've adopted a specific C++ style to help us avoid common pitfalls and write ma
 ## Source Control & Code Review
 
 * **Commit often:** Keep commits small and focused.
-* **Use branches:** Name branches like `<your-trigram>-<your-feature>`.
+* **Use branches:** Name branches like `<your-ngram>/<your-feature>`.
 * **Merge small changes quickly:** Bugfixes can be merged directly into `main`.
 * **Seek code reviews:** Request reviews from any team member. Merge after approval and CI passes.
 

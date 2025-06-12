@@ -14,7 +14,7 @@ cd paper-muncher
 export PATH=$PATH:$HOME/.local/bin
 
 # Render a webpage to PDF
-paper-muncher print index.html -o output.pdf
+paper-muncher --unsecure print index.html -o output.pdf
 
 # For more options, run
 paper-muncher --help
