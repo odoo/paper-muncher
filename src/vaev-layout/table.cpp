@@ -754,9 +754,14 @@ struct TableFormatingContext : FormatingContext {
                 }
                 colWidth = distWOPToUse;
             } else {
-                auto toDistribute = tableUsedWidth - sumWithPerc;
-                for (auto& w : distWPToUse)
-                    w += (toDistribute * w) / sumWithPerc;
+                if (sumWithPerc == 0_au) {
+                    for (auto& w : distWPToUse)
+                        w = tableUsedWidth / Au{grid.size.x};
+                } else {
+                    auto toDistribute = tableUsedWidth - sumWithPerc;
+                    for (auto& w : distWPToUse)
+                        w += (toDistribute * w) / sumWithPerc;
+                }
                 colWidth = distWPToUse;
             }
         } else {
