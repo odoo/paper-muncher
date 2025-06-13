@@ -634,7 +634,7 @@ struct FlexFormatingContext : FormatingContext {
         // NOTE: we assume all children are non-absolute positioned for fast mem allocation
         _items.ensure(box.children().len());
         for (auto& c : box.children()) {
-            if (c.style->position == Position::ABSOLUTE)
+            if (impliesRemovingFromFlow(c.style->position))
                 continue;
             _items.emplaceBack(tree, c, _flex.isRowOriented(), containingBlock);
         }

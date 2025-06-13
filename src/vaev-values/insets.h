@@ -17,6 +17,10 @@ enum struct Position {
     _LEN,
 };
 
+inline bool impliesRemovingFromFlow(Position position) {
+    return position == Position::ABSOLUTE || position == Position::FIXED;
+}
+
 template <>
 struct ValueParser<Position> {
     static Res<Position> parse(Cursor<Css::Sst>& c) {

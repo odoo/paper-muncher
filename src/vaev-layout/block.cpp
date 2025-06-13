@@ -204,7 +204,7 @@ struct BlockFormatingContext : FormatingContext {
                 childInlineSize = inlineSize - margin.horizontal();
             }
 
-            if (c.style->position != Position::ABSOLUTE) {
+            if (not impliesRemovingFromFlow(c.style->position)) {
                 // TODO: collapsed margins for sibling elements
                 blockSize += max(margin.top, lastMarginBottom) - lastMarginBottom;
                 if (input.fragment or input.knownSize.x)
@@ -224,7 +224,7 @@ struct BlockFormatingContext : FormatingContext {
                 c,
                 childInput
             );
-            if (c.style->position != Position::ABSOLUTE) {
+            if (not impliesRemovingFromFlow(c.style->position)) {
                 blockSize += output.size.y + margin.bottom;
                 lastMarginBottom = margin.bottom;
             }

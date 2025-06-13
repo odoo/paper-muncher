@@ -73,7 +73,7 @@ struct InlineFormatingContext : FormatingContext {
                 }
             );
 
-            if (atomicBox.style->position != Position::ABSOLUTE) {
+            if (not impliesRemovingFromFlow(atomicBox.style->position)) {
                 boxStrutCell.size = atomicBoxOutput.size;
                 // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
                 boxStrutCell.baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
@@ -95,7 +95,7 @@ struct InlineFormatingContext : FormatingContext {
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
 
             Math::Vec2<Opt<Au>> knownSize;
-            if (atomicBox.style->position != Position::ABSOLUTE) {
+            if (not impliesRemovingFromFlow(atomicBox.style->position)) {
                 knownSize = {
                     boxStrutCell.size.x,
                     boxStrutCell.size.y
