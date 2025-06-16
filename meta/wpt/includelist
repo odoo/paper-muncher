@@ -12,8 +12,11 @@ css/css-pseudo
 css/css-sizing
 css/css-syntax
 css/css-tables
+css/css-transforms
+css/css-values
 css/css-variables
 css/CSS2/box-display
+css/CSS2/media
 css/CSS2/normal-flow
 css/CSS2/selector
 css/CSS2/selectors
@@ -23,7 +26,10 @@ css/CSS2/visudet
 css/CSS2/visuren
 css/CSS2/zindex
 css/CSS2/zorder
-css/CSS2/media
 css/selectors
-css/css-values
-css/css-transforms
+svg/coordinate-systems
+svg/layout
+svg/painting
+svg/render/order
+svg/render/reftests
+svg/shapes
