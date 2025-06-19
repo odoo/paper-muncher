@@ -1054,6 +1054,7 @@ struct TableFormatingContext : FormatingContext {
         }
 
         currPosition.x += spacing.x;
+        Vec2Au startPosition = currPosition;
         for (usize j = 0; j < grid.size.x; currPosition.x += colWidth[j] + spacing.x, j++) {
             auto cell = grid.get(j, i);
             auto cellBox = grid.get(cell.anchorIdx.x, cell.anchorIdx.y).box;
@@ -1081,6 +1082,21 @@ struct TableFormatingContext : FormatingContext {
             }
             outputRow.someBottomsUncompleteLaidOut |= isBottomCell and not outputCell.completelyLaidOut;
         };
+
+        if (outputRow.allBottomsAndCompletelyLaidOut and rowHelper[i].axisIdx != NONE) {
+            layout(
+                tree,
+                rows[rowHelper[i].axisIdx.unwrap()].el,
+                {
+                    .fragment = input.fragment,
+                    .knownSize = {
+                        tableBoxSize.x,
+                        outputRow.sizeY,
+                    },
+                    .position = startPosition,
+                }
+            );
+        }
 
         return outputRow;
     }
@@ -1292,6 +1308,24 @@ struct TableFormatingContext : FormatingContext {
                 currPositionX, currPositionY,
                 0, numOfHeaderRows
             );
+
+        if (true) {
+            for (auto const& rowGroup : rowGroups) {
+                bool startedAfterOrNow = rowGroup.start > startAt or (rowGroup.start == startAt and not input.breakpointTraverser.getStart());
+                bool endedBeforeOrNow = rowGroup.end < stopAt or (rowGroup.end == stopAt and not input.breakpointTraverser.getEnd());
+                if (startedAfterOrNow and endedBeforeOrNow) {
+                    auto rowGroupOutput = layout(
+                        tree,
+                        rowGroup.el,
+                        {
+                            .fragment = input.fragment,
+                            .knownSize = {tableUsedWidth, rowHeightPref.query(rowGroup.start, rowGroup.end)},
+                            .position = {currPositionX, startPositionOfRow[rowGroup.start]},
+                        }
+                    );
+                }
+            }
+        }
 
         auto [completelyLaidOut, breakpoint] = layoutRows(
             tree, box, input,
