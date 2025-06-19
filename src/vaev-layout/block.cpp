@@ -200,7 +200,7 @@ struct BlockFormatingContext : FormatingContext {
             auto margin = computeMargins(tree, c, childInput);
 
             Opt<Au> childInlineSize = NONE;
-            if (c.style->sizing->width.is<Keywords::Auto>()) {
+            if (c.style->sizing->width.is<Keywords::Auto>() and c.style->display != Display::TABLE_BOX) {
                 childInlineSize = inlineSize - margin.horizontal();
             }
 
