@@ -1054,6 +1054,7 @@ struct TableFormatingContext : FormatingContext {
         }
 
         currPosition.x += spacing.x;
+        Vec2Au startPosition = currPosition;
         for (usize j = 0; j < grid.size.x; currPosition.x += colWidth[j] + spacing.x, j++) {
             auto cell = grid.get(j, i);
             auto cellBox = grid.get(cell.anchorIdx.x, cell.anchorIdx.y).box;
@@ -1081,6 +1082,21 @@ struct TableFormatingContext : FormatingContext {
             }
             outputRow.someBottomsUncompleteLaidOut |= isBottomCell and not outputCell.completelyLaidOut;
         };
+
+        if (outputRow.allBottomsAndCompletelyLaidOut and rowHelper[i].axisIdx) {
+            layout(
+                tree,
+                rows[rowHelper[i].axisIdx.unwrap()].el,
+                {
+                    .fragment = input.fragment,
+                    .knownSize = {
+                        currPosition.x,
+                        outputRow.sizeY,
+                    },
+                    .position = startPosition,
+                }
+            );
+        }
 
         return outputRow;
     }

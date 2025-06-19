@@ -54,7 +54,12 @@ Output _contentLayout(Tree& tree, Box& box, Input input, usize startAt, Opt<usiz
             box.formatingContext.unwrap()->build(tree, box);
     }
     if (not box.formatingContext)
-        return Output{};
+        return Output{
+            // FIXME: this is a hack. we shouldnt care for output of boxes without formating context, but we do this so
+            // we can have a fragment for rows with borders (and thus have a fake border-collapse behavior for the ledger)
+            .size = Vec2Au{},
+            .completelyLaidOut = true
+        };
     return box.formatingContext.unwrap()->run(tree, box, input, startAt, stopAt);
 }
 
