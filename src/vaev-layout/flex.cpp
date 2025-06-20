@@ -225,7 +225,9 @@ struct FlexItem {
                (fa.endCrossAxis(*box->style->margin).is<Keywords::Auto>());
     }
 
-    Au getScaledFlexShrinkFactor() const {
+    Au getScaledFlexShrinkFactor(Opt<Au> floorShrink = NONE) const {
+        if (floorShrink)
+            return flexBaseSize * max(*floorShrink, Au{flexItemProps.shrink});
         return flexBaseSize * Au{flexItemProps.shrink};
     }
 
@@ -725,6 +727,7 @@ struct FlexFormatingContext : FormatingContext {
 
     Vec<Au> _computeFlexFractions(Tree& t, Input input) {
         Vec<Au> flexFraction;
+        // For each flex item,
         for (auto& flexItem : _items) {
             Au contribution = flexItem.getMainSizeMinMaxContentContribution(
                 t,
@@ -732,16 +735,18 @@ struct FlexFormatingContext : FormatingContext {
                 availableSpace
             );
 
+            // subtract its outer flex base size from its max-content contribution size.
             auto itemFlexFraction =
                 contribution -
                 flexItem.flexBaseSize -
                 flexItem.getMargin(FlexItem::BOTH_MAIN);
 
+            // If that result is positive, divide by its flex grow factor floored at 1;
             if (itemFlexFraction > 0_au)
                 itemFlexFraction = itemFlexFraction / max(1_au, Au{flexItem.flexItemProps.grow});
-
+            // if negative, divide by its scaled flex shrink factor having floored the flex shrink factor at 1.
             else if (itemFlexFraction < 0_au)
-                itemFlexFraction = itemFlexFraction / max(1_au, Au{flexItem.flexItemProps.shrink});
+                itemFlexFraction = itemFlexFraction / flexItem.getScaledFlexShrinkFactor(1_au);
 
             flexFraction.pushBack(itemFlexFraction);
         }
@@ -756,6 +761,7 @@ struct FlexFormatingContext : FormatingContext {
         Au largestFraction{Limits<Au>::MIN};
 
         // TODO: gonna need this when fragmenting
+        // Within each line, find the largest max-content flex fraction among all the flex items.
         for (usize i = 0; i < _items.len(); ++i) {
             largestFraction = max(largestFraction, flexFraction[globalIdx]);
             globalIdx++;
@@ -763,12 +769,17 @@ struct FlexFormatingContext : FormatingContext {
 
         Au sumOfProducts{0};
         for (auto& flexItem : _items) {
+            // Add each item’s flex base size
             Au product{flexItem.flexBaseSize};
 
+            // to the product of its flex grow factor (or scaled flex shrink factor, if the chosen max-content flex
+            // fraction was negative) and the chosen max-content flex fraction,
+            // NOTE: SPECs doesn't say we should floor again here as we did when computing flex fractions.
+            // But if we don't, we get division by zero.
             if (largestFraction < 0_au) {
-                product += largestFraction / flexItem.getScaledFlexShrinkFactor();
-            } else {
-                product += largestFraction * Au{flexItem.flexItemProps.grow};
+                product += largestFraction / flexItem.getScaledFlexShrinkFactor(1_au);
+            } else if (largestFraction > 0_au) {
+                product += largestFraction * max(1_au, Au{flexItem.flexItemProps.grow});
             }
 
             auto [minPrefferedSize, maxPrefferedSize] = flexItem.getMinMaxPrefferedSize(
@@ -777,9 +788,12 @@ struct FlexFormatingContext : FormatingContext {
                 availableSpace
             );
 
+            // then clamp that result by the max main size floored by the min main size.
             sumOfProducts += clamp(product, minPrefferedSize, maxPrefferedSize) +
                              flexItem.getMargin(FlexItem::BOTH_MAIN);
         }
+        // The flex container’s max-content size is the largest sum of the afore-calculated sizes of all
+        // items within a single line.
         _usedMainSize = max(_usedMainSize, sumOfProducts);
     }
 
