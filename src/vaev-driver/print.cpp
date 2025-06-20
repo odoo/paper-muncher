@@ -3,13 +3,13 @@ module;
 #include <karm-base/rc.h>
 #include <karm-math/au.h>
 #include <karm-print/page.h>
+#include <karm-scene/clear.h>
 #include <karm-scene/stack.h>
 #include <karm-scene/transform.h>
 #include <karm-sys/time.h>
 #include <karm-text/book.h>
 #include <vaev-dom/document.h>
 #include <vaev-style/computer.h>
-#include <karm-scene/clear.h>
 
 export module Vaev.Driver:print;
 
@@ -227,7 +227,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
         Layout::paint(fragment, *pageStack);
         pageStack->prepare();
 
-        co_yield Print::Page(settings.paper,  makeRc<Scene::Clear>(makeRc<Scene::Transform>(pageStack, Math::Trans2f::scale(media.resolution.toDppx())), canvasColor));
+        co_yield Print::Page(settings.paper, makeRc<Scene::Clear>(makeRc<Scene::Transform>(pageStack, Math::Trans2f::scale(media.resolution.toDppx())), canvasColor));
 
         if (outReal.completelyLaidOut)
             break;

@@ -15,7 +15,7 @@ namespace Vaev::View {
 
 export struct ViewProps {
     bool wireframe = false;
-    Opt<Gc::Ref<Dom::Node>> selected = NONE;
+    Gc::Ptr<Dom::Node> selected = nullptr;
 };
 
 struct View : Ui::View<View> {
@@ -92,7 +92,7 @@ struct View : Ui::View<View> {
             Layout::wireframe(*frag, g);
 
         if (_props.selected)
-            Layout::overlay(*frag, g, *_props.selected);
+            Layout::overlay(*frag, g, _props.selected.upgrade());
 
         g.pop();
     }

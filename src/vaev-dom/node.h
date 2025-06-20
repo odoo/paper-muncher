@@ -38,10 +38,10 @@ struct Node : Tree<Node> {
     }
 
     template <typename T>
-    Gc::Ptr<T> is() const {
+    Gc::Ptr<T const> is() const {
         if (nodeType() != T::TYPE)
             return nullptr;
-        return static_cast<T const*>(this);
+        return {MOVE, static_cast<T const*>(this)};
     }
 
     Mime::Url baseURI();

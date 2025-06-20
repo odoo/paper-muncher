@@ -3109,6 +3109,10 @@ struct SVGXProp {
         c.svg.cow().x = value;
     }
 
+    static PercentOr<Length> load(SpecifiedValues const& c) {
+        return c.svg->x;
+    }
+
     Res<> parse(Cursor<Css::Sst>& c) {
         value = try$(parseValue<PercentOr<Length>>(c));
         return Ok();
@@ -3125,6 +3129,10 @@ struct SVGYProp {
 
     void apply(SpecifiedValues& c) const {
         c.svg.cow().y = value;
+    }
+
+    static PercentOr<Length> load(SpecifiedValues const& c) {
+        return c.svg->y;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
@@ -3145,6 +3153,10 @@ struct SVGCXProp {
         c.svg.cow().cx = value;
     }
 
+    static PercentOr<Length> load(SpecifiedValues const& c) {
+        return c.svg->cx;
+    }
+
     Res<> parse(Cursor<Css::Sst>& c) {
         value = try$(parseValue<PercentOr<Length>>(c));
         return Ok();
@@ -3161,6 +3173,10 @@ struct SVGCYProp {
 
     void apply(SpecifiedValues& c) const {
         c.svg.cow().cy = value;
+    }
+
+    static PercentOr<Length> load(SpecifiedValues const& c) {
+        return c.svg->cy;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
@@ -3181,6 +3197,10 @@ struct SVGRProp {
         c.svg.cow().r = value;
     }
 
+    static PercentOr<Length> load(SpecifiedValues const& c) {
+        return c.svg->r;
+    }
+
     Res<> parse(Cursor<Css::Sst>& c) {
         value = try$(parseValue<PercentOr<Length>>(c));
         return Ok();
@@ -3199,6 +3219,10 @@ struct SVGFillProp {
         c.svg.cow().fill = value;
     }
 
+    static Paint load(SpecifiedValues const& c) {
+        return c.svg->fill;
+    }
+
     Res<> parse(Cursor<Css::Sst>& c) {
         value = try$(parseValue<Paint>(c));
         return Ok();
@@ -3215,6 +3239,10 @@ struct SVGDProp {
 
     void apply(SpecifiedValues& c) const {
         c.svg.cow().d = value;
+    }
+
+    static Union<String, None> load(SpecifiedValues const& c) {
+        return c.svg->d;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
@@ -3241,6 +3269,10 @@ struct SVGViewBoxProp {
 
     void apply(SpecifiedValues& c) const {
         c.svg.cow().viewBox = value;
+    }
+
+    static Opt<ViewBox> load(SpecifiedValues const& c) {
+        return c.svg->viewBox;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
@@ -3275,6 +3307,10 @@ struct SVGStrokeProp {
         c.svg.cow().stroke = value;
     }
 
+    static Paint load(SpecifiedValues const& c) {
+        return c.svg->stroke;
+    }
+
     Res<> parse(Cursor<Css::Sst>& c) {
         value = try$(parseValue<Paint>(c));
         return Ok();
@@ -3291,6 +3327,10 @@ struct FillOpacityProp {
 
     void apply(SpecifiedValues& c) const {
         c.svg.cow().fillOpacity = value;
+    }
+
+    static f64 load(SpecifiedValues const& c) {
+        return c.svg->fillOpacity;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
@@ -3314,6 +3354,10 @@ struct StrokeWidthProp {
 
     void apply(SpecifiedValues& c) const {
         c.svg.cow().strokeWidth = value;
+    }
+
+    static PercentOr<Length> load(SpecifiedValues const& c) {
+        return c.svg->strokeWidth;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {

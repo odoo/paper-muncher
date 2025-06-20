@@ -605,7 +605,7 @@ void SVGRootFrag::offsetBoxFrags(Vec2Au d) {
 }
 
 void SVG::GroupFrag::computeBoundingBoxes(SVG::GroupFrag* group) {
-    if(group->elements.len() == 0)
+    if (group->elements.len() == 0)
         return;
 
     // FIXME: this could be implemented in the Union type
@@ -646,7 +646,7 @@ void SVG::GroupFrag::computeBoundingBoxes(SVG::GroupFrag* group) {
     };
 
     auto [objectBoundingBox, strokeBoundingBox] = getElementBoundingBoxes(group->elements[0]);
-    for(usize i = 1; i < group->elements.len(); i++) {
+    for (usize i = 1; i < group->elements.len(); i++) {
         auto [nextObjectBoundingBox, nextStrokeBoundingBox] = getElementBoundingBoxes(group->elements[i]);
         objectBoundingBox = objectBoundingBox.mergeWith(nextObjectBoundingBox);
         strokeBoundingBox = strokeBoundingBox.mergeWith(nextStrokeBoundingBox);

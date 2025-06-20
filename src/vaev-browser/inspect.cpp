@@ -22,24 +22,32 @@ export struct SelectNode {
     Gc::Ref<Dom::Node> node;
 };
 
-export using InspectorAction = Union<ExpandNode, SelectNode>;
+export struct ChangeFilter {
+    String filter;
+};
+
+export using InspectorAction = Union<ExpandNode, SelectNode, ChangeFilter>;
 
 export struct InspectState {
+    String filter = ""s;
     Map<Gc::Ref<Dom::Node>, bool> expandedNodes = {};
-    Opt<Gc::Ref<Dom::Node>> selectedNode = NONE;
+    Gc::Ptr<Dom::Node> selectedNode = nullptr;
 
     void apply(InspectorAction& a) {
         a.visit(Visitor{
-            [&](ExpandNode e) {
+            [&](ExpandNode const& e) {
                 if (expandedNodes.has(e.node))
                     expandedNodes.del(e.node);
                 else
                     expandedNodes.put(e.node, true);
             },
-            [&](SelectNode e) {
+            [&](SelectNode const& e) {
                 if (e.node->hasChildren())
                     expandedNodes.put(e.node, true);
                 selectedNode = e.node;
+            },
+            [&](ChangeFilter const& f) {
+                filter = f.filter;
             },
         });
     }
@@ -156,30 +164,44 @@ Ui::Child node(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<Inspector
     return Ui::vflow(children);
 }
 
-Ui::Child computedStyles() {
-    Ui::Children children;
+Ui::Child computedStyles(InspectState const& s, Ui::Action<InspectorAction> send) {
+    auto content = Ui::labelMedium("No element selected") |
+                   Ui::insets({8, 16}) |
+                   Ui::center();
 
-    Style::StyleProp::any([&]<typename T>() {
-        if constexpr (requires { T::initial(); }) {
-            children.pushBack(
-                Ui::text(Ui::TextStyles::codeSmall(), "{}: {}", T::name(), T::initial()) |
-                Ui::insets({4, 8})
-            );
+    if (s.selectedNode)
+        if (auto el = s.selectedNode->is<Dom::Element>()) {
+            Ui::Children children;
+
+            Style::StyleProp::any([&]<typename T>() {
+                if constexpr (requires { T::load; }) {
+                    if (s.filter and startWith(T::name(), s.filter) == Match::NO)
+                        return;
+                    children.pushBack(
+                        Ui::text(Ui::TextStyles::codeSmall(), "{}: {}", T::name(), T::load(*el->specifiedValues())) |
+                        Ui::insets({4, 8})
+                    );
+                }
+            });
+
+            content = Ui::vflow(children) | Ui::vhscroll();
         }
-    });
 
     return Ui::vflow(
                Kr::sidePanelTitle("Computed Styles") | Ui::dragRegion({0, -1}),
                Kr::separator(),
-               Ui::vflow(children) | Ui::vscroll() | Ui::grow()
+               Kr::input(Mdi::FILTER, "Filter..."s, s.filter, [send](auto& n, auto text) {
+                   send(n, ChangeFilter{text});
+               }),
+               content | Ui::grow()
            ) |
            Ui::pinSize(128);
 }
 
-export Ui::Child inspect(Gc::Ref<Vaev::Dom::Document> n, InspectState const& s, Ui::Action<InspectorAction> a) {
+export Ui::Child inspect(Gc::Ref<Vaev::Dom::Document> n, InspectState const& s, Ui::Action<InspectorAction> send) {
     return Ui::vflow(
-        node(n, s, a) | Ui::vscroll() | Ui::grow(),
-        computedStyles() | Kr::resizable(Kr::ResizeHandle::TOP, {128}, NONE)
+        node(n, s, send) | Ui::vscroll() | Ui::grow(),
+        computedStyles(s, send) | Kr::resizable(Kr::ResizeHandle::TOP, {128}, NONE)
     );
 }
 
