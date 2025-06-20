@@ -3,15 +3,12 @@ module;
 #include <karm-image/loader.h>
 #include <karm-text/loader.h>
 #include <karm-text/prose.h>
-#include <vaev-dom/document.h>
-#include <vaev-dom/element.h>
-#include <vaev-style/computed.h>
-#include <vaev-values/display.h>
-#include <vaev-values/table.h>
-#include <vaev-values/text.h>
 
 export module Vaev.Layout:builder;
 
+import Vaev.Values;
+import Vaev.Style;
+import Vaev.Dom;
 import :values;
 import :svg;
 
@@ -447,9 +444,9 @@ always_inline static bool isVoidElement(Gc::Ref<Dom::Element> el) {
 }
 
 static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
-    if (el->tagName == Html::INPUT) {
+    if (el->qualifiedName == Html::INPUT_TAG) {
         _buildInputProse(bc, el);
-    } else if (el->tagName == Html::IMG) {
+    } else if (el->qualifiedName == Html::IMG_TAG) {
         _buildImage(bc, el);
     }
 }
@@ -460,7 +457,7 @@ static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 // els, an internal display value will never be valid. This relates to a somewhat "replaced" property from these
 // elements, but <img> is replaced whereas <svg> per se is not.
 bool _alwaysInlineBlock(Gc::Ref<Dom::Element> el) {
-    return el->tagName == Html::IMG or el->tagName == Svg::SVG;
+    return el->qualifiedName == Html::IMG_TAG or el->tagName == Svg::SVG;
 }
 
 // MARK: Build flow -------------------------------------------------------------------------------
@@ -468,7 +465,7 @@ bool _alwaysInlineBlock(Gc::Ref<Dom::Element> el) {
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent);
 
 static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::SpecifiedValues> style, Gc::Ref<Dom::Element> el) {
-    if (el->tagName == Html::BR) {
+    if (el->qualifiedName == Html::BR_TAG) {
         bc.flushRootInlineBoxIntoAnonymousBox();
         return;
     }
@@ -486,7 +483,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
 }
 
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
-    if (el->tagName == Html::BR) {
+    if (el->qualifiedName == Html::BR_TAG) {
         // do nothing
     } else if (el->tagName == Svg::SVG) {
         bc.content() = _buildSVG(el);

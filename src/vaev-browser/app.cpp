@@ -8,7 +8,6 @@ module;
 #include <karm-sys/file.h>
 #include <karm-sys/launch.h>
 #include <karm-sys/time.h>
-#include <vaev-dom/document.h>
 
 export module Vaev.Browser:app;
 
@@ -16,6 +15,7 @@ import Mdi;
 import Vaev.View;
 import Vaev.Driver;
 import Vaev.Loader;
+import Vaev.Dom;
 import Karm.Http;
 import Karm.Kira;
 import Karm.Ui;

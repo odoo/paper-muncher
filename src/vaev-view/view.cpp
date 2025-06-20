@@ -2,13 +2,13 @@ module;
 
 #include <karm-gc/root.h>
 #include <karm-gfx/canvas.h>
-#include <vaev-dom/document.h>
-#include <vaev-style/media.h>
 
 export module Vaev.View:view;
 
 import Vaev.Driver;
 import Vaev.Layout;
+import Vaev.Style;
+import Vaev.Dom;
 import Karm.Ui;
 
 namespace Vaev::View {

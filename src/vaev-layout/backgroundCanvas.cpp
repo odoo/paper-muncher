@@ -3,11 +3,11 @@ module;
 #include <karm-image/loader.h>
 #include <karm-text/loader.h>
 #include <karm-text/prose.h>
-#include <vaev-dom/document.h>
-#include <vaev-style/computer.h>
 
 export module Vaev.Layout:backgroundCanvas;
 
+import Vaev.Style;
+import Vaev.Dom;
 import :values;
 
 namespace Vaev::Layout {
@@ -24,7 +24,7 @@ Gfx::Color _colorToGfx(Color color) {
 
 void _patchBackgrounds(MutSlice<Layout::Box>& children) {
     for (auto& child : children) {
-        if (child.origin->tagName == Html::BODY) {
+        if (child.origin->qualifiedName == Html::BODY_TAG) {
             child.style->backgrounds.cow().color = Gfx::ALPHA;
         }
     }

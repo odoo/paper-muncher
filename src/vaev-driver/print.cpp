@@ -8,16 +8,16 @@ module;
 #include <karm-scene/transform.h>
 #include <karm-sys/time.h>
 #include <karm-text/book.h>
-#include <vaev-dom/document.h>
-#include <vaev-style/computer.h>
 
 export module Vaev.Driver:print;
 
+import Vaev.Style;
 import Vaev.Layout;
+import Vaev.Dom;
 
 namespace Vaev::Driver {
 
-void _paintCornerMargin(Style::PageComputedStyle& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea area) {
+void _paintCornerMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea area) {
     Layout::Tree tree{
         .root = Layout::buildForPseudoElement(pageStyle.area(area)),
         .viewport = Layout::Viewport{.small = rect.size()}
@@ -34,7 +34,7 @@ void _paintCornerMargin(Style::PageComputedStyle& pageStyle, Scene::Stack& stack
     Layout::paint(frag, stack);
 }
 
-void _paintMainMargin(Style::PageComputedStyle& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas) {
+void _paintMainMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas) {
     auto box = Layout::buildForPseudoElement(pageStyle.area(mainArea));
     for (auto subArea : subAreas) {
         box.add(Layout::buildForPseudoElement(pageStyle.area(subArea)));
@@ -55,7 +55,7 @@ void _paintMainMargin(Style::PageComputedStyle& pageStyle, Scene::Stack& stack, 
     Layout::paint(frag, stack);
 }
 
-void _paintMargins(Style::PageComputedStyle& pageStyle, RectAu pageRect, RectAu pageContent, Scene::Stack& stack) {
+void _paintMargins(Style::PageSpecifiedValues& pageStyle, RectAu pageRect, RectAu pageContent, Scene::Stack& stack) {
     // Compute all corner rects
     auto topLeftMarginCornerRect = RectAu::fromTwoPoint(pageRect.topStart(), pageContent.topStart());
     auto topRightMarginCornerRect = RectAu::fromTwoPoint(pageRect.topEnd(), pageContent.topEnd());

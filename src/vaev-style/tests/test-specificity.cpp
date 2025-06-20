@@ -1,8 +1,6 @@
 #include <karm-test/macros.h>
-#include <vaev-style/computer.h>
-#include <vaev-style/selector.h>
 
-#include "vaev-style/rules.h"
+import Vaev.Style;
 
 namespace Vaev::Style::Tests {
 
@@ -56,7 +54,7 @@ test$("test-specificity-selector-list") {
     {
         Dom::Element elAnotherMatch{Dom::Element(Html::DIV)};
         elAnotherMatch.classList.add("b");
-        elAnotherMatch.setAttribute(AttrName::make("id"s, Vaev::HTML), "x"s);
+        elAnotherMatch.setAttribute(Html::ID_ATTR, "x"s);
 
         Vec<Tuple<Cursor<StyleRule>, Spec>> matchingRules;
         computer._evalRule(rule, elAnotherMatch, matchingRules);
@@ -67,7 +65,7 @@ test$("test-specificity-selector-list") {
         Dom::Element twoMatches{Dom::Element(Html::DIV)};
 
         twoMatches.classList.add("b");
-        twoMatches.setAttribute(AttrName::make("id"s, Vaev::HTML), "x"s);
+        twoMatches.setAttribute(Html::ID_ATTR, "x"s);
         twoMatches.classList.add("a");
 
         Vec<Tuple<Cursor<StyleRule>, Spec>> matchingRules;

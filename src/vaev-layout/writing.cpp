@@ -1,8 +1,8 @@
 module;
 
-#include <vaev-values/writing.h>
-
 export module Vaev.Layout:writing;
+
+import Vaev.Values;
 
 import :base;
 

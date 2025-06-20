@@ -7,12 +7,11 @@ module;
 #include <karm-scene/stack.h>
 #include <karm-scene/text.h>
 #include <karm-scene/transform.h>
-#include <vaev-dom/document.h>
-#include <vaev-dom/tags.h>
-#include <vaev-style/computer.h>
-#include <vaev-style/decls.h>
 
 export module Vaev.Layout:svg;
+
+import Vaev.Style;
+import Vaev.Dom;
 
 namespace Vaev::Layout {
 

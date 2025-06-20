@@ -3,11 +3,11 @@ module;
 #include <karm-scene/clear.h>
 #include <karm-scene/stack.h>
 #include <karm-text/book.h>
-#include <vaev-style/computer.h>
 
 export module Vaev.Driver:render;
 
 import Vaev.Layout;
+import Vaev.Style;
 
 namespace Vaev::Driver {
 

@@ -1,28 +1,91 @@
-#include <karm-base/array.h>
-#include <karm-base/tuple.h>
+module;
+
+#include <karm-base/func.h>
+#include <karm-base/res.h>
+#include <karm-base/vec.h>
+#include <karm-io/emit.h>
 #include <karm-io/expr.h>
 #include <karm-logger/logger.h>
 
-#include "lexer.h"
+export module Vaev.Css:lexer;
 
 namespace Vaev::Css {
 
-// MARK: Token -----------------------------------------------------------------
+#define FOREACH_TOKEN(TOKEN)                                         \
+    TOKEN(NIL, nil)                                 /* no a token */ \
+    TOKEN(IDENT, ident)                             /* foo */        \
+    TOKEN(FUNCTION, function)                       /* calc( */      \
+    TOKEN(AT_KEYWORD, atKeyword)                    /* @import */    \
+    TOKEN(HASH, hash)                               /* #foo */       \
+    TOKEN(STRING, string)                           /* "foo" */      \
+    TOKEN(BAD_STRING, badString)                    /* "foo */       \
+    TOKEN(URL, url)                                 /* url(foo) */   \
+    TOKEN(BAD_URL, badUrl)                          /* url(foo */    \
+    TOKEN(DELIM, delim)                             /* !, +, - */    \
+    TOKEN(NUMBER, number)                           /* 123 */        \
+    TOKEN(PERCENTAGE, percentage)                   /* 123% */       \
+    TOKEN(DIMENSION, dimension)                     /* 123px */      \
+    TOKEN(WHITESPACE, whitespace)                   /* ' ' */        \
+    TOKEN(CDO, cdo)                                 /* <!-- */       \
+    TOKEN(CDC, cdc)                                 /* --> */        \
+    TOKEN(COLON, colon)                             /* : */          \
+    TOKEN(SEMICOLON, semicolon)                     /* ; */          \
+    TOKEN(COMMA, comma)                             /* , */          \
+    TOKEN(LEFT_CURLY_BRACKET, leftCurlyBracket)     /* { */          \
+    TOKEN(RIGHT_CURLY_BRACKET, rightCurlyBracket)   /* } */          \
+    TOKEN(LEFT_SQUARE_BRACKET, leftSquareBracket)   /* [ */          \
+    TOKEN(RIGHT_SQUARE_BRACKET, rightSquareBracket) /* ] */          \
+    TOKEN(LEFT_PARENTHESIS, leftParenthesis)        /* ( */          \
+    TOKEN(RIGHT_PARENTHESIS, rightParenthesis)      /* ) */          \
+    TOKEN(COMMENT, comment)                         /* */            \
+    TOKEN(END_OF_FILE, endOfFile)                   /* EOF */        \
+    TOKEN(OTHER, other)                             /* anything else */
 
-void Token::repr(Io::Emit& e) const {
-    if (not *this) {
-        e("nil");
-        return;
+export struct Token {
+    enum struct Type {
+#define ITER(NAME, ...) NAME,
+        FOREACH_TOKEN(ITER)
+#undef ITER
+
+            _LEN,
+    };
+
+    using enum Type;
+
+    Type type;
+    String data;
+
+#define ITER(ID, NAME) \
+    static Token NAME(Str data = "") { return {ID, data}; }
+    FOREACH_TOKEN(ITER)
+#undef ITER
+
+    Token() : type(NIL) {}
+
+    Token(Type type, String data = ""s)
+        : type(type), data(data) {}
+
+    explicit operator bool() const {
+        return type != NIL;
     }
 
-    e(
-        "({} {#})",
-        type,
-        data
-    );
-}
+    void repr(Io::Emit& e) const {
+        if (not *this) {
+            e("nil");
+            return;
+        }
 
-// MARK: Lexer -----------------------------------------------------------------
+        e("({} {#})", type, data);
+    }
+
+    bool operator==(Type type) const {
+        return this->type == type;
+    }
+
+    bool operator==(Token const& other) const {
+        return type == other.type and data == other.data;
+    }
+};
 
 static auto const RE_BRACKET_OPEN = Re::single('{');
 static auto const RE_BRACKET_CLOSE = Re::single('}');
@@ -183,78 +246,112 @@ static auto const RE_STRING =
         )
     );
 
-Token Lexer::_nextIdent(Io::SScan& s) const {
-    if (not s.skip('('))
-        return {Token::IDENT, s.end()};
+export struct Lexer {
+    Io::SScan _scan;
+    Token _curr;
 
-    if (eqCi(s.end(), "url("s)) {
-        if (s.ahead(Re::zeroOrMore(RE_WHITESPACE) & RE_QUOTES)) {
-            return {Token::FUNCTION, s.end()};
-        }
-        s.skip(RE_URL);
-        return {Token::URL, s.end()};
+    Lexer(Str text) : _scan(text) {
+        _curr = _next(_scan);
     }
 
-    return {Token::FUNCTION, s.end()};
-}
+    Lexer(Io::SScan const& scan)
+        : _scan(scan) {
+        _curr = _next(_scan);
+    }
 
-Token Lexer::_next(Io::SScan& s) const {
-    s.begin();
-    if (s.ended()) {
-        return {Token::END_OF_FILE, s.end()};
-    } else if (s.skip(RE_WHITESPACE_TOKEN)) {
-        return {Token::WHITESPACE, s.end()};
-    } else if (s.skip(RE_BRACKET_OPEN)) {
-        return {Token::LEFT_CURLY_BRACKET, s.end()};
-    } else if (s.skip(RE_BRACKET_CLOSE)) {
-        return {Token::RIGHT_CURLY_BRACKET, s.end()};
-    } else if (s.skip(RE_SQUARE_BRACKET_OPEN)) {
-        return {Token::LEFT_SQUARE_BRACKET, s.end()};
-    } else if (s.skip(RE_SQUARE_BRACKET_CLOSE)) {
-        return {Token::RIGHT_SQUARE_BRACKET, s.end()};
-    } else if (s.skip(RE_PARENTHESIS_OPEN)) {
-        return {Token::LEFT_PARENTHESIS, s.end()};
-    } else if (s.skip(RE_PARENTHESIS_CLOSE)) {
-        return {Token::RIGHT_PARENTHESIS, s.end()};
-    } else if (s.skip(RE_SEMICOLON)) {
-        return {Token::SEMICOLON, s.end()};
-    } else if (s.skip(RE_COLON)) {
-        return {Token::COLON, s.end()};
-    } else if (s.skip(RE_COMMA)) {
-        return {Token::COMMA, s.end()};
-    } else if (s.skip(RE_HASH)) {
-        return {Token::HASH, s.end()};
-    } else if (s.skip("<!--")) {
-        return {Token::CDO, s.end()};
-    } else if (s.skip("-->")) {
-        return {Token::CDC, s.end()};
-    } else if (s.skip("/*")) {
-        // https://www.w3.org/TR/css-syntax-3/#consume-comment
-        s.skip(Re::untilAndConsume(Re::word("*/")));
-        return {Token::COMMENT, s.end()};
-    } else if (s.skip(RE_NUMBER)) {
-        // https://www.w3.org/TR/css-syntax-3/#consume-numeric-token
-        if (s.skip(RE_IDENTIFIER)) {
-            return {Token::DIMENSION, s.end()};
-        } else if (s.skip(Re::single('%'))) {
-            return {Token::PERCENTAGE, s.end()};
+    Token peek() const {
+        return _curr;
+    }
+
+    Token _nextIdent(Io::SScan& s) const {
+        if (not s.skip('('))
+            return {Token::IDENT, s.end()};
+
+        if (eqCi(s.end(), "url("s)) {
+            if (s.ahead(Re::zeroOrMore(RE_WHITESPACE) & RE_QUOTES)) {
+                return {Token::FUNCTION, s.end()};
+            }
+            s.skip(RE_URL);
+            return {Token::URL, s.end()};
+        }
+
+        return {Token::FUNCTION, s.end()};
+    }
+
+    Token _next(Io::SScan& s) const {
+        s.begin();
+        if (s.ended()) {
+            return {Token::END_OF_FILE, s.end()};
+        } else if (s.skip(RE_WHITESPACE_TOKEN)) {
+            return {Token::WHITESPACE, s.end()};
+        } else if (s.skip(RE_BRACKET_OPEN)) {
+            return {Token::LEFT_CURLY_BRACKET, s.end()};
+        } else if (s.skip(RE_BRACKET_CLOSE)) {
+            return {Token::RIGHT_CURLY_BRACKET, s.end()};
+        } else if (s.skip(RE_SQUARE_BRACKET_OPEN)) {
+            return {Token::LEFT_SQUARE_BRACKET, s.end()};
+        } else if (s.skip(RE_SQUARE_BRACKET_CLOSE)) {
+            return {Token::RIGHT_SQUARE_BRACKET, s.end()};
+        } else if (s.skip(RE_PARENTHESIS_OPEN)) {
+            return {Token::LEFT_PARENTHESIS, s.end()};
+        } else if (s.skip(RE_PARENTHESIS_CLOSE)) {
+            return {Token::RIGHT_PARENTHESIS, s.end()};
+        } else if (s.skip(RE_SEMICOLON)) {
+            return {Token::SEMICOLON, s.end()};
+        } else if (s.skip(RE_COLON)) {
+            return {Token::COLON, s.end()};
+        } else if (s.skip(RE_COMMA)) {
+            return {Token::COMMA, s.end()};
+        } else if (s.skip(RE_HASH)) {
+            return {Token::HASH, s.end()};
+        } else if (s.skip("<!--")) {
+            return {Token::CDO, s.end()};
+        } else if (s.skip("-->")) {
+            return {Token::CDC, s.end()};
+        } else if (s.skip("/*")) {
+            // https://www.w3.org/TR/css-syntax-3/#consume-comment
+            s.skip(Re::untilAndConsume(Re::word("*/")));
+            return {Token::COMMENT, s.end()};
+        } else if (s.skip(RE_NUMBER)) {
+            // https://www.w3.org/TR/css-syntax-3/#consume-numeric-token
+            if (s.skip(RE_IDENTIFIER)) {
+                return {Token::DIMENSION, s.end()};
+            } else if (s.skip(Re::single('%'))) {
+                return {Token::PERCENTAGE, s.end()};
+            } else {
+                return {Token::NUMBER, s.end()};
+            }
+        } else if (s.skip(RE_IDENTIFIER)) {
+            return _nextIdent(s);
+        } else if (s.skip(RE_AT_KEYWORD)) {
+            return {Token::AT_KEYWORD, s.end()};
+        } else if (s.skip(RE_STRING)) {
+            // https://www.w3.org/TR/css-syntax-3/#consume-string-token
+            return {Token::STRING, s.end()};
+        } else if (s.skip(RE_DELIM)) {
+            return {Token::DELIM, s.end()};
         } else {
-            return {Token::NUMBER, s.end()};
+            logWarn("unrecognized token: {}", s.end());
+            s.next();
+            return {Token::OTHER, s.end()};
         }
-    } else if (s.skip(RE_IDENTIFIER)) {
-        return _nextIdent(s);
-    } else if (s.skip(RE_AT_KEYWORD)) {
-        return {Token::AT_KEYWORD, s.end()};
-    } else if (s.skip(RE_STRING)) {
-        // https://www.w3.org/TR/css-syntax-3/#consume-string-token
-        return {Token::STRING, s.end()};
-    } else if (s.skip(RE_DELIM)) {
-        return {Token::DELIM, s.end()};
-    } else {
-        logWarn("unrecognized token: {}", s.end());
-        s.next();
-        return {Token::OTHER, s.end()};
     }
+
+    Token next() {
+        auto res = _curr;
+        _curr = _next(_scan);
+        return res;
+    }
+
+    bool ended() const {
+        return _scan.ended();
+    }
+};
+
+// https://www.w3.org/TR/css-syntax-3/#consume-declaration
+export void eatWhitespace(Lexer& lex) {
+    while (lex.peek() == Token::WHITESPACE and not lex.ended())
+        lex.next();
 }
 
 } // namespace Vaev::Css

@@ -6,7 +6,7 @@
         "cpp-excluded": true
     },
     "requires": [
-        "vaev-style",
+        "vaev-css",
         "karm-test"
     ],
     "injects": [

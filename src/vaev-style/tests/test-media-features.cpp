@@ -1,5 +1,6 @@
 #include <karm-test/macros.h>
-#include <vaev-style/media.h>
+
+import Vaev.Style;
 
 namespace Vaev::Style::Tests {
 

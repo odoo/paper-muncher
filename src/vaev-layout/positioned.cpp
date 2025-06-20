@@ -1,9 +1,8 @@
 module;
 
-#include <vaev-values/insets.h>
-
 export module Vaev.Layout:positioned;
 
+import Vaev.Values;
 import :layout;
 import :values;
 

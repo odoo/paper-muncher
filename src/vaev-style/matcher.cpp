@@ -1,10 +1,20 @@
-#include "matcher.h"
+module;
+
+#include <karm-base/vec.h>
+#include <karm-gc/ptr.h>
+#include <karm-logger/logger.h>
+
+export module Vaev.Style:matcher;
+
+import Vaev.Dom;
+import :selector;
 
 namespace Vaev::Style {
 
 static constexpr bool DEBUG_MATCHING = false;
 
 static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el);
+export Opt<Spec> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el);
 
 // https://www.w3.org/TR/selectors-4/#descendant-combinators
 static bool _matchDescendant(Selector const& s, Gc::Ref<Dom::Element> e) {
@@ -111,7 +121,17 @@ static bool _match(Nfix const& s, Gc::Ref<Dom::Element> el) {
 // 5.1. Type (tag name) selector
 // https://www.w3.org/TR/selectors-4/#type
 static bool _match(TypeSelector const& s, Gc::Ref<Dom::Element> el) {
-    return el->tagName.name() == s.elementName;
+    if (s.ns) {
+        if (el->namespaceUri() != s.ns)
+            return false;
+    }
+
+    if (s.name) {
+        // If the selector has a name, it must match the element's tag name.
+        return el->tagName.name() == s.name.unwrap();
+    }
+
+    return true;
 }
 
 static bool _match(IdSelector const& s, Gc::Ref<Dom::Element> el) {
@@ -212,7 +232,7 @@ static bool _match(AttributeSelector const& s, Gc::Ref<Dom::Element> el) {
 // https://www.w3.org/TR/selectors-4/#link
 
 static bool _matchLink(Gc::Ref<Dom::Element> el) {
-    return el->tagName == Html::A and el->hasAttribute(Html::HREF_ATTR);
+    return el->qualifiedName == Html::A_TAG and el->hasAttribute(Html::HREF_ATTR);
 }
 
 // 14.3.3. :first-child pseudo-class
@@ -248,12 +268,12 @@ static bool _matchLastChild(Gc::Ref<Dom::Element> e) {
 
 static bool _matchFirstOfType(Gc::Ref<Dom::Element> e) {
     Gc::Ptr<Dom::Node> curr = e;
-    auto tag = e->tagName;
+    auto name = e->qualifiedName;
 
     while (curr->hasPreviousSibling()) {
         auto prev = curr->previousSibling();
         if (auto el = prev->is<Dom::Element>())
-            if (e->tagName == tag)
+            if (e->qualifiedName == name)
                 return false;
         curr = prev;
     }
@@ -265,12 +285,12 @@ static bool _matchFirstOfType(Gc::Ref<Dom::Element> e) {
 
 static bool _matchLastOfType(Gc::Ref<Dom::Element> e) {
     Gc::Ptr<Dom::Node> curr = e;
-    auto tag = e->tagName;
+    auto name = e->qualifiedName;
 
     while (curr->hasNextSibling()) {
         auto prev = curr->nextSibling();
         if (auto el = prev->is<Dom::Element>())
-            if (e->tagName == tag)
+            if (e->qualifiedName == name)
                 return false;
         curr = prev;
     }
@@ -283,7 +303,7 @@ static bool _match(Pseudo const& s, Gc::Ref<Dom::Element> el) {
         return _matchLink(el);
 
     case Pseudo::ROOT:
-        return el->tagName == Html::HTML;
+        return el->qualifiedName == Html::HTML_TAG;
 
     case Pseudo::FIRST_OF_TYPE:
         return _matchFirstOfType(el);
@@ -303,12 +323,6 @@ static bool _match(Pseudo const& s, Gc::Ref<Dom::Element> el) {
     }
 }
 
-// 5.2. Universal selector
-// https://www.w3.org/TR/selectors-4/#the-universal-selector
-static bool _match(UniversalSelector const&, Gc::Ref<Dom::Element>) {
-    return true;
-}
-
 // MARK: Selector --------------------------------------------------------------
 
 static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el) {
@@ -322,7 +336,7 @@ static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el) {
     }});
 }
 
-Opt<Spec> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el) {
+export Opt<Spec> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el) {
     if (auto n = selector.is<Nfix>(); n and n->type == Nfix::OR) {
         Opt<Spec> specificity;
         for (auto& inner : n->inners) {

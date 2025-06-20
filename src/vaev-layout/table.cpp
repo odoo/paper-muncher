@@ -2,13 +2,10 @@ module;
 
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
-#include <vaev-values/break.h>
-#include <vaev-values/display.h>
-#include <vaev-values/sizing.h>
-#include <vaev-values/table.h>
 
 export module Vaev.Layout:table;
 
+import Vaev.Values;
 import :layout;
 import :values;
 

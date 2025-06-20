@@ -4,15 +4,15 @@ module;
 #include <karm-mime/mime.h>
 #include <karm-mime/url.h>
 #include <karm-sys/file.h>
-#include <vaev-dom/document.h>
-#include <vaev-dom/html/parser.h>
-#include <vaev-dom/xml/parser.h>
-#include <vaev-style/stylesheet.h>
 
 export module Vaev.Loader:loader;
 
 import Karm.Http;
 import Karm.Aio;
+import Vaev.Dom;
+import Vaev.Html;
+import Vaev.Xml;
+import Vaev.Style;
 
 namespace Vaev::Loader {
 
@@ -97,12 +97,12 @@ Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Http::Client& client, Mime:
 
 Async::Task<> _fetchStylesheetsAsync(Http::Client& client, Gc::Ref<Dom::Node> node, Style::StyleSheetList& sb) {
     auto el = node->is<Dom::Element>();
-    if (el and el->tagName == Html::STYLE) {
+    if (el and el->qualifiedName == Html::STYLE_TAG) {
         auto text = el->textContent();
         Io::SScan textScan{text};
         auto sheet = Style::StyleSheet::parse(textScan, node->baseURI());
         sb.add(std::move(sheet));
-    } else if (el and el->tagName == Html::LINK) {
+    } else if (el and el->qualifiedName == Html::LINK_TAG) {
         auto rel = el->getAttribute(Html::REL_ATTR);
         if (rel == "stylesheet"s) {
             auto href = el->getAttribute(Html::HREF_ATTR);
@@ -145,8 +145,16 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
     auto resp = co_trya$(client.getAsync(url));
     auto dom = co_trya$(_loadDocumentAsync(heap, url, resp));
     auto stylesheets = heap.alloc<Style::StyleSheetList>();
+
     stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-driver/html.css"_url, Style::Origin::USER_AGENT))
                          .take("user agent stylesheet not available"));
+
+    stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-driver/print.css"_url, Style::Origin::USER_AGENT))
+                         .take("user agent stylesheet not available"));
+
+    stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-driver/svg.css"_url, Style::Origin::USER_AGENT))
+                         .take("user agent stylesheet not available"));
+
     (void)co_await _fetchStylesheetsAsync(client, *dom, *stylesheets);
     dom->styleSheets = stylesheets;
     co_return Ok(dom);

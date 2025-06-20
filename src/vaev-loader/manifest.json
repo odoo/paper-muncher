@@ -5,6 +5,8 @@
     "description": "HTTP Document loader",
     "requires": [
         "vaev-dom",
+        "vaev-html",
+        "vaev-xml",
         "vaev-style",
         "karm-http",
         "karm-gc"

@@ -3,9 +3,10 @@ module;
 #include <karm-image/picture.h>
 #include <karm-text/font.h>
 #include <karm-text/prose.h>
-#include <vaev-style/computer.h>
 
 export module Vaev.Layout:base;
+
+import Vaev.Style;
 import :svg;
 
 namespace Vaev::Layout {

@@ -1,45 +1,135 @@
+module;
+
 #include <karm-logger/logger.h>
 
-#include "parser.h"
+export module Vaev.Css:parser;
+
+import :lexer;
 
 namespace Vaev::Css {
 
 // MARK: Sst -------------------------------------------------------------------
 
-void Sst::repr(Io::Emit& e) const {
-    if (type == TOKEN) {
-        e("{}", token);
-        return;
-    }
+// The SST (Skeleton Syntax Tree) is an intermediary representation of the CSS used to build the real syntaxic tree
+// We have all the block and declarations here but didn't interpreted it because we lacked context in the previous parse step
+// when we have this representation we can parse it a last time and interpret the different blocks and functions to build the CSSOM
+// The name come from: https://people.csail.mit.edu/jrb/Projects/dexprs.pdf chapter 3.4
 
-    e("({} ", type);
-    if (token)
-        e("token={}", token);
-    e.indent();
+export struct Sst;
 
-    if (prefix) {
-        e.newline();
-        e("prefix=");
-        (*prefix)->repr(e);
-    }
+export using Content = Vec<Sst>;
 
-    if (content) {
-        e.newline();
-        e("content=[");
-        e.indentNewline();
-        for (auto& child : content) {
-            child.repr(e);
+#define FOREACH_SST(SST) \
+    SST(RULE)            \
+    SST(FUNC)            \
+    SST(DECL)            \
+    SST(LIST)            \
+    SST(TOKEN)           \
+    SST(BLOCK)
+
+export struct Sst {
+    enum struct Type {
+#define ITER(NAME) NAME,
+        FOREACH_SST(ITER)
+#undef ITER
+
+            _LEN,
+    };
+    using enum Type;
+
+    Type type;
+    // Contains the token if type is TOKEN or the @rule name
+    Token token = Token(Token::NIL);
+    Opt<Box<Sst>> prefix{};
+    Content content{};
+
+    Sst(Type type) : type(type) {}
+
+    Sst(Token token) : type(TOKEN), token(token) {}
+
+    Sst(Content content) : type(LIST), content(content) {}
+
+    void repr(Io::Emit& e) const {
+        if (type == TOKEN) {
+            e("{}", token);
+            return;
+        }
+
+        e("({} ", type);
+        if (token)
+            e("token={}", token);
+        e.indent();
+
+        if (prefix) {
+            e.newline();
+            e("prefix=");
+            (*prefix)->repr(e);
+        }
+
+        if (content) {
+            e.newline();
+            e("content=[");
+            e.indentNewline();
+            for (auto& child : content) {
+                child.repr(e);
+                e.newline();
+            }
+            e.deindent();
+            e("]");
             e.newline();
         }
         e.deindent();
-        e("]");
-        e.newline();
+        e(")");
     }
-    e.deindent();
-    e(")");
-}
+
+    bool operator==(Type type) const {
+        return this->type == type;
+    }
+
+    bool operator==(Token::Type const& type) const {
+        return this->type == TOKEN and
+               token.type == type;
+    }
+
+    bool operator==(Token const& other) const {
+        return type == TOKEN and
+               token == other;
+    }
+};
 
 // MARK: Parser ----------------------------------------------------------------
+
+Sst consumeAtRule(Lexer& lex);
+export Content consumeDeclarationList(Lexer& lex, bool topLevel = true);
+Content consumeDeclarationBlock(Lexer& lex);
+Sst consumeComponentValue(Lexer& lex);
+Sst consumeBlock(Lexer& lex, Token::Type term);
+export Opt<Sst> consumeDeclaration(Lexer& lex);
+
+// https://www.w3.org/TR/css-syntax-3/#consume-qualified-rule
+Opt<Sst> consumeRule(Lexer& lex) {
+    Sst rule{Sst::RULE};
+    Content prefix;
+
+    while (true) {
+        switch (lex.peek().type) {
+        case Token::END_OF_FILE:
+            logError("unexpected end of file");
+            lex.next();
+            return rule;
+
+        case Token::LEFT_CURLY_BRACKET: {
+            rule.prefix = std::move(prefix);
+            rule.content = consumeDeclarationBlock(lex);
+            return rule;
+        }
+
+        default:
+            prefix.pushBack(consumeComponentValue(lex));
+            break;
+        }
+    }
+}
 
 // https://www.w3.org/TR/css-syntax-3/#consume-list-of-rules
 Content consumeRuleList(Lexer& lex, bool topLevel) {
@@ -113,33 +203,30 @@ Sst consumeAtRule(Lexer& lex) {
     }
 }
 
-// https://www.w3.org/TR/css-syntax-3/#consume-qualified-rule
-Opt<Sst> consumeRule(Lexer& lex) {
-    Sst rule{Sst::RULE};
-    Content prefix;
+export Content consumeDeclarationValue(Lexer& lex) {
+    Content value;
+    // 3. While the next input token is a <whitespace-token>, consume the next input token.
+    eatWhitespace(lex);
 
-    while (true) {
-        switch (lex.peek().type) {
-        case Token::END_OF_FILE:
-            logError("unexpected end of file");
-            lex.next();
-            return rule;
-
-        case Token::LEFT_CURLY_BRACKET: {
-            rule.prefix = std::move(prefix);
-            rule.content = consumeDeclarationBlock(lex);
-            return rule;
-        }
-
-        default:
-            prefix.pushBack(consumeComponentValue(lex));
-            break;
-        }
+    // 4. As long as the next input token is anything other than an <EOF-token>,
+    //    consume a component value and append it to the declaration’s value.
+    while ((lex.peek() != Token::END_OF_FILE and lex.peek() != Token::SEMICOLON and lex.peek() != Token::RIGHT_CURLY_BRACKET)) {
+        value.pushBack(consumeComponentValue(lex));
+        eatWhitespace(lex);
     }
+    return value;
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-style-block
 // https://www.w3.org/TR/css-syntax-3/#consume-list-of-declarations
+
+bool declarationAhead(Lexer lex) {
+    bool res = lex.peek() == Token::IDENT;
+    lex.next();
+    eatWhitespace(lex);
+    return res and lex.peek() == Token::COLON;
+}
+
 // NOSPEC: We unified the two functions into one for simplicity
 //         and added a check for the right curly bracket
 //         to avoid aving to parsing the input multiple times
@@ -202,34 +289,7 @@ Content consumeDeclarationBlock(Lexer& lex) {
     return res;
 }
 
-// https://www.w3.org/TR/css-syntax-3/#consume-declaration
-static void eatWhitespace(Lexer& lex) {
-    while (lex.peek() == Token::WHITESPACE and not lex.ended())
-        lex.next();
-}
-
-bool declarationAhead(Lexer lex) {
-    bool res = lex.peek() == Token::IDENT;
-    lex.next();
-    eatWhitespace(lex);
-    return res and lex.peek() == Token::COLON;
-}
-
-Content consumeDeclarationValue(Lexer& lex) {
-    Content value;
-    // 3. While the next input token is a <whitespace-token>, consume the next input token.
-    eatWhitespace(lex);
-
-    // 4. As long as the next input token is anything other than an <EOF-token>,
-    //    consume a component value and append it to the declaration’s value.
-    while ((lex.peek() != Token::END_OF_FILE and lex.peek() != Token::SEMICOLON and lex.peek() != Token::RIGHT_CURLY_BRACKET)) {
-        value.pushBack(consumeComponentValue(lex));
-        eatWhitespace(lex);
-    }
-    return value;
-}
-
-Opt<Sst> consumeDeclaration(Lexer& lex) {
+export Opt<Sst> consumeDeclaration(Lexer& lex) {
     Sst decl{Sst::DECL};
     decl.token = lex.next();
 
@@ -249,6 +309,32 @@ Opt<Sst> consumeDeclaration(Lexer& lex) {
     decl.content = consumeDeclarationValue(lex);
 
     return decl;
+}
+
+// https://www.w3.org/TR/css-syntax-3/#consume-function
+export Sst consumeFunc(Lexer& lex) {
+    Sst fn = Sst::FUNC;
+    fn.prefix = lex.next();
+
+    while (true) {
+        switch (lex.peek().type) {
+        case Token::COMMENT:
+            lex.next();
+            break;
+
+        case Token::END_OF_FILE:
+            logError("unexpected end of file");
+            return fn;
+
+        case Token::RIGHT_PARENTHESIS:
+            lex.next();
+            return fn;
+
+        default:
+            fn.content.pushBack(consumeComponentValue(lex));
+            break;
+        }
+    }
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-component-value
@@ -296,38 +382,14 @@ Sst consumeBlock(Lexer& lex, Token::Type term) {
     }
 }
 
-// https://www.w3.org/TR/css-syntax-3/#consume-function
-Sst consumeFunc(Lexer& lex) {
-    Sst fn = Sst::FUNC;
-    fn.prefix = lex.next();
-
-    while (true) {
-        switch (lex.peek().type) {
-        case Token::COMMENT:
-            lex.next();
-            break;
-
-        case Token::END_OF_FILE:
-            logError("unexpected end of file");
-            return fn;
-
-        case Token::RIGHT_PARENTHESIS:
-            lex.next();
-            return fn;
-
-        default:
-            fn.content.pushBack(consumeComponentValue(lex));
-            break;
-        }
-    }
-}
-
-// NOSPEC specialized parser for selectors,
+// NOSPEC: specialized parser for selectors,
 // it's not used in the normal workflow but for testing purposes and querySelectors
-Content consumeSelector(Lexer& lex) {
+export Content consumeSelector(Lexer& lex) {
     Content value;
 
-    while ((lex.peek() != Token::END_OF_FILE and lex.peek() != Token::SEMICOLON and lex.peek() != Token::RIGHT_CURLY_BRACKET)) {
+    while (lex.peek() != Token::END_OF_FILE and
+           lex.peek() != Token::SEMICOLON and
+           lex.peek() != Token::RIGHT_CURLY_BRACKET) {
         value.pushBack(consumeComponentValue(lex));
     }
     return value;

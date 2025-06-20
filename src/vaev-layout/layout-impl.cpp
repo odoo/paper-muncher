@@ -3,10 +3,10 @@ module;
 #include <karm-gfx/borders.h>
 #include <karm-image/picture.h>
 #include <karm-text/prose.h>
-#include <vaev-values/display.h>
-#include <vaev-values/sizing.h>
 
 module Vaev.Layout:layout;
+
+import Vaev.Values;
 
 import :block;
 import :flex;

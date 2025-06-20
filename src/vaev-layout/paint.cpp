@@ -7,10 +7,10 @@ module;
 #include <karm-scene/stack.h>
 #include <karm-scene/text.h>
 #include <karm-scene/transform.h>
-#include <vaev-style/computer.h>
 
 export module Vaev.Layout:paint;
 
+import Vaev.Style;
 import :base;
 import :values;
 

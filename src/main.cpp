@@ -7,12 +7,13 @@
 #include <karm-sys/entry.h>
 #include <karm-sys/file.h>
 #include <karm-sys/proc.h>
-#include <vaev-style/computer.h>
 
+import Karm.Http;
 import Vaev.Driver;
 import Vaev.Layout;
 import Vaev.Loader;
-import Karm.Http;
+import Vaev.Style;
+import Vaev.Values;
 
 namespace PaperMuncher {
 

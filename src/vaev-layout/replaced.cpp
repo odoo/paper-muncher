@@ -3,11 +3,10 @@ module;
 #include <karm-image/picture.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
-#include <vaev-values/length.h>
-#include <vaev-values/percent.h>
 
 export module Vaev.Layout:replaced;
 
+import Vaev.Values;
 import :base;
 import :layout;
 

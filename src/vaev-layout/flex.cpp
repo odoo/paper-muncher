@@ -2,13 +2,10 @@ module;
 
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
-#include <vaev-values/align.h>
-#include <vaev-values/flex.h>
-#include <vaev-values/insets.h>
-#include <vaev-values/sizing.h>
 
 export module Vaev.Layout:flex;
 
+import Vaev.Values;
 import :layout;
 import :values;
 

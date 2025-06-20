@@ -1,12 +1,10 @@
 module;
 
 #include <karm-text/prose.h>
-#include <vaev-values/display.h>
-#include <vaev-values/insets.h>
-#include <vaev-values/keywords.h>
 
 export module Vaev.Layout:inline_;
 
+import Vaev.Values;
 import :base;
 import :layout;
 

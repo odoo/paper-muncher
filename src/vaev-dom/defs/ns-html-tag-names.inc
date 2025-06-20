@@ -1,5 +1,3 @@
-TAG(__UNKNOWN__, __unknown__)
-
 TAG(A, a)
 TAG(ABBR, abbr)
 TAG(ACRONYM, acronym)

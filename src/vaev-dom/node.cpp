@@ -1,35 +1,68 @@
-#include "node.h"
+module;
 
-#include "document.h"
+#include <karm-gc/ptr.h>
+#include <karm-mime/url.h>
+
+export module Vaev.Dom:node;
+
+import :tree;
 
 namespace Vaev::Dom {
 
-// https://dom.spec.whatwg.org/#ref-for-dom-node-baseuri%E2%91%A0
-Mime::Url Node::baseURI() {
-    auto document = ownerDocument();
-    if (not document)
-        panic("node has no owner document");
-    return document->url();
-}
+export struct Document;
 
-// https://dom.spec.whatwg.org/#ref-for-dom-node-ownerdocument%E2%91%A0
-Gc::Ptr<Document> Node::ownerDocument() {
-    for (auto curr = parentNode(); curr; curr = curr->parentNode())
-        if (auto doc = curr->is<Document>())
-            return *doc;
-    return nullptr;
-}
+#define FOREACH_NODE_TYPE(TYPE)     \
+    TYPE(ELEMENT, 1)                \
+    TYPE(ATTRIBUTE, 2)              \
+    TYPE(TEXT, 3)                   \
+    TYPE(CDATA_SECTION, 4)          \
+    TYPE(PROCESSING_INSTRUCTION, 7) \
+    TYPE(COMMENT, 8)                \
+    TYPE(DOCUMENT, 9)               \
+    TYPE(DOCUMENT_TYPE, 10)         \
+    TYPE(DOCUMENT_FRAGMENT, 11)
 
-void Node::repr(Io::Emit& e) const {
-    e("({}", nodeType());
-    _repr(e);
-    if (hasChildren()) {
-        e.indentNewline();
-        for (auto child = firstChild(); child; child = child->nextSibling())
-            child->repr(e);
-        e.deindent();
+export enum struct NodeType {
+#define ITER(NAME, VALUE) NAME = VALUE,
+    FOREACH_NODE_TYPE(ITER)
+#undef ITER
+        _LEN,
+};
+
+// https://dom.spec.whatwg.org/#interface-node
+export struct Node : Tree<Node> {
+    virtual ~Node() = default;
+    virtual NodeType nodeType() const = 0;
+
+    template <typename T>
+    Gc::Ptr<T> is() {
+        if (nodeType() != T::TYPE)
+            return nullptr;
+        return {MOVE, static_cast<T*>(this)};
     }
-    e(")\n");
-}
+
+    template <typename T>
+    Gc::Ptr<T const> is() const {
+        if (nodeType() != T::TYPE)
+            return nullptr;
+        return {MOVE, static_cast<T const*>(this)};
+    }
+
+    Mime::Url baseURI();
+
+    Gc::Ptr<Document> ownerDocument();
+
+    virtual void _repr(Io::Emit&) const {}
+
+    void repr(Io::Emit& e) const;
+
+    bool operator==(Node const& other) const {
+        return this == &other;
+    }
+
+    auto operator<=>(Node const& other) const {
+        return this <=> &other;
+    }
+};
 
 } // namespace Vaev::Dom
