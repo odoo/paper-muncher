@@ -723,87 +723,30 @@ struct FlexFormatingContext : FormatingContext {
 
     Au _usedMainSize = {};
 
-    Vec<Au> _computeFlexFractions(Tree& t, Input input) {
-        Vec<Au> flexFraction;
+    // https://github.com/w3c/csswg-drafts/issues/8884
+    void _computeIntrinsicSizeWebCompat(Tree& t, bool isMin) {
+        _usedMainSize = 0_au;
         for (auto& flexItem : _items) {
-            Au contribution = flexItem.getMainSizeMinMaxContentContribution(
+            auto contrib = flexItem.getMainSizeMinMaxContentContribution(
                 t,
-                input.intrinsic == IntrinsicSize::MIN_CONTENT,
+                isMin,
                 availableSpace
             );
 
-            auto itemFlexFraction =
-                contribution -
-                flexItem.flexBaseSize -
-                flexItem.getMargin(FlexItem::BOTH_MAIN);
+            bool cantMove = flexItem.flexItemProps.grow == 0 and flexItem.flexBaseSize > contrib;
+            cantMove |= flexItem.flexItemProps.shrink == 0 and flexItem.flexBaseSize < contrib;
 
-            if (itemFlexFraction > 0_au)
-                itemFlexFraction = itemFlexFraction / max(1_au, Au{flexItem.flexItemProps.grow});
-
-            else if (itemFlexFraction < 0_au)
-                itemFlexFraction = itemFlexFraction / max(1_au, Au{flexItem.flexItemProps.shrink});
-
-            flexFraction.pushBack(itemFlexFraction);
+            if (cantMove and not flexItem.flexItemProps.basis.is<Keywords::Content>())
+                _usedMainSize += flexItem.flexBaseSize;
+            else
+                _usedMainSize += contrib;
         }
-        return flexFraction;
     }
 
     // https://www.w3.org/TR/css-flexbox-1/#intrinsic-main-sizes
-    void _computeIntrinsicSize(Tree& t, Vec<Au> flexFraction) {
-
-        usize globalIdx = 0;
-
-        Au largestFraction{Limits<Au>::MIN};
-
-        // TODO: gonna need this when fragmenting
-        for (usize i = 0; i < _items.len(); ++i) {
-            largestFraction = max(largestFraction, flexFraction[globalIdx]);
-            globalIdx++;
-        }
-
-        Au sumOfProducts{0};
-        for (auto& flexItem : _items) {
-            Au product{flexItem.flexBaseSize};
-
-            if (largestFraction < 0_au) {
-                product += largestFraction / flexItem.getScaledFlexShrinkFactor();
-            } else {
-                product += largestFraction * Au{flexItem.flexItemProps.grow};
-            }
-
-            auto [minPrefferedSize, maxPrefferedSize] = flexItem.getMinMaxPrefferedSize(
-                t,
-                fa.isRowOriented,
-                availableSpace
-            );
-
-            sumOfProducts += clamp(product, minPrefferedSize, maxPrefferedSize) +
-                             flexItem.getMargin(FlexItem::BOTH_MAIN);
-        }
-        _usedMainSize = max(_usedMainSize, sumOfProducts);
-    }
-
-    // https://github.com/w3c/csswg-drafts/issues/8884
-    void _computeIntrinsicSizeRowNoWrap(Tree& t) {
-        _usedMainSize = 0_au;
-        for (auto& flexItem : _items) {
-            auto minContrib = flexItem.getMainSizeMinMaxContentContribution(
-                t,
-                true,
-                availableSpace
-            );
-
-            bool cantMove = flexItem.flexItemProps.grow == 0 and flexItem.flexBaseSize > minContrib;
-            cantMove |= flexItem.flexItemProps.shrink == 0 and flexItem.flexBaseSize < minContrib;
-
-            if (cantMove and true)
-                _usedMainSize += flexItem.flexBaseSize;
-            else
-                _usedMainSize += minContrib;
-        }
-    }
-
-    void _computeIntrinsicSizeMinMultilineColumn(Tree& tree) {
+    void _computeIntrinsicSizeMinMultiline(Tree& tree) {
+        // However, for a multi-line container, it is simply the largest min-content contribution of all the flex items
+        // in the flex container.
         Au largestMinContentContrib = Limits<Au>::MIN;
         for (usize i = 0; i < _items.len(); ++i) {
             auto& flexItem = _items[i];
@@ -821,46 +764,44 @@ struct FlexFormatingContext : FormatingContext {
         _usedMainSize = max(_usedMainSize, largestMinContentContrib);
     }
 
+    void columnFlowIntrinsicSize() {
+        // NOTE: not CSS-compliant, but web-compatible. Its what chrome does.
+        _usedMainSize = 0_au;
+        for (auto& flexItem : _items) {
+            _usedMainSize += flexItem.hypoMainSize + flexItem.getMargin(FlexItem::BOTH_MAIN);
+        }
+    }
+
     void _determineMainSize(Tree& t, Input input, Box& box) {
         _usedMainSize =
             _flex.isRowOriented()
                 ? input.knownSize.x.unwrapOr(0_au)
                 : input.knownSize.y.unwrapOr(0_au);
 
-        if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
-            if (fa.isRowOriented) {
-                if (_flex.wrap == FlexWrap::NOWRAP)
-                    _computeIntrinsicSizeRowNoWrap(t);
-                else {
-                    // NOTE: would be _computeIntrinsicSize(t, _computeFlexFractions(t, input)) per specs, but found
-                    // different behaviour on Chrome
-                    _computeIntrinsicSizeRowNoWrap(t);
-                }
-            } else
-                _computeIntrinsicSize(t, _computeFlexFractions(t, input));
-        }
-        if (input.intrinsic == IntrinsicSize::MIN_CONTENT) {
-            if (fa.isRowOriented) {
-                if (_flex.wrap == FlexWrap::NOWRAP)
-                    _computeIntrinsicSizeRowNoWrap(t);
-                else
-                    _computeIntrinsicSizeMinMultilineColumn(t);
-            } else {
-                if (_flex.wrap == FlexWrap::NOWRAP)
-                    _computeIntrinsicSize(t, _computeFlexFractions(t, input));
-                else {
-                    _computeIntrinsicSize(t, _computeFlexFractions(t, input));
-                    // Chrome's behaviour is to put all items in the same line, even if it is multiline column; thus we
-                    // are not following specs and wont run _computeIntrinsicSizeMinMultilineColumn(t);
-                }
-            }
-        } else if (not fa.isRowOriented) {
+        // NOSPEC: After manually testing with different browsers and checking Chrome's source code, it was found this
+        // this non-spec behavior.
+        if (not fa.isRowOriented) {
             auto heightWrapSizing = box.style->sizing->height;
 
-            if (heightWrapSizing.is<Keywords::MaxContent>() or
+            if (input.intrinsic != IntrinsicSize::AUTO or
+                heightWrapSizing.is<Keywords::MaxContent>() or
                 heightWrapSizing.is<Keywords::MinContent>() or
-                heightWrapSizing.is<Keywords::Auto>())
-                _computeIntrinsicSize(t, _computeFlexFractions(t, input));
+                heightWrapSizing.is<Keywords::Auto>()) {
+                columnFlowIntrinsicSize();
+            }
+
+            return;
+        }
+
+        // https://drafts.csswg.org/css-flexbox-1/#intrinsic-main-sizes-ideal
+        // https://github.com/w3c/csswg-drafts/issues/8884
+        // The current state of the draft singles out the
+        // Multi-line min-content (https://drafts.csswg.org/css-flexbox-1/#intrinsic-main-sizes-multiline)
+        // while expecting other cases to be handled by the "web-compatible" algorithm
+        if (_flex.wrap == FlexWrap::WRAP and input.intrinsic == IntrinsicSize::MIN_CONTENT) {
+            _computeIntrinsicSizeMinMultiline(t);
+        } else if (input.intrinsic != IntrinsicSize::AUTO) {
+            _computeIntrinsicSizeWebCompat(t, input.intrinsic == IntrinsicSize::MIN_CONTENT);
         }
     }
 

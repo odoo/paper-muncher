@@ -2347,3 +2347,60 @@
         </div>
     </rendering>
 </test>
+
+<test name="flex: intrinsic sizes column flow" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                .green {
+                    background: green;
+                }
+
+                .main {
+                    display: flex;
+                    flex-wrap: nowrap;
+                    flex-direction: column;
+                    width: min-content;
+                    height: max-content;
+                }
+
+                .child {
+                    height: 50px;
+                    width: 50px;
+                }
+
+                section {
+                    width: 100px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+    <rendering>
+        <div style="width:50px;height:50px;background-color:green">
+        </div>
+    </rendering>
+    <rendering>
+        <div class="main">
+            <div class="child green" style="flex: 0.1 0.1 25px;"></div>
+            <div class="child green" style="flex: 1 1 25px;"></div>
+        </div>
+    </rendering>
+    <rendering>
+        <div class="main">
+            <div class="child green" style="flex: 0.1 0.1 40px;"></div>
+            <div class="child green" style="flex: 0 0 10px;"></div>
+        </div>
+    </rendering>
+</test>
