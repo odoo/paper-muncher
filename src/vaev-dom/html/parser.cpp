@@ -1286,7 +1286,19 @@ void HtmlParser::_handleInBody(HtmlToken& t) {
 
     // TODO: A start tag whose tag name is one of: "param", "source", "track"
 
-    // TODO: A start tag whose tag name is "hr"
+    // A start tag whose tag name is "hr"
+    else if (t.type == HtmlToken::START_TAG and t.name == "hr") {
+        // If the stack of open elements has a p element in button scope, then close a p element.
+        closePElementIfInButtonScope();
+        // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
+        _insertHtmlElement(t);
+        _openElements.popBack();
+        // Acknowledge the token's self-closing flag, if it is set.
+        _acknowledgeSelfClosingFlag(t);
+
+        // Set the frameset-ok flag to "not ok".
+        _framesetOk = false;
+    }
 
     // TODO: A start tag whose tag name is "image"
 
