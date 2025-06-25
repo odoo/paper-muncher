@@ -1062,6 +1062,7 @@ struct FlexFormatingContext : FormatingContext {
                 {
                     .knownSize = fa.extractMainAxisAndFillOptOther(i.usedSize),
                     .availableSpace = fa.extractMainAxisAndFillOther(i.usedSize, availableCrossSpace),
+                    .containingBlock = fa.extractMainAxisAndFillOther(i.usedSize, availableCrossSpace),
                 }
             );
         }
