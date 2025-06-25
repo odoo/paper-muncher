@@ -634,22 +634,32 @@ struct FlexFormatingContext : FormatingContext {
 
     // XX. MARK: Generate flex items ----------------------------------
     Vec<FlexItem> _items = {};
+    Vec<usize> _absPosChildren = {};
 
     void _generateFlexItems(Tree& tree, Box& box, Vec2Au containingBlock) {
         // NOTE: we assume all children are non-absolute positioned for fast mem allocation
         _items.ensure(box.children().len());
-        for (auto& c : box.children()) {
+        for (usize i = 0; i < box.children().len(); i++) {
+            auto& c = box.children()[i];
             if (impliesRemovingFromFlow(c.style->position))
-                continue;
-            _items.emplaceBack(tree, c, _flex.isRowOriented(), containingBlock);
+                _absPosChildren.pushBack(i);
+            else
+                _items.emplaceBack(tree, c, _flex.isRowOriented(), containingBlock);
         }
     }
 
     // XX. MARK: Layout aboslute positioned children ----------------------------------
     // https://www.w3.org/TR/css-flexbox-1/#abspos-items
 
-    void _layoutAbsolutePositionedChildren() {
-        // TODO
+    void _layoutAbsolutePositionedChildren(Tree& tree, Box& box, Input input) {
+        for (auto i : _absPosChildren) {
+            auto& c = box.children()[i];
+            layout(
+                tree,
+                c,
+                input
+            );
+        }
     }
 
     // 0. MARK: Empty flex items list ------------------------------------------------------
@@ -1476,7 +1486,7 @@ struct FlexFormatingContext : FormatingContext {
         _generateFlexItems(tree, box, input.containingBlock);
 
         // XX. Handle absolute positioned children
-        _layoutAbsolutePositionedChildren();
+        _layoutAbsolutePositionedChildren(tree, box, input);
 
         try$(returnIfNoFlexItems(input));
 
