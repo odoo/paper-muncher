@@ -5,6 +5,14 @@
 
 namespace Vaev::Style {
 
+void RuleLookup::build(Media media, StyleSheetList const& styleBook) {
+    for (auto const& sheet : styleBook.styleSheets) {
+        for (auto const& rule : sheet.rules) {
+            _buildRule(&rule, media);
+        }
+    }
+}
+
 void Computer::_evalRule(Rule const& rule, Gc::Ref<Dom::Element> el, MatchingRules& matches) {
     rule.visit(Visitor{
         [&](StyleRule const& r) {
@@ -158,14 +166,92 @@ Vec<Style::StyleProp> _considerPresentationAttributes(Gc::Ref<Dom::Element> el) 
     return styleProps;
 }
 
-// https://drafts.csswg.org/css-cascade/#cascade-origin
-Rc<SpecifiedValues> Computer::computeFor(SpecifiedValues const& parent, Gc::Ref<Dom::Element> el) {
+Vec<Cursor<Tuple<usize, Cursor<Rule>>>> Computer::partA(Gc::Ref<Dom::Element> el) {
+    Vec<Cursor<Tuple<usize, Cursor<Rule>>>> cursors;
+    for (auto const& class_ : el->classList._tokens) {
+        if (_ruleLookup.classRules.has(class_)) {
+            auto const& rules = _ruleLookup.classRules.get(class_);
+            cursors.pushBack({rules.buf(), rules.len()});
+        }
+    }
+
+    if (auto id = el->id()) {
+        if (_ruleLookup.iDRules.has(*id)) {
+            auto const& rules = _ruleLookup.iDRules.get(*id);
+            cursors.pushBack({rules.buf(), rules.len()});
+        }
+    }
+
+    if (auto tag = el->tagName.name()) {
+        if (_ruleLookup.typeRules.has(tag)) {
+            auto const& rules = _ruleLookup.typeRules.get(tag);
+            cursors.pushBack({rules.buf(), rules.len()});
+        }
+    }
+
+    for (auto const& [name, value] : el->attributes.iter()) {
+        if (auto attrName = name.name()) {
+            if (_ruleLookup.attrPresentRules.has(attrName)) {
+                auto const& rules = _ruleLookup.attrPresentRules.get(attrName);
+                cursors.pushBack({rules.buf(), rules.len()});
+            }
+            if (_ruleLookup.attrExactValueRules.has({attrName, value->value})) {
+                auto const& rules = _ruleLookup.attrExactValueRules.get({attrName, value->value});
+                cursors.pushBack({rules.buf(), rules.len()});
+            }
+        }
+    }
+
+    cursors.pushBack({_ruleLookup.nonLookupRules.buf(), _ruleLookup.nonLookupRules.len()});
+
+    return cursors;
+}
+
+Computer::MatchingRules Computer::partB(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>& cursors, Gc::Ref<Dom::Element> el) {
     MatchingRules matchingRules;
 
-    // Collect matching styles rules
-    for (auto const& sheet : _styleBook.styleSheets)
-        for (auto const& rule : sheet.rules)
-            _evalRule(rule, el, matchingRules);
+    while (cursors.len() > 0) {
+        usize bestCursorIdx = 0;
+        for (usize i = 1; i < cursors.len(); i++) {
+            if (cursors[i]->v0 < cursors[bestCursorIdx]->v0) {
+                bestCursorIdx = i;
+            }
+        }
+
+        auto& rule = *cursors[bestCursorIdx]->v1;
+        rule.visit(Visitor{
+            [&](StyleRule const& r) {
+                if (RuleLookup::lookupIsMatch(r.selector)) {
+                    matchingRules.pushBack({&r, spec(r.selector)});
+                } else {
+                    _evalRule(rule, el, matchingRules);
+                }
+            },
+            [&](auto const&) {
+                _evalRule(rule, el, matchingRules);
+            },
+        });
+
+        cursors[bestCursorIdx].next();
+        if (cursors[bestCursorIdx].ended()) {
+            std::swap(cursors[bestCursorIdx], last(cursors));
+            cursors.popBack();
+        }
+    }
+
+    return matchingRules;
+}
+
+Computer::MatchingRules Computer::_buildMatchingRules(Gc::Ref<Dom::Element> el) {
+    // Classic application for merging sorted lists, but we don't expect `cursors` to be big,
+    // so we use Vec instead of PriorityQueue.
+    Vec<Cursor<Tuple<usize, Cursor<Rule>>>> cursors = partA(el);
+    return partB(cursors, el);
+}
+
+// https://drafts.csswg.org/css-cascade/#cascade-origin
+Rc<SpecifiedValues> Computer::computeFor(SpecifiedValues const& parent, Gc::Ref<Dom::Element> el) {
+    auto matchingRules = _buildMatchingRules(el);
 
     // Get the style attribute if any
     auto styleAttr = el->style();

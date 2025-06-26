@@ -24,7 +24,7 @@ Gfx::Color _colorToGfx(Color color) {
 
 void _patchBackgrounds(MutSlice<Layout::Box>& children) {
     for (auto& child : children) {
-        if (child.origin->tagName == Html::BODY) {
+        if (child.origin and child.origin->tagName == Html::BODY) {
             child.style->backgrounds.cow().color = Gfx::ALPHA;
         }
     }

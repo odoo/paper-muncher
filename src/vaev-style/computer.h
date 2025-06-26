@@ -16,7 +16,19 @@ struct Computer {
 
     using MatchingRules = Vec<Tuple<Cursor<StyleRule>, Spec>>;
 
+    RuleLookup _ruleLookup{};
+
+    void build() {
+        _ruleLookup.build(_media, _styleBook);
+        loadFontFaces();
+    }
+
+    Vec<Cursor<Tuple<usize, Cursor<Rule>>>> partA(Gc::Ref<Dom::Element> el);
+    MatchingRules partB(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>& cursors, Gc::Ref<Dom::Element> el);
+
     // MARK: Cascading ---------------------------------------------------------
+
+    MatchingRules _buildMatchingRules(Gc::Ref<Dom::Element> el);
 
     void _evalRule(Rule const& rule, Gc::Ref<Dom::Element> el, MatchingRules& matches);
 
