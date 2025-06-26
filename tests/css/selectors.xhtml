@@ -1,0 +1,103 @@
+<test name="selectors-matching">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                .a {
+                    width: 100px;
+                }
+
+                .b {
+                    height: 100px;
+                }
+
+                #green {
+                    background-color: green;
+                }
+            </style>
+        </head>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background-color: green;"></div>
+    </rendering>
+
+    <rendering>
+        <div class="a b" id="green"></div>
+    </rendering>
+
+    <rendering>
+        <style>
+            div {
+                background-color: green;
+            }
+
+            div.whatever {
+                background-color: red;
+            }
+        </style>
+        <div class="a b"></div>
+    </rendering>
+
+    <rendering>
+        <style>
+            div,
+            .a,
+            .c {
+                background-color: green;
+            }
+        </style>
+        <div class="a b"></div>
+    </rendering>
+
+    <rendering skip="true">
+        <style>
+            div.a.b:is(.a) {
+                background-color: green;
+            }
+        </style>
+        <div class="a b"></div>
+    </rendering>
+
+    <rendering>
+        <style>
+            * .a {
+                background-color: green;
+            }
+        </style>
+        <div class="a b"></div>
+    </rendering>
+
+    <rendering>
+        <style>
+            * .a.b {
+                background-color: green;
+            }
+        </style>
+        <div class="a b"></div>
+    </rendering>
+
+    <rendering>
+        <style>
+            * div[href] {
+                background-color: green;
+            }
+        </style>
+        <div class="a b" href="oi"></div>
+    </rendering>
+
+
+</test>

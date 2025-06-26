@@ -8,37 +8,21 @@ namespace Vaev::Style::Tests {
 test$("test-specificity-selector-list") {
     Selector selector = try$(Selector::parse(".a, .b#x, .c.d.e.f"));
 
-    auto makeRule = [&]() -> Rule {
-        StyleRule rule{
-            .selector = selector,
-            .props = {}
-        };
-        return rule;
+    StyleRule rule{
+        .selector = selector,
+        .props = {}
     };
-
-    Rule rule = makeRule();
-
-    Text::FontBook fontBook;
-    StyleSheetList stylesheetList;
-    Media media;
-    Computer computer{media, stylesheetList, fontBook};
 
     {
         Dom::Element elZeroMatches{Html::DIV_TAG};
 
-        Vec<Tuple<Cursor<StyleRule>, Spec>> matchingRules;
-        computer._evalRule(rule, elZeroMatches, matchingRules);
-
-        expect$(matchingRules.len() == 0);
+        expect$(rule.match(elZeroMatches) == NONE);
     }
     {
         Dom::Element elOneMatch{Html::DIV_TAG};
         elOneMatch.classList.add("a");
 
-        Vec<Tuple<Cursor<StyleRule>, Spec>> matchingRules;
-        computer._evalRule(rule, elOneMatch, matchingRules);
-
-        expect$(matchingRules[0].v1 == Spec(0, 1, 0));
+        expect$(rule.match(elOneMatch) == Spec(0, 1, 0));
     }
     {
         Dom::Element elOneMatch{Html::DIV_TAG};
@@ -47,20 +31,14 @@ test$("test-specificity-selector-list") {
         elOneMatch.classList.add("e");
         elOneMatch.classList.add("f");
 
-        Vec<Tuple<Cursor<StyleRule>, Spec>> matchingRules;
-        computer._evalRule(rule, elOneMatch, matchingRules);
-
-        expect$(matchingRules[0].v1 == Spec(0, 4, 0));
+        expect$(rule.match(elOneMatch) == Spec(0, 4, 0));
     }
     {
         Dom::Element elAnotherMatch{Html::DIV_TAG};
         elAnotherMatch.classList.add("b");
         elAnotherMatch.setAttribute(Html::ID_ATTR, "x"s);
 
-        Vec<Tuple<Cursor<StyleRule>, Spec>> matchingRules;
-        computer._evalRule(rule, elAnotherMatch, matchingRules);
-
-        expect$(matchingRules[0].v1 == Spec(1, 1, 0));
+        expect$(rule.match(elAnotherMatch) == Spec(1, 1, 0));
     }
     {
         Dom::Element twoMatches{Html::DIV_TAG};
@@ -69,10 +47,7 @@ test$("test-specificity-selector-list") {
         twoMatches.setAttribute(Html::ID_ATTR, "x"s);
         twoMatches.classList.add("a");
 
-        Vec<Tuple<Cursor<StyleRule>, Spec>> matchingRules;
-        computer._evalRule(rule, twoMatches, matchingRules);
-
-        expect$(matchingRules[0].v1 == Spec(1, 1, 0));
+        expect$(rule.match(twoMatches) == Spec(1, 1, 0));
     }
 
     return Ok();
