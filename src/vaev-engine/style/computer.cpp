@@ -18,27 +18,9 @@ export struct Computer {
     Media _media;
     StyleSheetList const& _styleBook;
     Text::FontBook& fontBook;
-
-    using MatchingRules = Vec<Tuple<Cursor<StyleRule>, Spec>>;
+    StyleRuleLookup _styleRuleLookup{};
 
     // MARK: Cascading ---------------------------------------------------------
-
-    void _evalRule(Rule const& rule, Gc::Ref<Dom::Element> el, MatchingRules& matches) {
-        rule.visit(Visitor{
-            [&](StyleRule const& r) {
-                if (auto specificity = r.match(el))
-                    matches.pushBack({&r, specificity.unwrap()});
-            },
-            [&](MediaRule const& r) {
-                if (r.match(_media))
-                    for (auto const& subRule : r.rules)
-                        _evalRule(subRule, el, matches);
-            },
-            [&](auto const&) {
-                // Ignore other rule types
-            },
-        });
-    }
 
     void _evalRule(Rule const& rule, Page const& page, PageSpecifiedValues& c) {
         rule.visit(Visitor{
@@ -180,12 +162,7 @@ export struct Computer {
 
     // https://drafts.csswg.org/css-cascade/#cascade-origin
     Rc<SpecifiedValues> computeFor(SpecifiedValues const& parent, Gc::Ref<Dom::Element> el) {
-        MatchingRules matchingRules;
-
-        // Collect matching styles rules
-        for (auto const& sheet : _styleBook.styleSheets)
-            for (auto const& rule : sheet.rules)
-                _evalRule(rule, el, matchingRules);
+        MatchingRules matchingRules = _styleRuleLookup.buildMatchingRules(el);
 
         // Get the style attribute if any
         auto styleAttr = el->style();
@@ -256,7 +233,33 @@ export struct Computer {
         }
     }
 
-    void loadFontFaces() {
+    void build() {
+        for (auto const& sheet : _styleBook.styleSheets) {
+            for (auto const& rule : sheet.rules) {
+                _addRuleToLookup(&rule);
+            }
+        }
+
+        _loadFontFaces();
+    }
+
+    void _addRuleToLookup(Cursor<Rule> rule) {
+        rule->visit(Visitor{
+            [&](StyleRule const& r) {
+                _styleRuleLookup.add(r);
+            },
+            [&](MediaRule const& r) {
+                if (r.match(_media))
+                    for (auto const& subRule : r.rules)
+                        _addRuleToLookup(&subRule);
+            },
+            [&](auto const&) {
+                // Ignore other rule types
+            },
+        });
+    }
+
+    void _loadFontFaces() {
         for (auto const& sheet : _styleBook.styleSheets) {
 
             Vec<FontFace> fontFaces;
