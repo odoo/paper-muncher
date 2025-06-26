@@ -82,6 +82,9 @@ struct RuleLookup {
     Map<String, Vec<RuleWithId>> attrPresentRules;
     Map<Pair<String>, Vec<RuleWithId>> attrExactValueRules;
 
+    // this rule ID can only be used if we find it at least minCount times
+    Map<usize, usize> ruleIdToNeededCount;
+
     Vec<RuleWithId> nonLookupRules;
     usize _ruleCount = 0;
 
@@ -92,6 +95,9 @@ struct RuleLookup {
     }
 
     void _buildRuleFromSelector(Cursor<Rule> rule, usize _ruleCount, Selector const& selector) {
+        // Recursive level here should not be deeper than 2
+        // If it is 1, it should be to a lookupable selector
+        // If it is 2, it should be infix/nfix and then lookupable selector
         selector.visit(Visitor{
             [&](TypeSelector const& s) {
                 _initDictIfEmpty(s.elementName, typeRules);
@@ -117,7 +123,53 @@ struct RuleLookup {
                 }
             },
             [&](Infix const& s) {
-                _buildRuleFromSelector(rule, _ruleCount, s.rhs);
+                if (lookupIsMatch(s.rhs) or s.rhs->is<Nfix>()) {
+                    _buildRuleFromSelector(rule, _ruleCount, s.rhs);
+                } else {
+                    nonLookupRules.pushBack({_ruleCount, rule});
+                }
+            },
+            [&](Nfix const& s) {
+                if (s.type == Nfix::AND) {
+                    // the lookups are a condition to match the rule
+                    // if there are no lookups, we add the rule to the fallback list
+                    // if there are X lookups and we get all the X instances for an element, we are "allowed" to eval the rule
+                    // (maybe we can strip the lookupble selectors from this infix so they are not evaluated again. if
+                    // thats not possible, we should build infixes putting lookupable selectors first since these are cheaper to evaluate.
+                    // actually, putting them first is 100% agnostic of this lookup, its just benefitting from short circuit evaluation)
+                    usize conditionsCount = 0;
+                    for (auto const& inner : s.inners) {
+                        if (lookupIsMatch(inner)) {
+                            conditionsCount++;
+                            _buildRuleFromSelector(rule, _ruleCount, inner);
+                        }
+                    }
+
+                    if (conditionsCount == 0) {
+                        nonLookupRules.pushBack({_ruleCount, rule});
+                    } else {
+                        ruleIdToNeededCount.put(_ruleCount, conditionsCount);
+                    }
+                } else if (s.type == Nfix::OR) {
+                    // if an element has 2 or more occourence of this rule in its list, we can assume
+                    // the rule as matched, since at least one of the occourences is due to a lookupable selector,
+                    // which is guaranteed to match
+                    // it also makes sense to order the inners of the infix by putting lookupable selectors first, since
+                    // these should be cheaper to evaluate
+                    bool hasNonLookupable = false;
+                    for (auto const& inner : s.inners) {
+                        if (lookupIsMatch(inner)) {
+                            _buildRuleFromSelector(rule, _ruleCount, inner);
+                        } else {
+                            hasNonLookupable = true;
+                        }
+
+                        if (hasNonLookupable)
+                            nonLookupRules.pushBack({_ruleCount, rule});
+                    }
+                } else {
+                    nonLookupRules.pushBack({_ruleCount, rule});
+                }
             },
             [&](auto const&) {
                 nonLookupRules.pushBack({_ruleCount, rule});
@@ -158,6 +210,48 @@ struct RuleLookup {
             return false;
 
         return lookupIsMatch(selector.unwrap<AttributeSelector>());
+    }
+
+    Vec<Cursor<RuleWithId>> collectCursors(Gc::Ref<Dom::Element> el) {
+        Vec<Cursor<RuleWithId>> cursors;
+
+        for (auto const& class_ : el->classList._tokens) {
+            if (classRules.has(class_)) {
+                auto const& rules = classRules.get(class_);
+                cursors.pushBack({rules.buf(), rules.len()});
+            }
+        }
+
+        if (auto id = el->id()) {
+            if (iDRules.has(*id)) {
+                auto const& rules = iDRules.get(*id);
+                cursors.pushBack({rules.buf(), rules.len()});
+            }
+        }
+
+        if (auto tag = el->tagName.name()) {
+            if (typeRules.has(tag)) {
+                auto const& rules = typeRules.get(tag);
+                cursors.pushBack({rules.buf(), rules.len()});
+            }
+        }
+
+        for (auto const& [name, value] : el->attributes.iter()) {
+            if (auto attrName = name.name()) {
+                if (attrPresentRules.has(attrName)) {
+                    auto const& rules = attrPresentRules.get(attrName);
+                    cursors.pushBack({rules.buf(), rules.len()});
+                }
+                if (attrExactValueRules.has({attrName, value->value})) {
+                    auto const& rules = attrExactValueRules.get({attrName, value->value});
+                    cursors.pushBack({rules.buf(), rules.len()});
+                }
+            }
+        }
+
+        cursors.pushBack({nonLookupRules.buf(), nonLookupRules.len()});
+
+        return cursors;
     }
 };
 

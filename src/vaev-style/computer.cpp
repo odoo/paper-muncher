@@ -1,3 +1,4 @@
+#include <karm-sys/chan.h>
 #include <vaev-style/decls.h>
 
 #include "computed.h"
@@ -166,49 +167,14 @@ Vec<Style::StyleProp> _considerPresentationAttributes(Gc::Ref<Dom::Element> el) 
     return styleProps;
 }
 
-Vec<Cursor<Tuple<usize, Cursor<Rule>>>> Computer::partA(Gc::Ref<Dom::Element> el) {
-    Vec<Cursor<Tuple<usize, Cursor<Rule>>>> cursors;
-    for (auto const& class_ : el->classList._tokens) {
-        if (_ruleLookup.classRules.has(class_)) {
-            auto const& rules = _ruleLookup.classRules.get(class_);
-            cursors.pushBack({rules.buf(), rules.len()});
-        }
-    }
-
-    if (auto id = el->id()) {
-        if (_ruleLookup.iDRules.has(*id)) {
-            auto const& rules = _ruleLookup.iDRules.get(*id);
-            cursors.pushBack({rules.buf(), rules.len()});
-        }
-    }
-
-    if (auto tag = el->tagName.name()) {
-        if (_ruleLookup.typeRules.has(tag)) {
-            auto const& rules = _ruleLookup.typeRules.get(tag);
-            cursors.pushBack({rules.buf(), rules.len()});
-        }
-    }
-
-    for (auto const& [name, value] : el->attributes.iter()) {
-        if (auto attrName = name.name()) {
-            if (_ruleLookup.attrPresentRules.has(attrName)) {
-                auto const& rules = _ruleLookup.attrPresentRules.get(attrName);
-                cursors.pushBack({rules.buf(), rules.len()});
-            }
-            if (_ruleLookup.attrExactValueRules.has({attrName, value->value})) {
-                auto const& rules = _ruleLookup.attrExactValueRules.get({attrName, value->value});
-                cursors.pushBack({rules.buf(), rules.len()});
-            }
-        }
-    }
-
-    cursors.pushBack({_ruleLookup.nonLookupRules.buf(), _ruleLookup.nonLookupRules.len()});
-
-    return cursors;
-}
-
-Computer::MatchingRules Computer::partB(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>& cursors, Gc::Ref<Dom::Element> el) {
+Computer::MatchingRules Computer::partB(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>&& cursors, Gc::Ref<Dom::Element> el) {
     MatchingRules matchingRules;
+
+    // Classic application for merging sorted lists, but we don't expect `cursors` to be big,
+    // so we use Vec instead of PriorityQueue.
+
+    usize lastRuleId = 0;
+    usize countMatchesWithCurrentRule = 0;
 
     while (cursors.len() > 0) {
         usize bestCursorIdx = 0;
@@ -223,6 +189,35 @@ Computer::MatchingRules Computer::partB(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>&
             [&](StyleRule const& r) {
                 if (RuleLookup::lookupIsMatch(r.selector)) {
                     matchingRules.pushBack({&r, spec(r.selector)});
+                } else if (auto nfix = r.selector.is<Nfix>()) {
+                    if (nfix->type == Nfix::AND) {
+                        if (lastRuleId != cursors[bestCursorIdx]->v0)
+                            countMatchesWithCurrentRule = 0;
+                        countMatchesWithCurrentRule++;
+
+                        auto& neededCount = _ruleLookup.ruleIdToNeededCount.get(cursors[bestCursorIdx]->v0);
+                        if (countMatchesWithCurrentRule == neededCount) {
+                            if (nfix->inners.len() == countMatchesWithCurrentRule) {
+                                matchingRules.pushBack({&r, spec(r.selector)});
+                            } else {
+                                _evalRule(rule, el, matchingRules);
+                            }
+                        }
+                    } else if (nfix->type == Nfix::OR) {
+                        // we dont even need to call eval rule here if we have more than one occourence of this rule in
+                        // the list
+                        // this can be solved with more code complexity but its a big deal since this call to evalRule
+                        // can be expensive
+                        if (countMatchesWithCurrentRule)
+                            return;
+
+                        usize sizeBefore = matchingRules.len();
+                        _evalRule(rule, el, matchingRules);
+                        if (matchingRules.len() > sizeBefore)
+                            countMatchesWithCurrentRule = 1;
+                    } else {
+                        _evalRule(rule, el, matchingRules);
+                    }
                 } else {
                     _evalRule(rule, el, matchingRules);
                 }
@@ -231,6 +226,8 @@ Computer::MatchingRules Computer::partB(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>&
                 _evalRule(rule, el, matchingRules);
             },
         });
+
+        lastRuleId = cursors[bestCursorIdx]->v0;
 
         cursors[bestCursorIdx].next();
         if (cursors[bestCursorIdx].ended()) {
@@ -243,10 +240,7 @@ Computer::MatchingRules Computer::partB(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>&
 }
 
 Computer::MatchingRules Computer::_buildMatchingRules(Gc::Ref<Dom::Element> el) {
-    // Classic application for merging sorted lists, but we don't expect `cursors` to be big,
-    // so we use Vec instead of PriorityQueue.
-    Vec<Cursor<Tuple<usize, Cursor<Rule>>>> cursors = partA(el);
-    return partB(cursors, el);
+    return partB(_ruleLookup.collectCursors(el), el);
 }
 
 // https://drafts.csswg.org/css-cascade/#cascade-origin
