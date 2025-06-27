@@ -23,7 +23,7 @@ struct Computer {
         loadFontFaces();
     }
 
-    MatchingRules partB(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>&& cursors, Gc::Ref<Dom::Element> el);
+    MatchingRules mergeMatchedRules(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>&& cursors, Gc::Ref<Dom::Element> el);
 
     // MARK: Cascading ---------------------------------------------------------
 

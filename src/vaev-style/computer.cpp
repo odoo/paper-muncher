@@ -167,14 +167,33 @@ Vec<Style::StyleProp> _considerPresentationAttributes(Gc::Ref<Dom::Element> el) 
     return styleProps;
 }
 
-Computer::MatchingRules Computer::partB(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>&& cursors, Gc::Ref<Dom::Element> el) {
+Computer::MatchingRules Computer::mergeMatchedRules(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>&& cursors, Gc::Ref<Dom::Element> el) {
     MatchingRules matchingRules;
 
     // Classic application for merging sorted lists, but we don't expect `cursors` to be big,
     // so we use Vec instead of PriorityQueue.
 
-    usize lastRuleId = 0;
     usize countMatchesWithCurrentRule = 0;
+    usize lastRuleId = 0;
+    Cursor<Rule> lastStyleRule = nullptr;
+
+    auto maybeFinalizeNfixOrRule = [&]() {
+        if (not lastStyleRule)
+            return;
+
+        auto const& asStyleRule = lastStyleRule->is<StyleRule>();
+
+        if (auto nfix = asStyleRule->selector.is<Nfix>()) {
+            if (nfix->type != Nfix::OR)
+                return;
+
+            if (countMatchesWithCurrentRule == 1) {
+                _evalRule(*lastStyleRule, el, matchingRules);
+            } else {
+                matchingRules.pushBack({asStyleRule, spec(asStyleRule->selector)});
+            }
+        }
+    };
 
     while (cursors.len() > 0) {
         usize bestCursorIdx = 0;
@@ -185,47 +204,43 @@ Computer::MatchingRules Computer::partB(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>&
         }
 
         auto& rule = *cursors[bestCursorIdx]->v1;
-        rule.visit(Visitor{
-            [&](StyleRule const& r) {
-                if (RuleLookup::lookupIsMatch(r.selector)) {
-                    matchingRules.pushBack({&r, spec(r.selector)});
-                } else if (auto nfix = r.selector.is<Nfix>()) {
-                    if (nfix->type == Nfix::AND) {
-                        if (lastRuleId != cursors[bestCursorIdx]->v0)
-                            countMatchesWithCurrentRule = 0;
-                        countMatchesWithCurrentRule++;
 
-                        auto& neededCount = _ruleLookup.ruleIdToNeededCount.get(cursors[bestCursorIdx]->v0);
-                        if (countMatchesWithCurrentRule == neededCount) {
-                            if (nfix->inners.len() == countMatchesWithCurrentRule) {
-                                matchingRules.pushBack({&r, spec(r.selector)});
-                            } else {
-                                _evalRule(rule, el, matchingRules);
-                            }
+        // TODO: not sure this is better for performance, TBD
+        if (lastRuleId != cursors[bestCursorIdx]->v0) {
+            maybeFinalizeNfixOrRule();
+            countMatchesWithCurrentRule = 1;
+        } else {
+            countMatchesWithCurrentRule++;
+        }
+
+        if (auto styleRule = rule.is<StyleRule>()) {
+            if (RuleLookup::lookupIsMatch(styleRule->selector)) {
+                matchingRules.pushBack({styleRule, spec(styleRule->selector)});
+            } else if (auto nfix = styleRule->selector.is<Nfix>()) {
+                if (nfix->type == Nfix::AND) {
+                    auto& neededCount = _ruleLookup.ruleIdToNeededCount.get(cursors[bestCursorIdx]->v0);
+                    if (countMatchesWithCurrentRule == neededCount) {
+                        if (nfix->inners.len() == countMatchesWithCurrentRule) {
+                            matchingRules.pushBack({styleRule, spec(styleRule->selector)});
+                        } else {
+                            _evalRule(rule, el, matchingRules);
                         }
-                    } else if (nfix->type == Nfix::OR) {
-                        // we dont even need to call eval rule here if we have more than one occourence of this rule in
-                        // the list
-                        // this can be solved with more code complexity but its a big deal since this call to evalRule
-                        // can be expensive
-                        if (countMatchesWithCurrentRule)
-                            return;
-
-                        usize sizeBefore = matchingRules.len();
-                        _evalRule(rule, el, matchingRules);
-                        if (matchingRules.len() > sizeBefore)
-                            countMatchesWithCurrentRule = 1;
-                    } else {
-                        _evalRule(rule, el, matchingRules);
                     }
+                } else if (nfix->type == Nfix::OR) {
+                    // Do nothing.
+                    // Deffering the evaluation to after we know how many times this rule was matched.
                 } else {
                     _evalRule(rule, el, matchingRules);
                 }
-            },
-            [&](auto const&) {
+            } else {
                 _evalRule(rule, el, matchingRules);
-            },
-        });
+            }
+
+            lastStyleRule = &rule;
+        } else {
+            lastStyleRule = nullptr;
+            _evalRule(rule, el, matchingRules);
+        }
 
         lastRuleId = cursors[bestCursorIdx]->v0;
 
@@ -236,11 +251,13 @@ Computer::MatchingRules Computer::partB(Vec<Cursor<Tuple<usize, Cursor<Rule>>>>&
         }
     }
 
+    maybeFinalizeNfixOrRule();
+
     return matchingRules;
 }
 
 Computer::MatchingRules Computer::_buildMatchingRules(Gc::Ref<Dom::Element> el) {
-    return partB(_ruleLookup.collectCursors(el), el);
+    return mergeMatchedRules(_ruleLookup.collectMatchedRulesCursors(el), el);
 }
 
 // https://drafts.csswg.org/css-cascade/#cascade-origin
