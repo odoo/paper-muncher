@@ -1,13 +1,11 @@
 module;
 
-#include <vaev-dom/comment.h>
-#include <vaev-dom/document-type.h>
-#include <vaev-dom/document.h>
-#include <vaev-dom/element.h>
-#include <vaev-style/props.h>
+#include <karm-gc/ptr.h>
+#include <karm-gfx/colors.h>
 
 export module Vaev.Browser:inspect;
 
+import Vaev.Engine;
 import Karm.Kira;
 import Karm.Ui;
 import Mdi;
@@ -76,14 +74,14 @@ auto idented(isize ident) {
 Ui::Child elementStartTag(Dom::Element const& el, bool expanded) {
     return Ui::text(
         Ui::TextStyles::codeSmall().withColor(Ui::ACCENT500),
-        expanded ? "<{}>" : "<{}> … </{}>", el.tagName, el.tagName
+        expanded ? "<{}>" : "<{}> … </{}>", el.qualifiedName, el.qualifiedName
     );
 }
 
 Ui::Child elementEndTag(Dom::Element const& el) {
     return Ui::text(
         Ui::TextStyles::codeSmall().withColor(Ui::ACCENT500),
-        "</{}>", el.tagName
+        "</{}>", el.qualifiedName
     );
 }
 

@@ -6,7 +6,7 @@
     "requires": [
         "karm-kira",
         "vaev-view",
-        "vaev-loader",
+        "vaev-engine",
         "fonts-all"
     ]
 }

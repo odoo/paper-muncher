@@ -4,7 +4,7 @@
 
 import Karm.Ui;
 import Vaev.Browser;
-import Vaev.Loader;
+import Vaev.Engine;
 import Karm.Http;
 
 Async::Task<> entryPointAsync(Sys::Context& ctx) {

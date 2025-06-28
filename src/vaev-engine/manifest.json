@@ -1,0 +1,31 @@
+{
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+    "id": "vaev-engine",
+    "type": "lib",
+    "description": "The vaev web content engine",
+    "subdirs": [
+        "css",
+        "dom",
+        "driver",
+        "html",
+        "layout",
+        "loader",
+        "style",
+        "values",
+        "xml"
+    ],
+    "requires": [
+        "karm-base",
+        "karm-gc",
+        "karm-gfx",
+        "karm-http",
+        "karm-image",
+        "karm-io",
+        "karm-logger",
+        "karm-math",
+        "karm-mime",
+        "karm-print",
+        "karm-scene",
+        "karm-text"
+    ]
+}
