@@ -10,8 +10,7 @@
         "karm-cli",
         "karm-sys",
         "karm-image",
-        "vaev-driver",
-        "vaev-loader",
+        "vaev-engine",
         "fonts-all"
     ],
     "provides": [
