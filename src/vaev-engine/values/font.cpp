@@ -285,6 +285,11 @@ export struct FontSize {
             e("{}", _named);
         }
     }
+
+    bool operator==(FontSize const& other) const {
+        return _named == other._named and
+               (_named != LENGTH or _value == other._value);
+    }
 };
 
 export template <>
@@ -440,6 +445,14 @@ export struct FontProps {
         e(" style={}", style);
         e(" size={}", size);
         e(")");
+    }
+
+    bool operator==(FontProps const& other) const {
+        return families == other.families and
+               weight == other.weight and
+               width == other.width and
+               style == other.style and
+               size == other.size;
     }
 };
 

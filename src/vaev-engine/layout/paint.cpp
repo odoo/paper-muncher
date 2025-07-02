@@ -6,7 +6,7 @@ module;
 #include <karm-scene/image.h>
 #include <karm-scene/opacity.h>
 #include <karm-scene/stack.h>
-#include <karm-scene/text.h>
+#include <karm-scene/text-run.h>
 #include <karm-scene/transform.h>
 
 export module Vaev.Engine:layout.paint;
@@ -186,8 +186,21 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
 
     _paintFragBordersAndBackgrounds(frag, stack);
 
-    if (auto ic = frag.box->content.is<InlineBox>()) {
-        stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
+    if (auto proseFrag = frag.content.is<ProseFrag>()) {
+        for (auto const& line : proseFrag->lines) {
+            for (auto const& textRunFrag : line) {
+                stack.add(
+                    makeRc<Scene::TextRun>(
+                        textRunFrag.position.cast<f64>(),
+                        textRunFrag.run.font,
+                        textRunFrag.glyphs(),
+                        textRunFrag.run.paintedSegment
+                    )
+                );
+                Karm::logDebug("adicionei o doido em {} com size {}", frag.metrics.position.cast<f64>(), frag.metrics.borderSize);
+            }
+        }
+        // stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
     } else if (auto image = frag.box->content.is<Karm::Image::Picture>()) {
         stack.add(makeRc<Scene::Image>(frag.metrics.borderBox().cast<f64>(), *image));
     } else if (auto svgRoot = frag.content.is<SVGRootFrag>()) {
