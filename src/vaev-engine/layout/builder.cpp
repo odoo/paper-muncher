@@ -814,6 +814,10 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
     if (auto el = node->is<Dom::Element>()) {
         auto childStyle = el->specifiedValues();
         auto display = childStyle->display;
+        if (childStyle->position.is<RunningPosition>()) {
+            yap("runninGOUUU {} {}", node, childStyle->position);
+            // return;
+        }
 
         if (display.type() == Display::Type::BOX) {
             _buildChildBoxDisplay(bc, *el, display);
@@ -852,7 +856,9 @@ export Box build(Gc::Ref<Dom::Document> doc) {
     };
 }
 
-Style::RunningPositionInfo matchElementContent(Vec<Style::RunningPositionInfo> list, ElementContent::Target target = ElementContent::UNDEFINED, usize currentPage = 0) {
+RunningPositionInfo matchElementContent(Vec<RunningPositionInfo> list, ElementContent::Target target = ElementContent::UNDEFINED, usize currentPage = 0) {
+    yap("matching {}", list[0]);
+
     switch (target) {
     case ElementContent::UNDEFINED:
         return list[0];
@@ -865,36 +871,33 @@ Style::RunningPositionInfo matchElementContent(Vec<Style::RunningPositionInfo> l
     }
 }
 
-export Box buildForPseudoElement(Text::FontBook& fontBook, Rc<Style::SpecifiedStyle> style) {
-    auto fontFace = _lookupFontface(fontBook, *style);
-
-    // FIXME: We should pass this around from the top in order to properly resolve rems
-    Resolver resolver{
-        .rootFont = Text::Font{fontFace, 16},
-        .boxFont = Text::Font{fontFace, 16},
-    };
-
-    auto proseStyle = _proseStyleFomStyle(*style, fontFace);
-export Box buildForPseudoElement(Dom::PseudoElement& el) {
+export Box buildForPseudoElement(Dom::PseudoElement& el, usize& currentPage, Map<String, Vec<RunningPositionInfo>>& runningPos) {
     auto proseStyle = _proseStyleFomStyle(*el.specifiedValues(), el.computedValues()->fontFace);
 
-    auto prose = makeRc<Text::Prose>(proseStyle);
-    if (el.specifiedValues()->content) {
-        if (el.specifiedValues()->content->content.is<String>()) {
-            yap("building content {}", el.specifiedValues()->content->content.unwrap<String>());
+    if (el.specifiedValues()->content.is<String>()) {
+        auto prose = makeRc<Text::Prose>(proseStyle);
 
-            prose->append(el.specifiedValues()->content.str());
-            return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};
-        } else if (el.specifiedValues()->content.is<ElementContent>()) {
-            auto elt = style->content.unwrap<ElementContent>();
-            auto id = elt.customIdent;
-            yap("elementContentFound {}", style->content.unwrap<ElementContent>());
-            if (style->runningPositions->has(id)) {
-                prose->append(matchElementContent(style->runningPositions->take(id), elt.target).structure);
+        prose->append(el.specifiedValues()->content.unwrap<String>().str());
+        return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};
+    } else if (el.specifiedValues()->content.is<ElementContent>()) {
+        auto elt = el.specifiedValues()->content.unwrap<ElementContent>();
+        auto id = elt.customIdent;
+        if (runningPos.has(id)) {
+            auto box = matchElementContent(runningPos.take(id), elt.target, currentPage).structure;
+            if (box) {
+                yap("truc found {}", box.peek());
+                return box.peek();
             }
         }
-    }
+    } else if (el.specifiedValues()->content.is<Counter>()) {
+        auto elt = el.specifiedValues()->content.unwrap<Counter>();
+        if (elt.type == Counter::TYPE::PAGE) {
+            auto prose = makeRc<Text::Prose>(proseStyle);
 
+            prose->append(Io::toStr(currentPage + 1).str());
+            return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};
+        }
+    }
     return {el.specifiedValues(), el.computedValues()->fontFace, nullptr};
 }
 

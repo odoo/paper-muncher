@@ -7,6 +7,7 @@ module;
 module Vaev.Engine;
 
 import :values;
+import :base;
 import :layout.block;
 import :layout.flex;
 import :layout.grid;
@@ -327,8 +328,10 @@ Output layout(Tree& tree, Box& box, Input input) {
 
 Output layout(Tree& tree, Input input) {
     auto out = layout(tree, tree.root, input);
-    if (input.fragment)
-        layoutPositioned(tree, input.fragment->children()[0], input.containingBlock);
+    if (input.fragment) {
+        layoutPositioned(tree, input.fragment->children()[0], input.containingBlock, input);
+    }
+
     return out;
 }
 

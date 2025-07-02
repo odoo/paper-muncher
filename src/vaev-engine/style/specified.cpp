@@ -30,19 +30,6 @@ struct TransformProps {
 export struct SpecifiedValues {
     static SpecifiedValues const& initial();
 
-
-struct RunningPositionInfo {
-    usize page;
-    RunningPosition running;
-    Str structure;
-
-    RunningPositionInfo(RunningPosition running) : page(0), running(running), structure("") {
-    }
-};
-
-struct SpecifiedStyle {
-    static SpecifiedStyle const& initial();
-
     Gfx::Color color;
     Number opacity;
     Content content = Keywords::NORMAL;
@@ -59,8 +46,6 @@ struct SpecifiedStyle {
     Cow<SizingProps> sizing;
     Overflows overflows;
     Opt<BasicShape> clip;
-
-    Gc::Ref<Map<Str, Vec<RunningPositionInfo>>> runningPositions;
 
     // CSS Inline Layout Module Level 3
     // https://drafts.csswg.org/css-inline-3/
@@ -162,5 +147,4 @@ struct SpecifiedStyle {
         e(")");
     }
 };
-
 } // namespace Vaev::Style

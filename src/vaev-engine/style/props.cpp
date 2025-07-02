@@ -1225,19 +1225,15 @@ export struct ContentProp {
     static constexpr Content initial() { return Keywords::NORMAL; }
 
     void apply(SpecifiedValues& c) const {
-        yap("applying {} to content", value);
         c.content = value;
     }
 
-    static String load(SpecifiedValues const& c) {
+    static Content load(SpecifiedValues const& c) {
         return c.content;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        yap("old value content: {}", value);
-
         value = try$(parseValue<Content>(c));
-        yap("parsed content: {}", value);
         return Ok();
     }
 };
@@ -2591,17 +2587,7 @@ export struct PositionProp {
 
     static Position initial() { return Keywords::STATIC; }
 
-    void apply(SpecifiedStyle& c) const {
-        // if (auto pos = value.is<RunningPosition>()) {
-        //     auto position = pos.peek();
-        //     RunningPositionInfo info = position;
-        //     if (c.runningPositions->has(position.customIdent)) {
-        //         c.runningPositions->take(position.customIdent).pushBack(info);
-        //     } else {
-        //         c.runningPositions->put(position.customIdent, {info});
-        //     }
-        // }
-
+    void apply(SpecifiedValues& c) const {
         c.position = value;
     }
 
