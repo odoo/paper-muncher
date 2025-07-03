@@ -132,7 +132,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
     Style::Computer computer{
         media, *dom->styleSheets, fontBook
     };
-    computer.loadFontFaces();
+    computer.build();
     computer.styleDocument(*dom);
 
     // MARK: Page and Margins --------------------------------------------------
