@@ -27,7 +27,7 @@ struct RunningPosition {
 export using Position = Union<Keywords::Static, Keywords::Relative, Keywords::Absolute, Keywords::Fixed, Keywords::Sticky, RunningPosition>;
 
 export bool impliesRemovingFromFlow(Position position) {
-    return position == Position::ABSOLUTE || position == Position::FIXED;
+    return position == Keywords::ABSOLUTE || position == Keywords::FIXED;
 }
 
 export template <>
