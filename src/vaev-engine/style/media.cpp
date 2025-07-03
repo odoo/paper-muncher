@@ -3,10 +3,10 @@ module;
 #include <karm-base/box.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
-#include <karm-print/paper.h>
 
 export module Vaev.Engine:style.media;
 
+import Karm.Print;
 import :values;
 import :css;
 

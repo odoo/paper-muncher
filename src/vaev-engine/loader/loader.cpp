@@ -1,6 +1,5 @@
 module;
 
-#include <karm-gc/heap.h>
 #include <karm-logger/logger.h>
 #include <karm-mime/mime.h>
 #include <karm-mime/url.h>
@@ -8,6 +7,7 @@ module;
 
 export module Vaev.Engine:loader.loader;
 
+import Karm.Gc;
 import Karm.Http;
 import Karm.Aio;
 import :dom;

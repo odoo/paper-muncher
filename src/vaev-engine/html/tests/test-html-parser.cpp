@@ -1,7 +1,7 @@
-#include <karm-gc/heap.h>
 #include <karm-test/macros.h>
 
 import Vaev.Engine;
+import Karm.Gc;
 
 namespace Vaev::Dom::Tests {
 

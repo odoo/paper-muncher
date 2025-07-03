@@ -1,9 +1,11 @@
 module;
 
-#include <karm-gc/ptr.h>
+#include <karm-base/iter.h>
 #include <karm-meta/nocopy.h>
 
 export module Vaev.Engine:dom.tree;
+
+import Karm.Gc;
 
 namespace Vaev::Dom {
 

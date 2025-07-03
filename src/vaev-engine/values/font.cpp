@@ -377,13 +377,28 @@ export struct FontVariation {
     }
 };
 
+struct FontFamily {
+    Symbol name;
+
+    FontFamily(Symbol name)
+        : name(name) {
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(FontFamily name:{})", name);
+    }
+
+    bool operator==(FontFamily const&) const = default;
+    auto operator<=>(FontFamily const&) const = default;
+};
+
 export struct FontSource {
-    Union<Mime::Url, Text::Family> identifier;
+    Union<Mime::Url, FontFamily> identifier;
     Opt<String> format;
 
     FontSource(Mime::Url url) : identifier(url) {}
 
-    FontSource(Text::Family family) : identifier(family) {}
+    FontSource(FontFamily family) : identifier(family) {}
 
     void repr(Io::Emit& e) const {
         e("(font-source {}", identifier);
@@ -396,13 +411,13 @@ export struct FontSource {
 // MARK: FontFamily ------------------------------------------------------------
 
 export template <>
-struct ValueParser<Text::Family> {
-    static Res<Text::Family> parse(Cursor<Css::Sst>& c) {
+struct ValueParser<FontFamily> {
+    static Res<FontFamily> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
         if (c.peek() == Css::Token::STRING)
-            return Ok(Text::Family::parse(try$(parseValue<String>(c))));
+            return Ok<FontFamily>(Symbol::from(try$(parseValue<String>(c))));
 
         StringBuilder familyStrBuilder;
         usize amountOfIdents = 0;
@@ -418,15 +433,12 @@ struct ValueParser<Text::Family> {
             return Error::invalidData("expected font family name");
         }
 
-        if (amountOfIdents > 1)
-            return Ok(familyStrBuilder.take());
-
-        return Ok(Text::Family::parse(familyStrBuilder.take()));
+        return Ok<FontFamily>(Symbol::from(familyStrBuilder.take()));
     }
 };
 
 export struct FontProps {
-    Vec<Text::Family> families = {Text::GenericFamily::SANS_SERIF};
+    Vec<FontFamily> families = {"sans-serif"_sym};
     Text::FontWeight weight = Text::FontWeight::REGULAR;
     FontWidth width = FontWidth::NORMAL;
     FontStyle style = FontStyle::NORMAL;

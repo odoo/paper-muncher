@@ -1,11 +1,11 @@
 module;
 
 #include <karm-base/vec.h>
-#include <karm-gc/ptr.h>
 #include <karm-logger/logger.h>
 
 export module Vaev.Engine:style.matcher;
 
+import Karm.Gc;
 import :dom;
 import :style.selector;
 

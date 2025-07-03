@@ -1,4 +1,3 @@
-#include <karm-gc/heap.h>
 #include <karm-sys/entry.h>
 #include <karm-sys/proc.h>
 
@@ -6,6 +5,7 @@ import Karm.Ui;
 import Vaev.Browser;
 import Vaev.Engine;
 import Karm.Http;
+import Karm.Gc;
 
 Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto args = Sys::useArgs(ctx);

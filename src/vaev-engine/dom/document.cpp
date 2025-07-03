@@ -1,10 +1,10 @@
 module;
 
-#include <karm-gc/ptr.h>
 #include <karm-mime/url.h>
 
 export module Vaev.Engine:dom.document;
 
+import Karm.Gc;
 import :dom.node;
 import :dom.element;
 

@@ -1,9 +1,9 @@
-#include <karm-gc/heap.h>
-#include <karm-print/page.h>
 #include <karm-test/macros.h>
 #include <karm-text/prose.h>
 
 import Vaev.Engine;
+import Karm.Gc;
+import Karm.Print;
 
 namespace Vaev::Layout::Tests {
 

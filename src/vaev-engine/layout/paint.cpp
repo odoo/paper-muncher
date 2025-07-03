@@ -1,16 +1,14 @@
 module;
 
-#include <karm-gc/ptr.h>
-#include <karm-scene/box.h>
-#include <karm-scene/clip.h>
-#include <karm-scene/image.h>
-#include <karm-scene/opacity.h>
-#include <karm-scene/stack.h>
-#include <karm-scene/text.h>
-#include <karm-scene/transform.h>
+#include <karm-gfx/borders.h>
+#include <karm-gfx/outline.h>
+#include <karm-image/picture.h>
+#include <karm-math/au.h>
 
 export module Vaev.Engine:layout.paint;
 
+import Karm.Gc;
+import Karm.Scene;
 import :style;
 import :layout.base;
 import :layout.values;

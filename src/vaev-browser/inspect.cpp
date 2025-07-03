@@ -1,6 +1,5 @@
 module;
 
-#include <karm-gc/ptr.h>
 #include <karm-gfx/colors.h>
 
 export module Vaev.Browser:inspect;
@@ -8,6 +7,7 @@ export module Vaev.Browser:inspect;
 import Vaev.Engine;
 import Karm.Kira;
 import Karm.Ui;
+import Karm.Gc;
 import Mdi;
 
 namespace Vaev::Browser {

@@ -1,14 +1,13 @@
 module;
 
-#include <karm-gc/ptr.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
-#include <karm-scene/clear.h>
-#include <karm-scene/stack.h>
 #include <karm-text/book.h>
 
 export module Vaev.Engine:driver.render;
 
+import Karm.Gc;
+import Karm.Scene;
 import :layout;
 import :style;
 import :dom;

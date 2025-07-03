@@ -6,6 +6,7 @@ module;
 #include <karm-math/au.h>
 #include <karm-math/insets.h>
 #include <karm-mime/url.h>
+#include <karm-text/base.h>
 
 export module Vaev.Engine:style.props;
 
@@ -1665,11 +1666,11 @@ export struct ClearProp {
 
 // https://www.w3.org/TR/css-fonts-4/#font-family-prop
 export struct FontFamilyProp {
-    Vec<Text::Family> value = initial();
+    Vec<FontFamily> value = initial();
 
     static constexpr Str name() { return "font-family"; }
 
-    static Array<Text::Family, 1> initial() { return {Text::GenericFamily::SANS_SERIF}; }
+    static Array<FontFamily, 1> initial() { return {"sans-serif"_sym}; }
 
     static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
         if (not child.font.sameInstance(parent.font))
@@ -1680,7 +1681,7 @@ export struct FontFamilyProp {
         c.font.cow().families = value;
     }
 
-    static Vec<Text::Family> load(SpecifiedValues const& c) {
+    static Vec<FontFamily> load(SpecifiedValues const& c) {
         return c.font->families;
     }
 
@@ -1688,7 +1689,7 @@ export struct FontFamilyProp {
         value = {};
         eatWhitespace(c);
         while (not c.ended()) {
-            value.pushBack(try$(parseValue<Text::Family>(c)));
+            value.pushBack(try$(parseValue<FontFamily>(c)));
 
             eatWhitespace(c);
             c.skip(Css::Token::comma());
@@ -1844,7 +1845,7 @@ export struct FontProp {
             // TODO: use lineheight parsed value
         }
 
-        value.families = {try$(parseValue<Text::Family>(c))};
+        value.families = {try$(parseValue<FontFamily>(c))};
 
         return Ok();
     }

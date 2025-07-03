@@ -94,7 +94,7 @@ export struct SrcDesc {
             if (c.peek() == Css::Sst::FUNC and c.peek().prefix == Css::Token::function("local(")) {
                 auto func = c.next();
                 auto localFuncScan = Cursor<Css::Sst>{func.content};
-                auto familyName = try$(parseValue<Text::Family>(localFuncScan));
+                auto familyName = try$(parseValue<FontFamily>(localFuncScan));
                 fontSrcs.pushBack(familyName);
                 continue;
             }

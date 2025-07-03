@@ -1,16 +1,16 @@
-#include <karm-cli/args.h>
-#include <karm-gc/heap.h>
 #include <karm-gfx/cpu/canvas.h>
 #include <karm-image/saver.h>
+#include <karm-logger/logger.h>
 #include <karm-math/au.h>
-#include <karm-print/file-printer.h>
-#include <karm-print/page.h>
 #include <karm-sys/entry.h>
 #include <karm-sys/file.h>
 #include <karm-sys/proc.h>
 
 import Karm.Http;
 import Vaev.Engine;
+import Karm.Cli;
+import Karm.Gc;
+import Karm.Print;
 
 namespace PaperMuncher {
 

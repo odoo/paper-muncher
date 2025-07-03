@@ -1,7 +1,8 @@
 #pragma once
 
 #include <karm-base/res.h>
-#include <karm-gc/heap.h>
+
+import Karm.Gc;
 
 namespace Vaev::Script {
 

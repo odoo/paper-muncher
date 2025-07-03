@@ -1,15 +1,15 @@
 module;
 
+#include <karm-gfx/borders.h>
+#include <karm-gfx/color.h>
+#include <karm-gfx/outline.h>
 #include <karm-io/aton.h>
+#include <karm-math/au.h>
 #include <karm-math/vec.h>
-#include <karm-scene/box.h>
-#include <karm-scene/shape.h>
-#include <karm-scene/stack.h>
-#include <karm-scene/text.h>
-#include <karm-scene/transform.h>
 
 export module Vaev.Engine:layout.svg;
 
+import Karm.Scene;
 import :style;
 import :dom;
 import :values;

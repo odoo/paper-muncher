@@ -1,9 +1,10 @@
 module;
 
-#include <karm-print/page.h>
+#include <karm-base/res.h>
 
 export module Vaev.Engine:values.page;
 
+import Karm.Print;
 import :css;
 import :values.base;
 

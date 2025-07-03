@@ -1,7 +1,7 @@
 #include <karm-math/au.h>
-#include <karm-print/page.h>
 #include <karm-test/macros.h>
 
+import Karm.Print;
 import Vaev.Engine;
 
 namespace Vaev::Style::Tests {

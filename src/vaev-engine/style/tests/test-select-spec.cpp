@@ -1,6 +1,6 @@
-#include <karm-gc/heap.h>
 #include <karm-test/macros.h>
 
+import Karm.Gc;
 import Vaev.Engine;
 
 namespace Vaev::Style::Tests {

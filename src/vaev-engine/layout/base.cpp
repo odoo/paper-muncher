@@ -1,12 +1,12 @@
 module;
 
-#include <karm-gc/ptr.h>
 #include <karm-image/picture.h>
 #include <karm-text/font.h>
 #include <karm-text/prose.h>
 
 export module Vaev.Engine:layout.base;
 
+import Karm.Gc;
 import :style;
 import :layout.svg;
 

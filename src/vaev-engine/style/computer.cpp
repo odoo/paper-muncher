@@ -1,12 +1,12 @@
 module;
 
-#include <karm-gc/ptr.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 #include <karm-text/book.h>
 
 export module Vaev.Engine:style.computer;
 
+import Karm.Gc;
 import :dom;
 import :style.computed;
 import :style.specified;
@@ -125,14 +125,14 @@ export struct Computer {
         };
 
         for (auto family : style.font->families) {
-            fq.family = family;
+            fq.family = family.name;
             if (auto font = fontBook.queryClosest(fq))
                 return font.unwrap();
         }
 
         if (
             auto font = fontBook.queryClosest({
-                .family = String{"Inter"s},
+                .family = "system"_sym,
             })
         )
             return font.unwrap();
@@ -282,11 +282,11 @@ export struct Computer {
                         logWarn("Failed to load font at {}", resolvedUrl);
                     } else {
                         if (
-                            fontBook.queryExact(Text::FontQuery{.family = src.identifier.unwrap<Text::Family>()})
+                            fontBook.queryExact(Text::FontQuery{.family = src.identifier.unwrap<FontFamily>().name})
                         )
                             break;
 
-                        logWarn("Failed to assets font {}", src.identifier.unwrap<Text::Family>());
+                        logWarn("Failed to assets font {}", src.identifier.unwrap<FontFamily>().name);
                     }
                 }
             }

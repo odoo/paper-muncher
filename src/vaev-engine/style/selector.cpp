@@ -33,7 +33,6 @@ export struct Selector;
 
 export void unparse(Selector const& sel, Io::Emit& e);
 
-
 export struct SelectorUnparser {
     Selector& s;
 

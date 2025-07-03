@@ -1,10 +1,10 @@
 module;
 
-#include <karm-gc/heap.h>
 #include <karm-logger/logger.h>
 
 export module Vaev.Engine:html.parser;
 
+import Karm.Gc;
 import :dom;
 import :html.token;
 import :html.lexer;

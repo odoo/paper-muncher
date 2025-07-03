@@ -3,8 +3,9 @@
 #include <karm-base/set.h>
 #include <karm-base/string.h>
 #include <karm-base/union.h>
-#include <karm-gc/ptr.h>
 #include <karm-io/emit.h>
+
+import Karm.Gc;
 
 struct Agent;
 
