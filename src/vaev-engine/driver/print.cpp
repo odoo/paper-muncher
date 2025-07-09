@@ -220,7 +220,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
                 : outDiscovery.breakpoint.unwrap();
 
         contentTree.fc.leaveDiscovery();
-        auto [outReal, fragment] = Layout::layoutCreateFragment(
+        auto [outFragmentation, fragment] = Layout::layoutCreateFragment(
             contentTree,
             pageLayoutInput
                 .withBreakpointTraverser(Layout::BreakpointTraverser(&prevBreakpoint, &currBreakpoint))
@@ -231,7 +231,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
 
         co_yield Print::Page(settings.paper, makeRc<Scene::Clear>(makeRc<Scene::Transform>(pageStack, Math::Trans2f::scale(media.resolution.toDppx())), canvasColor));
 
-        if (outReal.completelyLaidOut)
+        if (outFragmentation.completelyLaidOut)
             break;
 
         prevBreakpoint = std::move(currBreakpoint);
