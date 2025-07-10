@@ -2,6 +2,7 @@ module;
 
 #include <karm-gfx/borders.h>
 #include <karm-text/prose.h>
+#include <karm-logger/logger.h>
 
 module Vaev.Engine;
 

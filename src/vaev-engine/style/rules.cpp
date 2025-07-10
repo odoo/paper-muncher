@@ -173,6 +173,73 @@ export struct NamespaceRule {
     }
 };
 
+
+export struct PageRule {
+    Vec<PageSelector> selectors;
+    Vec<StyleProp> props;
+    Vec<PageAreaRule> areas;
+
+    static PageRule parse(Css::Sst const& sst) {
+        if (sst != Css::Sst::RULE)
+            panic("expected rule");
+
+        if (sst.prefix != Css::Sst::LIST)
+            panic("expected list");
+
+        PageRule res;
+
+        // Parse the selector
+        auto& prefix = sst.prefix.unwrap();
+        Cursor<Css::Sst> prefixContent = prefix->content;
+        res.selectors = PageSelector::parseList(prefixContent);
+
+        // Parse the properties.
+        for (auto const& item : sst.content) {
+            if (item == Css::Sst::DECL) {
+                auto prop = parseDeclaration<StyleProp>(item);
+                if (prop)
+                    res.props.pushBack(prop.take());
+            } else if (item == Css::Sst::RULE and
+                       item.token == Css::Token::AT_KEYWORD) {
+                auto rule = PageAreaRule::parse(item);
+                if (rule)
+                    res.areas.pushBack(*rule);
+            } else {
+                logWarnIf(DEBUG_RULE, "unexpected item in style rule: {}", item);
+            }
+        }
+
+        return res;
+    }
+
+    bool match(Page const& page) const {
+        if (selectors.len() == 0)
+            return true;
+
+        for (auto& s : selectors) {
+            if (s.match(page))
+                return true;
+        }
+
+        return false;
+    }
+
+    void apply(PageSpecifiedValues& c) const {
+        for (auto const& prop : props) {
+            prop.apply(*c.style, *c.style);
+        }
+
+        for (auto const& area : areas) {
+            auto& areaPseudoElement = c.area(area.area);
+            area.apply(*areaPseudoElement.specifiedValues());
+        }
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(page-rule\nselectors: {}\nprops: {}\nmargins: {})", selectors, props, areas);
+    }
+};
+
 // https://www.w3.org/TR/cssom-1/#the-cssrule-interface
 using _Rule = Union<
     StyleRule,
