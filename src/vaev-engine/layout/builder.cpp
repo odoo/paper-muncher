@@ -1,11 +1,11 @@
 module;
 
-#include <karm-image/loader.h>
 #include <karm-text/loader.h>
 #include <karm-text/prose.h>
 
 export module Vaev.Engine:layout.builder;
 
+import Karm.Image;
 import Karm.Gc;
 import :values;
 import :style;

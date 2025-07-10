@@ -2,11 +2,11 @@ module;
 
 #include <karm-gfx/borders.h>
 #include <karm-gfx/outline.h>
-#include <karm-image/picture.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:layout.paint;
 
+import Karm.Image;
 import Karm.Gc;
 import Karm.Scene;
 import :style;

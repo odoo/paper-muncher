@@ -1,11 +1,11 @@
 module;
 
 #include <karm-gfx/borders.h>
-#include <karm-image/picture.h>
 #include <karm-text/prose.h>
 
 module Vaev.Engine;
 
+import Karm.Image;
 import :values;
 import :layout.block;
 import :layout.flex;

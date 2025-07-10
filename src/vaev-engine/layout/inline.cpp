@@ -25,13 +25,13 @@ struct InlineFormatingContext : FormatingContext {
     }
 
     BaselinePositionsSet _computeBaselinePositions(InlineBox& inlineBox, Au baselinePosition) {
-        auto baselineSet = inlineBox.prose->_style.font.baselineSet();
+        auto metrics = inlineBox.prose->_style.font.metrics();
 
         return BaselinePositionsSet{
-            .alphabetic = Au{baselineSet.alphabetic} + baselinePosition,
-            .xHeight = Au{baselineSet.xHeight} + baselinePosition,
-            .xMiddle = Au{baselineSet.xMiddle} + baselinePosition,
-            .capHeight = Au{baselineSet.capHeight} + baselinePosition,
+            .alphabetic = Au{metrics.alphabeticBaseline()} + baselinePosition,
+            .xHeight = Au{metrics.xHeight} + baselinePosition,
+            .xMiddle = Au{metrics.xMiddleBaseline()} + baselinePosition,
+            .capHeight = Au{metrics.captop} + baselinePosition,
         };
     }
 
