@@ -40,3 +40,4 @@ export import :values.visibility;
 export import :values.width;
 export import :values.writing;
 export import :values.z_index;
+export import :values.grid;

@@ -1878,6 +1878,180 @@ export struct FontSizeProp {
     }
 };
 
+// MARK: Grid ------------------------------------------------------------------
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid
+export struct GridValue {
+    ExplicitGridProps explict;
+    ImplicitGridProps implicit;
+};
+
+export struct GridProp {
+    GridValue value;
+
+    static constexpr Str name() { return "grid"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-area
+export struct GridAreaProp {
+    Array<GridLine, 4> value;
+
+    static constexpr Str name() { return "grid-area"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#auto-tracks
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-rows
+export struct GridAutoRowsProp {
+    Vec<GridTrackSize> value;
+
+    static constexpr Str name() { return "grid-auto-rows"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#auto-tracks
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-columns
+export struct GridAutoColumnsProp {
+    Vec<GridTrackSize> value;
+
+    static constexpr Str name() { return "grid-auto-columns"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-flow
+export struct GridAutoFlowProp {
+    GridAutoFlow value;
+
+    static constexpr Str name() { return "grid-auto-flow"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-column
+export struct GridColumnProp {
+    Pair<GridLine> value;
+
+    static constexpr Str name() { return "grid-column"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-column-start
+export struct GridColumnStartProp {
+    GridLine value;
+
+    static constexpr Str name() { return "grid-column-start"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-column-end
+export struct GridColumnEndProp {
+    GridLine value;
+
+    static constexpr Str name() { return "grid-column-end"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-row
+export struct GridRowProp {
+    Pair<GridLine> value;
+
+    static constexpr Str name() { return "grid-row"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-row-start
+export struct GridRowStartProp {
+    GridLine value;
+
+    static constexpr Str name() { return "grid-row-start"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-row-end
+export struct GridRowEndProp {
+    GridLine value;
+
+    static constexpr Str name() { return "grid-row-end"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-template
+export struct GridTemplateProp {
+    ExplicitGridProps value;
+
+    static constexpr Str name() { return "grid-template"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-template-areas
+export struct GridTemplateAreasProp {
+    Union<Keywords::None, Vec<Symbol>> value;
+
+    static constexpr Str name() { return "grid-template-areas"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-template-columns
+export struct GridTemplateColumnsProp {
+    Union<Keywords::None, GridTrackList> value;
+
+    static constexpr Str name() { return "grid-template-columns"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-template-rows
+export struct GridTemplateRowsProp {
+    Union<Keywords::None, GridTrackList> value;
+
+    static constexpr Str name() { return "grid-template-rows"; }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
 // MARK: Line ------------------------------------------------------------------
 
 export struct LineHeightProp {
@@ -1904,7 +2078,6 @@ export struct LineHeightProp {
 // MARK: Margin ----------------------------------------------------------------
 
 // https://www.w3.org/TR/css-box-3/#propdef-margin
-
 export struct MarginTopProp {
     Width value = initial();
 
@@ -3545,6 +3718,22 @@ using _StyleProp = Union<
     FontStyleProp,
     FontSizeProp,
     FontProp,
+
+    // Grid
+    GridProp,
+    GridAreaProp,
+    GridAutoColumnsProp,
+    GridAutoFlowProp,
+    GridColumnProp,
+    GridColumnStartProp,
+    GridColumnEndProp,
+    GridRowProp,
+    GridRowStartProp,
+    GridRowEndProp,
+    GridTemplateProp,
+    GridTemplateAreasProp,
+    GridTemplateColumnsProp,
+    GridTemplateRowsProp,
 
     // Line
     LineHeightProp,

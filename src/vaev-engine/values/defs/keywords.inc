@@ -1,5 +1,7 @@
 // TypeName, KeywordValue, ConstantName
 KEYWORD(Auto, "auto", AUTO)
+KEYWORD(AutoFill, "auto-fill", AUTO_FILL)
+KEYWORD(AutoFit, "auto-fit", AUTO_FIT)
 KEYWORD(Content, "content", CONTENT)
 KEYWORD(CurrentColor, "currentcolor", CURRENT_COLOR)
 KEYWORD(MaxContent, "max-content", MAX_CONTENT)
