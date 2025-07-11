@@ -26,7 +26,7 @@ export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media
         logWarn("not all fonts were properly loaded into fontbook");
 
     Style::Computer computer{media, *dom->styleSheets, fontBook};
-    computer.loadFontFaces();
+    computer.build();
     computer.styleDocument(*dom);
 
     Layout::Tree tree = {
