@@ -175,6 +175,17 @@ export struct ColorSpace {
 
         return Gfx::WHITE;
     }
+
+    bool operator==(ColorSpace const& other) const {
+        if (type != other.type)
+            return false;
+
+        if (type == _Type::RECTANGULAR) {
+            return rectangular == other.rectangular;
+        } else {
+            return polar == other.polar and interpolation == other.interpolation;
+        }
+    }
 };
 
 // MARK: Color -----------------------------------------------------------------
@@ -207,11 +218,19 @@ export struct ColorMix {
             if (perc)
                 e(" {}", *perc);
         }
+
+        bool operator==(Side const& other) const {
+            return color == other.color and perc == other.perc;
+        }
     };
 
     ColorSpace colorSpace;
     Side lhs;
     Side rhs;
+
+    bool operator==(ColorMix const& other) const {
+        return colorSpace == other.colorSpace and lhs == other.lhs and rhs == other.rhs;
+    }
 
     void repr(Io::Emit& e) const {
         e("(color-mix {} {} {})", colorSpace, lhs, rhs);

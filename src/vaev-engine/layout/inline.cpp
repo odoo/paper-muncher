@@ -25,7 +25,7 @@ struct InlineFormatingContext : FormatingContext {
     }
 
     BaselinePositionsSet _computeBaselinePositions(InlineBox& inlineBox, Au baselinePosition) {
-        auto metrics = inlineBox.prose->_style.font.metrics();
+        auto metrics = inlineBox.prose->_textRuns[0].font.metrics();
 
         return BaselinePositionsSet{
             .alphabetic = Au{metrics.alphabeticBaseline()} + baselinePosition,
@@ -33,6 +33,82 @@ struct InlineFormatingContext : FormatingContext {
             .xMiddle = Au{metrics.xMiddleBaseline()} + baselinePosition,
             .capHeight = Au{metrics.captop} + baselinePosition,
         };
+    }
+
+    Au resolveBaselinePosition(Style::AlignmentBaseline alignmentBaseline, Text::FontMetrics metrics) {
+        if (alignmentBaseline == Keywords::MIDDLE)
+            return Au{metrics.xMiddleBaseline()};
+        else if (alignmentBaseline == Keywords::TEXT_TOP)
+            return Au{metrics.captop};
+        else
+            return Au{metrics.alphabeticBaseline()};
+    }
+
+    // https://www.w3.org/TR/css-inline-3/#line-layout
+    // https://www.w3.org/TR/css-inline-3/#inline-height
+    Au _layoutVerticallyWithinLineBox(Vec<TextRunFrag>& textRunFrags) {
+        Au highestAscent = 0_au;
+        Au lowestDescent = 0_au;
+        for (auto& textRunFrag : textRunFrags) {
+            // position text run frags based on their baseline
+            auto& textRunFont = textRunFrag.run->font;
+
+            auto fontAscent = textRunFont.metrics().ascend;
+            auto fontDescend = textRunFont.metrics().descend;
+            auto baselinePosition = resolveBaselinePosition(
+                textRunFrag.run->style->baseline->alignment,
+                textRunFont.metrics()
+            );
+
+            textRunFrag.baselinePosition.y = -baselinePosition;
+            auto textRunAscent = Au{fontAscent} - baselinePosition;
+            auto textRunDescend = Au{fontDescend} + baselinePosition;
+
+            highestAscent = max(highestAscent, textRunAscent);
+            lowestDescent = max(lowestDescent, textRunDescend);
+        }
+
+        return highestAscent + lowestDescent;
+    }
+
+    void _layoutHorizontallyWithinLineBox(Vec<TextRunFrag>& textRunFrags, Au inlineSize, TextAlign textAlign) {
+        Au totalWidth = 0_au;
+        for (auto const& textRunFrag : textRunFrags)
+            totalWidth += textRunFrag.width;
+
+        Au free = inlineSize - totalWidth;
+        if (free <= 0_au or textAlign == TextAlign::LEFT) {
+            Au currXpos = 0_au;
+            for (auto& textRunFrag : textRunFrags) {
+                textRunFrag.baselinePosition.x = currXpos;
+                currXpos += textRunFrag.width;
+            }
+        } else if (textAlign == TextAlign::RIGHT) {
+            Au currXpos = inlineSize;
+            for (usize i = textRunFrags.len() - 1; i != usize(-1); --i) {
+                auto& textRunFrag = textRunFrags[i];
+                currXpos -= textRunFrag.width;
+                textRunFrag.baselinePosition.x = currXpos;
+            }
+        } else if (textAlign == TextAlign::CENTER) {
+            Au currXpos = free / 2_au;
+            for (auto& textRunFrag : textRunFrags) {
+                textRunFrag.baselinePosition.x = currXpos;
+                currXpos += textRunFrag.width;
+            }
+        }
+    }
+
+    Au _layoutWithinLineBox(Vec<TextRunFrag>& textRunFrags, Au inlineSize, TextAlign textAlign, Vec2Au position, Au ascend) {
+        auto lineHeight = _layoutVerticallyWithinLineBox(textRunFrags);
+        _layoutHorizontallyWithinLineBox(textRunFrags, inlineSize, textAlign);
+
+        // ascend is based on the dominant baseline
+        for (auto& textRunFrag : textRunFrags) {
+            textRunFrag.baselinePosition = textRunFrag.baselinePosition + position + ascend;
+        }
+
+        return lineHeight;
     }
 
     virtual Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
@@ -50,74 +126,41 @@ struct InlineFormatingContext : FormatingContext {
         });
 
         auto& prose = inlineBox.prose;
+        prose->finalizeBuild();
 
-        for (auto strutCell : prose->cellsWithStruts()) {
-            auto& boxStrutCell = *strutCell->strut();
+        auto lines = prose->layout(inlineSize);
 
-            auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
-
-            // NOTE: We set the same availableSpace to child inline boxes since line wrapping is possible i.e. in the
-            // worst case, they will take up the whole availableSpace, and a line break will be done right before them
-            auto atomicBoxOutput = layout(
-                tree,
-                atomicBox,
-                Input{
-                    .knownSize = {NONE, NONE},
-                    .availableSpace = {inlineSize, input.availableSpace.y},
-                    .containingBlock = {
-                        input.knownSize.x.unwrapOr(0_au),
-                        input.knownSize.y.unwrapOr(0_au)
-                    },
-                }
-            );
-
-            if (not impliesRemovingFromFlow(atomicBox.style->position)) {
-                boxStrutCell.size = atomicBoxOutput.size;
-                // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
-                boxStrutCell.baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
-            }
-        }
-
-        // FIXME: prose has a ongoing state that is not reset between layout calls, but it should be
-        prose->_blocksMeasured = false;
-        auto size = prose->layout(inlineSize);
-
-        auto firstBaselineSet = _computeBaselinePositions(inlineBox, first(prose->_lines).baseline);
-        auto lastBaselineSet = _computeBaselinePositions(inlineBox, last(prose->_lines).baseline);
-
-        for (auto strutCell : prose->cellsWithStruts()) {
-            auto runeIdx = strutCell->runeRange.start;
-            auto positionInProse = prose->queryPosition(runeIdx);
-
-            auto& boxStrutCell = *strutCell->strut();
-            auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
-
-            Math::Vec2<Opt<Au>> knownSize;
-            if (not impliesRemovingFromFlow(atomicBox.style->position)) {
-                knownSize = {
-                    boxStrutCell.size.x,
-                    boxStrutCell.size.y
-                };
+        ProseFrag proseFrag;
+        Vec2Au currPosition{input.position.x, input.position.y};
+        for (auto const& line : lines) {
+            // FIXME
+            Vec<TextRunFrag> textRunsFrags;
+            for (auto&& textRunSlice : line) {
+                textRunsFrags.pushBack(TextRunFrag{std::move(textRunSlice)});
             }
 
-            layout(
-                tree,
-                atomicBox,
-                Input{
-                    .fragment = input.fragment,
-                    .knownSize = knownSize,
-                    .position = input.position + positionInProse,
-                    .containingBlock = {
-                        input.knownSize.x.unwrapOr(0_au),
-                        input.knownSize.y.unwrapOr(0_au)
-                    },
-                }
+            auto lineHeight = _layoutWithinLineBox(
+                textRunsFrags,
+                inlineSize,
+                inlineBox.prose->style->text->align,
+                currPosition,
+                Au{first(lines)[0].run->font.metrics().ascend} // FIXME
             );
+
+            currPosition.y += lineHeight;
+            proseFrag.size.y += lineHeight;
+
+            proseFrag.lines.pushBack(textRunsFrags);
         }
+
+        // FIXME: a line that was only 1 word does not have this size
+        proseFrag.size.x = inlineSize;
+
+        input.fragment->content = proseFrag;
 
         if (tree.fc.allowBreak() and not tree.fc.acceptsFit(
                                          input.position.y,
-                                         size.y,
+                                         proseFrag.size.y,
                                          input.pendingVerticalSizes
                                      )) {
             return {
@@ -128,10 +171,10 @@ struct InlineFormatingContext : FormatingContext {
         }
 
         return {
-            .size = size,
+            .size = proseFrag.size,
             .completelyLaidOut = true,
-            .firstBaselineSet = firstBaselineSet,
-            .lastBaselineSet = lastBaselineSet,
+            // .firstBaselineSet = firstBaselineSet,
+            // .lastBaselineSet = lastBaselineSet,
         };
     }
 };

@@ -19,6 +19,7 @@
         "karm-gc",
         "karm-gfx",
         "karm-http",
+        "karm-icu",
         "karm-image",
         "karm-io",
         "karm-logger",

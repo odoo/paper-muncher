@@ -9,6 +9,7 @@ import Karm.Image;
 import Karm.Gc;
 import :style;
 import :layout.svg;
+import :layout.prose;
 
 namespace Vaev::Layout {
 
@@ -235,6 +236,7 @@ export struct BreakpointTraverser {
 export struct FormatingContext;
 export struct Box;
 
+// TODO: can we remove this struct and leave only PROSE?
 export struct InlineBox {
     /* NOTE:
     This is a sketch implementation of the data model for InlineBox. We should be able to:
@@ -243,18 +245,16 @@ export struct InlineBox {
             into line boxes)
         -   respect different styling for the same line (font, fontsize, color, etc)
     */
-    Rc<Text::Prose> prose;
+    Rc<Prose> prose;
     Vec<::Box<Box>> atomicBoxes;
 
-    InlineBox(Text::ProseStyle style) : prose(makeRc<Text::Prose>(style)) {}
+    InlineBox(Rc<Style::SpecifiedValues> style, Rc<Text::Fontface> fontFace)
+        : prose(makeRc<Prose>(style, fontFace)) {}
 
-    InlineBox(Rc<Text::Prose> prose) : prose(prose) {}
+    InlineBox(Rc<Prose> prose) : prose(prose) {}
 
-    void startInlineBox(Text::ProseStyle proseStyle) {
-        // FIXME: ugly workaround while we dont fix the Prose data structure
-        prose->pushSpan();
-        if (proseStyle.color)
-            prose->spanColor(proseStyle.color.unwrap());
+    void startInlineBox(Rc<Style::SpecifiedValues> style, Rc<Text::Fontface> fontFace) {
+        prose->pushSpan(style, fontFace);
     }
 
     void endInlineBox() {
@@ -264,7 +264,7 @@ export struct InlineBox {
     void add(Box&& b);
 
     bool active() {
-        return prose->_runes.len() or atomicBoxes.len();
+        return prose->_runes.len() > 1 or atomicBoxes.len();
     }
 
     void repr(Io::Emit& e) const {
@@ -281,8 +281,8 @@ export struct InlineBox {
     static InlineBox fromInterruptedInlineBox(InlineBox const& inlineBox) {
         auto oldProse = inlineBox.prose;
 
-        auto newInlineBox = InlineBox{oldProse->_style};
-        newInlineBox.prose->overrideSpanStackWith(*oldProse);
+        auto newInlineBox = InlineBox{oldProse->style, oldProse->_spans[0]->fontFace};
+        // newInlineBox.prose->overrideSpanStackWith(*oldProse);
 
         return newInlineBox;
     }
@@ -423,7 +423,7 @@ void SVG::Group::add(Vaev::Layout::Box&& box) {
 }
 
 void InlineBox::add(Box&& b) {
-    prose->append(Text::Prose::StrutCell{atomicBoxes.len()});
+    // prose->append(Text::Prose::StrutCell{atomicBoxes.len()});
     atomicBoxes.pushBack(makeBox<Box>(std::move(b)));
 }
 
@@ -550,7 +550,8 @@ struct SVGRootFrag : SVG::GroupFrag {
 
 export using FragContent = Union<
     Vec<Frag>,
-    SVGRootFrag>;
+    SVGRootFrag,
+    ProseFrag>;
 
 export struct Frag {
     MutCursor<Box> box;

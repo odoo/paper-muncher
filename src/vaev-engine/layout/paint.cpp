@@ -2,6 +2,7 @@ module;
 
 #include <karm-gfx/borders.h>
 #include <karm-gfx/outline.h>
+#include <karm-logger/logger.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:layout.paint;
@@ -15,21 +16,22 @@ import :layout.values;
 
 namespace Vaev::Layout {
 
-static bool _paintBorders(Frag& frag, Gfx::Color currentColor, Gfx::Borders& borders) {
-    borders.radii = frag.metrics.radii.cast<f64>(); // This value is needed for the outline
+    // FIXME: not convinced about this diff
+static bool _paintBorders(Style::SpecifiedValues const& style, RadiiAu radii, InsetsAu bordersMetrics, Gfx::Color currentColor, Gfx::Borders& borders) {
+    borders.radii = radii.cast<f64>(); // This value is needed for the outline
 
-    if (frag.metrics.borders.zero())
+    if (bordersMetrics.zero())
         return false;
 
-    currentColor = Vaev::resolve(frag.style().color, currentColor);
+    currentColor = Vaev::resolve(style.color, currentColor);
 
-    auto const& bordersLayout = frag.metrics.borders;
+    auto const& bordersLayout = bordersMetrics;
     borders.widths.top = bordersLayout.top.cast<f64>();
     borders.widths.bottom = bordersLayout.bottom.cast<f64>();
     borders.widths.start = bordersLayout.start.cast<f64>();
     borders.widths.end = bordersLayout.end.cast<f64>();
 
-    auto const& bordersStyle = *frag.style().borders;
+    auto const& bordersStyle = *style.borders;
     borders.styles[0] = bordersStyle.top.style;
     borders.styles[1] = bordersStyle.end.style;
     borders.styles[2] = bordersStyle.bottom.style;
@@ -41,6 +43,14 @@ static bool _paintBorders(Frag& frag, Gfx::Color currentColor, Gfx::Borders& bor
     borders.fills[3] = Vaev::resolve(bordersStyle.start.color, currentColor);
 
     return true;
+}
+
+static bool _paintBorders(Frag& frag, Gfx::Color currentColor, Gfx::Borders& borders) {
+    return _paintBorders(
+        frag.style(),
+        frag.metrics.radii, frag.metrics.borders,
+        currentColor, borders
+    );
 }
 
 static bool _paintOutline(Frag& frag, Gfx::Color currentColor, Gfx::Outline& outline) {
@@ -184,8 +194,40 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
 
     _paintFragBordersAndBackgrounds(frag, stack);
 
-    if (auto ic = frag.box->content.is<InlineBox>()) {
-        stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
+    if (auto proseFrag = frag.content.is<ProseFrag>()) {
+        for (auto& line : proseFrag->lines) {
+            for (auto& textRunFrag : line) {
+                auto& style = *textRunFrag.run->style;
+                auto const& cssBackground = style.backgrounds;
+
+                Gfx::Borders borders;
+                Gfx::Outline outline;
+
+                Vec<Gfx::Fill> backgrounds;
+                auto color = Vaev::resolve(cssBackground->color, style.color);
+                if (color.alpha != 0)
+                    backgrounds.pushBack(color);
+
+                auto currentColor = Vaev::resolve(style.color, color);
+                bool hasBorders = _paintBorders(style, Karm::RadiiAu{}, textRunFrag.borders(), currentColor, borders);
+                Math::Rectf bound = RectAu{textRunFrag.borderBoxPosition(), textRunFrag.borderBox()}.cast<f64>();
+
+                if (any(backgrounds) or hasBorders) {
+                    auto box = makeRc<Scene::Box>(bound, std::move(borders), std::move(outline), std::move(backgrounds));
+                    stack.add(box);
+                }
+
+                stack.add(
+                    makeRc<Scene::TextRun>(
+                        textRunFrag.baselinePosition.cast<f64>(),
+                        textRunFrag.run->font,
+                        textRunFrag.glyphs(),
+                        textRunFrag.run->paintedSegment
+                    )
+                );
+            }
+        }
+        // stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
     } else if (auto image = frag.box->content.is<Karm::Image::Picture>()) {
         stack.add(makeRc<Scene::Image>(frag.metrics.borderBox().cast<f64>(), *image));
     } else if (auto svgRoot = frag.content.is<SVGRootFrag>()) {

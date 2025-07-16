@@ -65,45 +65,7 @@ bool isSegmentBreak(Rune rune) {
     return rune == '\n' or rune == '\r' or rune == '\f' or rune == '\v';
 }
 
-static Text::ProseStyle _proseStyleFomStyle(Style::SpecifiedValues& style, Rc<Text::Fontface> fontFace) {
-    // FIXME: We should pass this around from the top in order to properly resolve rems
-    Resolver resolver{
-        .rootFont = Text::Font{fontFace, 16},
-        .boxFont = Text::Font{fontFace, 16},
-    };
-    Text::ProseStyle proseStyle{
-        .font = {
-            fontFace,
-            resolver.resolve(style.font->size).cast<f64>(),
-        },
-        .color = style.color,
-        .multiline = true,
-    };
-
-    switch (style.text->align) {
-    case TextAlign::START:
-    case TextAlign::LEFT:
-        proseStyle.align = Text::TextAlign::LEFT;
-        break;
-
-    case TextAlign::END:
-    case TextAlign::RIGHT:
-        proseStyle.align = Text::TextAlign::RIGHT;
-        break;
-
-    case TextAlign::CENTER:
-        proseStyle.align = Text::TextAlign::CENTER;
-        break;
-
-    default:
-        // FIXME: Implement the rest
-        break;
-    }
-
-    return proseStyle;
-}
-
-void _transformAndAppendRuneToProse(Rc<Text::Prose> prose, Rune rune, TextTransform transform) {
+void _transformAndAppendRuneToProse(Rc<Prose> prose, Rune rune, TextTransform transform) {
     switch (transform) {
     case TextTransform::UPPERCASE:
         prose->append(toAsciiUpper(rune));
@@ -252,8 +214,8 @@ struct BuilderContext {
     }
 
     // FIXME: find me a better name
-    void startInlineBox(Text::ProseStyle proseStyle) {
-        rootInlineBox().startInlineBox(proseStyle);
+    void startInlineBox(Rc<Style::SpecifiedValues> style, Rc<Text::Fontface> fontFace) {
+        rootInlineBox().startInlineBox(style, fontFace);
     }
 
     void endInlineBox() {
@@ -373,7 +335,6 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
         .rootFont = Text::Font{font, 16},
         .boxFont = Text::Font{font, 16},
     };
-    Text::ProseStyle proseStyle = _proseStyleFomStyle(*el->specifiedValues(), font);
 
     auto value = ""s;
     if (el->hasAttribute(Html::VALUE_ATTR))
@@ -381,10 +342,8 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     else if (el->hasAttribute(Html::PLACEHOLDER_ATTR))
         value = el->getAttribute(Html::PLACEHOLDER_ATTR).unwrap();
 
-    auto prose = makeRc<Text::Prose>(proseStyle, value);
-
     // FIXME: we should guarantee that input has no children (not added before nor to add after)
-    bc.content() = InlineBox{prose};
+    bc.content() = InlineBox{el->specifiedValues(), font};
 }
 
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el);
@@ -404,10 +363,10 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group* group) {
     } else if (el->qualifiedName == Svg::FOREIGN_OBJECT_TAG) {
         Box box{el->specifiedValues(), el->computedValues()->fontFace, el};
 
-        InlineBox rootInlineBox{_proseStyleFomStyle(
-            *el->specifiedValues(),
+        InlineBox rootInlineBox{
+            el->specifiedValues(),
             el->computedValues()->fontFace
-        )};
+        };
 
         BuilderContext bc{
             BuilderContext::From::BLOCK,
@@ -476,9 +435,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
         return;
     }
 
-    auto proseStyle = _proseStyleFomStyle(*style, el->computedValues()->fontFace);
-
-    bc.startInlineBox(proseStyle);
+    bc.startInlineBox(style, el->computedValues()->fontFace);
     _buildChildren(bc.toInlineContext(style), el);
     bc.endInlineBox();
 }
@@ -498,7 +455,7 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
 
 static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::SpecifiedValues> style, Gc::Ref<Dom::Element> el, Display display) {
     Box box = {style, el->computedValues()->fontFace, el};
-    InlineBox rootInlineBox{_proseStyleFomStyle(*style, el->computedValues()->fontFace)};
+    InlineBox rootInlineBox{style, el->computedValues()->fontFace};
 
     auto newBc = display == Display::Inside::FLEX
                      ? bc.toFlexContext(box, rootInlineBox)
@@ -542,7 +499,7 @@ struct AnonymousTableBoxWrapper {
         cellStyle->display = Display::Internal::TABLE_CELL;
 
         cellBox = Box{cellStyle, fontFace, nullptr};
-        rootInlineBoxForCell = InlineBox{_proseStyleFomStyle(*style, fontFace)};
+        rootInlineBoxForCell = InlineBox{style, fontFace};
     }
 
     void finalizeAndResetCell() {
@@ -731,7 +688,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Specifi
     wrapperStyle->margin = tableStyle->margin;
 
     Box wrapper = {wrapperStyle, tableBoxEl->computedValues()->fontFace, tableBoxEl};
-    InlineBox rootInlineBox{_proseStyleFomStyle(*wrapperStyle, tableBoxEl->computedValues()->fontFace)};
+    InlineBox rootInlineBox{wrapperStyle, tableBoxEl->computedValues()->fontFace};
 
     // SPEC: The table wrapper box establishes a block formatting context.
     _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, tableStyle);
@@ -833,7 +790,7 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
 export Box build(Gc::Ref<Dom::Document> doc) {
     if (auto el = doc->documentElement()) {
         Box root = {el->specifiedValues(), el->computedValues()->fontFace, el};
-        InlineBox rootInlineBox{_proseStyleFomStyle(*el->specifiedValues(), el->computedValues()->fontFace)};
+        InlineBox rootInlineBox{el->specifiedValues(), el->computedValues()->fontFace};
 
         BuilderContext bc{
             BuilderContext::From::BLOCK,
@@ -854,9 +811,7 @@ export Box build(Gc::Ref<Dom::Document> doc) {
 }
 
 export Box buildForPseudoElement(Dom::PseudoElement& el) {
-    auto proseStyle = _proseStyleFomStyle(*el.specifiedValues(), el.computedValues()->fontFace);
-
-    auto prose = makeRc<Text::Prose>(proseStyle);
+    auto prose = makeRc<Prose>(el.specifiedValues(), el.computedValues()->fontFace);
     if (el.specifiedValues()->content) {
         prose->append(el.specifiedValues()->content.str());
         return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};

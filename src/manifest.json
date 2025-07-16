@@ -10,6 +10,7 @@
         "karm-cli",
         "karm-sys",
         "karm-image",
+        "karm-icu",
         "vaev-engine",
         "fonts-all"
     ],
