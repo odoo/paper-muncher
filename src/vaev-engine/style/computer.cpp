@@ -10,7 +10,6 @@ export module Vaev.Engine:style.computer;
 import Karm.Gc;
 import Karm.Font;
 import :dom;
-import :style.computed;
 import :style.specified;
 import :style.stylesheet;
 
@@ -191,7 +190,7 @@ export struct Computer {
 
         for (auto& area : computed->_areas) {
             auto font = _lookupFontface(fontBook, *area.specifiedValues());
-            area._computedValues = makeRc<ComputedValues>(font);
+            area.specifiedValues()->fontFace = font;
         }
 
         return computed;
@@ -199,7 +198,7 @@ export struct Computer {
 
     // MARK: Styling -----------------------------------------------------------
 
-    void styleElement(SpecifiedValues const& parentSpecifiedValues, ComputedValues const& parentComputedValues, Dom::Element& el) {
+    void styleElement(SpecifiedValues const& parentSpecifiedValues, Dom::Element& el) {
         auto specifiedValues = computeFor(parentSpecifiedValues, el);
         el._specifiedValues = specifiedValues;
 
@@ -210,23 +209,22 @@ export struct Computer {
             (parentSpecifiedValues.font->families != specifiedValues->font->families or
              parentSpecifiedValues.font->weight != specifiedValues->font->weight)) {
             auto font = _lookupFontface(fontBook, *specifiedValues);
-            el._computedValues = makeRc<ComputedValues>(font);
+            specifiedValues->fontFace = font;
         } else {
-            el._computedValues = makeRc<ComputedValues>(parentComputedValues.fontFace);
+            specifiedValues->fontFace = parentSpecifiedValues.fontFace;
         }
 
         for (auto child = el.firstChild(); child; child = child->nextSibling()) {
             if (auto childEl = child->is<Dom::Element>())
-                styleElement(*specifiedValues, *el.computedValues(), *childEl);
+                styleElement(*specifiedValues, *childEl);
         }
     }
 
     void styleDocument(Dom::Document& doc) {
         if (auto el = doc.documentElement()) {
             auto rootSpecifiedValues = makeRc<SpecifiedValues>(SpecifiedValues::initial());
-            auto font = _lookupFontface(fontBook, *rootSpecifiedValues);
-            auto rootComputedValues = makeRc<ComputedValues>(font);
-            styleElement(*rootSpecifiedValues, *rootComputedValues, *el);
+            rootSpecifiedValues->fontFace = _lookupFontface(fontBook, *rootSpecifiedValues);
+            styleElement(*rootSpecifiedValues, *el);
         }
     }
 

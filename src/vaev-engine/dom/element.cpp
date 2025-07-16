@@ -10,8 +10,6 @@ import :dom.token_list;
 using namespace Karm;
 
 namespace Vaev::Style {
-
-export struct ComputedValues;
 export struct SpecifiedValues;
 
 } // namespace Vaev::Style
@@ -19,12 +17,7 @@ export struct SpecifiedValues;
 namespace Vaev::Dom {
 
 export struct PseudoElement {
-    Opt<Rc<Style::ComputedValues>> _computedValues = NONE;
     Opt<Rc<Style::SpecifiedValues>> _specifiedValues = NONE;
-
-    Rc<Style::ComputedValues> computedValues() const {
-        return _computedValues.unwrap("unstyled pseudo-element");
-    }
 
     Rc<Style::SpecifiedValues> specifiedValues() const {
         return _specifiedValues.unwrap("unstyled pseudo-element");
@@ -38,7 +31,6 @@ export struct Element : Node {
     QualifiedName qualifiedName;
     // NOSPEC: Should be a NamedNodeMap
     Map<QualifiedName, Rc<Attr>> attributes;
-    Opt<Rc<Style::ComputedValues>> _computedValues;
     Opt<Rc<Style::SpecifiedValues>> _specifiedValues; // FIXME: We should not have this store here
     TokenList classList;
 
@@ -56,10 +48,6 @@ export struct Element : Node {
 
     NodeType nodeType() const override {
         return TYPE;
-    }
-
-    Rc<Style::ComputedValues> computedValues() const {
-        return _computedValues.unwrap("unstyled element");
     }
 
     Rc<Style::SpecifiedValues> specifiedValues() const {
