@@ -219,7 +219,7 @@ struct BuilderContext {
         style->display = Display{Display::Inside::FLOW, Display::Outside::BLOCK};
 
         auto newInlineBox = InlineBox::fromInterruptedInlineBox(*_rootInlineBox);
-        _parent.add({style, _parent.fontFace, std::move(*_rootInlineBox), nullptr});
+        _parent.add({style, std::move(*_rootInlineBox), nullptr});
         *_rootInlineBox = std::move(newInlineBox);
     }
 
@@ -406,7 +406,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group* group) {
         buildSVGAggregate(el, &newSvgRoot);
         group->add(std::move(newSvgRoot));
     } else if (el->qualifiedName == Svg::FOREIGN_OBJECT_TAG) {
-        Box box{el->specifiedValues(), el->specifiedValues()->fontFace, el};
+        Box box{el->specifiedValues(), el};
 
         InlineBox rootInlineBox{_proseStyleFomStyle(
             *el->specifiedValues(),
@@ -501,7 +501,7 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
 }
 
 static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::SpecifiedValues> style, Gc::Ref<Dom::Element> el, Display display) {
-    Box box = {style, el->specifiedValues()->fontFace, el};
+    Box box = {style, el};
     InlineBox rootInlineBox{_proseStyleFomStyle(*style, el->specifiedValues()->fontFace)};
 
     auto newBc = display == Display::Inside::FLEX
@@ -534,7 +534,7 @@ struct AnonymousTableBoxWrapper {
         rowStyle->inherit(*style);
         rowStyle->display = Display::Internal::TABLE_ROW;
 
-        rowBox = Box{rowStyle, style->fontFace, nullptr};
+        rowBox = Box{rowStyle, nullptr};
     }
 
     void createCellIfNone(Rc<Style::SpecifiedValues> style) {
@@ -545,7 +545,7 @@ struct AnonymousTableBoxWrapper {
         cellStyle->inherit(*style);
         cellStyle->display = Display::Internal::TABLE_CELL;
 
-        cellBox = Box{cellStyle, style->fontFace, nullptr};
+        cellBox = Box{cellStyle, nullptr};
         rootInlineBoxForCell = InlineBox{_proseStyleFomStyle(*style, style->fontFace)};
     }
 
@@ -645,7 +645,7 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
 
 // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
 static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedValues> style, Display display) {
-    Box tableInternalBox = {style, el->specifiedValues()->fontFace, el};
+    Box tableInternalBox = {style, el};
     tableInternalBox.attrs = _parseDomAttr(el);
 
     switch (display.internal()) {
@@ -709,7 +709,7 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
     };
 
     tableBoxStyle->display = Display::Internal::TABLE_BOX;
-    Box tableBox = {tableBoxStyle, el->specifiedValues()->fontFace, el};
+    Box tableBox = {tableBoxStyle, el};
     tableBox.attrs = _parseDomAttr(el);
 
     bool captionsOnTop = tableBoxStyle->table->captionSide == CaptionSide::TOP;
@@ -734,7 +734,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Specifi
     wrapperStyle->display = tableStyle->display;
     wrapperStyle->margin = tableStyle->margin;
 
-    Box wrapper = {wrapperStyle, tableBoxEl->specifiedValues()->fontFace, tableBoxEl};
+    Box wrapper = {wrapperStyle, tableBoxEl};
     InlineBox rootInlineBox{_proseStyleFomStyle(*wrapperStyle, tableBoxEl->specifiedValues()->fontFace)};
 
     // SPEC: The table wrapper box establishes a block formatting context.
@@ -840,12 +840,11 @@ export Box build(Gc::Ref<Dom::Document> doc) {
     // NOTE: Fallback in case of an empty document
     Box root{
         makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial()),
-        Gfx::Fontface::fallback(),
         nullptr
     };
 
     if (auto el = doc->documentElement()) {
-        root = {el->specifiedValues(), el->specifiedValues()->fontFace, el};
+        root = {el->specifiedValues(), el};
         InlineBox rootInlineBox{_proseStyleFomStyle(*el->specifiedValues(), el->specifiedValues()->fontFace)};
 
         BuilderContext bc{
@@ -869,10 +868,10 @@ export Box buildForPseudoElement(Dom::PseudoElement& el) {
     auto prose = makeRc<Gfx::Prose>(proseStyle);
     if (el.specifiedValues()->content) {
         prose->append(el.specifiedValues()->content.str());
-        return {el.specifiedValues(), el.specifiedValues()->fontFace, InlineBox{prose}, nullptr};
+        return {el.specifiedValues(), InlineBox{prose}, nullptr};
     }
 
-    return {el.specifiedValues(), el.specifiedValues()->fontFace, nullptr};
+    return {el.specifiedValues(), nullptr};
 }
 
 } // namespace Vaev::Layout

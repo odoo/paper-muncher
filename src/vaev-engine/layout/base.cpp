@@ -355,17 +355,16 @@ export struct Attrs {
 
 struct Box : Meta::NoCopy {
     Rc<Style::SpecifiedValues> style;
-    Rc<Gfx::Fontface> fontFace;
     Content content = NONE;
     Attrs attrs;
     Opt<Rc<FormatingContext>> formatingContext = NONE;
     Gc::Ptr<Dom::Element> origin;
 
-    Box(Rc<Style::SpecifiedValues> style, Rc<Gfx::Fontface> font, Gc::Ptr<Dom::Element> og)
-        : style{std::move(style)}, fontFace{font}, origin{og} {}
+    Box(Rc<Style::SpecifiedValues> style, Gc::Ptr<Dom::Element> og)
+        : style{std::move(style)}, origin{og} {}
 
-    Box(Rc<Style::SpecifiedValues> style, Rc<Gfx::Fontface> font, Content content, Gc::Ptr<Dom::Element> og)
-        : style{std::move(style)}, fontFace{font}, content{std::move(content)}, origin{og} {}
+    Box(Rc<Style::SpecifiedValues> style, Content content, Gc::Ptr<Dom::Element> og)
+        : style{std::move(style)}, content{std::move(content)}, origin{og} {}
 
     Slice<Box> children() const {
         if (auto children = content.is<Vec<Box>>())

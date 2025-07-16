@@ -26,8 +26,8 @@ export struct Resolver {
         Au fontSize{16};
 
         Resolver resolver;
-        resolver.rootFont = Gfx::Font{tree.root.fontFace, fontSize.cast<f64>()};
-        resolver.boxFont = Gfx::Font{box.fontFace, fontSize.cast<f64>()};
+        resolver.rootFont = Gfx::Font{tree.root.style->fontFace, fontSize.cast<f64>()};
+        resolver.boxFont = Gfx::Font{box.style->fontFace, fontSize.cast<f64>()};
         resolver.viewport = tree.viewport;
         resolver.boxAxis = mainAxis(box);
         return resolver;
