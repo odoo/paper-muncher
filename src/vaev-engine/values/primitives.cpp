@@ -90,6 +90,32 @@ struct ValueParser<String> {
     }
 };
 
+// MARK: Custom Ident ----------------------------------------------------------
+// https://www.w3.org/TR/css-values-4/#identifier-value
+
+struct CustomIdent {
+    Symbol _symbol;
+};
+
+export template <>
+struct ValueParser<CustomIdent> {
+    static Res<CustomIdent> parse(Cursor<Css::Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (*c != Css::Token::IDENT)
+            return Error::invalidData("expected custom ident");
+
+        // TODO: Don't really know what to do with the following... lol
+        //       Represents any valid CSS identifier that would not be
+        //       misinterpreted as a pre-defined keyword in that property’s value definition
+        //       (See https://www.w3.org/TR/css-values-4/#custom-idents)
+        CustomIdent ident = CustomIdent{Symbol::from(c->token.data)};
+        c.next();
+        return Ok(std::move(ident));
+    }
+};
+
 // MARK: Url -------------------------------------------------------------------
 // https://www.w3.org/TR/css-values-4/#urls
 
