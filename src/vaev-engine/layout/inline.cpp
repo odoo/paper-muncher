@@ -103,7 +103,7 @@ struct InlineFormatingContext : FormatingContext {
             layout(
                 tree,
                 atomicBox,
-                Input{
+                {
                     .fragment = input.fragment,
                     .knownSize = knownSize,
                     .position = input.position + positionInProse,

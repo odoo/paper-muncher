@@ -87,6 +87,7 @@ export struct SpecifiedValues {
     ZIndex zIndex = Keywords::AUTO;
 
     Cow<SVGProps> svg;
+    Cow<GridProps> grid;
 
     void inherit(SpecifiedValues const& parent) {
         color = parent.color;

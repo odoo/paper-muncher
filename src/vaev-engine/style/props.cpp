@@ -1878,6 +1878,405 @@ export struct FontSizeProp {
     }
 };
 
+// MARK: Grid ------------------------------------------------------------------
+
+// TODO: https://www.w3.org/TR/css-grid-1/#propdef-grid
+
+export struct GridProp {
+    struct Value {
+        ExplicitGridProps explict;
+        ImplicitGridProps implicit;
+    };
+
+    Value value;
+
+    static constexpr Str name() { return "grid"; }
+
+    void apply(SpecifiedValues& c) {
+        auto& grid = c.grid.cow();
+        grid.explict = value.explict;
+        grid.implicit = value.implicit;
+    }
+
+    static Value load(SpecifiedValues& c) {
+        auto& grid = *c.grid;
+        return {
+            grid.explict,
+            grid.implicit
+        };
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#auto-tracks
+static Res<Vec<GridTrackSize>> _parseGridAutoTracks(Cursor<Css::Sst>& c) {
+    Vec<GridTrackSize> res = {};
+    if (not c.skip(Css::Token::ident("auto"))) {
+        while (auto r = parseValue<GridTrackSize>(c)) {
+            if (not res)
+                break;
+            res.pushBack(r.take());
+            eatWhitespace(c);
+        }
+    }
+    return Ok(std::move(res));
+}
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-rows
+export struct GridAutoRowsProp {
+    Vec<GridTrackSize> value; // empty mean 'auto'
+
+    static constexpr Str name() { return "grid-auto-rows"; }
+
+    void apply(SpecifiedValues& c) {
+        c.grid.cow().implicit.rows = value;
+    }
+
+    static Vec<GridTrackSize> load(SpecifiedValues& c) {
+        return c.grid->implicit.rows;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(_parseGridAutoTracks(c));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#auto-tracks
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-columns
+export struct GridAutoColumnsProp {
+    Vec<GridTrackSize> value; // empty mean 'auto'
+
+    static constexpr Str name() { return "grid-auto-columns"; }
+
+    static Vec<GridTrackSize> initial() {
+        return {};
+    }
+
+    void apply(SpecifiedValues& c) {
+        c.grid.cow().implicit.columns = value;
+    }
+
+    static Vec<GridTrackSize> load(SpecifiedValues& c) {
+        return c.grid->implicit.columns;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(_parseGridAutoTracks(c));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-flow
+export struct GridAutoFlowProp {
+    GridAutoFlow value = initial();
+
+    static constexpr Str name() { return "grid-auto-flow"; }
+
+    static GridAutoFlow initial() {
+        return GridAutoFlow::ROW;
+    }
+
+    void apply(SpecifiedValues& c) {
+        c.grid.cow().implicit.flow = value;
+    }
+
+    static GridAutoFlow load(SpecifiedValues& c) {
+        return c.grid->implicit.flow;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<GridAutoFlow>(c));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#placement-shorthands
+static Res<Pair<GridLine>> _parseGridLinePair(Cursor<Css::Sst>& c) {
+    Pair<GridLine> res = {Keywords::AUTO, Keywords::AUTO};
+    res.v0 = try$(parseValue<GridLine>(c));
+    eatWhitespace(c);
+    if (c.skip(Css::Token::delim("/"))) {
+        eatWhitespace(c);
+        res.v1 = try$(parseValue<GridLine>(c));
+    } else if (res.v0.is<Symbol>()) {
+        res.v1 = res.v0;
+    }
+    return Ok(res);
+}
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-area
+export struct GridAreaProp {
+    GridArea value;
+
+    static constexpr Str name() { return "grid-area"; }
+
+    void apply(SpecifiedValues& c) {
+        auto& grid = c.grid.cow();
+        grid.area = value;
+    }
+
+    static GridArea load(SpecifiedValues& c) {
+        return c.grid->area;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        usize n = 0;
+        GridArea area;
+
+        do {
+            eatWhitespace(c);
+            area[n] = try$(parseValue<GridLine>(c));
+            eatWhitespace(c);
+            n++;
+        } while (n < 4 and c.skip(Css::Token::delim("/")));
+
+        if (auto it = area.rowStart.is<Symbol>(); it and n <= 1)
+            area.columnStart = *it;
+
+        if (auto it = area.rowStart.is<Symbol>(); it and n <= 2)
+            area.rowEnd = *it;
+
+        if (auto it = area.columnStart.is<Symbol>(); it and n <= 3)
+            area.columnEnd = *it;
+
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-column
+export struct GridColumnProp {
+    Pair<GridLine> value;
+
+    static constexpr Str name() { return "grid-column"; }
+
+    void apply(SpecifiedValues& c) {
+        auto& grid = c.grid.cow();
+        grid.area.columnStart = value.v0;
+        grid.area.columnEnd = value.v1;
+    }
+
+    static Pair<GridLine> load(SpecifiedValues& c) {
+        auto& grid = *c.grid;
+        return {grid.area.columnStart, grid.area.columnEnd};
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(_parseGridLinePair(c));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-column-start
+export struct GridColumnStartProp {
+    GridLine value = initial();
+
+    static constexpr Str name() { return "grid-column-start"; }
+
+    static GridLine initial() {
+        return Keywords::AUTO;
+    }
+
+    void apply(SpecifiedValues& c) {
+        c.grid.cow().area.columnStart = value;
+    }
+
+    static GridLine load(SpecifiedValues& c) {
+        return c.grid->area.columnStart;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<GridLine>(c));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-column-end
+export struct GridColumnEndProp {
+    GridLine value = initial();
+
+    static constexpr Str name() { return "grid-column-end"; }
+
+    static GridLine initial() {
+        return Keywords::AUTO;
+    }
+
+    void apply(SpecifiedValues& c) {
+        c.grid.cow().area.columnEnd = value;
+    }
+
+    static GridLine load(SpecifiedValues& c) {
+        return c.grid->area.columnEnd;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<GridLine>(c));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-row
+export struct GridRowProp {
+    Pair<GridLine> value;
+
+    static constexpr Str name() { return "grid-row"; }
+
+    void apply(SpecifiedValues& c) {
+        auto& grid = c.grid.cow();
+        grid.area.rowStart = value.v0;
+        grid.area.rowEnd = value.v1;
+    }
+
+    static Pair<GridLine> load(SpecifiedValues& c) {
+        auto& grid = *c.grid;
+        return {grid.area.rowStart, grid.area.rowEnd};
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(_parseGridLinePair(c));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-row-start
+export struct GridRowStartProp {
+    GridLine value = initial();
+
+    static constexpr Str name() { return "grid-row-start"; }
+
+    static GridLine initial() {
+        return Keywords::AUTO;
+    }
+
+    void apply(SpecifiedValues& c) {
+        c.grid.cow().area.rowStart = value;
+    }
+
+    static GridLine load(SpecifiedValues& c) {
+        return c.grid->area.rowStart;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<GridLine>(c));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-row-end
+export struct GridRowEndProp {
+    GridLine value = initial();
+
+    static constexpr Str name() { return "grid-row-end"; }
+
+    static GridLine initial() {
+        return Keywords::AUTO;
+    }
+
+    void apply(SpecifiedValues& c) {
+        c.grid.cow().area.rowEnd = value;
+    }
+
+    static GridLine load(SpecifiedValues& c) {
+        return c.grid->area.rowEnd;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<GridLine>(c));
+        return Ok();
+    }
+};
+
+// TODO: https://www.w3.org/TR/css-grid-1/#propdef-grid-template
+export struct GridTemplateProp {
+    ExplicitGridProps value;
+
+    static constexpr Str name() { return "grid-template"; }
+
+    void apply(SpecifiedValues& c) {
+        c.grid.cow().explict = value;
+    }
+
+    static ExplicitGridProps load(SpecifiedValues& c) {
+        return c.grid->explict;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-template-areas
+export struct GridTemplateAreasProp {
+    Union<Keywords::None, GridAreas> value = initial();
+
+    static constexpr Str name() { return "grid-template-areas"; }
+
+    static Union<Keywords::None, GridAreas> initial() {
+        return Keywords::NONE;
+    }
+
+    void apply(SpecifiedValues& c) {
+        c.grid.cow().explict.areas = value;
+    }
+
+    static Union<Keywords::None, GridAreas> load(SpecifiedValues& c) {
+        return c.grid->explict.areas;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return parseValue<Union<Keywords::None, GridAreas>>(c);
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-template-columns
+export struct GridTemplateColumnsProp {
+    Union<Keywords::None, GridTrackList> value = initial();
+
+    static constexpr Str name() { return "grid-template-columns"; }
+
+    static Union<Keywords::None, GridTrackList> initial() {
+        return Keywords::NONE;
+    }
+
+    void apply(SpecifiedValues& c) {
+        c.grid.cow().explict.columns = value;
+    }
+
+    static Union<Keywords::None, GridTrackList> load(SpecifiedValues& c) {
+        return c.grid->explict.columns;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return parseValue<Union<Keywords::None, GridTrackList>>(c);
+    }
+};
+
+// https://www.w3.org/TR/css-grid-1/#propdef-grid-template-rows
+export struct GridTemplateRowsProp {
+    Union<Keywords::None, GridTrackList> value = initial();
+
+    static constexpr Str name() { return "grid-template-rows"; }
+
+    static Union<Keywords::None, GridTrackList> initial() {
+        return Keywords::NONE;
+    }
+
+    void apply(SpecifiedValues& c) {
+        c.grid.cow().explict.rows = value;
+    }
+
+    static Union<Keywords::None, GridTrackList> load(SpecifiedValues& c) {
+        return c.grid->explict.rows;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        return parseValue<Union<Keywords::None, GridTrackList>>(c);
+    }
+};
+
 // MARK: Line ------------------------------------------------------------------
 
 export struct LineHeightProp {
@@ -1904,7 +2303,6 @@ export struct LineHeightProp {
 // MARK: Margin ----------------------------------------------------------------
 
 // https://www.w3.org/TR/css-box-3/#propdef-margin
-
 export struct MarginTopProp {
     Width value = initial();
 
@@ -3545,6 +3943,22 @@ using _StyleProp = Union<
     FontStyleProp,
     FontSizeProp,
     FontProp,
+
+    // Grid
+    GridProp,
+    GridAreaProp,
+    GridAutoColumnsProp,
+    GridAutoFlowProp,
+    GridColumnProp,
+    GridColumnStartProp,
+    GridColumnEndProp,
+    GridRowProp,
+    GridRowStartProp,
+    GridRowEndProp,
+    GridTemplateProp,
+    GridTemplateAreasProp,
+    GridTemplateColumnsProp,
+    GridTemplateRowsProp,
 
     // Line
     LineHeightProp,
