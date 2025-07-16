@@ -66,7 +66,7 @@ bool isSegmentBreak(Rune rune) {
     return rune == '\n' or rune == '\r' or rune == '\f' or rune == '\v';
 }
 
-static Text::ProseStyle _proseStyleFomStyle(Style::SpecifiedValues& style, Rc<Text::Fontface> fontFace) {
+static Text::ProseStyle _proseStyleFromStyle(Style::SpecifiedValues& style, Rc<Text::Fontface> fontFace) {
     // FIXME: We should pass this around from the top in order to properly resolve rems
     Resolver resolver{
         .rootFont = Text::Font{fontFace, 16},
@@ -374,7 +374,7 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
         .rootFont = Text::Font{font, 16},
         .boxFont = Text::Font{font, 16},
     };
-    Text::ProseStyle proseStyle = _proseStyleFomStyle(*el->specifiedValues(), font);
+    Text::ProseStyle proseStyle = _proseStyleFromStyle(*el->specifiedValues(), font);
 
     auto value = ""s;
     if (el->hasAttribute(Html::VALUE_ATTR))
@@ -404,7 +404,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group* group) {
     } else if (el->qualifiedName == Svg::FOREIGN_OBJECT_TAG) {
         Box box{el->specifiedValues(), el->computedValues()->fontFace, el};
 
-        InlineBox rootInlineBox{_proseStyleFomStyle(
+        InlineBox rootInlineBox{_proseStyleFromStyle(
             *el->specifiedValues(),
             el->computedValues()->fontFace
         )};
@@ -476,7 +476,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
         return;
     }
 
-    auto proseStyle = _proseStyleFomStyle(*style, el->computedValues()->fontFace);
+    auto proseStyle = _proseStyleFromStyle(*style, el->computedValues()->fontFace);
 
     bc.startInlineBox(proseStyle);
     _buildChildren(bc.toInlineContext(style), el);
@@ -498,7 +498,7 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
 
 static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::SpecifiedValues> style, Gc::Ref<Dom::Element> el, Display display) {
     Box box = {style, el->computedValues()->fontFace, el};
-    InlineBox rootInlineBox{_proseStyleFomStyle(*style, el->computedValues()->fontFace)};
+    InlineBox rootInlineBox{_proseStyleFromStyle(*style, el->computedValues()->fontFace)};
 
     auto newBc = display == Display::Inside::FLEX
                      ? bc.toFlexContext(box, rootInlineBox)
@@ -542,7 +542,7 @@ struct AnonymousTableBoxWrapper {
         cellStyle->display = Display::Internal::TABLE_CELL;
 
         cellBox = Box{cellStyle, fontFace, nullptr};
-        rootInlineBoxForCell = InlineBox{_proseStyleFomStyle(*style, fontFace)};
+        rootInlineBoxForCell = InlineBox{_proseStyleFromStyle(*style, fontFace)};
     }
 
     void finalizeAndResetCell() {
@@ -731,7 +731,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Specifi
     wrapperStyle->margin = tableStyle->margin;
 
     Box wrapper = {wrapperStyle, tableBoxEl->computedValues()->fontFace, tableBoxEl};
-    InlineBox rootInlineBox{_proseStyleFomStyle(*wrapperStyle, tableBoxEl->computedValues()->fontFace)};
+    InlineBox rootInlineBox{_proseStyleFromStyle(*wrapperStyle, tableBoxEl->computedValues()->fontFace)};
 
     // SPEC: The table wrapper box establishes a block formatting context.
     _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, tableStyle);
@@ -833,7 +833,7 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
 export Box build(Gc::Ref<Dom::Document> doc) {
     if (auto el = doc->documentElement()) {
         Box root = {el->specifiedValues(), el->computedValues()->fontFace, el};
-        InlineBox rootInlineBox{_proseStyleFomStyle(*el->specifiedValues(), el->computedValues()->fontFace)};
+        InlineBox rootInlineBox{_proseStyleFromStyle(*el->specifiedValues(), el->computedValues()->fontFace)};
 
         BuilderContext bc{
             BuilderContext::From::BLOCK,
@@ -853,70 +853,8 @@ export Box build(Gc::Ref<Dom::Document> doc) {
     };
 }
 
-Vec<RunningPositionInfo> searchPage(Vec<RunningPositionInfo> list, usize page) {
-    // binary search of all running positions that match the page
-    Vec<RunningPositionInfo> result;
-    usize left = 0;
-    usize right = list.len() - 1;
-    while (left <= right) {
-        usize mid = (left + right) / 2;
-        if (list[mid].page == page) {
-            result.pushBack(list[mid]);
-            // search left side
-            usize l = mid;
-            while (l > 0 and list[l - 1].page == page) {
-                l--;
-                result.pushFront(list[l]);
-            }
-            // search right side
-            usize r = mid;
-            while (r < list.len() - 1 and list[r + 1].page == page) {
-                r++;
-                result.pushBack(list[r]);
-            }
-            break;
-        } else if (list[mid].page < page) {
-            left = mid + 1;
-        } else {
-            right = mid - 1;
-        }
-    }
-    if (result.len() == 0) {
-        // if no running position found, return the first one
-        result.pushBack(list[0]);
-    }
-    return result;
-}
-
-// https://www.w3.org/TR/css-gcpm-3/#using-named-strings
-RunningPositionInfo matchElementContent(Vec<RunningPositionInfo> list, ElementContent::Target target = ElementContent::UNDEFINED, usize currentPage = 0) {
-
-    switch (target) {
-    case ElementContent::UNDEFINED:
-        return list[0];
-        break;
-    case ElementContent::START:
-        for (usize i = 0; i < list.len(); i++) {
-            auto elt = list[i];
-            if (elt.page == currentPage) {
-                return list[i - 1];
-            }
-        }
-        return list[0];
-    case ElementContent::FIRST:
-    case ElementContent::FIRST_EXCEPT: {
-        auto elements = searchPage(list, currentPage);
-        return elements[0];
-    }
-    case ElementContent::LAST: {
-        auto elements = searchPage(list, currentPage);
-        return elements[elements.len() - 1];
-    }
-    }
-}
-
-export Box buildForPseudoElement(Dom::PseudoElement& el, usize& currentPage, Map<String, Vec<RunningPositionInfo>>& runningPos) {
-    auto proseStyle = _proseStyleFomStyle(*el.specifiedValues(), el.computedValues()->fontFace);
+export Box buildForPseudoElement(Dom::PseudoElement& el, usize currentPage, RunningPositionMap& runningPos) {
+    auto proseStyle = _proseStyleFromStyle(*el.specifiedValues(), el.computedValues()->fontFace);
 
     if (el.specifiedValues()->content.is<String>()) {
         auto prose = makeRc<Text::Prose>(proseStyle);
@@ -925,14 +863,10 @@ export Box buildForPseudoElement(Dom::PseudoElement& el, usize& currentPage, Map
         return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};
     } else if (el.specifiedValues()->content.is<ElementContent>()) {
         auto elt = el.specifiedValues()->content.unwrap<ElementContent>();
-        auto id = elt.customIdent;
-        if (runningPos.has(id)) {
-            auto box = matchElementContent(runningPos.get(id), elt.target, currentPage).structure;
-            return box;
+        if (auto box = runningPos.match(elt, currentPage)) {
+            return box.unwrap().structure;
         }
-    }
-
-    else if (el.specifiedValues()->content.is<Counter>()) {
+    } else if (el.specifiedValues()->content.is<Counter>()) {
         auto elt = el.specifiedValues()->content.unwrap<Counter>();
         if (elt.type == Counter::TYPE::PAGE) {
             auto prose = makeRc<Text::Prose>(proseStyle);

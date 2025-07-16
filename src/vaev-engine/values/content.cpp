@@ -12,7 +12,7 @@ import :values.primitives;
 namespace Vaev {
 
 export struct ElementContent {
-    String customIdent = ""s;
+    CustomIdent customIdent = {Symbol::from("")};
 
     enum Target {
         UNDEFINED,
@@ -24,9 +24,9 @@ export struct ElementContent {
 
     Target target = UNDEFINED;
 
-    explicit ElementContent(Str customIdent) : customIdent(customIdent) {}
+    explicit ElementContent(CustomIdent customIdent) : customIdent(customIdent) {}
 
-    explicit ElementContent(Str customIdent, Target target) : customIdent(customIdent), target(target) {}
+    explicit ElementContent(CustomIdent customIdent, Target target) : customIdent(customIdent), target(target) {}
 
     void repr(Io::Emit& e) const {
         e("element '{}'", customIdent);
@@ -82,11 +82,14 @@ struct ValueParser<ElementContent> {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        auto ident = c->token.data;
+        auto ident = ValueParser<CustomIdent>::parse(c);
 
-        c.next();
+        if (not ident) {
+            return Error::invalidData("ill formed custom ident in content");
+        }
+
         if (c.ended())
-            return Ok(ElementContent{ident});
+            return Ok(ElementContent{ident.take()});
 
         ElementContent::Target target = ElementContent::Target::UNDEFINED;
         if (c.skip(Css::Token::ident("first"))) {
@@ -99,7 +102,7 @@ struct ValueParser<ElementContent> {
             target = ElementContent::Target::FIRST_EXCEPT;
         }
         c.next();
-        return (Ok(ElementContent{ident, target}));
+        return (Ok(ElementContent{ident.take(), target}));
     }
 };
 

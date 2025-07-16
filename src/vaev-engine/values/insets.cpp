@@ -1,6 +1,7 @@
 module;
 
 #include <karm-io/emit.h>
+#include <karm-logger/logger.h>
 #include <karm-math/insets.h>
 
 export module Vaev.Engine:values.insets;
@@ -14,9 +15,7 @@ namespace Vaev {
 // MARK: Position --------------------------------------------------------------
 
 export struct RunningPosition {
-    String customIdent;
-
-    explicit RunningPosition(Str customIdent) : customIdent(customIdent) {}
+    CustomIdent customIdent;
 
     void repr(Io::Emit& e) const {
         e("running '{}'", customIdent);
@@ -49,9 +48,12 @@ struct ValueParser<Position> {
             return Ok(Keywords::STICKY);
         else if (c->type == Css::Sst::FUNC and c->prefix == Css::Token::function("running(")) {
             Cursor<Css::Sst> cur = c->content;
-            auto content = cur.peek().token.data.str();
+            auto res = parseValue<CustomIdent>(cur);
+            if (not res) {
+                return Error::invalidData("ill formed custom-ident in running position");
+            }
             c.next();
-            return Ok(RunningPosition{content});
+            return Ok(RunningPosition{res.take()});
 
         } else
             return Error::invalidData("expected position");

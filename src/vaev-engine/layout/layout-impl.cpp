@@ -3,7 +3,6 @@ module;
 #include <karm-gfx/borders.h>
 #include <karm-logger/logger.h>
 #include <karm-text/prose.h>
-#include <utility>
 
 module Vaev.Engine;
 
@@ -213,31 +212,11 @@ void fillKnownSizeWithSpecifiedSizeIfEmpty(Tree& tree, Box& box, Input& input) {
     }
 }
 
-static void registerRunningPosition(Input& input, Box& box) {
-
-    if (not input.runningPosition) {
-        return;
-    }
-
-    auto& style = box.style;
-    if (auto pos = style->position.is<RunningPosition>()) {
-        auto position = pos.peek();
-        auto& running = input.runningPosition.peek();
-
-        Box copy = box;
-        copy.style = makeRc<Style::SpecifiedValues>(*style);
-        copy.style->position = Keywords::STATIC;
-        RunningPositionInfo info = {input.page.number, position, copy};
-        if (running.has(position.customIdent)) {
-            running.get(position.customIdent).pushBack(info);
-        } else {
-            running.put(position.customIdent, {info});
-        }
-    }
-}
-
 static void lookForRunningPosition(Input& input, Box& box) {
-    registerRunningPosition(input, box);
+    if (input.runningPosition) {
+        auto& runningMap = input.runningPosition.peek();
+        runningMap.add(input.pageNumber, box);
+    }
     for (auto& child : box.children()) {
         lookForRunningPosition(input, child);
     }
