@@ -1,7 +1,6 @@
 export module Vaev.Engine:style;
 
 export import :style.computer;
-export import :style.computed;
 export import :style.specified;
 export import :style.decls;
 export import :style.fonts;
