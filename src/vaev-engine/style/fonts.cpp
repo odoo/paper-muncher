@@ -127,7 +127,7 @@ export struct SrcDesc {
 
             eatWhitespace(c);
 
-            if (not c.ended() and c.peek() == Css::Sst::FUNC and c.peek().prefix == Css::Token::function("tech")) {
+            if (not c.ended() and c.peek() == Css::Sst::FUNC and c.peek().prefix == Css::Token::function("tech(")) {
                 // TODO: https://www.w3.org/TR/css-fonts-4/#font-tech-values
             }
 
