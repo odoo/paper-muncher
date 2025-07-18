@@ -590,6 +590,10 @@ export struct Frag {
             children->pushBack(std::move(frag));
         }
     }
+
+    void repr(Io::Emit& e) const {
+        e("(frag matrics: {} content: {})", metrics, content);
+    }
 };
 
 void SVG::GroupFrag::add(Element&& el) {
