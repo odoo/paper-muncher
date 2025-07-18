@@ -136,6 +136,16 @@ export struct Media {
     Au deviceWidth;
     Au deviceHeight;
     Number deviceAspectRatio;
+
+    void updateSize(Vec2Au const& size) {
+        width = size.x;
+        height = size.y;
+        aspectRatio = (f64)size.x / (f64)size.y;
+
+        deviceWidth = size.x;
+        deviceHeight = size.y;
+        deviceAspectRatio = aspectRatio;
+    }
 };
 
 // MARK: Media Features --------------------------------------------------------
