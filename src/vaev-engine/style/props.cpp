@@ -2936,6 +2936,39 @@ export struct TextTransformProp {
     }
 };
 
+// https://www.w3.org/TR/css-page-3/#page-size-prop
+export struct PageSizeProp {
+    PageSize value = initial();
+
+    static constexpr Str name() { return "size"; }
+
+    static PageSize initial() { return Keywords::AUTO; }
+
+    void apply(SpecifiedValues& c) const {
+        c.pageSize.cow() = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Css::Token::ident("auto"))) {
+            value = Keywords::AUTO;
+        } else if (auto firstLength = parseValue<Length>(c)) {
+            auto secondLength = parseValue<Length>(c);
+            if (secondLength) {
+                value = Pair<Length>{firstLength.unwrap(), secondLength.unwrap()};
+            } else {
+                value = Pair<Length>{firstLength.unwrap(), firstLength.unwrap()};
+            }
+        } else {
+            value = try$(parseValue<PageStockWithOrientation>(c));
+        }
+
+        return Ok();
+    }
+};
+
 // MARK: Transform -------------------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#transform-property
 
@@ -3605,6 +3638,8 @@ using _StyleProp = Union<
     MinHeightProp,
     MaxWidthProp,
     MaxHeightProp,
+
+    PageSizeProp,
 
     // Text
     TextAlignProp,

@@ -91,6 +91,8 @@ export struct SpecifiedValues {
 
     Cow<SVGProps> svg;
 
+    Cow<PageSize> pageSize = makeCow<PageSize>(PageSize{Keywords::AUTO});
+
     // ---------- Computed Style ---------------------
 
     Rc<Gfx::Fontface> fontFace;
