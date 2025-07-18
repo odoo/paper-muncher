@@ -84,11 +84,13 @@ void _paintMargins(Style::PageSpecifiedValues& pageStyle, RectAu pageRect, RectA
 }
 
 static Style::Media _constructMedia(Print::Settings const& settings) {
+    Math::Vec2f paperSize = resolve(settings.orientation, settings.paper.size());
+
     return {
         .type = MediaType::SCREEN,
-        .width = Au{settings.paper.width},
-        .height = Au{settings.paper.height},
-        .aspectRatio = settings.paper.width / (f64)settings.paper.height,
+        .width = Au{paperSize.width},
+        .height = Au{paperSize.height},
+        .aspectRatio = paperSize.width / paperSize.height,
         .orientation = settings.orientation,
 
         .resolution = Resolution{settings.scale, Resolution::X},
@@ -116,9 +118,39 @@ static Style::Media _constructMedia(Print::Settings const& settings) {
         .prefersReducedData = ReducedData::NO_PREFERENCE,
 
         // NOTE: Deprecated Media Features
-        .deviceWidth = Au{settings.paper.width},
-        .deviceHeight = Au{settings.paper.height},
-        .deviceAspectRatio = settings.paper.width / settings.paper.height,
+        .deviceWidth = Au{paperSize.width},
+        .deviceHeight = Au{paperSize.height},
+        .deviceAspectRatio = paperSize.width / paperSize.height,
+    };
+}
+
+Pair<RectAu> _computePageBounds(Print::Settings const& settings, Style::Media const& media, Style::PageSpecifiedValues const& pageStyle) {
+    Vec2Au pageRectSize = resolve(
+        *pageStyle.style->pageSize,
+        Vec2Au{
+            media.width / Au{media.resolution.toDppx()},
+            media.height / Au{media.resolution.toDppx()}
+        }
+    );
+
+    InsetsAu pageMargin;
+    if (settings.margins == Print::Margins::DEFAULT) {
+        Layout::Resolver resolver{};
+        pageMargin = {
+            resolver.resolve(pageStyle.style->margin->top, pageRectSize.height),
+            resolver.resolve(pageStyle.style->margin->end, pageRectSize.width),
+            resolver.resolve(pageStyle.style->margin->bottom, pageRectSize.height),
+            resolver.resolve(pageStyle.style->margin->start, pageRectSize.width),
+        };
+    } else if (settings.margins == Print::Margins::CUSTOM) {
+        pageMargin = settings.margins.custom.cast<Au>();
+    } else if (settings.margins == Print::Margins::MINIMUM) {
+        pageMargin = {};
+    }
+
+    return {
+        pageRectSize,
+        RectAu{pageRectSize}.shrink(pageMargin)
     };
 }
 
@@ -164,39 +196,10 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
         };
 
         auto pageStyle = computer.computeFor(initialStyle, page);
-        RectAu pageRect{
-            media.width / Au{media.resolution.toDppx()},
-            media.height / Au{media.resolution.toDppx()}
-        };
 
-        auto pageSize = pageRect.size().cast<f64>();
+        auto [pageRect, pageContent] = _computePageBounds(settings, media, *pageStyle);
 
         auto pageStack = makeRc<Scene::Stack>();
-
-        InsetsAu pageMargin;
-
-        if (settings.margins == Print::Margins::DEFAULT) {
-            Layout::Resolver resolver{};
-            pageMargin = {
-                resolver.resolve(pageStyle->style->margin->top, pageRect.height),
-                resolver.resolve(pageStyle->style->margin->end, pageRect.width),
-                resolver.resolve(pageStyle->style->margin->bottom, pageRect.height),
-                resolver.resolve(pageStyle->style->margin->start, pageRect.width),
-            };
-        } else if (settings.margins == Print::Margins::CUSTOM) {
-            pageMargin = settings.margins.custom.cast<Au>();
-        } else if (settings.margins == Print::Margins::MINIMUM) {
-            pageMargin = {};
-        }
-
-        RectAu pageContent = pageRect.shrink(pageMargin);
-
-        Layout::Viewport vp{
-            .small = pageContent.size(),
-        };
-
-        contentTree.viewport = vp;
-        contentTree.fc = {pageContent.size()};
 
         if (settings.headerFooter and settings.margins != Print::Margins::NONE)
             _paintMargins(*pageStyle, pageRect, pageContent, *pageStack);
@@ -207,6 +210,13 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
             .availableSpace = pageContent.size(),
             .containingBlock = pageContent.size(),
         };
+
+        Layout::Viewport vp{
+            .small = pageContent.size(),
+        };
+
+        contentTree.viewport = vp;
+        contentTree.fc = {pageContent.size()};
 
         contentTree.fc.enterDiscovery();
         auto outDiscovery = Layout::layout(
@@ -229,7 +239,16 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
         Layout::paint(fragment, *pageStack);
         pageStack->prepare();
 
-        co_yield Print::Page(settings.paper, makeRc<Scene::Clear>(makeRc<Scene::Transform>(pageStack, Math::Trans2f::scale(media.resolution.toDppx())), canvasColor));
+        Print::PaperStock pagePaperStock{
+            ""s,
+            (f64)pageRect.size().width * media.resolution.toDppx(),
+            (f64)pageRect.size().height * media.resolution.toDppx()
+        };
+
+        co_yield Print::Page(
+            pagePaperStock,
+            makeRc<Scene::Clear>(makeRc<Scene::Transform>(pageStack, Math::Trans2f::scale(media.resolution.toDppx())), canvasColor)
+        );
 
         if (outFragmentation.completelyLaidOut)
             break;
