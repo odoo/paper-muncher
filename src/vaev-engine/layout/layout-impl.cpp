@@ -1,8 +1,8 @@
 module;
 
 #include <karm-gfx/borders.h>
-#include <karm-text/prose.h>
 #include <karm-logger/logger.h>
+#include <karm-text/prose.h>
 
 module Vaev.Engine;
 
@@ -212,6 +212,16 @@ void fillKnownSizeWithSpecifiedSizeIfEmpty(Tree& tree, Box& box, Input& input) {
     }
 }
 
+static void lookForRunningPosition(Input& input, Box& box) {
+    if (input.runningPosition) {
+        auto& runningMap = input.runningPosition.peek();
+        runningMap.add(input.pageNumber, box);
+    }
+    for (auto& child : box.children()) {
+        lookForRunningPosition(input, child);
+    }
+}
+
 Output layout(Tree& tree, Box& box, Input input) {
     // FIXME: confirm how the preferred width/height parameters interacts with intrinsic size argument from input
 
@@ -242,6 +252,8 @@ Output layout(Tree& tree, Box& box, Input input) {
 
     if (tree.fc.isDiscoveryMode()) {
         try$(_shouldAbortFragmentingBeforeLayout(tree.fc, input));
+
+        lookForRunningPosition(input, box);
 
         if (isMonolithicDisplay)
             tree.fc.enterMonolithicBox();
@@ -285,7 +297,11 @@ Output layout(Tree& tree, Box& box, Input input) {
                                 ? input.breakpointTraverser.getEnd()
                                 : NONE;
 
+        if (box.style->position.is<RunningPosition>()) {
+            input.fragment = nullptr;
+        }
         auto parentFrag = input.fragment;
+
         Frag currFrag(&box);
         input.fragment = input.fragment ? &currFrag : nullptr;
 
@@ -328,8 +344,10 @@ Output layout(Tree& tree, Box& box, Input input) {
 
 Output layout(Tree& tree, Input input) {
     auto out = layout(tree, tree.root, input);
-    if (input.fragment)
-        layoutPositioned(tree, input.fragment->children()[0], input.containingBlock);
+    if (input.fragment) {
+        layoutPositioned(tree, input.fragment->children()[0], input.containingBlock, input);
+    }
+
     return out;
 }
 
