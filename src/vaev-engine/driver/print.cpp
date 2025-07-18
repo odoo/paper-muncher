@@ -122,8 +122,75 @@ static Style::Media _constructMedia(Print::Settings const& settings) {
     };
 }
 
-export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
+Pair<RectAu> _computePageBounds(Print::Settings const& settings, Style::Media const& media, Style::PageSpecifiedValues const& pageStyle) {
+    Vec2Au pageRectSize = resolve(
+        *pageStyle.style->pageSize,
+        Vec2Au{
+            media.width / Au{media.resolution.toDppx()},
+            media.height / Au{media.resolution.toDppx()}
+        }
+    );
+
+    InsetsAu pageMargin;
+    if (settings.margins == Print::Margins::DEFAULT) {
+        Layout::Resolver resolver{};
+        pageMargin = {
+            resolver.resolve(pageStyle.style->margin->top, pageRectSize.height),
+            resolver.resolve(pageStyle.style->margin->end, pageRectSize.width),
+            resolver.resolve(pageStyle.style->margin->bottom, pageRectSize.height),
+            resolver.resolve(pageStyle.style->margin->start, pageRectSize.width),
+        };
+    } else if (settings.margins == Print::Margins::CUSTOM) {
+        pageMargin = settings.margins.custom.cast<Au>();
+    } else if (settings.margins == Print::Margins::MINIMUM) {
+        pageMargin = {};
+    }
+
+    if (resolve(*pageStyle.style->pageSize, media.orientation) == Print::Orientation::LANDSCAPE) {
+        pageRectSize = {
+            pageRectSize.height,
+            pageRectSize.width
+        };
+    }
+
+    return {
+        pageRectSize,
+        RectAu{pageRectSize}.shrink(pageMargin)
+    };
+}
+
+// https://www.w3.org/TR/css-page-3/#issue-59a903e8
+Style::Media _constructMediaForBasePageSize(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
     auto media = _constructMedia(settings);
+
+    // ----------------- Computing UA page size
+    InsetsAu uAPageMargin;
+    if (settings.margins == Print::Margins::DEFAULT) {
+        uAPageMargin = {resolveAbsoluteLength(Length{0.5, Length::Unit::IN})};
+    } else if (settings.margins == Print::Margins::CUSTOM) {
+        uAPageMargin = settings.margins.custom.cast<Au>();
+    } else if (settings.margins == Print::Margins::MINIMUM) {
+        uAPageMargin = {};
+    }
+
+    RectAu uAPageRect{
+        media.width / Au{media.resolution.toDppx()},
+        media.height / Au{media.resolution.toDppx()}
+    };
+
+    RectAu uAPageContent = uAPageRect.shrink(uAPageMargin);
+
+    // ----------------- Computing Page Base Size
+    auto pageStyleFromUAPage = computePageBaseSize(*dom->styleSheets, media);
+    auto [basePageRect, _] = _computePageBounds(settings, media, *pageStyleFromUAPage);
+
+    // FIXME: update or reconstruct?
+    media.updateSize(basePageRect.size());
+    return media;
+}
+
+export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
+    auto media = _constructMediaForBasePageSize(dom, settings);
 
     Text::FontBook fontBook;
     if (not fontBook.loadAll())
@@ -132,6 +199,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
     Style::Computer computer{
         media, *dom->styleSheets, fontBook
     };
+
     computer.build();
     computer.styleDocument(*dom);
 
@@ -164,39 +232,10 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
         };
 
         auto pageStyle = computer.computeFor(initialStyle, page);
-        RectAu pageRect{
-            media.width / Au{media.resolution.toDppx()},
-            media.height / Au{media.resolution.toDppx()}
-        };
 
-        auto pageSize = pageRect.size().cast<f64>();
+        auto [pageRect, pageContent] = _computePageBounds(settings, media, *pageStyle);
 
         auto pageStack = makeRc<Scene::Stack>();
-
-        InsetsAu pageMargin;
-
-        if (settings.margins == Print::Margins::DEFAULT) {
-            Layout::Resolver resolver{};
-            pageMargin = {
-                resolver.resolve(pageStyle->style->margin->top, pageRect.height),
-                resolver.resolve(pageStyle->style->margin->end, pageRect.width),
-                resolver.resolve(pageStyle->style->margin->bottom, pageRect.height),
-                resolver.resolve(pageStyle->style->margin->start, pageRect.width),
-            };
-        } else if (settings.margins == Print::Margins::CUSTOM) {
-            pageMargin = settings.margins.custom.cast<Au>();
-        } else if (settings.margins == Print::Margins::MINIMUM) {
-            pageMargin = {};
-        }
-
-        RectAu pageContent = pageRect.shrink(pageMargin);
-
-        Layout::Viewport vp{
-            .small = pageContent.size(),
-        };
-
-        contentTree.viewport = vp;
-        contentTree.fc = {pageContent.size()};
 
         if (settings.headerFooter and settings.margins != Print::Margins::NONE)
             _paintMargins(*pageStyle, pageRect, pageContent, *pageStack);
@@ -207,6 +246,13 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
             .availableSpace = pageContent.size(),
             .containingBlock = pageContent.size(),
         };
+
+        Layout::Viewport vp{
+            .small = pageContent.size(),
+        };
+
+        contentTree.viewport = vp;
+        contentTree.fc = {pageContent.size()};
 
         contentTree.fc.enterDiscovery();
         auto outDiscovery = Layout::layout(
@@ -229,7 +275,16 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
         Layout::paint(fragment, *pageStack);
         pageStack->prepare();
 
-        co_yield Print::Page(settings.paper, makeRc<Scene::Clear>(makeRc<Scene::Transform>(pageStack, Math::Trans2f::scale(media.resolution.toDppx())), canvasColor));
+        Print::PaperStock pagePaperStock{
+            ""s,
+            (f64)pageRect.size().width * media.resolution.toDppx(),
+            (f64)pageRect.size().height * media.resolution.toDppx()
+        };
+
+        co_yield Print::Page(
+            pagePaperStock,
+            makeRc<Scene::Clear>(makeRc<Scene::Transform>(pageStack, Math::Trans2f::scale(media.resolution.toDppx())), canvasColor)
+        );
 
         if (outFragmentation.completelyLaidOut)
             break;

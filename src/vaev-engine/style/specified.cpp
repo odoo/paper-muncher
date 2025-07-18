@@ -5,6 +5,7 @@ module;
 #include <karm-gfx/color.h>
 #include <karm-io/emit.h>
 #include <karm-math/au.h>
+#include <karm-text/font.h>
 
 export module Vaev.Engine:style.specified;
 
@@ -29,6 +30,8 @@ struct TransformProps {
 // https://www.w3.org/TR/css-cascade/#specified
 export struct SpecifiedValues {
     static SpecifiedValues const& initial();
+
+    SpecifiedValues() : fontFace(Text::Fontface::fallback()) {}
 
     Gfx::Color color;
     Number opacity;
@@ -87,6 +90,12 @@ export struct SpecifiedValues {
     ZIndex zIndex = Keywords::AUTO;
 
     Cow<SVGProps> svg;
+
+    Cow<PageSize> pageSize = makeCow<PageSize>(PageSize{Keywords::AUTO});
+
+    // ---------- Computed Style ---------------------
+
+    Rc<Text::Fontface> fontFace;
 
     void inherit(SpecifiedValues const& parent) {
         color = parent.color;

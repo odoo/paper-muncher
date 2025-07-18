@@ -8,14 +8,40 @@ export module Vaev.Engine:style.computer;
 
 import Karm.Gc;
 import :dom;
-import :style.computed;
 import :style.specified;
 import :style.stylesheet;
 
 namespace Vaev::Style {
 
+void _evalGuardlessPageRule(Rule const& rule, Media const& media, PageSpecifiedValues& c) {
+    rule.visit(Visitor{
+        [&](PageRule const& r) {
+            if (r.selectors.len() == 0)
+                r.apply(c);
+        },
+        [&](MediaRule const& r) {
+            if (r.match(media))
+                for (auto const& subRule : r.rules)
+                    _evalGuardlessPageRule(subRule, media, c);
+        },
+        [&](auto const&) {
+            // Ignore other rule types
+        },
+    });
+}
+
+export Rc<PageSpecifiedValues> computePageBaseSize(StyleSheetList const& styleBook, Media const& media) {
+    auto computed = makeRc<PageSpecifiedValues>(SpecifiedValues::initial());
+
+    for (auto const& sheet : styleBook.styleSheets)
+        for (auto const& rule : sheet.rules)
+            _evalGuardlessPageRule(rule, media, *computed);
+
+    return computed;
+}
+
 export struct Computer {
-    Media _media;
+    Media const _media;
     StyleSheetList const& _styleBook;
     Text::FontBook& fontBook;
     StyleRuleLookup _styleRuleLookup{};
@@ -194,7 +220,7 @@ export struct Computer {
 
         for (auto& area : computed->_areas) {
             auto font = _lookupFontface(fontBook, *area.specifiedValues());
-            area._computedValues = makeRc<ComputedValues>(font);
+            area.specifiedValues()->fontFace = font;
         }
 
         return computed;
@@ -202,7 +228,7 @@ export struct Computer {
 
     // MARK: Styling -----------------------------------------------------------
 
-    void styleElement(SpecifiedValues const& parentSpecifiedValues, ComputedValues const& parentComputedValues, Dom::Element& el) {
+    void styleElement(SpecifiedValues const& parentSpecifiedValues, Dom::Element& el) {
         auto specifiedValues = computeFor(parentSpecifiedValues, el);
         el._specifiedValues = specifiedValues;
 
@@ -213,23 +239,22 @@ export struct Computer {
             (parentSpecifiedValues.font->families != specifiedValues->font->families or
              parentSpecifiedValues.font->weight != specifiedValues->font->weight)) {
             auto font = _lookupFontface(fontBook, *specifiedValues);
-            el._computedValues = makeRc<ComputedValues>(font);
+            specifiedValues->fontFace = font;
         } else {
-            el._computedValues = makeRc<ComputedValues>(parentComputedValues.fontFace);
+            specifiedValues->fontFace = parentSpecifiedValues.fontFace;
         }
 
         for (auto child = el.firstChild(); child; child = child->nextSibling()) {
             if (auto childEl = child->is<Dom::Element>())
-                styleElement(*specifiedValues, *el.computedValues(), *childEl);
+                styleElement(*specifiedValues, *childEl);
         }
     }
 
     void styleDocument(Dom::Document& doc) {
         if (auto el = doc.documentElement()) {
             auto rootSpecifiedValues = makeRc<SpecifiedValues>(SpecifiedValues::initial());
-            auto font = _lookupFontface(fontBook, *rootSpecifiedValues);
-            auto rootComputedValues = makeRc<ComputedValues>(font);
-            styleElement(*rootSpecifiedValues, *rootComputedValues, *el);
+            rootSpecifiedValues->fontFace = _lookupFontface(fontBook, *rootSpecifiedValues);
+            styleElement(*rootSpecifiedValues, *el);
         }
     }
 

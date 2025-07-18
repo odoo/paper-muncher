@@ -26,8 +26,8 @@ export struct Resolver {
         Au fontSize{16};
 
         Resolver resolver;
-        resolver.rootFont = Text::Font{tree.root.fontFace, fontSize.cast<f64>()};
-        resolver.boxFont = Text::Font{box.fontFace, fontSize.cast<f64>()};
+        resolver.rootFont = Text::Font{tree.root.style->fontFace, fontSize.cast<f64>()};
+        resolver.boxFont = Text::Font{box.style->fontFace, fontSize.cast<f64>()};
         resolver.viewport = tree.viewport;
         resolver.boxAxis = mainAxis(box);
         return resolver;
@@ -211,31 +211,11 @@ export struct Resolver {
                 resolve(Length(value.val(), Length::SVH))
             );
 
-        // Absolute
-        // https://drafts.csswg.org/css-values/#absolute-lengths
-        case Length::CM:
-            return Au::fromFloatNearest(value.val() * 96 / 2.54);
-
-        case Length::MM:
-            return Au::fromFloatNearest(value.val() * 96 / 25.4);
-
-        case Length::Q:
-            return Au::fromFloatNearest(value.val() * 96 / 101.6);
-
-        case Length::IN:
-            return Au::fromFloatNearest(value.val() * 96);
-
-        case Length::PT:
-            return Au::fromFloatNearest(value.val() * 96 / 72.0);
-
-        case Length::PC:
-            return Au::fromFloatNearest(value.val() * 96 / 6.0);
-
-        case Length::PX:
-            return Au::fromFloatNearest(value.val());
-
-        default:
+        default: {
+            if (value.isAbsolute())
+                return resolveAbsoluteLength(value);
             panic("invalid length unit");
+        }
         }
     }
 

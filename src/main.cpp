@@ -60,9 +60,6 @@ static Async::Task<> printAsync(
 
     auto paper = options.paper;
 
-    if (options.orientation == Print::Orientation::LANDSCAPE)
-        paper = paper.landscape();
-
     if (options.width) {
         paper.name = "custom";
         paper.width = resolver.resolve(*options.width).cast<f64>();
@@ -75,6 +72,7 @@ static Async::Task<> printAsync(
 
     Print::Settings settings = {
         .paper = paper,
+        .orientation = options.orientation,
         .scale = options.scale.toDppx(),
     };
 
