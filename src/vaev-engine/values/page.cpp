@@ -52,9 +52,9 @@ struct ValueParser<Print::PaperStock> {
         else if (c.skip(Css::Token::ident("B4")))
             return Ok(Print::B4);
         else if (c.skip(Css::Token::ident("JIS-B5")))
-            return Ok(Print::B5); // FIXME
+            return Ok(Print::JIS_B5);
         else if (c.skip(Css::Token::ident("JIS-B4")))
-            return Ok(Print::B4); // FIXME
+            return Ok(Print::JIS_B4);
         else if (c.skip(Css::Token::ident("letter")))
             return Ok(Print::LETTER);
         else if (c.skip(Css::Token::ident("legal")))
@@ -62,7 +62,7 @@ struct ValueParser<Print::PaperStock> {
         else if (c.skip(Css::Token::ident("ledger")))
             return Ok(Print::LEDGER);
         else
-            return Error::invalidData("expected orientation");
+            return Error::invalidData("expected paper stock");
     }
 };
 
@@ -122,7 +122,7 @@ Vec2Au resolve(PageSize const& pageSize, Vec2Au const& mediaSize) {
     } else if (auto pageStockWithOrientation = pageSize.is<PageStockWithOrientation>()) {
         // https://www.w3.org/TR/css-page-3/#valdef-page-size-landscape
         // https://www.w3.org/TR/css-page-3/#valdef-page-size-portrait
-        
+
         if (not pageStockWithOrientation->stock) {
             // If a <page-size> is not specified, the size of the page sheet is chosen by the UA.
             return mediaSize;
