@@ -43,40 +43,40 @@ struct PrintOption {
     Print::PaperStock paper = Print::A4;
     Print::Orientation orientation = Print::Orientation::PORTRAIT;
     Mime::Uti outputFormat = Mime::Uti::PUBLIC_PDF;
+
+    auto preparePrintSettings(this auto const& self) -> Print::Settings {
+        Vaev::Layout::Resolver resolver;
+        resolver.viewport.dpi = self.scale;
+
+        auto paper = self.paper;
+
+        if (self.orientation == Print::Orientation::LANDSCAPE)
+            paper = paper.landscape();
+
+        if (self.width) {
+            paper.name = "custom";
+            paper.width = resolver.resolve(*self.width).template cast<f64>();
+        }
+
+        if (self.height) {
+            paper.name = "custom";
+            paper.height = resolver.resolve(*self.height).template cast<f64>();
+        }
+
+        return {
+            .paper = paper,
+            .scale = self.scale.toDppx(),
+        };
+    }
 };
 
 static Async::Task<> printAsync(
     Rc<Http::Client> client,
-    Mime::Url const& input,
+    Vec<Mime::Url> const& inputs,
     Mime::Url const& output,
     PrintOption options = {}
 ) {
     Gc::Heap heap;
-
-    auto dom = co_trya$(Vaev::Loader::fetchDocumentAsync(heap, *client, input));
-
-    Vaev::Layout::Resolver resolver;
-    resolver.viewport.dpi = options.scale;
-
-    auto paper = options.paper;
-
-    if (options.orientation == Print::Orientation::LANDSCAPE)
-        paper = paper.landscape();
-
-    if (options.width) {
-        paper.name = "custom";
-        paper.width = resolver.resolve(*options.width).cast<f64>();
-    }
-
-    if (options.height) {
-        paper.name = "custom";
-        paper.height = resolver.resolve(*options.height).cast<f64>();
-    }
-
-    Print::Settings settings = {
-        .paper = paper,
-        .scale = options.scale.toDppx(),
-    };
 
     auto printer = co_try$(
         Print::FilePrinter::create(
@@ -87,21 +87,25 @@ static Async::Task<> printAsync(
         )
     );
 
-    Vaev::Driver::print(
-        *dom,
-        settings
-    ) | forEach([&](Print::Page& page) {
-        page.print(
-            *printer,
-            {
-                .showBackgroundGraphics = true,
-            }
-        );
-    });
+    for (auto& input : inputs) {
+        logInfo("rendering {}...", input);
+        auto dom = co_trya$(Vaev::Loader::fetchDocumentAsync(heap, *client, input));
+        Vaev::Driver::print(
+            *dom,
+            options.preparePrintSettings()
+        ) | forEach([&](Print::Page& page) {
+            page.print(
+                *printer,
+                {
+                    .showBackgroundGraphics = true,
+                }
+            );
+        });
+    }
 
+    logInfo("saving {}...", output);
     Io::BufferWriter bw;
     co_try$(printer->write(bw));
-
     co_trya$(client->doAsync(
         Http::Request::from(
             Http::Method::PUT,
@@ -208,7 +212,8 @@ static Async::Task<> renderAsync(
 } // namespace PaperMuncher
 
 Async::Task<> entryPointAsync(Sys::Context& ctx) {
-    auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, "-"s);
+    auto inputArg = Cli::operand<Str>("input"s, "Input files (default: stdin)"s, "-"s);
+    auto inputsArg = Cli::operand<Vec<Str>>("inputs"s, "Input files (default: stdin)"s, {"-"s});
     auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
     auto formatArg = Cli::option<Str>('f', "format"s, "Override the output file format"s, ""s);
     auto unsecureArg = Cli::flag(NONE, "unsecure"s, "Allow local file and http access"s);
@@ -237,7 +242,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
         "print"s,
         "Render a web page into a printable document"s,
         {
-            inputArg,
+            inputsArg,
             outputArg,
             formatArg,
             densityArg,
@@ -264,9 +269,12 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             options.paper = co_try$(Print::findPaperStock(paperArg.unwrap()));
             options.orientation = co_try$(Vaev::parseValue<Print::Orientation>(orientationArg.unwrap()));
 
-            Mime::Url input = "fd:stdin"_url;
-            if (inputArg.unwrap() != "-"s)
-                input = Mime::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
+            Vec<Mime::Url> inputs;
+            for (auto& i : inputsArg.unwrap())
+                if (i == "-"s)
+                    inputs.pushBack("fd:stdin"_url);
+                else
+                    inputs.pushBack(Mime::parseUrlOrPath(i, co_try$(Sys::pwd())));
 
             Mime::Url output = "fd:stdout"_url;
             if (outputArg.unwrap() != "-"s)
@@ -276,7 +284,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
                 options.outputFormat = co_try$(Mime::Uti::fromMime({formatArg}));
 
             auto client = PaperMuncher::_createHttpClient(unsecureArg);
-            co_return co_await PaperMuncher::printAsync(client, input, output, options);
+            co_return co_await PaperMuncher::printAsync(client, inputs, output, options);
         }
     );
 
