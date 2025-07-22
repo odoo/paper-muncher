@@ -9,7 +9,7 @@ export module Vaev.Engine:loader.loader;
 
 import Karm.Gc;
 import Karm.Http;
-import Karm.Aio;
+import Karm.Core;
 import :dom;
 import :html;
 import :xml;
