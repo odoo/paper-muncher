@@ -154,8 +154,35 @@ Pair<RectAu> _computePageBounds(Print::Settings const& settings, Style::Media co
     };
 }
 
+// https://www.w3.org/TR/css-page-3/#issue-59a903e8
+Style::Media _constructMediaForBasePageSize(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
+    auto const media = _constructMedia(settings);
+
+    // ----------------- Computing UA page size
+    InsetsAu uAPageMargin;
+    if (settings.margins == Print::Margins::DEFAULT) {
+        uAPageMargin = {resolveAbsoluteLength(Length{0.5, Length::Unit::IN})};
+    } else if (settings.margins == Print::Margins::CUSTOM) {
+        uAPageMargin = settings.margins.custom.cast<Au>();
+    } else if (settings.margins == Print::Margins::MINIMUM) {
+        uAPageMargin = {};
+    }
+
+    RectAu uAPageRect{
+        media.width / Au{media.resolution.toDppx()},
+        media.height / Au{media.resolution.toDppx()}
+    };
+
+    RectAu uAPageContent = uAPageRect.shrink(uAPageMargin);
+
+    // ----------------- Computing Page Base Size
+    auto pageStyleFromUAPage = computePageBaseSize(*dom->styleSheets, media);
+    auto [basePageRect, _] = _computePageBounds(settings, media, *pageStyleFromUAPage);
+    return media.withPixelsDimensions(basePageRect.size());
+}
+
 export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
-    auto media = _constructMedia(settings);
+    auto const media = _constructMediaForBasePageSize(dom, settings);
 
     Text::FontBook fontBook;
     if (not fontBook.loadAll())
@@ -164,6 +191,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
     Style::Computer computer{
         media, *dom->styleSheets, fontBook
     };
+
     computer.build();
     computer.styleDocument(*dom);
 
