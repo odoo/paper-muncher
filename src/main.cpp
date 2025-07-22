@@ -50,9 +50,6 @@ struct PrintOption {
 
         auto paper = self.paper;
 
-        if (self.orientation == Print::Orientation::LANDSCAPE)
-            paper = paper.landscape();
-
         if (self.width) {
             paper.name = "custom";
             paper.width = resolver.resolve(*self.width).template cast<f64>();
@@ -65,6 +62,7 @@ struct PrintOption {
 
         return {
             .paper = paper,
+            .orientation = self.orientation,
             .scale = self.scale.toDppx(),
         };
     }

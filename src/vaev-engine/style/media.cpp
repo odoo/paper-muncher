@@ -14,6 +14,7 @@ namespace Vaev::Style {
 
 // MARK: Media -----------------------------------------------------------------
 
+// FIXME: media queries not correctly comparing different length units
 export struct Media {
     /// 2.3. Media Types
     /// https://drafts.csswg.org/mediaqueries/#media-types
@@ -35,6 +36,7 @@ export struct Media {
 
     /// 4.4. Orientation: the orientation feature
     /// https://drafts.csswg.org/mediaqueries/#orientation
+    // FIXME: this should not be a field, but a method dependent on width and height
     Print::Orientation orientation;
 
     // 5. MARK: Display Quality Media Features
@@ -136,6 +138,26 @@ export struct Media {
     Au deviceWidth;
     Au deviceHeight;
     Number deviceAspectRatio;
+
+    Media withPixelsDimensions(Vec2Au newSize) const {
+        newSize = newSize * Au{resolution.toDppx()};
+
+        Media newMedia = *this;
+
+        newMedia.width = newSize.x;
+        newMedia.height = newSize.y;
+        newMedia.aspectRatio = (f64)newSize.x / (f64)newSize.y;
+
+        newMedia.orientation = newMedia.height >= newMedia.width
+                                   ? Print::Orientation::PORTRAIT
+                                   : Print::Orientation::LANDSCAPE;
+
+        newMedia.deviceWidth = newMedia.width;
+        newMedia.deviceHeight = newMedia.height;
+        newMedia.deviceAspectRatio = newMedia.aspectRatio;
+
+        return newMedia;
+    }
 };
 
 // MARK: Media Features --------------------------------------------------------
