@@ -15,8 +15,35 @@ import :style.stylesheet;
 
 namespace Vaev::Style {
 
+void _evalGuardlessPageRule(Rule const& rule, Media const& media, PageSpecifiedValues& c) {
+    rule.visit(Visitor{
+        [&](PageRule const& r) {
+            if (r.selectors.len() == 0)
+                r.apply(c);
+        },
+        [&](MediaRule const& r) {
+            if (r.match(media))
+                for (auto const& subRule : r.rules)
+                    _evalGuardlessPageRule(subRule, media, c);
+        },
+        [&](auto const&) {
+            // Ignore other rule types
+        },
+    });
+}
+
+export Rc<PageSpecifiedValues> computePageBaseSize(StyleSheetList const& styleBook, Media const& media) {
+    auto computed = makeRc<PageSpecifiedValues>(SpecifiedValues::initial());
+
+    for (auto const& sheet : styleBook.styleSheets)
+        for (auto const& rule : sheet.rules)
+            _evalGuardlessPageRule(rule, media, *computed);
+
+    return computed;
+}
+
 export struct Computer {
-    Media _media;
+    Media const _media;
     StyleSheetList const& _styleBook;
     Font::Database& fontBook;
     StyleRuleLookup _styleRuleLookup{};
