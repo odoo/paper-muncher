@@ -28,16 +28,13 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url
     if (not resp->body)
         co_return Error::invalidInput("response body is missing");
 
-    if (not mime.has() and url == "fd:stdin"_url) {
-        mime = "text/html"_mime;
-        logInfo("assuming stdin is {}", mime);
-    }
-
-    if (not mime.has())
-        co_return Error::invalidInput("cannot determine MIME type");
-
     auto respBody = resp->body.unwrap();
     auto buf = co_trya$(Aio::readAllUtf8Async(*respBody));
+
+    if (not mime.has() or mime->is("application/octet-stream"_mime)) {
+        mime = Mime::sniffBytes(bytes(buf));
+        logWarn("{} has unspecified mime type, mime sniffing yielded '{}'", url, mime);
+    }
 
     if (mime->is("text/html"_mime)) {
         Html::HtmlParser parser{heap, dom};
@@ -53,7 +50,12 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url
     } else if (mime->is("text/plain"_mime)) {
         auto text = heap.alloc<Dom::Text>();
         text->appendData(buf);
-        dom->appendChild(text);
+
+        auto body = heap.alloc<Dom::Element>(Html::BODY_TAG);
+        body->appendChild(text);
+
+        dom->appendChild(body);
+
         co_return Ok(dom);
     } else if (mime->is("image/svg+xml"_mime)) {
         Io::SScan scan{buf};
