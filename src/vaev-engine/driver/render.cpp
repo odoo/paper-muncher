@@ -46,7 +46,6 @@ export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media
     );
 
     auto sceneRoot = makeRc<Scene::Stack>();
-
     Layout::paint(root, *sceneRoot);
     sceneRoot->prepare();
 
@@ -55,6 +54,13 @@ export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media
         makeRc<Scene::Clear>(sceneRoot, canvasColor),
         makeRc<Layout::Frag>(std::move(root)),
     };
+}
+
+export Rc<Gfx::Surface> renderToSurface(Gc::Ref<Dom::Document> dom, Vec2Au imageSize, Resolution scale) {
+    auto media = Vaev::Style::Media::forRender(imageSize, scale);
+    Vec2Au viewportSize = {media.width, media.height};
+    auto [layout, scene, frags] = Vaev::Driver::render(*dom, media, {.small = viewportSize});
+    return scene->snapshot(imageSize.cast<f64>(), scale.toDppx());
 }
 
 } // namespace Vaev::Driver

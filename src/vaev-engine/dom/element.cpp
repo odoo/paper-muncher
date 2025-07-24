@@ -132,11 +132,9 @@ export struct Element : Node {
     }
 
     Opt<Str> getAttributeUnqualified(Symbol name) const {
-        for (auto const& [qualifiedName, attr] : this->attributes.iter()) {
+        for (auto const& [qualifiedName, attr] : this->attributes.iter())
             if (qualifiedName.name == name)
                 return attr->value;
-        }
-
         return NONE;
     }
 };

@@ -25,45 +25,6 @@ struct View : Ui::View<View> {
     View(Gc::Root<Dom::Document> dom, ViewProps props)
         : _dom(dom), _props(props) {}
 
-    Style::Media _constructMedia(Math::Vec2i viewport) {
-        return {
-            .type = MediaType::SCREEN,
-            .width = Au{viewport.width},
-            .height = Au{viewport.height},
-            .aspectRatio = viewport.width / (f64)viewport.height,
-            .orientation = Print::Orientation::LANDSCAPE,
-
-            .resolution = Resolution::fromDpi(96),
-            .scan = Scan::PROGRESSIVE,
-            .grid = false,
-            .update = Update::FAST,
-
-            .overflowBlock = OverflowBlock::SCROLL,
-            .overflowInline = OverflowInline::SCROLL,
-
-            .color = 8,
-            .colorIndex = 0,
-            .monochrome = 0,
-            .colorGamut = ColorGamut::SRGB,
-            .pointer = Pointer::FINE,
-            .hover = Hover::HOVER,
-            .anyPointer = Pointer::FINE,
-            .anyHover = Hover::HOVER,
-
-            .prefersReducedMotion = ReducedMotion::NO_PREFERENCE,
-            .prefersReducedTransparency = ReducedTransparency::NO_PREFERENCE,
-            .prefersContrast = Contrast::NO_PREFERENCE,
-            .forcedColors = Colors::NONE,
-            .prefersColorScheme = Ui::DARK_MODE ? ColorScheme::DARK : ColorScheme::LIGHT,
-            .prefersReducedData = ReducedData::NO_PREFERENCE,
-
-            // NOTE: Deprecated Media Features
-            .deviceWidth = Au{viewport.width},
-            .deviceHeight = Au{viewport.height},
-            .deviceAspectRatio = viewport.width / (f64)viewport.height,
-        };
-    }
-
     void reconcile(View& o) override {
         _dom = o._dom;
         _props = o._props;
@@ -74,7 +35,7 @@ struct View : Ui::View<View> {
         // Painting browser's viewport.
         auto viewport = bound().size();
         if (not _renderResult) {
-            auto media = _constructMedia(viewport);
+            auto media = Style::Media::forView(viewport, Ui::DARK_MODE ? ColorScheme::DARK : ColorScheme::LIGHT);
             _renderResult = Driver::render(*_dom, media, {.small = viewport.cast<Au>()});
         }
 
