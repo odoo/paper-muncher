@@ -14,6 +14,7 @@ import :dom;
 import :html;
 import :xml;
 import :style;
+import :markdown;
 
 namespace Vaev::Loader {
 
@@ -23,7 +24,7 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url
     auto mime = resp->header.contentType();
 
     if (not mime.has())
-        mime = Mime::sniffSuffix(url.path.suffix());
+        mime = Mime::sniffSuffix(url.path.suffix());z
 
     if (not resp->body)
         co_return Error::invalidInput("response body is missing");
@@ -62,6 +63,13 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url
         Xml::XmlParser parser{heap};
         co_try$(parser.parse(scan, Svg::NAMESPACE, *dom));
 
+        co_return Ok(dom);
+    } else if (mime->is("text/markdown"_mime)) {
+        auto md = Markdown::parse(buf);
+        Io::StringWriter sw;
+        co_try$(Markdown::render(md, sw));
+        Html::HtmlParser parser{heap, dom};
+        parser.write(sw.str());
         co_return Ok(dom);
     } else {
         logError("unsupported MIME type: {}", mime);
