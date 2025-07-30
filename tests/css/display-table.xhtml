@@ -1841,3 +1841,47 @@
         </table>
     </rendering>
 </test>
+
+<test name="table: table auto and width percent resolution" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                    border: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background-color: green;"></div>
+    </rendering>
+
+    <rendering>
+        <div style="width: 100px;">
+            <table style="table-layout: auto; width: 100%;">
+                <tr>
+                    <td style="background-color: green; height: 100px;"></td>
+                </tr>
+            </table>
+        </div>
+    </rendering>
+</test>
