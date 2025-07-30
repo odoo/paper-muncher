@@ -704,8 +704,7 @@ struct TableFormatingContext : FormatingContext {
     }
 
     // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
-
-    void computeAutoColWidths(Tree& tree, Box& box, Au capmin, Au availableXSpace, Au containingBlockX) {
+    void computeAutoColWidths(Tree& tree, Box& box, Au capmin, Au containingBlockX) {
         // FIXME: This is a rough approximation of the algorithm.
         //        We need to distinguish between percentage-based and fixed lengths:
         //         - Percentage-based sizes are fixed and cannot have extra space distributed to them.
@@ -719,7 +718,7 @@ struct TableFormatingContext : FormatingContext {
         if (auto boxWidthCalc = box.style->sizing->width.is<CalcValue<PercentOr<Length>>>()) {
             auto [minWithoutPerc, maxWithoutPerc] = computeMinMaxAutoWidths(tree, grid.size.x, 0_au);
 
-            Au tableComputedWidth = resolve(tree, box, *boxWidthCalc, availableXSpace);
+            Au tableComputedWidth = resolve(tree, box, *boxWidthCalc, containingBlockX);
             tableUsedWidth = max(capmin, tableComputedWidth);
 
             auto sumMinWithoutPerc = iter(minWithoutPerc).sum();
@@ -887,13 +886,11 @@ struct TableFormatingContext : FormatingContext {
     Vec<Au> startPositionOfRow;
 
     struct CacheParametersFromInput {
-        Au availableXSpace;
         Au containingBlockX;
         Au capmin;
 
         CacheParametersFromInput(Input const& i)
-            : availableXSpace(i.availableSpace.x),
-              containingBlockX(i.containingBlock.x),
+            : containingBlockX(i.containingBlock.x),
               capmin(i.capmin.unwrap()) {}
 
         bool operator==(CacheParametersFromInput const& c) const = default;
@@ -929,12 +926,9 @@ struct TableFormatingContext : FormatingContext {
             box.style->sizing->width.is<Keywords::Auto>();
 
         if (shouldRunAutoAlgorithm)
-            computeAutoColWidths(
-                tree, box, input.capmin,
-                input.availableXSpace, input.containingBlockX
-            );
+            computeAutoColWidths(tree, box, input.capmin, input.containingBlockX);
         else
-            computeFixedColWidths(tree, box, input.availableXSpace);
+            computeFixedColWidths(tree, box, input.containingBlockX);
 
         computeRowHeights(tree);
 
