@@ -56,23 +56,52 @@ struct InlineFormatingContext : FormatingContext {
 
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
 
+            Input childInput{
+                .knownSize = {NONE, NONE},
+                .availableSpace = {inlineSize, input.availableSpace.y},
+                .containingBlock = {
+                    input.knownSize.x.unwrapOr(0_au),
+                    input.knownSize.y.unwrapOr(0_au)
+                },
+            };
+
+            auto borders = computeBorders(tree, atomicBox);
+            auto padding = computePaddings(tree, atomicBox, childInput.containingBlock);
+
+            if (input.intrinsic == IntrinsicSize::AUTO or atomicBox.style->display != Display::INLINE) {
+                if (atomicBox.style->sizing->width.is<Keywords::Auto>()) {
+                    childInput.knownSize.width = NONE;
+                } else {
+                    // FIXME: computing border box size. content box sizing should be supported later.
+                    auto specifiedWidth = computeSpecifiedSize(
+                        tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock, true
+                    );
+
+                    childInput.knownSize.width = specifiedWidth.unwrap() - borders.horizontal() - padding.horizontal();
+                }
+
+                if (atomicBox.style->sizing->height.is<Keywords::Auto>()) {
+                    childInput.knownSize.height = NONE;
+                } else {
+                    // FIXME: computing border box size. content box sizing should be supported later.
+                    auto specifiedHeight = computeSpecifiedSize(
+                        tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock, false
+                    );
+
+                    childInput.knownSize.height = specifiedHeight.unwrap() - borders.vertical() - padding.vertical();
+                }
+            }
+
             // NOTE: We set the same availableSpace to child inline boxes since line wrapping is possible i.e. in the
             // worst case, they will take up the whole availableSpace, and a line break will be done right before them
-            auto atomicBoxOutput = layout(
+            auto atomicBoxOutput = layoutContentBox(
                 tree,
                 atomicBox,
-                Input{
-                    .knownSize = {NONE, NONE},
-                    .availableSpace = {inlineSize, input.availableSpace.y},
-                    .containingBlock = {
-                        input.knownSize.x.unwrapOr(0_au),
-                        input.knownSize.y.unwrapOr(0_au)
-                    },
-                }
+                childInput
             );
 
             if (not impliesRemovingFromFlow(atomicBox.style->position)) {
-                boxStrutCell.size = atomicBoxOutput.size;
+                boxStrutCell.size = atomicBoxOutput.size + borders.all() + padding.all();
                 // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
                 boxStrutCell.baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
             }
@@ -100,19 +129,49 @@ struct InlineFormatingContext : FormatingContext {
                 };
             }
 
-            layout(
-                tree,
-                atomicBox,
-                Input{
-                    .fragment = input.fragment,
-                    .knownSize = knownSize,
-                    .position = input.position + positionInProse,
-                    .containingBlock = {
-                        input.knownSize.x.unwrapOr(0_au),
-                        input.knownSize.y.unwrapOr(0_au)
-                    },
+            // TODO: pending vertical sizes here?
+            Input childInput{
+                .fragment = input.fragment,
+                .knownSize = knownSize,
+                .position = input.position + positionInProse,
+                .containingBlock = {
+                    input.knownSize.x.unwrapOr(0_au),
+                    input.knownSize.y.unwrapOr(0_au)
+                },
+            };
+
+            auto borders = computeBorders(tree, atomicBox);
+            auto padding = computePaddings(tree, atomicBox, childInput.containingBlock);
+
+            childInput.knownSize.x = childInput.knownSize.x.map(
+                [&](Au size) {
+                    return size - borders.horizontal() - padding.horizontal();
                 }
             );
+
+            childInput.knownSize.y = childInput.knownSize.y.map(
+                [&](Au size) {
+                    return size - borders.vertical() - padding.vertical();
+                }
+            );
+
+            childInput.position = childInput.position + borders.topStart() + padding.topStart();
+
+            auto output = layoutContentBox(tree, atomicBox, childInput);
+
+            output.size = output.size + borders.all() + padding.all();
+
+            if (input.fragment) {
+                auto children = input.fragment->children();
+                auto& lastChildMetrics = last(children).metrics;
+
+                lastChildMetrics.borderSize = output.size;
+                lastChildMetrics.position = childInput.position - borders.topStart() - padding.topStart();
+
+                lastChildMetrics.padding = padding;
+                lastChildMetrics.borders = borders;
+                lastChildMetrics.radii = computeRadii(tree, atomicBox, output.size);
+            }
         }
 
         if (tree.fc.allowBreak() and not tree.fc.acceptsFit(
@@ -128,7 +187,7 @@ struct InlineFormatingContext : FormatingContext {
         }
 
         return {
-            .size = size,
+            .size = {input.knownSize.x.unwrapOr(size.x), input.knownSize.y.unwrapOr(size.y)},
             .completelyLaidOut = true,
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,

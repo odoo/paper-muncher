@@ -439,7 +439,7 @@ struct TableFormatingContext : FormatingContext {
     // MARK: Fixed Table Layout ------------------------------------------------------------------------
     // https://www.w3.org/TR/CSS22/tables.html#fixed-table-layout
 
-    void computeFixedColWidths(Tree& tree, Box& box, Au availableXSpace) {
+    void computeFixedColWidths(Tree& tree, Box& box, Au knownSizeX) {
         // NOTE: Percentages for 'width' and 'height' on the table (box)
         //       are calculated relative to the containing block of the
         //       table wrapper box, not the table wrapper box itself.
@@ -451,11 +451,7 @@ struct TableFormatingContext : FormatingContext {
         if (not(box.style->sizing->width.is<Keywords::Auto>() or box.style->sizing->width.is<CalcValue<PercentOr<Length>>>()))
             logWarn("width can't be anything other than 'auto' or a length in a table context");
 
-        tableUsedWidth =
-            not box.style->sizing->width.is<CalcValue<PercentOr<Length>>>()
-                ? 0_au // AUTO case
-                : resolve(tree, box, box.style->sizing->width.unwrap<CalcValue<PercentOr<Length>>>(), availableXSpace) -
-                      boxBorder.horizontal(); // NOTE: maybe remove this after borderbox param is clearer
+        tableUsedWidth = knownSizeX;
 
         auto [columnBorders, sumBorders] = getColumnBorders();
 
@@ -704,7 +700,7 @@ struct TableFormatingContext : FormatingContext {
     }
 
     // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
-    void computeAutoColWidths(Tree& tree, Box& box, Au capmin, Au containingBlockX) {
+    void computeAutoColWidths(Tree& tree, Opt<Au> specifiedWidth, Au capmin, Au containingBlockX) {
         // FIXME: This is a rough approximation of the algorithm.
         //        We need to distinguish between percentage-based and fixed lengths:
         //         - Percentage-based sizes are fixed and cannot have extra space distributed to them.
@@ -715,11 +711,10 @@ struct TableFormatingContext : FormatingContext {
         //        https://www.w3.org/TR/css-tables-3/#intrinsic-percentage-width-of-a-column-based-on-cells-of-span-up-to-1
         //        We will need a way to retrieve the percentage value, which is also not yet implemented.
 
-        if (auto boxWidthCalc = box.style->sizing->width.is<CalcValue<PercentOr<Length>>>()) {
+        if (specifiedWidth) {
             auto [minWithoutPerc, maxWithoutPerc] = computeMinMaxAutoWidths(tree, grid.size.x, 0_au);
 
-            Au tableComputedWidth = resolve(tree, box, *boxWidthCalc, containingBlockX);
-            tableUsedWidth = max(capmin, tableComputedWidth);
+            tableUsedWidth = max(capmin, specifiedWidth.unwrap());
 
             auto sumMinWithoutPerc = iter(minWithoutPerc).sum();
             if (sumMinWithoutPerc > tableUsedWidth) {
@@ -728,7 +723,7 @@ struct TableFormatingContext : FormatingContext {
                 return;
             }
 
-            auto [minWithPerc, maxWithPerc] = computeMinMaxAutoWidths(tree, grid.size.x, tableComputedWidth);
+            auto [minWithPerc, maxWithPerc] = computeMinMaxAutoWidths(tree, grid.size.x, specifiedWidth.unwrap());
 
             auto sumMaxWithoutPerc = iter(maxWithoutPerc).sum();
             Vec<Au>& distWOPToUse = sumMaxWithoutPerc < tableUsedWidth ? maxWithoutPerc : minWithoutPerc;
@@ -834,17 +829,15 @@ struct TableFormatingContext : FormatingContext {
                     }
                 }
 
-                auto cellOutput = layout(
+                auto minHeightSize = computeIntrinsicSize(
                     tree,
                     *cell.box,
-                    {
-                        .intrinsic = IntrinsicSize::MIN_CONTENT,
-                        .knownSize = {colWidth[j], NONE},
-                    }
+                    IntrinsicSize::MAX_CONTENT,
+                    0_au // FIXME
                 );
 
                 for (usize k = 0; k < rowSpan; k++) {
-                    rowHeight[i + k] = max(rowHeight[i + k], Au{cellOutput.size.y / Au{rowSpan}});
+                    rowHeight[i + k] = max(rowHeight[i + k], Au{minHeightSize.y / Au{rowSpan}});
                 }
             }
         }
@@ -888,10 +881,12 @@ struct TableFormatingContext : FormatingContext {
     struct CacheParametersFromInput {
         Au containingBlockX;
         Au capmin;
+        Opt<Au> knownSizeX;
 
         CacheParametersFromInput(Input const& i)
             : containingBlockX(i.containingBlock.x),
-              capmin(i.capmin.unwrap()) {}
+              capmin(i.capmin.unwrap()),
+              knownSizeX(i.knownSize.x) {}
 
         bool operator==(CacheParametersFromInput const& c) const = default;
     };
@@ -923,12 +918,12 @@ struct TableFormatingContext : FormatingContext {
         //      However, Chrome does not implement this exception, and we are not implementing it either.
         bool shouldRunAutoAlgorithm =
             box.style->table->tableLayout == TableLayout::AUTO or
-            box.style->sizing->width.is<Keywords::Auto>();
+            not input.knownSizeX;
 
         if (shouldRunAutoAlgorithm)
-            computeAutoColWidths(tree, box, input.capmin, input.containingBlockX);
+            computeAutoColWidths(tree, input.knownSizeX, input.capmin, input.containingBlockX);
         else
-            computeFixedColWidths(tree, box, input.containingBlockX);
+            computeFixedColWidths(tree, box, input.knownSizeX.unwrap());
 
         computeRowHeights(tree);
 
@@ -998,20 +993,42 @@ struct TableFormatingContext : FormatingContext {
         //
         //       (See https://www.w3.org/TR/CSS22/tables.html#height-layout)
         auto colSpan = cell.box->attrs.colSpan;
-        auto outputCell = layout(
+
+        Au horizontalSize = colWidthPref.query(j, j + colSpan - 1) + spacing.x * Au{colSpan - 1};
+
+        auto borders = computeBorders(tree, *cell.box);
+        auto padding = computePaddings(tree, *cell.box, horizontalSize);
+
+        Input childInput{
+            .fragment = input.fragment,
+            .knownSize = {
+                horizontalSize - borders.horizontal() - padding.horizontal(),
+                verticalSize ? verticalSize.unwrap() - borders.vertical() - padding.vertical() : Opt<Au>{},
+            },
+            .position = Vec2Au{currPositionX, startPositionY} + padding.topStart() + borders.topStart(),
+            .breakpointTraverser = breakpointsForCell,
+            .pendingVerticalSizes = input.pendingVerticalSizes + borders.bottom + padding.bottom,
+        };
+
+        auto outputCell = layoutContentBox(
             tree,
             *cell.box,
-            {
-                .fragment = input.fragment,
-                .knownSize = {
-                    colWidthPref.query(j, j + colSpan - 1) + spacing.x * Au{colSpan - 1},
-                    verticalSize,
-                },
-                .position = {currPositionX, startPositionY},
-                .breakpointTraverser = breakpointsForCell,
-                .pendingVerticalSizes = input.pendingVerticalSizes,
-            }
+            childInput
         );
+
+        outputCell.size = outputCell.size + borders.all() + padding.all();
+
+        if (input.fragment) {
+            auto children = input.fragment->children();
+            auto& lastChildMetrics = last(children).metrics;
+
+            lastChildMetrics.borderSize = outputCell.size;
+            lastChildMetrics.position = Vec2Au{currPositionX, startPositionY};
+
+            lastChildMetrics.padding = padding;
+            lastChildMetrics.borders = borders;
+            lastChildMetrics.radii = computeRadii(tree, *cell.box, outputCell.size);
+        }
 
         if (tree.fc.isDiscoveryMode()) {
             if (cellBox->style->break_->inside == BreakInside::AVOID) {
@@ -1252,6 +1269,19 @@ struct TableFormatingContext : FormatingContext {
         // TODO: - vertical and horizontal alignment
         //       - borders collapse
         // TODO: in every row, at least one cell must be an anchor, or else this row is 'skipable'
+
+        // The height of a table is given by the 'height' property for the 'table' or 'inline-table' element.
+        // A value of 'auto' means that the height is the sum of the row heights plus any cell spacing or borders.
+        // Any other value is treated as a minimum height.
+        if (input.knownSize.y)
+            logWarn("Known vertical size for a table is not supported, it will be ignored");
+
+        // https://www.w3.org/TR/css-tables-3/#layout-principles
+        // Unlike other block-level boxes, tables do not fill their containing block by default.
+        // When their width computes to auto, they behave as if they had fit-content specified instead.
+        // This is different from most block-level boxes, which behave as if they had stretch instead.
+        if (input.knownSize.x and box.style->sizing->width.is<Keywords::Auto>())
+            logWarn("Known horizontal size for a table is not supported, it will be ignored");
 
         CacheParametersFromInput inputCacheParameters{input};
         if (lastInput != inputCacheParameters) {

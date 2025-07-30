@@ -1,5 +1,6 @@
 module;
 
+#include <karm-logger/logger.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:layout.block;
@@ -156,11 +157,6 @@ struct BlockFormatingContext : FormatingContext {
             return fragmentEmptyBox(tree, input);
         }
 
-        // NOTE: Our parent has no clue about our width but wants us to commit,
-        //       we need to compute it first
-        if (input.fragment and not input.knownSize.width)
-            inlineSize = run(tree, box, input.withFragment(nullptr), startAt, stopAt).width();
-
         Breakpoint currentBreakpoint;
         BaselinePositionsSet firstBaselineSet, lastBaselineSet;
 
@@ -194,33 +190,79 @@ struct BlockFormatingContext : FormatingContext {
                 .pendingVerticalSizes = input.pendingVerticalSizes,
             };
 
-            auto margin = computeMargins(tree, c, childInput);
-
-            Opt<Au> childInlineSize = NONE;
-            if (c.style->sizing->width.is<Keywords::Auto>()) {
-                childInlineSize = inlineSize - margin.horizontal();
-            }
-
-            if (not impliesRemovingFromFlow(c.style->position)) {
-                // TODO: collapsed margins for sibling elements
-                blockSize += max(margin.top, lastMarginBottom) - lastMarginBottom;
-                if (input.fragment or input.knownSize.x)
-                    childInput.knownSize.width = childInlineSize;
-            }
-
-            childInput.position = input.position + Vec2Au{margin.start, blockSize};
-
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
             //       and avoid duplicating the layout code
             if (c.style->display == Display::Internal::TABLE_BOX) {
                 childInput.capmin = _computeCapmin(tree, box, input, inlineSize);
             }
 
-            auto output = layout(
+            auto margin = computeMargins(tree, c, childInput);
+            auto borders = computeBorders(tree, c);
+            auto padding = computePaddings(tree, c, childInput.containingBlock);
+
+            if (not impliesRemovingFromFlow(c.style->position)) {
+                // TODO: collapsed margins for sibling elements
+                blockSize += max(margin.top, lastMarginBottom) - lastMarginBottom;
+            }
+
+            if (input.intrinsic == IntrinsicSize::AUTO or c.style->display != Display::INLINE) {
+                if (c.style->sizing->width.is<Keywords::Auto>()) {
+                    // https://www.w3.org/TR/css-tables-3/#layout-principles
+                    // Unlike other block-level boxes, tables do not fill their containing block by default.
+                    // When their width computes to auto, they behave as if they had fit-content specified instead.
+                    // This is different from most block-level boxes, which behave as if they had stretch instead.
+                    if (c.style->display == Display::TABLE_BOX) {
+                        // Do nothing. 'fit-content' is kinda intrinsic size, when we don't populate knownSize.
+                    } else if (input.knownSize.x) {
+                        // When the inline size is not known, we cannot enforce it to the child. (?)
+                        childInput.knownSize.width = inlineSize - margin.horizontal() - borders.horizontal() - padding.horizontal();
+                    }
+                } else {
+                    // FIXME: computing border box size. content box sizing should be supported later.
+                    auto specifiedWidth = computeSpecifiedSize(
+                        tree, c, c.style->sizing->width, childInput.containingBlock, true
+                    );
+
+                    childInput.knownSize.width = specifiedWidth.unwrap() - borders.horizontal() - padding.horizontal();
+                }
+
+                if (c.style->sizing->height.is<Keywords::Auto>()) {
+                    childInput.knownSize.height = NONE;
+                } else {
+                    // FIXME: computing border box size. content box sizing should be supported later.
+                    auto specifiedHeight = computeSpecifiedSize(
+                        tree, c, c.style->sizing->height, childInput.containingBlock, false
+                    );
+
+                    childInput.knownSize.height = specifiedHeight.unwrap() - borders.vertical() - padding.vertical();
+                }
+            }
+
+            childInput.position = input.position + Vec2Au{margin.start, blockSize} +
+                                  borders.topStart() + padding.topStart();
+
+            childInput.pendingVerticalSizes += borders.bottom + padding.bottom;
+
+            auto output = layoutContentBox(
                 tree,
                 c,
                 childInput
             );
+
+            output.size = output.size + padding.all() + borders.all();
+
+            if (input.fragment) {
+                auto children = input.fragment->children();
+                auto& lastChildMetrics = last(children).metrics;
+
+                lastChildMetrics.borderSize = output.size;
+                lastChildMetrics.position = input.position + Vec2Au{margin.start, blockSize};
+
+                lastChildMetrics.padding = padding;
+                lastChildMetrics.borders = borders;
+                lastChildMetrics.radii = computeRadii(tree, c, output.size);
+            }
+
             if (not impliesRemovingFromFlow(c.style->position)) {
                 blockSize += output.size.y + margin.bottom;
                 lastMarginBottom = margin.bottom;
@@ -254,8 +296,12 @@ struct BlockFormatingContext : FormatingContext {
             inlineSize = max(inlineSize, output.size.x + margin.horizontal());
         }
 
+        // height here is overflow related
         return {
-            .size = Vec2Au{inlineSize, blockSize},
+            .size = Vec2Au{
+                input.knownSize.x.unwrapOr(inlineSize),
+                input.knownSize.y.unwrapOr(blockSize)
+            },
             .completelyLaidOut = blockWasCompletelyLaidOut,
             .breakpoint = currentBreakpoint,
             .firstBaselineSet = firstBaselineSet,

@@ -51,16 +51,33 @@ struct ReplacedFormatingContext : FormatingContext {
         } else if (auto box = element.is<::Box<Box>>()) {
             auto resolvedRect = SVG::resolve(SVG::buildRectangle(*(*box)->style), resolveTo);
 
+            auto borders = computeBorders(tree, *box);
+            auto padding = computePaddings(tree, *box, 0_au); // FIXME: containing block?
+
             auto frag = Layout::Frag();
             Input input{
                 .fragment = &frag,
-                .knownSize = {resolvedRect.width, resolvedRect.height},
-                .position = {resolvedRect.x, resolvedRect.y},
+                .knownSize = {
+                    resolvedRect.width - borders.horizontal() - padding.horizontal(),
+                    resolvedRect.height - borders.vertical() - padding.vertical(),
+                },
+                .position = Vec2Au{resolvedRect.x, resolvedRect.y} + borders.topStart() + padding.topStart(),
             };
 
-            layout(tree, *box, input);
+            auto out = layoutContentBox(tree, *box, input);
 
-            return makeBox<Frag>(std::move(frag.children()[0]));
+            out.size = out.size + borders.all() + padding.all();
+
+            auto childFrag = std::move(frag.children()[0]);
+
+            childFrag.metrics.borderSize = out.size;
+            childFrag.metrics.position = Vec2Au{resolvedRect.x, resolvedRect.y};
+
+            childFrag.metrics.padding = padding;
+            childFrag.metrics.borders = borders;
+            childFrag.metrics.radii = computeRadii(tree, *box, out.size);
+
+            return makeBox<Frag>(std::move(childFrag));
         }
         unreachable();
     }
