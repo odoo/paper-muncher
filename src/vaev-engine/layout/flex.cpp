@@ -1480,17 +1480,13 @@ struct FlexFormatingContext : FormatingContext {
                     childInput
                 );
 
-                auto children = input.fragment->children();
-
-                flexItem.commit(&last(children));
-                auto& lastChildMetrics = last(children).metrics;
-
-                lastChildMetrics.borderSize = output.size + flexItem.padding.all() + flexItem.borders.all();
-                lastChildMetrics.position = flexItem.position;
-
-                lastChildMetrics.padding = flexItem.padding;
-                lastChildMetrics.borders = flexItem.borders;
-                lastChildMetrics.radii = computeRadii(tree, *flexItem.box, output.size);
+                auto& child = input.fragment->children()[input.fragment->children().len() - 1];
+                flexItem.commit(&child);
+                child.metrics = Metrics::commitContentBox(
+                    tree, *flexItem.box,
+                    output.size, childInput.position,
+                    flexItem.borders, flexItem.padding
+                );
             }
         }
     }

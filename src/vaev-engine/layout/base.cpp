@@ -475,6 +475,8 @@ export struct Metrics {
     RectAu marginBox() const {
         return borderBox().grow(margin);
     }
+
+    static Metrics commitContentBox(Tree& tree, Box& box, Vec2Au contentBoxSize, Vec2Au contentBoxPosition, InsetsAu borders, InsetsAu padding);
 };
 
 export struct Frag;

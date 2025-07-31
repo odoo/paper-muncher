@@ -202,150 +202,6 @@ static void _maybeSetMonolithicBreakpoint(Fragmentainer& fc, bool isMonolticDisp
     outputBreakpoint = bottomOfContentBreakForTopMonolitic;
 }
 
-void fillKnownSizeWithSpecifiedSizeIfEmpty(Tree& tree, Box& box, Input& input) {
-    auto sizing = box.style->sizing;
-
-    if (input.knownSize.width == NONE) {
-        auto specifiedWidth = computeSpecifiedSize(tree, box, sizing->width, input.containingBlock, true);
-        input.knownSize.width = specifiedWidth;
-    }
-
-    if (input.knownSize.height == NONE) {
-        auto specifiedHeight = computeSpecifiedSize(tree, box, sizing->height, input.containingBlock, false);
-        input.knownSize.height = specifiedHeight;
-    }
-}
-
-void adaptForContentBox(Input& input, InsetsAu const& padding, InsetsAu const& borders) {
-    input.knownSize.width = input.knownSize.width.map([&](auto s) {
-        return max(0_au, s - padding.horizontal() - borders.horizontal());
-    });
-
-    input.knownSize.height = input.knownSize.height.map([&](auto s) {
-        return max(0_au, s - padding.vertical() - borders.vertical());
-    });
-
-    input.availableSpace.height = max(0_au, input.availableSpace.height - padding.vertical() - borders.vertical());
-    input.availableSpace.width = max(0_au, input.availableSpace.width - padding.horizontal() - borders.horizontal());
-
-    input.position = input.position + borders.topStart() + padding.topStart();
-    input.pendingVerticalSizes += borders.bottom + padding.bottom;
-}
-
-Output returnFromContentBox(Output output, InsetsAu const& padding, InsetsAu const& borders) {
-    Output newOutput = output;
-    newOutput.size = newOutput.size + padding.all() + borders.all();
-    newOutput.firstBaselineSet.translate(padding.top + borders.top);
-    newOutput.lastBaselineSet.translate(padding.top + borders.top);
-    return newOutput;
-}
-
-Frag fragFromContentBox(Frag&& frag, InsetsAu const& padding, InsetsAu const& borders) {
-    frag.metrics.borderSize = frag.metrics.borderSize + padding.all() + borders.all();
-    frag.metrics.position = frag.metrics.position - borders.topStart() - padding.topStart();
-    return std::move(frag);
-}
-
-Output layout(Tree& tree, Box& box, Input input) {
-    // FIXME: confirm how the preferred width/height parameters interacts with intrinsic size argument from input
-    fillKnownSizeWithSpecifiedSizeIfEmpty(tree, box, input);
-
-    auto borders = computeBorders(tree, box);
-    auto padding = computePaddings(tree, box, input.containingBlock);
-    adaptForContentBox(input, padding, borders);
-
-    bool isMonolithicDisplay =
-        box.style->display == Display::Inside::FLEX or
-        box.style->display == Display::Inside::GRID;
-
-    usize startAt = tree.fc.allowBreak() ? input.breakpointTraverser.getStart().unwrapOr(0) : 0;
-
-    if (tree.fc.isDiscoveryMode()) {
-        try$(_shouldAbortFragmentingBeforeLayout(tree.fc, input));
-
-        if (isMonolithicDisplay)
-            tree.fc.enterMonolithicBox();
-
-        // TODO: Class C breakpoint
-
-        auto out = _contentLayout(tree, box, input, startAt, NONE);
-
-        // NOTE: assert since algo is still a bit experimental
-        if (not out.completelyLaidOut and out.breakpoint == NONE)
-            panic("if it was not completely laid out, there should be a breakpoint");
-
-        auto size = out.size;
-        size.width = input.knownSize.width.unwrapOr(size.width);
-        if (out.completelyLaidOut and not input.breakpointTraverser.prevIteration) {
-            size.height = input.knownSize.height.unwrapOr(size.height);
-        }
-
-        // TODO: Class C breakpoint
-
-        _maybeSetMonolithicBreakpoint(
-            tree.fc,
-            isMonolithicDisplay,
-            out.completelyLaidOut,
-            box.children().len(),
-            out.breakpoint
-        );
-
-        if (isMonolithicDisplay)
-            tree.fc.leaveMonolithicBox();
-
-        return returnFromContentBox({
-                                        .size = size,
-                                        .completelyLaidOut = out.completelyLaidOut,
-                                        .breakpoint = out.breakpoint,
-                                        .firstBaselineSet = out.firstBaselineSet,
-                                        .lastBaselineSet = out.lastBaselineSet,
-                                    },
-                                    padding, borders);
-    } else {
-        Opt<usize> stopAt = tree.fc.allowBreak()
-                                ? input.breakpointTraverser.getEnd()
-                                : NONE;
-
-        auto parentFrag = input.fragment;
-        Frag currFrag(&box);
-        input.fragment = input.fragment ? &currFrag : nullptr;
-
-        if (isMonolithicDisplay)
-            tree.fc.enterMonolithicBox();
-
-        auto out = _contentLayout(tree, box, input, startAt, stopAt);
-
-        auto size = out.size;
-        size.width = input.knownSize.width.unwrapOr(size.width);
-        if ((not tree.fc.allowBreak()) or (out.completelyLaidOut and not input.breakpointTraverser.prevIteration)) {
-            size.height = input.knownSize.height.unwrapOr(size.height);
-        }
-
-        if (isMonolithicDisplay)
-            tree.fc.leaveMonolithicBox();
-
-        if (parentFrag) {
-            currFrag.metrics.position = input.position;
-            currFrag.metrics.borderSize = size;
-            currFrag.metrics.padding = padding;
-            currFrag.metrics.borders = borders;
-            currFrag.metrics.radii = computeRadii(tree, box, size);
-            currFrag.metrics.outlineOffset = resolve(tree, box, box.style->outline->offset);
-            currFrag.metrics.outlineWidth = resolve(tree, box, box.style->outline->width);
-
-            parentFrag->add(fragFromContentBox(std::move(currFrag), padding, borders));
-        }
-
-        return returnFromContentBox({
-                                        .size = size,
-                                        .completelyLaidOut = out.completelyLaidOut,
-                                        .firstBaselineSet = out.firstBaselineSet,
-                                        .lastBaselineSet = out.lastBaselineSet,
-                                    },
-                                    padding, borders);
-    }
-}
-
 Output layoutContentBox(Tree& tree, Box& box, Input input) {
     bool isMonolithicDisplay =
         box.style->display == Display::Inside::FLEX or
@@ -419,10 +275,35 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
 }
 
 Output layout(Tree& tree, Input input) {
-    auto out = layout(tree, tree.root, input);
-    if (input.fragment)
+    auto borders = computeBorders(tree, tree.root);
+    auto padding = computePaddings(tree, tree.root, input.containingBlock);
+    
+    if(auto specifiedWidth = computeSpecifiedSize(
+        tree, tree.root, tree.root.style->sizing->width, input.containingBlock, true
+    )){
+        input.knownSize.width = specifiedWidth.unwrap() - borders.horizontal() - padding.horizontal();
+    }
+
+    if(auto specifiedHeight = computeSpecifiedSize(
+        tree, tree.root, tree.root.style->sizing->width, input.containingBlock, true
+    )){
+        input.knownSize.height = specifiedHeight.unwrap() - borders.vertical() - padding.vertical();
+    }
+
+    
+    auto output = layoutContentBox(tree, tree.root, input);
+    if (input.fragment) {
+
+        auto& child = input.fragment->children()[0];
+        child.metrics = Metrics::commitContentBox(
+            tree, tree.root,
+            output.size, input.position,
+            borders, padding
+        );
+
         layoutPositioned(tree, input.fragment->children()[0], input.containingBlock);
-    return out;
+    }
+    return output;
 }
 
 Tuple<Output, Frag> layoutCreateFragment(Tree& tree, Input input) {
@@ -430,6 +311,19 @@ Tuple<Output, Frag> layoutCreateFragment(Tree& tree, Input input) {
     input.fragment = &root;
     auto out = layout(tree, input);
     return {out, std::move(root.children()[0])};
+}
+
+Metrics Metrics::commitContentBox(Tree& tree, Box& box, Vec2Au contentBoxSize, Vec2Au contentBoxPosition, InsetsAu borders, InsetsAu padding) {
+    return {
+        .padding = padding,
+        .borders = borders,
+        .outlineOffset = resolve(tree, box, box.style->outline->offset),
+        .outlineWidth = resolve(tree, box, box.style->outline->width),
+        .position = contentBoxPosition - borders.topStart() - padding.topStart(),
+        .borderSize = contentBoxSize + borders.all() + padding.all(),
+        .margin = {},
+        .radii = computeRadii(tree, box, contentBoxSize + borders.all() + padding.all()),
+    };
 }
 
 } // namespace Vaev::Layout

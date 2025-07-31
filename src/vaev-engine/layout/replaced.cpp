@@ -55,7 +55,7 @@ struct ReplacedFormatingContext : FormatingContext {
             auto padding = computePaddings(tree, *box, 0_au); // FIXME: containing block?
 
             auto frag = Layout::Frag();
-            Input input{
+            Input childInput{
                 .fragment = &frag,
                 .knownSize = {
                     resolvedRect.width - borders.horizontal() - padding.horizontal(),
@@ -64,18 +64,14 @@ struct ReplacedFormatingContext : FormatingContext {
                 .position = Vec2Au{resolvedRect.x, resolvedRect.y} + borders.topStart() + padding.topStart(),
             };
 
-            auto out = layoutContentBox(tree, *box, input);
-
-            out.size = out.size + borders.all() + padding.all();
+            auto output = layoutContentBox(tree, *box, childInput);
 
             auto childFrag = std::move(frag.children()[0]);
-
-            childFrag.metrics.borderSize = out.size;
-            childFrag.metrics.position = Vec2Au{resolvedRect.x, resolvedRect.y};
-
-            childFrag.metrics.padding = padding;
-            childFrag.metrics.borders = borders;
-            childFrag.metrics.radii = computeRadii(tree, *box, out.size);
+            childFrag.metrics = Metrics::commitContentBox(
+                tree, *box,
+                output.size, childInput.position,
+                borders, padding
+            );
 
             return makeBox<Frag>(std::move(childFrag));
         }
@@ -121,8 +117,6 @@ struct ReplacedFormatingContext : FormatingContext {
         if (auto image = box.content.is<Karm::Image::Picture>()) {
             size = image->bound().size().cast<Au>();
         } else if (auto svg = box.content.is<SVGRoot>()) {
-            fillKnownSizeWithSpecifiedSizeIfEmpty(tree, box, input);
-
             auto aspectRatio = SVG::intrinsicAspectRatio(box.style->svg->viewBox, box.style->sizing->width, box.style->sizing->height);
 
             size = _defaultSizing(input.knownSize, aspectRatio, input.containingBlock);

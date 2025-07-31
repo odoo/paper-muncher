@@ -1016,18 +1016,13 @@ struct TableFormatingContext : FormatingContext {
             childInput
         );
 
-        outputCell.size = outputCell.size + borders.all() + padding.all();
-
         if (input.fragment) {
-            auto children = input.fragment->children();
-            auto& lastChildMetrics = last(children).metrics;
-
-            lastChildMetrics.borderSize = outputCell.size;
-            lastChildMetrics.position = Vec2Au{currPositionX, startPositionY};
-
-            lastChildMetrics.padding = padding;
-            lastChildMetrics.borders = borders;
-            lastChildMetrics.radii = computeRadii(tree, *cell.box, outputCell.size);
+            auto& child = input.fragment->children()[input.fragment->children().len() - 1];
+            child.metrics = Metrics::commitContentBox(
+                tree, *cell.box,
+                outputCell.size, childInput.position,
+                borders, padding
+            );
         }
 
         if (tree.fc.isDiscoveryMode()) {
@@ -1036,6 +1031,7 @@ struct TableFormatingContext : FormatingContext {
             }
         }
 
+        outputCell.size = outputCell.size + borders.all() + padding.all();
         return {
             outputCell,
             startPositionY + outputCell.height() - startPositionOfRow[i]

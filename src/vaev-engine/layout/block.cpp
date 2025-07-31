@@ -249,18 +249,13 @@ struct BlockFormatingContext : FormatingContext {
                 childInput
             );
 
-            output.size = output.size + padding.all() + borders.all();
-
             if (input.fragment) {
-                auto children = input.fragment->children();
-                auto& lastChildMetrics = last(children).metrics;
-
-                lastChildMetrics.borderSize = output.size;
-                lastChildMetrics.position = input.position + Vec2Au{margin.start, blockSize};
-
-                lastChildMetrics.padding = padding;
-                lastChildMetrics.borders = borders;
-                lastChildMetrics.radii = computeRadii(tree, c, output.size);
+                auto& child = input.fragment->children()[input.fragment->children().len() - 1];
+                child.metrics = Metrics::commitContentBox(
+                    tree, c,
+                    output.size, childInput.position,
+                    borders, padding
+                );
             }
 
             if (not impliesRemovingFromFlow(c.style->position)) {

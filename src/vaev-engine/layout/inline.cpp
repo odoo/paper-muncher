@@ -159,18 +159,13 @@ struct InlineFormatingContext : FormatingContext {
 
             auto output = layoutContentBox(tree, atomicBox, childInput);
 
-            output.size = output.size + borders.all() + padding.all();
-
             if (input.fragment) {
-                auto children = input.fragment->children();
-                auto& lastChildMetrics = last(children).metrics;
-
-                lastChildMetrics.borderSize = output.size;
-                lastChildMetrics.position = childInput.position - borders.topStart() - padding.topStart();
-
-                lastChildMetrics.padding = padding;
-                lastChildMetrics.borders = borders;
-                lastChildMetrics.radii = computeRadii(tree, atomicBox, output.size);
+                auto& child = input.fragment->children()[input.fragment->children().len() - 1];
+                child.metrics = Metrics::commitContentBox(
+                    tree, atomicBox,
+                    output.size, childInput.position,
+                    borders, padding
+                );
             }
         }
 
