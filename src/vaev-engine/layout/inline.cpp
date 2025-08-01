@@ -157,16 +157,9 @@ struct InlineFormatingContext : FormatingContext {
 
             childInput.position = childInput.position + borders.topStart() + padding.topStart();
 
-            auto output = layoutContentBox(tree, atomicBox, childInput);
-
-            if (input.fragment) {
-                auto& child = input.fragment->children()[input.fragment->children().len() - 1];
-                child.metrics = Metrics::commitContentBox(
-                    tree, atomicBox,
-                    output.size, childInput.position,
-                    borders, padding
-                );
-            }
+            auto output = input.fragment
+                              ? layoutContentBox(tree, atomicBox, childInput, *input.fragment, borders, padding)
+                              : layoutContentBox(tree, atomicBox, childInput);
         }
 
         if (tree.fc.allowBreak() and not tree.fc.acceptsFit(

@@ -246,10 +246,6 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
                                 ? input.breakpointTraverser.getEnd()
                                 : NONE;
 
-        auto parentFrag = input.fragment;
-        Frag currFrag(&box);
-        input.fragment = input.fragment ? &currFrag : nullptr;
-
         if (isMonolithicDisplay)
             tree.fc.enterMonolithicBox();
 
@@ -257,13 +253,6 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
 
         if (isMonolithicDisplay)
             tree.fc.leaveMonolithicBox();
-
-        if (parentFrag) {
-            currFrag.metrics.outlineOffset = resolve(tree, box, box.style->outline->offset);
-            currFrag.metrics.outlineWidth = resolve(tree, box, box.style->outline->width);
-
-            parentFrag->add(std::move(currFrag));
-        }
 
         return {
             .size = out.size,
@@ -274,33 +263,45 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
     }
 }
 
+// FIXME: borders and padding here sucks
+Output layoutContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, InsetsAu borders, InsetsAu padding) {
+    Frag currFrag(&box);
+
+    auto output = layoutContentBox(tree, box, input.withFragment(&currFrag));
+
+    currFrag.metrics = Metrics::commitContentBox(
+        tree, box,
+        output.size, input.position,
+        borders, padding
+    );
+
+    parentFrag.add(std::move(currFrag));
+
+    return output;
+}
+
 Output layout(Tree& tree, Input input) {
     auto borders = computeBorders(tree, tree.root);
     auto padding = computePaddings(tree, tree.root, input.containingBlock);
-    
-    if(auto specifiedWidth = computeSpecifiedSize(
-        tree, tree.root, tree.root.style->sizing->width, input.containingBlock, true
-    )){
+
+    if (auto specifiedWidth = computeSpecifiedSize(
+            tree, tree.root, tree.root.style->sizing->width, input.containingBlock, true
+        )) {
         input.knownSize.width = specifiedWidth.unwrap() - borders.horizontal() - padding.horizontal();
     }
 
-    if(auto specifiedHeight = computeSpecifiedSize(
-        tree, tree.root, tree.root.style->sizing->width, input.containingBlock, true
-    )){
+    if (auto specifiedHeight = computeSpecifiedSize(
+            tree, tree.root, tree.root.style->sizing->width, input.containingBlock, true
+        )) {
         input.knownSize.height = specifiedHeight.unwrap() - borders.vertical() - padding.vertical();
     }
 
-    
-    auto output = layoutContentBox(tree, tree.root, input);
+    auto output =
+        input.fragment
+            ? layoutContentBox(tree, tree.root, input, *input.fragment, borders, padding)
+            : layoutContentBox(tree, tree.root, input);
+
     if (input.fragment) {
-
-        auto& child = input.fragment->children()[0];
-        child.metrics = Metrics::commitContentBox(
-            tree, tree.root,
-            output.size, input.position,
-            borders, padding
-        );
-
         layoutPositioned(tree, input.fragment->children()[0], input.containingBlock);
     }
     return output;

@@ -1010,20 +1010,9 @@ struct TableFormatingContext : FormatingContext {
             .pendingVerticalSizes = input.pendingVerticalSizes + borders.bottom + padding.bottom,
         };
 
-        auto outputCell = layoutContentBox(
-            tree,
-            *cell.box,
-            childInput
-        );
-
-        if (input.fragment) {
-            auto& child = input.fragment->children()[input.fragment->children().len() - 1];
-            child.metrics = Metrics::commitContentBox(
-                tree, *cell.box,
-                outputCell.size, childInput.position,
-                borders, padding
-            );
-        }
+        auto outputCell = input.fragment
+                              ? layoutContentBox(tree, *cell.box, childInput, *input.fragment, borders, padding)
+                              : layoutContentBox(tree, *cell.box, childInput);
 
         if (tree.fc.isDiscoveryMode()) {
             if (cellBox->style->break_->inside == BreakInside::AVOID) {

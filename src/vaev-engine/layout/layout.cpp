@@ -24,6 +24,8 @@ export Output layout(Tree& tree, Input input);
 
 export Output layoutContentBox(Tree& tree, Box& box, Input input);
 
+export Output layoutContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, InsetsAu borders, InsetsAu padding);
+
 export Tuple<Output, Frag> layoutCreateFragment(Tree& tree, Input input);
 
 } // namespace Vaev::Layout

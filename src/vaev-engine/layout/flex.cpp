@@ -1474,19 +1474,9 @@ struct FlexFormatingContext : FormatingContext {
                     .pendingVerticalSizes = input.pendingVerticalSizes + flexItem.borders.bottom + flexItem.padding.bottom
                 };
 
-                auto output = layoutContentBox(
-                    tree,
-                    *flexItem.box,
-                    childInput
-                );
-
-                auto& child = input.fragment->children()[input.fragment->children().len() - 1];
-                flexItem.commit(&child);
-                child.metrics = Metrics::commitContentBox(
-                    tree, *flexItem.box,
-                    output.size, childInput.position,
-                    flexItem.borders, flexItem.padding
-                );
+                auto output = input.fragment
+                                  ? layoutContentBox(tree, *flexItem.box, childInput, *input.fragment, flexItem.borders, flexItem.padding)
+                                  : layoutContentBox(tree, *flexItem.box, childInput);
             }
         }
     }

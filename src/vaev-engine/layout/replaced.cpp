@@ -54,9 +54,7 @@ struct ReplacedFormatingContext : FormatingContext {
             auto borders = computeBorders(tree, *box);
             auto padding = computePaddings(tree, *box, 0_au); // FIXME: containing block?
 
-            auto frag = Layout::Frag();
             Input childInput{
-                .fragment = &frag,
                 .knownSize = {
                     resolvedRect.width - borders.horizontal() - padding.horizontal(),
                     resolvedRect.height - borders.vertical() - padding.vertical(),
@@ -64,16 +62,9 @@ struct ReplacedFormatingContext : FormatingContext {
                 .position = Vec2Au{resolvedRect.x, resolvedRect.y} + borders.topStart() + padding.topStart(),
             };
 
-            auto output = layoutContentBox(tree, *box, childInput);
-
-            auto childFrag = std::move(frag.children()[0]);
-            childFrag.metrics = Metrics::commitContentBox(
-                tree, *box,
-                output.size, childInput.position,
-                borders, padding
-            );
-
-            return makeBox<Frag>(std::move(childFrag));
+            auto frag = Layout::Frag();
+            auto output = layoutContentBox(tree, *box, childInput, frag, borders, padding);
+            return makeBox<Frag>(std::move(frag.children()[0]));
         }
         unreachable();
     }

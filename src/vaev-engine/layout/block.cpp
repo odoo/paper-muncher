@@ -243,20 +243,9 @@ struct BlockFormatingContext : FormatingContext {
 
             childInput.pendingVerticalSizes += borders.bottom + padding.bottom;
 
-            auto output = layoutContentBox(
-                tree,
-                c,
-                childInput
-            );
-
-            if (input.fragment) {
-                auto& child = input.fragment->children()[input.fragment->children().len() - 1];
-                child.metrics = Metrics::commitContentBox(
-                    tree, c,
-                    output.size, childInput.position,
-                    borders, padding
-                );
-            }
+            auto output = input.fragment
+                              ? layoutContentBox(tree, c, childInput, *input.fragment, borders, padding)
+                              : layoutContentBox(tree, c, childInput);
 
             if (not impliesRemovingFromFlow(c.style->position)) {
                 blockSize += output.size.y + margin.bottom;
