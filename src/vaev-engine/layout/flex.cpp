@@ -237,24 +237,17 @@ struct FlexItem {
             input
         );
 
+        // FIXME: whats up with intrinsic sizing here?
         if (input.intrinsic == IntrinsicSize::AUTO or box->style->display != Display::INLINE) {
-            if (not box->style->sizing->width.is<Keywords::Auto>()) {
-                // FIXME: computing border box size. content box sizing should be supported later.
-                auto specifiedWidth = computeSpecifiedSize(
+            if (not input.knownSize.width)
+                input.knownSize.width = computeSpecifiedSize(
                     t, *box, box->style->sizing->width, input.containingBlock, true
                 );
 
-                input.knownSize.width = input.knownSize.width.unwrapOr(specifiedWidth.unwrap());
-            }
-
-            if (not box->style->sizing->height.is<Keywords::Auto>()) {
-                // FIXME: computing border box size. content box sizing should be supported later.
-                auto specifiedHeight = computeSpecifiedSize(
+            if (not input.knownSize.height)
+                input.knownSize.height = computeSpecifiedSize(
                     t, *box, box->style->sizing->height, input.containingBlock, false
                 );
-
-                input.knownSize.height = input.knownSize.height.unwrapOr(specifiedHeight.unwrap());
-            }
         }
 
         speculativeSize = layoutBorderBox(t, *box, input, UsedSpacings{.padding = padding, .borders = borders}).size;

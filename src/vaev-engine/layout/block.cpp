@@ -122,6 +122,31 @@ Output fragmentEmptyBox(Tree& tree, Input input) {
     }
 }
 
+void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, Au horizontalMargins, Opt<Au> blockInlineSize) {
+    if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Display::INLINE) {
+        if (child.style->sizing->width.is<Keywords::Auto>()) {
+            // https://www.w3.org/TR/css-tables-3/#layout-principles
+            // Unlike other block-level boxes, tables do not fill their containing block by default.
+            // When their width computes to auto, they behave as if they had fit-content specified instead.
+            // This is different from most block-level boxes, which behave as if they had stretch instead.
+            if (child.style->display == Display::TABLE_BOX) {
+                // Do nothing. 'fit-content' is kinda intrinsic size, when we don't populate knownSize.
+            } else if (blockInlineSize) {
+                // When the inline size is not known, we cannot enforce it to the child. (?)
+                childInput.knownSize.width = blockInlineSize.unwrap() - horizontalMargins;
+            }
+        } else {
+            childInput.knownSize.width = computeSpecifiedSize(
+                tree, child, child.style->sizing->width, childInput.containingBlock, true
+            );
+        }
+
+        childInput.knownSize.height = computeSpecifiedSize(
+            tree, child, child.style->sizing->height, childInput.containingBlock, false
+        );
+    }
+}
+
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
 struct BlockFormatingContext : FormatingContext {
     Au _computeCapmin(Tree& tree, Box& box, Input input, Au inlineSize) {
@@ -209,38 +234,7 @@ struct BlockFormatingContext : FormatingContext {
                 childInput.capmin = _computeCapmin(tree, box, input, inlineSize);
             }
 
-            if (input.intrinsic == IntrinsicSize::AUTO or c.style->display != Display::INLINE) {
-                if (c.style->sizing->width.is<Keywords::Auto>()) {
-                    // https://www.w3.org/TR/css-tables-3/#layout-principles
-                    // Unlike other block-level boxes, tables do not fill their containing block by default.
-                    // When their width computes to auto, they behave as if they had fit-content specified instead.
-                    // This is different from most block-level boxes, which behave as if they had stretch instead.
-                    if (c.style->display == Display::TABLE_BOX) {
-                        // Do nothing. 'fit-content' is kinda intrinsic size, when we don't populate knownSize.
-                    } else if (input.knownSize.x) {
-                        // When the inline size is not known, we cannot enforce it to the child. (?)
-                        childInput.knownSize.width = inlineSize - usedSpacings.margin.horizontal();
-                    }
-                } else {
-                    // FIXME: computing border box size. content box sizing should be supported later.
-                    auto specifiedWidth = computeSpecifiedSize(
-                        tree, c, c.style->sizing->width, childInput.containingBlock, true
-                    );
-
-                    childInput.knownSize.width = specifiedWidth.unwrap();
-                }
-
-                if (c.style->sizing->height.is<Keywords::Auto>()) {
-                    childInput.knownSize.height = NONE;
-                } else {
-                    // FIXME: computing border box size. content box sizing should be supported later.
-                    auto specifiedHeight = computeSpecifiedSize(
-                        tree, c, c.style->sizing->height, childInput.containingBlock, false
-                    );
-
-                    childInput.knownSize.height = specifiedHeight.unwrap();
-                }
-            }
+            _populateChildSpecifiedSizes(tree, c, childInput, usedSpacings.margin.horizontal(), input.knownSize.x);
 
             auto output = input.fragment
                               ? layoutBorderBox(tree, c, childInput, *input.fragment, usedSpacings)

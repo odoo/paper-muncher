@@ -56,6 +56,7 @@ struct InlineFormatingContext : FormatingContext {
 
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
 
+            // FIXME: intrinsic sizing not being passed around
             Input childInput{
                 .knownSize = {NONE, NONE},
                 .availableSpace = {inlineSize, input.availableSpace.y},
@@ -65,29 +66,13 @@ struct InlineFormatingContext : FormatingContext {
                 },
             };
 
-            if (input.intrinsic == IntrinsicSize::AUTO or atomicBox.style->display != Display::INLINE) {
-                if (atomicBox.style->sizing->width.is<Keywords::Auto>()) {
-                    childInput.knownSize.width = NONE;
-                } else {
-                    // FIXME: computing border box size. content box sizing should be supported later.
-                    auto specifiedWidth = computeSpecifiedSize(
-                        tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock, true
-                    );
+            childInput.knownSize.width = computeSpecifiedSize(
+                tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock, true
+            );
 
-                    childInput.knownSize.width = specifiedWidth.unwrap();
-                }
-
-                if (atomicBox.style->sizing->height.is<Keywords::Auto>()) {
-                    childInput.knownSize.height = NONE;
-                } else {
-                    // FIXME: computing border box size. content box sizing should be supported later.
-                    auto specifiedHeight = computeSpecifiedSize(
-                        tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock, false
-                    );
-
-                    childInput.knownSize.height = specifiedHeight.unwrap();
-                }
-            }
+            childInput.knownSize.height = computeSpecifiedSize(
+                tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock, false
+            );
 
             // NOTE: We set the same availableSpace to child inline boxes since line wrapping is possible i.e. in the
             // worst case, they will take up the whole availableSpace, and a line break will be done right before them
