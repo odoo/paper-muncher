@@ -263,8 +263,42 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
     }
 }
 
-// FIXME: borders and padding here sucks
-Output layoutContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, InsetsAu borders, InsetsAu padding) {
+Input _adaptToContentBox(Input input, UsedSpacings usedSpacings) {
+    auto borders = usedSpacings.borders;
+    auto padding = usedSpacings.padding;
+
+    input.knownSize.x = input.knownSize.x.map(
+        [&](Au size) {
+            return size - borders.horizontal() - padding.horizontal();
+        }
+    );
+
+    input.knownSize.y = input.knownSize.y.map(
+        [&](Au size) {
+            return size - borders.vertical() - padding.vertical();
+        }
+    );
+    input.position = input.position + borders.topStart() + padding.topStart();
+    input.pendingVerticalSizes += borders.bottom + padding.bottom;
+
+    return input;
+}
+
+Output layoutBorderBox(Tree& tree, Box& box, Input input, UsedSpacings usedSpacings) {
+    input = _adaptToContentBox(input, usedSpacings);
+    auto output = layoutContentBox(tree, box, input);
+    output.size = output.size + usedSpacings.borders.all() + usedSpacings.padding.all();
+    return output;
+}
+
+Output layoutBorderBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings usedSpacings) {
+    input = _adaptToContentBox(input, usedSpacings);
+    auto output = layoutContentBox(tree, box, input, parentFrag, usedSpacings);
+    output.size = output.size + usedSpacings.borders.all() + usedSpacings.padding.all();
+    return output;
+}
+
+Output layoutContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings usedSpacings) {
     Frag currFrag(&box);
 
     auto output = layoutContentBox(tree, box, input.withFragment(&currFrag));
@@ -272,7 +306,7 @@ Output layoutContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, Ins
     currFrag.metrics = Metrics::commitContentBox(
         tree, box,
         output.size, input.position,
-        borders, padding
+        usedSpacings
     );
 
     parentFrag.add(std::move(currFrag));
@@ -281,25 +315,27 @@ Output layoutContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, Ins
 }
 
 Output layout(Tree& tree, Input input) {
-    auto borders = computeBorders(tree, tree.root);
-    auto padding = computePaddings(tree, tree.root, input.containingBlock);
+    UsedSpacings usedSpacings{
+        .padding = computePaddings(tree, tree.root, input.containingBlock),
+        .borders = computeBorders(tree, tree.root),
+    };
 
     if (auto specifiedWidth = computeSpecifiedSize(
             tree, tree.root, tree.root.style->sizing->width, input.containingBlock, true
         )) {
-        input.knownSize.width = specifiedWidth.unwrap() - borders.horizontal() - padding.horizontal();
+        input.knownSize.width = specifiedWidth.unwrap();
     }
 
     if (auto specifiedHeight = computeSpecifiedSize(
             tree, tree.root, tree.root.style->sizing->width, input.containingBlock, true
         )) {
-        input.knownSize.height = specifiedHeight.unwrap() - borders.vertical() - padding.vertical();
+        input.knownSize.height = specifiedHeight.unwrap();
     }
 
     auto output =
         input.fragment
-            ? layoutContentBox(tree, tree.root, input, *input.fragment, borders, padding)
-            : layoutContentBox(tree, tree.root, input);
+            ? layoutBorderBox(tree, tree.root, input, *input.fragment, usedSpacings)
+            : layoutBorderBox(tree, tree.root, input, usedSpacings);
 
     if (input.fragment) {
         layoutPositioned(tree, input.fragment->children()[0], input.containingBlock);
@@ -314,16 +350,14 @@ Tuple<Output, Frag> layoutCreateFragment(Tree& tree, Input input) {
     return {out, std::move(root.children()[0])};
 }
 
-Metrics Metrics::commitContentBox(Tree& tree, Box& box, Vec2Au contentBoxSize, Vec2Au contentBoxPosition, InsetsAu borders, InsetsAu padding) {
+Metrics Metrics::commitContentBox(Tree& tree, Box& box, Vec2Au contentBoxSize, Vec2Au contentBoxPosition, UsedSpacings usedSpacings) {
     return {
-        .padding = padding,
-        .borders = borders,
+        .usedSpacings = usedSpacings,
         .outlineOffset = resolve(tree, box, box.style->outline->offset),
         .outlineWidth = resolve(tree, box, box.style->outline->width),
-        .position = contentBoxPosition - borders.topStart() - padding.topStart(),
-        .borderSize = contentBoxSize + borders.all() + padding.all(),
-        .margin = {},
-        .radii = computeRadii(tree, box, contentBoxSize + borders.all() + padding.all()),
+        .position = contentBoxPosition - usedSpacings.borders.topStart() - usedSpacings.padding.topStart(),
+        .borderSize = contentBoxSize + usedSpacings.borders.all() + usedSpacings.padding.all(),
+        .radii = computeRadii(tree, box, contentBoxSize + usedSpacings.borders.all() + usedSpacings.padding.all()),
     };
 }
 

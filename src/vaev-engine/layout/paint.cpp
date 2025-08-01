@@ -18,12 +18,12 @@ namespace Vaev::Layout {
 static bool _paintBorders(Frag& frag, Gfx::Color currentColor, Gfx::Borders& borders) {
     borders.radii = frag.metrics.radii.cast<f64>(); // This value is needed for the outline
 
-    if (frag.metrics.borders.zero())
+    if (frag.metrics.usedSpacings.borders.zero())
         return false;
 
     currentColor = Vaev::resolve(frag.style().color, currentColor);
 
-    auto const& bordersLayout = frag.metrics.borders;
+    auto const& bordersLayout = frag.metrics.usedSpacings.borders;
     borders.widths.top = bordersLayout.top.cast<f64>();
     borders.widths.bottom = bordersLayout.bottom.cast<f64>();
     borders.widths.start = bordersLayout.start.cast<f64>();
@@ -680,19 +680,19 @@ export void overlay(Frag& frag, Gfx::Canvas& g, Gc::Ref<Dom::Node> node) {
         Gfx::Borders border;
 
         // Margins
-        border.widths = frag.metrics.margin.cast<f64>();
+        border.widths = frag.metrics.usedSpacings.margin.cast<f64>();
         border.withFill(Gfx::YELLOW800.withOpacity(0.5));
         border.withStyle(Gfx::BorderStyle::SOLID);
         border.paint(g, frag.metrics.marginBox().cast<f64>());
 
         // Borders
-        border.widths = frag.metrics.borders.cast<f64>();
+        border.widths = frag.metrics.usedSpacings.borders.cast<f64>();
         border.withFill(Gfx::YELLOW500.withOpacity(0.5));
         border.withStyle(Gfx::BorderStyle::SOLID);
         border.paint(g, frag.metrics.borderBox().cast<f64>());
 
         // Paddings
-        border.widths = frag.metrics.padding.cast<f64>();
+        border.widths = frag.metrics.usedSpacings.padding.cast<f64>();
         border.withFill(Gfx::GREEN500.withOpacity(0.5));
         border.withStyle(Gfx::BorderStyle::SOLID);
         border.paint(g, frag.metrics.paddingBox().cast<f64>());

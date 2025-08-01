@@ -51,19 +51,21 @@ struct ReplacedFormatingContext : FormatingContext {
         } else if (auto box = element.is<::Box<Box>>()) {
             auto resolvedRect = SVG::resolve(SVG::buildRectangle(*(*box)->style), resolveTo);
 
-            auto borders = computeBorders(tree, *box);
-            auto padding = computePaddings(tree, *box, 0_au); // FIXME: containing block?
-
             Input childInput{
                 .knownSize = {
-                    resolvedRect.width - borders.horizontal() - padding.horizontal(),
-                    resolvedRect.height - borders.vertical() - padding.vertical(),
+                    resolvedRect.width,
+                    resolvedRect.height,
                 },
-                .position = Vec2Au{resolvedRect.x, resolvedRect.y} + borders.topStart() + padding.topStart(),
+                .position = Vec2Au{resolvedRect.x, resolvedRect.y},
+            };
+
+            UsedSpacings usedSpacings{
+                .padding = computePaddings(tree, *box, 0_au), // FIXME: containing block?,
+                .borders = computeBorders(tree, *box),
             };
 
             auto frag = Layout::Frag();
-            auto output = layoutContentBox(tree, *box, childInput, frag, borders, padding);
+            auto output = layoutBorderBox(tree, *box, childInput, frag, usedSpacings);
             return makeBox<Frag>(std::move(frag.children()[0]));
         }
         unreachable();

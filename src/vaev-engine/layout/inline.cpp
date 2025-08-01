@@ -65,9 +65,6 @@ struct InlineFormatingContext : FormatingContext {
                 },
             };
 
-            auto borders = computeBorders(tree, atomicBox);
-            auto padding = computePaddings(tree, atomicBox, childInput.containingBlock);
-
             if (input.intrinsic == IntrinsicSize::AUTO or atomicBox.style->display != Display::INLINE) {
                 if (atomicBox.style->sizing->width.is<Keywords::Auto>()) {
                     childInput.knownSize.width = NONE;
@@ -77,7 +74,7 @@ struct InlineFormatingContext : FormatingContext {
                         tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock, true
                     );
 
-                    childInput.knownSize.width = specifiedWidth.unwrap() - borders.horizontal() - padding.horizontal();
+                    childInput.knownSize.width = specifiedWidth.unwrap();
                 }
 
                 if (atomicBox.style->sizing->height.is<Keywords::Auto>()) {
@@ -88,20 +85,24 @@ struct InlineFormatingContext : FormatingContext {
                         tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock, false
                     );
 
-                    childInput.knownSize.height = specifiedHeight.unwrap() - borders.vertical() - padding.vertical();
+                    childInput.knownSize.height = specifiedHeight.unwrap();
                 }
             }
 
             // NOTE: We set the same availableSpace to child inline boxes since line wrapping is possible i.e. in the
             // worst case, they will take up the whole availableSpace, and a line break will be done right before them
-            auto atomicBoxOutput = layoutContentBox(
+            auto atomicBoxOutput = layoutBorderBox(
                 tree,
                 atomicBox,
-                childInput
+                childInput,
+                UsedSpacings{
+                    .padding = computePaddings(tree, atomicBox, childInput.containingBlock),
+                    .borders = computeBorders(tree, atomicBox),
+                }
             );
 
             if (not impliesRemovingFromFlow(atomicBox.style->position)) {
-                boxStrutCell.size = atomicBoxOutput.size + borders.all() + padding.all();
+                boxStrutCell.size = atomicBoxOutput.size;
                 // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
                 boxStrutCell.baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
             }
@@ -140,26 +141,15 @@ struct InlineFormatingContext : FormatingContext {
                 },
             };
 
-            auto borders = computeBorders(tree, atomicBox);
-            auto padding = computePaddings(tree, atomicBox, childInput.containingBlock);
+            UsedSpacings usedSpacings{
+                .padding = computePaddings(tree, atomicBox, childInput.containingBlock),
+                .borders = computeBorders(tree, atomicBox),
+            };
 
-            childInput.knownSize.x = childInput.knownSize.x.map(
-                [&](Au size) {
-                    return size - borders.horizontal() - padding.horizontal();
-                }
-            );
-
-            childInput.knownSize.y = childInput.knownSize.y.map(
-                [&](Au size) {
-                    return size - borders.vertical() - padding.vertical();
-                }
-            );
-
-            childInput.position = childInput.position + borders.topStart() + padding.topStart();
-
-            auto output = input.fragment
-                              ? layoutContentBox(tree, atomicBox, childInput, *input.fragment, borders, padding)
-                              : layoutContentBox(tree, atomicBox, childInput);
+            if (input.fragment)
+                layoutBorderBox(tree, atomicBox, childInput, *input.fragment, usedSpacings);
+            else
+                layoutBorderBox(tree, atomicBox, childInput, usedSpacings);
         }
 
         if (tree.fc.allowBreak() and not tree.fc.acceptsFit(

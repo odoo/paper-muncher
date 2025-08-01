@@ -996,23 +996,25 @@ struct TableFormatingContext : FormatingContext {
 
         Au horizontalSize = colWidthPref.query(j, j + colSpan - 1) + spacing.x * Au{colSpan - 1};
 
-        auto borders = computeBorders(tree, *cell.box);
-        auto padding = computePaddings(tree, *cell.box, horizontalSize);
-
         Input childInput{
             .fragment = input.fragment,
             .knownSize = {
-                horizontalSize - borders.horizontal() - padding.horizontal(),
-                verticalSize ? verticalSize.unwrap() - borders.vertical() - padding.vertical() : Opt<Au>{},
+                horizontalSize,
+                verticalSize,
             },
-            .position = Vec2Au{currPositionX, startPositionY} + padding.topStart() + borders.topStart(),
+            .position = Vec2Au{currPositionX, startPositionY},
             .breakpointTraverser = breakpointsForCell,
-            .pendingVerticalSizes = input.pendingVerticalSizes + borders.bottom + padding.bottom,
+            .pendingVerticalSizes = input.pendingVerticalSizes,
+        };
+
+        UsedSpacings usedSpacings{
+            .padding = computePaddings(tree, *cell.box, horizontalSize),
+            .borders = computeBorders(tree, *cell.box),
         };
 
         auto outputCell = input.fragment
-                              ? layoutContentBox(tree, *cell.box, childInput, *input.fragment, borders, padding)
-                              : layoutContentBox(tree, *cell.box, childInput);
+                              ? layoutBorderBox(tree, *cell.box, childInput, *input.fragment, usedSpacings)
+                              : layoutBorderBox(tree, *cell.box, childInput, usedSpacings);
 
         if (tree.fc.isDiscoveryMode()) {
             if (cellBox->style->break_->inside == BreakInside::AVOID) {
@@ -1020,7 +1022,6 @@ struct TableFormatingContext : FormatingContext {
             }
         }
 
-        outputCell.size = outputCell.size + borders.all() + padding.all();
         return {
             outputCell,
             startPositionY + outputCell.height() - startPositionOfRow[i]

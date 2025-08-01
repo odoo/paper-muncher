@@ -24,7 +24,11 @@ export Output layout(Tree& tree, Input input);
 
 export Output layoutContentBox(Tree& tree, Box& box, Input input);
 
-export Output layoutContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, InsetsAu borders, InsetsAu padding);
+export Output layoutContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings usedSpacings);
+
+export Output layoutBorderBox(Tree& tree, Box& box, Input input, UsedSpacings usedSpacings);
+
+export Output layoutBorderBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings usedSpacings);
 
 export Tuple<Output, Frag> layoutCreateFragment(Tree& tree, Input input);
 

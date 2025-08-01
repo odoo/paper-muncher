@@ -445,19 +445,28 @@ export struct Tree {
 
 // MARK: Fragment --------------------------------------------------------------
 
-export struct Metrics {
+struct UsedSpacings {
     InsetsAu padding{};
     InsetsAu borders{};
+    InsetsAu margin{};
+
+    void repr(Io::Emit& e) const {
+        e("(used spacings paddings: {} borders: {} margin: {})",
+          padding, borders, margin);
+    }
+};
+
+export struct Metrics {
+    UsedSpacings usedSpacings;
     Au outlineOffset{};
     Au outlineWidth{};
     Vec2Au position; //< Position relative to the content box of the containing block
     Vec2Au borderSize;
-    InsetsAu margin{};
     RadiiAu radii{};
 
     void repr(Io::Emit& e) const {
-        e("(layout paddings: {} borders: {} position: {} borderSize: {} margin: {} radii: {})",
-          padding, borders, position, borderSize, margin, radii);
+        e("(layout {} position: {} borderSize: {} radii: {})",
+          usedSpacings, position, borderSize, radii);
     }
 
     RectAu borderBox() const {
@@ -465,18 +474,18 @@ export struct Metrics {
     }
 
     RectAu paddingBox() const {
-        return borderBox().shrink(borders);
+        return borderBox().shrink(usedSpacings.borders);
     }
 
     RectAu contentBox() const {
-        return paddingBox().shrink(padding);
+        return paddingBox().shrink(usedSpacings.padding);
     }
 
     RectAu marginBox() const {
-        return borderBox().grow(margin);
+        return borderBox().grow(usedSpacings.margin);
     }
 
-    static Metrics commitContentBox(Tree& tree, Box& box, Vec2Au contentBoxSize, Vec2Au contentBoxPosition, InsetsAu borders, InsetsAu padding);
+    static Metrics commitContentBox(Tree& tree, Box& box, Vec2Au contentBoxSize, Vec2Au contentBoxPosition, UsedSpacings padding);
 };
 
 export struct Frag;

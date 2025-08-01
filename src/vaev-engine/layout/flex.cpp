@@ -162,11 +162,13 @@ struct FlexItem {
         computeContentSizes(tree, containingBlock);
     }
 
-    void commit(MutCursor<Frag> frag) {
-        frag->metrics.margin.top = margin.top.unwrapOr(speculativeMargin.top);
-        frag->metrics.margin.start = margin.start.unwrapOr(speculativeMargin.start);
-        frag->metrics.margin.end = margin.end.unwrapOr(speculativeMargin.end);
-        frag->metrics.margin.bottom = margin.bottom.unwrapOr(speculativeMargin.bottom);
+    InsetsAu resolvedMargin() {
+        return {
+            margin.top.unwrapOr(speculativeMargin.top),
+            margin.end.unwrapOr(speculativeMargin.end),
+            margin.bottom.unwrapOr(speculativeMargin.bottom),
+            margin.start.unwrapOr(speculativeMargin.start),
+        };
     }
 
     void computeContentSizes(Tree& tree, Vec2Au containingBlock) {
@@ -255,19 +257,7 @@ struct FlexItem {
             }
         }
 
-        input.knownSize.width = input.knownSize.width.map([&](auto s) {
-            return s - padding.horizontal() - borders.horizontal();
-        });
-
-        input.knownSize.height = input.knownSize.height.map([&](auto s) {
-            return s - padding.vertical() - borders.vertical();
-        });
-
-        input.position = input.position + borders.topStart() + padding.topStart();
-
-        input.pendingVerticalSizes += borders.bottom + padding.bottom;
-
-        speculativeSize = layoutContentBox(t, *box, input).size + padding.all() + borders.all();
+        speculativeSize = layoutBorderBox(t, *box, input, UsedSpacings{.padding = padding, .borders = borders}).size;
     }
 
     // https://www.w3.org/TR/css-flexbox-1/#valdef-flex-basis-auto
@@ -1466,17 +1456,24 @@ struct FlexFormatingContext : FormatingContext {
                 Input childInput{
                     .fragment = input.fragment,
                     .knownSize = {
-                        flexItem.usedSize.x - flexItem.padding.horizontal() - flexItem.borders.horizontal(),
-                        flexItem.usedSize.y - flexItem.padding.vertical() - flexItem.borders.vertical(),
+                        flexItem.usedSize.x,
+                        flexItem.usedSize.y,
                     },
-                    .position = flexItem.position + flexItem.borders.topStart() + flexItem.padding.topStart(),
+                    .position = flexItem.position,
                     .availableSpace = availableSpace,
-                    .pendingVerticalSizes = input.pendingVerticalSizes + flexItem.borders.bottom + flexItem.padding.bottom
+                    .pendingVerticalSizes = input.pendingVerticalSizes
                 };
 
-                auto output = input.fragment
-                                  ? layoutContentBox(tree, *flexItem.box, childInput, *input.fragment, flexItem.borders, flexItem.padding)
-                                  : layoutContentBox(tree, *flexItem.box, childInput);
+                UsedSpacings usedSpacings{
+                    .padding = std::move(flexItem.padding),
+                    .borders = std::move(flexItem.borders),
+                    .margin = flexItem.resolvedMargin(),
+                };
+
+                if (input.fragment)
+                    layoutBorderBox(tree, *flexItem.box, childInput, *input.fragment, usedSpacings);
+                else
+                    layoutBorderBox(tree, *flexItem.box, childInput, usedSpacings);
             }
         }
     }

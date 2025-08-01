@@ -190,19 +190,23 @@ struct BlockFormatingContext : FormatingContext {
                 .pendingVerticalSizes = input.pendingVerticalSizes,
             };
 
+            UsedSpacings usedSpacings{
+                .padding = computePaddings(tree, c, childInput.containingBlock),
+                .borders = computeBorders(tree, c),
+                .margin = computeMargins(tree, c, childInput)
+            };
+
+            if (not impliesRemovingFromFlow(c.style->position)) {
+                // TODO: collapsed margins for sibling elements
+                blockSize += max(usedSpacings.margin.top, lastMarginBottom) - lastMarginBottom;
+            }
+
+            childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
+
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
             //       and avoid duplicating the layout code
             if (c.style->display == Display::Internal::TABLE_BOX) {
                 childInput.capmin = _computeCapmin(tree, box, input, inlineSize);
-            }
-
-            auto margin = computeMargins(tree, c, childInput);
-            auto borders = computeBorders(tree, c);
-            auto padding = computePaddings(tree, c, childInput.containingBlock);
-
-            if (not impliesRemovingFromFlow(c.style->position)) {
-                // TODO: collapsed margins for sibling elements
-                blockSize += max(margin.top, lastMarginBottom) - lastMarginBottom;
             }
 
             if (input.intrinsic == IntrinsicSize::AUTO or c.style->display != Display::INLINE) {
@@ -215,7 +219,7 @@ struct BlockFormatingContext : FormatingContext {
                         // Do nothing. 'fit-content' is kinda intrinsic size, when we don't populate knownSize.
                     } else if (input.knownSize.x) {
                         // When the inline size is not known, we cannot enforce it to the child. (?)
-                        childInput.knownSize.width = inlineSize - margin.horizontal() - borders.horizontal() - padding.horizontal();
+                        childInput.knownSize.width = inlineSize - usedSpacings.margin.horizontal();
                     }
                 } else {
                     // FIXME: computing border box size. content box sizing should be supported later.
@@ -223,7 +227,7 @@ struct BlockFormatingContext : FormatingContext {
                         tree, c, c.style->sizing->width, childInput.containingBlock, true
                     );
 
-                    childInput.knownSize.width = specifiedWidth.unwrap() - borders.horizontal() - padding.horizontal();
+                    childInput.knownSize.width = specifiedWidth.unwrap();
                 }
 
                 if (c.style->sizing->height.is<Keywords::Auto>()) {
@@ -234,22 +238,17 @@ struct BlockFormatingContext : FormatingContext {
                         tree, c, c.style->sizing->height, childInput.containingBlock, false
                     );
 
-                    childInput.knownSize.height = specifiedHeight.unwrap() - borders.vertical() - padding.vertical();
+                    childInput.knownSize.height = specifiedHeight.unwrap();
                 }
             }
 
-            childInput.position = input.position + Vec2Au{margin.start, blockSize} +
-                                  borders.topStart() + padding.topStart();
-
-            childInput.pendingVerticalSizes += borders.bottom + padding.bottom;
-
             auto output = input.fragment
-                              ? layoutContentBox(tree, c, childInput, *input.fragment, borders, padding)
-                              : layoutContentBox(tree, c, childInput);
+                              ? layoutBorderBox(tree, c, childInput, *input.fragment, usedSpacings)
+                              : layoutBorderBox(tree, c, childInput, usedSpacings);
 
             if (not impliesRemovingFromFlow(c.style->position)) {
-                blockSize += output.size.y + margin.bottom;
-                lastMarginBottom = margin.bottom;
+                blockSize += output.size.y + usedSpacings.margin.bottom;
+                lastMarginBottom = usedSpacings.margin.bottom;
             }
 
             maybeProcessChildBreakpoint(
@@ -277,7 +276,7 @@ struct BlockFormatingContext : FormatingContext {
                 blockWasCompletelyLaidOut = output.completelyLaidOut and i + 1 == box.children().len();
             }
 
-            inlineSize = max(inlineSize, output.size.x + margin.horizontal());
+            inlineSize = max(inlineSize, output.size.x + usedSpacings.margin.horizontal());
         }
 
         // height here is overflow related
