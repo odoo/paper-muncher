@@ -5,6 +5,8 @@ import Vaev.Engine;
 import Karm.Gc;
 import Karm.Print;
 
+using namespace Karm;
+
 namespace Vaev::Layout::Tests {
 
 static Style::Media const TEST_MEDIA = {

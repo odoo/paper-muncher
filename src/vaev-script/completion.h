@@ -1,8 +1,10 @@
 #pragma once
 
-#include <karm-base/res.h>
+import Karm.Core;
 
 #include "value.h"
+
+using namespace Karm;
 
 namespace Vaev::Script {
 

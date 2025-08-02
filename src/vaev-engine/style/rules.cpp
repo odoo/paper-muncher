@@ -1,12 +1,13 @@
 module;
 
-#include <karm-io/emit.h>
 #include <karm-logger/logger.h>
 #include <karm-mime/url.h>
 
 export module Vaev.Engine:style.rules;
 
+import Karm.Core;
 import Karm.Gc;
+
 import :css;
 import :style.fonts;
 import :style.media;
@@ -16,6 +17,8 @@ import :style.props;
 import :style.selector;
 import :style.namespace_;
 import :style.matcher;
+
+using namespace Karm;
 
 namespace Vaev::Style {
 

@@ -1,12 +1,10 @@
-module;
-
-#include <karm-base/base.h>
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:values.align;
 
+import Karm.Core;
 import :css;
 import :values.base;
+
+using namespace Karm;
 
 namespace Vaev {
 

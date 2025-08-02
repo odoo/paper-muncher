@@ -1,17 +1,19 @@
 module;
 
 #include <karm-gfx/colors.h>
-#include <karm-io/aton.h>
-#include <karm-io/emit.h>
 #include <karm-logger/logger.h>
 
 export module Vaev.Engine:values.color;
+
+import Karm.Core;
 
 import :css;
 import :values.base;
 import :values.angle;
 import :values.keywords;
 import :values.percent;
+
+using namespace Karm;
 
 // https://www.w3.org/TR/css-color-4
 

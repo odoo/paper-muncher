@@ -1,5 +1,7 @@
 module;
 
+
+#include <karm-core/macros.h>
 #include <karm-mime/url.h>
 #include <karm-text/base.h>
 

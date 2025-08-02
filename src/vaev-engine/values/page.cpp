@@ -1,12 +1,12 @@
-module;
-
-#include <karm-base/res.h>
-
 export module Vaev.Engine:values.page;
 
+import Karm.Core;
 import Karm.Print;
+
 import :css;
 import :values.base;
+
+using namespace Karm;
 
 namespace Vaev {
 

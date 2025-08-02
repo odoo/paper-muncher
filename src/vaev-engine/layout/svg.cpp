@@ -3,16 +3,19 @@ module;
 #include <karm-gfx/borders.h>
 #include <karm-gfx/color.h>
 #include <karm-gfx/outline.h>
-#include <karm-io/aton.h>
 #include <karm-math/au.h>
 #include <karm-math/vec.h>
 
 export module Vaev.Engine:layout.svg;
 
+import Karm.Core;
 import Karm.Scene;
+
 import :style;
 import :dom;
 import :values;
+
+using namespace Karm;
 
 namespace Vaev::Layout {
 

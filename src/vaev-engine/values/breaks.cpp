@@ -1,12 +1,12 @@
-module;
-
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:values.breaks;
+
+import Karm.Core;
 
 import :css;
 import :values.base;
 import :values.primitives;
+
+using namespace Karm;
 
 namespace Vaev {
 

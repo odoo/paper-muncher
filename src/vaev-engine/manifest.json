@@ -15,12 +15,11 @@
         "xml"
     ],
     "requires": [
-        "karm-base",
+        "karm-core",
         "karm-gc",
         "karm-gfx",
         "karm-http",
         "karm-image",
-        "karm-io",
         "karm-logger",
         "karm-math",
         "karm-mime",

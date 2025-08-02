@@ -2,6 +2,8 @@
 
 import Vaev.Engine;
 
+using namespace Karm;
+
 namespace Vaev::Style::Tests {
 
 test$("vaev-style-parse-simple-selectors") {

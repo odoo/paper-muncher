@@ -1,13 +1,13 @@
-module;
-
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:values.flex;
+
+import Karm.Core;
 
 import :css;
 import :values.base;
 import :values.keywords;
 import :values.sizing;
+
+using namespace Karm;
 
 namespace Vaev {
 

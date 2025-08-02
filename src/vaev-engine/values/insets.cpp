@@ -1,13 +1,16 @@
 module;
 
-#include <karm-io/emit.h>
 #include <karm-math/insets.h>
 
 export module Vaev.Engine:values.insets;
 
+import Karm.Core;
+
 import :css;
 import :values.base;
 import :values.width;
+
+using namespace Karm;
 
 namespace Vaev {
 

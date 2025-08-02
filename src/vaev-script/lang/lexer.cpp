@@ -1,6 +1,8 @@
-#include <karm-base/array.h>
+import Karm.Core;
 
 #include "lexer.h"
+
+using namespace Karm;
 
 namespace Vaev::Script {
 

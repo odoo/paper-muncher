@@ -7,6 +7,8 @@ import Vaev.Engine;
 import Karm.Http;
 import Karm.Gc;
 
+using namespace Karm;
+
 Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto args = Sys::useArgs(ctx);
     auto url = args.len()

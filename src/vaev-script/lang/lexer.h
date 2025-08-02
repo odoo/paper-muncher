@@ -1,7 +1,8 @@
 #pragma once
 
-#include <karm-io/emit.h>
-#include <karm-io/sscan.h>
+import Karm.Core;
+
+using namespace Karm;
 
 namespace Vaev::Script {
 

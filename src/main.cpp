@@ -12,6 +12,8 @@ import Karm.Image;
 import Karm.Print;
 import Vaev.Engine;
 
+using namespace Karm;
+
 namespace PaperMuncher {
 
 static Rc<Http::Client> _createHttpClient(bool unsecure) {

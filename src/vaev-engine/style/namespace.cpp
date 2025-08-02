@@ -1,12 +1,9 @@
-module;
-
-#include <karm-base/map.h>
-#include <karm-base/res.h>
-#include <karm-base/symbol.h>
-
 export module Vaev.Engine:style.namespace_;
 
+import Karm.Core;
 import :dom;
+
+using namespace Karm;
 
 namespace Vaev::Style {
 

@@ -1,12 +1,11 @@
-module;
-
-#include <karm-base/string.h>
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:values.keywords;
+
+import Karm.Core;
 
 import :css;
 import :values.base;
+
+using namespace Karm;
 
 namespace Vaev {
 

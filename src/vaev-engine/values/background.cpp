@@ -1,13 +1,10 @@
-module;
-
-#include <karm-base/union.h>
-#include <karm-base/vec.h>
-#include <karm-io/emit.h>
+#include <karm-core/macros.h>
 
 export module Vaev.Engine:values.background;
 
-import :css;
+import Karm.Core;
 
+import :css;
 import :values.base;
 import :values.calc;
 import :values.color;
@@ -15,6 +12,8 @@ import :values.image;
 import :values.keywords;
 import :values.length;
 import :values.percent;
+
+using namespace Karm;
 
 namespace Vaev {
 

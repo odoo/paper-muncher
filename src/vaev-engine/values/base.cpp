@@ -1,12 +1,9 @@
-module;
-
-#include <karm-base/cursor.h>
-#include <karm-base/res.h>
-#include <karm-base/string.h>
-
 export module Vaev.Engine:values.base;
 
+import Karm.Core;
 import :css;
+
+using namespace Karm;
 
 namespace Vaev {
 

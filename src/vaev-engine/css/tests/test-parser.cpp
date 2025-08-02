@@ -2,6 +2,8 @@
 
 import Vaev.Engine;
 
+using namespace Karm;
+
 namespace Vaev::Css::Tests {
 
 test$("vaev-css-parse-func") {

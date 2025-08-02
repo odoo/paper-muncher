@@ -10,6 +10,8 @@ import Karm.Ui;
 import Karm.Gc;
 import Mdi;
 
+using namespace Karm;
+
 namespace Vaev::Browser {
 
 export struct ExpandNode {

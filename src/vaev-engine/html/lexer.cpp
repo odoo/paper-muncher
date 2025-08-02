@@ -1,11 +1,14 @@
 module;
 
-#include <karm-io/emit.h>
 #include <karm-logger/logger.h>
 
 export module Vaev.Engine:html.lexer;
 
+import Karm.Core;
+
 import :html.token;
+
+using namespace Karm;
 
 namespace Vaev::Html {
 

@@ -1,15 +1,15 @@
 module;
 
-#include <karm-base/cow.h>
-#include <karm-base/map.h>
 #include <karm-gfx/color.h>
-#include <karm-io/emit.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:style.specified;
 
+import Karm.Core;
 import :css;
 import :values;
+
+using namespace Karm;
 
 namespace Vaev::Style {
 

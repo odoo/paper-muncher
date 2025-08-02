@@ -1,8 +1,8 @@
-module;
-
-#include <karm-base/enum.h>
-
 export module Vaev.Engine:style.origin;
+
+import Karm.Core;
+
+using namespace Karm;
 
 namespace Vaev::Style {
 

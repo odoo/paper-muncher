@@ -2,7 +2,6 @@ module;
 
 #include <karm-gfx/borders.h>
 #include <karm-gfx/colors.h>
-#include <karm-io/emit.h>
 #include <karm-math/au.h>
 #include <karm-math/insets.h>
 #include <karm-mime/url.h>
@@ -10,9 +9,13 @@ module;
 
 export module Vaev.Engine:style.props;
 
+import Karm.Core;
+
 import :values;
 import :css;
 import :style.specified;
+
+using namespace Karm;
 
 // https://www.w3.org/TR/CSS22/propidx.html
 

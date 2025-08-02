@@ -1,13 +1,15 @@
 module;
 
-#include <karm-base/vec.h>
 #include <karm-logger/logger.h>
 
 export module Vaev.Engine:style.matcher;
 
+import Karm.Core;
 import Karm.Gc;
 import :dom;
 import :style.selector;
+
+using namespace Karm;
 
 namespace Vaev::Style {
 

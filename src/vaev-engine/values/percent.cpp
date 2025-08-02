@@ -1,15 +1,13 @@
-module;
-
-#include <karm-base/distinct.h>
-#include <karm-io/aton.h>
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:values.percent;
+
+import Karm.Core;
 
 import :css;
 import :values.base;
 import :values.primitives;
 import :values.resolved;
+
+using namespace Karm;
 
 namespace Vaev {
 

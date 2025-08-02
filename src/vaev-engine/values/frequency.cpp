@@ -1,9 +1,8 @@
-module;
-
-#include <karm-base/distinct.h>
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:values.frequency;
+
+import Karm.Core;
+
+using namespace Karm;
 
 namespace Vaev {
 

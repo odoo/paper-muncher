@@ -1,7 +1,9 @@
-#include <karm-math/funcs.h>
+import Karm.Core;
 
 #include "object.h"
 #include "value.h"
+
+using namespace Karm;
 
 namespace Vaev::Script {
 

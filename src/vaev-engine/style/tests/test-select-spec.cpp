@@ -3,6 +3,8 @@
 import Karm.Gc;
 import Vaev.Engine;
 
+using namespace Karm;
+
 namespace Vaev::Style::Tests {
 
 test$("select-class-spec") {

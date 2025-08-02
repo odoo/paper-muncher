@@ -2,6 +2,8 @@
 
 import Vaev.Engine;
 
+using namespace Karm;
+
 namespace Vaev::Css::Tests {
 
 Token lex(Str input) {

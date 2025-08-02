@@ -1,11 +1,9 @@
-module;
-
-#include <karm-base/string.h>
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:dom.character_data;
 
+import Karm.Core;
 import :dom.node;
+
+using namespace Karm;
 
 namespace Vaev::Dom {
 

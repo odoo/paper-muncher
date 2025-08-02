@@ -1,8 +1,8 @@
-module;
-
-#include <karm-math/const.h>
-
 export module Vaev.Engine:values.time;
+
+import Karm.Core;
+
+using namespace Karm;
 
 namespace Vaev {
 

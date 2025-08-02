@@ -1,8 +1,8 @@
-module;
-
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:html.token;
+
+import Karm.Core;
+
+using namespace Karm;
 
 namespace Vaev::Html {
 

@@ -4,6 +4,8 @@
 import Karm.Print;
 import Vaev.Engine;
 
+using namespace Karm;
+
 namespace Vaev::Style::Tests {
 
 static Media const TEST_MEDIA = {

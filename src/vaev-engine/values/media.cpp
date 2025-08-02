@@ -1,13 +1,11 @@
-module;
-
-#include <karm-base/array.h>
-#include <karm-base/cursor.h>
-#include <karm-base/res.h>
-
 export module Vaev.Engine:values.media;
+
+import Karm.Core;
 
 import :css;
 import :values.base;
+
+using namespace Karm;
 
 namespace Vaev {
 

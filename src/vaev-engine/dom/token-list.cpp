@@ -1,9 +1,8 @@
-module;
-
-#include <karm-base/string.h>
-#include <karm-base/vec.h>
-
 export module Vaev.Engine:dom.token_list;
+
+import Karm.Core;
+
+using namespace Karm;
 
 namespace Vaev::Dom {
 

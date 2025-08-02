@@ -1,14 +1,16 @@
 module;
 
-#include <karm-base/box.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:style.media;
 
+import Karm.Core;
 import Karm.Print;
 import :values;
 import :css;
+
+using namespace Karm;
 
 namespace Vaev::Style {
 

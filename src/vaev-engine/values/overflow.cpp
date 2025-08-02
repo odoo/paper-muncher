@@ -1,11 +1,11 @@
-module;
-
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:values.overflow;
+
+import Karm.Core;
 
 import :css;
 import :values.base;
+
+using namespace Karm;
 
 namespace Vaev {
 

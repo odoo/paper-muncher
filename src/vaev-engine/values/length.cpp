@@ -1,14 +1,15 @@
 module;
-
-#include <karm-io/aton.h>
-#include <karm-io/emit.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:values.length;
 
+import Karm.Core;
+
 import :css;
 import :values.base;
 import :values.resolved;
+
+using namespace Karm;
 
 namespace Vaev {
 

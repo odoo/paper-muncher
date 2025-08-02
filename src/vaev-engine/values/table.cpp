@@ -1,15 +1,18 @@
 module;
 
-#include <karm-io/emit.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:values.table;
+
+import Karm.Core;
 
 import :css;
 import :values.base;
 import :values.length;
 import :values.percent;
 import :values.width;
+
+using namespace Karm;
 
 namespace Vaev {
 

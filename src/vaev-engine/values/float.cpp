@@ -1,13 +1,12 @@
-module;
-
-#include <karm-base/cursor.h>
-#include <karm-base/res.h>
-
 export module Vaev.Engine:values.float_;
+
+import Karm.Core;
 
 import :css;
 import :values.base;
 import :values.length;
+
+using namespace Karm;
 
 namespace Vaev {
 

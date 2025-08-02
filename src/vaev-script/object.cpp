@@ -1,5 +1,6 @@
-#include "object.h"
+#include <karm-core/macros.h>
 
+#include "object.h"
 #include "ops.h"
 
 namespace Vaev::Script {

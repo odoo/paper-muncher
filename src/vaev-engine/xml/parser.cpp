@@ -1,13 +1,16 @@
 module;
 
-#include <karm-io/aton.h>
-#include <karm-io/expr.h>
 #include <karm-logger/logger.h>
+#include <karm-core/macros.h>
 
 export module Vaev.Engine:xml.parser;
 
+import Karm.Core;
 import Karm.Gc;
+
 import :dom;
+
+using namespace Karm;
 
 namespace Vaev::Xml {
 

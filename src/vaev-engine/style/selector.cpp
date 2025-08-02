@@ -1,15 +1,17 @@
 module;
 
-#include <karm-base/box.h>
-#include <karm-base/vec.h>
 #include <karm-logger/logger.h>
+#include <karm-core/macros.h>
 
 export module Vaev.Engine:style.selector;
 
+import Karm.Core;
 import :css;
 import :dom;
 import :values;
 import :style.namespace_;
+
+using namespace Karm;
 
 namespace Vaev::Style {
 

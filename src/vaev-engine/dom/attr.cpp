@@ -1,11 +1,11 @@
-module;
-
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:dom.attr;
+
+import Karm.Core;
 
 import :dom.node;
 import :dom.names;
+
+using namespace Karm;
 
 namespace Vaev::Dom {
 

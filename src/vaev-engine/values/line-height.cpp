@@ -1,15 +1,16 @@
-module;
-
-#include <karm-base/union.h>
-#include <karm-io/emit.h>
+#include <karm-core/macros.h>
 
 export module Vaev.Engine:values.line_height;
+
+import Karm.Core;
 
 import :css;
 import :values.base;
 import :values.length;
 import :values.percent;
 import :values.primitives;
+
+using namespace Karm;
 
 namespace Vaev {
 

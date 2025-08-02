@@ -1,13 +1,16 @@
-module;
-
-#include <karm-io/emit.h>
+#include <karm-core/macros.h>
 
 export module Vaev.Engine:values.calc;
+
+import Karm.Core;
+
 
 import :css;
 import :values.base;
 import :values.length;
 import :values.primitives;
+
+using namespace Karm;
 
 namespace Vaev {
 

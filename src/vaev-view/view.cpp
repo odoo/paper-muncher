@@ -10,6 +10,8 @@ import Karm.Print;
 import Karm.Ui;
 import Vaev.Engine;
 
+using namespace Karm;
+
 namespace Vaev::View {
 
 export struct ViewProps {
@@ -54,7 +56,7 @@ struct View : Ui::View<View> {
             .prefersReducedTransparency = ReducedTransparency::NO_PREFERENCE,
             .prefersContrast = Contrast::NO_PREFERENCE,
             .forcedColors = Colors::NONE,
-            .prefersColorScheme = Ui::DARK_MODE ? ColorScheme::DARK : ColorScheme::LIGHT,
+            .prefersColorScheme = Ui::darkMode ? ColorScheme::DARK : ColorScheme::LIGHT,
             .prefersReducedData = ReducedData::NO_PREFERENCE,
 
             // NOTE: Deprecated Media Features

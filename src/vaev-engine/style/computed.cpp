@@ -4,6 +4,10 @@ module;
 
 export module Vaev.Engine:style.computed;
 
+import Karm.Core;
+
+using namespace Karm;
+
 namespace Vaev::Style {
 
 // https://www.w3.org/TR/css-cascade/#computed

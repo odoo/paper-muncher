@@ -1,11 +1,9 @@
-module;
-
-#include <karm-base/base.h>
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:values.baseline;
 
+import Karm.Core;
 import :values.keywords;
+
+using namespace Karm;
 
 namespace Vaev::Style {
 

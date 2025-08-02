@@ -4,7 +4,7 @@
     "type": "lib",
     "description": "ECMAScript library & runtime for Vaev",
     "requires": [
-        "karm-io",
+        "karm-core",
         "karm-math",
         "karm-gc"
     ]

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <karm-base/box.h>
-#include <karm-base/union.h>
-#include <karm-base/vec.h>
+import Karm.Core;
+
+using namespace Karm;
 
 namespace Vaev::Script {
 

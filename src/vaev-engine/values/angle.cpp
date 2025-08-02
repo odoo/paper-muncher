@@ -1,15 +1,13 @@
-module;
-
-#include <karm-base/distinct.h>
-#include <karm-io/aton.h>
-#include <karm-io/emit.h>
-#include <karm-math/const.h>
+#include <karm-core/macros.h>
 
 export module Vaev.Engine:values.angle;
 
+import Karm.Core;
 import :css;
 import :values.base;
 import :values.resolved;
+
+using namespace Karm;
 
 namespace Vaev {
 

@@ -1,8 +1,8 @@
-module;
-
-#include <karm-io/emit.h>
+#include <karm-core/macros.h>
 
 export module Vaev.Engine:values.sizing;
+
+import Karm.Core;
 
 import :css;
 import :values.base;
@@ -11,6 +11,8 @@ import :values.keywords;
 import :values.length;
 import :values.percent;
 import :values.writing;
+
+using namespace Karm;
 
 namespace Vaev {
 

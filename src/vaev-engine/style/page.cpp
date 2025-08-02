@@ -1,6 +1,7 @@
 module;
 
 #include <karm-logger/logger.h>
+#include <karm-core/macros.h>
 
 export module Vaev.Engine:style.page;
 

@@ -1,11 +1,11 @@
 module;
 
-#include <karm-base/union.h>
-#include <karm-base/vec.h>
 #include <karm-gfx/types.h>
 #include <karm-math/path.h>
 
 export module Vaev.Engine:values.basic_shape;
+
+import Karm.Core;
 
 import :css;
 import :values.base;
@@ -16,6 +16,8 @@ import :values.background;
 import :values.insets;
 import :values.borders;
 import :values.keywords;
+
+using namespace Karm;
 
 namespace Vaev {
 

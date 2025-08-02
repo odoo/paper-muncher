@@ -1,12 +1,13 @@
 #pragma once
 
-#include <karm-base/func.h>
-#include <karm-base/vec.h>
+import Karm.Core;
 
 #include "agent.h"
 #include "completion.h"
 #include "properties.h"
 #include "value.h"
+
+using namespace Karm;
 
 namespace Vaev::Script {
 

@@ -1,13 +1,12 @@
 module;
 
-#include <karm-base/func.h>
-#include <karm-base/res.h>
-#include <karm-base/vec.h>
-#include <karm-io/emit.h>
-#include <karm-io/expr.h>
 #include <karm-logger/logger.h>
 
 export module Vaev.Engine:css.lexer;
+
+import Karm.Core;
+
+using namespace Karm;
 
 namespace Vaev::Css {
 

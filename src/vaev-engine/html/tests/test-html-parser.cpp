@@ -3,6 +3,8 @@
 import Vaev.Engine;
 import Karm.Gc;
 
+using namespace Karm;
+
 namespace Vaev::Dom::Tests {
 
 test$("parse-empty-document") {

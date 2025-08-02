@@ -1,15 +1,13 @@
 #pragma once
 
-#include <karm-base/set.h>
-#include <karm-base/string.h>
-#include <karm-base/union.h>
-#include <karm-io/emit.h>
-
+import Karm.Core;
 import Karm.Gc;
 
-struct Agent;
+using namespace Karm;
 
 namespace Vaev::Script {
+
+struct Agent;
 
 // https://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type
 struct Undefined {

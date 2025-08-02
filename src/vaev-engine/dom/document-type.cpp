@@ -1,10 +1,10 @@
-module;
-
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:dom.document_type;
 
+import Karm.Core;
+
 import :dom.node;
+
+using namespace Karm;
 
 namespace Vaev::Dom {
 

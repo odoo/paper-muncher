@@ -1,21 +1,19 @@
-module;
-
-#include <karm-base/map.h>
-#include <karm-base/rc.h>
-#include <karm-base/symbol.h>
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:dom.element;
 
+import Karm.Core;
 import :dom.attr;
 import :dom.node;
 import :dom.names;
 import :dom.text;
 import :dom.token_list;
 
+using namespace Karm;
+
 namespace Vaev::Style {
+
 export struct ComputedValues;
 export struct SpecifiedValues;
+
 } // namespace Vaev::Style
 
 namespace Vaev::Dom {

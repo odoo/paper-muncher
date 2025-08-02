@@ -3,6 +3,8 @@
 
 import Vaev.Engine;
 
+using namespace Karm;
+
 namespace Vaev::Style::Tests {
 
 test$("vaev-css-build-display") {

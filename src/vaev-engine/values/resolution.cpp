@@ -1,13 +1,13 @@
-module;
-
-#include <karm-io/aton.h>
-#include <karm-io/emit.h>
-#include <karm-math/const.h>
+#include <karm-core/macros.h>
 
 export module Vaev.Engine:values.resolution;
 
+import Karm.Core;
+
 import :css;
 import :values.base;
+
+using namespace Karm;
 
 namespace Vaev {
 

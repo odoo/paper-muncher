@@ -1,8 +1,8 @@
-module;
-
-#include <karm-base/base.h>
-
 export module Vaev.Engine:values.ratio;
+
+import Karm.Core;
+
+using namespace Karm;
 
 namespace Vaev {
 

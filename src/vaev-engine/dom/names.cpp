@@ -1,10 +1,8 @@
-module;
-
-#include <karm-base/array.h>
-#include <karm-base/string.h>
-#include <karm-io/emit.h>
-
 export module Vaev.Engine:dom.names;
+
+import Karm.Core;
+
+using namespace Karm;
 
 namespace Vaev {
 
