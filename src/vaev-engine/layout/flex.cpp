@@ -469,31 +469,21 @@ struct FlexItem {
     }
 
     // https://www.w3.org/TR/css-flexbox-1/#valdef-align-items-stretch
-    void alignCrossStretch(Tree& tree, Vec2Au availableSpaceInFlexContainer, Au lineCrossSize) {
+    void alignCrossStretch() {
         if (
             fa.crossAxis(box->style->sizing).is<Keywords::Auto>() and
-            not fa.startCrossAxis(*box->style->margin).is<Keywords::Auto>() and
-            not fa.endCrossAxis(*box->style->margin).is<Keywords::Auto>()
+            not hasAnyCrossMarginAuto()
         ) {
-            /* Its used value is the length necessary to make the cross size of the item’s margin box as close to
-            the same size as the line as possible, while still respecting the constraints imposed by
-            min-height/min-width/max-height/max-width.*/
-
-            auto elementSpeculativeCrossSize = lineCrossSize - getMargin(BOTH_CROSS);
-            speculateValues(
-                tree,
-                {
-                    .knownSize = fa.extractMainAxisAndFillOptOther(usedSize, elementSpeculativeCrossSize),
-                    .availableSpace = availableSpaceInFlexContainer,
-                }
-            );
+            // Do nothing.
+            // Used size based on stretch will be computed later
+            // due to https://www.w3.org/TR/css-flexbox-1/#algo-stretch
         }
 
         fa.crossAxis(position) = getMargin(START_CROSS);
     }
 
     // https://www.w3.org/TR/css-flexbox-1/#align-items-property
-    void alignItem(Tree& tree, Vec2Au availableSpaceInFlexContainer, Au lineCrossSize, Align::Keywords parentAlignItems) {
+    void alignItem(Au lineCrossSize, Align::Keywords parentAlignItems) {
         auto align = box->style->aligns.alignSelf.keyword;
 
         // https://www.w3.org/TR/css-flexbox-1/#valdef-align-items-auto
@@ -515,7 +505,7 @@ struct FlexItem {
             return;
 
         case Align::STRETCH:
-            alignCrossStretch(tree, availableSpaceInFlexContainer, lineCrossSize);
+            alignCrossStretch();
             return;
 
         default:
@@ -1314,12 +1304,10 @@ struct FlexFormatingContext : FormatingContext {
     // 14. MARK: Align all flex items ------------------------------------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-cross-align
 
-    void _alignAllFlexItems(Tree& tree, Box& box) {
+    void _alignAllFlexItems(Box& box) {
         for (auto& flexLine : _lines) {
             for (auto& flexItem : flexLine.items) {
                 flexItem.alignItem(
-                    tree,
-                    availableSpace,
                     flexLine.crossSize,
                     box.style->aligns.alignItems.keyword
                 );
@@ -1506,7 +1494,7 @@ struct FlexFormatingContext : FormatingContext {
         _resolveCrossAxisAutoMargins();
 
         // 14. Align all flex items along the cross-axis.
-        _alignAllFlexItems(tree, box);
+        _alignAllFlexItems(box);
 
         // 15. Determine the flex container's used cross size
         _determineFlexContainerUsedCrossSize(input, box);
