@@ -97,8 +97,42 @@
     </div>
 </rendering>
 
-<error>
-</error>
+</test>
 
+<test name="padding-resolved-against-cont-block-width">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                .green {
+                    background-color: green;
+                }
+            </style>
+        </head>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background-color: green;"></div>
+    </rendering>
+
+    <rendering>
+        <div style="width: 100px; height: 500px;">
+            <div style="padding: 50%; background-color: green;">
+                <div style="height: 0px; width: 0px;"></div>
+            </div>
+        </div>
+    </rendering>
 </test>
