@@ -1,8 +1,8 @@
 module;
 
 #include <karm-gfx/borders.h>
-#include <karm-text/prose.h>
 #include <karm-logger/logger.h>
+#include <karm-text/prose.h>
 
 module Vaev.Engine;
 
@@ -93,9 +93,9 @@ static InsetsAu _computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
     InsetsAu res;
     auto padding = box.style->padding;
 
-    res.top = resolve(tree, box, padding->top, containingBlock.height);
+    res.top = resolve(tree, box, padding->top, containingBlock.width);
     res.end = resolve(tree, box, padding->end, containingBlock.width);
-    res.bottom = resolve(tree, box, padding->bottom, containingBlock.height);
+    res.bottom = resolve(tree, box, padding->bottom, containingBlock.width);
     res.start = resolve(tree, box, padding->start, containingBlock.width);
 
     return res;
