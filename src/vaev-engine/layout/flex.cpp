@@ -292,7 +292,6 @@ struct FlexItem {
 
     // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
     Au getMinAutoPrefMainSize(Tree& tree, Vec2Au containerSize) const {
-
         Opt<Au> definiteMaxMainSize;
         auto maxMainSize = box->style->sizing->maxSize(fa.isRowOriented ? Axis::HORIZONTAL : Axis::VERTICAL);
         if (auto maxMainSizeCalc = maxMainSize.is<CalcValue<PercentOr<Length>>>()) {
@@ -409,7 +408,7 @@ struct FlexItem {
         );
     }
 
-    // unofficial
+    // NOTE: not present in spec
     Au getCrossSizeMinMaxContentContribution(Tree& tree, bool isMin, Vec2Au containerSize) {
         Au contentContribution =
             getMargin(BOTH_MAIN) +
@@ -440,13 +439,14 @@ struct FlexItem {
         );
     }
 
+    // https://www.w3.org/TR/css-flexbox-1/#valdef-align-items-flex-start
     void alignCrossFlexStart() {
-
         if (not hasAnyCrossMarginAuto()) {
             fa.crossAxis(position) = getMargin(START_CROSS);
         }
     }
 
+    // https://www.w3.org/TR/css-flexbox-1/#valdef-align-items-flex-end
     void alignCrossFlexEnd(Au lineCrossSize) {
         if (not hasAnyCrossMarginAuto()) {
             fa.crossAxis(position) =
@@ -456,6 +456,7 @@ struct FlexItem {
         }
     }
 
+    // https://www.w3.org/TR/css-flexbox-1/#valdef-align-items-center
     void alignCrossCenter(Au lineCrossSize) {
         if (not hasAnyCrossMarginAuto()) {
             Au startOfBlock =
@@ -467,6 +468,7 @@ struct FlexItem {
         }
     }
 
+    // https://www.w3.org/TR/css-flexbox-1/#valdef-align-items-stretch
     void alignCrossStretch(Tree& tree, Vec2Au availableSpaceInFlexContainer, Au lineCrossSize) {
         if (
             fa.crossAxis(box->style->sizing).is<Keywords::Auto>() and
@@ -490,9 +492,11 @@ struct FlexItem {
         fa.crossAxis(position) = getMargin(START_CROSS);
     }
 
+    // https://www.w3.org/TR/css-flexbox-1/#align-items-property
     void alignItem(Tree& tree, Vec2Au availableSpaceInFlexContainer, Au lineCrossSize, Align::Keywords parentAlignItems) {
         auto align = box->style->aligns.alignSelf.keyword;
 
+        // https://www.w3.org/TR/css-flexbox-1/#valdef-align-items-auto
         if (align == Align::AUTO)
             align = parentAlignItems;
 
@@ -506,6 +510,7 @@ struct FlexItem {
             return;
 
         case Align::FIRST_BASELINE:
+            // https://www.w3.org/TR/css-flexbox-1/#valdef-align-items-baseline
             // TODO: complex case, ignoring for now
             return;
 
@@ -530,6 +535,7 @@ struct FlexLine {
     FlexLine(MutSlice<FlexItem> items, bool isRowOriented)
         : items(items), crossSize(0), fa(isRowOriented) {}
 
+    // https://www.w3.org/TR/css-flexbox-1/#valdef-justify-content-flex-start
     void alignMainFlexStart() {
         Au currPositionMainAxis{0};
         for (auto& flexItem : items) {
@@ -540,6 +546,7 @@ struct FlexLine {
         }
     }
 
+    // https://www.w3.org/TR/css-flexbox-1/#valdef-justify-content-flex-end
     void alignMainFlexEnd(Au mainSize, Au occupiedSize) {
         Au currPositionMainAxis{mainSize - occupiedSize};
         for (auto& flexItem : items) {
@@ -550,6 +557,7 @@ struct FlexLine {
         }
     }
 
+    // https://www.w3.org/TR/css-flexbox-1/#valdef-justify-content-space-around
     void alignMainSpaceAround(Au mainSize, Au occupiedSize) {
         Au gapSize = (mainSize - occupiedSize) / Au{items.len()};
 
@@ -562,6 +570,7 @@ struct FlexLine {
         }
     }
 
+    // https://www.w3.org/TR/css-flexbox-1/#valdef-justify-content-space-between
     void alignMainSpaceBetween(Au mainSize, Au occupiedSize) {
         Au gapSize = (mainSize - occupiedSize) / Au{items.len() - 1};
 
@@ -574,6 +583,7 @@ struct FlexLine {
         }
     }
 
+    // https://www.w3.org/TR/css-flexbox-1/#valdef-justify-content-center
     void alignMainCenter(Au mainSize, Au occupiedSize) {
         Au currPositionMainAxis{(mainSize - occupiedSize) / 2_au};
         for (auto& flexItem : items) {
