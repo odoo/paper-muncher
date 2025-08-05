@@ -100,7 +100,7 @@ InsetsAu computeBorders(Tree& tree, Box& box) {
     return res;
 }
 
-static InsetsAu _computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
+InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
     // In a table only table cell have padding
     if (box.style->display.isTableInternal() and box.style->display != Display::TABLE_CELL)
         return {};
@@ -116,7 +116,7 @@ static InsetsAu _computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
     return res;
 }
 
-static Math::Radii<Au> _computeRadii(Tree& tree, Box& box, Vec2Au size) {
+Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size) {
     auto radii = box.style->borders->radii;
     Math::Radii<Au> res;
 
@@ -138,7 +138,7 @@ Vec2Au computeIntrinsicSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Vec2A
     }
 
     auto borders = computeBorders(tree, box);
-    auto padding = _computePaddings(tree, box, containingBlock);
+    auto padding = computePaddings(tree, box, containingBlock);
 
     auto output = _contentLayout(
         tree,
@@ -153,7 +153,7 @@ Vec2Au computeIntrinsicSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Vec2A
     return output.size + padding.all() + borders.all();
 }
 
-static Opt<Au> _computeSpecifiedSize(Tree& tree, Box& box, Size size, Vec2Au containingBlock, bool isWidth) {
+Opt<Au> computeSpecifiedSize(Tree& tree, Box& box, Size size, Vec2Au containingBlock, bool isWidth) {
     if (size.is<Keywords::MinContent>()) {
         auto intrinsicSize = computeIntrinsicSize(tree, box, IntrinsicSize::MIN_CONTENT, containingBlock);
         return isWidth ? Opt<Au>{intrinsicSize.x} : Opt<Au>{NONE};
@@ -217,12 +217,12 @@ void fillKnownSizeWithSpecifiedSizeIfEmpty(Tree& tree, Box& box, Input& input) {
     auto sizing = box.style->sizing;
 
     if (input.knownSize.width == NONE) {
-        auto specifiedWidth = _computeSpecifiedSize(tree, box, sizing->width, input.containingBlock, true);
+        auto specifiedWidth = computeSpecifiedSize(tree, box, sizing->width, input.containingBlock, true);
         input.knownSize.width = specifiedWidth;
     }
 
     if (input.knownSize.height == NONE) {
-        auto specifiedHeight = _computeSpecifiedSize(tree, box, sizing->height, input.containingBlock, false);
+        auto specifiedHeight = computeSpecifiedSize(tree, box, sizing->height, input.containingBlock, false);
         input.knownSize.height = specifiedHeight;
     }
 }
@@ -233,7 +233,7 @@ Output layout(Tree& tree, Box& box, Input input) {
     fillKnownSizeWithSpecifiedSizeIfEmpty(tree, box, input);
 
     auto borders = computeBorders(tree, box);
-    auto padding = _computePaddings(tree, box, input.containingBlock);
+    auto padding = computePaddings(tree, box, input.containingBlock);
 
     input.knownSize.width = input.knownSize.width.map([&](auto s) {
         return max(0_au, s - padding.horizontal() - borders.horizontal());
@@ -325,7 +325,7 @@ Output layout(Tree& tree, Box& box, Input input) {
             currFrag.metrics.borderSize = size;
             currFrag.metrics.padding = padding;
             currFrag.metrics.borders = borders;
-            currFrag.metrics.radii = _computeRadii(tree, box, size);
+            currFrag.metrics.radii = computeRadii(tree, box, size);
             currFrag.metrics.outlineOffset = resolve(tree, box, box.style->outline->offset);
             currFrag.metrics.outlineWidth = resolve(tree, box, box.style->outline->width);
 
