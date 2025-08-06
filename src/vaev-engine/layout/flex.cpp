@@ -134,7 +134,8 @@ struct FlexItem {
     FlexProps flexItemProps;
     FlexAxis fa;
 
-    // these 2 sizes do NOT account margins
+    Math::Insets<Au> borders;
+    Math::Insets<Au> padding;
     Vec2Au usedSize;
     Math::Insets<Opt<Au>> margin;
 
@@ -152,7 +153,8 @@ struct FlexItem {
     // InsetsAu borders;
 
     FlexItem(Tree& tree, Box& box, bool isRowOriented, Vec2Au containingBlock)
-        : box(&box), flexItemProps(*box.style->flex), fa(isRowOriented) {
+        : box(&box), flexItemProps(*box.style->flex), fa(isRowOriented),
+          borders(computeBorders(tree, box)), padding(computePaddings(tree, box, containingBlock)) {
         // FIXME: check if really needed
         speculateValues(tree, Input{.containingBlock = containingBlock});
         // TODO: not always we will need min/max content sizes,
@@ -160,11 +162,13 @@ struct FlexItem {
         computeContentSizes(tree, containingBlock);
     }
 
-    void commit(MutCursor<Frag> frag) {
-        frag->metrics.margin.top = margin.top.unwrapOr(speculativeMargin.top);
-        frag->metrics.margin.start = margin.start.unwrapOr(speculativeMargin.start);
-        frag->metrics.margin.end = margin.end.unwrapOr(speculativeMargin.end);
-        frag->metrics.margin.bottom = margin.bottom.unwrapOr(speculativeMargin.bottom);
+    InsetsAu resolvedMargin() {
+        return {
+            margin.top.unwrapOr(speculativeMargin.top),
+            margin.end.unwrapOr(speculativeMargin.end),
+            margin.bottom.unwrapOr(speculativeMargin.bottom),
+            margin.start.unwrapOr(speculativeMargin.start),
+        };
     }
 
     void computeContentSizes(Tree& tree, Vec2Au containingBlock) {
@@ -227,12 +231,23 @@ struct FlexItem {
     }
 
     void speculateValues(Tree& t, Input input) {
-        speculativeSize = layout(t, *box, input).size;
         speculativeMargin = computeMargins(
             t,
             *box,
             input
         );
+
+        if (not input.knownSize.width)
+            input.knownSize.width = computeSpecifiedWidth(
+                t, *box, box->style->sizing->width, input.containingBlock
+            );
+
+        if (not input.knownSize.height)
+            input.knownSize.height = computeSpecifiedHeight(
+                t, *box, box->style->sizing->height, input.containingBlock
+            );
+
+        speculativeSize = layoutBorderBox(t, *box, input, UsedSpacings{.padding = padding, .borders = borders}).size;
     }
 
     // https://www.w3.org/TR/css-flexbox-1/#valdef-flex-basis-auto
@@ -1423,17 +1438,19 @@ struct FlexFormatingContext : FormatingContext {
             for (auto& flexItem : flexLine.items) {
                 flexItem.position = flexItem.position + flexLine.position + input.position;
 
-                auto out = layout(
-                    tree,
-                    *flexItem.box,
-                    {
-                        .fragment = input.fragment,
-                        .knownSize = {flexItem.usedSize.x, flexItem.usedSize.y},
-                        .position = flexItem.position,
-                        .availableSpace = availableSpace,
-                    }
-                );
-                flexItem.commit(input.fragment);
+                UsedSpacings usedSpacings{
+                    .padding = std::move(flexItem.padding),
+                    .borders = std::move(flexItem.borders),
+                    .margin = flexItem.resolvedMargin(),
+                };
+
+                Input childInput{
+                    .knownSize = {flexItem.usedSize.x, flexItem.usedSize.y},
+                    .position = flexItem.position,
+                    .availableSpace = availableSpace,
+                };
+
+                layoutAndCommitBorderBox(tree, *flexItem.box, childInput, *input.fragment, usedSpacings);
             }
         }
     }

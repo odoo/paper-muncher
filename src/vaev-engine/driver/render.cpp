@@ -36,7 +36,7 @@ export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media
 
     auto canvasColor = fixupBackgrounds(computer, dom, tree);
 
-    auto [outDiscovery, root] = Layout::layoutCreateFragment(
+    auto [outDiscovery, root] = Layout::layoutAndCommitRoot(
         tree,
         {
             .knownSize = {viewport.small.width, NONE},
