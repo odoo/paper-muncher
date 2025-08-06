@@ -53,14 +53,12 @@ struct ReplacedFormatingContext : FormatingContext {
             auto resolvedRect = SVG::resolve(SVG::buildRectangle(*(*box)->style), resolveTo);
 
             auto frag = Layout::Frag();
-            Input input{
-                .fragment = &frag,
+            Input childInput{
                 .knownSize = {resolvedRect.width, resolvedRect.height},
                 .position = {resolvedRect.x, resolvedRect.y},
             };
 
-            layout(tree, *box, input);
-
+            auto output = layoutAndCommitBorderBox(tree, *box, childInput, frag, UsedSpacings{});
             return makeBox<Frag>(std::move(frag.children()[0]));
         }
         unreachable();
@@ -105,8 +103,6 @@ struct ReplacedFormatingContext : FormatingContext {
         if (auto image = box.content.is<Rc<Scene::Node>>()) {
             size = (*image)->bound().size().cast<Au>();
         } else if (auto svg = box.content.is<SVGRoot>()) {
-            fillKnownSizeWithSpecifiedSizeIfEmpty(tree, box, input);
-
             auto aspectRatio = SVG::intrinsicAspectRatio(box.style->svg->viewBox, box.style->sizing->width, box.style->sizing->height);
 
             size = _defaultSizing(input.knownSize, aspectRatio, input.containingBlock);
