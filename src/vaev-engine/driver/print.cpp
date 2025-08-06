@@ -25,7 +25,7 @@ void _paintCornerMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& sta
         .root = Layout::buildForPseudoElement(pageStyle.area(area), currentPage, runningPosition),
         .viewport = Layout::Viewport{.small = rect.size()}
     };
-    auto [_, frag] = Layout::layoutCreateFragment(
+    auto [_, frag] = Layout::layoutAndCommitRoot(
         tree,
         {
             .knownSize = rect.size().cast<Opt<Au>>(),
@@ -46,7 +46,7 @@ void _paintMainMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack
         .root = std::move(box),
         .viewport = Layout::Viewport{.small = rect.size()}
     };
-    auto [_, frag] = Layout::layoutCreateFragment(
+    auto [_, frag] = Layout::layoutAndCommitRoot(
         tree,
         {
             .knownSize = rect.size().cast<Opt<Au>>(),
@@ -162,7 +162,7 @@ Pair<Vec<Layout::Breakpoint>, Vec<PageLayoutInfos>> collectBreakPointsAndRunning
         pageLayoutInput.runningPosition = {&runningPosition};
         context.contentTree.fc.enterDiscovery();
 
-        auto outDiscovery = Layout::layout(
+        auto outDiscovery = Layout::layoutRoot(
             context.contentTree,
             pageLayoutInput.withBreakpointTraverser(Layout::BreakpointTraverser(&prevBreakpoint))
         );
@@ -233,7 +233,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
             .containingBlock = infos.pageContent.size(),
             .pageNumber = pageNumber,
         };
-        auto [outFragmentation, fragment] = Layout::layoutCreateFragment(
+        auto [outFragmentation, fragment] = Layout::layoutAndCommitRoot(
             contentTree,
             pageLayoutInput
                 .withBreakpointTraverser(Layout::BreakpointTraverser(&breakpoints[pageNumber], &breakpoints[pageNumber + 1]))
