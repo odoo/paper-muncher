@@ -56,18 +56,31 @@ struct InlineFormatingContext : FormatingContext {
 
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
 
+            Input childInput{
+                .availableSpace = {inlineSize, input.availableSpace.y},
+                .containingBlock = {
+                    input.knownSize.x.unwrapOr(0_au),
+                    input.knownSize.y.unwrapOr(0_au)
+                },
+            };
+
+            childInput.knownSize.width = computeSpecifiedWidth(
+                tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock
+            );
+
+            childInput.knownSize.height = computeSpecifiedHeight(
+                tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock
+            );
+
             // NOTE: We set the same availableSpace to child inline boxes since line wrapping is possible i.e. in the
             // worst case, they will take up the whole availableSpace, and a line break will be done right before them
-            auto atomicBoxOutput = layout(
+            auto atomicBoxOutput = layoutBorderBox(
                 tree,
                 atomicBox,
-                Input{
-                    .knownSize = {NONE, NONE},
-                    .availableSpace = {inlineSize, input.availableSpace.y},
-                    .containingBlock = {
-                        input.knownSize.x.unwrapOr(0_au),
-                        input.knownSize.y.unwrapOr(0_au)
-                    },
+                childInput,
+                UsedSpacings{
+                    .padding = computePaddings(tree, atomicBox, childInput.containingBlock),
+                    .borders = computeBorders(tree, atomicBox),
                 }
             );
 
@@ -100,19 +113,24 @@ struct InlineFormatingContext : FormatingContext {
                 };
             }
 
-            layout(
-                tree,
-                atomicBox,
-                Input{
-                    .fragment = input.fragment,
-                    .knownSize = knownSize,
-                    .position = input.position + positionInProse,
-                    .containingBlock = {
-                        input.knownSize.x.unwrapOr(0_au),
-                        input.knownSize.y.unwrapOr(0_au)
-                    },
-                }
-            );
+            Input childInput{
+                .knownSize = knownSize,
+                .position = input.position + positionInProse,
+                .containingBlock = {
+                    input.knownSize.x.unwrapOr(0_au),
+                    input.knownSize.y.unwrapOr(0_au)
+                },
+            };
+
+            UsedSpacings usedSpacings{
+                .padding = computePaddings(tree, atomicBox, childInput.containingBlock),
+                .borders = computeBorders(tree, atomicBox),
+            };
+
+            if (input.fragment)
+                layoutAndCommitBorderBox(tree, atomicBox, childInput, *input.fragment, usedSpacings);
+            else
+                layoutBorderBox(tree, atomicBox, childInput, usedSpacings);
         }
 
         if (tree.fc.allowBreak() and not tree.fc.acceptsFit(
@@ -128,7 +146,10 @@ struct InlineFormatingContext : FormatingContext {
         }
 
         return {
-            .size = size,
+            .size = {
+                input.knownSize.x.unwrapOr(size.x),
+                input.knownSize.y.unwrapOr(size.y),
+            },
             .completelyLaidOut = true,
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,
