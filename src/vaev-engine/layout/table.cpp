@@ -430,7 +430,7 @@ struct TableFormatingContext : FormatingContext {
     // MARK: Fixed Table Layout ------------------------------------------------------------------------
     // https://www.w3.org/TR/CSS22/tables.html#fixed-table-layout
 
-    void computeFixedColWidths(Tree& tree, Box& box, Au availableXSpace) {
+    void computeFixedColWidths(Tree& tree, Box& box, Au knownSizeX) {
         // NOTE: Percentages for 'width' and 'height' on the table (box)
         //       are calculated relative to the containing block of the
         //       table wrapper box, not the table wrapper box itself.
@@ -442,11 +442,7 @@ struct TableFormatingContext : FormatingContext {
         if (not(box.style->sizing->width.is<Keywords::Auto>() or box.style->sizing->width.is<CalcValue<PercentOr<Length>>>()))
             logWarn("width can't be anything other than 'auto' or a length in a table context");
 
-        tableUsedWidth =
-            not box.style->sizing->width.is<CalcValue<PercentOr<Length>>>()
-                ? 0_au // AUTO case
-                : resolve(tree, box, box.style->sizing->width.unwrap<CalcValue<PercentOr<Length>>>(), availableXSpace) -
-                      boxBorder.horizontal(); // NOTE: maybe remove this after borderbox param is clearer
+        tableUsedWidth = knownSizeX;
 
         auto [columnBorders, sumBorders] = getColumnBorders();
 
@@ -455,7 +451,6 @@ struct TableFormatingContext : FormatingContext {
         Vec<Opt<Au>> colWidthOrNone{};
         colWidthOrNone.resize(grid.size.x);
         for (auto& col : cols) {
-
             auto const& width = col.el.style->sizing->width;
 
             if (not(width.is<Keywords::Auto>() or width.is<CalcValue<PercentOr<Length>>>()))
@@ -695,7 +690,7 @@ struct TableFormatingContext : FormatingContext {
     }
 
     // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
-    void computeAutoColWidths(Tree& tree, Box& box, Au capmin, Au containingBlockX) {
+    void computeAutoColWidths(Tree& tree, Opt<Au> knownSizeX, Au capmin, Au containingBlockX) {
         // FIXME: This is a rough approximation of the algorithm.
         //        We need to distinguish between percentage-based and fixed lengths:
         //         - Percentage-based sizes are fixed and cannot have extra space distributed to them.
@@ -706,11 +701,10 @@ struct TableFormatingContext : FormatingContext {
         //        https://www.w3.org/TR/css-tables-3/#intrinsic-percentage-width-of-a-column-based-on-cells-of-span-up-to-1
         //        We will need a way to retrieve the percentage value, which is also not yet implemented.
 
-        if (auto boxWidthCalc = box.style->sizing->width.is<CalcValue<PercentOr<Length>>>()) {
+        if (knownSizeX) {
             auto [minWithoutPerc, maxWithoutPerc] = computeMinMaxAutoWidths(tree, grid.size.x, 0_au);
 
-            Au tableComputedWidth = resolve(tree, box, *boxWidthCalc, containingBlockX);
-            tableUsedWidth = max(capmin, tableComputedWidth);
+            tableUsedWidth = max(capmin, *knownSizeX);
 
             auto sumMinWithoutPerc = iter(minWithoutPerc).sum();
             if (sumMinWithoutPerc > tableUsedWidth) {
@@ -719,7 +713,7 @@ struct TableFormatingContext : FormatingContext {
                 return;
             }
 
-            auto [minWithPerc, maxWithPerc] = computeMinMaxAutoWidths(tree, grid.size.x, tableComputedWidth);
+            auto [minWithPerc, maxWithPerc] = computeMinMaxAutoWidths(tree, grid.size.x, *knownSizeX);
 
             auto sumMaxWithoutPerc = iter(maxWithoutPerc).sum();
             Vec<Au>& distWOPToUse = sumMaxWithoutPerc < tableUsedWidth ? maxWithoutPerc : minWithoutPerc;
@@ -825,14 +819,19 @@ struct TableFormatingContext : FormatingContext {
                     }
                 }
 
-                auto cellOutput = layout(
+                UsedSpacings usedSpacings{
+                    .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
+                    .borders = computeBorders(tree, *cell.box),
+                };
+
+                auto cellOutput = layoutBorderBox(
                     tree,
                     *cell.box,
                     {
-                        .intrinsic = IntrinsicSize::MIN_CONTENT,
                         .knownSize = {colWidth[j], NONE},
                         .containingBlock = {tableUsedWidth, 0_au},
-                    }
+                    },
+                    usedSpacings
                 );
 
                 for (usize k = 0; k < rowSpan; k++) {
@@ -871,10 +870,12 @@ struct TableFormatingContext : FormatingContext {
     struct CacheParametersFromInput {
         Au containingBlockX;
         Au capmin;
+        Opt<Au> knownSizeX;
 
         CacheParametersFromInput(Input const& i)
             : containingBlockX(i.containingBlock.x),
-              capmin(i.capmin.unwrap()) {}
+              capmin(i.capmin.unwrap()),
+              knownSizeX(i.knownSize.x) {}
 
         bool operator==(CacheParametersFromInput const& c) const = default;
     };
@@ -906,12 +907,12 @@ struct TableFormatingContext : FormatingContext {
         //      However, Chrome does not implement this exception, and we are not implementing it either.
         bool shouldRunAutoAlgorithm =
             box.style->table->tableLayout == TableLayout::AUTO or
-            box.style->sizing->width.is<Keywords::Auto>();
+            not input.knownSizeX;
 
         if (shouldRunAutoAlgorithm)
-            computeAutoColWidths(tree, box, input.capmin, input.containingBlockX);
+            computeAutoColWidths(tree, input.knownSizeX, input.capmin, input.containingBlockX);
         else
-            computeFixedColWidths(tree, box, input.containingBlockX);
+            computeFixedColWidths(tree, box, *input.knownSizeX);
 
         computeRowHeights(tree);
 
@@ -981,21 +982,25 @@ struct TableFormatingContext : FormatingContext {
         //
         //       (See https://www.w3.org/TR/CSS22/tables.html#height-layout)
         auto colSpan = cell.box->style->table->colSpan;
-        auto outputCell = layout(
-            tree,
-            *cell.box,
-            {
-                .fragment = input.fragment,
-                .knownSize = {
-                    colWidthPref.query(j, j + colSpan - 1) + spacing.x * Au{colSpan - 1},
-                    verticalSize,
-                },
-                .position = {currPositionX, startPositionY},
-                .containingBlock = tableBoxSize,
-                .breakpointTraverser = breakpointsForCell,
-                .pendingVerticalSizes = input.pendingVerticalSizes,
-            }
-        );
+        Input childInput{
+            .knownSize = {
+                colWidthPref.query(j, j + colSpan - 1) + spacing.x * Au{colSpan - 1},
+                verticalSize,
+            },
+            .position = {currPositionX, startPositionY},
+            .containingBlock = tableBoxSize,
+            .breakpointTraverser = breakpointsForCell,
+            .pendingVerticalSizes = input.pendingVerticalSizes,
+        };
+
+        UsedSpacings usedSpacings{
+            .padding = computePaddings(tree, *cell.box, tableBoxSize),
+            .borders = computeBorders(tree, *cell.box),
+        };
+
+        auto outputCell = input.fragment
+                              ? layoutAndCommitBorderBox(tree, *cell.box, childInput, *input.fragment, usedSpacings)
+                              : layoutBorderBox(tree, *cell.box, childInput, usedSpacings);
 
         if (tree.fc.isDiscoveryMode()) {
             if (cellBox->style->break_->inside == BreakInside::AVOID) {
