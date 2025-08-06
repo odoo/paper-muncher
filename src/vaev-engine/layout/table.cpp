@@ -546,14 +546,14 @@ struct TableFormatingContext : FormatingContext {
             tree,
             box,
             IntrinsicSize::MIN_CONTENT,
-            {} // FIXME
+            {tableComputedWidth, 0_au}
         );
 
         auto cellMaxOutput = computeIntrinsicSize(
             tree,
             box,
             IntrinsicSize::MAX_CONTENT,
-            {} // FIXME
+            {tableComputedWidth, 0_au}
         );
 
         auto cellMinWidth = cellMinOutput.x;
@@ -840,6 +840,7 @@ struct TableFormatingContext : FormatingContext {
                     {
                         .intrinsic = IntrinsicSize::MIN_CONTENT,
                         .knownSize = {colWidth[j], NONE},
+                        .containingBlock = {tableUsedWidth, 0_au},
                     }
                 );
 
@@ -1008,6 +1009,7 @@ struct TableFormatingContext : FormatingContext {
                     verticalSize,
                 },
                 .position = {currPositionX, startPositionY},
+                .containingBlock = tableBoxSize,
                 .breakpointTraverser = breakpointsForCell,
                 .pendingVerticalSizes = input.pendingVerticalSizes,
             }
