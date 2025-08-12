@@ -52,15 +52,31 @@ struct ValueParser<Gfx::BorderStyle> {
 
 // MARK: Border ----------------------------------------------------------------
 
-export struct Border {
-    LineWidth width = Keywords::MEDIUM;
-    Gfx::BorderStyle style;
+template <typename T>
+struct _Border {
+    T width;
+    Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
     Color color = Keywords::CURRENT_COLOR;
+
+    _Border();
+    _Border(T width, Gfx::BorderStyle style, Color color)
+        : width(width), style(style), color(color) {};
 
     void repr(Io::Emit& e) const {
         e("(border {} {} {})", width, style, color);
     }
 };
+
+export using Border = _Border<LineWidth>;
+
+template <>
+_Border<LineWidth>::_Border() : width(Keywords::MEDIUM) {}
+
+export using UsedBorder = _Border<Au>;
+export using UsedBorders = Math::Insets<UsedBorder>;
+
+template <>
+_Border<Au>::_Border() : width(0_au) {}
 
 export template <>
 struct ValueParser<Border> {
@@ -94,12 +110,36 @@ struct ValueParser<Border> {
     }
 };
 
+// FIXME: can we get rid of this?
+export enum struct BorderEdge {
+    TOP,
+    START,
+    BOTTOM,
+    END,
+    ALL,
+};
+
 export struct BorderProps {
     Border top, start, bottom, end;
     Math::Radii<CalcValue<PercentOr<Length>>> radii = {Length(0_au)};
 
     void all(Border b) {
         top = start = bottom = end = b;
+    }
+
+    Border const& get(BorderEdge edge) const {
+        switch (edge) {
+        case BorderEdge::TOP:
+            return top;
+        case BorderEdge::START:
+            return start;
+        case BorderEdge::BOTTOM:
+            return bottom;
+        case BorderEdge::END:
+            return end;
+        default:
+            panic("");
+        }
     }
 
     void repr(Io::Emit& e) const {
@@ -112,6 +152,15 @@ export struct BorderProps {
         e(")");
     }
 };
+
+export UsedBorders buildUsedBorders(InsetsAu const& widths, BorderProps const& borderProps) {
+    return {
+        UsedBorder{widths.top, borderProps.top.style, borderProps.top.color},
+        UsedBorder{widths.end, borderProps.end.style, borderProps.end.color},
+        UsedBorder{widths.bottom, borderProps.bottom.style, borderProps.bottom.color},
+        UsedBorder{widths.start, borderProps.start.style, borderProps.start.color},
+    };
+}
 
 export template <typename T>
 struct ValueParser<Math::Radii<T>> {
