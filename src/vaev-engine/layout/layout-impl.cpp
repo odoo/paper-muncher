@@ -122,13 +122,14 @@ Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size) {
     return res;
 }
 
-Vec2Au computeIntrinsicSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Vec2Au containingBlock) {
+// FIXME: not following the same pattern as the rest of the API
+Vec2Au computeIntrinsicSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Vec2Au containingBlock, Opt<UsedSpacings> usedSpacings) {
     if (intrinsic == IntrinsicSize::AUTO) {
         panic("bad argument");
     }
 
-    auto borders = computeBorders(tree, box);
-    auto padding = computePaddings(tree, box, containingBlock);
+    auto borders = usedSpacings ? usedSpacings->borders : computeBorders(tree, box);
+    auto padding = usedSpacings ? usedSpacings->padding : computePaddings(tree, box, containingBlock);
 
     auto output = _contentLayout(
         tree,

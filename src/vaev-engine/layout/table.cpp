@@ -1,5 +1,6 @@
 module;
 
+#include <karm-gfx/borders.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 
@@ -68,6 +69,13 @@ struct TableGrid {
         return rows[y][x];
     }
 
+    TableCell get(usize x, usize y) const {
+        if (x >= size.x or y >= size.y)
+            panic("bad coordinates for table slot");
+
+        return rows[y][x];
+    }
+
     void set(usize x, usize y, TableCell cell) {
         if (x >= size.x or y >= size.y)
             panic("bad coordinates for table slot");
@@ -95,7 +103,7 @@ struct PrefixSum {
     }
 };
 
-struct TableFormatingContext : FormatingContext {
+export struct TableFormatingContext : FormatingContext {
     TableGrid grid;
 
     Vec<TableAxis> cols;
@@ -103,7 +111,8 @@ struct TableFormatingContext : FormatingContext {
     Vec<TableGroup> rowGroups;
     Vec<TableGroup> colGroups;
 
-    // Table forming algorithm
+    // MARK: Table Forming Algorithm ----------------------------------------------------------------------------
+
     Math::Vec2u current;
 
     struct DownwardsGrowingCell {
@@ -118,17 +127,6 @@ struct TableFormatingContext : FormatingContext {
     // footers will be the last rows of the grid; same for headers?
     usize numOfHeaderRows = 0;
     usize numOfFooterRows = 0;
-
-    struct BorderGrid {
-        usize width = 0;
-        Vec<InsetsAu> borders;
-
-        InsetsAu& get(usize i, usize j) {
-            return borders[i * width + j];
-        }
-    };
-
-    BorderGrid bordersGrid;
 
     // https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-growing-downward-growing-cells
     void growDownwardGrowingCells() {
@@ -374,12 +372,356 @@ struct TableFormatingContext : FormatingContext {
         numOfFooterRows = grid.size.y - ystartFooterRows;
     }
 
-    void buildBordersGrid(Tree& tree) {
-        bordersGrid.borders.clear();
-        bordersGrid.borders.resize(grid.size.x * grid.size.y);
+    // MARK: Border Collapse ----------------------------------------------------------------------------
 
-        bordersGrid.width = grid.size.x;
+    constexpr static Array<Gfx::BorderStyle, 9> const ORDERED_STYLES = {
+        Gfx::BorderStyle::DOUBLE,
+        Gfx::BorderStyle::SOLID,
+        Gfx::BorderStyle::DASHED,
+        Gfx::BorderStyle::DOTTED,
+        Gfx::BorderStyle::RIDGE,
+        Gfx::BorderStyle::OUTSET,
+        Gfx::BorderStyle::GROOVE,
+        Gfx::BorderStyle::INSET,
+        Gfx::BorderStyle::NONE,
+    };
 
+    u8 styleOrder(Gfx::BorderStyle style) {
+        for (usize i = 0; i < 9; ++i)
+            if (style == ORDERED_STYLES[i])
+                return i;
+        return 10;
+    }
+
+    // https://www.w3.org/TR/css-tables-3/#border-specificity
+    UsedBorder moreSpecific(UsedBorder const& best, UsedBorder const& candidate) {
+        // 1… has the value "hidden" as border-style, if only one does
+        if (best.style == Karm::Gfx::BorderStyle::HIDDEN and candidate.style != Karm::Gfx::BorderStyle::HIDDEN)
+            return best;
+
+        if (best.style != Karm::Gfx::BorderStyle::HIDDEN and candidate.style == Karm::Gfx::BorderStyle::HIDDEN) {
+            return candidate;
+        }
+
+        // 2 … has the biggest border-width, once converted into css pixels
+        if (best.width > candidate.width)
+            return best;
+
+        if (candidate.width > best.width) {
+            return candidate;
+        }
+
+        // 3 … has the border-style which comes first in the following list:
+        if (styleOrder(candidate.style) < styleOrder(best.style))
+            return candidate;
+
+        // If same specificty, best is kept
+        return best;
+    }
+
+    // https://www.w3.org/TR/css-tables-3/#border-style-harmonization-algorithm
+    UsedBorder harmonizeConflictingBorders(Vec<UsedBorder> borders) {
+        UsedBorder currentlyWinningBorderProperties{
+            0_au,
+            Karm::Gfx::BorderStyle::NONE,
+            BLACK,
+        };
+
+        for (auto& border : borders)
+            currentlyWinningBorderProperties = moreSpecific(
+                currentlyWinningBorderProperties, border
+            );
+
+        return currentlyWinningBorderProperties;
+    }
+
+    struct AxisAndGroupsIdxs {
+        Opt<usize> groupIdx = NONE;
+        Opt<usize> axisIdx = NONE;
+
+        static Vec<AxisAndGroupsIdxs> build(Vec<TableAxis> const& axes, Vec<TableGroup> const& groups, usize len) {
+            Vec<AxisAndGroupsIdxs> helper{Buf<AxisAndGroupsIdxs>::init(len)};
+            for (usize groupIdx = 0; groupIdx < groups.len(); groupIdx++) {
+                for (usize i = groups[groupIdx].start; i <= groups[groupIdx].end; ++i)
+                    helper[i].groupIdx = groupIdx;
+            }
+            for (usize axisIdx = 0; axisIdx < axes.len(); axisIdx++) {
+                for (usize i = axes[axisIdx].start; i <= axes[axisIdx].end; ++i)
+                    helper[i].axisIdx = axisIdx;
+            }
+            return helper;
+        }
+    };
+
+    void addAxisAndGroupBorder(Tree& tree, Vec<UsedBorder>& borders, AxisAndGroupsIdxs const& ah, BorderEdge edge, Vec<TableAxis> const& axis, Vec<TableGroup> const& groups) {
+        if (ah.axisIdx) {
+            borders.pushBack(
+                resolve(tree, axis[ah.axisIdx.unwrap()].el, edge)
+            );
+        }
+        if (ah.groupIdx) {
+            borders.pushBack(
+                resolve(tree, groups[ah.groupIdx.unwrap()].el, edge)
+            );
+        }
+    }
+
+    // https://www.w3.org/TR/css-tables-3/#border-conflict-resolution-algorithm
+    void resolveConflictForBordersAtVerticalAxis(Tree& tree, usize i) {
+        usize start = 0;
+        while (start < grid.size.x) {
+            // starting in a hor position where there is a border on the cells on the right
+            // FIXME: cant we use colspan here?
+            while (
+                start < grid.size.x and
+                grid.get(start, i).anchorIdx == grid.get(start, i + 1).anchorIdx
+            )
+                start++;
+
+            if (start == grid.size.x)
+                break;
+
+            usize end = start;
+
+            // if there is no more borders to the right of `end` horizontal position
+            while (grid.get(end, i).anchorIdx != grid.get(end, i + 1).anchorIdx) {
+                auto endOfi =
+                    grid.get(end, i).anchorIdx.x + grid.get(end, i).box->attrs.colSpan - 1;
+                auto endOfip1 =
+                    grid.get(end, i + 1).anchorIdx.x + grid.get(end, i + 1).box->attrs.colSpan - 1;
+
+                if (endOfi == endOfip1)
+                    break;
+
+                end = max(endOfi, endOfip1);
+            }
+
+            Vec<UsedBorder> borders;
+            for (usize j = start; j <= end; j += grid.get(j, i).box->attrs.colSpan) {
+                borders.pushBack(resolve(tree, *grid.get(j, i).box, BorderEdge::BOTTOM));
+            }
+            for (usize j = start; j <= end; j += grid.get(j, i + 1).box->attrs.colSpan) {
+                borders.pushBack(resolve(tree, *grid.get(j, i + 1).box, BorderEdge::TOP));
+            }
+
+            addAxisAndGroupBorder(tree, borders, rowGroupIdxs[i], BorderEdge::BOTTOM, rows, rowGroups);
+            addAxisAndGroupBorder(tree, borders, rowGroupIdxs[i + 1], BorderEdge::TOP, rows, rowGroups);
+
+            auto finalBorder = harmonizeConflictingBorders(borders);
+            for (usize j = start; j <= end; j += grid.get(j, i).box->attrs.colSpan) {
+                auto colSpan = grid.get(j, i).box->attrs.colSpan;
+                auto rowSpan = grid.get(j, i).box->attrs.rowSpan;
+
+                bordersStyleGrid.colorAt(i + rowSpan - 1, j + colSpan - 1).bottom = finalBorder.color;
+                bordersStyleGrid.styleAt(i + rowSpan - 1, j + colSpan - 1).bottom = finalBorder.style;
+                bordersGrid.widthAt(i + rowSpan - 1, j + colSpan - 1).bottom = finalBorder.width;
+            }
+
+            for (usize j = start; j <= end; j += grid.get(j, i + 1).box->attrs.colSpan) {
+                bordersStyleGrid.colorAt(i + 1, j).top = finalBorder.color;
+                bordersStyleGrid.styleAt(i + 1, j).top = finalBorder.style;
+                bordersGrid.widthAt(i + 1, j).top = finalBorder.width;
+            }
+
+            start = end + 1;
+        }
+    }
+
+    // https://www.w3.org/TR/css-tables-3/#border-conflict-resolution-algorithm
+    void resolveConflictForBordersAtHorizontalAxis(Tree& tree, usize j) {
+        usize start = 0;
+        while (start < grid.size.y) {
+            // starting in a hor position where there is a border on the cells on the right
+            while (
+                start < grid.size.y and
+                grid.get(j, start).anchorIdx == grid.get(j + 1, start).anchorIdx
+            )
+                start++;
+
+            if (start == grid.size.y)
+                break;
+
+            usize end = start;
+
+            // if there is no more borders to the right of `end` horizontal position
+            while (grid.get(j, end).anchorIdx != grid.get(j + 1, end).anchorIdx) {
+
+                auto endOfj =
+                    grid.get(j, end).anchorIdx.y + grid.get(j, end).box->attrs.rowSpan - 1;
+                auto endOfjp1 =
+                    grid.get(j + 1, end).anchorIdx.y + grid.get(j + 1, end).box->attrs.rowSpan - 1;
+
+                if (endOfj == endOfjp1)
+                    break;
+
+                end = max(endOfj, endOfjp1);
+            }
+
+            Vec<UsedBorder> borders;
+            for (usize i = start; i <= end; i += grid.get(j, i).box->attrs.rowSpan) {
+                borders.pushBack(resolve(tree, *grid.get(j, i).box, BorderEdge::END));
+            }
+            for (usize i = start; i <= end; i += grid.get(j + 1, i).box->attrs.rowSpan) {
+                borders.pushBack(resolve(tree, *grid.get(j + 1, i).box, BorderEdge::START));
+            }
+
+            addAxisAndGroupBorder(tree, borders, colGroupIdxs[j], BorderEdge::END, cols, colGroups);
+            addAxisAndGroupBorder(tree, borders, colGroupIdxs[j + 1], BorderEdge::START, cols, colGroups);
+
+            auto finalBorder = harmonizeConflictingBorders(borders);
+            for (usize i = start; i <= end; i += grid.get(j, i).box->attrs.rowSpan) {
+                auto colSpan = grid.get(j, i).box->attrs.colSpan;
+                auto rowSpan = grid.get(j, i).box->attrs.rowSpan;
+
+                bordersStyleGrid.colorAt(i + rowSpan - 1, j + colSpan - 1).end = finalBorder.color;
+                bordersStyleGrid.styleAt(i + rowSpan - 1, j + colSpan - 1).end = finalBorder.style;
+                bordersGrid.widthAt(i + rowSpan - 1, j + colSpan - 1).end = finalBorder.width;
+            }
+
+            for (usize i = start; i <= end; i += grid.get(j + 1, i).box->attrs.rowSpan) {
+                bordersStyleGrid.colorAt(i, j + 1).start = finalBorder.color;
+                bordersStyleGrid.styleAt(i, j + 1).start = finalBorder.style;
+                bordersGrid.widthAt(i, j + 1).start = finalBorder.width;
+            }
+
+            start = end + 1;
+        }
+    }
+
+    void resolveTableRootBorders(Tree& tree, BorderEdge edge, UsedBorder tableBorder) {
+        usize incI;
+        usize incJ;
+        usize i;
+        usize j;
+
+        switch (edge) {
+        case BorderEdge::TOP:
+            incI = 0, incJ = 1, i = 0, j = 0;
+            break;
+        case BorderEdge::END:
+            incI = 1, incJ = 0, i = 0, j = grid.size.x - 1;
+            break;
+        case BorderEdge::BOTTOM:
+            incI = 0, incJ = 1, i = grid.size.y - 1, j = 0;
+            break;
+        case BorderEdge::START:
+            incI = 1, incJ = 0, i = 0, j = 0;
+            break;
+        case BorderEdge::ALL:
+            panic("");
+        }
+
+        auto getEdge = []<typename T>(Math::Insets<T>& inset, BorderEdge edge) -> T& {
+            switch (edge) {
+            case BorderEdge::TOP:
+                return inset.top;
+            case BorderEdge::END:
+                return inset.end;
+            case BorderEdge::BOTTOM:
+                return inset.bottom;
+            case BorderEdge::START:
+                return inset.start;
+            case BorderEdge::ALL:
+                panic("Invalid border edge");
+            }
+        };
+
+        while (i < grid.size.y and j < grid.size.x) {
+            // the specificity comparator keeps the "best" in case of same specificity; thus, since, in case of same
+            // specificity, cell's border should be kept, we put the table border lastly
+
+            Vec<UsedBorder> borders = {
+                resolve(tree, *grid.get(j, i).box, edge),
+                tableBorder
+            };
+
+            addAxisAndGroupBorder(tree, borders, rowGroupIdxs[i], edge, rows, rowGroups);
+            addAxisAndGroupBorder(tree, borders, colGroupIdxs[j], edge, cols, colGroups);
+
+            auto finalBorder = harmonizeConflictingBorders(borders);
+
+            auto nextI = i + incI * grid.get(j, i).box->attrs.rowSpan;
+            auto nextJ = j + incJ * grid.get(j, i).box->attrs.colSpan;
+
+            while (i < nextI or j < nextJ) {
+                getEdge(bordersGrid.widthAt(i, j), edge) = finalBorder.width;
+                getEdge(bordersStyleGrid.colorAt(i, j), edge) = finalBorder.color;
+                getEdge(bordersStyleGrid.styleAt(i, j), edge) = finalBorder.style;
+
+                i += incI;
+                j += incJ;
+            }
+        }
+    }
+
+    // MARK: Layout
+
+    struct {
+        usize gridWidth = 0;
+        Buf<Math::Insets<Color>> color;
+        Buf<Math::Insets<Gfx::BorderStyle>> style;
+
+        void init(Math::Vec2u size) {
+            gridWidth = size.x;
+            color.resize(size.x * size.y, Color{Keywords::CURRENT_COLOR});
+            style.resize(size.x * size.y, Gfx::BorderStyle::NONE);
+        }
+
+        Math::Insets<Color>& colorAt(usize i, usize j) {
+            return color[i * gridWidth + j];
+        }
+
+        Math::Insets<Gfx::BorderStyle>& styleAt(usize i, usize j) {
+            return style[i * gridWidth + j];
+        }
+
+    } bordersStyleGrid;
+
+    struct {
+        usize gridWidth = 0;
+        Buf<InsetsAu> width;
+
+        void init(Math::Vec2u size) {
+            gridWidth = size.x;
+            width.resize(size.x * size.y);
+        }
+
+        InsetsAu& widthAt(usize i, usize j) {
+            return width[i * gridWidth + j];
+        }
+
+    } bordersGrid;
+
+    void computeBordersStructsCollapse(Tree& tree, Box& box) {
+        bordersStyleGrid.init(grid.size);
+
+        for (usize i = 0; i + 1 < grid.size.y; ++i)
+            resolveConflictForBordersAtVerticalAxis(tree, i);
+        for (usize j = 0; j + 1 < grid.size.x; ++j)
+            resolveConflictForBordersAtHorizontalAxis(tree, j);
+
+        for (usize i = 0; i < grid.size.y; ++i) {
+            for (usize j = 0; j < grid.size.x; ++j) {
+                bordersGrid.widthAt(i, j).top = bordersGrid.widthAt(i, j).top / 2_au;
+                bordersGrid.widthAt(i, j).bottom = bordersGrid.widthAt(i, j).bottom / 2_au;
+                bordersGrid.widthAt(i, j).end = bordersGrid.widthAt(i, j).end / 2_au;
+                bordersGrid.widthAt(i, j).start = bordersGrid.widthAt(i, j).start / 2_au;
+            }
+        }
+
+        constexpr Array<BorderEdge, 4> edgesToResolve = {
+            BorderEdge::TOP,
+            BorderEdge::END,
+            BorderEdge::BOTTOM,
+            BorderEdge::START,
+        };
+
+        for (auto const& edge : edgesToResolve) {
+            resolveTableRootBorders(tree, edge, resolve(tree, box, edge));
+        }
+    }
+
+    void computeBordersStructsSeparate(Tree& tree) {
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
                 auto& cell = grid.get(j, i);
@@ -391,19 +733,28 @@ struct TableFormatingContext : FormatingContext {
 
                 auto cellBorder = computeBorders(tree, *cell.box);
 
-                // Top and bottom borders
                 for (usize k = 0; k < colSpan; ++k) {
-                    bordersGrid.get(i, j + k).top = cellBorder.top;
-                    bordersGrid.get(i + rowSpan - 1, j + k).bottom = cellBorder.bottom;
+                    bordersGrid.widthAt(i, j + k).top = cellBorder.top;
+                    bordersGrid.widthAt(i + rowSpan - 1, j + k).bottom = cellBorder.bottom;
                 }
 
-                // Left and right borders
                 for (usize k = 0; k < rowSpan; ++k) {
-                    bordersGrid.get(i + k, j).start = cellBorder.start;
-                    bordersGrid.get(i + k, j + colSpan - 1).end = cellBorder.end;
+                    bordersGrid.widthAt(i + k, j).start = cellBorder.start;
+                    bordersGrid.widthAt(i + k, j + colSpan - 1).end = cellBorder.end;
                 }
             }
         }
+    }
+
+    void computeBordersStructs(Tree& tree, Box& box) {
+        bordersGrid.init(grid.size);
+
+        if ((useBordersCollapse = (box.style->table->collapse == BorderCollapse::COLLAPSE))) {
+            bordersStyleGrid.init(grid.size);
+            computeBordersStructsCollapse(tree, box);
+            boxBorderMapping = Map<Box*, UsedBorders>{};
+        } else
+            computeBordersStructsSeparate(tree);
     }
 
     // https://www.w3.org/TR/CSS22/tables.html#borders
@@ -423,7 +774,7 @@ struct TableFormatingContext : FormatingContext {
 
                 columnBorder = max(
                     columnBorder,
-                    bordersGrid.get(i, j).horizontal()
+                    bordersGrid.widthAt(i, j).horizontal()
                 );
             }
 
@@ -536,19 +887,21 @@ struct TableFormatingContext : FormatingContext {
     }
 
     // MARK: Auto Table Layout -------------------------------------------------
-    Pair<Au> getCellMinMaxAutoWidth(Tree& tree, Box& box, TableCell& cell, Au tableComputedWidth) {
+    Pair<Au> getCellMinMaxAutoWidth(Tree& tree, Box& box, TableCell& cell, Au tableComputedWidth, UsedSpacings usedSpacings) {
         auto cellMinOutput = computeIntrinsicSize(
             tree,
             box,
             IntrinsicSize::MIN_CONTENT,
-            {tableComputedWidth, 0_au}
+            {tableComputedWidth, 0_au},
+            usedSpacings
         );
 
         auto cellMaxOutput = computeIntrinsicSize(
             tree,
             box,
             IntrinsicSize::MAX_CONTENT,
-            {tableComputedWidth, 0_au}
+            {tableComputedWidth, 0_au},
+            usedSpacings
         );
 
         auto cellMinWidth = cellMinOutput.x;
@@ -586,7 +939,18 @@ struct TableFormatingContext : FormatingContext {
                 if (colSpan > 1)
                     continue;
 
-                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth);
+                auto rowSpan = cell.box->attrs.rowSpan;
+                UsedSpacings usedSpacings{
+                    .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
+                    .borders = InsetsAu{
+                        bordersGrid.widthAt(i, j).top,
+                        bordersGrid.widthAt(i + rowSpan - 1, j + colSpan - 1).end,
+                        bordersGrid.widthAt(i + rowSpan - 1, j + colSpan - 1).bottom,
+                        bordersGrid.widthAt(i, j).start,
+                    }
+                };
+
+                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth, usedSpacings);
 
                 minColWidth[j] = max(minColWidth[j], cellMinWidth);
                 maxColWidth[j] = max(maxColWidth[j], cellMaxWidth);
@@ -602,11 +966,22 @@ struct TableFormatingContext : FormatingContext {
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
-                auto colSpan = cell.box->attrs.span;
+                auto colSpan = cell.box->attrs.colSpan;
                 if (colSpan <= 1)
                     continue;
 
-                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth);
+                auto rowSpan = cell.box->attrs.rowSpan;
+                UsedSpacings usedSpacings{
+                    .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
+                    .borders = InsetsAu{
+                        bordersGrid.widthAt(i, j).top,
+                        bordersGrid.widthAt(i + rowSpan - 1, j + colSpan - 1).end,
+                        bordersGrid.widthAt(i + rowSpan - 1, j + colSpan - 1).bottom,
+                        bordersGrid.widthAt(i, j).start,
+                    }
+                };
+
+                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth, usedSpacings);
 
                 Au currSumMinColWidth{0};
                 Au currSumMaxColWidth{0};
@@ -828,9 +1203,15 @@ struct TableFormatingContext : FormatingContext {
                     }
                 }
 
+                auto colSpan = cell.box->attrs.colSpan;
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
-                    .borders = computeBorders(tree, *cell.box),
+                    .borders = InsetsAu{
+                        bordersGrid.widthAt(i, j).top,
+                        bordersGrid.widthAt(i + rowSpan - 1, j + colSpan - 1).end,
+                        bordersGrid.widthAt(i + rowSpan - 1, j + colSpan - 1).bottom,
+                        bordersGrid.widthAt(i, j).start,
+                    }
                 };
 
                 auto cellOutput = layoutBorderBox(
@@ -850,25 +1231,6 @@ struct TableFormatingContext : FormatingContext {
         }
     }
 
-    struct AxisAndGroupsIdxs {
-        Opt<usize> groupIdx = NONE;
-        Opt<usize> axisIdx = NONE;
-
-        static Vec<AxisAndGroupsIdxs> build(Vec<TableAxis> const& axes, Vec<TableGroup> const& groups, usize len) {
-            Vec<AxisAndGroupsIdxs> helper{Buf<AxisAndGroupsIdxs>::init(len)};
-            for (usize groupIdx = 0; groupIdx < groups.len(); groupIdx++) {
-                for (usize i = groups[groupIdx].start; i <= groups[groupIdx].end; ++i)
-                    helper[i].groupIdx = groupIdx;
-            }
-            for (usize axisIdx = 0; axisIdx < axes.len(); axisIdx++) {
-                for (usize i = axes[axisIdx].start; i <= axes[axisIdx].end; ++i)
-                    helper[i].axisIdx = axisIdx;
-            }
-            return helper;
-        }
-    };
-
-    InsetsAu boxBorder;
     Vec2Au spacing;
     Vec2Au tableBoxSize = {}, headerSize = {}, footerSize = {};
     Vec<AxisAndGroupsIdxs> rowGroupIdxs, colGroupIdxs;
@@ -889,18 +1251,20 @@ struct TableFormatingContext : FormatingContext {
         bool operator==(CacheParametersFromInput const& c) const = default;
     };
 
+    bool useBordersCollapse = false;
+
     void build(Tree& tree, Box& box) override {
-        boxBorder = computeBorders(tree, box);
+        buildHTMLTable(box);
+
         spacing = {
             resolve(tree, box, box.style->table->spacing.horizontal),
             resolve(tree, box, box.style->table->spacing.vertical),
         };
 
-        buildHTMLTable(box);
-        buildBordersGrid(tree);
-
         rowGroupIdxs = AxisAndGroupsIdxs::build(rows, rowGroups, grid.size.y);
         colGroupIdxs = AxisAndGroupsIdxs::build(cols, colGroups, grid.size.x);
+
+        computeBordersStructs(tree, box);
 
         startPositionOfRow.clear();
         startPositionOfRow.resize(grid.size.y, 0_au);
@@ -949,8 +1313,34 @@ struct TableFormatingContext : FormatingContext {
         }
     }
 
-    Tuple<Output, Au> layoutCell(Tree& tree, Input& input, TableCell& cell, MutCursor<Box> cellBox, usize startFrag, usize i, usize j, Au currPositionX, usize breakpointIndexOffset) {
+    Opt<Map<Box*, UsedBorders>> boxBorderMapping;
 
+    UsedBorders buildUsedCollapsedBordersForCell(usize i, usize j, usize rowSpan, usize colSpan) {
+        return UsedBorders{
+            UsedBorder{
+                bordersGrid.widthAt(i, j).top,
+                bordersStyleGrid.styleAt(i, j).top,
+                bordersStyleGrid.colorAt(i, j).top,
+            },
+            UsedBorder{
+                bordersGrid.widthAt(i + rowSpan - 1, j + colSpan - 1).end,
+                bordersStyleGrid.styleAt(i + rowSpan - 1, j + colSpan - 1).end,
+                bordersStyleGrid.colorAt(i + rowSpan - 1, j + colSpan - 1).end,
+            },
+            UsedBorder{
+                bordersGrid.widthAt(i + rowSpan - 1, j + colSpan - 1).bottom,
+                bordersStyleGrid.styleAt(i + rowSpan - 1, j + colSpan - 1).bottom,
+                bordersStyleGrid.colorAt(i + rowSpan - 1, j + colSpan - 1).bottom,
+            },
+            UsedBorder{
+                bordersGrid.widthAt(i, j).start,
+                bordersStyleGrid.styleAt(i, j).start,
+                bordersStyleGrid.colorAt(i, j).start,
+            },
+        };
+    }
+
+    Tuple<Output, Au> layoutCell(Tree& tree, Input& input, TableCell& cell, MutCursor<Box> cellBox, usize startFrag, usize i, usize j, Au currPositionX, usize breakpointIndexOffset) {
         // breakpoint traversing for a cell that started in the previous fragmentainer is not trivial
         // since it started in the previous fragmentainer, its breakpoint must be of type ADVANCE_WITH_CHILDREN and thus
         // children info will be available at startFrag
@@ -1002,14 +1392,27 @@ struct TableFormatingContext : FormatingContext {
             .pendingVerticalSizes = input.pendingVerticalSizes,
         };
 
+        auto collapsedBorders =
+            useBordersCollapse
+                ? buildUsedCollapsedBordersForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, colSpan)
+                : Opt<UsedBorders>{NONE};
+
         UsedSpacings usedSpacings{
             .padding = computePaddings(tree, *cell.box, tableBoxSize),
-            .borders = computeBorders(tree, *cell.box),
+            .borders = collapsedBorders
+                           ? collapsedBorders->map([](auto b) {
+                                 return b.width;
+                             })
+                           : computeBorders(tree, *cell.box),
         };
 
         auto outputCell = input.fragment
                               ? layoutAndCommitBorderBox(tree, *cell.box, childInput, *input.fragment, usedSpacings)
                               : layoutBorderBox(tree, *cell.box, childInput, usedSpacings);
+
+        if (input.fragment and useBordersCollapse) {
+            boxBorderMapping->put(cellBox, *collapsedBorders);
+        }
 
         if (tree.fc.isDiscoveryMode()) {
             if (cellBox->style->break_->inside == BreakInside::AVOID) {

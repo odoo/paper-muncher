@@ -1,5 +1,6 @@
 module;
 
+#include <karm-gfx/borders.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 #include <karm-text/font.h>
@@ -387,6 +388,26 @@ export Au resolve(Tree const& tree, Box const& box, LineWidth const& value) {
 
 export Au resolve(Tree const& tree, Box const& box, FontSize const& value) {
     return Resolver::from(tree, box).resolve(value);
+}
+
+export UsedBorder resolve(Tree const& tree, Box const& box, BorderEdge const edge) {
+    auto& border = box.style->borders->get(edge);
+    return UsedBorder{
+        border.style == Karm::Gfx::BorderStyle::NONE
+            ? 0_au
+            : Vaev::Layout::resolve(tree, box, border.width),
+        border.style,
+        border.color,
+    };
+}
+
+export UsedBorders resolve(Tree const& tree, Box const& box) {
+    return UsedBorders{
+        resolve(tree, box, BorderEdge::TOP),
+        resolve(tree, box, BorderEdge::END),
+        resolve(tree, box, BorderEdge::BOTTOM),
+        resolve(tree, box, BorderEdge::START),
+    };
 }
 
 export template <typename T, typename... Args>
