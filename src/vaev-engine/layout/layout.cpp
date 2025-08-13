@@ -31,7 +31,7 @@ export Opt<Au> computeSpecifiedWidth(Tree& tree, Box& box, Size size, Vec2Au con
 
 export Opt<Au> computeSpecifiedHeight(Tree& tree, Box& box, Size size, Vec2Au containingBlock);
 
-export Vec2Au computeIntrinsicSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Vec2Au containingBlock);
+export Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic);
 
 // MARK: Layout ---------------------------------------------------------------------
 

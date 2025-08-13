@@ -153,20 +153,21 @@ struct BlockFormatingContext : FormatingContext {
         Au capmin{};
         for (auto& c : box.children()) {
             if (c.style->display != Display::TABLE_BOX) {
-                auto margin = computeMargins(
-                    tree, c,
-                    {
-                        .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_au)},
-                    }
+                auto minContentContrib = computeIntrinsicContentSize(
+                    tree, c, IntrinsicSize::MIN_CONTENT
                 );
 
-                auto minContentContrib = computeIntrinsicSize(
-                    tree, c, IntrinsicSize::MIN_CONTENT, input.containingBlock
-                );
+                Vec2Au containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_au)};
+                UsedSpacings usedSpacings{
+                    .padding = computePaddings(tree, c, containingBlock),
+                    .borders = computeBorders(tree, c),
+                    .margin = computeMargins(tree, c, {.containingBlock = containingBlock})
+                };
 
                 capmin = max(
                     capmin,
-                    minContentContrib.width + margin.horizontal()
+                    minContentContrib.width + usedSpacings.margin.horizontal() +
+                        usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
                 );
             }
         }
