@@ -536,23 +536,26 @@ struct TableFormatingContext : FormatingContext {
     }
 
     // MARK: Auto Table Layout -------------------------------------------------
-    Pair<Au> getCellMinMaxAutoWidth(Tree& tree, Box& box, TableCell& cell, Au tableComputedWidth) {
-        auto cellMinOutput = computeIntrinsicSize(
+    Pair<Au> getCellMinMaxAutoWidth(Tree& tree, Box& box, TableCell& cell, Au tableComputedWidth, UsedSpacings usedSpacings) {
+        auto cellMinOutput = computeIntrinsicContentSize(
             tree,
             box,
-            IntrinsicSize::MIN_CONTENT,
-            {tableComputedWidth, 0_au}
+            IntrinsicSize::MIN_CONTENT
         );
 
-        auto cellMaxOutput = computeIntrinsicSize(
+        auto cellMaxOutput = computeIntrinsicContentSize(
             tree,
             box,
-            IntrinsicSize::MAX_CONTENT,
-            {tableComputedWidth, 0_au}
+            IntrinsicSize::MAX_CONTENT
         );
 
-        auto cellMinWidth = cellMinOutput.x;
-        auto cellMaxWidth = cellMaxOutput.x;
+        auto cellMinWidth = cellMinOutput.x + usedSpacings.padding.horizontal() +
+                            usedSpacings.borders.horizontal() +
+                            usedSpacings.margin.horizontal();
+
+        auto cellMaxWidth = cellMaxOutput.x + usedSpacings.padding.horizontal() +
+                            usedSpacings.borders.horizontal() +
+                            usedSpacings.margin.horizontal();
 
         if (not(cell.box->style->sizing->width.is<Keywords::Auto>() or cell.box->style->sizing->width.is<CalcValue<PercentOr<Length>>>()))
             logWarn("width can't be anything other than 'auto' or a length in a table context");
@@ -586,7 +589,12 @@ struct TableFormatingContext : FormatingContext {
                 if (colSpan > 1)
                     continue;
 
-                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth);
+                UsedSpacings usedSpacings{
+                    .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
+                    .borders = computeBorders(tree, *cell.box)
+                };
+
+                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth, usedSpacings);
 
                 minColWidth[j] = max(minColWidth[j], cellMinWidth);
                 maxColWidth[j] = max(maxColWidth[j], cellMaxWidth);
@@ -602,11 +610,16 @@ struct TableFormatingContext : FormatingContext {
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
-                auto colSpan = cell.box->attrs.span;
+                auto colSpan = cell.box->attrs.colSpan;
                 if (colSpan <= 1)
                     continue;
 
-                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth);
+                UsedSpacings usedSpacings{
+                    .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
+                    .borders = computeBorders(tree, *cell.box)
+                };
+
+                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth, usedSpacings);
 
                 Au currSumMinColWidth{0};
                 Au currSumMaxColWidth{0};

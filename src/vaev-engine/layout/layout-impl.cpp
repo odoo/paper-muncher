@@ -130,13 +130,10 @@ Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size) {
     return res;
 }
 
-Vec2Au computeIntrinsicSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Vec2Au containingBlock) {
+Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic) {
     if (intrinsic == IntrinsicSize::AUTO) {
         panic("bad argument");
     }
-
-    auto borders = computeBorders(tree, box);
-    auto padding = computePaddings(tree, box, containingBlock);
 
     auto output = _contentLayout(
         tree,
@@ -148,20 +145,20 @@ Vec2Au computeIntrinsicSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Vec2A
         0, NONE
     );
 
-    return output.size + padding.all() + borders.all();
+    return output.size;
 }
 
 Opt<Au> computeSpecifiedWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock) {
     if (size.is<Keywords::MinContent>()) {
-        auto intrinsicSize = computeIntrinsicSize(tree, box, IntrinsicSize::MIN_CONTENT, containingBlock);
+        auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT);
         return intrinsicSize.x;
     } else if (size.is<Keywords::MaxContent>()) {
-        auto intrinsicSize = computeIntrinsicSize(tree, box, IntrinsicSize::MAX_CONTENT, containingBlock);
+        auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT);
         return intrinsicSize.x;
     } else if (size.is<FitContent>()) {
-        auto minIntrinsicSize = computeIntrinsicSize(tree, box, IntrinsicSize::MIN_CONTENT, containingBlock);
-        auto maxIntrinsicSize = computeIntrinsicSize(tree, box, IntrinsicSize::MAX_CONTENT, containingBlock);
-        auto stretchIntrinsicSize = computeIntrinsicSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, containingBlock);
+        auto minIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT);
+        auto maxIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT);
+        auto stretchIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::STRETCH_TO_FIT);
 
         return clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x);
     } else if (size.is<Keywords::Auto>()) {
