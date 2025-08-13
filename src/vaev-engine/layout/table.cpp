@@ -849,15 +849,6 @@ struct TableFormatingContext : FormatingContext {
                 }
             }
         }
-
-        for (usize i = 0; i < grid.size.y; ++i) {
-            Au rowBorderHeight{0};
-            for (usize j = 0; j < grid.size.x; ++j) {
-                auto cellVertBorder = bordersGrid.get(i, j).vertical();
-                rowBorderHeight = max(rowBorderHeight, cellVertBorder);
-            }
-            rowHeight[i] += rowBorderHeight;
-        }
     }
 
     struct AxisHelper { // FIXME: find me a better name pls
