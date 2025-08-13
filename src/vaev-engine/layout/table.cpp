@@ -863,28 +863,28 @@ struct TableFormatingContext : FormatingContext {
         }
     }
 
-    struct AxisHelper { // FIXME: find me a better name pls
+    struct AxisAndGroupsIdxs {
         Opt<usize> groupIdx = NONE;
         Opt<usize> axisIdx = NONE;
-    };
 
-    Vec<AxisHelper> buildAxisHelper(Vec<TableAxis> const& axes, Vec<TableGroup> const& groups, usize len) {
-        Vec<AxisHelper> helper{Buf<AxisHelper>::init(len)};
-        for (usize groupIdx = 0; groupIdx < groups.len(); groupIdx++) {
-            for (usize i = groups[groupIdx].start; i <= groups[groupIdx].end; ++i)
-                helper[i].groupIdx = groupIdx;
+        static Vec<AxisAndGroupsIdxs> build(Vec<TableAxis> const& axes, Vec<TableGroup> const& groups, usize len) {
+            Vec<AxisAndGroupsIdxs> helper{Buf<AxisAndGroupsIdxs>::init(len)};
+            for (usize groupIdx = 0; groupIdx < groups.len(); groupIdx++) {
+                for (usize i = groups[groupIdx].start; i <= groups[groupIdx].end; ++i)
+                    helper[i].groupIdx = groupIdx;
+            }
+            for (usize axisIdx = 0; axisIdx < axes.len(); axisIdx++) {
+                for (usize i = axes[axisIdx].start; i <= axes[axisIdx].end; ++i)
+                    helper[i].axisIdx = axisIdx;
+            }
+            return helper;
         }
-        for (usize axisIdx = 0; axisIdx < axes.len(); axisIdx++) {
-            for (usize i = axes[axisIdx].start; i <= axes[axisIdx].end; ++i)
-                helper[i].axisIdx = axisIdx;
-        }
-        return helper;
     };
 
     InsetsAu boxBorder;
     Vec2Au spacing;
     Vec2Au tableBoxSize = {}, headerSize = {}, footerSize = {};
-    Vec<AxisHelper> rowHelper, colHelper;
+    Vec<AxisAndGroupsIdxs> rowGroupIdxs, colGroupIdxs;
     PrefixSum<Au> colWidthPref, rowHeightPref;
     Math::Vec2u dataRowsInterval;
     Vec<Au> startPositionOfRow;
@@ -912,8 +912,8 @@ struct TableFormatingContext : FormatingContext {
         buildHTMLTable(box);
         buildBordersGrid(tree);
 
-        rowHelper = buildAxisHelper(rows, rowGroups, grid.size.y);
-        colHelper = buildAxisHelper(cols, colGroups, grid.size.x);
+        rowGroupIdxs = AxisAndGroupsIdxs::build(rows, rowGroups, grid.size.y);
+        colGroupIdxs = AxisAndGroupsIdxs::build(cols, colGroups, grid.size.x);
 
         startPositionOfRow.clear();
         startPositionOfRow.resize(grid.size.y, 0_au);
@@ -1117,26 +1117,26 @@ struct TableFormatingContext : FormatingContext {
 
         // if row is self contained, the <tr> it belongs to has size 1
         bool forcedBreakAfterCurrRow =
-            rowHelper[i].axisIdx and
-            rows[rowHelper[i].axisIdx.unwrap()].el.style->break_->after == BreakBetween::PAGE;
+            rowGroupIdxs[i].axisIdx and
+            rows[rowGroupIdxs[i].axisIdx.unwrap()].el.style->break_->after == BreakBetween::PAGE;
 
         bool forcedBreakBeforeNextRow =
             i + 1 <= dataRowsInterval.y and
-            rowHelper[i + 1].axisIdx and
-            rows[rowHelper[i + 1].axisIdx.unwrap()].el.style->break_->before == BreakBetween::PAGE;
+            rowGroupIdxs[i + 1].axisIdx and
+            rows[rowGroupIdxs[i + 1].axisIdx.unwrap()].el.style->break_->before == BreakBetween::PAGE;
 
-        bool limitOfCurrRowGroup = i + 1 <= dataRowsInterval.y and rowHelper[i].groupIdx != rowHelper[i + 1].groupIdx;
+        bool limitOfCurrRowGroup = i + 1 <= dataRowsInterval.y and rowGroupIdxs[i].groupIdx != rowGroupIdxs[i + 1].groupIdx;
 
         bool forcedBreakAfterCurrRowGroup =
             limitOfCurrRowGroup and
-            rowHelper[i].groupIdx and
-            rowGroups[rowHelper[i].groupIdx.unwrap()].el.style->break_->after == BreakBetween::PAGE;
+            rowGroupIdxs[i].groupIdx and
+            rowGroups[rowGroupIdxs[i].groupIdx.unwrap()].el.style->break_->after == BreakBetween::PAGE;
 
         bool forcedBreakBeforeNextRowGroup =
             limitOfCurrRowGroup and
             i + 1 <= dataRowsInterval.y and
-            rowHelper[i + 1].groupIdx and
-            rowGroups[rowHelper[i + 1].groupIdx.unwrap()].el.style->break_->before == BreakBetween::PAGE;
+            rowGroupIdxs[i + 1].groupIdx and
+            rowGroups[rowGroupIdxs[i + 1].groupIdx.unwrap()].el.style->break_->before == BreakBetween::PAGE;
 
         if (forcedBreakAfterCurrRow or forcedBreakBeforeNextRow or
             forcedBreakAfterCurrRowGroup or forcedBreakBeforeNextRowGroup) {
@@ -1153,12 +1153,12 @@ struct TableFormatingContext : FormatingContext {
         bool avoidBreakInsideTable = box.style->break_->inside == BreakInside::AVOID;
 
         bool avoidBreakInsideRow =
-            rowHelper[i].axisIdx and
-            rows[rowHelper[i].axisIdx.unwrap()].el.style->break_->inside == BreakInside::AVOID;
+            rowGroupIdxs[i].axisIdx and
+            rows[rowGroupIdxs[i].axisIdx.unwrap()].el.style->break_->inside == BreakInside::AVOID;
 
         bool avoidBreakInsideRowGroup =
-            rowHelper[i].groupIdx and
-            rowGroups[rowHelper[i].groupIdx.unwrap()].el.style->break_->inside == BreakInside::AVOID;
+            rowGroupIdxs[i].groupIdx and
+            rowGroups[rowGroupIdxs[i].groupIdx.unwrap()].el.style->break_->inside == BreakInside::AVOID;
 
         if (rowIsFreelyFragmentable) {
             // breakpoint inside of row, take in consideration ALL breakpoints
