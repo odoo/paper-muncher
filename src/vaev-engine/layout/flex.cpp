@@ -162,7 +162,7 @@ struct FlexItem {
         speculateValues(tree, Input{.containingBlock = containingBlock});
         // TODO: not always we will need min/max content sizes,
         //       this can be lazy computed for performance gains
-        computeContentSizes(tree, containingBlock);
+        computeContentSizes(tree);
     }
 
     InsetsAu resolvedMargin() {
@@ -174,19 +174,19 @@ struct FlexItem {
         };
     }
 
-    void computeContentSizes(Tree& tree, Vec2Au containingBlock) {
-        minContentSize = computeIntrinsicSize(
-            tree,
-            *box,
-            IntrinsicSize::MIN_CONTENT,
-            containingBlock
-        );
-        maxContentSize = computeIntrinsicSize(
-            tree,
-            *box,
-            IntrinsicSize::MAX_CONTENT,
-            containingBlock
-        );
+    void computeContentSizes(Tree& tree) {
+        minContentSize = computeIntrinsicContentSize(
+                             tree,
+                             *box,
+                             IntrinsicSize::MIN_CONTENT
+                         ) +
+                         padding.all() + borders.all();
+        maxContentSize = computeIntrinsicContentSize(
+                             tree,
+                             *box,
+                             IntrinsicSize::MAX_CONTENT
+                         ) +
+                         padding.all() + borders.all();
     }
 
     enum OuterPosition {
