@@ -59,18 +59,11 @@ struct TableGrid {
         size.y += span;
     }
 
-    TableCell& get(usize x, usize y) {
+    TableCell& at(usize x, usize y) {
         if (x >= size.x or y >= size.y)
             panic("bad coordinates for table slot");
 
         return rows[y][x];
-    }
-
-    void set(usize x, usize y, TableCell cell) {
-        if (x >= size.x or y >= size.y)
-            panic("bad coordinates for table slot");
-
-        rows[y][x] = cell;
     }
 };
 
@@ -132,7 +125,7 @@ struct TableFormatingContext : FormatingContext {
     void growDownwardGrowingCells() {
         for (auto& [cellIdx, cellx, width] : downwardsGrowingCells) {
             for (usize x = cellx; x < cellx + width; x++)
-                grid.set(x, current.y, grid.get(cellIdx.x, cellIdx.y));
+                grid.at(x, current.y) = grid.at(cellIdx.x, cellIdx.y);
         }
     }
 
@@ -153,7 +146,7 @@ struct TableFormatingContext : FormatingContext {
         });
 
         while (not tableRowCursor.ended()) {
-            while (current.x < grid.size.x and grid.get(current.x, current.y).isOccupied())
+            while (current.x < grid.size.x and grid.at(current.x, current.y).isOccupied())
                 current.x++;
 
             if (current.x == grid.size.x)
@@ -185,7 +178,7 @@ struct TableFormatingContext : FormatingContext {
 
                 for (usize x = current.x; x < current.x + colSpan; ++x) {
                     for (usize y = current.y; y < current.y + rowSpan; ++y) {
-                        grid.set(x, y, cell);
+                        grid.at(x, y) = cell;
                     }
                 }
 
@@ -380,7 +373,7 @@ struct TableFormatingContext : FormatingContext {
 
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
-                auto& cell = grid.get(j, i);
+                auto& cell = grid.at(j, i);
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
@@ -417,7 +410,7 @@ struct TableFormatingContext : FormatingContext {
             Au columnBorder{0};
 
             for (usize i = 0; i < grid.size.y; ++i) {
-                auto cell = grid.get(j, i);
+                auto cell = grid.at(j, i);
 
                 columnBorder = max(
                     columnBorder,
@@ -480,7 +473,7 @@ struct TableFormatingContext : FormatingContext {
 
         usize x = 0;
         while (x < grid.size.x) {
-            auto cell = grid.get(x, 0);
+            auto cell = grid.at(x, 0);
 
             auto cellBoxWidthCalc = cell.box->style->sizing->width.is<CalcValue<PercentOr<Length>>>();
 
@@ -580,7 +573,7 @@ struct TableFormatingContext : FormatingContext {
     void computeAutoWidthOfCellsSpan1(Tree& tree, Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
-                auto cell = grid.get(j, i);
+                auto cell = grid.at(j, i);
 
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
@@ -600,7 +593,7 @@ struct TableFormatingContext : FormatingContext {
     void computeAutoWidthOfCellsSpanN(Tree& tree, Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
-                auto cell = grid.get(j, i);
+                auto cell = grid.at(j, i);
 
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
@@ -807,7 +800,7 @@ struct TableFormatingContext : FormatingContext {
 
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
-                auto cell = grid.get(j, i);
+                auto cell = grid.at(j, i);
 
                 if (not(cell.anchorIdx == Math::Vec2u{j, i}))
                     continue;
@@ -1037,8 +1030,8 @@ struct TableFormatingContext : FormatingContext {
 
         currPosition.x += spacing.x;
         for (usize j = 0; j < grid.size.x; currPosition.x += colWidth[j] + spacing.x, j++) {
-            auto cell = grid.get(j, i);
-            auto cellBox = grid.get(cell.anchorIdx.x, cell.anchorIdx.y).box;
+            auto cell = grid.at(j, i);
+            auto cellBox = grid.at(cell.anchorIdx.x, cell.anchorIdx.y).box;
 
             if (cell.anchorIdx.x != j)
                 continue;
@@ -1081,8 +1074,7 @@ struct TableFormatingContext : FormatingContext {
 
         bool isSelfContainedRow = true;
         for (usize j = 0; j < grid.size.x; ++j) {
-            if (grid.get(j, i).anchorIdx != Math::Vec2u{j, i} or
-                grid.get(j, i).box->style->table->rowSpan != 1) {
+            if (grid.at(j, i).anchorIdx != Math::Vec2u{j, i} or grid.at(j, i).box->style->table->rowSpan != 1)
                 isSelfContainedRow = false;
                 break;
             }
