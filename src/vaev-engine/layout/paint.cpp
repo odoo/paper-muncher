@@ -4,6 +4,7 @@ module;
 #include <karm-gfx/outline.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
+#include <karm-math/insets.h>
 
 export module Vaev.Engine:layout.paint;
 
@@ -15,6 +16,7 @@ import Karm.Debug;
 import :style;
 import :layout.base;
 import :layout.values;
+import :layout.table;
 
 namespace Vaev::Layout {
 
@@ -40,6 +42,35 @@ Opt<Gfx::Borders> buildBorders(Metrics const& metrics, Style::SpecifiedValues co
     borders.fills[1] = Vaev::resolve(bordersStyle.end.color, currentColor);
     borders.fills[2] = Vaev::resolve(bordersStyle.bottom.color, currentColor);
     borders.fills[3] = Vaev::resolve(bordersStyle.start.color, currentColor);
+
+    return borders;
+}
+
+Opt<Gfx::Borders> buildBorders(UsedBorders const& border, Gfx::Color currentColor) {
+    if (border.map(
+                  [](auto b) {
+                      return b.width;
+                  }
+        )
+            .zero())
+        return NONE;
+
+    Gfx::Borders borders;
+
+    borders.widths.top = border.top.width.cast<f64>();
+    borders.widths.bottom = border.bottom.width.cast<f64>();
+    borders.widths.start = border.start.width.cast<f64>();
+    borders.widths.end = border.end.width.cast<f64>();
+
+    borders.styles[0] = border.top.style;
+    borders.styles[1] = border.end.style;
+    borders.styles[2] = border.bottom.style;
+    borders.styles[3] = border.start.style;
+
+    borders.fills[0] = Vaev::resolve(border.top.color, currentColor);
+    borders.fills[1] = Vaev::resolve(border.end.color, currentColor);
+    borders.fills[2] = Vaev::resolve(border.bottom.color, currentColor);
+    borders.fills[3] = Vaev::resolve(border.start.color, currentColor);
 
     return borders;
 }
@@ -80,7 +111,7 @@ static bool _needsNewStackingContext(Frag const& frag) {
            frag.style().opacity != 1.0;
 }
 
-static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
+static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack, Opt<UsedBorders> usedBorders = NONE) {
     auto const& cssBackground = frag.style().backgrounds;
 
     Vec<Gfx::Fill> backgrounds;
@@ -89,7 +120,9 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
         backgrounds.pushBack(color);
 
     auto currentColor = Vaev::resolve(frag.style().color, color);
-    auto bordersWithoutRadii = buildBorders(frag.metrics, frag.style(), Vaev::resolve(frag.style().color, currentColor));
+    auto bordersWithoutRadii = usedBorders
+                                   ? buildBorders(*usedBorders, Vaev::resolve(frag.style().color, currentColor))
+                                   : buildBorders(frag.metrics, frag.style(), Vaev::resolve(frag.style().color, currentColor));
     auto outline = buildOutline(frag.metrics, frag.style(), Vaev::resolve(frag.style().color, currentColor));
     Math::Rectf bound = frag.metrics.borderBox().round().cast<f64>();
 
@@ -182,12 +215,12 @@ Rc<Scene::Node> _paintSVGRoot(SVGRootFrag& svgRoot, Gfx::Color currentColor) {
     return makeRc<Scene::Transform>(content, svgRoot.transf);
 }
 
-static void _paintFrag(Frag& frag, Scene::Stack& stack) {
+static void _paintFrag(Frag& frag, Scene::Stack& stack, Opt<UsedBorders> usedBorders = NONE) {
     auto& s = frag.style();
     if (s.visibility == Visibility::HIDDEN)
         return;
 
-    _paintFragBordersAndBackgrounds(frag, stack);
+    _paintFragBordersAndBackgrounds(frag, stack, usedBorders);
 
     if (auto ic = frag.box->content.is<InlineBox>()) {
         stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
@@ -207,6 +240,13 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
 }
 
 static void _paintChildren(Frag& frag, Scene::Stack& stack, auto predicate) {
+    Opt<Map<Box*, UsedBorders>> tableBoxBorderMapping;
+    if (frag.style().display == Display::TABLE_BOX) {
+        // FIXME: downcasting like this?
+        TableFormatingContext* tableFormattingContext = (TableFormatingContext*)&(*frag.box->formatingContext.unwrap());
+        tableBoxBorderMapping = tableFormattingContext->boxBorderMapping;
+    }
+
     for (auto& c : frag.children()) {
         auto& s = c.style();
 
@@ -224,8 +264,12 @@ static void _paintChildren(Frag& frag, Scene::Stack& stack, auto predicate) {
             continue;
         }
 
-        if (predicate(s))
-            _paintFrag(c, stack);
+        if (predicate(s)) {
+            _paintFrag(
+                c, stack,
+                tableBoxBorderMapping ? tableBoxBorderMapping->get(c.box) : Opt<UsedBorders>{NONE}
+            );
+        }
         _paintChildren(c, stack, predicate);
     }
 }
