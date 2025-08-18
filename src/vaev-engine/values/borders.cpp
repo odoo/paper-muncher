@@ -48,15 +48,31 @@ struct ValueParser<Gfx::BorderStyle> {
 
 // MARK: Border ----------------------------------------------------------------
 
-export struct Border {
-    LineWidth width = Keywords::MEDIUM;
-    Gfx::BorderStyle style;
+template <typename T>
+struct _Border {
+    T width;
+    Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
     Color color = Keywords::CURRENT_COLOR;
+
+    _Border();
+    _Border(T width, Gfx::BorderStyle style, Color color)
+        : width(width), style(style), color(color) {};
 
     void repr(Io::Emit& e) const {
         e("(border {} {} {})", width, style, color);
     }
 };
+
+export using Border = _Border<LineWidth>;
+
+template <>
+_Border<LineWidth>::_Border() : width(Keywords::MEDIUM) {}
+
+export using UsedBorder = _Border<Au>;
+export using UsedBorders = Math::Insets<UsedBorder>;
+
+template <>
+_Border<Au>::_Border() : width(0_au) {}
 
 export template <>
 struct ValueParser<Border> {
@@ -90,12 +106,33 @@ struct ValueParser<Border> {
     }
 };
 
+// FIXME: cant we have this for karm/insets?
+export enum struct BorderEdge {
+    TOP,
+    START,
+    BOTTOM,
+    END,
+};
+
 export struct BorderProps {
     Border top, start, bottom, end;
     Math::Radii<CalcValue<PercentOr<Length>>> radii = {Length(0_au)};
 
     void all(Border b) {
         top = start = bottom = end = b;
+    }
+
+    Border const& get(BorderEdge edge) const {
+        switch (edge) {
+        case BorderEdge::TOP:
+            return top;
+        case BorderEdge::START:
+            return start;
+        case BorderEdge::BOTTOM:
+            return bottom;
+        case BorderEdge::END:
+            return end;
+        }
     }
 
     void repr(Io::Emit& e) const {

@@ -2129,3 +2129,492 @@
         </table>
     </rendering>
 </test>
+
+<test name="table: borders collapse colorful" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                .collapse {
+                    border-collapse: collapse;
+                    border: solid 4px pink;
+                }
+
+                .separate {
+                    border-collapse: separate;
+                    border: solid 2px pink;
+                }
+
+                table {
+                    display: table;
+                }
+
+                .collapse th,
+                .collapse td {
+                    border: solid 4px;
+                }
+
+                .separate th,
+                .separate td {
+                    border: solid 2px;
+                }
+
+                .fx {
+                    border-color: orange blue !important;
+                }
+
+                .gk {
+                    border-color: black red !important;
+                }
+
+                .ed {
+                    border-color: blue gold !important;
+                }
+
+                .tr {
+                    border-color: aqua !important;
+                }
+
+                .sa {
+                    border-color: silver blue !important;
+                }
+
+                .wk {
+                    border-color: gold blue !important;
+                }
+
+                .ch {
+                    border-color: red yellow green blue !important;
+                }
+
+                .bk {
+                    border-color: navy blue teal aqua !important;
+                }
+
+                .op {
+                    border-color: red !important;
+                }
+
+                .empty {
+                    width: 30px;
+                    height: 30px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <table class="separate" style="width: 100px; border: none;">
+            <tbody>
+                <tr>
+                    <td
+                        style="border-left: solid 4px blue; border-top: solid 4px orange; border-right: solid 2px blue; border-bottom: solid 2px orange;">
+                        <div class="empty"></div>
+                    </td>
+                    <td
+                        style="border-left: solid 2px blue; border-top: solid 4px black; border-right: solid 4px red; border-bottom: solid 2px black;">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td
+                        style="border-left: solid 4px gold; border-top: solid 2px orange; border-right: solid 2px gold; border-bottom: solid 2px blue;">
+                        <div class="empty"></div>
+                    </td>
+                    <td
+                        style="border-left: solid 2px gold; border-top: solid 2px black; border-right: solid 4px aqua; border-bottom: solid 2px aqua;">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td
+                        style="border-left: solid 4px red; border-top: solid 2px blue; border-right: solid 2px red; border-bottom: solid 4px red;">
+                        <div class="empty"></div>
+                    </td>
+                    <td
+                        style="border-left: solid 2px red; border-top: solid 2px aqua; border-right: solid 4px blue; border-bottom: solid 4px teal;">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </rendering>
+
+    <rendering>
+        <table class="collapse" style="width: 100px;">
+            <tbody>
+                <tr>
+                    <td class="fx">
+                        <div class="empty"></div>
+                    </td>
+                    <td class="gk">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ed">
+                        <div class="empty"></div>
+                    </td>
+                    <td class="tr">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="op">
+                        <div class="empty"></div>
+                    </td>
+                    <td class="bk">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
+
+<test name="table: borders collapse 2" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                table {
+                    border-spacing: 0;
+                    display: table;
+                    border: solid 18px black;
+                    border-collapse: collapse;
+                    width: 200px;
+                    box-sizing: border-box;
+                }
+
+                table th,
+                table td {
+                    padding: 0;
+                    border: solid 10px black;
+                }
+
+                .empty {
+                    width: 30px;
+                    height: 30px;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    margin: 0px;
+                }
+
+                .right {
+                    border-right-width: 5px !important;
+                }
+
+                .left {
+                    border-left-width: 5px !important;
+                }
+
+                .bottom {
+                    border-bottom-width: 5px !important;
+                }
+
+                .top {
+                    border-top-width: 5px !important;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <style>
+            table {
+                border-collapse: separate !important;
+            }
+
+            table th,
+            table td {
+                border: solid 0px black !important;
+            }
+        </style>
+        <table>
+            <tbody>
+                <tr>
+                    <td class="right bottom">
+                        <div class="empty"></div>
+                    </td>
+                    <td class="left bottom">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="right top">
+                        <div class="empty"></div>
+                    </td>
+                    <td class="left top">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <tbody>
+                <tr>
+                    <td colspan="2" class="bottom">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="top right">
+                        <div class="empty"></div>
+                    </td>
+                    <td class="top left">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <tbody>
+                <tr>
+                    <td rowspan="2" class="right">
+                        <div class="empty"></div>
+                    </td>
+                    <td class="bottom left">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="top left">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+
+    <rendering>
+        <table>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="empty"></div>
+                    </td>
+                    <td>
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="empty"></div>
+                    </td>
+                    <td>
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <tbody>
+                <tr>
+                    <td colspan="2">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="empty"></div>
+                    </td>
+                    <td>
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table>
+            <tbody>
+                <tr>
+                    <td rowspan="2">
+                        <div class="empty"></div>
+                    </td>
+                    <td>
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
+<test name="table: borders collapse col and rol groups" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                .collapse {
+                    border-collapse: collapse;
+                    border: solid 6px blue;
+                }
+
+                .separate {
+                    border-collapse: separate;
+                }
+
+                table {
+                    display: table;
+                    width: 100px;
+                }
+
+                .big-green {
+                    border: solid 10px green;
+                }
+
+                .big-yellow {
+                    border: solid 10px yellow;
+                }
+
+                .empty {
+                    width: 30px;
+                    height: 30px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <style>
+            .left-green {
+                border-left: solid 10px green;
+            }
+
+            .right-green {
+                border-right: solid 10px green;
+            }
+
+            .top-green {
+                border-top: solid 5px green;
+            }
+
+            .top-green-10 {
+                border-top: solid 10px green;
+            }
+
+            .bottom-green {
+                border-bottom: solid 5px green;
+            }
+
+            .left-yellow {
+                border-left: solid 5px yellow;
+            }
+
+            .left-yellow-10 {
+                border-left: solid 10px yellow;
+            }
+
+            .right-yellow {
+                border-right: solid 5px yellow;
+            }
+
+            .bottom-yellow {
+                border-bottom: solid 10px yellow;
+            }
+
+            .bottom-blue {
+                border-bottom: solid 6px blue;
+            }
+
+            .right-blue {
+                border-right: solid 6px blue;
+            }
+        </style>
+        <table class="separate">
+            <tbody>
+                <tr>
+                    <td class="left-green top-green-10 bottom-green right-yellow">
+                        <div class="empty"></div>
+                    </td>
+                    <td class="left-yellow top-green-10 bottom-green right-green">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="left-yellow-10 top-green bottom-yellow right-yellow">
+                        <div class="empty"></div>
+                    </td>
+                    <td class="left-yellow top-green bottom-blue right-blue">
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+
+    <rendering>
+        <table class="collapse">
+            <colgroup>
+                <col class="big-yellow" />
+            </colgroup>
+            <tbody>
+                <tr class="big-green">
+                    <td>
+                        <div class="empty"></div>
+                    </td>
+                    <td>
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="empty"></div>
+                    </td>
+                    <td>
+                        <div class="empty"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
