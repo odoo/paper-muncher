@@ -279,6 +279,12 @@ th {
     font-weight: bold;
 }
 
+table {
+    box-sizing: border-box;
+    border-spacing: 2px;
+    border-collapse: separate;
+}
+
 /* 15.3.10 MARK: Form controls ---------------------------------------------- */
 
 input[type="reset" i],

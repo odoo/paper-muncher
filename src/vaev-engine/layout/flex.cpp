@@ -238,13 +238,15 @@ struct FlexItem {
         );
 
         if (not input.knownSize.width)
-            input.knownSize.width = computeSpecifiedWidth(
-                t, *box, box->style->sizing->width, input.containingBlock
+            input.knownSize.width = computeSpecifiedBorderBoxWidth(
+                t, *box, box->style->sizing->width, input.containingBlock,
+                borders.horizontal() + padding.horizontal()
             );
 
         if (not input.knownSize.height)
-            input.knownSize.height = computeSpecifiedHeight(
-                t, *box, box->style->sizing->height, input.containingBlock
+            input.knownSize.height = computeSpecifiedBorderBoxHeight(
+                t, *box, box->style->sizing->height, input.containingBlock,
+                borders.vertical() + padding.vertical()
             );
 
         speculativeSize = layoutBorderBox(t, *box, input, UsedSpacings{.padding = padding, .borders = borders}).size;
@@ -280,6 +282,13 @@ struct FlexItem {
                     flexBasisDefiniteSize.unwrap(),
                     mainContainerSize.unwrapOr(0_au)
                 );
+
+                if (box->style->boxSizing == BoxSizing::CONTENT_BOX) {
+                    flexBaseSize +=
+                        fa.isRowOriented
+                            ? borders.horizontal() + padding.horizontal()
+                            : borders.vertical() + padding.vertical();
+                }
                 return;
             }
         }
