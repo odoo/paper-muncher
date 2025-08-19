@@ -66,25 +66,24 @@ struct InlineFormatingContext : FormatingContext {
                 },
             };
 
-            childInput.knownSize.width = computeSpecifiedWidth(
-                tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock
+            UsedSpacings usedSpacings{
+                .padding = computePaddings(tree, atomicBox, childInput.containingBlock),
+                .borders = computeBorders(tree, atomicBox),
+            };
+
+            childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
+                tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
+                usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
             );
 
-            childInput.knownSize.height = computeSpecifiedHeight(
-                tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock
+            childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
+                tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
+                usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
             );
 
             // NOTE: We set the same availableSpace to child inline boxes since line wrapping is possible i.e. in the
             // worst case, they will take up the whole availableSpace, and a line break will be done right before them
-            auto atomicBoxOutput = layoutBorderBox(
-                tree,
-                atomicBox,
-                childInput,
-                UsedSpacings{
-                    .padding = computePaddings(tree, atomicBox, childInput.containingBlock),
-                    .borders = computeBorders(tree, atomicBox),
-                }
-            );
+            auto atomicBoxOutput = layoutBorderBox(tree, atomicBox, childInput, usedSpacings);
 
             if (not impliesRemovingFromFlow(atomicBox.style->position)) {
                 boxStrutCell.size = atomicBoxOutput.size;
