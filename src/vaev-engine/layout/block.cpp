@@ -125,7 +125,7 @@ Output fragmentEmptyBox(Tree& tree, Input input) {
     }
 }
 
-void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, Au horizontalMargins, Opt<Au> blockInlineSize) {
+void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, UsedSpacings const& usedSpacings, Opt<Au> blockInlineSize) {
     if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Display::INLINE) {
         if (child.style->sizing->width.is<Keywords::Auto>()) {
             // https://www.w3.org/TR/css-tables-3/#layout-principles
@@ -136,16 +136,18 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, Au 
                 // Do nothing. 'fit-content' is kinda intrinsic size, when we don't populate knownSize.
             } else if (blockInlineSize) {
                 // When the inline size is not known, we cannot enforce it to the child. (?)
-                childInput.knownSize.width = blockInlineSize.unwrap() - horizontalMargins;
+                childInput.knownSize.width = blockInlineSize.unwrap() - usedSpacings.margin.horizontal();
             }
         } else {
-            childInput.knownSize.width = computeSpecifiedWidth(
-                tree, child, child.style->sizing->width, childInput.containingBlock
+            childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
+                tree, child, child.style->sizing->width, childInput.containingBlock,
+                usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
             );
         }
 
-        childInput.knownSize.height = computeSpecifiedHeight(
-            tree, child, child.style->sizing->height, childInput.containingBlock
+        childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
+            tree, child, child.style->sizing->height, childInput.containingBlock,
+            usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
         );
     }
 }
@@ -241,7 +243,7 @@ struct BlockFormatingContext : FormatingContext {
                 childInput.capmin = _computeCapmin(tree, box, input, inlineSize);
             }
 
-            _populateChildSpecifiedSizes(tree, c, childInput, usedSpacings.margin.horizontal(), input.knownSize.x);
+            _populateChildSpecifiedSizes(tree, c, childInput, usedSpacings, input.knownSize.x);
 
             auto output = input.fragment
                               ? layoutAndCommitBorderBox(tree, c, childInput, *input.fragment, usedSpacings)

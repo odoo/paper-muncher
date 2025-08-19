@@ -1,0 +1,30 @@
+<test name="border-radii"></test>
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            body {
+                margin: 0px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <section>
+            <slot />
+        </section>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div style="border-radius: 10px; width: 100px; height: 100px; background-color: green;"></div>
+</rendering>
+
+<error>
+    <div style="width: 100px; height: 100px; background-color: green;"></div>
+</error>
+
+</test>
