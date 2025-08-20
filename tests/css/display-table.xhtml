@@ -1885,3 +1885,98 @@
         </div>
     </rendering>
 </test>
+
+<test name="table: padding resolution" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                th,
+                td {
+                    padding: 0;
+                    border: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .red {
+                    background-color: red;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="position: absolute; top: 0px; left: 0px; height: 120px; width: 100px;" class="green">
+            <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 100px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 40px; width: 100px;">
+                    <div style="position: absolute; top: 10px; left: 10px; height: 20px; width: 50px;" class="red">
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 40px; left: 0px; height: 80px; width: 100px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 80px; width: 100px;">
+                    <div style="position: absolute; top: 30px; left: 30px; height: 20px; width: 20px;" class="red">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="position: absolute; top: 120px; left: 0px; height: 80px; width: 50px;" class="green">
+            <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 50px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 30px; width: 50px;">
+                    <div style="position: absolute; top: 5px; left: 5px; height: 20px; width: 50px;" class="red"></div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 30px; left: 0px; height: 50px; width: 50px;">
+                <div style="position: absolute; top: 0px; left: 0px; height: 50px; width: 50px;">
+                    <div style="position: absolute; top: 15px; left: 15px; height: 20px; width: 20px;" class="red">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </rendering>
+
+    <rendering>
+        <table style="width: 100px;">
+            <tr>
+                <td style="padding: 10%; background-color: green;">
+                    <div style="width: 50px;background-color: red;height: 20px;"></div>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 30%; background-color: green;">
+                    <div style="width: 20px;background-color: red;height: 20px;"></div>
+                </td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding: 10%; background-color: green;">
+                    <div style="width: 50px;background-color: red;height: 20px;"></div>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 30%; background-color: green;">
+                    <div style="width: 20px;background-color: red;height: 20px;"></div>
+                </td>
+            </tr>
+        </table>
+    </rendering>
+</test>
