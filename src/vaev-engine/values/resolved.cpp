@@ -1,5 +1,3 @@
-module;
-
 export module Vaev.Engine:values.resolved;
 
 namespace Vaev {

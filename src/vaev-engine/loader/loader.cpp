@@ -10,6 +10,8 @@ export module Vaev.Engine:loader.loader;
 import Karm.Gc;
 import Karm.Http;
 import Karm.Core;
+import Karm.Debug;
+
 import :dom;
 import :html;
 import :xml;
@@ -136,6 +138,9 @@ Async::Task<> _fetchStylesheetsAsync(Http::Client& client, Gc::Ref<Dom::Node> no
     co_return Ok();
 }
 
+static Debug::Flag dumpDom{"web-dom"};
+static Debug::Flag dumpStylesheets{"web-stylesheets"};
+
 export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Http::Client& client, Mime::Url const& url) {
     if (url.scheme == "about") {
         if (url.path.str() == "blank")
@@ -160,6 +165,13 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
 
     (void)co_await _fetchStylesheetsAsync(client, *dom, *stylesheets);
     dom->styleSheets = stylesheets;
+
+    if (dumpDom)
+        logDebugIf(dumpDom, "document tree: {}", dom);
+
+    if (dumpStylesheets)
+        logDebugIf(dumpStylesheets, "document stylesheets: {}", stylesheets);
+
     co_return Ok(dom);
 }
 

@@ -2,7 +2,7 @@ module;
 
 #include <karm-math/au.h>
 
-export module Vaev.Engine:values.line_width;
+export module Vaev.Engine:values.lineWidth;
 
 import :css;
 import :values.base;

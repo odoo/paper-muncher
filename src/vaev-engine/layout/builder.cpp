@@ -8,6 +8,8 @@ export module Vaev.Engine:layout.builder;
 
 import Karm.Image;
 import Karm.Gc;
+import Karm.Debug;
+
 import :values;
 import :style;
 import :dom;
@@ -831,9 +833,18 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
 
 // MARK: Entry points -----------------------------------------------------------------
 
+static Debug::Flag dumpBoxes{"web-boxes"s};
+
 export Box build(Gc::Ref<Dom::Document> doc) {
+    // NOTE: Fallback in case of an empty document
+    Box root{
+        makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial()),
+        Text::Fontface::fallback(),
+        nullptr
+    };
+
     if (auto el = doc->documentElement()) {
-        Box root = {el->specifiedValues(), el->computedValues()->fontFace, el};
+         root = {el->specifiedValues(), el->computedValues()->fontFace, el};
         InlineBox rootInlineBox{_proseStyleFomStyle(*el->specifiedValues(), el->computedValues()->fontFace)};
 
         BuilderContext bc{
@@ -844,14 +855,11 @@ export Box build(Gc::Ref<Dom::Document> doc) {
         };
 
         buildBlockFlowFromElement(bc, *el);
-        return root;
     }
-    // NOTE: Fallback in case of an empty document
-    return {
-        makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial()),
-        Text::Fontface::fallback(),
-        nullptr
-    };
+
+    logDebugIf(dumpBoxes,"document boxes: {}", root);
+
+    return root;
 }
 
 export Box buildForPseudoElement(Dom::PseudoElement& el) {

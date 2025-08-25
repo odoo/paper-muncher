@@ -1,6 +1,8 @@
+module;
+
 #include <karm-core/macros.h>
 
-export module Vaev.Engine:values.line_height;
+export module Vaev.Engine:values.lineHeight;
 
 import Karm.Core;
 

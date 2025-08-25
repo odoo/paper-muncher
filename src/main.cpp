@@ -10,6 +10,7 @@ import Karm.Gc;
 import Karm.Http;
 import Karm.Image;
 import Karm.Print;
+import Karm.Debug;
 import Vaev.Engine;
 
 using namespace Karm;
@@ -30,7 +31,7 @@ static Rc<Http::Client> _createHttpClient(bool unsecure) {
     }
 
     auto client = makeRc<Http::Client>(
-        multiplexTransport(std::move(transports))
+        Http::multiplexTransport(std::move(transports))
     );
     client->userAgent = "Paper-Muncher/" stringify$(__ck_version_value) ""s;
 

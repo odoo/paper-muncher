@@ -8,7 +8,7 @@ module;
 export module Vaev.Engine:values.outline;
 
 import :values.color;
-import :values.line_width;
+import :values.lineWidth;
 
 namespace Vaev {
 

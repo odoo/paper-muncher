@@ -3,12 +3,15 @@ module;
 #include <karm-gfx/borders.h>
 #include <karm-gfx/outline.h>
 #include <karm-math/au.h>
+#include <karm-logger/logger.h>
 
 export module Vaev.Engine:layout.paint;
 
 import Karm.Image;
 import Karm.Gc;
 import Karm.Scene;
+import Karm.Debug;
+
 import :style;
 import :layout.base;
 import :layout.values;

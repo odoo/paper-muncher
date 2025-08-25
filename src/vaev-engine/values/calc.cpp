@@ -1,3 +1,5 @@
+module;
+
 #include <karm-core/macros.h>
 
 export module Vaev.Engine:values.calc;

@@ -12,7 +12,7 @@ import :values.base;
 import :values.calc;
 import :values.color;
 import :values.length;
-import :values.line_width;
+import :values.lineWidth;
 import :values.percent;
 
 namespace Vaev {
