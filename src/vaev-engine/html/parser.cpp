@@ -5,13 +5,14 @@ module;
 export module Vaev.Engine:html.parser;
 
 import Karm.Gc;
+import Karm.Debug;
 import :dom;
 import :html.token;
 import :html.lexer;
 
 namespace Vaev::Html {
 
-static constexpr bool DEBUG_HTML_PARSER = false;
+static Debug::Flag debugParser{"web-html-parser"s};
 
 #define FOREACH_INSERTION_MODE(MODE) \
     MODE(INITIAL)                    \
@@ -165,7 +166,7 @@ export struct HtmlParser : HtmlSink {
     // 13.2.5 MARK: Tokenization
     // https://html.spec.whatwg.org/multipage/parsing.html#tokenization
     void _acknowledgeSelfClosingFlag(HtmlToken const&) {
-        logDebugIf(DEBUG_HTML_PARSER, "acknowledgeSelfClosingFlag not implemented");
+        logDebugIf(debugParser, "acknowledgeSelfClosingFlag not implemented");
     }
 
     // 13.2.6 MARK: Tree construction
@@ -2608,7 +2609,7 @@ export struct HtmlParser : HtmlSink {
 
     void _acceptIn(Mode mode, HtmlToken& t) {
         if (t.type != HtmlToken::CHARACTER)
-            logDebugIf(DEBUG_HTML_PARSER, "Parsing {} in {}", t, mode);
+            logDebugIf(debugParser, "Parsing {} in {}", t, mode);
 
         switch (mode) {
 

@@ -5,6 +5,7 @@ module;
 export module Vaev.Engine:html.lexer;
 
 import Karm.Core;
+import Karm.Debug;
 
 import :html.token;
 
@@ -12,7 +13,7 @@ using namespace Karm;
 
 namespace Vaev::Html {
 
-static constexpr bool DEBUG_HTML_LEXER = false;
+static Debug::Flag debugLexer{"web-html-lexer"};
 
 struct HtmlEntity {
     Str name;
@@ -78,6 +79,7 @@ export struct HtmlLexer {
     void _emit() {
         if (not _sink)
             panic("no sink");
+        logDebugIf(debugLexer, "emiting token: {}", _ensure());
         _sink->accept(_ensure());
         _last = std::move(_token);
     }
@@ -140,7 +142,7 @@ export struct HtmlLexer {
     }
 
     void consume(Rune rune, bool isEof = false) {
-        logDebugIf(DEBUG_HTML_LEXER, "Lexing '{#c}' {#x} in {}", rune, rune, _state);
+        logDebugIf(debugLexer, "Lexing '{#c}' {#x} in {}", rune, rune, _state);
 
         switch (_state) {
 
