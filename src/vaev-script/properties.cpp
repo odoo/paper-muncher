@@ -1,11 +1,11 @@
-#pragma once
+export module Vaev.Script:properties;
 
-#include "value.h"
+import :value;
 
 namespace Vaev::Script {
 
 // https://tc39.es/ecma262/#property-key
-struct PropertyKey {
+export struct PropertyKey {
     using _Store = Union<String, Symbol, u64>;
 
     _Store store;

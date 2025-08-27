@@ -1,4 +1,4 @@
-#pragma once
+export module Vaev.Script:lang.module_;
 
 namespace Vaev::Script {
 

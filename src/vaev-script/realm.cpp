@@ -1,13 +1,13 @@
-#pragma once
+export module Vaev.Script:realm;
 
-#include "agent.h"
-#include "completion.h"
-#include "value.h"
+import :agent;
+import :completion;
+import :value;
 
 namespace Vaev::Script {
 
 // https://tc39.es/ecma262/#realm
-struct Realm {
+export struct Realm {
     Gc::Ref<Agent> agentSignifier;
     Value globalThis = undefined;
 

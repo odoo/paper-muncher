@@ -1,7 +1,10 @@
 #include <karm-sys/entry.h>
-#include <vaev-script/object.h>
-#include <vaev-script/realm.h>
 
+import Vaev.Script;
+import Karm.Core;
+import Karm.Gc;
+
+using namespace Karm;
 using namespace Vaev;
 
 Async::Task<> entryPointAsync(Sys::Context&) {
@@ -16,7 +19,7 @@ Async::Task<> entryPointAsync(Sys::Context&) {
     (void)object1->defineOwnProperty(
         Script::PropertyKey::from(u"foo"_s16),
         {
-            .value = Vaev::Script::Number{42.},
+            .value = Script::Number{42.},
         }
     );
 

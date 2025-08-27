@@ -1,4 +1,4 @@
-#pragma once
+export module Vaev.Script:agent;
 
 import Karm.Core;
 import Karm.Gc;
@@ -8,7 +8,7 @@ using namespace Karm;
 namespace Vaev::Script {
 
 // https://tc39.es/ecma262/#agent
-struct Agent {
+export struct Agent {
     Gc::Heap& heap;
 };
 

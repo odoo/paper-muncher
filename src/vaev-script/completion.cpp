@@ -1,15 +1,14 @@
-#pragma once
+export module Vaev.Script:completion;
 
 import Karm.Core;
-
-#include "value.h"
+import :value;
 
 using namespace Karm;
 
 namespace Vaev::Script {
 
 // https://tc39.es/ecma262/#sec-completion-record-specification-type
-struct [[nodiscard]] Completion {
+export struct [[nodiscard]] Completion {
     enum struct _Type {
         NORMAL,
         BREAK,
@@ -73,7 +72,7 @@ struct [[nodiscard]] Completion {
     }
 };
 
-template <typename T = None>
+export template <typename T = None>
 using Except = Res<T, Completion>;
 
 } // namespace Vaev::Script

@@ -3,6 +3,9 @@
     "id": "vaev-script",
     "type": "lib",
     "description": "ECMAScript library & runtime for Vaev",
+    "subdirs": [
+        "lang"
+    ],
     "requires": [
         "karm-core",
         "karm-math",

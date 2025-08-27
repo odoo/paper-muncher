@@ -15,6 +15,7 @@
         "xml"
     ],
     "requires": [
+        "vaev-script",
         "karm-core",
         "karm-gc",
         "karm-gfx",
