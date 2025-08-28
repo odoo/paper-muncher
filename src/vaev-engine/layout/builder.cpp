@@ -843,7 +843,7 @@ export Box build(Gc::Ref<Dom::Document> doc) {
     };
 
     if (auto el = doc->documentElement()) {
-        Box root = {el->specifiedValues(), el->computedValues()->fontFace, el};
+        root = {el->specifiedValues(), el->computedValues()->fontFace, el};
         InlineBox rootInlineBox{_proseStyleFromStyle(*el->specifiedValues(), el->computedValues()->fontFace)};
 
         BuilderContext bc{
@@ -856,7 +856,7 @@ export Box build(Gc::Ref<Dom::Document> doc) {
         buildBlockFlowFromElement(bc, *el);
     }
 
-    logDebugIf(dumpBoxes,"document boxes: {}", root);
+    logDebugIf(dumpBoxes, "document boxes: {}", root);
 
     return root;
 }
