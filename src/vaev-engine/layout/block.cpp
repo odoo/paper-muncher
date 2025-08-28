@@ -1,7 +1,9 @@
 module;
 
-#include <karm-math/au.h>
 #include <karm-core/macros.h>
+#include <karm-math/au.h>
+
+#include "karm-logger/logger.h"
 
 export module Vaev.Engine:layout.block;
 
@@ -149,6 +151,16 @@ struct BlockFormatingContext : FormatingContext {
         return capmin;
     }
 
+    static void lookForRunningPosition(Input& input, Box& box) {
+        if (not input.runningPosition)
+            return;
+
+        if (box.style->position.is<RunningPosition>()) {
+            auto& runningMap = input.runningPosition.peek();
+            runningMap.add(input.pageNumber, box);
+        }
+    }
+
     Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
         Au blockSize = 0_au;
         Au inlineSize = input.knownSize.width.unwrapOr(0_au);
@@ -170,8 +182,10 @@ struct BlockFormatingContext : FormatingContext {
         bool blockWasCompletelyLaidOut = false;
 
         Au lastMarginBottom = 0_au;
+
         for (usize i = startAt; i < endChildren; ++i) {
             auto& c = box.children()[i];
+            lookForRunningPosition(input, c);
 
             try$(
                 processBreakpointsBeforeChild(
@@ -191,6 +205,8 @@ struct BlockFormatingContext : FormatingContext {
                 .intrinsic = input.intrinsic,
                 .availableSpace = {input.availableSpace.x, 0_au},
                 .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_au)},
+                .runningPosition = input.runningPosition,
+                .pageNumber = input.pageNumber,
                 .breakpointTraverser = input.breakpointTraverser.traverseInsideUsingIthChild(i),
                 .pendingVerticalSizes = input.pendingVerticalSizes,
             };
