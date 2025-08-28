@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "paper_muncher"
+version = "0.1.0"
+description = "Python bindings for Paper Muncher"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "LGPL-3.0-or-later" }
+authors = [
+  { name = "Odoo", email = "info@odoo.com" }
+]
+
+[tool.hatch.build]
+exclude = [
+  "/.doctrees",
+  "/documentation_source",
+  "/examples",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["paper_muncher"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "/.doctrees",
+  "/documentation_source",
+  "/examples",
+]
