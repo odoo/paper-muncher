@@ -2,7 +2,7 @@ module;
 
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
-#include <karm-text/book.h>
+#include <karm-font/database.h>
 
 export module Vaev.Engine:driver.render;
 
@@ -21,11 +21,11 @@ export struct RenderResult {
 };
 
 export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media, Layout::Viewport viewport) {
-    Text::FontBook fontBook;
-    if (not fontBook.loadAll())
-        logWarn("not all fonts were properly loaded into fontbook");
+    Font::Database db;
+    if (not db.loadAll())
+        logWarn("not all fonts were properly loaded into database");
 
-    Style::Computer computer{media, *dom->styleSheets, fontBook};
+    Style::Computer computer{media, *dom->styleSheets, db};
     computer.build();
     computer.styleDocument(*dom);
 

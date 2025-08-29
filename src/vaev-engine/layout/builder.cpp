@@ -1,7 +1,7 @@
 module;
 
-#include <karm-text/loader.h>
-#include <karm-text/prose.h>
+#include <karm-font/loader.h>
+#include <karm-gfx/prose.h>
 #include <karm-logger/logger.h>
 
 export module Vaev.Engine:layout.builder;
@@ -68,13 +68,13 @@ bool isSegmentBreak(Rune rune) {
     return rune == '\n' or rune == '\r' or rune == '\f' or rune == '\v';
 }
 
-static Text::ProseStyle _proseStyleFomStyle(Style::SpecifiedValues& style, Rc<Text::Fontface> fontFace) {
+static Gfx::ProseStyle _proseStyleFomStyle(Style::SpecifiedValues& style, Rc<Gfx::Fontface> fontFace) {
     // FIXME: We should pass this around from the top in order to properly resolve rems
     Resolver resolver{
-        .rootFont = Text::Font{fontFace, 16},
-        .boxFont = Text::Font{fontFace, 16},
+        .rootFont = Gfx::Font{fontFace, 16},
+        .boxFont = Gfx::Font{fontFace, 16},
     };
-    Text::ProseStyle proseStyle{
+    Gfx::ProseStyle proseStyle{
         .font = {
             fontFace,
             resolver.resolve(style.font->size).cast<f64>(),
@@ -86,16 +86,16 @@ static Text::ProseStyle _proseStyleFomStyle(Style::SpecifiedValues& style, Rc<Te
     switch (style.text->align) {
     case TextAlign::START:
     case TextAlign::LEFT:
-        proseStyle.align = Text::TextAlign::LEFT;
+        proseStyle.align = Gfx::TextAlign::LEFT;
         break;
 
     case TextAlign::END:
     case TextAlign::RIGHT:
-        proseStyle.align = Text::TextAlign::RIGHT;
+        proseStyle.align = Gfx::TextAlign::RIGHT;
         break;
 
     case TextAlign::CENTER:
-        proseStyle.align = Text::TextAlign::CENTER;
+        proseStyle.align = Gfx::TextAlign::CENTER;
         break;
 
     default:
@@ -106,7 +106,7 @@ static Text::ProseStyle _proseStyleFomStyle(Style::SpecifiedValues& style, Rc<Te
     return proseStyle;
 }
 
-void _transformAndAppendRuneToProse(Rc<Text::Prose> prose, Rune rune, TextTransform transform) {
+void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, TextTransform transform) {
     switch (transform) {
     case TextTransform::UPPERCASE:
         prose->append(toAsciiUpper(rune));
@@ -255,7 +255,7 @@ struct BuilderContext {
     }
 
     // FIXME: find me a better name
-    void startInlineBox(Text::ProseStyle proseStyle) {
+    void startInlineBox(Gfx::ProseStyle proseStyle) {
         rootInlineBox().startInlineBox(proseStyle);
     }
 
@@ -373,10 +373,10 @@ static void _buildImage(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     auto font = el->computedValues()->fontFace;
     Resolver resolver{
-        .rootFont = Text::Font{font, 16},
-        .boxFont = Text::Font{font, 16},
+        .rootFont = Gfx::Font{font, 16},
+        .boxFont = Gfx::Font{font, 16},
     };
-    Text::ProseStyle proseStyle = _proseStyleFomStyle(*el->specifiedValues(), font);
+    Gfx::ProseStyle proseStyle = _proseStyleFomStyle(*el->specifiedValues(), font);
 
     auto value = ""s;
     if (el->hasAttribute(Html::VALUE_ATTR))
@@ -384,7 +384,7 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     else if (el->hasAttribute(Html::PLACEHOLDER_ATTR))
         value = el->getAttribute(Html::PLACEHOLDER_ATTR).unwrap();
 
-    auto prose = makeRc<Text::Prose>(proseStyle, value);
+    auto prose = makeRc<Gfx::Prose>(proseStyle, value);
 
     // FIXME: we should guarantee that input has no children (not added before nor to add after)
     bc.content() = InlineBox{prose};
@@ -525,7 +525,7 @@ struct AnonymousTableBoxWrapper {
 
     AnonymousTableBoxWrapper(BuilderContext& bc) : bc(bc) {}
 
-    void createRowIfNone(Rc<Style::SpecifiedValues> style, Rc<Text::Fontface> fontFace) {
+    void createRowIfNone(Rc<Style::SpecifiedValues> style, Rc<Gfx::Fontface> fontFace) {
         if (rowBox)
             return;
 
@@ -536,7 +536,7 @@ struct AnonymousTableBoxWrapper {
         rowBox = Box{rowStyle, fontFace, nullptr};
     }
 
-    void createCellIfNone(Rc<Style::SpecifiedValues> style, Rc<Text::Fontface> fontFace) {
+    void createCellIfNone(Rc<Style::SpecifiedValues> style, Rc<Gfx::Fontface> fontFace) {
         if (cellBox)
             return;
 
@@ -839,7 +839,7 @@ export Box build(Gc::Ref<Dom::Document> doc) {
     // NOTE: Fallback in case of an empty document
     Box root{
         makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial()),
-        Text::Fontface::fallback(),
+        Gfx::Fontface::fallback(),
         nullptr
     };
 
@@ -865,7 +865,7 @@ export Box build(Gc::Ref<Dom::Document> doc) {
 export Box buildForPseudoElement(Dom::PseudoElement& el) {
     auto proseStyle = _proseStyleFomStyle(*el.specifiedValues(), el.computedValues()->fontFace);
 
-    auto prose = makeRc<Text::Prose>(proseStyle);
+    auto prose = makeRc<Gfx::Prose>(proseStyle);
     if (el.specifiedValues()->content) {
         prose->append(el.specifiedValues()->content.str());
         return {el.specifiedValues(), el.computedValues()->fontFace, InlineBox{prose}, nullptr};

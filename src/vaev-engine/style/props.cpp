@@ -5,7 +5,7 @@ module;
 #include <karm-math/au.h>
 #include <karm-math/insets.h>
 #include <karm-mime/url.h>
-#include <karm-text/base.h>
+#include <karm-gfx/font.h>
 
 export module Vaev.Engine:style.props;
 
@@ -1708,7 +1708,7 @@ export struct FontWeightProp {
 
     static constexpr Str name() { return "font-weight"; }
 
-    static FontWeight initial() { return Text::FontWeight::REGULAR; }
+    static FontWeight initial() { return Gfx::FontWeight::REGULAR; }
 
     static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
         if (not child.font.sameInstance(parent.font))

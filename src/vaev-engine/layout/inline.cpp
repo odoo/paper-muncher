@@ -1,6 +1,6 @@
 module;
 
-#include <karm-text/prose.h>
+#include <karm-gfx/prose.h>
 
 export module Vaev.Engine:layout.inline_;
 

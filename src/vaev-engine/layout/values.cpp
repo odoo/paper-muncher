@@ -2,7 +2,7 @@ module;
 
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
-#include <karm-text/font.h>
+#include <karm-gfx/font.h>
 
 export module Vaev.Engine:layout.values;
 
@@ -17,8 +17,8 @@ export struct Resolver {
     f64 userFontSize = 16;   /// Font size of the user agent
     f64 parentFontSize = 16; /// Font size of the parent box
 
-    Opt<Text::Font> rootFont = NONE;                 /// Font of the root element
-    Opt<Text::Font> boxFont = NONE;                  /// Font of the current box
+    Opt<Gfx::Font> rootFont = NONE;                 /// Font of the root element
+    Opt<Gfx::Font> boxFont = NONE;                  /// Font of the current box
     Viewport viewport = {.small = {800_au, 600_au}}; /// Viewport of the current box
     Axis boxAxis = Axis::HORIZONTAL;                 /// Inline axis of the current box
 
@@ -26,8 +26,8 @@ export struct Resolver {
         Au fontSize{16};
 
         Resolver resolver;
-        resolver.rootFont = Text::Font{tree.root.fontFace, fontSize.cast<f64>()};
-        resolver.boxFont = Text::Font{box.fontFace, fontSize.cast<f64>()};
+        resolver.rootFont = Gfx::Font{tree.root.fontFace, fontSize.cast<f64>()};
+        resolver.boxFont = Gfx::Font{box.fontFace, fontSize.cast<f64>()};
         resolver.viewport = tree.viewport;
         resolver.boxAxis = mainAxis(box);
         return resolver;

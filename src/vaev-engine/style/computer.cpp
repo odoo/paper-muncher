@@ -2,7 +2,7 @@ module;
 
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
-#include <karm-text/book.h>
+#include <karm-font/database.h>
 
 export module Vaev.Engine:style.computer;
 
@@ -17,7 +17,7 @@ namespace Vaev::Style {
 export struct Computer {
     Media _media;
     StyleSheetList const& _styleBook;
-    Text::FontBook& fontBook;
+    Font::Database& fontBook;
     StyleRuleLookup _styleRuleLookup{};
 
     // MARK: Cascading ---------------------------------------------------------
@@ -100,26 +100,21 @@ export struct Computer {
 
     // MARK: Computing ---------------------------------------------------------
 
-    static Rc<Karm::Text::Fontface> _lookupFontface(Text::FontBook& fontBook, Style::SpecifiedValues& style) {
-        Text::FontQuery fq{
+    static Rc<Gfx::Fontface> _lookupFontface(Font::Database& db, Style::SpecifiedValues& style) {
+        Font::Query fq{
             .weight = style.font->weight,
             .style = style.font->style.val,
         };
 
         for (auto family : style.font->families) {
-            fq.family = family.name;
-            if (auto font = fontBook.queryClosest(fq))
+            if (auto font = db.queryClosest(family.name, fq))
                 return font.unwrap();
         }
 
-        if (
-            auto font = fontBook.queryClosest({
-                .family = "system"_sym,
-            })
-        )
+        if (auto font = db.queryClosest("system"_sym))
             return font.unwrap();
 
-        return Text::Fontface::fallback();
+        return Gfx::Fontface::fallback();
     }
 
     // https://svgwg.org/specs/integration/#svg-css-sizing
@@ -285,7 +280,7 @@ export struct Computer {
                         logWarn("Failed to load font at {}", resolvedUrl);
                     } else {
                         if (
-                            fontBook.queryExact(Text::FontQuery{.family = src.identifier.unwrap<FontFamily>().name})
+                            fontBook.queryExact(src.identifier.unwrap<FontFamily>().name)
                         )
                             break;
 

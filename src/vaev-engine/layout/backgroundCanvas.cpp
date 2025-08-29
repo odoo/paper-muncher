@@ -1,7 +1,8 @@
 module;
 
-#include <karm-text/loader.h>
-#include <karm-text/prose.h>
+#include <karm-font/loader.h>
+#include <karm-gfx/prose.h>
+#include <karm-gfx/colors.h>
 #include <karm-logger/logger.h>
 
 export module Vaev.Engine:layout.backgroundCanvas;

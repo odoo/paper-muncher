@@ -2,7 +2,7 @@ module;
 
 #include <karm-core/macros.h>
 #include <karm-mime/url.h>
-#include <karm-text/base.h>
+#include <karm-gfx/font.h>
 
 export module Vaev.Engine:style.fonts;
 
@@ -20,7 +20,7 @@ export struct FontFace {
 
     Union<None, FontStyle, Range<Angle>> style = FontStyle{FontStyle::NORMAL};
 
-    Opt<Range<Text::FontWeight>> weight = Text::FontWeight::REGULAR;
+    Opt<Range<Gfx::FontWeight>> weight = Gfx::FontWeight::REGULAR;
     Opt<Range<FontWidth>> width = FontWidth::NORMAL;
 
     Vec<Range<Rune>> unicodeRange;
@@ -189,11 +189,11 @@ export struct FontStyleDesc {
 // MARK: font-weight
 // https://www.w3.org/TR/css-fonts-4/#font-weight-desc
 export struct FontWeightDesc {
-    Opt<Range<Text::FontWeight>> value;
+    Opt<Range<Gfx::FontWeight>> value;
 
     static Str name() { return "font-weight"; }
 
-    static auto initial() { return Text::FontWeight::REGULAR; }
+    static auto initial() { return Gfx::FontWeight::REGULAR; }
 
     void apply(FontFace& f) const {
         f.weight = value;
@@ -211,16 +211,16 @@ export struct FontWeightDesc {
 
         auto val = parseValue<FontWeight>(c);
         if (not val) {
-            value = weight.unwrap<Text::FontWeight>();
+            value = weight.unwrap<Gfx::FontWeight>();
             return Ok();
         }
 
         if (val.unwrap().isRelative())
             return Error::invalidData("font weight desciptors should use absolute font weight values");
 
-        value = Range<Text::FontWeight>::fromStartEnd(
-            weight.unwrap<Text::FontWeight>(),
-            val.unwrap().unwrap<Text::FontWeight>()
+        value = Range<Gfx::FontWeight>::fromStartEnd(
+            weight.unwrap<Gfx::FontWeight>(),
+            val.unwrap().unwrap<Gfx::FontWeight>()
         );
 
         return Ok();

@@ -1,7 +1,8 @@
 module;
 
-#include <karm-text/font.h>
-#include <karm-text/prose.h>
+#include <karm-gfx/font.h>
+#include <karm-gfx/prose.h>
+#include <karm-math/trans.h>
 
 export module Vaev.Engine:layout.base;
 
@@ -243,14 +244,14 @@ export struct InlineBox {
             into line boxes)
         -   respect different styling for the same line (font, fontsize, color, etc)
     */
-    Rc<Text::Prose> prose;
+    Rc<Gfx::Prose> prose;
     Vec<::Box<Box>> atomicBoxes;
 
-    InlineBox(Text::ProseStyle style) : prose(makeRc<Text::Prose>(style)) {}
+    InlineBox(Gfx::ProseStyle style) : prose(makeRc<Gfx::Prose>(style)) {}
 
-    InlineBox(Rc<Text::Prose> prose) : prose(prose) {}
+    InlineBox(Rc<Gfx::Prose> prose) : prose(prose) {}
 
-    void startInlineBox(Text::ProseStyle proseStyle) {
+    void startInlineBox(Gfx::ProseStyle proseStyle) {
         // FIXME: ugly workaround while we dont fix the Prose data structure
         prose->pushSpan();
         if (proseStyle.color)
@@ -354,16 +355,16 @@ export struct Attrs {
 
 struct Box : Meta::NoCopy {
     Rc<Style::SpecifiedValues> style;
-    Rc<Text::Fontface> fontFace;
+    Rc<Gfx::Fontface> fontFace;
     Content content = NONE;
     Attrs attrs;
     Opt<Rc<FormatingContext>> formatingContext = NONE;
     Gc::Ptr<Dom::Element> origin;
 
-    Box(Rc<Style::SpecifiedValues> style, Rc<Text::Fontface> font, Gc::Ptr<Dom::Element> og)
+    Box(Rc<Style::SpecifiedValues> style, Rc<Gfx::Fontface> font, Gc::Ptr<Dom::Element> og)
         : style{std::move(style)}, fontFace{font}, origin{og} {}
 
-    Box(Rc<Style::SpecifiedValues> style, Rc<Text::Fontface> font, Content content, Gc::Ptr<Dom::Element> og)
+    Box(Rc<Style::SpecifiedValues> style, Rc<Gfx::Fontface> font, Content content, Gc::Ptr<Dom::Element> og)
         : style{std::move(style)}, fontFace{font}, content{std::move(content)}, origin{og} {}
 
     Slice<Box> children() const {
@@ -423,7 +424,7 @@ void SVG::Group::add(Vaev::Layout::Box&& box) {
 }
 
 void InlineBox::add(Box&& b) {
-    prose->append(Text::Prose::StrutCell{atomicBoxes.len()});
+    prose->append(Gfx::Prose::StrutCell{atomicBoxes.len()});
     atomicBoxes.pushBack(makeBox<Box>(std::move(b)));
 }
 

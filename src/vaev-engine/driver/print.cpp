@@ -2,8 +2,10 @@ module;
 
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
+#include <karm-math/trans.h>
 #include <karm-sys/time.h>
-#include <karm-text/book.h>
+#include <karm-gfx/colors.h>
+#include <karm-font/database.h>
 
 export module Vaev.Engine:driver.print;
 
@@ -128,12 +130,12 @@ static Style::Media _constructMedia(Print::Settings const& settings) {
 export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
     auto media = _constructMedia(settings);
 
-    Text::FontBook fontBook;
-    if (not fontBook.loadAll())
-        logWarn("not all fonts were properly loaded into fontbook");
+    Font::Database db;
+    if (not db.loadAll())
+        logWarn("not all fonts were properly loaded into database");
 
     Style::Computer computer{
-        media, *dom->styleSheets, fontBook
+        media, *dom->styleSheets, db
     };
     computer.build();
     computer.styleDocument(*dom);

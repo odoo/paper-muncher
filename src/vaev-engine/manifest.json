@@ -26,6 +26,6 @@
         "karm-mime",
         "karm-print",
         "karm-scene",
-        "karm-text"
+        "karm-font"
     ]
 }

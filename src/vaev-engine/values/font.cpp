@@ -2,7 +2,7 @@ module;
 
 #include <karm-core/macros.h>
 #include <karm-mime/url.h>
-#include <karm-text/base.h>
+#include <karm-gfx/font.h>
 
 export module Vaev.Engine:values.font;
 
@@ -122,11 +122,11 @@ struct ValueParser<FontWidth> {
 // https://drafts.csswg.org/css-fonts-4/#propdef-font-style
 
 export struct FontStyle {
-    using enum Text::FontStyle;
-    Text::FontStyle val;
+    using enum Gfx::FontStyle;
+    Gfx::FontStyle val;
     Angle obliqueAngle;
 
-    constexpr FontStyle(Text::FontStyle named = NORMAL)
+    constexpr FontStyle(Gfx::FontStyle named = NORMAL)
         : val(named) {
     }
 
@@ -173,7 +173,7 @@ export enum struct RelativeFontWeight : u8 {
 };
 
 using _FontWeight = Union<
-    Text::FontWeight,
+    Gfx::FontWeight,
     RelativeFontWeight>;
 
 export struct FontWeight : _FontWeight {
@@ -184,28 +184,28 @@ export struct FontWeight : _FontWeight {
     }
 
     FontWeight()
-        : FontWeight(Text::FontWeight::REGULAR) {
+        : FontWeight(Gfx::FontWeight::REGULAR) {
     }
 
     void repr(Io::Emit& e) const {
-        e("{}", static_cast<Union<Text::FontWeight, RelativeFontWeight>>(*this));
+        e("{}", static_cast<Union<Gfx::FontWeight, RelativeFontWeight>>(*this));
     }
 
-    Text::FontWeight resolve() const {
+    Gfx::FontWeight resolve() const {
         if (is<RelativeFontWeight>())
-            return Text::FontWeight::REGULAR;
+            return Gfx::FontWeight::REGULAR;
 
-        return unwrap<Text::FontWeight>();
+        return unwrap<Gfx::FontWeight>();
     }
 
-    Text::FontWeight resolve(Text::FontWeight const& parent) const {
+    Gfx::FontWeight resolve(Gfx::FontWeight const& parent) const {
         if (is<RelativeFontWeight>()) {
             if (unwrap<RelativeFontWeight>() == RelativeFontWeight::LIGHTER)
                 return parent.lighter();
             return parent.bolder();
         }
 
-        return unwrap<Text::FontWeight>();
+        return unwrap<Gfx::FontWeight>();
     }
 };
 
@@ -219,15 +219,15 @@ struct ValueParser<FontWeight> {
             return Error::invalidData("unexpected end of input");
 
         if (c.skip(Css::Token::ident("normal"))) {
-            return Ok(Text::FontWeight::REGULAR);
+            return Ok(Gfx::FontWeight::REGULAR);
         } else if (c.skip(Css::Token::ident("bold"))) {
-            return Ok(Text::FontWeight::BOLD);
+            return Ok(Gfx::FontWeight::BOLD);
         } else if (c.skip(Css::Token::ident("bolder"))) {
             return Ok(RelativeFontWeight::BOLDER);
         } else if (c.skip(Css::Token::ident("lighter"))) {
             return Ok(RelativeFontWeight::LIGHTER);
         } else {
-            return Ok(Text::FontWeight{static_cast<u16>(clamp(try$(parseValue<Integer>(c)), 0, 1000))});
+            return Ok(Gfx::FontWeight{static_cast<u16>(clamp(try$(parseValue<Integer>(c)), 0, 1000))});
         }
     }
 };
@@ -440,7 +440,7 @@ struct ValueParser<FontFamily> {
 
 export struct FontProps {
     Vec<FontFamily> families = {"sans-serif"_sym};
-    Text::FontWeight weight = Text::FontWeight::REGULAR;
+    Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;
     FontWidth width = FontWidth::NORMAL;
     FontStyle style = FontStyle::NORMAL;
     FontSize size = FontSize::MEDIUM;

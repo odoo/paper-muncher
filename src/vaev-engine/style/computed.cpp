@@ -1,6 +1,6 @@
 module;
 
-#include <karm-text/font.h>
+#include <karm-gfx/font.h>
 
 export module Vaev.Engine:style.computed;
 
@@ -12,7 +12,7 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/css-cascade/#computed
 export struct ComputedValues {
-    Rc<Text::Fontface> fontFace;
+    Rc<Gfx::Fontface> fontFace;
 };
 
 } // namespace Vaev::Style

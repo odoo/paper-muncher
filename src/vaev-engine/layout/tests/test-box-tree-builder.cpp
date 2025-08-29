@@ -1,5 +1,5 @@
 #include <karm-test/macros.h>
-#include <karm-text/prose.h>
+#include <karm-gfx/prose.h>
 
 import Vaev.Engine;
 import Karm.Gc;
@@ -78,7 +78,7 @@ struct FakeInlineBox {
             ComparableInlineBox comparableInlineBox;
 
             Vec<MutCursor<ComparableInlineBox>> stackInlineBoxes = {&comparableInlineBox};
-            Vec<Opt<Rc<Text::Prose::Span>>> stackSpans = {NONE};
+            Vec<Opt<Rc<Gfx::Prose::Span>>> stackSpans = {NONE};
             for (auto& span : inlineBox.prose->_spans) {
                 while (true) {
                     if (span->parent == NONE) {
