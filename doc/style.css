@@ -5,3 +5,7 @@ nav a {
 nav a:first-child {
     margin-inline-start: 0;
 }
+
+body {
+    --accent: #0078d4;
+}
