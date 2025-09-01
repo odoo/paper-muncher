@@ -247,6 +247,17 @@ button {
     display: inline-block;
 }
 
+/* 15.3.11 MARK: The hr element --------------------------------------------- */
+
+hr {
+    color: gray;
+    border-style: solid;
+    border-width: 1px;
+    margin-block: 0.5em;
+    margin-inline: auto;
+    overflow: hidden;
+}
+
 /* 16.0 MARK: Obsolete features --------------------------------------------- */
 /* https://html.spec.whatwg.org/multipage/obsolete.html#center */
 
