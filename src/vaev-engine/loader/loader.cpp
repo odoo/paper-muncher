@@ -11,6 +11,7 @@ import Karm.Gc;
 import Karm.Http;
 import Karm.Core;
 import Karm.Debug;
+import Karm.Md;
 
 import :dom;
 import :html;
@@ -49,6 +50,21 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url
         co_try$(parser.parse(scan, Html::NAMESPACE, *dom));
 
         co_return Ok(dom);
+    } else if (mime->is("image/svg+xml"_mime)) {
+        Io::SScan scan{buf};
+        Xml::XmlParser parser{heap};
+        co_try$(parser.parse(scan, Svg::NAMESPACE, *dom));
+
+        co_return Ok(dom);
+    } else if (mime->is("text/markdown"_mime)) {
+        auto doc = Md::parse(buf);
+        logDebug("markdown: {}", doc);
+        auto html = Md::renderHtml(doc);
+
+        Html::HtmlParser parser{heap, dom};
+        parser.write(html);
+
+        co_return Ok(dom);
     } else if (mime->is("text/plain"_mime)) {
         auto text = heap.alloc<Dom::Text>();
         text->appendData(buf);
@@ -57,13 +73,6 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url
         body->appendChild(text);
 
         dom->appendChild(body);
-
-        co_return Ok(dom);
-    } else if (mime->is("image/svg+xml"_mime)) {
-        Io::SScan scan{buf};
-        Xml::XmlParser parser{heap};
-        co_try$(parser.parse(scan, Svg::NAMESPACE, *dom));
-
         co_return Ok(dom);
     } else {
         logError("unsupported MIME type: {}", mime);
