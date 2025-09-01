@@ -1,12 +1,14 @@
 module;
 
+#include <karm-gfx/font.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
-#include <karm-font/database.h>
+#include <karm-mime/url.h>
 
 export module Vaev.Engine:style.computer;
 
 import Karm.Gc;
+import Karm.Font;
 import :dom;
 import :style.computed;
 import :style.specified;

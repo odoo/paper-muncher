@@ -5,7 +5,6 @@ module;
 #include <karm-math/trans.h>
 #include <karm-sys/time.h>
 #include <karm-gfx/colors.h>
-#include <karm-font/database.h>
 
 export module Vaev.Engine:driver.print;
 
@@ -13,6 +12,7 @@ import Karm.Core;
 import Karm.Gc;
 import Karm.Print;
 import Karm.Scene;
+import Karm.Font;
 
 import :style;
 import :layout;
@@ -131,7 +131,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
     auto media = _constructMedia(settings);
 
     Font::Database db;
-    if (not db.loadAll())
+    if (not db.loadSystemFonts())
         logWarn("not all fonts were properly loaded into database");
 
     Style::Computer computer{

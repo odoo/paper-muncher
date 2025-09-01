@@ -1,6 +1,5 @@
 module;
 
-#include <karm-font/loader.h>
 #include <karm-gfx/prose.h>
 #include <karm-gfx/colors.h>
 #include <karm-logger/logger.h>
@@ -9,6 +8,7 @@ export module Vaev.Engine:layout.backgroundCanvas;
 
 import Karm.Image;
 import Karm.Gc;
+import Karm.Font;
 import :style;
 import :dom;
 import :layout.values;
