@@ -88,47 +88,8 @@ void _paintMargins(Style::PageSpecifiedValues& pageStyle, RectAu pageRect, RectA
     _paintMainMargin(pageStyle, stack, rightRect, Style::PageArea::RIGHT, {Style::PageArea::RIGHT_TOP, Style::PageArea::RIGHT_MIDDLE, Style::PageArea::RIGHT_BOTTOM});
 }
 
-static Style::Media _constructMedia(Print::Settings const& settings) {
-    return {
-        .type = MediaType::SCREEN,
-        .width = Au{settings.paper.width},
-        .height = Au{settings.paper.height},
-        .aspectRatio = settings.paper.width / (f64)settings.paper.height,
-        .orientation = settings.orientation,
-
-        .resolution = Resolution{settings.scale, Resolution::X},
-        .scan = Scan::PROGRESSIVE,
-        .grid = false,
-        .update = Update::FAST,
-
-        .overflowBlock = OverflowBlock::SCROLL,
-        .overflowInline = OverflowInline::SCROLL,
-
-        .color = 8,
-        .colorIndex = 0,
-        .monochrome = 0,
-        .colorGamut = ColorGamut::SRGB,
-        .pointer = Pointer::FINE,
-        .hover = Hover::HOVER,
-        .anyPointer = Pointer::FINE,
-        .anyHover = Hover::HOVER,
-
-        .prefersReducedMotion = ReducedMotion::NO_PREFERENCE,
-        .prefersReducedTransparency = ReducedTransparency::NO_PREFERENCE,
-        .prefersContrast = Contrast::NO_PREFERENCE,
-        .forcedColors = Colors::NONE,
-        .prefersColorScheme = ColorScheme::LIGHT,
-        .prefersReducedData = ReducedData::NO_PREFERENCE,
-
-        // NOTE: Deprecated Media Features
-        .deviceWidth = Au{settings.paper.width},
-        .deviceHeight = Au{settings.paper.height},
-        .deviceAspectRatio = settings.paper.width / settings.paper.height,
-    };
-}
-
 export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
-    auto media = _constructMedia(settings);
+    auto media = Style::Media::forPrint(settings);
 
     Font::Database db;
     if (not db.loadSystemFonts())
@@ -170,12 +131,9 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
 
         auto pageStyle = computer.computeFor(initialStyle, page);
         RectAu pageRect{
-            media.width / Au{media.resolution.toDppx()},
-            media.height / Au{media.resolution.toDppx()}
+            media.width / Au{media.resolution.toDppx()},  
+            media.height / Au{media.resolution.toDppx()}  
         };
-
-        auto pageSize = pageRect.size().cast<f64>();
-
         auto pageStack = makeRc<Scene::Stack>();
 
         InsetsAu pageMargin;
@@ -234,7 +192,16 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
         Layout::paint(fragment, *pageStack);
         pageStack->prepare();
 
-        co_yield Print::Page(settings.paper, makeRc<Scene::Clear>(makeRc<Scene::Transform>(pageStack, Math::Trans2f::scale(media.resolution.toDppx())), canvasColor));
+        co_yield Print::Page(
+            settings.paper,
+            makeRc<Scene::Clear>(
+                makeRc<Scene::Transform>(
+                    pageStack,
+                    Math::Trans2f::scale(media.resolution.toDppx())
+                ),
+                canvasColor
+            )
+        );
 
         if (outFragmentation.completelyLaidOut)
             break;

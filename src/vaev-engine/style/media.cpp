@@ -138,6 +138,123 @@ export struct Media {
     Au deviceWidth;
     Au deviceHeight;
     Number deviceAspectRatio;
+
+    static Media forView(Math::Vec2i viewport, ColorScheme colorScheme) {
+        return {
+            .type = MediaType::SCREEN,
+            .width = Au{viewport.width},
+            .height = Au{viewport.height},
+            .aspectRatio = viewport.width / (f64)viewport.height,
+            .orientation = Print::Orientation::LANDSCAPE,
+
+            .resolution = Resolution::fromDpi(96),
+            .scan = Scan::PROGRESSIVE,
+            .grid = false,
+            .update = Update::FAST,
+
+            .overflowBlock = OverflowBlock::SCROLL,
+            .overflowInline = OverflowInline::SCROLL,
+
+            .color = 8,
+            .colorIndex = 0,
+            .monochrome = 0,
+            .colorGamut = ColorGamut::SRGB,
+            .pointer = Pointer::FINE,
+            .hover = Hover::HOVER,
+            .anyPointer = Pointer::FINE,
+            .anyHover = Hover::HOVER,
+
+            .prefersReducedMotion = ReducedMotion::NO_PREFERENCE,
+            .prefersReducedTransparency = ReducedTransparency::NO_PREFERENCE,
+            .prefersContrast = Contrast::NO_PREFERENCE,
+            .forcedColors = Colors::NONE,
+            .prefersColorScheme = colorScheme,
+            .prefersReducedData = ReducedData::NO_PREFERENCE,
+
+            // NOTE: Deprecated Media Features
+            .deviceWidth = Au{viewport.width},
+            .deviceHeight = Au{viewport.height},
+            .deviceAspectRatio = viewport.width / (f64)viewport.height,
+        };
+    }
+
+    static Media forRender(Vec2Au viewport, Resolution scale) {
+        return {
+            .type = MediaType::SCREEN,
+            .width = viewport.width,
+            .height = viewport.height,
+            .aspectRatio = Number{viewport.width} / Number{viewport.height},
+            .orientation = Print::Orientation::PORTRAIT,
+
+            .resolution = scale,
+            .scan = Scan::PROGRESSIVE,
+            .grid = false,
+            .update = Update::NONE,
+
+            .overflowBlock = OverflowBlock::NONE,
+            .overflowInline = OverflowInline::NONE,
+
+            .color = 8,
+            .colorIndex = 0,
+            .monochrome = 0,
+            .colorGamut = ColorGamut::SRGB,
+            .pointer = Pointer::NONE,
+            .hover = Hover::NONE,
+            .anyPointer = Pointer::NONE,
+            .anyHover = Hover::NONE,
+
+            .prefersReducedMotion = ReducedMotion::REDUCE,
+            .prefersReducedTransparency = ReducedTransparency::REDUCE,
+            .prefersContrast = Contrast::MORE,
+            .forcedColors = Colors::NONE,
+            .prefersColorScheme = ColorScheme::LIGHT,
+            .prefersReducedData = ReducedData::NO_PREFERENCE,
+
+            // NOTE: Deprecated Media Features
+            .deviceWidth = viewport.width,
+            .deviceHeight = viewport.height,
+            .deviceAspectRatio = Number{viewport.width} / Number{viewport.height},
+        };
+    }
+
+    static Media forPrint(Print::Settings const& settings) {
+        return {
+            .type = MediaType::PRINT,
+            .width = Au{settings.paper.width},
+            .height = Au{settings.paper.height},
+            .aspectRatio = settings.paper.width / f64{settings.paper.height},
+            .orientation = settings.orientation,
+
+            .resolution = Resolution{settings.scale, Resolution::X},
+            .scan = Scan::PROGRESSIVE,
+            .grid = false,
+            .update = Update::FAST,
+
+            .overflowBlock = OverflowBlock::SCROLL,
+            .overflowInline = OverflowInline::SCROLL,
+
+            .color = 8,
+            .colorIndex = 0,
+            .monochrome = 0,
+            .colorGamut = ColorGamut::SRGB,
+            .pointer = Pointer::FINE,
+            .hover = Hover::HOVER,
+            .anyPointer = Pointer::FINE,
+            .anyHover = Hover::HOVER,
+
+            .prefersReducedMotion = ReducedMotion::NO_PREFERENCE,
+            .prefersReducedTransparency = ReducedTransparency::NO_PREFERENCE,
+            .prefersContrast = Contrast::NO_PREFERENCE,
+            .forcedColors = Colors::NONE,
+            .prefersColorScheme = ColorScheme::LIGHT,
+            .prefersReducedData = ReducedData::NO_PREFERENCE,
+
+            // NOTE: Deprecated Media Features
+            .deviceWidth = Au{settings.paper.width},
+            .deviceHeight = Au{settings.paper.height},
+            .deviceAspectRatio = settings.paper.width / settings.paper.height,
+        };
+    }
 };
 
 // MARK: Media Features --------------------------------------------------------
@@ -492,9 +609,9 @@ export struct MediaQuery {
 
         bool match(Media const& media) const {
             switch (type) {
-            case Type::AND:
+            case AND:
                 return lhs->match(media) and rhs->match(media);
-            case Type::OR:
+            case OR:
                 return lhs->match(media) or rhs->match(media);
             default:
                 return false;
@@ -519,9 +636,9 @@ export struct MediaQuery {
 
         bool match(Media const& media) const {
             switch (type) {
-            case Type::NOT:
+            case NOT:
                 return not query->match(media);
-            case Type::ONLY:
+            case ONLY:
                 return query->match(media);
             default:
                 return false;
