@@ -120,45 +120,6 @@ static Async::Task<> printAsync(
     co_return Ok();
 }
 
-static Vaev::Style::Media constructMediaForRender(Vaev::Resolution scale, Vec2Au size) {
-    return {
-        .type = Vaev::MediaType::SCREEN,
-        .width = size.width,
-        .height = size.height,
-        .aspectRatio = (Vaev::Number)size.width / (Vaev::Number)size.height,
-        .orientation = Print::Orientation::PORTRAIT,
-
-        .resolution = scale,
-        .scan = Vaev::Scan::PROGRESSIVE,
-        .grid = false,
-        .update = Vaev::Update::NONE,
-
-        .overflowBlock = Vaev::OverflowBlock::NONE,
-        .overflowInline = Vaev::OverflowInline::NONE,
-
-        .color = 8,
-        .colorIndex = 0,
-        .monochrome = 0,
-        .colorGamut = Vaev::ColorGamut::SRGB,
-        .pointer = Vaev::Pointer::NONE,
-        .hover = Vaev::Hover::NONE,
-        .anyPointer = Vaev::Pointer::NONE,
-        .anyHover = Vaev::Hover::NONE,
-
-        .prefersReducedMotion = Vaev::ReducedMotion::REDUCE,
-        .prefersReducedTransparency = Vaev::ReducedTransparency::REDUCE,
-        .prefersContrast = Vaev::Contrast::MORE,
-        .forcedColors = Vaev::Colors::NONE,
-        .prefersColorScheme = Vaev::ColorScheme::LIGHT,
-        .prefersReducedData = Vaev::ReducedData::NO_PREFERENCE,
-
-        // NOTE: Deprecated Media Features
-        .deviceWidth = size.width,
-        .deviceHeight = size.height,
-        .deviceAspectRatio = static_cast<Vaev::Number>(size.width) / static_cast<Vaev::Number>(size.height),
-    };
-}
-
 struct RenderOption {
     Vaev::Resolution scale = Vaev::Resolution::fromDpi(96);
     Vaev::Resolution density = Vaev::Resolution::fromDpi(96);
@@ -178,18 +139,12 @@ static Async::Task<> renderAsync(
     auto dom = co_trya$(Vaev::Loader::fetchDocumentAsync(heap, *client, input));
 
     Vaev::Layout::Resolver resolver;
-    resolver.viewport.dpi = options.scale;
-
     Vec2Au imageSize = {
         resolver.resolve(options.width),
         resolver.resolve(options.height),
     };
 
-    auto media = constructMediaForRender(options.scale, imageSize);
-    auto [layout, scene, frags] = Vaev::Driver::render(*dom, media, {.small = imageSize});
-
-    auto surface = scene->snapshot(imageSize.cast<f64>(), options.density.toDppx());
-
+    auto surface = Vaev::Driver::renderToSurface(dom, imageSize, options.scale);
     Io::BufferWriter bw;
     co_try$(
         Image::save(
