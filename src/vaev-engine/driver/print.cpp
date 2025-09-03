@@ -118,7 +118,6 @@ Pair<Vec<Layout::Breakpoint>, Vec<PageLayoutInfos>> collectBreakPointsAndRunning
             .number = pageNumber++,
             .blank = false,
         };
-        yap("breaking page {}", pageNumber);
 
         Rc<Style::PageSpecifiedValues> pageStyle = context.computer.computeFor(context.initialStyle, page);
         RectAu pageRect{
