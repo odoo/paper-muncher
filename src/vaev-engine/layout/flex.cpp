@@ -617,16 +617,6 @@ struct FlexLine {
     }
 };
 
-static void lookForRunningPosition(Input& input, Box& box) {
-    if (not input.runningPosition)
-        return;
-
-    if (box.style->position.is<RunningPosition>()) {
-        auto& runningMap = input.runningPosition.peek();
-        runningMap.add(input.pageNumber, box);
-    }
-}
-
 struct FlexFormatingContext : FormatingContext {
     FlexProps _flex;
     FlexAxis fa{_flex.isRowOriented()};

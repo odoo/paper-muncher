@@ -2,8 +2,8 @@ module;
 
 #include <karm-gfx/borders.h>
 #include <karm-gfx/outline.h>
-#include <karm-math/au.h>
 #include <karm-logger/logger.h>
+#include <karm-math/au.h>
 
 export module Vaev.Engine:layout.paint;
 
@@ -183,7 +183,7 @@ Rc<Scene::Node> _paintSVGRoot(SVGRootFrag& svgRoot, Gfx::Color currentColor) {
 static void _paintFrag(Frag& frag, Scene::Stack& stack) {
     auto& s = frag.style();
 
-    if (s.visibility == Visibility::HIDDEN or s.position.is<RunningPosition>())
+    if (s.visibility == Visibility::HIDDEN)
         return;
 
     _paintFragBordersAndBackgrounds(frag, stack);

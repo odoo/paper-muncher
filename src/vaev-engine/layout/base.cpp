@@ -709,10 +709,10 @@ struct RunningPositionMap {
         auto list = content.get(id);
 
         switch (elt.target) {
-        case ElementContent::UNDEFINED:
+        case ElementContent::Target::UNDEFINED:
             return Ok(list[0]);
             break;
-        case ElementContent::START:
+        case ElementContent::Target::START:
             for (usize i = 0; i < list.len(); i++) {
                 auto elt = list[i];
                 if (elt.page == currentPage and i > 0) {
@@ -720,12 +720,12 @@ struct RunningPositionMap {
                 }
             }
             return Ok(list[0]);
-        case ElementContent::FIRST:
-        case ElementContent::FIRST_EXCEPT: {
+        case ElementContent::Target::FIRST:
+        case ElementContent::Target::FIRST_EXCEPT: {
             auto elements = _searchPage(list, currentPage);
             return Ok(elements[0]);
         }
-        case ElementContent::LAST: {
+        case ElementContent::Target::LAST: {
             auto elements = _searchPage(list, currentPage);
             return Ok(elements[elements.len() - 1]);
         }
@@ -852,6 +852,16 @@ export struct Input {
         return copy;
     }
 };
+
+export void lookForRunningPosition(Input& input, Box& box) {
+    if (not input.runningPosition)
+        return;
+
+    if (box.style->position.is<RunningPosition>()) {
+        auto& runningMap = input.runningPosition.peek();
+        runningMap.add(input.pageNumber, box);
+    }
+}
 
 // https://drafts.csswg.org/css-align-3/#baseline-set
 // https://drafts.csswg.org/css-writing-modes-3/#baseline

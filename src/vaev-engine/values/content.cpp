@@ -1,18 +1,20 @@
 module;
 
-import Karm.Core;
 #include <karm-core/macros.h>
 
 export module Vaev.Engine:values.content;
 
+import Karm.Core;
 import :css;
 import :values.keywords;
 import :values.primitives;
 
 namespace Vaev {
 
+// https://www.w3.org/TR/css-content-3/
+// https://www.w3.org/TR/css-gcpm-3/#funcdef-element
 export struct ElementContent {
-    enum Target {
+    enum struct Target {
         UNDEFINED,
         FIRST,
         START,
@@ -21,9 +23,9 @@ export struct ElementContent {
     };
 
     CustomIdent customIdent = {""_sym};
-    Target target = UNDEFINED;
+    Target target = Target::UNDEFINED;
 
-    explicit ElementContent(CustomIdent customIdent, Target target = UNDEFINED)
+    explicit ElementContent(CustomIdent customIdent, Target target = Target::UNDEFINED)
         : customIdent(customIdent), target(target) {}
 
     void repr(Io::Emit& e) const {
@@ -31,6 +33,7 @@ export struct ElementContent {
     }
 };
 
+// https://drafts.csswg.org/css-lists/#auto-numbering
 export struct Counter {
     enum struct Type {
         PAGE,

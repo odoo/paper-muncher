@@ -24,7 +24,7 @@ using namespace Karm;
 
 namespace Vaev::Driver {
 
-void _paintCornerMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea area, usize currentPage, auto& runningPosition) {
+void _paintCornerMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea area, usize currentPage, Layout::RunningPositionMap& runningPosition) {
     Layout::Tree tree{
         .root = Layout::buildForPseudoElement(pageStyle.area(area), currentPage, runningPosition),
         .viewport = Layout::Viewport{.small = rect.size()}
@@ -41,7 +41,7 @@ void _paintCornerMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& sta
     Layout::paint(frag, stack);
 }
 
-void _paintMainMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas, usize currentPage, auto& runningPosition) {
+void _paintMainMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas, usize currentPage, Layout::RunningPositionMap& runningPosition) {
     auto box = Layout::buildForPseudoElement(pageStyle.area(mainArea), currentPage, runningPosition);
     for (auto subArea : subAreas) {
         box.add(Layout::buildForPseudoElement(pageStyle.area(subArea), currentPage, runningPosition));
@@ -50,6 +50,7 @@ void _paintMainMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack
         .root = std::move(box),
         .viewport = Layout::Viewport{.small = rect.size()}
     };
+    yap("coucou  {}", tree.root);
     auto [_, frag] = Layout::layoutCreateFragment(
         tree,
         {
@@ -62,7 +63,7 @@ void _paintMainMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack
     Layout::paint(frag, stack);
 }
 
-void _paintMargins(Style::PageSpecifiedValues& pageStyle, RectAu pageRect, RectAu pageContent, Scene::Stack& stack, usize currentPage, auto& runningPosition) {
+void _paintMargins(Style::PageSpecifiedValues& pageStyle, RectAu pageRect, RectAu pageContent, Scene::Stack& stack, usize currentPage, Layout::RunningPositionMap& runningPosition) {
     // Compute all corner rects
     auto topLeftMarginCornerRect = RectAu::fromTwoPoint(pageRect.topStart(), pageContent.topStart());
     auto topRightMarginCornerRect = RectAu::fromTwoPoint(pageRect.topEnd(), pageContent.topEnd());
@@ -102,7 +103,7 @@ struct PageLayoutInfos {
     Rc<Style::PageSpecifiedValues> pageStyle;
 };
 
-Pair<Vec<Layout::Breakpoint>, Vec<PageLayoutInfos>> collectBreakPointsAndRunningPositions(auto& runningPosition, PaginationContext& context) {
+Pair<Vec<Layout::Breakpoint>, Vec<PageLayoutInfos>> collectBreakPointsAndRunningPositions(Layout::RunningPositionMap& runningPosition, PaginationContext& context) {
     usize pageNumber = 0;
     Layout::Breakpoint prevBreakpoint{
         .endIdx = 0,

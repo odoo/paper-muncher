@@ -2,8 +2,6 @@ module;
 
 #include <karm-gfx/prose.h>
 
-#include "karm-logger/logger.h"
-
 export module Vaev.Engine:layout.inline_;
 
 import :values;
@@ -35,16 +33,6 @@ struct InlineFormatingContext : FormatingContext {
             .xMiddle = Au{metrics.xMiddleBaseline()} + baselinePosition,
             .capHeight = Au{metrics.captop} + baselinePosition,
         };
-    }
-
-    static void lookForRunningPosition(Input& input, Box& box) {
-        if (not input.runningPosition)
-            return;
-
-        if (box.style->position.is<RunningPosition>()) {
-            auto& runningMap = input.runningPosition.peek();
-            runningMap.add(input.pageNumber, box);
-        }
     }
 
     virtual Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {

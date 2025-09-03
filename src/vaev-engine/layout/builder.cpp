@@ -3,6 +3,7 @@ module;
 #include <karm-gfx/prose.h>
 #include <karm-logger/logger.h>
 #include <karm-mime/url.h>
+#include <utility>
 
 export module Vaev.Engine:layout.builder;
 
@@ -874,7 +875,9 @@ export Box buildForPseudoElement(Dom::PseudoElement& el, usize currentPage, Runn
     } else if (el.specifiedValues()->content.is<ElementContent>()) {
         auto elt = el.specifiedValues()->content.unwrap<ElementContent>();
         if (auto box = runningPos.match(elt, currentPage)) {
-            return box.unwrap().structure;
+            Box marginBox = {el.specifiedValues(), el.computedValues()->fontFace, nullptr};
+            marginBox.add(std::move(box.unwrap().structure));
+            return marginBox;
         }
     } else if (el.specifiedValues()->content.is<Counter>()) {
         auto elt = el.specifiedValues()->content.unwrap<Counter>();
