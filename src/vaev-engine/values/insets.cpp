@@ -1,5 +1,7 @@
 module;
 
+import Karm.Core;
+
 #include <karm-math/insets.h>
 
 export module Vaev.Engine:values.insets;
@@ -15,39 +17,49 @@ using namespace Karm;
 namespace Vaev {
 
 // MARK: Position --------------------------------------------------------------
-// https://www.w3.org/TR/CSS22/visuren.html#propdef-position
-export enum struct Position {
-    STATIC,
 
-    RELATIVE,
-    ABSOLUTE,
-    FIXED,
-    STICKY,
+export struct RunningPosition {
+    CustomIdent customIdent;
 
-    _LEN,
+    void repr(Io::Emit& e) const {
+        e("running '{}'", customIdent);
+    }
 };
 
+// https://www.w3.org/TR/CSS22/visuren.html#propdef-position
+export using Position = Union<Keywords::Static, Keywords::Relative, Keywords::Absolute, Keywords::Fixed, Keywords::Sticky, RunningPosition>;
+
 export bool impliesRemovingFromFlow(Position position) {
-    return position == Position::ABSOLUTE || position == Position::FIXED;
+    return position == Keywords::ABSOLUTE || position == Keywords::FIXED || position.is<RunningPosition>();
 }
 
 export template <>
 struct ValueParser<Position> {
+    // https://drafts.csswg.org/css-position-3/#propdef-position
     static Res<Position> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
         if (c.skip(Css::Token::ident("static")))
-            return Ok(Position::STATIC);
+            return Ok(Keywords::STATIC);
         else if (c.skip(Css::Token::ident("relative")))
-            return Ok(Position::RELATIVE);
+            return Ok(Keywords::RELATIVE);
         else if (c.skip(Css::Token::ident("absolute")))
-            return Ok(Position::ABSOLUTE);
+            return Ok(Keywords::ABSOLUTE);
         else if (c.skip(Css::Token::ident("fixed")))
-            return Ok(Position::FIXED);
+            return Ok(Keywords::FIXED);
         else if (c.skip(Css::Token::ident("sticky")))
-            return Ok(Position::STICKY);
-        else
+            return Ok(Keywords::STICKY);
+        else if (c->type == Css::Sst::FUNC and c->prefix == Css::Token::function("running(")) {
+            Cursor<Css::Sst> cur = c->content;
+            auto res = parseValue<CustomIdent>(cur);
+            if (not res) {
+                return Error::invalidData("ill formed custom-ident in running position");
+            }
+            c.next();
+            return Ok(RunningPosition{res.take()});
+
+        } else
             return Error::invalidData("expected position");
     }
 };
