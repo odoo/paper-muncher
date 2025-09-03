@@ -737,7 +737,7 @@ struct RunningPositionMap {
         // binary search of all running positions that match the page
 
         auto res = search(list, [&](RunningPositionInfo const& info) {
-            if (info.page <= page and page < info.page) {
+            if (info.page == page) {
                 return std::strong_ordering::equal;
             }
             return info.page <=> page;
