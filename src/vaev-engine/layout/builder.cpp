@@ -1,7 +1,7 @@
 module;
 
-#include <karm-logger/logger.h>
 #include <karm-gfx/prose.h>
+#include <karm-logger/logger.h>
 #include <karm-mime/url.h>
 
 export module Vaev.Engine:layout.builder;
@@ -392,19 +392,19 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 }
 
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el);
-void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group* group);
+void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group);
 
-void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group* group) {
+void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group& group) {
     if (SVG::isShape(el->qualifiedName)) {
-        group->add(SVG::Shape::build(el->specifiedValues(), el->qualifiedName));
+        group.add(SVG::Shape::build(el->specifiedValues(), el->qualifiedName));
     } else if (el->qualifiedName == Svg::G_TAG) {
         SVG::Group nestedGroup{el->specifiedValues()};
-        buildSVGAggregate(el, &nestedGroup);
-        group->add(std::move(nestedGroup));
+        buildSVGAggregate(el, nestedGroup);
+        group.add(std::move(nestedGroup));
     } else if (el->qualifiedName == Svg::SVG_TAG) {
         SVGRoot newSvgRoot{el->specifiedValues()};
-        buildSVGAggregate(el, &newSvgRoot);
-        group->add(std::move(newSvgRoot));
+        buildSVGAggregate(el, newSvgRoot);
+        group.add(std::move(newSvgRoot));
     } else if (el->qualifiedName == Svg::FOREIGN_OBJECT_TAG) {
         Box box{el->specifiedValues(), el};
 
@@ -422,14 +422,14 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group* group) {
 
         buildBlockFlowFromElement(bc, *el);
 
-        group->add(std::move(box));
+        group.add(std::move(box));
     } else {
         // TODO
         logWarn("cannot build element into svg tree: {}", el->qualifiedName);
     }
 }
 
-void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group* group) {
+void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group) {
     for (auto child = el->firstChild(); child; child = child->nextSibling()) {
         if (auto el = child->is<Dom::Element>()) {
             buildSVGElement(*el, group);
@@ -440,7 +440,7 @@ void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group* group) {
 
 SVGRoot _buildSVG(Gc::Ref<Dom::Element> el) {
     SVGRoot svgRoot{el->specifiedValues()};
-    buildSVGAggregate(el, &svgRoot);
+    buildSVGAggregate(el, svgRoot);
     return svgRoot;
 }
 
