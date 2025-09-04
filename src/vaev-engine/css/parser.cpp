@@ -115,8 +115,7 @@ Opt<Sst> consumeRule(Lexer& lex) {
         switch (lex.peek().type) {
         case Token::END_OF_FILE:
             logError("unexpected end of file");
-            lex.next();
-            return rule;
+            return NONE;
 
         case Token::LEFT_CURLY_BRACKET: {
             rule.prefix = std::move(prefix);
