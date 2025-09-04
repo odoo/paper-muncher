@@ -2404,3 +2404,41 @@
         </div>
     </rendering>
 </test>
+
+<test name="flex: percentage sizes and inline" size="320">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                * {
+                    font-size: 0px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+    <rendering>
+        <div style="width: 100px; height: 100px; background-color: green;"></div>
+    </rendering>
+    <rendering>
+        <div style="display: flex;">
+            <div style="display: flex;">
+                <div style="width: 100%;">
+                    <div style="display: inline-block; width: 50px; height: 100px; background-color: green;"></div>
+                    <div style="display: inline-block; width: 50px; height: 100px; background-color: green;"></div>
+                </div>
+            </div>
+        </div>
+    </rendering>
+</test>
