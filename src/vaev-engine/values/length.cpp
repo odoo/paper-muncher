@@ -174,4 +174,37 @@ struct ValueParser<Length> {
     }
 };
 
+Au resolveAbsoluteLength(Length const& value) {
+    if (not value.isAbsolute())
+        panic("expected absolute length");
+
+    switch (value.unit()) {
+        // Absolute
+    // https://drafts.csswg.org/css-values/#absolute-lengths
+    case Length::CM:
+        return Au::fromFloatNearest(value.val() * 96 / 2.54);
+
+    case Length::MM:
+        return Au::fromFloatNearest(value.val() * 96 / 25.4);
+
+    case Length::Q:
+        return Au::fromFloatNearest(value.val() * 96 / 101.6);
+
+    case Length::IN:
+        return Au::fromFloatNearest(value.val() * 96);
+
+    case Length::PT:
+        return Au::fromFloatNearest(value.val() * 96 / 72.0);
+
+    case Length::PC:
+        return Au::fromFloatNearest(value.val() * 96 / 6.0);
+
+    case Length::PX:
+        return Au::fromFloatNearest(value.val());
+
+    default:
+        panic("invalid absolute length unit");
+    }
+}
+
 } // namespace Vaev
