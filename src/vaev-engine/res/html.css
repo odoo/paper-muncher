@@ -92,6 +92,48 @@ xmp {
 /* 15.3.4 MARK: Phrasing content -------------------------------------------- */
 /* https://html.spec.whatwg.org/multipage/rendering.html#phrasing-content-3   */
 
+cite,
+dfn,
+em,
+i,
+var {
+    font-style: italic;
+}
+
+b,
+strong {
+    font-weight: bolder;
+}
+
+code,
+kbd,
+samp,
+tt {
+    font-family: monospace;
+}
+
+big {
+    font-size: larger;
+}
+
+small {
+    font-size: smaller;
+}
+
+sub {
+    vertical-align: sub;
+}
+
+sup {
+    vertical-align: super;
+}
+
+sub,
+sup {
+    line-height: normal;
+    font-size: smaller;
+}
+
 :link {
     color: #0000EE;
 }
@@ -181,6 +223,10 @@ ul {
 
 dd {
     margin-inline-start: 40px;
+}
+
+dir, menu, ol, ul {
+    padding-inline-start: 40px;
 }
 
 

@@ -2,10 +2,10 @@ module;
 
 #include <karm-gfx/borders.h>
 #include <karm-gfx/colors.h>
+#include <karm-gfx/font.h>
 #include <karm-math/au.h>
 #include <karm-math/insets.h>
 #include <karm-mime/url.h>
-#include <karm-gfx/font.h>
 
 export module Vaev.Engine:style.props;
 
@@ -2537,6 +2537,48 @@ export struct PaddingLeftProp {
     }
 };
 
+export struct PaddingInlineStart {
+    CalcValue<PercentOr<Length>> value = initial();
+
+    static Str name() { return "padding-inline-start"; }
+
+    static Length initial() { return Length{}; }
+
+    void apply(SpecifiedValues& c) const {
+        c.padding.cow().start = value;
+    }
+
+    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
+        return c.padding->start;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+        return Ok();
+    }
+};
+
+export struct PaddingInlineEnd {
+    CalcValue<PercentOr<Length>> value = initial();
+
+    static Str name() { return "padding-inline-end"; }
+
+    static Length initial() { return Length{}; }
+
+    void apply(SpecifiedValues& c) const {
+        c.padding.cow().end = value;
+    }
+
+    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
+        return c.padding->end;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+        return Ok();
+    }
+};
+
 export struct PaddingProp {
     Math::Insets<CalcValue<PercentOr<Length>>> value = initial();
 
@@ -3588,6 +3630,8 @@ using _StyleProp = Union<
     PaddingRightProp,
     PaddingBottomProp,
     PaddingLeftProp,
+    PaddingInlineStart,
+    PaddingInlineEnd,
     PaddingProp,
 
     // Positioning
