@@ -1,8 +1,8 @@
 module;
 
 #include <karm-gfx/borders.h>
-#include <karm-logger/logger.h>
 #include <karm-gfx/prose.h>
+#include <karm-logger/logger.h>
 
 module Vaev.Engine;
 
@@ -59,6 +59,10 @@ Output _contentLayout(Tree& tree, Box& box, Input input, usize startAt, Opt<usiz
 }
 
 InsetsAu computeMargins(Tree& tree, Box& box, Input input) {
+    // Boxes that make up a table do not have margins.
+    if (box.style->display.isTableInternal())
+        return {};
+
     InsetsAu res;
     auto margin = box.style->margin;
 
@@ -90,6 +94,10 @@ InsetsAu computeBorders(Tree& tree, Box& box) {
 }
 
 static InsetsAu _computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
+    // In a table only table cell have padding
+    if (box.style->display.isTableInternal() and box.style->display != Display::TABLE_CELL)
+        return {};
+
     InsetsAu res;
     auto padding = box.style->padding;
 

@@ -186,7 +186,7 @@ export struct Display {
         return _internal;
     }
 
-    bool operator==(Internal internal) const {
+    bool operator==(Internal const& internal) const {
         return is(Type::INTERNAL) and _internal == internal;
     }
 
