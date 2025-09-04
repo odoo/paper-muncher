@@ -3,7 +3,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#   "cutekit @ git+https://github.com/cute-engineering/cutekit.git@0.9.2",
+#   "cutekit~=0.9.2",
 #   "Markdown~=3.7",
 # ]
 # ///
