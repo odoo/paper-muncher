@@ -222,9 +222,15 @@ static bool _matchLink(Gc::Ref<Dom::Element> el) {
     return el->qualifiedName == Html::A_TAG and el->hasAttribute(Html::HREF_ATTR);
 }
 
+// 14.3.1. :nth-child() pseudo-class
+// https://www.w3.org/TR/selectors-4/#the-nth-child-pseudo
+static bool _matchNthChild(Gc::Ref<Dom::Element> e, AnB const& anb) {
+    auto index = e->index([](Gc::Ptr<Dom::Node> node) { return node->is<Dom::Element>(); }) + 1;
+    return anb.match(index);
+}
+
 // 14.3.3. :first-child pseudo-class
 // https://www.w3.org/TR/selectors-4/#the-first-child-pseudo
-
 static bool _matchFirstChild(Gc::Ref<Dom::Element> e) {
     Gc::Ptr<Dom::Node> curr = e;
     while (curr->hasPreviousSibling()) {
@@ -238,7 +244,6 @@ static bool _matchFirstChild(Gc::Ref<Dom::Element> e) {
 
 // 14.3.4. :last-child pseudo-class
 // https://www.w3.org/TR/selectors-4/#the-last-child-pseudo
-
 static bool _matchLastChild(Gc::Ref<Dom::Element> e) {
     Gc::Ptr<Dom::Node> curr = e;
     while (curr->hasNextSibling()) {
@@ -252,7 +257,6 @@ static bool _matchLastChild(Gc::Ref<Dom::Element> e) {
 
 // 14.4.3. :first-of-type pseudo-class
 // https://www.w3.org/TR/selectors-4/#the-first-of-type-pseudo
-
 static bool _matchFirstOfType(Gc::Ref<Dom::Element> e) {
     Gc::Ptr<Dom::Node> curr = e;
     auto name = e->qualifiedName;
@@ -269,7 +273,6 @@ static bool _matchFirstOfType(Gc::Ref<Dom::Element> e) {
 
 // 14.4.4. :last-of-type pseudo-class
 // https://www.w3.org/TR/selectors-4/#the-last-of-type-pseudo
-
 static bool _matchLastOfType(Gc::Ref<Dom::Element> e) {
     Gc::Ptr<Dom::Node> curr = e;
     auto name = e->qualifiedName;
@@ -303,6 +306,9 @@ static bool _match(Pseudo const& s, Gc::Ref<Dom::Element> el) {
 
     case Pseudo::LAST_CHILD:
         return _matchLastChild(el);
+
+    case Pseudo::NTH_CHILD:
+        return _matchNthChild(el, s.extra.unwrap<AnB>("unexpected missing AnB"));
 
     default:
         logDebugIf(DEBUG_MATCHING, "unimplemented pseudo class: {}", s);

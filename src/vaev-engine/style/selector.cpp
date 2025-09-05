@@ -191,13 +191,57 @@ export struct ClassSelector {
 };
 
 export struct AnB {
-    isize a, b;
+    Integer a, b;
 
     void repr(Io::Emit& e) const {
         e("{}n{}{}", a, b < 0 ? "-"s : "+"s, b);
     }
 
     bool operator==(AnB const&) const = default;
+
+    bool match(Integer index) const {
+        return a == 0? index == b : (index % a) == b;
+    }
+
+    // https://www.w3.org/TR/css-syntax-3/#the-anb-type
+    static Res<AnB> parse(Cursor<Css::Sst> cur) {
+        if (cur.peek() == Css::Token::IDENT) {
+            auto const& ident = cur->token.data;
+
+            cur.next();
+            if (not cur.ended()) {
+                return NONE;
+            }
+
+            if (ident == "odd") {
+                return Ok(AnB{2, 1});
+            } else if (ident == "even") {
+                return Ok(AnB{2, 0});
+            }
+
+            return Error::invalidData("expected 'odd' or 'even'");
+        }
+
+        if (cur.peek() == Css::Token::NUMBER) {
+            auto value = try$(parseValue<Integer>(cur));
+            return Ok(AnB{0, value});
+        }
+
+        return Error::invalidData("expected 'odd' or 'even'");
+    }
+
+    // TODO: make this template?
+    static Res<AnB> parse(Io::SScan& s) {
+        Css::Lexer lex = s;
+        auto val = consumeSelector(lex);
+        Cursor<Css::Sst> c{val};
+        return parse(c);
+    };
+
+    static Res<AnB> parse(Str input) {
+        Io::SScan s{input};
+        return parse(s);
+    };
 };
 
 export enum struct Dir {
@@ -224,17 +268,14 @@ export struct Pseudo {
         return NONE;
     }
 
-    static Pseudo make(Str name) {
-        auto id = _Type(name);
-        if (id) {
-            auto result = Type{*id};
-            return result;
-        }
-        return Type{0};
-    }
-
     using enum Type;
     using Extra = Union<None, String, AnB, Dir>;
+
+    static Pseudo make(Str name, Extra extra = NONE) {
+        if (auto id = _Type(name))
+            return Pseudo{Type{*id}, extra};
+        return Type{0};
+    }
 
     Type type;
     Extra extra = NONE;
@@ -603,12 +644,18 @@ export struct Selector : _Selector {
                     }
                 }
 
-                if (cur->prefix == Css::Token::function("not(")) {
-                    Cursor<Css::Sst> c = cur->content;
-                    // consume a whole selector not a single one
-                    val = Selector::not_(try$(Selector::parse(c, ns)));
-                } else {
+                if (cur->type == Css::Sst::Type::TOKEN) {
                     val = Pseudo::make(cur->token.data);
+                } else if (cur->type == Css::Sst::Type::FUNC) {
+                    if (cur->prefix == Css::Token::function("not(")) {
+                        Cursor<Css::Sst> c = cur->content;
+                        // consume a whole selector not a single one
+                        val = Selector::not_(try$(Selector::parse(c, ns)));
+                    } else {
+                        auto funcName = cur->prefix.unwrap()->token.data.str();
+                        if (auto anb = AnB::parse(cur->content))
+                            val = Pseudo::make(Str{funcName.begin(), funcName.len() - 1}, anb.unwrap());
+                    }
                 }
                 break;
             default:

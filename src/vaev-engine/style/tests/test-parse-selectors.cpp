@@ -243,6 +243,25 @@ test$("vaev-style-parse-mixed-selectors") {
     return Ok();
 }
 
+test$("vaev-style-parse-simple-anb") {
+    expectEq$(
+        try$(AnB::parse("odd")),
+        AnB(2, 1)
+    );
+
+    expectEq$(
+        try$(AnB::parse("even")),
+        AnB(2, 0)
+    );
+
+    expectEq$(
+        try$(AnB::parse("4")),
+        AnB(0, 4)
+    );
+
+    return Ok();
+}
+
 test$("vaev-style-parse-pseudo-selectors") {
     expectEq$(
         Pseudo{Pseudo::ROOT},
@@ -262,6 +281,11 @@ test$("vaev-style-parse-pseudo-selectors") {
     expectEq$(
         try$(Selector::parse(":first-child")),
         Pseudo{Pseudo::FIRST_CHILD}
+    );
+
+    expectEq$(
+        try$(Selector::parse(":nth-child(odd)")),
+        Pseudo(Pseudo::Type::NTH_CHILD, AnB(2, 1))
     );
 
     expectEq$(
