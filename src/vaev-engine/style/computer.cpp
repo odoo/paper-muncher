@@ -270,7 +270,7 @@ export struct Computer {
                         auto resolvedUrl = Ref::Url::resolveReference(sheet.href, fontUrl);
 
                         if (not resolvedUrl) {
-                            logWarn("Cannot resolve urls when loading fonts: {} {}", fontUrl, sheet.href);
+                            logWarn("Cannot resolve urls when loading fonts: {} {}", ff.family, sheet.href);
                             continue;
                         }
 
@@ -278,7 +278,7 @@ export struct Computer {
                         if (fontBook.load(resolvedUrl.unwrap()))
                             break;
 
-                        logWarn("Failed to load font at {}", resolvedUrl);
+                        logWarn("Failed to load font {}", ff.family);
                     } else {
                         if (
                             fontBook.queryExact(src.identifier.unwrap<FontFamily>().name)
