@@ -62,18 +62,14 @@ export struct Element : Node {
         return this->getAttributeUnqualified("style"_sym);
     }
 
-    String textContent() const {
-        String builder;
-        if (not hasChildren())
-            return ""s;
-
-        if (firstChild() != lastChild())
-            panic("textContent is not implemented for elements with multiple children");
-
-        if (auto text = firstChild()->is<Text>())
-            return text->data();
-
-        panic("textContent is not implemented for elements with children other than text nodes");
+    // https://dom.spec.whatwg.org/#concept-descendant-text-content
+    String textContent() {
+        StringBuilder sb;
+        for (auto child : iterDepthFirst()) {
+            if (auto text = child->is<Text>())
+                sb.append(text->data());
+        }
+        return sb.take();
     }
 
     void _repr(Io::Emit& e) const override {
