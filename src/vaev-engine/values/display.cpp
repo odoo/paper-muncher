@@ -249,21 +249,21 @@ export struct Display {
         return _internal == TABLE_CAPTION or isTableTrack() or isTableTrackGroup();
     }
 
-    static Array constexpr const INTERNAL_TABLE = {
-        TABLE_ROW_GROUP,
-        TABLE_HEADER_GROUP,
-        TABLE_FOOTER_GROUP,
-        TABLE_ROW,
-        TABLE_CELL,
-        TABLE_COLUMN_GROUP,
-        TABLE_COLUMN,
-        TABLE_CAPTION,
-        TABLE_BOX
-    };
-
     bool isTableInternal() const {
         if (type() != INTERNAL)
             return false;
+
+        // https://www.w3.org/TR/css-display-3/#internal-table-element
+        static Array constexpr const INTERNAL_TABLE = {
+            TABLE_ROW_GROUP,
+            TABLE_HEADER_GROUP,
+            TABLE_FOOTER_GROUP,
+            TABLE_ROW,
+            TABLE_CELL,
+            TABLE_COLUMN_GROUP,
+            TABLE_COLUMN,
+            TABLE_BOX
+        };
         return contains(INTERNAL_TABLE, _internal);
     }
 
