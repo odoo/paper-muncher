@@ -801,7 +801,11 @@ static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> c
     }
 
     // NOTE: Flow for From::BLOCK and From::INLINE
-    if (display == Display::Outside::BLOCK) {
+    // https://www.w3.org/TR/css-display-3/#valdef-display-flow
+    if (display == Display::Outside::BLOCK or
+        childStyle->float_ != Float::NONE or
+        childStyle->position != Position::STATIC) {
+
         bc.flushRootInlineBoxIntoAnonymousBox();
         _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
     } else {
