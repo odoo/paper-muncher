@@ -176,7 +176,6 @@ export struct NamespaceRule {
     }
 };
 
-
 export struct PageRule {
     Vec<PageSelector> selectors;
     Vec<StyleProp> props;

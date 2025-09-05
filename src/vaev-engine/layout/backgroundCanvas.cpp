@@ -1,7 +1,7 @@
 module;
 
-#include <karm-gfx/prose.h>
 #include <karm-gfx/colors.h>
+#include <karm-gfx/prose.h>
 #include <karm-logger/logger.h>
 
 export module Vaev.Engine:layout.backgroundCanvas;

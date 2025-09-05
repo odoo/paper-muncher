@@ -1,10 +1,10 @@
 module;
 
+#include <karm-gfx/colors.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 #include <karm-math/trans.h>
 #include <karm-sys/time.h>
-#include <karm-gfx/colors.h>
 
 export module Vaev.Engine:driver.print;
 
@@ -131,8 +131,8 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
 
         auto pageStyle = computer.computeFor(initialStyle, page);
         RectAu pageRect{
-            media.width / Au{media.resolution.toDppx()},  
-            media.height / Au{media.resolution.toDppx()}  
+            media.width / Au{media.resolution.toDppx()},
+            media.height / Au{media.resolution.toDppx()}
         };
         auto pageStack = makeRc<Scene::Stack>();
 

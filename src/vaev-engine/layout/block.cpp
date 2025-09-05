@@ -1,7 +1,7 @@
 module;
 
-#include <karm-math/au.h>
 #include <karm-core/macros.h>
+#include <karm-math/au.h>
 
 export module Vaev.Engine:layout.block;
 
