@@ -3,12 +3,13 @@ module;
 #include <karm-gfx/font.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
-#include <karm-mime/url.h>
 
 export module Vaev.Engine:style.computer;
 
 import Karm.Gc;
 import Karm.Font;
+import Karm.Ref;
+
 import :dom;
 import :style.specified;
 import :style.stylesheet;
@@ -263,10 +264,10 @@ export struct Computer {
 
             for (auto const& ff : fontFaces) {
                 for (auto const& src : ff.sources) {
-                    if (src.identifier.is<Mime::Url>()) {
-                        auto fontUrl = src.identifier.unwrap<Mime::Url>();
+                    if (src.identifier.is<Ref::Url>()) {
+                        auto fontUrl = src.identifier.unwrap<Ref::Url>();
 
-                        auto resolvedUrl = Mime::Url::resolveReference(sheet.href, fontUrl);
+                        auto resolvedUrl = Ref::Url::resolveReference(sheet.href, fontUrl);
 
                         if (not resolvedUrl) {
                             logWarn("Cannot resolve urls when loading fonts: {} {}", fontUrl, sheet.href);

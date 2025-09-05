@@ -2,9 +2,10 @@ module;
 
 #include <karm-core/macros.h>
 #include <karm-gfx/font.h>
-#include <karm-mime/url.h>
 
 export module Vaev.Engine:style.fonts;
+
+import Karm.Ref;
 
 import :values;
 import :css;
@@ -100,7 +101,7 @@ export struct SrcDesc {
                 continue;
             }
 
-            auto fontSrc = fontSrcs.emplaceBack(try$(parseValue<Mime::Url>(c)));
+            auto fontSrc = fontSrcs.emplaceBack(try$(parseValue<Ref::Url>(c)));
             eatWhitespace(c);
 
             if (not c.ended() and c.peek() == Css::Sst::FUNC and c.peek().prefix == Css::Token::function("format(")) {

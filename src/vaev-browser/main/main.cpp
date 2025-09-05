@@ -12,7 +12,7 @@ using namespace Karm;
 Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto args = Sys::useArgs(ctx);
     auto url = args.len()
-                   ? Mime::parseUrlOrPath(args[0], co_try$(Sys::pwd()))
+                   ? Ref::parseUrlOrPath(args[0], co_try$(Sys::pwd()))
                    : "about:start"_url;
     Gc::Heap heap;
     auto client = Http::defaultClient();

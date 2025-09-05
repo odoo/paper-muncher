@@ -1,8 +1,6 @@
 module;
 
 #include <karm-logger/logger.h>
-#include <karm-mime/mime.h>
-#include <karm-mime/url.h>
 #include <karm-sys/file.h>
 
 export module Vaev.Engine:loader.loader;
@@ -12,6 +10,7 @@ import Karm.Http;
 import Karm.Core;
 import Karm.Debug;
 import Karm.Md;
+import Karm.Ref;
 
 import :dom;
 import :html;
@@ -20,13 +19,13 @@ import :style;
 
 namespace Vaev::Loader {
 
-Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url url, Rc<Http::Response> resp) {
+Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url url, Rc<Http::Response> resp) {
     auto dom = heap.alloc<Dom::Document>(url);
 
     auto mime = resp->header.contentType();
 
     if (not mime.has())
-        mime = Mime::sniffSuffix(url.path.suffix());
+        mime = Ref::sniffSuffix(url.path.suffix());
 
     if (not resp->body)
         co_return Error::invalidInput("response body is missing");
@@ -35,7 +34,7 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url
     auto buf = co_trya$(Aio::readAllUtf8Async(*respBody));
 
     if (not mime.has() or mime->is("application/octet-stream"_mime)) {
-        mime = Mime::sniffBytes(bytes(buf));
+        mime = Ref::sniffBytes(bytes(buf));
         logWarn("{} has unspecified mime type, mime sniffing yielded '{}'", url, mime);
     }
 
@@ -81,7 +80,7 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Mime::Url
     }
 }
 
-export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http::Client& client, Mime::Url const& url) {
+export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url) {
     auto resp = co_trya$(client.getAsync(url));
     if (not resp->body)
         co_return Error::invalidInput("response body is missing");
@@ -99,7 +98,7 @@ export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http:
     co_return Ok(dom);
 }
 
-Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Http::Client& client, Mime::Url url, Style::Origin origin) {
+Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Http::Client& client, Ref::Url url, Style::Origin origin) {
     auto resp = co_trya$(client.getAsync(url));
 
     auto respBody = resp->body.unwrap();
@@ -125,7 +124,7 @@ Async::Task<> _fetchStylesheetsAsync(Http::Client& client, Gc::Ref<Dom::Node> no
                 co_return Error::invalidInput("link element missing href");
             }
 
-            auto url = Mime::Url::resolveReference(node->baseURI(), Mime::parseUrlOrPath(*href));
+            auto url = Ref::Url::resolveReference(node->baseURI(), Ref::parseUrlOrPath(*href));
             if (not url) {
                 logWarn("failed to resolve stylesheet url: {}", url);
                 co_return Error::invalidInput("failed to resolve stylesheet url");
@@ -150,7 +149,7 @@ Async::Task<> _fetchStylesheetsAsync(Http::Client& client, Gc::Ref<Dom::Node> no
 static Debug::Flag dumpDom{"web-dom"};
 static Debug::Flag dumpStylesheets{"web-stylesheets"};
 
-export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Http::Client& client, Mime::Url const& url) {
+export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url) {
     if (url.scheme == "about") {
         if (url.path.str() == "blank")
             co_return co_await fetchDocumentAsync(heap, client, "bundle://vaev-engine/blank.xhtml"_url);

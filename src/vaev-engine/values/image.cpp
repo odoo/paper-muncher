@@ -1,9 +1,10 @@
 module;
 
 #include <karm-gfx/color.h>
-#include <karm-mime/url.h>
 
 export module Vaev.Engine:values.image;
+
+import Karm.Ref;
 
 import :values.angle;
 import :values.color;
@@ -131,7 +132,7 @@ using _Image = Union<
     ConicGradient,
     CrossFade,
     Stripes,
-    Mime::Url>;
+    Ref::Url>;
 
 export struct Image : _Image {
     using _Image::_Image;

@@ -45,7 +45,7 @@ struct PrintOption {
     Opt<Vaev::Length> height = NONE;
     Print::PaperStock paper = Print::A4;
     Print::Orientation orientation = Print::Orientation::PORTRAIT;
-    Mime::Uti outputFormat = Mime::Uti::PUBLIC_PDF;
+    Ref::Uti outputFormat = Ref::Uti::PUBLIC_PDF;
 
     auto preparePrintSettings(this auto const& self) -> Print::Settings {
         Vaev::Layout::Resolver resolver;
@@ -75,8 +75,8 @@ struct PrintOption {
 
 static Async::Task<> printAsync(
     Rc<Http::Client> client,
-    Vec<Mime::Url> const& inputs,
-    Mime::Url const& output,
+    Vec<Ref::Url> const& inputs,
+    Ref::Url const& output,
     PrintOption options = {}
 ) {
     Gc::Heap heap;
@@ -125,13 +125,13 @@ struct RenderOption {
     Vaev::Resolution density = Vaev::Resolution::fromDpi(96);
     Vaev::Length width = 800_au;
     Vaev::Length height = 600_au;
-    Mime::Uti outputFormat = Mime::Uti::PUBLIC_BMP;
+    Ref::Uti outputFormat = Ref::Uti::PUBLIC_BMP;
 };
 
 static Async::Task<> renderAsync(
     Rc<Http::Client> client,
-    Mime::Url const& input,
-    Mime::Url const& output,
+    Ref::Url const& input,
+    Ref::Url const& output,
     RenderOption options = {}
 ) {
     Gc::Heap heap;
@@ -227,19 +227,19 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             options.paper = co_try$(Print::findPaperStock(paperArg.unwrap()));
             options.orientation = co_try$(Vaev::parseValue<Print::Orientation>(orientationArg.unwrap()));
 
-            Vec<Mime::Url> inputs;
+            Vec<Ref::Url> inputs;
             for (auto& i : inputsArg.unwrap())
                 if (i == "-"s)
                     inputs.pushBack("fd:stdin"_url);
                 else
-                    inputs.pushBack(Mime::parseUrlOrPath(i, co_try$(Sys::pwd())));
+                    inputs.pushBack(Ref::parseUrlOrPath(i, co_try$(Sys::pwd())));
 
-            Mime::Url output = "fd:stdout"_url;
+            Ref::Url output = "fd:stdout"_url;
             if (outputArg.unwrap() != "-"s)
-                output = Mime::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
+                output = Ref::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
 
             if (formatArg.unwrap() != ""s)
-                options.outputFormat = co_try$(Mime::Uti::fromMime({formatArg}));
+                options.outputFormat = co_try$(Ref::Uti::fromMime({formatArg}));
 
             auto client = PaperMuncher::_createHttpClient(unsecureArg);
             co_return co_await PaperMuncher::printAsync(client, inputs, output, options);
@@ -271,16 +271,16 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (heightArg.unwrap())
                 options.height = co_try$(Vaev::parseValue<Vaev::Length>(heightArg.unwrap()));
 
-            Mime::Url input = "fd:stdin"_url;
+            Ref::Url input = "fd:stdin"_url;
             if (inputArg.unwrap() != "-"s)
-                input = Mime::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
+                input = Ref::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
 
-            Mime::Url output = "fd:stdout"_url;
+            Ref::Url output = "fd:stdout"_url;
             if (outputArg.unwrap() != "-"s)
-                output = Mime::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
+                output = Ref::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
 
             if (formatArg.unwrap() != ""s)
-                options.outputFormat = co_try$(Mime::Uti::fromMime({formatArg}));
+                options.outputFormat = co_try$(Ref::Uti::fromMime({formatArg}));
 
             auto client = PaperMuncher::_createHttpClient(unsecureArg);
 

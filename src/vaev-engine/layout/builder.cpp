@@ -2,7 +2,6 @@ module;
 
 #include <karm-gfx/prose.h>
 #include <karm-logger/logger.h>
-#include <karm-mime/url.h>
 
 export module Vaev.Engine:layout.builder;
 
@@ -10,6 +9,7 @@ import Karm.Image;
 import Karm.Gc;
 import Karm.Debug;
 import Karm.Font;
+import Karm.Ref;
 
 import :values;
 import :style;
@@ -363,7 +363,7 @@ static void _buildText(BuilderContext bc, Gc::Ref<Dom::Text> node, Rc<Style::Spe
 
 static void _buildImage(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     auto src = el->getAttribute(Html::SRC_ATTR).unwrapOr(""s);
-    auto url = Mime::Url::resolveReference(el->baseURI(), Mime::parseUrlOrPath(src))
+    auto url = Ref::Url::resolveReference(el->baseURI(), Ref::parseUrlOrPath(src))
                    .unwrapOr("bundle://vaev-engine/missing.qoi"_url);
 
     bc.content() = Karm::Image::load(url).unwrapOrElse([] {

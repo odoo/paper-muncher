@@ -1,9 +1,6 @@
-module;
-
-#include <karm-mime/url.h>
-
 export module Vaev.Engine:dom.node;
 
+import Karm.Ref;
 import Karm.Gc;
 import :dom.tree;
 
@@ -48,7 +45,7 @@ export struct Node : Tree<Node> {
         return {MOVE, static_cast<T const*>(this)};
     }
 
-    Mime::Url baseURI();
+    Ref::Url baseURI();
 
     Gc::Ptr<Document> ownerDocument();
 

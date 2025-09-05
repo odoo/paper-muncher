@@ -9,7 +9,7 @@ namespace Vaev::Dom::Tests {
 
 test$("parse-empty-document") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write(""s);
@@ -18,7 +18,7 @@ test$("parse-empty-document") {
 
 test$("parse-open-close-tag-with-structure") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write("<html></html>"s);
@@ -44,7 +44,7 @@ test$("parse-open-close-tag-with-structure") {
 
 test$("parse-empty-tag") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write("<html/>"s);
@@ -60,7 +60,7 @@ test$("parse-empty-tag") {
 
 test$("parse-attr") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write("<html lang=\"en\"/>"s);
@@ -78,7 +78,7 @@ test$("parse-attr") {
 
 test$("parse-text") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write("<html>text</html>"s);
@@ -105,7 +105,7 @@ test$("parse-text") {
 
 test$("parse-title") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write("<title>the title</title>");
@@ -137,7 +137,7 @@ test$("parse-title") {
 
 test$("parse-comment-with-gt-symb") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write(
@@ -169,7 +169,7 @@ test$("parse-comment-with-gt-symb") {
 
 test$("parse-p-after-comment") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write(
@@ -205,7 +205,7 @@ test$("parse-p-after-comment") {
 
 test$("parse-not-nested-p-and-els-inbody") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write("<div>b</div><p>a<div>b</div><p>a<p>a");
@@ -228,7 +228,7 @@ test$("parse-not-nested-p-and-els-inbody") {
 
 test$("parse-char-referece-as-text") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write("<html><body>im there&sect;&Aacute;&sect;&seca;&seca&Aacute;im also there</body></html>");
@@ -254,7 +254,7 @@ test$("parse-char-referece-as-text") {
 
 test$("parse-char-referece-as-attribute-value") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write("<meta value=\"im there&sect;&Aacute;&sect;&seca;&seca&Aacute;im also there\">");
@@ -282,7 +282,7 @@ test$("parse-char-referece-as-attribute-value") {
 
 test$("parse-char-referece-spec-example") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write(
@@ -335,7 +335,7 @@ test$("parse-char-referece-spec-example") {
 
 test$("parse-input-element") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write("<div><input></div>");
@@ -365,7 +365,7 @@ test$("parse-input-element") {
 
 test$("parse-empty-table-element") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write("<table></table>");
@@ -392,7 +392,7 @@ test$("parse-empty-table-element") {
 
 test$("parse-table-element") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write("<table><thead><tr><th>hi</th></tr></thead></table>");
@@ -435,7 +435,7 @@ test$("parse-table-element") {
 
 test$("parse-table-element-create-body-tr-scope") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write("<table><th>hi</th></table>");
@@ -478,7 +478,7 @@ test$("parse-table-element-create-body-tr-scope") {
 
 test$("parse-svg-case-fix") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Mime::Url());
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
     parser.write(

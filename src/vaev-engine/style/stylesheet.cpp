@@ -1,10 +1,10 @@
 module;
 
 #include <karm-logger/logger.h>
-#include <karm-mime/mime.h>
-#include <karm-mime/url.h>
 
 export module Vaev.Engine:style.stylesheet;
+
+import Karm.Ref;
 
 import :style.rules;
 
@@ -12,13 +12,13 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/cssom-1/#css-style-sheets
 export struct StyleSheet {
-    Mime::Mime mime = "text/css"_mime;
-    Mime::Url href = ""_url;
+    Ref::Mime mime = "text/css"_mime;
+    Ref::Url href = ""_url;
     Str title = "";
     Vec<Rule> rules;
     Origin origin = Origin::AUTHOR;
 
-    static StyleSheet parse(Css::Sst const& sst, Mime::Url href, Origin origin) {
+    static StyleSheet parse(Css::Sst const& sst, Ref::Url href, Origin origin) {
         Namespace ns;
 
         if (sst != Css::Sst::LIST)
@@ -39,7 +39,7 @@ export struct StyleSheet {
         return res;
     }
 
-    static StyleSheet parse(Io::SScan& s, Mime::Url href, Origin origin = Origin::AUTHOR) {
+    static StyleSheet parse(Io::SScan& s, Ref::Url href, Origin origin = Origin::AUTHOR) {
         Css::Lexer lex{s};
         Css::Sst sst = consumeRuleList(lex, true);
         return parse(sst, href, origin);

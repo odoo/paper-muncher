@@ -1,12 +1,12 @@
 module;
 
 #include <karm-logger/logger.h>
-#include <karm-mime/url.h>
 
 export module Vaev.Engine:style.rules;
 
 import Karm.Core;
 import Karm.Gc;
+import Karm.Ref;
 
 import :css;
 import :style.fonts;
@@ -92,7 +92,7 @@ export struct StyleRule {
 
 // https://www.w3.org/TR/cssom-1/#the-cssimportrule-interface
 export struct ImportRule {
-    Mime::Url url;
+    Ref::Url url;
 
     static ImportRule parse(Css::Sst const&) {
         return {};

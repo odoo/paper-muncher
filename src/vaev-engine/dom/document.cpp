@@ -1,10 +1,7 @@
-module;
-
-#include <karm-mime/url.h>
-
 export module Vaev.Engine:dom.document;
 
 import Karm.Gc;
+import Karm.Ref;
 import :dom.node;
 import :dom.element;
 
@@ -24,7 +21,7 @@ export enum struct QuirkMode {
 export struct Document : Node {
     static constexpr auto TYPE = NodeType::DOCUMENT;
 
-    Mime::Url _url;
+    Ref::Url _url;
     QuirkMode quirkMode{QuirkMode::NO};
 
     String xmlVersion;
@@ -33,7 +30,7 @@ export struct Document : Node {
 
     Gc::Ptr<Style::StyleSheetList> styleSheets;
 
-    Document(Mime::Url url)
+    Document(Ref::Url url)
         : _url(url) {
     }
 
@@ -51,7 +48,7 @@ export struct Document : Node {
         return ""s;
     }
 
-    Mime::Url const& url() const {
+    Ref::Url const& url() const {
         return _url;
     }
 

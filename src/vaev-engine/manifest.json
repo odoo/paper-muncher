@@ -24,7 +24,7 @@
         "karm-logger",
         "karm-math",
         "karm-md",
-        "karm-mime",
+        "karm-ref",
         "karm-print",
         "karm-scene",
         "karm-font"

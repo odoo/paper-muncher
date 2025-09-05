@@ -1,16 +1,15 @@
-module;
-
-#include <karm-mime/url.h>
-
 module Vaev.Engine;
 
+import Karm.Core;
 import Karm.Gc;
+import Karm.Ref;
+
 import :dom.document;
 
 namespace Vaev::Dom {
 
 // https://dom.spec.whatwg.org/#ref-for-dom-node-baseuri%E2%91%A0
-Mime::Url Node::baseURI() {
+Ref::Url Node::baseURI() {
     auto document = ownerDocument();
     if (not document)
         panic("node has no owner document");

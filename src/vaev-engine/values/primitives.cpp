@@ -1,11 +1,11 @@
 module;
 
 #include <karm-core/macros.h>
-#include <karm-mime/url.h>
 
 export module Vaev.Engine:values.primitives;
 
 import Karm.Core;
+import Karm.Ref;
 
 import :css;
 import :values.base;
@@ -146,9 +146,9 @@ export Res<String> parseUrlIntoString(Cursor<Css::Sst>& c) {
 }
 
 export template <>
-struct ValueParser<Mime::Url> {
-    static Res<Mime::Url> parse(Cursor<Css::Sst>& c) {
-        return Ok(Mime::parseUrlOrPath(try$(parseUrlIntoString(c))));
+struct ValueParser<Ref::Url> {
+    static Res<Ref::Url> parse(Cursor<Css::Sst>& c) {
+        return Ok(Ref::parseUrlOrPath(try$(parseUrlIntoString(c))));
     }
 };
 
