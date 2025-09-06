@@ -27,7 +27,7 @@ static Rc<Http::Client> _createHttpClient(bool unsecure) {
         transports.pushBack(Http::localTransport(Http::LocalTransportPolicy::ALLOW_ALL));
     } else {
         // NOTE: Only allow access to bundle assets and standard input/output.
-        transports.pushBack(Http::localTransport({"bundle"s, "fd"s}));
+        transports.pushBack(Http::localTransport({"bundle"s, "fd"s, "data"s}));
     }
 
     auto client = makeRc<Http::Client>(
