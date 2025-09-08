@@ -17,12 +17,25 @@ struct Tree : Meta::Pinned {
 
     // Accessor ----------------------------------------------------------------
 
-    usize index() const {
+    usize index(auto filter) const {
         usize index = 0;
-        for (auto node = previousSibling();
-             node;
-             node = node->previousSibling())
-            ++index;
+        for (auto node = previousSibling(); node; node = node->previousSibling())
+            if (filter(node))
+                ++index;
+        return index;
+    }
+
+    usize index() const {
+        return index([](auto) {
+            return true;
+        });
+    }
+
+    usize reverseIndex(auto filter) const {
+        usize index = 0;
+        for (auto node = nextSibling(); node; node = node->nextSibling())
+            if (filter(node))
+                ++index;
         return index;
     }
 

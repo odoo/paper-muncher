@@ -347,6 +347,39 @@ test$("vaev-style-parse-pseudo-selectors") {
     );
 
     expectEq$(
+        try$(Selector::parse(":nth-child(odd)")),
+        Pseudo(Pseudo::Type::NTH_CHILD, Pseudo::AnBofS{AnB(2, 1), NONE})
+    );
+
+    expectEq$(
+        try$(Selector::parse(":nth-child(odd of .class)")),
+        Pseudo(Pseudo::Type::NTH_CHILD, Pseudo::AnBofS{AnB(2, 1), ClassSelector{"class"s}})
+    );
+
+    expectEq$(
+        try$(Selector::parse(":nth-last-child(even)")),
+        Pseudo(Pseudo::Type::NTH_LAST_CHILD, Pseudo::AnBofS{AnB(2, 0), NONE})
+    );
+
+    expectEq$(
+        try$(Selector::parse(":nth-last-child(even of #id)")),
+        Pseudo(Pseudo::Type::NTH_LAST_CHILD, Pseudo::AnBofS{AnB(2, 0), IdSelector{"id"_sym}})
+    );
+
+    expectEq$(
+        try$(Selector::parse(":nth-of-type(3n+1)")),
+        Pseudo(Pseudo::Type::NTH_OF_TYPE, Pseudo::AnBofS{AnB(3, 1), NONE})
+    );
+
+    expectEq$(
+        try$(Selector::parse(":nth-last-of-type(3n+1)")),
+        Pseudo(Pseudo::Type::NTH_LAST_OF_TYPE, Pseudo::AnBofS{AnB(3, 1), NONE})
+    );
+
+    expectNot$(Selector::parse(":nth-of-type(3n+1 of .class)"));
+    expectNot$(Selector::parse(":nth-last-of-type(3n+1 of .class)"));
+
+    expectEq$(
         try$(Selector::parse(":last-child")),
         Pseudo{Pseudo::LAST_CHILD}
     );
