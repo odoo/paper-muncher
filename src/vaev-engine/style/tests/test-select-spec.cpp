@@ -318,4 +318,79 @@ test$("select-attr-spec-case") {
     return Ok();
 }
 
+test$("anb-index-match") {
+    {
+        AnB anb{2, 0};
+        expectNot$(anb.match(1));
+        expect$(anb.match(2));
+        expectNot$(anb.match(3));
+        expect$(anb.match(4));
+    }
+    {
+        AnB anb{2, 1};
+        expect$(anb.match(1));
+        expectNot$(anb.match(2));
+        expect$(anb.match(3));
+        expectNot$(anb.match(4));
+    }
+    {
+        AnB anb{3, -1};
+        // n = 0: -1 (won't match)
+        // n = 1: 2
+        // n = 2: 5
+        // n = 3: 8
+        // n ...:
+        for (usize i = 1; i <= 10; i++) {
+            if (i == 2 or i == 5 or i == 8) {
+                expect$(anb.match(i));
+            } else {
+                expectNot$(anb.match(i));
+            }
+        }
+    }
+    {
+        AnB anb{-3, 10};
+        // n = 0: 10
+        // n = 1: 7
+        // n = 2: 4
+        // n = 3: 1
+        // n ...: won't match
+        for (usize i = 1; i <= 20; i++) {
+            if (i == 1 or i == 4 or i == 7 or i == 10) {
+                expect$(anb.match(i));
+            } else {
+                expectNot$(anb.match(i));
+            }
+        }
+    }
+    {
+        AnB anb{1, 1};
+        for (usize i = 1; i <= 20; i++) {
+            expect$(anb.match(i));
+        }
+    }
+    {
+        AnB anb{1, 2};
+        expectNot$(anb.match(1));
+        for (usize i = 2; i <= 20; i++) {
+            expect$(anb.match(i));
+        }
+    }
+    {
+        AnB anb{0, 0};
+        for (usize i = 1; i <= 20; i++) {
+            expectNot$(anb.match(i));
+        }
+    }
+    {
+        AnB anb{0, 21};
+        for (usize i = 1; i <= 20; i++) {
+            expectNot$(anb.match(i));
+        }
+        expect$(anb.match(21));
+    }
+
+    return Ok();
+}
+
 } // namespace Vaev::Style::Tests
