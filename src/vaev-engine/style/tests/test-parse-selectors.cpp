@@ -243,6 +243,88 @@ test$("vaev-style-parse-mixed-selectors") {
     return Ok();
 }
 
+test$("vaev-style-parse-anb") {
+    expectEq$(
+        try$(AnB::parse("odd")),
+        AnB(2, 1)
+    );
+
+    expectEq$(
+        try$(AnB::parse("even")),
+        AnB(2, 0)
+    );
+
+    expectEq$(
+        try$(AnB::parse("4")),
+        AnB(0, 4)
+    );
+
+    expectEq$(
+        try$(AnB::parse("-n")),
+        AnB(-1, 0)
+    );
+
+    expectEq$(
+        try$(AnB::parse("n")),
+        AnB(1, 0)
+    );
+
+    expectEq$(
+        try$(AnB::parse("3n")),
+        AnB(3, 0)
+    );
+
+    expectEq$(
+        try$(AnB::parse("2n+5")),
+        AnB(2, 5)
+    );
+
+    expectEq$(
+        try$(AnB::parse("2n + 5")),
+        AnB(2, 5)
+    );
+
+    expectEq$(
+        try$(AnB::parse("2n +5")),
+        AnB(2, 5)
+    );
+
+    expectEq$(
+        try$(AnB::parse("2n -5")),
+        AnB(2, -5)
+    );
+
+    expectEq$(
+        try$(AnB::parse("2n-5")),
+        AnB(2, -5)
+    );
+
+    expectEq$(
+        try$(AnB::parse("n-5")),
+        AnB(1, -5)
+    );
+
+    expectEq$(
+        try$(AnB::parse("n- 5")),
+        AnB(1, -5)
+    );
+
+    expectEq$(
+        try$(AnB::parse("n+ 5")),
+        AnB(1, 5)
+    );
+
+    expectNot$(AnB::parse("n+"));
+    expectNot$(AnB::parse("n+-5"));
+    expectNot$(AnB::parse("n- +5"));
+    expectNot$(AnB::parse("n-+ 5"));
+    expectNot$(AnB::parse("n -+5"));
+    expectNot$(AnB::parse("+ n"));
+    expectNot$(AnB::parse("+ n -3"));
+
+    return Ok();
+}
+
 test$("vaev-style-parse-pseudo-selectors") {
     expectEq$(
         Pseudo{Pseudo::ROOT},
