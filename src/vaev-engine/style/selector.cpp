@@ -371,7 +371,6 @@ export struct AnB {
         return Error::invalidData("expected AnB expression");
     }
 
-    // TODO: make this template?
     static Res<AnB> parse(Io::SScan& s) {
         Css::Lexer lex = s;
         auto val = consumeSelector(lex);
@@ -409,17 +408,16 @@ export struct Pseudo {
         return NONE;
     }
 
-    static Pseudo make(Str name) {
-        auto id = _Type(name);
-        if (id) {
-            auto result = Type{*id};
-            return result;
-        }
+    using enum Type;
+
+    using AnBofS = Pair<AnB, Opt<Box<Selector>>>;
+    using Extra = Union<None, String, AnBofS, Dir>;
+
+    static Pseudo make(Str name, Extra extra = NONE) {
+        if (auto id = _Type(name))
+            return Pseudo{Type{*id}, extra};
         return Type{0};
     }
-
-    using enum Type;
-    using Extra = Union<None, String, AnB, Dir>;
 
     Type type;
     Extra extra = NONE;
@@ -429,11 +427,11 @@ export struct Pseudo {
     Pseudo(Type type, Extra extra = NONE)
         : type(type), extra(extra) {}
 
-    bool operator==(Pseudo const&) const = default;
-
     void repr(Io::Emit& e) const {
-        e("{}", type);
+        e("{} {}", type, extra);
     }
+
+    bool operator==(Pseudo const&) const;
 };
 
 export struct AttributeSelector {
@@ -563,7 +561,7 @@ export struct Selector : _Selector {
         });
     }
 
-    bool operator==(Selector const&) const = default;
+    bool operator==(Selector const&) const;
 
     static Res<QualifiedNameSelector> _parseQualifiedNameSelector(Cursor<Css::Sst>& cur, Namespace const& ns, Opt<Symbol> default_) {
         // ns|name
@@ -750,6 +748,27 @@ export struct Selector : _Selector {
         }
     }
 
+    static Res<Pseudo> _parsePseudoClassFunction(Cursor<Css::Sst>& cur, Namespace const& ns) {
+        auto funcName = cur->prefix.unwrap()->token.data.str();
+        funcName = Str{funcName.begin(), funcName.len() - 1};
+
+        Cursor<Css::Sst> c = cur->content;
+        auto anb = try$(AnB::parse(c));
+        eatWhitespace(c);
+
+        if (c.ended()) {
+            return Ok(Pseudo::make(funcName, Pseudo::AnBofS{anb, NONE}));
+        }
+
+        if (funcName == "nth-of-type" or funcName == "nth-last-of-type")
+            return Error::invalidData("unexpected content after AnB nth-*of-type");
+
+        if (not c.skip(Css::Token::ident("of")))
+            return Error::invalidData("expected 'of' in pseudo-class function");
+
+        return Ok(Pseudo::make(funcName, Pseudo::AnBofS{anb, makeBox<Selector>(try$(Selector::parse(c, ns)))}));
+    }
+
     // consume a selector element (everything  that has a lesser priority than the current OP)
     static Res<Selector> _parseSelectorElement(Cursor<Css::Sst>& cur, OpCode currentOp, Namespace const& ns) {
         if (cur.ended()) {
@@ -788,12 +807,16 @@ export struct Selector : _Selector {
                     }
                 }
 
-                if (cur->prefix == Css::Token::function("not(")) {
-                    Cursor<Css::Sst> c = cur->content;
-                    // consume a whole selector not a single one
-                    val = Selector::not_(try$(Selector::parse(c, ns)));
-                } else {
+                if (cur->type == Css::Sst::Type::TOKEN) {
                     val = Pseudo::make(cur->token.data);
+                } else if (cur->type == Css::Sst::Type::FUNC) {
+                    if (cur->prefix == Css::Token::function("not(")) {
+                        Cursor<Css::Sst> c = cur->content;
+                        // consume a whole selector not a single one
+                        val = Selector::not_(try$(Selector::parse(c, ns)));
+                    } else {
+                        val = try$(_parsePseudoClassFunction(cur, ns));
+                    }
                 }
                 break;
             default:
@@ -932,10 +955,6 @@ export struct Selector : _Selector {
         return SelectorUnparser{*this};
     }
 };
-
-bool Infix::operator==(Infix const&) const = default;
-
-bool Nfix::operator==(Nfix const&) const = default;
 
 // MARK: Unparsing -------------------------------------------------------------
 

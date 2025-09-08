@@ -101,3 +101,166 @@
 
 
 </test>
+
+<test name="pseudo-nth-of-selectors-matching">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .stripe-4 {
+                    width: 100px;
+                    height: 25px;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .red {
+                    background-color: red;
+                }
+            </style>
+        </head>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background-color: green;"></div>
+    </rendering>
+
+    <rendering>
+        <div class="stripe-4 red"></div>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 red"></div>
+        <div class="stripe-4 green"></div>
+        <style>
+            .stripe-4:nth-child(odd) {
+                background-color: green !important;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <style>
+            .stripe-4:nth-last-child(even) {
+                background-color: green !important;
+            }
+        </style>
+        <div class="stripe-4 red"></div>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 red"></div>
+        <div class="stripe-4 green"></div>
+    </rendering>
+
+    <rendering>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 red"></div>
+        <div class="stripe-4 green"></div>
+        <style>
+            .stripe-4:nth-child(3) {
+                background-color: green !important;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <style>
+            .stripe-4:nth-last-child(2) {
+                background-color: green !important;
+            }
+        </style>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 red"></div>
+        <div class="stripe-4 green"></div>
+    </rendering>
+
+    <rendering>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 green funny"></div>
+        <div class="stripe-4 red funny"></div>
+        <style>
+            .stripe-4:nth-child(2 of .funny) {
+                background-color: green !important;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <style>
+            .stripe-4:nth-last-child(3 of .funny) {
+                background-color: green !important;
+            }
+        </style>
+        <div class="stripe-4 red funny"></div>
+        <div class="stripe-4 green funny"></div>
+        <div class="stripe-4 green funny"></div>
+        <div class="stripe-4 green"></div>
+    </rendering>
+
+    <rendering>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 red"></div>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 red"></div>
+        <style>
+            :nth-child(even of .stripe-4) {
+                background-color: green !important;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <style>
+            :nth-last-child(odd of .stripe-4) {
+                background-color: green !important;
+            }
+        </style>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 red"></div>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 red"></div>
+    </rendering>
+
+    <rendering>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 red"></div>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 red"></div>
+        <style>
+            :nth-of-type(2n) {
+                background-color: green !important;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <style>
+            div:nth-last-of-type(-n + 3) {
+                background-color: green !important;
+            }
+        </style>
+        <div class="stripe-4 green"></div>
+        <div class="stripe-4 red"></div>
+        <div class="stripe-4 red"></div>
+        <div class="stripe-4 red"></div>
+    </rendering>
+
+
+
+</test>
