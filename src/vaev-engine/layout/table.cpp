@@ -1050,6 +1050,14 @@ export struct TableFormatingContext : FormatingContext {
         return {minColWidth, maxColWidth};
     }
 
+    Opt<Pair<Vec<Au>>> intrinsicSizes;
+
+    Pair<Vec<Au>> computeIntrinsicMinMaxAutoWidths(Tree& tree, usize size) {
+        if (not intrinsicSizes)
+            intrinsicSizes = computeMinMaxAutoWidths(tree, size, 0_au);
+        return *intrinsicSizes;
+    }
+
     // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
     void computeAutoColWidths(Tree& tree, Opt<Au> knownSizeX, Au capmin, Au containingBlockX) {
         // FIXME: This is a rough approximation of the algorithm.
@@ -1063,7 +1071,7 @@ export struct TableFormatingContext : FormatingContext {
         //        We will need a way to retrieve the percentage value, which is also not yet implemented.
 
         if (knownSizeX) {
-            auto [minWithoutPerc, maxWithoutPerc] = computeMinMaxAutoWidths(tree, grid.size.x, 0_au);
+            auto [minWithoutPerc, maxWithoutPerc] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
 
             tableUsedWidth = max(capmin, *knownSizeX);
 
@@ -1107,7 +1115,7 @@ export struct TableFormatingContext : FormatingContext {
                 colWidth = distWPToUse;
             }
         } else {
-            auto [minColWidth, maxColWidth] = computeMinMaxAutoWidths(tree, grid.size.x, 0_au);
+            auto [minColWidth, maxColWidth] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
             auto sumMaxColWidths = iter(maxColWidth).sum();
             auto sumMinColWidths = iter(minColWidth).sum();
 
@@ -1136,6 +1144,10 @@ export struct TableFormatingContext : FormatingContext {
         //       (See https://www.w3.org/TR/css-tables-3/#computing-the-table-height)
 
         rowHeight.resize(grid.size.y);
+
+        // FIXME
+        for (auto& h : rowHeight)
+            h = 0_au;
 
         for (auto& row : rows) {
             auto& height = row.el.style->sizing->height;
@@ -1227,7 +1239,7 @@ export struct TableFormatingContext : FormatingContext {
     void build(Tree& tree, Box& box) override {
         useBordersCollapse = box.style->table->collapse == BorderCollapse::COLLAPSE;
 
-        if(not useBordersCollapse)
+        if (not useBordersCollapse)
             spacing = {
                 resolve(tree, box, box.style->table->spacing.horizontal),
                 resolve(tree, box, box.style->table->spacing.vertical),
@@ -1246,7 +1258,9 @@ export struct TableFormatingContext : FormatingContext {
         dataRowsInterval = {numOfHeaderRows, grid.size.y - numOfFooterRows - 1};
     }
 
-    void computeWidthAndHeight(Tree& tree, Box& box, CacheParametersFromInput& input) {
+    Opt<CacheParametersFromInput> lastInput;
+
+    void computeWidthAndHeight(Tree& tree, Box& box, Input const& input) {
         // NOTE: When "table-layout: fixed" is set but "width: auto", the specs suggest
         //       that the UA can use the fixed layout after computing the width
         //      (see https://www.w3.org/TR/CSS22/visudet.html#blockwidth).
@@ -1254,12 +1268,29 @@ export struct TableFormatingContext : FormatingContext {
         //      However, Chrome does not implement this exception, and we are not implementing it either.
         bool shouldRunAutoAlgorithm =
             box.style->table->tableLayout == TableLayout::AUTO or
-            not input.knownSizeX;
+            not input.knownSize.x;
 
-        if (shouldRunAutoAlgorithm)
-            computeAutoColWidths(tree, input.knownSizeX, input.capmin, input.containingBlockX);
-        else
-            computeFixedColWidths(tree, box, *input.knownSizeX);
+        if (shouldRunAutoAlgorithm) {
+            if (input.intrinsic == IntrinsicSize::AUTO) {
+                CacheParametersFromInput inputCacheParameters{input};
+                if (lastInput != inputCacheParameters) {
+                    lastInput = inputCacheParameters;
+                    // bad code
+                    computeAutoColWidths(tree, input.knownSize.x, input.capmin.unwrapOr(0_au), input.containingBlock.x);
+                }
+            } else {
+                auto [minContent, maxContent] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
+                if (input.intrinsic == IntrinsicSize::MIN_CONTENT)
+                    colWidth = minContent;
+                else if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
+                    colWidth = maxContent;
+                } else
+                    unreachable();
+
+                tableUsedWidth = iter(colWidth).sum();
+            }
+        } else
+            computeFixedColWidths(tree, box, *input.knownSize.x);
 
         computeRowHeights(tree);
 
@@ -1611,18 +1642,12 @@ export struct TableFormatingContext : FormatingContext {
         return {startAt, stopAt};
     }
 
-    Opt<CacheParametersFromInput> lastInput;
-
     Output run(Tree& tree, Box& box, Input input, usize startAtTable, Opt<usize> stopAtTable) override {
         // TODO: - vertical and horizontal alignment
         //       - borders collapse
         // TODO: in every row, at least one cell must be an anchor, or else this row is 'skipable'
 
-        CacheParametersFromInput inputCacheParameters{input};
-        if (lastInput != inputCacheParameters) {
-            lastInput = inputCacheParameters;
-            computeWidthAndHeight(tree, box, lastInput.unwrap());
-        }
+        computeWidthAndHeight(tree, box, input);
 
         // if shouldRepeatHeaderAndFooter, header and footer are never alone in the fragmentainer and we wont set
         // breakpoints on them;
