@@ -138,7 +138,8 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, Use
         } else {
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
                 tree, child, child.style->sizing->width, childInput.containingBlock,
-                usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
+                usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal(),
+                childInput.capmin
             );
         }
 
