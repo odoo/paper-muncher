@@ -56,6 +56,9 @@ struct InlineFormatingContext : FormatingContext {
 
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
 
+            if (impliesRemovingFromFlow(atomicBox.style->position))
+                continue;
+
             Input childInput{
                 .availableSpace = {inlineSize, input.availableSpace.y},
                 .containingBlock = {
@@ -83,11 +86,9 @@ struct InlineFormatingContext : FormatingContext {
             // worst case, they will take up the whole availableSpace, and a line break will be done right before them
             auto atomicBoxOutput = layoutBorderBox(tree, atomicBox, childInput, usedSpacings);
 
-            if (not impliesRemovingFromFlow(atomicBox.style->position)) {
-                boxStrutCell.size = atomicBoxOutput.size;
-                // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
-                boxStrutCell.baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
-            }
+            boxStrutCell.size = atomicBoxOutput.size;
+            // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
+            boxStrutCell.baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
         }
 
         // FIXME: prose has a ongoing state that is not reset between layout calls, but it should be
@@ -104,27 +105,31 @@ struct InlineFormatingContext : FormatingContext {
             auto& boxStrutCell = *strutCell->strut();
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
 
-            Math::Vec2<Opt<Au>> knownSize;
-            if (not impliesRemovingFromFlow(atomicBox.style->position)) {
-                knownSize = {
+            Input childInput{
+                .knownSize = {
                     boxStrutCell.size.x,
                     boxStrutCell.size.y
-                };
-            }
-
-            Input childInput{
-                .knownSize = knownSize,
-                .position = input.position + positionInProse,
-                .containingBlock = {
-                    input.knownSize.x.unwrapOr(0_au),
-                    input.knownSize.y.unwrapOr(0_au)
                 },
+                .position = input.position + positionInProse,
+                .containingBlock = {input.knownSize.x.unwrapOr(0_au), input.knownSize.y.unwrapOr(0_au)},
             };
 
             UsedSpacings usedSpacings{
                 .padding = computePaddings(tree, atomicBox, childInput.containingBlock),
                 .borders = computeBorders(tree, atomicBox),
             };
+
+            if (impliesRemovingFromFlow(atomicBox.style->position)) {
+                childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
+                    tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
+                    usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
+                );
+
+                childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
+                    tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
+                    usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
+                );
+            }
 
             if (input.fragment)
                 layoutAndCommitBorderBox(tree, atomicBox, childInput, *input.fragment, usedSpacings);
