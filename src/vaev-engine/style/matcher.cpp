@@ -224,8 +224,12 @@ static bool _matchLink(Gc::Ref<Dom::Element> el) {
 
 // 14.3.1. :nth-child() pseudo-class
 // 14.3.2. :nth-last-child() pseudo-class
+// 14.3.3. :first-child pseudo-class
+// 14.3.4. :last-child pseudo-class
 // https://www.w3.org/TR/selectors-4/#the-nth-child-pseudo
 // https://www.w3.org/TR/selectors-4/#the-nth-last-child-pseudo
+// https://www.w3.org/TR/selectors-4/#the-first-child-pseudo
+// https://www.w3.org/TR/selectors-4/#the-last-child-pseudo
 static bool _matchNthChild(Gc::Ref<Dom::Element> e, Pseudo::AnBofS const& anbOfS, bool isLast) {
     auto [anb, ofS] = anbOfS;
     if (ofS) {
@@ -247,36 +251,14 @@ static bool _matchNthChild(Gc::Ref<Dom::Element> e, Pseudo::AnBofS const& anbOfS
     }
 }
 
-// 14.3.3. :first-child pseudo-class
-// https://www.w3.org/TR/selectors-4/#the-first-child-pseudo
-static bool _matchFirstChild(Gc::Ref<Dom::Element> e) {
-    Gc::Ptr<Dom::Node> curr = e;
-    while (curr->hasPreviousSibling()) {
-        auto prev = curr->previousSibling();
-        if (auto el = prev->is<Dom::Element>())
-            return false;
-        curr = prev;
-    }
-    return true;
-}
-
-// 14.3.4. :last-child pseudo-class
-// https://www.w3.org/TR/selectors-4/#the-last-child-pseudo
-static bool _matchLastChild(Gc::Ref<Dom::Element> e) {
-    Gc::Ptr<Dom::Node> curr = e;
-    while (curr->hasNextSibling()) {
-        auto next = curr->nextSibling();
-        if (auto el = next->is<Dom::Element>())
-            return false;
-        curr = next;
-    }
-    return true;
-}
-
 // 14.4.1. :nth-of-type pseudo-class
 // 14.4.2. :nth-last-of-type pseudo-class
+// 14.4.3. :first-of-type pseudo-class
+// 14.4.4. :last-of-type pseudo-class
 // https://www.w3.org/TR/selectors-4/#the-nth-of-type-pseudo
 // https://www.w3.org/TR/selectors-4/#the-nth-last-of-type-pseudo
+// https://www.w3.org/TR/selectors-4/#the-first-of-type-pseudo
+// https://www.w3.org/TR/selectors-4/#the-last-of-type-pseudo
 static bool _matchNthOfType(Gc::Ref<Dom::Element> e, AnB const& anb, bool isLast) {
     Gc::Ptr<Dom::Node> curr = e;
     auto name = e->qualifiedName;
@@ -290,38 +272,6 @@ static bool _matchNthOfType(Gc::Ref<Dom::Element> e, AnB const& anb, bool isLast
     return anb.match(index + 1);
 }
 
-// 14.4.3. :first-of-type pseudo-class
-// https://www.w3.org/TR/selectors-4/#the-first-of-type-pseudo
-static bool _matchFirstOfType(Gc::Ref<Dom::Element> e) {
-    Gc::Ptr<Dom::Node> curr = e;
-    auto name = e->qualifiedName;
-
-    while (curr->hasPreviousSibling()) {
-        auto prev = curr->previousSibling();
-        if (auto el = prev->is<Dom::Element>())
-            if (e->qualifiedName == name)
-                return false;
-        curr = prev;
-    }
-    return true;
-}
-
-// 14.4.4. :last-of-type pseudo-class
-// https://www.w3.org/TR/selectors-4/#the-last-of-type-pseudo
-static bool _matchLastOfType(Gc::Ref<Dom::Element> e) {
-    Gc::Ptr<Dom::Node> curr = e;
-    auto name = e->qualifiedName;
-
-    while (curr->hasNextSibling()) {
-        auto prev = curr->nextSibling();
-        if (auto el = prev->is<Dom::Element>())
-            if (e->qualifiedName == name)
-                return false;
-        curr = prev;
-    }
-    return true;
-}
-
 static bool _match(Pseudo const& s, Gc::Ref<Dom::Element> el) {
     switch (s.type) {
     case Pseudo::LINK:
@@ -331,16 +281,16 @@ static bool _match(Pseudo const& s, Gc::Ref<Dom::Element> el) {
         return el->qualifiedName == Html::HTML_TAG;
 
     case Pseudo::FIRST_OF_TYPE:
-        return _matchFirstOfType(el);
+        return _matchNthOfType(el, AnB{0, 1}, false);
 
     case Pseudo::LAST_OF_TYPE:
-        return _matchLastOfType(el);
+        return _matchNthOfType(el, AnB{0, 1}, true);
 
     case Pseudo::FIRST_CHILD:
-        return _matchFirstChild(el);
+        return _matchNthChild(el, Pseudo::AnBofS{AnB{0, 1}, NONE}, false);
 
     case Pseudo::LAST_CHILD:
-        return _matchLastChild(el);
+        return _matchNthChild(el, Pseudo::AnBofS{AnB{0, 1}, NONE}, true);
 
     case Pseudo::NTH_CHILD:
         return _matchNthChild(el, s.extra.unwrap<Pseudo::AnBofS>("unexpected missing AnB"), false);
