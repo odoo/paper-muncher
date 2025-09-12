@@ -3425,10 +3425,10 @@ export struct StrokeWidthProp {
 // https://drafts.csswg.org/css-variables/#defining-variables
 // this symbolizes a custom property, it starts with `--` and can be used to store a value that can be reused in the stylesheet
 export struct CustomProp {
-    String varName;
+    Symbol varName;
     Css::Content value;
 
-    CustomProp(String varName, Css::Content value)
+    CustomProp(Symbol varName, Css::Content value)
         : varName(varName), value(value) {
     }
 
@@ -3446,21 +3446,21 @@ export struct CustomProp {
 // NOTE: A property that could not be parsed, it's used to store the value
 //       as-is and apply it with the cascade and custom properties
 export struct DeferredProp {
-    String propName;
+    Symbol propName;
     Css::Content value;
 
     static constexpr Str name() { return "deferred prop"; }
 
-    static bool _expandVariable(Cursor<Css::Sst>& c, Map<String, Css::Content> const& env, Css::Content& out);
+    static bool _expandVariable(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out);
 
-    static bool _expandFunction(Cursor<Css::Sst>& c, Map<String, Css::Content> const& env, Css::Content& out);
+    static bool _expandFunction(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out);
 
-    static void _expandContent(Cursor<Css::Sst>& c, Map<String, Css::Content> const& env, Css::Content& out);
+    static void _expandContent(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out);
 
     void apply(SpecifiedValues const& parent, SpecifiedValues& c) const;
 
     void repr(Io::Emit& e) const {
-        e("(Deffered {#} = {})", propName, value);
+        e("(deferred {#} = {})", propName, value);
     }
 };
 

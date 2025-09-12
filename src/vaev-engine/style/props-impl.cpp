@@ -15,7 +15,7 @@ static bool DEBUG_PROPS = false;
 
 // MARK: DeferredProp ----------------------------------------------------------
 
-bool DeferredProp::_expandVariable(Cursor<Css::Sst>& c, Map<String, Css::Content> const& env, Css::Content& out) {
+bool DeferredProp::_expandVariable(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out) {
     if (not(c->type == Css::Sst::FUNC and
             c->prefix == Css::Token::function("var(")))
         return false;
@@ -29,7 +29,7 @@ bool DeferredProp::_expandVariable(Cursor<Css::Sst>& c, Map<String, Css::Content
     if (content.peek() != Css::Token::IDENT)
         return true;
 
-    Str varName = content->token.data;
+    Symbol varName = Symbol::from(content->token.data);
     if (auto ref = env.access(varName)) {
         Cursor<Css::Sst> varContent = *ref;
         _expandContent(varContent, env, out);
@@ -46,7 +46,7 @@ bool DeferredProp::_expandVariable(Cursor<Css::Sst>& c, Map<String, Css::Content
     return true;
 }
 
-bool DeferredProp::_expandFunction(Cursor<Css::Sst>& c, Map<String, Css::Content> const& env, Css::Content& out) {
+bool DeferredProp::_expandFunction(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out) {
     if (c->type != Css::Sst::FUNC)
         return false;
 
@@ -58,7 +58,7 @@ bool DeferredProp::_expandFunction(Cursor<Css::Sst>& c, Map<String, Css::Content
     return true;
 }
 
-void DeferredProp::_expandContent(Cursor<Css::Sst>& c, Map<String, Css::Content> const& env, Css::Content& out) {
+void DeferredProp::_expandContent(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out) {
     // NOTE: Hint that we will add all the remaining elements
     out.ensure(out.len() + c.rem());
 
@@ -74,7 +74,7 @@ void DeferredProp::_expandContent(Cursor<Css::Sst>& c, Map<String, Css::Content>
 
 void DeferredProp::apply(SpecifiedValues const& parent, SpecifiedValues& c) const {
     Css::Sst decl{Css::Sst::DECL};
-    decl.token = Css::Token::ident(propName);
+    decl.token = Css::Token::ident(propName.str());
     Cursor<Css::Sst> cursor = value;
     _expandContent(cursor, *c.variables, decl.content);
 

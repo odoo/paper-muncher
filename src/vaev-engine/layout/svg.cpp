@@ -278,9 +278,10 @@ struct ShapeFrag : Frag {
             return fill.withOpacity(box->style->svg->fillOpacity);
         });
         Opt<Gfx::Color> resolvedStrokeColor = Vaev::Layout::resolve(box->style->svg->stroke, currentColor);
-        Opt<Gfx::Stroke> resolvedStroke = resolvedStrokeColor
-                                              ? Opt<Gfx::Stroke>{{*resolvedStrokeColor, (f64)strokeWidth}}
-                                              : NONE;
+        Opt<Gfx::Stroke> resolvedStroke =
+            resolvedStrokeColor
+                ? Opt<Gfx::Stroke>{{*resolvedStrokeColor, (f64)strokeWidth}}
+                : NONE;
 
         if (auto rect = shape.is<Rectangle<Au>>()) {
             return rectToSceneNode(rect->cast<f64>(), resolvedFill, resolvedStrokeColor, (f64)strokeWidth);

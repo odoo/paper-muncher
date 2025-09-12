@@ -45,7 +45,10 @@ Important _consumeImportant(Cursor<Css::Sst>& c, bool eatEverything) {
 
 template <typename P>
 P _deferProperty(Css::Sst const& sst) {
-    P prop = DeferredProp{sst.token.data, sst.content};
+    P prop = DeferredProp{
+        Symbol::from(sst.token.data),
+        sst.content,
+    };
     if constexpr (requires { P::important; }) {
         Cursor<Css::Sst> content = sst.content;
         prop.important = _consumeImportant(content, true);
@@ -105,7 +108,10 @@ Res<P> parseDeclaration(Css::Sst const& sst, bool allowDeferred = true) {
                         return false;
                     }
 
-                    resDecl = Ok(CustomProp(sst.token.data, sst.content));
+                    resDecl = Ok(CustomProp{
+                        Symbol::from(sst.token.data),
+                        sst.content,
+                    });
                     return true;
                 }
                 return false;

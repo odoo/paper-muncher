@@ -81,7 +81,7 @@ export struct SpecifiedValues {
     Cow<FlexProps> flex;
     Cow<BreakProps> break_;
 
-    Cow<Map<String, Css::Content>> variables;
+    Cow<Map<Symbol, Css::Content>> variables;
 
     Float float_ = Float::NONE;
     Clear clear = Clear::NONE;
@@ -110,11 +110,15 @@ export struct SpecifiedValues {
     }
 
     void setCustomProp(Str varName, Css::Content value) {
+        setCustomProp(Symbol::from(varName), value);
+    }
+
+    void setCustomProp(Symbol varName, Css::Content value) {
         variables.cow().put(varName, value);
     }
 
     Css::Content getCustomProp(Str varName) const {
-        auto value = variables->access(varName);
+        auto value = variables->access(Symbol::from(varName));
         if (value)
             return *value;
         return {};
