@@ -1,11 +1,11 @@
 #include <karm-sys/entry.h>
-#include <karm-sys/proc.h>
 
 import Karm.Ui;
 import Vaev.Browser;
 import Vaev.Engine;
 import Karm.Http;
 import Karm.Gc;
+import Karm.Sys;
 
 using namespace Karm;
 

@@ -2,8 +2,6 @@
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 #include <karm-sys/entry.h>
-#include <karm-sys/file.h>
-#include <karm-sys/proc.h>
 
 import Karm.Cli;
 import Karm.Gc;
@@ -11,6 +9,7 @@ import Karm.Http;
 import Karm.Image;
 import Karm.Print;
 import Karm.Debug;
+import Karm.Sys;
 import Vaev.Engine;
 
 using namespace Karm;
@@ -257,7 +256,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             widthArg,
             heightArg,
-            scaleArg,
+        scaleArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::RenderOption options{};

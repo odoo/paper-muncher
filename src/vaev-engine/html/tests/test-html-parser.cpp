@@ -2,6 +2,7 @@
 
 import Vaev.Engine;
 import Karm.Gc;
+import Karm.Ref;
 
 using namespace Karm;
 

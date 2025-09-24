@@ -1,6 +1,7 @@
 #include <karm-test/macros.h>
 
 import Karm.Gc;
+import Karm.Ref;
 import Vaev.Engine;
 
 using namespace Karm;

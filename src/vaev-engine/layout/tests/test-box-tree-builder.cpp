@@ -3,6 +3,7 @@
 
 import Vaev.Engine;
 import Karm.Gc;
+import Karm.Ref;
 import Karm.Print;
 
 using namespace Karm;
