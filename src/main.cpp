@@ -14,6 +14,29 @@ import Vaev.Engine;
 
 using namespace Karm;
 
+template <>
+struct Karm::Cli::ValueParser<Print::Margins> {
+    static Res<> usage(Io::TextWriter& w) {
+        return w.writeStr("margin"s);
+    }
+
+    static Res<Print::Margins> parse(Cursor<Token>& c) {
+        if (c.ended() or c->kind != Token::OPERAND)
+            return Error::invalidInput("expected margin");
+
+        auto value = c.next().value;
+
+        if (value == "default")
+            return Ok(Print::Margins::DEFAULT);
+        else if (value == "none")
+            return Ok(Print::Margins::NONE);
+        else if (value == "minimum")
+            return Ok(Print::Margins::MINIMUM);
+        else
+            return Error::invalidInput("expected margin");
+    }
+};
+
 namespace PaperMuncher {
 
 static Rc<Http::Client> _createHttpClient(bool unsecure) {
@@ -44,6 +67,7 @@ struct PrintOption {
     Opt<Vaev::Length> height = NONE;
     Print::PaperStock paper = Print::A4;
     Print::Orientation orientation = Print::Orientation::PORTRAIT;
+    Print::Margins margins = Print::Margins::DEFAULT;
     Ref::Uti outputFormat = Ref::Uti::PUBLIC_PDF;
 
     auto preparePrintSettings(this auto const& self) -> Print::Settings {
@@ -67,6 +91,7 @@ struct PrintOption {
 
         return {
             .paper = paper,
+            .margins = self.margins,
             .scale = self.scale.toDppx(),
         };
     }
@@ -194,6 +219,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto heightArg = Cli::option<Str>('h', "height"s, "Height of the output document in css units (e.g. 600px)"s, ""s);
     auto paperArg = Cli::option<Str>(NONE, "paper"s, "Paper size for printing (default: A4)"s, "A4"s);
     auto orientationArg = Cli::option<Str>(NONE, "orientation"s, "Page orientation (default: portrait)"s, "portrait"s);
+    auto marginArg = Cli::option<Print::Margins>(NONE, "margins"s, "Page margins (default: default)"s, Print::Margins::DEFAULT);
 
     cmd.subCommand(
         "print"s,
@@ -206,6 +232,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             paperArg,
             orientationArg,
+            marginArg,
 
             widthArg,
             heightArg,
@@ -225,6 +252,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             options.paper = co_try$(Print::findPaperStock(paperArg.unwrap()));
             options.orientation = co_try$(Vaev::parseValue<Print::Orientation>(orientationArg.unwrap()));
+            options.margins = marginArg.unwrap();
 
             Vec<Ref::Url> inputs;
             for (auto& i : inputsArg.unwrap())
@@ -256,7 +284,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
             widthArg,
             heightArg,
-        scaleArg,
+            scaleArg,
         },
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::RenderOption options{};
