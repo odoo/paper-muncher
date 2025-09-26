@@ -168,26 +168,19 @@ static Async::Task<> renderAsync(
         resolver.resolve(options.height),
     };
 
-    auto surface = Vaev::Driver::renderToSurface(dom, imageSize, options.scale);
-    Io::BufferWriter bw;
-    co_try$(
-        Image::save(
-            *surface,
-            bw,
-            {
-                .format = options.outputFormat,
-            }
-        )
-    );
+    Rc<Http::Body> body = Http::Body::empty();
+    if (options.outputFormat == Ref::Uti::PUBLIC_SVG) {
+        auto svg = Vaev::Driver::renderToSvg(dom, imageSize, options.scale);
+        body = Http::Body::from(svg);
+    } else {
+        auto surface = Vaev::Driver::renderToSurface(dom, imageSize, options.scale);
+        Image::Saver saves{.format = options.outputFormat};
+        body = Http::Body::from(co_try$(Image::save(*surface, saves)));
+    }
 
     co_trya$(client->doAsync(
-        Http::Request::from(
-            Http::Method::PUT,
-            output,
-            Http::Body::from(bw.take())
-        )
+        Http::Request::from(Http::Method::PUT, output, body)
     ));
-
     co_return Ok();
 }
 
@@ -306,8 +299,12 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (outputArg.unwrap() != "-"s)
                 output = Ref::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
 
-            if (formatArg.unwrap() != ""s)
+            if (formatArg.unwrap() != ""s) {
                 options.outputFormat = co_try$(Ref::Uti::fromMime({formatArg}));
+            } else {
+                auto mime = Ref::sniffSuffix(output.path.suffix());
+                options.outputFormat = mime ? co_try$(Ref::Uti::fromMime(*mime)) : Ref::Uti::PUBLIC_BMP;
+            }
 
             auto client = PaperMuncher::_createHttpClient(unsecureArg);
 

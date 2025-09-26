@@ -608,6 +608,8 @@ static Rc<Scene::Node> _applyTransform(Frag const& frag, Rc<Scene::Node> content
 
 // MARK: Stacking Context ------------------------------------------------------
 
+// 9.9 Layered presentation
+// https://www.w3.org/TR/CSS22/visuren.html
 static void _paintStackingContext(Frag& frag, Scene::Stack& stack) {
     // 1. the background and borders of the element forming the stacking context.
     _paintFrag(frag, stack);
@@ -660,7 +662,8 @@ static void _establishStackingContext(Frag& frag, Scene::Stack& stack) {
 }
 
 export void paint(Frag& frag, Scene::Stack& stack) {
-    _paintStackingContext(frag, stack);
+    // The root element forms the root stacking context.
+    _establishStackingContext(frag, stack);
 }
 
 // MARK: Wireframe -------------------------------------------------------------
