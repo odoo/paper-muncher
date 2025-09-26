@@ -12,7 +12,7 @@ apt-get install -y --no-install-recommends \
     jq
 
 # Build dependencies
-apt-get install -y --no-install-recommends libseccomp-dev liburing-dev libsdl2-dev
+apt-get install -y --no-install-recommends libseccomp-dev liburing-dev
 
 # Install llvm
 apt-get install -y --no-install-recommends wget lsb-release software-properties-common gnupg

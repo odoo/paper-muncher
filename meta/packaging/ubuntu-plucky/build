@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -e
+
+rm -rf .cutekit/venv
+rm -rf .cutekit/tools-ready
+rm -rf sysroot/
+
+podman run \
+    --rm \
+    -v "$PWD:/src" \
+    -w "/src" \
+    -e CUTEKIT_ALLOW_ROOT=1 \
+    ubuntu:plucky \
+    bash -c " \
+        ./ck tools setup && \
+        ./ck install --props:async=epoll --release --prefix=/opt/${COMPONENT} --sysroot=/src/sysroot ${COMPONENT} && \
+        mkdir /deb && \
+        mkdir /deb/DEBIAN && \
+        cp -r /src/sysroot/* /deb && \
+        cp -r meta/packaging/ubuntu-plucky/debian/* /deb/DEBIAN && \
+        mkdir -p /src/dist && \
+        dpkg-deb --build /deb /src/dist/${COMPONENT}_${VERSION}_plucky_amd64.deb"
+
+# Check if installing the package works
+podman run --rm -v "$PWD:/src" \
+    -w "/src" \
+    ubuntu:plucky \
+    bash -c " \
+        apt update && \
+        apt install -y /src/dist/${COMPONENT}_${VERSION}_plucky_amd64.deb && \
+        /opt/${COMPONENT}/bin/${COMPONENT} --version"

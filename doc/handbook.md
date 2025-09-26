@@ -26,10 +26,7 @@ As a team we believe that building exceptional software requires strong opinions
 
 ## Essential Commands
 
-* `./ck run vaev-browser -- <input document>`: Start the development environment.
-* `./ck run --debug vaev-browser -- <input document>`: For debugging.
-* `./ck run --profile vaev-browser -- <input document>`: For profiling (requires `perf` and `speedscope` to be installed).
-* `./ck run --release vaev-browser -- <input document>`: Build the release version.
+* `./ck reftests run`: Run all reftests.
 * `./ck test`: Run all tests.
 * `./ck clean`: Clean the build directory.
 
