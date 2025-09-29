@@ -13,7 +13,7 @@ import Karm.Md;
 import Karm.Ref;
 import Karm.Sys;
 
-import :dom;
+import :dom.document;
 import :html;
 import :xml;
 import :style;

@@ -103,8 +103,6 @@ static Async::Task<> printAsync(
     Ref::Url const& output,
     PrintOption options = {}
 ) {
-    Gc::Heap heap;
-
     auto printer = co_try$(
         Print::FilePrinter::create(
             options.outputFormat,
@@ -116,11 +114,9 @@ static Async::Task<> printAsync(
 
     for (auto& input : inputs) {
         logInfo("rendering {}...", input);
-        auto dom = co_trya$(Vaev::Loader::fetchDocumentAsync(heap, *client, input));
-        Vaev::Driver::print(
-            *dom,
-            options.preparePrintSettings()
-        ) | forEach([&](Print::Page& page) {
+        auto window = Vaev::Dom::Window::create(client);
+        co_trya$(window->loadLocationAsync(input));
+        window->print(options.preparePrintSettings()) | forEach([&](Print::Page& page) {
             page.print(
                 *printer,
                 {
@@ -158,25 +154,19 @@ static Async::Task<> renderAsync(
     Ref::Url const& output,
     RenderOption options = {}
 ) {
-    Gc::Heap heap;
-
-    auto dom = co_trya$(Vaev::Loader::fetchDocumentAsync(heap, *client, input));
-
+    auto window = Vaev::Dom::Window::create(client);
+    co_trya$(window->loadLocationAsync(input));
     Vaev::Layout::Resolver resolver;
     Vec2Au imageSize = {
         resolver.resolve(options.width),
         resolver.resolve(options.height),
     };
+    window->changeMedia(Vaev::Style::Media::forRender(imageSize.cast<Au>(), options.scale));
 
     Rc<Http::Body> body = Http::Body::empty();
-    if (options.outputFormat == Ref::Uti::PUBLIC_SVG) {
-        auto svg = Vaev::Driver::renderToSvg(dom, imageSize, options.scale);
-        body = Http::Body::from(svg);
-    } else {
-        auto surface = Vaev::Driver::renderToSurface(dom, imageSize, options.scale);
-        Image::Saver saves{.format = options.outputFormat};
-        body = Http::Body::from(co_try$(Image::save(*surface, saves)));
-    }
+
+    Image::Saver saves{.format = options.outputFormat, .density = options.density.toDppx()};
+    body = Http::Body::from(co_try$(Image::save(window->render(), imageSize.cast<isize>(), saves)));
 
     co_trya$(client->doAsync(
         Http::Request::from(Http::Method::PUT, output, body)

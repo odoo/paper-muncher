@@ -1,7 +1,7 @@
 export module Vaev.Engine:style.namespace_;
 
 import Karm.Core;
-import :dom;
+import :dom.names;
 
 using namespace Karm;
 

@@ -6,7 +6,10 @@ export module Vaev.Engine:html.parser;
 
 import Karm.Gc;
 import Karm.Debug;
-import :dom;
+import :dom.document;
+import :dom.documentType;
+import :dom.element;
+import :dom.comment;
 import :html.token;
 import :html.lexer;
 
@@ -110,6 +113,7 @@ export struct HtmlParser : HtmlSink {
         static Array const SPECIAL{
 #define SPECIAL(NAME) NAME,
 #include "defs/special.inc"
+
 #undef SPECIAL
         };
         return contains(SPECIAL, name);

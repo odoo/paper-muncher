@@ -11,7 +11,7 @@ import Karm.Scene;
 import Karm.Font;
 import :layout;
 import :style;
-import :dom;
+import :dom.document;
 import :values;
 
 namespace Vaev::Driver {
@@ -56,23 +56,6 @@ export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media
         makeRc<Scene::Clear>(sceneRoot, canvasColor),
         makeRc<Layout::Frag>(std::move(root)),
     };
-}
-
-export Rc<Scene::Node> renderToScene(Gc::Ref<Dom::Document> dom, Vec2Au imageSize, Resolution scale) {
-    auto media = Style::Media::forRender(imageSize, scale);
-    Vec2Au viewportSize = {media.width, media.height};
-    auto [layout, scene, frags] = Vaev::Driver::render(*dom, media, {.small = viewportSize});
-    return scene;
-}
-
-export Rc<Gfx::Surface> renderToSurface(Gc::Ref<Dom::Document> dom, Vec2Au imageSize, Resolution scale) {
-    auto scene = renderToScene(dom, imageSize, scale);
-    return scene->snapshot(imageSize.cast<f64>(), scale.toDppx());
-}
-
-export String renderToSvg(Gc::Ref<Dom::Document> dom, Vec2Au imageSize, Resolution scale) {
-    auto scene = renderToScene(dom, imageSize, scale);
-    return scene->toSvg(imageSize.cast<f64>(), scale.toDppx());
 }
 
 } // namespace Vaev::Driver

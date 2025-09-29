@@ -10,7 +10,8 @@ import Karm.Gc;
 import Karm.Font;
 import Karm.Ref;
 
-import :dom;
+import :dom.document;
+import :dom.element;
 import :style.specified;
 import :style.stylesheet;
 

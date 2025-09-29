@@ -178,6 +178,10 @@ export struct Media {
         };
     }
 
+    static Media defaultMedia() {
+        return forView({800, 600}, ColorScheme::LIGHT);
+    }
+
     static Media forRender(Vec2Au viewport, Resolution scale) {
         return {
             .type = MediaType::SCREEN,

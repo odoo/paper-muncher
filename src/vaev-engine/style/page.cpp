@@ -5,7 +5,7 @@ module;
 
 export module Vaev.Engine:style.page;
 
-import :dom;
+import :dom.element;
 import :style.origin;
 import :style.decls;
 

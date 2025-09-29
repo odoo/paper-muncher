@@ -26,12 +26,12 @@ export struct HtmlToken {
     };
 
     struct Attr {
-        Symbol name = Symbol::EMPTY;
+        Symbol name = ""_sym;
         String value;
     };
 
     Type type = NIL;
-    Symbol name = Symbol::EMPTY;
+    Symbol name = ""_sym;
     Rune rune = '\0';
     String data = ""s;
     String publicIdent = ""s;

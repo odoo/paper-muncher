@@ -13,7 +13,7 @@ import Karm.Ref;
 
 import :values;
 import :style;
-import :dom;
+import :dom.element;
 import :layout.values;
 import :layout.svg;
 

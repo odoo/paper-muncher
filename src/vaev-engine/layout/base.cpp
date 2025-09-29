@@ -1,5 +1,6 @@
 module;
 
+#include <karm-gfx/buffer.h>
 #include <karm-gfx/font.h>
 #include <karm-gfx/prose.h>
 #include <karm-math/trans.h>
@@ -9,6 +10,7 @@ export module Vaev.Engine:layout.base;
 import Karm.Image;
 import Karm.Gc;
 import :style;
+import :dom.element;
 import :layout.svg;
 
 namespace Vaev::Layout {
@@ -340,7 +342,7 @@ export using Content = Union<
     None,
     Vec<Box>,
     InlineBox,
-    Karm::Image::Picture,
+    Rc<Gfx::Surface>,
     SVGRoot>;
 
 export struct Attrs {
@@ -389,7 +391,7 @@ struct Box : Meta::NoCopy {
     }
 
     bool isReplaced() {
-        return content.is<Karm::Image::Picture>() or content.is<SVGRoot>();
+        return content.is<Rc<Gfx::Surface>>() or content.is<SVGRoot>();
     }
 
     void repr(Io::Emit& e) const {

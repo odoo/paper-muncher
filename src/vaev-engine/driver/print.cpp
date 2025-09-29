@@ -17,7 +17,7 @@ import Karm.Sys;
 import :style;
 import :layout;
 import :values;
-import :dom;
+import :dom.document;
 import :css;
 
 using namespace Karm;
@@ -88,7 +88,7 @@ void _paintMargins(Style::PageSpecifiedValues& pageStyle, RectAu pageRect, RectA
     _paintMainMargin(pageStyle, stack, rightRect, Style::PageArea::RIGHT, {Style::PageArea::RIGHT_TOP, Style::PageArea::RIGHT_MIDDLE, Style::PageArea::RIGHT_BOTTOM});
 }
 
-export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
+export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings settings) {
     auto media = Style::Media::forPrint(settings);
 
     Font::Database db;

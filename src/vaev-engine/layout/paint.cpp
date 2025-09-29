@@ -191,7 +191,7 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack) {
 
     if (auto ic = frag.box->content.is<InlineBox>()) {
         stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
-    } else if (auto image = frag.box->content.is<Karm::Image::Picture>()) {
+    } else if (auto image = frag.box->content.is<Rc<Gfx::Surface>>()) {
         stack.add(makeRc<Scene::Image>(frag.metrics.borderBox().cast<f64>(), *image, frag.metrics.radii.cast<f64>()));
     } else if (auto svgRoot = frag.content.is<SVGRootFrag>()) {
         if (min(frag.metrics.borderSize.x, frag.metrics.borderSize.y) == 0_au)

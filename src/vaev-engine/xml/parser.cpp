@@ -8,7 +8,9 @@ export module Vaev.Engine:xml.parser;
 import Karm.Core;
 import Karm.Gc;
 
-import :dom;
+import :dom.document;
+import :dom.comment;
+import :dom.documentType;
 
 using namespace Karm;
 

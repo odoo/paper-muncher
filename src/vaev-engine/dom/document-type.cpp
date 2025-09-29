@@ -1,4 +1,4 @@
-export module Vaev.Engine:dom.document_type;
+export module Vaev.Engine:dom.documentType;
 
 import Karm.Core;
 
@@ -12,7 +12,7 @@ namespace Vaev::Dom {
 export struct DocumentType : Node {
     static constexpr auto TYPE = NodeType::DOCUMENT_TYPE;
 
-    Symbol name = Symbol::EMPTY;
+    Symbol name = ""_sym;
     String publicId;
     String systemId;
 

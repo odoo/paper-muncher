@@ -10,7 +10,7 @@ import Karm.Image;
 import Karm.Gc;
 import Karm.Font;
 import :style;
-import :dom;
+import :dom.element;
 import :layout.values;
 
 namespace Vaev::Layout {

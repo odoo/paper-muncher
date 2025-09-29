@@ -7,7 +7,7 @@ export module Vaev.Engine:style.selector;
 
 import Karm.Core;
 import :css;
-import :dom;
+import :dom.element;
 import :values;
 import :style.namespace_;
 
@@ -393,6 +393,7 @@ export struct Pseudo {
     enum struct Type {
 #define PSEUDO(ID, ...) ID,
 #include "defs/pseudo.inc"
+
 #undef PSEUDO
 
         _LEN,
@@ -403,6 +404,7 @@ export struct Pseudo {
     if (name == NAME)       \
         return Type::IDENT;
 #include "defs/pseudo.inc"
+
 #undef PSEUDO
 
         return NONE;

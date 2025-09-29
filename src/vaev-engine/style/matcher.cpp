@@ -6,7 +6,7 @@ export module Vaev.Engine:style.matcher;
 
 import Karm.Core;
 import Karm.Gc;
-import :dom;
+import :dom.element;
 import :style.selector;
 
 using namespace Karm;

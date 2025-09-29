@@ -12,7 +12,7 @@ import Karm.Core;
 import Karm.Scene;
 
 import :style;
-import :dom;
+import :dom.names;
 import :values;
 
 using namespace Karm;

@@ -1,5 +1,6 @@
 module;
 
+#include <karm-gfx/buffer.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 
@@ -101,8 +102,8 @@ struct ReplacedFormatingContext : FormatingContext {
     Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
         Vec2Au size = {};
 
-        if (auto image = box.content.is<Karm::Image::Picture>()) {
-            size = image->bound().size().cast<Au>();
+        if (auto image = box.content.is<Rc<Gfx::Surface>>()) {
+            size = (*image)->bound().size().cast<Au>();
         } else if (auto svg = box.content.is<SVGRoot>()) {
             fillKnownSizeWithSpecifiedSizeIfEmpty(tree, box, input);
 

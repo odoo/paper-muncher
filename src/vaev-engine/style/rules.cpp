@@ -159,7 +159,7 @@ export struct NamespaceRule {
         }
         if (not maybeUrl) {
             logWarn("expected namespace URI, got: {}", prefixContent);
-            return {NONE, Symbol::EMPTY};
+            return {NONE, ""_sym};
         }
 
         // Store the namespace.
