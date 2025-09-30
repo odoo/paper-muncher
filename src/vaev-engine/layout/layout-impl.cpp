@@ -1,12 +1,12 @@
 module;
 
-#include <karm-gfx/borders.h>
-#include <karm-gfx/prose.h>
 #include <karm-logger/logger.h>
+#include <karm-math/au.h>
 
 module Vaev.Engine;
 
 import Karm.Image;
+import Karm.Gfx;
 import :values;
 import :layout.block;
 import :layout.flex;

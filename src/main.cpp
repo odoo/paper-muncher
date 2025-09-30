@@ -1,4 +1,3 @@
-#include <karm-gfx/cpu/canvas.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 #include <karm-sys/entry.h>
@@ -10,6 +9,7 @@ import Karm.Image;
 import Karm.Print;
 import Karm.Debug;
 import Karm.Sys;
+import Karm.Gfx;
 import Vaev.Engine;
 
 using namespace Karm;

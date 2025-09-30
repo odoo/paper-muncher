@@ -1,12 +1,12 @@
 module;
 
-#include <karm-gfx/color.h>
-#include <karm-gfx/font.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:style.specified;
 
 import Karm.Core;
+import Karm.Gfx;
+
 import :css;
 import :values;
 

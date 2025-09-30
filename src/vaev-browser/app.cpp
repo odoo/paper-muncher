@@ -1,7 +1,3 @@
-module;
-
-#include <karm-gfx/colors.h>
-
 export module Vaev.Browser:app;
 
 import Mdi;
@@ -12,6 +8,7 @@ import Karm.Kira;
 import Karm.Ref;
 import Karm.Sys;
 import Karm.Ui;
+import Karm.Gfx;
 import Vaev.Engine;
 import Vaev.View;
 import :inspect;

@@ -1,9 +1,10 @@
 module;
 
-#include <karm-gfx/colors.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:values.svg;
+
+import Karm.Gfx;
 
 import :css;
 import :values.base;

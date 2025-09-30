@@ -1,12 +1,12 @@
 module;
 
-#include <karm-gfx/buffer.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:layout.replaced;
 
 import Karm.Image;
+import Karm.Gfx;
 import :values;
 import :layout.base;
 import :layout.layout;

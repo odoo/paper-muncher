@@ -1,10 +1,11 @@
 module;
 
-#include <karm-gfx/color.h>
+#include <karm-math/vec.h>
 
 export module Vaev.Engine:values.image;
 
 import Karm.Ref;
+import Karm.Gfx;
 
 import :values.angle;
 import :values.color;

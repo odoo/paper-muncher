@@ -1,13 +1,13 @@
 module;
 
-#include <karm-gfx/font.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:layout.values;
 
-import :values;
+import Karm.Gfx;
 
+import :values;
 import :layout.base;
 import :layout.writing;
 

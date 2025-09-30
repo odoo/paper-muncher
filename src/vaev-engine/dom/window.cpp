@@ -1,13 +1,13 @@
 module;
 
 #include <karm-core/macros.h>
-#include <karm-gfx/buffer.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:dom.window;
 
 import Karm.Gc;
 import Karm.Http;
+import Karm.Gfx;
 import :style.media;
 import :dom.document;
 import :loader.loader;

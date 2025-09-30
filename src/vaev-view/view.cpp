@@ -1,6 +1,5 @@
 module;
 
-#include <karm-gfx/canvas.h>
 #include <karm-math/au.h>
 
 export module Vaev.View:view;
@@ -8,6 +7,7 @@ export module Vaev.View:view;
 import Karm.Gc;
 import Karm.Print;
 import Karm.Ui;
+import Karm.Gfx;
 import Vaev.Engine;
 
 using namespace Karm;

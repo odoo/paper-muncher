@@ -1,11 +1,11 @@
 module;
 
 #include <karm-core/macros.h>
-#include <karm-gfx/font.h>
 
 export module Vaev.Engine:values.font;
 
 import Karm.Ref;
+import Karm.Gfx;
 
 import :css;
 import :values.base;

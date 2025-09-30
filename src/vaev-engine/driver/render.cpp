@@ -1,6 +1,5 @@
 module;
 
-#include <karm-gfx/buffer.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 
@@ -9,6 +8,7 @@ export module Vaev.Engine:driver.render;
 import Karm.Gc;
 import Karm.Scene;
 import Karm.Font;
+import Karm.Gfx;
 import :layout;
 import :style;
 import :dom.document;

@@ -1,12 +1,12 @@
 module;
 
-#include <karm-gfx/font.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 
 export module Vaev.Engine:style.computer;
 
 import Karm.Gc;
+import Karm.Gfx;
 import Karm.Font;
 import Karm.Ref;
 

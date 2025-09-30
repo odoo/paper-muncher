@@ -1,11 +1,11 @@
 module;
 
-#include <karm-gfx/types.h>
 #include <karm-math/path.h>
 
 export module Vaev.Engine:values.basic_shape;
 
 import Karm.Core;
+import Karm.Gfx;
 
 import :css;
 import :values.base;

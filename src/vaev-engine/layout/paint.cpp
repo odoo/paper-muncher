@@ -1,9 +1,9 @@
 module;
 
-#include <karm-gfx/borders.h>
-#include <karm-gfx/outline.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
+#include <karm-math/path.h>
+#include <karm-math/trans.h>
 
 export module Vaev.Engine:layout.paint;
 
@@ -11,6 +11,7 @@ import Karm.Image;
 import Karm.Gc;
 import Karm.Scene;
 import Karm.Debug;
+import Karm.Gfx;
 
 import :style;
 import :layout.base;

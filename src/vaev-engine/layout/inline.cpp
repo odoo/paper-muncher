@@ -1,9 +1,10 @@
 module;
 
-#include <karm-gfx/prose.h>
+#include <karm-math/au.h>
 
 export module Vaev.Engine:layout.inline_;
 
+import Karm.Gfx;
 import :values;
 import :layout.base;
 import :layout.layout;

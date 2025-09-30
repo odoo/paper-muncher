@@ -1,8 +1,5 @@
 module;
 
-#include <karm-gfx/borders.h>
-#include <karm-gfx/colors.h>
-#include <karm-gfx/font.h>
 #include <karm-math/au.h>
 #include <karm-math/insets.h>
 
@@ -10,6 +7,7 @@ export module Vaev.Engine:style.props;
 
 import Karm.Core;
 import Karm.Ref;
+import Karm.Gfx;
 
 import :values;
 import :css;

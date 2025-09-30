@@ -1,6 +1,5 @@
 module;
 
-#include <karm-gfx/colors.h>
 #include <karm-logger/logger.h>
 #include <karm-math/au.h>
 #include <karm-math/trans.h>
@@ -13,6 +12,7 @@ import Karm.Print;
 import Karm.Scene;
 import Karm.Font;
 import Karm.Sys;
+import Karm.Gfx;
 
 import :style;
 import :layout;

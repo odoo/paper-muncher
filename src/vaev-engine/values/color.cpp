@@ -1,11 +1,12 @@
 module;
 
-#include <karm-gfx/colors.h>
+#include <karm-core/macros.h>
 #include <karm-logger/logger.h>
 
 export module Vaev.Engine:values.color;
 
 import Karm.Core;
+import Karm.Gfx;
 
 import :css;
 import :values.base;

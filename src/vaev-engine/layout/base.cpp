@@ -1,14 +1,14 @@
 module;
 
-#include <karm-gfx/buffer.h>
-#include <karm-gfx/font.h>
-#include <karm-gfx/prose.h>
 #include <karm-math/trans.h>
+#include <karm-math/au.h>
 
 export module Vaev.Engine:layout.base;
 
 import Karm.Image;
 import Karm.Gc;
+import Karm.Gfx;
+
 import :style;
 import :dom.element;
 import :layout.svg;
