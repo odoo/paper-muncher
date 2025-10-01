@@ -1,0 +1,30 @@
+name: Merge to Passing
+
+on:
+  workflow_run:
+    workflows: [ "Checks (Ubuntu)", "Checks (Darwin)" ]
+    types:
+      - completed
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Rebase passing onto main
+        run: |
+          git fetch origin passing:passing
+          git checkout passing
+          git rebase "origin/main"
+          git push origin passing
