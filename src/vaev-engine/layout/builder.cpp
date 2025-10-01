@@ -393,13 +393,13 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 }
 
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el);
-void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group);
+void buildSVGAggregate(Gc::Ref<Dom::Element> el, Svg::Group& group);
 
-void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group& group) {
-    if (SVG::isShape(el->qualifiedName)) {
-        group.add(SVG::Shape::build(el->specifiedValues(), el->qualifiedName));
+void buildSVGElement(Gc::Ref<Dom::Element> el, Svg::Group& group) {
+    if (Svg::isShape(el->qualifiedName)) {
+        group.add(Svg::Shape::build(el->specifiedValues(), el->qualifiedName));
     } else if (el->qualifiedName == Svg::G_TAG) {
-        SVG::Group nestedGroup{el->specifiedValues()};
+        Svg::Group nestedGroup{el->specifiedValues()};
         buildSVGAggregate(el, nestedGroup);
         group.add(std::move(nestedGroup));
     } else if (el->qualifiedName == Svg::SVG_TAG) {
@@ -430,7 +430,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group& group) {
     }
 }
 
-void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group) {
+void buildSVGAggregate(Gc::Ref<Dom::Element> el, Svg::Group& group) {
     for (auto child = el->firstChild(); child; child = child->nextSibling()) {
         if (auto el = child->is<Dom::Element>()) {
             buildSVGElement(*el, group);

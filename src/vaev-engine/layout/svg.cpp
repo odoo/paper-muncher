@@ -55,7 +55,7 @@ Opt<Gfx::Color> resolve(Paint color, Gfx::Color currentColor) {
     return Vaev::resolve(color.unwrap<Color>(), currentColor);
 }
 
-namespace SVG {
+namespace Svg {
 
 Au normalizedDiagonal(Vec2Au relativeTo) {
     return Au{

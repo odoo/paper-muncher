@@ -9,12 +9,15 @@ import Karm.Gc;
 import Karm.Scene;
 import Karm.Font;
 import Karm.Gfx;
+import Karm.Debug;
 import :layout;
 import :style;
 import :dom.document;
 import :values;
 
 namespace Vaev::Driver {
+
+Debug::Flag debugPaint{"web-paint"};
 
 export struct RenderResult {
     Rc<Layout::Box> layout;
@@ -50,6 +53,8 @@ export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media
     auto sceneRoot = makeRc<Scene::Stack>();
     Layout::paint(root, *sceneRoot);
     sceneRoot->prepare();
+    if (debugPaint)
+        logDebug("{}", sceneRoot);
 
     return {
         makeRc<Layout::Box>(std::move(tree.root)),
