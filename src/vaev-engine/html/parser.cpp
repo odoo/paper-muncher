@@ -15,7 +15,7 @@ import :html.lexer;
 
 namespace Vaev::Html {
 
-static Debug::Flag debugParser{"web-html-parser"s};
+static auto debugParser = Debug::Flag::debug("web-html-parser"s, "Log HTML parser state transitions"s);
 
 #define FOREACH_INSERTION_MODE(MODE) \
     MODE(INITIAL)                    \

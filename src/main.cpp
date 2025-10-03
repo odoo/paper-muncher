@@ -15,7 +15,7 @@ import Vaev.Engine;
 using namespace Karm;
 
 template <>
-struct Karm::Cli::ValueParser<Print::Margins> {
+struct Cli::ValueParser<Print::Margins> {
     static Res<> usage(Io::TextWriter& w) {
         return w.writeStr("margin"s);
     }
@@ -187,10 +187,18 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     Cli::Command cmd{
         "paper-muncher"s,
         "Munch the web into crisp documents"s,
-        {unsecureArg, verboseArg},
+        {
+            {
+                "Global Options"s,
+                {
+                    unsecureArg,
+                    verboseArg,
+                },
+            },
+        },
         [=](Sys::Context&) -> Async::Task<> {
-            setLogLevel(verboseArg ? PRINT : ERROR);
-            if (not unsecureArg)
+            setLogLevel(verboseArg.value() ? PRINT : ERROR);
+            if (not unsecureArg.value())
                 co_try$(Sys::enterSandbox());
             co_return Ok();
         }
@@ -198,8 +206,8 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
     auto scaleArg = Cli::option<Str>(NONE, "scale"s, "Scale of the input document in css units (e.g. 1x)"s, "1x"s);
     auto densityArg = Cli::option<Str>(NONE, "density"s, "Density of the output document in css units (e.g. 96dpi)"s, "1x"s);
-    auto widthArg = Cli::option<Str>('w', "width"s, "Width of the output document in css units (e.g. 800px)"s, ""s);
-    auto heightArg = Cli::option<Str>('h', "height"s, "Height of the output document in css units (e.g. 600px)"s, ""s);
+    auto widthArg = Cli::option<Str>(NONE, "width"s, "Width of the output document in css units (e.g. 800px)"s, ""s);
+    auto heightArg = Cli::option<Str>(NONE, "height"s, "Height of the output document in css units (e.g. 600px)"s, ""s);
     auto paperArg = Cli::option<Str>(NONE, "paper"s, "Paper size for printing (default: A4)"s, "A4"s);
     auto orientationArg = Cli::option<Str>(NONE, "orientation"s, "Page orientation (default: portrait)"s, "portrait"s);
     auto marginArg = Cli::option<Print::Margins>(NONE, "margins"s, "Page margins (default: default)"s, Print::Margins::DEFAULT);
@@ -208,50 +216,66 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
         "print"s,
         "Render a web page into a printable document"s,
         {
-            inputsArg,
-            outputArg,
-            formatArg,
-            densityArg,
+            {
+                "Input/Output Options"s,
+                {
+                    inputsArg,
+                    outputArg,
+                    formatArg,
+                    densityArg,
+                },
+            },
 
-            paperArg,
-            orientationArg,
-            marginArg,
+            {
+                "Paper Options"s,
+                {
+                    paperArg,
+                    orientationArg,
+                    marginArg,
+                },
+            },
 
-            widthArg,
-            heightArg,
-            scaleArg,
+            {
+                "Viewport Options"s,
+                {
+                    widthArg,
+                    heightArg,
+                    scaleArg,
+                },
+            },
         },
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::PrintOption options{};
 
-            options.scale = co_try$(Vaev::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
-            options.density = co_try$(Vaev::parseValue<Vaev::Resolution>(densityArg.unwrap()));
+            options.scale = co_try$(Vaev::parseValue<Vaev::Resolution>(scaleArg.value()));
+            options.density = co_try$(Vaev::parseValue<Vaev::Resolution>(densityArg.value()));
 
-            if (widthArg.unwrap())
-                options.width = co_try$(Vaev::parseValue<Vaev::Length>(widthArg.unwrap()));
+            if (widthArg.value())
+                options.width = co_try$(Vaev::parseValue<Vaev::Length>(widthArg.value()));
 
-            if (heightArg.unwrap())
-                options.height = co_try$(Vaev::parseValue<Vaev::Length>(heightArg.unwrap()));
+            if (heightArg.value())
+                options.height = co_try$(Vaev::parseValue<Vaev::Length>(heightArg.value()));
 
-            options.paper = co_try$(Print::findPaperStock(paperArg.unwrap()));
-            options.orientation = co_try$(Vaev::parseValue<Print::Orientation>(orientationArg.unwrap()));
-            options.margins = marginArg.unwrap();
+            options.paper = co_try$(Print::findPaperStock(paperArg.value()));
+            options.orientation = co_try$(Vaev::parseValue<Print::Orientation>(orientationArg.value()));
+            options.margins = marginArg.value();
 
             Vec<Ref::Url> inputs;
-            for (auto& i : inputsArg.unwrap())
+            for (auto& i : inputsArg.value())
                 if (i == "-"s)
                     inputs.pushBack("fd:stdin"_url);
                 else
                     inputs.pushBack(Ref::parseUrlOrPath(i, co_try$(Sys::pwd())));
 
             Ref::Url output = "fd:stdout"_url;
-            if (outputArg.unwrap() != "-"s)
-                output = Ref::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
+            if (outputArg.value() != "-"s)
+                output = Ref::parseUrlOrPath(outputArg.value(), co_try$(Sys::pwd()));
 
-            if (formatArg.unwrap() != ""s)
-                options.outputFormat = co_try$(Ref::Uti::fromMime({formatArg}));
+            if (formatArg.value() != ""s)
+                options.outputFormat = co_try$(Ref::Uti::fromMime({formatArg.value()}));
 
-            auto client = PaperMuncher::_createHttpClient(unsecureArg);
+            auto client = PaperMuncher::_createHttpClient(unsecureArg.value());
+
             co_return co_await PaperMuncher::printAsync(client, inputs, output, options);
         }
     );
@@ -260,43 +284,54 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
         "render"s,
         "Render a web page into an image"s,
         {
-            inputArg,
-            outputArg,
-            formatArg,
-            densityArg,
+            {
+                "Input/Output Options"s,
+                {
+                    inputsArg,
+                    outputArg,
+                    formatArg,
+                    densityArg,
+                },
+            },
 
-            widthArg,
-            heightArg,
-            scaleArg,
+            {
+                "Viewport Options"s,
+                {
+
+                    widthArg,
+                    heightArg,
+                    scaleArg,
+                },
+            },
         },
         [=](Sys::Context&) -> Async::Task<> {
             PaperMuncher::RenderOption options{};
 
-            options.scale = co_try$(Vaev::parseValue<Vaev::Resolution>(scaleArg.unwrap()));
-            options.density = co_try$(Vaev::parseValue<Vaev::Resolution>(densityArg.unwrap()));
+            options.scale = co_try$(Vaev::parseValue<Vaev::Resolution>(scaleArg.value()));
+            options.density = co_try$(Vaev::parseValue<Vaev::Resolution>(densityArg.value()));
 
-            if (widthArg.unwrap())
-                options.width = co_try$(Vaev::parseValue<Vaev::Length>(widthArg.unwrap()));
+            if (widthArg.value())
+                options.width = co_try$(Vaev::parseValue<Vaev::Length>(widthArg.value()));
 
-            if (heightArg.unwrap())
-                options.height = co_try$(Vaev::parseValue<Vaev::Length>(heightArg.unwrap()));
+            if (heightArg.value())
+                options.height = co_try$(Vaev::parseValue<Vaev::Length>(heightArg.value()));
 
             Ref::Url input = "fd:stdin"_url;
-            if (inputArg.unwrap() != "-"s)
-                input = Ref::parseUrlOrPath(inputArg, co_try$(Sys::pwd()));
+            if (inputArg.value() != "-"s)
+                input = Ref::parseUrlOrPath(inputArg.value(), co_try$(Sys::pwd()));
 
             Ref::Url output = "fd:stdout"_url;
-            if (outputArg.unwrap() != "-"s)
-                output = Ref::parseUrlOrPath(outputArg, co_try$(Sys::pwd()));
+            if (outputArg.value() != "-"s)
+                output = Ref::parseUrlOrPath(outputArg.value(), co_try$(Sys::pwd()));
 
-            if (formatArg.unwrap() != ""s) {
-                options.outputFormat = co_try$(Ref::Uti::fromMime({formatArg}));
+            if (formatArg.value() != ""s) {
+                options.outputFormat = co_try$(Ref::Uti::fromMime({formatArg.value()}));
             } else {
                 auto mime = Ref::sniffSuffix(output.path.suffix());
                 options.outputFormat = mime ? co_try$(Ref::Uti::fromMime(*mime)) : Ref::Uti::PUBLIC_BMP;
             }
 
-            auto client = PaperMuncher::_createHttpClient(unsecureArg);
+            auto client = PaperMuncher::_createHttpClient(unsecureArg.value());
 
             co_return co_await renderAsync(client, input, output, options);
         }

@@ -6,6 +6,7 @@ export module Vaev.Engine:style.matcher;
 
 import Karm.Core;
 import Karm.Gc;
+import Karm.Debug;
 import :dom.element;
 import :style.selector;
 
@@ -13,7 +14,8 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
-static constexpr bool DEBUG_MATCHING = false;
+static auto debugMatching = Debug::Flag::debug("web-style-matching", "Log failures to match selectors");
+static auto featureNthChild = Debug::Flag::feature("web-style-nth_child", "Enable :nth-child() and related selectors");
 
 static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el);
 export Opt<Spec> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el);
@@ -84,7 +86,7 @@ static bool _match(Infix const& s, Gc::Ref<Dom::Element> e) {
         return _matchSubsequent(*s.lhs, e);
 
     default:
-        logWarnIf(DEBUG_MATCHING, "unimplemented selector: {}", s);
+        logWarnIf(debugMatching, "unimplemented selector: {}", s);
         return false;
     }
 }
@@ -115,7 +117,7 @@ static bool _match(Nfix const& s, Gc::Ref<Dom::Element> el) {
         return not _matchSelector(s.inners[0], el);
 
     default:
-        logWarnIf(DEBUG_MATCHING, "unimplemented selector: {}", s);
+        logWarnIf(debugMatching, "unimplemented selector: {}", s);
         return false;
     }
 }
@@ -231,6 +233,9 @@ static bool _matchLink(Gc::Ref<Dom::Element> el) {
 // https://www.w3.org/TR/selectors-4/#the-first-child-pseudo
 // https://www.w3.org/TR/selectors-4/#the-last-child-pseudo
 static bool _matchNthChild(Gc::Ref<Dom::Element> e, Pseudo::AnBofS const& anbOfS, bool isLast) {
+    if (not featureNthChild.enabled)
+        return false;
+
     auto [anb, ofS] = anbOfS;
     if (ofS) {
         if (not matchSelector(*(ofS.unwrap()), *e))
@@ -260,6 +265,9 @@ static bool _matchNthChild(Gc::Ref<Dom::Element> e, Pseudo::AnBofS const& anbOfS
 // https://www.w3.org/TR/selectors-4/#the-first-of-type-pseudo
 // https://www.w3.org/TR/selectors-4/#the-last-of-type-pseudo
 static bool _matchNthOfType(Gc::Ref<Dom::Element> e, AnB const& anb, bool isLast) {
+    if (not featureNthChild.enabled)
+        return false;
+
     Gc::Ptr<Dom::Node> curr = e;
     auto name = e->qualifiedName;
 
@@ -305,7 +313,7 @@ static bool _match(Pseudo const& s, Gc::Ref<Dom::Element> el) {
         return _matchNthOfType(el, s.extra.unwrap<Pseudo::AnBofS>("unexpected missing AnB").v0, true);
 
     default:
-        logDebugIf(DEBUG_MATCHING, "unimplemented pseudo class: {}", s);
+        logDebugIf(debugMatching, "unimplemented pseudo class: {}", s);
         return false;
     }
 }
@@ -318,7 +326,7 @@ static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> el) {
         if constexpr (requires { _match(s, el); })
             return _match(s, el);
 
-        logWarnIf(DEBUG_MATCHING, "unimplemented selector: {}", s);
+        logWarnIf(debugMatching, "unimplemented selector: {}", s);
         return false;
     }});
 }

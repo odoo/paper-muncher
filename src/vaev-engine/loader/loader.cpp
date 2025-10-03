@@ -147,8 +147,8 @@ Async::Task<> _fetchStylesheetsAsync(Http::Client& client, Gc::Ref<Dom::Node> no
     co_return Ok();
 }
 
-static Debug::Flag dumpDom{"web-dom"};
-static Debug::Flag dumpStylesheets{"web-stylesheets"};
+static auto dumpDom = Debug::Flag::debug("web-dom", "Dump the loaded DOM tree");
+static auto dumpStylesheets = Debug::Flag::debug("web-stylesheets", "Dump the loaded stylesheets");
 
 export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url) {
     if (url.scheme == "about") {

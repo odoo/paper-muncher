@@ -24,7 +24,9 @@ def fetchFile(args: model.TargetArgs, component: str, path: str) -> str:
 
 
 def fetchMessage(args: model.TargetArgs, type: str) -> str:
-    message = eval("[" + fetchFile(args, "karm-core", "base/defs/" + type + ".inc") + "]")
+    message = eval(
+        "[" + fetchFile(args, "karm-core", "base/defs/" + type + ".inc") + "]"
+    )
     return message[randint(0, len(message) - 1)]
 
 
@@ -194,6 +196,8 @@ def _(args: RefTestArgs):
                     ysize = "600"
 
                 paperMuncher.popen(
+                    "--feature",
+                    "*=on",
                     "--verbose",
                     "--unsecure",
                     "render",

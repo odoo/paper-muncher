@@ -13,7 +13,7 @@ using namespace Karm;
 
 namespace Vaev::Html {
 
-static Debug::Flag debugLexer{"web-html-lexer"};
+static auto debugLexer = Debug::Flag::debug("web-html-lexer", "Log HTML lexer state transitions");
 
 struct HtmlEntity {
     Str name;

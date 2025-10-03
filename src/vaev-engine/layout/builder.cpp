@@ -835,7 +835,7 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
 
 // MARK: Entry points -----------------------------------------------------------------
 
-static Debug::Flag dumpBoxes{"web-boxes"s};
+static auto dumpBoxes = Debug::Flag::debug("web-boxes"s, "Dump the constructed boxes"s);
 
 export Box build(Gc::Ref<Dom::Document> doc) {
     // NOTE: Fallback in case of an empty document
