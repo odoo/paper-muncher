@@ -287,7 +287,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             {
                 "Input/Output Options"s,
                 {
-                    inputsArg,
+                    inputArg,
                     outputArg,
                     formatArg,
                     densityArg,
