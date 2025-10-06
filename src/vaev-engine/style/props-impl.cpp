@@ -1,8 +1,7 @@
-module;
-
-#include <karm-logger/logger.h>
-
 module Vaev.Engine;
+
+import Karm.Core;
+import Karm.Logger;
 
 import :css;
 import :values;

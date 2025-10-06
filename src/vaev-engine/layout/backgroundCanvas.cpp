@@ -1,14 +1,11 @@
-module;
-
-#include <karm-math/au.h>
-#include <karm-logger/logger.h>
-
 export module Vaev.Engine:layout.backgroundCanvas;
 
 import Karm.Image;
 import Karm.Gc;
 import Karm.Font;
 import Karm.Gfx;
+import Karm.Math;
+import Karm.Logger;
 
 import :style;
 import :dom.element;

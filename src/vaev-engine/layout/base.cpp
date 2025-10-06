@@ -1,13 +1,9 @@
-module;
-
-#include <karm-math/trans.h>
-#include <karm-math/au.h>
-
 export module Vaev.Engine:layout.base;
 
 import Karm.Image;
 import Karm.Gc;
 import Karm.Gfx;
+import Karm.Math;
 
 import :style;
 import :dom.element;

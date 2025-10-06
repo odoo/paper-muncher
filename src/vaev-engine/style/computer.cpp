@@ -1,14 +1,11 @@
-module;
-
-#include <karm-logger/logger.h>
-#include <karm-math/au.h>
-
 export module Vaev.Engine:style.computer;
 
 import Karm.Gc;
 import Karm.Gfx;
 import Karm.Font;
 import Karm.Ref;
+import Karm.Math;
+import Karm.Logger;
 
 import :dom.document;
 import :dom.element;

@@ -1,11 +1,7 @@
-module;
-
-#include <karm-math/au.h>
-#include <karm-math/radii.h>
-
 export module Vaev.Engine:values.borders;
 
 import Karm.Gfx;
+import Karm.Math;
 
 import :css;
 import :values.base;

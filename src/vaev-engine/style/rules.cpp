@@ -1,12 +1,9 @@
-module;
-
-#include <karm-logger/logger.h>
-
 export module Vaev.Engine:style.rules;
 
 import Karm.Core;
 import Karm.Gc;
 import Karm.Ref;
+import Karm.Logger;
 
 import :css;
 import :style.fonts;

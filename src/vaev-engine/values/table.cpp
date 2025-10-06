@@ -1,10 +1,7 @@
-module;
-
-#include <karm-math/au.h>
-
 export module Vaev.Engine:values.table;
 
 import Karm.Core;
+import Karm.Math;
 
 import :css;
 import :values.base;

@@ -1,7 +1,6 @@
 module;
 
 #include <karm-core/macros.h>
-#include <karm-logger/logger.h>
 
 export module Vaev.Engine:layout.builder;
 
@@ -11,6 +10,7 @@ import Karm.Debug;
 import Karm.Font;
 import Karm.Ref;
 import Karm.Gfx;
+import Karm.Logger;
 
 import :values;
 import :style;

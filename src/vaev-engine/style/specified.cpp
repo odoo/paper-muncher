@@ -1,11 +1,8 @@
-module;
-
-#include <karm-math/au.h>
-
 export module Vaev.Engine:style.specified;
 
 import Karm.Core;
 import Karm.Gfx;
+import Karm.Math;
 
 import :css;
 import :values;

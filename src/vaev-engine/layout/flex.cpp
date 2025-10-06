@@ -1,9 +1,11 @@
 module;
 
-#include <karm-logger/logger.h>
-#include <karm-math/au.h>
+#include <karm-core/macros.h>
 
 export module Vaev.Engine:layout.flex;
+
+import Karm.Math;
+import Karm.Logger;
 
 import :values;
 import :layout.layout;

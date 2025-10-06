@@ -1,11 +1,12 @@
 module;
 
 #include <karm-core/macros.h>
-#include <karm-logger/logger.h>
 
 export module Vaev.Engine:style.selector;
 
 import Karm.Core;
+import Karm.Logger;
+
 import :css;
 import :dom.element;
 import :values;

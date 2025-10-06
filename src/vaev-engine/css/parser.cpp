@@ -1,8 +1,6 @@
-module;
-
-#include <karm-logger/logger.h>
-
 export module Vaev.Engine:css.parser;
+
+import Karm.Logger;
 
 import :css.lexer;
 

@@ -1,12 +1,10 @@
-module;
-
-#include <karm-logger/logger.h>
-
 export module Vaev.Engine:style.matcher;
 
 import Karm.Core;
 import Karm.Gc;
 import Karm.Debug;
+import Karm.Logger;
+
 import :dom.element;
 import :style.selector;
 

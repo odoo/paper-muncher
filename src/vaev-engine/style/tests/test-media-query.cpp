@@ -1,7 +1,7 @@
-#include <karm-math/au.h>
 #include <karm-test/macros.h>
 
 import Karm.Print;
+import Karm.Math;
 import Vaev.Engine;
 
 using namespace Karm;

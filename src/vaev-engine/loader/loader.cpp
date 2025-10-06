@@ -1,7 +1,6 @@
 module;
 
 #include <karm-core/macros.h>
-#include <karm-logger/logger.h>
 
 export module Vaev.Engine:loader.loader;
 
@@ -12,6 +11,7 @@ import Karm.Debug;
 import Karm.Md;
 import Karm.Ref;
 import Karm.Sys;
+import Karm.Logger;
 
 import :dom.document;
 import :html;

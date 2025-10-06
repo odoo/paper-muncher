@@ -1,8 +1,10 @@
 module;
 
-#include <karm-math/au.h>
+#include <karm-core/macros.h>
 
 export module Vaev.Engine:values.lineWidth;
+
+import Karm.Math;
 
 import :css;
 import :values.base;

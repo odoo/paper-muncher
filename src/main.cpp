@@ -1,5 +1,3 @@
-#include <karm-logger/logger.h>
-#include <karm-math/au.h>
 #include <karm-sys/entry.h>
 
 import Karm.Cli;
@@ -10,6 +8,9 @@ import Karm.Print;
 import Karm.Debug;
 import Karm.Sys;
 import Karm.Gfx;
+import Karm.Math;
+import Karm.Logger;
+
 import Vaev.Engine;
 
 using namespace Karm;

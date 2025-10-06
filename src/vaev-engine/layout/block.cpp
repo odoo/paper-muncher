@@ -1,10 +1,10 @@
 module;
 
 #include <karm-core/macros.h>
-#include <karm-math/au.h>
 
 export module Vaev.Engine:layout.block;
 
+import Karm.Math;
 import :values;
 import :layout.base;
 import :layout.layout;

@@ -1,11 +1,8 @@
-module;
-
-#include <karm-logger/logger.h>
-
 export module Vaev.Engine:html.lexer;
 
 import Karm.Core;
 import Karm.Debug;
+import Karm.Logger;
 
 import :html.token;
 

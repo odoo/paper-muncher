@@ -1,9 +1,3 @@
-module;
-
-#include <karm-logger/logger.h>
-#include <karm-math/au.h>
-#include <karm-math/trans.h>
-
 export module Vaev.Engine:driver.print;
 
 import Karm.Core;
@@ -13,6 +7,8 @@ import Karm.Scene;
 import Karm.Font;
 import Karm.Sys;
 import Karm.Gfx;
+import Karm.Math;
+import Karm.Logger;
 
 import :style;
 import :layout;

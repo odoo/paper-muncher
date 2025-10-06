@@ -1,8 +1,6 @@
-module;
-
-#include <karm-math/au.h>
-
 export module Vaev.Engine:layout.layout;
+
+import Karm.Math;
 
 import :layout.base;
 

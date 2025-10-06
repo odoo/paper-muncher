@@ -1,11 +1,7 @@
-module;
-
-#include <karm-math/au.h>
-#include <karm-math/radii.h>
-
 export module Vaev.Engine:values.outline;
 
 import Karm.Gfx;
+import Karm.Math;
 
 import :values.color;
 import :values.lineWidth;

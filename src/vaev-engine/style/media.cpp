@@ -1,12 +1,10 @@
-module;
-
-#include <karm-logger/logger.h>
-#include <karm-math/au.h>
-
 export module Vaev.Engine:style.media;
 
 import Karm.Core;
 import Karm.Print;
+import Karm.Math;
+import Karm.Logger;
+
 import :values;
 import :css;
 

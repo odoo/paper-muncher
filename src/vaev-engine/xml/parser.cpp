@@ -1,12 +1,12 @@
 module;
 
 #include <karm-core/macros.h>
-#include <karm-logger/logger.h>
 
 export module Vaev.Engine:xml.parser;
 
 import Karm.Core;
 import Karm.Gc;
+import Karm.Logger;
 
 import :dom.document;
 import :dom.comment;

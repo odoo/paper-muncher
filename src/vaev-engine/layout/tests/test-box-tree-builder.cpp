@@ -1,11 +1,11 @@
 #include <karm-test/macros.h>
-#include <karm-math/au.h>
 
 import Vaev.Engine;
 import Karm.Gc;
 import Karm.Ref;
 import Karm.Print;
 import Karm.Gfx;
+import Karm.Math;
 
 using namespace Karm;
 

@@ -1,13 +1,12 @@
-module;
-
-#include <karm-math/au.h>
-
 export module Vaev.View:view;
 
 import Karm.Gc;
 import Karm.Print;
 import Karm.Ui;
 import Karm.Gfx;
+import Karm.Math;
+import Karm.Core;
+
 import Vaev.Engine;
 
 using namespace Karm;

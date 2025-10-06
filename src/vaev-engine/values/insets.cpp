@@ -1,10 +1,7 @@
-module;
-
-#include <karm-math/insets.h>
-
 export module Vaev.Engine:values.insets;
 
 import Karm.Core;
+import Karm.Math;
 
 import :css;
 import :values.base;

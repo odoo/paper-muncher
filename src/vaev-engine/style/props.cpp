@@ -1,13 +1,13 @@
 module;
 
-#include <karm-math/au.h>
-#include <karm-math/insets.h>
+#include <karm-core/macros.h>
 
 export module Vaev.Engine:style.props;
 
 import Karm.Core;
 import Karm.Ref;
 import Karm.Gfx;
+import Karm.Math;
 
 import :values;
 import :css;
