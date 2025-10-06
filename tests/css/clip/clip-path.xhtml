@@ -23,26 +23,24 @@
                 }
             </style>
         </head>
+
         <body>
-        <section>
-            <slot/>
-        </section>
+            <section>
+                <slot />
+            </section>
         </body>
 
         </html>
     </container>
 
     <rendering>
-        <div id="rect">
-            <div id="child"></div>
-        </div>
-    </rendering>
-
-
-    <rendering>
         <div style="background-color: green; width: 20px; height: 100px; top: 0; left: 40px; position: absolute"></div>
         <div style="background-color: red; width: 20px; height: 20px; top: 40px; left: 40px; position: absolute"></div>
     </rendering>
 
-
+    <rendering>
+        <div id="rect">
+            <div id="child"></div>
+        </div>
+    </rendering>
 </test>

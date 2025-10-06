@@ -10,6 +10,7 @@
         "html",
         "layout",
         "loader",
+        "paint",
         "style",
         "values",
         "xml"

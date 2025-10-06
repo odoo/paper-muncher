@@ -387,20 +387,20 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 }
 
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el);
-void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group);
+void buildSVGAggregate(Gc::Ref<Dom::Element> el, Svg::Group& group);
 
-void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group& group) {
-    if (SVG::isShape(el->qualifiedName)) {
-        group.add(SVG::Shape::build(el->specifiedValues(), el->qualifiedName));
-    } else if (el->qualifiedName == Svg::G_TAG) {
-        SVG::Group nestedGroup{el->specifiedValues()};
+void buildSVGElement(Gc::Ref<Dom::Element> el, Svg::Group& group) {
+    if (Svg::isShape(el->qualifiedName)) {
+        group.add(Svg::Shape::build(el->specifiedValues(), el->qualifiedName));
+    } else if (el->qualifiedName == Vaev::Svg::G_TAG) {
+        Svg::Group nestedGroup{el->specifiedValues()};
         buildSVGAggregate(el, nestedGroup);
         group.add(std::move(nestedGroup));
-    } else if (el->qualifiedName == Svg::SVG_TAG) {
+    } else if (el->qualifiedName == Vaev::Svg::SVG_TAG) {
         SVGRoot newSvgRoot{el->specifiedValues()};
         buildSVGAggregate(el, newSvgRoot);
         group.add(std::move(newSvgRoot));
-    } else if (el->qualifiedName == Svg::FOREIGN_OBJECT_TAG) {
+    } else if (el->qualifiedName == Vaev::Svg::FOREIGN_OBJECT_TAG) {
         Box box{el->specifiedValues(), el};
 
         InlineBox rootInlineBox{_proseStyleFomStyle(
@@ -424,7 +424,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group& group) {
     }
 }
 
-void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group) {
+void buildSVGAggregate(Gc::Ref<Dom::Element> el, Svg::Group& group) {
     for (auto child = el->firstChild(); child; child = child->nextSibling()) {
         if (auto el = child->is<Dom::Element>()) {
             buildSVGElement(*el, group);
@@ -457,7 +457,7 @@ static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 // els, an internal display value will never be valid. This relates to a somewhat "replaced" property from these
 // elements, but <img> is replaced whereas <svg> per se is not.
 bool _alwaysInlineBlock(Gc::Ref<Dom::Element> el) {
-    return el->qualifiedName == Html::IMG_TAG or el->qualifiedName == Svg::SVG_TAG;
+    return el->qualifiedName == Html::IMG_TAG or el->qualifiedName == Vaev::Svg::SVG_TAG;
 }
 
 // MARK: Build flow -------------------------------------------------------------------------------
@@ -485,7 +485,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     if (el->qualifiedName == Html::BR_TAG) {
         // do nothing
-    } else if (el->qualifiedName == Svg::SVG_TAG) {
+    } else if (el->qualifiedName == Vaev::Svg::SVG_TAG) {
         bc.content() = _buildSVG(el);
     } else if (isVoidElement(el)) {
         _buildVoidElement(bc, el);

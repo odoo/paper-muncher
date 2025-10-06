@@ -32,15 +32,15 @@ struct ReplacedFormatingContext : FormatingContext {
                          .cast<Au>();
     }
 
-    SVG::GroupFrag::Element buildSVGFrag(Tree& tree, SVG::Group::Element& element, Karm::Vec2Au resolveTo) {
-        if (auto shape = element.is<SVG::Shape>()) {
-            return SVG::ShapeFrag::fromShape(*shape, resolveTo);
-        } else if (auto nestedGroup = element.is<SVG::Group>()) {
-            SVG::GroupFrag nestedGroupFrag{&(*nestedGroup)};
+    Svg::GroupFrag::Element buildSVGFrag(Tree& tree, Svg::Group::Element& element, Karm::Vec2Au resolveTo) {
+        if (auto shape = element.is<Svg::Shape>()) {
+            return Svg::ShapeFrag::fromShape(*shape, resolveTo);
+        } else if (auto nestedGroup = element.is<Svg::Group>()) {
+            Svg::GroupFrag nestedGroupFrag{&(*nestedGroup)};
             buildSVGAggregateFrag(tree, nestedGroup, &nestedGroupFrag, resolveTo);
             return nestedGroupFrag;
         } else if (auto nestedRoot = element.is<SVGRoot>()) {
-            auto resolvedRect = SVG::resolve(SVG::buildRectangle(*nestedRoot->style), resolveTo);
+            auto resolvedRect = Svg::resolve(Svg::buildRectangle(*nestedRoot->style), resolveTo);
 
             return buildSVGRootFrag(
                 tree, *nestedRoot,
@@ -48,7 +48,7 @@ struct ReplacedFormatingContext : FormatingContext {
                 {resolvedRect.width, resolvedRect.height}
             );
         } else if (auto box = element.is<::Box<Box>>()) {
-            auto resolvedRect = SVG::resolve(SVG::buildRectangle(*(*box)->style), resolveTo);
+            auto resolvedRect = Svg::resolve(Svg::buildRectangle(*(*box)->style), resolveTo);
 
             auto frag = Layout::Frag();
             Input input{
@@ -64,7 +64,7 @@ struct ReplacedFormatingContext : FormatingContext {
         unreachable();
     }
 
-    void buildSVGAggregateFrag(Tree& tree, SVG::Group* group, SVG::GroupFrag* groupFrag, Karm::Vec2Au resolveTo) {
+    void buildSVGAggregateFrag(Tree& tree, Svg::Group* group, Svg::GroupFrag* groupFrag, Karm::Vec2Au resolveTo) {
         for (auto& element : group->elements) {
             groupFrag->add(buildSVGFrag(tree, element, resolveTo));
         }
@@ -105,13 +105,13 @@ struct ReplacedFormatingContext : FormatingContext {
         } else if (auto svg = box.content.is<SVGRoot>()) {
             fillKnownSizeWithSpecifiedSizeIfEmpty(tree, box, input);
 
-            auto aspectRatio = SVG::intrinsicAspectRatio(box.style->svg->viewBox, box.style->sizing->width, box.style->sizing->height);
+            auto aspectRatio = Svg::intrinsicAspectRatio(box.style->svg->viewBox, box.style->sizing->width, box.style->sizing->height);
 
             size = _defaultSizing(input.knownSize, aspectRatio, input.containingBlock);
 
             if (input.fragment) {
                 auto svgFrag = buildSVGRootFrag(tree, *svg, input.position, size);
-                SVG::GroupFrag::computeBoundingBoxes(&svgFrag);
+                Svg::GroupFrag::computeBoundingBoxes(&svgFrag);
                 input.fragment->content = svgFrag;
             }
         } else {
