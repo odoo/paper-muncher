@@ -84,13 +84,13 @@ struct Group {
 };
 } // namespace SVG
 
-struct SVGRoot : SVG::Group {
+struct SVGRoot : Svg::Group {
     Opt<ViewBox> viewBox;
     SVGRoot(Rc<Style::SpecifiedValues> style)
-        : SVG::Group(style), viewBox(style->svg->viewBox) {}
+        : Svg::Group(style), viewBox(style->svg->viewBox) {}
 
     void repr(Io::Emit& e) const {
-        e("(SVG {} viewBox:{}", SVG::buildRectangle(*style), viewBox);
+        e("(SVG {} viewBox:{}", Svg::buildRectangle(*style), viewBox);
         e.indentNewline();
         for (auto const& el : elements) {
             e("{}", el);
@@ -100,7 +100,7 @@ struct SVGRoot : SVG::Group {
     }
 };
 
-void SVG::Group::repr(Io::Emit& e) const {
+void Svg::Group::repr(Io::Emit& e) const {
     e("(Group {} ");
     e.indentNewline();
     for (auto const& el : elements) {
@@ -177,11 +177,11 @@ struct Box : Meta::NoCopy {
     }
 };
 
-void SVG::Group::add(Element&& element) {
+void Svg::Group::add(Element&& element) {
     elements.pushBack(std::move(element));
 }
 
-void SVG::Group::add(Vaev::Layout::Box&& box) {
+void Svg::Group::add(Vaev::Layout::Box&& box) {
     add(Element{makeBox<Vaev::Layout::Box>(std::move(box))});
 }
 

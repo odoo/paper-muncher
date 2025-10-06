@@ -15,6 +15,7 @@ import :layout;
 import :values;
 import :dom.document;
 import :css;
+import :paint;
 
 using namespace Karm;
 
@@ -34,7 +35,7 @@ void _paintCornerMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& sta
             .containingBlock = rect.size(),
         }
     );
-    Layout::paint(frag, stack);
+    Paint::paint(frag, stack, rect.cast<f64>());
 }
 
 void _paintMainMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas) {
@@ -55,7 +56,7 @@ void _paintMainMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack
             .containingBlock = rect.size(),
         }
     );
-    Layout::paint(frag, stack);
+    Paint::paint(frag, stack, rect.cast<f64>());
 }
 
 void _paintMargins(Style::PageSpecifiedValues& pageStyle, RectAu pageRect, RectAu pageContent, Scene::Stack& stack) {
@@ -185,7 +186,7 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
                 .withBreakpointTraverser(Layout::BreakpointTraverser(&prevBreakpoint, &currBreakpoint))
         );
 
-        Layout::paint(fragment, *pageStack);
+        Paint::paint(fragment, *pageStack, pageContent.cast<f64>());
         pageStack->prepare();
 
         co_yield Print::Page(

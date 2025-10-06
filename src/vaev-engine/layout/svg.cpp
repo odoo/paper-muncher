@@ -44,13 +44,13 @@ Au resolve(PercentOr<Length> const& value, Au relative) {
     return Au{relative.cast<f64>() * (value.unwrap<Percent>().value() / 100.)};
 }
 
-Opt<Gfx::Color> resolve(Paint color, Gfx::Color currentColor) {
+Opt<Gfx::Color> resolve(SvgPaint color, Gfx::Color currentColor) {
     if (color.is<None>())
         return NONE;
     return Vaev::resolve(color.unwrap<Color>(), currentColor);
 }
 
-namespace SVG {
+namespace Svg {
 
 Au normalizedDiagonal(Vec2Au relativeTo) {
     return Au{
@@ -198,11 +198,11 @@ struct Shape {
     Rc<Style::SpecifiedValues> style;
 
     static Type _getTypeFromTag(Dom::QualifiedName name) {
-        if (name == Svg::PATH_TAG) {
+        if (name == Vaev::Svg::PATH_TAG) {
             return Type::PATH;
-        } else if (name == Svg::CIRCLE_TAG) {
+        } else if (name == Vaev::Svg::CIRCLE_TAG) {
             return Type::CIRCLE;
-        } else if (name == Svg::RECT_TAG) {
+        } else if (name == Vaev::Svg::RECT_TAG) {
             return Type::RECT;
         }
         unreachable();
@@ -314,7 +314,7 @@ struct ShapeFrag : Frag {
 };
 
 bool isShape(Dom::QualifiedName name) {
-    return name == Svg::PATH_TAG or name == Svg::CIRCLE_TAG or name == Svg::RECT_TAG;
+    return name == Vaev::Svg::PATH_TAG or name == Vaev::Svg::CIRCLE_TAG or name == Vaev::Svg::RECT_TAG;
 }
 
 // MARK: Root ----------------------------------------------------------------------------
@@ -418,6 +418,6 @@ Opt<Number> intrinsicAspectRatio(Opt<ViewBox> const& vb, Size const& width, Size
     return NONE;
 }
 
-} // namespace SVG
+} // namespace Svg
 
 } // namespace Vaev::Layout

@@ -41,7 +41,7 @@ export enum struct MeetOrSlice {
 // MARK: Paint
 // TODO: still not complete type
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
-export using Paint = Union<Color, None>;
+export using SvgPaint = Union<Color, None>;
 
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
 export struct ViewBox {
@@ -65,8 +65,10 @@ export struct SVGProps {
     Number fillOpacity = 1;
     PercentOr<Length> strokeWidth = Length{1_au};
     Union<String, None> d = NONE;
-    Paint fill = Color{Gfx::BLACK};
-    Paint stroke = NONE;
+
+    SvgPaint fill = Color{Gfx::BLACK};
+    SvgPaint stroke = NONE;
+
     Opt<ViewBox> viewBox = NONE;
 
     void repr(Io::Emit& e) const {
@@ -89,8 +91,8 @@ export struct SVGProps {
 // MARK: Paint
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export template <>
-struct ValueParser<Paint> {
-    static Res<Paint> parse(Cursor<Css::Sst>& c) {
+struct ValueParser<SvgPaint> {
+    static Res<SvgPaint> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
