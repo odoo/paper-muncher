@@ -31,11 +31,11 @@ def fetchMessage(args: model.TargetArgs, type: str) -> str:
 
 
 def compareImages(
-    lhs: bytes,
-    rhs: bytes,
-    lowEpsilon: float = 0.05,
-    highEpsilon: float = 0.1,
-    strict=False,
+        lhs: bytes,
+        rhs: bytes,
+        lowEpsilon: float = 0.05,
+        highEpsilon: float = 0.1,
+        strict=False,
 ) -> bool:
     if strict:
         return lhs == rhs
@@ -135,7 +135,10 @@ def _(args: RefTestArgs):
         for info, test in re.findall(r"""<test([^>]*)>([\w\W]+?)</test>""", content):
             props = getInfo(info)
             print(f"{vt100.WHITE}Test {props.get('name')!r}{vt100.RESET}")
-            if "skip" in props and not args.runSkipped:
+
+            category_skipped = "skip" in props
+
+            if category_skipped and not args.runSkipped:
                 skippedCount += 1
                 skipped += 1
 
@@ -172,10 +175,11 @@ def _(args: RefTestArgs):
                     expected_image_url = ref_image
 
             for tag, info, rendering in re.findall(
-                r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test
+                    r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test
             ):
                 renderingProps = getInfo(info)
-                if "skip" in renderingProps and not args.runSkipped:
+                test_skipped = category_skipped or "skip" in renderingProps
+                if test_skipped and not args.runSkipped:
                     skippedCount += 1
                     skipped += 1
 
@@ -219,7 +223,7 @@ def _(args: RefTestArgs):
                     if not expected_image:
                         expected_image = output_image
                         with (TEST_REPORT / f"{counter}.expected.bmp").open(
-                            "wb"
+                                "wb"
                         ) as imageWriter:
                             imageWriter.write(expected_image)
                         continue
@@ -249,10 +253,18 @@ def _(args: RefTestArgs):
                     print(f"file://{TEST_REPORT / 'report.html'}#case-{counter}")
                     print()
 
+                add_infos = []
+                if test_skipped:
+                    add_infos.append("skip flag")
+                if len(add_infos) != 0:
+                    add_infos = " [" + ", ".join(add_infos) + "]"
+                else:
+                    add_infos = ""
+
                 test_report += f"""
                 <div id="case-{counter}" class="test-case {ok and "passed" or "failed"}">
                     <div class="infoBar"></div>
-                    <h2>{counter} - {tag}</h2>
+                    <h2>{counter} - {tag} {add_infos}</h2>
                     <p>{help}</p>
                     <div class="outputs">
                         <div>

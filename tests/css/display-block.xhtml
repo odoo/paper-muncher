@@ -239,7 +239,7 @@
 </error>
 </test>
 
-<test name="display: inline" skip="true">
+<test name="display: inline">
 <container>
     <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 
@@ -296,45 +296,45 @@
 </test>
 
 <test name="display: inline-block-containing-block">
-    <container>
-        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 
-        <head>
-            <style>
-                body {
-                    margin: 0;
-                }
-            </style>
-        </head>
+    <head>
+        <style>
+            body {
+                margin: 0;
+            }
+        </style>
+    </head>
 
-        <body>
-            <slot />
-        </body>
+    <body>
+    <slot/>
+    </body>
 
-        </html>
-    </container>
+    </html>
+</container>
 
-    <rendering>
-        <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;">
-            <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;background-color: green;">
-            </div>
+<rendering>
+    <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;">
+        <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;background-color: green;">
         </div>
-        <div style="position: absolute; top: 100px; left: 0px; height: 100px; width: 200px;">
-            <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 200px;background-color: green;">
-            </div>
+    </div>
+    <div style="position: absolute; top: 100px; left: 0px; height: 100px; width: 200px;">
+        <div style="position: absolute; top: 0px; left: 0px; height: 100px; width: 200px;background-color: green;">
         </div>
+    </div>
 
 
-    </rendering>
+</rendering>
 
-    <rendering>
-        <div style="width: 100px; height: 100px;">
-            <div style="display: inline-block; background-color: green; width: 100%; height: 100%;"></div>
-        </div>
-        <div style="height: 100px;">
-            <div style="display: inline-block; background-color: green; width: 100%; height: 100%;"></div>
-        </div>
-    </rendering>
+<rendering>
+    <div style="width: 100px; height: 100px;">
+        <div style="display: inline-block; background-color: green; width: 100%; height: 100%;"></div>
+    </div>
+    <div style="height: 100px;">
+        <div style="display: inline-block; background-color: green; width: 100%; height: 100%;"></div>
+    </div>
+</rendering>
 
 
 </test>
