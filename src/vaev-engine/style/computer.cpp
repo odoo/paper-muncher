@@ -145,7 +145,7 @@ export struct Computer {
             return {};
 
         Vec<Style::StyleProp> styleProps;
-        for (auto [attr, attrValue] : el->attributes.iter()) {
+        for (auto [attr, attrValue] : el->attributes.iterUnordered()) {
             parseSVGPresentationAttribute(attr.name, attrValue->value, styleProps);
         }
 

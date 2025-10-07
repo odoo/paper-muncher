@@ -475,7 +475,7 @@ struct StyleRuleLookup {
 
         considerCursorIfPresent(_typeNameRules, el->qualifiedName.name, _cursors);
 
-        for (auto const& [name, value] : el->attributes.iter()) {
+        for (auto const& [name, value] : el->attributes.iterUnordered()) {
             auto const& attrName = name.name;
             auto key = Tuple<Symbol, Str>{attrName, value->value.str()};
 
