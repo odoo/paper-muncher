@@ -5,6 +5,7 @@ export import :layout.base;
 export import :layout.block;
 export import :layout.builder;
 export import :layout.flex;
+export import :layout.floats;
 export import :layout.grid;
 export import :layout.inline_;
 export import :layout.layout;

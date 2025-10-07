@@ -25,7 +25,7 @@ export enum struct Position {
 };
 
 export bool impliesRemovingFromFlow(Position position) {
-    return position == Position::ABSOLUTE || position == Position::FIXED;
+    return position == Position::ABSOLUTE or position == Position::FIXED;
 }
 
 export template <>

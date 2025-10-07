@@ -8,6 +8,7 @@ import Karm.Math;
 import :values;
 import :layout.base;
 import :layout.layout;
+import :layout.floats;
 
 namespace Vaev::Layout {
 
@@ -170,6 +171,7 @@ struct BlockFormatingContext : FormatingContext {
         bool blockWasCompletelyLaidOut = false;
 
         Au lastMarginBottom = 0_au;
+        FloatsContainer floats{input.position, inlineSize};
         for (usize i = startAt; i < endChildren; ++i) {
             auto& c = box.children()[i];
 
@@ -182,9 +184,30 @@ struct BlockFormatingContext : FormatingContext {
                 )
             );
 
-            // TODO: Implement floating
-            // if (c.style->float_ != Float::NONE)
-            //     continue;
+            if (c.style->float_ != Float::NONE) {
+                Input floatInput = {
+                    .intrinsic = IntrinsicSize::MAX_CONTENT,
+                    .availableSpace = {input.availableSpace.x, 0_au},
+                    .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_au)},
+                };
+                auto size = layout(tree, c, floatInput).size;
+                auto margins = computeMargins(tree, c, floatInput);
+                auto bound = floats.place(size + margins.all(), c.style->float_, lastMarginBottom).shrink(margins);
+                if (input.fragment) {
+                    layout(
+                        tree,
+                        c,
+                        {
+                            .fragment = input.fragment,
+                            .knownSize = bound.size().cast<Opt<Au>>(),
+                            .position = bound.topStart(),
+                            .availableSpace = {input.availableSpace.x, 0_au},
+                            .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_au)},
+                        }
+                    );
+                }
+                continue;
+            }
 
             Input childInput = {
                 .fragment = input.fragment,

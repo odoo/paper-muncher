@@ -214,7 +214,8 @@ static void _paintChildren(Frag& frag, Scene::Stack& stack, auto predicate) {
 
         // NOTE: Positioned elements act as if they establish a stacking context
         auto position = s.position;
-        if (position != Position::STATIC) {
+        auto float_ = s.float_;
+        if (position != Position::STATIC or float_ != Float::NONE) {
             if (predicate(s))
                 _paintStackingContext(c, stack);
             continue;
