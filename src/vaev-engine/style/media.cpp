@@ -137,6 +137,23 @@ export struct Media {
     Au deviceHeight;
     Number deviceAspectRatio;
 
+    bool changeViewport(Vec2Au viewport) {
+        if (width == viewport.width and height == viewport.height)
+            return false;
+
+        f64 ratio = static_cast<f64>(Au{viewport.width / viewport.height});
+
+        width = Au{viewport.width};
+        height = Au{viewport.height};
+        aspectRatio = ratio;
+
+        deviceWidth = Au{viewport.width};
+        deviceHeight = Au{viewport.height};
+        deviceAspectRatio = ratio;
+
+        return true;
+    }
+
     static Media forView(Math::Vec2i viewport, ColorScheme colorScheme) {
         return {
             .type = MediaType::SCREEN,
