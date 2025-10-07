@@ -12,9 +12,9 @@ using namespace Karm;
 
 namespace Vaev::View {
 
-export Ui::Child printDialog(Gc::Ref<Dom::Document> dom) {
-    return Hideo::Printers::printDialog([dom](Print::Settings const& settings) -> Vec<Print::Page> {
-        return Driver::print(dom, settings) | collect<Vec<Print::Page>>();
+export Ui::Child printDialog(Rc<Dom::Window> window) {
+    return Hideo::Printers::printDialog([window](Print::Settings const& settings) -> Vec<Print::Page> {
+        return window->print(settings) | collect<Vec<Print::Page>>();
     });
 }
 

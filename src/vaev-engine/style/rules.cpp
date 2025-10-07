@@ -19,7 +19,7 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
-static bool DEBUG_RULE = false;
+static auto debugRule = Debug::Flag::debug("web-style-rule", "Print error message related to css rule parsing");
 
 export struct Rule;
 
@@ -45,7 +45,7 @@ export struct StyleRule {
         if (maybeSelector) {
             res.selector = maybeSelector.take();
         } else {
-            logWarn("failed to parse selector: {}: {}", prefix->content, maybeSelector);
+            logWarnIf(debugRule, "failed to parse selector: {}: {}", prefix->content, maybeSelector);
             res.selector = EmptySelector{};
         }
 
@@ -56,7 +56,7 @@ export struct StyleRule {
                 if (prop)
                     res.props.pushBack(prop.take());
             } else {
-                logWarnIf(DEBUG_RULE, "unexpected item in style rule: {}", item);
+                logWarnIf(debugRule, "unexpected item in style rule: {}", item);
             }
         }
 
@@ -204,7 +204,7 @@ export struct PageRule {
                 if (rule)
                     res.areas.pushBack(*rule);
             } else {
-                logWarnIf(DEBUG_RULE, "unexpected item in style rule: {}", item);
+                logWarnIf(debugRule, "unexpected item in style rule: {}", item);
             }
         }
 
@@ -265,7 +265,7 @@ export struct Rule : _Rule {
         else if (tok.data == "@page")
             return PageRule::parse(sst);
         else if (tok.data == "@supports") {
-            logWarn("cannot parse '@supports' at-rule");
+            logWarnIf(debugRule, "cannot parse '@supports' at-rule");
             return StyleRule{};
         } else if (tok.data == "@namespace") {
             return NamespaceRule::parse(sst, ns);
@@ -299,7 +299,7 @@ MediaRule MediaRule::parse(Css::Sst const& sst, Origin origin, Namespace& ns) {
         if (item == Css::Sst::RULE) {
             res.rules.pushBack(Rule::parse(item, origin, ns));
         } else {
-            logWarn("unexpected item in media rule: {}", item.type);
+            logWarnIf(debugRule, "unexpected item in media rule: {}", item.type);
         }
     }
 
