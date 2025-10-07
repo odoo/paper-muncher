@@ -117,6 +117,26 @@ export struct Computer {
         return Gfx::Fontface::fallback();
     }
 
+    // https://www.w3.org/TR/css-cascade-4/#author-presentational-hint-origin
+    static Vec<Style::StyleProp> _considerPresentationalHint(Gc::Ref<Dom::Element> el) {
+        Vec<Style::StyleProp> res;
+        // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-fgcolor
+        if (auto fgcolor = el->getAttribute(Html::FGCOLOR_ATTR)) {
+            auto color = parseValue<Color>(fgcolor.unwrap());
+            if (color)
+                res.pushBack(Style::ColorProp{color.take()});
+        }
+
+        // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-bgcolor
+        if (auto bgcolor = el->getAttribute(Html::BGCOLOR_ATTR)) {
+            auto color = parseValue<Color>(bgcolor.unwrap());
+            if (color)
+                res.pushBack(Style::BackgroundColorProp{color.take()});
+        }
+
+        return res;
+    }
+
     // https://svgwg.org/specs/integration/#svg-css-sizing
     static void _applySVGElementSizingRules(Gc::Ref<Dom::Element> svgEl, Vec<Style::StyleProp>& styleProps) {
         if (auto parentEl = svgEl->parentNode()->is<Dom::Element>()) {
@@ -159,9 +179,16 @@ export struct Computer {
     Rc<SpecifiedValues> computeFor(SpecifiedValues const& parent, Gc::Ref<Dom::Element> el) {
         MatchingRules matchingRules = _styleRuleLookup.buildMatchingRules(el);
 
+        // Non-CSS Presentational Hints
+        auto hints = _considerPresentationalHint(el);
+        StyleRule presentationHints{
+            .props = std::move(hints),
+            .origin = Origin::AUTHOR,
+        };
+        matchingRules.pushBack({&presentationHints, PRESENTATION_HINT_SPEC});
+
         // Get the style attribute if any
         auto styleAttr = el->style();
-
         StyleRule styleRule{
             .props = parseDeclarations<StyleProp>(styleAttr ? *styleAttr : ""),
             .origin = Origin::INLINE,

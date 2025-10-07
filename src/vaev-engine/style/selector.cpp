@@ -1069,6 +1069,7 @@ inline Spec const Spec::C = {0, 0, 1};
 
 Spec const INLINE_SPEC = Spec::ZERO;
 Spec const PRESENTATION_ATTR_SPEC = Spec::ZERO;
+Spec const PRESENTATION_HINT_SPEC = Spec::ZERO;
 
 // https://www.w3.org/TR/selectors-4/#specificity-rules
 export Spec spec(Selector const& s) {
