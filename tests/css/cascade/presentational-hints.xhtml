@@ -1,0 +1,48 @@
+<test name="presentational-hints">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                div {
+                    width: 100px;
+                    height: 100px;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div/>
+        <style>
+            div {
+                background-color: green;
+            }
+        </style>
+    </rendering>
+
+    <rendering help="background-color">
+        <div style="background-color: green;"/>
+        <style> div {
+            background-color: red;
+        } </style>
+    </rendering>
+
+    <rendering help="bgcolor+background-color">
+        <div bgcolor="red" style="background-color: green;"/>
+    </rendering>
+
+    <rendering help="bgcolor">
+        <div bgcolor="green"/>
+    </rendering>
+
+    <error>
+        <div style="background-color: red;"/>
+    </error>
+
+    <error>
+    </error>
+</test>
