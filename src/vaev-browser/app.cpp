@@ -32,22 +32,20 @@ enum struct Status {
 };
 
 struct State {
-    Gc::Heap& heap;
-    Http::Client& client;
     Status status = Status::LOADED;
+    Res<> loadingResult = Ok();
     usize currentIndex = 0;
     Vec<Navigate> history;
-    Res<Gc::Root<Dom::Document>> dom;
+    Rc<Dom::Window> window;
     SidePanel sidePanel = SidePanel::CLOSE;
     InspectState inspect = {};
-    String location;
     bool wireframe = false;
+    String locationInput;
 
-    State(Gc::Heap& heap, Http::Client& client, Navigate nav, Res<Gc::Root<Dom::Document>> dom)
-        : heap{heap},
-          client{client},
-          history{nav},
-          dom{dom}, location(dom ? dom.unwrap()->url().str() : String{}) {}
+    State(Rc<Dom::Window> window)
+        : history{Navigate{window->location()}},
+          window{window},
+          locationInput(window->location().str()) {}
 
     bool canGoBack() const {
         return currentIndex > 0;
@@ -65,7 +63,7 @@ struct State {
 struct Reload {};
 
 struct Loaded {
-    Res<Gc::Root<Dom::Document>> dom;
+    Res<> result;
 };
 
 struct GoBack {};
@@ -93,12 +91,8 @@ using Action = Union<
     UpdateLocation,
     NavigateLocation>;
 
-Async::_Task<Opt<Action>> navigateAsync(Gc::Heap& heap, Http::Client& client, Navigate nav) {
-    if (nav.action == Ref::Uti::PUBLIC_MODIFY) {
-        co_return Loaded{co_await Vaev::Loader::viewSourceAsync(heap, client, nav.url)};
-    } else {
-        co_return Loaded{co_await Vaev::Loader::fetchDocumentAsync(heap, client, nav.url)};
-    }
+Async::_Task<Opt<Action>> navigateAsync(Rc<Dom::Window> window, Navigate nav) {
+    co_return Loaded{(co_await window->loadLocationAsync(nav.url, nav.action))};
 }
 
 Ui::Task<Action> reduce(State& s, Action a) {
@@ -107,12 +101,12 @@ Ui::Task<Action> reduce(State& s, Action a) {
             if (s.status == Status::LOADING)
                 return NONE;
             s.status = Status::LOADING;
-            s.location = s.currentUrl().url.str();
-            return navigateAsync(s.heap, s.client, s.currentUrl());
+            return navigateAsync(s.window, s.currentUrl());
         },
         [&](Loaded l) -> Ui::Task<Action> {
             s.status = Status::LOADED;
-            s.dom = l.dom;
+            s.loadingResult = l.result;
+            s.locationInput = s.currentUrl().url.str();
             return NONE;
         },
         [&](GoBack) -> Ui::Task<Action> {
@@ -146,11 +140,11 @@ Ui::Task<Action> reduce(State& s, Action a) {
             return reduce(s, Reload{});
         },
         [&](UpdateLocation u) -> Ui::Task<Action> {
-            s.location = u.location;
+            s.locationInput = u.location;
             return NONE;
         },
         [&](NavigateLocation) -> Ui::Task<Action> {
-            return reduce(s, Navigate{Ref::Url::parse(s.location)});
+            return reduce(s, Navigate{Ref::Url::parse(s.locationInput)});
         },
     });
 
@@ -205,12 +199,12 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
         Kr::contextMenuItem(Model::bind(SidePanel::BOOKMARKS), Mdi::BOOKMARK, "Bookmarks"),
         Kr::separator(),
         Kr::contextMenuItem(
-            not s.dom
+            not s.loadingResult
                 ? Opt<Ui::Send<>>{NONE}
-                : [dom = s.dom.unwrap()](auto& n) {
+                : [window = s.window](auto& n) {
                       Ui::showDialog(
                           n,
-                          View::printDialog(dom)
+                          View::printDialog(window)
                       );
                   },
             Mdi::PRINTER, "Print..."
@@ -255,7 +249,7 @@ Ui::Child addressBar(State const& s) {
                    },
                    Ui::ButtonStyle::subtle(), Mdi::TUNE_VARIANT
                ),
-               Ui::input(Ui::TextStyles::labelMedium(), s.location, Model::map<UpdateLocation>()) |
+               Ui::input(Ui::TextStyles::labelMedium(), s.locationInput, Model::map<UpdateLocation>()) |
                    Ui::vcenter() |
                    Ui::hscroll() |
                    Ui::grow()
@@ -294,13 +288,13 @@ Ui::Child contextMenu(State const& s) {
 }
 
 Ui::Child inspectorContent(State const& s) {
-    if (not s.dom) {
+    if (not s.loadingResult) {
         return Ui::labelMedium(Ui::GRAY500, "No document") |
                Ui::center();
     }
 
     return Vaev::Browser::inspect(
-        s.dom.unwrap(),
+        s.window,
         s.inspect,
         [&](auto& n, auto a) {
             Model::bubble(n, a);
@@ -343,11 +337,10 @@ Ui::Child alert(State const& s, String title, String body) {
 }
 
 Ui::Child webview(State const& s) {
-    if (not s.dom)
-        return alert(s, "The page could not be loaded"s, Io::toStr(s.dom));
+    if (not s.loadingResult)
+        return alert(s, "The page could not be loaded"s, Io::toStr(s.loadingResult));
 
-    return Vaev::View::view(s.dom.unwrap(), {.wireframe = s.wireframe, .selected = s.inspect.selectedNode}) |
-           Ui::vscroll() |
+    return Vaev::View::viewport(s.window, {.wireframe = s.wireframe, .selected = s.inspect.selectedNode}) |
            Ui::box({
                .backgroundFill = Gfx::WHITE,
            }) |
@@ -366,13 +359,10 @@ Ui::Child appContent(State const& s) {
     );
 }
 
-export Ui::Child app(Gc::Heap& heap, Http::Client& client, Ref::Url url, Res<Gc::Ref<Vaev::Dom::Document>> dom) {
+export Ui::Child app(Rc<Dom::Window> window) {
     return Ui::reducer<Model>(
         {
-            heap,
-            client,
-            Navigate{url},
-            dom,
+            window,
         },
         [](State const& s) {
             auto scaffold = Kr::scaffold({
@@ -411,12 +401,12 @@ export Ui::Child app(Gc::Heap& heap, Http::Client& client, Ref::Url url, Res<Gc:
                    Ui::keyboardShortcut(App::Key::F12, Model::bind(SidePanel::DEVELOPER_TOOLS)) |
                    Ui::keyboardShortcut(App::Key::B, App::KeyMod::CTRL, Model::bind(SidePanel::BOOKMARKS)) |
                    Ui::keyboardShortcut(App::Key::P, App::KeyMod::CTRL, [&](auto& n) {
-                       if (not s.dom)
+                       if (not s.loadingResult)
                            return;
 
                        Ui::showDialog(
                            n,
-                           View::printDialog(s.dom.unwrap())
+                           View::printDialog(s.window)
                        );
                    });
         }

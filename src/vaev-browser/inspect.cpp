@@ -196,9 +196,9 @@ Ui::Child computedStyles(InspectState const& s, Ui::Action<InspectorAction> send
            Ui::pinSize(128);
 }
 
-export Ui::Child inspect(Gc::Ref<Vaev::Dom::Document> n, InspectState const& s, Ui::Action<InspectorAction> send) {
+export Ui::Child inspect(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectorAction> send) {
     return Ui::vflow(
-        node(n, s, send) | Ui::vscroll() | Ui::grow(),
+        node(window->document().upgrade(), s, send) | Ui::vscroll() | Ui::grow(),
         computedStyles(s, send) | Kr::resizable(Kr::ResizeHandle::TOP, {128}, NONE)
     );
 }

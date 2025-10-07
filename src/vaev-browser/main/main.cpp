@@ -17,14 +17,20 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto url = args.len()
                    ? Ref::parseUrlOrPath(args[0], co_try$(Sys::pwd()))
                    : "about:start"_url;
-    Gc::Heap heap;
+
     auto client = Http::defaultClient();
     client->userAgent = "Vaev-Browser/" stringify$(__ck_version_value) ""s;
-
-    auto dom = co_await Vaev::Loader::fetchDocumentAsync(heap, *client, url);
+    auto window = Vaev::Dom::Window::create(client);
+    window->changeMedia(
+        Vaev::Style::Media::forView(
+            {},
+            Ui::darkMode ? Vaev::ColorScheme::DARK : Vaev::ColorScheme::LIGHT
+        )
+    );
+    co_trya$(window->loadLocationAsync(url));
 
     co_return co_await Ui::runAsync(
         ctx,
-        Vaev::Browser::app(heap, *client, url, dom)
+        Vaev::Browser::app(window)
     );
 }
