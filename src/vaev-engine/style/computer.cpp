@@ -119,19 +119,43 @@ export struct Computer {
 
     // https://www.w3.org/TR/css-cascade-4/#author-presentational-hint-origin
     static Vec<Style::StyleProp> _considerPresentationalHint(Gc::Ref<Dom::Element> el) {
+        if (el->namespaceUri() != Html::NAMESPACE)
+            return {};
+
         Vec<Style::StyleProp> res;
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-fgcolor
         if (auto fgcolor = el->getAttribute(Html::FGCOLOR_ATTR)) {
-            auto color = parseValue<Color>(fgcolor.unwrap());
-            if (color)
-                res.pushBack(Style::ColorProp{color.take()});
+            auto value = parseValue<Color>(fgcolor.unwrap());
+            if (value)
+                res.pushBack(Style::ColorProp{value.take()});
         }
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-bgcolor
         if (auto bgcolor = el->getAttribute(Html::BGCOLOR_ATTR)) {
-            auto color = parseValue<Color>(bgcolor.unwrap());
-            if (color)
-                res.pushBack(Style::BackgroundColorProp{color.take()});
+            auto value = parseValue<Color>(bgcolor.unwrap());
+            if (value)
+                res.pushBack(Style::BackgroundColorProp{value.take()});
+        }
+
+        // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
+        if (auto width = el->getAttribute(Html::WIDTH_ATTR)) {
+            auto value = parseValue<Size>(width.unwrap());
+            if (value)
+                res.pushBack(Style::WidthProp{value.take()});
+        }
+
+        // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
+        if (auto height = el->getAttribute(Html::HEIGHT_ATTR)) {
+            auto value = parseValue<Size>(height.unwrap());
+            if (value)
+                res.pushBack(Style::HeightProp{value.take()});
+        }
+
+        // https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
+        if (auto size = el->getAttribute(Html::SIZE_ATTR)) {
+            auto value = parseValue<Integer>(size.unwrap());
+            if (value)
+                res.pushBack(WidthProp{CalcValue<PercentOr<Length>>{Length{static_cast<f64>(value.take()), Length::CH}}});
         }
 
         return res;
