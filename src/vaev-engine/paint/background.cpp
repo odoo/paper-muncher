@@ -1,11 +1,10 @@
-module;
-
-#include <karm-math/au.h>
-
 module Vaev.Engine;
 
 import Karm.Gfx;
 import Karm.Scene;
+import Karm.Math;
+import Karm.Core;
+
 import :layout.values;
 
 using namespace Karm;

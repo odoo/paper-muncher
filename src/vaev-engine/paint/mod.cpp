@@ -1,15 +1,12 @@
-module;
-
-#include <karm-math/au.h>
-#include <karm-math/rect.h>
-
 export module Vaev.Engine:paint;
 
 import Karm.Scene;
+import Karm.Math;
 
 import :layout.base;
 import :layout.values;
 import :values.transform;
+export import :paint.debug;
 
 namespace Vaev::Paint {
 
