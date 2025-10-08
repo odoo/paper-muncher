@@ -12,6 +12,7 @@ import Karm.Md;
 import Karm.Ref;
 import Karm.Sys;
 import Karm.Logger;
+import Karm.Image;
 
 import :dom.document;
 import :html;
@@ -101,6 +102,8 @@ export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http:
 
 Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Http::Client& client, Ref::Url url, Style::Origin origin) {
     auto resp = co_trya$(client.getAsync(url));
+    if (not resp->body)
+        co_return Error::notFound("could not load stylesheet");
 
     auto respBody = resp->body.unwrap();
     auto buf = co_trya$(Aio::readAllUtf8Async(*respBody));
@@ -109,9 +112,39 @@ Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Http::Client& client, Ref::
     co_return Ok(Style::StyleSheet::parse(s, url, origin));
 }
 
-Async::Task<> _fetchStylesheetsAsync(Http::Client& client, Gc::Ref<Dom::Node> node, Style::StyleSheetList& sb) {
+Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::Url url);
+
+Rc<Scene::Node> _missingImagePlaceholder() {
+    auto placeholder = Karm::Image::loadOrFallback("bundle://vaev-engine/missing.qoi"_url).unwrap();
+    return makeRc<Scene::Image>(placeholder->bound().cast<f64>(), placeholder);
+}
+
+Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node, Style::StyleSheetList& sb) {
     auto el = node->is<Dom::Element>();
-    if (el and el->qualifiedName == Html::STYLE_TAG) {
+    if (el and el->qualifiedName == Html::IMG_TAG) {
+        auto src = el->getAttribute(Html::SRC_ATTR);
+        if (not src) {
+            el->imageContent = _missingImagePlaceholder();
+            logWarn("image element missing src attribute");
+            co_return Error::invalidInput("link element missing src");
+        }
+
+        auto url = Ref::Url::resolveReference(node->baseURI(), Ref::parseUrlOrPath(*src));
+        if (not url) {
+            el->imageContent = _missingImagePlaceholder();
+            logWarn("failed to resolve image url: {}", url);
+            co_return Error::invalidInput("failed to resolve image url");
+        }
+
+        auto image = co_await _fetchImageContentAsync(client, url.unwrap());
+        if (not image) {
+            el->imageContent = _missingImagePlaceholder();
+            logWarn("failed to fetch image from {}: {}", url, image);
+            co_return Error::invalidInput("failed to fetch image");
+        }
+
+        el->imageContent = image.take();
+    } else if (el and el->qualifiedName == Html::STYLE_TAG) {
         auto text = el->textContent();
         Io::SScan textScan{text};
         auto sheet = Style::StyleSheet::parse(textScan, node->baseURI());
@@ -134,14 +167,14 @@ Async::Task<> _fetchStylesheetsAsync(Http::Client& client, Gc::Ref<Dom::Node> no
             auto sheet = co_await _fetchStylesheetAsync(client, url.unwrap(), Style::Origin::AUTHOR);
             if (not sheet) {
                 logWarn("failed to fetch stylesheet from {}: {}", url, sheet);
-                co_return Error::invalidInput("failed to fetch stylesheet from {}");
+                co_return Error::invalidInput("failed to fetch stylesheet");
             }
 
             sb.add(sheet.take());
         }
     } else {
         for (auto child = node->firstChild(); child; child = child->nextSibling())
-            (void)co_await _fetchStylesheetsAsync(client, *child, sb);
+            (void)co_await _fetchResourcesAsync(client, *child, sb);
     }
 
     co_return Ok();
@@ -172,7 +205,7 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
     stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-engine/svg.css"_url, Style::Origin::USER_AGENT))
                          .take("user agent stylesheet not available"));
 
-    (void)co_await _fetchStylesheetsAsync(client, *dom, *stylesheets);
+    (void)co_await _fetchResourcesAsync(client, *dom, *stylesheets);
     dom->styleSheets = stylesheets;
 
     if (dumpDom)
