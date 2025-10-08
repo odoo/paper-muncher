@@ -100,7 +100,7 @@ struct ReplacedFormatingContext : FormatingContext {
     Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
         Vec2Au size = {};
 
-        if (auto image = box.content.is<Rc<Gfx::Surface>>()) {
+        if (auto image = box.content.is<Rc<Scene::Node>>()) {
             size = (*image)->bound().size().cast<Au>();
         } else if (auto svg = box.content.is<SVGRoot>()) {
             fillKnownSizeWithSpecifiedSizeIfEmpty(tree, box, input);

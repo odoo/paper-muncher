@@ -338,7 +338,7 @@ export using Content = Union<
     None,
     Vec<Box>,
     InlineBox,
-    Rc<Gfx::Surface>,
+    Rc<Scene::Node>,
     SVGRoot>;
 
 export struct Attrs {
@@ -387,7 +387,7 @@ struct Box : Meta::NoCopy {
     }
 
     bool isReplaced() {
-        return content.is<Rc<Gfx::Surface>>() or content.is<SVGRoot>();
+        return content.is<Rc<Scene::Node>>() or content.is<SVGRoot>();
     }
 
     void repr(Io::Emit& e) const {

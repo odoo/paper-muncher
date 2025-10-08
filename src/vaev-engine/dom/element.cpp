@@ -1,6 +1,7 @@
 export module Vaev.Engine:dom.element;
 
 import Karm.Core;
+import Karm.Scene;
 import :dom.attr;
 import :dom.node;
 import :dom.names;
@@ -33,6 +34,7 @@ export struct Element : Node {
     Map<QualifiedName, Rc<Attr>> attributes;
     Opt<Rc<Style::SpecifiedValues>> _specifiedValues; // FIXME: We should not have this store here
     TokenList classList;
+    Opt<Rc<Scene::Node>> imageContent;
 
     Element(QualifiedName const& qualifiedName)
         : qualifiedName(qualifiedName) {

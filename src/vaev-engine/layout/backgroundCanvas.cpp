@@ -37,6 +37,9 @@ export Gfx::Color fixupBackgrounds(Style::Computer& c, Gc::Ref<Dom::Document> do
         return Gfx::WHITE;
     }
 
+    if (doc->documentElement()->namespaceUri() != Html::NAMESPACE)
+        return Gfx::ALPHA;
+
     auto style = c.computeFor(Style::SpecifiedValues::initial(), *el);
     if (style->backgrounds->color != Gfx::ALPHA) {
         tree.root.style->backgrounds.cow().color = Gfx::ALPHA;
