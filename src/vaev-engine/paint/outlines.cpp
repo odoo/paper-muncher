@@ -1,13 +1,10 @@
-module;
-
-#include <karm-math/au.h>
-
-#include "karm-logger/logger.h"
-
 module Vaev.Engine;
 
 import Karm.Gfx;
 import Karm.Scene;
+import Karm.Math;
+import Karm.Core;
+
 import :layout.base;
 import :layout.values;
 

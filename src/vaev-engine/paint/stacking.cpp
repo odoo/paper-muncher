@@ -1,12 +1,8 @@
-module;
-
-#include <karm-logger/logger.h>
-#include <karm-math/rect.h>
-
 module Vaev.Engine;
 
 import Karm.Core;
 import Karm.Scene;
+import Karm.Math;
 
 import :layout.base;
 
