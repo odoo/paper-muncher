@@ -10,6 +10,7 @@ import Karm.Sys;
 import Karm.Gfx;
 import Karm.Math;
 import Karm.Logger;
+import Karm.Scene;
 
 import Vaev.Engine;
 
@@ -167,7 +168,16 @@ static Async::Task<> renderAsync(
     Rc<Http::Body> body = Http::Body::empty();
 
     Image::Saver saves{.format = options.outputFormat, .density = options.density.toDppx()};
-    body = Http::Body::from(co_try$(Image::save(window->render(), imageSize.cast<isize>(), saves)));
+
+    auto scene = window->render();
+
+    // NOTE: Override the background of HTML document, since no
+    //       one really expect a html document to transparent
+    if (window->document()->documentElement()->namespaceUri() == Vaev::Html::NAMESPACE) {
+        scene = makeRc<Scene::Clear>(scene, Gfx::WHITE);
+    }
+
+    body = Http::Body::from(co_try$(Image::save(scene, imageSize.cast<isize>(), saves)));
 
     co_trya$(client->doAsync(
         Http::Request::from(Http::Method::PUT, output, body)

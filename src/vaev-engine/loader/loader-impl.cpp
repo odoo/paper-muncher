@@ -31,7 +31,8 @@ Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::
         auto window = Dom::Window::create(subClient);
 
         // FIXME: Properly determine the size of the SVG
-        window->changeMedia(Style::Media::forRender({20_au, 20_au}, Resolution::fromDppx(1)));
+        // https://www.w3.org/TR/SVG2/coords.html#SizingSVGInCSS
+        window->changeMedia(Style::Media::forRender({}, Resolution::fromDppx(1)));
         co_trya$(window->loadLocationAsync(url));
         window->computeStyle();
         auto root = window->document()->documentElement();
