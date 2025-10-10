@@ -34,8 +34,22 @@ void _paintBlockLevel(Layout::Frag& frag, Scene::Stack& stack) {
     auto& s = frag.style();
 
     // 1. If the element is a block-level replaced element, then: the replaced content, atomically.
-    if (auto image = frag.box->content.is<Rc<Gfx::Surface>>()) {
-        stack.add(makeRc<Scene::Image>(frag.metrics.borderBox().cast<f64>(), *image, frag.metrics.radii.cast<f64>()));
+    if (auto image = frag.box->content.is<Rc<Scene::Node>>()) {
+        auto bound = (*image)->bound();
+
+        auto contentBox = frag.metrics.contentBox().cast<f64>();
+        auto trans = Math::Trans2f::map(bound, contentBox);
+        Rc<Scene::Node> node = makeRc<Scene::Transform>(*image, trans);
+
+        auto radii = frag.metrics.radii;
+        if (radii.zero()) {
+            node = makeRc<Scene::Clip>(node, contentBox);
+        } else {
+            Math::Path path;
+            path.rect(contentBox, radii.cast<f64>());
+            node = makeRc<Scene::Clip>(node, std::move(path));
+        }
+        stack.add(node);
     } else if (auto svgRoot = frag.content.is<Layout::SVGRootFrag>()) {
         if (min(frag.metrics.borderSize.x, frag.metrics.borderSize.y) == 0_au)
             return;
@@ -46,7 +60,9 @@ void _paintBlockLevel(Layout::Frag& frag, Scene::Stack& stack) {
                 frag.metrics.contentBox().cast<f64>()
             )
         );
-    } else {
+    }
+    // Otherwise, for each line box of that element:
+    else {
         _paintInlineLevel(frag, stack);
     }
 }
