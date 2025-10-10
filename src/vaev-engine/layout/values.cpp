@@ -262,7 +262,7 @@ export struct Resolver {
     Au resolve(Width const& value, Au relative) {
         if (value.is<Keywords::Auto>())
             return 0_au;
-        return resolve(value.unwrap<CalcValue<PercentOr<Length>>>(), relative);
+        return resolve(value.unwrap<Calc<Length>>(), relative);
     }
 
     Rad resolve(Angle const& value) {
@@ -367,11 +367,11 @@ export struct Resolver {
 // MARK: Resolve during layout -------------------------------------------------
 
 // HACK: Temporary workaround while we don't properly evaluate computed values
-export bool isPurePercentage(CalcValue<PercentOr<Length>> calcValue) {
-    if (not calcValue._inner.is<CalcValue<PercentOr<Length>>::Value>())
+export bool isPurePercentage(Calc<Length> calcValue) {
+    if (not calcValue._inner.is<Calc<Length>::Value>())
         return false;
 
-    auto const& value = calcValue._inner.unwrap<CalcValue<PercentOr<Length>>::Value>();
+    auto const& value = calcValue._inner.unwrap<Calc<Length>::Value>();
     if (not value.is<PercentOr<Length>>())
         return false;
 

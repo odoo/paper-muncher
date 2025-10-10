@@ -24,12 +24,12 @@ namespace Vaev {
 // https://drafts.csswg.org/css-transforms/#transform-origin-property
 
 export struct TransformOrigin {
-    using OneValue = Union<Keywords::Left, Keywords::Center, Keywords::Right, CalcValue<PercentOr<Length>>>;
+    using OneValue = Union<Keywords::Left, Keywords::Center, Keywords::Right, Calc<Length>>;
 
     using XOffsetKeyword = Union<Keywords::Left, Keywords::Center, Keywords::Right>;
-    using XOffset = FlatUnion<XOffsetKeyword, CalcValue<PercentOr<Length>>>;
+    using XOffset = FlatUnion<XOffsetKeyword, Calc<Length>>;
     using YOffsetKeyword = Union<Keywords::Top, Keywords::Center, Keywords::Bottom>;
-    using YOffset = FlatUnion<YOffsetKeyword, CalcValue<PercentOr<Length>>>;
+    using YOffset = FlatUnion<YOffsetKeyword, Calc<Length>>;
 
     XOffset xOffset;
     YOffset yOffset;
@@ -105,7 +105,7 @@ struct ValueParser<TransformOrigin> {
                 });
             },
 
-            [&](CalcValue<PercentOr<Length>> value) -> Res<TransformOrigin> {
+            [&](Calc<Length> value) -> Res<TransformOrigin> {
                 return Ok(TransformOrigin{
                     .xOffset = std::move(value),
                     .yOffset = Keywords::CENTER, // default y-offset
@@ -167,8 +167,8 @@ struct ValueParser<MatrixTransform> {
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-translate
 export struct TranslateTransform {
-    CalcValue<PercentOr<Length>> x;
-    CalcValue<PercentOr<Length>> y;
+    Calc<Length> x;
+    Calc<Length> y;
 
     void repr(Io::Emit& e) const {
         e("translate({}, {})", x, y);
@@ -184,7 +184,7 @@ struct ValueParser<TranslateTransform> {
         if (c->prefix == Css::Token::function("translateX(")) {
             Cursor<Css::Sst> content = c->content;
             eatWhitespace(content);
-            auto tx = try$(parseValue<CalcValue<PercentOr<Length>>>(content));
+            auto tx = try$(parseValue<Calc<Length>>(content));
             eatWhitespace(content);
             if (not content.ended()) {
                 return Error::invalidData("unexpected content after translateX function");
@@ -196,7 +196,7 @@ struct ValueParser<TranslateTransform> {
         if (c->prefix == Css::Token::function("translateY(")) {
             Cursor<Css::Sst> content = c->content;
             eatWhitespace(content);
-            auto ty = try$(parseValue<CalcValue<PercentOr<Length>>>(content));
+            auto ty = try$(parseValue<Calc<Length>>(content));
             eatWhitespace(content);
             if (not content.ended())
                 return Error::invalidData("unexpected content after translateY function");
@@ -210,7 +210,7 @@ struct ValueParser<TranslateTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto tx = try$(parseValue<CalcValue<PercentOr<Length>>>(content));
+        auto tx = try$(parseValue<Calc<Length>>(content));
         skipOmmitableComma(content);
 
         if (content.ended()) {
@@ -219,7 +219,7 @@ struct ValueParser<TranslateTransform> {
             return Ok(TranslateTransform{std::move(tx), Length{0_au}});
         }
 
-        auto ty = try$(parseValue<CalcValue<PercentOr<Length>>>(content));
+        auto ty = try$(parseValue<Calc<Length>>(content));
         eatWhitespace(content);
         if (not content.ended())
             return Error::invalidData("unexpected content after scale function");

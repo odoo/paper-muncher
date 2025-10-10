@@ -28,7 +28,7 @@ export enum struct BoxSizing : u8 {
 // https://drafts.csswg.org/css-sizing-3/#preferred-size-properties
 
 export struct FitContent {
-    CalcValue<PercentOr<Length>> value = {Length{}};
+    Calc<Length> value = {Length{}};
 
     void repr(Io::Emit& e) const {
         e("(fit-content {})", value);
@@ -54,8 +54,8 @@ struct ValueParser<FitContent> {
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 // https://www.w3.org/TR/css-sizing-3/#propdef-height
-export using Size = FlatUnion<Keywords::Auto, CalcValue<PercentOr<Length>>, Keywords::MinContent, Keywords::MaxContent, FitContent>;
-export using MaxSize = FlatUnion<Keywords::None, CalcValue<PercentOr<Length>>, Keywords::MinContent, Keywords::MaxContent, FitContent>;
+export using Size = FlatUnion<Keywords::Auto, Calc<Length>, Keywords::MinContent, Keywords::MaxContent, FitContent>;
+export using MaxSize = FlatUnion<Keywords::None, Calc<Length>, Keywords::MinContent, Keywords::MaxContent, FitContent>;
 
 export struct SizingProps {
     Size width = Keywords::AUTO, height = Keywords::AUTO;

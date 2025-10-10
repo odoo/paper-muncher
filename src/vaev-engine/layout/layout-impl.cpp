@@ -174,7 +174,7 @@ Opt<Au> computeSpecifiedSize(Tree& tree, Box& box, Size size, Vec2Au containingB
             return clamp(stretchIntrinsicSize.y, minIntrinsicSize.y, maxIntrinsicSize.y);
     } else if (size.is<Keywords::Auto>()) {
         return NONE;
-    } else if (auto calc = size.is<CalcValue<PercentOr<Length>>>()) {
+    } else if (auto calc = size.is<Calc<Length>>()) {
         return resolve(tree, box, *calc, isWidth ? containingBlock.x : containingBlock.y);
     } else {
         logWarn("unknown specified size: {}", size);
