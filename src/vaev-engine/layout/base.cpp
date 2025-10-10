@@ -234,7 +234,7 @@ export struct BreakpointTraverser {
 export struct FormatingContext;
 export struct Box;
 
-export struct InlineBox {
+export struct LineBoxes {
     /* NOTE:
     This is a sketch implementation of the data model for InlineBox. We should be able to:
         -   add different inline elements to it, from different types (Prose, Image, inline-block)
@@ -245,9 +245,9 @@ export struct InlineBox {
     Rc<Gfx::Prose> prose;
     Vec<::Box<Box>> atomicBoxes;
 
-    InlineBox(Gfx::ProseStyle style) : prose(makeRc<Gfx::Prose>(style)) {}
+    LineBoxes(Gfx::ProseStyle style) : prose(makeRc<Gfx::Prose>(style)) {}
 
-    InlineBox(Rc<Gfx::Prose> prose) : prose(prose) {}
+    LineBoxes(Rc<Gfx::Prose> prose) : prose(prose) {}
 
     void startInlineBox(Gfx::ProseStyle proseStyle) {
         // FIXME: ugly workaround while we dont fix the Prose data structure
@@ -277,10 +277,10 @@ export struct InlineBox {
         e(")");
     }
 
-    static InlineBox fromInterruptedInlineBox(InlineBox const& inlineBox) {
+    static LineBoxes fromInterruptedInlineBox(LineBoxes const& inlineBox) {
         auto oldProse = inlineBox.prose;
 
-        auto newInlineBox = InlineBox{oldProse->_style};
+        auto newInlineBox = LineBoxes{oldProse->_style};
         newInlineBox.prose->overrideSpanStackWith(*oldProse);
 
         return newInlineBox;
@@ -337,7 +337,7 @@ void Svg::Group::repr(Io::Emit& e) const {
 export using Content = Union<
     None,
     Vec<Box>,
-    InlineBox,
+    LineBoxes,
     Rc<Scene::Node>,
     SVGRoot>;
 
@@ -349,6 +349,13 @@ export struct Attrs {
     void repr(Io::Emit& e) const {
         e("(attrs span: {} rowSpan: {} colSpan: {})", span, rowSpan, colSpan);
     }
+};
+
+enum struct BoxType {
+    INLINE_LEVEL = 1 << 0,
+    BLOCK_LEVEL = 1 << 1,
+    TABLE = 1 << 2,
+    REPLACED = 1 << 5,
 };
 
 struct Box : Meta::NoCopy {
@@ -386,8 +393,48 @@ struct Box : Meta::NoCopy {
         }
     }
 
-    bool isReplaced() {
+    bool isReplaced() const {
         return content.is<Rc<Scene::Node>>() or content.is<SVGRoot>();
+    }
+
+    bool isPositioned() const {
+        return style->position != Position::STATIC;
+    }
+
+    bool isFloating() const {
+        return style->float_ != Float::NONE;
+    }
+
+    bool isBlockLevel() const {
+        return not isPositioned() and
+               not isFloating() and
+               (style->display == Display::BLOCK or
+                style->display == Display::TABLE or
+                style->display == Display::Item::YES);
+    }
+
+    bool isBlockEquivalent() const {
+        return (
+            style->display == Display::FLOW or
+            style->display == Display::FLOW_ROOT or
+            style->display == Display::FLEX or
+            style->display == Display::GRID or
+            style->display == Display::Item::YES or
+            style->display == Display::TABLE_CELL or
+            isReplaced()
+        );
+    }
+
+    bool isInlineLevel() const {
+        return style->display == Display::INLINE;
+    }
+
+    bool hasLineBoxes() const {
+        return content.is<LineBoxes>();
+    }
+
+    LineBoxes& lineBoxes() {
+        return content.unwrap<LineBoxes>("box doesn't have lines boxes");
     }
 
     void repr(Io::Emit& e) const {
@@ -399,9 +446,9 @@ struct Box : Meta::NoCopy {
                 e.newline();
             }
             e.deindent();
-        } else if (content.is<InlineBox>()) {
+        } else if (content.is<LineBoxes>()) {
             e.indentNewline();
-            e("{}", content.unwrap<InlineBox>());
+            e("{}", content.unwrap<LineBoxes>());
             e.deindent();
         } else if (content.is<SVGRoot>()) {
             e.indentNewline();
@@ -420,7 +467,7 @@ void Svg::Group::add(Vaev::Layout::Box&& box) {
     add(Element{makeBox<Vaev::Layout::Box>(std::move(box))});
 }
 
-void InlineBox::add(Box&& b) {
+void LineBoxes::add(Box&& b) {
     prose->append(Gfx::Prose::StrutCell{atomicBoxes.len()});
     atomicBoxes.pushBack(makeBox<Box>(std::move(b)));
 }
@@ -589,6 +636,13 @@ export struct Frag {
             return *children;
         }
         return {};
+    }
+
+    void visitChildrenInTreeOrder(auto&& visitor) {
+        for (auto& c : children()) {
+            visitor(c);
+            c.visitChildrenInTreeOrder(visitor);
+        }
     }
 
     MutSlice<Frag> children() {

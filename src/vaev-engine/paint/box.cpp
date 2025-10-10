@@ -10,30 +10,9 @@ import :layout.values;
 
 namespace Vaev::Paint {
 
-void _paintInlineLevel(Layout::Frag& frag, Scene::Stack& stack) {
-    // 1. For each box that is a child of that element, in that line box, in tree order
-    if (auto ic = frag.box->content.is<Layout::InlineBox>())
-        stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
-
-    // 4. For inline elements:
-    for (auto& c : frag.children()) {
-        if (c.style().position != Position::STATIC)
-            continue;
-
-        // For inline-block and inline-table elements:
-
-        // For each one of these, treat the element as if it created a new stacking
-        // context, but any positioned descendants and descendants which actually
-        // create a new stacking context should be considered part of the parent
-        // stacking context, not this new one.
-        _paintStackingContext(c, stack);
-    }
-}
-
-void _paintBlockLevel(Layout::Frag& frag, Scene::Stack& stack) {
+void _paintReplaced(Layout::Frag& frag, Scene::Stack& stack) {
     auto& s = frag.style();
 
-    // 1. If the element is a block-level replaced element, then: the replaced content, atomically.
     if (auto image = frag.box->content.is<Rc<Scene::Node>>()) {
         auto bound = (*image)->bound();
 
@@ -60,10 +39,65 @@ void _paintBlockLevel(Layout::Frag& frag, Scene::Stack& stack) {
                 frag.metrics.contentBox().cast<f64>()
             )
         );
+    } else {
+        unreachable();
     }
-    // Otherwise, for each line box of that element:
-    else {
-        _paintInlineLevel(frag, stack);
+}
+
+// https://www.w3.org/TR/CSS22/zindex.html#:~:text=For%20inline%20elements%3A
+void _paintInlineLevel(Layout::Frag& frag, Scene::Stack& stack) {
+    if (_requiresStackingContext(frag.style())) {
+        _paintStackingContext(frag, stack);
+        return;
+    }
+
+    // 1. background color of element.
+    _paintBackgroundColor(frag, stack);
+
+    // 2. background image of element.
+    // TODO
+
+    // 3. border of element.
+    _paintBorders(frag, stack);
+
+    // 4. For inline elements
+
+    // 1. For all the element's in-flow, non-positioned, inline-level children
+    //    that are in this line box, and all runs of text inside the element
+    //    that is on this line box, in tree order:
+    if (frag.box->hasLineBoxes()) {
+        auto& lineBoxes = frag.box->lineBoxes();
+        auto position = frag.metrics.contentBox().topStart().cast<f64>();
+        stack.add(makeRc<Scene::Text>(position, lineBoxes.prose));
+    }
+
+    for (auto& c : frag.children()) {
+        if (c.box->isPositioned())
+            continue;
+
+        // Replaced elements
+        if (c.box->isReplaced())
+            _paintReplaced(c, stack);
+        // For inline-block and inline-table elements:
+        else
+            _paintStackingContext(c, stack);
+    }
+}
+
+void _paintBlockLevel(Layout::Frag& frag, Scene::Stack& stack) {
+    // For all its in-flow, non-positioned, block-level descendants in tree order
+    for (auto& c : frag.children()) {
+        if (c.box->isPositioned() or not c.box->isBlockLevel())
+            continue;
+
+        // 1. If the element is a block-level replaced element, then: the replaced content, atomically.
+        if (c.box->isReplaced())
+            _paintReplaced(c, stack);
+        // Otherwise, for each line box of that element:
+        else if (c.box->hasLineBoxes())
+            _paintInlineLevel(c, stack);
+
+        _paintBlockLevel(c, stack);
     }
 }
 
