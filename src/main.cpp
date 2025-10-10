@@ -172,7 +172,7 @@ static Async::Task<> renderAsync(
     auto scene = window->render();
 
     // NOTE: Override the background of HTML document, since no
-    //       one really expect a html document to transparent
+    //       one really expect a html document to be transparent
     if (window->document()->documentElement()->namespaceUri() == Vaev::Html::NAMESPACE) {
         scene = makeRc<Scene::Clear>(scene, Gfx::WHITE);
     }
