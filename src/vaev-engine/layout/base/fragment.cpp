@@ -167,6 +167,13 @@ export struct Frag {
         return {};
     }
 
+    void visitChildrenInTreeOrder(auto&& visitor) {
+        for (auto& c : children()) {
+            visitor(c);
+            c.visitChildrenInTreeOrder(visitor);
+        }
+    }
+
     /// Add a child fragment.
     void add(Frag&& frag) {
         if (auto children = content.is<Vec<Frag>>()) {

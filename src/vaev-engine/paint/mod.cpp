@@ -24,11 +24,14 @@ Rc<Scene::Node> _applyClip(Layout::Frag const& frag, Rc<Scene::Node> content);
 
 void _paintOutline(Layout::Frag& frag, Scene::Stack& stack);
 
+// MARK: Stacking --------------------------------------------------------------
+
 export struct Options {
     Math::Rectf canvasBound;
     bool rootElement = false;
 };
 
+bool _requiresStackingContext(Style::SpecifiedValues const& s);
 export void _paintStackingContext(Layout::Frag& frag, Scene::Stack& stack, Options const& options = {});
 export void _paintStackingContextInternal(Layout::Frag& frag, Scene::Stack& stack, Options const& options);
 export void _establishStackingContext(Layout::Frag& frag, Scene::Stack& stack, Options const& options);

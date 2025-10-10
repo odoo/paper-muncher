@@ -14,6 +14,11 @@ bool _doEstablishStackingContext(Style::SpecifiedValues const& s) {
            s.opacity < 1.0;
 }
 
+bool _requiresStackingContext(Style::SpecifiedValues const& s) {
+    return _doEstablishStackingContext(s) or
+           s.position != Position::STATIC;
+}
+
 void _establishStackingContext(Layout::Frag& frag, Scene::Stack& stack, Options const& options) {
     auto inner = makeRc<Scene::Stack>();
     _paintStackingContextInternal(frag, *inner, options);
@@ -29,8 +34,6 @@ void _establishStackingContext(Layout::Frag& frag, Scene::Stack& stack, Options 
 
 // https://www.w3.org/TR/CSS22/zindex.html
 void _paintStackingContextInternal(Layout::Frag& frag, Scene::Stack& stack, Options const& options) {
-    auto const& style = frag.style();
-
     // 1. If the element is a root element:
     if (options.rootElement) {
         // 1. background color of element over the entire canvas.
@@ -41,7 +44,7 @@ void _paintStackingContextInternal(Layout::Frag& frag, Scene::Stack& stack, Opti
     }
 
     // 2. If the element is a block, list-item, or other block equivalent:
-    if (style.display == Display::BLOCK or style.display == Display::Item::YES) {
+    if (frag.box->isBlockEquivalent()) {
         if (not options.rootElement) {
             // 1. background color of element unless it is the root element.
             _paintBackgroundColor(frag, stack);
@@ -56,15 +59,16 @@ void _paintStackingContextInternal(Layout::Frag& frag, Scene::Stack& stack, Opti
 
     // 3. Stacking contexts formed by positioned descendants with negative z-indices (excluding 0) in z-index order (most negative first) then tree order
     for (auto& c : frag.children()) {
-        if (c.style().zIndex.unwrapOr<Integer>(0) >= 0)
+        if (not c.box->isPositioned() or
+            c.style().zIndex.unwrapOr<Integer>(0) >= 0)
             break;
         _paintStackingContext(c, stack);
     }
 
     // 4. For all its in-flow, non-positioned, block-level descendants in tree order: If the element is a block, list-item, or other block equivalent:
-    for (auto& c : frag.children()) {
-        if (c.style().position != Position::STATIC)
-            continue;
+    frag.visitChildrenInTreeOrder([&](auto& c) {
+        if (c.box->isPositioned() or not c.box->isBlockEquivalent())
+            return;
 
         // 1. background color of element.
         _paintBackgroundColor(c, stack);
@@ -73,19 +77,20 @@ void _paintStackingContextInternal(Layout::Frag& frag, Scene::Stack& stack, Opti
 
         // 3. border of element.
         _paintBorders(c, stack);
-    }
+    });
 
     // 5. All non-positioned floating descendants, in tree order.
     for (auto& c : frag.children()) {
-        if (c.style().position == Position::STATIC and c.style().float_ != Float::NONE) {
-            // For each one of these, treat the element as if it created a new stacking context,
-            // but any positioned descendants and descendants which actually create a new stacking context should be considered part of the parent stacking context, not this new one.
-            _paintStackingContext(c, stack);
-        }
+        if (c.box->isPositioned() or not c.box->isFloating())
+            continue;
+
+        // For each one of these, treat the element as if it created a new stacking context,
+        // but any positioned descendants and descendants which actually create a new stacking context should be considered part of the parent stacking context, not this new one.
+        _paintStackingContext(c, stack);
     }
 
     // 6. If the element is an inline element that generates a stacking context
-    if (frag.box->content.is<Layout::InlineBox>()) {
+    if (frag.box->isInlineLevel()) {
         // For each line box that the element is in:
         //     Jump to 7.2.1 for the box(es) of the element in that line box (in tree order).
         _paintInlineLevel(frag, stack);
@@ -98,10 +103,8 @@ void _paintStackingContextInternal(Layout::Frag& frag, Scene::Stack& stack, Opti
 
     // 8. All positioned descendants with 'z-index: auto' or 'z-index: 0', in tree order.
     for (auto& c : frag.children()) {
-        if (c.style().position == Position::STATIC)
-            continue;
-
-        if (c.style().zIndex.unwrapOr<Integer>(0) != 0)
+        if (not c.box->isPositioned() or
+            c.style().zIndex.unwrapOr<Integer>(0) != 0)
             continue;
 
         //     For those with 'z-index: auto', treat the element as if it created a new stacking context, but any positioned descendants and descendants which actually create a new stacking context should be considered part of the parent stacking context, not this new one.
@@ -111,8 +114,10 @@ void _paintStackingContextInternal(Layout::Frag& frag, Scene::Stack& stack, Opti
 
     // 9. Stacking contexts formed by positioned descendants with z-indices greater than or equal to 1 in z-index order (smallest first) then tree order.
     for (auto& c : frag.children()) {
-        if (c.style().zIndex.unwrapOr<Integer>(0) >= 1)
-            _paintStackingContext(c, stack);
+        if (not c.box->isPositioned() or c.style().zIndex.unwrapOr<Integer>(0) < 1)
+            continue;
+
+        _paintStackingContext(c, stack);
     }
 
     // 10. Finally, draw outlines from this stacking context

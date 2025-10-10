@@ -17,7 +17,7 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
 
     if (box.isReplaced()) {
         return constructReplacedFormatingContext(box);
-    } else if (box.content.is<InlineBox>()) {
+    } else if (box.content.is<LineBoxes>()) {
         return constructInlineFormatingContext(box);
     } else if (
         display == Display::FLOW or
