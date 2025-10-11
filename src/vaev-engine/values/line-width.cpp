@@ -25,7 +25,7 @@ export using LineWidth = Union<
     Keywords::Thin,
     Keywords::Medium,
     Keywords::Thick,
-    CalcValue<Length>>;
+    Calc<Length>>;
 
 export template <>
 struct ValueParser<LineWidth> {
@@ -46,7 +46,7 @@ struct ValueParser<LineWidth> {
             return Ok(Keywords::THICK);
         }
 
-        return Ok(try$(parseValue<CalcValue<Length>>(c)));
+        return Ok(try$(parseValue<Calc<Length>>(c)));
     }
 };
 

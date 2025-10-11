@@ -58,11 +58,11 @@ export struct BackgroundPosition {
           vertical(Percent{0}) {
     }
 
-    constexpr BackgroundPosition(Calc<Length>> horizontal, CalcValue<PercentOr<Length> vertical)
+    constexpr BackgroundPosition(Calc<Length> horizontal, Calc<Length> vertical)
         : horizontalAnchor(Keywords::LEFT), horizontal(horizontal), verticalAnchor(Keywords::TOP), vertical(vertical) {
     }
 
-    constexpr BackgroundPosition(HorizontalAnchor horizontalAnchor, Calc<Length>> horizontal, VerticalAnchor verticalAnchor, CalcValue<PercentOr<Length> vertical)
+    constexpr BackgroundPosition(HorizontalAnchor horizontalAnchor, Calc<Length> horizontal, VerticalAnchor verticalAnchor, Calc<Length> vertical)
         : horizontalAnchor(horizontalAnchor), horizontal(horizontal), verticalAnchor(verticalAnchor), vertical(vertical) {
     }
 

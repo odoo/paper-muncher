@@ -812,7 +812,7 @@ export struct BorderBottomWidthProp {
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<Length>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
@@ -982,7 +982,7 @@ export struct BorderRadius {
 
     static constexpr Str name() { return "border-radius"; }
 
-    static Math::Radii<Calc<Length>>> initial() { return {CalcValue<PercentOr<Length>(Length{})}; }
+    static Math::Radii<Calc<Length>>> initial() { return {Calc<Length>(Length{})}; }
 
     void apply(SpecifiedValues& c) const {
         c.borders.cow().radii = value;
@@ -1014,7 +1014,7 @@ export struct BorderTopProp {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
+            auto width = parseValue<Calc<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -1055,7 +1055,7 @@ export struct BorderRightProp {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
+            auto width = parseValue<Calc<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -1096,7 +1096,7 @@ export struct BorderBottomProp {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
+            auto width = parseValue<Calc<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -1137,7 +1137,7 @@ export struct BorderLeftProp {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
+            auto width = parseValue<Calc<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -2199,7 +2199,7 @@ export struct OutlineProp {
     Res<> parse(Cursor<Css::Sst>& c) {
         bool styleSet = false;
         while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
+            auto width = parseValue<Calc<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -2302,7 +2302,7 @@ export struct OutlineColorProp {
 
 // https://drafts.csswg.org/css-ui/#outline-offset
 export struct OutlineOffsetProp {
-    CalcValue<Length> value = initial();
+    Calc<Length> value = initial();
 
     static Str name() { return "outline-offset"; }
 
@@ -2312,12 +2312,12 @@ export struct OutlineOffsetProp {
         c.outline.cow().offset = value;
     }
 
-    static CalcValue<Length> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.outline->offset;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<Length>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };

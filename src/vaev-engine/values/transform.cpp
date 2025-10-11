@@ -130,7 +130,7 @@ export using TransformBox = Union<
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-matrix
 export struct MatrixTransform {
-    Array<CalcValue<Number>, 6> values;
+    Array<Calc<Number>, 6> values;
 
     void repr(Io::Emit& e) const {
         e("matrix({}, {}, {}, {}, {}, {})", values[0], values[1], values[2], values[3], values[4], values[5]);
@@ -148,13 +148,13 @@ struct ValueParser<MatrixTransform> {
 
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
-        Array<CalcValue<Number>, 6> values;
+        Array<Calc<Number>, 6> values;
 
         for (usize i = 0; i < 6; ++i) {
             if (content.ended())
                 return Error::invalidData("unexpected end of input");
 
-            auto value = try$(parseValue<CalcValue<Number>>(content));
+            auto value = try$(parseValue<Calc<Number>>(content));
             values[i] = std::move(value);
             if (i < 5)
                 skipOmmitableComma(content);
@@ -231,8 +231,8 @@ struct ValueParser<TranslateTransform> {
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-scale
 export struct ScaleTransform {
-    CalcValue<Number> x;
-    CalcValue<Number> y;
+    Calc<Number> x;
+    Calc<Number> y;
 
     void repr(Io::Emit& e) const {
         e("scale({}, {})", x, y);
@@ -248,7 +248,7 @@ struct ValueParser<ScaleTransform> {
         if (c->prefix == Css::Token::function("scaleX(")) {
             Cursor<Css::Sst> content = c->content;
             eatWhitespace(content);
-            auto sx = try$(parseValue<CalcValue<Number>>(content));
+            auto sx = try$(parseValue<Calc<Number>>(content));
             eatWhitespace(content);
             if (not content.ended()) {
                 return Error::invalidData("unexpected content after scaleX function");
@@ -260,7 +260,7 @@ struct ValueParser<ScaleTransform> {
         if (c->prefix == Css::Token::function("scaleY(")) {
             Cursor<Css::Sst> content = c->content;
             eatWhitespace(content);
-            auto sy = try$(parseValue<CalcValue<Number>>(content));
+            auto sy = try$(parseValue<Calc<Number>>(content));
             eatWhitespace(content);
             if (not content.ended())
                 return Error::invalidData("unexpected content after scaleY function");
@@ -274,7 +274,7 @@ struct ValueParser<ScaleTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto x = try$(parseValue<CalcValue<Number>>(content));
+        auto x = try$(parseValue<Calc<Number>>(content));
         skipOmmitableComma(content);
 
         // If the second parameter is not provided, it takes a value equal to the first.
@@ -284,7 +284,7 @@ struct ValueParser<ScaleTransform> {
             return Ok(ScaleTransform{std::move(x), std::move(y)});
         }
 
-        auto y = try$(parseValue<CalcValue<Number>>(content));
+        auto y = try$(parseValue<Calc<Number>>(content));
         eatWhitespace(content);
         if (not content.ended())
             return Error::invalidData("unexpected content after scale function");
@@ -296,7 +296,7 @@ struct ValueParser<ScaleTransform> {
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-rotate
 export struct RotateTransform {
-    CalcValue<Angle> value;
+    Calc<Angle> value;
 
     void repr(Io::Emit& e) const {
         e("rotate({})", value);
@@ -315,7 +315,7 @@ struct ValueParser<RotateTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto value = try$(parseValue<CalcValue<Angle>>(content));
+        auto value = try$(parseValue<Calc<Angle>>(content));
         eatWhitespace(content);
 
         if (not content.ended())
@@ -328,8 +328,8 @@ struct ValueParser<RotateTransform> {
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-skew
 export struct SkewTransform {
-    CalcValue<Angle> x;
-    CalcValue<Angle> y;
+    Calc<Angle> x;
+    Calc<Angle> y;
 
     void repr(Io::Emit& e) const {
         e("skew({}, {})", x, y);
@@ -348,7 +348,7 @@ struct ValueParser<SkewTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto x = try$(parseValue<CalcValue<Angle>>(content));
+        auto x = try$(parseValue<Calc<Angle>>(content));
         skipOmmitableComma(content);
 
         // If the second parameter is not provided, it has a zero value.
@@ -357,7 +357,7 @@ struct ValueParser<SkewTransform> {
             return Ok(SkewTransform{std::move(x), Angle::fromDegree(0.)});
         }
 
-        auto y = try$(parseValue<CalcValue<Angle>>(content));
+        auto y = try$(parseValue<Calc<Angle>>(content));
         eatWhitespace(content);
 
         if (not content.ended())
@@ -370,7 +370,7 @@ struct ValueParser<SkewTransform> {
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-skewx
 export struct SkewXTransform {
-    CalcValue<Angle> value;
+    Calc<Angle> value;
 
     void repr(Io::Emit& e) const {
         e("skewX({})", value);
@@ -389,7 +389,7 @@ struct ValueParser<SkewXTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto value = try$(parseValue<CalcValue<Angle>>(content));
+        auto value = try$(parseValue<Calc<Angle>>(content));
         eatWhitespace(content);
 
         if (not content.ended())
@@ -402,7 +402,7 @@ struct ValueParser<SkewXTransform> {
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-skewy
 export struct SkewYTransform {
-    CalcValue<Angle> value;
+    Calc<Angle> value;
 
     void repr(Io::Emit& e) const {
         e("skewY({})", value);
@@ -421,7 +421,7 @@ struct ValueParser<SkewYTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto value = try$(parseValue<CalcValue<Angle>>(content));
+        auto value = try$(parseValue<Calc<Angle>>(content));
         eatWhitespace(content);
 
         if (not content.ended())

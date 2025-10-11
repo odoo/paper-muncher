@@ -328,12 +328,12 @@ export struct Resolver {
     }
 
     template <typename T, typename... Args>
-    Resolved<T> resolve(CalcValue<T> const& calc, Args... args) {
+    Resolved<T> resolve(Calc<T> const& calc, Args... args) {
         auto resolveUnion = Visitor{
             [&](T const& v) {
                 return resolve(v, args...);
             },
-            [&](CalcValue<T>::Leaf const& v) {
+            [&](Calc<T>::Leaf const& v) {
                 return resolve<T>(*v, args...);
             },
             [&](Number const& v)
@@ -344,16 +344,16 @@ export struct Resolver {
             };
 
         return calc.visit(Visitor{
-            [&](typename CalcValue<T>::Value const& v) {
+            [&](typename Calc<T>::Value const& v) {
                 return v.visit(resolveUnion);
             },
-            [&](typename CalcValue<T>::Unary const& u) {
+            [&](typename Calc<T>::Unary const& u) {
                 return _resolveUnary<T>(
                     u.op,
                     u.val.visit(resolveUnion)
                 );
             },
-            [&](typename CalcValue<T>::Binary const& b) {
+            [&](typename Calc<T>::Binary const& b) {
                 return _resolveInfix<T>(
                     b.op,
                     b.lhs.visit(resolveUnion),
@@ -399,7 +399,7 @@ export Au resolve(Tree const& tree, Box const& box, FontSize const& value) {
 }
 
 export template <typename T, typename... Args>
-auto resolve(Tree const& tree, Box const& box, CalcValue<T> const& value, Args... args) -> Resolved<T> {
+auto resolve(Tree const& tree, Box const& box, Calc<T> const& value, Args... args) -> Resolved<T> {
     return Resolver::from(tree, box).resolve(value, args...);
 }
 
