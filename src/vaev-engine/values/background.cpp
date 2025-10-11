@@ -47,9 +47,9 @@ export struct BackgroundPosition {
     using VerticalAnchor = Union<Keywords::Top, Keywords::Center, Keywords::Bottom>;
 
     HorizontalAnchor horizontalAnchor;
-    CalcValue<PercentOr<Length>> horizontal;
+    Calc<Length> horizontal;
     VerticalAnchor verticalAnchor;
-    CalcValue<PercentOr<Length>> vertical;
+    Calc<Length> vertical;
 
     constexpr BackgroundPosition()
         : horizontalAnchor(Keywords::LEFT),
@@ -58,11 +58,11 @@ export struct BackgroundPosition {
           vertical(Percent{0}) {
     }
 
-    constexpr BackgroundPosition(CalcValue<PercentOr<Length>> horizontal, CalcValue<PercentOr<Length>> vertical)
+    constexpr BackgroundPosition(Calc<Length> horizontal, Calc<Length> vertical)
         : horizontalAnchor(Keywords::LEFT), horizontal(horizontal), verticalAnchor(Keywords::TOP), vertical(vertical) {
     }
 
-    constexpr BackgroundPosition(HorizontalAnchor horizontalAnchor, CalcValue<PercentOr<Length>> horizontal, VerticalAnchor verticalAnchor, CalcValue<PercentOr<Length>> vertical)
+    constexpr BackgroundPosition(HorizontalAnchor horizontalAnchor, Calc<Length> horizontal, VerticalAnchor verticalAnchor, Calc<Length> vertical)
         : horizontalAnchor(horizontalAnchor), horizontal(horizontal), verticalAnchor(verticalAnchor), vertical(vertical) {
     }
 
@@ -80,7 +80,7 @@ struct ValueParser<BackgroundPosition> {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        using Item = FlatUnion<BackgroundPosition::HorizontalAnchor, BackgroundPosition::VerticalAnchor, CalcValue<PercentOr<Length>>>;
+        using Item = FlatUnion<BackgroundPosition::HorizontalAnchor, BackgroundPosition::VerticalAnchor, Calc<Length>>;
 
         InlineVec<Item, 4> items;
         for (int i = 0; i < 4 && not c.ended(); ++i) {
@@ -108,16 +108,16 @@ struct ValueParser<BackgroundPosition> {
                 items.pushBack(items.popFront());
 
             BackgroundPosition::HorizontalAnchor hAnchor = Keywords::LEFT;
-            CalcValue<PercentOr<Length>> hValue = {Percent(0)};
+            Calc<Length> hValue = {Percent(0)};
             BackgroundPosition::VerticalAnchor vAnchor = Keywords::TOP;
-            CalcValue<PercentOr<Length>> vValue = {Percent(0)};
+            Calc<Length> vValue = {Percent(0)};
 
             try$(items[0].visit(Visitor{
                 [&](Meta::Contains<Keywords::Left, Keywords::Right, Keywords::Center> auto& t) -> Res<> {
                     hAnchor = t;
                     return Ok();
                 },
-                [&](CalcValue<PercentOr<Length>>& t) -> Res<> {
+                [&](Calc<Length>& t) -> Res<> {
                     hValue = t;
                     return Ok();
                 },
@@ -131,7 +131,7 @@ struct ValueParser<BackgroundPosition> {
                     vAnchor = t;
                     return Ok();
                 },
-                [&](CalcValue<PercentOr<Length>>& t) -> Res<> {
+                [&](Calc<Length>& t) -> Res<> {
                     vValue = t;
                     return Ok();
                 },
@@ -145,11 +145,11 @@ struct ValueParser<BackgroundPosition> {
 
         // case 3
         BackgroundPosition::HorizontalAnchor hAnchor = Keywords::LEFT;
-        CalcValue<PercentOr<Length>> hValue = {Percent(0)};
+        Calc<Length> hValue = {Percent(0)};
         bool hSet = false;
 
         BackgroundPosition::VerticalAnchor vAnchor = Keywords::TOP;
-        CalcValue<PercentOr<Length>> vValue = {Percent(0)};
+        Calc<Length> vValue = {Percent(0)};
 
         usize secondPairIndex = 2;
 
@@ -158,7 +158,7 @@ struct ValueParser<BackgroundPosition> {
                 hAnchor = t;
                 hSet = true;
 
-                if (auto mesure = items[1].is<CalcValue<PercentOr<Length>>>()) {
+                if (auto mesure = items[1].is<Calc<Length>>()) {
                     hValue = *mesure;
                 } else {
                     secondPairIndex = 1;
@@ -177,7 +177,7 @@ struct ValueParser<BackgroundPosition> {
             [&](Meta::Contains<Keywords::Top, Keywords::Bottom> auto& t) -> Res<> {
                 vAnchor = t;
 
-                if (auto mesure = items[1].is<CalcValue<PercentOr<Length>>>()) {
+                if (auto mesure = items[1].is<Calc<Length>>()) {
                     vValue = *mesure;
                 } else {
                     secondPairIndex = 1;
@@ -204,7 +204,7 @@ struct ValueParser<BackgroundPosition> {
                 hAnchor = t;
 
                 if (secondPairIndex + 1 < items.len()) {
-                    if (auto mesure = items[secondPairIndex + 1].is<CalcValue<PercentOr<Length>>>())
+                    if (auto mesure = items[secondPairIndex + 1].is<Calc<Length>>())
                         hValue = *mesure;
                     else {
                         return Error::invalidData("expected percent or length");
@@ -217,7 +217,7 @@ struct ValueParser<BackgroundPosition> {
                 vAnchor = t;
 
                 if (secondPairIndex + 1 < items.len()) {
-                    if (auto mesure = items[secondPairIndex + 1].is<CalcValue<PercentOr<Length>>>())
+                    if (auto mesure = items[secondPairIndex + 1].is<Calc<Length>>())
                         vValue = *mesure;
                     else {
                         return Error::invalidData("unexpected last value");

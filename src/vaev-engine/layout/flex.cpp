@@ -240,21 +240,21 @@ struct FlexItem {
     // https://www.w3.org/TR/css-flexbox-1/#valdef-flex-basis-auto
     void computeFlexBaseSize(Tree& tree, Opt<Au> mainContainerSize, IntrinsicSize containerSizing) {
         // A NONE return here indicates a CONTENT case for the flex basis
-        auto getDefiniteFlexBasisSize = [](FlexProps& flexItemProps, FlexAxis& fa, Box* box) -> Opt<CalcValue<PercentOr<Length>>> {
+        auto getDefiniteFlexBasisSize = [](FlexProps& flexItemProps, FlexAxis& fa, Box* box) -> Opt<Calc<Length>> {
             if (flexItemProps.basis.is<Keywords::Content>())
                 return NONE;
 
             // from now on flex basis is width
 
-            if (auto basisCalc = flexItemProps.basis.is<CalcValue<PercentOr<Length>>>())
+            if (auto basisCalc = flexItemProps.basis.is<Calc<Length>>())
                 return *basisCalc;
 
-            if (not fa.mainAxis(box->style->sizing).is<CalcValue<PercentOr<Length>>>())
+            if (not fa.mainAxis(box->style->sizing).is<Calc<Length>>())
                 return NONE;
 
             // TODO: solve definite values also min and max content
 
-            return fa.mainAxis(box->style->sizing).unwrap<CalcValue<PercentOr<Length>>>();
+            return fa.mainAxis(box->style->sizing).unwrap<Calc<Length>>();
         };
 
         if (auto flexBasisDefiniteSize = getDefiniteFlexBasisSize(flexItemProps, fa, box)) {
@@ -300,7 +300,7 @@ struct FlexItem {
     Au getMinAutoPrefMainSize(Tree& tree, Vec2Au containerSize) const {
         Opt<Au> definiteMaxMainSize;
         auto maxMainSize = box->style->sizing->maxSize(fa.isRowOriented ? Axis::HORIZONTAL : Axis::VERTICAL);
-        if (auto maxMainSizeCalc = maxMainSize.is<CalcValue<PercentOr<Length>>>()) {
+        if (auto maxMainSizeCalc = maxMainSize.is<Calc<Length>>()) {
             definiteMaxMainSize = resolve(
                 tree,
                 *box,
@@ -315,7 +315,7 @@ struct FlexItem {
             contentSizeSuggestion = min(contentSizeSuggestion, definiteMaxMainSize.unwrap());
 
         auto mainAxis = fa.mainAxis(box->style->sizing);
-        if (auto mainAxisCalc = mainAxis.is<CalcValue<PercentOr<Length>>>()) {
+        if (auto mainAxisCalc = mainAxis.is<Calc<Length>>()) {
             Au specifiedSizeSuggestion = resolve(
                 tree,
                 *box,
@@ -338,7 +338,7 @@ struct FlexItem {
         MaxSize maxSizeToResolve = isWidth ? box->style->sizing->maxWidth : box->style->sizing->maxHeight;
 
         auto visitor = Visitor{
-            [&](CalcValue<PercentOr<Length>> const& v) {
+            [&](Calc<Length> const& v) {
                 return resolve(
                     tree,
                     *box,
@@ -380,7 +380,7 @@ struct FlexItem {
         Au contentContribution = fa.mainAxis(isMin ? minContentSize : maxContentSize) + getMargin(BOTH_MAIN);
 
         auto mainAxis = fa.mainAxis(box->style->sizing);
-        if (auto mainAxisCalc = mainAxis.is<CalcValue<PercentOr<Length>>>()) {
+        if (auto mainAxisCalc = mainAxis.is<Calc<Length>>()) {
             contentContribution = max(
                 contentContribution,
                 resolve(
@@ -425,7 +425,7 @@ struct FlexItem {
             );
 
         auto crossAxis = fa.crossAxis(box->style->sizing);
-        if (auto crossAxisCalc = crossAxis.is<CalcValue<PercentOr<Length>>>()) {
+        if (auto crossAxisCalc = crossAxis.is<Calc<Length>>()) {
             contentContribution = max(
                 contentContribution,
                 resolve(
@@ -702,11 +702,11 @@ struct FlexFormatingContext : FormatingContext {
 
     void _determineFlexBaseSizeAndHypotheticalMainSize(Tree& tree, Box& box, Input input) {
         Opt<Au> containerDefiniteMainSize = fa.mainAxis(input.knownSize);
-        if (fa.mainAxis(box.style->sizing).is<CalcValue<PercentOr<Length>>>()) {
+        if (fa.mainAxis(box.style->sizing).is<Calc<Length>>()) {
             containerDefiniteMainSize = resolve(
                 tree,
                 box,
-                fa.mainAxis(box.style->sizing).unwrap<CalcValue<PercentOr<Length>>>(),
+                fa.mainAxis(box.style->sizing).unwrap<Calc<Length>>(),
                 fa.mainAxis(input.containingBlock)
             );
         }
