@@ -2,6 +2,7 @@ export module Vaev.Engine:layout.inline_;
 
 import Karm.Gfx;
 import Karm.Math;
+import Karm.Core;
 
 import :values;
 import :layout.base;

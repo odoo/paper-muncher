@@ -5,6 +5,8 @@ module;
 export module Vaev.Engine:layout.block;
 
 import Karm.Math;
+import Karm.Core;
+
 import :values;
 import :layout.base;
 import :layout.layout;

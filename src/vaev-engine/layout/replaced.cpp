@@ -4,6 +4,8 @@ import Karm.Image;
 import Karm.Gfx;
 import Karm.Math;
 import Karm.Logger;
+import Karm.Scene;
+import Karm.Core;
 
 import :values;
 import :layout.base;

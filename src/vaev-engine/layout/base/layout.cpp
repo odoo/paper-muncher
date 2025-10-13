@@ -2,7 +2,10 @@ export module Vaev.Engine:layout.layout;
 
 import Karm.Math;
 
-import :layout.base;
+import :layout.box;
+import :layout.input;
+import :layout.output;
+import :layout.formating;
 
 namespace Vaev::Layout {
 

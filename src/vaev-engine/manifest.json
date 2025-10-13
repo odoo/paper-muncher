@@ -9,6 +9,8 @@
         "driver",
         "html",
         "layout",
+        "layout/base",
+        "layout/builder",
         "loader",
         "style",
         "values",
