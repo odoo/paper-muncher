@@ -5,7 +5,7 @@ import Karm.Math;
 import Karm.Logger;
 
 import :values;
-import :layout.base;
+import :layout.formating;
 import :layout.writing;
 
 namespace Vaev::Layout {
@@ -44,7 +44,6 @@ export struct Resolver {
         }
 
         switch (value.unit()) {
-
         case Length::EM:
             return Au::fromFloatNearest(value.val() * boxFont.unwrap().fontSize());
 
