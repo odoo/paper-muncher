@@ -128,6 +128,9 @@ export struct TableProps {
     CaptionSide captionSide = CaptionSide::TOP;
     BorderSpacing spacing = {0_au, 0_au};
     BorderCollapse collapse = BorderCollapse::SEPARATE;
+    usize span = 1;
+    usize rowSpan = 1;
+    usize colSpan = 1;
 
     void repr(Io::Emit& e) const {
         e("(table");
@@ -135,6 +138,9 @@ export struct TableProps {
         e(" captionSide={}", captionSide);
         e(" spacing={}", spacing);
         e(" collapse={}", collapse);
+        e(" span={}", span);
+        e(" rowSpan={}", rowSpan);
+        e(" colSpan={}", colSpan);
         e(")");
     }
 };

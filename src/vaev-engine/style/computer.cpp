@@ -122,7 +122,7 @@ export struct Computer {
         if (el->namespaceUri() != Html::NAMESPACE)
             return {};
 
-        Vec<Style::StyleProp> res;
+        Vec<StyleProp> res;
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-fgcolor
         if (auto fgcolor = el->getAttribute(Html::FGCOLOR_ATTR)) {
             auto value = parseValue<Color>(fgcolor.unwrap());
@@ -159,6 +159,39 @@ export struct Computer {
         }
 
         return res;
+    }
+
+    static void _considerElementAttributes(SpecifiedValues& values, Gc::Ref<Dom::Element> el) {
+        // https://html.spec.whatwg.org/multipage/tables.html#the-col-element
+        // The element may have a span content attribute specified, whose value must
+        // be a valid non-negative integer greater than zero and less than or equal to 1000.
+        if (auto span = el->getAttribute(Html::SPAN_ATTR)) {
+            auto value = parseValue<Integer>(span.unwrap()).unwrapOr(0);
+            if (value <= 0 or value > 1000)
+                value = 1;
+            values.table.cow().span = value;
+        }
+
+        // https://html.spec.whatwg.org/multipage/tables.html#attributes-common-to-td-and-th-elements
+        // The td and th elements may have a colspan content attribute specified,
+        // whose value must be a valid non-negative integer greater than zero and less than or equal to 1000.
+        if (auto colSpan = el->getAttribute(Html::COLSPAN_ATTR)) {
+            auto value = parseValue<Integer>(colSpan.unwrap()).unwrapOr(0);
+            if (value <= 0 or value > 1000)
+                value = 1;
+            values.table.cow().colSpan = value;
+        }
+
+        // The td and th elements may also have a rowspan content attribute specified,
+        // whose value must be a valid non-negative integer less than or equal to 65534.
+        if (auto rowSpan = el->getAttribute(Html::ROWSPAN_ATTR)) {
+            auto value = parseValue<Integer>(rowSpan.unwrap()).unwrapOr(0);
+            if (value < 0)
+                value = 0;
+            if (value > 65534)
+                value = 65534;
+            values.table.cow().rowSpan = value;
+        }
     }
 
     // https://svgwg.org/specs/integration/#svg-css-sizing
@@ -228,7 +261,11 @@ export struct Computer {
         };
         matchingRules.pushBack({&presentationAttributes, PRESENTATION_ATTR_SPEC});
 
-        return _evalCascade(parent, matchingRules);
+        auto values = _evalCascade(parent, matchingRules);
+
+        _considerElementAttributes(*values, el);
+
+        return values;
     }
 
     Rc<PageSpecifiedValues> computeFor(SpecifiedValues const& parent, Page const& page) {

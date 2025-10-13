@@ -117,20 +117,9 @@ export using Content = Union<
     Rc<Scene::Node>,
     SVGRoot>;
 
-export struct Attrs {
-    usize span = 1;
-    usize rowSpan = 1;
-    usize colSpan = 1;
-
-    void repr(Io::Emit& e) const {
-        e("(attrs span: {} rowSpan: {} colSpan: {})", span, rowSpan, colSpan);
-    }
-};
-
 struct Box : Meta::NoCopy {
     Rc<Style::SpecifiedValues> style;
     Content content = NONE;
-    Attrs attrs;
     Opt<Rc<FormatingContext>> formatingContext = NONE;
     Gc::Ptr<Dom::Element> origin;
 
@@ -167,7 +156,7 @@ struct Box : Meta::NoCopy {
     }
 
     void repr(Io::Emit& e) const {
-        e("(box {} {} {}", attrs, style->display, style->position);
+        e("(box {} {}", style->display, style->position);
         if (children()) {
             e.indentNewline();
             for (auto& c : children()) {

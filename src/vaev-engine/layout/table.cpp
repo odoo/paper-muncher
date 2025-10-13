@@ -159,8 +159,8 @@ struct TableFormatingContext : FormatingContext {
             if (current.x == grid.size.x)
                 grid.increaseWidth();
 
-            usize rowSpan = tableRowCursor->attrs.rowSpan;
-            usize colSpan = tableRowCursor->attrs.colSpan;
+            usize rowSpan = tableRowCursor->style->table->rowSpan;
+            usize colSpan = tableRowCursor->style->table->colSpan;
 
             bool cellGrowsDownward;
             if (rowSpan == 0 and true /* TODO: and the table element's node document is not set to quirks mode, */) {
@@ -291,7 +291,7 @@ struct TableFormatingContext : FormatingContext {
 
                 // MARK: Columns
                 while (not columnGroupCursor.ended()) {
-                    auto span = columnGroupCursor->attrs.span;
+                    auto span = columnGroupCursor->style->table->span;
                     grid.increaseWidth(span);
 
                     cols.pushBack({.start = grid.size.x - span, .end = grid.size.x - 1, .el = *columnGroupCursor});
@@ -304,7 +304,7 @@ struct TableFormatingContext : FormatingContext {
 
                 colGroups.pushBack({.start = startColRange, .end = grid.size.x - 1, .el = *tableBoxCursor});
             } else {
-                auto span = tableBoxCursor->attrs.span;
+                auto span = tableBoxCursor->style->table->span;
                 grid.increaseWidth(span);
 
                 colGroups.pushBack({.start = grid.size.x - span + 1, .end = grid.size.x - 1, .el = *tableBoxCursor});
@@ -384,8 +384,8 @@ struct TableFormatingContext : FormatingContext {
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
-                usize rowSpan = cell.box->attrs.rowSpan;
-                usize colSpan = cell.box->attrs.colSpan;
+                usize rowSpan = cell.box->style->table->rowSpan;
+                usize colSpan = cell.box->style->table->colSpan;
 
                 auto cellBorder = computeBorders(tree, *cell.box);
 
@@ -497,7 +497,7 @@ struct TableFormatingContext : FormatingContext {
                 continue;
 
             auto cellWidth = resolve(tree, *cell.box, *cellBoxWidthCalc, tableUsedWidth);
-            auto colSpan = cell.box->attrs.colSpan;
+            auto colSpan = cell.box->style->table->colSpan;
 
             for (usize j = 0; j < colSpan; ++j, x++) {
                 // FIXME: Not overriding values already computed,
@@ -585,7 +585,7 @@ struct TableFormatingContext : FormatingContext {
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
-                auto colSpan = cell.box->attrs.colSpan;
+                auto colSpan = cell.box->style->table->colSpan;
                 if (colSpan > 1)
                     continue;
 
@@ -605,7 +605,7 @@ struct TableFormatingContext : FormatingContext {
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
-                auto colSpan = cell.box->attrs.span;
+                auto colSpan = cell.box->style->table->span;
                 if (colSpan <= 1)
                     continue;
 
@@ -818,7 +818,7 @@ struct TableFormatingContext : FormatingContext {
                 if (not(cell.box->style->sizing->height.is<Keywords::Auto>() or cell.box->style->sizing->height.is<CalcValue<PercentOr<Length>>>()))
                     logWarn("height can't be anything other than 'auto' or a length in a table context");
 
-                auto rowSpan = cell.box->attrs.rowSpan;
+                auto rowSpan = cell.box->style->table->rowSpan;
                 if (auto cellBoxHeightCalc = cell.box->style->sizing->height.is<CalcValue<PercentOr<Length>>>()) {
                     auto computedHeight = resolve(
                         tree,
@@ -969,7 +969,7 @@ struct TableFormatingContext : FormatingContext {
         // if the box started being rendered in the previous fragment,
         // - its started position must be row starting the fragment
         // - its size cant be the one computed in the build phase, thus is NONE
-        auto rowSpan = cell.box->attrs.rowSpan;
+        auto rowSpan = cell.box->style->table->rowSpan;
         bool boxStartedInPrevFragment = tree.fc.allowBreak() and breakpointsForCell.prevIteration;
         Au startPositionY = startPositionOfRow[boxStartedInPrevFragment ? startFrag : cell.anchorIdx.y];
 
@@ -987,7 +987,7 @@ struct TableFormatingContext : FormatingContext {
         //       increase the height of the cell box.
         //
         //       (See https://www.w3.org/TR/CSS22/tables.html#height-layout)
-        auto colSpan = cell.box->attrs.colSpan;
+        auto colSpan = cell.box->style->table->colSpan;
         auto outputCell = layout(
             tree,
             *cell.box,
@@ -1043,7 +1043,7 @@ struct TableFormatingContext : FormatingContext {
             if (cell.anchorIdx.x != j)
                 continue;
 
-            bool isBottomCell = cell.anchorIdx.y + cellBox->attrs.rowSpan - 1 == i;
+            bool isBottomCell = cell.anchorIdx.y + cellBox->style->table->rowSpan - 1 == i;
 
             if (not tree.fc.isDiscoveryMode() and not(isBottomCell or isBreakpointedRow)) {
                 continue;
@@ -1081,7 +1081,8 @@ struct TableFormatingContext : FormatingContext {
 
         bool isSelfContainedRow = true;
         for (usize j = 0; j < grid.size.x; ++j) {
-            if (grid.get(j, i).anchorIdx != Math::Vec2u{j, i} or grid.get(j, i).box->attrs.rowSpan != 1) {
+            if (grid.get(j, i).anchorIdx != Math::Vec2u{j, i} or
+                grid.get(j, i).box->style->table->rowSpan != 1) {
                 isSelfContainedRow = false;
                 break;
             }
@@ -1095,7 +1096,7 @@ struct TableFormatingContext : FormatingContext {
         if (not allBottomsAndCompletelyLaidOut or isLastRow)
             return true;
 
-        // if row is self contained, the <tr> it belongs to has size 1
+        // if row is self-contained, the <tr> it belongs to has size 1
         bool forcedBreakAfterCurrRow =
             rowGroupIdxs[i].axisIdx and
             rows[rowGroupIdxs[i].axisIdx.unwrap()].el.style->break_->after == BreakBetween::PAGE;

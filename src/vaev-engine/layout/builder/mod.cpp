@@ -22,48 +22,6 @@ namespace Vaev::Layout {
 
 static constexpr bool DEBUG_BUILDER = false;
 
-// MARK: Attributes ------------------------------------------------------------
-
-static Opt<Str> _parseStrAttr(Gc::Ref<Dom::Element> el, Dom::QualifiedName name) {
-    return el->getAttribute(name);
-}
-
-static Opt<usize> _parseUsizeAttr(Gc::Ref<Dom::Element> el, Dom::QualifiedName name) {
-    auto str = _parseStrAttr(el, name);
-    if (not str)
-        return NONE;
-    return Io::atoi(str.unwrap());
-}
-
-static Attrs _parseDomAttr(Gc::Ref<Dom::Element> el) {
-    Attrs attrs;
-
-    // https://html.spec.whatwg.org/multipage/tables.html#the-col-element
-
-    // The element may have a span content attribute specified, whose value must
-    // be a valid non-negative integer greater than zero and less than or equal to 1000.
-
-    attrs.span = _parseUsizeAttr(el, Html::SPAN_ATTR).unwrapOr(1);
-    if (attrs.span == 0 or attrs.span > 1000)
-        attrs.span = 1;
-
-    // https://html.spec.whatwg.org/multipage/tables.html#attributes-common-to-td-and-th-elements
-
-    // The td and th elements may have a colspan content attribute specified,
-    // whose value must be a valid non-negative integer greater than zero and less than or equal to 1000.
-    attrs.colSpan = _parseUsizeAttr(el, Html::COLSPAN_ATTR).unwrapOr(1);
-    if (attrs.colSpan == 0 or attrs.colSpan > 1000)
-        attrs.colSpan = 1;
-
-    // The td and th elements may also have a rowspan content attribute specified,
-    // whose value must be a valid non-negative integer less than or equal to 65534.
-    attrs.rowSpan = _parseUsizeAttr(el, Html::ROWSPAN_ATTR).unwrapOr(1);
-    if (attrs.rowSpan > 65534)
-        attrs.rowSpan = 65534;
-
-    return attrs;
-}
-
 // MARK: Build Prose ----------------------------------------------------------
 
 bool isSegmentBreak(Rune rune) {
@@ -505,7 +463,6 @@ static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::SpecifiedVa
 
     buildBlockFlowFromElement(newBc, el);
 
-    box.attrs = _parseDomAttr(el);
     return box;
 }
 
@@ -641,7 +598,6 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
 // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
 static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedValues> style, Display display) {
     Box tableInternalBox = {style, el};
-    tableInternalBox.attrs = _parseDomAttr(el);
 
     switch (display.internal()) {
     case Display::Internal::TABLE_HEADER_GROUP:
@@ -705,7 +661,6 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
 
     tableBoxStyle->display = Display::Internal::TABLE_BOX;
     Box tableBox = {tableBoxStyle, el};
-    tableBox.attrs = _parseDomAttr(el);
 
     bool captionsOnTop = tableBoxStyle->table->captionSide == CaptionSide::TOP;
     if (captionsOnTop) {
@@ -734,7 +689,6 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Specifi
 
     // SPEC: The table wrapper box establishes a block formatting context.
     _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, tableStyle);
-    wrapper.attrs = _parseDomAttr(tableBoxEl);
 
     return wrapper;
 }
