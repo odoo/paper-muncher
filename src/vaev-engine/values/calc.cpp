@@ -10,6 +10,7 @@ import :css;
 import :values.base;
 import :values.length;
 import :values.primitives;
+import :values.percent;
 
 using namespace Karm;
 
@@ -32,11 +33,12 @@ export enum struct CalcOp {
 // 10. Mathematical Expressions
 // https://drafts.csswg.org/css-values/#math
 export template <typename T>
-struct CalcValue {
-    using Leaf = Box<CalcValue<T>>;
+struct Calc {
+    using Leaf = Box<Calc>;
 
     using Value = Union<
         T,
+        Percent,
         Leaf,
         Number>;
 
@@ -58,23 +60,23 @@ struct CalcValue {
 
     Inner _inner;
 
-    constexpr CalcValue()
-        : CalcValue(T{}) {
+    constexpr Calc()
+        : Calc(T{}) {
     }
 
-    constexpr CalcValue(Meta::Convertible<T> auto val)
+    constexpr Calc(Meta::Convertible<T> auto val)
         : _inner(Value{T{val}}) {
     }
 
-    constexpr CalcValue(Value val)
+    constexpr Calc(Value val)
         : _inner(val) {
     }
 
-    constexpr CalcValue(CalcOp op, Value val)
+    constexpr Calc(CalcOp op, Value val)
         : _inner(makeBox<Unary>(op, val)) {
     }
 
-    constexpr CalcValue(CalcOp op, Value lhs, Value rhs)
+    constexpr Calc(CalcOp op, Value lhs, Value rhs)
         : _inner(makeBox<Binary>(op, lhs, rhs)) {
     }
 
@@ -108,8 +110,8 @@ struct CalcValue {
 };
 
 export template <typename T>
-struct ValueParser<CalcValue<T>> {
-    static Res<CalcValue<T>> parse(Cursor<Css::Sst>& c) {
+struct ValueParser<Calc<T>> {
+    static Res<Calc<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -123,13 +125,13 @@ struct ValueParser<CalcValue<T>> {
 
                 auto op = parseOp(content);
                 if (not op)
-                    return Ok(CalcValue<T>{lhs});
+                    return Ok(Calc<T>{lhs});
 
                 if (content.peek() == Css::Token::WHITESPACE) {
                     content.next();
                 }
                 auto rhs = try$(parseVal(content));
-                return Ok(CalcValue<T>{op.unwrap(), lhs, rhs});
+                return Ok(Calc<T>{op.unwrap(), lhs, rhs});
             }
         }
 
@@ -161,7 +163,7 @@ struct ValueParser<CalcValue<T>> {
         return Error::invalidData("unexpected operator");
     }
 
-    static Res<typename CalcValue<T>::Value> parseVal(Cursor<Css::Sst>& c) {
+    static Res<typename Calc<T>::Value> parseVal(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 

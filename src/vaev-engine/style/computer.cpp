@@ -155,7 +155,7 @@ export struct Computer {
         if (auto size = el->getAttribute(Html::SIZE_ATTR)) {
             auto value = parseValue<Integer>(size.unwrap());
             if (value)
-                res.pushBack(WidthProp{CalcValue<PercentOr<Length>>{Length{static_cast<f64>(value.take()), Length::CH}}});
+                res.pushBack(WidthProp{Calc<Length>{Length{static_cast<f64>(value.take()), Length::CH}}});
         }
 
         return res;
@@ -174,10 +174,10 @@ export struct Computer {
             // height to '150px' (using CSS 2.1 replaced elements size calculation).
             if (not svgEl->hasAttribute(Svg::VIEW_BOX_ATTR)) {
                 if (not svgEl->hasAttribute(Svg::WIDTH_ATTR)) {
-                    styleProps.pushBack(WidthProp{CalcValue<PercentOr<Length>>{PercentOr<Length>{Length{Au{300}}}}});
+                    styleProps.pushBack(WidthProp{Calc<Length>{Length{Au{300}}}});
                 }
                 if (not svgEl->hasAttribute(Svg::HEIGHT_ATTR)) {
-                    styleProps.pushBack(HeightProp{CalcValue<PercentOr<Length>>{PercentOr<Length>{Length{Au{150}}}}});
+                    styleProps.pushBack(HeightProp{Calc<Length>{Length{Au{150}}}});
                 }
             }
         }

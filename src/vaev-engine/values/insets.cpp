@@ -51,7 +51,7 @@ struct ValueParser<Position> {
 
 export using Margin = Math::Insets<Width>;
 
-export using Padding = Math::Insets<CalcValue<PercentOr<Length>>>;
+export using Padding = Math::Insets<Calc<Length>>;
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-top
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-right
@@ -87,7 +87,7 @@ struct ValueParser<Math::Insets<T>> {
 
 export using Gap = Union<
     Keywords::Normal,
-    CalcValue<PercentOr<Length>>>;
+    Calc<Length>>;
 
 export struct Gaps {
     Gap x = Keywords::NORMAL;

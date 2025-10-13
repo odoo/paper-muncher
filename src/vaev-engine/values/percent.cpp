@@ -32,14 +32,6 @@ struct ValueParser<Percent> {
     }
 };
 
-export template <typename T>
-using PercentOr = Union<Percent, T>;
-
-export template <typename T>
-struct _Resolved<PercentOr<T>> {
-    using Type = Resolved<T>;
-};
-
 } // namespace Vaev
 
 export template <>

@@ -276,8 +276,8 @@ export void parseSVGPresentationAttribute(Symbol presentationAttr, Str style, Ve
 
                     if constexpr (Meta::Constructible<decltype(propAsNumber.value), Length>) {
                         propAsNumber.value = Length{Au{maybeNumber.take()}};
-                    } else if constexpr (Meta::Constructible<decltype(propAsNumber.value), CalcValue<PercentOr<Length>>>) {
-                        propAsNumber.value = CalcValue<PercentOr<Length>>{Length{Au{maybeNumber.take()}}};
+                    } else if constexpr (Meta::Constructible<decltype(propAsNumber.value), Calc<Length>>) {
+                        propAsNumber.value = Calc<Length>{Length{Au{maybeNumber.take()}}};
                     } else {
                         return true;
                     }

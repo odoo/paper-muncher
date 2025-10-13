@@ -260,13 +260,13 @@ export struct FontSize {
     using enum _Named;
 
     _Named _named;
-    PercentOr<Length> _value;
+    Calc<Length> _value;
 
     constexpr FontSize(_Named named = MEDIUM)
         : _named(named), _value(Length{}) {
     }
 
-    constexpr FontSize(PercentOr<Length> size)
+    constexpr FontSize(Calc<Length> size)
         : _named(LENGTH), _value(size) {
     }
 
@@ -274,7 +274,7 @@ export struct FontSize {
         return _named;
     }
 
-    PercentOr<Length> value() const {
+    Calc<Length> value() const {
         if (_named != LENGTH)
             panic("not a length");
         return _value;
@@ -314,7 +314,7 @@ struct ValueParser<FontSize> {
         else if (c.skip(Css::Token::ident("larger")))
             return Ok(FontSize::LARGER);
         else
-            return Ok(try$(parseValue<PercentOr<Length>>(c)));
+            return Ok(try$(parseValue<Calc<Length>>(c)));
     }
 };
 
