@@ -56,14 +56,14 @@ export struct ViewBox {
 };
 
 export struct SVGProps {
-    PercentOr<Length> x = Length{0_au};
-    PercentOr<Length> y = Length{0_au};
-    PercentOr<Length> cx = Length{0_au};
-    PercentOr<Length> cy = Length{0_au};
-    PercentOr<Length> r = Length{0_au};
+    Calc<Length> x = Length{0_au};
+    Calc<Length> y = Length{0_au};
+    Calc<Length> cx = Length{0_au};
+    Calc<Length> cy = Length{0_au};
+    Calc<Length> r = Length{0_au};
 
     Number fillOpacity = 1;
-    PercentOr<Length> strokeWidth = Length{1_au};
+    Calc<Length> strokeWidth = Length{1_au};
 
     Union<String, None> d = NONE;
 

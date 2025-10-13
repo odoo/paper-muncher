@@ -262,7 +262,7 @@ export struct Resolver {
     Au resolve(Width const& value, Au relative) {
         if (value.is<Keywords::Auto>())
             return 0_au;
-        return resolve(value.unwrap<CalcValue<PercentOr<Length>>>(), relative);
+        return resolve(value.unwrap<Calc<Length>>(), relative);
     }
 
     Rad resolve(Angle const& value) {
@@ -328,12 +328,12 @@ export struct Resolver {
     }
 
     template <typename T, typename... Args>
-    Resolved<T> resolve(CalcValue<T> const& calc, Args... args) {
+    Resolved<T> resolve(Calc<T> const& calc, Args... args) {
         auto resolveUnion = Visitor{
             [&](T const& v) {
                 return resolve(v, args...);
             },
-            [&](CalcValue<T>::Leaf const& v) {
+            [&](Calc<T>::Leaf const& v) {
                 return resolve<T>(*v, args...);
             },
             [&](Number const& v)
@@ -344,16 +344,16 @@ export struct Resolver {
             };
 
         return calc.visit(Visitor{
-            [&](typename CalcValue<T>::Value const& v) {
+            [&](typename Calc<T>::Value const& v) {
                 return v.visit(resolveUnion);
             },
-            [&](typename CalcValue<T>::Unary const& u) {
+            [&](typename Calc<T>::Unary const& u) {
                 return _resolveUnary<T>(
                     u.op,
                     u.val.visit(resolveUnion)
                 );
             },
-            [&](typename CalcValue<T>::Binary const& b) {
+            [&](typename Calc<T>::Binary const& b) {
                 return _resolveInfix<T>(
                     b.op,
                     b.lhs.visit(resolveUnion),
@@ -367,11 +367,11 @@ export struct Resolver {
 // MARK: Resolve during layout -------------------------------------------------
 
 // HACK: Temporary workaround while we don't properly evaluate computed values
-export bool isPurePercentage(CalcValue<PercentOr<Length>> calcValue) {
-    if (not calcValue._inner.is<CalcValue<PercentOr<Length>>::Value>())
+export bool isPurePercentage(Calc<Length> calcValue) {
+    if (not calcValue._inner.is<Calc<Length>::Value>())
         return false;
 
-    auto const& value = calcValue._inner.unwrap<CalcValue<PercentOr<Length>>::Value>();
+    auto const& value = calcValue._inner.unwrap<Calc<Length>::Value>();
     if (not value.is<PercentOr<Length>>())
         return false;
 
@@ -399,7 +399,7 @@ export Au resolve(Tree const& tree, Box const& box, FontSize const& value) {
 }
 
 export template <typename T, typename... Args>
-auto resolve(Tree const& tree, Box const& box, CalcValue<T> const& value, Args... args) -> Resolved<T> {
+auto resolve(Tree const& tree, Box const& box, Calc<T> const& value, Args... args) -> Resolved<T> {
     return Resolver::from(tree, box).resolve(value, args...);
 }
 

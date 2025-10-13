@@ -812,7 +812,7 @@ export struct BorderBottomWidthProp {
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<Length>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
@@ -841,12 +841,12 @@ export struct BorderLeftWidthProp {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderRadiusTopRight {
-    Array<CalcValue<PercentOr<Length>>, 2> value = initial();
+    Array<Calc<Length>, 2> value = initial();
 
     static constexpr Str name() { return "border-top-right-radius"; }
 
-    static constexpr Array<CalcValue<PercentOr<Length>>, 2> initial() {
-        return makeArray<CalcValue<PercentOr<Length>>, 2>(Length{});
+    static constexpr Array<Calc<Length>, 2> initial() {
+        return makeArray<Calc<Length>, 2>(Length{});
     }
 
     void apply(SpecifiedValues& c) const {
@@ -854,7 +854,7 @@ export struct BorderRadiusTopRight {
         c.borders.cow().radii.d = value[1];
     }
 
-    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedValues const& c) {
+    static Array<Calc<Length>, 2> load(SpecifiedValues const& c) {
         return {
             c.borders->radii.c,
             c.borders->radii.d,
@@ -862,11 +862,11 @@ export struct BorderRadiusTopRight {
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+        value[0] = try$(parseValue<Calc<Length>>(c));
         if (c.ended()) {
             value[1] = value[0];
         } else {
-            value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            value[1] = try$(parseValue<Calc<Length>>(c));
         }
 
         return Ok();
@@ -875,12 +875,12 @@ export struct BorderRadiusTopRight {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderRadiusTopLeft {
-    Array<CalcValue<PercentOr<Length>>, 2> value = initial();
+    Array<Calc<Length>, 2> value = initial();
 
     static constexpr Str name() { return "border-top-left-radius"; }
 
-    static constexpr Array<CalcValue<PercentOr<Length>>, 2> initial() {
-        return makeArray<CalcValue<PercentOr<Length>>, 2>(Length{});
+    static constexpr Array<Calc<Length>, 2> initial() {
+        return makeArray<Calc<Length>, 2>(Length{});
     }
 
     void apply(SpecifiedValues& c) const {
@@ -888,7 +888,7 @@ export struct BorderRadiusTopLeft {
         c.borders.cow().radii.b = value[0];
     }
 
-    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedValues const& c) {
+    static Array<Calc<Length>, 2> load(SpecifiedValues const& c) {
         return {
             c.borders->radii.a,
             c.borders->radii.b,
@@ -896,12 +896,12 @@ export struct BorderRadiusTopLeft {
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+        value[0] = try$(parseValue<Calc<Length>>(c));
         eatWhitespace(c);
         if (c.ended()) {
             value[1] = value[0];
         } else {
-            value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            value[1] = try$(parseValue<Calc<Length>>(c));
         }
 
         return Ok();
@@ -910,12 +910,12 @@ export struct BorderRadiusTopLeft {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderRadiusBottomRight {
-    Array<CalcValue<PercentOr<Length>>, 2> value = initial();
+    Array<Calc<Length>, 2> value = initial();
 
     static constexpr Str name() { return "border-bottom-right-radius"; }
 
-    static constexpr Array<CalcValue<PercentOr<Length>>, 2> initial() {
-        return makeArray<CalcValue<PercentOr<Length>>, 2>(Length{});
+    static constexpr Array<Calc<Length>, 2> initial() {
+        return makeArray<Calc<Length>, 2>(Length{});
     }
 
     void apply(SpecifiedValues& c) const {
@@ -923,7 +923,7 @@ export struct BorderRadiusBottomRight {
         c.borders.cow().radii.f = value[0];
     }
 
-    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedValues const& c) {
+    static Array<Calc<Length>, 2> load(SpecifiedValues const& c) {
         return {
             c.borders->radii.e,
             c.borders->radii.f,
@@ -931,11 +931,11 @@ export struct BorderRadiusBottomRight {
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+        value[0] = try$(parseValue<Calc<Length>>(c));
         if (c.ended()) {
             value[1] = value[0];
         } else {
-            value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            value[1] = try$(parseValue<Calc<Length>>(c));
         }
 
         return Ok();
@@ -944,12 +944,12 @@ export struct BorderRadiusBottomRight {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderRadiusBottomLeft {
-    Array<CalcValue<PercentOr<Length>>, 2> value = initial();
+    Array<Calc<Length>, 2> value = initial();
 
     static constexpr Str name() { return "border-bottom-left-radius"; }
 
-    static constexpr Array<CalcValue<PercentOr<Length>>, 2> initial() {
-        return makeArray<CalcValue<PercentOr<Length>>, 2>(Length{});
+    static constexpr Array<Calc<Length>, 2> initial() {
+        return makeArray<Calc<Length>, 2>(Length{});
     }
 
     void apply(SpecifiedValues& c) const {
@@ -957,7 +957,7 @@ export struct BorderRadiusBottomLeft {
         c.borders.cow().radii.h = value[1];
     }
 
-    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedValues const& c) {
+    static Array<Calc<Length>, 2> load(SpecifiedValues const& c) {
         return {
             c.borders->radii.g,
             c.borders->radii.h,
@@ -965,11 +965,11 @@ export struct BorderRadiusBottomLeft {
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+        value[0] = try$(parseValue<Calc<Length>>(c));
         if (c.ended()) {
             value[1] = value[0];
         } else {
-            value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            value[1] = try$(parseValue<Calc<Length>>(c));
         }
 
         return Ok();
@@ -978,22 +978,22 @@ export struct BorderRadiusBottomLeft {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderRadius {
-    Math::Radii<CalcValue<PercentOr<Length>>> value = initial();
+    Math::Radii<Calc<Length>> value = initial();
 
     static constexpr Str name() { return "border-radius"; }
 
-    static Math::Radii<CalcValue<PercentOr<Length>>> initial() { return {CalcValue<PercentOr<Length>>(Length{})}; }
+    static Math::Radii<Calc<Length>>> initial() { return {Calc<Length>(Length{})}; }
 
     void apply(SpecifiedValues& c) const {
         c.borders.cow().radii = value;
     }
 
-    static Math::Radii<CalcValue<PercentOr<Length>>> load(SpecifiedValues const& c) {
+    static Math::Radii<Calc<Length>> load(SpecifiedValues const& c) {
         return c.borders->radii;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Math::Radii<CalcValue<PercentOr<Length>>>>(c));
+        value = try$(parseValue<Math::Radii<Calc<Length>>>(c));
         return Ok();
     }
 };
@@ -1014,7 +1014,7 @@ export struct BorderTopProp {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
+            auto width = parseValue<Calc<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -1055,7 +1055,7 @@ export struct BorderRightProp {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
+            auto width = parseValue<Calc<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -1096,7 +1096,7 @@ export struct BorderBottomProp {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
+            auto width = parseValue<Calc<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -1137,7 +1137,7 @@ export struct BorderLeftProp {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
+            auto width = parseValue<Calc<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -1585,7 +1585,7 @@ export struct FlexProp {
 
         // deafult values if these parameters are omitted
         value.flexGrow = value.flexShrink = 1;
-        value.flexBasis = CalcValue<PercentOr<Length>>(Length{});
+        value.flexBasis = Calc<Length>(Length{});
 
         auto parseGrowShrink = [](Cursor<Css::Sst>& c, FlexItemProps& value) -> Res<> {
             auto grow = parseValue<Number>(c);
@@ -1911,7 +1911,7 @@ export struct MarginTopProp {
 
     static Str name() { return "margin-top"; }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+    static Width initial() { return Calc<Length>(Length{}); }
 
     void apply(SpecifiedValues& c) const {
         c.margin.cow().top = value;
@@ -1932,7 +1932,7 @@ export struct MarginRightProp {
 
     static Str name() { return "margin-right"; }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+    static Width initial() { return Calc<Length>(Length{}); }
 
     void apply(SpecifiedValues& c) const {
         c.margin.cow().end = value;
@@ -1953,7 +1953,7 @@ export struct MarginBottomProp {
 
     static constexpr Str name() { return "margin-bottom"; }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+    static Width initial() { return Calc<Length>(Length{}); }
 
     void apply(SpecifiedValues& c) const {
         c.margin.cow().bottom = value;
@@ -1974,7 +1974,7 @@ export struct MarginLeftProp {
 
     static Str name() { return "margin-left"; }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+    static Width initial() { return Calc<Length>(Length{}); }
 
     void apply(SpecifiedValues& c) const {
         c.margin.cow().start = value;
@@ -1995,7 +1995,7 @@ export struct MarginProp {
 
     static Str name() { return "margin"; }
 
-    static Math::Insets<Width> initial() { return {CalcValue<PercentOr<Length>>(Length{})}; }
+    static Math::Insets<Width> initial() { return {Calc<Length>(Length{})}; }
 
     void apply(SpecifiedValues& c) const {
         c.margin.cow() = value;
@@ -2018,7 +2018,7 @@ export struct MarginInlineStartProp {
 
     static Str name() { return "margin-inline-start"; }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+    static Width initial() { return Calc<Length>(Length{}); }
 
     void apply(SpecifiedValues& c) const {
         // FIXME: Take writing mode into account
@@ -2040,7 +2040,7 @@ export struct MarginInlineEndProp {
 
     static Str name() { return "margin-inline-end"; }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+    static Width initial() { return Calc<Length>(Length{}); }
 
     void apply(SpecifiedValues& c) const {
         // FIXME: Take writing mode into account
@@ -2062,7 +2062,7 @@ export struct MarginInlineProp {
 
     static Str name() { return "margin-inline"; }
 
-    static Math::Insets<Width> initial() { return {CalcValue<PercentOr<Length>>(Length{})}; }
+    static Math::Insets<Width> initial() { return {Calc<Length>(Length{})}; }
 
     void apply(SpecifiedValues& c) const {
         // FIXME: Take writing mode into account
@@ -2088,7 +2088,7 @@ export struct MarginBlockStartProp {
 
     static Str name() { return "margin-block-start"; }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+    static Width initial() { return Calc<Length>(Length{}); }
 
     void apply(SpecifiedValues& c) const {
         // FIXME: Take writing mode into account
@@ -2110,7 +2110,7 @@ export struct MarginBlockEndProp {
 
     static Str name() { return "margin-block-end"; }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+    static Width initial() { return Calc<Length>(Length{}); }
 
     void apply(SpecifiedValues& c) const {
         // FIXME: Take writing mode into account
@@ -2132,7 +2132,7 @@ export struct MarginBlockProp {
 
     static Str name() { return "margin-block"; }
 
-    static Math::Insets<Width> initial() { return {CalcValue<PercentOr<Length>>(Length{})}; }
+    static Math::Insets<Width> initial() { return {Calc<Length>(Length{})}; }
 
     void apply(SpecifiedValues& c) const {
         // FIXME: Take writing mode into account
@@ -2199,7 +2199,7 @@ export struct OutlineProp {
     Res<> parse(Cursor<Css::Sst>& c) {
         bool styleSet = false;
         while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
+            auto width = parseValue<Calc<Length>>(c);
             if (width) {
                 value.width = width.unwrap();
                 continue;
@@ -2302,7 +2302,7 @@ export struct OutlineColorProp {
 
 // https://drafts.csswg.org/css-ui/#outline-offset
 export struct OutlineOffsetProp {
-    CalcValue<Length> value = initial();
+    Calc<Length> value = initial();
 
     static Str name() { return "outline-offset"; }
 
@@ -2312,12 +2312,12 @@ export struct OutlineOffsetProp {
         c.outline.cow().offset = value;
     }
 
-    static CalcValue<Length> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.outline->offset;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<Length>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
@@ -2452,7 +2452,7 @@ export struct OverflowProp {
 // https://www.w3.org/TR/css-box-3/#propdef-padding
 
 export struct PaddingTopProp {
-    CalcValue<PercentOr<Length>> value = initial();
+    Calc<Length> value = initial();
 
     static Str name() { return "padding-top"; }
 
@@ -2462,18 +2462,18 @@ export struct PaddingTopProp {
         c.padding.cow().top = value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.padding->top;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
 
 export struct PaddingRightProp {
-    CalcValue<PercentOr<Length>> value = initial();
+    Calc<Length> value = initial();
 
     static Str name() { return "padding-right"; }
 
@@ -2483,18 +2483,18 @@ export struct PaddingRightProp {
         c.padding.cow().end = value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.padding->end;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
 
 export struct PaddingBottomProp {
-    CalcValue<PercentOr<Length>> value = initial();
+    Calc<Length> value = initial();
 
     static Str name() { return "padding-bottom"; }
 
@@ -2504,18 +2504,18 @@ export struct PaddingBottomProp {
         c.padding.cow().bottom = value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.padding->bottom;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
 
 export struct PaddingLeftProp {
-    CalcValue<PercentOr<Length>> value = initial();
+    Calc<Length> value = initial();
 
     static Str name() { return "padding-left"; }
 
@@ -2525,18 +2525,18 @@ export struct PaddingLeftProp {
         c.padding.cow().start = value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.padding->start;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
 
 export struct PaddingInlineStart {
-    CalcValue<PercentOr<Length>> value = initial();
+    Calc<Length> value = initial();
 
     static Str name() { return "padding-inline-start"; }
 
@@ -2546,18 +2546,18 @@ export struct PaddingInlineStart {
         c.padding.cow().start = value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.padding->start;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
 
 export struct PaddingInlineEnd {
-    CalcValue<PercentOr<Length>> value = initial();
+    Calc<Length> value = initial();
 
     static Str name() { return "padding-inline-end"; }
 
@@ -2567,33 +2567,33 @@ export struct PaddingInlineEnd {
         c.padding.cow().end = value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.padding->end;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
 
 export struct PaddingProp {
-    Math::Insets<CalcValue<PercentOr<Length>>> value = initial();
+    Math::Insets<Calc<Length>> value = initial();
 
     static Str name() { return "padding"; }
 
-    static Math::Insets<CalcValue<PercentOr<Length>>> initial() { return {Length{}}; }
+    static Math::Insets<Calc<Length>> initial() { return {Length{}}; }
 
     void apply(SpecifiedValues& c) const {
         c.padding.cow() = value;
     }
 
-    static Math::Insets<CalcValue<PercentOr<Length>>> load(SpecifiedValues const& c) {
+    static Math::Insets<Calc<Length>> load(SpecifiedValues const& c) {
         return *c.padding;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Math::Insets<CalcValue<PercentOr<Length>>>>(c));
+        value = try$(parseValue<Math::Insets<Calc<Length>>>(c));
         return Ok();
     }
 };
@@ -2987,8 +2987,8 @@ export struct TransformOriginProp {
 
     static TransformOrigin initial() {
         return {
-            .xOffset = CalcValue<PercentOr<Length>>{Percent{50}},
-            .yOffset = CalcValue<PercentOr<Length>>{Percent{50}},
+            .xOffset = Calc<Length>{Percent{50}},
+            .yOffset = Calc<Length>{Percent{50}},
         };
     }
 
@@ -3150,7 +3150,7 @@ export struct ZIndexProp {
 
 // https://svgwg.org/svg2-draft/geometry.html#XProperty
 export struct SVGXProp {
-    PercentOr<Length> value = initial();
+    Calc<Length> value = initial();
 
     static constexpr Str name() { return "x"; }
 
@@ -3160,19 +3160,19 @@ export struct SVGXProp {
         c.svg.cow().x = value;
     }
 
-    static PercentOr<Length> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.svg->x;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
 
 // https://svgwg.org/svg2-draft/geometry.html#YProperty
 export struct SVGYProp {
-    PercentOr<Length> value = initial();
+    Calc<Length> value = initial();
 
     static constexpr Str name() { return "y"; }
 
@@ -3182,19 +3182,19 @@ export struct SVGYProp {
         c.svg.cow().y = value;
     }
 
-    static PercentOr<Length> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.svg->y;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
 
 // https://svgwg.org/svg2-draft/geometry.html#CXProperty
 export struct SVGCXProp {
-    PercentOr<Length> value = initial();
+    Calc<Length> value = initial();
 
     static constexpr Str name() { return "cx"; }
 
@@ -3204,19 +3204,19 @@ export struct SVGCXProp {
         c.svg.cow().cx = value;
     }
 
-    static PercentOr<Length> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.svg->cx;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
 
 // https://svgwg.org/svg2-draft/geometry.html#CYProperty
 export struct SVGCYProp {
-    PercentOr<Length> value = initial();
+    Calc<Length> value = initial();
 
     static constexpr Str name() { return "cy"; }
 
@@ -3226,19 +3226,19 @@ export struct SVGCYProp {
         c.svg.cow().cy = value;
     }
 
-    static PercentOr<Length> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.svg->cy;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
 
 // https://svgwg.org/svg2-draft/geometry.html#RProperty
 export struct SVGRProp {
-    PercentOr<Length> value = initial();
+    Calc<Length> value = initial();
 
     static constexpr Str name() { return "r"; }
 
@@ -3248,12 +3248,12 @@ export struct SVGRProp {
         c.svg.cow().r = value;
     }
 
-    static PercentOr<Length> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.svg->r;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };
@@ -3397,7 +3397,7 @@ export struct FillOpacityProp {
 
 // https://svgwg.org/svg2-draft/painting.html#StrokeWidth
 export struct StrokeWidthProp {
-    PercentOr<Length> value = initial();
+    Calc<Length> value = initial();
 
     static constexpr Str name() { return "stroke-width"; }
 
@@ -3407,12 +3407,12 @@ export struct StrokeWidthProp {
         c.svg.cow().strokeWidth = value;
     }
 
-    static PercentOr<Length> load(SpecifiedValues const& c) {
+    static Calc<Length> load(SpecifiedValues const& c) {
         return c.svg->strokeWidth;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
+        value = try$(parseValue<Calc<Length>>(c));
         return Ok();
     }
 };

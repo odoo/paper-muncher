@@ -11,7 +11,7 @@ namespace Vaev {
 // https://drafts.csswg.org/css-ui/#outline
 export struct Outline {
     LineWidth width = Keywords::MEDIUM;
-    CalcValue<Length> offset = 0_au;
+    Calc<Length> offset = 0_au;
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
     Union<Keywords::Auto, Color> color = Keywords::AUTO;
 

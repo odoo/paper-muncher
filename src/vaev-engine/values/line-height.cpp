@@ -16,15 +16,16 @@ using namespace Karm;
 
 namespace Vaev {
 
+// https://drafts.csswg.org/css-inline/#line-height-property
 export struct LineHeight {
     struct _Normal {};
 
     static constexpr _Normal NORMAL = {};
-    Union<PercentOr<Length>, Number> _value;
+    Union<Calc<Length>, Number> _value;
 
     LineHeight(_Normal) : _value(1.2) {}
 
-    LineHeight(PercentOr<Length> value) : _value(value) {}
+    LineHeight(Calc<Length> value) : _value(value) {}
 
     LineHeight(Number value) : _value(value) {}
 
@@ -52,7 +53,7 @@ struct ValueParser<LineHeight> {
             }
         }
 
-        return Ok(LineHeight{try$(parseValue<PercentOr<Length>>(c))});
+        return Ok(LineHeight{try$(parseValue<Calc<Length>>(c))});
     }
 };
 

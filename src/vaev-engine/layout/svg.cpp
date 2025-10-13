@@ -14,10 +14,10 @@ using namespace Karm;
 namespace Vaev::Layout {
 
 // SVG sizes shouldn't be defined using calc values
-Opt<PercentOr<Length>> extractValueFromCalc(CalcValue<PercentOr<Length>> const& size) {
+Opt<PercentOr<Length>> extractValueFromCalc(Calc<Length> const& size) {
     return size.visit(
         Visitor{
-            [](CalcValue<PercentOr<Length>>::Value const& v) {
+            [](Calc<Length>::Value const& v) {
                 return Opt<PercentOr<Length>>{v.unwrap<PercentOr<Length>>()};
             },
             [](auto const) {
@@ -32,7 +32,7 @@ PercentOr<Length> fromSize(Size const& size) {
     if (size.is<Keywords::Auto>())
         return PercentOr<Length>{Percent{100}};
 
-    return extractValueFromCalc(size.unwrap<CalcValue<PercentOr<Length>>>())
+    return extractValueFromCalc(size.unwrap<Calc<Length>>())
         .unwrapOr(PercentOr<Length>{Percent{100}});
 }
 
@@ -158,7 +158,7 @@ Rc<Scene::Node> circleToSceneNode(Circle<f64> circle, Opt<Gfx::Fill> fill, Opt<G
     return makeRc<Scene::Shape>(path, stroke, fill);
 }
 
-Circle<PercentOr<Length>> buildCircle(Style::SpecifiedValues const& style) {
+Circle<Calc<Length>> buildCircle(Style::SpecifiedValues const& style) {
     return {
         style.svg->cx,
         style.svg->cy,
@@ -166,7 +166,7 @@ Circle<PercentOr<Length>> buildCircle(Style::SpecifiedValues const& style) {
     };
 }
 
-Circle<Au> resolve(Circle<PercentOr<Length>> const& circle, Karm::Vec2Au const& relativeTo) {
+Circle<Au> resolve(Circle<Calc<Length>> const& circle, Karm::Vec2Au const& relativeTo) {
     return {
         Vaev::Layout::resolve(circle.cx, relativeTo.x),
         Vaev::Layout::resolve(circle.cy, relativeTo.y),
@@ -385,10 +385,10 @@ Opt<Number> intrinsicAspectRatio(Opt<ViewBox> const& vb, Size const& width, Size
     // FIXME: again this should be targetted by the styling computation refactoring,
     // where Size will be resolved to a mix between Percent and Lengths
     auto absoluteValue = [](Size size) -> Opt<Length> {
-        if (not size.is<CalcValue<PercentOr<Length>>>())
+        if (not size.is<Calc<Length>>())
             return NONE;
 
-        auto calc = size.unwrap<CalcValue<PercentOr<Length>>>();
+        auto calc = size.unwrap<Calc<Length>>();
 
         auto percOrLength = extractValueFromCalc(calc);
         if (not percOrLength)
