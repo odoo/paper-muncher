@@ -316,7 +316,7 @@ export struct Resolver {
         switch (op) {
         case CalcOp::ADD:
             return lhs + rhs;
-        case CalcOp::SUBSTRACT:
+        case CalcOp::SUBTRACT:
             return lhs - rhs;
         case CalcOp::MULTIPLY:
             return lhs * rhs;

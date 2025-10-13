@@ -19,7 +19,7 @@ export enum struct CalcOp {
     NOP,
 
     ADD,
-    SUBSTRACT,
+    SUBTRACT,
     MULTIPLY,
     DIVIDE,
     SIN,
@@ -150,7 +150,7 @@ struct ValueParser<CalcValue<T>> {
             return Ok(CalcOp::ADD);
         } else if (c.peek().token.data == "-") {
             c.next();
-            return Ok(CalcOp::SUBSTRACT);
+            return Ok(CalcOp::SUBTRACT);
         } else if (c.peek().token.data == "*") {
             c.next();
             return Ok(CalcOp::MULTIPLY);
