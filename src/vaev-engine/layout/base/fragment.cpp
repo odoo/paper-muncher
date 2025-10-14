@@ -81,7 +81,7 @@ struct GroupFrag : Svg::Frag {
         e("(GroupFrag)");
     }
 };
-} // namespace SVG
+} // namespace Svg
 
 struct SvgRootFrag : Svg::GroupFrag {
     // NOTE: SVG viewports have these intrinsic transformations; choosing to store these transforms is more compliant
@@ -118,6 +118,11 @@ struct SvgRootFrag : Svg::GroupFrag {
 export using FragContent = Union<
     Vec<Frag>,
     SvgRootFrag>;
+
+enum struct TreeIteration {
+    CONTINUE,
+    SKIP_CHILDREN
+};
 
 export struct Frag {
     MutCursor<Box> box;
@@ -169,8 +174,15 @@ export struct Frag {
 
     void visitChildrenInTreeOrder(auto&& visitor) {
         for (auto& c : children()) {
-            visitor(c);
-            c.visitChildrenInTreeOrder(visitor);
+            if (visitor(c) == TreeIteration::CONTINUE) {
+                c.visitChildrenInTreeOrder(visitor);
+            }
+        }
+    }
+
+    void visitInTreeOrder(auto&& visitor) {
+        if (visitor(*this) == TreeIteration::CONTINUE) {
+            visitChildrenInTreeOrder(visitor);
         }
     }
 

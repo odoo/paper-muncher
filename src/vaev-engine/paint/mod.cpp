@@ -20,8 +20,7 @@ void _paintBackgroundColor(Layout::Frag& frag, Scene::Stack& stack, Math::Rectf 
 
 void _paintBorders(Layout::Frag& frag, Scene::Stack& stack);
 
-void _paintInlineLevel(Layout::Frag& frag, Scene::Stack& stack);
-void _paintBlockLevel(Layout::Frag& frag, Scene::Stack& stack);
+void _paintReplaced(Layout::Frag& frag, Scene::Stack& stack);
 
 Rc<Scene::Node> _applyClip(Layout::Frag const& frag, Rc<Scene::Node> content);
 
