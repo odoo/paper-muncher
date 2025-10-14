@@ -86,7 +86,7 @@ Rc<Scene::Stack> _paintSvgAggregate(Layout::Svg::GroupFrag& group, Gfx::Color cu
 }
 
 Rc<Scene::Node> _paintSvg(Layout::SvgRootFrag& svgRoot, Gfx::Color currentColor) {
-    // FIXME: Ugly cast because we need to upcast, should be fixed once we unify SVGRootFrag with Frag
+    // FIXME: Ugly cast because we need to upcast, should be fixed once we unify SvgRootFrag with Frag
     Layout::SvgRoot const& rootBox = *static_cast<Layout::SvgRoot const*>(svgRoot.box.buf());
 
     // https://drafts.csswg.org/css-transforms/#transform-box

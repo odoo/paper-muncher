@@ -29,7 +29,7 @@ void _paintReplaced(Layout::Frag& frag, Scene::Stack& stack) {
             node = makeRc<Scene::Clip>(node, std::move(path));
         }
         stack.add(node);
-    } else if (auto svgRoot = frag.content.is<Layout::SVGRootFrag>()) {
+    } else if (auto svgRoot = frag.content.is<Layout::SvgRootFrag>()) {
         if (min(frag.metrics.borderSize.x, frag.metrics.borderSize.y) == 0_au)
             return;
 

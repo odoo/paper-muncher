@@ -45,12 +45,12 @@ export struct Metrics {
 };
 
 export struct Frag;
-struct SVGRootFrag;
+struct SvgRootFrag;
 
-namespace SVG {
+namespace Svg {
 
 struct GroupFrag : Svg::Frag {
-    using Element = Union<Svg::ShapeFrag, SVGRootFrag, ::Box<Vaev::Layout::Frag>, GroupFrag>;
+    using Element = Union<Svg::ShapeFrag, SvgRootFrag, ::Box<Vaev::Layout::Frag>, GroupFrag>;
     Vec<Element> elements = {};
 
     RectAu _objectBoundingBox{};
@@ -83,28 +83,28 @@ struct GroupFrag : Svg::Frag {
 };
 } // namespace SVG
 
-struct SVGRootFrag : Svg::GroupFrag {
+struct SvgRootFrag : Svg::GroupFrag {
     // NOTE: SVG viewports have these intrinsic transformations; choosing to store these transforms is more compliant
     // and somewhat rendering-friendly but makes it harder to debug
     Math::Trans2f transf;
     Svg::Rectangle<Au> boundingBox;
 
-    SVGRootFrag(Karm::Cursor<Svg::Group> group, Math::Trans2f transf, Svg::Rectangle<Au> boundingBox)
+    SvgRootFrag(Karm::Cursor<Svg::Group> group, Math::Trans2f transf, Svg::Rectangle<Au> boundingBox)
         : Svg::GroupFrag(group), transf(transf), boundingBox(boundingBox) {
     }
 
-    static SVGRootFrag build(SVGRoot const& box, Vec2Au position, Vec2Au viewportSize) {
+    static SvgRootFrag build(SvgRoot const& box, Vec2Au position, Vec2Au viewportSize) {
         Svg::Rectangle<Karm::Au> rect{position.x, position.y, viewportSize.x, viewportSize.y};
 
         Math::Trans2f transf =
             box.viewBox ? Svg::computeEquivalentTransformOfSVGViewport(*box.viewBox, position, viewportSize)
                         : Math::Trans2f::translate(position.cast<f64>());
 
-        return SVGRootFrag{&box, transf, rect};
+        return SvgRootFrag{&box, transf, rect};
     }
 
     void repr(Io::Emit& e) const {
-        e("(SVGRootFrag)");
+        e("(SvgRootFrag)");
     }
 
     void offsetBoxFrags(Vec2Au d);
@@ -117,7 +117,7 @@ struct SVGRootFrag : Svg::GroupFrag {
 
 export using FragContent = Union<
     Vec<Frag>,
-    SVGRootFrag>;
+    SvgRootFrag>;
 
 export struct Frag {
     MutCursor<Box> box;
@@ -148,7 +148,7 @@ export struct Frag {
         if (auto children = content.is<Vec<Frag>>()) {
             for (auto& c : *children)
                 c.offset(d);
-        } else if (auto svg = content.is<SVGRootFrag>()) {
+        } else if (auto svg = content.is<SvgRootFrag>()) {
             svg->offset(d);
         }
     }
@@ -190,11 +190,11 @@ void Svg::GroupFrag::add(Element&& el) {
     elements.pushBack(std::move(el));
 }
 
-void SVGRootFrag::offsetBoxFrags(Vec2Au d) {
+void SvgRootFrag::offsetBoxFrags(Vec2Au d) {
     for (auto& element : elements) {
         if (auto frag = element.is<::Box<Vaev::Layout::Frag>>()) {
             (*frag)->offset(d);
-        } else if (auto nestedRoot = element.is<SVGRootFrag>()) {
+        } else if (auto nestedRoot = element.is<SvgRootFrag>()) {
             nestedRoot->offsetBoxFrags(d);
         }
     }

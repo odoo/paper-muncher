@@ -355,7 +355,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, Svg::Group& group) {
         buildSVGAggregate(el, nestedGroup);
         group.add(std::move(nestedGroup));
     } else if (el->qualifiedName == Vaev::Svg::SVG_TAG) {
-        SVGRoot newSvgRoot{el->specifiedValues()};
+        SvgRoot newSvgRoot{el->specifiedValues()};
         buildSVGAggregate(el, newSvgRoot);
         group.add(std::move(newSvgRoot));
     } else if (el->qualifiedName == Vaev::Svg::FOREIGN_OBJECT_TAG) {
@@ -391,8 +391,8 @@ void buildSVGAggregate(Gc::Ref<Dom::Element> el, Svg::Group& group) {
     }
 }
 
-SVGRoot _buildSVG(Gc::Ref<Dom::Element> el) {
-    SVGRoot svgRoot{el->specifiedValues()};
+SvgRoot _buildSVG(Gc::Ref<Dom::Element> el) {
+    SvgRoot svgRoot{el->specifiedValues()};
     buildSVGAggregate(el, svgRoot);
     return svgRoot;
 }

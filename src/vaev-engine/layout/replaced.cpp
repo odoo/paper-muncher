@@ -14,7 +14,7 @@ import :layout.layout;
 namespace Vaev::Layout {
 
 struct ReplacedFormatingContext : FormatingContext {
-    Karm::Vec2Au updateRelativeTo(SVGRoot& root, SVGRootFrag& svgFrag) {
+    Karm::Vec2Au updateRelativeTo(SvgRoot& root, SvgRootFrag& svgFrag) {
         // https://svgwg.org/svg2-draft/coords.html#Units
         // SPEC: For <percentage> values that are defined to be relative to the size of SVG viewport:
         // the value to use must be the percentage, in user units, of the * parameter of the ‘viewBox’ applied to that
@@ -41,10 +41,10 @@ struct ReplacedFormatingContext : FormatingContext {
             Svg::GroupFrag nestedGroupFrag{&(*nestedGroup)};
             buildSVGAggregateFrag(tree, nestedGroup, &nestedGroupFrag, resolveTo);
             return nestedGroupFrag;
-        } else if (auto nestedRoot = element.is<SVGRoot>()) {
+        } else if (auto nestedRoot = element.is<SvgRoot>()) {
             auto resolvedRect = Svg::resolve(Svg::buildRectangle(*nestedRoot->style), resolveTo);
 
-            return buildSVGRootFrag(
+            return buildSvgRootFrag(
                 tree, *nestedRoot,
                 {resolvedRect.x, resolvedRect.y},
                 {resolvedRect.width, resolvedRect.height}
@@ -72,8 +72,8 @@ struct ReplacedFormatingContext : FormatingContext {
         }
     }
 
-    SVGRootFrag buildSVGRootFrag(Tree& tree, SVGRoot& root, Karm::Vec2Au position, Karm::Vec2Au size) {
-        SVGRootFrag svgFrag = SVGRootFrag::build(root, position, size);
+    SvgRootFrag buildSvgRootFrag(Tree& tree, SvgRoot& root, Karm::Vec2Au position, Karm::Vec2Au size) {
+        SvgRootFrag svgFrag = SvgRootFrag::build(root, position, size);
         buildSVGAggregateFrag(tree, &root, &svgFrag, updateRelativeTo(root, svgFrag));
         return svgFrag;
     }
@@ -104,7 +104,7 @@ struct ReplacedFormatingContext : FormatingContext {
 
         if (auto image = box.content.is<Rc<Scene::Node>>()) {
             size = (*image)->bound().size().cast<Au>();
-        } else if (auto svg = box.content.is<SVGRoot>()) {
+        } else if (auto svg = box.content.is<SvgRoot>()) {
             fillKnownSizeWithSpecifiedSizeIfEmpty(tree, box, input);
 
             auto aspectRatio = Svg::intrinsicAspectRatio(box.style->svg->viewBox, box.style->sizing->width, box.style->sizing->height);
@@ -112,7 +112,7 @@ struct ReplacedFormatingContext : FormatingContext {
             size = _defaultSizing(input.knownSize, aspectRatio, input.containingBlock);
 
             if (input.fragment) {
-                auto svgFrag = buildSVGRootFrag(tree, *svg, input.position, size);
+                auto svgFrag = buildSvgRootFrag(tree, *svg, input.position, size);
                 Svg::GroupFrag::computeBoundingBoxes(&svgFrag);
                 input.fragment->content = svgFrag;
             }

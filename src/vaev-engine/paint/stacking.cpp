@@ -9,7 +9,7 @@ import :layout.base;
 namespace Vaev::Paint {
 
 bool _doEstablishStackingContext(Style::SpecifiedValues const& s) {
-    return s.clip.has() or
+    return s.clip->has() or
            s.transform->has() or
            s.opacity < 1.0;
 }
@@ -23,7 +23,7 @@ void _establishStackingContext(Layout::Frag& frag, Scene::Stack& stack, Options 
     auto inner = makeRc<Scene::Stack>();
     _paintStackingContextInternal(frag, *inner, options);
     Rc<Scene::Node> out = inner;
-    if (frag.style().clip.has())
+    if (frag.style().clip->has())
         out = _applyClip(frag, out);
     if (frag.style().transform->has())
         out = _applyTransform(frag, out);

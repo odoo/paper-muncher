@@ -13,7 +13,7 @@ namespace Vaev::Paint {
 
 Rc<Scene::Node> _applyClip(Layout::Frag const& frag, Rc<Scene::Node> content) {
     Math::Path result;
-    auto& clip = frag.style().clip.unwrap();
+    auto& clip = frag.style().clip->unwrap();
 
     // TODO: handle SVG cases (https://drafts.fxtf.org/css-masking/#typedef-geometry-box)
     auto [referenceBox, radii] = clip.referenceBox.visit(Visitor{

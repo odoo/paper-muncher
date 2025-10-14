@@ -6,6 +6,9 @@ import Karm.Math;
 import :layout.base;
 import :layout.values;
 import :values.transform;
+import :values.background;
+import :values.background;
+import :style.specified;
 export import :paint.debug;
 
 namespace Vaev::Paint {

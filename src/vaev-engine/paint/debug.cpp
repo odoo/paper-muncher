@@ -1,5 +1,10 @@
 export module Vaev.Engine:paint.debug;
 
+import Karm.Core;
+import Karm.Gfx;
+import Karm.Gc;
+
+import :dom.node;
 import :layout.base;
 import :layout.values;
 

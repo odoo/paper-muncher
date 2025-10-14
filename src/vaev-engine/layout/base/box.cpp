@@ -65,12 +65,12 @@ export struct LineBoxes {
     }
 };
 
-struct SVGRoot;
+struct SvgRoot;
 
-namespace SVG {
+namespace Svg {
 
 struct Group {
-    using Element = Union<Shape, SVGRoot, Karm::Box<Vaev::Layout::Box>, Group>;
+    using Element = Union<Shape, SvgRoot, Karm::Box<Vaev::Layout::Box>, Group>;
     Vec<Element> elements = {};
     Rc<Style::SpecifiedValues> style;
 
@@ -82,11 +82,11 @@ struct Group {
 
     void repr(Io::Emit& e) const;
 };
-} // namespace SVG
+} // namespace Svg
 
-struct SVGRoot : Svg::Group {
+struct SvgRoot : Svg::Group {
     Opt<ViewBox> viewBox;
-    SVGRoot(Rc<Style::SpecifiedValues> style)
+    SvgRoot(Rc<Style::SpecifiedValues> style)
         : Svg::Group(style), viewBox(style->svg->viewBox) {}
 
     void repr(Io::Emit& e) const {
@@ -115,7 +115,7 @@ export using Content = Union<
     Vec<Box>,
     LineBoxes,
     Rc<Scene::Node>,
-    SVGRoot>;
+    SvgRoot>;
 
 struct Box : Meta::NoCopy {
     Rc<Style::SpecifiedValues> style;
@@ -152,7 +152,7 @@ struct Box : Meta::NoCopy {
     }
 
     bool isReplaced() const {
-        return content.is<Rc<Scene::Node>>() or content.is<SVGRoot>();
+        return content.is<Rc<Scene::Node>>() or content.is<SvgRoot>();
     }
 
     bool isPositioned() const {
@@ -208,9 +208,9 @@ struct Box : Meta::NoCopy {
             e.indentNewline();
             e("{}", content.unwrap<LineBoxes>());
             e.deindent();
-        } else if (content.is<SVGRoot>()) {
+        } else if (content.is<SvgRoot>()) {
             e.indentNewline();
-            e("{}", content.unwrap<SVGRoot>());
+            e("{}", content.unwrap<SvgRoot>());
             e.deindent();
         }
         e(")");
