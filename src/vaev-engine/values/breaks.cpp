@@ -71,7 +71,7 @@ struct ValueParser<BreakBetween> {
 // 3.2. Breaks Within Boxes: the break-inside property
 // https://www.w3.org/TR/css-break-3/#break-within
 
-export enum struct BreakInside {
+export enum struct BreakInside : u8 {
     AUTO,
     AVOID,
     AVOID_PAGE,

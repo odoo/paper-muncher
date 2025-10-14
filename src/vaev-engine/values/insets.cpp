@@ -13,7 +13,7 @@ namespace Vaev {
 
 // MARK: Position --------------------------------------------------------------
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-position
-export enum struct Position {
+export enum struct Position : u8 {
     STATIC,
 
     RELATIVE,
