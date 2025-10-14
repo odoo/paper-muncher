@@ -1,5 +1,9 @@
 export module Vaev.Engine:values.writing;
 
+import Karm.Core;
+
+using namespace Karm;
+
 namespace Vaev {
 
 // https://drafts.csswg.org/css-writing-modes-4/#inline-axis
@@ -40,14 +44,14 @@ export struct Axis {
 };
 
 // https://www.w3.org/TR/css-writing-modes-3/#propdef-writing-mode
-export enum struct WritingMode {
+export enum struct WritingMode : u8 {
     HORIZONTAL_TB,
     VERTICAL_RL,
     VERTICAL_LR,
 };
 
 // https://www.w3.org/TR/css-writing-modes-3/#propdef-direction
-export enum struct Direction {
+export enum struct Direction : u8 {
     LTR,
     RTL,
 };

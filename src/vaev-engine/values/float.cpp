@@ -12,7 +12,7 @@ namespace Vaev {
 
 // MARK: Clear & Float ---------------------------------------------------------
 
-export enum struct Float {
+export enum struct Float : u8 {
     NONE,
 
     INLINE_START,
@@ -45,7 +45,7 @@ struct ValueParser<Float> {
     }
 };
 
-export enum struct Clear {
+export enum struct Clear : u8 {
     NONE,
 
     LEFT,

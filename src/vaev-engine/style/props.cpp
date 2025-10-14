@@ -1252,14 +1252,14 @@ export struct ClipPathProp {
 
     void apply(SpecifiedValues& c) const {
         if (auto clipShape = value.is<BasicShape>())
-            c.clip = *clipShape;
+            c.clip.cow() = *clipShape;
         else
-            c.clip = NONE;
+            c.clip.cow() = NONE;
     }
 
     static Value load(SpecifiedValues const& c) {
-        if (c.clip.has())
-            return c.clip.unwrap();
+        if (c.clip->has())
+            return c.clip->unwrap();
         return Keywords::NONE;
     }
 

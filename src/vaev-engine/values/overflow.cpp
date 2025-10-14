@@ -11,7 +11,7 @@ namespace Vaev {
 
 // MARK: Overflow
 // https://www.w3.org/TR/css-overflow/#overflow-control
-export enum struct Overflow {
+export enum struct Overflow : u8 {
     VISIBLE,
     HIDDEN,
     SCROLL,

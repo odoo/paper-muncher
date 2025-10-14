@@ -9,7 +9,6 @@ import Karm.Logger;
 import Karm.Math;
 import Karm.Scene;
 
-
 import :style;
 import :values;
 import :layout.base;
@@ -75,7 +74,7 @@ Opt<Gfx::Outline> buildOutline(Metrics const& metrics, Style::SpecifiedValues co
 
 static bool _needsNewStackingContext(Frag const& frag) {
     return frag.style().zIndex != Keywords::AUTO or
-           frag.style().clip.has() or
+           frag.style().clip->has() or
            frag.style().transform->has() or
            frag.style().opacity != 1.0;
 }
@@ -285,7 +284,7 @@ static Math::Vec2f _resolveBackgroundPosition(Resolver& resolver, BackgroundPosi
 
 static Rc<Scene::Clip> _applyClip(Frag const& frag, Rc<Scene::Node> content) {
     Math::Path result;
-    auto& clip = frag.style().clip.unwrap();
+    auto& clip = frag.style().clip->unwrap();
 
     // TODO: handle SVG cases (https://drafts.fxtf.org/css-masking/#typedef-geometry-box)
     auto [referenceBox, radii] = clip.referenceBox.visit(Visitor{
@@ -665,7 +664,7 @@ static void _establishStackingContext(Frag& frag, Scene::Stack& stack) {
     _paintStackingContext(frag, *innerStack);
 
     Rc<Scene::Node> out = innerStack;
-    if (frag.style().clip.has())
+    if (frag.style().clip->has())
         out = _applyClip(frag, out);
     if (frag.style().transform->has())
         out = _applyTransform(frag, out);
