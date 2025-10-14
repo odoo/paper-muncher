@@ -282,8 +282,12 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             if (outputArg.value() != "-"s)
                 output = Ref::parseUrlOrPath(outputArg.value(), co_try$(Sys::pwd()));
 
-            if (formatArg.value() != ""s)
+            if (formatArg.value() != ""s) {
                 options.outputFormat = co_try$(Ref::Uti::fromMime({formatArg.value()}));
+            } else {
+                auto mime = Ref::sniffSuffix(output.path.suffix());
+                options.outputFormat = mime ? co_try$(Ref::Uti::fromMime(*mime)) : Ref::Uti::PUBLIC_PDF;
+            }
 
             auto client = PaperMuncher::_createHttpClient(unsecureArg.value());
 
