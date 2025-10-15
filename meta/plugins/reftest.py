@@ -237,21 +237,6 @@ def _(args: RefTestArgs):
                 else:
                     test_render(paperMuncher, xsize, ysize, img_path, input_path)
 
-                paperMuncher.popen(
-                    "--feature",
-                    "*=on",
-                    "--verbose",
-                    "--unsecure",
-                    "render",
-                    "--width",
-                    xsize + "px",
-                    "--height",
-                    ysize + "px",
-                    "-o",
-                    img_path,
-                    input_path,
-                )
-
                 with img_path.open("rb") as imageFile:
                     output_image: bytes = imageFile.read()
 
