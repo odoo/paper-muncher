@@ -31,6 +31,7 @@ void _paintOutline(Layout::Frag& frag, Scene::Stack& stack);
 export struct Options {
     Math::Rectf canvasBound;
     bool rootElement = false;
+    bool inStackingContainer = false;
 };
 
 bool _requiresStackingContext(Style::SpecifiedValues const& s);

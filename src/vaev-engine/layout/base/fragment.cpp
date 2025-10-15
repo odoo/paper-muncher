@@ -119,11 +119,6 @@ export using FragContent = Union<
     Vec<Frag>,
     SvgRootFrag>;
 
-enum struct TreeIteration {
-    CONTINUE,
-    SKIP_CHILDREN
-};
-
 export struct Frag {
     MutCursor<Box> box;
     Metrics metrics;
@@ -170,20 +165,6 @@ export struct Frag {
             return *children;
         }
         return {};
-    }
-
-    void visitChildrenInTreeOrder(auto&& visitor) {
-        for (auto& c : children()) {
-            if (visitor(c) == TreeIteration::CONTINUE) {
-                c.visitChildrenInTreeOrder(visitor);
-            }
-        }
-    }
-
-    void visitInTreeOrder(auto&& visitor) {
-        if (visitor(*this) == TreeIteration::CONTINUE) {
-            visitChildrenInTreeOrder(visitor);
-        }
     }
 
     /// Add a child fragment.
