@@ -61,6 +61,38 @@ def compareImages(
     return True
 
 
+def test_print(PM_instance, img_path, input_path):
+    PM_instance.popen(
+        "--feature",
+        "*=on",
+        "--verbose",
+        "--unsecure",
+        "print",
+        "-o",
+        img_path,
+        input_path,
+        "--format",
+        "image/bmp",
+    )
+
+
+def test_render(PM_instance, xsize, ysize, img_path, input_path):
+    PM_instance.popen(
+        "--feature",
+        "*=on",
+        "--verbose",
+        "--unsecure",
+        "render",
+        "--width",
+        xsize + "px",
+        "--height",
+        ysize + "px",
+        "-o",
+        img_path,
+        input_path,
+    )
+
+
 class RefTestArgs(model.TargetArgs):
     glob: str = cli.arg("g", "glob")
     headless: bool = cli.arg(
@@ -137,6 +169,7 @@ def _(args: RefTestArgs):
             print(f"{vt100.WHITE}Test {props.get('name')!r}{vt100.RESET}")
 
             category_skipped = "skip" in props
+            type = props.get("type")  # the type of test [render (default) | print]
 
             if category_skipped and not args.runSkipped:
                 skippedCount += 1
@@ -198,6 +231,11 @@ def _(args: RefTestArgs):
                 if props.get("size") == "full":
                     xsize = "800"
                     ysize = "600"
+
+                if type and type == "print":
+                    test_print(paperMuncher, img_path, input_path)
+                else:
+                    test_render(paperMuncher, xsize, ysize, img_path, input_path)
 
                 paperMuncher.popen(
                     "--feature",
