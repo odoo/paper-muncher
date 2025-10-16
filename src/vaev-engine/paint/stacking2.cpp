@@ -17,22 +17,30 @@ enum struct TreeIteration {
     SKIP_CHILDREN
 };
 
-struct Walker {
-    bool inStackingContainer;
-    bool skipStackingContainerContent;
-};
+bool _doEstablishStackingContext(Style::SpecifiedValues const& s) {
+    return s.clip->has() or
+           s.transform->has() or
+           s.opacity < 1.0;
+}
 
-void _visitChildrenInTreeOrder(Walker walker, Layout::Frag& root, auto&& visitor) {
+bool _isStackingContainer(Layout::Frag& frag) {
+    if (frag.box->isPositioned())
+        return false;
+
+    return frag.style().zIndex == Keywords::AUTO or frag.box->isInlineLevel();
+}
+
+void _visitChildrenInTreeOrder(Layout::Frag& root, auto&& visitor) {
     for (auto& c : root.children()) {
-        if (visitor(walker, c) == TreeIteration::CONTINUE) {
-            _visitChildrenInTreeOrder(walker, c, visitor);
+        if (visitor(c) == TreeIteration::CONTINUE) {
+            _visitChildrenInTreeOrder(c, visitor);
         }
     }
 }
 
-void _visitInTreeOrder(Walker walker, Layout::Frag& root, auto&& visitor) {
-    if (visitor(walker, root) == TreeIteration::CONTINUE) {
-        _visitChildrenInTreeOrder(walker, root, visitor);
+void _visitInTreeOrder(Layout::Frag& root, auto&& visitor) {
+    if (visitor(root) == TreeIteration::CONTINUE) {
+        _visitChildrenInTreeOrder(root, visitor);
     }
 }
 
@@ -78,7 +86,7 @@ void _paintDocument(Layout::Frag& root, Scene::Stack& canvas, Math::Rectf canvas
     // 2. Paint a stacking context given el and canvas, treating el as a stacking context, with the initial containing block as its containing block.
 }
 
-void _paintStackingContext(Layout::Frag& root, Scene::Stack& canvas, Options const& options) {
+void _paintStackingContextInternal(Layout::Frag& root, Scene::Stack& canvas, Options const& options) {
     // 1. If root is an element, paint a stacking context given root’s principal box and canvas, then return.
 
     // 2. Assert: root is a box, and generates a stacking context.
@@ -98,15 +106,14 @@ void _paintStackingContext(Layout::Frag& root, Scene::Stack& canvas, Options con
 
     // 5. For each of root’s positioned descendants with negative (non-zero) z-index values,
     _visitChildrenInTreeOrder(
-        {.inStackingContainer = options.inStackingContainer},
         root,
-        [&](Walker const& walker, Layout::Frag& c) {
+        [&](Layout::Frag& c) {
             if (not c.box->isPositioned() or c.box->style->zIndex.unwrapOr<Integer>(0) >= 0)
                 return TreeIteration::CONTINUE;
 
             // sort those descendants by z-index order (most negative first) then tree order,
             // and paint a stacking context given each descendant and canvas.
-            if (walker.inStackingContainer)
+            if (options.paintStackingContainer)
                 return TreeIteration::SKIP_CHILDREN;
 
             _paintStackingContext(c, canvas);
@@ -116,14 +123,13 @@ void _paintStackingContext(Layout::Frag& root, Scene::Stack& canvas, Options con
 
     // 6. For each of root’s in-flow, non-positioned, block-level descendants, in tree order,
     _visitChildrenInTreeOrder(
-        {.inStackingContainer = options.inStackingContainer},
         root,
-        [&](Walker const& walker, Layout::Frag& c) {
+        [&](Layout::Frag& c) {
             if (c.box->isPositioned() or not c.box->isBlockLevel())
                 return TreeIteration::SKIP_CHILDREN;
 
             // paint a block’ s decorations given the descendant and canvas.
-            if (walker.skipStackingContainerContent)
+            if (_isStackingContainer(root) and not options.paintStackingContainer)
                 return TreeIteration::CONTINUE;
 
             _paintBlockDecoration(c, canvas);
@@ -133,14 +139,13 @@ void _paintStackingContext(Layout::Frag& root, Scene::Stack& canvas, Options con
 
     // 7. For each of root’s non-positioned floating descendants, in tree order,
     _visitChildrenInTreeOrder(
-        {.inStackingContainer = options.inStackingContainer},
         root,
-        [&](Walker const& walker, Layout::Frag& c) {
+        [&](Layout::Frag& c) {
             if (c.box->isPositioned() or not c.box->isFloating())
                 return TreeIteration::CONTINUE;
 
             // paint a stacking container given the descendant and canvas.
-            if (walker.inStackingContainer)
+            if (options.paintStackingContainer)
                 return TreeIteration::SKIP_CHILDREN;
 
             _paintStackingContext(c, canvas);
@@ -157,13 +162,12 @@ void _paintStackingContext(Layout::Frag& root, Scene::Stack& canvas, Options con
     else {
         // First for root, then for all its in-flow, non-positioned, block-level descendant boxes, in tree order:
         _visitInTreeOrder(
-            {.inStackingContainer = options.inStackingContainer},
             root,
-            [&](Walker const& walker, Layout::Frag& c) {
+            [&](Layout::Frag& c) {
                 if (c.box->isPositioned() or not c.box->isBlockLevel())
                     return TreeIteration::SKIP_CHILDREN;
 
-                if (walker.skipStackingContainerContent)
+                if (_isStackingContainer(root) and not options.paintStackingContainer)
                     return TreeIteration::CONTINUE;
 
                 // 1. If the box is a replaced element, paint the replaced content into canvas, atomically.
@@ -190,13 +194,12 @@ void _paintStackingContext(Layout::Frag& root, Scene::Stack& canvas, Options con
 
     // 9. For each of root’s positioned descendants with z-index: auto or z-index: 0, in tree order:
     _visitChildrenInTreeOrder(
-        {.inStackingContainer = options.inStackingContainer},
         root,
-        [&](Walker const& walker, Layout::Frag& c) {
+        [&](Layout::Frag& c) {
             if (not c.box->isPositioned())
                 return TreeIteration::CONTINUE;
 
-            if (walker.inStackingContainer)
+            if (options.paintStackingContainer)
                 return TreeIteration::SKIP_CHILDREN;
 
             // descendant has z-index: auto
@@ -219,15 +222,14 @@ void _paintStackingContext(Layout::Frag& root, Scene::Stack& canvas, Options con
 
     // 10. For each of root’ s positioned descendants with positive (non-zero) z-index values,
     _visitChildrenInTreeOrder(
-        {.inStackingContainer = options.inStackingContainer},
         root,
-        [&](Walker const& walker, Layout::Frag& c) {
+        [&](Layout::Frag& c) {
             if (not c.box->isPositioned() or c.box->style->zIndex.unwrapOr<Integer>(0) <= 0)
                 return TreeIteration::CONTINUE;
 
             // sort those descendants by z-index order (smallest first) then tree order,
             // and paint a stacking context given each descendant and canvas.
-            if (walker.inStackingContainer)
+            if (options.paintStackingContainer)
                 return TreeIteration::SKIP_CHILDREN;
 
             _paintStackingContext(c, canvas);
@@ -239,6 +241,26 @@ void _paintStackingContext(Layout::Frag& root, Scene::Stack& canvas, Options con
     // draw all of root’ s outlines (those that it skipped drawing due to not using in-band
     // outlines during the current invocation of this algorithm) into canvas.
     // TODO: Support out-of-band outlines
+}
+
+void _establishStackingContext(Layout::Frag& frag, Scene::Stack& stack, Options const& options) {
+    auto inner = makeRc<Scene::Stack>();
+    _paintStackingContextInternal(frag, *inner, options);
+    Rc<Scene::Node> out = inner;
+    if (frag.style().clip->has())
+        out = _applyClip(frag, out);
+    if (frag.style().transform->has())
+        out = _applyTransform(frag, out);
+    if (frag.style().opacity != 1.0)
+        out = makeRc<Scene::Opacity>(out, frag.style().opacity);
+    stack.add(std::move(out));
+}
+
+void _paintStackingContext(Layout::Frag& frag, Scene::Stack& stack, Options const& options) {
+    if (_doEstablishStackingContext(frag.style()))
+        _establishStackingContext(frag, stack, options);
+    else
+        _paintStackingContextInternal(frag, stack, options);
 }
 
 void _paintBoxInLineBox(Layout::Frag& root, Scene::Stack& canvas) {
@@ -272,7 +294,7 @@ void _paintStackingContainer(Layout::Frag& root, Scene::Stack& canvas) {
     //    treating root as if it created a new stacking context,
     //    but omitting any positioned descendants or descendants that actually create a stacking context
     //    (letting the parent stacking context paint them, instead).
-    _paintStackingContext(root, canvas, {.inStackingContainer = true});
+    _paintStackingContext(root, canvas, {.paintStackingContainer = true});
 }
 
 } // namespace Vaev::Paint
