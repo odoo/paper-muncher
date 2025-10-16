@@ -61,36 +61,25 @@ def compareImages(
     return True
 
 
-def test_print(PM_instance, img_path, input_path):
-    PM_instance.popen(
-        "--feature",
-        "*=on",
-        "--verbose",
-        "--unsecure",
-        "print",
-        "-o",
-        img_path,
-        input_path,
-        "--format",
-        "image/bmp",
-    )
+def runPaperMuncher(executable, type, xsize, ysize, page, outputPath, inputPath):
+    command = ["--feature", "*=on", "--verbose", "--unsecure", type or "render"]
 
+    if xsize or not page:
+        command.extend(["--width", (xsize or 200) + "px"])
 
-def test_render(PM_instance, xsize, ysize, img_path, input_path):
-    PM_instance.popen(
-        "--feature",
-        "*=on",
-        "--verbose",
-        "--unsecure",
-        "render",
-        "--width",
-        xsize + "px",
-        "--height",
-        ysize + "px",
+    if ysize or not page:
+        command.extend(["--height", (ysize or 200) + "px"])
+
+    if page:
+        command.extend(["--page", page])
+
+    command += [
         "-o",
-        img_path,
-        input_path,
-    )
+        outputPath,
+        inputPath,
+    ]
+
+    executable.popen(*command)
 
 
 class RefTestArgs(model.TargetArgs):
@@ -113,7 +102,7 @@ TEST_REPORT = (Path(const.PROJECT_CK_DIR) / "tests" / "report").absolute()
 
 
 @cli.command("reftests/clean", "Manage the reftests")
-def _(args: RefTestArgs):
+def _():
     for f in TEST_REPORT.glob("*.*"):
         f.unlink()
     TEST_REPORT.rmdir()
@@ -228,14 +217,12 @@ def _(args: RefTestArgs):
 
                 xsize = props.get("size", "200")
                 ysize = xsize
+                page = props.get("page")
                 if props.get("size") == "full":
                     xsize = "800"
                     ysize = "600"
 
-                if type and type == "print":
-                    test_print(paperMuncher, img_path, input_path)
-                else:
-                    test_render(paperMuncher, xsize, ysize, img_path, input_path)
+                runPaperMuncher(paperMuncher, type, xsize, ysize, page, img_path, input_path)
 
                 with img_path.open("rb") as imageFile:
                     output_image: bytes = imageFile.read()
