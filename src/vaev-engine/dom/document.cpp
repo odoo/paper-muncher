@@ -52,10 +52,30 @@ export struct Document : Node {
         return _url;
     }
 
+    // https://dom.spec.whatwg.org/#document-element
     Gc::Ptr<Element> documentElement() const {
         for (auto child = firstChild(); child; child = child->nextSibling())
             if (auto el = child->is<Element>())
                 return el;
+        return nullptr;
+    }
+
+    // https://html.spec.whatwg.org/multipage/dom.html#dom-document-body-dev
+    Gc::Ptr<Element> body() const {
+        auto document = documentElement();
+
+        if (not document)
+            return nullptr;
+
+        if (document->qualifiedName != Html::HTML_TAG)
+            return nullptr;
+
+        for (auto child : document->iterChildren()) {
+            if (auto el = child->is<Element>();
+                el and el->qualifiedName == Html::BODY_TAG)
+                return el;
+        }
+
         return nullptr;
     }
 };
