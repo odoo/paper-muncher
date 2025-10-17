@@ -170,10 +170,9 @@ struct Tree : Meta::Pinned {
                 co_yield i;
     }
 
-    Generator<Gc::Ref<Node>> iterChildren(this auto& self) {
-        co_yield Gc::Ref(self);
-        for (auto child = self.firstChild(); child; child = child->nextSibling())
-            co_yield child;
+    Generator<Gc::Ref<Node>> iterChildren() {
+        for (auto child = firstChild(); child; child = child->nextSibling())
+            co_yield child.upgrade();
     }
 };
 

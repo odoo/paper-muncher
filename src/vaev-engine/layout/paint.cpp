@@ -84,8 +84,14 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
 
     Vec<Gfx::Fill> backgrounds;
     auto color = Vaev::resolve(cssBackground->color, frag.style().color);
-    if (color.alpha != 0)
-        backgrounds.pushBack(color);
+    auto doc = frag.box->origin->ownerDocument();
+    if (color.alpha != 0) {
+        if (doc and doc->documentElement() == frag.box->origin) {
+            stack.add(makeRc<Scene::Clear>(color));
+        } else {
+            backgrounds.pushBack(color);
+        }
+    }
 
     auto currentColor = Vaev::resolve(frag.style().color, color);
     auto bordersWithoutRadii = buildBorders(frag.metrics, frag.style(), Vaev::resolve(frag.style().color, currentColor));

@@ -14,4 +14,3 @@ export import :layout.replaced;
 export import :layout.table;
 export import :layout.values;
 export import :layout.writing;
-export import :layout.backgroundCanvas;
