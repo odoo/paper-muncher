@@ -34,8 +34,6 @@ export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media
         viewport
     };
 
-    auto canvasColor = fixupBackgrounds(computer, dom, tree);
-
     auto [outDiscovery, root] = Layout::layoutCreateFragment(
         tree,
         {
@@ -51,7 +49,7 @@ export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media
 
     return {
         makeRc<Layout::Box>(std::move(tree.root)),
-        makeRc<Scene::Clear>(sceneRoot, canvasColor),
+        sceneRoot,
         makeRc<Layout::Frag>(std::move(root)),
     };
 }
