@@ -31,11 +31,11 @@ def fetchMessage(args: model.TargetArgs, type: str) -> str:
 
 
 def compareImages(
-        lhs: bytes,
-        rhs: bytes,
-        lowEpsilon: float = 0.05,
-        highEpsilon: float = 0.1,
-        strict=False,
+    lhs: bytes,
+    rhs: bytes,
+    lowEpsilon: float = 0.05,
+    highEpsilon: float = 0.1,
+    strict=False,
 ) -> bool:
     if strict:
         return lhs == rhs
@@ -62,7 +62,10 @@ def compareImages(
 
 
 def runPaperMuncher(executable, type, xsize, ysize, page, outputPath, inputPath):
-    command = ["--feature", "*=on", "--verbose", "--unsecure", type or "render"]
+    command = ["--feature", "*=on", "--verbose"]
+
+    if type == "print":
+        command.extend(["--flow", "paginate"])
 
     if xsize or not page:
         command.extend(["--width", (xsize or 200) + "px"])
@@ -197,7 +200,7 @@ def _(args: RefTestArgs):
                     expected_image_url = ref_image
 
             for tag, info, rendering in re.findall(
-                    r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test
+                r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""", test
             ):
                 renderingProps = getInfo(info)
                 test_skipped = category_skipped or "skip" in renderingProps
@@ -222,7 +225,9 @@ def _(args: RefTestArgs):
                     xsize = "800"
                     ysize = "600"
 
-                runPaperMuncher(paperMuncher, type, xsize, ysize, page, img_path, input_path)
+                runPaperMuncher(
+                    paperMuncher, type, xsize, ysize, page, img_path, input_path
+                )
 
                 with img_path.open("rb") as imageFile:
                     output_image: bytes = imageFile.read()
@@ -233,7 +238,7 @@ def _(args: RefTestArgs):
                     if not expected_image:
                         expected_image = output_image
                         with (TEST_REPORT / f"{counter}.expected.bmp").open(
-                                "wb"
+                            "wb"
                         ) as imageWriter:
                             imageWriter.write(expected_image)
                         continue
