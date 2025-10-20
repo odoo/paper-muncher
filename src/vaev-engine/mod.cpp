@@ -6,6 +6,7 @@ export import :driver;
 export import :html;
 export import :layout;
 export import :loader;
+export import :paint;
 export import :style;
 export import :values;
 export import :xml;

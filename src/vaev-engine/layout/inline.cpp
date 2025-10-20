@@ -25,7 +25,7 @@ struct InlineFormatingContext : FormatingContext {
         return output.firstBaselineSet;
     }
 
-    BaselinePositionsSet _computeBaselinePositions(InlineBox& inlineBox, Au baselinePosition) {
+    BaselinePositionsSet _computeBaselinePositions(LineBoxes& inlineBox, Au baselinePosition) {
         auto metrics = inlineBox.prose->_style.font.metrics();
 
         return BaselinePositionsSet{
@@ -38,7 +38,7 @@ struct InlineFormatingContext : FormatingContext {
 
     virtual Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
         // NOTE: We are not supposed to get there if the content is not a prose
-        auto& inlineBox = box.content.unwrap<InlineBox>("inlineLayout");
+        auto& inlineBox = box.content.unwrap<LineBoxes>("inlineLayout");
 
         auto inlineSize = input.knownSize.x.unwrapOrElse([&] {
             if (input.intrinsic == IntrinsicSize::MIN_CONTENT) {

@@ -42,10 +42,10 @@ struct Viewport : Ui::View<Viewport> {
         _window->render()->paint(g, paintRect.cast<f64>());
 
         if (_props.wireframe)
-            Layout::wireframe(*_window->ensureRender().frag, g);
+            Paint::wireframe(*_window->ensureRender().frag, g);
 
         if (_props.selected)
-            Layout::overlay(*_window->ensureRender().frag, g, _props.selected.upgrade());
+            Paint::overlay(*_window->ensureRender().frag, g, _props.selected.upgrade());
 
         g.pop();
 

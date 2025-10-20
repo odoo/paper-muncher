@@ -3261,22 +3261,22 @@ export struct SVGRProp {
 
 // https://svgwg.org/svg2-draft/painting.html#FillProperty
 export struct SVGFillProp {
-    Paint value = initial();
+    SvgPaint value = initial();
 
     static constexpr Str name() { return "fill"; }
 
-    static constexpr Paint initial() { return Color{Gfx::BLACK}; }
+    static constexpr SvgPaint initial() { return Color{Gfx::BLACK}; }
 
     void apply(SpecifiedValues& c) const {
         c.svg.cow().fill = value;
     }
 
-    static Paint load(SpecifiedValues const& c) {
+    static SvgPaint load(SpecifiedValues const& c) {
         return c.svg->fill;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Paint>(c));
+        value = try$(parseValue<SvgPaint>(c));
         return Ok();
     }
 };
@@ -3349,22 +3349,22 @@ export struct SVGViewBoxProp {
 
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingStrokePaint
 export struct SVGStrokeProp {
-    Paint value = initial();
+    SvgPaint value = initial();
 
     static constexpr Str name() { return "stroke"; }
 
-    static Paint initial() { return NONE; }
+    static SvgPaint initial() { return NONE; }
 
     void apply(SpecifiedValues& c) const {
         c.svg.cow().stroke = value;
     }
 
-    static Paint load(SpecifiedValues const& c) {
+    static SvgPaint load(SpecifiedValues const& c) {
         return c.svg->stroke;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Paint>(c));
+        value = try$(parseValue<SvgPaint>(c));
         return Ok();
     }
 };

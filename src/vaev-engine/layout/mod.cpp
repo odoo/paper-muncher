@@ -8,7 +8,6 @@ export import :layout.flex;
 export import :layout.grid;
 export import :layout.inline_;
 export import :layout.layout;
-export import :layout.paint;
 export import :layout.positioned;
 export import :layout.replaced;
 export import :layout.table;

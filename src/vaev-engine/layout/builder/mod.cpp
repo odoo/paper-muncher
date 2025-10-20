@@ -86,7 +86,7 @@ void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, TextTransfo
 
 // https://www.w3.org/TR/css-text-3/#white-space-phase-1
 // https://www.w3.org/TR/css-text-3/#white-space-phase-2
-void _appendTextToInlineBox(Io::SScan scan, Rc<Style::SpecifiedValues> parentStyle, InlineBox& rootInlineBox) {
+void _appendTextToInlineBox(Io::SScan scan, Rc<Style::SpecifiedValues> parentStyle, LineBoxes& rootInlineBox) {
     auto whitespace = parentStyle->text->whiteSpace;
     bool whiteSpacesAreCollapsible =
         whitespace == WhiteSpace::NORMAL or
@@ -140,7 +140,7 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::SpecifiedValues> parentSty
     }
 }
 
-bool _buildText(Gc::Ref<Dom::Text> node, Rc<Style::SpecifiedValues> parentStyle, InlineBox& rootInlineBox, bool skipIfWhitespace) {
+bool _buildText(Gc::Ref<Dom::Text> node, Rc<Style::SpecifiedValues> parentStyle, LineBoxes& rootInlineBox, bool skipIfWhitespace) {
     if (skipIfWhitespace) {
         Io::SScan scan{node->data()};
         scan.eat(Re::space());
@@ -166,7 +166,7 @@ struct BuilderContext {
     Rc<Style::SpecifiedValues> const parentStyle;
 
     Box& _parent;
-    MutCursor<InlineBox> _rootInlineBox;
+    MutCursor<LineBoxes> _rootInlineBox;
 
     // https://www.w3.org/TR/css-inline-3/#model
     void flushRootInlineBoxIntoAnonymousBox() {
@@ -178,7 +178,7 @@ struct BuilderContext {
         style->inherit(*parentStyle);
         style->display = Display{Display::Inside::FLOW, Display::Outside::BLOCK};
 
-        auto newInlineBox = InlineBox::fromInterruptedInlineBox(*_rootInlineBox);
+        auto newInlineBox = LineBoxes::fromInterruptedInlineBox(*_rootInlineBox);
         _parent.add({style, std::move(*_rootInlineBox), nullptr});
         *_rootInlineBox = std::move(newInlineBox);
     }
@@ -192,7 +192,7 @@ struct BuilderContext {
             return;
         }
 
-        auto newRootInlineBox = InlineBox::fromInterruptedInlineBox(*_rootInlineBox);
+        auto newRootInlineBox = LineBoxes::fromInterruptedInlineBox(*_rootInlineBox);
         _parent.content = std::move(*_rootInlineBox);
         *_rootInlineBox = std::move(newRootInlineBox);
     }
@@ -205,7 +205,7 @@ struct BuilderContext {
         _parent.add(std::move(box));
     }
 
-    InlineBox& rootInlineBox() {
+    LineBoxes& rootInlineBox() {
         if (_rootInlineBox == nullptr)
             panic("no root inline box set for the current builder context");
         return *_rootInlineBox;
@@ -228,7 +228,7 @@ struct BuilderContext {
         return _parent.content;
     }
 
-    BuilderContext toBlockContext(Box& parent, InlineBox& rootInlineBox) {
+    BuilderContext toBlockContext(Box& parent, LineBoxes& rootInlineBox) {
         return {
             From::BLOCK,
             parent.style,
@@ -239,7 +239,7 @@ struct BuilderContext {
 
     // NOTE: although all inline elements from FLEX containers are blockified, its less complex to have a
     // rootInlineBox setted for it and then calling `_flushRootInlineBoxIntoAnonymousBox` right after a text is added
-    BuilderContext toFlexContext(Box& parent, InlineBox& rootInlineBox) {
+    BuilderContext toFlexContext(Box& parent, LineBoxes& rootInlineBox) {
         return {
             From::FLEX,
             parent.style,
@@ -278,7 +278,7 @@ struct BuilderContext {
         };
     }
 
-    BuilderContext toTableCellContent(Box& parent, InlineBox& rootInlineBox) {
+    BuilderContext toTableCellContent(Box& parent, LineBoxes& rootInlineBox) {
         return {
             From::TABLE,
             parent.style,
@@ -342,27 +342,27 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     auto prose = makeRc<Gfx::Prose>(proseStyle, value);
 
     // FIXME: we should guarantee that input has no children (not added before nor to add after)
-    bc.content() = InlineBox{prose};
+    bc.content() = LineBoxes{prose};
 }
 
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el);
-void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group);
+void buildSVGAggregate(Gc::Ref<Dom::Element> el, Svg::Group& group);
 
-void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group& group) {
-    if (SVG::isShape(el->qualifiedName)) {
-        group.add(SVG::Shape::build(el->specifiedValues(), el->qualifiedName));
-    } else if (el->qualifiedName == Svg::G_TAG) {
-        SVG::Group nestedGroup{el->specifiedValues()};
+void buildSVGElement(Gc::Ref<Dom::Element> el, Svg::Group& group) {
+    if (Svg::isShape(el->qualifiedName)) {
+        group.add(Svg::Shape::build(el->specifiedValues(), el->qualifiedName));
+    } else if (el->qualifiedName == Vaev::Svg::G_TAG) {
+        Svg::Group nestedGroup{el->specifiedValues()};
         buildSVGAggregate(el, nestedGroup);
         group.add(std::move(nestedGroup));
-    } else if (el->qualifiedName == Svg::SVG_TAG) {
-        SVGRoot newSvgRoot{el->specifiedValues()};
+    } else if (el->qualifiedName == Vaev::Svg::SVG_TAG) {
+        SvgRoot newSvgRoot{el->specifiedValues()};
         buildSVGAggregate(el, newSvgRoot);
         group.add(std::move(newSvgRoot));
-    } else if (el->qualifiedName == Svg::FOREIGN_OBJECT_TAG) {
+    } else if (el->qualifiedName == Vaev::Svg::FOREIGN_OBJECT_TAG) {
         Box box{el->specifiedValues(), el};
 
-        InlineBox rootInlineBox{_proseStyleFromStyle(
+        LineBoxes rootInlineBox{_proseStyleFromStyle(
             *el->specifiedValues(),
             el->specifiedValues()->fontFace
         )};
@@ -383,7 +383,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group& group) {
     }
 }
 
-void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group) {
+void buildSVGAggregate(Gc::Ref<Dom::Element> el, Svg::Group& group) {
     for (auto child = el->firstChild(); child; child = child->nextSibling()) {
         if (auto el = child->is<Dom::Element>()) {
             buildSVGElement(*el, group);
@@ -392,8 +392,8 @@ void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group) {
     }
 }
 
-SVGRoot _buildSVG(Gc::Ref<Dom::Element> el) {
-    SVGRoot svgRoot{el->specifiedValues()};
+SvgRoot _buildSVG(Gc::Ref<Dom::Element> el) {
+    SvgRoot svgRoot{el->specifiedValues()};
     buildSVGAggregate(el, svgRoot);
     return svgRoot;
 }
@@ -416,7 +416,7 @@ static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 // els, an internal display value will never be valid. This relates to a somewhat "replaced" property from these
 // elements, but <img> is replaced whereas <svg> per se is not.
 bool _alwaysInlineBlock(Gc::Ref<Dom::Element> el) {
-    return el->qualifiedName == Html::IMG_TAG or el->qualifiedName == Svg::SVG_TAG;
+    return el->qualifiedName == Html::IMG_TAG or el->qualifiedName == Vaev::Svg::SVG_TAG;
 }
 
 // MARK: Build flow -------------------------------------------------------------------------------
@@ -444,7 +444,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     if (el->qualifiedName == Html::BR_TAG) {
         // do nothing
-    } else if (el->qualifiedName == Svg::SVG_TAG) {
+    } else if (el->qualifiedName == Vaev::Svg::SVG_TAG) {
         bc.content() = _buildSVG(el);
     } else if (isVoidElement(el)) {
         _buildVoidElement(bc, el);
@@ -456,7 +456,7 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
 
 static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::SpecifiedValues> style, Gc::Ref<Dom::Element> el, Display display) {
     Box box = {style, el};
-    InlineBox rootInlineBox{_proseStyleFromStyle(*style, el->specifiedValues()->fontFace)};
+    LineBoxes rootInlineBox{_proseStyleFromStyle(*style, el->specifiedValues()->fontFace)};
 
     auto newBc = display == Display::Inside::FLEX
                      ? bc.toFlexContext(box, rootInlineBox)
@@ -473,7 +473,7 @@ static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<
 
 struct AnonymousTableBoxWrapper {
     Opt<Box> rowBox, cellBox;
-    Opt<InlineBox> rootInlineBoxForCell;
+    Opt<LineBoxes> rootInlineBoxForCell;
 
     BuilderContext& bc;
 
@@ -499,7 +499,7 @@ struct AnonymousTableBoxWrapper {
         cellStyle->display = Display::Internal::TABLE_CELL;
 
         cellBox = Box{cellStyle, nullptr};
-        rootInlineBoxForCell = InlineBox{_proseStyleFromStyle(*style, style->fontFace)};
+        rootInlineBoxForCell = LineBoxes{_proseStyleFromStyle(*style, style->fontFace)};
     }
 
     void finalizeAndResetCell() {
@@ -686,7 +686,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Specifi
     wrapperStyle->margin = tableStyle->margin;
 
     Box wrapper = {wrapperStyle, tableBoxEl};
-    InlineBox rootInlineBox{_proseStyleFromStyle(*wrapperStyle, tableBoxEl->specifiedValues()->fontFace)};
+    LineBoxes rootInlineBox{_proseStyleFromStyle(*wrapperStyle, tableBoxEl->specifiedValues()->fontFace)};
 
     // SPEC: The table wrapper box establishes a block formatting context.
     _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, tableStyle);
@@ -795,7 +795,7 @@ export Box build(Gc::Ref<Dom::Document> doc) {
 
     if (auto el = doc->documentElement()) {
         root = {el->specifiedValues(), el};
-        InlineBox rootInlineBox{_proseStyleFromStyle(*el->specifiedValues(), el->specifiedValues()->fontFace)};
+        LineBoxes rootInlineBox{_proseStyleFromStyle(*el->specifiedValues(), el->specifiedValues()->fontFace)};
 
         BuilderContext bc{
             BuilderContext::From::BLOCK,
@@ -814,7 +814,7 @@ export Box build(Gc::Ref<Dom::Document> doc) {
 
 export Box buildElement(Gc::Ref<Dom::Element> elt) {
     Box box = {elt->specifiedValues(), elt};
-    InlineBox rootInlineBox{_proseStyleFromStyle(*elt->specifiedValues(), elt->specifiedValues()->fontFace)};
+    LineBoxes rootInlineBox{_proseStyleFromStyle(*elt->specifiedValues(), elt->specifiedValues()->fontFace)};
 
     BuilderContext bc{
         BuilderContext::From::BLOCK,
@@ -835,7 +835,7 @@ export Box buildForPseudoElement(Dom::PseudoElement& el, usize currentPage, Runn
         auto prose = makeRc<Gfx::Prose>(proseStyle);
 
         prose->append(el.specifiedValues()->content.unwrap<String>().str());
-        return {el.specifiedValues(), InlineBox{prose}, nullptr};
+        return {el.specifiedValues(), LineBoxes{prose}, nullptr};
     } else if (el.specifiedValues()->content.is<ElementContent>()) {
         auto elt = el.specifiedValues()->content.unwrap<ElementContent>();
         if (auto infos = runningPos.match(elt, currentPage)) {
@@ -852,7 +852,7 @@ export Box buildForPseudoElement(Dom::PseudoElement& el, usize currentPage, Runn
             auto prose = makeRc<Gfx::Prose>(proseStyle);
 
             prose->append(Io::toStr(currentPage + 1).str());
-            return {el.specifiedValues(), InlineBox{prose}, nullptr};
+            return {el.specifiedValues(), LineBoxes{prose}, nullptr};
         }
     }
 

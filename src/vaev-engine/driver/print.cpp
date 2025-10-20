@@ -15,6 +15,7 @@ import :layout;
 import :values;
 import :dom.document;
 import :css;
+import :paint;
 
 using namespace Karm;
 
@@ -34,7 +35,7 @@ void _paintCornerMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& sta
             .containingBlock = rect.size(),
         }
     );
-    Layout::paint(frag, stack);
+    Paint::paintDocument(frag, stack, rect.cast<f64>());
 }
 
 void _paintMainMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas, usize currentPage, Layout::RunningPositionMap& runningPosition) {
@@ -55,7 +56,7 @@ void _paintMainMargin(Style::PageSpecifiedValues& pageStyle, Scene::Stack& stack
             .containingBlock = rect.size(),
         }
     );
-    Layout::paint(frag, stack);
+    Paint::paintDocument(frag, stack, rect.cast<f64>());
 }
 
 void _paintMargins(Style::PageSpecifiedValues& pageStyle, RectAu pageRect, RectAu pageContent, Scene::Stack& stack, usize currentPage, Layout::RunningPositionMap& runningPosition) {
@@ -247,7 +248,10 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
         if (settings.headerFooter and settings.margins != Print::Margins::NONE)
             _paintMargins(*pageInfos[pageNumber].pageStyle, pageInfos[pageNumber].pageRect, pageInfos[pageNumber].pageContent, *pageStack, page.number, runningPosition);
 
-        Layout::paint(fragment, *pageStack);
+        Paint::paintDocument(
+            fragment, *pageStack,
+            pageInfos[pageNumber].pageContent.cast<f64>()
+        );
         pageStack->prepare();
 
         co_yield Print::Page(

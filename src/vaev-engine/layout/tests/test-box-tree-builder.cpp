@@ -76,7 +76,7 @@ struct FakeInlineBox {
             return last(children);
         }
 
-        static ComparableInlineBox fromInlineBox(Layout::InlineBox const& inlineBox) {
+        static ComparableInlineBox fromInlineBox(Layout::LineBoxes const& inlineBox) {
             ComparableInlineBox comparableInlineBox;
 
             Vec<MutCursor<ComparableInlineBox>> stackInlineBoxes = {&comparableInlineBox};
@@ -118,7 +118,7 @@ struct FakeInlineBox {
         return true;
     }
 
-    bool matches(InlineBox const& inlineBox);
+    bool matches(LineBoxes const& inlineBox);
 };
 
 struct FakeBox {
@@ -130,7 +130,7 @@ struct FakeBox {
             return false;
 
         bool fakeBoxStablishesInline = content.is<FakeInlineBox>();
-        bool boxStablishesInline = b.content.is<Layout::InlineBox>();
+        bool boxStablishesInline = b.content.is<Layout::LineBoxes>();
 
         // logDebug("box: {}, expected: {}", boxStablishesInline, fakeBoxStablishesInline);
 
@@ -138,7 +138,7 @@ struct FakeBox {
             return false;
 
         if (boxStablishesInline) {
-            return content.unwrap<FakeInlineBox>().matches(b.content.unwrap<Layout::InlineBox>());
+            return content.unwrap<FakeInlineBox>().matches(b.content.unwrap<Layout::LineBoxes>());
         } else {
             auto& children = content.unwrap<Vec<FakeBox>>();
             // logDebug("box children: {} expected children: {}", b.children().len(), children.len());
@@ -154,7 +154,7 @@ struct FakeBox {
     }
 };
 
-bool FakeInlineBox::matches(InlineBox const& inlineBox) {
+bool FakeInlineBox::matches(LineBoxes const& inlineBox) {
     if (atomicBoxes.len() != inlineBox.atomicBoxes.len())
         return false;
 

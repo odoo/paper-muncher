@@ -45,12 +45,12 @@ export struct Metrics {
 };
 
 export struct Frag;
-struct SVGRootFrag;
+struct SvgRootFrag;
 
-namespace SVG {
+namespace Svg {
 
-struct GroupFrag : SVG::Frag {
-    using Element = Union<SVG::ShapeFrag, SVGRootFrag, ::Box<Vaev::Layout::Frag>, GroupFrag>;
+struct GroupFrag : Svg::Frag {
+    using Element = Union<Svg::ShapeFrag, SvgRootFrag, ::Box<Vaev::Layout::Frag>, GroupFrag>;
     Vec<Element> elements = {};
 
     RectAu _objectBoundingBox{};
@@ -61,7 +61,7 @@ struct GroupFrag : SVG::Frag {
     GroupFrag(Karm::Cursor<Group> group)
         : box(group) {}
 
-    static void computeBoundingBoxes(SVG::GroupFrag* group);
+    static void computeBoundingBoxes(Svg::GroupFrag* group);
 
     RectAu objectBoundingBox() override {
         return _objectBoundingBox;
@@ -81,30 +81,30 @@ struct GroupFrag : SVG::Frag {
         e("(GroupFrag)");
     }
 };
-} // namespace SVG
+} // namespace Svg
 
-struct SVGRootFrag : SVG::GroupFrag {
+struct SvgRootFrag : Svg::GroupFrag {
     // NOTE: SVG viewports have these intrinsic transformations; choosing to store these transforms is more compliant
     // and somewhat rendering-friendly but makes it harder to debug
     Math::Trans2f transf;
-    SVG::Rectangle<Au> boundingBox;
+    Svg::Rectangle<Au> boundingBox;
 
-    SVGRootFrag(Karm::Cursor<SVG::Group> group, Math::Trans2f transf, SVG::Rectangle<Au> boundingBox)
-        : SVG::GroupFrag(group), transf(transf), boundingBox(boundingBox) {
+    SvgRootFrag(Karm::Cursor<Svg::Group> group, Math::Trans2f transf, Svg::Rectangle<Au> boundingBox)
+        : Svg::GroupFrag(group), transf(transf), boundingBox(boundingBox) {
     }
 
-    static SVGRootFrag build(SVGRoot const& box, Vec2Au position, Vec2Au viewportSize) {
-        SVG::Rectangle<Karm::Au> rect{position.x, position.y, viewportSize.x, viewportSize.y};
+    static SvgRootFrag build(SvgRoot const& box, Vec2Au position, Vec2Au viewportSize) {
+        Svg::Rectangle<Karm::Au> rect{position.x, position.y, viewportSize.x, viewportSize.y};
 
         Math::Trans2f transf =
-            box.viewBox ? SVG::computeEquivalentTransformOfSVGViewport(*box.viewBox, position, viewportSize)
+            box.viewBox ? Svg::computeEquivalentTransformOfSVGViewport(*box.viewBox, position, viewportSize)
                         : Math::Trans2f::translate(position.cast<f64>());
 
-        return SVGRootFrag{&box, transf, rect};
+        return SvgRootFrag{&box, transf, rect};
     }
 
     void repr(Io::Emit& e) const {
-        e("(SVGRootFrag)");
+        e("(SvgRootFrag)");
     }
 
     void offsetBoxFrags(Vec2Au d);
@@ -117,7 +117,7 @@ struct SVGRootFrag : SVG::GroupFrag {
 
 export using FragContent = Union<
     Vec<Frag>,
-    SVGRootFrag>;
+    SvgRootFrag>;
 
 export struct Frag {
     MutCursor<Box> box;
@@ -148,7 +148,7 @@ export struct Frag {
         if (auto children = content.is<Vec<Frag>>()) {
             for (auto& c : *children)
                 c.offset(d);
-        } else if (auto svg = content.is<SVGRootFrag>()) {
+        } else if (auto svg = content.is<SvgRootFrag>()) {
             svg->offset(d);
         }
     }
@@ -179,21 +179,21 @@ export struct Frag {
     }
 };
 
-void SVG::GroupFrag::add(Element&& el) {
+void Svg::GroupFrag::add(Element&& el) {
     elements.pushBack(std::move(el));
 }
 
-void SVGRootFrag::offsetBoxFrags(Vec2Au d) {
+void SvgRootFrag::offsetBoxFrags(Vec2Au d) {
     for (auto& element : elements) {
         if (auto frag = element.is<::Box<Vaev::Layout::Frag>>()) {
             (*frag)->offset(d);
-        } else if (auto nestedRoot = element.is<SVGRootFrag>()) {
+        } else if (auto nestedRoot = element.is<SvgRootFrag>()) {
             nestedRoot->offsetBoxFrags(d);
         }
     }
 }
 
-void SVG::GroupFrag::computeBoundingBoxes(SVG::GroupFrag* group) {
+void Svg::GroupFrag::computeBoundingBoxes(Svg::GroupFrag* group) {
     if (group->elements.len() == 0)
         return;
 
@@ -202,16 +202,16 @@ void SVG::GroupFrag::computeBoundingBoxes(SVG::GroupFrag* group) {
         return element.visit(upcaster);
     };
 
-    auto toSVGFrag = [&]<typename T>(T const& el) -> SVG::Frag* {
-        if constexpr (Meta::Derive<T, SVG::Frag>) {
-            return (SVG::Frag*)(&el);
+    auto toSVGFrag = [&]<typename T>(T const& el) -> Svg::Frag* {
+        if constexpr (Meta::Derive<T, Svg::Frag>) {
+            return (Svg::Frag*)(&el);
         }
         return nullptr;
     };
 
-    auto toSVGGroupFrag = [&]<typename T>(T const& el) -> SVG::GroupFrag* {
-        if constexpr (Meta::Derive<T, SVG::GroupFrag>) {
-            return (SVG::GroupFrag*)(&el);
+    auto toSVGGroupFrag = [&]<typename T>(T const& el) -> Svg::GroupFrag* {
+        if constexpr (Meta::Derive<T, Svg::GroupFrag>) {
+            return (Svg::GroupFrag*)(&el);
         }
         return nullptr;
     };

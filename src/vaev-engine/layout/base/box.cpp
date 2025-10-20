@@ -12,9 +12,9 @@ namespace Vaev::Layout {
 export struct FormatingContext;
 export struct Box;
 
-export struct InlineBox {
+export struct LineBoxes {
     /* NOTE:
-    This is a sketch implementation of the data model for InlineBox. We should be able to:
+    This is a sketch implementation of the data model for LineBoxes. We should be able to:
         -   add different inline elements to it, from different types (Prose, Image, inline-block)
         -   retrieve the added data to be displayed in the same Inline Formatting Context (break lines and display
             into line boxes)
@@ -23,9 +23,9 @@ export struct InlineBox {
     Rc<Gfx::Prose> prose;
     Vec<::Box<Box>> atomicBoxes;
 
-    InlineBox(Gfx::ProseStyle style) : prose(makeRc<Gfx::Prose>(style)) {}
+    LineBoxes(Gfx::ProseStyle style) : prose(makeRc<Gfx::Prose>(style)) {}
 
-    InlineBox(Rc<Gfx::Prose> prose) : prose(prose) {}
+    LineBoxes(Rc<Gfx::Prose> prose) : prose(prose) {}
 
     void startInlineBox(Gfx::ProseStyle proseStyle) {
         // FIXME: ugly workaround while we dont fix the Prose data structure
@@ -55,22 +55,22 @@ export struct InlineBox {
         e(")");
     }
 
-    static InlineBox fromInterruptedInlineBox(InlineBox const& inlineBox) {
+    static LineBoxes fromInterruptedInlineBox(LineBoxes const& inlineBox) {
         auto oldProse = inlineBox.prose;
 
-        auto newInlineBox = InlineBox{oldProse->_style};
+        auto newInlineBox = LineBoxes{oldProse->_style};
         newInlineBox.prose->overrideSpanStackWith(*oldProse);
 
         return newInlineBox;
     }
 };
 
-struct SVGRoot;
+struct SvgRoot;
 
-namespace SVG {
+namespace Svg {
 
 struct Group {
-    using Element = Union<Shape, SVGRoot, Karm::Box<Vaev::Layout::Box>, Group>;
+    using Element = Union<Shape, SvgRoot, Karm::Box<Vaev::Layout::Box>, Group>;
     Vec<Element> elements = {};
     Rc<Style::SpecifiedValues> style;
 
@@ -82,16 +82,16 @@ struct Group {
 
     void repr(Io::Emit& e) const;
 };
-} // namespace SVG
+} // namespace Svg
 
-struct SVGRoot : SVG::Group {
+struct SvgRoot : Svg::Group {
     Opt<ViewBox> viewBox;
 
-    SVGRoot(Rc<Style::SpecifiedValues> style)
-        : SVG::Group(style), viewBox(style->svg->viewBox) {}
+    SvgRoot(Rc<Style::SpecifiedValues> style)
+        : Svg::Group(style), viewBox(style->svg->viewBox) {}
 
     void repr(Io::Emit& e) const {
-        e("(SVG {} viewBox:{}", SVG::buildRectangle(*style), viewBox);
+        e("(SVG {} viewBox:{}", Svg::buildRectangle(*style), viewBox);
         e.indentNewline();
         for (auto const& el : elements) {
             e("{}", el);
@@ -101,7 +101,7 @@ struct SVGRoot : SVG::Group {
     }
 };
 
-void SVG::Group::repr(Io::Emit& e) const {
+void Svg::Group::repr(Io::Emit& e) const {
     e("(Group {} ");
     e.indentNewline();
     for (auto const& el : elements) {
@@ -114,9 +114,9 @@ void SVG::Group::repr(Io::Emit& e) const {
 export using Content = Union<
     None,
     Vec<Box>,
-    InlineBox,
+    LineBoxes,
     Rc<Scene::Node>,
-    SVGRoot>;
+    SvgRoot>;
 
 struct Box : Meta::NoCopy {
     Rc<Style::SpecifiedValues> style;
@@ -152,8 +152,59 @@ struct Box : Meta::NoCopy {
         }
     }
 
-    bool isReplaced() {
-        return content.is<Rc<Scene::Node>>() or content.is<SVGRoot>();
+    bool isRootElementPrincipalBox() {
+        if (not origin)
+            return false;
+
+        auto doc = origin->ownerDocument();
+        if (not doc)
+            return false;
+
+        return doc->documentElement() == origin;
+    }
+
+    bool isReplaced() const {
+        return content.is<Rc<Scene::Node>>() or content.is<SvgRoot>();
+    }
+
+    bool isPositioned() const {
+        return style->position != Keywords::STATIC;
+    }
+
+    bool isFloating() const {
+        return style->float_ != Float::NONE;
+    }
+
+    bool isBlockLevel() const {
+        return not isPositioned() and
+               not isFloating() and
+               (style->display == Display::BLOCK or
+                style->display == Display::TABLE or
+                style->display == Display::Item::YES);
+    }
+
+    bool isBlockEquivalent() const {
+        return (
+            style->display == Display::FLOW or
+            style->display == Display::FLOW_ROOT or
+            style->display == Display::FLEX or
+            style->display == Display::GRID or
+            style->display == Display::Item::YES or
+            style->display == Display::TABLE_CELL or
+            isReplaced()
+        );
+    }
+
+    bool isInlineLevel() const {
+        return style->display == Display::INLINE;
+    }
+
+    bool hasLineBoxes() const {
+        return content.is<LineBoxes>();
+    }
+
+    LineBoxes& lineBoxes() {
+        return content.unwrap<LineBoxes>("box doesn't have lines boxes");
     }
 
     void repr(Io::Emit& e) const {
@@ -165,28 +216,28 @@ struct Box : Meta::NoCopy {
                 e.newline();
             }
             e.deindent();
-        } else if (content.is<InlineBox>()) {
+        } else if (content.is<LineBoxes>()) {
             e.indentNewline();
-            e("{}", content.unwrap<InlineBox>());
+            e("{}", content.unwrap<LineBoxes>());
             e.deindent();
-        } else if (content.is<SVGRoot>()) {
+        } else if (content.is<SvgRoot>()) {
             e.indentNewline();
-            e("{}", content.unwrap<SVGRoot>());
+            e("{}", content.unwrap<SvgRoot>());
             e.deindent();
         }
         e(")");
     }
 };
 
-void SVG::Group::add(Element&& element) {
+void Svg::Group::add(Element&& element) {
     elements.pushBack(std::move(element));
 }
 
-void SVG::Group::add(Vaev::Layout::Box&& box) {
+void Svg::Group::add(Vaev::Layout::Box&& box) {
     add(Element{makeBox<Vaev::Layout::Box>(std::move(box))});
 }
 
-void InlineBox::add(Box&& b) {
+void LineBoxes::add(Box&& b) {
     prose->append(Gfx::Prose::StrutCell{atomicBoxes.len()});
     atomicBoxes.pushBack(makeBox<Box>(std::move(b)));
 }
