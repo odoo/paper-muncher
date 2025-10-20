@@ -14,6 +14,7 @@ import :values;
 import :layout.base;
 import :layout.values;
 import :dom.node;
+import :dom.element;
 
 namespace Vaev::Layout {
 
@@ -79,13 +80,27 @@ static bool _needsNewStackingContext(Frag const& frag) {
            frag.style().opacity != 1.0;
 }
 
+static bool isRootElement(Gc::Ptr<Dom::Element> el) {
+    if (not el)
+        return false;
+
+    auto doc = el->ownerDocument();
+    if (not doc)
+        return false;
+
+    return doc->documentElement() == el;
+}
+
 static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
     auto const& cssBackground = frag.style().backgrounds;
 
     Vec<Gfx::Fill> backgrounds;
     auto color = Vaev::resolve(cssBackground->color, frag.style().color);
-    if (color.alpha != 0)
-        backgrounds.pushBack(color);
+
+    if (color.alpha != 0) {
+        if (not isRootElement(frag.box->origin))
+            backgrounds.pushBack(color);
+    }
 
     auto currentColor = Vaev::resolve(frag.style().color, color);
     auto bordersWithoutRadii = buildBorders(frag.metrics, frag.style(), Vaev::resolve(frag.style().color, currentColor));
@@ -99,7 +114,11 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack) {
 
         auto box = makeRc<Scene::Box>(bound, std::move(borders), std::move(outline.unwrapOr(Gfx::Outline{})), std::move(backgrounds));
         box->zIndex = _needsNewStackingContext(frag) ? Limits<isize>::MIN : 0;
-        stack.add(box);
+        if (isRootElement(frag.box->origin)) {
+            stack.add(makeRc<Scene::Clear>(box, color));
+        } else {
+            stack.add(box);
+        }
     }
 }
 

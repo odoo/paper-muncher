@@ -210,7 +210,6 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
     Layout::Tree contentTree = {
         Layout::build(dom),
     };
-    auto canvasColor = fixupBackgrounds(computer, dom, contentTree);
 
     Layout::RunningPositionMap runningPosition = {}; // Mapping the different Running positions to their respective names and their page.
     PaginationContext paginationContext{
@@ -252,12 +251,9 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
 
         co_yield Print::Page(
             settings.paper,
-            makeRc<Scene::Clear>(
-                makeRc<Scene::Transform>(
-                    pageStack,
-                    Math::Trans2f::scale(media.resolution.toDppx())
-                ),
-                canvasColor
+            makeRc<Scene::Transform>(
+                pageStack,
+                Math::Trans2f::scale(media.resolution.toDppx())
             )
         );
     }
