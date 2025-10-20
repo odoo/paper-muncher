@@ -32,7 +32,7 @@ Paper-Muncher is now in early alpha. We're currently focused on improving stabil
 # Basic usage
 
 ```bash
-paper-muncher --unsecure print index.html -o output.pdf
+paper-muncher index.html -o output.pdf
 ```
 
 # Introduction
@@ -62,7 +62,7 @@ cd paper-muncher
 export PATH=$PATH:$HOME/.local/bin
 
 # Render a webpage to PDF
-paper-muncher --unsecure --timeout=10s print index.html -o output.pdf
+paper-muncher index.html -o output.pdf
 
 # For more options, run
 paper-muncher --help
