@@ -82,7 +82,11 @@ export struct Window {
         Font::Database db;
         if (not db.loadSystemFonts())
             logWarn("not all fonts were properly loaded into database");
-        Style::Computer computer{_media, *_document->styleSheets, db};
+        Style::Computer computer{
+            _media,
+            *_document->styleSheets,
+            std::move(db),
+        };
         computer.build();
         computer.styleDocument(*_document);
     }
@@ -96,8 +100,10 @@ export struct Window {
     }
 
     [[clang::coro_wrapper]]
-    Generator<Print::Page> print(Print::Settings const& settings) const {
-        return Driver::print(_document.upgrade(), settings);
+    Generator<Print::Page> print(Print::Settings const& settings) {
+        auto context = Driver::PaginationContext::create(*_document, settings);
+        for (auto p : context.iterPages())
+            co_yield p;
     }
 };
 

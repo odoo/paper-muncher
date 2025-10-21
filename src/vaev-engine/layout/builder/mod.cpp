@@ -828,7 +828,7 @@ export Box buildElement(Gc::Ref<Dom::Element> elt) {
     return box;
 }
 
-export Box buildForPseudoElement(Dom::PseudoElement& el, usize currentPage, RunningPositionMap& runningPos) {
+export Box buildForPseudoElement(Dom::PseudoElement& el, usize currentPage, Runnings& runningPos) {
     auto proseStyle = _proseStyleFromStyle(*el.specifiedValues(), el.specifiedValues()->fontFace);
 
     if (el.specifiedValues()->content.is<String>()) {

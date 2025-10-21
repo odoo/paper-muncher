@@ -197,7 +197,7 @@ struct BlockFormatingContext : FormatingContext {
                 .availableSpace = {input.availableSpace.x, 0_au},
                 .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_au)},
                 .runningPosition = input.runningPosition,
-                .pageNumber = input.pageNumber,
+                .pageIndex = input.pageIndex,
                 .breakpointTraverser = input.breakpointTraverser.traverseInsideUsingIthChild(i),
                 .pendingVerticalSizes = input.pendingVerticalSizes,
             };

@@ -82,6 +82,9 @@ export struct Breakpoint {
     Vec<Opt<Breakpoint>> children = {};
     Advance advance;
 
+    static Breakpoint const START_OF_DOCUMENT;
+    static Breakpoint const END_OF_DOCUMENT;
+
     static Breakpoint forced(usize endIdx) {
         return {
             .endIdx = endIdx,
@@ -171,19 +174,29 @@ export struct Breakpoint {
     }
 };
 
+Breakpoint const Breakpoint::START_OF_DOCUMENT = {
+    .endIdx = 0,
+    .advance = Advance::WITHOUT_CHILDREN
+};
+
+Breakpoint const Breakpoint::END_OF_DOCUMENT = {
+    .endIdx = 1,
+    .advance = Advance::WITHOUT_CHILDREN
+};
+
 export struct BreakpointTraverser {
-    MutCursor<Breakpoint> prevIteration, currIteration;
+    Cursor<Breakpoint> prevIteration, currIteration;
 
     BreakpointTraverser(
-        MutCursor<Breakpoint> prev = nullptr,
-        MutCursor<Breakpoint> curr = nullptr
+        Cursor<Breakpoint> prev = nullptr,
+        Cursor<Breakpoint> curr = nullptr
     ) : prevIteration(prev), currIteration(curr) {}
 
     bool isDeactivated() {
         return prevIteration == nullptr and currIteration == nullptr;
     }
 
-    MutCursor<Breakpoint> traversePrev(usize i, usize j) {
+    Cursor<Breakpoint> traversePrev(usize i, usize j) {
         if (prevIteration and prevIteration->children.len() > 0 and
             (i + 1 == prevIteration->endIdx or
              (prevIteration->advance == Breakpoint::Advance::WITH_CHILDREN and i == prevIteration->endIdx))) {
@@ -193,7 +206,7 @@ export struct BreakpointTraverser {
         return nullptr;
     }
 
-    MutCursor<Breakpoint> traverseCurr(usize i, usize j) {
+    Cursor<Breakpoint> traverseCurr(usize i, usize j) {
         if (currIteration and currIteration->children.len() > 0 and i + 1 == currIteration->endIdx) {
             if (currIteration->children[j])
                 return &currIteration->children[j].unwrap();
