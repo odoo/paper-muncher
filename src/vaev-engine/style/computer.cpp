@@ -17,7 +17,7 @@ namespace Vaev::Style {
 export struct Computer {
     Media _media;
     StyleSheetList const& _styleBook;
-    Font::Database& fontBook;
+    Font::Database _database;
     StyleRuleLookup _styleRuleLookup{};
 
     // MARK: Cascading ---------------------------------------------------------
@@ -304,7 +304,7 @@ export struct Computer {
                 _evalRule(rule, page, *computed);
 
         for (auto& area : computed->_areas) {
-            auto font = _lookupFontface(fontBook, *area.specifiedValues());
+            auto font = _lookupFontface(_database, *area.specifiedValues());
             area.specifiedValues()->fontFace = font;
         }
 
@@ -323,7 +323,7 @@ export struct Computer {
         if (not parentSpecifiedValues.font.sameInstance(specifiedValues->font) and
             (parentSpecifiedValues.font->families != specifiedValues->font->families or
              parentSpecifiedValues.font->weight != specifiedValues->font->weight)) {
-            auto font = _lookupFontface(fontBook, *specifiedValues);
+            auto font = _lookupFontface(_database, *specifiedValues);
             specifiedValues->fontFace = font;
         } else {
             specifiedValues->fontFace = parentSpecifiedValues.fontFace;
@@ -338,7 +338,7 @@ export struct Computer {
     void styleDocument(Dom::Document& doc) {
         if (auto el = doc.documentElement()) {
             auto rootSpecifiedValues = makeRc<SpecifiedValues>(SpecifiedValues::initial());
-            rootSpecifiedValues->fontFace = _lookupFontface(fontBook, *rootSpecifiedValues);
+            rootSpecifiedValues->fontFace = _lookupFontface(_database, *rootSpecifiedValues);
             styleElement(*rootSpecifiedValues, *el);
         }
         _propagateBodyBackgroundToHtml(doc);
@@ -390,13 +390,13 @@ export struct Computer {
                         }
 
                         // FIXME: use attrs from style::FontFace
-                        if (fontBook.load(resolvedUrl.unwrap()))
+                        if (_database.load(resolvedUrl.unwrap()))
                             break;
 
                         logWarn("Failed to load font {}", ff.family);
                     } else {
                         if (
-                            fontBook.queryExact(src.identifier.unwrap<FontFamily>().name)
+                            _database.queryExact(src.identifier.unwrap<FontFamily>().name)
                         )
                             break;
 

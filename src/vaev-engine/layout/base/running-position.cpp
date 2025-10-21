@@ -27,10 +27,11 @@ export struct RunningPositionInfo {
     }
 };
 
-struct RunningPositionMap {
+// Mapping the different Running positions to their respective names and their page.
+struct Runnings {
     Map<CustomIdent, Vec<RunningPositionInfo>> content;
 
-    void add(usize pageNumber, Layout::Box& box) {
+    void add(usize pageNumber, Box& box) {
         auto& style = box.style;
 
         if (auto position = style->position.is<RunningPosition>()) {
@@ -79,7 +80,6 @@ struct RunningPositionMap {
     }
 
     Slice<RunningPositionInfo> _searchPage(Slice<RunningPositionInfo> list, usize page) {
-        page++; // pages are 1-indexed
         // binary search of all running positions that match the page
 
         auto res = search(list, [&](RunningPositionInfo const& info) {

@@ -26,8 +26,8 @@ export struct Input {
     Vec2Au position = {};
     Vec2Au availableSpace = {};
     Vec2Au containingBlock = {};
-    MutCursor<RunningPositionMap> runningPosition = nullptr;
-    usize pageNumber = 0;
+    MutCursor<Runnings> runningPosition = nullptr;
+    usize pageIndex = 0;
 
     BreakpointTraverser breakpointTraverser = {};
 

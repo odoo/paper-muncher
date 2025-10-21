@@ -119,7 +119,7 @@ struct InlineFormatingContext : FormatingContext {
                         input.knownSize.y.unwrapOr(0_au)
                     },
                     .runningPosition = input.runningPosition,
-                    .pageNumber = input.pageNumber,
+                    .pageIndex = input.pageIndex,
                 }
             );
         }

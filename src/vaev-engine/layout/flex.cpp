@@ -1454,7 +1454,7 @@ struct FlexFormatingContext : FormatingContext {
                         .position = flexItem.position,
                         .availableSpace = availableSpace,
                         .runningPosition = input.runningPosition,
-                        .pageNumber = input.pageNumber,
+                        .pageIndex = input.pageIndex,
                     }
                 );
                 flexItem.commit(input.fragment);
