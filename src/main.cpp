@@ -11,10 +11,11 @@ using namespace Karm;
 
 Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto sandboxedArg = Cli::flag(NONE, "sandboxed"s, "Disallow local file and http access"s);
-    auto verboseArg = Cli::flag(NONE, "verbose"s, "Makes paper-muncher be more talkative, it might yap about how its day's going"s);
+    auto verboseArg = Cli::flag(NONE, "verbose"s, "Enable verbose logging"s);
+    auto quietArg = Cli::flag(NONE, "quiet"s, "Suppress non-fatal logging"s);
     Cli::Section runtimeSection{
         "Runtime Options"s,
-        {sandboxedArg, verboseArg},
+        {sandboxedArg, verboseArg, quietArg},
     };
 
     auto inputsArg = Cli::operand<Vec<Str>>("inputs"s, "Input files (default: stdin)"s, {"-"s});
@@ -70,7 +71,13 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     if (not cmd)
         co_return Ok();
 
-    setLogLevel(verboseArg.value() ? PRINT : ERROR);
+    auto level = INFO;
+    if (verboseArg.value())
+        level = PRINT;
+    if (quietArg.value())
+        level = FATAL;
+    setLogLevel(level);
+
     if (sandboxedArg.value())
         co_try$(Sys::enterSandbox());
 
