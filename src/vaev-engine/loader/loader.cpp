@@ -129,14 +129,8 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node
             co_return Error::invalidInput("link element missing src");
         }
 
-        auto url = Ref::Url::resolveReference(node->baseURI(), Ref::parseUrlOrPath(*src));
-        if (not url) {
-            el->imageContent = _missingImagePlaceholder();
-            logWarn("failed to resolve image url: {}", url);
-            co_return Error::invalidInput("failed to resolve image url");
-        }
-
-        auto image = co_await _fetchImageContentAsync(client, url.unwrap());
+        auto url = Ref::Url::parse(*src, node->baseURI());
+        auto image = co_await _fetchImageContentAsync(client, url);
         if (not image) {
             el->imageContent = _missingImagePlaceholder();
             logWarn("failed to fetch image from {}: {}", url, image);
@@ -158,13 +152,9 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node
                 co_return Error::invalidInput("link element missing href");
             }
 
-            auto url = Ref::Url::resolveReference(node->baseURI(), Ref::parseUrlOrPath(*href));
-            if (not url) {
-                logWarn("failed to resolve stylesheet url: {}", url);
-                co_return Error::invalidInput("failed to resolve stylesheet url");
-            }
+            auto url = Ref::Url::parse(*href, node->baseURI());
+            auto sheet = co_await _fetchStylesheetAsync(client, url, Style::Origin::AUTHOR);
 
-            auto sheet = co_await _fetchStylesheetAsync(client, url.unwrap(), Style::Origin::AUTHOR);
             if (not sheet) {
                 logWarn("failed to fetch stylesheet from {}: {}", url, sheet);
                 co_return Error::invalidInput("failed to fetch stylesheet");
