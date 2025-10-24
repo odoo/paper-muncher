@@ -24,36 +24,42 @@ using namespace Karm;
 namespace PaperMuncher {
 
 export enum struct Flow {
-    AUTO,
-    PAGINATE,
-    CONTINUOUS,
+    AUTO, //< Paginate for PDF, otherwise continuous
+    PAGINATE, //< If the content exceeds the viewport, create new pages
+    CONTINUOUS, //< If the content exceeds the viewport, extend the viewport
+
     _LEN,
 };
 
 export enum struct Extend {
     CROP, //< The document is cropped to the container
     FIT,  //< Container is resized to fit the document
+
     _LEN,
 };
 
-export Rc<Http::Client> defaultHttpClient(bool sandboxed) {
-    Vec<Rc<Http::Transport>> transports;
-
-    transports.pushBack(Http::pipeTransport());
-
+Rc<Http::Transport> _createHttpTransport(bool sandboxed) {
     if (sandboxed) {
-        // NOTE: Only allow access to bundle assets and standard input/output.
-        transports.pushBack(Http::localTransport({"bundle"s, "fd"s, "data"s}));
-    } else {
-        transports.pushBack(Http::httpTransport());
-        transports.pushBack(Http::localTransport(Http::LocalTransportPolicy::ALLOW_ALL));
+        return Http::multiplexTransport({
+            Http::cacheTransport(Http::pipeTransport()),
+            Http::localTransport({"bundle"s, "fd"s, "data"s}),
+        });
     }
 
-    auto client = makeRc<Http::Client>(
-        Http::multiplexTransport(std::move(transports))
-    );
-    client->userAgent = "Paper-Muncher/" stringify$(__ck_version_value) ""s;
+    return Http::multiplexTransport({
+        Http::cacheTransport({
+            Http::pipeTransport(),
+            Http::httpTransport(),
+        }),
+        Http::localTransport(Http::LocalTransportPolicy::ALLOW_ALL),
+    });
+}
 
+
+export Rc<Http::Client> defaultHttpClient(bool sandboxed) {
+    auto transport = _createHttpTransport(sandboxed);
+    auto client = makeRc<Http::Client>(transport);
+    client->userAgent = "Paper-Muncher/" stringify$(__ck_version_value) ""s;
     return client;
 }
 
