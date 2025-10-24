@@ -3,6 +3,7 @@
     "id": "vaev-webdriver",
     "type": "exe",
     "requires": [
+        "karm-cli",
         "vaev-engine"
     ]
 }
