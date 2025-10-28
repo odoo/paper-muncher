@@ -21,11 +21,7 @@ export struct RenderResult {
 };
 
 export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media, Layout::Viewport viewport) {
-    Font::Database db;
-    if (not db.loadSystemFonts())
-        logWarn("not all fonts were properly loaded into database");
-
-    Style::Computer computer{media, *dom->styleSheets, db};
+    Style::Computer computer{media, *dom->styleSheets, *dom->fontDatabase};
     computer.build();
     computer.styleDocument(*dom);
 

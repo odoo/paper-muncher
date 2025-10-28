@@ -170,6 +170,8 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node
     co_return Ok();
 }
 
+Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Style::StyleSheetList const& stylesheets);
+
 static auto dumpDom = Debug::Flag::debug("web-dom", "Dump the loaded DOM tree");
 static auto dumpStylesheets = Debug::Flag::debug("web-stylesheets", "Dump the loaded stylesheets");
 
@@ -195,6 +197,7 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
 
     (void)co_await _fetchResourcesAsync(client, *dom, *stylesheets);
     dom->styleSheets = stylesheets;
+    dom->fontDatabase = co_await _loadFontfacesAsync(client, *stylesheets);
 
     if (dumpDom)
         logDebugIf(dumpDom, "document tree: {}", dom);
