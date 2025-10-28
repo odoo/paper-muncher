@@ -49,12 +49,12 @@ export struct Window {
     Async::Task<> loadLocationAsync(Ref::Url url, Ref::Uti intent = Ref::Uti::PUBLIC_OPEN) {
         if (intent == Ref::Uti::PUBLIC_OPEN) {
             _document = co_trya$(
-                Vaev::Loader::fetchDocumentAsync(
+                Loader::fetchDocumentAsync(
                     _heap, *_client, url
                 )
             );
         } else if (intent == Ref::Uti::PUBLIC_MODIFY) {
-            _document = co_trya$(Vaev::Loader::viewSourceAsync(_heap, *_client, url));
+            _document = co_trya$(Loader::viewSourceAsync(_heap, *_client, url));
         } else {
             co_return Error::invalidInput("unsupported intent");
         }
