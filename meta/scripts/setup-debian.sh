@@ -7,7 +7,7 @@ apt-get install -y --no-install-recommends build-essential git ninja-build libsd
 
 # Install llvm
 apt-get install -y --no-install-recommends wget lsb-release software-properties-common gnupg
-bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm 20 all
+bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm 21 all
 
 # Install UV
 apt-get install -y --no-install-recommends curl
