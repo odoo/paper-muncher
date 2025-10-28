@@ -173,16 +173,14 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node
 static auto dumpDom = Debug::Flag::debug("web-dom", "Dump the loaded DOM tree");
 static auto dumpStylesheets = Debug::Flag::debug("web-stylesheets", "Dump the loaded stylesheets");
 
+static Str ABOUT_BLANK = R"html(<!DOCTYPE html><html><head></head><body></body></html>)html";
+
 export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url) {
-    if (url.scheme == "about") {
-        if (url.path.str() == "blank")
-            co_return co_await fetchDocumentAsync(heap, client, "bundle://vaev-engine/blank.xhtml"_url);
+    Ref::Url resolvedUrl = url;
+    if (url.scheme == "about" and url.path.str() == "blank")
+        resolvedUrl = Ref::Url::data("text/html"_mime, bytes(ABOUT_BLANK));
 
-        if (url.path.str() == "start")
-            co_return co_await fetchDocumentAsync(heap, client, "bundle://vaev-engine/start-page.xhtml"_url);
-    }
-
-    auto resp = co_trya$(client.getAsync(url));
+    auto resp = co_trya$(client.getAsync(resolvedUrl));
     auto dom = co_trya$(_loadDocumentAsync(heap, url, resp));
     auto stylesheets = heap.alloc<Style::StyleSheetList>();
 

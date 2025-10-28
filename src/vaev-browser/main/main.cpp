@@ -16,7 +16,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto args = Sys::useArgs(ctx);
     auto url = args.len()
                    ? Ref::parseUrlOrPath(args[0], co_try$(Sys::pwd()))
-                   : "about:start"_url;
+                   : "about:blank"_url;
 
     auto client = Http::defaultClient();
     client->userAgent = "Vaev-Browser/" stringify$(__ck_version_value) ""s;
