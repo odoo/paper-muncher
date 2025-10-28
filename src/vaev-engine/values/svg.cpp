@@ -64,6 +64,7 @@ export struct SVGProps {
 
     Number fillOpacity = 1;
     PercentOr<Length> strokeWidth = Length{1_au};
+    Number strokeOpacity = 1;
     Union<String, None> d = NONE;
     Paint fill = Color{Gfx::BLACK};
     Paint stroke = NONE;
