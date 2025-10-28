@@ -86,22 +86,22 @@ struct Rectangle {
     }
 };
 
-Rc<Scene::Node> rectToSceneNode(Rectangle<f64> rect, Opt<Gfx::Fill> fill, Opt<Gfx::Fill> strokeColor, f64 strokeWidth) {
+Rc<Scene::Node> rectToSceneNode(Rectangle<f64> rect, Opt<Gfx::Fill> fill, Opt<Gfx::Stroke> const& stroke) {
     Gfx::Borders borders;
-    if (strokeColor and strokeWidth > 0) {
+    if (stroke) {
         borders = Gfx::Borders{
             Math::Radiif{},
-            Math::Insetsf{strokeWidth},
-            Array<Gfx::Fill, 4>::fill(*strokeColor),
+            Math::Insetsf{stroke->width},
+            Array<Gfx::Fill, 4>::fill(stroke->fill),
             Array<Gfx::BorderStyle, 4>::fill(Gfx::BorderStyle::SOLID),
         };
 
         // FIXME: needed due to mismatch between SVG's and Scene's box model
         // svg's stroke's center is at the shape's edges
-        rect.width += strokeWidth;
-        rect.height += strokeWidth;
-        rect.x -= strokeWidth / 2;
-        rect.y -= strokeWidth / 2;
+        rect.width += stroke->width;
+        rect.height += stroke->width;
+        rect.x -= stroke->width / 2;
+        rect.y -= stroke->width / 2;
     }
 
     return makeRc<Scene::Box>(
@@ -267,18 +267,33 @@ struct ShapeFrag : Frag {
         unreachable();
     }
 
+    Opt<Gfx::Stroke> _resolveStroke(SVGProps const& style, Gfx::Color currentColor) const {
+        Opt<Gfx::Color> color = Vaev::Layout::resolve(style.stroke, currentColor);
+        if (not color)
+            return NONE;
+
+        if (Math::epsilonEq(style.strokeOpacity, 0.))
+            return NONE;
+
+        color = color->withOpacity(style.strokeOpacity);
+
+        if (strokeWidth == 0_au)
+            return NONE;
+
+        return Gfx::Stroke{*color, static_cast<f64>(strokeWidth)};
+    }
+
     Rc<Scene::Node> toSceneNode(Gfx::Color currentColor) const {
-        Opt<Gfx::Color> resolvedFill = Vaev::Layout::resolve(box->style->svg->fill, currentColor).map([&](auto fill) {
-            return fill.withOpacity(box->style->svg->fillOpacity);
+        auto const& style = *box->style->svg;
+
+        Opt<Gfx::Color> resolvedFill = Vaev::Layout::resolve(style.fill, currentColor).map([&](auto fill) {
+            return fill.withOpacity(style.fillOpacity);
         });
-        Opt<Gfx::Color> resolvedStrokeColor = Vaev::Layout::resolve(box->style->svg->stroke, currentColor);
-        Opt<Gfx::Stroke> resolvedStroke =
-            resolvedStrokeColor
-                ? Opt<Gfx::Stroke>{{*resolvedStrokeColor, (f64)strokeWidth}}
-                : NONE;
+
+        Opt<Gfx::Stroke> resolvedStroke = _resolveStroke(style, currentColor);
 
         if (auto rect = shape.is<Rectangle<Au>>()) {
-            return rectToSceneNode(rect->cast<f64>(), resolvedFill, resolvedStrokeColor, (f64)strokeWidth);
+            return rectToSceneNode(rect->cast<f64>(), resolvedFill, resolvedStroke);
         } else if (auto circle = shape.is<Circle<Au>>()) {
             return circleToSceneNode(circle->cast<f64>(), resolvedFill, resolvedStroke);
         } else if (auto path = shape.is<Rc<Math::Path>>()) {

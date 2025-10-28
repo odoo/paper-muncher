@@ -3369,6 +3369,33 @@ export struct SVGStrokeProp {
     }
 };
 
+// https://svgwg.org/svg2-draft/painting.html#StrokeOpacity
+export struct SvgStrokeOpacityProp {
+    Number value = initial();
+
+    static Str name() { return "stroke-opacity"; }
+
+    static f64 initial() { return 1; }
+
+    void apply(SpecifiedValues& c) const {
+        c.svg.cow().strokeOpacity = value;
+    }
+
+    static f64 load(SpecifiedValues const& c) {
+        return c.svg->strokeOpacity;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        auto maybePercent = parseValue<Percent>(c);
+        if (maybePercent) {
+            value = maybePercent.unwrap().value() / 100;
+        } else {
+            value = try$(parseValue<Number>(c));
+        }
+        return Ok();
+    }
+};
+
 // https://svgwg.org/svg2-draft/painting.html#FillOpacity
 export struct FillOpacityProp {
     Number value = initial();
@@ -3671,6 +3698,7 @@ using _StyleProp = Union<
     SVGFillProp,
     SVGDProp,
     SVGStrokeProp,
+    SvgStrokeOpacityProp,
     SVGViewBoxProp,
     FillOpacityProp,
     StrokeWidthProp

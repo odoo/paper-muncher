@@ -81,6 +81,7 @@ struct GroupFrag : SVG::Frag {
         e("(GroupFrag)");
     }
 };
+
 } // namespace SVG
 
 struct SVGRootFrag : SVG::GroupFrag {
