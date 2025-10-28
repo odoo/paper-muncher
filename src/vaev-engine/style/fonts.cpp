@@ -16,7 +16,7 @@ namespace Vaev::Style {
 // MARK: FontFace --------------------------------------------------------------
 
 export struct FontFace {
-    String family;
+    Symbol family = ""_sym;
 
     Vec<FontSource> sources;
 
@@ -38,7 +38,37 @@ export struct FontFace {
     FontDisplay display = FontDisplay::AUTO;
 
     bool valid() const {
-        return any(family) and any(sources);
+        return any(family.str()) and any(sources);
+    }
+
+    Gfx::FontAttrs attributes() const {
+        Gfx::FontWeight resolvedWeight = Gfx::FontWeight::REGULAR;
+        if (weight)
+            resolvedWeight = weight.unwrap().start;
+
+        Gfx::FontStretch resolvedStretch = Gfx::FontStretch::NORMAL;
+        if (width)
+            resolvedStretch = Gfx::FontStretch::fromPercent(width.unwrap().start.val().value());
+
+        Gfx::FontStyle resolvedStyle = Gfx::FontStyle::NORMAL;
+        if (style.is<FontStyle>())
+            resolvedStyle = style.unwrap<FontStyle>().val;
+
+        return {
+            .family = family,
+            .weight = resolvedWeight,
+            .stretch = resolvedStretch,
+            .style = resolvedStyle,
+        };
+    }
+
+    Gfx::FontAdjust adjustments() const {
+        return {
+            .ascent = ascentOverride.unwrapOr(Percent{100}).value() / 100,
+            .descent = descentOverride.unwrapOr(Percent{100}).value() / 100,
+            .linegap = lineGapOverride.unwrapOr(Percent{100}).value() / 100,
+            .sizeAdjust = sizeAdjust.unwrapOr(Percent{100}).value() / 100,
+        };
     }
 };
 
@@ -49,11 +79,11 @@ export struct FontFace {
 // MARK: font-family
 // https://www.w3.org/TR/css-fonts-4/#font-family-desc
 export struct FontFamilyDesc {
-    String value = initial();
+    Symbol value = initial();
 
     static Str name() { return "font-family"; }
 
-    static String initial() { return "serif"s; }
+    static Symbol initial() { return "serif"_sym; }
 
     void apply(FontFace& f) const {
         f.family = value;
@@ -61,9 +91,9 @@ export struct FontFamilyDesc {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         if (c.peek() == Css::Token::STRING) {
-            value = try$(parseValue<String>(c));
+            value = Symbol::from(try$(parseValue<String>(c)));
         } else if (c.peek() == Css::Token::IDENT) {
-            value = c.next().token.data;
+            value = Symbol::from(c.next().token.data);
         } else {
             return Error::invalidData("expected font-family value");
         }

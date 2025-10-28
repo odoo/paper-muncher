@@ -187,12 +187,8 @@ Pair<Vec<Layout::Breakpoint>, Vec<PageLayoutInfos>> collectBreakPointsAndRunning
 export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
     auto media = Style::Media::forPrint(settings);
 
-    Font::Database db;
-    if (not db.loadSystemFonts())
-        logWarn("not all fonts were properly loaded into database");
-
     Style::Computer computer{
-        media, *dom->styleSheets, db
+        media, *dom->styleSheets, *dom->fontDatabase
     };
     computer.build();
     computer.styleDocument(*dom);

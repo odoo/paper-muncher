@@ -79,10 +79,7 @@ export struct Window {
     }
 
     void computeStyle() {
-        Font::Database db;
-        if (not db.loadSystemFonts())
-            logWarn("not all fonts were properly loaded into database");
-        Style::Computer computer{_media, *_document->styleSheets, db};
+        Style::Computer computer{_media, *_document->styleSheets, *_document->fontDatabase};
         computer.build();
         computer.styleDocument(*_document);
     }

@@ -2,6 +2,7 @@ export module Vaev.Engine:dom.document;
 
 import Karm.Gc;
 import Karm.Ref;
+import Karm.Font;
 import :dom.node;
 import :dom.element;
 
@@ -29,6 +30,7 @@ export struct Document : Node {
     String xmlStandalone = "no"s; // https://www.w3.org/TR/xml/#NT-SDDecl
 
     Gc::Ptr<Style::StyleSheetList> styleSheets;
+    Opt<Rc<Font::Database>> fontDatabase;
 
     Document(Ref::Url url)
         : _url(url) {

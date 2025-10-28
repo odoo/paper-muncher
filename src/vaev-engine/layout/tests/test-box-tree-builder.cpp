@@ -11,58 +11,7 @@ using namespace Karm;
 
 namespace Vaev::Layout::Tests {
 
-static Style::Media const TEST_MEDIA = {
-    .type = MediaType::SCREEN,
-    .width = 1920_au,
-    .height = 1080_au,
-    .aspectRatio = 16.0 / 9.0,
-    .orientation = Print::Orientation::LANDSCAPE,
-
-    .resolution = Resolution::fromDpi(96),
-    .scan = Scan::PROGRESSIVE,
-    .grid = false,
-    .update = Update::NONE,
-    .overflowBlock = OverflowBlock::NONE,
-    .overflowInline = OverflowInline::NONE,
-
-    .color = 8,
-    .colorIndex = 256,
-    .monochrome = 0,
-    .colorGamut = ColorGamut::SRGB,
-    .pointer = Pointer::NONE,
-    .hover = Hover::NONE,
-    .anyPointer = Pointer::FINE,
-    .anyHover = Hover::HOVER,
-
-    .prefersReducedMotion = ReducedMotion::REDUCE,
-    .prefersReducedTransparency = ReducedTransparency::NO_PREFERENCE,
-    .prefersContrast = Contrast::LESS,
-    .forcedColors = Colors::NONE,
-    .prefersColorScheme = ColorScheme::LIGHT,
-    .prefersReducedData = ReducedData::REDUCE,
-
-    .deviceWidth = 1920_au,
-    .deviceHeight = 1080_au,
-    .deviceAspectRatio = 16.0 / 9.0,
-};
-
 struct FakeBox;
-
-void buildHtmlTestCase(Gc::Heap& gc, Gc::Ref<Dom::Document> dom, Str testCase) {
-    dom->styleSheets = gc.alloc<Style::StyleSheetList>();
-    Html::HtmlParser parser{gc, dom};
-
-    Io::SScan textScan{"html, body, div { display: block; }"s};
-    auto sheet = Style::StyleSheet::parse(textScan, ""_url);
-    dom->styleSheets->add(std::move(sheet));
-
-    Karm::StringBuilder builder;
-    builder.append("<html>"s);
-    builder.append(testCase);
-    builder.append("</html>"s);
-
-    parser.write(builder.take());
-}
 
 struct FakeInlineBox {
     Vec<FakeBox> atomicBoxes{};
@@ -166,30 +115,28 @@ bool FakeInlineBox::matches(InlineBox const& inlineBox) {
     return _matches(ComparableInlineBox::fromInlineBox(inlineBox));
 }
 
-test$("empty-body") {
-    Gc::Heap gc;
+Async::Task<Box> _buildBoxesAsync(Str html) {
+    auto window = Dom::Window::create();
+    co_trya$(window->loadLocationAsync(Ref::Url::data("text/html"_mime, bytes(html))));
+    co_return Ok(std::move(window->ensureRender().layout->children()[0]));
+}
 
-    auto dom = gc.alloc<Dom::Document>(Ref::Url());
-    buildHtmlTestCase(gc, dom, "<body/>");
+testAsync$("empty-body") {
+    auto html = "<html><body/></html>";
+    auto body = co_trya$(_buildBoxesAsync(html));
 
     auto expectedBodySubtree =
         FakeBox{
             // body
         };
 
-    auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
-    auto const& bodyBox = rootBox->children()[0];
-
-    expect$(expectedBodySubtree.matches(bodyBox));
-
-    return Ok();
+    co_expect$(expectedBodySubtree.matches(body));
+    co_return Ok();
 }
 
-test$("no span") {
-    Gc::Heap gc;
-
-    auto dom = gc.alloc<Dom::Document>(Ref::Url());
-    buildHtmlTestCase(gc, dom, "<body>hello, world</body>");
+testAsync$("no span") {
+    auto html = "<html><body>hello, world</body></html>";
+    auto body = co_trya$(_buildBoxesAsync(html));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -199,19 +146,13 @@ test$("no span") {
             }
         };
 
-    auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
-    auto const& bodyBox = rootBox->children()[0];
-
-    expect$(expectedBodySubtree.matches(bodyBox));
-
-    return Ok();
+    co_expect$(expectedBodySubtree.matches(body));
+    co_return Ok();
 }
 
-test$("no span") {
-    Gc::Heap gc;
-
-    auto dom = gc.alloc<Dom::Document>(Ref::Url());
-    buildHtmlTestCase(gc, dom, "<body>hello,<br>brrrrr world</body>");
+testAsync$("no span with br") {
+    auto html = "<html><body>hello,<br>brrrrr world</body></html>";
+    auto body = co_trya$(_buildBoxesAsync(html));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -232,19 +173,13 @@ test$("no span") {
             }
         };
 
-    auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
-    auto const& bodyBox = rootBox->children()[0];
-
-    expect$(expectedBodySubtree.matches(bodyBox));
-
-    return Ok();
+    co_expect$(expectedBodySubtree.matches(body));
+    co_return Ok();
 }
 
-test$("no span, breaking block") {
-    Gc::Heap gc;
-
-    auto dom = gc.alloc<Dom::Document>(Ref::Url());
-    buildHtmlTestCase(gc, dom, "<body>hello, <div>cruel</div> world</body>");
+testAsync$("no span, breaking block") {
+    auto html = "<html><body>hello, <div>cruel</div> world</body></html>";
+    auto body = co_trya$(_buildBoxesAsync(html));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -269,26 +204,21 @@ test$("no span, breaking block") {
             }
         };
 
-    auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
-    auto const& bodyBox = rootBox->children()[0];
-
-    expect$(expectedBodySubtree.matches(bodyBox));
-
-    return Ok();
+    co_expect$(expectedBodySubtree.matches(body));
+    co_return Ok();
 }
 
-test$("span and breaking block 1") {
-    Gc::Heap gc;
-
-    auto dom = gc.alloc<Dom::Document>(Ref::Url());
-    buildHtmlTestCase(gc, dom, "<body>"
-                               "<span>hello"
-                               "<span>cruel"
-                               "<span>world"
-                               "<div></div>"
-                               "</span></span></span>"
-                               "melancholy"
-                               "</body>");
+testAsync$("span and breaking block 1") {
+    auto html =
+        "<html><body>"
+        "<span>hello"
+        "<span>cruel"
+        "<span>world"
+        "<div></div>"
+        "</span></span></span>"
+        "melancholy"
+        "</body></html>";
+    auto body = co_trya$(_buildBoxesAsync(html));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -334,7 +264,7 @@ test$("span and breaking block 1") {
                                         },
                                     },
                                 },
-                                // root inline with have "melancholy"
+                                // root inline with "melancholy"
                             },
                         },
                     },
@@ -342,27 +272,22 @@ test$("span and breaking block 1") {
             },
         };
 
-    auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
-    auto const& bodyBox = rootBox->children()[0];
-
-    expect$(expectedBodySubtree.matches(bodyBox));
-
-    return Ok();
+    co_expect$(expectedBodySubtree.matches(body));
+    co_return Ok();
 }
 
-test$("span and breaking block 2") {
-    Gc::Heap gc;
-
-    auto dom = gc.alloc<Dom::Document>(Ref::Url());
-    buildHtmlTestCase(gc, dom, "<body>"
-                               "<span>hello"
-                               "<span>cruel"
-                               "<span>world"
-                               "<div></div>"
-                               "melancholy"
-                               "</span></span><div>kidding</div></span>"
-                               "good vibes"
-                               "</body>");
+testAsync$("span and breaking block 2") {
+    auto html =
+        "<html><body>"
+        "<span>hello"
+        "<span>cruel"
+        "<span>world"
+        "<div></div>"
+        "melancholy"
+        "</span></span><div>kidding</div></span>"
+        "good vibes"
+        "</body></html>";
+    auto body = co_trya$(_buildBoxesAsync(html));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -427,41 +352,36 @@ test$("span and breaking block 2") {
                             FakeInlineBox{
                                 // span that had "hello"
                             },
-                            // root inline with have good vibes in the end
+                            // root inline with "good vibes"
                         },
                     },
                 },
             }
         };
 
-    auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
-    auto const& bodyBox = rootBox->children()[0];
-
-    expect$(expectedBodySubtree.matches(bodyBox));
-
-    return Ok();
+    co_expect$(expectedBodySubtree.matches(body));
+    co_return Ok();
 }
 
-test$("inline-block") {
-    Gc::Heap gc;
-
-    auto dom = gc.alloc<Dom::Document>(Ref::Url());
-    buildHtmlTestCase(gc, dom, "<body>"
-                               "   A <span>X</span>"
-                               "   <div id=\"banana\" style=\"display:inline-block\">"
-                               "       B"
-                               "       <div id=\"apple\" style=\"display:inline-block\">"
-                               "           C"
-                               "       </div>"
-                               "   </div>"
-                               "   D"
-                               "</body>");
+testAsync$("inline-block") {
+    auto html =
+        "<html><body>"
+        "   A <span>X</span>"
+        "   <div id=\"banana\" style=\"display:inline-block\">"
+        "       B"
+        "       <div id=\"apple\" style=\"display:inline-block\">"
+        "           C"
+        "       </div>"
+        "   </div>"
+        "   D"
+        "</body></html>";
+    auto body = co_trya$(_buildBoxesAsync(html));
 
     auto expectedBodySubtree =
         FakeBox{
             // body
             .content = FakeInlineBox{
-                // root inline box with A, strut for bana and D
+                // root inline box with A, strut for banana, and D
                 .atomicBoxes = {
                     FakeBox{
                         // banana div
@@ -486,28 +406,20 @@ test$("inline-block") {
             }
         };
 
-    auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
-    auto const& bodyBox = rootBox->children()[0];
-
-    expect$(expectedBodySubtree.matches(bodyBox));
-
-    return Ok();
+    co_expect$(expectedBodySubtree.matches(body));
+    co_return Ok();
 }
 
-test$("flex-blockify") {
-    Gc::Heap gc;
-
-    auto dom = gc.alloc<Dom::Document>(Ref::Url());
-    buildHtmlTestCase(
-        gc,
-        dom,
-        "<body><div style=\"display:flex\">"
+testAsync$("flex-blockify") {
+    auto html =
+        "<html><body><div style=\"display:flex\">"
         "hello"
         "<div style=\"display:inline-block\">hi</div>"
         "goodbye"
         "<div style=\"display:block\">hi</div>"
-        "</div></body>"
-    );
+        "</div></body></html>";
+
+    auto body = co_trya$(_buildBoxesAsync(html));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -521,7 +433,7 @@ test$("flex-blockify") {
                             .content = FakeInlineBox{}
                         },
                         FakeBox{
-                            // blockifyed <div ib>hi</div>, same as a <div>hi</div>
+                            // blockified <div ib>hi</div>
                             .content = FakeInlineBox{}
                         },
                         FakeBox{
@@ -537,40 +449,23 @@ test$("flex-blockify") {
             }
         };
 
-    auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
-    auto const& bodyBox = rootBox->children()[0];
-
-    expect$(expectedBodySubtree.matches(bodyBox));
-
-    return Ok();
+    co_expect$(expectedBodySubtree.matches(body));
+    co_return Ok();
 }
 
-test$("table-fixup") {
-    Gc::Heap gc;
-
-    auto dom = gc.alloc<Dom::Document>(Ref::Url());
-    dom->styleSheets = gc.alloc<Style::StyleSheetList>();
-
-    Io::SScan scan{
+testAsync$("table-fixup") {
+    Str xhtml =
         "<html><body><table>"
         "wrap me!"
         "<td>wrap me also! and in the same row!</td>"
         "<tr><td>dont wrap me!</td></tr>"
         "<td>wrap mi</td>"
         "<tr>wrap me!</tr>"
-        "</table></body></html>"
-    };
-    Xml::XmlParser parser{gc};
-    try$(parser.parse(scan, Html::NAMESPACE, *dom));
+        "</table></body></html>";
 
-    Io::SScan styleScan{
-        "html, body, div { display: block; }"s
-        "table { display: table; }"s
-        "tr { display: table-row; }"s
-        "td { display: table-cell; }"s
-    };
-    auto sheet = Style::StyleSheet::parse(styleScan, ""_url);
-    dom->styleSheets->add(std::move(sheet));
+    auto window = Dom::Window::create();
+    co_trya$(window->loadLocationAsync(Ref::Url::data("application/xhtml+xml"_mime, bytes(xhtml))));
+    Box root = std::move(window->ensureRender().layout->children()[0]);
 
     auto expectedBodySubtree =
         FakeBox{
@@ -636,12 +531,8 @@ test$("table-fixup") {
             }
         };
 
-    auto rootBox = Vaev::Driver::render(dom, TEST_MEDIA, Viewport{.small = Vec2Au{100_au, 100_au}}).layout;
-    auto const& bodyBox = rootBox->children()[0];
-
-    expect$(expectedBodySubtree.matches(bodyBox));
-
-    return Ok();
+    co_expect$(expectedBodySubtree.matches(root));
+    co_return Ok();
 }
 
 } // namespace Vaev::Layout::Tests
