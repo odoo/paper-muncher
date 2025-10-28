@@ -175,12 +175,17 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Style
 static auto dumpDom = Debug::Flag::debug("web-dom", "Dump the loaded DOM tree");
 static auto dumpStylesheets = Debug::Flag::debug("web-stylesheets", "Dump the loaded stylesheets");
 
-static Str ABOUT_BLANK = R"html(<!DOCTYPE html><html><head></head><body></body></html>)html";
-
+// https://fetch.spec.whatwg.org/#scheme-fetch
 export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url) {
     Ref::Url resolvedUrl = url;
-    if (url.scheme == "about" and url.path.str() == "blank")
-        resolvedUrl = Ref::Url::data("text/html"_mime, bytes(ABOUT_BLANK));
+
+    // If request’s current URL’s path is the string "blank", 
+    if (url.scheme == "about" and url.path.str() == "blank") {
+        // then return a new response whose status message is `OK`, 
+        // header list is « (`Content-Type`, `text/html;charset=utf-8`) »
+        // and body is the empty byte sequence as a body.
+        resolvedUrl = Ref::Url::data("text/html"_mime, {});
+    }
 
     auto resp = co_trya$(client.getAsync(resolvedUrl));
     auto dom = co_trya$(_loadDocumentAsync(heap, url, resp));
