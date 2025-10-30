@@ -13,7 +13,7 @@ podman run \
     ubuntu:noble \
     bash -c " \
         ./ck tools setup && \
-        ./ck install --props:async=epoll --release --prefix=/opt/${COMPONENT} --sysroot=/src/sysroot ${COMPONENT} && \
+        ./ck package --props:async=epoll --release --prefix=/opt/${COMPONENT} --sysroot=/src/sysroot ${COMPONENT} && \
         mkdir /deb && \
         mkdir /deb/DEBIAN && \
         cp -r /src/sysroot/* /deb && \

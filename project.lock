@@ -1,0 +1,50 @@
+{
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.lockfile.v1",
+    "extern": {
+        "cute-engineering/cat": {
+            "commit": "7b88876f8ae5fb781e7f1aaa3c2fa343f55a1678",
+            "git": "https://github.com/cute-engineering/cat.git",
+            "tag": "v0.10.0"
+        },
+        "cute-engineering/ce-heap": {
+            "commit": "918dd7962dbcd703a883c9fcf658b496f9e3502e",
+            "git": "https://github.com/cute-engineering/ce-heap.git",
+            "tag": "v1.1.0"
+        },
+        "cute-engineering/ce-libc": {
+            "commit": "d5703dc5442bb9460eb7a99368c9c8b71791d629",
+            "git": "https://github.com/cute-engineering/ce-libc.git",
+            "tag": "v1.1.1"
+        },
+        "cute-engineering/ce-libm": {
+            "commit": "f2c6194b1e464c9315fd15e4d9eea06f27995499",
+            "git": "https://github.com/cute-engineering/ce-libm.git",
+            "tag": "v1.0.2"
+        },
+        "cute-engineering/ce-mdi": {
+            "commit": "45d348a86e2c5fd8058484730781d871676ccb58",
+            "git": "https://github.com/cute-engineering/ce-mdi.git",
+            "tag": "v0.5.0"
+        },
+        "cute-engineering/ce-stdcpp": {
+            "commit": "0f591c8ccd2e091b247c09db7166958dff76370a",
+            "git": "https://github.com/cute-engineering/ce-stdcpp.git",
+            "tag": "v1.4.0"
+        },
+        "cute-engineering/ce-targets": {
+            "commit": "eaa19de89b05da7fbbe9320c6f1f24dae1a3b96d",
+            "git": "https://github.com/cute-engineering/ce-targets.git",
+            "tag": "v0.4.0"
+        },
+        "skift-org/hideo": {
+            "commit": "2eeb98fbeb4210a50acf63321aa6f6f8aea2335a",
+            "git": "https://github.com/skift-org/hideo.git",
+            "tag": "main"
+        },
+        "skift-org/karm": {
+            "commit": "d0bbd315e86f225292032dc6c47d117b3f1e6767",
+            "git": "https://github.com/skift-org/karm.git",
+            "tag": "main"
+        }
+    }
+}

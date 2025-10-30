@@ -3,7 +3,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#   "cutekit~=0.9.2",
+#   "cutekit~=0.10.0",
 #   "Markdown~=3.7",
 # ]
 # ///
