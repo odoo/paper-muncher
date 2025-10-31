@@ -18,13 +18,13 @@ test$("test-specificity-selector-list") {
     {
         Dom::Element elZeroMatches{Html::DIV_TAG};
 
-        expect$(rule.match(elZeroMatches) == NONE);
+        expect$(rule.match(elZeroMatches, NONE) == NONE);
     }
     {
         Dom::Element elOneMatch{Html::DIV_TAG};
         elOneMatch.classList.add("a");
 
-        expect$(rule.match(elOneMatch) == Spec(0, 1, 0));
+        expect$(rule.match(elOneMatch, NONE) == Spec(0, 1, 0));
     }
     {
         Dom::Element elOneMatch{Html::DIV_TAG};
@@ -33,14 +33,14 @@ test$("test-specificity-selector-list") {
         elOneMatch.classList.add("e");
         elOneMatch.classList.add("f");
 
-        expect$(rule.match(elOneMatch) == Spec(0, 4, 0));
+        expect$(rule.match(elOneMatch, NONE) == Spec(0, 4, 0));
     }
     {
         Dom::Element elAnotherMatch{Html::DIV_TAG};
         elAnotherMatch.classList.add("b");
         elAnotherMatch.setAttribute(Html::ID_ATTR, "x"s);
 
-        expect$(rule.match(elAnotherMatch) == Spec(1, 1, 0));
+        expect$(rule.match(elAnotherMatch, NONE) == Spec(1, 1, 0));
     }
     {
         Dom::Element twoMatches{Html::DIV_TAG};
@@ -49,7 +49,7 @@ test$("test-specificity-selector-list") {
         twoMatches.setAttribute(Html::ID_ATTR, "x"s);
         twoMatches.classList.add("a");
 
-        expect$(rule.match(twoMatches) == Spec(1, 1, 0));
+        expect$(rule.match(twoMatches, NONE) == Spec(1, 1, 0));
     }
 
     return Ok();

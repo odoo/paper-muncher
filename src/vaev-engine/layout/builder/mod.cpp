@@ -170,7 +170,7 @@ struct BuilderContext {
 
     // https://www.w3.org/TR/css-inline-3/#model
     void flushRootInlineBoxIntoAnonymousBox() {
-        if (not rootInlineBox().active())
+        if (not _rootInlineBox or not rootInlineBox().active())
             return;
 
         // The root inline box inherits from its parent block container, but is otherwise unstyleable.
@@ -289,6 +289,7 @@ struct BuilderContext {
 };
 
 static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node);
+static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudoElement);
 
 // MARK: Build void/leaves ---------------------------------------------------------
 
@@ -424,11 +425,6 @@ bool _alwaysInlineBlock(Gc::Ref<Dom::Element> el) {
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent);
 
 static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::SpecifiedValues> style, Gc::Ref<Dom::Element> el) {
-    if (el->qualifiedName == Html::BR_TAG) {
-        bc.flushRootInlineBoxIntoAnonymousBox();
-        return;
-    }
-
     if (isVoidElement(el)) {
         _buildVoidElement(bc, el);
         return;
@@ -442,9 +438,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
 }
 
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
-    if (el->qualifiedName == Html::BR_TAG) {
-        // do nothing
-    } else if (el->qualifiedName == Svg::SVG_TAG) {
+    if (el->qualifiedName == Svg::SVG_TAG) {
         bc.content() = _buildSVG(el);
     } else if (isVoidElement(el)) {
         _buildVoidElement(bc, el);
@@ -668,6 +662,10 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
         searchAndBuildCaption();
     }
 
+    if (auto before = el->getPseudoElement(Dom::PseudoElement::BEFORE)) {
+        _buildPseudoElement(tableWrapperBc, before.unwrap());
+    }
+
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-root
     // box which are not proper table child boxes.
     _buildTableChildrenWhileWrappingIntoAnonymousBox(tableWrapperBc.toTableContent(tableBox), *el, tableBoxStyle, true, [](Display const& display) {
@@ -678,18 +676,41 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
     if (not captionsOnTop) {
         searchAndBuildCaption();
     }
+
+    if (auto before = el->getPseudoElement(Dom::PseudoElement::AFTER)) {
+        _buildPseudoElement(tableWrapperBc, before.unwrap());
+    }
 }
 
 static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::SpecifiedValues> tableStyle, Gc::Ref<Dom::Element> tableBoxEl) {
-    auto wrapperStyle = makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial());
+    // The computed values of properties 'position', 'float', 'margin-*', 'top',
+    // 'right', 'bottom', and 'left' on the table element are used on the table
+    // wrapper box and not the table box; all other values of non-inheritable
+    // properties are used on the table box and not the table wrapper box.
+    // https://www.w3.org/TR/CSS22/tables.html#model
+
+    auto const& initialStyle = Style::SpecifiedValues::initial();
+
+    auto wrapperStyle = makeRc<Style::SpecifiedValues>(initialStyle);
     wrapperStyle->display = tableStyle->display;
+
     wrapperStyle->margin = tableStyle->margin;
+    wrapperStyle->position = tableStyle->position;
+    wrapperStyle->float_ = tableStyle->float_;
+    wrapperStyle->offsets = tableStyle->offsets;
 
     Box wrapper = {wrapperStyle, tableBoxEl};
     InlineBox rootInlineBox{_proseStyleFromStyle(*wrapperStyle, tableBoxEl->specifiedValues()->fontFace)};
 
     // SPEC: The table wrapper box establishes a block formatting context.
-    _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, tableStyle);
+    auto innerStyle = makeRc<Style::SpecifiedValues>(*tableStyle);
+
+    innerStyle->margin = initialStyle.margin;
+    innerStyle->position = initialStyle.position;
+    innerStyle->float_ = initialStyle.float_;
+    innerStyle->offsets = initialStyle.offsets;
+
+    _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, innerStyle);
 
     return wrapper;
 }
@@ -723,8 +744,17 @@ static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc:
 // MARK: Dispatching from Node to builder based on outside role ------------------------------------------------------
 
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent) {
+    auto el = parent->is<Dom::Element>();
+    if (auto before = el ? el->getPseudoElement(Dom::PseudoElement::BEFORE) : NONE) {
+        _buildPseudoElement(bc, before.unwrap());
+    }
+
     for (auto child = parent->firstChild(); child; child = child->nextSibling()) {
         _buildNode(bc, *child);
+    }
+
+    if (auto after = el ? el->getPseudoElement(Dom::PseudoElement::AFTER) : NONE) {
+        _buildPseudoElement(bc, after.unwrap());
     }
 }
 
@@ -780,6 +810,29 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
     } else if (auto text = node->is<Dom::Text>()) {
         _buildText(bc, *text, bc.parentStyle);
     }
+}
+
+export Box _buildBlockPseudoElement(Dom::PseudoElement& el) {
+    auto proseStyle = _proseStyleFromStyle(*el.specifiedValues(), el.specifiedValues()->fontFace);
+
+    if (el.specifiedValues()->content.is<String>()) {
+        auto prose = makeRc<Gfx::Prose>(proseStyle);
+        prose->append(el.specifiedValues()->content.unwrap<String>().str());
+        return {el.specifiedValues(), InlineBox{prose}, nullptr};
+    }
+
+    return {el.specifiedValues(), nullptr};
+}
+
+static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudoElement) {
+    auto style = pseudoElement->specifiedValues();
+    auto display = style->display;
+    if (display == Display::NONE)
+        return;
+
+    // FIXME: Treat all pseudo element as block
+    bc.flushRootInlineBoxIntoAnonymousBox();
+    bc.addToParentBox(_buildBlockPseudoElement(*pseudoElement));
 }
 
 // MARK: Entry points -----------------------------------------------------------------

@@ -10,6 +10,6 @@ export import :dom.node;
 export import :dom.names;
 export import :dom.node;
 export import :dom.text;
-export import :dom.token_list;
+export import :dom.tokenList;
 export import :dom.tree;
 export import :dom.window;

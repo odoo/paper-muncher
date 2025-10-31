@@ -58,8 +58,3 @@ PSEUDO(ONLY_OF_TYPE, "only-of-type"s)
 
 PSEUDO(LANG, "lang"s)
 PSEUDO(DIR, "dir"s)
-
-PSEUDO(BEFORE, "before"s)
-PSEUDO(AFTER, "after"s)
-PSEUDO(FIRST_LETTER, "first-letter"s)
-PSEUDO(FIRST_LINE, "first-line"s)
