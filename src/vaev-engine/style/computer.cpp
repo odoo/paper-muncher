@@ -11,6 +11,7 @@ import :dom.document;
 import :dom.element;
 import :style.specified;
 import :style.stylesheet;
+import :style.ruleIndex;
 
 namespace Vaev::Style {
 
@@ -18,7 +19,7 @@ export struct Computer {
     Media _media;
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
-    StyleRuleLookup _styleRuleLookup = {};
+    RuleIndex _ruleIndex = {};
 
     // MARK: Cascading ---------------------------------------------------------
 
@@ -244,7 +245,7 @@ export struct Computer {
 
     // https://drafts.csswg.org/css-cascade/#cascade-origin
     Rc<SpecifiedValues> computeFor(SpecifiedValues const& parent, Gc::Ref<Dom::Element> el) {
-        MatchingRules matchingRules = _styleRuleLookup.buildMatchingRules(el);
+        MatchingRules matchingRules = _ruleIndex.match(el, NONE);
 
         // Non-CSS Presentational Hints
         auto hints = _considerPresentationalHint(el);
@@ -278,6 +279,11 @@ export struct Computer {
         return values;
     }
 
+    Rc<SpecifiedValues> computeFor(SpecifiedValues const& parent, Gc::Ref<Dom::Element> el, Symbol pseudoElement) {
+        MatchingRules matchingRules = _ruleIndex.match(el, pseudoElement);
+        return _evalCascade(parent, matchingRules);
+    }
+
     Rc<PageSpecifiedValues> computeFor(SpecifiedValues const& parent, Page const& page) {
         auto computed = makeRc<PageSpecifiedValues>(parent);
 
@@ -295,6 +301,35 @@ export struct Computer {
 
     // MARK: Styling -----------------------------------------------------------
 
+    void generatePseudoElement(SpecifiedValues const& parentSpecifiedValues, Dom::Element& el, Symbol type) {
+        auto specifiedValues = computeFor(parentSpecifiedValues, el, type);
+
+        // HACK: This is basically nonsense to avoid doing too much font lookup,
+        //       and it should be remove once the style engine get refactored
+        //       and computed values are properly handled.
+        if (not parentSpecifiedValues.font.sameInstance(specifiedValues->font) and
+            (parentSpecifiedValues.font->families != specifiedValues->font->families or
+             parentSpecifiedValues.font->weight != specifiedValues->font->weight)) {
+            auto font = _lookupFontface(*specifiedValues);
+            specifiedValues->fontFace = font;
+        } else {
+            specifiedValues->fontFace = parentSpecifiedValues.fontFace;
+        }
+
+        // https://drafts.csswg.org/css-content/#valdef-content-none
+        // On pseudo-elements it inhibits the creation of the pseudo-element as if it had display: none.
+        if (specifiedValues->content == Keywords::NONE)
+            return;
+
+        // https://drafts.csswg.org/css-content/#valdef-content-normal
+        if (specifiedValues->content == Keywords::NORMAL and
+            (type == Dom::PseudoElement::BEFORE or
+             type == Dom::PseudoElement::AFTER))
+            return;
+
+        el.addPseudoElement(makeRc<Dom::PseudoElement>(type, specifiedValues));
+    }
+
     void styleElement(SpecifiedValues const& parentSpecifiedValues, Dom::Element& el) {
         auto specifiedValues = computeFor(parentSpecifiedValues, el);
         el._specifiedValues = specifiedValues;
@@ -310,6 +345,13 @@ export struct Computer {
         } else {
             specifiedValues->fontFace = parentSpecifiedValues.fontFace;
         }
+
+        if (specifiedValues->display == Display::Item::YES) {
+            generatePseudoElement(*specifiedValues, el, Dom::PseudoElement::MARKER);
+        }
+
+        generatePseudoElement(*specifiedValues, el, Dom::PseudoElement::AFTER);
+        generatePseudoElement(*specifiedValues, el, Dom::PseudoElement::BEFORE);
 
         for (auto child = el.firstChild(); child; child = child->nextSibling()) {
             if (auto childEl = child->is<Dom::Element>())
@@ -337,7 +379,7 @@ export struct Computer {
     void _addRuleToLookup(Cursor<Rule> rule) {
         rule->visit(Visitor{
             [&](StyleRule const& r) {
-                _styleRuleLookup.add(r);
+                _ruleIndex.add(r);
             },
             [&](MediaRule const& r) {
                 if (r.match(_media))

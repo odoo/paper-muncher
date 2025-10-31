@@ -8,9 +8,9 @@ import Karm.Core;
 import Karm.Logger;
 
 import :css;
-import :dom.element;
 import :values;
 import :style.namespace_;
+import :dom.element;
 
 using namespace Karm;
 
@@ -390,10 +390,20 @@ export enum struct Dir {
     RTL,
 };
 
-export struct Pseudo {
+export struct PseudoElementSelector {
+    Symbol type;
+
+    bool operator==(PseudoElementSelector const&) const = default;
+
+    void repr(Io::Emit& e) const {
+        e("{}", type);
+    }
+};
+
+export struct PseudoClassSelector {
     enum struct Type {
 #define PSEUDO(ID, ...) ID,
-#include "defs/pseudo.inc"
+#include "defs/pseudo-class.inc"
 
 #undef PSEUDO
 
@@ -404,7 +414,7 @@ export struct Pseudo {
 #define PSEUDO(IDENT, NAME) \
     if (name == NAME)       \
         return Type::IDENT;
-#include "defs/pseudo.inc"
+#include "defs/pseudo-class.inc"
 
 #undef PSEUDO
 
@@ -416,25 +426,29 @@ export struct Pseudo {
     using AnBofS = Pair<AnB, Opt<Box<Selector>>>;
     using Extra = Union<None, String, AnBofS, Dir>;
 
-    static Pseudo make(Str name, Extra extra = NONE) {
+    static PseudoClassSelector make(Str name, Extra extra = NONE) {
         if (auto id = _Type(name))
-            return Pseudo{Type{*id}, extra};
+            return PseudoClassSelector{Type{*id}, extra};
         return Type{0};
     }
 
     Type type;
     Extra extra = NONE;
 
-    Pseudo() = default;
+    PseudoClassSelector() = default;
 
-    Pseudo(Type type, Extra extra = NONE)
+    PseudoClassSelector(Type type, Extra extra = NONE)
         : type(type), extra(extra) {}
 
     void repr(Io::Emit& e) const {
         e("{} {}", type, extra);
     }
 
-    bool operator==(Pseudo const&) const;
+    bool operator==(PseudoClassSelector const&) const;
+
+    bool operator==(Type const& other) const {
+        return this->type == other;
+    }
 };
 
 export struct AttributeSelector {
@@ -478,7 +492,8 @@ using _Selector = Union<
     EmptySelector,
     IdSelector,
     ClassSelector,
-    Pseudo,
+    PseudoElementSelector,
+    PseudoClassSelector,
     AttributeSelector>;
 
 export void unparse(Selector const& sel, Io::Emit& e);
@@ -591,7 +606,7 @@ export struct Selector : _Selector {
         }
 
         Opt<Symbol> secondName = NONE;
-        ;
+
         if (cur->token == Css::Token::IDENT) {
             secondName = Symbol::from(cur->token.data);
             cur.next();
@@ -751,7 +766,7 @@ export struct Selector : _Selector {
         }
     }
 
-    static Res<Pseudo> _parsePseudoClassFunction(Cursor<Css::Sst>& cur, Namespace const& ns) {
+    static Res<PseudoClassSelector> _parsePseudoClassFunction(Cursor<Css::Sst>& cur, Namespace const& ns) {
         auto funcName = cur->prefix.unwrap()->token.data.str();
         funcName = Str{funcName.begin(), funcName.len() - 1};
 
@@ -760,7 +775,7 @@ export struct Selector : _Selector {
         eatWhitespace(c);
 
         if (c.ended()) {
-            return Ok(Pseudo::make(funcName, Pseudo::AnBofS{anb, NONE}));
+            return Ok(PseudoClassSelector::make(funcName, PseudoClassSelector::AnBofS{anb, NONE}));
         }
 
         if (funcName == "nth-of-type" or funcName == "nth-last-of-type")
@@ -769,7 +784,7 @@ export struct Selector : _Selector {
         if (not c.skip(Css::Token::ident("of")))
             return Error::invalidData("expected 'of' in pseudo-class function");
 
-        return Ok(Pseudo::make(funcName, Pseudo::AnBofS{anb, makeBox<Selector>(try$(Selector::parse(c, ns)))}));
+        return Ok(PseudoClassSelector::make(funcName, PseudoClassSelector::AnBofS{anb, makeBox<Selector>(try$(Selector::parse(c, ns)))}));
     }
 
     // consume a selector element (everything  that has a lesser priority than the current OP)
@@ -811,12 +826,20 @@ export struct Selector : _Selector {
                 }
 
                 if (cur->type == Css::Sst::Type::TOKEN) {
-                    val = Pseudo::make(cur->token.data);
+                    Str name = cur->token.data;
+                    if (name == "before")
+                        val = PseudoElementSelector{Dom::PseudoElement::BEFORE};
+                    else if (name == "after")
+                        val = PseudoElementSelector{Dom::PseudoElement::AFTER};
+                    else if (name == "marker")
+                        val = PseudoElementSelector{Dom::PseudoElement::MARKER};
+                    else
+                        val = PseudoClassSelector::make(cur->token.data);
                 } else if (cur->type == Css::Sst::Type::FUNC) {
                     if (cur->prefix == Css::Token::function("not(")) {
                         Cursor<Css::Sst> c = cur->content;
                         // consume a whole selector not a single one
-                        val = Selector::not_(try$(Selector::parse(c, ns)));
+                        val = not_(try$(Selector::parse(c, ns)));
                     } else {
                         val = try$(_parsePseudoClassFunction(cur, ns));
                     }
@@ -997,7 +1020,7 @@ export void unparse(Selector const& sel, Io::Emit& e) {
                 e("{}", s);
             }
         },
-        [&](Pseudo const& s) -> void {
+        [&](PseudoClassSelector const& s) -> void {
             e("{}", s);
         },
         [&](AttributeSelector const& s) {
@@ -1102,7 +1125,7 @@ export Spec spec(Selector const& s) {
         [](ClassSelector const&) {
             return Spec::B;
         },
-        [](Pseudo const&) {
+        [](PseudoClassSelector const&) {
             return Spec::B;
         },
         [](AttributeSelector const&) {

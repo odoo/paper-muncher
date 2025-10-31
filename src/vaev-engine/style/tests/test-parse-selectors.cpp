@@ -176,14 +176,14 @@ test$("vaev-style-parse-mixed-selectors") {
 
     expectEq$(
         try$(Selector::parse(":not(:first-child)")),
-        Selector::not_(Pseudo{Pseudo::FIRST_CHILD})
+        Selector::not_(PseudoClassSelector{PseudoClassSelector::FIRST_CHILD})
     );
 
     expectEq$(
         try$(Selector::parse("tr:not(:last-child) th:not(:first-child)")),
         Selector::descendant(
-            Selector::and_({TypeSelector{Html::TR_TAG}, Selector::not_(Pseudo{Pseudo::LAST_CHILD})}),
-            Selector::and_({TypeSelector{Html::TH_TAG}, {Selector::not_(Pseudo{Pseudo::FIRST_CHILD})}})
+            Selector::and_({TypeSelector{Html::TR_TAG}, Selector::not_(PseudoClassSelector{PseudoClassSelector::LAST_CHILD})}),
+            Selector::and_({TypeSelector{Html::TH_TAG}, {Selector::not_(PseudoClassSelector{PseudoClassSelector::FIRST_CHILD})}})
         )
     );
 
@@ -230,12 +230,12 @@ test$("vaev-style-parse-mixed-selectors") {
                 ),
                 Selector::and_({
                     TypeSelector{Html::TR_TAG},
-                    Selector::not_(Pseudo{Pseudo::LAST_CHILD}),
+                    Selector::not_(PseudoClassSelector{PseudoClassSelector::LAST_CHILD}),
                 })
             ),
             Selector::and_({
                 TypeSelector{Html::TH_TAG},
-                {Selector::not_(Pseudo{Pseudo::FIRST_CHILD})},
+                {Selector::not_(PseudoClassSelector{PseudoClassSelector::FIRST_CHILD})},
             })
         )
     );
@@ -327,53 +327,53 @@ test$("vaev-style-parse-anb") {
 
 test$("vaev-style-parse-pseudo-selectors") {
     expectEq$(
-        Pseudo{Pseudo::ROOT},
-        Pseudo{Pseudo::ROOT}
+        PseudoClassSelector{PseudoClassSelector::ROOT},
+        PseudoClassSelector{PseudoClassSelector::ROOT}
     );
 
     expectEq$(
         try$(Selector::parse(":root")),
-        Pseudo{Pseudo::ROOT}
+        PseudoClassSelector{PseudoClassSelector::ROOT}
     );
 
     expectEq$(
         try$(Selector::parse(":root")),
-        Pseudo{Pseudo::make("root")}
+        PseudoClassSelector{PseudoClassSelector::make("root")}
     );
 
     expectEq$(
         try$(Selector::parse(":first-child")),
-        Pseudo{Pseudo::FIRST_CHILD}
+        PseudoClassSelector{PseudoClassSelector::FIRST_CHILD}
     );
 
     expectEq$(
         try$(Selector::parse(":nth-child(odd)")),
-        Pseudo(Pseudo::Type::NTH_CHILD, Pseudo::AnBofS{AnB(2, 1), NONE})
+        PseudoClassSelector(PseudoClassSelector::Type::NTH_CHILD, PseudoClassSelector::AnBofS{AnB(2, 1), NONE})
     );
 
     expectEq$(
         try$(Selector::parse(":nth-child(odd of .class)")),
-        Pseudo(Pseudo::Type::NTH_CHILD, Pseudo::AnBofS{AnB(2, 1), ClassSelector{"class"s}})
+        PseudoClassSelector(PseudoClassSelector::Type::NTH_CHILD, PseudoClassSelector::AnBofS{AnB(2, 1), ClassSelector{"class"s}})
     );
 
     expectEq$(
         try$(Selector::parse(":nth-last-child(even)")),
-        Pseudo(Pseudo::Type::NTH_LAST_CHILD, Pseudo::AnBofS{AnB(2, 0), NONE})
+        PseudoClassSelector(PseudoClassSelector::Type::NTH_LAST_CHILD, PseudoClassSelector::AnBofS{AnB(2, 0), NONE})
     );
 
     expectEq$(
         try$(Selector::parse(":nth-last-child(even of #id)")),
-        Pseudo(Pseudo::Type::NTH_LAST_CHILD, Pseudo::AnBofS{AnB(2, 0), IdSelector{"id"_sym}})
+        PseudoClassSelector(PseudoClassSelector::Type::NTH_LAST_CHILD, PseudoClassSelector::AnBofS{AnB(2, 0), IdSelector{"id"_sym}})
     );
 
     expectEq$(
         try$(Selector::parse(":nth-of-type(3n+1)")),
-        Pseudo(Pseudo::Type::NTH_OF_TYPE, Pseudo::AnBofS{AnB(3, 1), NONE})
+        PseudoClassSelector(PseudoClassSelector::Type::NTH_OF_TYPE, PseudoClassSelector::AnBofS{AnB(3, 1), NONE})
     );
 
     expectEq$(
         try$(Selector::parse(":nth-last-of-type(3n+1)")),
-        Pseudo(Pseudo::Type::NTH_LAST_OF_TYPE, Pseudo::AnBofS{AnB(3, 1), NONE})
+        PseudoClassSelector(PseudoClassSelector::Type::NTH_LAST_OF_TYPE, PseudoClassSelector::AnBofS{AnB(3, 1), NONE})
     );
 
     expectNot$(Selector::parse(":nth-of-type(3n+1 of .class)"));
@@ -381,14 +381,14 @@ test$("vaev-style-parse-pseudo-selectors") {
 
     expectEq$(
         try$(Selector::parse(":last-child")),
-        Pseudo{Pseudo::LAST_CHILD}
+        PseudoClassSelector{PseudoClassSelector::LAST_CHILD}
     );
 
     expectEq$(
         try$(Selector::parse(".class :last-child")),
         Selector::descendant(
             ClassSelector{"class"s},
-            Pseudo{Pseudo::LAST_CHILD}
+            PseudoClassSelector{PseudoClassSelector::LAST_CHILD}
         )
     );
 
@@ -396,7 +396,7 @@ test$("vaev-style-parse-pseudo-selectors") {
         try$(Selector::parse("html:hover")),
         Selector::and_({
             TypeSelector{Html::HTML_TAG},
-            Pseudo{Pseudo::HOVER},
+            PseudoClassSelector{PseudoClassSelector::HOVER},
         })
     );
 
@@ -406,7 +406,7 @@ test$("vaev-style-parse-pseudo-selectors") {
         try$(Selector::parse("html:after")),
         Selector::and_({
             TypeSelector{Html::HTML_TAG},
-            Pseudo{Pseudo::AFTER},
+            PseudoElementSelector{Dom::PseudoElement::AFTER},
         })
     );
 
@@ -414,7 +414,7 @@ test$("vaev-style-parse-pseudo-selectors") {
         try$(Selector::parse("html::after")),
         Selector::and_({
             TypeSelector{Html::HTML_TAG},
-            Pseudo{Pseudo::AFTER},
+            PseudoElementSelector{Dom::PseudoElement::AFTER},
         })
     );
 

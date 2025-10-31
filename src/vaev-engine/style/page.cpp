@@ -60,10 +60,8 @@ export struct PageSpecifiedValues {
 
     PageSpecifiedValues(SpecifiedValues const& initial)
         : style(makeRc<SpecifiedValues>(initial)),
-          _areas(Areas::fill([&](...) {
-              Dom::PseudoElement pseudoElement;
-              pseudoElement._specifiedValues = makeRc<SpecifiedValues>(initial);
-              return pseudoElement;
+          _areas(Areas::fill([&](...) -> Dom::PseudoElement {
+              return {"::-vaev-page"_sym, makeRc<SpecifiedValues>(initial)};
           })) {}
 
     Dom::PseudoElement& area(PageArea margin) {

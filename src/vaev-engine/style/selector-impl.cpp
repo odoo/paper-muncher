@@ -5,7 +5,7 @@ import :style.selector;
 
 namespace Vaev::Style {
 
-bool Pseudo::operator==(Pseudo const&) const = default;
+bool PseudoClassSelector::operator==(PseudoClassSelector const&) const = default;
 
 bool Infix::operator==(Infix const& other) const = default;
 

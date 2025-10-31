@@ -1,4 +1,4 @@
-export module Vaev.Engine:dom.token_list;
+export module Vaev.Engine:dom.tokenList;
 
 import Karm.Core;
 
