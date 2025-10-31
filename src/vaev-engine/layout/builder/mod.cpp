@@ -681,15 +681,34 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
 }
 
 static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::SpecifiedValues> tableStyle, Gc::Ref<Dom::Element> tableBoxEl) {
-    auto wrapperStyle = makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial());
+    // The computed values of properties 'position', 'float', 'margin-*', 'top',
+    // 'right', 'bottom', and 'left' on the table element are used on the table
+    // wrapper box and not the table box; all other values of non-inheritable
+    // properties are used on the table box and not the table wrapper box.
+    // https://www.w3.org/TR/CSS22/tables.html#model
+
+    auto const& initialStyle = Style::SpecifiedValues::initial();
+
+    auto wrapperStyle = makeRc<Style::SpecifiedValues>(initialStyle);
     wrapperStyle->display = tableStyle->display;
+
     wrapperStyle->margin = tableStyle->margin;
+    wrapperStyle->position = tableStyle->position;
+    wrapperStyle->float_ = tableStyle->float_;
+    wrapperStyle->offsets = tableStyle->offsets;
 
     Box wrapper = {wrapperStyle, tableBoxEl};
     InlineBox rootInlineBox{_proseStyleFromStyle(*wrapperStyle, tableBoxEl->specifiedValues()->fontFace)};
 
     // SPEC: The table wrapper box establishes a block formatting context.
-    _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, tableStyle);
+    auto innerStyle = makeRc<Style::SpecifiedValues>(*tableStyle);
+
+    innerStyle->margin = initialStyle.margin;
+    innerStyle->position = initialStyle.position;
+    innerStyle->float_ = initialStyle.float_;
+    innerStyle->offsets = initialStyle.offsets;
+
+    _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, innerStyle);
 
     return wrapper;
 }
