@@ -52,8 +52,13 @@ test$("vaev-css-lex-hash") {
 test$("vaev-css-lex-strings") {
     auto t = lex("''");
     expectEq$(t.type, Token::STRING);
+    expectEq$(t.data, "");
 
     t = lex("\"\"");
+    expectEq$(t.type, Token::STRING);
+    expectEq$(t.data, "");
+
+    t = lex(R"("\"")");
     expectEq$(t.type, Token::STRING);
 
     t = lex("\"abc\"");

@@ -211,37 +211,6 @@ static auto const RE_NUMBER = Re::chain(
     )
 );
 
-// string token description
-static auto const RE_STRING =
-    Re::either(
-        Re::chain(
-            '"'_re,
-            Re::zeroOrMore(
-                Re::either(
-                    RE_ESCAPE,
-                    Re::negate(
-                        '\\'_re | RE_NEWLINE | '\"'_re
-                    ),
-                    '\\'_re & RE_NEWLINE
-                )
-            ),
-            '"'_re
-        ),
-        Re::chain(
-            '\''_re,
-            Re::zeroOrMore(
-                Re::either(
-                    RE_ESCAPE,
-                    Re::negate(
-                        '\\'_re | RE_NEWLINE | '\''_re
-                    ),
-                    '\\'_re & RE_NEWLINE
-                )
-            ),
-            '\''_re
-        )
-    );
-
 export struct Lexer {
     Io::SScan _scan;
     Token _curr;
@@ -272,6 +241,105 @@ export struct Lexer {
         }
 
         return {Token::FUNCTION, s.end()};
+    }
+
+    // https://www.w3.org/TR/css-syntax-3/#check-if-two-code-points-are-a-valid-escape
+    bool _checkValidEscape(Io::SScan& s) {
+        if (s.rem() < 2)
+            return false;
+        // If the first code point is not U+005C REVERSE SOLIDUS (\), return false.
+        if (s.peek() != '\\')
+            return false;
+        // Otherwise, if the second code point is a newline, return false.
+        else if (s.ahead('\\'_re & RE_NEWLINE))
+            return false;
+        // Otherwise, return true.
+        return true;
+    }
+
+    // https://www.w3.org/TR/css-syntax-3/#consume-an-escaped-code-point
+    Rune _consumeEscapeCodepoint(Io::SScan& s) const {
+        if (not s.skip('\\'))
+            return U'�';
+
+        // hex digit
+        if (auto hex = s.token(Re::nOrN(1, 5, Re::xdigit()))) {
+            // Consume as many hex digits as possible, but no more than 5.
+            // NOTE: This means 1-6 hex digits have been consumed in total.
+
+            // If the next input code point is whitespace, consume it as well.
+            s.skip(RE_WHITESPACE);
+
+            // Interpret the hex digits as a hexadecimal number.
+            auto num = Io::atou(hex, {.base = 16}).unwrap();
+
+            // If this number is zero, or is for a surrogate, or is greater than the maximum allowed code point
+            if (0xD800 <= num and num <= 0xDFFF)
+                return U'�';
+            if (num == 0 or num > 0x10FFFF)
+                // return U+FFFD REPLACEMENT CHARACTER (�).
+                return U'�';
+
+            // Otherwise, return the code point with that value.
+            return num;
+        }
+        // EOF
+        else if (s.ended()) {
+            // This is a parse error. Return U+FFFD REPLACEMENT CHARACTER (�).
+            logWarn("Unexpected EOF");
+            return U'�';
+        }
+
+        // anything else
+        else {
+            return s.next();
+        }
+    }
+
+    // https://www.w3.org/TR/css-syntax-3/#consume-string-token
+    Token _consumeStringToken(Io::SScan& s, Opt<Rune> endingCodepoint = NONE) const {
+        // Initially create a <string-token> with its value set to the empty string.
+        StringBuilder sb;
+        if (not endingCodepoint)
+            endingCodepoint = s.next();
+
+        // Repeatedly consume the next input code point from the stream:
+        while (not s.ended()) {
+            // ending code point
+            if (s.peek() == endingCodepoint) {
+                // Return the <string-token>.
+                s.next();
+                return {Token::STRING, sb.take()};
+            }
+            // newline
+            else if (s.ahead(RE_NEWLINE)) {
+                // This is a parse error. Reconsume the current input code point, create a <bad-string-token>, and return it.
+                logWarn("tokenizing bad string due to newline");
+                return {Token::BAD_STRING, sb.take()};
+            }
+            // U+005C REVERSE SOLIDUS (\)
+            else if (s.peek() == '\\') {
+                // If the next input code point is EOF, do nothing.
+                if (s.rem() == 1)
+                    s.next();
+                // Otherwise, if the next input code point is a newline, consume it.
+                else if (s.skip('\\'_re & RE_NEWLINE))
+                    /* consumed by skip() */;
+                // Otherwise, (the stream starts with a valid escape) consume an escaped code point and append the returned code point to the <string-token>’s value.
+                else
+                    sb.append(_consumeEscapeCodepoint(s));
+            }
+            // anything else
+            else {
+                // Append the current input code point to the <string-token>’s value.
+                sb.append(s.next());
+            }
+        }
+
+        // EOF
+        // This is a parse error. Return the <string-token>.
+        logWarn("unexpected EOF");
+        return {Token::STRING, sb.take()};
     }
 
     Token _next(Io::SScan& s) const {
@@ -321,13 +389,12 @@ export struct Lexer {
             return _nextIdent(s);
         } else if (s.skip(RE_AT_KEYWORD)) {
             return {Token::AT_KEYWORD, s.end()};
-        } else if (s.skip(RE_STRING)) {
-            // https://www.w3.org/TR/css-syntax-3/#consume-string-token
-            return {Token::STRING, s.end()};
+        } else if (s.peek() == '"' or s.peek() == '\'') {
+            return _consumeStringToken(s);
         } else if (s.skip(RE_DELIM)) {
             return {Token::DELIM, s.end()};
         } else {
-            logWarn("unrecognized token: {}", s.end());
+            logWarn("unrecognized token: {}", s.remStr());
             s.next();
             return {Token::OTHER, s.end()};
         }

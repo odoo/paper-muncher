@@ -13,6 +13,7 @@ import Karm.Ref;
 import Karm.Logger;
 import Karm.Gfx;
 import Karm.Sys;
+import Karm.Font;
 
 import :dom.window;
 import :layout.values;
