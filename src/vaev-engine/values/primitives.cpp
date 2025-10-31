@@ -73,23 +73,8 @@ struct ValueParser<String> {
     static Res<String> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
-
-        if (c.peek() == Css::Token::STRING) {
-            // TODO: Handle escape sequences
-            Io::SScan s = c.next().token.data.str();
-            StringBuilder sb{s.rem()};
-            auto quote = s.next();
-            while (not s.skip(quote) and not s.ended()) {
-                if (s.skip('\\') and not s.ended()) {
-                    if (s.skip('\\'))
-                        sb.append(s.next());
-                } else {
-                    sb.append(s.next());
-                }
-            }
-            return Ok(sb.take());
-        }
-
+        if (c.peek() == Css::Token::STRING)
+            return Ok(c.next().token.data);
         return Error::invalidData("expected string");
     }
 };
