@@ -1,0 +1,156 @@
+<test name="block-level-before-pseudo-element">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="width: 100px; height: 100px; background-color: green;"></div>
+    </rendering>
+
+    <rendering help="with before pseudo-element">
+        <style>
+            div::before {
+                content: '';
+                display: block;
+                width: 100px;
+                height: 100px;
+                background-color: green;
+            }
+        </style>
+        <div></div>
+    </rendering>
+
+    <error help="without before pseudo-element">
+        <div style="width: 100px; height: 100px; background-color: red;"></div>
+    </error>
+
+    <error help="empty document">
+    </error>
+</test>
+
+<test name="block-level-after-pseudo-element">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="width: 100px; height: 100px; background-color: green;"></div>
+    </rendering>
+
+    <rendering help="with after pseudo-element">
+        <style>
+            div::after {
+                content: '';
+                display: block;
+                width: 100px;
+                height: 100px;
+                background-color: green;
+            }
+        </style>
+        <div></div>
+    </rendering>
+
+    <error help="without after pseudo-element">
+        <div style="width: 100px; height: 100px; background-color: red;"></div>
+    </error>
+
+    <error help="empty document">
+    </error>
+</test>
+
+<test name="block-level-before-and-after-pseudo-elements">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="width: 100px; height: 200px; background-color: green;"></div>
+    </rendering>
+
+    <rendering help="with before and after pseudo-elements">
+        <style>
+            div::before,
+            div::after {
+                content: '';
+                display: block;
+                width: 100px;
+                height: 100px;
+                background-color: green;
+            }
+        </style>
+        <div></div>
+    </rendering>
+
+    <error help="without before and after pseudo-elements">
+        <div style="width: 100px; height: 200px; background-color: red;"></div>
+    </error>
+
+    <error help="empty document">
+    </error>
+</test>
+
+<test name="inline-level-before-and-after">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <span>"Hello, world"</span>
+    </rendering>
+
+    <rendering help="with before and after pseudo-elements">
+        <style>
+            span::before {
+                content: '"';
+            }
+
+            span::after {
+                content: '"';
+            }
+        </style>
+        <span>Hello, world</span>
+    </rendering>
+
+    <error help="without before and after pseudo-elements">
+        <span>'Hello, world'</span>
+    </error>
+
+    <error help="empty document">
+    </error>
+</test>

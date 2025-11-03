@@ -6,7 +6,7 @@ import :dom.attr;
 import :dom.node;
 import :dom.names;
 import :dom.text;
-import :dom.token_list;
+import :dom.tokenList;
 
 using namespace Karm;
 
@@ -17,13 +17,24 @@ export struct SpecifiedValues;
 
 namespace Vaev::Dom {
 
+// https://drafts.csswg.org/css-pseudo/#CSSPseudoElement-interface
 export struct PseudoElement {
+    // https://drafts.csswg.org/css-pseudo/#dom-csspseudoelement-type
+    static Symbol const BEFORE;
+    static Symbol const AFTER;
+    static Symbol const MARKER;
+
+    Symbol type;
     Opt<Rc<Style::SpecifiedValues>> _specifiedValues = NONE;
 
     Rc<Style::SpecifiedValues> specifiedValues() const {
         return _specifiedValues.unwrap("unstyled pseudo-element");
     }
 };
+
+Symbol const PseudoElement::BEFORE = "::before"_sym;
+Symbol const PseudoElement::AFTER = "::after"_sym;
+Symbol const PseudoElement::MARKER = "::marker"_sym;
 
 // https://dom.spec.whatwg.org/#interface-element
 export struct Element : Node {
@@ -35,43 +46,16 @@ export struct Element : Node {
     Opt<Rc<Style::SpecifiedValues>> _specifiedValues; // FIXME: We should not have this store here
     TokenList classList;
     Opt<Rc<Scene::Node>> imageContent;
+    Map<Symbol, Rc<PseudoElement>> _pseudoElements;
+
+    // MARK: Node --------------------------------------------------------------
 
     Element(QualifiedName const& qualifiedName)
         : qualifiedName(qualifiedName) {
     }
 
-    Symbol namespaceUri() const {
-        return qualifiedName.ns;
-    }
-
-    Symbol localName() const {
-        return qualifiedName.name;
-    }
-
     NodeType nodeType() const override {
         return TYPE;
-    }
-
-    Rc<Style::SpecifiedValues> specifiedValues() const {
-        return _specifiedValues.unwrap("unstyled element");
-    }
-
-    Opt<Str> id() const {
-        return this->getAttributeUnqualified("id"_sym);
-    }
-
-    Opt<Str> style() const {
-        return this->getAttributeUnqualified("style"_sym);
-    }
-
-    // https://dom.spec.whatwg.org/#concept-descendant-text-content
-    String textContent() {
-        StringBuilder sb;
-        for (auto child : iterDepthFirst()) {
-            if (auto text = child->is<Text>())
-                sb.append(text->data());
-        }
-        return sb.take();
     }
 
     void _repr(Io::Emit& e) const override {
@@ -83,6 +67,26 @@ export struct Element : Node {
             }
             e.deindent();
         }
+    }
+
+    // MARK: Name --------------------------------------------------------------
+
+    Symbol namespaceUri() const {
+        return qualifiedName.ns;
+    }
+
+    Symbol localName() const {
+        return qualifiedName.name;
+    }
+
+    // MARK: Attributes --------------------------------------------------------
+
+    Opt<Str> id() const {
+        return getAttributeUnqualified("id"_sym);
+    }
+
+    Opt<Str> style() const {
+        return getAttributeUnqualified("style"_sym);
     }
 
     void setAttribute(QualifiedName name, String value) {
@@ -120,6 +124,42 @@ export struct Element : Node {
             if (qualifiedName.name == name)
                 return attr->value;
         return NONE;
+    }
+
+    // MARK: Style -------------------------------------------------------------
+
+    Rc<Style::SpecifiedValues> specifiedValues() const {
+        return _specifiedValues.unwrap("unstyled element");
+    }
+
+    // MARK: Content -----------------------------------------------------------
+
+    // https://dom.spec.whatwg.org/#concept-descendant-text-content
+    String textContent() {
+        StringBuilder sb;
+        for (auto child : iterDepthFirst()) {
+            if (auto text = child->is<Text>())
+                sb.append(text->data());
+        }
+        return sb.take();
+    }
+
+    // MARK: Pseudo Elements ---------------------------------------------------
+
+    void clearPseudoElement() {
+        _pseudoElements.clear();
+    }
+
+    bool hasPseudoElement(Symbol type) const {
+        return _pseudoElements.has(type);
+    }
+
+    void addPseudoElement(Rc<PseudoElement> pseudoElement) {
+        _pseudoElements.put(pseudoElement->type, pseudoElement);
+    }
+
+    Opt<Rc<PseudoElement>> getPseudoElement(Symbol type) const {
+        return _pseudoElements.tryGet(type);
     }
 };
 
