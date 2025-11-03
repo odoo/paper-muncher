@@ -34,8 +34,7 @@ namespace Vaev::Css {
     TOKEN(LEFT_PARENTHESIS, leftParenthesis)        /* ( */          \
     TOKEN(RIGHT_PARENTHESIS, rightParenthesis)      /* ) */          \
     TOKEN(COMMENT, comment)                         /* */            \
-    TOKEN(END_OF_FILE, endOfFile)                   /* EOF */        \
-    TOKEN(OTHER, other)                             /* anything else */
+    TOKEN(END_OF_FILE, endOfFile)                   /* EOF */
 
 export struct Token {
     enum struct Type {
@@ -93,11 +92,6 @@ static auto const RE_SEMICOLON = Re::single(';');
 static auto const RE_COLON = Re::single(':');
 static auto const RE_COMMA = Re::single(',');
 static auto const RE_QUOTES = Re::single('"', '\'');
-
-// NOSPEC: In the spec the fallback is delim
-// since DELIM has a semantic meaning and could catch a really unexpected content
-// we chose to use OTHER as a fallback and delim is a determined set of characters
-static auto const RE_DELIM = '.'_re | '+'_re | '-'_re | '#'_re | '~'_re | '!'_re | '*'_re | '='_re | '<'_re | '>'_re | '^'_re | '/'_re;
 
 static auto const RE_NEWLINE = Re::either(Re::single('\n', '\r', '\f'), Re::word("\r\n"));
 static auto const RE_ASCII = Re::range(0x00, 0x7f);
@@ -391,12 +385,9 @@ export struct Lexer {
             return {Token::AT_KEYWORD, s.end()};
         } else if (s.peek() == '"' or s.peek() == '\'') {
             return _consumeStringToken(s);
-        } else if (s.skip(RE_DELIM)) {
-            return {Token::DELIM, s.end()};
         } else {
-            logWarn("unrecognized token: {}", s.remStr());
             s.next();
-            return {Token::OTHER, s.end()};
+            return {Token::DELIM, s.end()};
         }
     }
 
