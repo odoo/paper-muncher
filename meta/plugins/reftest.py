@@ -62,7 +62,7 @@ def compareImages(
 
 
 def runPaperMuncher(executable, type, xsize, ysize, page, outputPath, inputPath):
-    command = ["--feature", "*=on", "--verbose"]
+    command = ["--feature", "*=on", "--quiet"]
 
     if type == "print":
         command.extend(["--flow", "paginate"])
