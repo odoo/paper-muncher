@@ -140,15 +140,15 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::SpecifiedValues> parentSty
     }
 }
 
-bool _buildText(Gc::Ref<Dom::Text> node, Rc<Style::SpecifiedValues> parentStyle, InlineBox& rootInlineBox, bool skipIfWhitespace) {
+bool _buildText(Str text, Rc<Style::SpecifiedValues> parentStyle, InlineBox& rootInlineBox, bool skipIfWhitespace) {
     if (skipIfWhitespace) {
-        Io::SScan scan{node->data()};
+        Io::SScan scan{text};
         scan.eat(Re::space());
         if (scan.ended())
             return false;
     }
 
-    _appendTextToInlineBox(node->data(), parentStyle, rootInlineBox);
+    _appendTextToInlineBox(text, parentStyle, rootInlineBox);
     return true;
 }
 
@@ -170,7 +170,7 @@ struct BuilderContext {
 
     // https://www.w3.org/TR/css-inline-3/#model
     void flushRootInlineBoxIntoAnonymousBox() {
-        if (not rootInlineBox().active())
+        if (not _rootInlineBox or not rootInlineBox().active())
             return;
 
         // The root inline box inherits from its parent block container, but is otherwise unstyleable.
@@ -289,11 +289,12 @@ struct BuilderContext {
 };
 
 static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node);
+static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudoElement);
 
 // MARK: Build void/leaves ---------------------------------------------------------
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace#how_does_css_process_whitespace/
-static void _buildText(BuilderContext bc, Gc::Ref<Dom::Text> node, Rc<Style::SpecifiedValues> parentStyle) {
+static void _buildText(BuilderContext bc, Str text, Rc<Style::SpecifiedValues> parentStyle) {
     // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
     // TODO: For tables, the default case is to skip whitespace text, but there are some extra checks to be done
 
@@ -307,7 +308,7 @@ static void _buildText(BuilderContext bc, Gc::Ref<Dom::Text> node, Rc<Style::Spe
         bc.from == BuilderContext::From::FLEX or
         bc.from == BuilderContext::From::BLOCK;
 
-    bool addedNonWhitespace = _buildText(node, parentStyle, bc.rootInlineBox(), shouldSkipWhitespace);
+    bool addedNonWhitespace = _buildText(text, parentStyle, bc.rootInlineBox(), shouldSkipWhitespace);
 
     // https://www.w3.org/TR/css-flexbox-1/#algo-anon-box
     // https://www.w3.org/TR/css-flexbox-1/#flex-items
@@ -428,7 +429,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
         bc.flushRootInlineBoxIntoAnonymousBox();
         return;
     }
-
+    
     if (isVoidElement(el)) {
         _buildVoidElement(bc, el);
         return;
@@ -588,7 +589,7 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
             if (bc.parentStyle->display != Display::Internal::TABLE_ROW)
                 anonTableWrapper.createRowIfNone(style);
             anonTableWrapper.createCellIfNone(style);
-            _buildText(anonTableWrapper.cellBuilderContext(), *text, style);
+            _buildText(anonTableWrapper.cellBuilderContext(), text->data(), style);
         }
     }
 
@@ -668,6 +669,10 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
         searchAndBuildCaption();
     }
 
+    if (auto before = el->getPseudoElement(Dom::PseudoElement::BEFORE)) {
+        _buildPseudoElement(tableWrapperBc, before.unwrap());
+    }
+
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-root
     // box which are not proper table child boxes.
     _buildTableChildrenWhileWrappingIntoAnonymousBox(tableWrapperBc.toTableContent(tableBox), *el, tableBoxStyle, true, [](Display const& display) {
@@ -677,6 +682,10 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
 
     if (not captionsOnTop) {
         searchAndBuildCaption();
+    }
+
+    if (auto before = el->getPseudoElement(Dom::PseudoElement::AFTER)) {
+        _buildPseudoElement(tableWrapperBc, before.unwrap());
     }
 }
 
@@ -742,8 +751,17 @@ static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc:
 // MARK: Dispatching from Node to builder based on outside role ------------------------------------------------------
 
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent) {
+    auto el = parent->is<Dom::Element>();
+    if (auto before = el ? el->getPseudoElement(Dom::PseudoElement::BEFORE) : NONE) {
+        _buildPseudoElement(bc, before.unwrap());
+    }
+
     for (auto child = parent->firstChild(); child; child = child->nextSibling()) {
         _buildNode(bc, *child);
+    }
+
+    if (auto after = el ? el->getPseudoElement(Dom::PseudoElement::AFTER) : NONE) {
+        _buildPseudoElement(bc, after.unwrap());
     }
 }
 
@@ -797,7 +815,36 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
             _buildChildDefaultDisplay(bc, *el, childStyle, display);
         }
     } else if (auto text = node->is<Dom::Text>()) {
-        _buildText(bc, *text, bc.parentStyle);
+        _buildText(bc, text->data(), bc.parentStyle);
+    }
+}
+
+export Box _buildBlockPseudoElement(Dom::PseudoElement& el) {
+    auto proseStyle = _proseStyleFromStyle(*el.specifiedValues(), el.specifiedValues()->fontFace);
+
+    if (el.specifiedValues()->content.is<String>()) {
+        auto prose = makeRc<Gfx::Prose>(proseStyle);
+        prose->append(el.specifiedValues()->content.unwrap<String>().str());
+        return {el.specifiedValues(), InlineBox{prose}, nullptr};
+    }
+
+    return {el.specifiedValues(), nullptr};
+}
+
+static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudoElement) {
+    auto style = pseudoElement->specifiedValues();
+    auto display = style->display;
+    if (display == Display::NONE)
+        return;
+
+    if (display == Display::INLINE) {
+        bc.startInlineBox(_proseStyleFromStyle(*style, style->fontFace));
+        if (auto maybeStr = style->content.is<String>())
+            _buildText(bc, maybeStr->str(), style);
+        bc.endInlineBox();
+    } else {
+        bc.flushRootInlineBoxIntoAnonymousBox();
+        bc.addToParentBox(_buildBlockPseudoElement(*pseudoElement));
     }
 }
 
@@ -852,7 +899,6 @@ export Box buildForPseudoElement(Dom::PseudoElement& el, usize currentPage, Runn
 
     if (el.specifiedValues()->content.is<String>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle);
-
         prose->append(el.specifiedValues()->content.unwrap<String>().str());
         return {el.specifiedValues(), InlineBox{prose}, nullptr};
     } else if (el.specifiedValues()->content.is<ElementContent>()) {
