@@ -62,8 +62,12 @@ struct ValueParser<Content> {
 
         if (c.skip(Css::Token::ident("normal")))
             return Ok(Keywords::NORMAL);
-        else if (c.skip(Css::Token::ident("none")))
-            return Ok(Keywords::NONE);
+        else if (c.skip(Css::Token::ident("normal")))
+            return Ok(Keywords::NORMAL);
+        else if (c.skip(Css::Token::ident("open-quote")))
+            return Ok(String{"“"});
+        else  if (c.skip(Css::Token::ident("close-quote")))
+            return Ok(String{"”"});
         else if (c->type == Css::Sst::FUNC and c->prefix == Css::Token::function("element(")) {
             Cursor<Css::Sst> cur = c->content;
             auto element = try$(parseValue<ElementContent>(cur));
