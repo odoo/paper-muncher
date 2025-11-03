@@ -1,0 +1,25 @@
+name: Check Site
+
+on:
+  push:
+    branches-ignore: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "site-check"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Build Environment
+        run: ./ck tools setup && ./ck tools doctor && ./ck install
+
+      - name: Build Website with cat
+        run: ./ck cat build
