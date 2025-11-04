@@ -143,6 +143,14 @@ mark {
     color: black;
 }
 
+q::before {
+    content: open-quote;
+}
+
+q::after {
+    content: close-quote;
+}
+
 /* 15.3.6 MARK: Sections and headings --------------------------------------- */
 /* https://html.spec.whatwg.org/multipage/rendering.html#sections-and-headings */
 
@@ -225,7 +233,10 @@ dd {
     margin-inline-start: 40px;
 }
 
-dir, menu, ol, ul {
+dir,
+menu,
+ol,
+ul {
     padding-inline-start: 40px;
 }
 
@@ -293,7 +304,8 @@ button {
     display: inline-block;
 }
 
-input:not([type=submit], input[type=button], input[type=image], input[type=reset], input[type=color], input[type=checkbox], input[type=file], input[type=radio], input[type=range]), textarea {
+input:not([type=submit], input[type=button], input[type=image], input[type=reset], input[type=color], input[type=checkbox], input[type=file], input[type=radio], input[type=range]),
+textarea {
     border: 1px solid ButtonBorder;
     min-height: 16px;
     cursor: text;
