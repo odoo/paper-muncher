@@ -156,6 +156,10 @@ struct Box : Meta::NoCopy {
         return content.is<Rc<Scene::Node>>() or content.is<SVGRoot>();
     }
 
+    bool isPositioned() const {
+        return style->position != Keywords::STATIC;
+    }
+
     void repr(Io::Emit& e) const {
         e("(box {} {}", style->display, style->position);
         if (children()) {

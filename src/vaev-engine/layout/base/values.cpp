@@ -258,9 +258,9 @@ export struct Resolver {
         return Au{relative.cast<f64>() * (value.unwrap<Percent>().value() / 100.)};
     }
 
-    Au resolve(Width const& value, Au relative) {
+    Opt<Au> resolve(Width const& value, Au relative) {
         if (value.is<Keywords::Auto>())
-            return 0_au;
+            return NONE;
         return resolve(value.unwrap<CalcValue<PercentOr<Length>>>(), relative);
     }
 
@@ -385,7 +385,7 @@ export Au resolve(Tree const& tree, Box const& box, PercentOr<Length> const& val
     return Resolver::from(tree, box).resolve(value, relative);
 }
 
-export Au resolve(Tree const& tree, Box const& box, Width const& value, Au relative) {
+export Opt<Au> resolve(Tree const& tree, Box const& box, Width const& value, Au relative) {
     return Resolver::from(tree, box).resolve(value, relative);
 }
 

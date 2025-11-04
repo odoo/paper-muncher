@@ -9,7 +9,7 @@ import :layout.formating;
 
 namespace Vaev::Layout {
 
-export InsetsAu computeMargins(Tree& tree, Box& box, Input input);
+export Math::Insets<Opt<Au>> computeMargins(Tree& tree, Box& box, Input input);
 
 export InsetsAu computeBorders(Tree& tree, Box& box);
 

@@ -12,6 +12,8 @@ import :layout.base;
 import :layout.layout;
 import :layout.positioned;
 
+using namespace Karm;
+
 namespace Vaev::Layout {
 
 void maybeProcessChildBreakpoint(Fragmentainer& fc, Breakpoint& currentBreakpoint, usize childIndex, bool currBoxIsBreakAvoid, Opt<Breakpoint> maybeChildBreakpoint) {
@@ -152,7 +154,7 @@ struct BlockFormatingContext : FormatingContext {
         return capmin;
     }
 
-    Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
+    Output run2(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
         Au blockSize = 0_au;
         Au inlineSize = input.knownSize.width.unwrapOr(0_au);
 
@@ -209,7 +211,7 @@ struct BlockFormatingContext : FormatingContext {
                 childInlineSize = inlineSize - margin.horizontal();
             }
 
-            if (not impliesRemovingFromFlow(c.style->position)) {
+            if (not c.isPositioned() or c.style->position == Keywords::RELATIVE) {
                 // TODO: collapsed margins for sibling elements
                 blockSize += max(margin.top, lastMarginBottom) - lastMarginBottom;
                 if (input.fragment or input.knownSize.x)
@@ -269,6 +271,113 @@ struct BlockFormatingContext : FormatingContext {
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,
         };
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // NEW CODE
+    ////////////////////////////////////////////////////////////////////////////
+
+    struct Item {
+        Box const* box;
+
+        Math::Vec2<Opt<Au>> size;
+        Math::Insets<Opt<Au>> margins;
+        Math::Insets<Au> borders;
+        Math::Insets<Au> paddings;
+    };
+
+    Vec<Item> _items;
+
+    void _generateItems(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) {
+        _items.clear();
+
+        auto children = box.children();
+        children = mutSub(children, startAt, startAt + stopAt.unwrapOr(box.children().len()));
+        for (auto& c : children) {
+            Item item;
+            item.box = &c;
+
+            item.size.x = computeSpecifiedSize(tree, c, c.style->sizing->width, input.containingBlock, true);
+            item.size.y = computeSpecifiedSize(tree, c, c.style->sizing->width, input.containingBlock, false);
+            if (input.intrinsic != IntrinsicSize::AUTO) {
+                auto intrinsic computeIntrinsicSize(tree, c, input.intrinsic, input.containingBlock)
+            }
+            item.margins = computeMargins(tree, c, input);
+            item.borders = computeBorders(tree, c);
+            item.paddings = computePaddings(tree, c, input.containingBlock);
+        }
+    }
+
+    void _collapseMargins() {
+        for (auto& i : _items) {
+            // https://www.w3.org/TR/CSS22/visudet.html#normal-block
+
+            // If 'margin-top', or 'margin-bottom' are 'auto', their used value is 0.
+            if (i.margins.top == NONE)
+                i.margins.top = 0_au;
+            if (i.margins.bottom == NONE)
+                i.margins.bottom = 0_au;
+
+            // If 'height' is 'auto', the height depends on whether the element has any block-level children and whether it has padding or borders:
+        }
+    }
+
+    // https://www.w3.org/TR/CSS22/visudet.html#blockwidth
+    void _computeWidth(Input const& input) {
+        for (auto& i : _items) {
+            // 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
+            if (input.intrinsic != IntrinsicSize::AUTO) {
+                i.margins.start = i.margins.start.unwrapOr(0_au);
+                i.margins.end = i.margins.end.unwrapOr(0_au);
+                continue;
+            }
+
+            // If 'width' is not 'auto' and 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' (plus any of 'margin-left' or 'margin-right' that are not 'auto') is larger than the width of the containing block, then any 'auto' values for 'margin-left' or 'margin-right' are, for the following rules, treated as zero.
+
+            // If all of the above have a computed value other than 'auto', the values are said to be "over-constrained" and one of the used values will have to be different from its computed value. If the 'direction' property of the containing block has the value 'ltr', the specified value of 'margin-right' is ignored and the value is calculated so as to make the equality true. If the value of 'direction' is 'rtl', this happens to 'margin-left' instead.
+
+            // If there is exactly one value specified as 'auto', its used value follows from the equality.
+
+            // If 'width' is set to 'auto', any other 'auto' values become '0' and 'width' follows from the resulting equality.
+
+            // If both 'margin-left' and 'margin-right' are 'auto', their used values are equal. This horizontally centers the element with respect to the edges of the containing block.
+        }
+    }
+
+    // https://www.w3.org/TR/CSS22/visudet.html#abs-non-replaced-height
+    void _computeHeight(Input const& input) {
+        for (auto& i : _items) {
+            // 'top' + 'margin-top' + 'border-top-width' + 'padding-top' + 'height' + 'padding-bottom' + 'border-bottom-width' + 'margin-bottom' + 'bottom' = height of containing block
+
+            if (input.intrinsic != IntrinsicSize::AUTO) {
+                i.margins.top = i.margins.top.unwrapOr(0_au);
+                i.margins.bottom = i.margins.top.unwrapOr(0_au);
+                continue;
+            }
+
+            // 1. The used value of 'height' is determined as for inline replaced elements. If 'margin-top' or 'margin-bottom' is specified as 'auto' its used value is determined by the rules below.
+
+            // 2. If both 'top' and 'bottom' have the value 'auto', replace 'top' with the element's static position.
+
+            // 3. If 'bottom' is 'auto', replace any 'auto' on 'margin-top' or 'margin-bottom' with '0'.
+
+            // 4. If at this point both 'margin-top' and 'margin-bottom' are still 'auto', solve the equation under the extra constraint that the two margins must get equal values.
+
+            // 5. If at this point there is only one 'auto' left, solve the equation for that value.
+
+            // 6. If at this point the values are over-constrained, ignore the value for 'bottom' and solve for that value.
+        }
+    }
+
+    void _layout(Input const& input) {
+    }
+
+    Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) {
+        _generateItems(tree, box, input, startAt, stopAt);
+        _collapseMargins();
+        _computeWidth();
+        _computeHeight();
+        _layout();
     }
 };
 

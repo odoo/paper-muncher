@@ -18,6 +18,33 @@ Vec2Au _resolveOrigin(Vec2Au fragPosition, Vec2Au containingBlockOrigin, Positio
     }
 }
 
+RectAu _resolveInsets(Tree& tree, Box& box, Offsets const& offsets, RectAu bound, RectAu containingBlock) {
+    Opt<Au> start, end, top, bottom;
+
+    auto topOffset = offsets.top;
+    if (auto topOffsetCalc = topOffset.is<CalcValue<PercentOr<Length>>>()) {
+        top = origin.y + resolve(tree, box, *topOffsetCalc, containingBlock);
+    }
+
+    if (not(start and end))
+        start = bound.x;
+    if (not(top and bottom))
+        top = bound.y;
+    if (not end)
+        end = start.unwrap() + bound.width;
+    if (not bottom)
+        bottom = top.unwrap() + bound.height;
+    if (not start)
+        start = end.unwrap() - bound.width;
+    if (not top)
+        top = end.unwrap() - bound.height;
+
+    return RectAu::fromTwoPoint(
+        {start.unwrap(), top.unwrap()},
+        {end.unwrap(), bottom.unwrap()}
+    );
+}
+
 export void layoutPositioned(Tree& tree, Frag& frag, RectAu containingBlock, Input input) {
 
     auto& style = frag.style();
@@ -59,13 +86,14 @@ export void layoutPositioned(Tree& tree, Frag& frag, RectAu containingBlock, Inp
     }
 }
 
-export void lookForRunningPosition(Input& input, Box& box) {
-    if (not input.runningPosition)
+export void layoutPositioned2(Tree& tree, Box& box, Input input) {
+    if (not box.isPositioned())
         return;
 
-    if (box.style->position.is<RunningPosition>()) {
-        auto& runningMap = input.runningPosition.peek();
-        runningMap.add(input.pageNumber, box);
+    if (auto runnings = input.runningPosition;
+        runnings and box.style->position.is<RunningPosition>()) {
+        runnings->add(input.pageNumber, box);
+        return;
     }
 }
 

@@ -51,7 +51,7 @@ Output _contentLayout(Tree& tree, Box& box, Input input, usize startAt, Opt<usiz
     return box.formatingContext.unwrap()->run(tree, box, input, startAt, stopAt);
 }
 
-InsetsAu computeMargins(Tree& tree, Box& box, Input input) {
+Math::Insets<Opt<Au>> computeMargins(Tree& tree, Box& box, Input input) {
     // Boxes that make up a table do not have margins.
     if (box.style->display.isTableInternal())
         return {};
