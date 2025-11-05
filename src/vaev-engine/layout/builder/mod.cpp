@@ -429,7 +429,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
         bc.flushRootInlineBoxIntoAnonymousBox();
         return;
     }
-    
+
     if (isVoidElement(el)) {
         _buildVoidElement(bc, el);
         return;
@@ -837,7 +837,8 @@ static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudo
     if (display == Display::NONE)
         return;
 
-    if (display == Display::INLINE) {
+    if (display == Display::INLINE or
+        display == Display::CONTENTS) {
         bc.startInlineBox(_proseStyleFromStyle(*style, style->fontFace));
         if (auto maybeStr = style->content.is<String>())
             _buildText(bc, maybeStr->str(), style);
@@ -853,7 +854,6 @@ static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudo
 static auto dumpBoxes = Debug::Flag::debug("web-boxes"s, "Dump the constructed boxes"s);
 
 export Box build(Gc::Ref<Dom::Document> doc) {
-    // NOTE: Fallback in case of an empty document
     Box root{
         makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial()),
         nullptr

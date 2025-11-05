@@ -1,0 +1,57 @@
+<test name="display-content-pseudo-element">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div>PASS</div>
+    </rendering>
+
+    <rendering>
+        <style>
+            div {
+                display: contents;
+                color: green;
+            }
+
+            .p::before {
+                content: "P"
+            }
+
+            .a::before {
+                content: "A"
+            }
+
+            .s::after {
+                content: "S"
+            }
+
+            div::before {
+                display: contents;
+                border: 1px solid red;
+            }
+
+            .active div::before {
+                color: green;
+            }
+        </style>
+        <div>
+            <div>
+                <div class="p"></div>
+            </div>
+            <div></div>
+            <div class="a"></div>
+            <div>S<div class="s"></div>
+            </div>
+        </div>
+    </rendering>
+</test>
