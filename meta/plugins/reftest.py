@@ -143,12 +143,13 @@ def _(args: RefTestArgs):
     passed = 0
     failed = 0
     skipped = 0
+    test_failed = ""
 
     counter = 0
     for file in TESTS_DIR.glob(args.glob or "**/*.xhtml"):
         if file.suffix != ".xhtml":
             continue
-        print(f"Running comparison test {file}...")
+        print(f"Running {file.relative_to(TESTS_DIR)}...")
 
         with file.open() as f:
             content = f.read()
@@ -158,7 +159,6 @@ def _(args: RefTestArgs):
         skippedCount = 0
         for info, test in re.findall(r"""<test([^>]*)>([\w\W]+?)</test>""", content):
             props = getInfo(info)
-            print(f"{vt100.WHITE}Test {props.get('name')!r}{vt100.RESET}")
 
             category_skipped = "skip" in props
             type = props.get("type")  # the type of test [render (default) | print]
@@ -175,7 +175,7 @@ def _(args: RefTestArgs):
                     </div>
                 <div>
                 """
-                print(f"{vt100.YELLOW}Skip test{vt100.RESET}")
+                print(f"{vt100.YELLOW}○{vt100.RESET}", end="", flush=True)
                 continue
 
             test_report = ""
@@ -208,7 +208,7 @@ def _(args: RefTestArgs):
                     skippedCount += 1
                     skipped += 1
 
-                    print(f"{vt100.YELLOW}Skip test{vt100.RESET}")
+                    print(f"{vt100.YELLOW}○{vt100.RESET}", end="", flush=True)
                     continue
 
                 input_path = TEST_REPORT / f"{counter}.xhtml"
@@ -257,16 +257,14 @@ def _(args: RefTestArgs):
 
                 if ok:
                     passed += 1
-                    print(f"{counter}: {help}: {vt100.GREEN}Passed{vt100.RESET}")
+                    print(f"{vt100.GREEN}●{vt100.RESET}", end="", flush=True)
                 else:
                     failed += 1
-
-                    print()
-                    print(f"{counter}: {help}: {vt100.RED}Failed{vt100.RESET}")
-
-                    print(f"file://{input_path}")
-                    print(f"file://{TEST_REPORT / 'report.html'}#case-{counter}")
-                    print()
+                    print(f"{vt100.RED}●{vt100.RESET}", end="", flush=True)
+                    test_failed += f"""Test {counter} failed.
+file://{input_path}
+file://{TEST_REPORT / "report.html"}#case-{counter}
+"""
 
                 add_infos = []
                 if test_skipped:
@@ -317,6 +315,7 @@ def _(args: RefTestArgs):
                     {test_report}
                 </div>
                 """
+        print()
     report += f"""
         <footer>
         <p class="witty">{fetchMessage(args, "witty" if failed else "nice")}</p>
@@ -513,6 +512,10 @@ def _(args: RefTestArgs):
             f"{vt100.RED}Failed {failed} tests{vt100.RESET}, {vt100.GREEN}Passed {passed} tests{vt100.RESET}"
         )
         print(f"Report: {TEST_REPORT / 'report.html'}")
+
+        print()
+        print("Failed tests details:")
+        print(test_failed)
         raise RuntimeError("Some tests failed")
     else:
         print(f"{vt100.GREEN}// {fetchMessage(args, 'nice')}{vt100.RESET}")
