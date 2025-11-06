@@ -36,13 +36,18 @@
             "git": "https://github.com/cute-engineering/ce-targets.git",
             "tag": "v0.4.0"
         },
+        "skift-org/assets": {
+            "commit": "d311e1f13f9d6d91fc2aa5a6c896ef6a714363e6",
+            "git": "https://github.com/skift-org/assets.git",
+            "tag": "main"
+        },
         "skift-org/hideo": {
-            "commit": "2eeb98fbeb4210a50acf63321aa6f6f8aea2335a",
+            "commit": "e2be582bd8b168d9541ae19b6105f741c5dd7716",
             "git": "https://github.com/skift-org/hideo.git",
             "tag": "main"
         },
         "skift-org/karm": {
-            "commit": "298a3b2fd01efcca2b5cf38d20b1d992c134a795",
+            "commit": "980d12ae52f867e6efc180407ec356c78ffdef5e",
             "git": "https://github.com/skift-org/karm.git",
             "tag": "main"
         }
