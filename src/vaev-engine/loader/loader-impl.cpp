@@ -85,10 +85,7 @@ Async::Task<Rc<Gfx::Fontface>> _loadFontfaceAsync(Http::Client& client, Ref::Url
 }
 
 Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Style::StyleSheetList const& stylesheets) {
-    auto fontDatabase = makeRc<Font::Database>();
-    if (auto result = fontDatabase->loadSystemFonts(); not result)
-        logWarn("Failed to load system fonts: {}", result);
-
+    auto fontDatabase = makeRc<Font::Database>(Font::globalDatabase());
     for (auto const& sheet : stylesheets.styleSheets) {
         Vec<Style::FontFace> fontFaces;
         for (auto const& rule : sheet.rules)

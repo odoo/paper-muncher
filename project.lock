@@ -47,7 +47,7 @@
             "tag": "main"
         },
         "skift-org/karm": {
-            "commit": "980d12ae52f867e6efc180407ec356c78ffdef5e",
+            "commit": "93c3aaf3959abbeb05176b8d64ecbf80dfa2ac0a",
             "git": "https://github.com/skift-org/karm.git",
             "tag": "main"
         }

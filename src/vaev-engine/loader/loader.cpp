@@ -179,9 +179,9 @@ static auto dumpStylesheets = Debug::Flag::debug("web-stylesheets", "Dump the lo
 export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url) {
     Ref::Url resolvedUrl = url;
 
-    // If request’s current URL’s path is the string "blank", 
+    // If request’s current URL’s path is the string "blank",
     if (url.scheme == "about" and url.path.str() == "blank") {
-        // then return a new response whose status message is `OK`, 
+        // then return a new response whose status message is `OK`,
         // header list is « (`Content-Type`, `text/html;charset=utf-8`) »
         // and body is the empty byte sequence as a body.
         resolvedUrl = Ref::Url::data("text/html"_mime, {});
