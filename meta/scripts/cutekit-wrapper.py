@@ -5,6 +5,8 @@
 # dependencies = [
 #   "cutekit~=0.10.0",
 #   "Markdown~=3.7",
+#   "opencv-python",
+#   "scikit-image",
 # ]
 # ///
 
