@@ -3,6 +3,7 @@
 set -e
 
 meta/packaging/debian-bookworm/build
+meta/packaging/debian-trixie/build
 meta/packaging/ubuntu-jammy/build
 meta/packaging/ubuntu-noble/build
 meta/packaging/ubuntu-plucky/build
