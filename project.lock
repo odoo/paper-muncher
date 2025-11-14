@@ -6,6 +6,11 @@
             "git": "https://github.com/cute-engineering/cat.git",
             "tag": "v0.11.0"
         },
+        "cute-engineering/ce-bootfs": {
+            "commit": "e854f9b6a9b3c839d8f1ef8a08639dd52fd1ac56",
+            "git": "https://github.com/cute-engineering/ce-bootfs.git",
+            "tag": "main"
+        },
         "cute-engineering/ce-heap": {
             "commit": "918dd7962dbcd703a883c9fcf658b496f9e3502e",
             "git": "https://github.com/cute-engineering/ce-heap.git",

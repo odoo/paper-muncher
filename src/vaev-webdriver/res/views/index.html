@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{.title}}</title>
+</head>
+
+<body>
+    <h1>{{.title}}</h1>
+    <p>Version: {{.version}}</p>
+
+    <h2>Session</h2>
+    <ul>
+        {{for session in .sessions}}
+        <li>Session {{.session.uuid}}</li>
+        {{end}}
+        {{if not .sessions}}
+        <li>No open session</li>
+        {{end}}
+    </ul>
+</body>
+
+</html>
