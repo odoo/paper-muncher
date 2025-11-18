@@ -94,6 +94,7 @@ export Symbol qualifiedAttrNameCased(Str name) {
     if (eqCi(Str(#VALUE), name)) \
         return Symbol::from(Str(#VALUE));
 #include "defs/ns-svg-attr-names.inc"
+
 #undef ATTR
     return Symbol::from(name);
 }
@@ -103,6 +104,7 @@ export Symbol qualifiedTagNameCased(Str name) {
     if (eqCi(Str(#VALUE), name)) \
         return Symbol::from(Str(#VALUE));
 #include "defs/ns-svg-tag-names.inc"
+
 #undef TAG
     return Symbol::from(name);
 }
@@ -127,6 +129,10 @@ namespace Dom {
 
 void Dom::QualifiedName::repr(Io::Emit& e) const {
     Str displayNamespace = ns.str();
+    // NOTE: If current node is an element in the HTML namespace, the MathML namespace,
+    //       or the SVG namespace, then let tagname be current node's local name.
+    //       Otherwise, let tagname be current node's qualified name.
+    // SEE: 13.3.5.2 https://html.spec.whatwg.org/multipage/parsing.html#serialising-html-fragments
     if (ns == Html::NAMESPACE) {
         displayNamespace = "html";
     } else if (ns == Svg::NAMESPACE) {
@@ -134,6 +140,7 @@ void Dom::QualifiedName::repr(Io::Emit& e) const {
     } else if (ns == MathMl::NAMESPACE) {
         displayNamespace = "mathml";
     }
+
     e("{}:{}", displayNamespace, name);
 }
 
