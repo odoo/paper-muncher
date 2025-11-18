@@ -274,6 +274,10 @@ export struct Media {
             .deviceAspectRatio = settings.paper.width / settings.paper.height,
         };
     }
+
+    Vec2Au viewportSize() const {
+        return {width, height};
+    }
 };
 
 // MARK: Media Features --------------------------------------------------------
