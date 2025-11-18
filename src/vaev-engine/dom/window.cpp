@@ -58,8 +58,13 @@ export struct Window {
         } else {
             co_return Error::invalidInput("unsupported intent");
         }
+
         invalidateRender();
         co_return Ok();
+    }
+
+    Async::Task<> refreshAsync() {
+        co_return co_await loadLocationAsync(document()->url());
     }
 
     Ref::Url location() const {
@@ -73,8 +78,7 @@ export struct Window {
     Driver::RenderResult& ensureRender() {
         if (_render)
             return *_render;
-        Vec2Au viewportSize = {_media.width, _media.height};
-        _render = Driver::render(_document.upgrade(), _media, {.small = viewportSize});
+        _render = Driver::render(_document.upgrade(), _media, {.small = _media.viewportSize()});
         return *_render;
     }
 
