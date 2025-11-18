@@ -1,0 +1,12 @@
+{
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+    "id": "vaev-driver.main",
+    "props": {
+        "cpp-excluded": true
+    },
+    "type": "exe",
+    "requires": [
+        "vaev-webdriver",
+        "karm-cli"
+    ]
+}
