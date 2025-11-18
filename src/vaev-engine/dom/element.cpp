@@ -144,6 +144,25 @@ export struct Element : Node {
         return sb.take();
     }
 
+    // MARK: Element -----------------------------------------------------------
+
+    // https://html.spec.whatwg.org/multipage/syntax.html#void-elements
+    bool isVoidElement() const {
+        return qualifiedName == Html::AREA_TAG or
+               qualifiedName == Html::BASE_TAG or
+               qualifiedName == Html::BR_TAG or
+               qualifiedName == Html::COL_TAG or
+               qualifiedName == Html::EMBED_TAG or
+               qualifiedName == Html::HR_TAG or
+               qualifiedName == Html::IMG_TAG or
+               qualifiedName == Html::INPUT_TAG or
+               qualifiedName == Html::LINK_TAG or
+               qualifiedName == Html::META_TAG or
+               qualifiedName == Html::SOURCE_TAG or
+               qualifiedName == Html::TRACK_TAG or
+               qualifiedName == Html::WBR_TAG;
+    }
+
     // MARK: Pseudo Elements ---------------------------------------------------
 
     void clearPseudoElement() {
