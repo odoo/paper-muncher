@@ -75,14 +75,14 @@ export struct WebDriver {
     // MARK: 9. Timeout --------------------------------------------------------
     // https://www.w3.org/TR/webdriver2/#timeouts
 
-    // https://www.w3.org/TR/webdriver2/#get-timeouts
+    // https://www.w3.org/TR/webdriver2/#set-timeouts
     Res<> setTimeouts(Ref::Uuid sessionId, TimeoutConfiguration timeouts) {
         auto session = try$(getSession(sessionId));
         session->timeouts = timeouts;
         return Ok();
     }
 
-    // https://www.w3.org/TR/webdriver2/#set-timeouts
+    // https://www.w3.org/TR/webdriver2/#get-timeouts
     Res<TimeoutConfiguration> getTimeouts(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
         return Ok(session->timeouts);

@@ -64,7 +64,7 @@ export struct Window {
     }
 
     Async::Task<> refreshAsync() {
-        co_return co_await loadLocationAsync(document()->url());
+        return loadLocationAsync(document()->url());
     }
 
     Ref::Url location() const {
