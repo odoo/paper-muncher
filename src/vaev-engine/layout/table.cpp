@@ -495,8 +495,8 @@ export struct TableFormatingContext : FormatingContext {
 
             usize end = start;
             while (grid.at(end, i).anchorIdx != grid.at(end, i + 1).anchorIdx) {
-                auto endOfI = grid.at(end, i).anchorIdx.x + grid.at(end, i).box->attrs.colSpan - 1;
-                auto endOfNextI = grid.at(end, i + 1).anchorIdx.x + grid.at(end, i + 1).box->attrs.colSpan - 1;
+                auto endOfI = grid.at(end, i).anchorIdx.x + grid.at(end, i).box->style->table->colSpan - 1;
+                auto endOfNextI = grid.at(end, i + 1).anchorIdx.x + grid.at(end, i + 1).box->style->table->colSpan - 1;
 
                 if (endOfI == endOfNextI)
                     break;
@@ -505,10 +505,10 @@ export struct TableFormatingContext : FormatingContext {
             }
 
             Vec<UsedBorder> borders;
-            for (usize j = start; j <= end; j += grid.at(j, i).box->attrs.colSpan) {
+            for (usize j = start; j <= end; j += grid.at(j, i).box->style->table->colSpan) {
                 borders.pushBack(resolve(tree, *grid.at(j, i).box, BorderEdge::BOTTOM));
             }
-            for (usize j = start; j <= end; j += grid.at(j, i + 1).box->attrs.colSpan) {
+            for (usize j = start; j <= end; j += grid.at(j, i + 1).box->style->table->colSpan) {
                 borders.pushBack(resolve(tree, *grid.at(j, i + 1).box, BorderEdge::TOP));
             }
 
@@ -518,11 +518,11 @@ export struct TableFormatingContext : FormatingContext {
             auto finalBorder = harmonizeConflictingBorders(borders);
 
             for (usize j = start; j <= end; j++) {
-                j += grid.at(j, i).box->attrs.colSpan - 1;
+                j += grid.at(j, i).box->style->table->colSpan - 1;
                 paintCellBottom(i, j, finalBorder);
             }
 
-            for (usize j = start; j <= end; j += grid.at(j, i + 1).box->attrs.colSpan) {
+            for (usize j = start; j <= end; j += grid.at(j, i + 1).box->style->table->colSpan) {
                 paintCellTop(i + 1, j, finalBorder);
             }
 
@@ -545,8 +545,8 @@ export struct TableFormatingContext : FormatingContext {
 
             usize end = start;
             while (grid.at(j, end).anchorIdx != grid.at(j + 1, end).anchorIdx) {
-                auto endOfJ = grid.at(j, end).anchorIdx.y + grid.at(j, end).box->attrs.rowSpan - 1;
-                auto endOfNextJ = grid.at(j + 1, end).anchorIdx.y + grid.at(j + 1, end).box->attrs.rowSpan - 1;
+                auto endOfJ = grid.at(j, end).anchorIdx.y + grid.at(j, end).box->style->table->rowSpan - 1;
+                auto endOfNextJ = grid.at(j + 1, end).anchorIdx.y + grid.at(j + 1, end).box->style->table->rowSpan - 1;
 
                 if (endOfJ == endOfNextJ)
                     break;
@@ -556,11 +556,11 @@ export struct TableFormatingContext : FormatingContext {
 
             Vec<UsedBorder> borders;
 
-            for (usize i = start; i <= end; i += grid.at(j, i).box->attrs.rowSpan) {
+            for (usize i = start; i <= end; i += grid.at(j, i).box->style->table->rowSpan) {
                 borders.pushBack(resolve(tree, *grid.at(j, i).box, BorderEdge::END));
             }
 
-            for (usize i = start; i <= end; i += grid.at(j + 1, i).box->attrs.rowSpan) {
+            for (usize i = start; i <= end; i += grid.at(j + 1, i).box->style->table->rowSpan) {
                 borders.pushBack(resolve(tree, *grid.at(j + 1, i).box, BorderEdge::START));
             }
 
@@ -570,11 +570,11 @@ export struct TableFormatingContext : FormatingContext {
             auto finalBorder = harmonizeConflictingBorders(borders);
 
             for (usize i = start; i <= end; i++) {
-                i += grid.at(j, i).box->attrs.rowSpan - 1;
+                i += grid.at(j, i).box->style->table->rowSpan - 1;
                 paintCellEnd(i, j, finalBorder);
             }
 
-            for (usize i = start; i <= end; i += grid.at(j + 1, i).box->attrs.rowSpan) {
+            for (usize i = start; i <= end; i += grid.at(j + 1, i).box->style->table->rowSpan) {
                 paintCellStart(i, j + 1, finalBorder);
             }
 
@@ -598,7 +598,7 @@ export struct TableFormatingContext : FormatingContext {
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
-            usize colSpan = grid.at(j, i).box->attrs.colSpan;
+            usize colSpan = grid.at(j, i).box->style->table->colSpan;
             if (edge == BorderEdge::TOP) {
                 paintCellTop(0, j, finalBorder);
             } else {
@@ -627,7 +627,7 @@ export struct TableFormatingContext : FormatingContext {
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
-            usize rowSpan = grid.at(j, i).box->attrs.rowSpan;
+            usize rowSpan = grid.at(j, i).box->style->table->rowSpan;
             if (edge == BorderEdge::START) {
                 paintCellStart(i, j, finalBorder);
             } else {
@@ -931,7 +931,7 @@ export struct TableFormatingContext : FormatingContext {
 
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
-                    .borders = buildBordersWidthsForCell(i, j, cell.box->attrs.rowSpan, colSpan)
+                    .borders = buildBordersWidthsForCell(i, j, cell.box->style->table->rowSpan, colSpan)
                 };
 
                 auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth, usedSpacings);
@@ -956,7 +956,7 @@ export struct TableFormatingContext : FormatingContext {
 
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
-                    .borders = buildBordersWidthsForCell(i, j, cell.box->attrs.rowSpan, colSpan)
+                    .borders = buildBordersWidthsForCell(i, j, cell.box->style->table->rowSpan, colSpan)
                 };
 
                 auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth, usedSpacings);
@@ -1194,7 +1194,7 @@ export struct TableFormatingContext : FormatingContext {
 
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
-                    .borders = buildBordersWidthsForCell(i, j, rowSpan, cell.box->attrs.colSpan)
+                    .borders = buildBordersWidthsForCell(i, j, rowSpan, cell.box->style->table->colSpan)
                 };
 
                 auto cellOutput = layoutBorderBox(
@@ -1229,7 +1229,8 @@ export struct TableFormatingContext : FormatingContext {
         CacheParametersFromInput(Input const& i)
             : containingBlockX(i.containingBlock.x),
               capmin(i.capmin.unwrap()),
-              knownSizeX(i.knownSize.x) {}
+              knownSizeX(i.knownSize.x) {
+        }
 
         bool operator==(CacheParametersFromInput const& c) const = default;
     };
@@ -1313,7 +1314,7 @@ export struct TableFormatingContext : FormatingContext {
             footerSize = Vec2Au{
                 tableBoxSize.x,
                 rowHeightPref.query(grid.size.y - numOfFooterRows, grid.size.y - 1) +
-                    spacing.y * Au{numOfHeaderRows + 1},
+                spacing.y * Au{numOfHeaderRows + 1},
             };
         }
     }
@@ -1396,8 +1397,8 @@ export struct TableFormatingContext : FormatingContext {
             .padding = computePaddings(tree, *cell.box, tableBoxSize),
             .borders = collapsedBorders
                            ? collapsedBorders->map([](auto b) {
-                                 return b.width;
-                             })
+                               return b.width;
+                           })
                            : computeBorders(tree, *cell.box),
         };
 
@@ -1486,14 +1487,13 @@ export struct TableFormatingContext : FormatingContext {
 
         bool isSelfContainedRow = true;
         for (usize j = 0; j < grid.size.x; ++j) {
-            if (grid.at(j, i).anchorIdx != Math::Vec2u{j, i} or grid.at(j, i).box->style->table->rowSpan != 1)
+            if (grid.at(j, i).anchorIdx != Math::Vec2u{j, i} or grid.at(j, i).box->style->table->rowSpan != 1) {
                 isSelfContainedRow = false;
                 break;
             }
         }
 
-        return not isSelfContainedRow or
-               rowHeight[i] * 2_au > min(fragmentainerSize.x, fragmentainerSize.y);
+        return not isSelfContainedRow or rowHeight[i] * 2_au > min(fragmentainerSize.x, fragmentainerSize.y);
     }
 
     bool handlePossibleForcedBreakpointAfterRow(Breakpoint& currentBreakpoint, bool allBottomsAndCompletelyLaidOut, bool isLastRow, usize i) {
