@@ -90,7 +90,7 @@ export Rc<Http::Service> createService(Rc<WebDriver> webdriver) {
 
     // https://www.w3.org/TR/webdriver2/#get-timeouts
     service->get(
-        " /session/{sessionId}/timeouts",
+        "/session/{sessionId}/timeouts",
         [webdriver](Rc<Http::Request> req, Rc<Http::Response::Writer> resp) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
             auto maybeTimeouts = webdriver->getTimeouts(sessionId);
@@ -302,7 +302,7 @@ export Rc<Http::Service> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#resizing-and-positioning-windows
 
     // https://www.w3.org/TR/webdriver2/#get-window-rect
-    service->post(
+    service->get(
         "/session/{sessionId}/window/rect",
         [webdriver](Rc<Http::Request> req, Rc<Http::Response::Writer> resp) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
@@ -383,7 +383,7 @@ export Rc<Http::Service> createService(Rc<WebDriver> webdriver) {
             if (auto value = parameters.getOr("script", NONE); value.isStr()) {
                 script = value.asStr();
             } else {
-                co_return co_await _sendErrorAsync(resp, Error::invalidInput("missing handle key"));
+                co_return co_await _sendErrorAsync(resp, Error::invalidInput("missing script key"));
             }
 
             auto scriptResult = webdriver->executeScript(sessionId, script);
@@ -395,7 +395,7 @@ export Rc<Http::Service> createService(Rc<WebDriver> webdriver) {
         }
     );
 
-    // https://www.w3.org/TR/webdriver2/#execute-script
+    // https://www.w3.org/TR/webdriver2/#execute-async-script
     service->post(
         "/session/{sessionId}/execute/async",
         [webdriver](Rc<Http::Request> req, Rc<Http::Response::Writer> resp) mutable -> Async::Task<> {
@@ -406,7 +406,7 @@ export Rc<Http::Service> createService(Rc<WebDriver> webdriver) {
             if (auto value = parameters.getOr("script", NONE); value.isStr()) {
                 script = value.asStr();
             } else {
-                co_return co_await _sendErrorAsync(resp, Error::invalidInput("missing handle key"));
+                co_return co_await _sendErrorAsync(resp, Error::invalidInput("missing script key"));
             }
 
             auto scriptResult = webdriver->executeScript(sessionId, script);
@@ -450,7 +450,7 @@ export Rc<Http::Service> createService(Rc<WebDriver> webdriver) {
             // Let orientation be the result of getting a property with default named "orientation" and with default "portrait" from parameters.
             auto orientation = parameters.getOr("orientation", "portrait"s);
             // If orientation is not a String or does not have one of the values "landscape" or "portrait", return error with error code invalid argument.
-            if (not orientation.isStr() or (orientation.asStr() != "landscape"s and orientation.asStr() != "landscape"s)) {
+            if (not orientation.isStr() or (orientation.asStr() != "landscape"s and orientation.asStr() != "portrait"s)) {
                 co_trya$(_sendErrorAsync(resp, Error::invalidInput("invalid argument")));
                 co_return Ok();
             }
@@ -474,13 +474,13 @@ export Rc<Http::Service> createService(Rc<WebDriver> webdriver) {
             auto pageWidth = page.getOr("width", 21.59);
 
             // Let pageHeight be the result of getting a property with default named "height" and with a default of 27.94 from page.
-            auto pageHeight = page.getOr("width", 27.94);
+            auto pageHeight = page.getOr("height", 27.94);
 
             // If either of pageWidth or pageHeight is not a Number, or is less than (2.54 / 72), return error with error code invalid argument.
             // TODO
 
             // Let margin be the result of getting a property with default named "margin" and with a default of an empty Object from parameters.
-            auto margin = parameters.getOr("page", Serde::Object{});
+            auto margin = parameters.getOr("margin", Serde::Object{});
 
             // Let marginTop be the result of getting a property with default named "top" and with a default of 1 from margin.
             auto marginTop = margin.getOr("top", 1);

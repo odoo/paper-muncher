@@ -48,7 +48,7 @@ struct ReadinessState {
 struct TimeoutConfiguration {
     Duration script = Duration::fromMSecs(30000);
     Duration pageLoad = Duration::fromMSecs(300000);
-    Duration implicit = Duration::fromMSecs(9);
+    Duration implicit = Duration::fromMSecs(0);
 };
 
 // MARK: 18. Print -------------------------------------------------------------
