@@ -14,7 +14,7 @@ using namespace Karm;
 
 namespace Vaev::WebDriver {
 
-export Rc<Http::Service> createService(Rc<WebDriver> webdriver) {
+export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     auto service = makeRc<Http::Router>();
 
     service->get("/", [webdriver](Rc<Http::Request>, Rc<Http::Response::Writer> resp) -> Async::Task<> {
