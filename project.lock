@@ -6,13 +6,18 @@
             "git": "https://github.com/cute-engineering/cat.git",
             "tag": "v0.11.0"
         },
+        "cute-engineering/ce-bootfs": {
+            "commit": "87ad7796d29b6e36adebc7810b69c9b8dd4d0208",
+            "git": "https://github.com/cute-engineering/ce-bootfs.git",
+            "tag": "main"
+        },
         "cute-engineering/ce-heap": {
             "commit": "918dd7962dbcd703a883c9fcf658b496f9e3502e",
             "git": "https://github.com/cute-engineering/ce-heap.git",
             "tag": "v1.1.0"
         },
         "cute-engineering/ce-libc": {
-            "commit": "d5703dc5442bb9460eb7a99368c9c8b71791d629",
+            "commit": "3ed3147c168046594a92d7862feed99f5c558ac2",
             "git": "https://github.com/cute-engineering/ce-libc.git",
             "tag": "v1.1.1"
         },
@@ -42,12 +47,12 @@
             "tag": "main"
         },
         "skift-org/hideo": {
-            "commit": "e2be582bd8b168d9541ae19b6105f741c5dd7716",
+            "commit": "eb9ef17d03ee0abff1e142c467d3b6e04ca1564f",
             "git": "https://github.com/skift-org/hideo.git",
             "tag": "main"
         },
         "skift-org/karm": {
-            "commit": "93c3aaf3959abbeb05176b8d64ecbf80dfa2ac0a",
+            "commit": "6ce43866d37365b2954b127b8a34e7e091c6d2ad",
             "git": "https://github.com/skift-org/karm.git",
             "tag": "main"
         }

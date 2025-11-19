@@ -63,6 +63,7 @@ export struct Window {
         co_return Ok();
     }
 
+    [[clang::coro_wrapper]]
     Async::Task<> refreshAsync() {
         return loadLocationAsync(document()->url());
     }
