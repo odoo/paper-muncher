@@ -24,7 +24,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
     auto webdriver = Vaev::WebDriver::createWebDriver();
     auto service = Vaev::WebDriver::createService(webdriver);
-    co_return co_await Http::servAsync(
+    co_return co_await Http::serveAsync(
         service,
         {
             .name = "Vaev WebDriver"s,
