@@ -61,7 +61,7 @@ export struct SpecifiedValues {
     Integer order;
     AlignProps aligns;
     Display display;
-    f16 opacity;
+    f32 opacity;
 
     // Small Field
     Float float_ = Float::NONE;
