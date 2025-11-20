@@ -22,10 +22,11 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
     auto formatArg = Cli::option<Str>('f', "format"s, "Override the output file format"s, ""s);
     auto densityArg = Cli::option<Str>(NONE, "density"s, "Density of the output document in css units (e.g. 96dpi)"s, "1x"s);
+    auto backgroundArg = Cli::option<Str>(NONE, "background"s, "Background color of the output document (default: white for html, transparent for svg)"s, ""s);
 
     Cli::Section inOutSection{
         "Input/Output Options"s,
-        {inputsArg, outputArg, formatArg, densityArg},
+        {inputsArg, outputArg, formatArg, densityArg, backgroundArg},
     };
 
     auto paperArg = Cli::option<Str>(NONE, "paper"s, "Paper size for printing (default: A4)"s, "A4"s);
@@ -91,6 +92,9 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
 
     if (heightArg.value())
         options.height = co_try$(Vaev::parseValue<Vaev::Length>(heightArg.value()));
+
+    if (backgroundArg.value())
+        options.background = co_try$(Vaev::parseValue<Vaev::Color>(backgroundArg.value()));
 
     options.paper = co_try$(Print::findPaperStock(paperArg.value()));
     options.orientation = co_try$(Vaev::parseValue<Print::Orientation>(orientationArg.value()));

@@ -24,8 +24,8 @@ using namespace Karm;
 namespace PaperMuncher {
 
 export enum struct Flow {
-    AUTO, //< Paginate for PDF, otherwise continuous
-    PAGINATE, //< If the content exceeds the viewport, create new pages
+    AUTO,       //< Paginate for PDF, otherwise continuous
+    PAGINATE,   //< If the content exceeds the viewport, create new pages
     CONTINUOUS, //< If the content exceeds the viewport, extend the viewport
 
     _LEN,
@@ -55,7 +55,6 @@ Rc<Http::Transport> _createHttpTransport(bool sandboxed) {
     });
 }
 
-
 export Rc<Http::Client> defaultHttpClient(bool sandboxed) {
     auto transport = _createHttpTransport(sandboxed);
     auto client = makeRc<Http::Client>(transport);
@@ -68,6 +67,7 @@ export struct Option {
     Vaev::Resolution density = Vaev::Resolution::fromDppx(1);
     Opt<Vaev::Length> width = NONE;
     Opt<Vaev::Length> height = NONE;
+    Opt<Vaev::Color> background = NONE;
     Print::PaperStock paper = Print::A4;
     Print::Orientation orientation = Print::Orientation::PORTRAIT;
     Print::Margins margins = Print::Margins::DEFAULT;
@@ -149,9 +149,12 @@ export Async::Task<> run(
 
             auto scene = window->render();
 
+            if (options.background.has()) {
+                scene = makeRc<Scene::Clear>(scene, Vaev::resolve(*options.background, Gfx::ALPHA));
+            }
             // NOTE: Override the background of HTML document, since no
             //       one really expect a html document to be transparent
-            if (window->document()->documentElement()->namespaceUri() == Vaev::Html::NAMESPACE) {
+            else if (window->document()->documentElement()->namespaceUri() == Vaev::Html::NAMESPACE) {
                 scene = makeRc<Scene::Clear>(scene, Gfx::WHITE);
             }
 
