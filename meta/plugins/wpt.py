@@ -46,9 +46,9 @@ def _(args: WptArgs):
     cmd = [
         "./wpt",
         "run",
-        "paper_muncher",
+        "vaev",
         "--webdriver-binary",
-        "paper_muncher_webdriver",
+        "vaev-webdriver",
         "--test-type=reftest",
         "--no-fail-on-unexpected",
     ] + args.args
