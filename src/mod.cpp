@@ -151,7 +151,7 @@ export Async::Task<> run(
 
             if (options.background.has()) {
                 scene = makeRc<Scene::Clear>(scene, Vaev::resolve(*options.background, Gfx::ALPHA));
-            } 
+            }
             // NOTE: Override the background of HTML document, since no
             //       one really expect a html document to be transparent
             else if (window->document()->documentElement()->namespaceUri() == Vaev::Html::NAMESPACE) {
