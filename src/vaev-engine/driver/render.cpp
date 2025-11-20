@@ -30,7 +30,7 @@ export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media
         viewport
     };
 
-    auto [outDiscovery, root] = Layout::layoutCreateFragment(
+    auto [outDiscovery, root] = Layout::layoutAndCommitRoot(
         tree,
         {
             .knownSize = {viewport.small.width, NONE},
