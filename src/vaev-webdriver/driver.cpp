@@ -9,6 +9,7 @@ import Karm.Http;
 import Karm.Ref;
 import Karm.Image;
 import Karm.Crypto;
+import Karm.Sys;
 import Vaev.Engine;
 
 import :protocol;
@@ -69,6 +70,7 @@ export struct WebDriver {
     Res<ReadinessState> status() {
         return Ok(ReadinessState{
             .ready = true,
+            .message = wholesome(Sys::now().val()),
         });
     }
 
