@@ -1,8 +1,9 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
     "id": "vaev-webdriver",
-    "type": "lib",
+    "type": "exe",
     "requires": [
-        "vaev-engine"
+        "vaev-engine",
+        "karm-cli"
     ]
 }
