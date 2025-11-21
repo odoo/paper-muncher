@@ -17,7 +17,7 @@ namespace Vaev::WebDriver {
 export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     auto service = makeRc<Http::Router>();
 
-    service->get("/", [webdriver](Rc<Http::Request>, Rc<Http::Response::Writer> resp) -> Async::Task<> {
+    service->get("/", [](Rc<Http::Request>, Rc<Http::Response::Writer> resp) -> Async::Task<> {
         co_trya$(resp->writeStrAsync(R"html(
             <!DOCTYPE html>
             <html>
@@ -63,6 +63,8 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
             if (not result)
                 co_return co_await _sendErrorAsync(resp, result.none());
 
+            co_trya$(_sendSuccessAsync(resp));
+            
             co_return Ok();
         }
     );
