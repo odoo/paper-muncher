@@ -17,7 +17,6 @@ namespace Vaev::WebDriver {
 // https://www.w3.org/TR/webdriver2/#protocol
 
 Async::Task<> _sendSuccessAsync(Rc<Http::Response::Writer> resp, Serde::Value data = NONE) {
-    co_trya$(resp->writeHeaderAsync(Http::Code::OK));
     co_trya$(resp->writeJsonAsync(Serde::Object{
         {"value"s, data},
     }));

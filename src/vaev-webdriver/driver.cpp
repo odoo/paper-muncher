@@ -94,7 +94,7 @@ export struct WebDriver {
     // https://www.w3.org/TR/webdriver2/#navigation
 
     // https://www.w3.org/TR/webdriver2/#navigate-to
-    Async::Task<> navigateTo(Ref::Uuid sessionId, Ref::Url url) {
+    Async::Task<> navigateToAsync(Ref::Uuid sessionId, Ref::Url url) {
         auto session = co_try$(getSession(sessionId));
         auto window = co_try$(session->currentBrowsingContext());
         co_return co_await window->loadLocationAsync(url);
@@ -133,11 +133,25 @@ export struct WebDriver {
     }
 
     // https://www.w3.org/TR/webdriver2/#close-window
-    Res<> closeWindow(Ref::Uuid sessionId) {
+    Res<Vec<Ref::Uuid>> closeWindow(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
+
+        // 3. Close session's current top-level browsing context.
         if (not session->windows.del(session->current))
             return Error::invalidInput("browsing context no longer open");
-        return Ok();
+
+        // 4. If there are no more open top-level browsing contexts,
+        //    then try to close the session.
+        if (not session->windows.len()) {
+            try$(deleteSession(sessionId));
+            return Ok<Vec<Ref::Uuid>>();
+        }
+
+        session->current = first(session->windows.keys());
+
+        // 5. Return the result of running the remote end steps for the
+        //    Get Window Handles command, with session, URL variables and parameters.
+        return getWindowHandles(sessionId);
     }
 
     // https://www.w3.org/TR/webdriver2/#switch-to-window
@@ -176,11 +190,11 @@ export struct WebDriver {
     }
 
     // https://www.w3.org/TR/webdriver2/#set-window-rect
-    Res<> setWindowRect(Ref::Uuid sessionId, RectAu rect) {
+    Res<RectAu> setWindowRect(Ref::Uuid sessionId, RectAu rect) {
         auto session = try$(getSession(sessionId));
         auto window = try$(session->currentBrowsingContext());
         window->changeViewport(rect.size());
-        return Ok();
+        return Ok(rect);
     }
 
     // https://www.w3.org/TR/webdriver2/#maximize-window

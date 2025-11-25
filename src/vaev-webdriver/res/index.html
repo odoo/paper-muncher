@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Vaev WebDriver</title>
+</head>
+
+<body>
+    <h1>Vaev WebDriver</h1>
+
+    <section>
+        <h2>Server</h2>
+        <label>
+            Base URL:
+            <input id="baseUrl" type="text">
+        </label>
+        <button id="pingStatusBtn">GET /status</button>
+        <pre id="statusOutput"></pre>
+    </section>
+
+    <section>
+        <h2>Sessions</h2>
+        <button id="newSessionBtn">POST /session (new)</button>
+        <label>
+            Active session:
+            <select id="sessionSelect"></select>
+        </label>
+        <button id="deleteSessionBtn">DELETE /session/{id}</button>
+        <pre id="sessionsOutput"></pre>
+    </section>
+
+    <section>
+        <h2>Navigation</h2>
+        <label>
+            URL:
+            <input id="navUrl" type="text" size="60" value="https://example.com/">
+        </label>
+        <button id="navigateBtn">POST /session/{id}/url</button>
+        <button id="refreshBtn">POST /session/{id}/refresh</button>
+        <button id="getCurrentUrlBtn">GET /session/{id}/url</button>
+        <button id="getTitleBtn">GET /session/{id}/title</button>
+        <pre id="navigationOutput"></pre>
+    </section>
+
+    <section>
+        <h2>Timeouts</h2>
+        <label>script (ms): <input id="timeoutScript" type="number"></label>
+        <label>pageLoad (ms): <input id="timeoutPageLoad" type="number"></label>
+        <label>implicit (ms): <input id="timeoutImplicit" type="number"></label>
+        <button id="getTimeoutsBtn">GET /session/{id}/timeouts</button>
+        <button id="setTimeoutsBtn">POST /session/{id}/timeouts</button>
+        <pre id="timeoutsOutput"></pre>
+    </section>
+
+    <section>
+        <h2>Windows</h2>
+        <button id="getWindowHandleBtn">GET /session/{id}/window</button>
+        <button id="getWindowHandlesBtn">GET /session/{id}/window/handles</button>
+        <button id="newWindowBtn">POST /session/{id}/window/new</button>
+        <label>
+            Switch to handle:
+            <input id="switchHandle" type="text" size="40">
+        </label>
+        <button id="switchWindowBtn">POST /session/{id}/window (switch)</button>
+        <button id="closeWindowBtn">DELETE /session/{id}/window</button>
+        <pre id="windowsOutput"></pre>
+    </section>
+
+    <section>
+        <h2>Window Rect</h2>
+        <button id="getWindowRectBtn">GET /session/{id}/window/rect</button>
+        <label>x: <input id="rectX" type="number"></label>
+        <label>y: <input id="rectY" type="number"></label>
+        <label>width: <input id="rectWidth" type="number"></label>
+        <label>height: <input id="rectHeight" type="number"></label>
+        <button id="setWindowRectBtn">POST /session/{id}/window/rect</button>
+        <pre id="rectOutput"></pre>
+    </section>
+
+    <section>
+        <h2>Document</h2>
+        <button id="getSourceBtn">GET /session/{id}/source</button>
+        <pre id="sourceOutput"></pre>
+
+        <h3>Execute Script (sync)</h3>
+        <textarea id="scriptSync" rows="4" cols="80">return [window.outerWidth - window.innerWidth,
+       window.outerHeight - window.innerHeight];</textarea>
+        <button id="executeSyncBtn">POST /session/{id}/execute/sync</button>
+
+        <h3>Execute Script (async)</h3>
+        <textarea id="scriptAsync" rows="4" cols="80">const initialized = !!window.__wptrunner_url;</textarea>
+        <button id="executeAsyncBtn">POST /session/{id}/execute/async</button>
+
+        <pre id="scriptOutput"></pre>
+    </section>
+
+    <section>
+        <h2>Screenshot</h2>
+        <button id="screenshotBtn">GET /session/{id}/screenshot</button>
+        <pre id="screenshotOutput"></pre>
+        <p>Decoded screenshot:</p>
+        <img id="screenshotImg" alt="screenshot will appear here">
+    </section>
+
+    <section>
+        <h2>Print</h2>
+        <label>orientation:
+            <select id="printOrientation">
+                <option value="portrait">portrait</option>
+                <option value="landscape">landscape</option>
+            </select>
+        </label>
+        <label>scale: <input id="printScale" type="number" step="0.1" value="1"></label>
+        <button id="printBtn">POST /session/{id}/print</button>
+        <pre id="printOutput"></pre>
+    </section>
+
+    <section>
+        <h2>Custom Request</h2>
+        <label>Method:
+            <select id="customMethod">
+                <option>GET</option>
+                <option>POST</option>
+                <option>DELETE</option>
+            </select>
+        </label>
+        <label>Path (relative to base URL):
+            <input id="customPath" type="text" size="60" value="/status">
+        </label>
+        <br>
+        <label>Body (JSON):</label><br>
+        <textarea id="customBody" rows="6" cols="80">{}</textarea><br>
+        <button id="customSendBtn">Send</button>
+        <pre id="customOutput"></pre>
+    </section>
+
+    <section>
+        <h2>Last HTTP Request / Response</h2>
+        <pre id="logOutput"></pre>
+    </section>
+
+    <script>
+        const baseUrlInput = document.getElementById("baseUrl");
+        const statusOutput = document.getElementById("statusOutput");
+        const sessionsOutput = document.getElementById("sessionsOutput");
+        const sessionSelect = document.getElementById("sessionSelect");
+        const navigationOutput = document.getElementById("navigationOutput");
+        const timeoutsOutput = document.getElementById("timeoutsOutput");
+        const windowsOutput = document.getElementById("windowsOutput");
+        const rectOutput = document.getElementById("rectOutput");
+        const sourceOutput = document.getElementById("sourceOutput");
+        const scriptOutput = document.getElementById("scriptOutput");
+        const screenshotOutput = document.getElementById("screenshotOutput");
+        const screenshotImg = document.getElementById("screenshotImg");
+        const printOutput = document.getElementById("printOutput");
+        const customOutput = document.getElementById("customOutput");
+        const logOutput = document.getElementById("logOutput");
+
+        const navUrlInput = document.getElementById("navUrl");
+        const timeoutScriptInput = document.getElementById("timeoutScript");
+        const timeoutPageLoadInput = document.getElementById("timeoutPageLoad");
+        const timeoutImplicitInput = document.getElementById("timeoutImplicit");
+        const switchHandleInput = document.getElementById("switchHandle");
+        const rectXInput = document.getElementById("rectX");
+        const rectYInput = document.getElementById("rectY");
+        const rectWidthInput = document.getElementById("rectWidth");
+        const rectHeightInput = document.getElementById("rectHeight");
+        const scriptSyncInput = document.getElementById("scriptSync");
+        const scriptAsyncInput = document.getElementById("scriptAsync");
+        const printOrientationSelect = document.getElementById("printOrientation");
+        const printScaleInput = document.getElementById("printScale");
+
+        const customMethodSelect = document.getElementById("customMethod");
+        const customPathInput = document.getElementById("customPath");
+        const customBodyInput = document.getElementById("customBody");
+
+        let sessions = []; // array of {id: "uuid", capabilities: any}
+
+        function getBaseUrl() {
+            return baseUrlInput.value.replace(/\/+$/, "");
+        }
+
+        function getActiveSessionId() {
+            return sessionSelect.value || null;
+        }
+
+        function updateSessionSelect() {
+            const prev = sessionSelect.value;
+            sessionSelect.innerHTML = "";
+            sessions.forEach(s => {
+                const opt = document.createElement("option");
+                opt.value = s.id;
+                opt.textContent = s.id;
+                sessionSelect.appendChild(opt);
+            });
+            if (sessions.length > 0) {
+                sessionSelect.value = prev && sessions.some(s => s.id === prev)
+                    ? prev
+                    : sessions[0].id;
+            }
+        }
+
+        function logRequest(method, url, body) {
+            const bodyStr = body !== undefined ? JSON.stringify(body, null, 2) : "(no body)";
+            logOutput.textContent = "REQUEST:\n" +
+                method + " " + url + "\n\n" +
+                bodyStr + "\n";
+        }
+
+        function logResponse(status, json) {
+            logOutput.textContent += "\nRESPONSE (status " + status + "):\n" +
+                JSON.stringify(json, null, 2) + "\n";
+        }
+
+        async function sendRequest(method, path, body) {
+            const url = getBaseUrl() + path;
+            const options = {
+                method: method,
+                headers: {}
+            };
+            if (body !== undefined && body !== null &&
+                method !== "GET" && method !== "HEAD") {
+                options.headers["Content-Type"] = "application/json";
+                options.body = JSON.stringify(body);
+            }
+            logRequest(method, url, body);
+
+            const res = await fetch(url, options);
+            let json = null;
+            try {
+                json = await res.json();
+            } catch (e) {
+                json = { parseError: e.toString() };
+            }
+            logResponse(res.status, json);
+            return { status: res.status, json };
+        }
+
+        function unwrapValue(resp, outputEl) {
+            if (!resp || typeof resp.json !== "object") {
+                outputEl.textContent = "Invalid response";
+                return null;
+            }
+            if ("value" in resp.json) {
+                outputEl.textContent = JSON.stringify(resp.json, null, 2);
+                return resp.json.value;
+            } else {
+                outputEl.textContent = JSON.stringify(resp.json, null, 2);
+                return resp.json;
+            }
+        }
+
+        baseUrlInput.value = window.location.origin;
+
+        // Status
+        document.getElementById("pingStatusBtn").addEventListener("click", async () => {
+            const resp = await sendRequest("GET", "/status");
+            unwrapValue(resp, statusOutput);
+        });
+
+        // Sessions
+        document.getElementById("newSessionBtn").addEventListener("click", async () => {
+            const body = {
+                capabilities: {
+                    alwaysMatch: {},
+                    firstMatch: [{}]
+                }
+            };
+            const resp = await sendRequest("POST", "/session", body);
+            const value = unwrapValue(resp, sessionsOutput);
+            if (value && value.sessionId) {
+                sessions.push({ id: value.sessionId, capabilities: value.capabilities });
+                updateSessionSelect();
+            }
+        });
+
+        document.getElementById("deleteSessionBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                sessionsOutput.textContent = "No active session";
+                return;
+            }
+            const resp = await sendRequest("DELETE", "/session/" + encodeURIComponent(sessionId));
+            unwrapValue(resp, sessionsOutput);
+            sessions = sessions.filter(s => s.id !== sessionId);
+            updateSessionSelect();
+        });
+
+        // Navigation
+        document.getElementById("navigateBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                navigationOutput.textContent = "No active session";
+                return;
+            }
+            const url = navUrlInput.value;
+            const body = { url: url };
+            const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/url", body);
+            unwrapValue(resp, navigationOutput);
+        });
+
+        document.getElementById("refreshBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                navigationOutput.textContent = "No active session";
+                return;
+            }
+            const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/refresh", {});
+            unwrapValue(resp, navigationOutput);
+        });
+
+        document.getElementById("getCurrentUrlBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                navigationOutput.textContent = "No active session";
+                return;
+            }
+            const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/url");
+            const value = unwrapValue(resp, navigationOutput);
+            if (typeof value === "string") {
+                navUrlInput.value = value;
+            }
+        });
+
+        document.getElementById("getTitleBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                navigationOutput.textContent = "No active session";
+                return;
+            }
+            const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/title");
+            unwrapValue(resp, navigationOutput);
+        });
+
+        // Timeouts
+        document.getElementById("getTimeoutsBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                timeoutsOutput.textContent = "No active session";
+                return;
+            }
+            const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/timeouts");
+            const value = unwrapValue(resp, timeoutsOutput);
+            if (value && typeof value === "object") {
+                if (value.script != null) timeoutScriptInput.value = value.script;
+                if (value.pageLoad != null) timeoutPageLoadInput.value = value.pageLoad;
+                if (value.implicit != null) timeoutImplicitInput.value = value.implicit;
+            }
+        });
+
+        document.getElementById("setTimeoutsBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                timeoutsOutput.textContent = "No active session";
+                return;
+            }
+            const body = {};
+            if (timeoutScriptInput.value !== "") body.script = Number(timeoutScriptInput.value);
+            if (timeoutPageLoadInput.value !== "") body.pageLoad = Number(timeoutPageLoadInput.value);
+            if (timeoutImplicitInput.value !== "") body.implicit = Number(timeoutImplicitInput.value);
+            const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/timeouts", body);
+            unwrapValue(resp, timeoutsOutput);
+        });
+
+        // Windows
+        document.getElementById("getWindowHandleBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                windowsOutput.textContent = "No active session";
+                return;
+            }
+            const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/window");
+            const value = unwrapValue(resp, windowsOutput);
+            if (typeof value === "string") {
+                switchHandleInput.value = value;
+            }
+        });
+
+        document.getElementById("getWindowHandlesBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                windowsOutput.textContent = "No active session";
+                return;
+            }
+            const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/window/handles");
+            unwrapValue(resp, windowsOutput);
+        });
+
+        document.getElementById("newWindowBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                windowsOutput.textContent = "No active session";
+                return;
+            }
+            const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/window/new", {});
+            const value = unwrapValue(resp, windowsOutput);
+            if (value && value.handle) {
+                switchHandleInput.value = value.handle;
+            }
+        });
+
+        document.getElementById("switchWindowBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                windowsOutput.textContent = "No active session";
+                return;
+            }
+            const handle = switchHandleInput.value;
+            const body = { handle: handle };
+            const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/window", body);
+            unwrapValue(resp, windowsOutput);
+        });
+
+        document.getElementById("closeWindowBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                windowsOutput.textContent = "No active session";
+                return;
+            }
+            const resp = await sendRequest("DELETE", "/session/" + encodeURIComponent(sessionId) + "/window");
+            unwrapValue(resp, windowsOutput);
+        });
+
+        // Window rect
+        document.getElementById("getWindowRectBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                rectOutput.textContent = "No active session";
+                return;
+            }
+            const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/window/rect");
+            const value = unwrapValue(resp, rectOutput);
+            if (value && typeof value === "object") {
+                if (value.x != null) rectXInput.value = value.x;
+                if (value.y != null) rectYInput.value = value.y;
+                if (value.width != null) rectWidthInput.value = value.width;
+                if (value.height != null) rectHeightInput.value = value.height;
+            }
+        });
+
+        document.getElementById("setWindowRectBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                rectOutput.textContent = "No active session";
+                return;
+            }
+            const body = {};
+            if (rectXInput.value !== "") body.x = Number(rectXInput.value);
+            if (rectYInput.value !== "") body.y = Number(rectYInput.value);
+            if (rectWidthInput.value !== "") body.width = Number(rectWidthInput.value);
+            if (rectHeightInput.value !== "") body.height = Number(rectHeightInput.value);
+            const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/window/rect", body);
+            unwrapValue(resp, rectOutput);
+        });
+
+        // Document
+        document.getElementById("getSourceBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                sourceOutput.textContent = "No active session";
+                return;
+            }
+            const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/source");
+            const value = unwrapValue(resp, sourceOutput);
+            if (typeof value === "string") {
+                sourceOutput.textContent = value;
+            }
+        });
+
+        document.getElementById("executeSyncBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                scriptOutput.textContent = "No active session";
+                return;
+            }
+            const body = {
+                script: scriptSyncInput.value,
+                args: []
+            };
+            const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/execute/sync", body);
+            unwrapValue(resp, scriptOutput);
+        });
+
+        document.getElementById("executeAsyncBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                scriptOutput.textContent = "No active session";
+                return;
+            }
+            const body = {
+                script: scriptAsyncInput.value,
+                args: []
+            };
+            const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/execute/async", body);
+            unwrapValue(resp, scriptOutput);
+        });
+
+        // Screenshot
+        document.getElementById("screenshotBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                screenshotOutput.textContent = "No active session";
+                return;
+            }
+            const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/screenshot");
+            const value = unwrapValue(resp, screenshotOutput);
+            if (typeof value === "string") {
+                // assume BMP; data URL will still show it in most browsers
+                screenshotImg.src = "data:image/bmp;base64," + value;
+            }
+        });
+
+        // Print
+        document.getElementById("printBtn").addEventListener("click", async () => {
+            const sessionId = getActiveSessionId();
+            if (!sessionId) {
+                printOutput.textContent = "No active session";
+                return;
+            }
+            const body = {
+                orientation: printOrientationSelect.value,
+                scale: Number(printScaleInput.value)
+            };
+            const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/print", body);
+            const value = unwrapValue(resp, printOutput);
+            if (typeof value === "string") {
+                printOutput.textContent = "Got base64 PDF (" + value.length + " chars)";
+            }
+        });
+
+        // Custom request
+        document.getElementById("customSendBtn").addEventListener("click", async () => {
+            const method = customMethodSelect.value;
+            const path = customPathInput.value || "/";
+            let body = undefined;
+            const raw = customBodyInput.value.trim();
+            if (raw !== "" && method !== "GET" && method !== "HEAD") {
+                try {
+                    body = JSON.parse(raw);
+                } catch (e) {
+                    customOutput.textContent = "Invalid JSON body: " + e.toString();
+                    return;
+                }
+            }
+            const resp = await sendRequest(method, path, body);
+            unwrapValue(resp, customOutput);
+        });
+
+        // Init
+        updateSessionSelect();
+    </script>
+</body>
+
+</html>
