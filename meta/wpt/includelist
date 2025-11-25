@@ -6,13 +6,13 @@ css/css-color
 css/css-conditional
 css/css-display
 css/css-flexbox
+css/css-fonts
 css/css-page
 css/css-position
 css/css-pseudo
 css/css-sizing
 css/css-syntax
 css/css-tables
-css/css-fonts
 css/css-transforms
 css/css-values
 css/css-variables
@@ -34,3 +34,4 @@ svg/painting
 svg/render/order
 svg/render/reftests
 svg/shapes
+webdriver/tests/classic
