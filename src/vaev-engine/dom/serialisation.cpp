@@ -99,7 +99,12 @@ export void serializeHtmlFragment(Gc::Ref<Node> node, Io::Emit& e) {
         if (auto el = currentNode->is<Element>()) {
             // - Determine tagname: if in HTML, MathML, or SVG namespace, tagname is local name; otherwise qualified name.
             // - Append "<" followed by tagname.
-            e("<{}", el->qualifiedName);
+
+            if (el->namespaceUri() == Html::NAMESPACE or el->namespaceUri() == MathMl::NAMESPACE or el->namespaceUri() == Svg::NAMESPACE) {
+                e("<{}", el->localName());
+            } else {
+                e("<{}", el->qualifiedName);
+            }
 
             // - If current node has an is value not present as an attribute, append ' is="<escaped is value>"'.
             if (auto isValue = el->getAttribute(Html::IS_ATTR)) {
@@ -108,11 +113,11 @@ export void serializeHtmlFragment(Gc::Ref<Node> node, Io::Emit& e) {
                 e("\"");
             }
             // - For each attribute:
-            for (auto& [name, attr] : el->attributes.iterUnordered()) {
-                if (name == Html::IS_ATTR)
+            for (auto& [qualifiedName, attr] : el->attributes.iterUnordered()) {
+                if (qualifiedName == Html::IS_ATTR)
                     continue;
                 //     Append space, attribute’s serialized name, "=", quote, escaped value, quote.
-                e(" {}=\"", name);
+                e(" {}=\"", qualifiedName.name);
                 escapeString(e, attr->value, true);
                 e("\"");
             }
@@ -127,7 +132,11 @@ export void serializeHtmlFragment(Gc::Ref<Node> node, Io::Emit& e) {
             serializeHtmlFragment(currentNode, e);
 
             // then "</tagname>".
-            e("</{}>", el->qualifiedName);
+            if (el->namespaceUri() == Html::NAMESPACE or el->namespaceUri() == MathMl::NAMESPACE or el->namespaceUri() == Svg::NAMESPACE) {
+                e("</{}>", el->localName());
+            } else {
+                e("</{}>", el->qualifiedName);
+            }
         }
 
         // If current node is a Text node:
