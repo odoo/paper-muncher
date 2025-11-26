@@ -4,158 +4,314 @@
 <head>
     <meta charset="utf-8">
     <title>Vaev WebDriver</title>
+    <style>
+        /* ========== GLOBAL RESET ========== */
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Inter", system-ui, sans-serif;
+            background: #0f0f11;
+            color: #e6e6eb;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ========== HEADER ========== */
+        h1 {
+            margin: 0;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #1d1d21;
+            background: #151518;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #f5f5f8;
+        }
+
+        /* ========== MAIN LAYOUT ========== */
+        .layout {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            background: #0f0f11;
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            width: 360px;
+            max-width: 40vw;
+            padding: 1rem;
+            border-right: 1px solid #1d1d21;
+            overflow-y: auto;
+            background: #131316;
+        }
+
+        .sidebar h2 {
+            margin-top: 1.2rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 600;
+            color: #8b8b96;
+        }
+
+        .sidebar h3 {
+            margin-top: 0.8rem;
+            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
+            color: #a0a0aa;
+        }
+
+        /* ========== INPUTS & BUTTONS ========== */
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.45rem 0.6rem;
+            margin-top: 0.4rem;
+            border: 1px solid #2a2a31;
+            border-radius: 6px;
+            background: #18181b;
+            color: #e6e6eb;
+            font-size: 0.9rem;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 0.4rem;
+            margin-right: 0.3rem;
+            padding: 0.4rem 0.6rem;
+            background: #2b2b31;
+            border: 1px solid #3a3a40;
+            border-radius: 6px;
+            color: #e6e6eb;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.15s, border 0.15s, transform 0.1s;
+        }
+
+        button:hover {
+            background: #3a3a40;
+            border-color: #4c4c55;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* ========== VIEWER PANEL ========== */
+        .viewer {
+            flex: 1;
+            display: flex;
+            background: #0f0f11;
+            overflow: hidden;
+        }
+
+        #viewerRoot {
+            flex: 1;
+            height: 100%;
+            overflow: auto;
+            padding: 1.5rem 2rem;
+            background: #0f0f11;
+        }
+
+        /* ========== VIEWER TITLES ========== */
+        #viewerRoot h2 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: #18181b;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #24242a;
+            color: #f0f0f5;
+        }
+
+        /* ========== JSON / TEXT OUTPUT ========== */
+        #viewerRoot pre {
+            background: #18181b;
+            border: 1px solid #24242a;
+            padding: 1rem 1.2rem;
+            border-radius: 10px;
+            color: #e6e6eb;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* ========== MEDIA (Images, PDF) ========== */
+        #viewerRoot img,
+        #viewerRoot iframe {
+            width: 100%;
+            height: calc(100vh - 5rem);
+            border: none;
+            background: #000;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        /* Make media truly full-bleed by removing viewer padding */
+        #viewerRoot.media-mode {
+            padding: 0;
+        }
+
+        #viewerRoot.media-mode h2 {
+            display: none;
+            /* cleaner when previewing screenshots/PDF */
+        }
+
+        /* Sidebar separators */
+        section {
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #1a1a1e;
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
 
 <body>
     <h1>Vaev WebDriver</h1>
 
-    <section>
-        <h2>Server</h2>
-        <label>
-            Base URL:
-            <input id="baseUrl" type="text">
-        </label>
-        <button id="pingStatusBtn">GET /status</button>
-        <pre id="statusOutput"></pre>
-    </section>
+    <div class="layout">
+        <!-- LEFT: controls -->
+        <aside class="sidebar">
+            <section>
+                <h2>Server</h2>
+                <label>
+                    Base URL:
+                    <input id="baseUrl" type="text">
+                </label>
+                <button id="pingStatusBtn">GET /status</button>
+            </section>
 
-    <section>
-        <h2>Sessions</h2>
-        <button id="newSessionBtn">POST /session (new)</button>
-        <label>
-            Active session:
-            <select id="sessionSelect"></select>
-        </label>
-        <button id="deleteSessionBtn">DELETE /session/{id}</button>
-        <pre id="sessionsOutput"></pre>
-    </section>
+            <section>
+                <h2>Sessions</h2>
+                <button id="newSessionBtn">POST /session (new)</button>
+                <label>
+                    Active session:
+                    <select id="sessionSelect"></select>
+                </label>
+                <button id="deleteSessionBtn">DELETE /session/{id}</button>
+            </section>
 
-    <section>
-        <h2>Navigation</h2>
-        <label>
-            URL:
-            <input id="navUrl" type="text" size="60" value="https://example.com/">
-        </label>
-        <button id="navigateBtn">POST /session/{id}/url</button>
-        <button id="refreshBtn">POST /session/{id}/refresh</button>
-        <button id="getCurrentUrlBtn">GET /session/{id}/url</button>
-        <button id="getTitleBtn">GET /session/{id}/title</button>
-        <pre id="navigationOutput"></pre>
-    </section>
+            <section>
+                <h2>Navigation</h2>
+                <label>
+                    URL:
+                    <input id="navUrl" type="text" size="60" value="http://example.org/">
+                </label>
+                <button id="navigateBtn">POST /session/{id}/url</button>
+                <button id="refreshBtn">POST /session/{id}/refresh</button>
+                <button id="getCurrentUrlBtn">GET /session/{id}/url</button>
+                <button id="getTitleBtn">GET /session/{id}/title</button>
+            </section>
 
-    <section>
-        <h2>Timeouts</h2>
-        <label>script (ms): <input id="timeoutScript" type="number"></label>
-        <label>pageLoad (ms): <input id="timeoutPageLoad" type="number"></label>
-        <label>implicit (ms): <input id="timeoutImplicit" type="number"></label>
-        <button id="getTimeoutsBtn">GET /session/{id}/timeouts</button>
-        <button id="setTimeoutsBtn">POST /session/{id}/timeouts</button>
-        <pre id="timeoutsOutput"></pre>
-    </section>
+            <section>
+                <h2>Timeouts</h2>
+                <label>script (ms): <input id="timeoutScript" type="number"></label>
+                <label>pageLoad (ms): <input id="timeoutPageLoad" type="number"></label>
+                <label>implicit (ms): <input id="timeoutImplicit" type="number"></label>
+                <button id="getTimeoutsBtn">GET /session/{id}/timeouts</button>
+                <button id="setTimeoutsBtn">POST /session/{id}/timeouts</button>
+            </section>
 
-    <section>
-        <h2>Windows</h2>
-        <button id="getWindowHandleBtn">GET /session/{id}/window</button>
-        <button id="getWindowHandlesBtn">GET /session/{id}/window/handles</button>
-        <button id="newWindowBtn">POST /session/{id}/window/new</button>
-        <label>
-            Switch to handle:
-            <input id="switchHandle" type="text" size="40">
-        </label>
-        <button id="switchWindowBtn">POST /session/{id}/window (switch)</button>
-        <button id="closeWindowBtn">DELETE /session/{id}/window</button>
-        <pre id="windowsOutput"></pre>
-    </section>
+            <section>
+                <h2>Windows</h2>
+                <button id="getWindowHandleBtn">GET /session/{id}/window</button>
+                <button id="getWindowHandlesBtn">GET /session/{id}/window/handles</button>
+                <button id="newWindowBtn">POST /session/{id}/window/new</button>
+                <label>
+                    Switch to handle:
+                    <input id="switchHandle" type="text" size="40">
+                </label>
+                <button id="switchWindowBtn">POST /session/{id}/window (switch)</button>
+                <button id="closeWindowBtn">DELETE /session/{id}/window</button>
+            </section>
 
-    <section>
-        <h2>Window Rect</h2>
-        <button id="getWindowRectBtn">GET /session/{id}/window/rect</button>
-        <label>x: <input id="rectX" type="number"></label>
-        <label>y: <input id="rectY" type="number"></label>
-        <label>width: <input id="rectWidth" type="number"></label>
-        <label>height: <input id="rectHeight" type="number"></label>
-        <button id="setWindowRectBtn">POST /session/{id}/window/rect</button>
-        <pre id="rectOutput"></pre>
-    </section>
+            <section>
+                <h2>Window Rect</h2>
+                <button id="getWindowRectBtn">GET /session/{id}/window/rect</button>
+                <label>x: <input id="rectX" type="number"></label>
+                <label>y: <input id="rectY" type="number"></label>
+                <label>width: <input id="rectWidth" type="number"></label>
+                <label>height: <input id="rectHeight" type="number"></label>
+                <button id="setWindowRectBtn">POST /session/{id}/window/rect</button>
+            </section>
 
-    <section>
-        <h2>Document</h2>
-        <button id="getSourceBtn">GET /session/{id}/source</button>
-        <pre id="sourceOutput"></pre>
+            <section>
+                <h2>Document</h2>
+                <button id="getSourceBtn">GET /session/{id}/source</button>
 
-        <h3>Execute Script (sync)</h3>
-        <textarea id="scriptSync" rows="4" cols="80">return [window.outerWidth - window.innerWidth,
+                <h3>Execute Script (sync)</h3>
+                <textarea id="scriptSync" rows="4" cols="80">return [window.outerWidth - window.innerWidth,
        window.outerHeight - window.innerHeight];</textarea>
-        <button id="executeSyncBtn">POST /session/{id}/execute/sync</button>
+                <button id="executeSyncBtn">POST /session/{id}/execute/sync</button>
 
-        <h3>Execute Script (async)</h3>
-        <textarea id="scriptAsync" rows="4" cols="80">const initialized = !!window.__wptrunner_url;</textarea>
-        <button id="executeAsyncBtn">POST /session/{id}/execute/async</button>
+                <h3>Execute Script (async)</h3>
+                <textarea id="scriptAsync" rows="4" cols="80">const initialized = !!window.__wptrunner_url;</textarea>
+                <button id="executeAsyncBtn">POST /session/{id}/execute/async</button>
+            </section>
 
-        <pre id="scriptOutput"></pre>
-    </section>
+            <section>
+                <h2>Screenshot</h2>
+                <button id="screenshotBtn">GET /session/{id}/screenshot</button>
+            </section>
 
-    <section>
-        <h2>Screenshot</h2>
-        <button id="screenshotBtn">GET /session/{id}/screenshot</button>
-        <pre id="screenshotOutput"></pre>
-        <p>Decoded screenshot:</p>
-        <img id="screenshotImg" alt="screenshot will appear here">
-    </section>
+            <section>
+                <h2>Print</h2>
+                <label>orientation:
+                    <select id="printOrientation">
+                        <option value="portrait">portrait</option>
+                        <option value="landscape">landscape</option>
+                    </select>
+                </label>
+                <label>scale: <input id="printScale" type="number" step="0.1" value="1"></label>
+                <button id="printBtn">POST /session/{id}/print</button>
+            </section>
 
-    <section>
-        <h2>Print</h2>
-        <label>orientation:
-            <select id="printOrientation">
-                <option value="portrait">portrait</option>
-                <option value="landscape">landscape</option>
-            </select>
-        </label>
-        <label>scale: <input id="printScale" type="number" step="0.1" value="1"></label>
-        <button id="printBtn">POST /session/{id}/print</button>
-        <pre id="printOutput"></pre>
-    </section>
+            <section>
+                <h2>Custom Request</h2>
+                <label>Method:
+                    <select id="customMethod">
+                        <option>GET</option>
+                        <option>POST</option>
+                        <option>DELETE</option>
+                    </select>
+                </label>
+                <label>Path (relative to base URL):
+                    <input id="customPath" type="text" size="60" value="/status">
+                </label>
+                <br>
+                <label>Body (JSON):</label><br>
+                <textarea id="customBody" rows="6" cols="80">{}</textarea><br>
+                <button id="customSendBtn">Send</button>
+            </section>
+        </aside>
 
-    <section>
-        <h2>Custom Request</h2>
-        <label>Method:
-            <select id="customMethod">
-                <option>GET</option>
-                <option>POST</option>
-                <option>DELETE</option>
-            </select>
-        </label>
-        <label>Path (relative to base URL):
-            <input id="customPath" type="text" size="60" value="/status">
-        </label>
-        <br>
-        <label>Body (JSON):</label><br>
-        <textarea id="customBody" rows="6" cols="80">{}</textarea><br>
-        <button id="customSendBtn">Send</button>
-        <pre id="customOutput"></pre>
-    </section>
-
-    <section>
-        <h2>Last HTTP Request / Response</h2>
-        <pre id="logOutput"></pre>
-    </section>
+        <!-- RIGHT: single viewer -->
+        <main class="viewer">
+            <div id="viewerRoot"></div>
+        </main>
+    </div>
 
     <script>
         const baseUrlInput = document.getElementById("baseUrl");
-        const statusOutput = document.getElementById("statusOutput");
-        const sessionsOutput = document.getElementById("sessionsOutput");
         const sessionSelect = document.getElementById("sessionSelect");
-        const navigationOutput = document.getElementById("navigationOutput");
-        const timeoutsOutput = document.getElementById("timeoutsOutput");
-        const windowsOutput = document.getElementById("windowsOutput");
-        const rectOutput = document.getElementById("rectOutput");
-        const sourceOutput = document.getElementById("sourceOutput");
-        const scriptOutput = document.getElementById("scriptOutput");
-        const screenshotOutput = document.getElementById("screenshotOutput");
-        const screenshotImg = document.getElementById("screenshotImg");
-        const printOutput = document.getElementById("printOutput");
-        const customOutput = document.getElementById("customOutput");
-        const logOutput = document.getElementById("logOutput");
 
         const navUrlInput = document.getElementById("navUrl");
         const timeoutScriptInput = document.getElementById("timeoutScript");
@@ -174,6 +330,8 @@
         const customMethodSelect = document.getElementById("customMethod");
         const customPathInput = document.getElementById("customPath");
         const customBodyInput = document.getElementById("customBody");
+
+        const viewerRoot = document.getElementById("viewerRoot");
 
         let sessions = []; // array of {id: "uuid", capabilities: any}
 
@@ -201,16 +359,50 @@
             }
         }
 
-        function logRequest(method, url, body) {
-            const bodyStr = body !== undefined ? JSON.stringify(body, null, 2) : "(no body)";
-            logOutput.textContent = "REQUEST:\n" +
-                method + " " + url + "\n\n" +
-                bodyStr + "\n";
+        function clearViewer() {
+            viewerRoot.innerHTML = "";
         }
 
-        function logResponse(status, json) {
-            logOutput.textContent += "\nRESPONSE (status " + status + "):\n" +
-                JSON.stringify(json, null, 2) + "\n";
+        function showText(title, text) {
+            clearViewer();
+            const h2 = document.createElement("h2");
+            h2.textContent = title;
+            const pre = document.createElement("pre");
+            pre.textContent = text;
+            viewerRoot.appendChild(h2);
+            viewerRoot.appendChild(pre);
+        }
+
+        function viewerSetMode(isMedia) {
+            if (isMedia) viewerRoot.classList.add("media-mode");
+            else viewerRoot.classList.remove("media-mode");
+        }
+
+        function showImage(title, base64, mime) {
+            viewerSetMode(true);
+            clearViewer();
+            const img = document.createElement("img");
+            img.src = `data:${mime || "image/bmp"};base64,${base64}`;
+            viewerRoot.appendChild(img);
+        }
+
+        function showPdf(title, base64) {
+            viewerSetMode(true);
+            clearViewer();
+            const iframe = document.createElement("iframe");
+            iframe.src = `data:application/pdf;base64,${base64}`;
+            viewerRoot.appendChild(iframe);
+        }
+
+        function showJson(title, data) {
+            viewerSetMode(false);
+            clearViewer();
+            const h2 = document.createElement("h2");
+            h2.textContent = title;
+            const pre = document.createElement("pre");
+            pre.textContent = JSON.stringify(data, null, 2);
+            viewerRoot.appendChild(h2);
+            viewerRoot.appendChild(pre);
         }
 
         async function sendRequest(method, path, body) {
@@ -224,7 +416,8 @@
                 options.headers["Content-Type"] = "application/json";
                 options.body = JSON.stringify(body);
             }
-            logRequest(method, url, body);
+
+            console.log("REQUEST", { method, url, body });
 
             const res = await fetch(url, options);
             let json = null;
@@ -233,20 +426,21 @@
             } catch (e) {
                 json = { parseError: e.toString() };
             }
-            logResponse(res.status, json);
+
+            console.log("RESPONSE", { status: res.status, json });
             return { status: res.status, json };
         }
 
-        function unwrapValue(resp, outputEl) {
+        function unwrapValue(resp, title) {
             if (!resp || typeof resp.json !== "object") {
-                outputEl.textContent = "Invalid response";
+                showText(title || "Response", "Invalid response");
                 return null;
             }
             if ("value" in resp.json) {
-                outputEl.textContent = JSON.stringify(resp.json, null, 2);
+                showJson(title || "Response", resp.json);
                 return resp.json.value;
             } else {
-                outputEl.textContent = JSON.stringify(resp.json, null, 2);
+                showJson(title || "Response", resp.json);
                 return resp.json;
             }
         }
@@ -256,7 +450,7 @@
         // Status
         document.getElementById("pingStatusBtn").addEventListener("click", async () => {
             const resp = await sendRequest("GET", "/status");
-            unwrapValue(resp, statusOutput);
+            unwrapValue(resp, "Server status");
         });
 
         // Sessions
@@ -268,7 +462,7 @@
                 }
             };
             const resp = await sendRequest("POST", "/session", body);
-            const value = unwrapValue(resp, sessionsOutput);
+            const value = unwrapValue(resp, "New session");
             if (value && value.sessionId) {
                 sessions.push({ id: value.sessionId, capabilities: value.capabilities });
                 updateSessionSelect();
@@ -278,11 +472,11 @@
         document.getElementById("deleteSessionBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                sessionsOutput.textContent = "No active session";
+                showText("Delete session", "No active session");
                 return;
             }
             const resp = await sendRequest("DELETE", "/session/" + encodeURIComponent(sessionId));
-            unwrapValue(resp, sessionsOutput);
+            unwrapValue(resp, "Delete session");
             sessions = sessions.filter(s => s.id !== sessionId);
             updateSessionSelect();
         });
@@ -291,33 +485,33 @@
         document.getElementById("navigateBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                navigationOutput.textContent = "No active session";
+                showText("Navigation", "No active session");
                 return;
             }
             const url = navUrlInput.value;
             const body = { url: url };
             const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/url", body);
-            unwrapValue(resp, navigationOutput);
+            unwrapValue(resp, "Navigation");
         });
 
         document.getElementById("refreshBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                navigationOutput.textContent = "No active session";
+                showText("Refresh", "No active session");
                 return;
             }
             const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/refresh", {});
-            unwrapValue(resp, navigationOutput);
+            unwrapValue(resp, "Refresh");
         });
 
         document.getElementById("getCurrentUrlBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                navigationOutput.textContent = "No active session";
+                showText("Current URL", "No active session");
                 return;
             }
             const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/url");
-            const value = unwrapValue(resp, navigationOutput);
+            const value = unwrapValue(resp, "Current URL");
             if (typeof value === "string") {
                 navUrlInput.value = value;
             }
@@ -326,22 +520,22 @@
         document.getElementById("getTitleBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                navigationOutput.textContent = "No active session";
+                showText("Title", "No active session");
                 return;
             }
             const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/title");
-            unwrapValue(resp, navigationOutput);
+            unwrapValue(resp, "Title");
         });
 
         // Timeouts
         document.getElementById("getTimeoutsBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                timeoutsOutput.textContent = "No active session";
+                showText("Timeouts", "No active session");
                 return;
             }
             const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/timeouts");
-            const value = unwrapValue(resp, timeoutsOutput);
+            const value = unwrapValue(resp, "Timeouts");
             if (value && typeof value === "object") {
                 if (value.script != null) timeoutScriptInput.value = value.script;
                 if (value.pageLoad != null) timeoutPageLoadInput.value = value.pageLoad;
@@ -352,7 +546,7 @@
         document.getElementById("setTimeoutsBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                timeoutsOutput.textContent = "No active session";
+                showText("Timeouts", "No active session");
                 return;
             }
             const body = {};
@@ -360,18 +554,18 @@
             if (timeoutPageLoadInput.value !== "") body.pageLoad = Number(timeoutPageLoadInput.value);
             if (timeoutImplicitInput.value !== "") body.implicit = Number(timeoutImplicitInput.value);
             const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/timeouts", body);
-            unwrapValue(resp, timeoutsOutput);
+            unwrapValue(resp, "Timeouts");
         });
 
         // Windows
         document.getElementById("getWindowHandleBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                windowsOutput.textContent = "No active session";
+                showText("Window", "No active session");
                 return;
             }
             const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/window");
-            const value = unwrapValue(resp, windowsOutput);
+            const value = unwrapValue(resp, "Window");
             if (typeof value === "string") {
                 switchHandleInput.value = value;
             }
@@ -380,21 +574,21 @@
         document.getElementById("getWindowHandlesBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                windowsOutput.textContent = "No active session";
+                showText("Window handles", "No active session");
                 return;
             }
             const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/window/handles");
-            unwrapValue(resp, windowsOutput);
+            unwrapValue(resp, "Window handles");
         });
 
         document.getElementById("newWindowBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                windowsOutput.textContent = "No active session";
+                showText("New window", "No active session");
                 return;
             }
             const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/window/new", {});
-            const value = unwrapValue(resp, windowsOutput);
+            const value = unwrapValue(resp, "New window");
             if (value && value.handle) {
                 switchHandleInput.value = value.handle;
             }
@@ -403,34 +597,34 @@
         document.getElementById("switchWindowBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                windowsOutput.textContent = "No active session";
+                showText("Switch window", "No active session");
                 return;
             }
             const handle = switchHandleInput.value;
             const body = { handle: handle };
             const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/window", body);
-            unwrapValue(resp, windowsOutput);
+            unwrapValue(resp, "Switch window");
         });
 
         document.getElementById("closeWindowBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                windowsOutput.textContent = "No active session";
+                showText("Close window", "No active session");
                 return;
             }
             const resp = await sendRequest("DELETE", "/session/" + encodeURIComponent(sessionId) + "/window");
-            unwrapValue(resp, windowsOutput);
+            unwrapValue(resp, "Close window");
         });
 
         // Window rect
         document.getElementById("getWindowRectBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                rectOutput.textContent = "No active session";
+                showText("Window rect", "No active session");
                 return;
             }
             const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/window/rect");
-            const value = unwrapValue(resp, rectOutput);
+            const value = unwrapValue(resp, "Window rect");
             if (value && typeof value === "object") {
                 if (value.x != null) rectXInput.value = value.x;
                 if (value.y != null) rectYInput.value = value.y;
@@ -442,7 +636,7 @@
         document.getElementById("setWindowRectBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                rectOutput.textContent = "No active session";
+                showText("Window rect", "No active session");
                 return;
             }
             const body = {};
@@ -451,27 +645,27 @@
             if (rectWidthInput.value !== "") body.width = Number(rectWidthInput.value);
             if (rectHeightInput.value !== "") body.height = Number(rectHeightInput.value);
             const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/window/rect", body);
-            unwrapValue(resp, rectOutput);
+            unwrapValue(resp, "Window rect");
         });
 
         // Document
         document.getElementById("getSourceBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                sourceOutput.textContent = "No active session";
+                showText("Source", "No active session");
                 return;
             }
             const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/source");
-            const value = unwrapValue(resp, sourceOutput);
+            const value = unwrapValue(resp, "Source");
             if (typeof value === "string") {
-                sourceOutput.textContent = value;
+                showText("Source", value);
             }
         });
 
         document.getElementById("executeSyncBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                scriptOutput.textContent = "No active session";
+                showText("Execute script (sync)", "No active session");
                 return;
             }
             const body = {
@@ -479,13 +673,13 @@
                 args: []
             };
             const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/execute/sync", body);
-            unwrapValue(resp, scriptOutput);
+            unwrapValue(resp, "Execute script (sync)");
         });
 
         document.getElementById("executeAsyncBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                scriptOutput.textContent = "No active session";
+                showText("Execute script (async)", "No active session");
                 return;
             }
             const body = {
@@ -493,21 +687,26 @@
                 args: []
             };
             const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/execute/async", body);
-            unwrapValue(resp, scriptOutput);
+            unwrapValue(resp, "Execute script (async)");
         });
 
         // Screenshot
         document.getElementById("screenshotBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                screenshotOutput.textContent = "No active session";
+                showText("Screenshot", "No active session");
                 return;
             }
             const resp = await sendRequest("GET", "/session/" + encodeURIComponent(sessionId) + "/screenshot");
-            const value = unwrapValue(resp, screenshotOutput);
+            if (!resp || typeof resp.json !== "object") {
+                showText("Screenshot", "Invalid response");
+                return;
+            }
+            const value = ("value" in resp.json) ? resp.json.value : null;
             if (typeof value === "string") {
-                // assume BMP; data URL will still show it in most browsers
-                screenshotImg.src = "data:image/bmp;base64," + value;
+                showImage("Screenshot", value, "image/bmp");
+            } else {
+                showJson("Screenshot", resp.json);
             }
         });
 
@@ -515,7 +714,7 @@
         document.getElementById("printBtn").addEventListener("click", async () => {
             const sessionId = getActiveSessionId();
             if (!sessionId) {
-                printOutput.textContent = "No active session";
+                showText("Print", "No active session");
                 return;
             }
             const body = {
@@ -523,9 +722,15 @@
                 scale: Number(printScaleInput.value)
             };
             const resp = await sendRequest("POST", "/session/" + encodeURIComponent(sessionId) + "/print", body);
-            const value = unwrapValue(resp, printOutput);
+            if (!resp || typeof resp.json !== "object") {
+                showText("Print", "Invalid response");
+                return;
+            }
+            const value = ("value" in resp.json) ? resp.json.value : null;
             if (typeof value === "string") {
-                printOutput.textContent = "Got base64 PDF (" + value.length + " chars)";
+                showPdf("Print PDF", value);
+            } else {
+                showJson("Print", resp.json);
             }
         });
 
@@ -539,12 +744,12 @@
                 try {
                     body = JSON.parse(raw);
                 } catch (e) {
-                    customOutput.textContent = "Invalid JSON body: " + e.toString();
+                    showText("Custom request", "Invalid JSON body: " + e.toString());
                     return;
                 }
             }
             const resp = await sendRequest(method, path, body);
-            unwrapValue(resp, customOutput);
+            unwrapValue(resp, "Custom request");
         });
 
         // Init
