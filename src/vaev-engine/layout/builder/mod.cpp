@@ -399,13 +399,61 @@ SVGRoot _buildSVG(Gc::Ref<Dom::Element> el) {
     return svgRoot;
 }
 
-always_inline static bool isVoidElement(Gc::Ref<Dom::Element> el) {
-    return contains(Html::VOID_TAGS, el->qualifiedName);
-}
-
 static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     if (el->qualifiedName == Html::INPUT_TAG) {
-        _buildInputProse(bc, el);
+        auto type = el->getAttribute(Html::TYPE_ATTR).unwrapOr(""s);
+        if (type == "hidden") {
+            // Don't generate a box
+        } else if (type == "radio" or type == "checkbox") {
+            Math::Rectf rect = {14, 14};
+
+            Rc<Scene::Stack> box = makeRc<Scene::Stack>();
+
+            box->add(
+                makeRc<Scene::Box>(
+                    rect,
+                    Gfx::Borders{
+                        .radii = type == "checkbox" ? 2 : 99,
+                        .widths = 1,
+                        .fills = {
+                            Gfx::BLACK,
+                            Gfx::BLACK,
+                            Gfx::BLACK,
+                            Gfx::BLACK,
+                        },
+                        .styles = {
+                            Gfx::BorderStyle::SOLID,
+                            Gfx::BorderStyle::SOLID,
+                            Gfx::BorderStyle::SOLID,
+                            Gfx::BorderStyle::SOLID,
+                        },
+                    },
+                    Gfx::Outline{}, Vec<Gfx::Fill>{Gfx::WHITE}
+                )
+            );
+
+            bool checked = el->hasAttribute(Html::CHECKED_ATTR) or el->getAttribute(Html::VALUE_ATTR).unwrapOr(""s) == "on";
+
+            if (checked) {
+                box->add(
+                    makeRc<Scene::Box>(
+                        rect.shrink(2),
+                        Gfx::Borders{
+                            .radii = type == "checkbox" ? 2 : 99,
+                            .widths = 0,
+                            .fills = {
+                            },
+                            .styles = {},
+                        },
+                        Gfx::Outline{}, Vec<Gfx::Fill>{Gfx::BLUE500}
+                    )
+                );
+            }
+
+            bc.content() = Rc<Scene::Node>{box};
+        } else {
+            _buildInputProse(bc, el);
+        }
     } else if (el->qualifiedName == Html::IMG_TAG) {
         _buildImage(bc, el);
     }
@@ -430,7 +478,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
         return;
     }
 
-    if (isVoidElement(el)) {
+    if (el->isVoidElement()) {
         _buildVoidElement(bc, el);
         return;
     }
@@ -447,7 +495,7 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
         // do nothing
     } else if (el->qualifiedName == Svg::SVG_TAG) {
         bc.content() = _buildSVG(el);
-    } else if (isVoidElement(el)) {
+    } else if (el->isVoidElement()) {
         _buildVoidElement(bc, el);
     } else {
         _buildChildren(bc, el);
