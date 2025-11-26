@@ -50,14 +50,18 @@ export struct WebDriver {
     }
 
     // https://www.w3.org/TR/webdriver2/#new-session
-    Res<Ref::Uuid> newSession() {
-        auto sessionId = try$(Ref::Uuid::v4());
-        auto windowHandle = try$(Ref::Uuid::v4());
+    Async::Task<Ref::Uuid> newSessionAsync() {
+        auto sessionId = co_try$(Ref::Uuid::v4());
+        auto windowHandle = co_try$(Ref::Uuid::v4());
         auto session = makeRc<Session>(sessionId);
-        session->windows.put(windowHandle, Dom::Window::create());
+
+        auto window = Dom::Window::create();
+        co_trya$(window->loadLocationAsync("about:blank"_url));
+
+        session->windows.put(windowHandle, window);
         session->current = windowHandle;
         _sessions.put(sessionId, session);
-        return Ok(sessionId);
+        co_return Ok(sessionId);
     }
 
     // https://www.w3.org/TR/webdriver2/#delete-session
@@ -170,13 +174,14 @@ export struct WebDriver {
     }
 
     // https://www.w3.org/TR/webdriver2/#new-window
-    Res<Ref::Uuid> newWindow(Ref::Uuid sessionId) {
-        auto session = try$(getSession(sessionId));
-        auto windowHandle = try$(Ref::Uuid::v4());
+    Async::Task<Ref::Uuid> newWindowAsync(Ref::Uuid sessionId) {
+        auto session = co_try$(getSession(sessionId));
+        auto windowHandle = co_try$(Ref::Uuid::v4());
         auto window = Dom::Window::create();
+        co_trya$(window->loadLocationAsync("about:blank"_url));
         session->windows.put(windowHandle, window);
         session->current = windowHandle;
-        return Ok(windowHandle);
+        co_return Ok(windowHandle);
     }
 
     // MARK: 11.8 Resizing and positioning windows -----------------------------

@@ -24,7 +24,7 @@ Async::Task<> _sendSuccessAsync(Rc<Http::Response::Writer> resp, Serde::Value da
 }
 
 Async::Task<> _sendErrorAsync(Rc<Http::Response::Writer> resp, Error err, Serde::Value data = {}) {
-    co_trya$(resp->writeHeaderAsync(Http::Code::BAD_REQUEST));
+    resp->code = Http::Code::BAD_REQUEST;
     co_trya$(resp->writeJsonAsync(Serde::Object{
         {"error"s, Str{err.msg()}},
         {"data"s, data},

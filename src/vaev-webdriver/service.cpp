@@ -31,7 +31,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
         [webdriver](Rc<Http::Request> req, Rc<Http::Response::Writer> resp) mutable -> Async::Task<> {
             auto data = co_trya$(req->readJsonAsync());
 
-            auto sessionId = co_try$(webdriver->newSession());
+            auto sessionId = co_trya$(webdriver->newSessionAsync());
             co_trya$(_sendSuccessAsync(
                 resp,
                 Serde::Object{
@@ -265,7 +265,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
         [webdriver](Rc<Http::Request> req, Rc<Http::Response::Writer> resp) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
-            auto windowHandle = co_try$(webdriver->newWindow(sessionId));
+            auto windowHandle = co_trya$(webdriver->newWindowAsync(sessionId));
 
             co_trya$(_sendSuccessAsync(
                 resp,
@@ -519,8 +519,10 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
 
         Async::Task<> handleAsync(Rc<Http::Request> req, Rc<Http::Response::Writer> resp) override {
             auto result = co_await _next->handleAsync(req, resp);
-            if (not result)
+            if (not result) {
+                logWarn("webdriver error: {}", result);
                 co_return co_await _sendErrorAsync(resp, result.none());
+            }
             co_return Ok();
         }
     };
