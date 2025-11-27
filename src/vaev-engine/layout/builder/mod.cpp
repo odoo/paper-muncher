@@ -401,10 +401,15 @@ SVGRoot _buildSVG(Gc::Ref<Dom::Element> el) {
 
 static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     if (el->qualifiedName == Html::INPUT_TAG) {
+        // FIXME: Only support appearance: none for now
+        // https://www.w3.org/TR/css-ui-4/#valdef-appearance-none
+
         auto type = el->getAttribute(Html::TYPE_ATTR).unwrapOr(""s);
         if (type == "hidden") {
             // Don't generate a box
         } else if (type == "radio" or type == "checkbox") {
+            // NOTE: The UA may however give them a different look and feel as long as it remains possible to operate the widget.
+            // https://www.w3.org/TR/css-ui-4/#appearance-semantics
             Math::Rectf rect = {14, 14};
 
             Rc<Scene::Stack> box = makeRc<Scene::Stack>();
