@@ -15,4 +15,4 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 source ./meta/scripts/setup-any.sh
-uv tool run --from 'cutekit~=0.10.2' --with markdown cutekit $@
+uv tool run --from 'cutekit~=0.10.3' --with markdown cutekit $@

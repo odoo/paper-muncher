@@ -37,7 +37,7 @@
             "tag": "v1.4.0"
         },
         "cute-engineering/ce-targets": {
-            "commit": "eaa19de89b05da7fbbe9320c6f1f24dae1a3b96d",
+            "commit": "916ae22a50bd1f4c8a0b4e1d2e82cf05af8a1585",
             "git": "https://github.com/cute-engineering/ce-targets.git",
             "tag": "v0.4.0"
         },
@@ -52,7 +52,7 @@
             "tag": "main"
         },
         "skift-org/karm": {
-            "commit": "7cc013fd56e45f3bec614de949cf857c92cbd006",
+            "commit": "54bb23e14df95bc0234203c20c2635eef6455e1f",
             "git": "https://github.com/skift-org/karm.git",
             "tag": "main"
         }
