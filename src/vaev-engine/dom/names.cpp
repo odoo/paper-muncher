@@ -28,23 +28,6 @@ export Symbol NAMESPACE = "http://www.w3.org/1999/xhtml"_sym;
 #include "defs/ns-html-tag-names.inc"
 #undef TAG
 
-export Array const VOID_TAGS = {
-    AREA_TAG,
-    BASE_TAG,
-    BR_TAG,
-    COL_TAG,
-    EMBED_TAG,
-    HR_TAG,
-    IMG_TAG,
-    INPUT_TAG,
-    LINK_TAG,
-    META_TAG,
-    PARAM_TAG,
-    SOURCE_TAG,
-    TRACK_TAG,
-    WBR_TAG
-};
-
 // FIXME: remaining elements from https://html.spec.whatwg.org/#has-an-element-in-scope
 export Array const BASIC_SCOPE_DELIMITERS = {
     APPLET_TAG,
