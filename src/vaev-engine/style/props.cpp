@@ -19,6 +19,36 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
+export struct Property {
+    struct Declaration {
+        virtual ~Declaration() = default;
+
+        virtual Symbol name() const = 0;
+
+        virtual Rc<Property> initial() const = 0;
+
+        virtual Rc<Property> load(SpecifiedValues const& c) const = 0;
+
+        virtual Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const = 0;
+    };
+
+    bool important = false;
+
+    virtual ~Property() = default;
+
+    virtual void apply(SpecifiedValues& c) const = 0;
+
+    virtual void apply(SpecifiedValues const& parent, SpecifiedValues& child) const {
+        apply(child);
+    }
+
+    virtual void repr(Io::Emit& e) const = 0;
+};
+
+export struct PropertyRegistry {
+    Map<Symbol, Rc<Property::Declaration>> _decls;
+};
+
 // MARK: Props -----------------------------------------------------------------
 
 // NOTE: This list should be kept alphabetically sorted.
@@ -27,1191 +57,1705 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-align-3
 
 // https://drafts.csswg.org/css-align-3/#propdef-align-content
-export struct AlignContentProp {
-    Align value = initial();
+export struct AlignContentProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "align-content"_sym;
+        }
 
-    static constexpr Str name() { return "align-content"; }
+        Rc<Property> initial() const override {
+            return makeRc<AlignContentProperty>(Align::Keywords::STRETCH);
+        }
 
-    static constexpr Align initial() { return Align::Keywords::STRETCH; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<AlignContentProperty>(c.aligns.alignContent);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.aligns.alignContent = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<AlignContentProperty>(try$(parseValue<Align>(c))));
+        }
+    };
+
+    Align _value;
+
+    AlignContentProperty(Align value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.aligns.alignContent = _value;
     }
 
-    static Align load(SpecifiedValues const& c) {
-        return c.aligns.alignContent;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Align>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-align-3/#propdef-justify-content
-export struct JustifyContentProp {
-    Align value = initial();
+export struct JustifyContentProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "justify-content"_sym;
+        }
 
-    static constexpr Str name() { return "justify-content"; }
+        Rc<Property> initial() const override {
+            return makeRc<JustifyContentProperty>(Align::Keywords::FLEX_START);
+        }
 
-    static constexpr Align initial() { return Align::Keywords::FLEX_START; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<JustifyContentProperty>(c.aligns.justifyContent);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.aligns.justifyContent = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<JustifyContentProperty>(try$(parseValue<Align>(c))));
+        }
+    };
+
+    Align _value;
+
+    JustifyContentProperty(Align value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.aligns.justifyContent = _value;
     }
 
-    static Align load(SpecifiedValues const& c) {
-        return c.aligns.justifyContent;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Align>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-align-3/#propdef-justify-self
-export struct JustifySelfProp {
-    Align value = initial();
+export struct JustifySelfProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "justify-self"_sym;
+        }
 
-    static constexpr Str name() { return "justify-self"; }
+        Rc<Property> initial() const override {
+            return makeRc<JustifySelfProperty>(Align{});
+        }
 
-    static constexpr Align initial() { return {}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<JustifySelfProperty>(c.aligns.justifySelf);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.aligns.justifySelf = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<JustifySelfProperty>(try$(parseValue<Align>(c))));
+        }
+    };
+
+    Align _value;
+
+    JustifySelfProperty(Align value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.aligns.justifySelf = _value;
     }
 
-    static Align load(SpecifiedValues const& c) {
-        return c.aligns.justifySelf;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Align>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-align-3/#propdef-align-self
-export struct AlignSelfProp {
-    Align value = initial();
+export struct AlignSelfProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "align-self"_sym;
+        }
 
-    static constexpr Str name() { return "align-self"; }
+        Rc<Property> initial() const override {
+            return makeRc<AlignSelfProperty>(Align::Keywords::AUTO);
+        }
 
-    static constexpr Align initial() { return Align::Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<AlignSelfProperty>(c.aligns.alignSelf);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.aligns.alignSelf = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<AlignSelfProperty>(try$(parseValue<Align>(c))));
+        }
+    };
+
+    Align _value;
+
+    AlignSelfProperty(Align value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.aligns.alignSelf = _value;
     }
 
-    static Align load(SpecifiedValues const& c) {
-        return c.aligns.alignSelf;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Align>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-align-3/#propdef-justify-items
-export struct JustifyItemsProp {
-    Align value = initial();
+export struct JustifyItemsProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "justify-items"_sym;
+        }
 
-    static constexpr Str name() { return "justify-items"; }
+        Rc<Property> initial() const override {
+            return makeRc<JustifyItemsProperty>(Align{});
+        }
 
-    static constexpr Align initial() { return {}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<JustifyItemsProperty>(c.aligns.justifyItems);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.aligns.justifyItems = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<JustifyItemsProperty>(try$(parseValue<Align>(c))));
+        }
+    };
+
+    Align _value;
+
+    JustifyItemsProperty(Align value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.aligns.justifyItems = _value;
     }
 
-    static Align load(SpecifiedValues const& c) {
-        return c.aligns.justifyItems;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Align>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-align-3/#propdef-align-items
-export struct AlignItemsProp {
-    Align value = initial();
+export struct AlignItemsProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "align-items"_sym;
+        }
 
-    static constexpr Str name() { return "align-items"; }
+        Rc<Property> initial() const override {
+            return makeRc<AlignItemsProperty>(Align::Keywords::STRETCH);
+        }
 
-    static constexpr Align initial() { return Align::Keywords::STRETCH; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<AlignItemsProperty>(c.aligns.alignItems);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.aligns.alignItems = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<AlignItemsProperty>(try$(parseValue<Align>(c))));
+        }
+    };
+
+    Align _value;
+
+    AlignItemsProperty(Align value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.aligns.alignItems = _value;
     }
 
-    static Align load(SpecifiedValues const& c) {
-        return c.aligns.alignItems;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Align>(c));
-        return Ok();
-    }
-};
-
-// https://drafts.csswg.org/css-align-3/#column-row-gap
-export struct RowGapProp {
-    Gap value = initial();
-
-    static constexpr Str name() { return "row-gap"; }
-
-    static constexpr Keywords::Normal initial() { return Keywords::NORMAL; }
-
-    void apply(SpecifiedValues& c) const {
-        c.gaps.cow().y = value;
-    }
-
-    static Gap load(SpecifiedValues const& c) {
-        return c.gaps->y;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Gap>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-align-3/#column-row-gap
-export struct ColumnGapProp {
-    Gap value = initial();
+export struct RowGapProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "row-gap"_sym;
+        }
 
-    static constexpr Str name() { return "column-gap"; }
+        Rc<Property> initial() const override {
+            return makeRc<RowGapProperty>(Keywords::NORMAL);
+        }
 
-    static constexpr Keywords::Normal initial() { return Keywords::NORMAL; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<RowGapProperty>(c.gaps->y);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.gaps.cow().x = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<RowGapProperty>(try$(parseValue<Gap>(c))));
+        }
+    };
+
+    Gap _value;
+
+    RowGapProperty(Gap value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.gaps.cow().y = _value;
     }
 
-    static Gap load(SpecifiedValues const& c) {
-        return c.gaps->x;
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
+    }
+};
+
+// https://drafts.csswg.org/css-align-3/#column-row-gap
+export struct ColumnGapProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "column-gap"_sym;
+        }
+
+        Rc<Property> initial() const override {
+            return makeRc<ColumnGapProperty>(Keywords::NORMAL);
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<ColumnGapProperty>(c.gaps->x);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<ColumnGapProperty>(try$(parseValue<Gap>(c))));
+        }
+    };
+
+    Gap _value;
+
+    ColumnGapProperty(Gap value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.gaps.cow().x = _value;
     }
 
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Gap>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Baselines ------------------------------------------------------
 
 // https://www.w3.org/TR/css-inline-3/#dominant-baseline-property
-export struct DominantBaselineProp {
-    DominantBaseline value = initial();
+export struct DominantBaselineProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "dominant-baseline"_sym;
+        }
 
-    static constexpr Str name() { return "dominant-baseline"; }
+        Rc<Property> initial() const override {
+            return makeRc<DominantBaselineProperty>(Keywords::AUTO);
+        }
 
-    static constexpr Keywords::Auto initial() { return Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<DominantBaselineProperty>(c.baseline->dominant);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.baseline.cow().dominant = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<DominantBaselineProperty>(try$(parseValue<DominantBaseline>(c))));
+        }
+    };
+
+    DominantBaseline _value;
+
+    DominantBaselineProperty(DominantBaseline value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.baseline.cow().dominant = _value;
     }
 
-    static DominantBaseline load(SpecifiedValues const& c) {
-        return c.baseline->dominant;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<DominantBaseline>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-inline-3/#baseline-source
-export struct BaselineSourceProp {
-    BaselineSource value = initial();
+export struct BaselineSourceProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "baseline-source"_sym;
+        }
 
-    static constexpr Str name() { return "baseline-source"; }
+        Rc<Property> initial() const override {
+            return makeRc<BaselineSourceProperty>(Keywords::AUTO);
+        }
 
-    static constexpr Keywords::Auto initial() { return Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BaselineSourceProperty>(c.baseline->source);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.baseline.cow().source = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BaselineSourceProperty>(try$(parseValue<BaselineSource>(c))));
+        }
+    };
+
+    BaselineSource _value;
+
+    BaselineSourceProperty(BaselineSource value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.baseline.cow().source = _value;
     }
 
-    static BaselineSource load(SpecifiedValues const& c) {
-        return c.baseline->source;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<BaselineSource>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-inline-3/#alignment-baseline-property
-export struct AlignmentBaselineProp {
-    AlignmentBaseline value = initial();
+export struct AlignmentBaselineProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "alignment-baseline"_sym;
+        }
 
-    static constexpr Str name() { return "alignment-baseline"; }
+        Rc<Property> initial() const override {
+            return makeRc<AlignmentBaselineProperty>(Keywords::BASELINE);
+        }
 
-    static constexpr Keywords::Baseline initial() { return Keywords::BASELINE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<AlignmentBaselineProperty>(c.baseline->alignment);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.baseline.cow().alignment = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<AlignmentBaselineProperty>(try$(parseValue<AlignmentBaseline>(c))));
+        }
+    };
+
+    AlignmentBaseline _value;
+
+    AlignmentBaselineProperty(AlignmentBaseline value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.baseline.cow().alignment = _value;
     }
 
-    static AlignmentBaseline load(SpecifiedValues const& c) {
-        return c.baseline->alignment;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<AlignmentBaseline>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Background Color ------------------------------------------------------
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-color
-export struct BackgroundColorProp {
-    Color value = initial();
+export struct BackgroundColorProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "background-color"_sym;
+        }
 
-    static constexpr Str name() { return "background-color"; }
+        Rc<Property> initial() const override {
+            return makeRc<BackgroundColorProperty>(TRANSPARENT);
+        }
 
-    static constexpr Color initial() { return TRANSPARENT; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BackgroundColorProperty>(c.backgrounds->color);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.backgrounds.cow().color = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BackgroundColorProperty>(try$(parseValue<Color>(c))));
+        }
+    };
+
+    Color _value;
+
+    BackgroundColorProperty(Color value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.backgrounds.cow().color = _value;
     }
 
-    static Color load(SpecifiedValues const& c) {
-        return c.backgrounds->color;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Color>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Background Image ------------------------------------------------------
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-attachment
-export struct BackgroundAttachmentProp {
-    Vec<BackgroundAttachment> value = initial();
+export struct BackgroundAttachmentProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "background-attachment"_sym;
+        }
 
-    static constexpr Str name() { return "background-attachment"; }
+        Rc<Property> initial() const override {
+            return makeRc<BackgroundAttachmentProperty>(Vec<BackgroundAttachment>{BackgroundAttachment::SCROLL});
+        }
 
-    static constexpr Array<BackgroundAttachment, 1> initial() {
-        return {BackgroundAttachment::SCROLL};
-    }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            Vec<BackgroundAttachment> layers;
+            for (auto const& l : c.backgrounds->layers)
+                layers.pushBack(l.attachment);
+            return makeRc<BackgroundAttachmentProperty>(std::move(layers));
+        }
 
-    void apply(SpecifiedValues& c) const {
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BackgroundAttachmentProperty>(try$(parseValue<Vec<BackgroundAttachment>>(c))));
+        }
+    };
+
+    Vec<BackgroundAttachment> _value;
+
+    BackgroundAttachmentProperty(Vec<BackgroundAttachment> value) : _value(std::move(value)) {}
+
+    void apply(SpecifiedValues& c) const override {
         auto& layers = c.backgrounds.cow().layers;
-        layers.resize(max(layers.len(), value.len()));
-        for (usize i = 0; i < value.len(); ++i)
-            layers[i].attachment = value[i];
+        layers.resize(max(layers.len(), _value.len()));
+        for (usize i = 0; i < _value.len(); ++i)
+            layers[i].attachment = _value[i];
     }
 
-    static Vec<BackgroundAttachment> load(SpecifiedValues const& c) {
-        Vec<BackgroundAttachment> layers;
-        for (auto const& l : c.backgrounds->layers)
-            layers.pushBack(l.attachment);
-        return layers;
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-image
-export struct BackgroundImageProp {
-    Vec<Image> value = initial();
+export struct BackgroundImageProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "background-image"_sym;
+        }
 
-    static constexpr Str name() { return "background-image"; }
+        Rc<Property> initial() const override {
+            return makeRc<BackgroundImageProperty>(Vec<Image>{});
+        }
 
-    static Vec<Image> initial() { return {}; }
+        Rc<Property> load(SpecifiedValues const&) const override {
+            return makeRc<BackgroundImageProperty>(Vec<Image>{});
+        }
 
-    void apply(SpecifiedValues&) const {
+        Res<Rc<Property>> parse(Cursor<Css::Sst>&) const override {
+            // TODO
+            return Ok(makeRc<BackgroundImageProperty>(Vec<Image>{}));
+        }
+    };
+
+    Vec<Image> _value;
+
+    BackgroundImageProperty(Vec<Image> value) : _value(std::move(value)) {}
+
+    void apply(SpecifiedValues&) const override {
         // TODO
     }
 
-    static Vec<Image> load(SpecifiedValues const&) {
-        return {};
-    }
-
-    Res<> parse(Cursor<Css::Sst>&) {
-        // TODO
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-position
-export struct BackgroundPositionProp {
-    Vec<BackgroundPosition> value = initial();
+export struct BackgroundPositionProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "background-position"_sym;
+        }
 
-    static constexpr Str name() { return "background-position"; }
+        Rc<Property> initial() const override {
+            return makeRc<BackgroundPositionProperty>(Vec<BackgroundPosition>{});
+        }
 
-    static constexpr Vec<BackgroundPosition> initial() {
-        return {};
-    }
+        Rc<Property> load(SpecifiedValues const&) const override {
+            return makeRc<BackgroundPositionProperty>(Vec<BackgroundPosition>{});
+        }
 
-    void apply(SpecifiedValues&) const {
+        Res<Rc<Property>> parse(Cursor<Css::Sst>&) const override {
+            // TODO
+            return Ok(makeRc<BackgroundPositionProperty>(Vec<BackgroundPosition>{}));
+        }
+    };
+
+    Vec<BackgroundPosition> _value;
+
+    BackgroundPositionProperty(Vec<BackgroundPosition> value) : _value(std::move(value)) {}
+
+    void apply(SpecifiedValues&) const override {
         // TODO
     }
 
-    static Vec<BackgroundPosition> load(SpecifiedValues const&) {
-        return {};
-    }
-
-    Res<> parse(Cursor<Css::Sst>&) {
-        // TODO
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-repeat
-export struct BackgroundRepeatProp {
-    Vec<BackgroundRepeat> value = initial();
+export struct BackgroundRepeatProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "background-repeat"_sym;
+        }
 
-    static constexpr Str name() { return "background-repeat"; }
+        Rc<Property> initial() const override {
+            return makeRc<BackgroundRepeatProperty>(Vec<BackgroundRepeat>{BackgroundRepeat::REPEAT});
+        }
 
-    static constexpr Array<BackgroundRepeat, 1> initial() {
-        return {BackgroundRepeat::REPEAT};
-    }
+        Rc<Property> load(SpecifiedValues const&) const override {
+            return makeRc<BackgroundRepeatProperty>(Vec<BackgroundRepeat>{});
+        }
 
-    void apply(SpecifiedValues&) const {
+        Res<Rc<Property>> parse(Cursor<Css::Sst>&) const override {
+            // TODO
+            return Ok(makeRc<BackgroundRepeatProperty>(Vec<BackgroundRepeat>{}));
+        }
+    };
+
+    Vec<BackgroundRepeat> _value;
+
+    BackgroundRepeatProperty(Vec<BackgroundRepeat> value) : _value(std::move(value)) {}
+
+    void apply(SpecifiedValues&) const override {
         // TODO
     }
 
-    static Vec<BackgroundRepeat> load(SpecifiedValues const&) {
-        return {};
-    }
-
-    Res<> parse(Cursor<Css::Sst>&) {
-        // TODO
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/colors.html#x10
-export struct BackgroundProp {
-    // FIXME: this should cover everything else
-    BackgroundProps value = initial();
+export struct BackgroundProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "background"_sym;
+        }
 
-    static constexpr Str name() { return "background"; }
+        Rc<Property> initial() const override {
+            return makeRc<BackgroundProperty>(BackgroundProps{TRANSPARENT});
+        }
 
-    static BackgroundProps initial() { return {TRANSPARENT}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BackgroundProperty>(*c.backgrounds);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.backgrounds.cow() = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            BackgroundProps value;
+            value.color = try$(parseValue<Color>(c));
+            return Ok(makeRc<BackgroundProperty>(std::move(value)));
+        }
+    };
+
+    BackgroundProps _value;
+
+    BackgroundProperty(BackgroundProps value) : _value(std::move(value)) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.backgrounds.cow() = _value;
     }
 
-    static BackgroundProps load(SpecifiedValues const& c) {
-        return *c.backgrounds;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value.color = try$(parseValue<Color>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-color
-export struct ColorProp {
-    Color value = initial();
+export struct ColorProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "color"_sym;
+        }
 
-    static constexpr Str name() { return "color"; }
+        Rc<Property> initial() const override {
+            return makeRc<ColorProperty>(BLACK);
+        }
 
-    static constexpr Color initial() { return BLACK; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<ColorProperty>(c.color);
+        }
 
-    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
-        child.color = parent.color;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<ColorProperty>(try$(parseValue<Color>(c))));
+        }
+    };
+
+    Color _value;
+
+    ColorProperty(Color value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.color = resolve(_value, Gfx::BLACK);
     }
 
-    void apply(SpecifiedValues& c) const {
-        c.color = resolve(value, Gfx::BLACK);
+    void apply(SpecifiedValues const& parent, SpecifiedValues& c) const override {
+        c.color = resolve(_value, parent.color);
     }
 
-    void apply(SpecifiedValues const& parent, SpecifiedValues& c) const {
-        c.color = resolve(value, parent.color);
-    }
-
-    static Color load(SpecifiedValues const& c) {
-        return c.color;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Color>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-display
-export struct DisplayProp {
-    Display value = initial();
+export struct DisplayProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "display"_sym;
+        }
 
-    static constexpr Str name() { return "display"; }
+        Rc<Property> initial() const override {
+            return makeRc<DisplayProperty>(Display{Display::FLOW, Display::INLINE});
+        }
 
-    static constexpr Display initial() { return {Display::FLOW, Display::INLINE}; }
+        Rc<Property> load(SpecifiedValues const& s) const override {
+            return makeRc<DisplayProperty>(s.display);
+        }
 
-    void apply(SpecifiedValues& s) const {
-        s.display = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<DisplayProperty>(try$(parseValue<Display>(c))));
+        }
+    };
+
+    Display _value;
+
+    DisplayProperty(Display value) : _value(value) {}
+
+    void apply(SpecifiedValues& s) const override {
+        s.display = _value;
     }
 
-    static Display load(SpecifiedValues const& s) {
-        return s.display;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Display>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS21/tables.html#propdef-table-layout
-export struct TableLayoutProp {
-    TableLayout value = initial();
+export struct TableLayoutProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "table-layout"_sym;
+        }
 
-    static constexpr Str name() { return "table-layout"; }
+        Rc<Property> initial() const override {
+            return makeRc<TableLayoutProperty>(TableLayout::AUTO);
+        }
 
-    static constexpr TableLayout initial() { return TableLayout::AUTO; }
+        Rc<Property> load(SpecifiedValues const& s) const override {
+            return makeRc<TableLayoutProperty>(s.table->tableLayout);
+        }
 
-    void apply(SpecifiedValues& s) const {
-        s.table.cow().tableLayout = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<TableLayoutProperty>(try$(parseValue<TableLayout>(c))));
+        }
+    };
+
+    TableLayout _value;
+
+    TableLayoutProperty(TableLayout value) : _value(value) {}
+
+    void apply(SpecifiedValues& s) const override {
+        s.table.cow().tableLayout = _value;
     }
 
-    static TableLayout load(SpecifiedValues const& s) {
-        return s.table->tableLayout;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<TableLayout>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS21/tables.html#caption-position
-export struct CaptionSideProp {
-    CaptionSide value = initial();
+export struct CaptionSideProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "caption-side"_sym;
+        }
 
-    static constexpr Str name() { return "caption-side"; }
+        Rc<Property> initial() const override {
+            return makeRc<CaptionSideProperty>(CaptionSide::TOP);
+        }
 
-    static constexpr CaptionSide initial() { return CaptionSide::TOP; }
+        Rc<Property> load(SpecifiedValues const& s) const override {
+            return makeRc<CaptionSideProperty>(s.table->captionSide);
+        }
 
-    void apply(SpecifiedValues& s) const {
-        s.table.cow().captionSide = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<CaptionSideProperty>(try$(parseValue<CaptionSide>(c))));
+        }
+    };
+
+    CaptionSide _value;
+
+    CaptionSideProperty(CaptionSide value) : _value(value) {}
+
+    void apply(SpecifiedValues& s) const override {
+        s.table.cow().captionSide = _value;
     }
 
-    static CaptionSide load(SpecifiedValues const& s) {
-        return s.table->captionSide;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CaptionSide>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Borders ---------------------------------------------------------------
 
 // https://www.w3.org/TR/CSS22/box.html#propdef-border-color
-export struct BorderTopColorProp {
-    Color value = initial();
+export struct BorderTopColorProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-top-color"_sym;
+        }
 
-    static constexpr Str name() { return "border-top-color"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderTopColorProperty>(BLACK);
+        }
 
-    static constexpr Color initial() { return BLACK; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderTopColorProperty>(c.borders->top.color);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().top.color = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderTopColorProperty>(try$(parseValue<Color>(c))));
+        }
+    };
+
+    Color _value;
+
+    BorderTopColorProperty(Color value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().top.color = _value;
     }
 
-    static Color load(SpecifiedValues const& c) {
-        return c.borders->top.color;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Color>(c));
-        return Ok();
-    }
-};
-
-// https://www.w3.org/TR/CSS22/box.html#propdef-border-color
-export struct BorderRightColorProp {
-    Color value = initial();
-
-    static constexpr Str name() { return "border-right-color"; }
-
-    static constexpr Color initial() { return BLACK; }
-
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().end.color = value;
-    }
-
-    static Color load(SpecifiedValues const& c) {
-        return c.borders->end.color;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Color>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/box.html#propdef-border-color
-export struct BorderBottomColorProp {
-    Color value = initial();
+export struct BorderRightColorProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-right-color"_sym;
+        }
 
-    static constexpr Str name() { return "border-bottom-color"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderRightColorProperty>(BLACK);
+        }
 
-    static constexpr Color initial() { return BLACK; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderRightColorProperty>(c.borders->end.color);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().bottom.color = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderRightColorProperty>(try$(parseValue<Color>(c))));
+        }
+    };
+
+    Color _value;
+
+    BorderRightColorProperty(Color value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().end.color = _value;
     }
 
-    static Color load(SpecifiedValues const& c) {
-        return c.borders->bottom.color;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Color>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/box.html#propdef-border-color
-export struct BorderLeftColorProp {
-    Color value = initial();
+export struct BorderBottomColorProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-bottom-color"_sym;
+        }
 
-    static constexpr Str name() { return "border-left-color"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderBottomColorProperty>(BLACK);
+        }
 
-    static constexpr Color initial() { return BLACK; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderBottomColorProperty>(c.borders->bottom.color);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().start.color = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderBottomColorProperty>(try$(parseValue<Color>(c))));
+        }
+    };
+
+    Color _value;
+
+    BorderBottomColorProperty(Color value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().bottom.color = _value;
     }
 
-    static Color load(SpecifiedValues const& c) {
-        return c.borders->start.color;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Color>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
-export struct BorderColorProp {
-    Math::Insets<Color> value = initial();
+// https://www.w3.org/TR/CSS22/box.html#propdef-border-color
+export struct BorderLeftColorProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-left-color"_sym;
+        }
 
-    static constexpr Str name() { return "border-color"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderLeftColorProperty>(BLACK);
+        }
 
-    static constexpr Math::Insets<Color> initial() { return {BLACK}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderLeftColorProperty>(c.borders->start.color);
+        }
 
-    void apply(SpecifiedValues& c) const {
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderLeftColorProperty>(try$(parseValue<Color>(c))));
+        }
+    };
+
+    Color _value;
+
+    BorderLeftColorProperty(Color value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().start.color = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
+    }
+};
+
+export struct BorderColorProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-color"_sym;
+        }
+
+        Rc<Property> initial() const override {
+            return makeRc<BorderColorProperty>(Math::Insets<Color>{BLACK});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderColorProperty>(Math::Insets<Color>{
+                c.borders->start.color,
+                c.borders->end.color,
+                c.borders->top.color,
+                c.borders->bottom.color,
+            });
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderColorProperty>(try$(parseValue<Math::Insets<Color>>(c))));
+        }
+    };
+
+    Math::Insets<Color> _value;
+
+    BorderColorProperty(Math::Insets<Color> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
         auto& borders = c.borders.cow();
-        borders.start.color = value.start;
-        borders.end.color = value.end;
-        borders.top.color = value.top;
-        borders.bottom.color = value.bottom;
+        borders.start.color = _value.start;
+        borders.end.color = _value.end;
+        borders.top.color = _value.top;
+        borders.bottom.color = _value.bottom;
     }
 
-    static Math::Insets<Color> load(SpecifiedValues const& c) {
-        return {
-            c.borders->start.color,
-            c.borders->end.color,
-            c.borders->top.color,
-            c.borders->bottom.color,
-        };
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Math::Insets<Color>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 
-export struct BorderStyle {
-    Math::Insets<Gfx::BorderStyle> value = initial();
+export struct BorderStyleProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-style"_sym;
+        }
 
-    static constexpr Str name() { return "border-style"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderStyleProperty>(Math::Insets<Gfx::BorderStyle>{Gfx::BorderStyle::NONE});
+        }
 
-    static constexpr Math::Insets<Gfx::BorderStyle> initial() {
-        return {Gfx::BorderStyle::NONE};
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderStyleProperty>(Math::Insets<Gfx::BorderStyle>{
+                c.borders->start.style,
+                c.borders->end.style,
+                c.borders->top.style,
+                c.borders->bottom.style,
+            });
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderStyleProperty>(try$(parseValue<Math::Insets<Gfx::BorderStyle>>(c))));
+        }
+    };
+
+    Math::Insets<Gfx::BorderStyle> _value;
+
+    BorderStyleProperty(Math::Insets<Gfx::BorderStyle> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().start.style = _value.start;
+        c.borders.cow().end.style = _value.end;
+        c.borders.cow().top.style = _value.top;
+        c.borders.cow().bottom.style = _value.bottom;
     }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().start.style = value.start;
-        c.borders.cow().end.style = value.end;
-        c.borders.cow().top.style = value.top;
-        c.borders.cow().bottom.style = value.bottom;
-    }
-
-    static Math::Insets<Gfx::BorderStyle> load(SpecifiedValues const& c) {
-        return {
-            c.borders->start.style,
-            c.borders->end.style,
-            c.borders->top.style,
-            c.borders->bottom.style,
-        };
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Math::Insets<Gfx::BorderStyle>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
-export struct BorderLeftStyleProp {
-    Gfx::BorderStyle value = initial();
+export struct BorderLeftStyleProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-left-style"_sym;
+        }
 
-    static constexpr Str name() { return "border-left-style"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderLeftStyleProperty>(Gfx::BorderStyle::NONE);
+        }
 
-    static constexpr Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderLeftStyleProperty>(c.borders->start.style);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().start.style = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderLeftStyleProperty>(try$(parseValue<Gfx::BorderStyle>(c))));
+        }
+    };
+
+    Gfx::BorderStyle _value;
+
+    BorderLeftStyleProperty(Gfx::BorderStyle value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().start.style = _value;
     }
 
-    static Gfx::BorderStyle load(SpecifiedValues const& c) {
-        return c.borders->start.style;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Gfx::BorderStyle>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
-export struct BorderTopStyleProp {
-    Gfx::BorderStyle value = initial();
+export struct BorderTopStyleProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-top-style"_sym;
+        }
 
-    static constexpr Str name() { return "border-top-style"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderTopStyleProperty>(Gfx::BorderStyle::NONE);
+        }
 
-    static constexpr Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderTopStyleProperty>(c.borders->top.style);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().top.style = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderTopStyleProperty>(try$(parseValue<Gfx::BorderStyle>(c))));
+        }
+    };
+
+    Gfx::BorderStyle _value;
+
+    BorderTopStyleProperty(Gfx::BorderStyle value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().top.style = _value;
     }
 
-    static Gfx::BorderStyle load(SpecifiedValues const& c) {
-        return c.borders->top.style;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Gfx::BorderStyle>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
-export struct BorderRightStyleProp {
-    Gfx::BorderStyle value = initial();
+export struct BorderRightStyleProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-right-style"_sym;
+        }
 
-    static constexpr Str name() { return "border-right-style"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderRightStyleProperty>(Gfx::BorderStyle::NONE);
+        }
 
-    static constexpr Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderRightStyleProperty>(c.borders->end.style);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().end.style = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderRightStyleProperty>(try$(parseValue<Gfx::BorderStyle>(c))));
+        }
+    };
+
+    Gfx::BorderStyle _value;
+
+    BorderRightStyleProperty(Gfx::BorderStyle value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().end.style = _value;
     }
 
-    static Gfx::BorderStyle load(SpecifiedValues const& c) {
-        return c.borders->end.style;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Gfx::BorderStyle>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
-export struct BorderBottomStyleProp {
-    Gfx::BorderStyle value = initial();
+export struct BorderBottomStyleProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-bottom-style"_sym;
+        }
 
-    static constexpr Str name() { return "border-bottom-style"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderBottomStyleProperty>(Gfx::BorderStyle::NONE);
+        }
 
-    static constexpr Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderBottomStyleProperty>(c.borders->bottom.style);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().bottom.style = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderBottomStyleProperty>(try$(parseValue<Gfx::BorderStyle>(c))));
+        }
+    };
+
+    Gfx::BorderStyle _value;
+
+    BorderBottomStyleProperty(Gfx::BorderStyle value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().bottom.style = _value;
     }
 
-    static Gfx::BorderStyle load(SpecifiedValues const& c) {
-        return c.borders->bottom.style;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Gfx::BorderStyle>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
-export struct BorderTopWidthProp {
-    LineWidth value = initial();
+export struct BorderTopWidthProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-top-width"_sym;
+        }
 
-    static constexpr Str name() { return "border-top-width"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderTopWidthProperty>(Keywords::MEDIUM);
+        }
 
-    static constexpr LineWidth initial() { return Keywords::MEDIUM; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderTopWidthProperty>(c.borders->top.width);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().top.width = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderTopWidthProperty>(try$(parseValue<LineWidth>(c))));
+        }
+    };
+
+    LineWidth _value;
+
+    BorderTopWidthProperty(LineWidth value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().top.width = _value;
     }
 
-    static LineWidth load(SpecifiedValues const& c) {
-        return c.borders->top.width;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<LineWidth>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
-export struct BorderRightWidthProp {
-    LineWidth value = initial();
+export struct BorderRightWidthProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-right-width"_sym;
+        }
 
-    static constexpr Str name() { return "border-right-width"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderRightWidthProperty>(Keywords::MEDIUM);
+        }
 
-    static constexpr LineWidth initial() { return Keywords::MEDIUM; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderRightWidthProperty>(c.borders->end.width);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().end.width = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderRightWidthProperty>(try$(parseValue<LineWidth>(c))));
+        }
+    };
+
+    LineWidth _value;
+
+    BorderRightWidthProperty(LineWidth value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().end.width = _value;
     }
 
-    static LineWidth load(SpecifiedValues const& c) {
-        return c.borders->end.width;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<LineWidth>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
-export struct BorderBottomWidthProp {
-    LineWidth value = initial();
+export struct BorderBottomWidthProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-bottom-width"_sym;
+        }
 
-    static constexpr Str name() { return "border-bottom-width"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderBottomWidthProperty>(Keywords::MEDIUM);
+        }
 
-    static constexpr LineWidth initial() { return Keywords::MEDIUM; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderBottomWidthProperty>(c.borders->bottom.width);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().bottom.width = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderBottomWidthProperty>(try$(parseValue<CalcValue<Length>>(c))));
+        }
+    };
+
+    LineWidth _value;
+
+    BorderBottomWidthProperty(LineWidth value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().bottom.width = _value;
     }
 
-    static LineWidth load(SpecifiedValues const& c) {
-        return c.borders->bottom.width;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<Length>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
-export struct BorderLeftWidthProp {
-    LineWidth value = initial();
+export struct BorderLeftWidthProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-left-width"_sym;
+        }
 
-    static constexpr Str name() { return "border-left-width"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderLeftWidthProperty>(Keywords::MEDIUM);
+        }
 
-    static constexpr LineWidth initial() { return Keywords::MEDIUM; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderLeftWidthProperty>(c.borders->start.width);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().start.width = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderLeftWidthProperty>(try$(parseValue<LineWidth>(c))));
+        }
+    };
+
+    LineWidth _value;
+
+    BorderLeftWidthProperty(LineWidth value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().start.width = _value;
     }
 
-    static LineWidth load(SpecifiedValues const& c) {
-        return c.borders->start.width;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<LineWidth>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
-export struct BorderRadiusTopRight {
-    Array<CalcValue<PercentOr<Length>>, 2> value = initial();
-
-    static constexpr Str name() { return "border-top-right-radius"; }
-
-    static constexpr Array<CalcValue<PercentOr<Length>>, 2> initial() {
-        return makeArray<CalcValue<PercentOr<Length>>, 2>(Length{});
-    }
-
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().radii.c = value[0];
-        c.borders.cow().radii.d = value[1];
-    }
-
-    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedValues const& c) {
-        return {
-            c.borders->radii.c,
-            c.borders->radii.d,
-        };
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-        if (c.ended()) {
-            value[1] = value[0];
-        } else {
-            value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+export struct BorderRadiusTopRightProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-top-right-radius"_sym;
         }
 
-        return Ok();
+        Rc<Property> initial() const override {
+            return makeRc<BorderRadiusTopRightProperty>(makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderRadiusTopRightProperty>(Array<CalcValue<PercentOr<Length>>, 2>{
+                c.borders->radii.c,
+                c.borders->radii.d,
+            });
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            Array<CalcValue<PercentOr<Length>>, 2> value;
+            value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            if (c.ended()) {
+                value[1] = value[0];
+            } else {
+                value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            }
+            return Ok(makeRc<BorderRadiusTopRightProperty>(value));
+        }
+    };
+
+    Array<CalcValue<PercentOr<Length>>, 2> _value;
+
+    BorderRadiusTopRightProperty(Array<CalcValue<PercentOr<Length>>, 2> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().radii.c = _value[0];
+        c.borders.cow().radii.d = _value[1];
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
-export struct BorderRadiusTopLeft {
-    Array<CalcValue<PercentOr<Length>>, 2> value = initial();
-
-    static constexpr Str name() { return "border-top-left-radius"; }
-
-    static constexpr Array<CalcValue<PercentOr<Length>>, 2> initial() {
-        return makeArray<CalcValue<PercentOr<Length>>, 2>(Length{});
-    }
-
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().radii.a = value[1];
-        c.borders.cow().radii.b = value[0];
-    }
-
-    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedValues const& c) {
-        return {
-            c.borders->radii.a,
-            c.borders->radii.b,
-        };
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-        eatWhitespace(c);
-        if (c.ended()) {
-            value[1] = value[0];
-        } else {
-            value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+export struct BorderRadiusTopLeftProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-top-left-radius"_sym;
         }
 
-        return Ok();
+        Rc<Property> initial() const override {
+            return makeRc<BorderRadiusTopLeftProperty>(makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderRadiusTopLeftProperty>(Array<CalcValue<PercentOr<Length>>, 2>{
+                c.borders->radii.a,
+                c.borders->radii.b,
+            });
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            Array<CalcValue<PercentOr<Length>>, 2> value;
+            value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            eatWhitespace(c);
+            if (c.ended()) {
+                value[1] = value[0];
+            } else {
+                value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            }
+            return Ok(makeRc<BorderRadiusTopLeftProperty>(value));
+        }
+    };
+
+    Array<CalcValue<PercentOr<Length>>, 2> _value;
+
+    BorderRadiusTopLeftProperty(Array<CalcValue<PercentOr<Length>>, 2> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().radii.a = _value[1];
+        c.borders.cow().radii.b = _value[0];
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
-export struct BorderRadiusBottomRight {
-    Array<CalcValue<PercentOr<Length>>, 2> value = initial();
-
-    static constexpr Str name() { return "border-bottom-right-radius"; }
-
-    static constexpr Array<CalcValue<PercentOr<Length>>, 2> initial() {
-        return makeArray<CalcValue<PercentOr<Length>>, 2>(Length{});
-    }
-
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().radii.e = value[1];
-        c.borders.cow().radii.f = value[0];
-    }
-
-    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedValues const& c) {
-        return {
-            c.borders->radii.e,
-            c.borders->radii.f,
-        };
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-        if (c.ended()) {
-            value[1] = value[0];
-        } else {
-            value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+export struct BorderRadiusBottomRightProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-bottom-right-radius"_sym;
         }
 
-        return Ok();
+        Rc<Property> initial() const override {
+            return makeRc<BorderRadiusBottomRightProperty>(makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderRadiusBottomRightProperty>(Array<CalcValue<PercentOr<Length>>, 2>{
+                c.borders->radii.e,
+                c.borders->radii.f,
+            });
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            Array<CalcValue<PercentOr<Length>>, 2> value;
+            value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            if (c.ended()) {
+                value[1] = value[0];
+            } else {
+                value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            }
+            return Ok(makeRc<BorderRadiusBottomRightProperty>(value));
+        }
+    };
+
+    Array<CalcValue<PercentOr<Length>>, 2> _value;
+
+    BorderRadiusBottomRightProperty(Array<CalcValue<PercentOr<Length>>, 2> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().radii.e = _value[1];
+        c.borders.cow().radii.f = _value[0];
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
-export struct BorderRadiusBottomLeft {
-    Array<CalcValue<PercentOr<Length>>, 2> value = initial();
-
-    static constexpr Str name() { return "border-bottom-left-radius"; }
-
-    static constexpr Array<CalcValue<PercentOr<Length>>, 2> initial() {
-        return makeArray<CalcValue<PercentOr<Length>>, 2>(Length{});
-    }
-
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().radii.g = value[0];
-        c.borders.cow().radii.h = value[1];
-    }
-
-    static Array<CalcValue<PercentOr<Length>>, 2> load(SpecifiedValues const& c) {
-        return {
-            c.borders->radii.g,
-            c.borders->radii.h,
-        };
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-        if (c.ended()) {
-            value[1] = value[0];
-        } else {
-            value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+export struct BorderRadiusBottomLeftProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-bottom-left-radius"_sym;
         }
 
-        return Ok();
+        Rc<Property> initial() const override {
+            return makeRc<BorderRadiusBottomLeftProperty>(makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderRadiusBottomLeftProperty>(Array<CalcValue<PercentOr<Length>>, 2>{
+                c.borders->radii.g,
+                c.borders->radii.h,
+            });
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            Array<CalcValue<PercentOr<Length>>, 2> value;
+            value[0] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            if (c.ended()) {
+                value[1] = value[0];
+            } else {
+                value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            }
+            return Ok(makeRc<BorderRadiusBottomLeftProperty>(value));
+        }
+    };
+
+    Array<CalcValue<PercentOr<Length>>, 2> _value;
+
+    BorderRadiusBottomLeftProperty(Array<CalcValue<PercentOr<Length>>, 2> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().radii.g = _value[0];
+        c.borders.cow().radii.h = _value[1];
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
-export struct BorderRadius {
-    Math::Radii<CalcValue<PercentOr<Length>>> value = initial();
-
-    static constexpr Str name() { return "border-radius"; }
-
-    static Math::Radii<CalcValue<PercentOr<Length>>> initial() { return {CalcValue<PercentOr<Length>>(Length{})}; }
-
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().radii = value;
-    }
-
-    static Math::Radii<CalcValue<PercentOr<Length>>> load(SpecifiedValues const& c) {
-        return c.borders->radii;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Math::Radii<CalcValue<PercentOr<Length>>>>(c));
-        return Ok();
-    }
-};
-
-// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
-export struct BorderTopProp {
-    Border value;
-
-    static constexpr Str name() { return "border-top"; }
-
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().top = value;
-    }
-
-    static Border load(SpecifiedValues const& c) {
-        return c.borders->top;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
-            if (width) {
-                value.width = width.unwrap();
-                continue;
-            }
-
-            auto color = parseValue<Color>(c);
-            if (color) {
-                value.color = color.unwrap();
-                continue;
-            }
-
-            auto style = parseValue<Gfx::BorderStyle>(c);
-            if (style) {
-                value.style = style.unwrap();
-                continue;
-            }
-
-            break;
+export struct BorderRadiusProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-radius"_sym;
         }
 
-        return Ok();
-    }
-};
-
-// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
-export struct BorderRightProp {
-    Border value;
-
-    static constexpr Str name() { return "border-right"; }
-
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().end = value;
-    }
-
-    static Border load(SpecifiedValues const& c) {
-        return c.borders->end;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
-            if (width) {
-                value.width = width.unwrap();
-                continue;
-            }
-
-            auto color = parseValue<Color>(c);
-            if (color) {
-                value.color = color.unwrap();
-                continue;
-            }
-
-            auto style = parseValue<Gfx::BorderStyle>(c);
-            if (style) {
-                value.style = style.unwrap();
-                continue;
-            }
-
-            break;
+        Rc<Property> initial() const override {
+            return makeRc<BorderRadiusProperty>(Math::Radii<CalcValue<PercentOr<Length>>>{CalcValue<PercentOr<Length>>(Length{})});
         }
 
-        return Ok();
-    }
-};
-
-// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
-export struct BorderBottomProp {
-    Border value;
-
-    static constexpr Str name() { return "border-bottom"; }
-
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().bottom = value;
-    }
-
-    static Border load(SpecifiedValues const& c) {
-        return c.borders->bottom;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
-            if (width) {
-                value.width = width.unwrap();
-                continue;
-            }
-
-            auto color = parseValue<Color>(c);
-            if (color) {
-                value.color = color.unwrap();
-                continue;
-            }
-
-            auto style = parseValue<Gfx::BorderStyle>(c);
-            if (style) {
-                value.style = style.unwrap();
-                continue;
-            }
-
-            break;
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderRadiusProperty>(c.borders->radii);
         }
 
-        return Ok();
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderRadiusProperty>(try$(parseValue<Math::Radii<CalcValue<PercentOr<Length>>>>(c))));
+        }
+    };
+
+    Math::Radii<CalcValue<PercentOr<Length>>> _value;
+
+    BorderRadiusProperty(Math::Radii<CalcValue<PercentOr<Length>>> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().radii = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
-export struct BorderLeftProp {
-    Border value;
-
-    static constexpr Str name() { return "border-left"; }
-
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().start = value;
-    }
-
-    static Border load(SpecifiedValues const& c) {
-        return c.borders->start;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
-            if (width) {
-                value.width = width.unwrap();
-                continue;
-            }
-
-            auto color = parseValue<Color>(c);
-            if (color) {
-                value.color = color.unwrap();
-                continue;
-            }
-
-            auto style = parseValue<Gfx::BorderStyle>(c);
-            if (style) {
-                value.style = style.unwrap();
-                continue;
-            }
-
-            break;
+export struct BorderTopProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-top"_sym;
         }
 
-        return Ok();
+        Rc<Property> initial() const override {
+            return makeRc<BorderTopProperty>(Border{});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderTopProperty>(c.borders->top);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            Border value;
+            while (not c.ended()) {
+                auto width = parseValue<CalcValue<Length>>(c);
+                if (width) {
+                    value.width = width.unwrap();
+                    continue;
+                }
+
+                auto color = parseValue<Color>(c);
+                if (color) {
+                    value.color = color.unwrap();
+                    continue;
+                }
+
+                auto style = parseValue<Gfx::BorderStyle>(c);
+                if (style) {
+                    value.style = style.unwrap();
+                    continue;
+                }
+
+                break;
+            }
+            return Ok(makeRc<BorderTopProperty>(value));
+        }
+    };
+
+    Border _value;
+
+    BorderTopProperty(Border value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().top = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
-export struct BorderProp {
-    Border value;
+export struct BorderRightProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-right"_sym;
+        }
 
-    static constexpr Str name() { return "border"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderRightProperty>(Border{});
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.borders.cow().top = value;
-        c.borders.cow().bottom = value;
-        c.borders.cow().start = value;
-        c.borders.cow().end = value;
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderRightProperty>(c.borders->end);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            Border value;
+            while (not c.ended()) {
+                auto width = parseValue<CalcValue<Length>>(c);
+                if (width) {
+                    value.width = width.unwrap();
+                    continue;
+                }
+
+                auto color = parseValue<Color>(c);
+                if (color) {
+                    value.color = color.unwrap();
+                    continue;
+                }
+
+                auto style = parseValue<Gfx::BorderStyle>(c);
+                if (style) {
+                    value.style = style.unwrap();
+                    continue;
+                }
+
+                break;
+            }
+            return Ok(makeRc<BorderRightProperty>(value));
+        }
+    };
+
+    Border _value;
+
+    BorderRightProperty(Border value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().end = _value;
     }
 
-    static Border load(SpecifiedValues const& c) {
-        return c.borders->top;
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
+    }
+};
+
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+export struct BorderBottomProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-bottom"_sym;
+        }
+
+        Rc<Property> initial() const override {
+            return makeRc<BorderBottomProperty>(Border{});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderBottomProperty>(c.borders->bottom);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            Border value;
+            while (not c.ended()) {
+                auto width = parseValue<CalcValue<Length>>(c);
+                if (width) {
+                    value.width = width.unwrap();
+                    continue;
+                }
+
+                auto color = parseValue<Color>(c);
+                if (color) {
+                    value.color = color.unwrap();
+                    continue;
+                }
+
+                auto style = parseValue<Gfx::BorderStyle>(c);
+                if (style) {
+                    value.style = style.unwrap();
+                    continue;
+                }
+
+                break;
+            }
+            return Ok(makeRc<BorderBottomProperty>(value));
+        }
+    };
+
+    Border _value;
+
+    BorderBottomProperty(Border value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().bottom = _value;
     }
 
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Border>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
+    }
+};
+
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+export struct BorderLeftProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-left"_sym;
+        }
+
+        Rc<Property> initial() const override {
+            return makeRc<BorderLeftProperty>(Border{});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderLeftProperty>(c.borders->start);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            Border value;
+            while (not c.ended()) {
+                auto width = parseValue<CalcValue<Length>>(c);
+                if (width) {
+                    value.width = width.unwrap();
+                    continue;
+                }
+
+                auto color = parseValue<Color>(c);
+                if (color) {
+                    value.color = color.unwrap();
+                    continue;
+                }
+
+                auto style = parseValue<Gfx::BorderStyle>(c);
+                if (style) {
+                    value.style = style.unwrap();
+                    continue;
+                }
+
+                break;
+            }
+            return Ok(makeRc<BorderLeftProperty>(value));
+        }
+    };
+
+    Border _value;
+
+    BorderLeftProperty(Border value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().start = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
+    }
+};
+
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+export struct BorderProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border"_sym;
+        }
+
+        Rc<Property> initial() const override {
+            return makeRc<BorderProperty>(Border{});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderProperty>(c.borders->top);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderProperty>(try$(parseValue<Border>(c))));
+        }
+    };
+
+    Border _value;
+
+    BorderProperty(Border value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.borders.cow().top = _value;
+        c.borders.cow().bottom = _value;
+        c.borders.cow().start = _value;
+        c.borders.cow().end = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
-export struct BorderWidthProp {
-    Math::Insets<LineWidth> value = LineWidth{Keywords::MEDIUM};
+export struct BorderWidthProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-width"_sym;
+        }
 
-    static constexpr Str name() { return "border-width"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderWidthProperty>(Math::Insets<LineWidth>{LineWidth{Keywords::MEDIUM}});
+        }
 
-    void apply(SpecifiedValues& c) const {
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderWidthProperty>(Math::Insets<LineWidth>{
+                c.borders->start.width,
+                c.borders->end.width,
+                c.borders->top.width,
+                c.borders->bottom.width,
+            });
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderWidthProperty>(try$(parseValue<Math::Insets<LineWidth>>(c))));
+        }
+    };
+
+    Math::Insets<LineWidth> _value;
+
+    BorderWidthProperty(Math::Insets<LineWidth> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
         auto& borders = c.borders.cow();
-        borders.start.width = value.start;
-        borders.end.width = value.end;
-        borders.top.width = value.top;
-        borders.bottom.width = value.bottom;
+        borders.start.width = _value.start;
+        borders.end.width = _value.end;
+        borders.top.width = _value.top;
+        borders.bottom.width = _value.bottom;
     }
 
-    static Math::Insets<LineWidth> load(SpecifiedValues const& c) {
-        return {
-            c.borders->start.width,
-            c.borders->end.width,
-            c.borders->top.width,
-            c.borders->bottom.width,
-        };
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Math::Insets<LineWidth>>(c));
-
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
@@ -1219,687 +1763,915 @@ export struct BorderWidthProp {
 
 // https://www.w3.org/TR/css-gcpm-3/
 // https://drafts.csswg.org/css-content/#content-property
-export struct ContentProp {
-    Content value = initial();
+export struct ContentProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "content"_sym;
+        }
 
-    static constexpr Str name() { return "content"; }
+        Rc<Property> initial() const override {
+            return makeRc<ContentProperty>(Keywords::NORMAL);
+        }
 
-    static constexpr Content initial() { return Keywords::NORMAL; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<ContentProperty>(c.content);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.content = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<ContentProperty>(try$(parseValue<Content>(c))));
+        }
+    };
+
+    Content _value;
+
+    ContentProperty(Content value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.content = _value;
     }
 
-    static Content load(SpecifiedValues const& c) {
-        return c.content;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Content>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Clip Path -------------------------------------------------------------
 
 // https://drafts.fxtf.org/css-masking/#the-clip-path
-export struct ClipPathProp {
+export struct ClipPathProperty : Property {
     using Value = Union</* Url, */ BasicShape, Keywords::None>;
-    Value value = initial();
 
-    static constexpr Str name() { return "clip-path"; }
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "clip-path"_sym;
+        }
 
-    static Keywords::None initial() { return Keywords::NONE; }
+        Rc<Property> initial() const override {
+            return makeRc<ClipPathProperty>(Keywords::NONE);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        if (auto clipShape = value.is<BasicShape>())
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            if (c.clip->has())
+                return makeRc<ClipPathProperty>(c.clip->unwrap());
+            return makeRc<ClipPathProperty>(Keywords::NONE);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<ClipPathProperty>(try$(parseValue<Value>(c))));
+        }
+    };
+
+    Value _value;
+
+    ClipPathProperty(Value value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        if (auto clipShape = _value.is<BasicShape>())
             c.clip.cow() = *clipShape;
         else
             c.clip.cow() = NONE;
     }
 
-    static Value load(SpecifiedValues const& c) {
-        if (c.clip->has())
-            return c.clip->unwrap();
-        return Keywords::NONE;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Value>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Borders - Table -------------------------------------------------------
 
 // https://www.w3.org/TR/CSS22/tables.html#propdef-border-collapse
-export struct BorderCollapseProp {
-    BorderCollapse value = initial();
+export struct BorderCollapseProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-collapse"_sym;
+        }
 
-    static constexpr Str name() { return "border-collapse"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderCollapseProperty>(BorderCollapse::SEPARATE);
+        }
 
-    static constexpr BorderCollapse initial() { return BorderCollapse::SEPARATE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderCollapseProperty>(c.table->collapse);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.table.cow().collapse = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderCollapseProperty>(try$(parseValue<BorderCollapse>(c))));
+        }
+    };
+
+    BorderCollapse _value;
+
+    BorderCollapseProperty(BorderCollapse value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.table.cow().collapse = _value;
     }
 
-    static BorderCollapse load(SpecifiedValues const& c) {
-        return c.table->collapse;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<BorderCollapse>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/tables.html#propdef-border-spacing
-export struct BorderSpacingProp {
-    BorderSpacing value = initial();
+export struct BorderSpacingProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "border-spacing"_sym;
+        }
 
-    static constexpr Str name() { return "border-spacing"; }
+        Rc<Property> initial() const override {
+            return makeRc<BorderSpacingProperty>(BorderSpacing{0_au, 0_au});
+        }
 
-    static constexpr BorderSpacing initial() { return {0_au, 0_au}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BorderSpacingProperty>(c.table->spacing);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.table.cow().spacing = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderSpacingProperty>(try$(parseValue<BorderSpacing>(c))));
+        }
+    };
+
+    BorderSpacing _value;
+
+    BorderSpacingProperty(BorderSpacing value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.table.cow().spacing = _value;
     }
 
-    static BorderSpacing load(SpecifiedValues const& c) {
-        return c.table->spacing;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<BorderSpacing>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Breaks ----------------------------------------------------------------
 
 // https://www.w3.org/TR/css-break-3/#propdef-break-after
-export struct BreakAfterProp {
-    BreakBetween value = initial();
+export struct BreakAfterProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "break-after"_sym;
+        }
 
-    static constexpr Str name() { return "break-after"; }
+        Rc<Property> initial() const override {
+            return makeRc<BreakAfterProperty>(BreakBetween::AUTO);
+        }
 
-    static constexpr BreakBetween initial() { return BreakBetween::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BreakAfterProperty>(c.break_->after);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.break_.cow().after = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BreakAfterProperty>(try$(parseValue<BreakBetween>(c))));
+        }
+    };
+
+    BreakBetween _value;
+
+    BreakAfterProperty(BreakBetween value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.break_.cow().after = _value;
     }
 
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<BreakBetween>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-break-3/#propdef-break-before
-export struct BreakBeforeProp {
-    BreakBetween value = initial();
+export struct BreakBeforeProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "break-before"_sym;
+        }
 
-    static constexpr Str name() { return "break-before"; }
+        Rc<Property> initial() const override {
+            return makeRc<BreakBeforeProperty>(BreakBetween::AUTO);
+        }
 
-    static constexpr BreakBetween initial() { return BreakBetween::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BreakBeforeProperty>(c.break_->before);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.break_.cow().before = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BreakBeforeProperty>(try$(parseValue<BreakBetween>(c))));
+        }
+    };
+
+    BreakBetween _value;
+
+    BreakBeforeProperty(BreakBetween value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.break_.cow().before = _value;
     }
 
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<BreakBetween>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-break-3/#break-within
-export struct BreakInsideProp {
-    BreakInside value = initial();
+export struct BreakInsideProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "break-inside"_sym;
+        }
 
-    static constexpr Str name() { return "break-inside"; }
+        Rc<Property> initial() const override {
+            return makeRc<BreakInsideProperty>(BreakInside::AUTO);
+        }
 
-    static constexpr BreakInside initial() { return BreakInside::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BreakInsideProperty>(c.break_->inside);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.break_.cow().inside = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BreakInsideProperty>(try$(parseValue<BreakInside>(c))));
+        }
+    };
+
+    BreakInside _value;
+
+    BreakInsideProperty(BreakInside value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.break_.cow().inside = _value;
     }
 
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<BreakInside>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Flex ------------------------------------------------------------------
 
 // https://www.w3.org/TR/css-flexbox-1/#flex-basis-property
-export struct FlexBasisProp {
-    FlexBasis value = initial();
+export struct FlexBasisProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "flex-basis"_sym;
+        }
 
-    static constexpr Str name() { return "flex-basis"; }
+        Rc<Property> initial() const override {
+            return makeRc<FlexBasisProperty>(Keywords::AUTO);
+        }
 
-    static FlexBasis initial() { return Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FlexBasisProperty>(c.flex->basis);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.flex.cow().basis = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<FlexBasisProperty>(try$(parseValue<FlexBasis>(c))));
+        }
+    };
+
+    FlexBasis _value;
+
+    FlexBasisProperty(FlexBasis value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.flex.cow().basis = _value;
     }
 
-    static FlexBasis load(SpecifiedValues const& c) {
-        return c.flex->basis;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<FlexBasis>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-direction
-export struct FlexDirectionProp {
-    FlexDirection value = initial();
+export struct FlexDirectionProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "flex-direction"_sym;
+        }
 
-    static constexpr Str name() { return "flex-direction"; }
+        Rc<Property> initial() const override {
+            return makeRc<FlexDirectionProperty>(FlexDirection::ROW);
+        }
 
-    static constexpr FlexDirection initial() { return FlexDirection::ROW; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FlexDirectionProperty>(c.flex->direction);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.flex.cow().direction = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<FlexDirectionProperty>(try$(parseValue<FlexDirection>(c))));
+        }
+    };
+
+    FlexDirection _value;
+
+    FlexDirectionProperty(FlexDirection value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.flex.cow().direction = _value;
     }
 
-    static FlexDirection load(SpecifiedValues const& c) {
-        return c.flex->direction;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<FlexDirection>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-flexbox-1/#flex-grow-property
-export struct FlexGrowProp {
-    Number value = initial();
+export struct FlexGrowProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "flex-grow"_sym;
+        }
 
-    static constexpr Str name() { return "flex-grow"; }
+        Rc<Property> initial() const override {
+            return makeRc<FlexGrowProperty>(Number{0});
+        }
 
-    static constexpr f64 initial() { return 0; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FlexGrowProperty>(c.flex->grow);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.flex.cow().grow = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<FlexGrowProperty>(try$(parseValue<Number>(c))));
+        }
+    };
+
+    Number _value;
+
+    FlexGrowProperty(Number value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.flex.cow().grow = _value;
     }
 
-    static Number load(SpecifiedValues const& c) {
-        return c.flex->grow;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Number>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-shrink
-export struct FlexShrinkProp {
-    Number value = initial();
+export struct FlexShrinkProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "flex-shrink"_sym;
+        }
 
-    static constexpr Str name() { return "flex-shrink"; }
+        Rc<Property> initial() const override {
+            return makeRc<FlexShrinkProperty>(Number{1});
+        }
 
-    static constexpr Number initial() { return 1; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FlexShrinkProperty>(c.flex->shrink);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.flex.cow().shrink = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<FlexShrinkProperty>(try$(parseValue<Number>(c))));
+        }
+    };
+
+    Number _value;
+
+    FlexShrinkProperty(Number value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.flex.cow().shrink = _value;
     }
 
-    static Number load(SpecifiedValues const& c) {
-        return c.flex->shrink;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Number>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-wrap
-export struct FlexWrapProp {
-    FlexWrap value = initial();
+export struct FlexWrapProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "flex-wrap"_sym;
+        }
 
-    static constexpr Str name() { return "flex-wrap"; }
+        Rc<Property> initial() const override {
+            return makeRc<FlexWrapProperty>(FlexWrap::NOWRAP);
+        }
 
-    static constexpr FlexWrap initial() { return FlexWrap::NOWRAP; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FlexWrapProperty>(c.flex->wrap);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.flex.cow().wrap = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<FlexWrapProperty>(try$(parseValue<FlexWrap>(c))));
+        }
+    };
+
+    FlexWrap _value;
+
+    FlexWrapProperty(FlexWrap value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.flex.cow().wrap = _value;
     }
 
-    static FlexWrap load(SpecifiedValues const& c) {
-        return c.flex->wrap;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<FlexWrap>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-flow
-export struct FlexFlowProp {
-    Tuple<FlexDirection, FlexWrap> value = initial();
-
-    static Tuple<FlexDirection, FlexWrap> initial() {
-        return {
-            FlexDirection::ROW,
-            FlexWrap::NOWRAP,
-        };
-    }
-
-    static constexpr Str name() { return "flex-flow"; }
-
-    void apply(SpecifiedValues& c) const {
-        c.flex.cow().direction = value.v0;
-        c.flex.cow().wrap = value.v1;
-    }
-
-    static Tuple<FlexDirection, FlexWrap> load(SpecifiedValues const& c) {
-        return {
-            c.flex->direction,
-            c.flex->wrap,
-        };
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        auto direction = parseValue<FlexDirection>(c);
-        if (direction) {
-            value.v0 = direction.unwrap();
-
-            auto wrap = parseValue<FlexWrap>(c);
-            if (wrap)
-                value.v1 = wrap.unwrap();
-        } else {
-            auto wrap = parseValue<FlexWrap>(c);
-            if (not wrap)
-                return Error::invalidData("expected flex direction or wrap");
-            value.v1 = wrap.unwrap();
-
-            direction = parseValue<FlexDirection>(c);
-            if (direction)
-                value.v0 = direction.unwrap();
+export struct FlexFlowProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "flex-flow"_sym;
         }
 
-        return Ok();
+        Rc<Property> initial() const override {
+            return makeRc<FlexFlowProperty>(Tuple<FlexDirection, FlexWrap>{FlexDirection::ROW, FlexWrap::NOWRAP});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FlexFlowProperty>(Tuple<FlexDirection, FlexWrap>{c.flex->direction, c.flex->wrap});
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            if (c.ended())
+                return Error::invalidData("unexpected end of input");
+
+            Tuple<FlexDirection, FlexWrap> value{FlexDirection::ROW, FlexWrap::NOWRAP};
+
+            auto direction = parseValue<FlexDirection>(c);
+            if (direction) {
+                value.v0 = direction.unwrap();
+
+                auto wrap = parseValue<FlexWrap>(c);
+                if (wrap)
+                    value.v1 = wrap.unwrap();
+            } else {
+                auto wrap = parseValue<FlexWrap>(c);
+                if (not wrap)
+                    return Error::invalidData("expected flex direction or wrap");
+                value.v1 = wrap.unwrap();
+
+                direction = parseValue<FlexDirection>(c);
+                if (direction)
+                    value.v0 = direction.unwrap();
+            }
+
+            return Ok(makeRc<FlexFlowProperty>(value));
+        }
+    };
+
+    Tuple<FlexDirection, FlexWrap> _value;
+
+    FlexFlowProperty(Tuple<FlexDirection, FlexWrap> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.flex.cow().direction = _value.v0;
+        c.flex.cow().wrap = _value.v1;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{} {}", _value.v0, _value.v1);
     }
 };
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex
-export struct FlexProp {
-    FlexItemProps value = initial();
-
-    static constexpr Str name() { return "flex"; }
-
-    static FlexItemProps initial() {
-        return {
-            Keywords::AUTO,
-            0,
-            1,
-        };
-    }
-
-    void apply(SpecifiedValues& c) const {
-        auto& flex = c.flex.cow();
-        flex.basis = value.flexBasis;
-        flex.grow = value.flexGrow;
-        flex.shrink = value.flexShrink;
-    }
-
-    static FlexItemProps load(SpecifiedValues const& c) {
-        return {
-            c.flex->basis,
-            c.flex->grow,
-            c.flex->shrink,
-        };
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Css::Token::ident("none"))) {
-            value = {
-                Keywords::AUTO,
-                0,
-                0,
-            };
-            return Ok();
-        } else if (c.skip(Css::Token::ident("initial"))) {
-            value = {
-                Keywords::AUTO,
-                0,
-                1,
-            };
-            return Ok();
+export struct FlexProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "flex"_sym;
         }
 
-        // deafult values if these parameters are omitted
-        value.flexGrow = value.flexShrink = 1;
-        value.flexBasis = CalcValue<PercentOr<Length>>(Length{});
+        Rc<Property> initial() const override {
+            return makeRc<FlexProperty>(FlexItemProps{Keywords::AUTO, 0, 1});
+        }
 
-        auto parseGrowShrink = [](Cursor<Css::Sst>& c, FlexItemProps& value) -> Res<> {
-            auto grow = parseValue<Number>(c);
-            if (not grow)
-                return Error::invalidData("expected flex item grow");
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FlexProperty>(FlexItemProps{c.flex->basis, c.flex->grow, c.flex->shrink});
+        }
 
-            value.flexGrow = grow.unwrap();
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            if (c.ended())
+                return Error::invalidData("unexpected end of input");
 
-            auto shrink = parseValue<Number>(c);
-            if (shrink)
-                value.flexShrink = shrink.unwrap();
+            FlexItemProps value{Keywords::AUTO, 0, 1};
 
-            return Ok();
-        };
+            if (c.skip(Css::Token::ident("none"))) {
+                value = {Keywords::AUTO, 0, 0};
+                return Ok(makeRc<FlexProperty>(value));
+            } else if (c.skip(Css::Token::ident("initial"))) {
+                value = {Keywords::AUTO, 0, 1};
+                return Ok(makeRc<FlexProperty>(value));
+            }
 
-        auto parsedGrowAndMaybeShrink = parseGrowShrink(c, value);
-        if (parsedGrowAndMaybeShrink) {
-            auto basis = parseValue<FlexBasis>(c);
-            if (basis)
-                value.flexBasis = basis.unwrap();
-        } else {
-            auto basis = parseValue<FlexBasis>(c);
-            if (basis)
-                value.flexBasis = basis.unwrap();
-            else
-                return Error::invalidData("expected flex item grow or basis");
+            // deafult values if these parameters are omitted
+            value.flexGrow = value.flexShrink = 1;
+            value.flexBasis = CalcValue<PercentOr<Length>>(Length{});
+
+            auto parseGrowShrink = [](Cursor<Css::Sst>& c, FlexItemProps& value) -> Res<> {
+                auto grow = parseValue<Number>(c);
+                if (not grow)
+                    return Error::invalidData("expected flex item grow");
+
+                value.flexGrow = grow.unwrap();
+
+                auto shrink = parseValue<Number>(c);
+                if (shrink)
+                    value.flexShrink = shrink.unwrap();
+
+                return Ok();
+            };
 
             auto parsedGrowAndMaybeShrink = parseGrowShrink(c, value);
+            if (parsedGrowAndMaybeShrink) {
+                auto basis = parseValue<FlexBasis>(c);
+                if (basis)
+                    value.flexBasis = basis.unwrap();
+            } else {
+                auto basis = parseValue<FlexBasis>(c);
+                if (basis)
+                    value.flexBasis = basis.unwrap();
+                else
+                    return Error::invalidData("expected flex item grow or basis");
+
+                auto parsedGrowAndMaybeShrink = parseGrowShrink(c, value);
+            }
+            return Ok(makeRc<FlexProperty>(value));
         }
-        return Ok();
+    };
+
+    FlexItemProps _value;
+
+    FlexProperty(FlexItemProps value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        auto& flex = c.flex.cow();
+        flex.basis = _value.flexBasis;
+        flex.grow = _value.flexGrow;
+        flex.shrink = _value.flexShrink;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{} {} {}", _value.flexGrow, _value.flexShrink, _value.flexBasis);
     }
 };
 
 // MARK: Float & Clear ---------------------------------------------------------
 
-export struct FloatProp {
-    Float value = initial();
+export struct FloatProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "float"_sym;
+        }
 
-    static constexpr Str name() { return "float"; }
+        Rc<Property> initial() const override {
+            return makeRc<FloatProperty>(Float::NONE);
+        }
 
-    static Float initial() { return Float::NONE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FloatProperty>(c.float_);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.float_ = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<FloatProperty>(try$(parseValue<Float>(c))));
+        }
+    };
+
+    Float _value;
+
+    FloatProperty(Float value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.float_ = _value;
     }
 
-    static Float load(SpecifiedValues const& c) {
-        return c.float_;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Float>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
-export struct ClearProp {
-    Clear value = initial();
+export struct ClearProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "clear"_sym;
+        }
 
-    static constexpr Str name() { return "clear"; }
+        Rc<Property> initial() const override {
+            return makeRc<ClearProperty>(Clear::NONE);
+        }
 
-    static Clear initial() { return Clear::NONE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<ClearProperty>(c.clear);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.clear = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<ClearProperty>(try$(parseValue<Clear>(c))));
+        }
+    };
+
+    Clear _value;
+
+    ClearProperty(Clear value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.clear = _value;
     }
 
-    static Clear load(SpecifiedValues const& c) {
-        return c.clear;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Clear>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Fonts -----------------------------------------------------------------
 
 // https://www.w3.org/TR/css-fonts-4/#font-family-prop
-export struct FontFamilyProp {
-    Vec<FontFamily> value = initial();
-
-    static constexpr Str name() { return "font-family"; }
-
-    static Array<FontFamily, 1> initial() { return {"sans-serif"_sym}; }
-
-    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
-        if (not child.font.sameInstance(parent.font))
-            child.font.cow().families = parent.font->families;
-    }
-
-    void apply(SpecifiedValues& c) const {
-        c.font.cow().families = value;
-    }
-
-    static Vec<FontFamily> load(SpecifiedValues const& c) {
-        return c.font->families;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = {};
-        eatWhitespace(c);
-        while (not c.ended()) {
-            value.pushBack(try$(parseValue<FontFamily>(c)));
-
-            eatWhitespace(c);
-            c.skip(Css::Token::comma());
-            eatWhitespace(c);
+export struct FontFamilyProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "font-family"_sym;
         }
-        return Ok();
+
+        Rc<Property> initial() const override {
+            return makeRc<FontFamilyProperty>(Vec<FontFamily>{"sans-serif"_sym});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FontFamilyProperty>(c.font->families);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            Vec<FontFamily> value{};
+            eatWhitespace(c);
+            while (not c.ended()) {
+                value.pushBack(try$(parseValue<FontFamily>(c)));
+
+                eatWhitespace(c);
+                c.skip(Css::Token::comma());
+                eatWhitespace(c);
+            }
+            return Ok(makeRc<FontFamilyProperty>(std::move(value)));
+        }
+    };
+
+    Vec<FontFamily> _value;
+
+    FontFamilyProperty(Vec<FontFamily> value) : _value(std::move(value)) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.font.cow().families = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-fonts-4/#font-weight-prop
-export struct FontWeightProp {
-    FontWeight value = initial();
+export struct FontWeightProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "font-weight"_sym;
+        }
 
-    static constexpr Str name() { return "font-weight"; }
+        Rc<Property> initial() const override {
+            return makeRc<FontWeightProperty>(FontWeight{Gfx::FontWeight::REGULAR});
+        }
 
-    static FontWeight initial() { return Gfx::FontWeight::REGULAR; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FontWeightProperty>(c.font->weight);
+        }
 
-    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
-        if (not child.font.sameInstance(parent.font))
-            child.font.cow().weight = parent.font->weight;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<FontWeightProperty>(try$(parseValue<FontWeight>(c))));
+        }
+    };
+
+    FontWeight _value;
+
+    FontWeightProperty(FontWeight value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.font.cow().weight = _value.resolve();
     }
 
-    void apply(SpecifiedValues& child) const {
-        child.font.cow().weight = value.resolve();
+    void apply(SpecifiedValues const& parent, SpecifiedValues& c) const override {
+        c.font.cow().weight = _value.resolve(parent.font->weight);
     }
 
-    void apply(SpecifiedValues const& parent, SpecifiedValues& child) const {
-        child.font.cow().weight = value.resolve(parent.font->weight);
-    }
-
-    static FontWeight load(SpecifiedValues const& c) {
-        return c.font->weight;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<FontWeight>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-fonts-4/#font-width-prop
-export struct FontWidthProp {
-    FontWidth value = initial();
+export struct FontWidthProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "font-width"_sym;
+        }
 
-    static constexpr Str name() { return "font-width"; }
+        Rc<Property> initial() const override {
+            return makeRc<FontWidthProperty>(FontWidth::NORMAL);
+        }
 
-    static constexpr FontWidth initial() { return FontWidth::NORMAL; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FontWidthProperty>(c.font->width);
+        }
 
-    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
-        if (not child.font.sameInstance(parent.font))
-            child.font.cow().width = parent.font->width;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<FontWidthProperty>(try$(parseValue<FontWidth>(c))));
+        }
+    };
+
+    FontWidth _value;
+
+    FontWidthProperty(FontWidth value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.font.cow().width = _value;
     }
 
-    void apply(SpecifiedValues& c) const {
-        c.font.cow().width = value;
-    }
-
-    static FontWidth load(SpecifiedValues const& c) {
-        return c.font->width;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<FontWidth>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-fonts-4/#font-style-prop
-export struct FontStyleProp {
-    FontStyle value = initial();
+export struct FontStyleProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "font-style"_sym;
+        }
 
-    static constexpr Str name() { return "font-style"; }
+        Rc<Property> initial() const override {
+            return makeRc<FontStyleProperty>(FontStyle::NORMAL);
+        }
 
-    static constexpr FontStyle initial() { return FontStyle::NORMAL; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FontStyleProperty>(c.font->style);
+        }
 
-    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
-        if (not child.font.sameInstance(parent.font))
-            child.font.cow().style = parent.font->style;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<FontStyleProperty>(try$(parseValue<FontStyle>(c))));
+        }
+    };
+
+    FontStyle _value;
+
+    FontStyleProperty(FontStyle value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.font.cow().style = _value;
     }
 
-    void apply(SpecifiedValues& c) const {
-        c.font.cow().style = value;
-    }
-
-    static FontStyle load(SpecifiedValues const& c) {
-        return c.font->style;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<FontStyle>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-fonts-4/#font-prop
-export struct FontProp {
-    FontProps value;
-    Opt<FontWeight> unresolvedWeight;
-
-    static constexpr Str name() { return "font"; }
-
-    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
-        child.font.cow() = *parent.font;
-    }
-
-    void apply(SpecifiedValues& c) const {
-        c.font.cow() = value;
-        if (unresolvedWeight)
-            c.font.cow().weight = unresolvedWeight->resolve();
-    }
-
-    void apply(SpecifiedValues const& parent, SpecifiedValues& child) const {
-        child.font.cow() = value;
-        if (unresolvedWeight)
-            child.font.cow().weight = unresolvedWeight->resolve(parent.font->weight);
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        // TODO: system family name
-
-        while (true) {
-            auto fontStyle = parseValue<FontStyle>(c);
-            if (fontStyle) {
-                value.style = fontStyle.unwrap();
-                continue;
-            }
-
-            auto fontWeight = parseValue<FontWeight>(c);
-            if (fontWeight) {
-                unresolvedWeight = fontWeight.unwrap();
-                continue;
-            }
-
-            // TODO: font variant https://www.w3.org/TR/css-fonts-4/#font-variant-css21-values
-
-            auto fontWidth = parseValue<FontWidth>(c);
-            if (fontWidth) {
-                value.width = fontWidth.unwrap();
-                continue;
-            }
-
-            auto fontSize = parseValue<FontSize>(c);
-            if (fontSize) {
-                value.size = fontSize.unwrap();
-                break;
-            }
-
-            return Error::invalidData("expected font-style, font-weight, font-width or font-size");
+export struct FontProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "font"_sym;
         }
 
-        if (c.skip(Css::Token::delim("/"))) {
-            auto lh = Ok(parseValue<LineHeight>(c));
-            // TODO: use lineheight parsed value
+        Rc<Property> initial() const override {
+            return makeRc<FontProperty>(FontProps{}, None{});
         }
 
-        value.families = {try$(parseValue<FontFamily>(c))};
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FontProperty>(*c.font, None{});
+        }
 
-        return Ok();
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            // TODO: system family name
+            FontProps value;
+            Opt<FontWeight> unresolvedWeight;
+
+            while (true) {
+                auto fontStyle = parseValue<FontStyle>(c);
+                if (fontStyle) {
+                    value.style = fontStyle.unwrap();
+                    continue;
+                }
+
+                auto fontWeight = parseValue<FontWeight>(c);
+                if (fontWeight) {
+                    unresolvedWeight = fontWeight.unwrap();
+                    continue;
+                }
+
+                // TODO: font variant https://www.w3.org/TR/css-fonts-4/#font-variant-css21-values
+
+                auto fontWidth = parseValue<FontWidth>(c);
+                if (fontWidth) {
+                    value.width = fontWidth.unwrap();
+                    continue;
+                }
+
+                auto fontSize = parseValue<FontSize>(c);
+                if (fontSize) {
+                    value.size = fontSize.unwrap();
+                    break;
+                }
+
+                return Error::invalidData("expected font-style, font-weight, font-width or font-size");
+            }
+
+            if (c.skip(Css::Token::delim("/"))) {
+                auto lh = Ok(parseValue<LineHeight>(c));
+                // TODO: use lineheight parsed value
+            }
+
+            value.families = {try$(parseValue<FontFamily>(c))};
+
+            return Ok(makeRc<FontProperty>(std::move(value), unresolvedWeight));
+        }
+    };
+
+    FontProps _value;
+    Opt<FontWeight> _unresolvedWeight;
+
+    FontProperty(FontProps value, Opt<FontWeight> unresolvedWeight)
+        : _value(std::move(value)), _unresolvedWeight(unresolvedWeight) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.font.cow() = _value;
+        if (_unresolvedWeight)
+            c.font.cow().weight = _unresolvedWeight->resolve();
+    }
+
+    void apply(SpecifiedValues const& parent, SpecifiedValues& c) const override {
+        c.font.cow() = _value;
+        if (_unresolvedWeight)
+            c.font.cow().weight = _unresolvedWeight->resolve(parent.font->weight);
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-fonts-4/#font-size-prop
-export struct FontSizeProp {
-    FontSize value = initial();
+export struct FontSizeProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "font-size"_sym;
+        }
 
-    static constexpr Str name() { return "font-size"; }
+        Rc<Property> initial() const override {
+            return makeRc<FontSizeProperty>(FontSize::MEDIUM);
+        }
 
-    static constexpr FontSize initial() { return FontSize::MEDIUM; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FontSizeProperty>(c.font->size);
+        }
 
-    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
-        if (not child.font.sameInstance(parent.font))
-            child.font.cow().size = parent.font->size;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<FontSizeProperty>(try$(parseValue<FontSize>(c))));
+        }
+    };
+
+    FontSize _value;
+
+    FontSizeProperty(FontSize value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.font.cow().size = _value;
     }
 
-    void apply(SpecifiedValues& c) const {
-        c.font.cow().size = value;
-    }
-
-    static FontSize load(SpecifiedValues const& c) {
-        return c.font->size;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<FontSize>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Line ------------------------------------------------------------------
 
-export struct LineHeightProp {
-    LineHeight value = initial();
+export struct LineHeightProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "line-height"_sym;
+        }
 
-    static constexpr Str name() { return "line-height"; }
+        Rc<Property> initial() const override {
+            return makeRc<LineHeightProperty>(LineHeight::NORMAL);
+        }
 
-    static LineHeight initial() { return LineHeight::NORMAL; }
+        Rc<Property> load(SpecifiedValues const&) const override {
+            return makeRc<LineHeightProperty>(LineHeight::NORMAL); // TODO
+        }
 
-    void apply(SpecifiedValues&) const {
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<LineHeightProperty>(try$(parseValue<LineHeight>(c))));
+        }
+    };
+
+    LineHeight _value;
+
+    LineHeightProperty(LineHeight value) : _value(value) {}
+
+    void apply(SpecifiedValues&) const override {
         // TODO
     }
 
-    static LineHeight load(SpecifiedValues const&) {
-        return initial(); // TODO
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<LineHeight>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
@@ -1907,544 +2679,788 @@ export struct LineHeightProp {
 
 // https://www.w3.org/TR/css-box-3/#propdef-margin
 
-export struct MarginTopProp {
-    Width value = initial();
+export struct MarginTopProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "margin-top"_sym;
+        }
 
-    static Str name() { return "margin-top"; }
+        Rc<Property> initial() const override {
+            return makeRc<MarginTopProperty>(CalcValue<PercentOr<Length>>(Length{}));
+        }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MarginTopProperty>(c.margin->top);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.margin.cow().top = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MarginTopProperty>(try$(parseValue<Width>(c))));
+        }
+    };
+
+    Width _value;
+
+    MarginTopProperty(Width value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.margin.cow().top = _value;
     }
 
-    static Width load(SpecifiedValues const& c) {
-        return c.margin->top;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Width>(c));
-        return Ok();
-    }
-};
-
-export struct MarginRightProp {
-    Width value = initial();
-
-    static Str name() { return "margin-right"; }
-
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
-
-    void apply(SpecifiedValues& c) const {
-        c.margin.cow().end = value;
-    }
-
-    static Width load(SpecifiedValues const& c) {
-        return c.margin->end;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Width>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
-export struct MarginBottomProp {
-    Width value = initial();
+export struct MarginRightProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "margin-right"_sym;
+        }
 
-    static constexpr Str name() { return "margin-bottom"; }
+        Rc<Property> initial() const override {
+            return makeRc<MarginRightProperty>(CalcValue<PercentOr<Length>>(Length{}));
+        }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MarginRightProperty>(c.margin->end);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.margin.cow().bottom = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MarginRightProperty>(try$(parseValue<Width>(c))));
+        }
+    };
+
+    Width _value;
+
+    MarginRightProperty(Width value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.margin.cow().end = _value;
     }
 
-    static Width load(SpecifiedValues const& c) {
-        return c.margin->bottom;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Width>(c));
-        return Ok();
-    }
-};
-
-export struct MarginLeftProp {
-    Width value = initial();
-
-    static Str name() { return "margin-left"; }
-
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
-
-    void apply(SpecifiedValues& c) const {
-        c.margin.cow().start = value;
-    }
-
-    static Width load(SpecifiedValues const& c) {
-        return c.margin->start;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Width>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
-export struct MarginProp {
-    Math::Insets<Width> value = initial();
+export struct MarginBottomProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "margin-bottom"_sym;
+        }
 
-    static Str name() { return "margin"; }
+        Rc<Property> initial() const override {
+            return makeRc<MarginBottomProperty>(CalcValue<PercentOr<Length>>(Length{}));
+        }
 
-    static Math::Insets<Width> initial() { return {CalcValue<PercentOr<Length>>(Length{})}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MarginBottomProperty>(c.margin->bottom);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.margin.cow() = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MarginBottomProperty>(try$(parseValue<Width>(c))));
+        }
+    };
+
+    Width _value;
+
+    MarginBottomProperty(Width value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.margin.cow().bottom = _value;
     }
 
-    static Math::Insets<Width> load(SpecifiedValues const& c) {
-        return c.margin->start;
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
+    }
+};
+
+export struct MarginLeftProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "margin-left"_sym;
+        }
+
+        Rc<Property> initial() const override {
+            return makeRc<MarginLeftProperty>(CalcValue<PercentOr<Length>>(Length{}));
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MarginLeftProperty>(c.margin->start);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MarginLeftProperty>(try$(parseValue<Width>(c))));
+        }
+    };
+
+    Width _value;
+
+    MarginLeftProperty(Width value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.margin.cow().start = _value;
     }
 
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Math::Insets<Width>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
+    }
+};
+
+export struct MarginProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "margin"_sym;
+        }
+
+        Rc<Property> initial() const override {
+            return makeRc<MarginProperty>(Math::Insets<Width>{CalcValue<PercentOr<Length>>(Length{})});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MarginProperty>(*c.margin);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MarginProperty>(try$(parseValue<Math::Insets<Width>>(c))));
+        }
+    };
+
+    Math::Insets<Width> _value;
+
+    MarginProperty(Math::Insets<Width> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.margin.cow() = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-logical/#margin-properties
 
-export struct MarginInlineStartProp {
-    Width value = initial();
+export struct MarginInlineStartProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "margin-inline-start"_sym;
+        }
 
-    static Str name() { return "margin-inline-start"; }
+        Rc<Property> initial() const override {
+            return makeRc<MarginInlineStartProperty>(CalcValue<PercentOr<Length>>(Length{}));
+        }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MarginInlineStartProperty>(c.margin->start);
+        }
 
-    void apply(SpecifiedValues& c) const {
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MarginInlineStartProperty>(try$(parseValue<Width>(c))));
+        }
+    };
+
+    Width _value;
+
+    MarginInlineStartProperty(Width value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
         // FIXME: Take writing mode into account
-        c.margin.cow().start = value;
+        c.margin.cow().start = _value;
     }
 
-    static Width load(SpecifiedValues const& c) {
-        return c.margin->start;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Width>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
-export struct MarginInlineEndProp {
-    Width value = initial();
+export struct MarginInlineEndProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "margin-inline-end"_sym;
+        }
 
-    static Str name() { return "margin-inline-end"; }
+        Rc<Property> initial() const override {
+            return makeRc<MarginInlineEndProperty>(CalcValue<PercentOr<Length>>(Length{}));
+        }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MarginInlineEndProperty>(c.margin->end);
+        }
 
-    void apply(SpecifiedValues& c) const {
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MarginInlineEndProperty>(try$(parseValue<Width>(c))));
+        }
+    };
+
+    Width _value;
+
+    MarginInlineEndProperty(Width value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
         // FIXME: Take writing mode into account
-        c.margin.cow().end = value;
+        c.margin.cow().end = _value;
     }
 
-    static Width load(SpecifiedValues const& c) {
-        return c.margin->end;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Width>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
-export struct MarginInlineProp {
-    Math::Insets<Width> value = initial();
+export struct MarginInlineProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "margin-inline"_sym;
+        }
 
-    static Str name() { return "margin-inline"; }
+        Rc<Property> initial() const override {
+            return makeRc<MarginInlineProperty>(Math::Insets<Width>{CalcValue<PercentOr<Length>>(Length{})});
+        }
 
-    static Math::Insets<Width> initial() { return {CalcValue<PercentOr<Length>>(Length{})}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MarginInlineProperty>(Math::Insets<Width>{c.margin->start, c.margin->end});
+        }
 
-    void apply(SpecifiedValues& c) const {
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MarginInlineProperty>(try$(parseValue<Math::Insets<Width>>(c))));
+        }
+    };
+
+    Math::Insets<Width> _value;
+
+    MarginInlineProperty(Math::Insets<Width> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
         // FIXME: Take writing mode into account
-        c.margin.cow().start = value.start;
-        c.margin.cow().end = value.end;
+        c.margin.cow().start = _value.start;
+        c.margin.cow().end = _value.end;
     }
 
-    static Math::Insets<Width> load(SpecifiedValues const& c) {
-        return {
-            c.margin->start,
-            c.margin->end,
-        };
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Math::Insets<Width>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
-export struct MarginBlockStartProp {
-    Width value = initial();
+export struct MarginBlockStartProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "margin-block-start"_sym;
+        }
 
-    static Str name() { return "margin-block-start"; }
+        Rc<Property> initial() const override {
+            return makeRc<MarginBlockStartProperty>(CalcValue<PercentOr<Length>>(Length{}));
+        }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MarginBlockStartProperty>(c.margin->top);
+        }
 
-    void apply(SpecifiedValues& c) const {
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MarginBlockStartProperty>(try$(parseValue<Width>(c))));
+        }
+    };
+
+    Width _value;
+
+    MarginBlockStartProperty(Width value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
         // FIXME: Take writing mode into account
-        c.margin.cow().top = value;
+        c.margin.cow().top = _value;
     }
 
-    static Width load(SpecifiedValues const& c) {
-        return c.margin->top;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Width>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
-export struct MarginBlockEndProp {
-    Width value = initial();
+export struct MarginBlockEndProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "margin-block-end"_sym;
+        }
 
-    static Str name() { return "margin-block-end"; }
+        Rc<Property> initial() const override {
+            return makeRc<MarginBlockEndProperty>(CalcValue<PercentOr<Length>>(Length{}));
+        }
 
-    static Width initial() { return CalcValue<PercentOr<Length>>(Length{}); }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MarginBlockEndProperty>(c.margin->bottom);
+        }
 
-    void apply(SpecifiedValues& c) const {
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MarginBlockEndProperty>(try$(parseValue<Width>(c))));
+        }
+    };
+
+    Width _value;
+
+    MarginBlockEndProperty(Width value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
         // FIXME: Take writing mode into account
-        c.margin.cow().bottom = value;
+        c.margin.cow().bottom = _value;
     }
 
-    static Width load(SpecifiedValues const& c) {
-        return c.margin->bottom;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Width>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
-export struct MarginBlockProp {
-    Math::Insets<Width> value = initial();
+export struct MarginBlockProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "margin-block"_sym;
+        }
 
-    static Str name() { return "margin-block"; }
+        Rc<Property> initial() const override {
+            return makeRc<MarginBlockProperty>(Math::Insets<Width>{CalcValue<PercentOr<Length>>(Length{})});
+        }
 
-    static Math::Insets<Width> initial() { return {CalcValue<PercentOr<Length>>(Length{})}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MarginBlockProperty>(Math::Insets<Width>{c.margin->top, c.margin->bottom});
+        }
 
-    void apply(SpecifiedValues& c) const {
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MarginBlockProperty>(try$(parseValue<Math::Insets<Width>>(c))));
+        }
+    };
+
+    Math::Insets<Width> _value;
+
+    MarginBlockProperty(Math::Insets<Width> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
         // FIXME: Take writing mode into account
-        c.margin.cow().top = value.top;
-        c.margin.cow().bottom = value.bottom;
+        c.margin.cow().top = _value.top;
+        c.margin.cow().bottom = _value.bottom;
     }
 
-    static Math::Insets<Width> load(SpecifiedValues const& c) {
-        return {
-            c.margin->top,
-            c.margin->bottom,
-        };
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Math::Insets<Width>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-color-4/#propdef-opacity
-export struct OpacityProp {
-    Number value = initial();
-
-    static Str name() { return "opacity"; }
-
-    static f64 initial() { return 1; }
-
-    void apply(SpecifiedValues& c) const {
-        c.opacity = value;
-    }
-
-    static f64 load(SpecifiedValues const& c) {
-        return c.opacity;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        auto maybePercent = parseValue<Percent>(c);
-        if (maybePercent) {
-            value = maybePercent.unwrap().value() / 100;
-        } else {
-            value = try$(parseValue<Number>(c));
+export struct OpacityProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "opacity"_sym;
         }
-        return Ok();
+
+        Rc<Property> initial() const override {
+            return makeRc<OpacityProperty>(Number{1});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<OpacityProperty>(c.opacity);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            auto maybePercent = parseValue<Percent>(c);
+            if (maybePercent) {
+                return Ok(makeRc<OpacityProperty>(maybePercent.unwrap().value() / 100));
+            } else {
+                return Ok(makeRc<OpacityProperty>(try$(parseValue<Number>(c))));
+            }
+        }
+    };
+
+    Number _value;
+
+    OpacityProperty(Number value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.opacity = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Outline --------------------------------------------------------------
 
 // https://drafts.csswg.org/css-ui/#outline
-export struct OutlineProp {
-    Outline value;
-
-    static Str name() { return "outline"; }
-
-    void apply(SpecifiedValues& c) const {
-        c.outline.cow() = value;
-    }
-
-    static Outline load(SpecifiedValues const& c) {
-        return *c.outline;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        bool styleSet = false;
-        while (not c.ended()) {
-            auto width = parseValue<CalcValue<Length>>(c);
-            if (width) {
-                value.width = width.unwrap();
-                continue;
-            }
-
-            auto color = parseValue<Color>(c);
-            if (color) {
-                value.color = color.unwrap();
-                continue;
-            }
-
-            auto style = parseValue<Gfx::BorderStyle>(c);
-            if (style) {
-                value.style = style.unwrap();
-                styleSet = true;
-                continue;
-            }
-
-            if (c.skip(Css::Token::ident("auto"))) {
-                if (not styleSet)
-                    value.style = Keywords::AUTO;
-                value.color = Keywords::AUTO;
-                continue;
-            }
-
-            break;
+export struct OutlineProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "outline"_sym;
         }
 
-        return Ok();
+        Rc<Property> initial() const override {
+            return makeRc<OutlineProperty>(Outline{});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<OutlineProperty>(*c.outline);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            Outline value;
+            bool styleSet = false;
+            while (not c.ended()) {
+                auto width = parseValue<CalcValue<Length>>(c);
+                if (width) {
+                    value.width = width.unwrap();
+                    continue;
+                }
+
+                auto color = parseValue<Color>(c);
+                if (color) {
+                    value.color = color.unwrap();
+                    continue;
+                }
+
+                auto style = parseValue<Gfx::BorderStyle>(c);
+                if (style) {
+                    value.style = style.unwrap();
+                    styleSet = true;
+                    continue;
+                }
+
+                if (c.skip(Css::Token::ident("auto"))) {
+                    if (not styleSet)
+                        value.style = Keywords::AUTO;
+                    value.color = Keywords::AUTO;
+                    continue;
+                }
+
+                break;
+            }
+
+            return Ok(makeRc<OutlineProperty>(value));
+        }
+    };
+
+    Outline _value;
+
+    OutlineProperty(Outline value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.outline.cow() = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-ui/#outline-width
-export struct OutlineWidthProp {
-    LineWidth value = initial();
+export struct OutlineWidthProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "outline-width"_sym;
+        }
 
-    static Str name() { return "outline-width"; }
+        Rc<Property> initial() const override {
+            return makeRc<OutlineWidthProperty>(LineWidth{Keywords::MEDIUM});
+        }
 
-    static LineWidth initial() { return Keywords::MEDIUM; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<OutlineWidthProperty>(c.outline->width);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.outline.cow().width = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<OutlineWidthProperty>(try$(parseValue<LineWidth>(c))));
+        }
+    };
+
+    LineWidth _value;
+
+    OutlineWidthProperty(LineWidth value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.outline.cow().width = _value;
     }
 
-    static LineWidth load(SpecifiedValues const& c) {
-        return c.outline->width;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<LineWidth>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-ui/#outline-style
-export struct OutlineStyleProp {
+export struct OutlineStyleProperty : Property {
     using Value = Union<Keywords::Auto, Gfx::BorderStyle>;
-    Value value = initial();
 
-    static Str name() { return "outline-style"; }
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "outline-style"_sym;
+        }
 
-    static Gfx::BorderStyle initial() { return Gfx::BorderStyle::NONE; }
+        Rc<Property> initial() const override {
+            return makeRc<OutlineStyleProperty>(Value{Gfx::BorderStyle::NONE});
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.outline.cow().style = value;
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<OutlineStyleProperty>(c.outline->style);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<OutlineStyleProperty>(try$(parseValue<Value>(c))));
+        }
+    };
+
+    Value _value;
+
+    OutlineStyleProperty(Value value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.outline.cow().style = _value;
     }
 
-    static Value load(SpecifiedValues const& c) {
-        return c.outline->style;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Value>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-ui/#outline-color
-export struct OutlineColorProp {
+export struct OutlineColorProperty : Property {
     using Value = Union<Keywords::Auto, Color>;
-    Value value = initial();
 
-    static Str name() { return "outline-color"; }
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "outline-color"_sym;
+        }
 
-    static Keywords::Auto initial() { return Keywords::AUTO; }
+        Rc<Property> initial() const override {
+            return makeRc<OutlineColorProperty>(Value{Keywords::AUTO});
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.outline.cow().color = value;
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<OutlineColorProperty>(c.outline->color);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<OutlineColorProperty>(try$(parseValue<Value>(c))));
+        }
+    };
+
+    Value _value;
+
+    OutlineColorProperty(Value value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.outline.cow().color = _value;
     }
 
-    static Value load(SpecifiedValues const& c) {
-        return c.outline->color;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Value>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-ui/#outline-offset
-export struct OutlineOffsetProp {
-    CalcValue<Length> value = initial();
+export struct OutlineOffsetProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "outline-offset"_sym;
+        }
 
-    static Str name() { return "outline-offset"; }
+        Rc<Property> initial() const override {
+            return makeRc<OutlineOffsetProperty>(CalcValue<Length>{0_au});
+        }
 
-    static Length initial() { return 0_au; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<OutlineOffsetProperty>(c.outline->offset);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.outline.cow().offset = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<OutlineOffsetProperty>(try$(parseValue<CalcValue<Length>>(c))));
+        }
+    };
+
+    CalcValue<Length> _value;
+
+    OutlineOffsetProperty(CalcValue<Length> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.outline.cow().offset = _value;
     }
 
-    static CalcValue<Length> load(SpecifiedValues const& c) {
-        return c.outline->offset;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<Length>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Overflow --------------------------------------------------------------
 
 // https://www.w3.org/TR/css-overflow/#overflow-control
-export struct OverflowXProp {
-    Overflow value = initial();
+export struct OverflowXProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "overflow-x"_sym;
+        }
 
-    static Str name() { return "overflow-x"; }
+        Rc<Property> initial() const override {
+            return makeRc<OverflowXProperty>(Overflow::VISIBLE);
+        }
 
-    static Overflow initial() { return Overflow::VISIBLE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<OverflowXProperty>(c.overflows.x);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.overflows.x = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<OverflowXProperty>(try$(parseValue<Overflow>(c))));
+        }
+    };
+
+    Overflow _value;
+
+    OverflowXProperty(Overflow value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.overflows.x = _value;
     }
 
-    static Overflow load(SpecifiedValues const& c) {
-        return c.overflows.x;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Overflow>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-overflow/#overflow-control
-export struct OverflowYProp {
-    Overflow value = initial();
+export struct OverflowYProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "overflow-y"_sym;
+        }
 
-    static Str name() { return "overflow-y"; }
+        Rc<Property> initial() const override {
+            return makeRc<OverflowYProperty>(Overflow::VISIBLE);
+        }
 
-    static Overflow initial() { return Overflow::VISIBLE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<OverflowYProperty>(c.overflows.y);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.overflows.y = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<OverflowYProperty>(try$(parseValue<Overflow>(c))));
+        }
+    };
+
+    Overflow _value;
+
+    OverflowYProperty(Overflow value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.overflows.y = _value;
     }
 
-    static Overflow load(SpecifiedValues const& c) {
-        return c.overflows.y;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Overflow>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-overflow/#overflow-block
-export struct OverflowBlockProp {
-    Overflow value = initial();
+export struct OverflowBlockProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "overflow-block"_sym;
+        }
 
-    static Str name() { return "overflow-block"; }
+        Rc<Property> initial() const override {
+            return makeRc<OverflowBlockProperty>(Overflow::VISIBLE);
+        }
 
-    static Overflow initial() { return Overflow::VISIBLE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<OverflowBlockProperty>(c.overflows.block);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.overflows.block = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<OverflowBlockProperty>(try$(parseValue<Overflow>(c))));
+        }
+    };
+
+    Overflow _value;
+
+    OverflowBlockProperty(Overflow value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.overflows.block = _value;
     }
 
-    static Overflow load(SpecifiedValues const& c) {
-        return c.overflows.block;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Overflow>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-overflow/#overflow-inline
-export struct OverflowInlineProp {
-    Overflow value = initial();
+export struct OverflowInlineProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "overflow-inline"_sym;
+        }
 
-    static Str name() { return "overflow-inline"; }
+        Rc<Property> initial() const override {
+            return makeRc<OverflowInlineProperty>(Overflow::VISIBLE);
+        }
 
-    static Overflow initial() { return Overflow::VISIBLE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<OverflowInlineProperty>(c.overflows.inline_);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.overflows.inline_ = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<OverflowInlineProperty>(try$(parseValue<Overflow>(c))));
+        }
+    };
+
+    Overflow _value;
+
+    OverflowInlineProperty(Overflow value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.overflows.inline_ = _value;
     }
 
-    static Overflow load(SpecifiedValues const& c) {
-        return c.overflows.inline_;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Overflow>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-overflow-3/#propdef-overflow
-export struct OverflowProp {
-    Pair<Overflow> value = initial();
-
-    static Str name() { return "overflow"; }
-
-    static Pair<Overflow> initial() { return {Overflow::VISIBLE, Overflow::VISIBLE}; }
-
-    void apply(SpecifiedValues& c) const {
-        c.overflows.x = value.v0;
-        c.overflows.y = value.v1;
-    }
-
-    static Pair<Overflow> load(SpecifiedValues const& c) {
-        return {c.overflows.x, c.overflows.y};
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        eatWhitespace(c);
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        value.v0 = try$(parseValue<Overflow>(c));
-
-        eatWhitespace(c);
-        if (c.ended()) {
-            value.v1 = value.v0;
-        } else {
-            value.v1 = try$(parseValue<Overflow>(c));
+export struct OverflowProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "overflow"_sym;
         }
 
-        return Ok();
+        Rc<Property> initial() const override {
+            return makeRc<OverflowProperty>(Pair<Overflow>{Overflow::VISIBLE, Overflow::VISIBLE});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<OverflowProperty>(Pair<Overflow>{c.overflows.x, c.overflows.y});
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            eatWhitespace(c);
+            if (c.ended())
+                return Error::invalidData("unexpected end of input");
+
+            Pair<Overflow> value;
+            value.v0 = try$(parseValue<Overflow>(c));
+
+            eatWhitespace(c);
+            if (c.ended()) {
+                value.v1 = value.v0;
+            } else {
+                value.v1 = try$(parseValue<Overflow>(c));
+            }
+
+            return Ok(makeRc<OverflowProperty>(value));
+        }
+    };
+
+    Pair<Overflow> _value;
+
+    OverflowProperty(Pair<Overflow> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.overflows.x = _value.v0;
+        c.overflows.y = _value.v1;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{} {}", _value.v0, _value.v1);
     }
 };
 
@@ -2452,284 +3468,427 @@ export struct OverflowProp {
 
 // https://www.w3.org/TR/css-box-3/#propdef-padding
 
-export struct PaddingTopProp {
-    CalcValue<PercentOr<Length>> value = initial();
+export struct PaddingTopProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "padding-top"_sym;
+        }
 
-    static Str name() { return "padding-top"; }
+        Rc<Property> initial() const override {
+            return makeRc<PaddingTopProperty>(CalcValue<PercentOr<Length>>{Length{}});
+        }
 
-    static Length initial() { return Length{}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<PaddingTopProperty>(c.padding->top);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.padding.cow().top = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<PaddingTopProperty>(try$(parseValue<CalcValue<PercentOr<Length>>>(c))));
+        }
+    };
+
+    CalcValue<PercentOr<Length>> _value;
+
+    PaddingTopProperty(CalcValue<PercentOr<Length>> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.padding.cow().top = _value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
-        return c.padding->top;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-        return Ok();
-    }
-};
-
-export struct PaddingRightProp {
-    CalcValue<PercentOr<Length>> value = initial();
-
-    static Str name() { return "padding-right"; }
-
-    static Length initial() { return Length{}; }
-
-    void apply(SpecifiedValues& c) const {
-        c.padding.cow().end = value;
-    }
-
-    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
-        return c.padding->end;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
-export struct PaddingBottomProp {
-    CalcValue<PercentOr<Length>> value = initial();
+export struct PaddingRightProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "padding-right"_sym;
+        }
 
-    static Str name() { return "padding-bottom"; }
+        Rc<Property> initial() const override {
+            return makeRc<PaddingRightProperty>(CalcValue<PercentOr<Length>>{Length{}});
+        }
 
-    static Length initial() { return Length{}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<PaddingRightProperty>(c.padding->end);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.padding.cow().bottom = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<PaddingRightProperty>(try$(parseValue<CalcValue<PercentOr<Length>>>(c))));
+        }
+    };
+
+    CalcValue<PercentOr<Length>> _value;
+
+    PaddingRightProperty(CalcValue<PercentOr<Length>> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.padding.cow().end = _value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
-        return c.padding->bottom;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-        return Ok();
-    }
-};
-
-export struct PaddingLeftProp {
-    CalcValue<PercentOr<Length>> value = initial();
-
-    static Str name() { return "padding-left"; }
-
-    static Length initial() { return {}; }
-
-    void apply(SpecifiedValues& c) const {
-        c.padding.cow().start = value;
-    }
-
-    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
-        return c.padding->start;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
-export struct PaddingInlineStart {
-    CalcValue<PercentOr<Length>> value = initial();
+export struct PaddingBottomProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "padding-bottom"_sym;
+        }
 
-    static Str name() { return "padding-inline-start"; }
+        Rc<Property> initial() const override {
+            return makeRc<PaddingBottomProperty>(CalcValue<PercentOr<Length>>{Length{}});
+        }
 
-    static Length initial() { return Length{}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<PaddingBottomProperty>(c.padding->bottom);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.padding.cow().start = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<PaddingBottomProperty>(try$(parseValue<CalcValue<PercentOr<Length>>>(c))));
+        }
+    };
+
+    CalcValue<PercentOr<Length>> _value;
+
+    PaddingBottomProperty(CalcValue<PercentOr<Length>> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.padding.cow().bottom = _value;
     }
 
-    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
-        return c.padding->start;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-        return Ok();
-    }
-};
-
-export struct PaddingInlineEnd {
-    CalcValue<PercentOr<Length>> value = initial();
-
-    static Str name() { return "padding-inline-end"; }
-
-    static Length initial() { return Length{}; }
-
-    void apply(SpecifiedValues& c) const {
-        c.padding.cow().end = value;
-    }
-
-    static CalcValue<PercentOr<Length>> load(SpecifiedValues const& c) {
-        return c.padding->end;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
-export struct PaddingProp {
-    Math::Insets<CalcValue<PercentOr<Length>>> value = initial();
+export struct PaddingLeftProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "padding-left"_sym;
+        }
 
-    static Str name() { return "padding"; }
+        Rc<Property> initial() const override {
+            return makeRc<PaddingLeftProperty>(CalcValue<PercentOr<Length>>{Length{}});
+        }
 
-    static Math::Insets<CalcValue<PercentOr<Length>>> initial() { return {Length{}}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<PaddingLeftProperty>(c.padding->start);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.padding.cow() = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<PaddingLeftProperty>(try$(parseValue<CalcValue<PercentOr<Length>>>(c))));
+        }
+    };
+
+    CalcValue<PercentOr<Length>> _value;
+
+    PaddingLeftProperty(CalcValue<PercentOr<Length>> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.padding.cow().start = _value;
     }
 
-    static Math::Insets<CalcValue<PercentOr<Length>>> load(SpecifiedValues const& c) {
-        return *c.padding;
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
+    }
+};
+
+export struct PaddingInlineStartProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "padding-inline-start"_sym;
+        }
+
+        Rc<Property> initial() const override {
+            return makeRc<PaddingInlineStartProperty>(CalcValue<PercentOr<Length>>{Length{}});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<PaddingInlineStartProperty>(c.padding->start);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<PaddingInlineStartProperty>(try$(parseValue<CalcValue<PercentOr<Length>>>(c))));
+        }
+    };
+
+    CalcValue<PercentOr<Length>> _value;
+
+    PaddingInlineStartProperty(CalcValue<PercentOr<Length>> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.padding.cow().start = _value;
     }
 
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Math::Insets<CalcValue<PercentOr<Length>>>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
+    }
+};
+
+export struct PaddingInlineEndProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "padding-inline-end"_sym;
+        }
+
+        Rc<Property> initial() const override {
+            return makeRc<PaddingInlineEndProperty>(CalcValue<PercentOr<Length>>{Length{}});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<PaddingInlineEndProperty>(c.padding->end);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<PaddingInlineEndProperty>(try$(parseValue<CalcValue<PercentOr<Length>>>(c))));
+        }
+    };
+
+    CalcValue<PercentOr<Length>> _value;
+
+    PaddingInlineEndProperty(CalcValue<PercentOr<Length>> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.padding.cow().end = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
+    }
+};
+
+export struct PaddingProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "padding"_sym;
+        }
+
+        Rc<Property> initial() const override {
+            return makeRc<PaddingProperty>(Math::Insets<CalcValue<PercentOr<Length>>>{Length{}});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<PaddingProperty>(*c.padding);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<PaddingProperty>(try$(parseValue<Math::Insets<CalcValue<PercentOr<Length>>>>(c))));
+        }
+    };
+
+    Math::Insets<CalcValue<PercentOr<Length>>> _value;
+
+    PaddingProperty(Math::Insets<CalcValue<PercentOr<Length>>> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.padding.cow() = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-display-3/#order-property
-export struct OrderProp {
-    Integer value = initial();
+export struct OrderProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "order"_sym;
+        }
 
-    static Str name() { return "order"; }
+        Rc<Property> initial() const override {
+            return makeRc<OrderProperty>(Integer{0});
+        }
 
-    static Integer initial() { return 0; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<OrderProperty>(c.order);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.order = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<OrderProperty>(try$(parseValue<Integer>(c))));
+        }
+    };
+
+    Integer _value;
+
+    OrderProperty(Integer value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.order = _value;
     }
 
-    static Integer load(SpecifiedValues const& c) {
-        return c.order;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Integer>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: Positioning -----------------------------------------------------------
 
 // https://www.w3.org/TR/CSS22/visuren.html#positioning-scheme
-export struct PositionProp {
-    Position value = initial();
+export struct PositionProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "position"_sym;
+        }
 
-    static Str name() { return "position"; }
+        Rc<Property> initial() const override {
+            return makeRc<PositionProperty>(Position{Keywords::STATIC});
+        }
 
-    static Position initial() { return Keywords::STATIC; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<PositionProperty>(c.position);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.position = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<PositionProperty>(try$(parseValue<Position>(c))));
+        }
+    };
+
+    Position _value;
+
+    PositionProperty(Position value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.position = _value;
     }
 
-    static Position load(SpecifiedValues const& c) {
-        return c.position;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Position>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-top
-export struct TopProp {
-    Width value = initial();
+export struct TopProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "top"_sym;
+        }
 
-    static Str name() { return "top"; }
+        Rc<Property> initial() const override {
+            return makeRc<TopProperty>(Width{Keywords::AUTO});
+        }
 
-    static Width initial() { return Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<TopProperty>(c.offsets->top);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.offsets.cow().top = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<TopProperty>(try$(parseValue<Width>(c))));
+        }
+    };
+
+    Width _value;
+
+    TopProperty(Width value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.offsets.cow().top = _value;
     }
 
-    static Width load(SpecifiedValues const& c) {
-        return c.offsets->top;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Width>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-right
-export struct RightProp {
-    Width value = initial();
+export struct RightProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "right"_sym;
+        }
 
-    static Str name() { return "right"; }
+        Rc<Property> initial() const override {
+            return makeRc<RightProperty>(Width{Keywords::AUTO});
+        }
 
-    static Width initial() { return Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<RightProperty>(c.offsets->end);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.offsets.cow().end = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<RightProperty>(try$(parseValue<Width>(c))));
+        }
+    };
+
+    Width _value;
+
+    RightProperty(Width value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.offsets.cow().end = _value;
     }
 
-    static Width load(SpecifiedValues const& c) {
-        return c.offsets->end;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Width>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-bottom
-export struct BottomProp {
-    Width value = initial();
+export struct BottomProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "bottom"_sym;
+        }
 
-    static Str name() { return "bottom"; }
+        Rc<Property> initial() const override {
+            return makeRc<BottomProperty>(Width{Keywords::AUTO});
+        }
 
-    static Width initial() { return Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BottomProperty>(c.offsets->bottom);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.offsets.cow().bottom = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BottomProperty>(try$(parseValue<Width>(c))));
+        }
+    };
+
+    Width _value;
+
+    BottomProperty(Width value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.offsets.cow().bottom = _value;
     }
 
-    static Width load(SpecifiedValues const& c) {
-        return c.offsets->bottom;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Width>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-left
-export struct LeftProp {
-    Width value = initial();
+export struct LeftProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "left"_sym;
+        }
 
-    static Str name() { return "left"; }
+        Rc<Property> initial() const override {
+            return makeRc<LeftProperty>(Width{Keywords::AUTO});
+        }
 
-    static Width initial() { return Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<LeftProperty>(c.offsets->start);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.offsets.cow().start = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<LeftProperty>(try$(parseValue<Width>(c))));
+        }
+    };
+
+    Width _value;
+
+    LeftProperty(Width value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.offsets.cow().start = _value;
     }
 
-    static Width load(SpecifiedValues const& c) {
-        return c.offsets->start;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Width>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
@@ -2737,168 +3896,247 @@ export struct LeftProp {
 // https://www.w3.org/TR/css-sizing-3
 
 // https://www.w3.org/TR/css-sizing-3/#box-sizing
-export struct BoxSizingProp {
-    BoxSizing value = initial();
+export struct BoxSizingProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "box-sizing"_sym;
+        }
 
-    static constexpr Str name() { return "box-sizing"; }
+        Rc<Property> initial() const override {
+            return makeRc<BoxSizingProperty>(BoxSizing::CONTENT_BOX);
+        }
 
-    static constexpr BoxSizing initial() { return BoxSizing::CONTENT_BOX; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<BoxSizingProperty>(c.boxSizing);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.boxSizing = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            BoxSizing value;
+            if (c.skip(Css::Token::ident("border-box")))
+                value = BoxSizing::BORDER_BOX;
+            else if (c.skip(Css::Token::ident("content-box")))
+                value = BoxSizing::CONTENT_BOX;
+            else
+                return Error::invalidData("expected 'border-box' or 'content-box'");
+
+            return Ok(makeRc<BoxSizingProperty>(value));
+        }
+    };
+
+    BoxSizing _value;
+
+    BoxSizingProperty(BoxSizing value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.boxSizing = _value;
     }
 
-    static BoxSizing load(SpecifiedValues const& c) {
-        return c.boxSizing;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        if (c.skip(Css::Token::ident("border-box")))
-            value = BoxSizing::BORDER_BOX;
-        else if (c.skip(Css::Token::ident("content-box")))
-            value = BoxSizing::CONTENT_BOX;
-        else
-            return Error::invalidData("expected 'border-box' or 'content-box'");
-
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 
-export struct WidthProp {
-    Size value = initial();
+export struct WidthProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "width"_sym;
+        }
 
-    static constexpr Str name() { return "width"; }
+        Rc<Property> initial() const override {
+            return makeRc<WidthProperty>(Size{Keywords::AUTO});
+        }
 
-    static Size initial() { return Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<WidthProperty>(c.sizing->width);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.sizing.cow().width = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<WidthProperty>(try$(parseValue<Size>(c))));
+        }
+    };
+
+    Size _value;
+
+    WidthProperty(Size value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.sizing.cow().width = _value;
     }
 
-    static Size load(SpecifiedValues const& c) {
-        return c.sizing->width;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Size>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-height
 
-export struct HeightProp {
-    Size value = initial();
+export struct HeightProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "height"_sym;
+        }
 
-    static constexpr Str name() { return "height"; }
+        Rc<Property> initial() const override {
+            return makeRc<HeightProperty>(Size{Keywords::AUTO});
+        }
 
-    static Size initial() { return Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<HeightProperty>(c.sizing->height);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.sizing.cow().height = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<HeightProperty>(try$(parseValue<Size>(c))));
+        }
+    };
+
+    Size _value;
+
+    HeightProperty(Size value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.sizing.cow().height = _value;
     }
 
-    static Size load(SpecifiedValues const& c) {
-        return c.sizing->height;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Size>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-min-width
 
-export struct MinWidthProp {
-    Size value = initial();
+export struct MinWidthProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "min-width"_sym;
+        }
 
-    static constexpr Str name() { return "min-width"; }
+        Rc<Property> initial() const override {
+            return makeRc<MinWidthProperty>(Size{Keywords::AUTO});
+        }
 
-    static Size initial() { return Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MinWidthProperty>(c.sizing->minWidth);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.sizing.cow().minWidth = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MinWidthProperty>(try$(parseValue<Size>(c))));
+        }
+    };
+
+    Size _value;
+
+    MinWidthProperty(Size value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.sizing.cow().minWidth = _value;
     }
 
-    static Size load(SpecifiedValues const& c) {
-        return c.sizing->minWidth;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Size>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-min-height
 
-export struct MinHeightProp {
-    Size value = initial();
+export struct MinHeightProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "min-height"_sym;
+        }
 
-    static constexpr Str name() { return "min-height"; }
+        Rc<Property> initial() const override {
+            return makeRc<MinHeightProperty>(Size{Keywords::AUTO});
+        }
 
-    static Size initial() { return Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MinHeightProperty>(c.sizing->minHeight);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.sizing.cow().minHeight = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MinHeightProperty>(try$(parseValue<Size>(c))));
+        }
+    };
+
+    Size _value;
+
+    MinHeightProperty(Size value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.sizing.cow().minHeight = _value;
     }
 
-    static Size load(SpecifiedValues const& c) {
-        return c.sizing->minHeight;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Size>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-max-width
 
-export struct MaxWidthProp {
-    MaxSize value = initial();
+export struct MaxWidthProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "max-width"_sym;
+        }
 
-    static constexpr Str name() { return "max-width"; }
+        Rc<Property> initial() const override {
+            return makeRc<MaxWidthProperty>(MaxSize{Keywords::NONE});
+        }
 
-    static MaxSize initial() { return Keywords::NONE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MaxWidthProperty>(c.sizing->maxWidth);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.sizing.cow().maxWidth = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MaxWidthProperty>(try$(parseValue<MaxSize>(c))));
+        }
+    };
+
+    MaxSize _value;
+
+    MaxWidthProperty(MaxSize value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.sizing.cow().maxWidth = _value;
     }
 
-    static MaxSize load(SpecifiedValues const& c) {
-        return c.sizing->maxWidth;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<MaxSize>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-max-height
 
-export struct MaxHeightProp {
-    MaxSize value = initial();
+export struct MaxHeightProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "max-height"_sym;
+        }
 
-    static constexpr Str name() { return "max-height"; }
+        Rc<Property> initial() const override {
+            return makeRc<MaxHeightProperty>(MaxSize{Keywords::NONE});
+        }
 
-    static MaxSize initial() { return Keywords::NONE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<MaxHeightProperty>(c.sizing->maxHeight);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.sizing.cow().maxHeight = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<MaxHeightProperty>(try$(parseValue<MaxSize>(c))));
+        }
+    };
+
+    MaxSize _value;
+
+    MaxHeightProperty(MaxSize value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.sizing.cow().maxHeight = _value;
     }
 
-    static MaxSize load(SpecifiedValues const& c) {
-        return c.sizing->maxHeight;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<MaxSize>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
@@ -2907,73 +4145,99 @@ export struct MaxHeightProp {
 
 // https://drafts.csswg.org/css-text/#text-align-property
 
-export struct TextAlignProp {
-    TextAlign value = initial();
-
-    static constexpr Str name() { return "text-align"; }
-
-    static TextAlign initial() { return TextAlign::LEFT; }
-
-    void apply(SpecifiedValues& c) const {
-        c.text.cow().align = value;
-    }
-
-    static TextAlign load(SpecifiedValues const& c) {
-        return c.text->align;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        if (c.skip(Css::Token::ident("left"))) {
-            value = TextAlign::LEFT;
-        } else if (c.skip(Css::Token::ident("right"))) {
-            value = TextAlign::RIGHT;
-        } else if (c.skip(Css::Token::ident("center"))) {
-            value = TextAlign::CENTER;
-        } else if (c.skip(Css::Token::ident("justify"))) {
-            value = TextAlign::JUSTIFY;
-        } else if (c.skip(Css::Token::ident("start"))) {
-            value = TextAlign::START;
-        } else if (c.skip(Css::Token::ident("end"))) {
-            value = TextAlign::END;
-        } else {
-            return Error::invalidData("expected text-align");
+export struct TextAlignProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "text-align"_sym;
         }
-        return Ok();
+
+        Rc<Property> initial() const override {
+            return makeRc<TextAlignProperty>(TextAlign::LEFT);
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<TextAlignProperty>(c.text->align);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            TextAlign value;
+            if (c.skip(Css::Token::ident("left"))) {
+                value = TextAlign::LEFT;
+            } else if (c.skip(Css::Token::ident("right"))) {
+                value = TextAlign::RIGHT;
+            } else if (c.skip(Css::Token::ident("center"))) {
+                value = TextAlign::CENTER;
+            } else if (c.skip(Css::Token::ident("justify"))) {
+                value = TextAlign::JUSTIFY;
+            } else if (c.skip(Css::Token::ident("start"))) {
+                value = TextAlign::START;
+            } else if (c.skip(Css::Token::ident("end"))) {
+                value = TextAlign::END;
+            } else {
+                return Error::invalidData("expected text-align");
+            }
+            return Ok(makeRc<TextAlignProperty>(value));
+        }
+    };
+
+    TextAlign _value;
+
+    TextAlignProperty(TextAlign value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.text.cow().align = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-text-4/#text-transform-property
 
-export struct TextTransformProp {
-    TextTransform value = initial();
-
-    static constexpr Str name() { return "text-transform"; }
-
-    static TextTransform initial() { return TextTransform::NONE; }
-
-    void apply(SpecifiedValues& c) const {
-        c.text.cow().transform = value;
-    }
-
-    static TextTransform load(SpecifiedValues const& c) {
-        return c.text->transform;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Css::Token::ident("none"))) {
-            value = TextTransform::NONE;
-        } else if (c.skip(Css::Token::ident("uppercase"))) {
-            value = TextTransform::UPPERCASE;
-        } else if (c.skip(Css::Token::ident("lowsercase"))) {
-            value = TextTransform::LOWERCASE;
-        } else {
-            return Error::invalidData("expected text-transform");
+export struct TextTransformProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "text-transform"_sym;
         }
 
-        return Ok();
+        Rc<Property> initial() const override {
+            return makeRc<TextTransformProperty>(TextTransform::NONE);
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<TextTransformProperty>(c.text->transform);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            if (c.ended())
+                return Error::invalidData("unexpected end of input");
+
+            TextTransform value;
+            if (c.skip(Css::Token::ident("none"))) {
+                value = TextTransform::NONE;
+            } else if (c.skip(Css::Token::ident("uppercase"))) {
+                value = TextTransform::UPPERCASE;
+            } else if (c.skip(Css::Token::ident("lowsercase"))) {
+                value = TextTransform::LOWERCASE;
+            } else {
+                return Error::invalidData("expected text-transform");
+            }
+
+            return Ok(makeRc<TextTransformProperty>(value));
+        }
+    };
+
+    TextTransform _value;
+
+    TextTransformProperty(TextTransform value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.text.cow().transform = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
@@ -2981,467 +4245,661 @@ export struct TextTransformProp {
 // https://drafts.csswg.org/css-transforms/#transform-property
 
 // https://drafts.csswg.org/css-transforms/#transform-origin-property
-export struct TransformOriginProp {
-    TransformOrigin value = initial();
+export struct TransformOriginProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "transform-origin"_sym;
+        }
 
-    static constexpr Str name() { return "transform-origin"; }
+        Rc<Property> initial() const override {
+            return makeRc<TransformOriginProperty>(TransformOrigin{
+                .xOffset = CalcValue<PercentOr<Length>>{Percent{50}},
+                .yOffset = CalcValue<PercentOr<Length>>{Percent{50}},
+            });
+        }
 
-    static TransformOrigin initial() {
-        return {
-            .xOffset = CalcValue<PercentOr<Length>>{Percent{50}},
-            .yOffset = CalcValue<PercentOr<Length>>{Percent{50}},
-        };
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<TransformOriginProperty>(c.transform->origin);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<TransformOriginProperty>(try$(parseValue<TransformOrigin>(c))));
+        }
+    };
+
+    TransformOrigin _value;
+
+    TransformOriginProperty(TransformOrigin value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.transform.cow().origin = _value;
     }
 
-    void apply(SpecifiedValues& c) const {
-        c.transform.cow().origin = value;
-    }
-
-    static TransformOrigin load(SpecifiedValues const& c) {
-        return c.transform->origin;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<TransformOrigin>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-transforms/#transform-box
-export struct TransformBoxProp {
-    TransformBox value = initial();
+export struct TransformBoxProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "transform-box"_sym;
+        }
 
-    static constexpr Str name() { return "transform-box"; }
+        Rc<Property> initial() const override {
+            return makeRc<TransformBoxProperty>(TransformBox{Keywords::VIEW_BOX});
+        }
 
-    static TransformBox initial() { return Keywords::VIEW_BOX; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<TransformBoxProperty>(c.transform->box);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.transform.cow().box = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<TransformBoxProperty>(try$(parseValue<TransformBox>(c))));
+        }
+    };
+
+    TransformBox _value;
+
+    TransformBoxProperty(TransformBox value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.transform.cow().box = _value;
     }
 
-    static TransformBox load(SpecifiedValues const& c) {
-        return c.transform->box;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<TransformBox>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-transforms/#propdef-transform
-export struct TransformProp {
-    Transform value = initial();
+export struct TransformProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "transform"_sym;
+        }
 
-    static constexpr Str name() { return "transform"; }
+        Rc<Property> initial() const override {
+            return makeRc<TransformProperty>(Transform{Keywords::NONE});
+        }
 
-    static Transform initial() { return Keywords::NONE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<TransformProperty>(c.transform->transform);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.transform.cow().transform = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<TransformProperty>(try$(parseValue<Transform>(c))));
+        }
+    };
+
+    Transform _value;
+
+    TransformProperty(Transform value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.transform.cow().transform = _value;
     }
 
-    static Transform load(SpecifiedValues const& c) {
-        return c.transform->transform;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Transform>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-display/#visibility
-export struct VisibilityProp {
-    Visibility value = initial();
-
-    static constexpr Str name() { return "visibility"; }
-
-    static Visibility initial() { return Visibility::VISIBLE; }
-
-    void apply(SpecifiedValues& c) const {
-        c.visibility = value;
-    }
-
-    static Visibility load(SpecifiedValues const& c) {
-        return c.visibility;
-    }
-
-    static void inherit(SpecifiedValues const& parent, SpecifiedValues& child) {
-        child.visibility = parent.visibility;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        if (c.skip(Css::Token::ident("visible"))) {
-            value = Visibility::VISIBLE;
-        } else if (c.skip(Css::Token::ident("hidden"))) {
-            value = Visibility::HIDDEN;
-        } else if (c.skip(Css::Token::ident("collapse"))) {
-            value = Visibility::COLLAPSE;
-        } else {
-            return Error::invalidData("expected visibility");
+export struct VisibilityProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "visibility"_sym;
         }
 
-        return Ok();
+        Rc<Property> initial() const override {
+            return makeRc<VisibilityProperty>(Visibility::VISIBLE);
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<VisibilityProperty>(c.visibility);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            Visibility value;
+            if (c.skip(Css::Token::ident("visible"))) {
+                value = Visibility::VISIBLE;
+            } else if (c.skip(Css::Token::ident("hidden"))) {
+                value = Visibility::HIDDEN;
+            } else if (c.skip(Css::Token::ident("collapse"))) {
+                value = Visibility::COLLAPSE;
+            } else {
+                return Error::invalidData("expected visibility");
+            }
+
+            return Ok(makeRc<VisibilityProperty>(value));
+        }
+    };
+
+    Visibility _value;
+
+    VisibilityProperty(Visibility value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.visibility = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css-text/#white-space-property
 
-export struct WhiteSpaceProp {
-    WhiteSpace value = initial();
-
-    static constexpr Str name() { return "white-space"; }
-
-    static WhiteSpace initial() { return WhiteSpace::NORMAL; }
-
-    void apply(SpecifiedValues& c) const {
-        c.text.cow().whiteSpace = value;
-    }
-
-    static WhiteSpace load(SpecifiedValues const& c) {
-        return c.text->whiteSpace;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        if (c.skip(Css::Token::ident("normal"))) {
-            value = WhiteSpace::NORMAL;
-        } else if (c.skip(Css::Token::ident("nowrap"))) {
-            value = WhiteSpace::NOWRAP;
-        } else if (c.skip(Css::Token::ident("pre"))) {
-            value = WhiteSpace::PRE;
-        } else if (c.skip(Css::Token::ident("pre-wrap"))) {
-            value = WhiteSpace::PRE_WRAP;
-        } else if (c.skip(Css::Token::ident("pre-line"))) {
-            value = WhiteSpace::PRE_LINE;
-        } else if (c.skip(Css::Token::ident("break-spaces"))) {
-            value = WhiteSpace::BREAK_SPACES;
-        } else {
-            return Error::invalidData("expected white-space");
+export struct WhiteSpaceProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "white-space"_sym;
         }
 
-        return Ok();
+        Rc<Property> initial() const override {
+            return makeRc<WhiteSpaceProperty>(WhiteSpace::NORMAL);
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<WhiteSpaceProperty>(c.text->whiteSpace);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            WhiteSpace value;
+            if (c.skip(Css::Token::ident("normal"))) {
+                value = WhiteSpace::NORMAL;
+            } else if (c.skip(Css::Token::ident("nowrap"))) {
+                value = WhiteSpace::NOWRAP;
+            } else if (c.skip(Css::Token::ident("pre"))) {
+                value = WhiteSpace::PRE;
+            } else if (c.skip(Css::Token::ident("pre-wrap"))) {
+                value = WhiteSpace::PRE_WRAP;
+            } else if (c.skip(Css::Token::ident("pre-line"))) {
+                value = WhiteSpace::PRE_LINE;
+            } else if (c.skip(Css::Token::ident("break-spaces"))) {
+                value = WhiteSpace::BREAK_SPACES;
+            } else {
+                return Error::invalidData("expected white-space");
+            }
+
+            return Ok(makeRc<WhiteSpaceProperty>(value));
+        }
+    };
+
+    WhiteSpace _value;
+
+    WhiteSpaceProperty(WhiteSpace value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.text.cow().whiteSpace = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://drafts.csswg.org/css2/#z-index
 
-export struct ZIndexProp {
-    ZIndex value = initial();
+export struct ZIndexProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "z-index"_sym;
+        }
 
-    static constexpr Str name() { return "z-index"; }
+        Rc<Property> initial() const override {
+            return makeRc<ZIndexProperty>(ZIndex{Keywords::AUTO});
+        }
 
-    static constexpr ZIndex initial() { return Keywords::AUTO; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<ZIndexProperty>(c.zIndex);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.zIndex = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<ZIndexProperty>(try$(parseValue<ZIndex>(c))));
+        }
+    };
+
+    ZIndex _value;
+
+    ZIndexProperty(ZIndex value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.zIndex = _value;
     }
 
-    static ZIndex load(SpecifiedValues const& c) {
-        return c.zIndex;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<ZIndex>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // MARK: SVG ----------------------------------------------------------------
 
 // https://svgwg.org/svg2-draft/geometry.html#XProperty
-export struct SVGXProp {
-    PercentOr<Length> value = initial();
+export struct SVGXProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "x"_sym;
+        }
 
-    static constexpr Str name() { return "x"; }
+        Rc<Property> initial() const override {
+            return makeRc<SVGXProperty>(PercentOr<Length>{Length{0_au}});
+        }
 
-    static constexpr Length initial() { return Length{0_au}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<SVGXProperty>(c.svg->x);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.svg.cow().x = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<SVGXProperty>(try$(parseValue<PercentOr<Length>>(c))));
+        }
+    };
+
+    PercentOr<Length> _value;
+
+    SVGXProperty(PercentOr<Length> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.svg.cow().x = _value;
     }
 
-    static PercentOr<Length> load(SpecifiedValues const& c) {
-        return c.svg->x;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://svgwg.org/svg2-draft/geometry.html#YProperty
-export struct SVGYProp {
-    PercentOr<Length> value = initial();
+export struct SVGYProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "y"_sym;
+        }
 
-    static constexpr Str name() { return "y"; }
+        Rc<Property> initial() const override {
+            return makeRc<SVGYProperty>(PercentOr<Length>{Length{0_au}});
+        }
 
-    static constexpr Length initial() { return Length{0_au}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<SVGYProperty>(c.svg->y);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.svg.cow().y = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<SVGYProperty>(try$(parseValue<PercentOr<Length>>(c))));
+        }
+    };
+
+    PercentOr<Length> _value;
+
+    SVGYProperty(PercentOr<Length> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.svg.cow().y = _value;
     }
 
-    static PercentOr<Length> load(SpecifiedValues const& c) {
-        return c.svg->y;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://svgwg.org/svg2-draft/geometry.html#CXProperty
-export struct SVGCXProp {
-    PercentOr<Length> value = initial();
+export struct SVGCXProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "cx"_sym;
+        }
 
-    static constexpr Str name() { return "cx"; }
+        Rc<Property> initial() const override {
+            return makeRc<SVGCXProperty>(PercentOr<Length>{Length{0_au}});
+        }
 
-    static constexpr Length initial() { return Length{0_au}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<SVGCXProperty>(c.svg->cx);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.svg.cow().cx = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<SVGCXProperty>(try$(parseValue<PercentOr<Length>>(c))));
+        }
+    };
+
+    PercentOr<Length> _value;
+
+    SVGCXProperty(PercentOr<Length> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.svg.cow().cx = _value;
     }
 
-    static PercentOr<Length> load(SpecifiedValues const& c) {
-        return c.svg->cx;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://svgwg.org/svg2-draft/geometry.html#CYProperty
-export struct SVGCYProp {
-    PercentOr<Length> value = initial();
+export struct SVGCYProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "cy"_sym;
+        }
 
-    static constexpr Str name() { return "cy"; }
+        Rc<Property> initial() const override {
+            return makeRc<SVGCYProperty>(PercentOr<Length>{Length{0_au}});
+        }
 
-    static constexpr Length initial() { return Length{0_au}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<SVGCYProperty>(c.svg->cy);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.svg.cow().cy = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<SVGCYProperty>(try$(parseValue<PercentOr<Length>>(c))));
+        }
+    };
+
+    PercentOr<Length> _value;
+
+    SVGCYProperty(PercentOr<Length> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.svg.cow().cy = _value;
     }
 
-    static PercentOr<Length> load(SpecifiedValues const& c) {
-        return c.svg->cy;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://svgwg.org/svg2-draft/geometry.html#RProperty
-export struct SVGRProp {
-    PercentOr<Length> value = initial();
+export struct SVGRProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "r"_sym;
+        }
 
-    static constexpr Str name() { return "r"; }
+        Rc<Property> initial() const override {
+            return makeRc<SVGRProperty>(PercentOr<Length>{Length{0_au}});
+        }
 
-    static constexpr Length initial() { return Length{0_au}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<SVGRProperty>(c.svg->r);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.svg.cow().r = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<SVGRProperty>(try$(parseValue<PercentOr<Length>>(c))));
+        }
+    };
+
+    PercentOr<Length> _value;
+
+    SVGRProperty(PercentOr<Length> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.svg.cow().r = _value;
     }
 
-    static PercentOr<Length> load(SpecifiedValues const& c) {
-        return c.svg->r;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://svgwg.org/svg2-draft/painting.html#FillProperty
-export struct SVGFillProp {
-    Paint value = initial();
+export struct SVGFillProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "fill"_sym;
+        }
 
-    static constexpr Str name() { return "fill"; }
+        Rc<Property> initial() const override {
+            return makeRc<SVGFillProperty>(Paint{Color{Gfx::BLACK}});
+        }
 
-    static constexpr Paint initial() { return Color{Gfx::BLACK}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<SVGFillProperty>(c.svg->fill);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.svg.cow().fill = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<SVGFillProperty>(try$(parseValue<Paint>(c))));
+        }
+    };
+
+    Paint _value;
+
+    SVGFillProperty(Paint value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.svg.cow().fill = _value;
     }
 
-    static Paint load(SpecifiedValues const& c) {
-        return c.svg->fill;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Paint>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://svgwg.org/svg2-draft/paths.html#TheDProperty
-export struct SVGDProp {
-    Union<String, None> value = initial();
-
-    static constexpr Str name() { return "d"; }
-
-    static constexpr Union<String, None> initial() { return NONE; }
-
-    void apply(SpecifiedValues& c) const {
-        c.svg.cow().d = value;
-    }
-
-    static Union<String, None> load(SpecifiedValues const& c) {
-        return c.svg->d;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        eatWhitespace(c);
-        if (c.peek() != Css::Sst::FUNC or c.peek().prefix != Css::Token::function("path(")) {
-            return Error::invalidData("expected path function");
+export struct SVGDProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "d"_sym;
         }
 
-        auto pathFunc = c.next();
-        Cursor<Css::Sst> scanPath{pathFunc.content};
-        value = try$(parseValue<String>(scanPath));
+        Rc<Property> initial() const override {
+            return makeRc<SVGDProperty>(Union<String, None>{NONE});
+        }
 
-        return Ok();
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<SVGDProperty>(c.svg->d);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            eatWhitespace(c);
+            if (c.peek() != Css::Sst::FUNC or c.peek().prefix != Css::Token::function("path(")) {
+                return Error::invalidData("expected path function");
+            }
+
+            auto pathFunc = c.next();
+            Cursor<Css::Sst> scanPath{pathFunc.content};
+            return Ok(makeRc<SVGDProperty>(try$(parseValue<String>(scanPath))));
+        }
+    };
+
+    Union<String, None> _value;
+
+    SVGDProperty(Union<String, None> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.svg.cow().d = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
-export struct SVGViewBoxProp {
-    Opt<ViewBox> value = initial();
+export struct SVGViewBoxProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "viewBox"_sym;
+        }
 
-    static constexpr Str name() { return "viewBox"; }
+        Rc<Property> initial() const override {
+            return makeRc<SVGViewBoxProperty>(Opt<ViewBox>{NONE});
+        }
 
-    static Opt<ViewBox> initial() { return NONE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<SVGViewBoxProperty>(c.svg->viewBox);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.svg.cow().viewBox = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            ViewBox viewBox;
+
+            viewBox.minX = try$(parseValue<Number>(c));
+
+            c.skip(Css::Token::comma());
+            viewBox.minY = try$(parseValue<Number>(c));
+
+            c.skip(Css::Token::comma());
+            viewBox.width = try$(parseValue<Number>(c));
+
+            c.skip(Css::Token::comma());
+            viewBox.height = try$(parseValue<Number>(c));
+
+            return Ok(makeRc<SVGViewBoxProperty>(Opt<ViewBox>{std::move(viewBox)}));
+        }
+    };
+
+    Opt<ViewBox> _value;
+
+    SVGViewBoxProperty(Opt<ViewBox> value) : _value(std::move(value)) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.svg.cow().viewBox = _value;
     }
 
-    static Opt<ViewBox> load(SpecifiedValues const& c) {
-        return c.svg->viewBox;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        ViewBox viewBox;
-
-        viewBox.minX = try$(parseValue<Number>(c));
-
-        c.skip(Css::Token::comma());
-        viewBox.minY = try$(parseValue<Number>(c));
-
-        c.skip(Css::Token::comma());
-        viewBox.width = try$(parseValue<Number>(c));
-
-        c.skip(Css::Token::comma());
-        viewBox.height = try$(parseValue<Number>(c));
-
-        value = std::move(viewBox);
-
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingStrokePaint
-export struct SVGStrokeProp {
-    Paint value = initial();
+export struct SVGStrokeProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "stroke"_sym;
+        }
 
-    static constexpr Str name() { return "stroke"; }
+        Rc<Property> initial() const override {
+            return makeRc<SVGStrokeProperty>(Paint{NONE});
+        }
 
-    static Paint initial() { return NONE; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<SVGStrokeProperty>(c.svg->stroke);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.svg.cow().stroke = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<SVGStrokeProperty>(try$(parseValue<Paint>(c))));
+        }
+    };
+
+    Paint _value;
+
+    SVGStrokeProperty(Paint value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.svg.cow().stroke = _value;
     }
 
-    static Paint load(SpecifiedValues const& c) {
-        return c.svg->stroke;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Paint>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://svgwg.org/svg2-draft/painting.html#StrokeOpacity
-export struct SvgStrokeOpacityProp {
-    Number value = initial();
-
-    static Str name() { return "stroke-opacity"; }
-
-    static f64 initial() { return 1; }
-
-    void apply(SpecifiedValues& c) const {
-        c.svg.cow().strokeOpacity = value;
-    }
-
-    static f64 load(SpecifiedValues const& c) {
-        return c.svg->strokeOpacity;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        auto maybePercent = parseValue<Percent>(c);
-        if (maybePercent) {
-            value = maybePercent.unwrap().value() / 100;
-        } else {
-            value = try$(parseValue<Number>(c));
+export struct SvgStrokeOpacityProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "stroke-opacity"_sym;
         }
-        return Ok();
+
+        Rc<Property> initial() const override {
+            return makeRc<SvgStrokeOpacityProperty>(Number{1});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<SvgStrokeOpacityProperty>(c.svg->strokeOpacity);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            auto maybePercent = parseValue<Percent>(c);
+            if (maybePercent) {
+                return Ok(makeRc<SvgStrokeOpacityProperty>(maybePercent.unwrap().value() / 100));
+            } else {
+                return Ok(makeRc<SvgStrokeOpacityProperty>(try$(parseValue<Number>(c))));
+            }
+        }
+    };
+
+    Number _value;
+
+    SvgStrokeOpacityProperty(Number value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.svg.cow().strokeOpacity = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://svgwg.org/svg2-draft/painting.html#FillOpacity
-export struct FillOpacityProp {
-    Number value = initial();
-
-    static Str name() { return "fill-opacity"; }
-
-    static f64 initial() { return 1; }
-
-    void apply(SpecifiedValues& c) const {
-        c.svg.cow().fillOpacity = value;
-    }
-
-    static f64 load(SpecifiedValues const& c) {
-        return c.svg->fillOpacity;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        auto maybePercent = parseValue<Percent>(c);
-        if (maybePercent) {
-            value = maybePercent.unwrap().value() / 100;
-        } else {
-            value = try$(parseValue<Number>(c));
+export struct FillOpacityProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "fill-opacity"_sym;
         }
-        return Ok();
+
+        Rc<Property> initial() const override {
+            return makeRc<FillOpacityProperty>(Number{1});
+        }
+
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<FillOpacityProperty>(c.svg->fillOpacity);
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            auto maybePercent = parseValue<Percent>(c);
+            if (maybePercent) {
+                return Ok(makeRc<FillOpacityProperty>(maybePercent.unwrap().value() / 100));
+            } else {
+                return Ok(makeRc<FillOpacityProperty>(try$(parseValue<Number>(c))));
+            }
+        }
+    };
+
+    Number _value;
+
+    FillOpacityProperty(Number value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.svg.cow().fillOpacity = _value;
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
 // https://svgwg.org/svg2-draft/painting.html#StrokeWidth
-export struct StrokeWidthProp {
-    PercentOr<Length> value = initial();
+export struct StrokeWidthProperty : Property {
+    struct Declaration : Property::Declaration {
+        Symbol name() const override {
+            return "stroke-width"_sym;
+        }
 
-    static constexpr Str name() { return "stroke-width"; }
+        Rc<Property> initial() const override {
+            return makeRc<StrokeWidthProperty>(PercentOr<Length>{Length{1_au}});
+        }
 
-    static constexpr Length initial() { return Length{1_au}; }
+        Rc<Property> load(SpecifiedValues const& c) const override {
+            return makeRc<StrokeWidthProperty>(c.svg->strokeWidth);
+        }
 
-    void apply(SpecifiedValues& c) const {
-        c.svg.cow().strokeWidth = value;
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<StrokeWidthProperty>(try$(parseValue<PercentOr<Length>>(c))));
+        }
+    };
+
+    PercentOr<Length> _value;
+
+    StrokeWidthProperty(PercentOr<Length> value) : _value(value) {}
+
+    void apply(SpecifiedValues& c) const override {
+        c.svg.cow().strokeWidth = _value;
     }
 
-    static PercentOr<Length> load(SpecifiedValues const& c) {
-        return c.svg->strokeWidth;
-    }
-
-    Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PercentOr<Length>>(c));
-        return Ok();
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
     }
 };
 
