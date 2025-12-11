@@ -8,6 +8,7 @@ import Karm.Core;
 import Karm.Http;
 import Karm.Ref;
 import Karm.Image;
+import Karm.Logger;
 import Karm.Crypto;
 import Karm.Sys;
 import Vaev.Engine;
@@ -232,8 +233,8 @@ export struct WebDriver {
         // FIXME: We don't support javascript yet, let's pretend we are
 
         // https://github.com/web-platform-tests/wpt/blob/bbfc05f2af01d92e2c5af0f8a37b580e233f48f1/tools/wptrunner/wptrunner/executors/executorwebdriver.py#L1070
-        if (contains(body, R"js(return [window.outerWidth - window.innerWidth,
-                       window.outerHeight - window.innerHeight];")js"s)) {
+        if (contains(body, "return [window.outerWidth - window.innerWidth,\n"
+                           "                       window.outerHeight - window.innerHeight];"s)) {
             return Ok(Serde::Array{0, 0});
         }
 
@@ -248,8 +249,10 @@ export struct WebDriver {
             return Ok(Serde::Array{"complete"s, "complete"s, Serde::Array{}});
         }
 
-        else
+        else {
+            logWarn("Could not evaluate javascript {#}", body);
             return Error::unsupported("unsupported operation");
+        }
     }
 
     // MARK: 17. Screen capture ------------------------------------------------
