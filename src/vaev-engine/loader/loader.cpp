@@ -100,7 +100,7 @@ export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http:
     co_return Ok(dom);
 }
 
-Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Http::Client& client, Ref::Url url, Style::Origin origin) {
+Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Style::PropertyRegistry& registry, Http::Client& client, Ref::Url url, Style::Origin origin) {
     auto resp = co_trya$(client.getAsync(url));
     if (not resp->body)
         co_return Error::notFound("could not load stylesheet");
@@ -109,7 +109,7 @@ Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Http::Client& client, Ref::
     auto buf = co_trya$(Aio::readAllUtf8Async(*respBody));
 
     Io::SScan s{buf};
-    co_return Ok(Style::StyleSheet::parse(s, url, origin));
+    co_return Ok(Style::StyleSheet::parse(registry, s, url, origin));
 }
 
 Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::Url url);
@@ -119,7 +119,7 @@ Rc<Scene::Node> _missingImagePlaceholder() {
     return makeRc<Scene::Image>(placeholder->bound().cast<f64>(), placeholder);
 }
 
-Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node, Style::StyleSheetList& sb) {
+Async::Task<> _fetchResourcesAsync(Style::PropertyRegistry& registry, Http::Client& client, Gc::Ref<Dom::Node> node, Style::StyleSheetList& sb) {
     auto el = node->is<Dom::Element>();
     if (el and el->qualifiedName == Html::IMG_TAG) {
         auto src = el->getAttribute(Html::SRC_ATTR);
@@ -141,7 +141,7 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node
     } else if (el and el->qualifiedName == Html::STYLE_TAG) {
         auto text = el->textContent();
         Io::SScan textScan{text};
-        auto sheet = Style::StyleSheet::parse(textScan, node->baseURI());
+        auto sheet = Style::StyleSheet::parse(registry, textScan, node->baseURI());
         sb.add(std::move(sheet));
     } else if (el and el->qualifiedName == Html::LINK_TAG) {
         auto rel = el->getAttribute(Html::REL_ATTR);
@@ -153,7 +153,7 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node
             }
 
             auto url = Ref::Url::parse(*href, node->baseURI());
-            auto sheet = co_await _fetchStylesheetAsync(client, url, Style::Origin::AUTHOR);
+            auto sheet = co_await _fetchStylesheetAsync(registry, client, url, Style::Origin::AUTHOR);
 
             if (not sheet) {
                 logWarn("failed to fetch stylesheet from {}: {}", url, sheet);
@@ -164,7 +164,7 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node
         }
     } else {
         for (auto child = node->firstChild(); child; child = child->nextSibling())
-            (void)co_await _fetchResourcesAsync(client, *child, sb);
+            (void)co_await _fetchResourcesAsync(registry, client, *child, sb);
     }
 
     co_return Ok();
@@ -191,16 +191,16 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
     auto dom = co_trya$(_loadDocumentAsync(heap, url, resp));
     auto stylesheets = heap.alloc<Style::StyleSheetList>();
 
-    stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-engine/html.css"_url, Style::Origin::USER_AGENT))
+    stylesheets->add((co_await _fetchStylesheetAsync(dom->registeredPropertySet, client, "bundle://vaev-engine/html.css"_url, Style::Origin::USER_AGENT))
                          .take("user agent stylesheet not available"));
 
-    stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-engine/print.css"_url, Style::Origin::USER_AGENT))
+    stylesheets->add((co_await _fetchStylesheetAsync(dom->registeredPropertySet, client, "bundle://vaev-engine/print.css"_url, Style::Origin::USER_AGENT))
                          .take("user agent stylesheet not available"));
 
-    stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-engine/svg.css"_url, Style::Origin::USER_AGENT))
+    stylesheets->add((co_await _fetchStylesheetAsync(dom->registeredPropertySet, client, "bundle://vaev-engine/svg.css"_url, Style::Origin::USER_AGENT))
                          .take("user agent stylesheet not available"));
 
-    (void)co_await _fetchResourcesAsync(client, *dom, *stylesheets);
+    (void)co_await _fetchResourcesAsync(dom->registeredPropertySet, client, *dom, *stylesheets);
     dom->styleSheets = stylesheets;
     dom->fontDatabase = co_await _loadFontfacesAsync(client, *stylesheets);
 
