@@ -29,7 +29,7 @@ struct InlineFormatingContext : FormatingContext {
         auto metrics = inlineBox.prose->_style.font.metrics();
 
         return BaselinePositionsSet{
-            .alphabetic = Au{metrics.alphabeticBaseline()} + baselinePosition,
+            .alphabetic = Au{metrics.alphabeticBaseline()},
             .xHeight = Au{metrics.xHeight} + baselinePosition,
             .xMiddle = Au{metrics.xMiddleBaseline()} + baselinePosition,
             .capHeight = Au{metrics.captop} + baselinePosition,
