@@ -1,0 +1,27 @@
+<test id="inline-block-one-el" name="inline-block: one element">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <body>
+        <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="background: blue">
+            <span style="display: inline-block">
+                Pizza
+            </span>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="background: blue">
+            <span style="display: block">
+                Pizza
+            </span>
+        </div>
+    </rendering>
+</test>
