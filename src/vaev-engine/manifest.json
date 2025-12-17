@@ -12,6 +12,7 @@
         "layout/base",
         "layout/builder",
         "loader",
+        "props",
         "style",
         "values",
         "xml"

@@ -177,7 +177,7 @@ export struct PageSelector {
 
 export struct PageAreaRule {
     PageArea area;
-    Vec<StyleProp> props;
+    Vec<Rc<Property>> props;
 
     static Opt<PageArea> _parsePageArea(Css::Token tok) {
         Str name = next(tok.data);
@@ -193,16 +193,15 @@ export struct PageAreaRule {
         return NONE;
     }
 
-    static Opt<PageAreaRule> parse(Css::Sst const& sst) {
+    static Opt<PageAreaRule> parse(PropertyRegistry& propertyRegistry, Css::Sst const& sst) {
         PageAreaRule res;
 
         res.area = try$(_parsePageArea(sst.token));
 
         for (auto const& item : sst.content) {
             if (item == Css::Sst::DECL) {
-                auto prop = parseDeclaration<StyleProp>(item);
-                if (prop)
-                    res.props.pushBack(prop.take());
+                if (auto p = propertyRegistry.parseDeclaration(item, PropertyRegistry::TOP_LEVEL))
+                    res.props.pushBack(p.take());
             } else {
                 logWarnIf(DEBUG_PAGE, "unexpected item in style rule: {}", item);
             }
@@ -211,9 +210,18 @@ export struct PageAreaRule {
         return res;
     }
 
-    void apply(SpecifiedValues& c) const {
+    void apply(PropertyRegistry& registry, SpecifiedValues const& parent, SpecifiedValues& child) const {
         for (auto const& prop : props) {
-            prop.apply(c, c);
+            if (prop->isBogusProperty())
+                continue;
+
+            if (prop->isShorthandProperty()) {
+                for (auto& longhand : prop->expandShorthand(registry, parent, child)) {
+                    longhand->apply(parent, child);
+                }
+                continue;
+            }
+            prop->apply(parent, child);
         }
     }
 

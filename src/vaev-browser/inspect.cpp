@@ -162,7 +162,7 @@ Ui::Child node(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<Inspector
     return Ui::vflow(children);
 }
 
-Ui::Child computedStyles(InspectState const& s, Ui::Action<InspectorAction> send) {
+Ui::Child computedStyles(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::Action<InspectorAction> send) {
     auto content = Ui::labelMedium("No element selected") |
                    Ui::insets({8, 16}) |
                    Ui::center();
@@ -171,16 +171,16 @@ Ui::Child computedStyles(InspectState const& s, Ui::Action<InspectorAction> send
         if (auto el = s.selectedNode->is<Dom::Element>()) {
             Ui::Children children;
 
-            Style::StyleProp::any([&]<typename T>() {
-                if constexpr (requires { T::load; }) {
-                    if (s.filter and startWith(T::name(), s.filter) == Match::NO)
-                        return;
-                    children.pushBack(
-                        Ui::text(Ui::TextStyles::codeSmall(), "{}: {}", T::name(), T::load(*el->specifiedValues())) |
-                        Ui::insets({4, 8})
-                    );
-                }
-            });
+            for (auto const& [name, registration] : dom->registeredPropertySet.registrations().iterUnordered()) {
+                if (s.filter and startWith(name.str(), s.filter) == Match::NO)
+                    continue;
+
+                auto property = registration->load(*el->specifiedValues());
+                children.pushBack(
+                    Ui::text(Ui::TextStyles::codeSmall(), "{}: {}", name, *property) |
+                    Ui::insets({4, 8})
+                );
+            }
 
             content = Ui::vflow(children) | Ui::vhscroll();
         }
@@ -197,9 +197,10 @@ Ui::Child computedStyles(InspectState const& s, Ui::Action<InspectorAction> send
 }
 
 export Ui::Child inspect(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectorAction> send) {
+    auto document = window->document().upgrade();
     return Ui::vflow(
-        node(window->document().upgrade(), s, send) | Ui::vscroll() | Ui::grow(),
-        computedStyles(s, send) | Kr::resizable(Kr::ResizeHandle::TOP, {128}, NONE)
+        node(document, s, send) | Ui::vscroll() | Ui::grow(),
+        computedStyles(document, s, send) | Kr::resizable(Kr::ResizeHandle::TOP, {128}, NONE)
     );
 }
 

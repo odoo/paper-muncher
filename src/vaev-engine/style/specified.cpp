@@ -95,8 +95,8 @@ export struct SpecifiedValues {
         variables.cow().put(varName, value);
     }
 
-    Css::Content getCustomProp(Str varName) const {
-        auto value = variables->access(Symbol::from(varName));
+    Css::Content getCustomProp(Symbol varName) const {
+        auto value = variables->access(varName);
         if (value)
             return *value;
         return {};
