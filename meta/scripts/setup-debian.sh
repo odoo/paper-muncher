@@ -3,7 +3,7 @@
 set -e
 
 apt-get update -y --no-install-recommends
-apt-get install -y --no-install-recommends build-essential git ninja-build nasm liburing-dev ccache jq libseccomp-dev
+apt-get install -y --no-install-recommends build-essential git ninja-build liburing-dev jq libseccomp-dev pkg-config
 
 # Install llvm
 apt-get install -y --no-install-recommends wget lsb-release software-properties-common gnupg
