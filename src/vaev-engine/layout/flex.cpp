@@ -162,7 +162,7 @@ struct FlexItem {
         speculateValues(tree, Input{.containingBlock = containingBlock});
         // TODO: not always we will need min/max content sizes,
         //       this can be lazy computed for performance gains
-        computeContentSizes(tree);
+        computeContentSizes(tree, containingBlock);
     }
 
     InsetsAu resolvedMargin() {
@@ -174,19 +174,38 @@ struct FlexItem {
         };
     }
 
-    void computeContentSizes(Tree& tree) {
-        minContentSize = computeIntrinsicContentSize(
-                             tree,
-                             *box,
-                             IntrinsicSize::MIN_CONTENT
-                         ) +
-                         padding.all() + borders.all();
-        maxContentSize = computeIntrinsicContentSize(
-                             tree,
-                             *box,
-                             IntrinsicSize::MAX_CONTENT
-                         ) +
-                         padding.all() + borders.all();
+    void computeContentSizes(Tree& tree, Vec2Au containingBlock) {
+        if (fa.isRowOriented) {
+            minContentSize = computeIntrinsicContentSize(
+                                 tree,
+                                 *box,
+                                 IntrinsicSize::MIN_CONTENT
+                             ) +
+                             padding.all() + borders.all();
+
+            maxContentSize = computeIntrinsicContentSize(
+                                 tree,
+                                 *box,
+                                 IntrinsicSize::MAX_CONTENT
+                             ) +
+                             padding.all() + borders.all();
+        } else {
+            Input measureInput{
+                .intrinsic = IntrinsicSize::MIN_CONTENT,
+                .knownSize = {containingBlock.x, NONE},
+                .availableSpace = {containingBlock.x, Limits<Au>::MAX},
+            };
+
+            UsedSpacings spacings{
+                .padding = padding,
+                .borders = borders,
+            };
+
+            auto out = layoutBorderBox(tree, *box, measureInput, spacings);
+
+            minContentSize = out.size;
+            maxContentSize = out.size;
+        }
     }
 
     enum OuterPosition {
