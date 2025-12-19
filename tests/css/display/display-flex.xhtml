@@ -2522,3 +2522,40 @@
         </div>
     </rendering>
 </test>
+
+<test name="flex: inline-block child in column direction" size="320">
+<container>
+    <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+    <head>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    </head>
+
+    <body>
+    <slot />
+    </body>
+
+    </html>
+</container>
+<rendering>
+    <div style="display: flex; flex-direction: row; background: blue">
+        <div style="background: blue">
+            <span style="background: red; display: inline-block">TEST1</span>
+            <span style="background: red; display: inline-block">TEST2</span>
+        </div>
+    </div>
+</rendering>
+<rendering>
+    <div style="display: flex; flex-direction: column; background: blue">
+        <div style="background: blue">
+            <span style="background: red; display: inline-block">TEST1</span>
+            <span style="background: red; display: inline-block">TEST2</span>
+        </div>
+    </div>
+</rendering>
+</test>
