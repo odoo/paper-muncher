@@ -26,6 +26,9 @@ jobs:
       - name: Setup Build Environment
         run: ./ck tools setup && ./ck tools doctor
 
+      - name: Instal Externs
+        run: ./ck install
+
       - name: Build Libraries
         run: ./ck build --props:async=${{ matrix.async }}
 

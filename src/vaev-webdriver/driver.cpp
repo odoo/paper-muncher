@@ -51,13 +51,13 @@ export struct WebDriver {
     }
 
     // https://www.w3.org/TR/webdriver2/#new-session
-    Async::Task<Ref::Uuid> newSessionAsync() {
+    Async::Task<Ref::Uuid> newSessionAsync(Async::CancellationToken ct) {
         auto sessionId = co_try$(Ref::Uuid::v4());
         auto windowHandle = co_try$(Ref::Uuid::v4());
         auto session = makeRc<Session>(sessionId);
 
         auto window = Dom::Window::create();
-        co_trya$(window->loadLocationAsync("about:blank"_url));
+        co_trya$(window->loadLocationAsync("about:blank"_url, Ref::Uti::PUBLIC_OPEN, ct));
 
         session->windows.put(windowHandle, window);
         session->current = windowHandle;
@@ -99,10 +99,10 @@ export struct WebDriver {
     // https://www.w3.org/TR/webdriver2/#navigation
 
     // https://www.w3.org/TR/webdriver2/#navigate-to
-    Async::Task<> navigateToAsync(Ref::Uuid sessionId, Ref::Url url) {
+    Async::Task<> navigateToAsync(Ref::Uuid sessionId, Ref::Url url, Async::CancellationToken ct) {
         auto session = co_try$(getSession(sessionId));
         auto window = co_try$(session->currentBrowsingContext());
-        co_return co_await window->loadLocationAsync(url);
+        co_return co_await window->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct);
     }
 
     // https://www.w3.org/TR/webdriver2/#get-current-url
@@ -113,10 +113,10 @@ export struct WebDriver {
     }
 
     // https://www.w3.org/TR/webdriver2/#refresh
-    Async::Task<> refreshAsync(Ref::Uuid sessionId) {
+    Async::Task<> refreshAsync(Ref::Uuid sessionId, Async::CancellationToken ct) {
         auto session = co_try$(getSession(sessionId));
         auto window = co_try$(session->currentBrowsingContext());
-        co_return co_await window->refreshAsync();
+        co_return co_await window->refreshAsync(ct);
     }
 
     // https://www.w3.org/TR/webdriver2/#get-title
@@ -175,11 +175,11 @@ export struct WebDriver {
     }
 
     // https://www.w3.org/TR/webdriver2/#new-window
-    Async::Task<Ref::Uuid> newWindowAsync(Ref::Uuid sessionId) {
+    Async::Task<Ref::Uuid> newWindowAsync(Ref::Uuid sessionId, Async::CancellationToken ct) {
         auto session = co_try$(getSession(sessionId));
         auto windowHandle = co_try$(Ref::Uuid::v4());
         auto window = Dom::Window::create();
-        co_trya$(window->loadLocationAsync("about:blank"_url));
+        co_trya$(window->loadLocationAsync("about:blank"_url, Ref::Uti::PUBLIC_OPEN, ct));
         session->windows.put(windowHandle, window);
         session->current = windowHandle;
         co_return Ok(windowHandle);

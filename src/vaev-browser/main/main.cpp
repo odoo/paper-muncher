@@ -10,7 +10,7 @@ import Karm.Debug;
 
 using namespace Karm;
 
-Async::Task<> entryPointAsync(Sys::Context& ctx) {
+Async::Task<> entryPointAsync(Sys::Context& ctx, Async::CancellationToken ct) {
     co_try$(Debug::toggleFlag(Debug::FEATURE, "*", true));
 
     auto args = Sys::useArgs(ctx);
@@ -27,10 +27,15 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
             Ui::darkMode ? Vaev::ColorScheme::DARK : Vaev::ColorScheme::LIGHT
         )
     );
-    co_trya$(window->loadLocationAsync(url));
+    co_trya$(window->loadLocationAsync(
+        url,
+        Ref::Uti::PUBLIC_OPEN,
+        Async::CancellationToken::uninterruptible()
+    ));
 
     co_return co_await Ui::runAsync(
         ctx,
-        Vaev::Browser::app(window)
+        Vaev::Browser::app(window),
+        ct
     );
 }

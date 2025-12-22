@@ -46,15 +46,15 @@ export struct Window {
             invalidateRender();
     }
 
-    Async::Task<> loadLocationAsync(Ref::Url url, Ref::Uti intent = Ref::Uti::PUBLIC_OPEN) {
+    Async::Task<> loadLocationAsync(Ref::Url url, Ref::Uti intent, Async::CancellationToken ct) {
         if (intent == Ref::Uti::PUBLIC_OPEN) {
             _document = co_trya$(
                 Loader::fetchDocumentAsync(
-                    _heap, *_client, url
+                    _heap, *_client, url, ct
                 )
             );
         } else if (intent == Ref::Uti::PUBLIC_MODIFY) {
-            _document = co_trya$(Loader::viewSourceAsync(_heap, *_client, url));
+            _document = co_trya$(Loader::viewSourceAsync(_heap, *_client, url, ct));
         } else {
             co_return Error::invalidInput("unsupported intent");
         }
@@ -64,8 +64,8 @@ export struct Window {
     }
 
     [[clang::coro_wrapper]]
-    Async::Task<> refreshAsync() {
-        return loadLocationAsync(document()->url());
+    Async::Task<> refreshAsync(Async::CancellationToken ct) {
+        return loadLocationAsync(document()->url(), Ref::Uti::PUBLIC_OPEN, ct);
     }
 
     Ref::Url location() const {

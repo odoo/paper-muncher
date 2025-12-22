@@ -16,25 +16,31 @@ namespace Vaev::WebDriver {
 // MARK: 6. Protocol -----------------------------------------------------------
 // https://www.w3.org/TR/webdriver2/#protocol
 
-Async::Task<> _sendSuccessAsync(Rc<Http::ResponseWriter> resp, Serde::Value data = NONE) {
-    co_trya$(resp->writeJsonAsync(Serde::Object{
-        {"value"s, data},
-    }));
+Async::Task<> _sendSuccessAsync(Rc<Http::ResponseWriter> resp, Serde::Value data, Async::CancellationToken ct) {
+    co_trya$(resp->writeJsonAsync(
+        Serde::Object{
+            {"value"s, data},
+        },
+        ct
+    ));
     co_return Ok();
 }
 
-Async::Task<> _sendErrorAsync(Rc<Http::ResponseWriter> resp, Error err, Serde::Value data = {}) {
+Async::Task<> _sendErrorAsync(Rc<Http::ResponseWriter> resp, Error err, Serde::Value data, Async::CancellationToken ct) {
     resp->code = Http::Code::BAD_REQUEST;
-    co_trya$(resp->writeJsonAsync(Serde::Object{
-        {
-            "value"s,
-            Serde::Object{
-                {"error"s, Str{err.msg()}},
-                {"message"s, data},
-                {"stacktrace"s, ""s},
+    co_trya$(resp->writeJsonAsync(
+        Serde::Object{
+            {
+                "value"s,
+                Serde::Object{
+                    {"error"s, Str{err.msg()}},
+                    {"message"s, data},
+                    {"stacktrace"s, ""s},
+                },
             },
         },
-    }));
+        ct
+    ));
 
     co_return Ok();
 }
