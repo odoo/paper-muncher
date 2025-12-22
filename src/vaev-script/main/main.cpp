@@ -7,7 +7,7 @@ import Karm.Gc;
 using namespace Karm;
 using namespace Vaev;
 
-Async::Task<> entryPointAsync(Sys::Context&) {
+Async::Task<> entryPointAsync(Sys::Context&, Async::CancellationToken) {
     Gc::Heap heap;
 
     auto agent = heap.alloc<Script::Agent>(heap);
