@@ -108,11 +108,12 @@ export struct Option {
     }
 };
 
-export Async::Task<> run(
+export Async::Task<> runAsync(
     Rc<Http::Client> client,
     Vec<Ref::Url> const& inputs,
     Ref::Url const& output,
-    Option options = {}
+    Option options,
+    Async::CancellationToken ct
 ) {
     if (options.flow == Flow::AUTO)
         options.flow =
@@ -132,7 +133,7 @@ export Async::Task<> run(
     for (auto& input : inputs) {
         logInfo("loading {}...", input);
         auto window = Vaev::Dom::Window::create(client);
-        co_trya$(window->loadLocationAsync(input));
+        co_trya$(window->loadLocationAsync(input, Ref::Uti::PUBLIC_OPEN, ct));
 
         logInfo("rendering {}...", input);
         if (options.flow == Flow::PAGINATE) {
@@ -186,7 +187,8 @@ export Async::Task<> run(
             Http::Method::PUT,
             output,
             Http::Body::from(bw.take())
-        )
+        ),
+        ct
     ));
 
     co_return Ok();

@@ -9,7 +9,7 @@ import Vaev.Engine;
 
 using namespace Karm;
 
-Async::Task<> entryPointAsync(Sys::Context& ctx) {
+Async::Task<> entryPointAsync(Sys::Context& ctx, Async::CancellationToken ct) {
     auto sandboxedArg = Cli::flag(NONE, "sandboxed"s, "Disallow local file and http access"s);
     auto verboseArg = Cli::flag(NONE, "verbose"s, "Enable verbose logging"s);
     auto quietArg = Cli::flag(NONE, "quiet"s, "Suppress non-fatal logging"s);
@@ -122,5 +122,5 @@ Async::Task<> entryPointAsync(Sys::Context& ctx) {
     options.extend = extendArg.value();
 
     auto client = PaperMuncher::defaultHttpClient(sandboxedArg.value());
-    co_return co_await PaperMuncher::run(client, inputs, output, options);
+    co_return co_await PaperMuncher::runAsync(client, inputs, output, options, ct);
 }

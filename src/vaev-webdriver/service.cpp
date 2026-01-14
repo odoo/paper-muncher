@@ -17,8 +17,8 @@ namespace Vaev::WebDriver {
 export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     auto router = makeRc<Http::Router>();
 
-    router->get("/", [](Rc<Http::Request>, Rc<Http::ResponseWriter> resp) -> Async::Task<> {
-        co_trya$(resp->writeFileAsync("bundle://vaev-webdriver/index.html"_url));
+    router->get("/", [](Rc<Http::Request>, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) -> Async::Task<> {
+        co_trya$(resp->writeFileAsync("bundle://vaev-webdriver/index.html"_url, ct));
         co_return Ok();
     });
 
@@ -28,16 +28,17 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#new-session
     router->post(
         "/session",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
-            auto data = co_trya$(req->readJsonAsync());
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
+            auto data = co_trya$(req->readJsonAsync(ct));
 
-            auto sessionId = co_trya$(webdriver->newSessionAsync());
+            auto sessionId = co_trya$(webdriver->newSessionAsync(ct));
             co_trya$(_sendSuccessAsync(
                 resp,
                 Serde::Object{
                     {"sessionId"s, sessionId.unparsed()},
                     {"capabilities"s, data.getOr("capabilities"s, NONE)},
-                }
+                },
+                ct
             ));
 
             co_return Ok();
@@ -47,11 +48,11 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#delete-session
     router->delete_(
         "/session/{sessionId}",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
             co_try$(webdriver->deleteSession(sessionId));
-            co_trya$(_sendSuccessAsync(resp));
+            co_trya$(_sendSuccessAsync(resp, {}, ct));
 
             co_return Ok();
         }
@@ -60,7 +61,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#status
     router->get(
         "/status",
-        [webdriver](Rc<Http::Request>, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request>, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             auto status = co_try$(webdriver->status());
 
             co_trya$(_sendSuccessAsync(
@@ -68,7 +69,8 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
                 Serde::Object{
                     {"ready"s, status.ready},
                     {"message"s, status.message},
-                }
+                },
+                ct
             ));
 
             co_return Ok();
@@ -81,7 +83,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#get-timeouts
     router->get(
         "/session/{sessionId}/timeouts",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
             auto timeouts = co_try$(webdriver->getTimeouts(sessionId));
 
@@ -91,7 +93,8 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
                     {"script"s, timeouts.script.toMSecs()},
                     {"pageLoad"s, timeouts.pageLoad.toMSecs()},
                     {"implicit"s, timeouts.implicit.toMSecs()},
-                }
+                },
+                ct
             ));
 
             co_return Ok();
@@ -101,9 +104,9 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#set-timeouts
     router->post(
         "/session/{sessionId}/timeouts",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
-            Serde::Value timeouts = co_trya$(req->readJsonAsync());
+            Serde::Value timeouts = co_trya$(req->readJsonAsync(ct));
             TimeoutConfiguration configuration{};
 
             if (auto value = timeouts.getOr("script", NONE); value.isInt()) {
@@ -117,7 +120,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
             }
 
             co_try$(webdriver->setTimeouts(sessionId, configuration));
-            co_trya$(_sendSuccessAsync(resp));
+            co_trya$(_sendSuccessAsync(resp, {}, ct));
 
             co_return Ok();
         }
@@ -129,9 +132,9 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#navigate-to
     router->post(
         "/session/{sessionId}/url",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
-            Serde::Value parameters = co_trya$(req->readJsonAsync());
+            Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
 
             Ref::Url url;
             if (auto value = parameters.getOr("url", NONE); value.isStr()) {
@@ -140,8 +143,8 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
                 co_return Error::invalidInput("missing url key");
             }
 
-            co_trya$(webdriver->navigateToAsync(sessionId, url));
-            co_trya$(_sendSuccessAsync(resp));
+            co_trya$(webdriver->navigateToAsync(sessionId, url, ct));
+            co_trya$(_sendSuccessAsync(resp, {}, ct));
 
             co_return Ok();
         }
@@ -150,11 +153,11 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#get-current-url
     router->get(
         "/session/{sessionId}/url",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
             auto url = co_try$(webdriver->getCurrentUrl(sessionId));
-            co_trya$(_sendSuccessAsync(resp, url.str()));
+            co_trya$(_sendSuccessAsync(resp, url.str(), ct));
 
             co_return Ok();
         }
@@ -163,11 +166,11 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#refresh
     router->post(
         "/session/{sessionId}/refresh",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
-            co_trya$(webdriver->refreshAsync(sessionId));
-            co_trya$(_sendSuccessAsync(resp));
+            co_trya$(webdriver->refreshAsync(sessionId, ct));
+            co_trya$(_sendSuccessAsync(resp, {}, ct));
 
             co_return Ok();
         }
@@ -176,11 +179,11 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#get-title
     router->get(
         "/session/{sessionId}/title",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
             auto title = co_try$(webdriver->getTitle(sessionId));
-            co_trya$(_sendSuccessAsync(resp, title));
+            co_trya$(_sendSuccessAsync(resp, title, ct));
 
             co_return Ok();
         }
@@ -192,11 +195,11 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#get-window-handle
     router->get(
         "/session/{sessionId}/window",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
             auto windowHandle = co_try$(webdriver->getWindowHandle(sessionId));
-            co_trya$(_sendSuccessAsync(resp, windowHandle.unparsed()));
+            co_trya$(_sendSuccessAsync(resp, windowHandle.unparsed(), ct));
 
             co_return Ok();
         }
@@ -205,7 +208,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#close-window
     router->delete_(
         "/session/{sessionId}/window",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
             Serde::Array handles =
@@ -215,7 +218,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
                     })
                     .collect<Serde::Array>();
 
-            co_trya$(_sendSuccessAsync(resp, std::move(handles)));
+            co_trya$(_sendSuccessAsync(resp, std::move(handles), ct));
             co_return Ok();
         }
     );
@@ -223,9 +226,9 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#switch-to-window
     router->post(
         "/session/{sessionId}/window",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
-            Serde::Value parameters = co_trya$(req->readJsonAsync());
+            Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
 
             Ref::Uuid handle;
             if (auto value = parameters.getOr("handle", NONE); value.isStr()) {
@@ -236,7 +239,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
 
             co_try$(webdriver->switchToWindow(sessionId, handle));
 
-            co_trya$(_sendSuccessAsync(resp));
+            co_trya$(_sendSuccessAsync(resp, {}, ct));
             co_return Ok();
         }
     );
@@ -244,7 +247,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#get-window-handles
     router->get(
         "/session/{sessionId}/window/handles",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
             Serde::Array handles =
@@ -254,7 +257,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
                     })
                     .collect<Serde::Array>();
 
-            co_trya$(_sendSuccessAsync(resp, std::move(handles)));
+            co_trya$(_sendSuccessAsync(resp, std::move(handles), ct));
             co_return Ok();
         }
     );
@@ -262,17 +265,18 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#new-window
     router->post(
         "/session/{sessionId}/window/new",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
-            auto windowHandle = co_trya$(webdriver->newWindowAsync(sessionId));
+            auto windowHandle = co_trya$(webdriver->newWindowAsync(sessionId, ct));
 
             co_trya$(_sendSuccessAsync(
                 resp,
                 Serde::Object{
                     {"handle"s, windowHandle.unparsed()},
                     {"type"s, "window"s},
-                }
+                },
+                ct
             ));
 
             co_return Ok();
@@ -285,7 +289,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#get-window-rect
     router->get(
         "/session/{sessionId}/window/rect",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
             auto windowRect = co_try$(webdriver->getWindowRect(sessionId));
@@ -296,7 +300,8 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
                     {"y"s, windowRect.y.cast<f64>()},
                     {"width"s, windowRect.width.cast<f64>()},
                     {"height"s, windowRect.height.cast<f64>()},
-                }
+                },
+                ct
             ));
 
             co_return Ok();
@@ -306,10 +311,10 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#set-window-rect
     router->post(
         "/session/{sessionId}/window/rect",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
-            Serde::Value parameters = co_trya$(req->readJsonAsync());
+            Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
 
             RectAu rect = co_try$(webdriver->getWindowRect(sessionId));
 
@@ -333,7 +338,8 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
                     {"y"s, windowRect.y.cast<f64>()},
                     {"width"s, windowRect.width.cast<f64>()},
                     {"height"s, windowRect.height.cast<f64>()},
-                }
+                },
+                ct
             ));
 
             co_return Ok();
@@ -346,11 +352,11 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#get-page-source
     router->get(
         "/session/{sessionId}/source",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
             auto source = co_try$(webdriver->getPageSource(sessionId));
-            co_trya$(_sendSuccessAsync(resp, source));
+            co_trya$(_sendSuccessAsync(resp, source, ct));
 
             co_return Ok();
         }
@@ -359,10 +365,10 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#execute-script
     router->post(
         "/session/{sessionId}/execute/sync",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
-            Serde::Value parameters = co_trya$(req->readJsonAsync());
+            Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
             String script;
             if (auto value = parameters.getOr("script", NONE); value.isStr()) {
                 script = value.asStr();
@@ -371,7 +377,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
             }
 
             auto result = co_try$(webdriver->executeScript(sessionId, script));
-            co_trya$(_sendSuccessAsync(resp, result));
+            co_trya$(_sendSuccessAsync(resp, result, ct));
 
             co_return Ok();
         }
@@ -380,10 +386,10 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#execute-async-script
     router->post(
         "/session/{sessionId}/execute/async",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
-            Serde::Value parameters = co_trya$(req->readJsonAsync());
+            Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
             String script;
             if (auto value = parameters.getOr("script", NONE); value.isStr()) {
                 script = value.asStr();
@@ -392,7 +398,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
             }
 
             auto result = co_try$(webdriver->executeScript(sessionId, script));
-            co_trya$(_sendSuccessAsync(resp, result));
+            co_trya$(_sendSuccessAsync(resp, std::move(result), ct));
 
             co_return Ok();
         }
@@ -404,11 +410,11 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#take-screenshot
     router->get(
         "/session/{sessionId}/screenshot",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
             auto screenshot = co_try$(webdriver->takeScreenshot(sessionId));
-            co_trya$(_sendSuccessAsync(resp, screenshot));
+            co_trya$(_sendSuccessAsync(resp, std::move(screenshot), ct));
 
             co_return Ok();
         }
@@ -420,10 +426,10 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     // https://www.w3.org/TR/webdriver2/#print-page
     router->post(
         "/session/{sessionId}/print",
-        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) mutable -> Async::Task<> {
+        [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
-            Serde::Value parameters = co_trya$(req->readJsonAsync());
+            Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
 
             // Let orientation be the result of getting a property with default named "orientation" and with default "portrait" from parameters.
             auto orientation = parameters.getOr("orientation", "portrait"s);
@@ -505,7 +511,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
                 }
             ));
 
-            co_trya$(_sendSuccessAsync(resp, pdf));
+            co_trya$(_sendSuccessAsync(resp, std::move(pdf), ct));
 
             co_return Ok();
         }
@@ -517,11 +523,11 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
         ErrorHandler(Rc<Handler> next)
             : _next(next) {}
 
-        Async::Task<> handleAsync(Rc<Http::Request> req, Rc<Http::ResponseWriter> resp) override {
-            auto result = co_await _next->handleAsync(req, resp);
+        Async::Task<> handleAsync(Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) override {
+            auto result = co_await _next->handleAsync(req, resp, ct);
             if (not result) {
                 logWarn("webdriver error: {}", result);
-                co_return co_await _sendErrorAsync(resp, result.none());
+                co_return co_await _sendErrorAsync(resp, result.none(), {}, ct);
             }
             co_return Ok();
         }

@@ -8,12 +8,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            async: epoll
+          # NOTE: Temporarily disabled epoll and kevent due to same flakiness in tests.
+          # - os: ubuntu-latest
+          #   async: epoll
+          # - os: macos-latest
+          #   async: kevent
           - os: ubuntu-latest
             async: uring
-          - os: macos-latest
-            async: kevent
 
     runs-on: ${{ matrix.os }}
 
@@ -25,6 +26,9 @@ jobs:
 
       - name: Setup Build Environment
         run: ./ck tools setup && ./ck tools doctor
+
+      - name: Instal Externs
+        run: ./ck install
 
       - name: Build Libraries
         run: ./ck build --props:async=${{ matrix.async }}

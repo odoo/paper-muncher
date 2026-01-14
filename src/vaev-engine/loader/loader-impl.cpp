@@ -20,14 +20,14 @@ import :layout.values;
 
 namespace Vaev::Loader {
 
-Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::Url url) {
-    auto resp = co_trya$(client.getAsync(url));
+Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct) {
+    auto resp = co_trya$(client.getAsync(url, ct));
     if (not resp->body)
         co_return Error::notFound("could not load image");
 
     auto body = resp->body.unwrap();
 
-    auto data = co_trya$(Aio::readAllAsync(*body));
+    auto data = co_trya$(Aio::readAllAsync(*body, ct));
     if (resp->header.contentType().unwrapOr(Ref::sniffBytes(data)) == "image/svg+xml"_mime) {
         auto subClient = makeRc<Http::Client>(client._transport);
         subClient->userAgent = client.userAgent;
@@ -36,7 +36,7 @@ Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::
         // FIXME: Properly determine the size of the SVG
         // https://www.w3.org/TR/SVG2/coords.html#SizingSVGInCSS
         window->changeMedia(Style::Media::forRender({}, Resolution::fromDppx(1)));
-        co_trya$(window->loadLocationAsync(url));
+        co_trya$(window->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
         window->computeStyle();
         auto root = window->document()->documentElement();
         Layout::Resolver resolver;
@@ -70,12 +70,12 @@ void _evalFontfaceRules(Style::Rule const& rule, Vec<Style::FontFace>& fontFaces
     });
 }
 
-Async::Task<Rc<Gfx::Fontface>> _loadFontfaceAsync(Http::Client& client, Ref::Url url) {
-    auto resp = co_trya$(client.getAsync(url));
+Async::Task<Rc<Gfx::Fontface>> _loadFontfaceAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct) {
+    auto resp = co_trya$(client.getAsync(url, ct));
     if (not resp->body)
         co_return Error::notFound("could not load image");
     auto body = resp->body.unwrap();
-    auto data = co_trya$(Aio::readAllAsync(*body));
+    auto data = co_trya$(Aio::readAllAsync(*body, ct));
 
     // FIXME: Make this more streamline and avoid the extra copy once we reworked karm-font.
     auto size = alignUp(data.len(), Sys::pageSize());
@@ -84,7 +84,7 @@ Async::Task<Rc<Gfx::Fontface>> _loadFontfaceAsync(Http::Client& client, Ref::Url
     co_return Font::loadFontface(mem.seal());
 }
 
-Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Style::StyleSheetList const& stylesheets) {
+Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Style::StyleSheetList const& stylesheets, Async::CancellationToken ct) {
     auto fontDatabase = makeRc<Font::Database>(Font::globalDatabase());
     for (auto const& sheet : stylesheets.styleSheets) {
         Vec<Style::FontFace> fontFaces;
@@ -113,7 +113,7 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Style
                     continue;
                 }
 
-                auto fontface = co_await _loadFontfaceAsync(client, resolvedUrl.unwrap());
+                auto fontface = co_await _loadFontfaceAsync(client, resolvedUrl.unwrap(), ct);
                 if (not fontface) {
                     logWarn("Failed to load font {}", ff.family);
                     continue;
