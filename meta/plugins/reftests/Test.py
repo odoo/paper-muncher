@@ -13,12 +13,18 @@ class TestReference:
         self.image = image
 
 
+_currentTestId = 0
+
+
 class TestCase:
-    def __init__(self, props, inputPath, outputPath, context, tag, testDocument, caseProps, testId: int,
-                 container=None, reference: TestReference | None = None):
+    def __init__(self, props: dict[str, str], tag: str, testDocument: str,
+                 caseProps: dict[str, str], container=None):
+        self.ref = None
+        global _currentTestId
         self.outputImage: bytes | None = None
         self.addInfos = []
-        self.id = testId
+        self.id = _currentTestId
+        _currentTestId += 1
 
         self.type = props.get("type")  # the type of test [render (default) | print]
         self.xsize = props.get("size", "200")
@@ -29,11 +35,10 @@ class TestCase:
             self.ysize = "600"
 
         self.page = props.get("page")  # page size
-        self.inputPath = inputPath  # path to test case's document
-        self.outputPath = outputPath  # path to the output image
-        self.context = context
-        self.ref = reference
+        self.inputPath: Path = TEST_REPORT / f"{self.id}.xhtml"  # path to test case's document
+        self.outputPath: Path = TEST_REPORT / f"{self.id}.bmp"  # path to the output image
         self.help = caseProps.get("help", "")
+        self.skipped = caseProps.get("skip", False)
         self.tag = tag  # test tag [rendering | error]
 
         if not container:
@@ -42,7 +47,7 @@ class TestCase:
         self.container = container
         self.testDocument = testDocument
 
-    def render(self):
+    def render(self, paperMuncher):  #
         def updateTempFile(path, rendering):
             # write xhtml into the temporary file
             xhtml = re.sub(r"<slot\s*/>", rendering, self.container) if self.container else rendering
@@ -51,15 +56,15 @@ class TestCase:
 
         updateTempFile(self.inputPath, self.testDocument)
 
-        runPaperMuncher(self.context.paperMuncher, self)
+        runPaperMuncher(paperMuncher, self)
 
         with self.outputPath.open("rb") as imageFile:
             self.outputImage = imageFile.read()
 
-    def run(self) -> bool:
-        self.render()
-
-        return areImagesIdentical(self.ref.image, self.outputImage) == (self.tag == "rendering")
+    def run(self, paperMuncher, reference: TestReference) -> bool:
+        self.render(paperMuncher)
+        self.ref = reference
+        return areImagesIdentical(reference.image, self.outputImage) == (self.tag == "rendering")
 
 
 def runPaperMuncher(executable, test: TestCase):

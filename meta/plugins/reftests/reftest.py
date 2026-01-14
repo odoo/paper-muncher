@@ -116,9 +116,18 @@ class TestParser:
         return {prop: value for prop, value in REG_INFO.findall(text)}
 
     @staticmethod
-    def parseTestCases(content: str) -> list[tuple[str, str, str]]:
+    def parseTestCases(content: str, props: dict[str, str], container=None) -> list[TestCase]:
         """Parse individual test cases (rendering/error tags)."""
-        return REG_TESTS.findall(content)
+        testCasesInfos = REG_TESTS.findall(content)
+        testCases: list[TestCase] = []
+        for tag, info, testDocument in testCasesInfos:
+            caseProps: dict[str, str] = TestParser.parseProperties(info)
+
+            test = TestCase(props, tag, testDocument, caseProps, container=container)
+
+            testCases.append(test)
+
+        return testCases
 
     @staticmethod
     def parseTestBlocks(content: str) -> list[tuple[str, str]]:
@@ -144,32 +153,29 @@ class TestRunner:
 
     def _generateReferenceImage(self, testCase: TestCase) -> TestReference:
         """Generate reference image from a test case."""
-        testCase.render()
+        testCase.render(self._context.paperMuncher)
         return TestReference(
             testCase.inputPath,
             testCase.outputPath,
             testCase.outputImage
         )
 
-    def _runSingleTestCase(self, test: TestCase, skipped: bool = False) -> bool:
+    def _runSingleTestCase(self, test: TestCase, reference: TestReference, skipped: bool = False) -> bool:
         """Run a single test case and report results."""
-        testId: int = self._context.currentTestId
-
         if skipped:
             test.addInfos.append("skip flag")
 
-        ok: bool = test.run()
+        ok: bool = test.run(self._context.paperMuncher, reference)
         if not ok:
-            failureDetails: str = f"""Test {testId} failed.
+            failureDetails: str = f"""Test {test.id} failed.
             file://{test.inputPath}
-            file://{TEST_REPORT / "report.html"}#case-{testId}
+            file://{TEST_REPORT / "report.html"}#case-{test.id}
             """
             self._context.results.addFailed(failureDetails)
         else:
             self._context.results.addPassed()
 
         self._reporter.addTestCase(test, ok)
-        self._context.currentTestId += 1
 
         return ok
 
@@ -177,35 +183,23 @@ class TestRunner:
                          container: str, file: Path, categorySkipped: bool = False) -> TestResults:
         """Run all test cases in a category."""
         categoryResults: TestResults = TestResults()
-        testCases: list[tuple[str, str, str]] = self._parser.parseTestCases(test_content)
+        testCases: list[TestCase] = self._parser.parseTestCases(test_content, props, container=container)
         reference: TestReference | None = None
 
-        for tag, info, testDocument in testCases:
-            caseProps: dict[str, str] = self._parser.parseProperties(info)
-            inputPath: Path = TEST_REPORT / f"{self._context.currentTestId}.xhtml"
-            imgPath: Path = TEST_REPORT / f"{self._context.currentTestId}.bmp"
-
+        for test in testCases:
             # First test case is the reference
             if not reference:
-                test = TestCase(props, inputPath, imgPath, self._context, tag,
-                                testDocument, caseProps, self._context.currentTestId,
-                                container=container)
                 reference = self._generateReferenceImage(test)
-                self._context.currentTestId += 1
                 continue
 
-            testSkipped: bool = categorySkipped or "skip" in caseProps
-
-            test = TestCase(props, inputPath, imgPath, self._context, tag,
-                            testDocument, caseProps, self._context.currentTestId,
-                            container=container, reference=reference)
+            testSkipped: bool = categorySkipped or test.skipped
 
             if testSkipped and not self._context.shouldRunSkipped():
                 categoryResults.addSkipped()
                 self._reporter.addSkippedCase(test)
                 continue
 
-            success: bool = self._runSingleTestCase(test, testSkipped)
+            success: bool = self._runSingleTestCase(test, reference, testSkipped)
             if success:
                 categoryResults.addPassed()
             else:
