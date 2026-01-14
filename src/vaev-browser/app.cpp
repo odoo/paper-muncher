@@ -91,8 +91,8 @@ using Action = Union<
     UpdateLocation,
     NavigateLocation>;
 
-Async::_Task<Opt<Action>> navigateAsync(Rc<Dom::Window> window, Navigate nav) {
-    co_return Loaded{(co_await window->loadLocationAsync(nav.url, nav.action))};
+Async::_Task<Opt<Action>> navigateAsync(Rc<Dom::Window> window, Navigate nav, Async::CancellationToken ct) {
+    co_return Loaded{(co_await window->loadLocationAsync(nav.url, nav.action, ct))};
 }
 
 Ui::Task<Action> reduce(State& s, Action a) {
@@ -101,7 +101,7 @@ Ui::Task<Action> reduce(State& s, Action a) {
             if (s.status == Status::LOADING)
                 return NONE;
             s.status = Status::LOADING;
-            return navigateAsync(s.window, s.currentUrl());
+            return navigateAsync(s.window, s.currentUrl(), Async::CancellationToken::uninterruptible());
         },
         [&](Loaded l) -> Ui::Task<Action> {
             s.status = Status::LOADED;

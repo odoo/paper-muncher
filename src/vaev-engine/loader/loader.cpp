@@ -21,7 +21,7 @@ import :style;
 
 namespace Vaev::Loader {
 
-Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url url, Rc<Http::Response> resp) {
+Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url url, Rc<Http::Response> resp, Async::CancellationToken ct) {
     auto dom = heap.alloc<Dom::Document>(url);
 
     auto mime = resp->header.contentType();
@@ -33,7 +33,7 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url 
         co_return Error::invalidInput("response body is missing");
 
     auto respBody = resp->body.unwrap();
-    auto buf = co_trya$(Aio::readAllUtf8Async(*respBody));
+    auto buf = co_trya$(Aio::readAllUtf8Async(*respBody, ct));
 
     if (not mime.has() or mime->is("application/octet-stream"_mime)) {
         mime = Ref::sniffBytes(bytes(buf));
@@ -82,12 +82,12 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url 
     }
 }
 
-export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url) {
-    auto resp = co_trya$(client.getAsync(url));
+export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url, Async::CancellationToken ct) {
+    auto resp = co_trya$(client.getAsync(url, ct));
     if (not resp->body)
         co_return Error::invalidInput("response body is missing");
     auto respBody = resp->body.unwrap();
-    auto buf = co_trya$(Aio::readAllUtf8Async(*respBody));
+    auto buf = co_trya$(Aio::readAllUtf8Async(*respBody, ct));
 
     auto dom = heap.alloc<Dom::Document>(url);
     auto body = heap.alloc<Dom::Element>(Html::BODY_TAG);
@@ -100,26 +100,26 @@ export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http:
     co_return Ok(dom);
 }
 
-Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Http::Client& client, Ref::Url url, Style::Origin origin) {
-    auto resp = co_trya$(client.getAsync(url));
+Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Http::Client& client, Ref::Url url, Style::Origin origin, Async::CancellationToken ct) {
+    auto resp = co_trya$(client.getAsync(url, ct));
     if (not resp->body)
         co_return Error::notFound("could not load stylesheet");
 
     auto respBody = resp->body.unwrap();
-    auto buf = co_trya$(Aio::readAllUtf8Async(*respBody));
+    auto buf = co_trya$(Aio::readAllUtf8Async(*respBody, ct));
 
     Io::SScan s{buf};
     co_return Ok(Style::StyleSheet::parse(s, url, origin));
 }
 
-Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::Url url);
+Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct);
 
 Rc<Scene::Node> _missingImagePlaceholder() {
     auto placeholder = Karm::Image::loadOrFallback("bundle://vaev-engine/missing.qoi"_url).unwrap();
     return makeRc<Scene::Image>(placeholder->bound().cast<f64>(), placeholder);
 }
 
-Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node, Style::StyleSheetList& sb) {
+Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node, Style::StyleSheetList& sb, Async::CancellationToken ct) {
     auto el = node->is<Dom::Element>();
     if (el and el->qualifiedName == Html::IMG_TAG) {
         auto src = el->getAttribute(Html::SRC_ATTR);
@@ -130,7 +130,7 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node
         }
 
         auto url = Ref::Url::parse(*src, node->baseURI());
-        auto image = co_await _fetchImageContentAsync(client, url);
+        auto image = co_await _fetchImageContentAsync(client, url, ct);
         if (not image) {
             el->imageContent = _missingImagePlaceholder();
             logWarn("failed to fetch image from {}: {}", url, image);
@@ -153,7 +153,7 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node
             }
 
             auto url = Ref::Url::parse(*href, node->baseURI());
-            auto sheet = co_await _fetchStylesheetAsync(client, url, Style::Origin::AUTHOR);
+            auto sheet = co_await _fetchStylesheetAsync(client, url, Style::Origin::AUTHOR, ct);
 
             if (not sheet) {
                 logWarn("failed to fetch stylesheet from {}: {}", url, sheet);
@@ -164,19 +164,19 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Gc::Ref<Dom::Node> node
         }
     } else {
         for (auto child = node->firstChild(); child; child = child->nextSibling())
-            (void)co_await _fetchResourcesAsync(client, *child, sb);
+            (void)co_await _fetchResourcesAsync(client, *child, sb, ct);
     }
 
     co_return Ok();
 }
 
-Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Style::StyleSheetList const& stylesheets);
+Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Style::StyleSheetList const& stylesheets, Async::CancellationToken ct);
 
 static auto dumpDom = Debug::Flag::debug("web-dom", "Dump the loaded DOM tree");
 static auto dumpStylesheets = Debug::Flag::debug("web-stylesheets", "Dump the loaded stylesheets");
 
 // https://fetch.spec.whatwg.org/#scheme-fetch
-export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url) {
+export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url, Async::CancellationToken ct) {
     Ref::Url resolvedUrl = url;
 
     // If request’s current URL’s path is the string "blank",
@@ -187,22 +187,22 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
         resolvedUrl = Ref::Url::data("text/html"_mime, {});
     }
 
-    auto resp = co_trya$(client.getAsync(resolvedUrl));
-    auto dom = co_trya$(_loadDocumentAsync(heap, url, resp));
+    auto resp = co_trya$(client.getAsync(resolvedUrl, ct));
+    auto dom = co_trya$(_loadDocumentAsync(heap, url, resp, ct));
     auto stylesheets = heap.alloc<Style::StyleSheetList>();
 
-    stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-engine/html.css"_url, Style::Origin::USER_AGENT))
+    stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-engine/html.css"_url, Style::Origin::USER_AGENT, ct))
                          .take("user agent stylesheet not available"));
 
-    stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-engine/print.css"_url, Style::Origin::USER_AGENT))
+    stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-engine/print.css"_url, Style::Origin::USER_AGENT, ct))
                          .take("user agent stylesheet not available"));
 
-    stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-engine/svg.css"_url, Style::Origin::USER_AGENT))
+    stylesheets->add((co_await _fetchStylesheetAsync(client, "bundle://vaev-engine/svg.css"_url, Style::Origin::USER_AGENT, ct))
                          .take("user agent stylesheet not available"));
 
-    (void)co_await _fetchResourcesAsync(client, *dom, *stylesheets);
+    (void)co_await _fetchResourcesAsync(client, *dom, *stylesheets, ct);
     dom->styleSheets = stylesheets;
-    dom->fontDatabase = co_await _loadFontfacesAsync(client, *stylesheets);
+    dom->fontDatabase = co_await _loadFontfacesAsync(client, *stylesheets, ct);
 
     if (dumpDom)
         logDebugIf(dumpDom, "document tree: {}", dom);

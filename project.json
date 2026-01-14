@@ -5,17 +5,13 @@
     "version": "v0.2.2",
     "description": "An experimental document-generation tool",
     "extern": {
-        "skift-org/karm": {
-            "git": "https://github.com/skift-org/karm.git",
-            "tag": "main"
-        },
-        "skift-org/hideo": {
-            "git": "https://github.com/skift-org/hideo.git",
+        "skift/karm": {
+            "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
         },
         "cute-engineering/cat": {
-            "git": "https://github.com/cute-engineering/cat.git",
-            "tag": "v0.11.0"
+            "git": "https://codeberg.org/cute-engineering/cat.git",
+            "tag": "v0.12.0"
         }
     }
 }

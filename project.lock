@@ -2,58 +2,58 @@
     "$schema": "https://schemas.cute.engineering/stable/cutekit.lockfile.v1",
     "extern": {
         "cute-engineering/cat": {
-            "commit": "a295bf9d45f5bd56dbb961e47540fee6dbf211f2",
-            "git": "https://github.com/cute-engineering/cat.git",
-            "tag": "v0.11.0"
+            "commit": "1aa5ab2f7030e81a5030e2d3f58c443b2f92affe",
+            "git": "https://codeberg.org/cute-engineering/cat.git",
+            "tag": "v0.12.0"
         },
         "cute-engineering/ce-bootfs": {
-            "commit": "87ad7796d29b6e36adebc7810b69c9b8dd4d0208",
-            "git": "https://github.com/cute-engineering/ce-bootfs.git",
-            "tag": "main"
+            "commit": "cefbbceeaa8010aadf14aae2d8d90e02de8bce61",
+            "git": "https://codeberg.org/cute-engineering/ce-bootfs.git",
+            "tag": "v0.1.1"
         },
         "cute-engineering/ce-heap": {
-            "commit": "918dd7962dbcd703a883c9fcf658b496f9e3502e",
-            "git": "https://github.com/cute-engineering/ce-heap.git",
-            "tag": "v1.1.0"
+            "commit": "028c6accd7b8d735e04ebd5fa340953f5957827f",
+            "git": "https://codeberg.org/cute-engineering/ce-heap.git",
+            "tag": "v1.2.0"
         },
         "cute-engineering/ce-libc": {
-            "commit": "3ed3147c168046594a92d7862feed99f5c558ac2",
-            "git": "https://github.com/cute-engineering/ce-libc.git",
-            "tag": "v1.1.1"
+            "commit": "765180855aa5067c00b02186aa42baffe867d71b",
+            "git": "https://codeberg.org/cute-engineering/ce-libc.git",
+            "tag": "v1.2.0"
         },
         "cute-engineering/ce-libm": {
-            "commit": "f2c6194b1e464c9315fd15e4d9eea06f27995499",
-            "git": "https://github.com/cute-engineering/ce-libm.git",
-            "tag": "v1.0.2"
+            "commit": "4a7457db84b24eac547cde9e234472489e5ff46f",
+            "git": "https://codeberg.org/cute-engineering/ce-libm.git",
+            "tag": "v1.1.0"
         },
         "cute-engineering/ce-mdi": {
-            "commit": "de730b8fb27b87508ca49324e34d0380885d1203",
-            "git": "https://github.com/cute-engineering/ce-mdi.git",
-            "tag": "v0.6.0"
+            "commit": "950f40cbb8f67ec645f0d5844ee3a468b8169dce",
+            "git": "https://codeberg.org/cute-engineering/ce-mdi.git",
+            "tag": "v0.7.0"
         },
         "cute-engineering/ce-stdcpp": {
-            "commit": "0f591c8ccd2e091b247c09db7166958dff76370a",
-            "git": "https://github.com/cute-engineering/ce-stdcpp.git",
-            "tag": "v1.4.0"
+            "commit": "30dfe17cc6a1b319768b0ffbecb755f836e2be90",
+            "git": "https://codeberg.org/cute-engineering/ce-stdcpp.git",
+            "tag": "v1.5.0"
         },
         "cute-engineering/ce-targets": {
-            "commit": "eaa19de89b05da7fbbe9320c6f1f24dae1a3b96d",
-            "git": "https://github.com/cute-engineering/ce-targets.git",
-            "tag": "v0.4.0"
-        },
-        "skift-org/assets": {
-            "commit": "d311e1f13f9d6d91fc2aa5a6c896ef6a714363e6",
-            "git": "https://github.com/skift-org/assets.git",
-            "tag": "main"
-        },
-        "skift-org/hideo": {
-            "commit": "41467f2f70bfb1b5b62755d59d876730310170f6",
-            "git": "https://github.com/skift-org/hideo.git",
-            "tag": "main"
+            "commit": "9c0064dc613d43c40e5f00bb972ed54977a82e00",
+            "git": "https://codeberg.org/cute-engineering/ce-targets.git",
+            "tag": "v0.6.0"
         },
         "skift-org/karm": {
-            "commit": "3bbf8b18067a780584dfbc81da105bc4faac73e0",
-            "git": "https://github.com/skift-org/karm.git",
+            "commit": "7ccfc3b3cd52ab4a305acaae126b461620a76dab",
+            "git": "https://codeberg.org/skift/karm.git",
+            "tag": "main"
+        },
+        "skift/assets": {
+            "commit": "d311e1f13f9d6d91fc2aa5a6c896ef6a714363e6",
+            "git": "https://codeberg.org/skift/assets.git",
+            "tag": "main"
+        },
+        "skift/karm": {
+            "commit": "b26ada6600d55ee468cb0282f719657618805665",
+            "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
         }
     }

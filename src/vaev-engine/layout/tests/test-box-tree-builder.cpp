@@ -115,15 +115,15 @@ bool FakeInlineBox::matches(InlineBox const& inlineBox) {
     return _matches(ComparableInlineBox::fromInlineBox(inlineBox));
 }
 
-Async::Task<Box> _buildBoxesAsync(Str html) {
+Async::Task<Box> _buildBoxesAsync(Str html, Async::CancellationToken ct) {
     auto window = Dom::Window::create();
-    co_trya$(window->loadLocationAsync(Ref::Url::data("text/html"_mime, bytes(html))));
+    co_trya$(window->loadLocationAsync(Ref::Url::data("text/html"_mime, bytes(html)), Ref::Uti::PUBLIC_OPEN, ct));
     co_return Ok(std::move(window->ensureRender().layout->children()[0]));
 }
 
 testAsync$("empty-body") {
     auto html = "<html><body/></html>";
-    auto body = co_trya$(_buildBoxesAsync(html));
+    auto body = co_trya$(_buildBoxesAsync(html, ct));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -136,7 +136,7 @@ testAsync$("empty-body") {
 
 testAsync$("no span") {
     auto html = "<html><body>hello, world</body></html>";
-    auto body = co_trya$(_buildBoxesAsync(html));
+    auto body = co_trya$(_buildBoxesAsync(html, ct));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -152,7 +152,7 @@ testAsync$("no span") {
 
 testAsync$("no span with br") {
     auto html = "<html><body>hello,<br>brrrrr world</body></html>";
-    auto body = co_trya$(_buildBoxesAsync(html));
+    auto body = co_trya$(_buildBoxesAsync(html, ct));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -179,7 +179,7 @@ testAsync$("no span with br") {
 
 testAsync$("no span, breaking block") {
     auto html = "<html><body>hello, <div>cruel</div> world</body></html>";
-    auto body = co_trya$(_buildBoxesAsync(html));
+    auto body = co_trya$(_buildBoxesAsync(html, ct));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -218,7 +218,7 @@ testAsync$("span and breaking block 1") {
         "</span></span></span>"
         "melancholy"
         "</body></html>";
-    auto body = co_trya$(_buildBoxesAsync(html));
+    auto body = co_trya$(_buildBoxesAsync(html, ct));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -287,7 +287,7 @@ testAsync$("span and breaking block 2") {
         "</span></span><div>kidding</div></span>"
         "good vibes"
         "</body></html>";
-    auto body = co_trya$(_buildBoxesAsync(html));
+    auto body = co_trya$(_buildBoxesAsync(html, ct));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -375,7 +375,7 @@ testAsync$("inline-block") {
         "   </div>"
         "   D"
         "</body></html>";
-    auto body = co_trya$(_buildBoxesAsync(html));
+    auto body = co_trya$(_buildBoxesAsync(html, ct));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -419,7 +419,7 @@ testAsync$("flex-blockify") {
         "<div style=\"display:block\">hi</div>"
         "</div></body></html>";
 
-    auto body = co_trya$(_buildBoxesAsync(html));
+    auto body = co_trya$(_buildBoxesAsync(html, ct));
 
     auto expectedBodySubtree =
         FakeBox{
@@ -464,7 +464,7 @@ testAsync$("table-fixup") {
         "</table></body></html>";
 
     auto window = Dom::Window::create();
-    co_trya$(window->loadLocationAsync(Ref::Url::data("application/xhtml+xml"_mime, bytes(xhtml))));
+    co_trya$(window->loadLocationAsync(Ref::Url::data("application/xhtml+xml"_mime, bytes(xhtml)), Ref::Uti::PUBLIC_OPEN, ct));
     Box root = std::move(window->ensureRender().layout->children()[0]);
 
     auto expectedBodySubtree =
