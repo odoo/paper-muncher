@@ -32,7 +32,9 @@ class CLIReport(Reporter):
     def finish(self, manifests: model.Registry, results, context):
         print()
         if results.failed:
-            print(f"{vt100.BRIGHT_GREEN}// {fetchMessage(manifests, 'witty')}{vt100.RESET}")
+            print(
+                f"{vt100.BRIGHT_GREEN}// {fetchMessage(manifests, 'witty')}{vt100.RESET}"
+            )
             print(
                 f"{vt100.RED}Failed {results.failed} tests{vt100.RESET}, {vt100.GREEN}Passed {results.passed} tests{vt100.RESET}"
             )
@@ -40,7 +42,7 @@ class CLIReport(Reporter):
 
             print()
             print("Failed tests details:")
-            print(context.testFailed)
+            print(results.failedDetails)
 
         else:
             print(f"{vt100.GREEN}// {fetchMessage(manifests, 'nice')}{vt100.RESET}")
