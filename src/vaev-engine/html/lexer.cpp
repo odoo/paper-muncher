@@ -42,7 +42,7 @@ export struct HtmlLexer {
     using enum State;
 
     State _state = State::DATA;
-    State _returnState = State::NIL;
+    State _returnState = State::DATA;
 
     Opt<HtmlToken> _token;
     Opt<HtmlToken> _last;
@@ -1005,6 +1005,47 @@ export struct HtmlLexer {
 
             break;
         }
+
+        case State::SCRIPT_DATA_ESCAPED_DASH_DASH:
+            // 13.2.5.22 MARK: Script data escaped dash dash state
+            // U+002D HYPHEN-MINUS (-)
+            // Emit a U+002D HYPHEN-MINUS character token.
+            if (rune == '-') {
+                _emit('-');
+            }
+            // U+003C LESS-THAN SIGN (<)
+            // Switch to the script data escaped less-than sign state.
+            else if (rune == '<') {
+                _switchTo(State::SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN);
+            }
+            // U+003E GREATER-THAN SIGN (>)
+            // Switch to the script data state. Emit a U+003E GREATER-THAN SIGN character token.
+            else if (rune == '>') {
+                _switchTo(State::SCRIPT_DATA);
+                _emit('>');
+            }
+            // U+0000 NULL
+            // This is an unexpected-null-character parse error. Switch to the script data escaped state. Emit a U+FFFD REPLACEMENT CHARACTER character token.
+            else if (rune == 0) {
+                _raise("unexpected-null-character");
+                _switchTo(State::SCRIPT_DATA_ESCAPED);
+                _emit(0xFFFD);
+            }
+            // EOF
+            // This is an eof-in-script-html-comment-like-text parse error. Emit an end-of-file token.
+            else if (isEof) {
+                _raise("eof-in-script-html-comment-like-text");
+                _begin(HtmlToken::END_OF_FILE);
+                _emit();
+            }
+            // Anything else
+            // Switch to the script data escaped state. Emit the current input character as a character token.
+            else {
+                _switchTo(State::SCRIPT_DATA_ESCAPED);
+                _emit(rune);
+            }
+
+            break;
 
         case State::SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN: {
             // 13.2.5.23 MARK: Script data escaped less-than sign state
@@ -3791,7 +3832,4 @@ export struct HtmlLexer {
         }
     }
 };
-
-#undef FOREACH_TOKEN
-
 } // namespace Vaev::Html
