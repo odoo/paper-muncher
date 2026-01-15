@@ -207,19 +207,21 @@ static auto const RE_NUMBER = Re::chain(
 
 export struct Lexer {
     Io::SScan _scan;
-    Token _curr;
 
     Lexer(Str text) : _scan(text) {
-        _curr = _next(_scan);
     }
 
     Lexer(Io::SScan const& scan)
         : _scan(scan) {
-        _curr = _next(_scan);
     }
 
-    Token peek() const {
-        return _curr;
+    Token peek(usize offset = 1) const {
+        Io::SScan scan = _scan;
+        Token res = Token::NIL;
+        for (auto _ : range(offset)) {
+            res = _next(scan);
+        }
+        return res;
     }
 
     Token _nextIdent(Io::SScan& s) const {
@@ -392,9 +394,7 @@ export struct Lexer {
     }
 
     Token next() {
-        auto res = _curr;
-        _curr = _next(_scan);
-        return res;
+        return _next(_scan);
     }
 
     bool ended() const {

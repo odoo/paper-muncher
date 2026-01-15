@@ -31,9 +31,9 @@ Res<T> parseValue(Cursor<Css::Sst>& c) {
 export template <typename T>
 Res<T> parseValue(Str str) {
     Css::Lexer lex{str};
-    auto content = Css::consumeDeclarationValue(lex);
-    Cursor<Css::Sst> c{content};
-    return ValueParser<T>::parse(c);
+    auto [sst, _] = Css::consumeDeclarationValue(lex);
+    Cursor<Css::Sst> content{sst};
+    return ValueParser<T>::parse(content);
 }
 
 export template <typename T>

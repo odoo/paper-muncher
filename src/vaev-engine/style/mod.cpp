@@ -8,7 +8,6 @@ export import :style.matcher;
 export import :style.media;
 export import :style.origin;
 export import :style.page;
-export import :style.props;
 export import :style.rules;
 export import :style.selector;
 export import :style.stylesheet;

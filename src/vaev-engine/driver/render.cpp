@@ -21,7 +21,13 @@ export struct RenderResult {
 };
 
 export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media, Layout::Viewport viewport) {
-    Style::Computer computer{media, *dom->styleSheets, *dom->fontDatabase};
+    Style::Computer computer{
+        media,
+        dom->registeredPropertySet,
+        *dom->styleSheets,
+        *dom->fontDatabase,
+    };
+
     computer.build();
     computer.styleDocument(*dom);
 
