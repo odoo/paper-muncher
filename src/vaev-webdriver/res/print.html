@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF Sandbox (WebDriver2)</title>
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+            font-family: sans-serif;
+            font-size: 14px;
+        }
+
+        #app {
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            flex: 0 0 33.3%;
+        }
+
+        .panel > header {
+            padding: 4px;
+            border-bottom: 1px solid #ccc;
+            font-weight: bold;
+        }
+
+        .panel > main {
+            flex: 1;
+            overflow: auto;
+            padding: 4px;
+            box-sizing: border-box;
+            position: relative; /* for spinner overlay */
+        }
+
+        .divider {
+            width: 4px;
+            cursor: col-resize;
+            background: #ddd;
+            flex: 0 0 auto;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        input, select, button {
+            font: inherit;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- CODE PANEL ---------------------------------------------------------- -->
+    <section class="panel" id="codePanel">
+        <header>Code</header>
+        <main>
+            <div style="margin-bottom:4px;">
+                <button id="newSessionBtn">New Session</button>
+                <button id="renderBtn">Render PDF</button>
+            </div>
+            <div style="height: calc(100% - 30px);">
+        <textarea id="sourceHtml"><!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Sample</title>
+    <style>
+      body { font-family: sans-serif; padding: 2cm; }
+      h1   { color: #333; }
+    </style>
+  </head>
+  <body>
+    <h1>Hello from Paper-Muncher</h1>
+    <p>This is a test document.</p>
+  </body>
+</html>
+        </textarea>
+            </div>
+        </main>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- PDF PANEL ----------------------------------------------------------- -->
+    <section class="panel" id="pdfPanel">
+        <header>PDF Output</header>
+        <main>
+            <div id="spinner" style="
+        display:none;
+        position:absolute;
+        inset:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:rgba(255,255,255,0.6);
+        font-size:12px;
+        pointer-events:none;
+      ">
+                Rendering…
+            </div>
+            <iframe id="pdfViewer"></iframe>
+        </main>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SETTINGS PANEL ------------------------------------------------------ -->
+    <section class="panel" id="settingsPanel">
+        <header>Print Settings</header>
+        <main>
+            <div>
+                <strong>Page</strong>
+                <div>
+                    <label>
+                        Width (cm)<br>
+                        <input id="pageWidth" type="number" step="0.1" value="21">
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        Height (cm)<br>
+                        <input id="pageHeight" type="number" step="0.1" value="29.7">
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        Orientation<br>
+                        <select id="orientation">
+                            <option value="portrait" selected>Portrait</option>
+                            <option value="landscape">Landscape</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top:8px;">
+                <strong>Margins (cm)</strong>
+                <div>
+                    <label>
+                        Top<br>
+                        <input id="marginTop" type="number" step="0.1" value="1.5">
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        Right<br>
+                        <input id="marginRight" type="number" step="0.1" value="1.5">
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        Bottom<br>
+                        <input id="marginBottom" type="number" step="0.1" value="1.5">
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        Left<br>
+                        <input id="marginLeft" type="number" step="0.1" value="1.5">
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top:8px;">
+                <strong>Options</strong>
+                <div>
+                    <label>
+                        <input id="printBackground" type="checkbox" checked>
+                        Print background
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        <input id="shrinkToFit" type="checkbox" checked>
+                        Shrink to fit
+                    </label>
+                </div>
+            </div>
+        </main>
+    </section>
+</div>
+
+<script>
+    // --- CONFIG --------------------------------------------------------------
+    const BASE_URL = `${location.protocol}//${location.host}`;
+
+    // --- DOM -----------------------------------------------------------------
+    const newSessionBtn = document.getElementById('newSessionBtn');
+    const renderBtn = document.getElementById('renderBtn');
+    const sourceHtml = document.getElementById('sourceHtml');
+    const pdfViewer = document.getElementById('pdfViewer');
+    const spinnerEl = document.getElementById('spinner');
+
+    // --- STATE ---------------------------------------------------------------
+    let sessionId = null;
+    let isRendering = false;
+
+    function debounce(fn, delay) {
+        let t = null;
+        return function (...args) {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+    function showSpinner(show) {
+        spinnerEl.style.display = show ? 'flex' : 'none';
+    }
+
+    // --- WEBDRIVER2 HELPERS --------------------------------------------------
+    async function wdFetch(path, options = {}) {
+        const url = BASE_URL.replace(/\/+$/, '') + path;
+        const res = await fetch(url, {
+            method: 'GET',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8',
+                ...(options.headers || {})
+            },
+            body: options.body ? JSON.stringify(options.body) : undefined
+        });
+        const json = await res.json().catch(() => null);
+        if (!res.ok) {
+            throw new Error('WebDriver error: ' + res.status);
+        }
+        return json;
+    }
+
+    async function createSession() {
+        const body = {
+            capabilities: {
+                alwaysMatch: {browserName: "vaev"}
+            }
+        };
+        const json = await wdFetch('/session', {method: 'POST', body});
+        const id = json.value && (json.value.sessionId || json.value["sessionId"]);
+        if (!id) throw new Error('No sessionId in response');
+        sessionId = id;
+        return sessionId;
+    }
+
+    async function ensureSession() {
+        if (sessionId) return sessionId;
+        return createSession();
+    }
+
+    function buildDataUrl(html) {
+        const encoded = encodeURIComponent(html);
+        return 'data:text/html;charset=utf-8,' + encoded;
+    }
+
+    function buildPrintOptions() {
+        const widthCm = parseFloat(document.getElementById('pageWidth').value) || 21;
+        const heightCm = parseFloat(document.getElementById('pageHeight').value) || 29.7;
+
+        const marginTop = (parseFloat(document.getElementById('marginTop').value) || 1.5);
+        const marginRight = (parseFloat(document.getElementById('marginRight').value) || 1.5);
+        const marginBottom = (parseFloat(document.getElementById('marginBottom').value) || 1.5);
+        const marginLeft = (parseFloat(document.getElementById('marginLeft').value) || 1.5);
+
+        return {
+            orientation: document.getElementById('orientation').value,
+            page: {
+                width: widthCm,
+                height: heightCm
+            },
+            margin: {
+                top: marginTop,
+                right: marginRight,
+                bottom: marginBottom,
+                left: marginLeft
+            },
+            printBackground: document.getElementById('printBackground').checked,
+            shrinkToFit: document.getElementById('shrinkToFit').checked
+        };
+    }
+
+    function showPdfFromBase64(base64) {
+        const bytes = atob(base64);
+        const len = bytes.length;
+        const buffer = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            buffer[i] = bytes.charCodeAt(i);
+        }
+        const blob = new Blob([buffer], {type: 'application/pdf'});
+        const url = URL.createObjectURL(blob);
+        pdfViewer.src = url;
+    }
+
+    // Single render function used by button + auto-preview
+    async function renderPdf() {
+        if (isRendering) return; // simple coalescing
+        isRendering = true;
+        showSpinner(true);
+        try {
+            const sid = await ensureSession();
+            const html = sourceHtml.value;
+            const dataUrl = buildDataUrl(html);
+
+            await wdFetch(`/session/${encodeURIComponent(sid)}/url`, {
+                method: 'POST',
+                body: {url: dataUrl}
+            });
+
+            const printOptions = buildPrintOptions();
+            const json = await wdFetch(`/session/${encodeURIComponent(sid)}/print`, {
+                method: 'POST',
+                body: printOptions
+            });
+
+            const pdfBase64 = json.value && (json.value.data || json.value.pdf || json.value);
+            if (!pdfBase64) {
+                throw new Error('No PDF data in response');
+            }
+
+            showPdfFromBase64(pdfBase64);
+        } catch (e) {
+            alert(e.message);
+        } finally {
+            isRendering = false;
+            showSpinner(false);
+        }
+    }
+
+    const renderPdfDebounced = debounce(renderPdf, 300);
+
+    // --- BUTTONS / EVENTS ----------------------------------------------------
+    newSessionBtn.addEventListener('click', async () => {
+        try {
+            sessionId = null;
+            await createSession();
+            // Optionally auto-render on new session:
+            renderPdfDebounced();
+        } catch (e) {
+            alert(e.message);
+        }
+    });
+
+    renderBtn.addEventListener('click', () => {
+        renderPdfDebounced();
+    });
+
+    sourceHtml.addEventListener('input', () => {
+        renderPdfDebounced();
+    });
+
+    // --- RESIZABLE PANELS ----------------------------------------------------
+    (function setupResizers() {
+        const app = document.getElementById('app');
+        const panels = Array.from(app.querySelectorAll('.panel'));
+        const dividers = Array.from(app.querySelectorAll('.divider'));
+
+        let dragging = false;
+        let startX = 0;
+        let leftPanel = null;
+        let rightPanel = null;
+        let leftWidth = 0;
+        let rightWidth = 0;
+
+        dividers.forEach((divider, i) => {
+            divider.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                dragging = true;
+                startX = e.clientX;
+                leftPanel = panels[i];
+                rightPanel = panels[i + 1];
+                const leftRect = leftPanel.getBoundingClientRect();
+                const rightRect = rightPanel.getBoundingClientRect();
+                leftWidth = leftRect.width;
+                rightWidth = rightRect.width;
+            });
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!dragging || !leftPanel || !rightPanel) return;
+            const dx = e.clientX - startX;
+
+            const newLeft = leftWidth + dx;
+            const newRight = rightWidth - dx;
+            if (newLeft < 100 || newRight < 100) return;
+
+            leftPanel.style.flex = '0 0 ' + newLeft + 'px';
+            rightPanel.style.flex = '0 0 ' + newRight + 'px';
+        });
+
+        window.addEventListener('mouseup', () => {
+            dragging = false;
+            leftPanel = null;
+            rightPanel = null;
+        });
+    })();
+
+    // Optional: first auto render on load
+    renderPdfDebounced();
+</script>
+</body>
+</html>

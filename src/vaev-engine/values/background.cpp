@@ -19,13 +19,11 @@ using namespace Karm;
 
 namespace Vaev {
 
-export enum struct BackgroundAttachment {
-    SCROLL,
-    FIXED,
-    LOCAL,
-
-    _LEN
-};
+// https://drafts.csswg.org/css-backgrounds/#background-attachment
+using BackgroundAttachment = Union<
+    Keywords::Scroll,
+    Keywords::Fixed,
+    Keywords::Local>;
 
 // MARK: Background Position ---------------------------------------------------
 // https://www.w3.org/TR/css-backgrounds-3/#typedef-bg-position
@@ -265,7 +263,7 @@ export struct BackgroundRepeat {
 
 export struct BackgroundLayer {
     Opt<Image> image;
-    BackgroundAttachment attachment;
+    BackgroundAttachment attachment = Keywords::FIXED;
     BackgroundPosition position;
     BackgroundRepeat repeat;
 

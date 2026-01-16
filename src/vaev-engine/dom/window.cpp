@@ -84,7 +84,12 @@ export struct Window {
     }
 
     void computeStyle() {
-        Style::Computer computer{_media, *_document->styleSheets, *_document->fontDatabase};
+        Style::Computer computer{
+            _media,
+            _document->registeredPropertySet,
+            *_document->styleSheets,
+            *_document->fontDatabase,
+        };
         computer.build();
         computer.styleDocument(*_document);
     }
