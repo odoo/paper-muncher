@@ -188,7 +188,10 @@ export Generator<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings 
     auto media = Style::Media::forPrint(settings);
 
     Style::Computer computer{
-        media, *dom->styleSheets, *dom->fontDatabase
+        media,
+        dom->registeredPropertySet,
+        *dom->styleSheets,
+        *dom->fontDatabase,
     };
     computer.build();
     computer.styleDocument(*dom);

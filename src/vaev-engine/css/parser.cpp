@@ -17,6 +17,11 @@ export struct Sst;
 
 export using Content = Vec<Sst>;
 
+export enum struct Important : u8 {
+    UNSET,
+    YES,
+};
+
 #define FOREACH_SST(SST) \
     SST(RULE)            \
     SST(FUNC)            \
@@ -40,12 +45,18 @@ export struct Sst {
     Token token = Token(Token::NIL);
     Opt<Box<Sst>> prefix{};
     Content content{};
+    Important important = Important::UNSET;
 
     Sst(Type type) : type(type) {}
 
     Sst(Token token) : type(TOKEN), token(token) {}
 
     Sst(Content content) : type(LIST), content(content) {}
+
+    // https://drafts.csswg.org/css-variables-2/#guaranteed-invalid
+    static Sst guaranteedInvalid() {
+        return Token::badString("");
+    }
 
     void repr(Io::Emit& e) const {
         if (type == TOKEN) {
@@ -200,18 +211,48 @@ Sst consumeAtRule(Lexer& lex) {
     }
 }
 
-export Content consumeDeclarationValue(Lexer& lex) {
+Important consumeImportant(Lexer& lex) {
+    if (lex.peek() != Css::Token::delim("!"))
+        return Important::UNSET;
+    lex.next();
+
+    auto copy = lex;
+    eatWhitespace(copy);
+    if (copy.next() != Css::Token::ident("important"))
+        return Important::UNSET;
+    lex = copy;
+    return Important::YES;
+}
+
+export bool endedDeclarationValue(Lexer& lex) {
+    return lex.peek() == Token::END_OF_FILE or
+           lex.peek() == Token::SEMICOLON or
+           lex.peek() == Token::RIGHT_CURLY_BRACKET;
+}
+
+export Tuple<Content, Important> consumeDeclarationValue(Lexer& lex) {
     Content value;
+
     // 3. While the next input token is a <whitespace-token>, consume the next input token.
     eatWhitespace(lex);
 
     // 4. As long as the next input token is anything other than an <EOF-token>,
     //    consume a component value and append it to the declaration’s value.
-    while ((lex.peek() != Token::END_OF_FILE and lex.peek() != Token::SEMICOLON and lex.peek() != Token::RIGHT_CURLY_BRACKET)) {
-        value.pushBack(consumeComponentValue(lex));
-        eatWhitespace(lex);
+    while (not endedDeclarationValue(lex)) {
+        // 5. If the last two non-<whitespace-token>s in the declaration’s
+        //    value are a <delim-token> with the value "!" followed by an
+        //    <ident-token> with a value that is an ASCII case-insensitive match
+        //    for "important", remove them from the declaration’s value
+        //    and set the declaration’s important flag to true.
+        if (consumeImportant(lex) == Important::YES) {
+            eatWhitespace(lex);
+            return {std::move(value), Important::YES};
+        } else {
+            value.pushBack(consumeComponentValue(lex));
+            eatWhitespace(lex);
+        }
     }
-    return value;
+    return {std::move(value), Important::UNSET};
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-style-block
@@ -286,6 +327,7 @@ Content consumeDeclarationBlock(Lexer& lex) {
     return res;
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-declaration
 export Opt<Sst> consumeDeclaration(Lexer& lex) {
     Sst decl{Sst::DECL};
     decl.token = lex.next();
@@ -303,7 +345,9 @@ export Opt<Sst> consumeDeclaration(Lexer& lex) {
     lex.next();
 
     // Parse the declaration’s value.
-    decl.content = consumeDeclarationValue(lex);
+    auto [content, important] = consumeDeclarationValue(lex);
+    decl.content = std::move(content);
+    decl.important = important;
 
     return decl;
 }

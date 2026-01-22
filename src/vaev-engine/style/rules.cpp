@@ -10,7 +10,6 @@ import :style.fonts;
 import :style.media;
 import :style.origin;
 import :style.page;
-import :style.props;
 import :style.selector;
 import :style.namespace_;
 import :style.matcher;
@@ -26,10 +25,10 @@ export struct Rule;
 // https://www.w3.org/TR/cssom-1/#the-cssstylerule-interface
 export struct StyleRule {
     Selector selector = TypeSelector::universal();
-    Vec<StyleProp> props;
+    Vec<Rc<Property>> props;
     Origin origin = Origin::AUTHOR;
 
-    static StyleRule parse(Css::Sst const& sst, Origin origin, Namespace& ns) {
+    static StyleRule parse(PropertyRegistry& propertyRegistry, Css::Sst const& sst, Origin origin, Namespace& ns) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
@@ -41,20 +40,18 @@ export struct StyleRule {
         // Parse the selector.
         auto& prefix = sst.prefix.unwrap();
         Cursor<Css::Sst> prefixContent = prefix->content;
-        auto maybeSelector = Selector::parse(prefixContent, ns);
-        if (maybeSelector) {
-            res.selector = maybeSelector.take();
+        if (auto s = Selector::parse(prefixContent, ns)) {
+            res.selector = s.take();
         } else {
-            logWarnIf(debugRule, "failed to parse selector: {}: {}", prefix->content, maybeSelector);
+            logWarnIf(debugRule, "failed to parse selector: {}: {}", prefix->content, s);
             res.selector = EmptySelector{};
         }
 
         // Parse the properties.
         for (auto const& item : sst.content) {
             if (item == Css::Sst::DECL) {
-                auto prop = parseDeclaration<StyleProp>(item);
-                if (prop)
-                    res.props.pushBack(prop.take());
+                if (auto p = propertyRegistry.parseDeclaration(item, PropertyRegistry::TOP_LEVEL))
+                    res.props.pushBack(p.take());
             } else {
                 logWarnIf(debugRule, "unexpected item in style rule: {}", item);
             }
@@ -105,7 +102,7 @@ export struct MediaRule {
     MediaQuery media;
     Vec<Rule> rules;
 
-    static MediaRule parse(Css::Sst const& sst, Origin origin, Namespace& ns);
+    static MediaRule parse(PropertyRegistry& registry, Css::Sst const& sst, Origin origin, Namespace& ns);
 
     bool match(Media const& m) const {
         return media.match(m);
@@ -119,7 +116,7 @@ export struct FontFaceRule {
     Vec<FontDesc> descs;
 
     static FontFaceRule parse(Css::Sst const& sst) {
-        return {parseDeclarations<FontDesc>(sst, false)};
+        return {parseDeclarations<FontDesc>(sst)};
     }
 
     void repr(Io::Emit& e) const {
@@ -175,10 +172,10 @@ export struct NamespaceRule {
 
 export struct PageRule {
     Vec<PageSelector> selectors;
-    Vec<StyleProp> props;
+    Vec<Rc<Property>> props;
     Vec<PageAreaRule> areas;
 
-    static PageRule parse(Css::Sst const& sst) {
+    static PageRule parse(PropertyRegistry& registry, Css::Sst const& sst) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
@@ -195,12 +192,12 @@ export struct PageRule {
         // Parse the properties.
         for (auto const& item : sst.content) {
             if (item == Css::Sst::DECL) {
-                auto prop = parseDeclaration<StyleProp>(item);
+                auto prop = registry.parseDeclaration(item, PropertyRegistry::TOP_LEVEL);
                 if (prop)
                     res.props.pushBack(prop.take());
             } else if (item == Css::Sst::RULE and
                        item.token == Css::Token::AT_KEYWORD) {
-                auto rule = PageAreaRule::parse(item);
+                auto rule = PageAreaRule::parse(registry, item);
                 if (rule)
                     res.areas.pushBack(*rule);
             } else {
@@ -223,14 +220,24 @@ export struct PageRule {
         return false;
     }
 
-    void apply(PageSpecifiedValues& c) const {
+    void apply(PropertyRegistry& registry, PageSpecifiedValues& c) const {
         for (auto const& prop : props) {
-            prop.apply(*c.style, *c.style);
+            if (prop->isBogusProperty())
+                continue;
+
+            if (prop->isShorthandProperty()) {
+                for (auto& longhand : prop->expandShorthand(registry, *c.style, *c.style)) {
+                    longhand->apply(*c.style, *c.style);
+                }
+                continue;
+            }
+
+            prop->apply(*c.style, *c.style);
         }
 
         for (auto const& area : areas) {
             auto& areaPseudoElement = c.area(area.area);
-            area.apply(*areaPseudoElement.specifiedValues());
+            area.apply(registry, *c.style, *areaPseudoElement.specifiedValues());
         }
     }
 
@@ -251,26 +258,26 @@ using _Rule = Union<
 export struct Rule : _Rule {
     using _Rule::_Rule;
 
-    static Rule parse(Css::Sst const& sst, Origin origin, Namespace& ns) {
+    static Rule parse(PropertyRegistry& registry, Css::Sst const& sst, Origin origin, Namespace& ns) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
         auto tok = sst.token;
         if (tok.data == "@media")
-            return MediaRule::parse(sst, origin, ns);
+            return MediaRule::parse(registry, sst, origin, ns);
         else if (tok.data == "@import")
             return ImportRule::parse(sst);
         else if (tok.data == "@font-face")
             return FontFaceRule::parse(sst);
         else if (tok.data == "@page")
-            return PageRule::parse(sst);
+            return PageRule::parse(registry, sst);
         else if (tok.data == "@supports") {
             logWarnIf(debugRule, "cannot parse '@supports' at-rule");
             return StyleRule{};
         } else if (tok.data == "@namespace") {
             return NamespaceRule::parse(sst, ns);
         } else
-            return StyleRule::parse(sst, origin, ns);
+            return StyleRule::parse(registry, sst, origin, ns);
     }
 
     void repr(Io::Emit& e) const {
@@ -280,7 +287,7 @@ export struct Rule : _Rule {
     }
 };
 
-MediaRule MediaRule::parse(Css::Sst const& sst, Origin origin, Namespace& ns) {
+MediaRule MediaRule::parse(PropertyRegistry& registry, Css::Sst const& sst, Origin origin, Namespace& ns) {
     if (sst != Css::Sst::RULE)
         panic("expected rule");
 
@@ -297,7 +304,7 @@ MediaRule MediaRule::parse(Css::Sst const& sst, Origin origin, Namespace& ns) {
     // Parse the rules.
     for (auto const& item : sst.content) {
         if (item == Css::Sst::RULE) {
-            res.rules.pushBack(Rule::parse(item, origin, ns));
+            res.rules.pushBack(Rule::parse(registry, item, origin, ns));
         } else {
             logWarnIf(debugRule, "unexpected item in media rule: {}", item.type);
         }

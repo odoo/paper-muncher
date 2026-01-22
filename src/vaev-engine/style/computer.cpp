@@ -17,6 +17,7 @@ namespace Vaev::Style {
 
 export struct Computer {
     Media _media;
+    PropertyRegistry& _propertyRegistry;
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
     RuleIndex _ruleIndex = {};
@@ -27,7 +28,7 @@ export struct Computer {
         rule.visit(Visitor{
             [&](PageRule const& r) {
                 if (r.match(page))
-                    r.apply(c);
+                    r.apply(_propertyRegistry, c);
             },
             [&](MediaRule const& r) {
                 if (r.match(_media))
@@ -54,29 +55,53 @@ export struct Computer {
         // Compute computed style
         auto computed = makeRc<SpecifiedValues>(SpecifiedValues::initial());
         computed->inherit(parent);
-        Vec<Cursor<StyleProp>> importantProps;
+        Vec<Rc<Property>> importantProps;
 
         // HACK: Apply custom properties first
         for (auto const& [styleRule, _] : matchingRules) {
             for (auto& prop : styleRule->props) {
-                if (prop.is<CustomProp>())
-                    prop.apply(parent, *computed);
+                if (prop->isCustomProperty())
+                    prop->apply(parent, *computed);
             }
         }
 
         for (auto const& [styleRule, _] : matchingRules) {
             for (auto& prop : styleRule->props) {
-                if (not prop.is<CustomProp>()) {
-                    if (prop.important == Important::NO)
-                        prop.apply(parent, *computed);
-                    else
-                        importantProps.pushBack(&prop);
+                if (prop->isBogusProperty())
+                    continue;
+
+                if (prop->isCustomProperty())
+                    continue;
+
+                if (prop->important == Css::Important::YES) {
+                    importantProps.pushBack(prop);
+                    continue;
                 }
+
+                if (prop->isShorthandProperty()) {
+                    for (auto& longhand : prop->expandShorthand(_propertyRegistry, parent, *computed)) {
+                        longhand->apply(parent, *computed);
+                    }
+                    continue;
+                }
+
+                prop->apply(parent, *computed);
             }
         }
 
-        for (auto const& prop : importantProps)
+        for (auto const& prop : importantProps) {
+            if (prop->isBogusProperty())
+                continue;
+
+            if (prop->isShorthandProperty()) {
+                for (auto& longhand : prop->expandShorthand(_propertyRegistry, parent, *computed)) {
+                    longhand->apply(parent, *computed);
+                }
+                continue;
+            }
+
             prop->apply(parent, *computed);
+        }
 
         return computed;
     }
@@ -101,44 +126,49 @@ export struct Computer {
     }
 
     // https://www.w3.org/TR/css-cascade-4/#author-presentational-hint-origin
-    static Vec<StyleProp> _considerPresentationalHint(Gc::Ref<Dom::Element> el) {
+    Vec<Rc<Property>> _considerPresentationalHint(Gc::Ref<Dom::Element> el) {
         if (el->namespaceUri() != Html::NAMESPACE)
             return {};
 
-        Vec<StyleProp> res;
+        Vec<Rc<Property>> res;
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-fgcolor
         if (auto fgcolor = el->getAttribute(Html::FGCOLOR_ATTR)) {
-            auto value = parseValue<Color>(fgcolor.unwrap());
-            if (value)
-                res.pushBack(ColorProp{value.take()});
+            if (auto property = _propertyRegistry.parseValue(
+                    Properties::COLOR, fgcolor.unwrap(), {}
+                ))
+                res.pushBack(property.take());
         }
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-bgcolor
         if (auto bgcolor = el->getAttribute(Html::BGCOLOR_ATTR)) {
-            auto value = parseValue<Color>(bgcolor.unwrap());
-            if (value)
-                res.pushBack(BackgroundColorProp{value.take()});
+            if (auto property = _propertyRegistry.parseValue(
+                    Properties::BACKGROUND_COLOR, bgcolor.unwrap(), {}
+                ))
+                res.pushBack(property.take());
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
         if (auto width = el->getAttribute(Html::WIDTH_ATTR)) {
-            auto value = parseValue<Size>(width.unwrap());
-            if (value)
-                res.pushBack(WidthProp{value.take()});
+            if (auto property = _propertyRegistry.parseValue(
+                    Properties::WIDTH, width.unwrap(), {}
+                ))
+                res.pushBack(property.take());
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
         if (auto height = el->getAttribute(Html::HEIGHT_ATTR)) {
-            auto value = parseValue<Size>(height.unwrap());
-            if (value)
-                res.pushBack(HeightProp{value.take()});
+            if (auto property = _propertyRegistry.parseValue(
+                    Properties::HEIGHT, height.unwrap(), {}
+                ))
+                res.pushBack(property.take());
         }
 
         // https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
         if (auto size = el->getAttribute(Html::SIZE_ATTR)) {
-            auto value = parseValue<Integer>(size.unwrap());
-            if (value)
-                res.pushBack(WidthProp{CalcValue<PercentOr<Length>>{Length{static_cast<f64>(value.take()), Length::CH}}});
+            if (auto property = _propertyRegistry.parseValue(
+                    Properties::WIDTH, Io::format("{}ch", size), {}
+                ))
+                res.pushBack(property.take());
         }
 
         return res;
@@ -206,7 +236,7 @@ export struct Computer {
     }
 
     // https://svgwg.org/specs/integration/#svg-css-sizing
-    static void _applySVGElementSizingRules(Gc::Ref<Dom::Element> svgEl, Vec<StyleProp>& styleProps) {
+    void _applySVGElementSizingRules(Gc::Ref<Dom::Element> svgEl, Vec<Rc<Property>>& styleProps) {
         if (auto parentEl = svgEl->parentNode()->is<Dom::Element>()) {
             // **If we have an <svg> element inside a CSS context**
             if (parentEl->qualifiedName.ns == Svg::NAMESPACE)
@@ -216,25 +246,31 @@ export struct Computer {
             // - ...
             // - If any of the sizing attributes are missing, resolve the missing ‘svg’ element width to '300px' and missing
             // height to '150px' (using CSS 2.1 replaced elements size calculation).
-            if (not svgEl->hasAttribute(Svg::VIEW_BOX_ATTR)) {
-                if (not svgEl->hasAttribute(Svg::WIDTH_ATTR)) {
-                    styleProps.pushBack(WidthProp{CalcValue<PercentOr<Length>>{PercentOr<Length>{Length{Au{300}}}}});
-                }
-                if (not svgEl->hasAttribute(Svg::HEIGHT_ATTR)) {
-                    styleProps.pushBack(HeightProp{CalcValue<PercentOr<Length>>{PercentOr<Length>{Length{Au{150}}}}});
-                }
-            }
+            if (svgEl->hasAttribute(Svg::VIEW_BOX_ATTR))
+                return;
+
+            if (not svgEl->hasAttribute(Svg::WIDTH_ATTR))
+                styleProps.pushBack(
+                    _propertyRegistry.parseValue(Properties::WIDTH, "300px", {}).unwrap()
+                );
+
+            if (not svgEl->hasAttribute(Svg::HEIGHT_ATTR))
+                styleProps.pushBack(
+                    _propertyRegistry.parseValue(Properties::HEIGHT, "150px", {}).unwrap()
+                );
         }
     }
 
     // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
-    Vec<StyleProp> _considerPresentationAttributes(Gc::Ref<Dom::Element> el) {
+    Vec<Rc<Property>> _considerPresentationAttributes(Gc::Ref<Dom::Element> el) {
         if (el->qualifiedName.ns != Svg::NAMESPACE)
             return {};
 
-        Vec<StyleProp> styleProps;
+        Vec<Rc<Property>> styleProps;
         for (auto [attr, attrValue] : el->attributes.iterUnordered()) {
-            parseSVGPresentationAttribute(attr.name, attrValue->value, styleProps);
+            if (auto property = _propertyRegistry.parsePresentationAttribute(attr.name, attrValue->value)) {
+                styleProps.pushBack(property.take());
+            }
         }
 
         if (el->qualifiedName == Svg::SVG_TAG)
@@ -258,7 +294,10 @@ export struct Computer {
         // Get the style attribute if any
         auto styleAttr = el->style();
         StyleRule styleRule{
-            .props = parseDeclarations<StyleProp>(styleAttr ? *styleAttr : ""),
+            .props = _propertyRegistry.parseDeclarations(
+                styleAttr ? *styleAttr : "",
+                PropertyRegistry::TOP_LEVEL
+            ),
             .origin = Origin::INLINE,
         };
         matchingRules.pushBack({&styleRule, INLINE_SPEC});
