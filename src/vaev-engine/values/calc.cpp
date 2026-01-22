@@ -119,16 +119,17 @@ struct ValueParser<CalcValue<T>> {
             if (prefixToken.data == "calc(") {
                 Cursor<Css::Sst> content = c.peek().content;
                 auto lhs = try$(parseVal(content));
-                c.next();
 
                 auto op = parseOp(content);
-                if (not op)
+                if (not op) {
+                    c.next();
                     return Ok(CalcValue<T>{lhs});
-
-                if (content.peek() == Css::Token::WHITESPACE) {
-                    content.next();
                 }
+
+                eatWhitespace(content);
                 auto rhs = try$(parseVal(content));
+
+                c.next();
                 return Ok(CalcValue<T>{op.unwrap(), lhs, rhs});
             }
         }

@@ -1,17 +1,17 @@
 module Vaev.Engine;
 
-import :style.props;
+import :props.registry;
 
 namespace Vaev::Style {
 
 SpecifiedValues const& SpecifiedValues::initial() {
     static SpecifiedValues computed = [] {
-        SpecifiedValues res{};
-        StyleProp::any([&]<typename T>() {
-            if constexpr (requires { T::initial(); })
-                T{}.apply(res);
-        });
-        return res;
+        SpecifiedValues values{};
+        auto registry = defaultRegistry();
+        for (auto& [_, registration] : registry.registrations().iterUnordered())
+            if (not registration->flags().has(Property::SHORTHAND_PROPERTY))
+                registration->initial()->apply(values, values);
+        return values;
     }();
     return computed;
 }

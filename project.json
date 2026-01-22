@@ -9,6 +9,10 @@
             "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
         },
+        "skift/hideo": {
+            "git": "https://codeberg.org/skift/hideo.git",
+            "tag": "main"
+        },
         "cute-engineering/cat": {
             "git": "https://codeberg.org/cute-engineering/cat.git",
             "tag": "v0.12.0"

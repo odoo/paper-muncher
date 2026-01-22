@@ -100,11 +100,11 @@ export using Gap = Union<
     CalcValue<PercentOr<Length>>>;
 
 export struct Gaps {
-    Gap x = Keywords::NORMAL;
-    Gap y = Keywords::NORMAL;
+    Gap row = Keywords::NORMAL;
+    Gap col = Keywords::NORMAL;
 
     void repr(Io::Emit& e) const {
-        e("(gaps {} {})", x, y);
+        e("(gaps {} {})", row, col);
     }
 };
 

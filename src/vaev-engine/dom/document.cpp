@@ -5,12 +5,16 @@ import Karm.Ref;
 import Karm.Font;
 import :dom.node;
 import :dom.element;
+import :props.base;
+import :props.registry;
 
 namespace Vaev::Style {
 export struct StyleSheetList;
 } // namespace Vaev::Style
 
 namespace Vaev::Dom {
+
+export struct Window;
 
 export enum struct QuirkMode {
     NO,
@@ -29,7 +33,12 @@ export struct Document : Node {
     String xmlEncoding;
     String xmlStandalone = "no"s; // https://www.w3.org/TR/xml/#NT-SDDecl
 
+    // https://drafts.csswg.org/cssom/#dom-documentorshadowroot-stylesheets
     Gc::Ptr<Style::StyleSheetList> styleSheets;
+
+    // https://drafts.css-houdini.org/css-properties-values-api/#dom-window-registeredpropertyset-slot
+    Style::PropertyRegistry registeredPropertySet = Style::defaultRegistry();
+
     Opt<Rc<Font::Database>> fontDatabase;
 
     Document(Ref::Url url)

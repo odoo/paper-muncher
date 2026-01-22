@@ -10,7 +10,7 @@ namespace Vaev::Style::Tests {
 test$("vaev-css-build-display") {
     auto testCase = [&](Str input, Display expected) -> Res<> {
         auto lex = Css::Lexer{input};
-        auto val = consumeDeclarationValue(lex);
+        auto [val, _] = consumeDeclarationValue(lex);
         Cursor<Css::Sst> sst{val};
         auto res = parseValue<Display>(sst);
         expect$(res);
@@ -69,28 +69,23 @@ test$("vaev-css-build-display") {
 
 test$("vaev-css-build-margin") {
     auto testCase = [&](Str input, Math::Insets<Width> expected) -> Res<> {
-        auto lex = Css::Lexer{input};
-        auto val = consumeDeclaration(lex);
-        Css::Sst sst{val.unwrap()};
-
-        auto res = parseDeclaration<StyleProp>(sst);
+        auto res = defaultRegistry().parseValue(Properties::MARGIN, input, {});
         expect$(res);
 
-        SpecifiedValues c;
-        res.unwrap().apply(c, c);
+        auto prop = try$(res.take().cast<MarginProperty>());
 
-        expectEq$(Io::format("{}", *c.margin), Io::format("{}", expected));
+        expectEq$(Io::format("{}", prop->_value), Io::format("{}", expected));
 
         return Ok();
     };
 
     try$(testCase(
-        "margin: 30px;",
+        "30px;",
         Margin{Width{CalcValue<PercentOr<Length>>{Length{30_au}}}}
     ));
 
     try$(testCase(
-        "margin: 1px 2px;",
+        "1px 2px;",
         Margin{
             Width{CalcValue<PercentOr<Length>>{Length{1_au}}},
             Width{CalcValue<PercentOr<Length>>{Length{2_au}}},
@@ -98,7 +93,7 @@ test$("vaev-css-build-margin") {
     ));
 
     try$(testCase(
-        "margin: 1px 2px 3px;",
+        "1px 2px 3px;",
         Margin{
             Width{CalcValue<PercentOr<Length>>{Length{1_au}}},
             Width{CalcValue<PercentOr<Length>>{Length{2_au}}},
@@ -107,7 +102,7 @@ test$("vaev-css-build-margin") {
     ));
 
     try$(testCase(
-        "margin: 1px 2px 3px 4px;",
+        "1px 2px 3px 4px;",
         Margin{
             Width{CalcValue<PercentOr<Length>>{Length{1_au}}},
             Width{CalcValue<PercentOr<Length>>{Length{2_au}}},
