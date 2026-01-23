@@ -92,7 +92,8 @@ export struct Property : Meta::NoCopy {
         // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
         virtual Res<Rc<Property>> parsePresentationAttribute(Str style) {
             Css::Lexer lex{style};
-            auto [content, _] = Css::consumeDeclarationValue(lex);
+            Diag::Collector diags = Diag::Collector::ignore();
+            auto [content, _] = Css::consumeDeclarationValue(lex, diags);
             Cursor<Css::Sst> cursor = content;
             return parse(cursor);
         }
@@ -552,7 +553,8 @@ export struct PropertyRegistry {
 
     Res<Rc<Property>> parseValue(Symbol propertyName, Str propertyValue, Flags<Options> options) {
         Css::Lexer lex{propertyValue};
-        auto [content, _] = Css::consumeDeclarationValue(lex);
+        Diag::Collector diags = Diag::Collector::ignore();
+        auto [content, _] = Css::consumeDeclarationValue(lex, diags);
         return parseValue(propertyName, content, options);
     }
 
@@ -594,7 +596,8 @@ export struct PropertyRegistry {
 
     Vec<Rc<Property>> parseDeclarations(Str style, Flags<Options> options) {
         Css::Lexer lex{style};
-        auto sst = Css::consumeDeclarationList(lex, true);
+        auto diags = Diag::Collector::ignore();
+        auto sst = Css::consumeDeclarationList(lex, diags, true);
         return parseDeclarations(sst, options);
     }
 

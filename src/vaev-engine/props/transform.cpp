@@ -146,7 +146,8 @@ export struct TransformProperty : Property {
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
             Css::Lexer lex{style};
-            auto [sst, _] = Css::consumeDeclarationValue(lex);
+            auto diags = Diag::Collector::ignore();
+            auto [sst, _] = Css::consumeDeclarationValue(lex, diags);
             _fixTransformNumberToDimensions(sst);
             Cursor<Css::Sst> content{sst};
             return parse(content);

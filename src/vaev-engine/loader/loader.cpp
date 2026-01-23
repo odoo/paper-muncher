@@ -109,7 +109,15 @@ Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Style::PropertyRegistry& re
     auto buf = co_trya$(Aio::readAllUtf8Async(*respBody, ct));
 
     Io::SScan s{buf};
-    co_return Ok(Style::StyleSheet::parse(registry, s, url, origin));
+    Diag::Collector diags;
+    auto stylesheet = Style::StyleSheet::parse(registry, s, diags, url, origin);
+
+    if (diags.any()) {
+        Diag::Renderer render{buf, url};
+        render.render(Sys::err(), diags);
+    }
+
+    co_return Ok(stylesheet);
 }
 
 Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct);
@@ -141,7 +149,12 @@ Async::Task<> _fetchResourcesAsync(Style::PropertyRegistry& registry, Http::Clie
     } else if (el and el->qualifiedName == Html::STYLE_TAG) {
         auto text = el->textContent();
         Io::SScan textScan{text};
-        auto sheet = Style::StyleSheet::parse(registry, textScan, node->baseURI());
+        Diag::Collector diags;
+        auto sheet = Style::StyleSheet::parse(registry, textScan, diags, node->baseURI());
+        if (diags.any()) {
+            Diag::Renderer render{text, node->baseURI()};
+            render.render(Sys::err(), diags);
+        }
         sb.add(std::move(sheet));
     } else if (el and el->qualifiedName == Html::LINK_TAG) {
         auto rel = el->getAttribute(Html::REL_ATTR);

@@ -30,6 +30,7 @@
         "karm-ref",
         "karm-print",
         "karm-scene",
-        "karm-font"
+        "karm-font",
+        "karm-diag"
     ]
 }

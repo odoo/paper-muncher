@@ -1,6 +1,7 @@
 export module Vaev.Engine:css.parser;
 
 import Karm.Logger;
+import Karm.Diag;
 
 import :css.lexer;
 
@@ -108,39 +109,43 @@ export struct Sst {
 
 // MARK: Parser ----------------------------------------------------------------
 
-Sst consumeAtRule(Lexer& lex);
-export Content consumeDeclarationList(Lexer& lex, bool topLevel = true);
-Content consumeDeclarationBlock(Lexer& lex);
-Sst consumeComponentValue(Lexer& lex);
-Sst consumeBlock(Lexer& lex, Token::Type term);
-export Opt<Sst> consumeDeclaration(Lexer& lex);
+Sst consumeAtRule(Lexer& lex, Diag::Collector& diags);
+export Content consumeDeclarationList(Lexer& lex, Diag::Collector& diags, bool topLevel = true);
+Content consumeDeclarationBlock(Lexer& lex, Diag::Collector& diags);
+Sst consumeComponentValue(Lexer& lex, Diag::Collector& diags);
+Sst consumeBlock(Lexer& lex, Diag::Collector& diags, Token::Type term);
+export Opt<Sst> consumeDeclaration(Lexer& lex, Diag::Collector& diags);
 
 // https://www.w3.org/TR/css-syntax-3/#consume-qualified-rule
-Opt<Sst> consumeRule(Lexer& lex) {
+Opt<Sst> consumeRule(Lexer& lex, Diag::Collector& diags) {
     Sst rule{Sst::RULE};
     Content prefix;
 
     while (true) {
-        switch (lex.peek().type) {
+        auto t = lex.peek();
+        switch (t.type) {
         case Token::END_OF_FILE:
-            logError("unexpected end of file");
+            diags.emit(
+                Diag::Diagnostic::error("unexpected end of file"s)
+                    .withPrimaryLabel(t.span, "here"s)
+            );
             return NONE;
 
         case Token::LEFT_CURLY_BRACKET: {
             rule.prefix = std::move(prefix);
-            rule.content = consumeDeclarationBlock(lex);
+            rule.content = consumeDeclarationBlock(lex, diags);
             return rule;
         }
 
         default:
-            prefix.pushBack(consumeComponentValue(lex));
+            prefix.pushBack(consumeComponentValue(lex, diags));
             break;
         }
     }
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-list-of-rules
-export Content consumeRuleList(Lexer& lex, bool topLevel) {
+export Content consumeRuleList(Lexer& lex, bool topLevel, Diag::Collector& diags) {
     Content list{};
 
     while (true) {
@@ -157,7 +162,7 @@ export Content consumeRuleList(Lexer& lex, bool topLevel) {
         case Token::CDC:
         case Token::CDO: {
             if (not topLevel) {
-                auto rule = consumeRule(lex);
+                auto rule = consumeRule(lex, diags);
                 if (rule)
                     list.pushBack(*rule);
             }
@@ -165,12 +170,12 @@ export Content consumeRuleList(Lexer& lex, bool topLevel) {
         }
 
         case Token::AT_KEYWORD: {
-            list.pushBack(consumeAtRule(lex));
+            list.pushBack(consumeAtRule(lex, diags));
             break;
         }
 
         default: {
-            auto rule = consumeRule(lex);
+            auto rule = consumeRule(lex, diags);
             if (rule)
                 list.pushBack(*rule);
             break;
@@ -180,20 +185,24 @@ export Content consumeRuleList(Lexer& lex, bool topLevel) {
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-at-rule
-Sst consumeAtRule(Lexer& lex) {
+Sst consumeAtRule(Lexer& lex, Diag::Collector& diags) {
     Sst atRule{Sst::RULE};
     atRule.token = lex.next();
     Content prefix;
 
     while (true) {
-        switch (lex.peek().type) {
+        auto t = lex.peek();
+        switch (t.type) {
         case Token::SEMICOLON:
             lex.next();
             atRule.prefix = prefix;
             return atRule;
 
         case Token::END_OF_FILE:
-            logError("unexpected end of file");
+            diags.emit(
+                Diag::Diagnostic::error("unexpected end of file"s)
+                    .withPrimaryLabel(t.span, "here"s)
+            );
 
             lex.next();
             atRule.prefix = prefix;
@@ -201,11 +210,11 @@ Sst consumeAtRule(Lexer& lex) {
 
         case Token::LEFT_CURLY_BRACKET:
             atRule.prefix = std::move(prefix);
-            atRule.content = consumeDeclarationBlock(lex);
+            atRule.content = consumeDeclarationBlock(lex, diags);
             return atRule;
 
         default:
-            prefix.pushBack(consumeComponentValue(lex));
+            prefix.pushBack(consumeComponentValue(lex, diags));
             break;
         }
     }
@@ -230,7 +239,7 @@ export bool endedDeclarationValue(Lexer& lex) {
            lex.peek() == Token::RIGHT_CURLY_BRACKET;
 }
 
-export Tuple<Content, Important> consumeDeclarationValue(Lexer& lex) {
+export Tuple<Content, Important> consumeDeclarationValue(Lexer& lex, Diag::Collector diags) {
     Content value;
 
     // 3. While the next input token is a <whitespace-token>, consume the next input token.
@@ -248,7 +257,7 @@ export Tuple<Content, Important> consumeDeclarationValue(Lexer& lex) {
             eatWhitespace(lex);
             return {std::move(value), Important::YES};
         } else {
-            value.pushBack(consumeComponentValue(lex));
+            value.pushBack(consumeComponentValue(lex, diags));
             eatWhitespace(lex);
         }
     }
@@ -268,11 +277,12 @@ bool declarationAhead(Lexer lex) {
 // NOSPEC: We unified the two functions into one for simplicity
 //         and added a check for the right curly bracket
 //         to avoid aving to parsing the input multiple times
-Content consumeDeclarationList(Lexer& lex, bool topLevel) {
+Content consumeDeclarationList(Lexer& lex, Diag::Collector& diags, bool topLevel) {
     Content block;
 
     while (true) {
-        switch (lex.peek().type) {
+        auto t = lex.peek();
+        switch (t.type) {
         case Token::WHITESPACE:
         case Token::SEMICOLON:
         case Token::COMMENT:
@@ -280,26 +290,30 @@ Content consumeDeclarationList(Lexer& lex, bool topLevel) {
             break;
 
         case Token::END_OF_FILE:
-            if (not topLevel)
-                logError("unexpected end of file");
+            if (not topLevel) {
+                diags.emit(
+                    Diag::Diagnostic::error("unexpected end of file"s)
+                        .withPrimaryLabel(t.span, "here"s)
+                );
+            }
             lex.next();
             return block;
 
         case Token::AT_KEYWORD:
-            block.pushBack(consumeAtRule(lex));
+            block.pushBack(consumeAtRule(lex, diags));
             break;
 
         case Token::IDENT:
             if (lex.peek().data == "&") {
-                auto rule = consumeRule(lex);
+                auto rule = consumeRule(lex, diags);
                 if (rule)
                     block.pushBack(*rule);
             } else if (declarationAhead(lex)) {
-                auto decl = consumeDeclaration(lex);
+                auto decl = consumeDeclaration(lex, diags);
                 if (decl)
                     block.pushBack(*decl);
             } else {
-                auto rule = consumeRule(lex);
+                auto rule = consumeRule(lex, diags);
                 if (rule)
                     block.pushBack(*rule);
             }
@@ -309,7 +323,7 @@ Content consumeDeclarationList(Lexer& lex, bool topLevel) {
             return block;
 
         default:
-            auto rule = consumeRule(lex);
+            auto rule = consumeRule(lex, diags);
             if (rule)
                 block.pushBack(*rule);
             break;
@@ -317,18 +331,22 @@ Content consumeDeclarationList(Lexer& lex, bool topLevel) {
     }
 }
 
-Content consumeDeclarationBlock(Lexer& lex) {
-    lex.next(); // consume left curly bracket
-    auto res = consumeDeclarationList(lex);
-    if (lex.peek() != Token::RIGHT_CURLY_BRACKET)
-        logError("expected right curly bracket");
-    else
+Content consumeDeclarationBlock(Lexer& lex, Diag::Collector& diags) {
+    auto opening = lex.next(); // consume left curly bracket
+    auto res = consumeDeclarationList(lex, diags);
+    auto t = lex.peek();
+    if (t != Token::RIGHT_CURLY_BRACKET) {
+        diags.emit(
+            Diag::Diagnostic::error("expected '}' at the end of declaration block"s)
+                .withSecondaryLabel(opening.span, "to match this '{'")
+        );
+    } else
         lex.next(); // consume right curly bracket
     return res;
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-declaration
-export Opt<Sst> consumeDeclaration(Lexer& lex) {
+export Opt<Sst> consumeDeclaration(Lexer& lex, Diag::Collector& diags) {
     Sst decl{Sst::DECL};
     decl.token = lex.next();
 
@@ -336,8 +354,12 @@ export Opt<Sst> consumeDeclaration(Lexer& lex) {
     eatWhitespace(lex);
 
     // 2. If the next input token is anything other than a <colon-token>, this is a parse error. Return nothing.
-    if (lex.peek() != Token::COLON) {
-        logError("expected colon");
+    auto t = lex.peek();
+    if (t != Token::COLON) {
+        diags.emit(
+            Diag::Diagnostic::error("expected colon"s)
+                .withPrimaryLabel(t.span, "here"s)
+        );
         return NONE;
     }
 
@@ -345,7 +367,7 @@ export Opt<Sst> consumeDeclaration(Lexer& lex) {
     lex.next();
 
     // Parse the declaration’s value.
-    auto [content, important] = consumeDeclarationValue(lex);
+    auto [content, important] = consumeDeclarationValue(lex, diags);
     decl.content = std::move(content);
     decl.important = important;
 
@@ -353,18 +375,22 @@ export Opt<Sst> consumeDeclaration(Lexer& lex) {
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-function
-export Sst consumeFunc(Lexer& lex) {
+export Sst consumeFunc(Lexer& lex, Diag::Collector& diags) {
     Sst fn = Sst::FUNC;
     fn.prefix = lex.next();
 
     while (true) {
-        switch (lex.peek().type) {
+        auto t = lex.peek();
+        switch (t.type) {
         case Token::COMMENT:
             lex.next();
             break;
 
         case Token::END_OF_FILE:
-            logError("unexpected end of file");
+            diags.emit(
+                Diag::Diagnostic::error("unexpected end of file"s)
+                    .withPrimaryLabel(t.span, "here"s)
+            );
             return fn;
 
         case Token::RIGHT_PARENTHESIS:
@@ -372,26 +398,26 @@ export Sst consumeFunc(Lexer& lex) {
             return fn;
 
         default:
-            fn.content.pushBack(consumeComponentValue(lex));
+            fn.content.pushBack(consumeComponentValue(lex, diags));
             break;
         }
     }
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-component-value
-Sst consumeComponentValue(Lexer& lex) {
+Sst consumeComponentValue(Lexer& lex, Diag::Collector& diags) {
     switch (lex.peek().type) {
     case Token::LEFT_SQUARE_BRACKET:
-        return consumeBlock(lex, Token::RIGHT_SQUARE_BRACKET);
+        return consumeBlock(lex, diags, Token::RIGHT_SQUARE_BRACKET);
 
     case Token::LEFT_CURLY_BRACKET:
-        return consumeBlock(lex, Token::RIGHT_CURLY_BRACKET);
+        return consumeBlock(lex, diags, Token::RIGHT_CURLY_BRACKET);
 
     case Token::LEFT_PARENTHESIS:
-        return consumeBlock(lex, Token::RIGHT_PARENTHESIS);
+        return consumeBlock(lex, diags, Token::RIGHT_PARENTHESIS);
 
     case Token::FUNCTION:
-        return consumeFunc(lex);
+        return consumeFunc(lex, diags);
 
     default:
         return lex.next();
@@ -399,25 +425,28 @@ Sst consumeComponentValue(Lexer& lex) {
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-a-simple-block
-Sst consumeBlock(Lexer& lex, Token::Type term) {
+Sst consumeBlock(Lexer& lex, Diag::Collector& diags, Token::Type term) {
     Sst block = Sst::BLOCK;
     lex.next();
 
     while (true) {
-        auto token = lex.peek();
+        auto t = lex.peek();
 
-        switch (token.type) {
+        switch (t.type) {
         case Token::END_OF_FILE:
-            logError("unexpected end of file");
+            diags.emit(
+                Diag::Diagnostic::error("unexpected end of file"s)
+                    .withPrimaryLabel(t.span, "here"s)
+            );
             return block;
 
         default:
-            if (token.type == term) {
+            if (t.type == term) {
                 lex.next();
                 return block;
             }
 
-            block.content.emplaceBack(consumeComponentValue(lex));
+            block.content.emplaceBack(consumeComponentValue(lex, diags));
             break;
         }
     }
@@ -425,13 +454,13 @@ Sst consumeBlock(Lexer& lex, Token::Type term) {
 
 // NOSPEC: specialized parser for selectors,
 // it's not used in the normal workflow but for testing purposes and querySelectors
-export Content consumeSelector(Lexer& lex) {
+export Content consumeSelector(Lexer& lex, Diag::Collector& diags) {
     Content value;
 
     while (lex.peek() != Token::END_OF_FILE and
            lex.peek() != Token::SEMICOLON and
            lex.peek() != Token::RIGHT_CURLY_BRACKET) {
-        value.pushBack(consumeComponentValue(lex));
+        value.pushBack(consumeComponentValue(lex, diags));
     }
     return value;
 }

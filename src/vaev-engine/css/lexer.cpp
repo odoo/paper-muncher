@@ -49,6 +49,7 @@ export struct Token {
 
     Type type;
     String data;
+    Io::LocSpan span = {};
 
 #define ITER(ID, NAME) \
     static Token NAME(Str data = "") { return {ID, data}; }
@@ -213,11 +214,6 @@ export struct Lexer {
 
     Lexer(Io::SScan const& scan)
         : _scan(scan) {
-    }
-
-    Token peek() const {
-        Io::SScan scan = _scan;
-        return _next(scan);
     }
 
     Token _nextIdent(Io::SScan& s) const {
@@ -390,7 +386,15 @@ export struct Lexer {
     }
 
     Token next() {
-        return _next(_scan);
+        auto start = _scan.loc();
+        auto token = _next(_scan);
+        token.span = {start, _scan.loc()};
+        return token;
+    }
+
+    Token peek() const {
+        auto save = *this;
+        return save.next();
     }
 
     bool ended() const {
