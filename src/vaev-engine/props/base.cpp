@@ -206,68 +206,73 @@ struct DeferredProperty : Property {
     DeferredProperty(Rc<Property::Registration> registration, Css::Content value)
         : Property(registration), _value(value) {}
 
-    static bool _expandVariable(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out) {
+    static Res<bool> _expandVariable(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out, usize depth) {
+        if (depth > 32)
+            return Error::invalidData("likely dependency cycle in variables");
+
         if (not(c->type == Css::Sst::FUNC and
                 c->prefix == Css::Token::function("var("))) {
-            return false;
+            return Ok(false);
         }
 
         Cursor<Css::Sst> content = c->content;
 
         eatWhitespace(content);
         if (content.ended())
-            return true;
+            return Ok(true);
 
         if (content.peek() != Css::Token::IDENT)
-            return true;
+            return Ok(true);
 
         Symbol varName = Symbol::from(content->token.data);
         if (auto ref = env.access(varName)) {
             Cursor<Css::Sst> varContent = *ref;
-            _expandContent(varContent, env, out);
-            return true;
+            try$(_expandContent(varContent, env, out, depth));
+            return Ok(true);
         }
         content.next();
 
         eatWhitespace(content);
 
         if (not content.skip(Css::Token::COMMA))
-            return true;
+            return Ok(true);
 
-        _expandContent(content, env, out);
-        return true;
+        try$(_expandContent(content, env, out, depth));
+        return Ok(true);
     }
 
-    static bool _expandFunction(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out) {
+    static Res<bool> _expandFunction(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out, usize depth) {
         if (c->type != Css::Sst::FUNC)
-            return false;
+            return Ok(false);
 
         auto& func = out.emplaceBack(Css::Sst::FUNC);
         func.prefix = c->prefix;
         Cursor<Css::Sst> content = c->content;
-        _expandContent(content, env, func.content);
+        try$(_expandContent(content, env, func.content, depth));
 
-        return true;
+        return Ok(true);
     }
 
-    static void _expandContent(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out) {
+    static Res<> _expandContent(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out, usize depth) {
         // NOTE: Hint that we will add all the remaining elements
         out.ensure(out.len() + c.rem());
 
         while (not c.ended()) {
-            if (not _expandVariable(c, env, out) and
-                not _expandFunction(c, env, out)) {
+            if (not try$(_expandVariable(c, env, out, depth + 1)) and
+                not try$(_expandFunction(c, env, out, depth))) {
                 out.pushBack(*c);
             }
 
             c.next();
         }
+
+        return Ok();
     }
 
     Res<Rc<Property>> _expandProperty(SpecifiedValues& child) const {
         Cursor<Css::Sst> cursor = _value;
         Css::Content out;
-        _expandContent(cursor, *child.variables, out);
+        try$(_expandContent(cursor, *child.variables, out, 0));
         cursor = out;
 
         // Expanding the variable might have introduced some leading whitespace
