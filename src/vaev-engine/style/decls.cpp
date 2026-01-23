@@ -90,11 +90,4 @@ Vec<P> parseDeclarations(Css::Sst const& sst) {
     return parseDeclarations<P>(sst.content);
 }
 
-export template <typename P>
-Vec<P> parseDeclarations(Str style) {
-    Css::Lexer lex{style};
-    auto sst = Css::consumeDeclarationList(lex, true);
-    return parseDeclarations<P>(sst);
-}
-
 } // namespace Vaev::Style

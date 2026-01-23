@@ -37,9 +37,9 @@ export struct StyleSheet {
         return res;
     }
 
-    static StyleSheet parse(PropertyRegistry& registry, Io::SScan& s, Ref::Url href, Origin origin = Origin::AUTHOR) {
+    static StyleSheet parse(PropertyRegistry& registry, Io::SScan& s, Diag::Collector& diags, Ref::Url href, Origin origin = Origin::AUTHOR) {
         Css::Lexer lex{s};
-        Css::Sst sst = consumeRuleList(lex, true);
+        Css::Sst sst = consumeRuleList(lex, true, diags);
         return parse(registry, sst, href, origin);
     }
 

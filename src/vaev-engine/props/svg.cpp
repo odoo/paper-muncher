@@ -306,7 +306,8 @@ export struct SvgDProperty : Property {
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
             auto fixedStyle = _wrapPathAsCSSStyle(style);
             Css::Lexer lex{fixedStyle};
-            auto [sst, _] = Css::consumeDeclarationValue(lex);
+            Diag::Collector diags = Diag::Collector::ignore();
+            auto [sst, _] = Css::consumeDeclarationValue(lex, diags);
             Cursor<Css::Sst> content = sst;
             return parse(content);
         }

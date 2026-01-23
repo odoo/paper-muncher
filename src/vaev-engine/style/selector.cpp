@@ -374,7 +374,8 @@ export struct AnB {
 
     static Res<AnB> parse(Io::SScan& s) {
         Css::Lexer lex = s;
-        auto val = consumeSelector(lex);
+        Diag::Collector diags = Diag::Collector::ignore();
+        auto val = consumeSelector(lex, diags);
         Cursor<Css::Sst> c{val};
         return parse(c);
     };
@@ -967,7 +968,8 @@ export struct Selector : _Selector {
 
     static Res<Selector> parse(Io::SScan& s, Namespace const& ns = {}) {
         Css::Lexer lex = s;
-        auto val = consumeSelector(lex);
+        Diag::Collector diags;
+        auto val = consumeSelector(lex, diags);
         Cursor<Css::Sst> c{val};
         return parse(c, ns);
     };
