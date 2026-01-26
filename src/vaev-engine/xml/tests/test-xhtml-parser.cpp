@@ -1,4 +1,4 @@
-#include <karm-test/macros.h>
+#include <karm/test>
 
 import Karm.Gc;
 import Karm.Ref;

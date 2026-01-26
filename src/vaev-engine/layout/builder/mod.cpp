@@ -1,6 +1,6 @@
 module;
 
-#include <karm-core/macros.h>
+#include <karm/macros>
 #include <utility>
 
 export module Vaev.Engine:layout.builder;

@@ -1,5 +1,5 @@
-#include <karm-core/macros.h>
-#include <karm-sys/entry.h>
+#include <karm/macros>
+#include <karm/entry>
 
 import Karm.Core;
 import Karm.Http;

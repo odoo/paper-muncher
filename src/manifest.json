@@ -3,9 +3,6 @@
     "id": "paper-muncher",
     "description": "Vaev development tools",
     "type": "exe",
-    "props": {
-        "cpp-excluded": true
-    },
     "requires": [
         "karm-cli",
         "karm-sys",
