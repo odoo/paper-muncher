@@ -572,7 +572,7 @@ export struct HtmlParser : HtmlSink {
         if (_openElements.len() == 0)
             panic("html element should always be in scope");
 
-        for (usize i = _openElements.len() - 1; i >= 0; --i) {
+        for (isize i = _openElements.len() - 1; i >= 0; --i) {
             auto& el = _openElements[i];
 
             // 2. If node is target node, terminate in a match state.
