@@ -515,4 +515,26 @@ test$("parse-svg-case-fix") {
     return Ok();
 }
 
+test$("parse-misnested-content-in-table") {
+    Gc::Heap gc;
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
+    Html::HtmlParser parser{gc, dom};
+
+    parser.write("<table><div>fostered</div><tr><td>cell</td></tr></table>");
+
+    auto html = dom->firstChild()->is<Element>();
+    auto body = html->lastChild()->is<Element>();
+
+    auto fostered = body->firstChild()->is<Element>();
+    expectNe$(fostered, nullptr);
+    expect$(fostered->qualifiedName == Html::DIV_TAG);
+
+    auto table = fostered->nextSibling()->is<Element>();
+    expectNe$(table, nullptr);
+    expect$(table->qualifiedName == Html::TABLE_TAG);
+
+    return Ok();
+}
+
+
 } // namespace Vaev::Dom::Tests
