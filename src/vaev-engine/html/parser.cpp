@@ -178,19 +178,29 @@ export struct HtmlParser : HtmlSink {
     // https://html.spec.whatwg.org/multipage/parsing.html#creating-and-inserting-nodes
 
     struct AdjustedInsertionLocation {
-        Gc::Ptr<Dom::Element> parent;
+        Gc::Ptr<Dom::Node> parent;
+        Gc::Ptr<Dom::Node> insertBefore;
 
         // https://html.spec.whatwg.org/multipage/parsing.html#insert-an-element-at-the-adjusted-insertion-location
         void insert(Gc::Ref<Dom::Node> node) {
             // NOSPEC
-            if (parent)
-                parent->appendChild(node);
+            if (parent) {
+                if (insertBefore) {
+                    parent->insertBefore(node, insertBefore);
+                } else {
+                    parent->appendChild(node);
+                }
+            }
         }
 
-        Gc::Ptr<Dom::Node> lastChild() {
+        Gc::Ptr<Dom::Node> previousSibling() {
             // NOSPEC
+            if (insertBefore)
+                return insertBefore->previousSibling();
+
             if (not parent->hasChildren())
                 return nullptr;
+
             return parent->lastChild();
         }
     };
@@ -207,44 +217,79 @@ export struct HtmlParser : HtmlSink {
 
         // 2. Determine the adjusted insertion location using the first
         //    matching steps from the following list:
+        AdjustedInsertionLocation adjustedInsertionLocation;
 
         //    If foster parenting is enabled and target is a table, tbody, tfoot, thead, or tr element
-
         //    NOTE: Foster parenting happens when content is misnested in tables.
+        if (_fosterParenting and (_currentElement()->qualifiedName == Html::TABLE_TAG or
+                                  _currentElement()->qualifiedName == Html::TBODY_TAG or
+                                  _currentElement()->qualifiedName == Html::TFOOT_TAG or
+                                  _currentElement()->qualifiedName == Html::THEAD_TAG or
+                                  _currentElement()->qualifiedName == Html::TR_TAG)) {
 
-        //    1. Let last template be the last template element in the stack of open elements, if any.
+            //    1. Let last template be the last template element in the stack of open elements, if any.
+            Opt<Tuple<Gc::Ref<Dom::Element>, isize>> lastTemplate = NONE;
+            for (isize i = _openElements.len() - 1; i >= 0; --i) {
+                if (_openElements[i]->qualifiedName == Html::TEMPLATE_TAG) {
+                    lastTemplate = {_openElements[i], i};
+                    break;
+                }
+            }
 
-        //    2. Let last table be the last table element in the stack of open elements, if any.
+            //    2. Let last table be the last table element in the stack of open elements, if any.
+            Opt<Tuple<Gc::Ref<Dom::Element>, isize>> lastTable = NONE;
+            for (isize i = _openElements.len() - 1; i >= 0; --i) {
+                if (_openElements[i]->qualifiedName == Html::TABLE_TAG) {
+                    lastTable = {_openElements[i], i};
+                    break;
+                }
+            }
 
-        //    3. If there is a last template and either there is no last table,
-        //       or there is one, but last template is lower (more recently added)
-        //       than last table in the stack of open elements,
-        //       then: let adjusted insertion location be inside last template's
-        //       template contents, after its last child (if any), and abort these steps.
+            //    3. If there is a last template and either there is no last table,
+            //       or there is one, but last template is lower (more recently added)
+            //       than last table in the stack of open elements,
+            //       then: let adjusted insertion location be inside last template's
+            //       template contents, after its last child (if any), and abort these steps.
+            if (lastTemplate and (not lastTable or lastTemplate->v1 > lastTable->v1)) {
+                // TODO: Use the template's template content instead
+                return {lastTemplate->v0, nullptr};
+            }
 
-        //    4. If there is no last table, then let adjusted insertion location be
-        //       inside the first element in the stack of open elements (the html element),
-        //       after its last child (if any), and abort these steps. (fragment case)
+            //    4. If there is no last table, then let adjusted insertion location be
+            //       inside the first element in the stack of open elements (the html element),
+            //       after its last child (if any), and abort these steps. (fragment case)
+            if (!lastTable) {
+                // TODO: Handle template case
+                return {_openElements[0], nullptr};
+            }
 
-        //    5. If last table has a parent node, then let adjusted insertion location
-        //       be inside last table's parent node, immediately before last table,
-        //       and abort these steps.
+            //    5. If last table has a parent node, then let adjusted insertion location
+            //       be inside last table's parent node, immediately before last table,
+            //       and abort these steps.
+            if (lastTable->v0->hasParentNode()) {
+                return {lastTable->v0->parentNode(), lastTable->v0};
+            }
 
-        //    6. Let previous element be the element immediately above last table
-        //       in the stack of open elements.
+            //    6. Let previous element be the element immediately above last table
+            //       in the stack of open elements.
+            Gc::Ref<Dom::Element> previousElement = _openElements[lastTable->v1 - 1];
 
-        //    7. Let adjusted insertion location be inside previous element,
-        //       after its last child (if any).
+            //    7. Let adjusted insertion location be inside previous element,
+            //       after its last child (if any).
+            adjustedInsertionLocation = {previousElement, nullptr};
+        } else {
+            //  Otherwise: Let adjusted insertion location be inside target,
+            //             after its last child (if any).
+            adjustedInsertionLocation = {target, nullptr};
+        }
 
-        //  Otherwise: Let adjusted insertion location be inside target,
-        //             after its last child (if any).
-
+        // TODO:
         // 3. If the adjusted insertion location is inside a template element,
         //    let it instead be inside the template element's template contents,
         //    after its last child (if any).
 
         // 4. Return the adjusted insertion location.
-        return {target};
+        return adjustedInsertionLocation;
     }
 
     // https://html.spec.whatwg.org/multipage/parsing.html#create-an-element-for-the-token
@@ -371,9 +416,9 @@ export struct HtmlParser : HtmlSink {
 
         // 4. If there is a Text node immediately before the adjusted insertion
         //    location, then append data to that Text node's data.
-        auto lastChild = location.lastChild();
-        if (lastChild and lastChild->nodeType() == Dom::NodeType::TEXT) {
-            auto text = lastChild->is<Dom::Text>();
+        auto previousSibling = location.previousSibling();
+        if (previousSibling and previousSibling->nodeType() == Dom::NodeType::TEXT) {
+            auto text = previousSibling->is<Dom::Text>();
             text->appendData(c);
         }
 
