@@ -60,9 +60,88 @@ export struct HtmlParser : HtmlSink {
 
     HtmlLexer _lexer;
     Gc::Ref<Dom::Document> _document;
-    Vec<Gc::Ref<Dom::Element>> _openElements;
     Gc::Ptr<Dom::Element> _headElement = nullptr;
     Gc::Ptr<Dom::Element> _formElement = nullptr;
+
+    struct ElementStack {
+        Vec<Gc::Ref<Dom::Element>> _vec{};
+
+        usize len() const {
+            return _vec.len();
+        }
+
+        bool isEmpty() const {
+            return len() == 0;
+        }
+
+        void push(Gc::Ref<Dom::Element> const& el) {
+            return _vec.pushBack(el);
+        }
+
+        Gc::Ref<Dom::Element> pop() {
+            return _vec.popBack();
+        }
+
+        template <typename... Names>
+        void popUntilOneOf(Names&&... names) {
+            while (not isEmpty()) {
+                if (oneOf(pop()->qualifiedName, std::forward<Names>(names)...))
+                    break;
+            }
+        }
+
+        Opt<Gc::Ref<Dom::Element>> top() const {
+            if (isEmpty())
+                return NONE;
+
+            return _vec[len() - 1];
+        }
+
+        Opt<Gc::Ref<Dom::Element>> bottom() const {
+            if (isEmpty())
+                return NONE;
+
+            return _vec[0];
+        }
+
+        Opt<Tuple<Gc::Ref<Dom::Element>, isize>> findLast(Dom::QualifiedName const& name) const {
+            for (isize i = len() - 1; i >= 0; --i) {
+                if (_vec[i]->qualifiedName == name) {
+                    return Tuple{_vec[i], i};
+                }
+            }
+
+            return NONE;
+        }
+
+        bool any(auto f) {
+            for (auto const& el : _vec) {
+                if (f(el))
+                    return true;
+            }
+            return false;
+        }
+
+        bool contains(Dom::QualifiedName const& name) const {
+            for (auto& el : _vec) {
+                if (el->qualifiedName == name) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        bool removeAll(Gc::Ref<Dom::Element> const& val) {
+            return _vec.removeAll(val);
+        }
+
+        Gc::Ref<Dom::Element>& operator[](usize i) {
+            return _vec[i];
+        }
+    };
+
+    ElementStack _openElements;
 
     // https://html.spec.whatwg.org/multipage/parsing.html#concept-frag-parse-context
     Gc::Ptr<Dom::Element> _contextElement = nullptr;
@@ -78,9 +157,11 @@ export struct HtmlParser : HtmlSink {
 
     // https://html.spec.whatwg.org/multipage/parsing.html#current-node
     Gc::Ref<Dom::Element> _currentElement() {
-        if (_openElements.len() == 0)
+        auto el = _openElements.top();
+        if (!el)
             panic("no current element");
-        return last(_openElements);
+
+        return *el;
     }
 
     // https://html.spec.whatwg.org/multipage/parsing.html#adjusted-current-node
@@ -228,22 +309,10 @@ export struct HtmlParser : HtmlSink {
                                   _currentElement()->qualifiedName == Html::TR_TAG)) {
 
             //    1. Let last template be the last template element in the stack of open elements, if any.
-            Opt<Tuple<Gc::Ref<Dom::Element>, isize>> lastTemplate = NONE;
-            for (isize i = _openElements.len() - 1; i >= 0; --i) {
-                if (_openElements[i]->qualifiedName == Html::TEMPLATE_TAG) {
-                    lastTemplate = {_openElements[i], i};
-                    break;
-                }
-            }
+            Opt<Tuple<Gc::Ref<Dom::Element>, isize>> lastTemplate = _openElements.findLast(Html::TEMPLATE_TAG);
 
             //    2. Let last table be the last table element in the stack of open elements, if any.
-            Opt<Tuple<Gc::Ref<Dom::Element>, isize>> lastTable = NONE;
-            for (isize i = _openElements.len() - 1; i >= 0; --i) {
-                if (_openElements[i]->qualifiedName == Html::TABLE_TAG) {
-                    lastTable = {_openElements[i], i};
-                    break;
-                }
-            }
+            Opt<Tuple<Gc::Ref<Dom::Element>, isize>> lastTable = _openElements.findLast(Html::TABLE_TAG);
 
             //    3. If there is a last template and either there is no last table,
             //       or there is one, but last template is lower (more recently added)
@@ -260,7 +329,7 @@ export struct HtmlParser : HtmlSink {
             //       after its last child (if any), and abort these steps. (fragment case)
             if (!lastTable) {
                 // TODO: Handle template case
-                return {_openElements[0], nullptr};
+                return {*_openElements.bottom(), nullptr};
             }
 
             //    5. If last table has a parent node, then let adjusted insertion location
@@ -392,7 +461,7 @@ export struct HtmlParser : HtmlSink {
         }
 
         // 4. Push element onto the stack of open elements so that it is the new current node.
-        _openElements.pushBack(el);
+        _openElements.push(el);
 
         // 5. Return element.
         return el;
@@ -605,7 +674,7 @@ export struct HtmlParser : HtmlSink {
     static void _generateImpliedEndTags(HtmlParser& b, Opt<Dom::QualifiedName> except = NONE) {
         while (contains(IMPLIED_END_TAGS, b._currentElement()->qualifiedName) and
                b._currentElement()->qualifiedName != except) {
-            b._openElements.popBack();
+            b._openElements.pop();
         }
     }
 
@@ -749,7 +818,7 @@ export struct HtmlParser : HtmlSink {
         else if (t.type == HtmlToken::START_TAG and t.name == "html") {
             auto el = _createElementFor(t, Html::NAMESPACE);
             _document->appendChild(el);
-            _openElements.pushBack(el);
+            _openElements.push(el);
             _switchTo(Mode::BEFORE_HEAD);
         }
 
@@ -764,7 +833,7 @@ export struct HtmlParser : HtmlSink {
         else {
             auto el = _heap.alloc<Dom::Element>(Html::HTML_TAG);
             _document->appendChild(el);
-            _openElements.pushBack(el);
+            _openElements.push(el);
             _switchTo(Mode::BEFORE_HEAD);
             accept(t);
         }
@@ -830,7 +899,7 @@ export struct HtmlParser : HtmlSink {
     // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inhead
     void _handleInHead(HtmlToken& t) {
         auto anythingElse = [&] {
-            _openElements.popBack();
+            _openElements.pop();
             _switchTo(Mode::AFTER_HEAD);
             accept(t);
         };
@@ -864,14 +933,14 @@ export struct HtmlParser : HtmlSink {
         // A start tag whose tag name is one of: "base", "basefont", "bgsound", "link"
         else if (t.type == HtmlToken::START_TAG and (t.name == "base" or t.name == "basefont" or t.name == "bgsound" or t.name == "link")) {
             _insertHtmlElement(t);
-            _openElements.popBack();
+            _openElements.pop();
             _acknowledgeSelfClosingFlag(t);
         }
 
         // A start tag whose tag name is "meta"
         else if (t.type == HtmlToken::START_TAG and (t.name == "meta")) {
             _insertHtmlElement(t);
-            _openElements.popBack();
+            _openElements.pop();
             _acknowledgeSelfClosingFlag(t);
             // TODO: Handle handle speculative parsing
         }
@@ -934,7 +1003,7 @@ export struct HtmlParser : HtmlSink {
             localtion.insert(el);
 
             // 7. Push the element onto the stack of open elements so that it is the new current node.
-            _openElements.pushBack(el);
+            _openElements.push(el);
 
             // 8. Switch the tokenizer to the script data state.
             _lexer._switchTo(HtmlLexer::SCRIPT_DATA);
@@ -945,7 +1014,7 @@ export struct HtmlParser : HtmlSink {
             // 10. Switch the insertion mode to "text".
             _switchTo(Mode::TEXT);
         } else if (t.type == HtmlToken::END_TAG and (t.name == "head")) {
-            _openElements.popBack();
+            _openElements.pop();
             _switchTo(Mode::AFTER_HEAD);
         } else if (t.type == HtmlToken::END_TAG and (t.name == "body" or t.name == "html" or t.name == "br")) {
             anythingElse();
@@ -966,7 +1035,7 @@ export struct HtmlParser : HtmlSink {
     void _handleInHeadNoScript(HtmlToken& t) {
         auto anythingElse = [&] {
             _raise("unexpected token");
-            _openElements.popBack();
+            _openElements.pop();
             _switchTo(Mode::IN_HEAD);
             accept(t);
         };
@@ -983,7 +1052,7 @@ export struct HtmlParser : HtmlSink {
 
         // An end tag whose tag name is "noscript"
         else if (t.type == HtmlToken::END_TAG and (t.name == "noscript")) {
-            _openElements.popBack();
+            _openElements.pop();
             _switchTo(Mode::IN_HEAD);
         }
 
@@ -1089,9 +1158,9 @@ export struct HtmlParser : HtmlSink {
              t.name == "template" or t.name == "title")
         ) {
             _raise("unexpected start tag");
-            _openElements.pushBack(_headElement.upgrade());
+            _openElements.push(_headElement.upgrade());
             _acceptIn(Mode::IN_HEAD, t);
-            _openElements.removeAll(_headElement);
+            _openElements.removeAll(*_headElement);
         }
 
         // An end tag whose tag name is "template"
@@ -1133,13 +1202,7 @@ export struct HtmlParser : HtmlSink {
                     _raise("unexpected p element");
 
                 // Pop elements from the stack of open elements until a p element has been popped from the stack.
-                while (_openElements.len() > 0) {
-                    auto lastEl = last(_openElements);
-
-                    _openElements.popBack();
-                    if (lastEl->qualifiedName == Html::P_TAG)
-                        break;
-                }
+                _openElements.popUntilOneOf(Html::P_TAG);
             }
         };
 
@@ -1201,14 +1264,21 @@ export struct HtmlParser : HtmlSink {
             // is not an implied end tag or
             // tbody element, a td element, a tfoot element, a th element, a thead element, a tr element, the body element, or the html
             // then this is a parse error.
-            for (auto& el : _openElements) {
-                if (not contains(IMPLIED_END_TAGS, el->qualifiedName) and
-                    el->qualifiedName != Html::TBODY_TAG and el->qualifiedName != Html::TD_TAG and el->qualifiedName != Html::TFOOT_TAG and
-                    el->qualifiedName != Html::TH_TAG and el->qualifiedName != Html::THEAD_TAG and el->qualifiedName != Html::TR_TAG and
-                    el->qualifiedName != Html::BODY_TAG and el->qualifiedName != Html::HTML_TAG) {
-                    _raise("unexpected end tag for body");
-                    break;
-                }
+            if (_openElements.any([](auto& el) {
+                    bool isOtherAllowedTag = oneOf(
+                        el->qualifiedName,
+                        Html::TBODY_TAG,
+                        Html::TD_TAG,
+                        Html::TFOOT_TAG,
+                        Html::TH_TAG,
+                        Html::THEAD_TAG,
+                        Html::TR_TAG,
+                        Html::BODY_TAG,
+                        Html::HTML_TAG
+                    );
+                    return contains(IMPLIED_END_TAGS, el->qualifiedName) and not isOtherAllowedTag;
+                })) {
+                _raise("unexpected end tag for body");
             }
 
             // Switch the insertion mode to "after body".
@@ -1258,7 +1328,7 @@ export struct HtmlParser : HtmlSink {
                 _currentElement()->qualifiedName == Html::H5_TAG or _currentElement()->qualifiedName == Html::H6_TAG
             ) {
                 _raise("unexpected h1-h6 tag");
-                _openElements.popBack();
+                _openElements.pop();
             }
 
             // Insert an HTML element for the token.
@@ -1300,9 +1370,7 @@ export struct HtmlParser : HtmlSink {
                     }
 
                     // 3. Pop elements from the stack of open elements until a dd element has been popped from the stack.
-                    while (Karm::any(_openElements) and _openElements.popBack()->qualifiedName != Html::DD_TAG) {
-                        // do nothing
-                    }
+                    _openElements.popUntilOneOf(Html::DD_TAG);
 
                     // 4. Jump to the step labeled done below.
                     done();
@@ -1319,9 +1387,7 @@ export struct HtmlParser : HtmlSink {
                     }
 
                     // 3. Pop elements from the stack of open elements until a dt element has been popped from the stack.
-                    while (Karm::any(_openElements) and _openElements.popBack()->qualifiedName != Html::DT_TAG) {
-                        // do nothing
-                    }
+                    _openElements.popUntilOneOf(Html::DT_TAG);
 
                     // 4. Jump to the step labeled done below.
                     done();
@@ -1387,15 +1453,7 @@ export struct HtmlParser : HtmlSink {
 
             // 3. Pop elements from the stack of open elements until an HTML element whose tag name is one of "h1", "h2",
             // "h3", "h4", "h5", or "h6" has been popped from the stack.
-            while (Karm::any(_openElements)) {
-                auto poppedEl = _openElements.popBack();
-                if (
-                    poppedEl->qualifiedName == Html::H1_TAG or poppedEl->qualifiedName == Html::H2_TAG or
-                    poppedEl->qualifiedName == Html::H3_TAG or poppedEl->qualifiedName == Html::H4_TAG or
-                    poppedEl->qualifiedName == Html::H5_TAG or poppedEl->qualifiedName == Html::H6_TAG
-                )
-                    break;
-            }
+            _openElements.popUntilOneOf(Html::H1_TAG, Html::H2_TAG, Html::H3_TAG, Html::H4_TAG, Html::H5_TAG, Html::H6_TAG);
         }
 
         // TODO: An end tag whose tag name is "sarcasm"
@@ -1450,7 +1508,7 @@ export struct HtmlParser : HtmlSink {
 
             // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
             _insertHtmlElement(t);
-            _openElements.popBack();
+            _openElements.pop();
 
             // Acknowledge the token's self-closing flag, if it is set.
             _acknowledgeSelfClosingFlag(t);
@@ -1465,7 +1523,7 @@ export struct HtmlParser : HtmlSink {
 
             // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
             _insertHtmlElement(t);
-            _openElements.popBack();
+            _openElements.pop();
 
             // Acknowledge the token's self-closing flag, if it is set.
             _acknowledgeSelfClosingFlag(t);
@@ -1498,7 +1556,7 @@ export struct HtmlParser : HtmlSink {
             closePElementIfInButtonScope();
             // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
             _insertHtmlElement(t);
-            _openElements.popBack();
+            _openElements.pop();
             // Acknowledge the token's self-closing flag, if it is set.
             _acknowledgeSelfClosingFlag(t);
 
@@ -1546,7 +1604,7 @@ export struct HtmlParser : HtmlSink {
             // If the token has its self-closing flag set, pop the current node
             // off the stack of open elements and acknowledge the token's self-closing flag.
             if (t.selfClosing) {
-                _openElements.popBack();
+                _openElements.pop();
                 _acknowledgeSelfClosingFlag(t);
             }
         }
@@ -1586,9 +1644,9 @@ export struct HtmlParser : HtmlSink {
 
                     // 3. Pop all the nodes from the current node up to node, including node, then stop these steps
                     while (_currentElement() != node) {
-                        _openElements.popBack();
+                        _openElements.pop();
                     }
-                    _openElements.popBack();
+                    _openElements.pop();
                     break;
                 }
 
@@ -1622,7 +1680,7 @@ export struct HtmlParser : HtmlSink {
 
             // TODO: If the current node is a script element, then set its already started to true.
 
-            _openElements.popBack();
+            _openElements.pop();
             _switchTo(_originalInsertionMode);
         }
 
@@ -1633,7 +1691,7 @@ export struct HtmlParser : HtmlSink {
 
         // Any other end tag
         else if (t.type == HtmlToken::END_TAG) {
-            this->_openElements.popBack();
+            this->_openElements.pop();
             _switchTo(_originalInsertionMode);
         }
 
@@ -1662,7 +1720,7 @@ export struct HtmlParser : HtmlSink {
                    _currentElement()->qualifiedName != Html::TEMPLATE_TAG and
                    _currentElement()->qualifiedName != Html::HTML_TAG) {
 
-                _openElements.popBack();
+                _openElements.pop();
             }
         };
 
@@ -1772,9 +1830,7 @@ export struct HtmlParser : HtmlSink {
             // Otherwise:
 
             // Pop elements from this stack until a table element has been popped from the stack.
-            while (Karm::any(_openElements) and _openElements.popBack()->qualifiedName != Html::TABLE_TAG) {
-                // do nothing
-            }
+            _openElements.popUntilOneOf(Html::TABLE_TAG);
 
             // Reset the insertion mode appropriately.
             _resetTheInsertionModeAppropriately();
@@ -1793,9 +1849,7 @@ export struct HtmlParser : HtmlSink {
             }
 
             // Pop elements from this stack until a table element has been popped from the stack.
-            while (Karm::any(_openElements) and _openElements.popBack()->qualifiedName != Html::TABLE_TAG) {
-                // do nothing
-            }
+            _openElements.popUntilOneOf(Html::TABLE_TAG);
 
             // Reset the insertion mode appropriately.
             _resetTheInsertionModeAppropriately();
@@ -1854,7 +1908,7 @@ export struct HtmlParser : HtmlSink {
             _insertHtmlElement(t);
 
             // Pop that input element off the stack of open elements.
-            _openElements.popBack();
+            _openElements.pop();
 
             // Acknowledge the token's self-closing flag, if it is set.
             _acknowledgeSelfClosingFlag(t);
@@ -1866,12 +1920,7 @@ export struct HtmlParser : HtmlSink {
             _raise("unexpected form start tag");
 
             // If there is a template element on the stack of open elements, or if the form element pointer is not null, ignore the token.
-            for (auto& el : _openElements) {
-                if (el->qualifiedName == Html::TEMPLATE_TAG)
-                    return;
-            }
-
-            if (not _formElement)
+            if (_openElements.contains(Html::TEMPLATE_TAG) or _formElement)
                 return;
 
             // Insert an HTML element for the token, and set the form element pointer to point to the element created.
@@ -1882,7 +1931,7 @@ export struct HtmlParser : HtmlSink {
             _formElement = _insertAForeignElement(formToken, Html::NAMESPACE, false);
 
             // Pop that form element off the stack of open elements.
-            _openElements.popBack();
+            _openElements.pop();
         }
 
         // An end-of-file token
@@ -1968,9 +2017,7 @@ export struct HtmlParser : HtmlSink {
                 _raise("unexpected caption end tag");
 
             // Pop elements from this stack until a caption element has been popped from the stack.
-            while (Karm::any(_openElements) and _openElements.popBack()->qualifiedName != Html::CAPTION_TAG) {
-                // do nothing
-            }
+            _openElements.popUntilOneOf(Html::CAPTION_TAG);
 
             // TODO: Clear the list of active formatting elements up to the last marker.
 
@@ -2051,7 +2098,7 @@ export struct HtmlParser : HtmlSink {
             _insertHtmlElement(t);
 
             // Immediately pop the current node off the stack of open elements.
-            _openElements.popBack();
+            _openElements.pop();
 
             // Acknowledge the token's self-closing flag, if it is set.
             _acknowledgeSelfClosingFlag(t);
@@ -2068,7 +2115,7 @@ export struct HtmlParser : HtmlSink {
             }
 
             // Otherwise, pop the current node from the stack of open elements.
-            _openElements.popBack();
+            _openElements.pop();
 
             // Switch the insertion mode to "in table".
             _switchTo(Mode::IN_TABLE);
@@ -2103,7 +2150,7 @@ export struct HtmlParser : HtmlSink {
             }
 
             // Otherwise, pop the current node from the stack of open elements.
-            _openElements.popBack();
+            _openElements.pop();
 
             // Switch the insertion mode to "in table".
             _switchTo(Mode::IN_TABLE);
@@ -2124,7 +2171,7 @@ export struct HtmlParser : HtmlSink {
                 _currentElement()->qualifiedName != Html::TEMPLATE_TAG and
                 _currentElement()->qualifiedName != Html::HTML_TAG
             ) {
-                _openElements.popBack();
+                _openElements.pop();
             }
         };
 
@@ -2168,7 +2215,7 @@ export struct HtmlParser : HtmlSink {
             _clearTheStackBackToATableBodyContext();
 
             // Pop the current node from the stack of open elements. Switch the insertion mode to "in table".
-            _openElements.popBack();
+            _openElements.pop();
             _switchTo(Mode::IN_TABLE);
         }
 
@@ -2195,7 +2242,7 @@ export struct HtmlParser : HtmlSink {
             _clearTheStackBackToATableBodyContext();
 
             // Pop the current node from the stack of open elements. Switch the insertion mode to "in table".
-            _openElements.popBack();
+            _openElements.pop();
             _switchTo(Mode::IN_TABLE);
 
             // Reprocess the token.
@@ -2228,7 +2275,7 @@ export struct HtmlParser : HtmlSink {
                    _currentElement()->qualifiedName != Html::TEMPLATE_TAG and
                    _currentElement()->qualifiedName != Html::HTML_TAG) {
 
-                _openElements.popBack();
+                _openElements.pop();
             }
         };
 
@@ -2257,7 +2304,7 @@ export struct HtmlParser : HtmlSink {
             _clearTheStackBackToATableRowContext();
 
             // Pop the current node (which will be a tr element) from the stack of open elements.
-            _openElements.popBack();
+            _openElements.pop();
 
             // Switch the insertion mode to "in table body".
             _switchTo(Mode::IN_TABLE_BODY);
@@ -2283,7 +2330,7 @@ export struct HtmlParser : HtmlSink {
             _clearTheStackBackToATableRowContext();
 
             // Pop the current node (which will be a tr element) from the stack of open elements.
-            _openElements.popBack();
+            _openElements.pop();
 
             // Switch the insertion mode to "in table body".
             _switchTo(Mode::IN_TABLE_BODY);
@@ -2307,7 +2354,7 @@ export struct HtmlParser : HtmlSink {
             _clearTheStackBackToATableRowContext();
 
             // Pop the current node (which will be a tr element) from the stack of open elements.
-            _openElements.popBack();
+            _openElements.pop();
 
             // Switch the insertion mode to "in table body".
             _switchTo(Mode::IN_TABLE_BODY);
@@ -2344,11 +2391,7 @@ export struct HtmlParser : HtmlSink {
             }
 
             // Pop elements from the stack of open elements until a td element or a th element has been popped from the stack.
-            while (Karm::any(_openElements)) {
-                auto poppedEl = _openElements.popBack();
-                if (poppedEl->qualifiedName == Html::TD_TAG or poppedEl->qualifiedName == Html::TH_TAG)
-                    break;
-            }
+            _openElements.popUntilOneOf(Html::TD_TAG, Html::TH_TAG);
 
             // TODO: Clear the list of active formatting elements up to the last marker.
 
@@ -2381,9 +2424,7 @@ export struct HtmlParser : HtmlSink {
 
             // Pop elements from the stack of open elements until an HTML element with the same tag name as
             // the token has been popped from the stack.
-            while (Karm::any(_openElements) and _openElements.popBack()->qualifiedName != tokenQualifiedName) {
-                // do nothing
-            }
+            _openElements.popUntilOneOf(tokenQualifiedName);
 
             // TODO: Clear the list of active formatting elements up to the last marker.
 
@@ -2477,7 +2518,7 @@ export struct HtmlParser : HtmlSink {
             // TODO
 
             // Pop the current node off the stack of open elements.
-            _openElements.popBack();
+            _openElements.pop();
 
             // Let the old insertion point have the same value as the current insertion point. Let the insertion point be just before the next input character.
 
@@ -2555,7 +2596,7 @@ export struct HtmlParser : HtmlSink {
                 }
 
                 // pop elements from the stack of open elements.
-                _openElements.popBack();
+                _openElements.pop();
             }
 
             // Reprocess the token according to the rules given in the section
@@ -2598,7 +2639,7 @@ export struct HtmlParser : HtmlSink {
                 // Otherwise
                 else {
                     // Pop the current node off the stack of open elements and acknowledge the token's self-closing flag.
-                    _openElements.popBack();
+                    _openElements.pop();
                     _acknowledgeSelfClosingFlag(t);
                 }
             }
@@ -2629,9 +2670,9 @@ export struct HtmlParser : HtmlSink {
                 if (eqCi(node->qualifiedName.name.str(), t.name.str())) {
                     // pop elements from the stack of open elements until node has been popped from the stack, and then return.
                     while (_currentElement() != node) {
-                        _openElements.popBack();
+                        _openElements.pop();
                     }
-                    _openElements.popBack();
+                    _openElements.pop();
                     return;
                 }
 
@@ -2768,7 +2809,7 @@ export struct HtmlParser : HtmlSink {
         // If the adjusted current node is an HTML integration point and the token is a character token
         // If the token is an end-of-file token
         if (
-            isEmpty(_openElements) or
+            _openElements.isEmpty() or
             _currentElement()->qualifiedName.ns == Html::NAMESPACE or
             (t.type == HtmlToken::START_TAG and _isHtmlIntegrationPoint(*_currentElement())) or
             (t.type == HtmlToken::CHARACTER and _isMathMlTextIntegrationPoint(*_currentElement())) or
