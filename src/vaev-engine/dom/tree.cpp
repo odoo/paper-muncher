@@ -96,7 +96,7 @@ struct Tree : Meta::Pinned {
         if (!child)
             return appendChild(node);
 
-        if (child->_parent != Gc::Ptr<Node>{MOVE, static_cast<Node*>(this)})
+        if (child->_parent != static_cast<Node*>(this))
             panic("node is not a child");
 
         if (node->_parent)
@@ -117,7 +117,7 @@ struct Tree : Meta::Pinned {
     }
 
     void insertAfter(Gc::Ptr<Node> node, Gc::Ptr<Node> child) {
-        if (child->_parent != Gc::Ptr<Node>{MOVE, static_cast<Node*>(this)})
+        if (child->_parent != static_cast<Node*>(this))
             panic("node is not a child");
 
         if (node->_parent)
@@ -138,7 +138,7 @@ struct Tree : Meta::Pinned {
     }
 
     void removeChild(Gc::Ptr<Node> node) {
-        if (node->_parent != this)
+        if (node->_parent != static_cast<Node*>(this))
             panic("node is not a child");
 
         if (node->_parent)
