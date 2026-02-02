@@ -1242,16 +1242,115 @@ export struct HtmlParser : HtmlSink {
             _raise(diags, t.span, "unexpected DOCTYPE token");
         }
 
-        // TODO: A start tag whose tag name is "html"
+        // A start tag whose tag name is "html"
+        else if (t.type == HtmlToken::START_TAG and t.name == "html") {
+            _raise(diags, t.span, "unexpected html start tag");
 
-        // TODO: A start tag whose tag name is one of: "base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title"
+            // If there is a template element on the stack of open elements, then ignore the token.
+            if (_openElements.contains(Html::TEMPLATE_TAG)) {
+                return;
+            }
+
+            // Otherwise, for each attribute on the token, check to see if the attribute is already present on the top element of the
+            // stack of open elements. If it is not, add the attribute and its corresponding value to that element.
+            for (auto const& attr : t.attrs) {
+                auto name = Dom::QualifiedName{""_sym, attr.name};
+
+                if (!_currentElement()->hasAttribute(name)) {
+                    _currentElement()->setAttribute(name, attr.value);
+                }
+            }
+        }
+
+        // A start tag whose tag name is one of: "base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title"
         // An end tag whose tag name is "template"
+        else if (
+            (t.type == HtmlToken::START_TAG and oneOf(t.name, "base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title")) or
+            (t.type == HtmlToken::END_TAG and t.name == "template")
+        ) {
+            // Process the token using the rules for the "in head" insertion mode.
+            _acceptIn(Mode::IN_HEAD, t, diags);
+        }
 
-        // TODO: A start tag whose tag name is "body"
+        // A start tag whose tag name is "body"
+        else if (t.type == HtmlToken::START_TAG and t.name == "body") {
+            _raise(diags, t.span, "unexpected body start tag");
 
-        // TODO: A start tag whose tag name is "frameset"
+            // If the stack of open elements has only one node on it, or if the second element on the stack of open elements is not
+            // a body element, or if there is a template element on the stack of open elements, then ignore the token.
+            // (fragment case or there is a template element on the stack)
+            if (_openElements.len() == 1 or _openElements[1]->qualifiedName != Html::BODY_TAG or _openElements.contains(Html::TEMPLATE_TAG)) {
+                return;
+            }
 
-        // TODO: An end-of-file token
+            // Otherwise, set the frameset-ok flag to "not ok"; then, for each attribute on the token, check to see if the attribute is
+            // already present on the body element (the second element) on the stack of open elements, and if it is not, add the attribute
+            // and its corresponding value to that element.
+            _framesetOk = false;
+
+            for (auto const& attr : t.attrs) {
+                auto name = Dom::QualifiedName{""_sym, attr.name};
+
+                if (!_openElements[1]->hasAttribute(name)) {
+                    _openElements[1]->setAttribute(name, attr.value);
+                }
+            }
+        }
+
+        // A start tag whose tag name is "frameset"
+        else if (t.type == HtmlToken::START_TAG and t.name == "frameset") {
+            _raise(diags, t.span, "unexpected frameset");
+
+            // If the stack of open elements has only one node on it, or if the second element on the stack of open elements is not
+            // a body element, then ignore the token. (fragment case or there is a template element on the stack)
+            if (_openElements.len() == 1 or _openElements[1]->qualifiedName != Html::BODY_TAG or not _framesetOk) {
+                return;
+            }
+
+            // Otherwise, run the following steps:
+
+            // 1. Remove the second element on the stack of open elements from its parent node, if it has one.
+            if (_openElements[1]->hasParentNode()) {
+                _openElements[1]->parentNode()->removeChild(_openElements[1]);
+            }
+
+            // 2. Pop all the nodes from the bottom of the stack of open elements, from the current node up to, but not including, the root html element.
+            while (_openElements.len() > 1)
+                _openElements.pop();
+
+            // 3. Insert an HTML element for the token.
+            _insertHtmlElement(t);
+
+            // 4. Switch the insertion mode to "in frameset".
+            _switchTo(Mode::IN_FRAMESET);
+        }
+
+        // An end-of-file token
+        else if (t.type == HtmlToken::END_OF_FILE) {
+            // If the stack of template insertion modes is not empty, then process the token using the rules for the "in template" insertion mode.
+            if (Karm::any(_templateInsertionModes)) {
+                _acceptIn(Mode::IN_TEMPLATE, t, diags);
+                return;
+            }
+
+            // Otherwise, follow these steps:
+
+            // 1. If there is a node in the stack of open elements that is not either a dd element, a dt element, an li element, an optgroup element,
+            // an option element, a p element, an rb element, an rp element, an rt element, an rtc element, a tbody element, a td element, a tfoot element,
+            // a th element, a thead element, a tr element, the body element, or the html element, then this is a parse error.
+            if (_openElements.any([](auto const& el) {
+                    return not oneOf(
+                        el->qualifiedName,
+                        Html::DD_TAG, Html::DT_TAG, Html::LI_TAG, Html::OPTGROUP_TAG, Html::OPTION_TAG, Html::P_TAG,
+                        Html::RB_TAG, Html::RP_TAG, Html::RT_TAG, Html::RTC_TAG, Html::TBODY_TAG, Html::TD_TAG,
+                        Html::TFOOT_TAG, Html::TH_TAG, Html::THEAD_TAG, Html::TR_TAG, Html::BODY_TAG, Html::HTML_TAG
+                    );
+                })) {
+                _raise(diags, t.span, "unexpected end of file");
+            }
+
+            // 2. Stop parsing.
+        }
 
         // An end tag whose tag name is "body"
         // An end tag whose tag name is "html"
@@ -1300,12 +1399,14 @@ export struct HtmlParser : HtmlSink {
         // "summary", "ul"
         else if (
             t.type == HtmlToken::START_TAG and
-            (t.name == "address" or t.name == "article" or t.name == "aside" or t.name == "blockquote" or
-             t.name == "center" or t.name == "details" or t.name == "dialog" or t.name == "dir" or
-             t.name == "div" or t.name == "dl" or t.name == "fieldset" or t.name == "figcaption" or
-             t.name == "figure" or t.name == "footer" or t.name == "header" or t.name == "hgroup" or
-             t.name == "main" or t.name == "menu" or t.name == "nav" or t.name == "ol" or
-             t.name == "p" or t.name == "search" or t.name == "section" or t.name == "summary" or t.name == "ul")
+            oneOf(
+                t.name,
+                "address", "article", "aside", "blockquote", "center",
+                "details", "dialog", "dir", "div", "dl", "fieldset",
+                "figcaption", "figure", "footer", "header", "hgroup",
+                "main", "menu", "nav", "ol", "p", "search", "section",
+                "summary", "ul"
+            )
         ) {
             // If the stack of open elements has a p element in button scope, then close a p element.
             closePElementIfInButtonScope();
@@ -1317,19 +1418,14 @@ export struct HtmlParser : HtmlSink {
         // A start tag whose tag name is one of: "h1", "h2", "h3", "h4", "h5", "h6"
         else if (
             t.type == HtmlToken::START_TAG and
-            (t.name == "h1" or t.name == "h2" or t.name == "h3" or t.name == "h4" or
-             t.name == "h5" or t.name == "h6")
+            oneOf(t.name, "h1", "h2", "h3", "h4", "h5", "h6")
         ) {
             // If the stack of open elements has a p element in button scope, then close a p element.
             closePElementIfInButtonScope();
 
             // If the current node is an HTML element whose tag name is one of "h1", "h2", "h3", "h4", "h5", or "h6",
             // then this is a parse error; pop the current node off the stack of open elements.
-            if (
-                _currentElement()->qualifiedName == Html::H1_TAG or _currentElement()->qualifiedName == Html::H2_TAG or
-                _currentElement()->qualifiedName == Html::H3_TAG or _currentElement()->qualifiedName == Html::H4_TAG or
-                _currentElement()->qualifiedName == Html::H5_TAG or _currentElement()->qualifiedName == Html::H6_TAG
-            ) {
+            if (oneOf(_currentElement()->qualifiedName, Html::H1_TAG, Html::H2_TAG, Html::H3_TAG, Html::H4_TAG, Html::H5_TAG, Html::H6_TAG)) {
                 _raise(diags, t.span, "unexpected h1-h6 tag");
                 _openElements.pop();
             }
@@ -1427,8 +1523,7 @@ export struct HtmlParser : HtmlSink {
         // An end tag whose tag name is one of: "h1", "h2", "h3", "h4", "h5", "h6"
         else if (
             t.type == HtmlToken::END_TAG and
-            (t.name == "h1" or t.name == "h2" or t.name == "h3" or t.name == "h4" or
-             t.name == "h5" or t.name == "h6")
+            oneOf(t.name, "h1", "h2", "h3", "h4", "h5", "h6")
         ) {
             // If the stack of open elements does not have an element in scope that is an HTML element and whose tag name is
             // one of "h1", "h2", "h3", "h4", "h5", or "h6",
