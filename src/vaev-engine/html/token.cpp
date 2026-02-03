@@ -1,6 +1,7 @@
 export module Vaev.Engine:html.token;
 
 import Karm.Core;
+import Karm.Diag;
 
 using namespace Karm;
 
@@ -37,6 +38,7 @@ export struct HtmlToken {
     String publicIdent = ""s;
     String systemIdent = ""s;
     Vec<Attr> attrs = {};
+    Io::LocSpan span = {};
     bool forceQuirks{false};
     bool selfClosing{false};
 
@@ -76,7 +78,7 @@ export struct HtmlToken {
 
 export struct HtmlSink {
     virtual ~HtmlSink() = default;
-    virtual void accept(HtmlToken& token) = 0;
+    virtual void accept(HtmlToken& token, Diag::Collector& diags) = 0;
 };
 
 } // namespace Vaev::Html

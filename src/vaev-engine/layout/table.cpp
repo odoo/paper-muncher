@@ -1314,7 +1314,7 @@ export struct TableFormatingContext : FormatingContext {
             footerSize = Vec2Au{
                 tableBoxSize.x,
                 rowHeightPref.query(grid.size.y - numOfFooterRows, grid.size.y - 1) +
-                spacing.y * Au{numOfHeaderRows + 1},
+                    spacing.y * Au{numOfHeaderRows + 1},
             };
         }
     }
@@ -1397,8 +1397,8 @@ export struct TableFormatingContext : FormatingContext {
             .padding = computePaddings(tree, *cell.box, tableBoxSize),
             .borders = collapsedBorders
                            ? collapsedBorders->map([](auto b) {
-                               return b.width;
-                           })
+                                 return b.width;
+                             })
                            : computeBorders(tree, *cell.box),
         };
 

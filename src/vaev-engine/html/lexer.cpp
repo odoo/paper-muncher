@@ -3,6 +3,7 @@ export module Vaev.Engine:html.lexer;
 import Karm.Core;
 import Karm.Debug;
 import Karm.Logger;
+import Karm.Diag;
 
 import :html.token;
 
@@ -55,8 +56,11 @@ export struct HtmlLexer {
 
     Opt<usize> matchedCharReferenceNoSemiColon;
 
-    HtmlToken& _begin(HtmlToken::Type type) {
-        _token = HtmlToken{.type = type};
+    HtmlToken& _begin(HtmlToken::Type type, Io::Loc loc) {
+        _token = HtmlToken{
+            .type = type,
+            .span = Io::LocSpan::single(loc),
+        };
         return *_token;
     }
 
@@ -73,17 +77,17 @@ export struct HtmlLexer {
         return token;
     }
 
-    void _emit() {
+    void _emit(Diag::Collector& diags) {
         if (not _sink)
             panic("no sink");
         logDebugIf(debugLexer, "emiting token: {}", _ensure());
-        _sink->accept(_ensure());
+        _sink->accept(_ensure(), diags);
         _last = std::move(_token);
     }
 
-    void _emit(Rune rune) {
-        _begin(HtmlToken::CHARACTER).rune = rune;
-        _emit();
+    void _emit(Rune rune, Io::Loc loc, Diag::Collector diags) {
+        _begin(HtmlToken::CHARACTER, loc).rune = rune;
+        _emit(diags);
     }
 
     void _beginAttribute() {
@@ -97,17 +101,17 @@ export struct HtmlLexer {
         return last(token.attrs);
     }
 
-    void _reconsumeIn(State state, Rune rune) {
+    void _reconsumeIn(State state, Rune rune, Io::Loc loc, Diag::Collector& diags) {
         _switchTo(state);
-        consume(rune);
+        consume(rune, loc, diags);
     }
 
     void _switchTo(State state) {
         _state = state;
     }
 
-    void _raise(Str msg) {
-        logWarn("{}: {}", _state, msg);
+    void _raise(Diag::Collector& diags, Io::Loc loc, Str msg) {
+        diags.emit(Diag::Diagnostic::warning(msg).withPrimaryLabel(Io::LocSpan::single(loc)));
     }
 
     bool _isAppropriateEndTagToken() {
@@ -116,12 +120,12 @@ export struct HtmlLexer {
         return _last.unwrap().name == _token.unwrap().name;
     }
 
-    void _flushCodePointsConsumedAsACharacterReference() {
+    void _flushCodePointsConsumedAsACharacterReference(Io::Loc loc, Diag::Collector& diags) {
         for (auto codePoint : iterRunes(_temp.str())) {
             if (_consumedAsPartOfAnAttribute()) {
                 _builder.append(codePoint);
             } else {
-                _emit(codePoint);
+                _emit(codePoint, loc, diags);
             }
         }
     }
@@ -138,7 +142,7 @@ export struct HtmlLexer {
         _sink = &sink;
     }
 
-    void consume(Rune rune, bool isEof = false) {
+    void consume(Rune rune, Io::Loc loc, Diag::Collector& diags, bool isEof = false) {
         logDebugIf(debugLexer, "Lexing '{#c}' {#x} in {}", rune, rune, _state);
 
         switch (_state) {
@@ -165,21 +169,21 @@ export struct HtmlLexer {
             // This is an unexpected-null-character parse error. Emit the
             // current input character as a character token.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
-                _emit(rune);
+                _raise(diags, loc, "unexpected-null-character");
+                _emit(rune, loc, diags);
             }
 
             // EOF
             // Emit an end-of-file token.
             else if (isEof) {
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
             // Emit the current input character as a character token.
             else {
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             break;
@@ -206,21 +210,21 @@ export struct HtmlLexer {
             // This is an unexpected-null-character parse error. Emit a U+FFFD
             // REPLACEMENT CHARACTER character token.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
-                _emit(0xFFFD);
+                _raise(diags, loc, "unexpected-null-character");
+                _emit(0xFFFD, loc, diags);
             }
 
             // EOF
             // Emit an end-of-file token.
             else if (isEof) {
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
             // Emit the current input character as a character token.
             else {
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             break;
@@ -240,21 +244,21 @@ export struct HtmlLexer {
             // This is an unexpected-null-character parse error. Emit a U+FFFD
             // REPLACEMENT CHARACTER character token.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
-                _emit(0xFFFD);
+                _raise(diags, loc, "unexpected-null-character");
+                _emit(0xFFFD, loc, diags);
             }
 
             // EOF
             // Emit an end-of-file token.
             else if (isEof) {
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
             // Emit the current input character as a character token.
             else {
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             break;
@@ -274,21 +278,21 @@ export struct HtmlLexer {
             // This is an unexpected-null-character parse error. Emit a U+FFFD
             // REPLACEMENT CHARACTER character token.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
-                _emit(0xFFFD);
+                _raise(diags, loc, "unexpected-null-character");
+                _emit(0xFFFD, loc, diags);
             }
 
             // EOF
             // Emit an end-of-file token.
             else if (isEof) {
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
             // Emit the current input character as a character token.
             else {
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             break;
@@ -302,21 +306,21 @@ export struct HtmlLexer {
             // This is an unexpected-null-character parse error. Emit a U+FFFD
             // REPLACEMENT CHARACTER character token.
             if (rune == 0) {
-                _raise("unexpected-null-character");
-                _emit(0xFFFD);
+                _raise(diags, loc, "unexpected-null-character");
+                _emit(0xFFFD, loc, diags);
             }
 
             // EOF
             // Emit an end-of-file token.
             else if (isEof) {
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
             // Emit the current input character as a character token.
             else {
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             break;
@@ -342,8 +346,8 @@ export struct HtmlLexer {
             // Create a new start tag token, set its tag name to the empty
             // string. Reconsume in the tag name state.
             else if (isAsciiAlpha(rune)) {
-                _begin(HtmlToken::START_TAG);
-                _reconsumeIn(State::TAG_NAME, rune);
+                _begin(HtmlToken::START_TAG, loc);
+                _reconsumeIn(State::TAG_NAME, rune, loc, diags);
             }
 
             // U+003F QUESTION MARK (?)
@@ -351,19 +355,19 @@ export struct HtmlLexer {
             // error. Create a comment token whose data is the empty string.
             // Reconsume in the bogus comment state.
             else if (rune == '?') {
-                _raise("unexpected-question-mark-instead-of-tag-name");
-                _begin(HtmlToken::COMMENT);
-                _reconsumeIn(State::BOGUS_COMMENT, rune);
+                _raise(diags, loc, "unexpected-question-mark-instead-of-tag-name");
+                _begin(HtmlToken::COMMENT, loc);
+                _reconsumeIn(State::BOGUS_COMMENT, rune, loc, diags);
             }
 
             // EOF
             // This is an eof-before-tag-name parse error. Emit a U+003C
             // LESS-THAN SIGN character token and an end-of-file token.
             else if (isEof) {
-                _raise("eof-before-tag-name");
-                _emit('<');
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-before-tag-name");
+                _emit('<', loc, diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -371,9 +375,9 @@ export struct HtmlLexer {
             // a U+003C LESS-THAN SIGN character token. Reconsume in the data
             // state.
             else {
-                _raise("invalid-first-character-of-tag-name");
-                _emit('<');
-                _reconsumeIn(State::DATA, rune);
+                _raise(diags, loc, "invalid-first-character-of-tag-name");
+                _emit('<', loc, diags);
+                _reconsumeIn(State::DATA, rune, loc, diags);
             }
 
             break;
@@ -387,15 +391,15 @@ export struct HtmlLexer {
             // Create a new end tag token, set its tag name to the empty string.
             // Reconsume in the tag name state.
             if (isAsciiAlpha(rune)) {
-                _begin(HtmlToken::END_TAG);
-                _reconsumeIn(State::TAG_NAME, rune);
+                _begin(HtmlToken::END_TAG, loc);
+                _reconsumeIn(State::TAG_NAME, rune, loc, diags);
             }
 
             // U+003E GREATER-THAN SIGN (>)
             // This is a missing-end-tag-name parse error. Switch to the data
             // state.
             else if (rune == '>') {
-                _raise("missing-end-tag-name");
+                _raise(diags, loc, "missing-end-tag-name");
                 _switchTo(State::DATA);
             }
 
@@ -404,11 +408,11 @@ export struct HtmlLexer {
             // LESS-THAN SIGN character token, a U+002F SOLIDUS character token
             // and an end-of-file token.
             else if (isEof) {
-                _raise("eof-before-tag-name");
-                _emit('<');
-                _emit('/');
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-before-tag-name");
+                _emit('<', loc, diags);
+                _emit('/', loc, diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -416,9 +420,9 @@ export struct HtmlLexer {
             // Create a comment token whose data is the empty string. Reconsume
             // in the bogus comment state.
             else {
-                _raise("invalid-first-character-of-tag-name");
-                _begin(HtmlToken::COMMENT);
-                _reconsumeIn(State::BOGUS_COMMENT, rune);
+                _raise(diags, loc, "invalid-first-character-of-tag-name");
+                _begin(HtmlToken::COMMENT, loc);
+                _reconsumeIn(State::BOGUS_COMMENT, rune, loc, diags);
             }
 
             break;
@@ -450,7 +454,7 @@ export struct HtmlLexer {
             else if (rune == '>') {
                 _ensure().name = Symbol::from(_builder.take());
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // ASCII upper alpha
@@ -466,16 +470,16 @@ export struct HtmlLexer {
             // REPLACEMENT CHARACTER character to the current tag token's tag
             // name.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _builder.append(0xFFFD);
             }
 
             // EOF
             // This is an eof-in-tag parse error. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-tag");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-tag");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -504,8 +508,8 @@ export struct HtmlLexer {
             // Emit a U+003C LESS-THAN SIGN character token. Reconsume in the
             // RCDATA state.
             else {
-                _emit('<');
-                _reconsumeIn(State::RCDATA, rune);
+                _emit('<', loc, diags);
+                _reconsumeIn(State::RCDATA, rune, loc, diags);
             }
 
             break;
@@ -519,17 +523,17 @@ export struct HtmlLexer {
             // Create a new end tag token, set its tag name to the empty string.
             // Reconsume in the RCDATA end tag name state.
             if (isAsciiAlpha(rune)) {
-                _begin(HtmlToken::END_TAG);
-                _reconsumeIn(State::RCDATA_END_TAG_NAME, rune);
+                _begin(HtmlToken::END_TAG, loc);
+                _reconsumeIn(State::RCDATA_END_TAG_NAME, rune, loc, diags);
             }
 
             // Anything else
             // Emit a U+003C LESS-THAN SIGN character token and a U+002F SOLIDUS
             // character token. Reconsume in the RCDATA state.
             else {
-                _emit('<');
-                _emit('/');
-                _reconsumeIn(State::RCDATA, rune);
+                _emit('<', loc, diags);
+                _emit('/', loc, diags);
+                _reconsumeIn(State::RCDATA, rune, loc, diags);
             }
 
             break;
@@ -568,7 +572,7 @@ export struct HtmlLexer {
             else if (rune == '>' and _isAppropriateEndTagToken()) {
                 _ensure().name = Symbol::from(_builder.take());
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // ASCII upper alpha
@@ -596,12 +600,12 @@ export struct HtmlLexer {
             // the characters in the temporary buffer (in the order they
             // were added to the buffer). Reconsume in the RCDATA state.
             else {
-                _emit('<');
-                _emit('/');
+                _emit('<', loc, diags);
+                _emit('/', loc, diags);
                 for (Rune rune : iterRunes(_temp.str()))
-                    _emit(rune);
+                    _emit(rune, loc, diags);
 
-                _reconsumeIn(State::RCDATA, rune);
+                _reconsumeIn(State::RCDATA, rune, loc, diags);
             }
 
             break;
@@ -622,8 +626,8 @@ export struct HtmlLexer {
             // Emit a U+003C LESS-THAN SIGN character token. Reconsume in the
             // RAWTEXT state.
             else {
-                _emit('<');
-                _reconsumeIn(State::RAWTEXT, rune);
+                _emit('<', loc, diags);
+                _reconsumeIn(State::RAWTEXT, rune, loc, diags);
             }
 
             break;
@@ -637,17 +641,17 @@ export struct HtmlLexer {
             // Create a new end tag token, set its tag name to the empty string.
             // Reconsume in the RAWTEXT end tag name state.
             if (isAsciiAlpha(rune)) {
-                _begin(HtmlToken::END_TAG);
-                _reconsumeIn(State::RAWTEXT_END_TAG_NAME, rune);
+                _begin(HtmlToken::END_TAG, loc);
+                _reconsumeIn(State::RAWTEXT_END_TAG_NAME, rune, loc, diags);
             }
 
             // Anything else
             // Emit a U+003C LESS-THAN SIGN character token and a U+002F SOLIDUS
             // character token. Reconsume in the RAWTEXT state.
             else {
-                _emit('<');
-                _emit('/');
-                _reconsumeIn(State::RAWTEXT, rune);
+                _emit('<', loc, diags);
+                _emit('/', loc, diags);
+                _reconsumeIn(State::RAWTEXT, rune, loc, diags);
             }
 
             break;
@@ -684,7 +688,7 @@ export struct HtmlLexer {
             else if (rune == '>' and _isAppropriateEndTagToken()) {
                 _builder.clear();
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // ASCII upper alpha
@@ -711,11 +715,11 @@ export struct HtmlLexer {
             // in the temporary buffer (in the order they were added to the
             // buffer). Reconsume in the RAWTEXT state.
             else {
-                _emit('<');
-                _emit('/');
+                _emit('<', loc, diags);
+                _emit('/', loc, diags);
                 for (Rune rune : iterRunes(_temp.str()))
-                    _emit(rune);
-                _reconsumeIn(State::RAWTEXT, rune);
+                    _emit(rune, loc, diags);
+                _reconsumeIn(State::RAWTEXT, rune, loc, diags);
             }
 
             break;
@@ -739,16 +743,16 @@ export struct HtmlLexer {
             // character token.
             else if (rune == '!') {
                 _switchTo(State::SCRIPT_DATA_ESCAPE_START);
-                _emit('<');
-                _emit('!');
+                _emit('<', loc, diags);
+                _emit('!', loc, diags);
             }
 
             // Anything else
             // Emit a U+003C LESS-THAN SIGN character token. Reconsume in the
             // script data state.
             else {
-                _emit('<');
-                _reconsumeIn(State::SCRIPT_DATA, rune);
+                _emit('<', loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags);
             }
             break;
         }
@@ -761,17 +765,17 @@ export struct HtmlLexer {
             // Create a new end tag token, set its tag name to the empty string.
             // Reconsume in the script data end tag name state.
             if (isAsciiAlpha(rune)) {
-                _begin(HtmlToken::END_TAG);
-                _reconsumeIn(State::SCRIPT_DATA_END_TAG_NAME, rune);
+                _begin(HtmlToken::END_TAG, loc);
+                _reconsumeIn(State::SCRIPT_DATA_END_TAG_NAME, rune, loc, diags);
             }
 
             // Anything else
             // Emit a U+003C LESS-THAN SIGN character token and a U+002F SOLIDUS
             // character token. Reconsume in the script data state.
             else {
-                _emit('<');
-                _emit('/');
-                _reconsumeIn(State::SCRIPT_DATA, rune);
+                _emit('<', loc, diags);
+                _emit('/', loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags);
             }
 
             break;
@@ -809,7 +813,7 @@ export struct HtmlLexer {
             else if (rune == '>' and _isAppropriateEndTagToken()) {
                 _switchTo(State::DATA);
                 _ensure().name = Symbol::from(_builder.take());
-                _emit();
+                _emit(diags);
             }
 
             // ASCII upper alpha
@@ -838,11 +842,11 @@ export struct HtmlLexer {
             // were added to the buffer). Reconsume in the script data
             // state.
             else {
-                _emit('<');
-                _emit('/');
+                _emit('<', loc, diags);
+                _emit('/', loc, diags);
                 for (Rune rune : iterRunes(_temp.str()))
-                    _emit(rune);
-                _reconsumeIn(State::SCRIPT_DATA, rune);
+                    _emit(rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags);
             }
 
             break;
@@ -857,13 +861,13 @@ export struct HtmlLexer {
             // HYPHEN-MINUS character token.
             if (rune == '-') {
                 _switchTo(State::SCRIPT_DATA_ESCAPE_START_DASH);
-                _emit('-');
+                _emit('-', loc, diags);
             }
 
             // Anything else
             // Reconsume in the script data state.
             else {
-                _reconsumeIn(State::SCRIPT_DATA, rune);
+                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags);
             }
 
             break;
@@ -878,13 +882,13 @@ export struct HtmlLexer {
             // HYPHEN-MINUS character token.
             if (rune == '-') {
                 _switchTo(State::SCRIPT_DATA_ESCAPED_DASH_DASH);
-                _emit('-');
+                _emit('-', loc, diags);
             }
 
             // Anything else
             // Reconsume in the script data state.
             else {
-                _reconsumeIn(State::SCRIPT_DATA, rune);
+                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags);
             }
 
             break;
@@ -899,7 +903,7 @@ export struct HtmlLexer {
             // HYPHEN-MINUS character token.
             if (rune == '-') {
                 _switchTo(State::SCRIPT_DATA_ESCAPED_DASH);
-                _emit('-');
+                _emit('-', loc, diags);
             }
 
             // U+003C LESS-THAN SIGN (<)
@@ -912,23 +916,23 @@ export struct HtmlLexer {
             // This is an unexpected-null-character parse error. Emit a U+FFFD
             // REPLACEMENT CHARACTER character token.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
-                _emit(0xFFFD);
+                _raise(diags, loc, "unexpected-null-character");
+                _emit(0xFFFD, loc, diags);
             }
 
             // EOF
             // This is an eof-in-script-html-comment-like-text parse error. Emit
             // an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-script-html-comment-like-text");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-script-html-comment-like-text");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
             // Emit the current input character as a character token.
             else {
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             break;
@@ -943,7 +947,7 @@ export struct HtmlLexer {
             // HYPHEN-MINUS character token.
             if (rune == '-') {
                 _switchTo(State::SCRIPT_DATA_ESCAPED_DASH_DASH);
-                _emit('-');
+                _emit('-', loc, diags);
             }
 
             // U+003C LESS-THAN SIGN (<)
@@ -957,23 +961,23 @@ export struct HtmlLexer {
             // script data escaped state. Emit a U+FFFD REPLACEMENT CHARACTER
             // character token.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _switchTo(State::SCRIPT_DATA_ESCAPED);
-                _emit(0xFFFD);
+                _emit(0xFFFD, loc, diags);
             }
 
             // EOF
             else if (isEof) {
-                _raise("eof-in-script-html-comment-like-text");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-script-html-comment-like-text");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Switch to the script data state. Emit a U+003E GREATER-THAN SIGN
             // character token.
             else if (rune == '>') {
                 _switchTo(State::SCRIPT_DATA);
-                _emit('>');
+                _emit('>', loc, diags);
             }
 
             // U+0000 NULL
@@ -981,18 +985,18 @@ export struct HtmlLexer {
             // script data escaped state. Emit a U+FFFD REPLACEMENT CHARACTER
             // character token.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _switchTo(State::SCRIPT_DATA_ESCAPED);
-                _emit(0xFFFD);
+                _emit(0xFFFD, loc, diags);
             }
 
             // EOF
             // This is an eof-in-script-html-comment-like-text parse error. Emit
             // an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-script-html-comment-like-text");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-script-html-comment-like-text");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -1000,7 +1004,7 @@ export struct HtmlLexer {
             // character as a character token.
             else {
                 _switchTo(State::SCRIPT_DATA_ESCAPED);
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             break;
@@ -1011,7 +1015,7 @@ export struct HtmlLexer {
             // U+002D HYPHEN-MINUS (-)
             // Emit a U+002D HYPHEN-MINUS character token.
             if (rune == '-') {
-                _emit('-');
+                _emit('-', loc, diags);
             }
             // U+003C LESS-THAN SIGN (<)
             // Switch to the script data escaped less-than sign state.
@@ -1022,27 +1026,27 @@ export struct HtmlLexer {
             // Switch to the script data state. Emit a U+003E GREATER-THAN SIGN character token.
             else if (rune == '>') {
                 _switchTo(State::SCRIPT_DATA);
-                _emit('>');
+                _emit('>', loc, diags);
             }
             // U+0000 NULL
             // This is an unexpected-null-character parse error. Switch to the script data escaped state. Emit a U+FFFD REPLACEMENT CHARACTER character token.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _switchTo(State::SCRIPT_DATA_ESCAPED);
-                _emit(0xFFFD);
+                _emit(0xFFFD, loc, diags);
             }
             // EOF
             // This is an eof-in-script-html-comment-like-text parse error. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-script-html-comment-like-text");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-script-html-comment-like-text");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
             // Anything else
             // Switch to the script data escaped state. Emit the current input character as a character token.
             else {
                 _switchTo(State::SCRIPT_DATA_ESCAPED);
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             break;
@@ -1065,16 +1069,16 @@ export struct HtmlLexer {
             // double escape start state.
             else if (isAsciiAlpha(rune)) {
                 _temp.clear();
-                _emit('<');
-                _reconsumeIn(State::SCRIPT_DATA_DOUBLE_ESCAPE_START, rune);
+                _emit('<', loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_DOUBLE_ESCAPE_START, rune, loc, diags);
             }
 
             // Anything else
             // Emit a U+003C LESS-THAN SIGN character token. Reconsume in the
             // script data escaped state.
             else {
-                _emit('<');
-                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune);
+                _emit('<', loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune, loc, diags);
             }
 
             break;
@@ -1088,17 +1092,17 @@ export struct HtmlLexer {
             // Create a new end tag token, set its tag name to the empty string.
             // Reconsume in the script data escaped end tag name state.
             if (isAsciiAlpha(rune)) {
-                _begin(HtmlToken::END_TAG);
-                _reconsumeIn(State::SCRIPT_DATA_ESCAPED_END_TAG_NAME, rune);
+                _begin(HtmlToken::END_TAG, loc);
+                _reconsumeIn(State::SCRIPT_DATA_ESCAPED_END_TAG_NAME, rune, loc, diags);
             }
 
             // Anything else
             // Emit a U+003C LESS-THAN SIGN character token and a U+002F SOLIDUS
             // character token. Reconsume in the script data escaped state.
             else {
-                _emit('<');
-                _emit('/');
-                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune);
+                _emit('<', loc, diags);
+                _emit('/', loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune, loc, diags);
             }
 
             break;
@@ -1134,7 +1138,7 @@ export struct HtmlLexer {
             // Otherwise, treat it as per the "anything else" entry below.
             else if (rune == '>' and _isAppropriateEndTagToken()) {
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // ASCII upper alpha
@@ -1161,11 +1165,11 @@ export struct HtmlLexer {
             // in the temporary buffer (in the order they were added to the
             // buffer). Reconsume in the script data escaped state.
             else {
-                _emit('<');
-                _emit('/');
+                _emit('<', loc, diags);
+                _emit('/', loc, diags);
                 for (Rune rune : iterRunes(_temp.str()))
-                    _emit(rune);
-                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune);
+                    _emit(rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune, loc, diags);
             }
 
             break;
@@ -1192,7 +1196,7 @@ export struct HtmlLexer {
                 else
                     _switchTo(State::SCRIPT_DATA_ESCAPED);
 
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             // ASCII upper alpha
@@ -1201,7 +1205,7 @@ export struct HtmlLexer {
             // Emit the current input character as a character token.
             else if (isAsciiUpper(rune)) {
                 _temp.append(toAsciiLower(rune));
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             // ASCII lower alpha
@@ -1209,13 +1213,13 @@ export struct HtmlLexer {
             // the current input character as a character token.
             else if (isAsciiLower(rune)) {
                 _temp.append(rune);
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             // Anything else
             // Reconsume in the script data escaped state.
             else {
-                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune);
+                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune, loc, diags);
             }
 
             break;
@@ -1230,7 +1234,7 @@ export struct HtmlLexer {
             // U+002D HYPHEN-MINUS character token.
             if (rune == '-') {
                 _switchTo(State::SCRIPT_DATA_DOUBLE_ESCAPED_DASH);
-                _emit('-');
+                _emit('-', loc, diags);
             }
 
             // U+003C LESS-THAN SIGN (<)
@@ -1238,30 +1242,30 @@ export struct HtmlLexer {
             // Emit a U+003C LESS-THAN SIGN character token.
             else if (rune == '<') {
                 _switchTo(State::SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN);
-                _emit('<');
+                _emit('<', loc, diags);
             }
 
             // U+0000 NULL
             // This is an unexpected-null-character parse error. Emit a U+FFFD
             // REPLACEMENT CHARACTER character token.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
-                _emit(0xFFFD);
+                _raise(diags, loc, "unexpected-null-character");
+                _emit(0xFFFD, loc, diags);
             }
 
             // EOF
             // This is an eof-in-script-html-comment-like-text parse error. Emit
             // an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-script-html-comment-like-text");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-script-html-comment-like-text");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
             // Emit the current input character as a character token.
             else {
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             break;
@@ -1276,7 +1280,7 @@ export struct HtmlLexer {
             // U+002D HYPHEN-MINUS character token.
             if (rune == '-') {
                 _switchTo(State::SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH);
-                _emit('-');
+                _emit('-', loc, diags);
             }
 
             // U+003C LESS-THAN SIGN (<)
@@ -1284,7 +1288,7 @@ export struct HtmlLexer {
             // Emit a U+003C LESS-THAN SIGN character token.
             else if (rune == '<') {
                 _switchTo(State::SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN);
-                _emit('<');
+                _emit('<', loc, diags);
             }
 
             // U+0000 NULL
@@ -1292,18 +1296,18 @@ export struct HtmlLexer {
             // script data double escaped state. Emit a U+FFFD REPLACEMENT
             // CHARACTER character token.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _switchTo(State::SCRIPT_DATA_DOUBLE_ESCAPED);
-                _emit(0xFFFD);
+                _emit(0xFFFD, loc, diags);
             }
 
             // EOF
             // This is an eof-in-script-html-comment-like-text parse error. Emit
             // an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-script-html-comment-like-text");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-script-html-comment-like-text");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -1311,7 +1315,7 @@ export struct HtmlLexer {
             // input character as a character token.
             else {
                 _switchTo(State::SCRIPT_DATA_DOUBLE_ESCAPED);
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             break;
@@ -1324,7 +1328,7 @@ export struct HtmlLexer {
             // U+002D HYPHEN-MINUS (-)
             // Emit a U+002D HYPHEN-MINUS character token.
             if (rune == '-') {
-                _emit('-');
+                _emit('-', loc, diags);
             }
 
             // U+003C LESS-THAN SIGN (<)
@@ -1332,7 +1336,7 @@ export struct HtmlLexer {
             // Emit a U+003C LESS-THAN SIGN character token.
             else if (rune == '<') {
                 _switchTo(State::SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN);
-                _emit('<');
+                _emit('<', loc, diags);
             }
 
             // U+003E GREATER-THAN SIGN (>)
@@ -1340,7 +1344,7 @@ export struct HtmlLexer {
             // character token.
             else if (rune == '>') {
                 _switchTo(State::SCRIPT_DATA);
-                _emit('>');
+                _emit('>', loc, diags);
             }
 
             // U+0000 NULL
@@ -1348,18 +1352,18 @@ export struct HtmlLexer {
             // script data double escaped state. Emit a U+FFFD REPLACEMENT
             // CHARACTER character token.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _switchTo(State::SCRIPT_DATA_DOUBLE_ESCAPED);
-                _emit(0xFFFD);
+                _emit(0xFFFD, loc, diags);
             }
 
             // EOF
             // This is an eof-in-script-html-comment-like-text parse error. Emit
             // an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-script-html-comment-like-text");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-script-html-comment-like-text");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -1367,7 +1371,7 @@ export struct HtmlLexer {
             // input character as a character token.
             else {
                 _switchTo(State::SCRIPT_DATA_DOUBLE_ESCAPED);
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             break;
@@ -1384,13 +1388,13 @@ export struct HtmlLexer {
             if (rune == '/') {
                 _temp.clear();
                 _switchTo(State::SCRIPT_DATA_DOUBLE_ESCAPE_END);
-                _emit('/');
+                _emit('/', loc, diags);
             }
 
             // Anything else
             // Reconsume in the script data double escaped state.
             else {
-                _reconsumeIn(State::SCRIPT_DATA_DOUBLE_ESCAPED, rune);
+                _reconsumeIn(State::SCRIPT_DATA_DOUBLE_ESCAPED, rune, loc, diags);
             }
 
             break;
@@ -1426,7 +1430,7 @@ export struct HtmlLexer {
             // Emit the current input character as a character token.
             else if (isAsciiUpper(rune)) {
                 _temp.append(toAsciiLower(rune));
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             // ASCII lower alpha
@@ -1434,13 +1438,13 @@ export struct HtmlLexer {
             // the current input character as a character token.
             else if (isAsciiLower(rune)) {
                 _temp.append(rune);
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             // Anything else
             // Reconsume in the script data double escaped state.
             else {
-                _reconsumeIn(State::SCRIPT_DATA_DOUBLE_ESCAPED, rune);
+                _reconsumeIn(State::SCRIPT_DATA_DOUBLE_ESCAPED, rune, loc, diags);
             }
             break;
         }
@@ -1463,7 +1467,7 @@ export struct HtmlLexer {
             // EOF
             // Reconsume in the after attribute name state.
             else if (rune == '/' or rune == '>' or isEof) {
-                _reconsumeIn(State::AFTER_ATTRIBUTE_NAME, rune);
+                _reconsumeIn(State::AFTER_ATTRIBUTE_NAME, rune, loc, diags);
             }
 
             // U+003D EQUALS SIGN (=)
@@ -1472,7 +1476,7 @@ export struct HtmlLexer {
             // attribute's name to the current input character, and its value to
             // the empty string. Switch to the attribute name state.
             else if (rune == '=') {
-                _raise("unexpected-equals-sign-before-attribute-name");
+                _raise(diags, loc, "unexpected-equals-sign-before-attribute-name");
                 _beginAttribute();
                 _builder.append(rune);
                 _switchTo(State::ATTRIBUTE_NAME);
@@ -1484,7 +1488,7 @@ export struct HtmlLexer {
             // attribute name state.
             else {
                 _beginAttribute();
-                _reconsumeIn(State::ATTRIBUTE_NAME, rune);
+                _reconsumeIn(State::ATTRIBUTE_NAME, rune, loc, diags);
             }
 
             break;
@@ -1505,7 +1509,7 @@ export struct HtmlLexer {
             if (rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ' or
                 rune == '/' or rune == '>' or isEof) {
                 _lastAttr().name = Symbol::from(_builder.take());
-                _reconsumeIn(State::AFTER_ATTRIBUTE_NAME, rune);
+                _reconsumeIn(State::AFTER_ATTRIBUTE_NAME, rune, loc, diags);
             }
 
             // U+003D EQUALS SIGN (=)
@@ -1527,7 +1531,7 @@ export struct HtmlLexer {
             // This is an unexpected-null-character parse error. Append a U+FFFD
             // REPLACEMENT CHARACTER character to the current attribute's name.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _builder.append(0xFFFD);
             }
 
@@ -1537,7 +1541,7 @@ export struct HtmlLexer {
             // This is an unexpected-character-in-attribute-name parse error.
             // Treat it as per the "anything else" entry below.
             else if (rune == '"' or rune == '\'' or rune == '<') {
-                _raise("unexpected-character-in-attribute-name");
+                _raise(diags, loc, "unexpected-character-in-attribute-name");
                 _builder.append(rune);
             }
 
@@ -1590,15 +1594,15 @@ export struct HtmlLexer {
             // Switch to the data state. Emit the current tag token.
             else if (rune == '>') {
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
             // This is an eof-in-tag parse error. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-tag");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-tag");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -1607,7 +1611,7 @@ export struct HtmlLexer {
             // attribute name state.
             else {
                 _beginAttribute();
-                _reconsumeIn(State::ATTRIBUTE_NAME, rune);
+                _reconsumeIn(State::ATTRIBUTE_NAME, rune, loc, diags);
             }
 
             break;
@@ -1642,15 +1646,15 @@ export struct HtmlLexer {
             // This is a missing-attribute-value parse error. Switch to the data
             // state. Emit the current tag token.
             else if (rune == '>') {
-                _raise("missing-attribute-value");
+                _raise(diags, loc, "missing-attribute-value");
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // Anything else
             // Reconsume in the attribute value (unquoted) state.
             else {
-                _reconsumeIn(State::ATTRIBUTE_VALUE_UNQUOTED, rune);
+                _reconsumeIn(State::ATTRIBUTE_VALUE_UNQUOTED, rune, loc, diags);
             }
 
             break;
@@ -1679,16 +1683,16 @@ export struct HtmlLexer {
             // This is an unexpected-null-character parse error. Append a U+FFFD
             // REPLACEMENT CHARACTER character to the current attribute's value.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _builder.append(0xFFFD);
             }
 
             // EOF
             // This is an eof-in-tag parse error. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-tag");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-tag");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -1724,16 +1728,16 @@ export struct HtmlLexer {
             // This is an unexpected-null-character parse error. Append a U+FFFD
             // REPLACEMENT CHARACTER character to the current attribute's value.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _builder.append(0xFFFD);
             }
 
             // EOF
             // This is an eof-in-tag parse error. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-tag");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-tag");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -1772,14 +1776,14 @@ export struct HtmlLexer {
             else if (rune == '>') {
                 _lastAttr().value = _builder.take();
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // U+0000 NULL
             // This is an unexpected-null-character parse error. Append a U+FFFD
             // REPLACEMENT CHARACTER character to the current attribute's value.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _builder.append(0xFFFD);
             }
 
@@ -1791,16 +1795,16 @@ export struct HtmlLexer {
             // This is an unexpected-character-in-unquoted-attribute-value parse
             // error. Treat it as per the "anything else" entry below.
             else if (rune == '"' or rune == '\'' or rune == '<' or rune == '=' or rune == '`') {
-                _raise("unexpected-character-in-unquoted-attribute-value");
+                _raise(diags, loc, "unexpected-character-in-unquoted-attribute-value");
                 _builder.append(rune);
             }
 
             // EOF
             // This is an eof-in-tag parse error. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-tag");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-tag");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -1836,23 +1840,23 @@ export struct HtmlLexer {
             // Switch to the data state. Emit the current tag token.
             else if (rune == '>') {
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
             // This is an eof-in-tag parse error. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-tag");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-tag");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
             // This is a missing-whitespace-between-attributes parse error.
             // Reconsume in the before attribute name state.
             else {
-                _raise("missing-whitespace-between-attributes");
-                _reconsumeIn(State::BEFORE_ATTRIBUTE_NAME, rune);
+                _raise(diags, loc, "missing-whitespace-between-attributes");
+                _reconsumeIn(State::BEFORE_ATTRIBUTE_NAME, rune, loc, diags);
             }
 
             break;
@@ -1869,23 +1873,23 @@ export struct HtmlLexer {
                 _ensure().selfClosing = true;
                 _builder.clear();
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
             // This is an eof-in-tag parse error. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-tag");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-tag");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
             // This is an unexpected-solidus-in-tag parse error. Reconsume in
             // the before attribute name state.
             else {
-                _raise("unexpected-solidus-in-tag");
-                _reconsumeIn(State::BEFORE_ATTRIBUTE_NAME, rune);
+                _raise(diags, loc, "unexpected-solidus-in-tag");
+                _reconsumeIn(State::BEFORE_ATTRIBUTE_NAME, rune, loc, diags);
             }
 
             break;
@@ -1899,22 +1903,22 @@ export struct HtmlLexer {
             if (rune == '>') {
                 _ensure(HtmlToken::COMMENT).data = _builder.take();
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
             // Emit the comment. Emit an end-of-file token.
             else if (isEof) {
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // U+0000 NULL
             // This is an unexpected-null-character parse error. Append a U+FFFD
             // REPLACEMENT CHARACTER character to the comment token's data.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _builder.append(0xFFFD);
             }
 
@@ -1940,7 +1944,7 @@ export struct HtmlLexer {
                     break;
 
                 _peek.clear();
-                _begin(HtmlToken::COMMENT);
+                _begin(HtmlToken::COMMENT, loc);
                 _switchTo(State::COMMENT_START);
             }
 
@@ -1978,9 +1982,9 @@ export struct HtmlLexer {
             // comment state (don't consume anything in the current state).
             else {
                 _peek.clear();
-                _raise("incorrectly-opened-comment");
-                _begin(HtmlToken::COMMENT);
-                _reconsumeIn(State::BOGUS_COMMENT, rune);
+                _raise(diags, loc, "incorrectly-opened-comment");
+                _begin(HtmlToken::COMMENT, loc);
+                _reconsumeIn(State::BOGUS_COMMENT, rune, loc, diags);
             }
             break;
         }
@@ -1999,15 +2003,15 @@ export struct HtmlLexer {
             // This is an abrupt-closing-of-empty-comment parse error. Switch to
             // the data state. Emit the current comment token.
             else if (rune == '>') {
-                _raise("abrupt-closing-of-empty-comment");
+                _raise(diags, loc, "abrupt-closing-of-empty-comment");
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // Anything else
             // Reconsume in the comment state.
             else {
-                _reconsumeIn(State::COMMENT, rune);
+                _reconsumeIn(State::COMMENT, rune, loc, diags);
             }
 
             break;
@@ -2027,20 +2031,20 @@ export struct HtmlLexer {
             // This is an abrupt-closing-of-empty-comment parse error. Switch to
             // the data state. Emit the current comment token.
             else if (rune == '>') {
-                _raise("abrupt-closing-of-empty-comment");
+                _raise(diags, loc, "abrupt-closing-of-empty-comment");
                 _ensure(HtmlToken::COMMENT).data = _builder.take();
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
             // This is an eof-in-comment parse error. Emit the current comment
             // token. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-comment");
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-comment");
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2048,7 +2052,7 @@ export struct HtmlLexer {
             // data. Reconsume in the comment state.
             else {
                 _builder.append('-');
-                _reconsumeIn(State::COMMENT, rune);
+                _reconsumeIn(State::COMMENT, rune, loc, diags);
             }
 
             break;
@@ -2076,7 +2080,7 @@ export struct HtmlLexer {
             // This is an unexpected-null-character parse error. Append a U+FFFD
             // REPLACEMENT CHARACTER character to the comment token's data.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _builder.append(0xFFFD);
             }
 
@@ -2084,11 +2088,11 @@ export struct HtmlLexer {
             // This is an eof-in-comment parse error. Emit the current comment
             // token. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-comment");
-                _emit();
+                _raise(diags, loc, "eof-in-comment");
+                _emit(diags);
 
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2121,7 +2125,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the comment state.
             else {
-                _reconsumeIn(State::COMMENT, rune);
+                _reconsumeIn(State::COMMENT, rune, loc, diags);
             }
 
             break;
@@ -2140,7 +2144,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the comment state.
             else {
-                _reconsumeIn(State::COMMENT, rune);
+                _reconsumeIn(State::COMMENT, rune, loc, diags);
             }
 
             break;
@@ -2159,7 +2163,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the comment end dash state.
             else {
-                _reconsumeIn(State::COMMENT_END_DASH, rune);
+                _reconsumeIn(State::COMMENT_END_DASH, rune, loc, diags);
             }
 
             break;
@@ -2173,15 +2177,15 @@ export struct HtmlLexer {
             // EOF
             // Reconsume in the comment end state.
             if (rune == '>' or isEof) {
-                _reconsumeIn(State::COMMENT_END, rune);
+                _reconsumeIn(State::COMMENT_END, rune, loc, diags);
             }
 
             // Anything else
             // This is a nested-comment parse error. Reconsume in the comment
             // end state.
             else {
-                _raise("nested-comment");
-                _reconsumeIn(State::COMMENT_END, rune);
+                _raise(diags, loc, "nested-comment");
+                _reconsumeIn(State::COMMENT_END, rune, loc, diags);
             }
 
             break;
@@ -2201,10 +2205,10 @@ export struct HtmlLexer {
             // This is an eof-in-comment parse error. Emit the current comment
             // token. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-comment");
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-comment");
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2212,7 +2216,7 @@ export struct HtmlLexer {
             // data. Reconsume in the comment state.
             else {
                 _builder.append('-');
-                _reconsumeIn(State::COMMENT, rune);
+                _reconsumeIn(State::COMMENT, rune, loc, diags);
             }
 
             break;
@@ -2227,7 +2231,7 @@ export struct HtmlLexer {
             if (rune == '>') {
                 _ensure(HtmlToken::COMMENT).data = _builder.take();
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // U+0021 EXCLAMATION MARK (!)
@@ -2247,10 +2251,10 @@ export struct HtmlLexer {
             // This is an eof-in-comment parse error. Emit the current comment
             // token. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-comment");
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-comment");
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2259,7 +2263,7 @@ export struct HtmlLexer {
             else {
                 _builder.append('-');
                 _builder.append('-');
-                _reconsumeIn(State::COMMENT, rune);
+                _reconsumeIn(State::COMMENT, rune, loc, diags);
             }
 
             break;
@@ -2284,19 +2288,19 @@ export struct HtmlLexer {
             // This is an incorrectly-closed-comment parse error. Switch to the
             // data state. Emit the current comment token.
             else if (rune == '>') {
-                _raise("incorrectly-closed-comment");
+                _raise(diags, loc, "incorrectly-closed-comment");
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
             // This is an eof-in-comment parse error. Emit the current comment
             // token. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-comment");
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-comment");
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2307,7 +2311,7 @@ export struct HtmlLexer {
                 _builder.append('-');
                 _builder.append('-');
                 _builder.append('!');
-                _reconsumeIn(State::COMMENT, rune);
+                _reconsumeIn(State::COMMENT, rune, loc, diags);
             }
 
             break;
@@ -2329,7 +2333,7 @@ export struct HtmlLexer {
             // U+003E GREATER-THAN SIGN (>)
             // Reconsume in the before DOCTYPE name state.
             else if (rune == '>') {
-                _reconsumeIn(State::BEFORE_DOCTYPE_NAME, rune);
+                _reconsumeIn(State::BEFORE_DOCTYPE_NAME, rune, loc, diags);
             }
 
             // EOF
@@ -2337,20 +2341,20 @@ export struct HtmlLexer {
             // token. Set its force-quirks flag to on. Emit the current token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
-                _begin(HtmlToken::DOCTYPE);
+                _raise(diags, loc, "eof-in-doctype");
+                _begin(HtmlToken::DOCTYPE, loc);
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
             // This is a missing-whitespace-before-doctype-name parse error.
             // Reconsume in the before DOCTYPE name state.
             else {
-                _raise("missing-whitespace-before-doctype-name");
-                _reconsumeIn(State::BEFORE_DOCTYPE_NAME, rune);
+                _raise(diags, loc, "missing-whitespace-before-doctype-name");
+                _reconsumeIn(State::BEFORE_DOCTYPE_NAME, rune, loc, diags);
             }
 
             break;
@@ -2374,7 +2378,7 @@ export struct HtmlLexer {
             // version of the current input character (add 0x0020 to the
             // character's code point). Switch to the DOCTYPE name state.
             else if (isAsciiUpper(rune)) {
-                _begin(HtmlToken::DOCTYPE);
+                _begin(HtmlToken::DOCTYPE, loc);
                 _builder.append(toAsciiLower(rune));
                 _switchTo(State::DOCTYPE_NAME);
             }
@@ -2384,8 +2388,8 @@ export struct HtmlLexer {
             // DOCTYPE token. Set the token's name to a U+FFFD REPLACEMENT
             // CHARACTER character. Switch to the DOCTYPE name state.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
-                _begin(HtmlToken::DOCTYPE);
+                _raise(diags, loc, "unexpected-null-character");
+                _begin(HtmlToken::DOCTYPE, loc);
                 _builder.append(0xFFFD);
                 _switchTo(State::DOCTYPE_NAME);
             }
@@ -2395,11 +2399,11 @@ export struct HtmlLexer {
             // token. Set its force-quirks flag to on. Switch to the data state.
             // Emit the current token.
             else if (rune == '>') {
-                _raise("missing-doctype-name");
-                _begin(HtmlToken::DOCTYPE);
+                _raise(diags, loc, "missing-doctype-name");
+                _begin(HtmlToken::DOCTYPE, loc);
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
@@ -2407,19 +2411,19 @@ export struct HtmlLexer {
             // token. Set its force-quirks flag to on. Emit the current token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
-                _begin(HtmlToken::DOCTYPE);
+                _raise(diags, loc, "eof-in-doctype");
+                _begin(HtmlToken::DOCTYPE, loc);
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
             // Create a new DOCTYPE token. Set the token's name to the current
             // input character. Switch to the DOCTYPE name state.
             else {
-                _begin(HtmlToken::DOCTYPE);
+                _begin(HtmlToken::DOCTYPE, loc);
                 _builder.append(rune);
                 _switchTo(State::DOCTYPE_NAME);
             }
@@ -2446,7 +2450,7 @@ export struct HtmlLexer {
             else if (rune == '>') {
                 _ensure(HtmlToken::DOCTYPE).name = Symbol::from(_builder.take());
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // ASCII upper alpha
@@ -2462,7 +2466,7 @@ export struct HtmlLexer {
             // REPLACEMENT CHARACTER character to the current DOCTYPE token's
             // name.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _builder.append(0xFFFD);
             }
 
@@ -2471,11 +2475,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2505,7 +2509,7 @@ export struct HtmlLexer {
             // Switch to the data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
@@ -2513,11 +2517,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2542,9 +2546,9 @@ export struct HtmlLexer {
             // the current DOCTYPE token's force-quirks flag to on. Reconsume in
             // the bogus DOCTYPE state.
             else {
-                _raise("invalid-character-sequence-after-doctype-name");
+                _raise(diags, loc, "invalid-character-sequence-after-doctype-name");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
             }
 
             break;
@@ -2569,7 +2573,7 @@ export struct HtmlLexer {
             // empty string (not missing), then switch to the DOCTYPE public
             // identifier (double-quoted) state.
             else if (rune == '"') {
-                _raise("missing-whitespace-after-doctype-public-keyword");
+                _raise(diags, loc, "missing-whitespace-after-doctype-public-keyword");
                 _switchTo(State::DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED);
             }
 
@@ -2579,7 +2583,7 @@ export struct HtmlLexer {
             // empty string (not missing), then switch to the DOCTYPE public
             // identifier (single-quoted) state.
             else if (rune == '\'') {
-                _raise("missing-whitespace-after-doctype-public-keyword");
+                _raise(diags, loc, "missing-whitespace-after-doctype-public-keyword");
                 _switchTo(State::DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED);
             }
 
@@ -2588,10 +2592,10 @@ export struct HtmlLexer {
             // current DOCTYPE token's force-quirks flag to on. Switch to the
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
-                _raise("missing-doctype-public-identifier");
+                _raise(diags, loc, "missing-doctype-public-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
@@ -2599,11 +2603,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2611,9 +2615,9 @@ export struct HtmlLexer {
             // error. Set the current DOCTYPE token's force-quirks flag to on.
             // Reconsume in the bogus DOCTYPE state.
             else {
-                _raise("missing-quote-before-doctype-public-identifier");
+                _raise(diags, loc, "missing-quote-before-doctype-public-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
             }
 
             break;
@@ -2653,10 +2657,10 @@ export struct HtmlLexer {
             // current DOCTYPE token's force-quirks flag to on. Switch to the
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
-                _raise("missing-doctype-public-identifier");
+                _raise(diags, loc, "missing-doctype-public-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
@@ -2664,11 +2668,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2676,9 +2680,9 @@ export struct HtmlLexer {
             // error. Set the current DOCTYPE token's force-quirks flag to on.
             // Reconsume in the bogus DOCTYPE state.
             else {
-                _raise("missing-quote-before-doctype-public-identifier");
+                _raise(diags, loc, "missing-quote-before-doctype-public-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
             }
 
             break;
@@ -2700,7 +2704,7 @@ export struct HtmlLexer {
             // REPLACEMENT CHARACTER character to the current DOCTYPE token's
             // public identifier.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _builder.append(0xFFFD);
             }
 
@@ -2709,11 +2713,11 @@ export struct HtmlLexer {
             // current DOCTYPE token's force-quirks flag to on. Switch to the
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
-                _raise("abrupt-doctype-public-identifier");
+                _raise(diags, loc, "abrupt-doctype-public-identifier");
                 _ensure(HtmlToken::DOCTYPE).publicIdent = _builder.take();
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
@@ -2721,11 +2725,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2754,7 +2758,7 @@ export struct HtmlLexer {
             // REPLACEMENT CHARACTER character to the current DOCTYPE token's
             // public identifier.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _builder.append(0xFFFD);
             }
 
@@ -2763,11 +2767,11 @@ export struct HtmlLexer {
             // current DOCTYPE token's force-quirks flag to on. Switch to the
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
-                _raise("abrupt-doctype-public-identifier");
+                _raise(diags, loc, "abrupt-doctype-public-identifier");
                 _ensure(HtmlToken::DOCTYPE).publicIdent = _builder.take();
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
@@ -2775,11 +2779,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2809,7 +2813,7 @@ export struct HtmlLexer {
             // Switch to the data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // U+0022 QUOTATION MARK (")
@@ -2819,7 +2823,7 @@ export struct HtmlLexer {
             // the empty string (not missing), then switch to the DOCTYPE system
             // identifier (double-quoted) state.
             else if (rune == '"') {
-                _raise("missing-whitespace-between-doctype-public-and-system-identifiers");
+                _raise(diags, loc, "missing-whitespace-between-doctype-public-and-system-identifiers");
                 _switchTo(State::DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED);
             }
 
@@ -2830,7 +2834,7 @@ export struct HtmlLexer {
             // the empty string (not missing), then switch to the DOCTYPE system
             // identifier (single-quoted) state.
             else if (rune == '\'') {
-                _raise("missing-whitespace-between-doctype-public-and-system-identifiers");
+                _raise(diags, loc, "missing-whitespace-between-doctype-public-and-system-identifiers");
                 _switchTo(State::DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED);
             }
 
@@ -2839,11 +2843,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2851,9 +2855,9 @@ export struct HtmlLexer {
             // error. Set the current DOCTYPE token's force-quirks flag to on.
             // Reconsume in the bogus DOCTYPE state.
             else {
-                _raise("missing-quote-before-doctype-system-identifier");
+                _raise(diags, loc, "missing-quote-before-doctype-system-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
             }
 
             break;
@@ -2876,7 +2880,7 @@ export struct HtmlLexer {
             // Switch to the data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // U+0022 QUOTATION MARK (")
@@ -2900,11 +2904,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2912,9 +2916,9 @@ export struct HtmlLexer {
             // error. Set the current DOCTYPE token's force-quirks flag to on.
             // Reconsume in the bogus DOCTYPE state.
             else {
-                _raise("missing-quote-before-doctype-system-identifier");
+                _raise(diags, loc, "missing-quote-before-doctype-system-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
             }
 
             break;
@@ -2939,7 +2943,7 @@ export struct HtmlLexer {
             // empty string (not missing), then switch to the DOCTYPE system
             // identifier (double-quoted) state.
             else if (rune == '"') {
-                _raise("missing-whitespace-after-doctype-system-keyword");
+                _raise(diags, loc, "missing-whitespace-after-doctype-system-keyword");
                 _switchTo(State::DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED);
             }
 
@@ -2949,7 +2953,7 @@ export struct HtmlLexer {
             // empty string (not missing), then switch to the DOCTYPE system
             // identifier (single-quoted) state.
             else if (rune == '\'') {
-                _raise("missing-whitespace-after-doctype-system-keyword");
+                _raise(diags, loc, "missing-whitespace-after-doctype-system-keyword");
                 _switchTo(State::DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED);
             }
 
@@ -2958,10 +2962,10 @@ export struct HtmlLexer {
             // current DOCTYPE token's force-quirks flag to on. Switch to the
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
-                _raise("missing-doctype-system-identifier");
+                _raise(diags, loc, "missing-doctype-system-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
@@ -2969,11 +2973,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -2981,9 +2985,9 @@ export struct HtmlLexer {
             // error. Set the current DOCTYPE token's force-quirks flag to on.
             // Reconsume in the bogus DOCTYPE state.
             else {
-                _raise("missing-quote-before-doctype-system-identifier");
+                _raise(diags, loc, "missing-quote-before-doctype-system-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
             }
 
             break;
@@ -3023,10 +3027,10 @@ export struct HtmlLexer {
             // current DOCTYPE token's force-quirks flag to on. Switch to the
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
-                _raise("missing-doctype-system-identifier");
+                _raise(diags, loc, "missing-doctype-system-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
@@ -3034,11 +3038,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -3046,9 +3050,9 @@ export struct HtmlLexer {
             // error. Set the current DOCTYPE token's force-quirks flag to on.
             // Reconsume in the bogus DOCTYPE state.
             else {
-                _raise("missing-quote-before-doctype-system-identifier");
+                _raise(diags, loc, "missing-quote-before-doctype-system-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
             }
 
             break;
@@ -3069,7 +3073,7 @@ export struct HtmlLexer {
             // REPLACEMENT CHARACTER character to the current DOCTYPE token's
             // system identifier.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _builder.append(0xFFFD);
             }
 
@@ -3078,10 +3082,10 @@ export struct HtmlLexer {
             // current DOCTYPE token's force-quirks flag to on. Switch to the
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
-                _raise("abrupt-doctype-system-identifier");
+                _raise(diags, loc, "abrupt-doctype-system-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
@@ -3089,11 +3093,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -3121,7 +3125,7 @@ export struct HtmlLexer {
             // REPLACEMENT CHARACTER character to the current DOCTYPE token's
             // system identifier.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 _builder.append(0xFFFD);
             }
 
@@ -3130,10 +3134,10 @@ export struct HtmlLexer {
             // current DOCTYPE token's force-quirks flag to on. Switch to the
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
-                _raise("abrupt-doctype-system-identifier");
+                _raise(diags, loc, "abrupt-doctype-system-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
@@ -3141,11 +3145,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -3175,7 +3179,7 @@ export struct HtmlLexer {
             // Switch to the data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // EOF
@@ -3183,11 +3187,11 @@ export struct HtmlLexer {
             // token's force-quirks flag to on. Emit the current DOCTYPE token.
             // Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-doctype");
+                _raise(diags, loc, "eof-in-doctype");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -3195,8 +3199,8 @@ export struct HtmlLexer {
             // parse error. Reconsume in the bogus DOCTYPE state. (This does not
             // set the current DOCTYPE token's force-quirks flag to on.)
             else {
-                _raise("unexpected-character-after-doctype-system-identifier");
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune);
+                _raise(diags, loc, "unexpected-character-after-doctype-system-identifier");
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
             }
 
             break;
@@ -3210,23 +3214,23 @@ export struct HtmlLexer {
             // Switch to the data state. Emit the DOCTYPE token.
             if (rune == '>') {
                 _switchTo(State::DATA);
-                _emit();
+                _emit(diags);
             }
 
             // U+0000 NULL
             // This is an unexpected-null-character parse error. Ignore the
             // character.
             else if (rune == 0) {
-                _raise("unexpected-null-character");
+                _raise(diags, loc, "unexpected-null-character");
                 // Ignore
             }
 
             // EOF
             // Emit the DOCTYPE token. Emit an end-of-file token.
             else if (isEof) {
-                _emit();
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _emit(diags);
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -3251,9 +3255,9 @@ export struct HtmlLexer {
             // EOF
             // This is an eof-in-cdata parse error. Emit an end-of-file token.
             else if (isEof) {
-                _raise("eof-in-cdata");
-                _begin(HtmlToken::END_OF_FILE);
-                _emit();
+                _raise(diags, loc, "eof-in-cdata");
+                _begin(HtmlToken::END_OF_FILE, loc);
+                _emit(diags);
             }
 
             // Anything else
@@ -3262,7 +3266,7 @@ export struct HtmlLexer {
             // stage, as part of the in foreign content insertion mode, which is
             // the only place where CDATA sections can appear.
             else {
-                _emit(rune);
+                _emit(rune, loc, diags);
             }
 
             break;
@@ -3282,8 +3286,8 @@ export struct HtmlLexer {
             // Emit a U+005D RIGHT SQUARE BRACKET character token. Reconsume in
             // the CDATA section state.
             else {
-                _emit(']');
-                _reconsumeIn(State::CDATA_SECTION, rune);
+                _emit(']', loc, diags);
+                _reconsumeIn(State::CDATA_SECTION, rune, loc, diags);
             }
 
             break;
@@ -3296,7 +3300,7 @@ export struct HtmlLexer {
             // U+005D RIGHT SQUARE BRACKET (])
             // Emit a U+005D RIGHT SQUARE BRACKET character token.
             if (rune == ']') {
-                _emit(']');
+                _emit(']', loc, diags);
             }
 
             // U+003E GREATER-THAN SIGN character
@@ -3309,9 +3313,9 @@ export struct HtmlLexer {
             // Emit two U+005D RIGHT SQUARE BRACKET character tokens. Reconsume
             // in the CDATA section state.
             else {
-                _emit(']');
-                _emit(']');
-                _reconsumeIn(State::CDATA_SECTION, rune);
+                _emit(']', loc, diags);
+                _emit(']', loc, diags);
+                _reconsumeIn(State::CDATA_SECTION, rune, loc, diags);
             }
 
             break;
@@ -3329,7 +3333,7 @@ export struct HtmlLexer {
             // ASCII alphanumeric
             // Reconsume in the named character reference state.
             if (isAsciiAlphaNum(rune)) {
-                _reconsumeIn(State::NAMED_CHARACTER_REFERENCE, rune);
+                _reconsumeIn(State::NAMED_CHARACTER_REFERENCE, rune, loc, diags);
             }
 
             // U+0023 NUMBER SIGN (#)
@@ -3345,8 +3349,8 @@ export struct HtmlLexer {
             // Flush code points consumed as a character reference. Reconsume in
             // the return state.
             else {
-                _flushCodePointsConsumedAsACharacterReference();
-                _reconsumeIn(_returnState, rune);
+                _flushCodePointsConsumedAsACharacterReference(loc, diags);
+                _reconsumeIn(_returnState, rune, loc, diags);
             }
 
             break;
@@ -3430,15 +3434,15 @@ export struct HtmlLexer {
                     _consumedAsPartOfAnAttribute() and
                     (rune == '=' or isAsciiAlphaNum(rune))
                 ) {
-                    _flushCodePointsConsumedAsACharacterReference();
-                    _reconsumeIn(_returnState, rune);
+                    _flushCodePointsConsumedAsACharacterReference(loc, diags);
+                    _reconsumeIn(_returnState, rune, loc, diags);
                 } else {
                     // Otherwise:
 
                     // If the last character matched is not a U+003B SEMICOLON character
                     // (;), then this is a missing-semicolon-after-character-reference
                     // parse error.
-                    _raise("missing-semicolon-after-character-reference");
+                    _raise(diags, loc, "missing-semicolon-after-character-reference");
 
                     // Set the temporary buffer to the empty string.
                     // Append one or two characters corresponding to the character reference name (as
@@ -3467,8 +3471,8 @@ export struct HtmlLexer {
                     // Flush code points consumed as a character reference. Switch to
                     // the return state.
                     matchedCharReferenceNoSemiColon = NONE;
-                    _flushCodePointsConsumedAsACharacterReference();
-                    _reconsumeIn(_returnState, rune);
+                    _flushCodePointsConsumedAsACharacterReference(loc, diags);
+                    _reconsumeIn(_returnState, rune, loc, diags);
                 }
             }
 
@@ -3511,15 +3515,15 @@ export struct HtmlLexer {
                 // Flush code points consumed as a character reference. Switch to
                 // the return state.
                 matchedCharReferenceNoSemiColon = NONE;
-                _flushCodePointsConsumedAsACharacterReference();
+                _flushCodePointsConsumedAsACharacterReference(loc, diags);
                 _switchTo(_returnState);
             }
 
             else {
                 // Otherwise Flush code points consumed as a character reference.
                 // Switch to the ambiguous ampersand state.
-                _flushCodePointsConsumedAsACharacterReference();
-                _reconsumeIn(State::AMBIGUOUS_AMPERSAND, rune);
+                _flushCodePointsConsumedAsACharacterReference(loc, diags);
+                _reconsumeIn(State::AMBIGUOUS_AMPERSAND, rune, loc, diags);
             }
             break;
         }
@@ -3537,7 +3541,7 @@ export struct HtmlLexer {
                 if (_consumedAsPartOfAnAttribute()) {
                     _builder.append(rune);
                 } else {
-                    _emit(rune);
+                    _emit(rune, loc, diags);
                 }
             }
 
@@ -3545,14 +3549,14 @@ export struct HtmlLexer {
             // This is an unknown-named-character-reference parse error.
             // Reconsume in the return state.
             else if (rune == ';') {
-                _raise("unknown-named-character-reference");
-                _reconsumeIn(_returnState, rune);
+                _raise(diags, loc, "unknown-named-character-reference");
+                _reconsumeIn(_returnState, rune, loc, diags);
             }
 
             // Anything else
             // Reconsume in the return state.
             else {
-                _reconsumeIn(_returnState, rune);
+                _reconsumeIn(_returnState, rune, loc, diags);
             }
 
             break;
@@ -3575,7 +3579,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the decimal character reference start state.
             else {
-                _reconsumeIn(State::DECIMAL_CHARACTER_REFERENCE_START, rune);
+                _reconsumeIn(State::DECIMAL_CHARACTER_REFERENCE_START, rune, loc, diags);
             }
 
             break;
@@ -3588,7 +3592,7 @@ export struct HtmlLexer {
             // ASCII hex digit
             // Reconsume in the hexadecimal character reference state.
             if (isAsciiHexDigit(rune)) {
-                _reconsumeIn(State::HEXADECIMAL_CHARACTER_REFERENCE, rune);
+                _reconsumeIn(State::HEXADECIMAL_CHARACTER_REFERENCE, rune, loc, diags);
             }
 
             // Anything else
@@ -3596,9 +3600,9 @@ export struct HtmlLexer {
             // error. Flush code points consumed as a character reference.
             // Reconsume in the return state.
             else {
-                _raise("absence-of-digits-in-numeric-character-reference");
-                _flushCodePointsConsumedAsACharacterReference();
-                _reconsumeIn(_returnState, rune);
+                _raise(diags, loc, "absence-of-digits-in-numeric-character-reference");
+                _flushCodePointsConsumedAsACharacterReference(loc, diags);
+                _reconsumeIn(_returnState, rune, loc, diags);
             }
 
             break;
@@ -3611,7 +3615,7 @@ export struct HtmlLexer {
             // ASCII digit
             // Reconsume in the decimal character reference state.
             if (isAsciiDigit(rune)) {
-                _reconsumeIn(State::DECIMAL_CHARACTER_REFERENCE, rune);
+                _reconsumeIn(State::DECIMAL_CHARACTER_REFERENCE, rune, loc, diags);
             }
 
             // Anything else
@@ -3619,9 +3623,9 @@ export struct HtmlLexer {
             // error. Flush code points consumed as a character reference.
             // Reconsume in the return state.
             else {
-                _raise("absence-of-digits-in-numeric-character-reference");
-                _flushCodePointsConsumedAsACharacterReference();
-                _reconsumeIn(_returnState, rune);
+                _raise(diags, loc, "absence-of-digits-in-numeric-character-reference");
+                _flushCodePointsConsumedAsACharacterReference(loc, diags);
+                _reconsumeIn(_returnState, rune, loc, diags);
             }
 
             break;
@@ -3667,8 +3671,8 @@ export struct HtmlLexer {
             // This is a missing-semicolon-after-character-reference parse
             // error. Reconsume in the numeric character reference end state.
             else {
-                _raise("missing-semicolon-after-character-reference");
-                _reconsumeIn(State::NUMERIC_CHARACTER_REFERENCE_END, rune);
+                _raise(diags, loc, "missing-semicolon-after-character-reference");
+                _reconsumeIn(State::NUMERIC_CHARACTER_REFERENCE_END, rune, loc, diags);
             }
 
             break;
@@ -3696,8 +3700,8 @@ export struct HtmlLexer {
             // This is a missing-semicolon-after-character-reference parse
             // error. Reconsume in the numeric character reference end state.
             else {
-                _raise("missing-semicolon-after-character-reference");
-                _reconsumeIn(State::NUMERIC_CHARACTER_REFERENCE_END, rune);
+                _raise(diags, loc, "missing-semicolon-after-character-reference");
+                _reconsumeIn(State::NUMERIC_CHARACTER_REFERENCE_END, rune, loc, diags);
             }
 
             break;
@@ -3710,7 +3714,7 @@ export struct HtmlLexer {
             // If the number is 0x00, then this is a null-character-reference
             // parse error. Set the character reference code to 0xFFFD.
             if (_currChar == 0) {
-                _raise("null-character-reference");
+                _raise(diags, loc, "null-character-reference");
                 _currChar = 0xFFFD;
             }
 
@@ -3718,7 +3722,7 @@ export struct HtmlLexer {
             // character-reference-outside-unicode-range parse error. Set the
             // character reference code to 0xFFFD.
             else if (isUnicode(rune)) {
-                _raise("character-reference-outside-unicode-range");
+                _raise(diags, loc, "character-reference-outside-unicode-range");
                 _currChar = 0xFFFD;
             }
 
@@ -3726,20 +3730,20 @@ export struct HtmlLexer {
             // surrogate-character-reference parse error. Set the character
             // reference code to 0xFFFD.
             else if (isUnicodeSurrogate(rune)) {
-                _raise("surrogate-character-reference");
+                _raise(diags, loc, "surrogate-character-reference");
                 _currChar = 0xFFFD;
             }
 
             // If the number is a noncharacter, then this is a
             // noncharacter-character-reference parse error.
             else if ((0xFDD0 <= _currChar and _currChar <= 0xFDEF) or (_currChar & 0xFFFF) == 0xFFFE or (_currChar & 0xFFFF) == 0xFFFF) {
-                _raise("noncharacter-character-reference");
+                _raise(diags, loc, "noncharacter-character-reference");
             }
 
             // If the number is 0x0D, or a control that's not ASCII whitespace,
             // then this is a control-character-reference parse error.
             else if ((_currChar & 0xFFFF) == 0x000D or isAsciiBlank(_currChar)) {
-                _raise("control-character-reference");
+                _raise(diags, loc, "control-character-reference");
             }
 
             // If the number is one of the numbers in the first column of the
@@ -3820,7 +3824,7 @@ export struct HtmlLexer {
 
             _temp.clear();
             _temp.append(_currChar);
-            _flushCodePointsConsumedAsACharacterReference();
+            _flushCodePointsConsumedAsACharacterReference(loc, diags);
             _switchTo(_returnState);
 
             break;
