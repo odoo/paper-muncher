@@ -446,8 +446,7 @@ static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
                         Gfx::Borders{
                             .radii = type == "checkbox" ? 2 : 99,
                             .widths = 0,
-                            .fills = {
-                            },
+                            .fills = {},
                             .styles = {},
                         },
                         Gfx::Outline{}, Vec<Gfx::Fill>{Gfx::BLUE500}

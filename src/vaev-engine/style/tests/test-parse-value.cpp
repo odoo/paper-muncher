@@ -2,6 +2,7 @@
 
 import Vaev.Engine;
 import Karm.Math;
+import Karm.Diag;
 
 using namespace Karm;
 
@@ -10,7 +11,9 @@ namespace Vaev::Style::Tests {
 test$("vaev-css-build-display") {
     auto testCase = [&](Str input, Display expected) -> Res<> {
         auto lex = Css::Lexer{input};
-        auto [val, _] = consumeDeclarationValue(lex);
+
+        auto diags = Diag::Collector::ignore();
+        auto [val, _] = consumeDeclarationValue(lex, diags);
         Cursor<Css::Sst> sst{val};
         auto res = parseValue<Display>(sst);
         expect$(res);

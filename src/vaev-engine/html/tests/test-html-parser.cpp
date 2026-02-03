@@ -3,6 +3,7 @@
 import Vaev.Engine;
 import Karm.Gc;
 import Karm.Ref;
+import Karm.Diag;
 
 using namespace Karm;
 
@@ -13,7 +14,8 @@ test$("parse-empty-document") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write(""s);
+    auto diags = Diag::Collector::ignore();
+    parser.write(""s, diags);
     return Ok();
 }
 
@@ -22,7 +24,8 @@ test$("parse-open-close-tag-with-structure") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<html></html>"s);
+    auto diags = Diag::Collector::ignore();
+    parser.write("<html></html>"s, diags);
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
     expect$(dom->hasChildren());
@@ -48,7 +51,8 @@ test$("parse-empty-tag") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<html/>"s);
+    auto diags = Diag::Collector::ignore();
+    parser.write("<html/>"s, diags);
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
     expect$(dom->hasChildren());
@@ -64,7 +68,8 @@ test$("parse-attr") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<html lang=\"en\"/>"s);
+    auto diags = Diag::Collector::ignore();
+    parser.write("<html lang=\"en\"/>"s, diags);
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
     expect$(dom->hasChildren());
@@ -82,7 +87,8 @@ test$("parse-text") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<html>text</html>"s);
+    auto diags = Diag::Collector::ignore();
+    parser.write("<html>text</html>"s, diags);
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
     expect$(dom->hasChildren());
@@ -109,7 +115,8 @@ test$("parse-title") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<title>the title</title>");
+    auto diags = Diag::Collector::ignore();
+    parser.write("<title>the title</title>", diags);
 
     expect$(dom->title() == "the title");
     expect$(dom->nodeType() == NodeType::DOCUMENT);
@@ -141,9 +148,11 @@ test$("parse-comment-with-gt-symb") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
+    auto diags = Diag::Collector::ignore();
     parser.write(
         "<title>im a title!</title>"
-        "<!-- a b <meta> c d -->"
+        "<!-- a b <meta> c d -->",
+        diags
     );
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
@@ -173,9 +182,11 @@ test$("parse-p-after-comment") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
+    auto diags = Diag::Collector::ignore();
     parser.write(
         "<!-- im a comment -->"
-        "<p>im a p</p>"
+        "<p>im a p</p>",
+        diags
     );
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
@@ -209,7 +220,8 @@ test$("parse-not-nested-p-and-els-inbody") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<div>b</div><p>a<div>b</div><p>a<p>a");
+    auto diags = Diag::Collector::ignore();
+    parser.write("<div>b</div><p>a<div>b</div><p>a<p>a", diags);
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
     expect$(dom->hasChildren());
@@ -232,7 +244,8 @@ test$("parse-char-referece-as-text") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<html><body>im there&sect;&Aacute;&sect;&seca;&seca&Aacute;im also there</body></html>");
+    auto diags = Diag::Collector::ignore();
+    parser.write("<html><body>im there&sect;&Aacute;&sect;&seca;&seca&Aacute;im also there</body></html>", diags);
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
     expect$(dom->hasChildren());
@@ -258,7 +271,8 @@ test$("parse-char-referece-as-attribute-value") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<meta value=\"im there&sect;&Aacute;&sect;&seca;&seca&Aacute;im also there\">");
+    auto diags = Diag::Collector::ignore();
+    parser.write("<meta value=\"im there&sect;&Aacute;&sect;&seca;&seca&Aacute;im also there\">", diags);
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
     expect$(dom->hasChildren());
@@ -286,9 +300,11 @@ test$("parse-char-referece-spec-example") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
+    auto diags = Diag::Collector::ignore();
     parser.write(
         "<html><meta value=\"I'm &notit; I tell you\">"
-        "<body><div>I'm &notit; I tell you</div><div>I'm &notin; I tell you</div></body></html>"
+        "<body><div>I'm &notit; I tell you</div><div>I'm &notin; I tell you</div></body></html>",
+        diags
     );
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
@@ -339,7 +355,8 @@ test$("parse-input-element") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<div><input></div>");
+    auto diags = Diag::Collector::ignore();
+    parser.write("<div><input></div>", diags);
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
     expect$(dom->hasChildren());
@@ -369,7 +386,8 @@ test$("parse-empty-table-element") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<table></table>");
+    auto diags = Diag::Collector::ignore();
+    parser.write("<table></table>", diags);
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
     expect$(dom->hasChildren());
@@ -396,7 +414,8 @@ test$("parse-table-element") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<table><thead><tr><th>hi</th></tr></thead></table>");
+    auto diags = Diag::Collector::ignore();
+    parser.write("<table><thead><tr><th>hi</th></tr></thead></table>", diags);
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
     expect$(dom->hasChildren());
@@ -439,7 +458,8 @@ test$("parse-table-element-create-body-tr-scope") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<table><th>hi</th></table>");
+    auto diags = Diag::Collector::ignore();
+    parser.write("<table><th>hi</th></table>", diags);
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
     expect$(dom->hasChildren());
@@ -482,8 +502,10 @@ test$("parse-svg-case-fix") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
+    auto diags = Diag::Collector::ignore();
     parser.write(
-        "<html><svg viewbox=\"0 0 0 0\"><foreignobject></foreignobject></svg></html>"s
+        "<html><svg viewbox=\"0 0 0 0\"><foreignobject></foreignobject></svg></html>"s,
+        diags
     );
 
     expect$(dom->nodeType() == NodeType::DOCUMENT);
@@ -520,7 +542,8 @@ test$("parse-misnested-content-in-table") {
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    parser.write("<table><div>fostered</div><tr><td>cell</td></tr></table>");
+    auto diags = Diag::Collector::ignore();
+    parser.write("<table><div>fostered</div><tr><td>cell</td></tr></table>", diags);
 
     auto html = dom->firstChild()->is<Element>();
     auto body = html->lastChild()->is<Element>();
@@ -535,6 +558,5 @@ test$("parse-misnested-content-in-table") {
 
     return Ok();
 }
-
 
 } // namespace Vaev::Dom::Tests

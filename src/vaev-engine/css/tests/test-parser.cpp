@@ -1,6 +1,7 @@
 #include <karm/test>
 
 import Vaev.Engine;
+import Karm.Diag;
 
 using namespace Karm;
 
@@ -8,7 +9,8 @@ namespace Vaev::Css::Tests {
 
 test$("vaev-css-parse-func") {
     Lexer lex{"func(1 2 3 4) not-consumed(4 3 2 1)"};
-    auto sst = consumeFunc(lex);
+    auto diags = Diag::Collector::ignore();
+    auto sst = consumeFunc(lex, diags);
     expect$(not lex.ended());
 
     expectEq$(sst, Sst::FUNC);
