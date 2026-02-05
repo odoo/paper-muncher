@@ -150,6 +150,8 @@ export struct HtmlParser : HtmlSink {
 
     Vec<HtmlToken> _pendingTableCharacterTokens;
 
+    bool _ignoreNextTokenIfLineFeed = false;
+
     HtmlParser(Gc::Heap& heap, Gc::Ref<Dom::Document> document)
         : _heap(heap), _document(document) {
         _lexer.bind(*this);
@@ -1192,21 +1194,17 @@ export struct HtmlParser : HtmlSink {
     // 13.2.6.4.7 MARK: The "in body" insertion mode
     // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inbody
     void _handleInBody(HtmlToken& t, Diag::Collector& diags) {
-        auto closePElementIfInButtonScope = [&]() {
-            // https://html.spec.whatwg.org/#close-a-p-element
-            // If the stack of open elements has a p element in button scope, then close a p element.
-            if (_hasElementInButtonScope(Html::P_TAG)) {
+        // https://html.spec.whatwg.org/#close-a-p-element
+        auto closePElement = [&]() {
+            // Generate implied end tags, except for p elements.
+            _generateImpliedEndTags(*this, Html::P_TAG);
 
-                // Generate implied end tags, except for p elements.
-                _generateImpliedEndTags(*this, Html::P_TAG);
+            // If the current node is not a p element, then this is a parse error.
+            if (_currentElement()->qualifiedName != Html::P_TAG)
+                _raise(diags, t.span, "unexpected p element");
 
-                // If the current node is not a p element, then this is a parse error.
-                if (_currentElement()->qualifiedName != Html::P_TAG)
-                    _raise(diags, t.span, "unexpected p element");
-
-                // Pop elements from the stack of open elements until a p element has been popped from the stack.
-                _openElements.popUntilOneOf(Html::P_TAG);
-            }
+            // Pop elements from the stack of open elements until a p element has been popped from the stack.
+            _openElements.popUntilOneOf(Html::P_TAG);
         };
 
         // A character token that is U+0000 NULL
@@ -1409,7 +1407,9 @@ export struct HtmlParser : HtmlSink {
             )
         ) {
             // If the stack of open elements has a p element in button scope, then close a p element.
-            closePElementIfInButtonScope();
+            if (_hasElementInButtonScope(Html::P_TAG)) {
+                closePElement();
+            }
 
             // Insert an HTML element for the token.
             _insertHtmlElement(t);
@@ -1421,7 +1421,9 @@ export struct HtmlParser : HtmlSink {
             oneOf(t.name, "h1", "h2", "h3", "h4", "h5", "h6")
         ) {
             // If the stack of open elements has a p element in button scope, then close a p element.
-            closePElementIfInButtonScope();
+            if (_hasElementInButtonScope(Html::P_TAG)) {
+                closePElement();
+            }
 
             // If the current node is an HTML element whose tag name is one of "h1", "h2", "h3", "h4", "h5", or "h6",
             // then this is a parse error; pop the current node off the stack of open elements.
@@ -1434,14 +1436,102 @@ export struct HtmlParser : HtmlSink {
             _insertHtmlElement(t);
         }
 
-        // TODO: A start tag whose tag name is one of: "pre", "listing"
+        // A start tag whose tag name is one of: "pre", "listing"
+        else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "pre", "listing")) {
+            // If the stack of open elements has a p element in button scope, then close a p element.
+            if (_hasElementInButtonScope(Html::P_TAG)) {
+                closePElement();
+            }
 
-        // TODO: A start tag whose tag name is "form"
+            // Insert an HTML element for the token.
+            _insertHtmlElement(t);
 
-        // TODO: A start tag whose tag name is "li"
+            // If the next token is a U+000A LINE FEED (LF) character token, then ignore that token and move on to the next one.
+            // (Newlines at the start of pre blocks are ignored as an authoring convenience.)
+            _ignoreNextTokenIfLineFeed = true;
 
-        // TODO: A start tag whose tag name is one of: "dd", "dt"
-        else if (t.type == HtmlToken::START_TAG and (t.name == "dd" or t.name == "dt")) {
+            // Set the frameset-ok flag to "not ok".
+            _framesetOk = false;
+        }
+
+        // A start tag whose tag name is "form"
+        else if (t.type == HtmlToken::START_TAG and t.name == "form") {
+            // If the form element pointer is not null, and there is no template element on the stack of open elements,
+            if (_formElement and not _openElements.contains(Html::TEMPLATE_TAG)) {
+                // then this is a parse error; ignore the token.
+                _raise(diags, t.span, "unexpected form tag");
+                return;
+            }
+
+            // Otherwise:
+
+            // 1. If the stack of open elements has a p element in button scope, then close a p element.
+            if (_hasElementInButtonScope(Html::P_TAG)) {
+                closePElement();
+            }
+
+            // 2. Insert an HTML element for the token, and, if there is no template element on the stack of open elements,
+            // set the form element pointer to point to the element created.
+            auto createdElement = _insertHtmlElement(t);
+            if (not _openElements.contains(Html::TEMPLATE_TAG)) {
+                _formElement = createdElement;
+            }
+        }
+
+        // A start tag whose tag name is "li"
+        else if (t.type == HtmlToken::START_TAG and t.name == "li") {
+            // 1. Set the frameset-ok flag to "not ok".
+            _framesetOk = false;
+
+            // 2. Initialize node to be the current node (the bottommost node of the stack).
+            usize curr = _openElements.len();
+
+            auto done = [&] {
+                // 6. If the stack of open elements has a p element in button scope, then close a p element.
+                if (_hasElementInButtonScope(Html::P_TAG)) {
+                    closePElement();
+                }
+
+                // 7. Insert an HTML element for the token.
+                _insertHtmlElement(t);
+            };
+
+            // 3. Loop:
+            while (curr > 0) {
+                auto tag = _openElements[curr - 1]->qualifiedName;
+                // If node is a li element, then run these substeps:
+                if (tag == Html::LI_TAG) {
+                    // 1. Generate implied end tags, except for li elements.
+                    _generateImpliedEndTags(*this, Html::LI_TAG);
+
+                    // 2. If the current node is not a li element, then this is a parse error.
+                    if (_currentElement()->qualifiedName != Html::LI_TAG) {
+                        _raise(diags, t.span, "unexpected li tag");
+                    }
+
+                    // 3. Pop elements from the stack of open elements until an li element has been popped from the stack.
+                    _openElements.popUntilOneOf(Html::LI_TAG);
+
+                    // 4. Jump to the step labeled done below.
+                    done();
+                    return;
+                }
+
+                // 4. If node is in the special category, but is not an address,
+                //    div, or p element, then jump to the step labeled done below.
+                if (_isSpecial(tag) and not oneOf(tag, Html::ADDRESS_TAG, Html::DIV_TAG, Html::P_TAG)) {
+                    done();
+                    return;
+                }
+
+                // 5. Otherwise, set node to the previous entry in the stack of open
+                //    elements and return to the step labeled loop.
+                curr--;
+            }
+        }
+
+        // A start tag whose tag name is one of: "dd", "dt"
+        else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "dd", "dt")) {
             // 1. Set the frameset-ok flag to "not ok".
             _framesetOk = false;
 
@@ -1450,6 +1540,9 @@ export struct HtmlParser : HtmlSink {
 
             auto done = [&] {
                 // 7. If the stack of open elements has a p element in button scope, then close a p element.
+                if (_hasElementInButtonScope(Html::P_TAG)) {
+                    closePElement();
+                }
 
                 // 8. Insert an HTML element for the token.
                 _insertHtmlElement(t);
@@ -1495,7 +1588,7 @@ export struct HtmlParser : HtmlSink {
 
                 // 5. If node is in the special category, but is not an address,
                 //    div, or p element, then jump to the step labeled done below.
-                if (_isSpecial(tag) and not(tag == Html::ADDRESS_TAG or tag == Html::DIV_TAG or tag == Html::P_TAG)) {
+                if (_isSpecial(tag) and not oneOf(tag, Html::ADDRESS_TAG, Html::DIV_TAG, Html::P_TAG)) {
                     done();
                     return;
                 }
@@ -1506,19 +1599,199 @@ export struct HtmlParser : HtmlSink {
             }
         }
 
-        // TODO: A start tag whose tag name is "plaintext"
+        // A start tag whose tag name is "plaintext"
+        else if (t.type == HtmlToken::START_TAG and t.name == "plaintext") {
+            // If the stack of open elements has a p element in button scope, then close a p element.
+            if (_hasElementInButtonScope(Html::P_TAG)) {
+                closePElement();
+            }
 
-        // TODO: A start tag whose tag name is "button"
+            // Insert an HTML element for the token.
+            _insertHtmlElement(t);
 
-        // TODO: An end tag whose tag name is one of: "address", "article", "aside", "blockquote", "button", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "main", "menu", "nav", "ol", "pre", "search", "section", "summary", "ul"
+            // Switch the tokenizer to the PLAINTEXT state.
+            _lexer._switchTo(HtmlLexer::PLAINTEXT);
+        }
 
-        // TODO: An end tag whose tag name is "form"
+        // A start tag whose tag name is "button"
+        else if (t.type == HtmlToken::START_TAG and t.name == "button") {
+            // 1. If the stack of open elements has a button element in scope, then run these substeps:
+            if (_hasElementInScope(Html::BUTTON_TAG)) {
+                // 1. Parse error.
+                _raise(diags, t.span, "unexpected button tag");
 
-        // TODO: An end tag whose tag name is "p"
+                // 2. Generate implied end tags.
+                _generateImpliedEndTags(*this);
 
-        // TODO: An end tag whose tag name is "li"
+                // 3. Pop elements from the stack of open elements until a button element has been popped from the stack.
+                _openElements.popUntilOneOf(Html::BUTTON_TAG);
+            }
 
-        // TODO: An end tag whose tag name is one of: "dd", "dt"
+            // 2. Reconstruct the active formatting elements, if any.
+            _reconstructActiveFormattingElements();
+
+            // 3. Insert an HTML element for the token.
+            _insertHtmlElement(t);
+
+            // 4. Set the frameset-ok flag to "not ok".
+            _framesetOk = false;
+        }
+
+        // An end tag whose tag name is one of:
+        // "address", "article", "aside", "blockquote", "button", "center", "details", "dialog",
+        // "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup",
+        // "listing", "main", "menu", "nav", "ol", "pre", "search", "section", "summary", "ul"
+        else if (
+            t.type == HtmlToken::END_TAG and
+            oneOf(
+                t.name,
+                "address", "article", "aside", "blockquote", "button", "center", "details", "dialog",
+                "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup",
+                "listing", "main", "menu", "nav", "ol", "pre", "search", "section", "summary", "ul"
+            )
+        ) {
+            // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name
+            // as that of the token,
+            if (not _hasElementInScope(Dom::QualifiedName{Html::NAMESPACE, t.name})) {
+                // then this is a parse error; ignore the token.
+                _raise(diags, t.span, "unexpected end tag");
+                return;
+            }
+
+            // Otherwise, run these steps:
+
+            // 1. Generate implied end tags.
+            _generateImpliedEndTags(*this);
+
+            // 2. If the current node is not an HTML element with the same tag name as that of the token,
+            if (_currentElement()->qualifiedName.name != t.name) {
+                // then this is a parse error.
+                _raise(diags, t.span, "unexpected end tag");
+            }
+
+            // 3. Pop elements from the stack of open elements until an HTML element with the same tag name as the
+            // token has been popped from the stack.
+            _openElements.popUntilOneOf(Dom::QualifiedName{Html::NAMESPACE, t.name});
+        }
+
+        // An end tag whose tag name is "form"
+        else if (t.type == HtmlToken::END_TAG and t.name == "form") {
+            // If there is no template element on the stack of open elements, then run these substeps:
+            if (not _openElements.contains(Html::TEMPLATE_TAG)) {
+                // 1. Let node be the element that the form element pointer is set to, or null if it is not set to an element.
+                auto node = _formElement;
+
+                // 2. Set the form element pointer to null.
+                _formElement = nullptr;
+
+                // 3. If node is null or if the stack of open elements does not have node in scope,
+                if (not node or not _hasElementInScope(node->qualifiedName)) {
+                    // then this is a parse error; return and ignore the token.
+                    _raise(diags, t.span, "unexpected form end tag");
+                    return;
+                }
+
+                // 4. Generate implied end tags.
+                _generateImpliedEndTags(*this);
+
+                // 5. If the current node is not node, then this is a parse error.
+                if (_currentElement() != node) {
+                    _raise(diags, t.span, "unexpected form end tag");
+                }
+
+                // 6. Remove node from the stack of open elements.
+                _openElements.removeAll(*node);
+            }
+
+            // If there is a template element on the stack of open elements, then run these substeps instead:
+            else {
+                // 1. If the stack of open elements does not have a form element in scope,
+                if (not _hasElementInScope(Html::FORM_TAG)) {
+                    // then this is a parse error; return and ignore the token.
+                    _raise(diags, t.span, "unexpected form end tag");
+                    return;
+                }
+
+                // 2. Generate implied end tags.
+                _generateImpliedEndTags(*this);
+
+                // 3. If the current node is not a form element, then this is a parse error.
+                if (_currentElement()->qualifiedName != Html::FORM_TAG) {
+                    _raise(diags, t.span, "unexpected form end tag");
+                }
+
+                // 4. Pop elements from the stack of open elements until a form element has been popped from the stack.
+                _openElements.popUntilOneOf(Html::FORM_TAG);
+            }
+        }
+
+        // An end tag whose tag name is "p"
+        else if (t.type == HtmlToken::END_TAG and t.name == "p") {
+            // If the stack of open elements does not have a p element in button scope,
+
+            if (not _hasElementInButtonScope(Html::P_TAG)) {
+                // then this is a parse error;
+                _raise(diags, t.span, "unexpected p end tag");
+
+                // insert an HTML element for a "p" start tag token with no attributes.
+                _insertHtmlElement(HtmlToken{
+                    .type = HtmlToken::START_TAG,
+                    .name = "p"_sym,
+                });
+            }
+
+            // Close a p element.
+            closePElement();
+        }
+
+        // An end tag whose tag name is "li"
+        else if (t.type == HtmlToken::END_TAG and t.name == "li") {
+            // If the stack of open elements does not have an li element in list item scope,
+            if (not _hasElementInListItemScope(Html::LI_TAG)) {
+                // then this is a parse error; ignore the token.
+                _raise(diags, t.span, "unexpected li end tag");
+                return;
+            }
+
+            // Otherwise, run these steps:
+
+            // 1. Generate implied end tags, except for li elements.
+            _generateImpliedEndTags(*this, Html::LI_TAG);
+
+            // 2. If the current node is not an li element, then this is a parse error.
+            if (_currentElement()->qualifiedName != Html::LI_TAG) {
+                _raise(diags, t.span, "unexpected li end tag");
+            }
+
+            // 3. Pop elements from the stack of open elements until an li element has been popped from the stack.
+            _openElements.popUntilOneOf(Html::LI_TAG);
+        }
+
+        // An end tag whose tag name is one of: "dd", "dt"
+        else if (t.type == HtmlToken::END_TAG and oneOf(t.name, "dd", "dt")) {
+            auto qualifiedName = Dom::QualifiedName{Html::NAMESPACE, t.name};
+
+            // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name
+            // as that of the token,
+            if (not _hasElementInScope(qualifiedName)) {
+                // then this is a parse error; ignore the token.
+                _raise(diags, t.span, "unexpected end tag");
+                return;
+            }
+
+            // Otherwise, run these steps:
+
+            // 1. Generate implied end tags, except for HTML elements with the same tag name as the token.
+            _generateImpliedEndTags(*this, qualifiedName);
+
+            // 2. If the current node is not an HTML element with the same tag name as that of the token, then this is a parse error.
+            if (_currentElement()->qualifiedName != qualifiedName) {
+                _raise(diags, t.span, "unexpected end tag");
+            }
+
+            // 3. Pop elements from the stack of open elements until an HTML element with the same tag name as the token has been popped from the stack.
+            _openElements.popUntilOneOf(qualifiedName);
+        }
 
         // An end tag whose tag name is one of: "h1", "h2", "h3", "h4", "h5", "h6"
         else if (
@@ -1554,9 +1827,8 @@ export struct HtmlParser : HtmlSink {
             _openElements.popUntilOneOf(Html::H1_TAG, Html::H2_TAG, Html::H3_TAG, Html::H4_TAG, Html::H5_TAG, Html::H6_TAG);
         }
 
-        // TODO: An end tag whose tag name is "sarcasm"
-        //       This state machine is not equipped to handle sarcasm
-        //       So we just ignore it
+        // An end tag whose tag name is "sarcasm"
+        // Take a deep breath, then act as described in the "any other end tag" entry below.
 
         // TODO: A start tag whose tag name is "a"
 
@@ -1617,7 +1889,8 @@ export struct HtmlParser : HtmlSink {
 
         // A start tag whose tag name is "input"
         else if (t.type == HtmlToken::START_TAG and t.name == "input") {
-            // TODO: Reconstruct the active formatting elements, if any.
+            // Reconstruct the active formatting elements, if any.
+            _reconstructActiveFormattingElements();
 
             // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
             _insertHtmlElement(t);
@@ -1651,7 +1924,10 @@ export struct HtmlParser : HtmlSink {
         // A start tag whose tag name is "hr"
         else if (t.type == HtmlToken::START_TAG and t.name == "hr") {
             // If the stack of open elements has a p element in button scope, then close a p element.
-            closePElementIfInButtonScope();
+            if (_hasElementInButtonScope(Html::P_TAG)) {
+                closePElement();
+            }
+
             // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
             _insertHtmlElement(t);
             _openElements.pop();
@@ -2898,6 +3174,14 @@ export struct HtmlParser : HtmlSink {
 
     // https://html.spec.whatwg.org/multipage/parsing.html#tree-construction
     void accept(HtmlToken& t, Diag::Collector& diags) override {
+        // NOSPEC
+        if (_ignoreNextTokenIfLineFeed) {
+            _ignoreNextTokenIfLineFeed = false;
+
+            if (t.type == HtmlToken::CHARACTER and t.rune == 0x000A)
+                return;
+        }
+
         // If the stack of open elements is empty
         // If the adjusted current node is an element in the HTML namespace
         // If the adjusted current node is a MathML text integration point and the token is a start tag whose tag name is neither "mglyph" nor "malignmark"
