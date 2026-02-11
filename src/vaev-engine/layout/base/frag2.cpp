@@ -2,19 +2,22 @@ export module Vaev.Engine:layout.frag2;
 
 import Karm.Core;
 import Karm.Gfx;
+import Karm.Gc;
+
+import :dom.element;
 
 using namespace Karm;
 
 namespace Vaev::Layout {
 
 struct Fragment {
-    Opt<Box&> _box;
+    virtual Opt<Box&> box();
+
+    virtual Gc::Ptr<Dom::Element> element();
 
     virtual void hitTest();
 
     virtual void paint(Gfx::Canvas& g);
-
-    virtual void add(Rc<Fragment>);
 
     // https://www.w3.org/TR/SVG2/coords.html#TermObjectBoundingBox
     virtual RectAu objectBoundingBox();
@@ -29,6 +32,10 @@ struct Fragment {
     virtual RectAu scrollableOverflow();
 
     virtual void repr(Io::Emit& e) {}
+
+    Rc<Gfx::Surface> snapshot() {}
+
+    String svg(Math::Vec2i) {}
 };
 
 struct GroupFragment : Fragment {
@@ -48,6 +55,7 @@ union Shape {
 };
 
 struct ShapeFragment : Fragment {
+    Rc<Shape> _shape;
 };
 
 struct ProseFragment : Fragment {
@@ -55,12 +63,17 @@ struct ProseFragment : Fragment {
 };
 
 struct ImageFragment : Fragment {
+    Rc<Gfx::Surface> _surface;
 };
+
+// https://drafts.csswg.org/css-backgrounds/#background
+struct BoxBackground {};
 
 struct BoxMetrics {};
 
 struct BoxFragment : Fragment {
     BoxMetrics _metrics;
+    Vec<Rc<Fragment>> _children;
 };
 
 struct OverflowFragment : Fragment {};
@@ -94,6 +107,11 @@ struct PageFragment : Fragment {
     }
 };
 
+/// Represent the viewbox of an SVG
+struct ViewboxFragment : Fragment {
+};
+
+/// Scrollable viewport, handle overflow too
 struct ViewportFragment : Fragment {
     Rc<Fragment> _content;
 
