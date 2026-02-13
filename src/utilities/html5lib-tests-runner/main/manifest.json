@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+  "id": "html5lib-tests-runner.main",
+  "description": "Standalone version of html5lib-tests runner",
+  "type": "exe",
+  "requires": [
+    "karm-cli",
+    "vaev-engine",
+    "html5lib-tests-runner"
+  ]
+}
