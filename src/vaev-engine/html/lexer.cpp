@@ -101,9 +101,9 @@ export struct HtmlLexer {
         return last(token.attrs);
     }
 
-    void _reconsumeIn(State state, Rune rune, Io::Loc loc, Diag::Collector& diags) {
+    void _reconsumeIn(State state, Rune rune, Io::Loc loc, Diag::Collector& diags, bool isEof) {
         _switchTo(state);
-        consume(rune, loc, diags);
+        consume(rune, loc, diags, isEof);
     }
 
     void _switchTo(State state) {
@@ -347,7 +347,7 @@ export struct HtmlLexer {
             // string. Reconsume in the tag name state.
             else if (isAsciiAlpha(rune)) {
                 _begin(HtmlToken::START_TAG, loc);
-                _reconsumeIn(State::TAG_NAME, rune, loc, diags);
+                _reconsumeIn(State::TAG_NAME, rune, loc, diags, isEof);
             }
 
             // U+003F QUESTION MARK (?)
@@ -357,7 +357,7 @@ export struct HtmlLexer {
             else if (rune == '?') {
                 _raise(diags, loc, "unexpected-question-mark-instead-of-tag-name");
                 _begin(HtmlToken::COMMENT, loc);
-                _reconsumeIn(State::BOGUS_COMMENT, rune, loc, diags);
+                _reconsumeIn(State::BOGUS_COMMENT, rune, loc, diags, isEof);
             }
 
             // EOF
@@ -377,7 +377,7 @@ export struct HtmlLexer {
             else {
                 _raise(diags, loc, "invalid-first-character-of-tag-name");
                 _emit('<', loc, diags);
-                _reconsumeIn(State::DATA, rune, loc, diags);
+                _reconsumeIn(State::DATA, rune, loc, diags, isEof);
             }
 
             break;
@@ -392,7 +392,7 @@ export struct HtmlLexer {
             // Reconsume in the tag name state.
             if (isAsciiAlpha(rune)) {
                 _begin(HtmlToken::END_TAG, loc);
-                _reconsumeIn(State::TAG_NAME, rune, loc, diags);
+                _reconsumeIn(State::TAG_NAME, rune, loc, diags, isEof);
             }
 
             // U+003E GREATER-THAN SIGN (>)
@@ -422,7 +422,7 @@ export struct HtmlLexer {
             else {
                 _raise(diags, loc, "invalid-first-character-of-tag-name");
                 _begin(HtmlToken::COMMENT, loc);
-                _reconsumeIn(State::BOGUS_COMMENT, rune, loc, diags);
+                _reconsumeIn(State::BOGUS_COMMENT, rune, loc, diags, isEof);
             }
 
             break;
@@ -509,7 +509,7 @@ export struct HtmlLexer {
             // RCDATA state.
             else {
                 _emit('<', loc, diags);
-                _reconsumeIn(State::RCDATA, rune, loc, diags);
+                _reconsumeIn(State::RCDATA, rune, loc, diags, isEof);
             }
 
             break;
@@ -524,7 +524,7 @@ export struct HtmlLexer {
             // Reconsume in the RCDATA end tag name state.
             if (isAsciiAlpha(rune)) {
                 _begin(HtmlToken::END_TAG, loc);
-                _reconsumeIn(State::RCDATA_END_TAG_NAME, rune, loc, diags);
+                _reconsumeIn(State::RCDATA_END_TAG_NAME, rune, loc, diags, isEof);
             }
 
             // Anything else
@@ -533,7 +533,7 @@ export struct HtmlLexer {
             else {
                 _emit('<', loc, diags);
                 _emit('/', loc, diags);
-                _reconsumeIn(State::RCDATA, rune, loc, diags);
+                _reconsumeIn(State::RCDATA, rune, loc, diags, isEof);
             }
 
             break;
@@ -605,7 +605,7 @@ export struct HtmlLexer {
                 for (Rune rune : iterRunes(_temp.str()))
                     _emit(rune, loc, diags);
 
-                _reconsumeIn(State::RCDATA, rune, loc, diags);
+                _reconsumeIn(State::RCDATA, rune, loc, diags, isEof);
             }
 
             break;
@@ -627,7 +627,7 @@ export struct HtmlLexer {
             // RAWTEXT state.
             else {
                 _emit('<', loc, diags);
-                _reconsumeIn(State::RAWTEXT, rune, loc, diags);
+                _reconsumeIn(State::RAWTEXT, rune, loc, diags, isEof);
             }
 
             break;
@@ -642,7 +642,7 @@ export struct HtmlLexer {
             // Reconsume in the RAWTEXT end tag name state.
             if (isAsciiAlpha(rune)) {
                 _begin(HtmlToken::END_TAG, loc);
-                _reconsumeIn(State::RAWTEXT_END_TAG_NAME, rune, loc, diags);
+                _reconsumeIn(State::RAWTEXT_END_TAG_NAME, rune, loc, diags, isEof);
             }
 
             // Anything else
@@ -651,7 +651,7 @@ export struct HtmlLexer {
             else {
                 _emit('<', loc, diags);
                 _emit('/', loc, diags);
-                _reconsumeIn(State::RAWTEXT, rune, loc, diags);
+                _reconsumeIn(State::RAWTEXT, rune, loc, diags, isEof);
             }
 
             break;
@@ -719,7 +719,7 @@ export struct HtmlLexer {
                 _emit('/', loc, diags);
                 for (Rune rune : iterRunes(_temp.str()))
                     _emit(rune, loc, diags);
-                _reconsumeIn(State::RAWTEXT, rune, loc, diags);
+                _reconsumeIn(State::RAWTEXT, rune, loc, diags, isEof);
             }
 
             break;
@@ -752,7 +752,7 @@ export struct HtmlLexer {
             // script data state.
             else {
                 _emit('<', loc, diags);
-                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags, isEof);
             }
             break;
         }
@@ -766,7 +766,7 @@ export struct HtmlLexer {
             // Reconsume in the script data end tag name state.
             if (isAsciiAlpha(rune)) {
                 _begin(HtmlToken::END_TAG, loc);
-                _reconsumeIn(State::SCRIPT_DATA_END_TAG_NAME, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_END_TAG_NAME, rune, loc, diags, isEof);
             }
 
             // Anything else
@@ -775,7 +775,7 @@ export struct HtmlLexer {
             else {
                 _emit('<', loc, diags);
                 _emit('/', loc, diags);
-                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags, isEof);
             }
 
             break;
@@ -846,7 +846,7 @@ export struct HtmlLexer {
                 _emit('/', loc, diags);
                 for (Rune rune : iterRunes(_temp.str()))
                     _emit(rune, loc, diags);
-                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags, isEof);
             }
 
             break;
@@ -867,7 +867,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the script data state.
             else {
-                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags, isEof);
             }
 
             break;
@@ -888,7 +888,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the script data state.
             else {
-                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA, rune, loc, diags, isEof);
             }
 
             break;
@@ -1070,7 +1070,7 @@ export struct HtmlLexer {
             else if (isAsciiAlpha(rune)) {
                 _temp.clear();
                 _emit('<', loc, diags);
-                _reconsumeIn(State::SCRIPT_DATA_DOUBLE_ESCAPE_START, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_DOUBLE_ESCAPE_START, rune, loc, diags, isEof);
             }
 
             // Anything else
@@ -1078,7 +1078,7 @@ export struct HtmlLexer {
             // script data escaped state.
             else {
                 _emit('<', loc, diags);
-                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune, loc, diags, isEof);
             }
 
             break;
@@ -1093,7 +1093,7 @@ export struct HtmlLexer {
             // Reconsume in the script data escaped end tag name state.
             if (isAsciiAlpha(rune)) {
                 _begin(HtmlToken::END_TAG, loc);
-                _reconsumeIn(State::SCRIPT_DATA_ESCAPED_END_TAG_NAME, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_ESCAPED_END_TAG_NAME, rune, loc, diags, isEof);
             }
 
             // Anything else
@@ -1102,7 +1102,7 @@ export struct HtmlLexer {
             else {
                 _emit('<', loc, diags);
                 _emit('/', loc, diags);
-                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune, loc, diags, isEof);
             }
 
             break;
@@ -1169,7 +1169,7 @@ export struct HtmlLexer {
                 _emit('/', loc, diags);
                 for (Rune rune : iterRunes(_temp.str()))
                     _emit(rune, loc, diags);
-                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune, loc, diags, isEof);
             }
 
             break;
@@ -1219,7 +1219,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the script data escaped state.
             else {
-                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_ESCAPED, rune, loc, diags, isEof);
             }
 
             break;
@@ -1394,7 +1394,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the script data double escaped state.
             else {
-                _reconsumeIn(State::SCRIPT_DATA_DOUBLE_ESCAPED, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_DOUBLE_ESCAPED, rune, loc, diags, isEof);
             }
 
             break;
@@ -1444,7 +1444,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the script data double escaped state.
             else {
-                _reconsumeIn(State::SCRIPT_DATA_DOUBLE_ESCAPED, rune, loc, diags);
+                _reconsumeIn(State::SCRIPT_DATA_DOUBLE_ESCAPED, rune, loc, diags, isEof);
             }
             break;
         }
@@ -1467,7 +1467,7 @@ export struct HtmlLexer {
             // EOF
             // Reconsume in the after attribute name state.
             else if (rune == '/' or rune == '>' or isEof) {
-                _reconsumeIn(State::AFTER_ATTRIBUTE_NAME, rune, loc, diags);
+                _reconsumeIn(State::AFTER_ATTRIBUTE_NAME, rune, loc, diags, isEof);
             }
 
             // U+003D EQUALS SIGN (=)
@@ -1488,7 +1488,7 @@ export struct HtmlLexer {
             // attribute name state.
             else {
                 _beginAttribute();
-                _reconsumeIn(State::ATTRIBUTE_NAME, rune, loc, diags);
+                _reconsumeIn(State::ATTRIBUTE_NAME, rune, loc, diags, isEof);
             }
 
             break;
@@ -1509,7 +1509,7 @@ export struct HtmlLexer {
             if (rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ' or
                 rune == '/' or rune == '>' or isEof) {
                 _lastAttr().name = Symbol::from(_builder.take());
-                _reconsumeIn(State::AFTER_ATTRIBUTE_NAME, rune, loc, diags);
+                _reconsumeIn(State::AFTER_ATTRIBUTE_NAME, rune, loc, diags, isEof);
             }
 
             // U+003D EQUALS SIGN (=)
@@ -1611,7 +1611,7 @@ export struct HtmlLexer {
             // attribute name state.
             else {
                 _beginAttribute();
-                _reconsumeIn(State::ATTRIBUTE_NAME, rune, loc, diags);
+                _reconsumeIn(State::ATTRIBUTE_NAME, rune, loc, diags, isEof);
             }
 
             break;
@@ -1654,7 +1654,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the attribute value (unquoted) state.
             else {
-                _reconsumeIn(State::ATTRIBUTE_VALUE_UNQUOTED, rune, loc, diags);
+                _reconsumeIn(State::ATTRIBUTE_VALUE_UNQUOTED, rune, loc, diags, isEof);
             }
 
             break;
@@ -1856,7 +1856,7 @@ export struct HtmlLexer {
             // Reconsume in the before attribute name state.
             else {
                 _raise(diags, loc, "missing-whitespace-between-attributes");
-                _reconsumeIn(State::BEFORE_ATTRIBUTE_NAME, rune, loc, diags);
+                _reconsumeIn(State::BEFORE_ATTRIBUTE_NAME, rune, loc, diags, isEof);
             }
 
             break;
@@ -1889,7 +1889,7 @@ export struct HtmlLexer {
             // the before attribute name state.
             else {
                 _raise(diags, loc, "unexpected-solidus-in-tag");
-                _reconsumeIn(State::BEFORE_ATTRIBUTE_NAME, rune, loc, diags);
+                _reconsumeIn(State::BEFORE_ATTRIBUTE_NAME, rune, loc, diags, isEof);
             }
 
             break;
@@ -1984,7 +1984,7 @@ export struct HtmlLexer {
                 _peek.clear();
                 _raise(diags, loc, "incorrectly-opened-comment");
                 _begin(HtmlToken::COMMENT, loc);
-                _reconsumeIn(State::BOGUS_COMMENT, rune, loc, diags);
+                _reconsumeIn(State::BOGUS_COMMENT, rune, loc, diags, isEof);
             }
             break;
         }
@@ -2011,7 +2011,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the comment state.
             else {
-                _reconsumeIn(State::COMMENT, rune, loc, diags);
+                _reconsumeIn(State::COMMENT, rune, loc, diags, isEof);
             }
 
             break;
@@ -2052,7 +2052,7 @@ export struct HtmlLexer {
             // data. Reconsume in the comment state.
             else {
                 _builder.append('-');
-                _reconsumeIn(State::COMMENT, rune, loc, diags);
+                _reconsumeIn(State::COMMENT, rune, loc, diags, isEof);
             }
 
             break;
@@ -2125,7 +2125,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the comment state.
             else {
-                _reconsumeIn(State::COMMENT, rune, loc, diags);
+                _reconsumeIn(State::COMMENT, rune, loc, diags, isEof);
             }
 
             break;
@@ -2144,7 +2144,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the comment state.
             else {
-                _reconsumeIn(State::COMMENT, rune, loc, diags);
+                _reconsumeIn(State::COMMENT, rune, loc, diags, isEof);
             }
 
             break;
@@ -2163,7 +2163,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the comment end dash state.
             else {
-                _reconsumeIn(State::COMMENT_END_DASH, rune, loc, diags);
+                _reconsumeIn(State::COMMENT_END_DASH, rune, loc, diags, isEof);
             }
 
             break;
@@ -2177,7 +2177,7 @@ export struct HtmlLexer {
             // EOF
             // Reconsume in the comment end state.
             if (rune == '>' or isEof) {
-                _reconsumeIn(State::COMMENT_END, rune, loc, diags);
+                _reconsumeIn(State::COMMENT_END, rune, loc, diags, isEof);
             }
 
             // Anything else
@@ -2185,7 +2185,7 @@ export struct HtmlLexer {
             // end state.
             else {
                 _raise(diags, loc, "nested-comment");
-                _reconsumeIn(State::COMMENT_END, rune, loc, diags);
+                _reconsumeIn(State::COMMENT_END, rune, loc, diags, isEof);
             }
 
             break;
@@ -2216,7 +2216,7 @@ export struct HtmlLexer {
             // data. Reconsume in the comment state.
             else {
                 _builder.append('-');
-                _reconsumeIn(State::COMMENT, rune, loc, diags);
+                _reconsumeIn(State::COMMENT, rune, loc, diags, isEof);
             }
 
             break;
@@ -2263,7 +2263,7 @@ export struct HtmlLexer {
             else {
                 _builder.append('-');
                 _builder.append('-');
-                _reconsumeIn(State::COMMENT, rune, loc, diags);
+                _reconsumeIn(State::COMMENT, rune, loc, diags, isEof);
             }
 
             break;
@@ -2311,7 +2311,7 @@ export struct HtmlLexer {
                 _builder.append('-');
                 _builder.append('-');
                 _builder.append('!');
-                _reconsumeIn(State::COMMENT, rune, loc, diags);
+                _reconsumeIn(State::COMMENT, rune, loc, diags, isEof);
             }
 
             break;
@@ -2333,7 +2333,7 @@ export struct HtmlLexer {
             // U+003E GREATER-THAN SIGN (>)
             // Reconsume in the before DOCTYPE name state.
             else if (rune == '>') {
-                _reconsumeIn(State::BEFORE_DOCTYPE_NAME, rune, loc, diags);
+                _reconsumeIn(State::BEFORE_DOCTYPE_NAME, rune, loc, diags, isEof);
             }
 
             // EOF
@@ -2354,7 +2354,7 @@ export struct HtmlLexer {
             // Reconsume in the before DOCTYPE name state.
             else {
                 _raise(diags, loc, "missing-whitespace-before-doctype-name");
-                _reconsumeIn(State::BEFORE_DOCTYPE_NAME, rune, loc, diags);
+                _reconsumeIn(State::BEFORE_DOCTYPE_NAME, rune, loc, diags, isEof);
             }
 
             break;
@@ -2548,7 +2548,7 @@ export struct HtmlLexer {
             else {
                 _raise(diags, loc, "invalid-character-sequence-after-doctype-name");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags, isEof);
             }
 
             break;
@@ -2617,7 +2617,7 @@ export struct HtmlLexer {
             else {
                 _raise(diags, loc, "missing-quote-before-doctype-public-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags, isEof);
             }
 
             break;
@@ -2682,7 +2682,7 @@ export struct HtmlLexer {
             else {
                 _raise(diags, loc, "missing-quote-before-doctype-public-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags, isEof);
             }
 
             break;
@@ -2857,7 +2857,7 @@ export struct HtmlLexer {
             else {
                 _raise(diags, loc, "missing-quote-before-doctype-system-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags, isEof);
             }
 
             break;
@@ -2918,7 +2918,7 @@ export struct HtmlLexer {
             else {
                 _raise(diags, loc, "missing-quote-before-doctype-system-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags, isEof);
             }
 
             break;
@@ -2987,7 +2987,7 @@ export struct HtmlLexer {
             else {
                 _raise(diags, loc, "missing-quote-before-doctype-system-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags, isEof);
             }
 
             break;
@@ -3052,7 +3052,7 @@ export struct HtmlLexer {
             else {
                 _raise(diags, loc, "missing-quote-before-doctype-system-identifier");
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags, isEof);
             }
 
             break;
@@ -3200,7 +3200,7 @@ export struct HtmlLexer {
             // set the current DOCTYPE token's force-quirks flag to on.)
             else {
                 _raise(diags, loc, "unexpected-character-after-doctype-system-identifier");
-                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags);
+                _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags, isEof);
             }
 
             break;
@@ -3287,7 +3287,7 @@ export struct HtmlLexer {
             // the CDATA section state.
             else {
                 _emit(']', loc, diags);
-                _reconsumeIn(State::CDATA_SECTION, rune, loc, diags);
+                _reconsumeIn(State::CDATA_SECTION, rune, loc, diags, isEof);
             }
 
             break;
@@ -3315,7 +3315,7 @@ export struct HtmlLexer {
             else {
                 _emit(']', loc, diags);
                 _emit(']', loc, diags);
-                _reconsumeIn(State::CDATA_SECTION, rune, loc, diags);
+                _reconsumeIn(State::CDATA_SECTION, rune, loc, diags, isEof);
             }
 
             break;
@@ -3333,7 +3333,7 @@ export struct HtmlLexer {
             // ASCII alphanumeric
             // Reconsume in the named character reference state.
             if (isAsciiAlphaNum(rune)) {
-                _reconsumeIn(State::NAMED_CHARACTER_REFERENCE, rune, loc, diags);
+                _reconsumeIn(State::NAMED_CHARACTER_REFERENCE, rune, loc, diags, isEof);
             }
 
             // U+0023 NUMBER SIGN (#)
@@ -3350,7 +3350,7 @@ export struct HtmlLexer {
             // the return state.
             else {
                 _flushCodePointsConsumedAsACharacterReference(loc, diags);
-                _reconsumeIn(_returnState, rune, loc, diags);
+                _reconsumeIn(_returnState, rune, loc, diags, isEof);
             }
 
             break;
@@ -3435,7 +3435,7 @@ export struct HtmlLexer {
                     (rune == '=' or isAsciiAlphaNum(rune))
                 ) {
                     _flushCodePointsConsumedAsACharacterReference(loc, diags);
-                    _reconsumeIn(_returnState, rune, loc, diags);
+                    _reconsumeIn(_returnState, rune, loc, diags, isEof);
                 } else {
                     // Otherwise:
 
@@ -3472,7 +3472,7 @@ export struct HtmlLexer {
                     // the return state.
                     matchedCharReferenceNoSemiColon = NONE;
                     _flushCodePointsConsumedAsACharacterReference(loc, diags);
-                    _reconsumeIn(_returnState, rune, loc, diags);
+                    _reconsumeIn(_returnState, rune, loc, diags, isEof);
                 }
             }
 
@@ -3523,7 +3523,7 @@ export struct HtmlLexer {
                 // Otherwise Flush code points consumed as a character reference.
                 // Switch to the ambiguous ampersand state.
                 _flushCodePointsConsumedAsACharacterReference(loc, diags);
-                _reconsumeIn(State::AMBIGUOUS_AMPERSAND, rune, loc, diags);
+                _reconsumeIn(State::AMBIGUOUS_AMPERSAND, rune, loc, diags, isEof);
             }
             break;
         }
@@ -3550,13 +3550,13 @@ export struct HtmlLexer {
             // Reconsume in the return state.
             else if (rune == ';') {
                 _raise(diags, loc, "unknown-named-character-reference");
-                _reconsumeIn(_returnState, rune, loc, diags);
+                _reconsumeIn(_returnState, rune, loc, diags, isEof);
             }
 
             // Anything else
             // Reconsume in the return state.
             else {
-                _reconsumeIn(_returnState, rune, loc, diags);
+                _reconsumeIn(_returnState, rune, loc, diags, isEof);
             }
 
             break;
@@ -3579,7 +3579,7 @@ export struct HtmlLexer {
             // Anything else
             // Reconsume in the decimal character reference start state.
             else {
-                _reconsumeIn(State::DECIMAL_CHARACTER_REFERENCE_START, rune, loc, diags);
+                _reconsumeIn(State::DECIMAL_CHARACTER_REFERENCE_START, rune, loc, diags, isEof);
             }
 
             break;
@@ -3592,7 +3592,7 @@ export struct HtmlLexer {
             // ASCII hex digit
             // Reconsume in the hexadecimal character reference state.
             if (isAsciiHexDigit(rune)) {
-                _reconsumeIn(State::HEXADECIMAL_CHARACTER_REFERENCE, rune, loc, diags);
+                _reconsumeIn(State::HEXADECIMAL_CHARACTER_REFERENCE, rune, loc, diags, isEof);
             }
 
             // Anything else
@@ -3602,7 +3602,7 @@ export struct HtmlLexer {
             else {
                 _raise(diags, loc, "absence-of-digits-in-numeric-character-reference");
                 _flushCodePointsConsumedAsACharacterReference(loc, diags);
-                _reconsumeIn(_returnState, rune, loc, diags);
+                _reconsumeIn(_returnState, rune, loc, diags, isEof);
             }
 
             break;
@@ -3615,7 +3615,7 @@ export struct HtmlLexer {
             // ASCII digit
             // Reconsume in the decimal character reference state.
             if (isAsciiDigit(rune)) {
-                _reconsumeIn(State::DECIMAL_CHARACTER_REFERENCE, rune, loc, diags);
+                _reconsumeIn(State::DECIMAL_CHARACTER_REFERENCE, rune, loc, diags, isEof);
             }
 
             // Anything else
@@ -3625,7 +3625,7 @@ export struct HtmlLexer {
             else {
                 _raise(diags, loc, "absence-of-digits-in-numeric-character-reference");
                 _flushCodePointsConsumedAsACharacterReference(loc, diags);
-                _reconsumeIn(_returnState, rune, loc, diags);
+                _reconsumeIn(_returnState, rune, loc, diags, isEof);
             }
 
             break;
@@ -3672,7 +3672,7 @@ export struct HtmlLexer {
             // error. Reconsume in the numeric character reference end state.
             else {
                 _raise(diags, loc, "missing-semicolon-after-character-reference");
-                _reconsumeIn(State::NUMERIC_CHARACTER_REFERENCE_END, rune, loc, diags);
+                _reconsumeIn(State::NUMERIC_CHARACTER_REFERENCE_END, rune, loc, diags, isEof);
             }
 
             break;
@@ -3701,7 +3701,7 @@ export struct HtmlLexer {
             // error. Reconsume in the numeric character reference end state.
             else {
                 _raise(diags, loc, "missing-semicolon-after-character-reference");
-                _reconsumeIn(State::NUMERIC_CHARACTER_REFERENCE_END, rune, loc, diags);
+                _reconsumeIn(State::NUMERIC_CHARACTER_REFERENCE_END, rune, loc, diags, isEof);
             }
 
             break;
