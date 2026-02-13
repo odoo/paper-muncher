@@ -52,6 +52,10 @@ export struct Symbol {
         return _desc == other._desc;
     }
 
+    auto operator<=>(Symbol const& other) const {
+        return _desc <=> other._desc;
+    }
+
     void repr(Io::Emit& e) const {
         e("(Symbol {#})", _desc);
     }

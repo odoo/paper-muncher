@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+  "id": "html5lib-tests-runner",
+  "description": "Test runner for the html5lib test suite",
+  "type": "lib",
+  "requires": [
+    "karm-diag",
+    "karm-core",
+    "vaev-engine"
+  ]
+}
