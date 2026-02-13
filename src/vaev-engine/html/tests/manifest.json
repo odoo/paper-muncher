@@ -4,6 +4,7 @@
     "type": "lib",
     "requires": [
         "vaev-engine",
+        "html5lib-tests-runner",
         "karm-test"
     ],
     "injects": [
