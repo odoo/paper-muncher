@@ -32,6 +32,247 @@ using namespace Karm;
 
 namespace Vaev::Html::Tests {
 
+test$("html5lib-adoption01-0") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a><p></a></p>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,10): adoption-agency-1.3\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|     <p>\n"
+        "|       <a>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-adoption01-1") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a>1<p>2</a>3</p>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,12): adoption-agency-1.3\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       \"1\"\n"
+        "|     <p>\n"
+        "|       <a>\n"
+        "|         \"2\"\n"
+        "|       \"3\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-adoption01-2") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a>1<button>2</a>3</button>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,17): adoption-agency-1.3\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       \"1\"\n"
+        "|     <button>\n"
+        "|       <a>\n"
+        "|         \"2\"\n"
+        "|       \"3\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-adoption01-3") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a>1<b>2</a>3</b>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,12): adoption-agency-1.3\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       \"1\"\n"
+        "|       <b>\n"
+        "|         \"2\"\n"
+        "|     <b>\n"
+        "|       \"3\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-adoption01-4") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a>1<div>2<div>3</a>4</div>5</div>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,20): adoption-agency-1.3\n"
+        "(1,20): adoption-agency-1.3\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       \"1\"\n"
+        "|     <div>\n"
+        "|       <a>\n"
+        "|         \"2\"\n"
+        "|       <div>\n"
+        "|         <a>\n"
+        "|           \"3\"\n"
+        "|         \"4\"\n"
+        "|       \"5\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-adoption01-6") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b><b><a><p></a>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,16): adoption-agency-1.3\n"
+        "(1,16): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       <b>\n"
+        "|         <a>\n"
+        "|         <p>\n"
+        "|           <a>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-adoption01-7") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b><a><b><p></a>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,16): adoption-agency-1.3\n"
+        "(1,16): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       <a>\n"
+        "|         <b>\n"
+        "|       <b>\n"
+        "|         <p>\n"
+        "|           <a>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-adoption01-8") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a><b><b><p></a>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,16): adoption-agency-1.3\n"
+        "(1,16): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       <b>\n"
+        "|         <b>\n"
+        "|     <b>\n"
+        "|       <b>\n"
+        "|         <p>\n"
+        "|           <a>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-adoption01-9") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<p>1<s id=\"A\">2<b id=\"B\">3</p>4</s>5</b>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,30): unexpected-end-tag\n"
+        "(1,35): adoption-agency-1.3\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       \"1\"\n"
+        "|       <s>\n"
+        "|         id=\"A\"\n"
+        "|         \"2\"\n"
+        "|         <b>\n"
+        "|           id=\"B\"\n"
+        "|           \"3\"\n"
+        "|     <s>\n"
+        "|       id=\"A\"\n"
+        "|       <b>\n"
+        "|         id=\"B\"\n"
+        "|         \"4\"\n"
+        "|     <b>\n"
+        "|       id=\"B\"\n"
+        "|       \"5\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-adoption01-11") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -59,6 +300,86 @@ test$("html5lib-adoption01-11") {
     return Ok();
 }
 
+test$("html5lib-adoption01-13") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<div><a><b><div><div><div><div><div><div><div><div><div><div></a>\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,65): adoption-agency-1.3\n"
+        "(1,65): adoption-agency-1.3\n"
+        "(1,65): adoption-agency-1.3\n"
+        "(1,65): adoption-agency-1.3\n"
+        "(1,65): adoption-agency-1.3\n"
+        "(1,65): adoption-agency-1.3\n"
+        "(1,65): adoption-agency-1.3\n"
+        "(1,65): adoption-agency-1.3\n"
+        "(1,65): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <div>\n"
+        "|       <a>\n"
+        "|         <b>\n"
+        "|       <b>\n"
+        "|         <div>\n"
+        "|           <a>\n"
+        "|           <div>\n"
+        "|             <a>\n"
+        "|             <div>\n"
+        "|               <a>\n"
+        "|               <div>\n"
+        "|                 <a>\n"
+        "|                 <div>\n"
+        "|                   <a>\n"
+        "|                   <div>\n"
+        "|                     <a>\n"
+        "|                     <div>\n"
+        "|                       <a>\n"
+        "|                       <div>\n"
+        "|                         <a>\n"
+        "|                           <div>\n"
+        "|                             <div>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-adoption01-14") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<div><a><b><u><i><code><div></a>\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,32): adoption-agency-1.3\n"
+        "(1,32): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <div>\n"
+        "|       <a>\n"
+        "|         <b>\n"
+        "|           <u>\n"
+        "|             <i>\n"
+        "|               <code>\n"
+        "|       <u>\n"
+        "|         <i>\n"
+        "|           <code>\n"
+        "|             <div>\n"
+        "|               <a>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-adoption01-15") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -75,6 +396,65 @@ test$("html5lib-adoption01-15") {
         "|           <b>\n"
         "|             \"x\"\n"
         "|     \"y\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-adoption01-16") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<p><b><b><b><b><p>x\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,18): unexpected-end-tag\n"
+        "(1,19): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       <b>\n"
+        "|         <b>\n"
+        "|           <b>\n"
+        "|             <b>\n"
+        "|     <p>\n"
+        "|       <b>\n"
+        "|         <b>\n"
+        "|           <b>\n"
+        "|             \"x\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-adoption02-0") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b>1<i>2<p>3</b>4\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,16): adoption-agency-1.3\n"
+        "(1,17): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       \"1\"\n"
+        "|       <i>\n"
+        "|         \"2\"\n"
+        "|     <i>\n"
+        "|       <p>\n"
+        "|         <b>\n"
+        "|           \"3\"\n"
+        "|         \"4\"\n"
         ""s
     ));
 
@@ -2401,6 +2781,36 @@ test$("html5lib-html5test-com-18") {
     return Ok();
 }
 
+test$("html5lib-html5test-com-20") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<i>A<b>B<p></i>C</b>D\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,15): adoption-agency-1.3\n"
+        "(1,20): adoption-agency-1.3\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <i>\n"
+        "|       \"A\"\n"
+        "|       <b>\n"
+        "|         \"B\"\n"
+        "|     <b>\n"
+        "|     <p>\n"
+        "|       <b>\n"
+        "|         <i>\n"
+        "|         \"C\"\n"
+        "|       \"D\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-html5test-com-21") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -2695,6 +3105,30 @@ test$("html5lib-menuitem-element-6") {
         "|     <li>\n"
         "|       <menuitem>\n"
         "|     <li>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-menuitem-element-8") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><p><b></p><menuitem>\n"
+        "#errors\n"
+        "25: End tag \342\200\234p\342\200\235 seen, but there were open elements.\n"
+        "35: End of file seen and there were open elements.\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       <b>\n"
+        "|     <b>\n"
+        "|       <menuitem>\n"
         ""s
     ));
 
@@ -3218,6 +3652,72 @@ test$("html5lib-noscript01-16") {
     return Ok();
 }
 
+test$("html5lib-pending-spec-changes-0") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<input type=\"hidden\"><frameset>\n"
+        "#errors\n"
+        "(1,21): expected-doctype-but-got-start-tag\n"
+        "(1,31): unexpected-start-tag\n"
+        "(1,31): eof-in-frameset\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <frameset>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-plain-text-unsafe-1") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html>\000<frameset></frameset>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "(1,7): invalid-codepoint\n"
+        "(1,7): invalid-codepoint-in-body\n"
+        "(1,17): unexpected-start-tag\n"
+        "#new-errors\n"
+        "(1:7) unexpected-null-character\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <frameset>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-plain-text-unsafe-2") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html> \000 <frameset></frameset>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "(1,8): invalid-codepoint\n"
+        "(1,8): invalid-codepoint-in-body\n"
+        "(1,19): unexpected-start-tag\n"
+        "#new-errors\n"
+        "(1:8) unexpected-null-character\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <frameset>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-plain-text-unsafe-3") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -3235,6 +3735,56 @@ test$("html5lib-plain-text-unsafe-3") {
         "|   <head>\n"
         "|   <body>\n"
         "|     \"aa\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-plain-text-unsafe-4") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html>\000\000<frameset></frameset>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "(1,7): invalid-codepoint\n"
+        "(1,7): invalid-codepoint-in-body\n"
+        "(1,8): invalid-codepoint\n"
+        "(1,8): invalid-codepoint-in-body\n"
+        "(1,18): unexpected-start-tag\n"
+        "#new-errors\n"
+        "(1:7) unexpected-null-character\n"
+        "(1:8) unexpected-null-character\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <frameset>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-plain-text-unsafe-5") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html>\000\n"
+        "<frameset></frameset>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "(1,7): invalid-codepoint\n"
+        "(1,7): invalid-codepoint-in-body\n"
+        "(2,11): unexpected-start-tag\n"
+        "#new-errors\n"
+        "(1:7) unexpected-null-character\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <frameset>\n"
         ""s
     ));
 
@@ -3381,6 +3931,74 @@ test$("html5lib-plain-text-unsafe-12") {
         "|   <head>\n"
         "|   <body>\n"
         "|     <!-- \357\277\275filler\357\277\275text -->\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-plain-text-unsafe-18") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<svg>\000</svg><frameset>\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,6): invalid-codepoint\n"
+        "(1,6): invalid-codepoint-in-foreign-content\n"
+        "(1,22): unexpected-start-tag\n"
+        "(1,22): eof-in-frameset\n"
+        "#new-errors\n"
+        "(1:6) unexpected-null-character\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <frameset>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-plain-text-unsafe-19") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<svg>\000 </svg><frameset>\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,6): invalid-codepoint\n"
+        "(1,6): invalid-codepoint-in-foreign-content\n"
+        "(1,23): unexpected-start-tag\n"
+        "(1,23): eof-in-frameset\n"
+        "#new-errors\n"
+        "(1:6) unexpected-null-character\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <frameset>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-plain-text-unsafe-21") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<svg><path></path></svg><frameset>\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,34): unexpected-start-tag\n"
+        "(1,34): eof-in-frameset\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <frameset>\n"
         ""s
     ));
 
@@ -4614,6 +5232,89 @@ test$("html5lib-tests1-21") {
     return Ok();
 }
 
+test$("html5lib-tests1-22") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a><p>X<a>Y</a>Z</p></a>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,10): unexpected-start-tag-implies-end-tag\n"
+        "(1,10): adoption-agency-1.3\n"
+        "(1,24): unexpected-end-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|     <p>\n"
+        "|       <a>\n"
+        "|         \"X\"\n"
+        "|       <a>\n"
+        "|         \"Y\"\n"
+        "|       \"Z\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-23") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b><button>foo</b>bar\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,18): adoption-agency-1.3\n"
+        "(1,21): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|     <button>\n"
+        "|       <b>\n"
+        "|         \"foo\"\n"
+        "|       \"bar\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-25") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<p><b><div><marquee></p></b></div>X\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,11): unexpected-end-tag\n"
+        "(1,24): unexpected-end-tag\n"
+        "(1,28): unexpected-end-tag\n"
+        "(1,34): end-tag-too-early\n"
+        "(1,35): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       <b>\n"
+        "|     <div>\n"
+        "|       <b>\n"
+        "|         <marquee>\n"
+        "|           <p>\n"
+        "|           \"X\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests1-26") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -4689,43 +5390,69 @@ test$("html5lib-tests1-28") {
     return Ok();
 }
 
-test$("html5lib-tests1-32") {
+test$("html5lib-tests1-30") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
-        "<!-----><font><div>hello<table>excite!<b>me!<th><i>please!</tr><!--X-->\n"
+        "<a><table><td><a><table></table><a></tr><a></table><b>X</b>C<a>Y\n"
         "#errors\n"
-        "(1,14): expected-doctype-but-got-start-tag\n"
-        "(1,41): unexpected-start-tag-implies-table-voodoo\n"
-        "(1,48): foster-parenting-character-in-table\n"
-        "(1,48): foster-parenting-character-in-table\n"
-        "(1,48): foster-parenting-character-in-table\n"
-        "(1,48): foster-parenting-character-in-table\n"
-        "(1,48): foster-parenting-character-in-table\n"
-        "(1,48): foster-parenting-character-in-table\n"
-        "(1,48): foster-parenting-character-in-table\n"
-        "(1,48): foster-parenting-character-in-table\n"
-        "(1,48): foster-parenting-character-in-table\n"
-        "(1,48): foster-parenting-character-in-table\n"
-        "(1,48): unexpected-cell-in-table-body\n"
-        "(1,63): unexpected-cell-end-tag\n"
-        "(1,71): eof-in-table\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,14): unexpected-cell-in-table-body\n"
+        "(1,35): unexpected-start-tag-implies-end-tag\n"
+        "(1,40): unexpected-cell-end-tag\n"
+        "(1,43): unexpected-start-tag-implies-table-voodoo\n"
+        "(1,43): unexpected-start-tag-implies-end-tag\n"
+        "(1,43): unexpected-end-tag\n"
+        "(1,63): unexpected-start-tag-implies-end-tag\n"
+        "(1,64): expected-closing-tag-but-got-eof\n"
         "#document\n"
-        "| <!-- - -->\n"
         "| <html>\n"
         "|   <head>\n"
         "|   <body>\n"
-        "|     <font>\n"
-        "|       <div>\n"
-        "|         \"helloexcite!\"\n"
-        "|         <b>\n"
-        "|           \"me!\"\n"
-        "|         <table>\n"
-        "|           <tbody>\n"
-        "|             <tr>\n"
-        "|               <th>\n"
-        "|                 <i>\n"
-        "|                   \"please!\"\n"
-        "|             <!-- X -->\n"
+        "|     <a>\n"
+        "|       <a>\n"
+        "|       <table>\n"
+        "|         <tbody>\n"
+        "|           <tr>\n"
+        "|             <td>\n"
+        "|               <a>\n"
+        "|                 <table>\n"
+        "|               <a>\n"
+        "|     <a>\n"
+        "|       <b>\n"
+        "|         \"X\"\n"
+        "|       \"C\"\n"
+        "|     <a>\n"
+        "|       \"Y\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-31") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a X>0<b>1<a Y>2\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,15): unexpected-start-tag-implies-end-tag\n"
+        "(1,15): adoption-agency-1.3\n"
+        "(1,16): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       x=\"\"\n"
+        "|       \"0\"\n"
+        "|       <b>\n"
+        "|         \"1\"\n"
+        "|     <b>\n"
+        "|       <a>\n"
+        "|         y=\"\"\n"
+        "|         \"2\"\n"
         ""s
     ));
 
@@ -4977,6 +5704,29 @@ test$("html5lib-tests1-50") {
     return Ok();
 }
 
+test$("html5lib-tests1-51") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b><p></b>TEST\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,10): adoption-agency-1.3\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|     <p>\n"
+        "|       <b>\n"
+        "|       \"TEST\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests1-52") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -5050,6 +5800,35 @@ test$("html5lib-tests1-55") {
     return Ok();
 }
 
+test$("html5lib-tests1-56") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<font><p>hello<b>cruel</font>world\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "(1,29): adoption-agency-1.3\n"
+        "(1,29): adoption-agency-1.3\n"
+        "(1,34): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <font>\n"
+        "|     <p>\n"
+        "|       <font>\n"
+        "|         \"hello\"\n"
+        "|         <b>\n"
+        "|           \"cruel\"\n"
+        "|       <b>\n"
+        "|         \"world\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests1-57") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -5089,6 +5868,34 @@ test$("html5lib-tests1-58") {
         "|         \"B\"\n"
         "|         <div>\n"
         "|           \"C\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-60") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b>A<cite>B<div>C</b>D\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,21): adoption-agency-1.3\n"
+        "(1,22): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       \"A\"\n"
+        "|       <cite>\n"
+        "|         \"B\"\n"
+        "|     <div>\n"
+        "|       <b>\n"
+        "|         \"C\"\n"
+        "|       \"D\"\n"
         ""s
     ));
 
@@ -5285,6 +6092,203 @@ test$("html5lib-tests1-70") {
     return Ok();
 }
 
+test$("html5lib-tests1-71") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<DIV> abc <B> def <I> ghi <P> jkl </B>\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,38): adoption-agency-1.3\n"
+        "(1,38): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <div>\n"
+        "|       \" abc \"\n"
+        "|       <b>\n"
+        "|         \" def \"\n"
+        "|         <i>\n"
+        "|           \" ghi \"\n"
+        "|       <i>\n"
+        "|         <p>\n"
+        "|           <b>\n"
+        "|             \" jkl \"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-72") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<DIV> abc <B> def <I> ghi <P> jkl </B> mno\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,38): adoption-agency-1.3\n"
+        "(1,42): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <div>\n"
+        "|       \" abc \"\n"
+        "|       <b>\n"
+        "|         \" def \"\n"
+        "|         <i>\n"
+        "|           \" ghi \"\n"
+        "|       <i>\n"
+        "|         <p>\n"
+        "|           <b>\n"
+        "|             \" jkl \"\n"
+        "|           \" mno\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-73") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<DIV> abc <B> def <I> ghi <P> jkl </B> mno </I>\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,38): adoption-agency-1.3\n"
+        "(1,47): adoption-agency-1.3\n"
+        "(1,47): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <div>\n"
+        "|       \" abc \"\n"
+        "|       <b>\n"
+        "|         \" def \"\n"
+        "|         <i>\n"
+        "|           \" ghi \"\n"
+        "|       <i>\n"
+        "|       <p>\n"
+        "|         <i>\n"
+        "|           <b>\n"
+        "|             \" jkl \"\n"
+        "|           \" mno \"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-74") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<DIV> abc <B> def <I> ghi <P> jkl </B> mno </I> pqr\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,38): adoption-agency-1.3\n"
+        "(1,47): adoption-agency-1.3\n"
+        "(1,51): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <div>\n"
+        "|       \" abc \"\n"
+        "|       <b>\n"
+        "|         \" def \"\n"
+        "|         <i>\n"
+        "|           \" ghi \"\n"
+        "|       <i>\n"
+        "|       <p>\n"
+        "|         <i>\n"
+        "|           <b>\n"
+        "|             \" jkl \"\n"
+        "|           \" mno \"\n"
+        "|         \" pqr\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-75") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<DIV> abc <B> def <I> ghi <P> jkl </B> mno </I> pqr </P>\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,38): adoption-agency-1.3\n"
+        "(1,47): adoption-agency-1.3\n"
+        "(1,56): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <div>\n"
+        "|       \" abc \"\n"
+        "|       <b>\n"
+        "|         \" def \"\n"
+        "|         <i>\n"
+        "|           \" ghi \"\n"
+        "|       <i>\n"
+        "|       <p>\n"
+        "|         <i>\n"
+        "|           <b>\n"
+        "|             \" jkl \"\n"
+        "|           \" mno \"\n"
+        "|         \" pqr \"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-76") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<DIV> abc <B> def <I> ghi <P> jkl </B> mno </I> pqr </P> stu\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,38): adoption-agency-1.3\n"
+        "(1,47): adoption-agency-1.3\n"
+        "(1,60): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <div>\n"
+        "|       \" abc \"\n"
+        "|       <b>\n"
+        "|         \" def \"\n"
+        "|         <i>\n"
+        "|           \" ghi \"\n"
+        "|       <i>\n"
+        "|       <p>\n"
+        "|         <i>\n"
+        "|           <b>\n"
+        "|             \" jkl \"\n"
+        "|           \" mno \"\n"
+        "|         \" pqr \"\n"
+        "|       \" stu\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests1-77") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -5306,14 +6310,18 @@ test$("html5lib-tests1-77") {
     return Ok();
 }
 
-test$("html5lib-tests1-79") {
+test$("html5lib-tests1-78") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
-        "<a href=\"blah\">aba<table><tr><td><a href=\"foo\">br</td></tr>x</table>aoe\n"
+        "<a href=\"blah\">aba<table><a href=\"foo\">br<tr><td></td></tr>x</table>aoe\n"
         "#errors\n"
         "(1,15): expected-doctype-but-got-start-tag\n"
-        "(1,54): unexpected-cell-end-tag\n"
-        "(1,68): unexpected text in table\n"
+        "(1,39): unexpected-start-tag-implies-table-voodoo\n"
+        "(1,39): unexpected-start-tag-implies-end-tag\n"
+        "(1,39): unexpected-end-tag\n"
+        "(1,45): foster-parenting-character-in-table\n"
+        "(1,45): foster-parenting-character-in-table\n"
+        "(1,68): foster-parenting-character-in-table\n"
         "(1,71): expected-closing-tag-but-got-eof\n"
         "#document\n"
         "| <html>\n"
@@ -5321,14 +6329,19 @@ test$("html5lib-tests1-79") {
         "|   <body>\n"
         "|     <a>\n"
         "|       href=\"blah\"\n"
-        "|       \"abax\"\n"
+        "|       \"aba\"\n"
+        "|       <a>\n"
+        "|         href=\"foo\"\n"
+        "|         \"br\"\n"
+        "|       <a>\n"
+        "|         href=\"foo\"\n"
+        "|         \"x\"\n"
         "|       <table>\n"
         "|         <tbody>\n"
         "|           <tr>\n"
         "|             <td>\n"
-        "|               <a>\n"
-        "|                 href=\"foo\"\n"
-        "|                 \"br\"\n"
+        "|     <a>\n"
+        "|       href=\"foo\"\n"
         "|       \"aoe\"\n"
         ""s
     ));
@@ -5359,6 +6372,33 @@ test$("html5lib-tests1-81") {
         "|           href=\"b\"\n"
         "|           \"bb\"\n"
         "|       \"aa\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-82") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<wbr><strike><code></strike><code><strike></code>\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,28): adoption-agency-1.3\n"
+        "(1,49): adoption-agency-1.3\n"
+        "(1,49): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <wbr>\n"
+        "|     <strike>\n"
+        "|       <code>\n"
+        "|     <code>\n"
+        "|       <code>\n"
+        "|         <strike>\n"
         ""s
     ));
 
@@ -5511,6 +6551,40 @@ test$("html5lib-tests1-88") {
     return Ok();
 }
 
+test$("html5lib-tests1-91") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a><table><a></table><p><a><div><a>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,13): unexpected-start-tag-implies-table-voodoo\n"
+        "(1,13): unexpected-start-tag-implies-end-tag\n"
+        "(1,13): adoption-agency-1.3\n"
+        "(1,27): unexpected-start-tag-implies-end-tag\n"
+        "(1,27): adoption-agency-1.2\n"
+        "(1,32): unexpected-end-tag\n"
+        "(1,35): unexpected-start-tag-implies-end-tag\n"
+        "(1,35): adoption-agency-1.2\n"
+        "(1,35): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       <a>\n"
+        "|       <table>\n"
+        "|     <p>\n"
+        "|       <a>\n"
+        "|     <div>\n"
+        "|       <a>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests1-92") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -5524,6 +6598,34 @@ test$("html5lib-tests1-92") {
         "|     <meta>\n"
         "|   <body>\n"
         "|     <p>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-94") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b><table><td></b><i></table>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,14): unexpected-cell-in-table-body\n"
+        "(1,18): unexpected-end-tag\n"
+        "(1,29): unexpected-cell-end-tag\n"
+        "(1,29): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       <table>\n"
+        "|         <tbody>\n"
+        "|           <tr>\n"
+        "|             <td>\n"
+        "|               <i>\n"
         ""s
     ));
 
@@ -5546,6 +6648,120 @@ test$("html5lib-tests1-95") {
         "|   <body>\n"
         "|     <h1>\n"
         "|     <h2>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-96") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a><p><a></a></p></a>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,9): unexpected-start-tag-implies-end-tag\n"
+        "(1,9): adoption-agency-1.3\n"
+        "(1,21): unexpected-end-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|     <p>\n"
+        "|       <a>\n"
+        "|       <a>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-97") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b><button></b></button></b>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,15): adoption-agency-1.3\n"
+        "(1,28): unexpected-end-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|     <button>\n"
+        "|       <b>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-98") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<p><b><div><marquee></p></b></div>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,11): unexpected-end-tag\n"
+        "(1,24): unexpected-end-tag\n"
+        "(1,28): unexpected-end-tag\n"
+        "(1,34): end-tag-too-early\n"
+        "(1,34): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       <b>\n"
+        "|     <div>\n"
+        "|       <b>\n"
+        "|         <marquee>\n"
+        "|           <p>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-102") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a><table><td><a><table></table><a></tr><a></table><a>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,14): unexpected-cell-in-table-body\n"
+        "(1,35): unexpected-start-tag-implies-end-tag\n"
+        "(1,40): unexpected-cell-end-tag\n"
+        "(1,43): unexpected-start-tag-implies-table-voodoo\n"
+        "(1,43): unexpected-start-tag-implies-end-tag\n"
+        "(1,43): unexpected-end-tag\n"
+        "(1,54): unexpected-start-tag-implies-end-tag\n"
+        "(1,54): adoption-agency-1.2\n"
+        "(1,54): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       <a>\n"
+        "|       <table>\n"
+        "|         <tbody>\n"
+        "|           <tr>\n"
+        "|             <td>\n"
+        "|               <a>\n"
+        "|                 <table>\n"
+        "|               <a>\n"
+        "|     <a>\n"
         ""s
     ));
 
@@ -6014,6 +7230,68 @@ test$("html5lib-tests14-5") {
         "|   789=\"012\"\n"
         "|   <head>\n"
         "|   <body>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests15-0") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><p><b><i><u></p> <p>X\n"
+        "#errors\n"
+        "(1,31): unexpected-end-tag\n"
+        "(1,36): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       <b>\n"
+        "|         <i>\n"
+        "|           <u>\n"
+        "|     <b>\n"
+        "|       <i>\n"
+        "|         <u>\n"
+        "|           \" \"\n"
+        "|           <p>\n"
+        "|             \"X\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests15-1") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<p><b><i><u></p>\n"
+        "<p>X\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,16): unexpected-end-tag\n"
+        "(2,4): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       <b>\n"
+        "|         <i>\n"
+        "|           <u>\n"
+        "|     <b>\n"
+        "|       <i>\n"
+        "|         <u>\n"
+        "|           \"\n"
+        "\"\n"
+        "|           <p>\n"
+        "|             \"X\"\n"
         ""s
     ));
 
@@ -6586,6 +7864,31 @@ test$("html5lib-tests2-8") {
         "| <html>\n"
         "|   <head>\n"
         "|   <frameset>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests2-9") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><font><p><b>test</font>\n"
+        "#errors\n"
+        "(1,38): adoption-agency-1.3\n"
+        "(1,38): adoption-agency-1.3\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <font>\n"
+        "|     <p>\n"
+        "|       <font>\n"
+        "|         <b>\n"
+        "|           \"test\"\n"
         ""s
     ));
 
@@ -7228,6 +8531,378 @@ test$("html5lib-tests20-50") {
     return Ok();
 }
 
+test$("html5lib-tests22-0") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a><b><big><em><strong><div>X</a>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,33): adoption-agency-1.3\n"
+        "(1,33): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       <b>\n"
+        "|         <big>\n"
+        "|           <em>\n"
+        "|             <strong>\n"
+        "|     <big>\n"
+        "|       <em>\n"
+        "|         <strong>\n"
+        "|           <div>\n"
+        "|             <a>\n"
+        "|               \"X\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests22-1") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a><b><div id=1><div id=2><div id=3><div id=4><div id=5><div id=6><div id=7><div id=8>A</a>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,91): adoption-agency-1.3\n"
+        "(1,91): adoption-agency-1.3\n"
+        "(1,91): adoption-agency-1.3\n"
+        "(1,91): adoption-agency-1.3\n"
+        "(1,91): adoption-agency-1.3\n"
+        "(1,91): adoption-agency-1.3\n"
+        "(1,91): adoption-agency-1.3\n"
+        "(1,91): adoption-agency-1.3\n"
+        "(1,91): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       <b>\n"
+        "|     <b>\n"
+        "|       <div>\n"
+        "|         id=\"1\"\n"
+        "|         <a>\n"
+        "|         <div>\n"
+        "|           id=\"2\"\n"
+        "|           <a>\n"
+        "|           <div>\n"
+        "|             id=\"3\"\n"
+        "|             <a>\n"
+        "|             <div>\n"
+        "|               id=\"4\"\n"
+        "|               <a>\n"
+        "|               <div>\n"
+        "|                 id=\"5\"\n"
+        "|                 <a>\n"
+        "|                 <div>\n"
+        "|                   id=\"6\"\n"
+        "|                   <a>\n"
+        "|                   <div>\n"
+        "|                     id=\"7\"\n"
+        "|                     <a>\n"
+        "|                     <div>\n"
+        "|                       id=\"8\"\n"
+        "|                       <a>\n"
+        "|                         \"A\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests22-2") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a><b><div id=1><div id=2><div id=3><div id=4><div id=5><div id=6><div id=7><div id=8><div id=9>A</a>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,101): adoption-agency-1.3\n"
+        "(1,101): adoption-agency-1.3\n"
+        "(1,101): adoption-agency-1.3\n"
+        "(1,101): adoption-agency-1.3\n"
+        "(1,101): adoption-agency-1.3\n"
+        "(1,101): adoption-agency-1.3\n"
+        "(1,101): adoption-agency-1.3\n"
+        "(1,101): adoption-agency-1.3\n"
+        "(1,101): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       <b>\n"
+        "|     <b>\n"
+        "|       <div>\n"
+        "|         id=\"1\"\n"
+        "|         <a>\n"
+        "|         <div>\n"
+        "|           id=\"2\"\n"
+        "|           <a>\n"
+        "|           <div>\n"
+        "|             id=\"3\"\n"
+        "|             <a>\n"
+        "|             <div>\n"
+        "|               id=\"4\"\n"
+        "|               <a>\n"
+        "|               <div>\n"
+        "|                 id=\"5\"\n"
+        "|                 <a>\n"
+        "|                 <div>\n"
+        "|                   id=\"6\"\n"
+        "|                   <a>\n"
+        "|                   <div>\n"
+        "|                     id=\"7\"\n"
+        "|                     <a>\n"
+        "|                     <div>\n"
+        "|                       id=\"8\"\n"
+        "|                       <a>\n"
+        "|                         <div>\n"
+        "|                           id=\"9\"\n"
+        "|                           \"A\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests22-3") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<a><b><div id=1><div id=2><div id=3><div id=4><div id=5><div id=6><div id=7><div id=8><div id=9><div id=10>A</a>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,112): adoption-agency-1.3\n"
+        "(1,112): adoption-agency-1.3\n"
+        "(1,112): adoption-agency-1.3\n"
+        "(1,112): adoption-agency-1.3\n"
+        "(1,112): adoption-agency-1.3\n"
+        "(1,112): adoption-agency-1.3\n"
+        "(1,112): adoption-agency-1.3\n"
+        "(1,112): adoption-agency-1.3\n"
+        "(1,112): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       <b>\n"
+        "|     <b>\n"
+        "|       <div>\n"
+        "|         id=\"1\"\n"
+        "|         <a>\n"
+        "|         <div>\n"
+        "|           id=\"2\"\n"
+        "|           <a>\n"
+        "|           <div>\n"
+        "|             id=\"3\"\n"
+        "|             <a>\n"
+        "|             <div>\n"
+        "|               id=\"4\"\n"
+        "|               <a>\n"
+        "|               <div>\n"
+        "|                 id=\"5\"\n"
+        "|                 <a>\n"
+        "|                 <div>\n"
+        "|                   id=\"6\"\n"
+        "|                   <a>\n"
+        "|                   <div>\n"
+        "|                     id=\"7\"\n"
+        "|                     <a>\n"
+        "|                     <div>\n"
+        "|                       id=\"8\"\n"
+        "|                       <a>\n"
+        "|                         <div>\n"
+        "|                           id=\"9\"\n"
+        "|                           <div>\n"
+        "|                             id=\"10\"\n"
+        "|                             \"A\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests23-0") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<p><font size=4><font color=red><font size=4><font size=4><font size=4><font size=4><font size=4><font color=red><p>X\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,116): unexpected-end-tag\n"
+        "(1,117): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       <font>\n"
+        "|         size=\"4\"\n"
+        "|         <font>\n"
+        "|           color=\"red\"\n"
+        "|           <font>\n"
+        "|             size=\"4\"\n"
+        "|             <font>\n"
+        "|               size=\"4\"\n"
+        "|               <font>\n"
+        "|                 size=\"4\"\n"
+        "|                 <font>\n"
+        "|                   size=\"4\"\n"
+        "|                   <font>\n"
+        "|                     size=\"4\"\n"
+        "|                     <font>\n"
+        "|                       color=\"red\"\n"
+        "|     <p>\n"
+        "|       <font>\n"
+        "|         color=\"red\"\n"
+        "|         <font>\n"
+        "|           size=\"4\"\n"
+        "|           <font>\n"
+        "|             size=\"4\"\n"
+        "|             <font>\n"
+        "|               size=\"4\"\n"
+        "|               <font>\n"
+        "|                 color=\"red\"\n"
+        "|                 \"X\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests23-1") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<p><font size=4><font size=4><font size=4><font size=4><p>X\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,58): unexpected-end-tag\n"
+        "(1,59): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       <font>\n"
+        "|         size=\"4\"\n"
+        "|         <font>\n"
+        "|           size=\"4\"\n"
+        "|           <font>\n"
+        "|             size=\"4\"\n"
+        "|             <font>\n"
+        "|               size=\"4\"\n"
+        "|     <p>\n"
+        "|       <font>\n"
+        "|         size=\"4\"\n"
+        "|         <font>\n"
+        "|           size=\"4\"\n"
+        "|           <font>\n"
+        "|             size=\"4\"\n"
+        "|             \"X\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests23-2") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<p><font size=4><font size=4><font size=4><font size=\"5\"><font size=4><p>X\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,73): unexpected-end-tag\n"
+        "(1,74): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       <font>\n"
+        "|         size=\"4\"\n"
+        "|         <font>\n"
+        "|           size=\"4\"\n"
+        "|           <font>\n"
+        "|             size=\"4\"\n"
+        "|             <font>\n"
+        "|               size=\"5\"\n"
+        "|               <font>\n"
+        "|                 size=\"4\"\n"
+        "|     <p>\n"
+        "|       <font>\n"
+        "|         size=\"4\"\n"
+        "|         <font>\n"
+        "|           size=\"4\"\n"
+        "|           <font>\n"
+        "|             size=\"5\"\n"
+        "|             <font>\n"
+        "|               size=\"4\"\n"
+        "|               \"X\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests23-3") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<p><font size=4 id=a><font size=4 id=b><font size=4><font size=4><p>X\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,68): unexpected-end-tag\n"
+        "(1,69): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       <font>\n"
+        "|         id=\"a\"\n"
+        "|         size=\"4\"\n"
+        "|         <font>\n"
+        "|           id=\"b\"\n"
+        "|           size=\"4\"\n"
+        "|           <font>\n"
+        "|             size=\"4\"\n"
+        "|             <font>\n"
+        "|               size=\"4\"\n"
+        "|     <p>\n"
+        "|       <font>\n"
+        "|         id=\"a\"\n"
+        "|         size=\"4\"\n"
+        "|         <font>\n"
+        "|           id=\"b\"\n"
+        "|           size=\"4\"\n"
+        "|           <font>\n"
+        "|             size=\"4\"\n"
+        "|             <font>\n"
+        "|               size=\"4\"\n"
+        "|               \"X\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests24-0") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -7796,6 +9471,266 @@ test$("html5lib-tests25-21") {
         "|   <body>\n"
         "|     <meta>\n"
         "|     \"A\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests26-0") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><body><a href='#1'><nobr>1<nobr></a><br><a href='#2'><nobr>2<nobr></a><br><a href='#3'><nobr>3<nobr></a>\n"
+        "#errors\n"
+        "(1,47): unexpected-start-tag-implies-end-tag\n"
+        "(1,51): adoption-agency-1.3\n"
+        "(1,74): unexpected-start-tag-implies-end-tag\n"
+        "(1,74): adoption-agency-1.3\n"
+        "(1,81): unexpected-start-tag-implies-end-tag\n"
+        "(1,85): adoption-agency-1.3\n"
+        "(1,108): unexpected-start-tag-implies-end-tag\n"
+        "(1,108): adoption-agency-1.3\n"
+        "(1,115): unexpected-start-tag-implies-end-tag\n"
+        "(1,119): adoption-agency-1.3\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <a>\n"
+        "|       href=\"#1\"\n"
+        "|       <nobr>\n"
+        "|         \"1\"\n"
+        "|       <nobr>\n"
+        "|     <nobr>\n"
+        "|       <br>\n"
+        "|       <a>\n"
+        "|         href=\"#2\"\n"
+        "|     <a>\n"
+        "|       href=\"#2\"\n"
+        "|       <nobr>\n"
+        "|         \"2\"\n"
+        "|       <nobr>\n"
+        "|     <nobr>\n"
+        "|       <br>\n"
+        "|       <a>\n"
+        "|         href=\"#3\"\n"
+        "|     <a>\n"
+        "|       href=\"#3\"\n"
+        "|       <nobr>\n"
+        "|         \"3\"\n"
+        "|       <nobr>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests26-1") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><body><b><nobr>1<nobr></b><i><nobr>2<nobr></i>3\n"
+        "#errors\n"
+        "(1,37): unexpected-start-tag-implies-end-tag\n"
+        "(1,41): adoption-agency-1.3\n"
+        "(1,50): unexpected-start-tag-implies-end-tag\n"
+        "(1,50): adoption-agency-1.3\n"
+        "(1,57): unexpected-start-tag-implies-end-tag\n"
+        "(1,61): adoption-agency-1.3\n"
+        "(1,62): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       <nobr>\n"
+        "|         \"1\"\n"
+        "|       <nobr>\n"
+        "|     <nobr>\n"
+        "|       <i>\n"
+        "|     <i>\n"
+        "|       <nobr>\n"
+        "|         \"2\"\n"
+        "|       <nobr>\n"
+        "|     <nobr>\n"
+        "|       \"3\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests26-4") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><body><b><nobr>1<div><nobr></b><i><nobr>2<nobr></i>3\n"
+        "#errors\n"
+        "(1,42): unexpected-start-tag-implies-end-tag\n"
+        "(1,42): adoption-agency-1.3\n"
+        "(1,46): adoption-agency-1.3\n"
+        "(1,46): adoption-agency-1.3\n"
+        "(1,55): unexpected-start-tag-implies-end-tag\n"
+        "(1,55): adoption-agency-1.3\n"
+        "(1,62): unexpected-start-tag-implies-end-tag\n"
+        "(1,66): adoption-agency-1.3\n"
+        "(1,67): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       <nobr>\n"
+        "|         \"1\"\n"
+        "|     <div>\n"
+        "|       <b>\n"
+        "|         <nobr>\n"
+        "|         <nobr>\n"
+        "|       <nobr>\n"
+        "|         <i>\n"
+        "|       <i>\n"
+        "|         <nobr>\n"
+        "|           \"2\"\n"
+        "|         <nobr>\n"
+        "|       <nobr>\n"
+        "|         \"3\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests26-5") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><body><b><nobr>1<nobr></b><div><i><nobr>2<nobr></i>3\n"
+        "#errors\n"
+        "(1,37): unexpected-start-tag-implies-end-tag\n"
+        "(1,41): adoption-agency-1.3\n"
+        "(1,55): unexpected-start-tag-implies-end-tag\n"
+        "(1,55): adoption-agency-1.3\n"
+        "(1,62): unexpected-start-tag-implies-end-tag\n"
+        "(1,66): adoption-agency-1.3\n"
+        "(1,67): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       <nobr>\n"
+        "|         \"1\"\n"
+        "|       <nobr>\n"
+        "|     <div>\n"
+        "|       <nobr>\n"
+        "|         <i>\n"
+        "|       <i>\n"
+        "|         <nobr>\n"
+        "|           \"2\"\n"
+        "|         <nobr>\n"
+        "|       <nobr>\n"
+        "|         \"3\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests26-6") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><body><b><nobr>1<nobr><ins></b><i><nobr>\n"
+        "#errors\n"
+        "(1,37): unexpected-start-tag-implies-end-tag\n"
+        "(1,46): adoption-agency-1.3\n"
+        "(1,55): unexpected-start-tag-implies-end-tag\n"
+        "(1,55): adoption-agency-1.3\n"
+        "(1,55): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       <nobr>\n"
+        "|         \"1\"\n"
+        "|       <nobr>\n"
+        "|         <ins>\n"
+        "|     <nobr>\n"
+        "|       <i>\n"
+        "|     <i>\n"
+        "|       <nobr>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests26-7") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><body><b><nobr>1<ins><nobr></b><i>2\n"
+        "#errors\n"
+        "(1,42): unexpected-start-tag-implies-end-tag\n"
+        "(1,42): adoption-agency-1.3\n"
+        "(1,46): adoption-agency-1.3\n"
+        "(1,50): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       <nobr>\n"
+        "|         \"1\"\n"
+        "|         <ins>\n"
+        "|       <nobr>\n"
+        "|     <nobr>\n"
+        "|       <i>\n"
+        "|         \"2\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests26-8") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><body><b>1<nobr></b><i><nobr>2</i>\n"
+        "#errors\n"
+        "(1,35): adoption-agency-1.3\n"
+        "(1,44): unexpected-start-tag-implies-end-tag\n"
+        "(1,44): adoption-agency-1.3\n"
+        "(1,49): adoption-agency-1.3\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       \"1\"\n"
+        "|       <nobr>\n"
+        "|     <nobr>\n"
+        "|       <i>\n"
+        "|     <i>\n"
+        "|       <nobr>\n"
+        "|         \"2\"\n"
         ""s
     ));
 
@@ -8764,6 +10699,63 @@ test$("html5lib-tests6-42") {
     return Ok();
 }
 
+test$("html5lib-tests6-47") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<param><frameset></frameset>\n"
+        "#errors\n"
+        "(1,7): expected-doctype-but-got-start-tag\n"
+        "(1,17): unexpected-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <frameset>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests6-48") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<source><frameset></frameset>\n"
+        "#errors\n"
+        "(1,8): expected-doctype-but-got-start-tag\n"
+        "(1,18): unexpected-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <frameset>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests6-49") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<track><frameset></frameset>\n"
+        "#errors\n"
+        "(1,7): expected-doctype-but-got-start-tag\n"
+        "(1,17): unexpected-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <frameset>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests7-25") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -9105,6 +11097,32 @@ test$("html5lib-tests8-7") {
     return Ok();
 }
 
+test$("html5lib-tests8-8") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b>a<div></div><div></b>y\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,24): adoption-agency-1.3\n"
+        "(1,25): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       \"a\"\n"
+        "|       <div>\n"
+        "|     <div>\n"
+        "|       <b>\n"
+        "|       \"y\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests9-21") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -9148,6 +11166,308 @@ test$("html5lib-tests9-22") {
         "| <html>\n"
         "|   <head>\n"
         "|   <frameset>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tricky01-0") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b><p>Bold </b> Not bold</p>\n"
+        "Also not bold.\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,15): adoption-agency-1.3\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|     <p>\n"
+        "|       <b>\n"
+        "|         \"Bold \"\n"
+        "|       \" Not bold\"\n"
+        "|     \"\n"
+        "Also not bold.\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tricky01-1") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html>\n"
+        "<font color=red><i>Italic and Red<p>Italic and Red </font> Just italic.</p> Italic only.</i> Plain\n"
+        "<p>I should not be red. <font color=red>Red. <i>Italic and red.</p>\n"
+        "<p>Italic and red. </i> Red.</font> I should not be red.</p>\n"
+        "<b>Bold <i>Bold and italic</b> Only Italic </i> Plain\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "(2,58): adoption-agency-1.3\n"
+        "(3,67): unexpected-end-tag\n"
+        "(4,23): adoption-agency-1.3\n"
+        "(4,35): adoption-agency-1.3\n"
+        "(5,30): adoption-agency-1.3\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <font>\n"
+        "|       color=\"red\"\n"
+        "|       <i>\n"
+        "|         \"Italic and Red\"\n"
+        "|     <i>\n"
+        "|       <p>\n"
+        "|         <font>\n"
+        "|           color=\"red\"\n"
+        "|           \"Italic and Red \"\n"
+        "|         \" Just italic.\"\n"
+        "|       \" Italic only.\"\n"
+        "|     \" Plain\n"
+        "\"\n"
+        "|     <p>\n"
+        "|       \"I should not be red. \"\n"
+        "|       <font>\n"
+        "|         color=\"red\"\n"
+        "|         \"Red. \"\n"
+        "|         <i>\n"
+        "|           \"Italic and red.\"\n"
+        "|     <font>\n"
+        "|       color=\"red\"\n"
+        "|       <i>\n"
+        "|         \"\n"
+        "\"\n"
+        "|     <p>\n"
+        "|       <font>\n"
+        "|         color=\"red\"\n"
+        "|         <i>\n"
+        "|           \"Italic and red. \"\n"
+        "|         \" Red.\"\n"
+        "|       \" I should not be red.\"\n"
+        "|     \"\n"
+        "\"\n"
+        "|     <b>\n"
+        "|       \"Bold \"\n"
+        "|       <i>\n"
+        "|         \"Bold and italic\"\n"
+        "|     <i>\n"
+        "|       \" Only Italic \"\n"
+        "|     \" Plain\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tricky01-2") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><body>\n"
+        "<p><font size=\"7\">First paragraph.</p>\n"
+        "<p>Second paragraph.</p></font>\n"
+        "<b><p><i>Bold and Italic</b> Italic</p>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "(2,38): unexpected-end-tag\n"
+        "(4,28): adoption-agency-1.3\n"
+        "(4,28): adoption-agency-1.3\n"
+        "(4,39): unexpected-end-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     \"\n"
+        "\"\n"
+        "|     <p>\n"
+        "|       <font>\n"
+        "|         size=\"7\"\n"
+        "|         \"First paragraph.\"\n"
+        "|     <font>\n"
+        "|       size=\"7\"\n"
+        "|       \"\n"
+        "\"\n"
+        "|       <p>\n"
+        "|         \"Second paragraph.\"\n"
+        "|     \"\n"
+        "\"\n"
+        "|     <b>\n"
+        "|     <p>\n"
+        "|       <b>\n"
+        "|         <i>\n"
+        "|           \"Bold and Italic\"\n"
+        "|       <i>\n"
+        "|         \" Italic\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tricky01-3") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html>\n"
+        "<dl>\n"
+        "<dt><b>Boo\n"
+        "<dd>Goo?\n"
+        "</dl>\n"
+        "</html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "(4,4): end-tag-too-early\n"
+        "(5,5): end-tag-too-early\n"
+        "(6,7): expected-one-end-tag-but-got-another\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <dl>\n"
+        "|       \"\n"
+        "\"\n"
+        "|       <dt>\n"
+        "|         <b>\n"
+        "|           \"Boo\n"
+        "\"\n"
+        "|       <dd>\n"
+        "|         <b>\n"
+        "|           \"Goo?\n"
+        "\"\n"
+        "|     <b>\n"
+        "|       \"\n"
+        "\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tricky01-6") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<table><tr><p><a><p>You should see this text.\n"
+        "#errors\n"
+        "(1,7): expected-doctype-but-got-start-tag\n"
+        "(1,14): unexpected-start-tag-implies-table-voodoo\n"
+        "(1,17): unexpected-start-tag-implies-table-voodoo\n"
+        "(1,20): unexpected-start-tag-implies-table-voodoo\n"
+        "(1,20): closing-non-current-p-element\n"
+        "(1,21): foster-parenting-character\n"
+        "(1,22): foster-parenting-character\n"
+        "(1,23): foster-parenting-character\n"
+        "(1,24): foster-parenting-character\n"
+        "(1,25): foster-parenting-character\n"
+        "(1,26): foster-parenting-character\n"
+        "(1,27): foster-parenting-character\n"
+        "(1,28): foster-parenting-character\n"
+        "(1,29): foster-parenting-character\n"
+        "(1,30): foster-parenting-character\n"
+        "(1,31): foster-parenting-character\n"
+        "(1,32): foster-parenting-character\n"
+        "(1,33): foster-parenting-character\n"
+        "(1,34): foster-parenting-character\n"
+        "(1,35): foster-parenting-character\n"
+        "(1,36): foster-parenting-character\n"
+        "(1,37): foster-parenting-character\n"
+        "(1,38): foster-parenting-character\n"
+        "(1,39): foster-parenting-character\n"
+        "(1,40): foster-parenting-character\n"
+        "(1,41): foster-parenting-character\n"
+        "(1,42): foster-parenting-character\n"
+        "(1,43): foster-parenting-character\n"
+        "(1,44): foster-parenting-character\n"
+        "(1,45): foster-parenting-character\n"
+        "(1,45): eof-in-table\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       <a>\n"
+        "|     <p>\n"
+        "|       <a>\n"
+        "|         \"You should see this text.\"\n"
+        "|     <table>\n"
+        "|       <tbody>\n"
+        "|         <tr>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tricky01-7") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<TABLE>\n"
+        "<TR>\n"
+        "<CENTER><CENTER><TD></TD></TR><TR>\n"
+        "<FONT>\n"
+        "<TABLE><tr></tr></TABLE>\n"
+        "</P>\n"
+        "<a></font><font></a>\n"
+        "This page contains an insanely badly-nested tag sequence.\n"
+        "#errors\n"
+        "(1,7): expected-doctype-but-got-start-tag\n"
+        "(3,8): unexpected-start-tag-implies-table-voodoo\n"
+        "(3,16): unexpected-start-tag-implies-table-voodoo\n"
+        "(4,6): unexpected-start-tag-implies-table-voodoo\n"
+        "(4,6): unexpected character token in table (the newline)\n"
+        "(5,7): unexpected-start-tag-implies-end-tag\n"
+        "(6,4): unexpected p end tag\n"
+        "(7,10): adoption-agency-1.3\n"
+        "(7,20): adoption-agency-1.3\n"
+        "(8,57): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <center>\n"
+        "|       <center>\n"
+        "|     <font>\n"
+        "|       \"\n"
+        "\"\n"
+        "|     <table>\n"
+        "|       \"\n"
+        "\"\n"
+        "|       <tbody>\n"
+        "|         <tr>\n"
+        "|           \"\n"
+        "\"\n"
+        "|           <td>\n"
+        "|         <tr>\n"
+        "|           \"\n"
+        "\"\n"
+        "|     <table>\n"
+        "|       <tbody>\n"
+        "|         <tr>\n"
+        "|     <font>\n"
+        "|       \"\n"
+        "\"\n"
+        "|       <p>\n"
+        "|       \"\n"
+        "\"\n"
+        "|       <a>\n"
+        "|     <a>\n"
+        "|       <font>\n"
+        "|     <font>\n"
+        "|       \"\n"
+        "This page contains an insanely badly-nested tag sequence.\"\n"
         ""s
     ));
 
@@ -9589,6 +11909,34 @@ test$("html5lib-webkit01-32") {
     return Ok();
 }
 
+test$("html5lib-webkit01-33") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<div><b></div><div><nobr>a<nobr>\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,14): end-tag-too-early\n"
+        "(1,32): unexpected-start-tag-implies-end-tag\n"
+        "(1,32): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <div>\n"
+        "|       <b>\n"
+        "|     <div>\n"
+        "|       <b>\n"
+        "|         <nobr>\n"
+        "|           \"a\"\n"
+        "|         <nobr>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-webkit01-34") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -9878,6 +12226,117 @@ test$("html5lib-webkit02-9") {
     return Ok();
 }
 
+test$("html5lib-webkit02-12") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b><em><foo><foo><aside></b>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,28): adoption-agency-9\n"
+        "(1,29): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       <em>\n"
+        "|         <foo>\n"
+        "|           <foo>\n"
+        "|     <em>\n"
+        "|       <aside>\n"
+        "|         <b>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-webkit02-13") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b><em><foo><foo><aside></b></em>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,28): adoption-agency-9\n"
+        "(1,33): adoption-agency-9\n"
+        "(1,34): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       <em>\n"
+        "|         <foo>\n"
+        "|           <foo>\n"
+        "|     <em>\n"
+        "|     <aside>\n"
+        "|       <em>\n"
+        "|         <b>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-webkit02-14") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b><em><foo><foo><foo><aside></b>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,33): adoption-agency-9\n"
+        "(1,34): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       <em>\n"
+        "|         <foo>\n"
+        "|           <foo>\n"
+        "|             <foo>\n"
+        "|     <aside>\n"
+        "|       <b>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-webkit02-15") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<b><em><foo><foo><foo><aside></b></em>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,33): adoption-agency-9\n"
+        "(1,38): adoption-agency-9\n"
+        "(1,39): expected-closing-tag-but-got-eof\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <b>\n"
+        "|       <em>\n"
+        "|         <foo>\n"
+        "|           <foo>\n"
+        "|             <foo>\n"
+        "|     <aside>\n"
+        "|       <b>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-webkit02-21") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -9938,6 +12397,57 @@ test$("html5lib-webkit02-30") {
         "|           <td>\n"
         "|             <select>\n"
         "|               <hr>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-webkit02-35") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<select><div><i></div><option>option\n"
+        "#errors\n"
+        "1:1: ERROR: Expected a doctype token\n"
+        "1:17: ERROR: End tag 'div' isn't allowed here. Currently open tags: html, body, select, div, i.\n"
+        "1:37: ERROR: Premature end of file. Currently open tags: html, body, select, option, i.\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <select>\n"
+        "|       <div>\n"
+        "|         <i>\n"
+        "|       <i>\n"
+        "|         <option>\n"
+        "|           \"option\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-webkit02-36") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<div><i></div><option>option\n"
+        "#errors\n"
+        "1:1: ERROR: Expected a doctype token\n"
+        "1:9: ERROR: End tag 'div' isn't allowed here. Currently open tags: html, body, div, i.\n"
+        "1:29: ERROR: Premature end of file. Currently open tags: html, body, i, option.\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <div>\n"
+        "|       <i>\n"
+        "|     <i>\n"
+        "|       <option>\n"
+        "|         \"option\"\n"
         ""s
     ));
 
