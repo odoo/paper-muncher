@@ -85,7 +85,7 @@ export struct HtmlLexer {
         _last = std::move(_token);
     }
 
-    void _emit(Rune rune, Io::Loc loc, Diag::Collector diags) {
+    void _emit(Rune rune, Io::Loc loc, Diag::Collector& diags) {
         _begin(HtmlToken::CHARACTER, loc).rune = rune;
         _emit(diags);
     }
