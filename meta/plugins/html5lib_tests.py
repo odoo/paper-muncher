@@ -171,7 +171,6 @@ def _saveTest(result: TestResult, root_dir: Path):
         (testDir / "reference").write_text(result.reference)
     
     if result.actual:
-        print(result.actual)
         (testDir / "actual").write_text(result.actual)
     
     if result.error:
