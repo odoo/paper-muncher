@@ -68,7 +68,7 @@ struct Tree : Meta::Pinned {
 
     void appendChild(Gc::Ptr<Node> node) {
         if (node->_parent)
-            panic("node already has a parent");
+            node->remove();
 
         if (_lastChild)
             _lastChild->_nextSibling = node;
@@ -81,7 +81,7 @@ struct Tree : Meta::Pinned {
 
     void prependChild(Gc::Ptr<Node> node) {
         if (node->_parent)
-            panic("node already has a parent");
+            node->remove();
 
         if (_firstChild)
             _firstChild->_prevSibling = node;
@@ -96,11 +96,8 @@ struct Tree : Meta::Pinned {
         if (!child)
             return appendChild(node);
 
-        if (child->_parent != static_cast<Node*>(this))
-            panic("node is not a child");
-
         if (node->_parent)
-            panic("node already has a parent");
+            node->remove();
 
         node->_prevSibling = child->_prevSibling;
         node->_nextSibling = child;
@@ -117,11 +114,11 @@ struct Tree : Meta::Pinned {
     }
 
     void insertAfter(Gc::Ptr<Node> node, Gc::Ptr<Node> child) {
-        if (child->_parent != static_cast<Node*>(this))
-            panic("node is not a child");
+        if (not child)
+            return appendChild(node);
 
         if (node->_parent)
-            panic("node already has a parent");
+            node->remove();
 
         node->_prevSibling = child;
         node->_nextSibling = child->_nextSibling;
@@ -137,28 +134,33 @@ struct Tree : Meta::Pinned {
         node->_parent = {MOVE, static_cast<Node*>(this)};
     }
 
-    void removeChild(Gc::Ptr<Node> node) {
-        if (node->_parent != static_cast<Node*>(this))
+    void remove(this auto& self) {
+        if (not self._parent)
+            return;
+
+        if (self._parent->_firstChild == &self)
+            self._parent->_firstChild = self._nextSibling;
+
+        if (self._parent->_lastChild == &self)
+            self._parent->_lastChild = self._prevSibling;
+
+        if (self._nextSibling)
+            self._nextSibling->_prevSibling = self._prevSibling;
+
+        if (self._prevSibling)
+            self._prevSibling->_nextSibling = self._nextSibling;
+
+        self._nextSibling = nullptr;
+        self._prevSibling = nullptr;
+        self._parent = nullptr;
+    }
+
+
+    void removeChild(this auto& self, Gc::Ptr<Node> node) {
+        if (node->_parent != &self)
             panic("node is not a child");
 
-        if (node->_parent)
-            panic("node already has a parent");
-
-        if (_firstChild == node)
-            _firstChild = node->_nextSibling;
-
-        if (_lastChild == node)
-            _lastChild = node->_prevSibling;
-
-        if (node->_nextSibling)
-            node->_nextSibling->_prevSibling = node->_prevSibling;
-
-        if (node->_prevSibling)
-            node->_prevSibling->_nextSibling = node->_nextSibling;
-
-        node->_nextSibling = nullptr;
-        node->_prevSibling = nullptr;
-        node->_parent = nullptr;
+        node->remove();
     }
 
     // Iteration ---------------------------------------------------------------

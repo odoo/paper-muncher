@@ -35,6 +35,13 @@ struct _ElementStack {
         return _vec.popBack();
     }
 
+    void popUntil(Gc::Ref<Dom::Element> el) {
+        while (not isEmpty()) {
+            if (pop() == el)
+                break;
+        }
+    }
+
     template <typename... Names>
     void popUntilOneOf(Names&&... names) {
         while (not isEmpty()) {
@@ -43,18 +50,28 @@ struct _ElementStack {
         }
     }
 
-    Opt<Gc::Ref<Dom::Element>> top() const {
+    Gc::Ptr<Dom::Element> top() const {
         if (isEmpty())
-            return NONE;
+            return nullptr;
 
-        return _vec[len() - 1];
+        return last(_vec);
     }
 
-    Opt<Gc::Ref<Dom::Element>> bottom() const {
+    Gc::Ptr<Dom::Element> bottom() const {
         if (isEmpty())
-            return NONE;
+            return nullptr;
 
-        return _vec[0];
+        return first(_vec);
+    }
+
+    Gc::Ptr<Dom::Element> elementImmediatelyAbove(Gc::Ref<Dom::Element> const& el) const {
+        for (usize i = 1; i < _vec.len(); i++) {
+            if (_vec[i] == el) {
+                return _vec[i - 1];
+            }
+        }
+
+        return nullptr;
     }
 
     Opt<Tuple<Gc::Ref<Dom::Element>, isize>> findLast(Dom::QualifiedName const& name) const {
@@ -75,6 +92,10 @@ struct _ElementStack {
         return false;
     }
 
+    bool contains(Gc::Ref<Dom::Element> const& el) const {
+        return Karm::contains(_vec, el);
+    }
+
     bool contains(Dom::QualifiedName const& name) const {
         for (auto& el : _vec) {
             if (el->qualifiedName == name) {
@@ -85,12 +106,227 @@ struct _ElementStack {
         return false;
     }
 
-    bool removeAll(Gc::Ref<Dom::Element> const& val) {
-        return _vec.removeAll(val);
+    void insert(usize index, Gc::Ref<Dom::Element> const& el) {
+        _vec.insert(index, el);
+    }
+
+    void insertBelow(Gc::Ref<Dom::Element> const& below, Gc::Ref<Dom::Element> const& el) {
+        usize index = indexOf(_vec, below).unwrap() + 1;
+        _vec.insert(index, el);
+    }
+
+    bool remove(Gc::Ref<Dom::Element> const& el) {
+        return _vec.removeAll(el);
+    }
+
+    void replace(Gc::Ref<Dom::Element> const& oldEl, Gc::Ref<Dom::Element> const& newEl) {
+        auto index = Karm::indexOf(_vec, oldEl);
+
+        if (not index)
+            panic("trying to replace missing element");
+
+        _vec.replace(*index, newEl);
     }
 
     Gc::Ref<Dom::Element>& operator[](usize i) {
         return _vec[i];
+    }
+};
+
+// https://html.spec.whatwg.org/multipage/parsing.html#list-of-active-formatting-elements
+struct _ActiveFormattingElementList {
+    struct FormattingElement {
+        Gc::Ref<Dom::Element> element;
+        HtmlToken token;
+
+        bool operator==(FormattingElement const& other) const {
+            return element == other.element;
+        }
+    };
+
+    enum struct Marker : u8 { MARKER };
+    using enum Marker;
+
+    struct Entry : Union<FormattingElement, Marker> {
+        using Union::Union;
+
+        Gc::Ref<Dom::Element> element() const {
+            return is<FormattingElement>()->element;
+        }
+
+        HtmlToken const& token() const {
+            return is<FormattingElement>()->token;
+        }
+    };
+
+    Vec<Entry> entries;
+    usize indexAfterLastMarker = 0;
+
+    bool contains(Gc::Ref<Dom::Element> const& element) {
+        for (auto& entry : entries) {
+            if (auto f = entry.is<FormattingElement>()) {
+                if (f->element == element) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    Gc::Ptr<Dom::Element> lastElementAfterLastMarkerWithTagName(Symbol tagName) {
+        for (usize i = indexAfterLastMarker; i < entries.len(); i++) {
+            if (entries[i].element()->qualifiedName.name == tagName) {
+                return entries[i].element();
+            }
+        }
+
+        return nullptr;
+    }
+
+    Gc::Ptr<Dom::Element> findElementAfterLastMarker(Dom::QualifiedName qualifiedName) {
+        for (usize i = indexAfterLastMarker; i < entries.len(); i++) {
+            if (entries[i].element()->qualifiedName == qualifiedName) {
+                return entries[i].element();
+            }
+        }
+
+        return nullptr;
+    }
+
+    Opt<Entry> findElement(Gc::Ref<Dom::Element> const& element) {
+        for (usize i = 0; i < entries.len(); i++) {
+            if (entries[i] != MARKER and entries[i].element() == element) {
+                return entries[i];
+            }
+        }
+
+        return NONE;
+    }
+
+    // https://html.spec.whatwg.org/multipage/parsing.html#push-onto-the-list-of-active-formatting-elements
+    void push(Gc::Ref<Dom::Element> const& element, HtmlToken const& t) {
+        // 1. If there are already three elements in the list of active formatting elements after the last marker,
+        //    if any, or anywhere in the list if there are no markers,that have the same tag name, namespace, and attributes as element,
+        usize similarElements = 0;
+        Opt<Gc::Ref<Dom::Element>> firstSimilarElement = NONE;
+
+        for (usize i = indexAfterLastMarker; i < entries.len(); i++) {
+            bool sameQualifiedName = entries[i].element()->qualifiedName == element->qualifiedName;
+
+            // For these purposes, the attributes must be compared as they were when the elements were created by the parser;
+            // two elements have the same attributes if all their parsed attributes can be paired such that the two attributes in each pair have identical
+            // names, namespaces, and values (the order of the attributes does not matter).
+
+            bool sameAttributes = entries[i].element()->attributes.len() == element->attributes.len();
+            if (sameAttributes) {
+                for (auto const& attr : entries[i].element()->attributes.iterUnordered()) {
+                    auto other = element->getAttribute(attr.v0);
+
+                    if (not other) {
+                        sameAttributes = false;
+                        break;
+                    }
+
+                    if (attr.v1->value != *other) {
+                        sameAttributes = false;
+                        break;
+                    }
+                }
+            }
+
+            if (sameQualifiedName and sameAttributes) {
+                if (not firstSimilarElement) {
+                    firstSimilarElement = entries[i].element();
+                }
+
+                similarElements++;
+            }
+        }
+
+        if (similarElements >= 3) {
+            remove(*firstSimilarElement);
+        }
+
+        // 2. Add element to the list of active formatting elements.
+        entries.pushBack(FormattingElement{
+            .element = element,
+            .token = t,
+        });
+    }
+
+    void pushMarker() {
+        entries.pushBack(Marker{});
+        indexAfterLastMarker = entries.len();
+    }
+
+    // https://html.spec.whatwg.org/multipage/parsing.html#clear-the-list-of-active-formatting-elements-up-to-the-last-marker
+    void clearUpToLastMarker() {
+        while (true) {
+            // 1. Let entry be the last (most recently added) entry in the list of active formatting elements.
+            auto const& entry = last();
+
+            // 2. Remove entry from the list of active formatting elements.
+            entries.popBack();
+
+            // 3. If entry was a marker,
+            if (entry == MARKER) {
+                // then stop the algorithm at this point. The list has been cleared up to the last marker.
+                break;
+            }
+
+            // 4. Go to step 1.
+        }
+    }
+
+    void insert(usize index, Gc::Ref<Dom::Element> const& el, HtmlToken const& t) {
+        if (index < indexAfterLastMarker)
+            indexAfterLastMarker++;
+
+        entries.insert(index, FormattingElement{el, t});
+    }
+
+    Entry const& last() {
+        return entries[entries.len() - 1];
+    }
+
+    Opt<usize> indexOf(Gc::Ref<Dom::Element> const& el) {
+        for (usize i = 0; i < entries.len(); i++) {
+            if (auto const& f = entries[i].is<FormattingElement>()) {
+                if (f->element == el) {
+                    return i;
+                }
+            }
+        }
+
+        return NONE;
+    }
+
+    bool remove(Gc::Ref<Dom::Element> const& el) {
+        auto index = indexOf(el);
+
+        if (!index)
+            return false;
+
+        if (*index < indexAfterLastMarker)
+            indexAfterLastMarker--;
+
+        entries.removeAt(*index);
+
+        return true;
+    }
+
+    void replace(usize index, Gc::Ref<Dom::Element> const& newEl, HtmlToken const& t) {
+        entries.replace(index, FormattingElement{newEl, t});
+    }
+
+    void replace(Gc::Ref<Dom::Element> const& oldEl, Gc::Ref<Dom::Element> const& newEl, HtmlToken const& t) {
+        auto index = indexOf(oldEl);
+
+        if (not index)
+            panic("trying to replace missing element");
+
+        replace(*index, newEl, t);
     }
 };
 
@@ -144,6 +380,7 @@ export struct HtmlParser : HtmlSink {
     Gc::Ptr<Dom::Element> _formElement = nullptr;
 
     _ElementStack _openElements;
+    _ActiveFormattingElementList _activeFormattingElements;
 
     // https://html.spec.whatwg.org/multipage/parsing.html#concept-frag-parse-context
     Gc::Ptr<Dom::Element> _contextElement = nullptr;
@@ -247,8 +484,84 @@ export struct HtmlParser : HtmlSink {
     }
 
     // 13.2.4.3 MARK: The list of active formatting elements
+    // https://html.spec.whatwg.org/multipage/parsing.html#reconstruct-the-active-formatting-elements
     void _reconstructActiveFormattingElements() {
-        // TODO
+        // 1. If there are no entries in the list of active formatting elements,
+        if (_activeFormattingElements.entries.len() == 0) {
+            // then there is nothing to reconstruct; stop this algorithm.
+            return;
+        }
+
+        // 2. If the last (most recently added) entry in the list of active formatting elements is a marker,
+        // or if it is an element that is in the stack of open elements,
+        auto const& entry = _activeFormattingElements.last();
+        if (entry == _ActiveFormattingElementList::MARKER or _openElements.contains(entry.element())) {
+            // then there is nothing to reconstruct; stop this algorithm.
+            return;
+        }
+
+        // 3. Let entry be the last (most recently added) element in the list of active formatting elements.
+        usize index = _activeFormattingElements.entries.len() - 1;
+
+        enum struct State {
+            REWIND,
+            ADVANCE,
+            CREATE,
+        };
+
+        State state = State::REWIND;
+
+        while (true) {
+            switch (state) {
+            // 4. Rewind:
+            case State::REWIND:
+                // If there are no entries before entry in the list of active formatting elements,
+                // then jump to the step labeled create.
+                if (index == 0) {
+                    state = State::CREATE;
+                    continue;
+                }
+
+                // 5. Let entry be the entry one earlier than entry in the list of active formatting elements.
+                index--;
+
+                // 6. If entry is neither a marker nor an element that is also in the stack of open elements, go to the step labeled rewind.
+                if (
+                    _activeFormattingElements.entries[index] != _ActiveFormattingElementList::MARKER and
+                    not _openElements.contains(_activeFormattingElements.entries[index].element())
+                ) {
+                    break;
+                }
+
+                state = State::ADVANCE;
+                break;
+
+            // 7. Advance:
+            case State::ADVANCE:
+                // Let entry be the element one later than entry in the list of active formatting elements.
+                index++;
+                state = State::CREATE;
+                break;
+
+            // 8. Create:
+            case State::CREATE:
+                // Insert an HTML element for the token for which the element entry was created, to obtain new element.
+                auto token = _activeFormattingElements.entries[index].token();
+                auto newElement = _insertHtmlElement(token);
+
+                // 9. Replace the entry for entry in the list with an entry for new element.
+                _activeFormattingElements.replace(index, newElement, token);
+
+                // 10. If the entry for new element in the list of active formatting elements is not the last entry in the list,
+                // return to the step labeled advance.
+                if (index != _activeFormattingElements.entries.len() - 1) {
+                    state = State::ADVANCE;
+                    break;
+                }
+
+                return;
+            }
+        }
     }
 
     // 13.2.5 MARK: Tokenization
@@ -1165,7 +1478,7 @@ export struct HtmlParser : HtmlSink {
             _raise(diags, t.span, "unexpected start tag");
             _openElements.push(_headElement.upgrade());
             _acceptIn(Mode::IN_HEAD, t, diags);
-            _openElements.removeAll(*_headElement);
+            _openElements.remove(*_headElement);
         }
 
         // An end tag whose tag name is "template"
@@ -1205,6 +1518,205 @@ export struct HtmlParser : HtmlSink {
 
             // Pop elements from the stack of open elements until a p element has been popped from the stack.
             _openElements.popUntilOneOf(Html::P_TAG);
+        };
+
+        // https://html.spec.whatwg.org/multipage/parsing.html#adoption-agency-algorithm
+        auto adoptionAgencyAlgorithm = [&](HtmlToken const& t, Diag::Collector& diags) {
+            // 1. Let subject be token's tag name.
+            Symbol subject = t.name;
+
+            // 2. If the current node is an HTML element whose tag name is subject,
+            //    and the current node is not in the list of active formatting elements,
+            if (
+                _currentElement()->qualifiedName == Dom::QualifiedName{Html::NAMESPACE, subject} and
+                not _activeFormattingElements.contains(_currentElement())
+            ) {
+                // then pop the current node off the stack of open elements and return.
+                _openElements.remove(_currentElement());
+                return;
+            }
+
+            // 3. Let outerLoopCounter be 0.
+            usize outerLoopCounter = 0;
+
+            // 4. While true:
+            while (true) {
+                // 1. If outerLoopCounter is greater than or equal to 8,
+                if (outerLoopCounter >= 8) {
+                    // then return.
+                    return;
+                }
+
+                // 2. Increment outerLoopCounter by 1.
+                outerLoopCounter++;
+
+                // 3. Let formattingElement be the last element in the list of active formatting elements that:
+                //    - is between the end of the list and the last marker in the list, if any, or the start of the list otherwise, and
+                //    - has the tag name subject.
+                auto maybeFormattingElement = _activeFormattingElements.lastElementAfterLastMarkerWithTagName(subject);
+
+                // TODO: If there is no such element, then return and instead act as described in the "any other end tag" entry above.
+                if (not maybeFormattingElement) {
+                    return;
+                }
+
+                Gc::Ref formattingElement = *maybeFormattingElement;
+
+                // 4. If formattingElement is not in the stack of open elements,
+                if (not _openElements.contains(formattingElement)) {
+                    // then this is a parse error; remove the element from the list, and return.
+                    _raise(diags, t.span, ""); // TODO
+                    _activeFormattingElements.remove(formattingElement);
+                    return;
+                }
+
+                // 5. If formattingElement is in the stack of open elements, but the element is not in scope,
+                if (_openElements.contains(formattingElement) and not _hasElementInScope(formattingElement->qualifiedName)) {
+                    // then this is a parse error; return.
+                    _raise(diags, t.span, ""); // TODO
+                    return;
+                }
+
+                // 6. If formattingElement is not the current node,
+                if (formattingElement != _currentElement()) {
+                    // this is a parse error. (But do not return.)
+                    _raise(diags, t.span, ""); // TODO
+                }
+
+                // 7. Let furthestBlock be the topmost node in the stack of open elements that is lower in the stack than formattingElement,
+                //    and is an element in the special category. There might not be one.
+                isize formattingElementIndex = indexOf(_openElements._vec, formattingElement).unwrap();
+                Opt<Gc::Ref<Dom::Element>> furthestBlock = NONE;
+
+                for (usize i = formattingElementIndex + 1; i < _openElements.len(); i++) {
+                    if (_isSpecial(_openElements[i]->qualifiedName)) {
+                        furthestBlock = _openElements[i];
+                        break;
+                    }
+                }
+
+                // 8. If there is no furthestBlock,
+                if (not furthestBlock) {
+                    // then the UA must first pop all the nodes from the bottom of the stack of open elements,
+                    // from the current node up to and including formattingElement,
+                    _openElements.popUntil(formattingElement);
+
+                    // then remove formattingElement from the list of active formatting elements,
+                    _activeFormattingElements.remove(formattingElement);
+
+                    // and finally return.
+                    return;
+                }
+
+                // 9. Let commonAncestor be the element immediately above formattingElement in the stack of open elements.
+                auto commonAncestor = _openElements[formattingElementIndex - 1];
+
+                // 10. Let a bookmark note the position of formattingElement in the list of active formatting elements relative
+                //     to the elements on either side of it in the list.
+                usize bookmark = _activeFormattingElements.indexOf(formattingElement).unwrap();
+
+                // 11. Let node and lastNode be furthestBlock.
+                auto node = furthestBlock.unwrap();
+                auto lastNode = node;
+
+                Gc::Ref elementAfterNode = *_openElements.elementImmediatelyAbove(*furthestBlock);
+
+                // 12. Let innerLoopCounter be 0.
+                usize innerLoopCounter = 0;
+
+                // 13. While true:
+                while (true) {
+                    // 1. Increment innerLoopCounter by 1.
+                    innerLoopCounter++;
+
+                    // 2. Let node be the element immediately above node in the stack of open elements,
+                    //    or if node is no longer in the stack of open elements (e.g. because it got removed by this algorithm),
+                    //    the element that was immediately above node in the stack of open elements before node was removed.
+                    node = elementAfterNode;
+                    elementAfterNode = *_openElements.elementImmediatelyAbove(node);
+
+                    // 3. If node is formattingElement,
+                    if (node == formattingElement) {
+                        // then break.
+                        break;
+                    }
+
+                    // 4. If innerLoopCounter is greater than 3 and node is in the list of active formatting elements,
+                    if (innerLoopCounter > 3 and _activeFormattingElements.contains(node)) {
+                        // then remove node from the list of active formatting elements.
+                        _activeFormattingElements.remove(node);
+                    }
+
+                    // 5. If node is not in the list of active formatting elements,
+                    if (not _activeFormattingElements.contains(node)) {
+                        //  then remove node from the stack of open elements and continue.
+                        _openElements.remove(node);
+                        continue;
+                    }
+
+                    // 6. Create an element for the token for which the element node was created, in the HTML namespace,
+                    //    with commonAncestor as the intended parent;
+                    auto nodeToken = _activeFormattingElements.findElement(node)->token();
+                    auto el = _createElementFor(nodeToken, Html::NAMESPACE);
+
+                    // replace the entry for node in the list of active formatting elements with an entry for the new element,
+                    _activeFormattingElements.replace(node, el, nodeToken);
+
+                    // replace the entry for node in the stack of open elements with an entry for the new element,
+                    _openElements.replace(node, el);
+
+                    // and let node be the new element.
+                    node = el;
+                    elementAfterNode = *_openElements.elementImmediatelyAbove(node);
+
+                    // 7. If lastNode is furthestBlock, then move the aforementioned bookmark
+                    //    to be immediately after the new node in the list of active formatting elements.
+                    if (lastNode == *furthestBlock) {
+                        bookmark = _activeFormattingElements.indexOf(node).unwrap() + 1;
+                    }
+
+                    // 8. Append lastNode to node.
+                    node->appendChild(lastNode);
+
+                    // 9. Set lastNode to node.
+                    lastNode = node;
+                }
+
+                // 14. Insert whatever lastNode ended up being in the previous step at the appropriate
+                //     place for inserting a node, but using commonAncestor as the override target.
+                _apropriatePlaceForInsertingANode(commonAncestor).insert(lastNode);
+
+                // 15. Create an element for the token for which formattingElement was created,
+                //     in the HTML namespace,with furthestBlock as the intended parent.
+                auto formattingElementToken = _activeFormattingElements.findElement(formattingElement)->token();
+                auto newEl = _createElementFor(formattingElementToken, Html::NAMESPACE);
+
+                // 16. Take all of the child nodes of furthestBlock and append them to the element created in the last step.
+                while (auto child = furthestBlock.unwrap()->firstChild()) {
+                    newEl->appendChild(child);
+                }
+
+                // 17. Append that new element to furthestBlock.
+                furthestBlock.unwrap()->appendChild(newEl);
+
+                // 18. Remove formattingElement from the list of active formatting elements,
+                //     and insert the new element into the list of active formatting elements
+                //     at the position of the aforementioned bookmark.
+                _activeFormattingElements.remove(formattingElement);
+
+                // NOTE: Since the bookmark is guaranteed to be after formattingElement in the list
+                //      we must decrement its index after removing formattingElement.
+                if (bookmark > 0)
+                    bookmark--;
+
+                _activeFormattingElements.insert(bookmark, newEl, formattingElementToken);
+
+                // 19. Remove formattingElement from the stack of open elements,
+                //     and insert the new element into the stack of open elements
+                //     immediately below the position of furthestBlock in that stack.
+                _openElements.remove(formattingElement);
+                _openElements.insertBelow(*furthestBlock, newEl);
+            }
         };
 
         // A character token that is U+0000 NULL
@@ -1309,7 +1821,7 @@ export struct HtmlParser : HtmlSink {
 
             // 1. Remove the second element on the stack of open elements from its parent node, if it has one.
             if (_openElements[1]->hasParentNode()) {
-                _openElements[1]->parentNode()->removeChild(_openElements[1]);
+                _openElements[1]->remove();
             }
 
             // 2. Pop all the nodes from the bottom of the stack of open elements, from the current node up to, but not including, the root html element.
@@ -1700,7 +2212,7 @@ export struct HtmlParser : HtmlSink {
                 }
 
                 // 6. Remove node from the stack of open elements.
-                _openElements.removeAll(*node);
+                _openElements.remove(*node);
             }
 
             // If there is a template element on the stack of open elements, then run these substeps instead:
@@ -1830,17 +2342,114 @@ export struct HtmlParser : HtmlSink {
         // An end tag whose tag name is "sarcasm"
         // Take a deep breath, then act as described in the "any other end tag" entry below.
 
-        // TODO: A start tag whose tag name is "a"
+        // A start tag whose tag name is "a"
+        else if (t.type == HtmlToken::START_TAG and t.name == "a") {
+            // If the list of active formatting elements contains an a element between the end of the list and the last marker on the list
+            // (or the start of the list if there is no marker on the list),
+            auto element = _activeFormattingElements.findElementAfterLastMarker(Html::A_TAG);
 
-        // TODO: A start tag whose tag name is one of: "b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u"
+            if (element) {
+                // then this is a parse error;
+                _raise(diags, t.span, "unexpected start tag for a");
 
-        // TODO: A start tag whose tag name is "nobr"
+                // run the adoption agency algorithm for the token,
+                adoptionAgencyAlgorithm(t, diags);
 
-        // TODO: An end tag whose tag name is one of: "a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"
+                // then remove that element from the list of active formatting elements and the stack of open elements if
+                // the adoption agency algorithm didn't already remove it (it might not have if the element is not in table scope).
+                _activeFormattingElements.remove(*element);
+                _openElements.remove(*element);
+            }
 
-        // TODO: A start tag whose tag name is one of: "applet", "marquee", "object"
+            // Reconstruct the active formatting elements, if any.
+            _reconstructActiveFormattingElements();
 
-        // TODO: An end tag token whose tag name is one of: "applet", "marquee", "object"
+            // Insert an HTML element for the token. Push onto the list of active formatting elements that element.
+            _activeFormattingElements.push(_insertHtmlElement(t), t);
+        }
+
+        // A start tag whose tag name is one of: "b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u"
+        else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u")) { // Reconstruct the active formatting elements, if any.
+            _reconstructActiveFormattingElements();
+
+            // Insert an HTML element for the token. Push onto the list of active formatting elements that element.
+            _activeFormattingElements.push(_insertHtmlElement(t), t);
+        }
+
+        // A start tag whose tag name is "nobr"
+        else if (t.type == HtmlToken::START_TAG and t.name == "nobr") {
+            // Reconstruct the active formatting elements, if any.
+            _reconstructActiveFormattingElements();
+
+            // If the stack of open elements has a nobr element in scope,
+            if (_hasElementInScope(Html::NOBR_TAG)) {
+                // then this is a parse error;
+                _raise(diags, t.span, "unexpected start tag for nobr");
+
+                // run the adoption agency algorithm for the token,
+                adoptionAgencyAlgorithm(t, diags);
+
+                // then once again reconstruct the active formatting elements, if any.
+                _reconstructActiveFormattingElements();
+            }
+
+            // Insert an HTML element for the token. Push onto the list of active formatting elements that element.
+            _activeFormattingElements.push(_insertHtmlElement(t), t);
+        }
+
+        // An end tag whose tag name is one of: "a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"
+        else if (t.type == HtmlToken::END_TAG and oneOf(t.name, "a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u")) {
+            // Run the adoption agency algorithm for the token.
+            adoptionAgencyAlgorithm(t, diags);
+        }
+
+        // A start tag whose tag name is one of: "applet", "marquee", "object"
+        else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "applet", "marquee", "object")) {
+            // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name as that of the token,
+            if (not _hasElementInScope(Dom::QualifiedName{Html::NAMESPACE, t.name})) {
+                // Reconstruct the active formatting elements, if any.
+                _reconstructActiveFormattingElements();
+
+                // Insert an HTML element for the token.
+                _insertHtmlElement(t);
+
+                // Insert a marker at the end of the list of active formatting elements.
+                _activeFormattingElements.pushMarker();
+
+                // Set the frameset-ok flag to "not ok".
+                _framesetOk = false;
+            }
+        }
+
+        // An end tag token whose tag name is one of: "applet", "marquee", "object"
+        else if (t.type == HtmlToken::END_TAG and oneOf(t.name, "applet", "marquee", "object")) {
+            // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name as that of the token,
+            if (not _hasElementInScope(Dom::QualifiedName{Html::NAMESPACE, t.name})) {
+                // then this is a parse error;
+                _raise(diags, t.span, "unexpected end tag");
+
+                // ignore the token.
+                return;
+            }
+
+            // Otherwise, run these steps:
+
+            // 1. Generate implied end tags.
+            _generateImpliedEndTags(*this);
+
+            // 2. If the current node is not an HTML element with the same tag name as that of the token,
+            if (_currentElement()->qualifiedName.name == t.name) {
+                // then this is a parse error.
+                _raise(diags, t.span, "unexpected end tag");
+            }
+
+            // 3. Pop elements from the stack of open elements until an HTML element with the
+            // same tag name as the token has been popped from the stack.
+            _openElements.popUntilOneOf(Dom::QualifiedName{Html::NAMESPACE, t.name});
+
+            // 4. Clear the list of active formatting elements up to the last marker.
+            _activeFormattingElements.clearUpToLastMarker();
+        }
 
         // A start tag whose tag name is "table"
         else if (t.type == HtmlToken::START_TAG and t.name == "table") {
