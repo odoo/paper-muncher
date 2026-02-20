@@ -212,11 +212,10 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
             Serde::Array handles =
-                iter(co_try$(webdriver->closeWindow(sessionId)))
-                    .map([](Ref::Uuid const& i) -> Serde::Value {
-                        return i.unparsed();
-                    })
-                    .collect<Serde::Array>();
+                iter(co_try$(webdriver->closeWindow(sessionId))) | Select([](Ref::Uuid const& i) -> Serde::Value {
+                    return i.unparsed();
+                }) |
+                Collect<Serde::Array>();
 
             co_trya$(_sendSuccessAsync(resp, std::move(handles), ct));
             co_return Ok();
@@ -251,11 +250,11 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
             Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
 
             Serde::Array handles =
-                iter(co_try$(webdriver->getWindowHandles(sessionId)))
-                    .map([](Ref::Uuid const& i) -> Serde::Value {
-                        return i.unparsed();
-                    })
-                    .collect<Serde::Array>();
+                iter(co_try$(webdriver->getWindowHandles(sessionId))) |
+                Select([](Ref::Uuid const& i) -> Serde::Value {
+                    return i.unparsed();
+                }) |
+                Collect<Serde::Array>();
 
             co_trya$(_sendSuccessAsync(resp, std::move(handles), ct));
             co_return Ok();

@@ -141,7 +141,7 @@ export Res<String> parseUrlIntoString(Cursor<Css::Sst>& c) {
 export template <>
 struct ValueParser<Ref::Url> {
     static Res<Ref::Url> parse(Cursor<Css::Sst>& c) {
-        return Ok(Ref::parseUrlOrPath(try$(parseUrlIntoString(c))));
+        return Ok(Ref::Url::parse(try$(parseUrlIntoString(c))));
     }
 };
 

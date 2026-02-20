@@ -165,14 +165,14 @@ struct Tree : Meta::Pinned {
 
     // Iteration ---------------------------------------------------------------
 
-    Generator<Gc::Ref<Node>> iterDepthFirst(this auto& self) {
+    Yield<Gc::Ref<Node>> iterDepthFirst(this auto& self) {
         co_yield Gc::Ref(self);
         for (auto child = self.firstChild(); child; child = child->nextSibling())
             for (auto i : child->iterDepthFirst())
                 co_yield i;
     }
 
-    Generator<Gc::Ref<Node>> iterChildren() {
+    Yield<Gc::Ref<Node>> iterChildren() {
         for (auto child = firstChild(); child; child = child->nextSibling())
             co_yield child.upgrade();
     }

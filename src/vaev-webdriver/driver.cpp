@@ -291,7 +291,7 @@ export struct WebDriver {
             )
         );
 
-        window->print(settings.toNative()) | forEach([&](Print::Page& page) {
+        window->print(settings.toNative()) | ForEach([&](Print::Page& page) {
             page.print(
                 *printer,
                 {.showBackgroundGraphics = true}

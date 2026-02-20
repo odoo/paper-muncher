@@ -144,7 +144,7 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack, Opt
         auto borders = bordersWithoutRadii ? bordersWithoutRadii.take() : Gfx::Borders{};
         borders.radii = frag.metrics.radii.cast<f64>();
 
-        auto box = makeRc<Scene::Box>(bound, std::move(borders), std::move(outline.unwrapOr(Gfx::Outline{})), std::move(backgrounds));
+        auto box = makeRc<Scene::Box>(bound, std::move(borders), outline.unwrapOr(Gfx::Outline{}), std::move(backgrounds));
         box->zIndex = _needsNewStackingContext(frag) ? Limits<isize>::MIN : 0;
         if (isRootElement(frag.box->origin)) {
             stack.add(makeRc<Scene::Clear>(box, color));

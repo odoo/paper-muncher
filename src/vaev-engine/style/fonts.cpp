@@ -22,8 +22,8 @@ export struct FontFace {
 
     Union<None, FontStyle, Range<Angle>> style = FontStyle{FontStyle::NORMAL};
 
-    Opt<Range<Gfx::FontWeight>> weight = Gfx::FontWeight::REGULAR;
-    Opt<Range<FontWidth>> width = FontWidth::NORMAL;
+    Opt<Range<Gfx::FontWeight>> weight = Range<Gfx::FontWeight>::emptyAt(Gfx::FontWeight::REGULAR);
+    Opt<Range<FontWidth>> width = Range<FontWidth>::emptyAt(FontWidth::NORMAL);
 
     Vec<Range<Rune>> unicodeRange;
 
@@ -237,22 +237,17 @@ export struct FontWeightDesc {
             return Ok();
         }
 
-        auto weight = try$(parseValue<FontWeight>(c));
-        if (weight.isRelative())
-            return Error::invalidData("font weight desciptors should use absolute font weight values");
+        auto weight = try$(parseValue<Gfx::FontWeight>(c));
 
-        auto val = parseValue<FontWeight>(c);
+        auto val = parseValue<Gfx::FontWeight>(c);
         if (not val) {
-            value = weight.unwrap<Gfx::FontWeight>();
+            value = Range<Gfx::FontWeight>::emptyAt(weight);
             return Ok();
         }
 
-        if (val.unwrap().isRelative())
-            return Error::invalidData("font weight desciptors should use absolute font weight values");
-
         value = Range<Gfx::FontWeight>::fromStartEnd(
-            weight.unwrap<Gfx::FontWeight>(),
-            val.unwrap().unwrap<Gfx::FontWeight>()
+            weight,
+            val.unwrap()
         );
 
         return Ok();
@@ -282,7 +277,7 @@ export struct FontWidthDesc {
 
         auto val = parseValue<FontWidth>(c);
         if (not val) {
-            value = width;
+            value = Range<FontWidth>::emptyAt(width);
             return Ok();
         }
 

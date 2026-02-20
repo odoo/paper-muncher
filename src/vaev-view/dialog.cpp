@@ -14,7 +14,7 @@ namespace Vaev::View {
 
 export Ui::Child printDialog(Rc<Dom::Window> window) {
     return Hideo::Printers::printDialog([window](Print::Settings const& settings) -> Vec<Print::Page> {
-        return window->print(settings) | collect<Vec<Print::Page>>();
+        return window->print(settings) | Collect<Vec<Print::Page>>();
     });
 }
 
