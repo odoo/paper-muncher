@@ -22,6 +22,9 @@ export enum struct TextAlign {
     MATCH_PARENT,
     JUSTIFY_ALL,
 
+    // NOTE: Non standard block centering value, used for <center> elements and supported by all major browsers
+    BLOCK_CENTER,
+
     _LEN,
 };
 

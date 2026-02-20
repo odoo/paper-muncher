@@ -50,6 +50,10 @@ export struct TextAlignProperty : Property {
                 value = TextAlign::START;
             } else if (c.skip(Css::Token::ident("end"))) {
                 value = TextAlign::END;
+            } else if (c.skip(Css::Token::ident("-vaev-block-center")) or
+                       c.skip(Css::Token::ident("-webkit-center")) or
+                       c.skip(Css::Token::ident("-moz-center"))) {
+                value = TextAlign::BLOCK_CENTER;
             } else {
                 return Error::invalidData("expected text-align");
             }
