@@ -2714,6 +2714,49 @@ test$("html5lib-html5test-com-12") {
     return Ok();
 }
 
+test$("html5lib-html5test-com-14") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<textarea><!--</textarea>--></textarea>\n"
+        "#errors\n"
+        "(1,10): expected-doctype-but-got-start-tag\n"
+        "(1,39): unexpected-end-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <textarea>\n"
+        "|       \"<!--\"\n"
+        "|     \"-->\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-html5test-com-15") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<textarea><!--</textarea>-->\n"
+        "#errors\n"
+        "(1,10): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <textarea>\n"
+        "|       \"<!--\"\n"
+        "|     \"-->\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-html5test-com-16") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -4007,6 +4050,98 @@ test$("html5lib-plain-text-unsafe-21") {
     return Ok();
 }
 
+test$("html5lib-ruby-0") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rb>b<rb></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rb>\n"
+        "|         \"b\"\n"
+        "|       <rb>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-ruby-1") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rb>b<rt></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rb>\n"
+        "|         \"b\"\n"
+        "|       <rt>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-ruby-2") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rb>b<rtc></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rb>\n"
+        "|         \"b\"\n"
+        "|       <rtc>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-ruby-3") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rb>b<rp></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rb>\n"
+        "|         \"b\"\n"
+        "|       <rp>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-ruby-4") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -4031,6 +4166,98 @@ test$("html5lib-ruby-4") {
     return Ok();
 }
 
+test$("html5lib-ruby-5") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rt>b<rb></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rt>\n"
+        "|         \"b\"\n"
+        "|       <rb>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-ruby-6") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rt>b<rt></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rt>\n"
+        "|         \"b\"\n"
+        "|       <rt>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-ruby-7") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rt>b<rtc></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rt>\n"
+        "|         \"b\"\n"
+        "|       <rtc>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-ruby-8") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rt>b<rp></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rt>\n"
+        "|         \"b\"\n"
+        "|       <rp>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-ruby-9") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -4047,6 +4274,32 @@ test$("html5lib-ruby-9") {
         "|       <rt>\n"
         "|         \"b\"\n"
         "|         <span>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-ruby-11") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rtc>b<rt>c<rt>d</ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rtc>\n"
+        "|         \"b\"\n"
+        "|         <rt>\n"
+        "|           \"c\"\n"
+        "|         <rt>\n"
+        "|           \"d\"\n"
         ""s
     ));
 
@@ -4094,6 +4347,98 @@ test$("html5lib-ruby-14") {
         "|       <rtc>\n"
         "|         \"b\"\n"
         "|         <span>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-ruby-15") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rp>b<rb></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rp>\n"
+        "|         \"b\"\n"
+        "|       <rb>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-ruby-16") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rp>b<rt></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rp>\n"
+        "|         \"b\"\n"
+        "|       <rt>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-ruby-17") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rp>b<rtc></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rp>\n"
+        "|         \"b\"\n"
+        "|       <rtc>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-ruby-18") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rp>b<rp></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rp>\n"
+        "|         \"b\"\n"
+        "|       <rp>\n"
         ""s
     ));
 
@@ -5390,6 +5735,33 @@ test$("html5lib-tests1-28") {
     return Ok();
 }
 
+test$("html5lib-tests1-29") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<select><b><option><select><option></b></select>X\n"
+        "#errors\n"
+        "1:1: ERROR: Expected a doctype token\n"
+        "1:20: ERROR: Start tag 'select' isn't allowed here. Currently open tags: html, body, select, b, option.\n"
+        "1:36: ERROR: End tag 'b' isn't allowed here. Currently open tags: html, body, b, select, option.\n"
+        "1:50: ERROR: Premature end of file. Currently open tags: html, body, b.\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <select>\n"
+        "|       <b>\n"
+        "|         <option>\n"
+        "|     <b>\n"
+        "|       <option>\n"
+        "|     \"X\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests1-30") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -6551,6 +6923,47 @@ test$("html5lib-tests1-88") {
     return Ok();
 }
 
+test$("html5lib-tests1-89") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<textarea><p></textarea>\n"
+        "#errors\n"
+        "(1,10): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <textarea>\n"
+        "|       \"<p>\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-90") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<p><image></p>\n"
+        "#errors\n"
+        "(1,3): expected-doctype-but-got-start-tag\n"
+        "(1,10): unexpected-start-tag-treated-as\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <p>\n"
+        "|       <img>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests1-91") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -6725,6 +7138,32 @@ test$("html5lib-tests1-98") {
         "|       <b>\n"
         "|         <marquee>\n"
         "|           <p>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests1-100") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<select><b><option><select><option></b></select>\n"
+        "#errors\n"
+        "1:1: ERROR: Expected a doctype token\n"
+        "1:20: ERROR: Start tag 'select' isn't allowed here. Currently open tags: html, body, select, b, option.\n"
+        "1:36: ERROR: End tag 'b' isn't allowed here. Currently open tags: html, body, b, select, option.\n"
+        "1:49: ERROR: Premature end of file. Currently open tags: html, body, b.\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <select>\n"
+        "|       <b>\n"
+        "|         <option>\n"
+        "|     <b>\n"
+        "|       <option>\n"
         ""s
     ));
 
@@ -7640,6 +8079,52 @@ test$("html5lib-tests16-183") {
     return Ok();
 }
 
+test$("html5lib-tests16-185") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<noscript><iframe></noscript>X\n"
+        "#errors\n"
+        " * (1,11) missing DOCTYPE\n"
+        " * (1,19) unexpected token in head noscript\n"
+        " * (1,31) unexpected EOF\n"
+        "#script-off\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|     <noscript>\n"
+        "|   <body>\n"
+        "|     <iframe>\n"
+        "|       \"</noscript>X\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests16-188") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<textarea><!--<textarea></textarea>--></textarea>\n"
+        "#errors\n"
+        "(1,10): expected-doctype-but-got-start-tag\n"
+        "(1,49): unexpected-end-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <textarea>\n"
+        "|       \"<!--<textarea>\"\n"
+        "|     \"-->\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests16-189") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -7652,6 +8137,92 @@ test$("html5lib-tests16-189") {
         "|   <body>\n"
         "|     <textarea>\n"
         "|       \"</textarea>\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests16-190") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<iframe><!--<iframe></iframe>--></iframe>\n"
+        "#errors\n"
+        "(1,8): expected-doctype-but-got-start-tag\n"
+        "(1,41): unexpected-end-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <iframe>\n"
+        "|       \"<!--<iframe>\"\n"
+        "|     \"-->\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests16-191") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<iframe>...<!--X->...<!--/X->...</iframe>\n"
+        "#errors\n"
+        "(1,8): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <iframe>\n"
+        "|       \"...<!--X->...<!--/X->...\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests16-192") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<xmp><!--<xmp></xmp>--></xmp>\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "(1,29): unexpected-end-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <xmp>\n"
+        "|       \"<!--<xmp>\"\n"
+        "|     \"-->\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests16-193") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<noembed><!--<noembed></noembed>--></noembed>\n"
+        "#errors\n"
+        "(1,9): expected-doctype-but-got-start-tag\n"
+        "(1,45): unexpected-end-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <noembed>\n"
+        "|       \"<!--<noembed>\"\n"
+        "|     \"-->\"\n"
         ""s
     ));
 
@@ -7673,6 +8244,75 @@ test$("html5lib-tests18-0") {
         "|   <body>\n"
         "|     <plaintext>\n"
         "|       \"</plaintext>\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests19-14") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rb>b<rt></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rb>\n"
+        "|         \"b\"\n"
+        "|       <rt>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests19-15") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rp>b<rt></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rp>\n"
+        "|         \"b\"\n"
+        "|       <rt>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests19-16") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<html><ruby>a<rt>b<rt></ruby></html>\n"
+        "#errors\n"
+        "(1,6): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <ruby>\n"
+        "|       \"a\"\n"
+        "|       <rt>\n"
+        "|         \"b\"\n"
+        "|       <rt>\n"
         ""s
     ));
 
@@ -8237,6 +8877,52 @@ test$("html5lib-tests2-35") {
     return Ok();
 }
 
+test$("html5lib-tests2-36") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><select><option><optgroup>\n"
+        "#errors\n"
+        "(1,41): eof-in-select\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <select>\n"
+        "|       <option>\n"
+        "|       <optgroup>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests2-37") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><select><optgroup><option></optgroup><option><select><option>\n"
+        "#errors\n"
+        "1:61: ERROR: Start tag 'select' isn't allowed here. Currently open tags: html, body, select, option.\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <select>\n"
+        "|       <optgroup>\n"
+        "|         <option>\n"
+        "|       <option>\n"
+        "|     <option>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests2-39") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -8523,6 +9209,26 @@ test$("html5lib-tests20-50") {
         "|     <option>\n"
         "|       <span>\n"
         "|         <option>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests20-51") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<option><option>\n"
+        "#errors\n"
+        "(1,8): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <option>\n"
+        "|     <option>\n"
         ""s
     ));
 
@@ -9479,6 +10185,66 @@ test$("html5lib-tests25-21") {
     return Ok();
 }
 
+test$("html5lib-tests25-22") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><body><param>A\n"
+        "#errors\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <param>\n"
+        "|     \"A\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests25-23") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><body><source>A\n"
+        "#errors\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <source>\n"
+        "|     \"A\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests25-24") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><body><track>A\n"
+        "#errors\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <track>\n"
+        "|     \"A\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests26-0") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -9961,6 +10727,47 @@ test$("html5lib-tests3-14") {
     return Ok();
 }
 
+test$("html5lib-tests3-17") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><textarea>\n"
+        "</textarea>\n"
+        "#errors\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <textarea>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests3-18") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<!DOCTYPE html><textarea>\n"
+        "foo</textarea>\n"
+        "#errors\n"
+        "#document\n"
+        "| <!DOCTYPE html>\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <textarea>\n"
+        "|       \"foo\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests3-21") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -10071,6 +10878,50 @@ test$("html5lib-tests5-3") {
     return Ok();
 }
 
+test$("html5lib-tests5-4") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<iframe> <!---> </iframe>x\n"
+        "#errors\n"
+        "(1,8): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <iframe>\n"
+        "|       \" <!---> \"\n"
+        "|     \"x\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests5-5") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<iframe> <!--- </iframe>->x</iframe> --> </iframe>x\n"
+        "#errors\n"
+        "(1,8): expected-doctype-but-got-start-tag\n"
+        "(1,36): unexpected-end-tag\n"
+        "(1,50): unexpected-end-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <iframe>\n"
+        "|       \" <!--- \"\n"
+        "|     \"->x --> x\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests5-6") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -10117,6 +10968,29 @@ test$("html5lib-tests5-7") {
     return Ok();
 }
 
+test$("html5lib-tests5-8") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<textarea> <!--- </textarea>->x</textarea> --> </textarea>x\n"
+        "#errors\n"
+        "(1,10): expected-doctype-but-got-start-tag\n"
+        "(1,42): unexpected-end-tag\n"
+        "(1,58): unexpected-end-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <textarea>\n"
+        "|       \" <!--- \"\n"
+        "|     \"->x --> x\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-tests5-9") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -10130,6 +11004,26 @@ test$("html5lib-tests5-9") {
         "|       \" <!</-- \"\n"
         "|   <body>\n"
         "|     \"x\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-tests5-11") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<xmp> <!-- > --> </xmp>\n"
+        "#errors\n"
+        "(1,5): expected-doctype-but-got-start-tag\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <xmp>\n"
+        "|       \" <!-- > --> \"\n"
         ""s
     ));
 
@@ -11884,6 +12778,46 @@ test$("html5lib-webkit01-29") {
     return Ok();
 }
 
+test$("html5lib-webkit01-31") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<select><option>A<select><option>B<select><option>C<select><option>D<select><option>E<select><option>F<select><option>G<select>\n"
+        "#errors\n"
+        "1:1: ERROR: Expected a doctype token\n"
+        "1:18: ERROR: Start tag 'select' isn't allowed here. Currently open tags: html, body, select, option.\n"
+        "1:52: ERROR: Start tag 'select' isn't allowed here. Currently open tags: html, body, select, option.\n"
+        "1:86: ERROR: Start tag 'select' isn't allowed here. Currently open tags: html, body, select, option.\n"
+        "1:120: ERROR: Start tag 'select' isn't allowed here. Currently open tags: html, body, select, option.\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <select>\n"
+        "|       <option>\n"
+        "|         \"A\"\n"
+        "|     <option>\n"
+        "|       \"B\"\n"
+        "|       <select>\n"
+        "|         <option>\n"
+        "|           \"C\"\n"
+        "|     <option>\n"
+        "|       \"D\"\n"
+        "|       <select>\n"
+        "|         <option>\n"
+        "|           \"E\"\n"
+        "|     <option>\n"
+        "|       \"F\"\n"
+        "|       <select>\n"
+        "|         <option>\n"
+        "|           \"G\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
 test$("html5lib-webkit01-32") {
     auto result = try$(Html5LibTest::run(
         "#data\n"
@@ -12522,6 +13456,53 @@ test$("html5lib-webkit02-39") {
         "|     <select>\n"
         "|       <datalist>\n"
         "|         \"datalist\"\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-webkit02-40") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<select><button><select></select></button></select>\n"
+        "#errors\n"
+        "1:1: ERROR: Expected a doctype token\n"
+        "1:17: ERROR: Start tag 'select' isn't allowed here. Currently open tags: html, body, select, button.\n"
+        "1:25: ERROR: End tag 'select' isn't allowed here. Currently open tags: html, body.\n"
+        "1:34: ERROR: End tag 'button' isn't allowed here. Currently open tags: html, body.\n"
+        "1:43: ERROR: End tag 'select' isn't allowed here. Currently open tags: html, body.\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <select>\n"
+        "|       <button>\n"
+        ""s
+    ));
+
+    expect$(result.passed);
+
+    return Ok();
+}
+
+test$("html5lib-webkit02-41") {
+    auto result = try$(Html5LibTest::run(
+        "#data\n"
+        "<select><button><div><select></select>\n"
+        "#errors\n"
+        "1:1: ERROR: Expected a doctype token\n"
+        "1:22: ERROR: Start tag 'select' isn't allowed here. Currently open tags: html, body, select, button, div.\n"
+        "1:30: ERROR: End tag 'select' isn't allowed here. Currently open tags: html, body.\n"
+        "#document\n"
+        "| <html>\n"
+        "|   <head>\n"
+        "|   <body>\n"
+        "|     <select>\n"
+        "|       <button>\n"
+        "|         <div>\n"
         ""s
     ));
 
