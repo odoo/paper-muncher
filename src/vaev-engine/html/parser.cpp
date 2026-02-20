@@ -2528,7 +2528,19 @@ export struct HtmlParser : HtmlSink {
             }
         }
 
-        // TODO: A start tag whose tag name is one of: "param", "source", "track"
+        // A start tag whose tag name is one of: "param", "source", "track"
+        else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "param", "source", "track")) {
+            // Insert an HTML element for the token.
+            _insertHtmlElement(t);
+
+            // Immediately pop the current node off the stack of open elements.
+            _openElements.pop();
+
+            // Acknowledge the token's self-closing flag, if it is set.
+            if (t.selfClosing) {
+                _acknowledgeSelfClosingFlag(t);
+            }
+        }
 
         // A start tag whose tag name is "hr"
         else if (t.type == HtmlToken::START_TAG and t.name == "hr") {
@@ -2547,26 +2559,217 @@ export struct HtmlParser : HtmlSink {
             _framesetOk = false;
         }
 
-        // TODO: A start tag whose tag name is "image"
+        // A start tag whose tag name is "image"
+        else if (t.type == HtmlToken::START_TAG and t.name == "image") {
+            // Parse error.
+            _raise(diags, t.span, "image tag used instead of img tag");
 
-        // TODO: A start tag whose tag name is "textarea"
+            // Change the token's tag name to "img" and reprocess it. (Don't ask.)
+            t.name = "img"_sym;
+            accept(t, diags);
+        }
 
-        // TODO: A start tag whose tag name is "xmp"
+        // A start tag whose tag name is "textarea"
+        else if (t.type == HtmlToken::START_TAG and t.name == "textarea") {
+            // Run these steps:
 
-        // TODO: A start tag whose tag name is "iframe"
+            // 1. Insert an HTML element for the token.
+            _insertHtmlElement(t);
 
-        // TODO: A start tag whose tag name is "noembed"
+            // 2. If the next token is a U+000A LINE FEED (LF) character token,
+            //    then ignore that token and move on to the next one.
+            //    (Newlines at the start of textarea elements are ignored as an authoring convenience.)
+            _ignoreNextTokenIfLineFeed = true;
+
+            // 3. Switch the tokenizer to the RCDATA state.
+            _lexer._switchTo(HtmlLexer::RCDATA);
+
+            // 4. Set the original insertion mode to the current insertion mode.
+            _originalInsertionMode = _insertionMode;
+
+            // 5. Set the frameset-ok flag to "not ok".
+            _framesetOk = false;
+
+            // 6. Switch the insertion mode to "text".
+            _switchTo(Mode::TEXT);
+        }
+
+        // A start tag whose tag name is "xmp"
+        else if (t.type == HtmlToken::START_TAG and t.name == "xmp") {
+            // If the stack of open elements has a p element in button scope,
+            if (_hasElementInButtonScope(Html::P_TAG)) {
+                // then close a p element.
+                closePElement();
+            }
+
+            // Reconstruct the active formatting elements, if any.
+            _reconstructActiveFormattingElements();
+
+            // Set the frameset-ok flag to "not ok".
+            _framesetOk = false;
+
+            // Follow the generic raw text element parsing algorithm.
+            _parseRawTextElement(t);
+        }
+
+        // A start tag whose tag name is "iframe"
+        else if (t.type == HtmlToken::START_TAG and t.name == "iframe") {
+            // Set the frameset-ok flag to "not ok".
+            _framesetOk = false;
+
+            // Follow the generic raw text element parsing algorithm.
+            _parseRawTextElement(t);
+        }
+
+        // A start tag whose tag name is "noembed"
         // A start tag whose tag name is "noscript", if the scripting flag is enabled
+        else if (t.type == HtmlToken::START_TAG and (t.name == "noembed" or (t.name == "noscript" and _scriptingEnabled))) {
+            // Follow the generic raw text element parsing algorithm.
+            _parseRawTextElement(t);
+        }
 
-        // TODO: A start tag whose tag name is "select"
+        // A start tag whose tag name is "select"
+        else if (t.type == HtmlToken::START_TAG and t.name == "select") {
+            // TODO: If the parser was created as part of the HTML fragment parsing algorithm (fragment case)
+            // TODO: and the context element passed to that algorithm is a select element:
+            // TODO: 1. Parse error.
+            // TODO: 2. Ignore the token.
 
-        // TODO: A start tag whose tag name is one of: "optgroup", "option"
+            // Otherwise, if the stack of open elements has a select element in scope:
+            if (_hasElementInScope(Html::SELECT_TAG)) {
+                // 1. Parse error.
+                _raise(diags, t.span, "unexpect start tag for select");
 
-        // TODO: A start tag whose tag name is one of: "rb", "rtc"
+                // 2. Ignore the token.
 
-        // TODO: A start tag whose tag name is one of: "rp", "rt"
+                // 3. Pop elements from the stack of open elements until a select element has been popped from the stack.
+                _openElements.popUntilOneOf(Html::SELECT_TAG);
+            } else {
+                // Otherwise:
 
-        // TODO: A start tag whose tag name is "math"
+                // 1. Reconstruct the active formatting elements, if any.
+                _reconstructActiveFormattingElements();
+
+                // 2. Insert an HTML element for the token.
+                _insertHtmlElement(t);
+
+                // 3. Set the frameset-ok flag to "not ok".
+                _framesetOk = false;
+            }
+        }
+
+        // A start tag whose tag name is "option"
+        else if (t.type == HtmlToken::START_TAG and t.name == "option") {
+            // If the stack of open elements has a select element in scope:
+            if (_hasElementInScope(Html::SELECT_TAG)) {
+                // 1. Generate implied end tags except for optgroup elements.
+                _generateImpliedEndTags(*this, Html::OPTGROUP_TAG);
+
+                // 2. If the stack of open elements has an option element in scope,
+                if (_hasElementInScope(Html::OPTION_TAG)) {
+                    // then this is a parse error.
+                    _raise(diags, t.span, "unexpect start tag for option");
+                }
+            } else {
+                // Otherwise:
+
+                // 1. If the current node is an option element,
+                if (_currentElement()->qualifiedName == Html::OPTION_TAG) {
+                    // then pop the current node off the stack of open elements.
+                    _openElements.pop();
+                }
+            }
+
+            // Reconstruct the active formatting elements, if any.
+            _reconstructActiveFormattingElements();
+
+            // Insert an HTML element for the token.
+            _insertHtmlElement(t);
+        }
+
+        // A start tag whose tag name is "optgroup"
+        else if (t.type == HtmlToken::START_TAG and t.name == "optgroup") {
+            // If the stack of open elements has a select element in scope:
+            if (_hasElementInScope(Html::SELECT_TAG)) {
+                // 1. Generate implied end tags except for optgroup elements.
+                _generateImpliedEndTags(*this, Html::OPTGROUP_TAG);
+
+                // 2. If the stack of open elements has an option element in scope or has an optgroup element in scope,
+                if (_hasElementInScope(Html::OPTION_TAG) or _hasElementInScope(Html::OPTGROUP_TAG)) {
+                    // then this is a parse error.
+                    _raise(diags, t.span, "unexpect start tag for optgroup");
+                } else {
+                    // Otherwise:
+
+                    // 1. If the current node is an option element,
+                    if (_currentElement()->qualifiedName == Html::OPTION_TAG) {
+                        // then pop the current node off the stack of open elements.
+                        _openElements.pop();
+                    }
+                }
+
+                // Reconstruct the active formatting elements, if any.
+                _reconstructActiveFormattingElements();
+
+                // Insert an HTML element for the token.
+                _insertHtmlElement(t);
+            }
+        }
+
+        // A start tag whose tag name is one of: "rb", "rtc"
+        else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "rb", "rtc")) {
+            // If the stack of open elements has a ruby element in scope,
+            if (_hasElementInScope(Html::RUBY_TAG)) {
+                // then generate implied end tags.
+                _generateImpliedEndTags(*this);
+
+                // If the current node is not now a ruby element,
+                if (_currentElement()->qualifiedName != Html::RUBY_TAG) {
+                    // this is a parse error.
+                    _raise(diags, t.span, "unexpected start tag");
+                }
+            }
+
+            // Insert an HTML element for the token.
+            _insertHtmlElement(t);
+        }
+
+        // A start tag whose tag name is one of: "rp", "rt"
+        else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "rp", "rt")) {
+            // If the stack of open elements has a ruby element in scope,
+            if (_hasElementInScope(Html::RUBY_TAG)) {
+                // then generate implied end tags, except for rtc elements.
+                _generateImpliedEndTags(*this, Html::RTC_TAG);
+
+                // If the current node is not now a rtc element or a ruby element,
+                if (not oneOf(_currentElement()->qualifiedName, Html::RTC_TAG, Html::RUBY_TAG)) {
+                    // this is a parse error.
+                    _raise(diags, t.span, "unexpected start tag");
+                }
+            }
+
+            // Insert an HTML element for the token.
+            _insertHtmlElement(t);
+        }
+
+        // A start tag whose tag name is "math"
+        else if (t.type == HtmlToken::START_TAG and t.name == "math") {
+            // Reconstruct the active formatting elements, if any.
+            _reconstructActiveFormattingElements();
+
+            // TODO: Adjust MathML attributes for the token. (This fixes the case of MathML attributes that are not all lowercase.)
+            // TODO: Adjust foreign attributes for the token. (This fixes the use of namespaced attributes, in particular XLink.)
+
+            // Insert a foreign element for the token, with MathML namespace and false.
+            _insertAForeignElement(t, MathMl::NAMESPACE, false);
+
+            // If the token has its self-closing flag set,
+            if (t.selfClosing) {
+                // pop the current node off the stack of open elements and acknowledge the token's self-closing flag.
+                _openElements.pop();
+                _acknowledgeSelfClosingFlag(t);
+            }
+        }
 
         // A start tag whose tag name is "svg"
         else if (t.type == HtmlToken::START_TAG and t.name == "svg") {
