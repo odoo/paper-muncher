@@ -989,10 +989,10 @@ export struct HtmlParser : HtmlSink {
     // 13.2.6.3 MARK: Closing elements that have implied end tags
     // https://html.spec.whatwg.org/multipage/parsing.html#generate-implied-end-tags
 
-    static void _generateImpliedEndTags(HtmlParser& b, Opt<Dom::QualifiedName> except = NONE) {
-        while (contains(IMPLIED_END_TAGS, b._currentElement()->qualifiedName) and
-               b._currentElement()->qualifiedName != except) {
-            b._openElements.pop();
+    void _generateImpliedEndTags(Opt<Dom::QualifiedName> except = NONE) {
+        while (contains(IMPLIED_END_TAGS, _currentElement()->qualifiedName) and
+               _currentElement()->qualifiedName != except) {
+            _openElements.pop();
         }
     }
 
@@ -1510,7 +1510,7 @@ export struct HtmlParser : HtmlSink {
         // https://html.spec.whatwg.org/#close-a-p-element
         auto closePElement = [&]() {
             // Generate implied end tags, except for p elements.
-            _generateImpliedEndTags(*this, Html::P_TAG);
+            _generateImpliedEndTags(Html::P_TAG);
 
             // If the current node is not a p element, then this is a parse error.
             if (_currentElement()->qualifiedName != Html::P_TAG)
@@ -2014,7 +2014,7 @@ export struct HtmlParser : HtmlSink {
                 // If node is a li element, then run these substeps:
                 if (tag == Html::LI_TAG) {
                     // 1. Generate implied end tags, except for li elements.
-                    _generateImpliedEndTags(*this, Html::LI_TAG);
+                    _generateImpliedEndTags(Html::LI_TAG);
 
                     // 2. If the current node is not a li element, then this is a parse error.
                     if (_currentElement()->qualifiedName != Html::LI_TAG) {
@@ -2066,7 +2066,7 @@ export struct HtmlParser : HtmlSink {
                 // If node is a dd element, then run these substeps:
                 if (tag == Html::DD_TAG) {
                     // 1. Generate implied end tags, except for dd elements.
-                    _generateImpliedEndTags(*this, Html::DD_TAG);
+                    _generateImpliedEndTags(Html::DD_TAG);
 
                     // 2. If the current node is not a dd element, then this is a parse error.
                     if (_currentElement()->qualifiedName != Html::DD_TAG) {
@@ -2083,7 +2083,7 @@ export struct HtmlParser : HtmlSink {
 
                 if (tag == Html::DT_TAG) {
                     // 1. Generate implied end tags, except for dt elements.
-                    _generateImpliedEndTags(*this, Html::DT_TAG);
+                    _generateImpliedEndTags(Html::DT_TAG);
 
                     // 2. If the current node is not a dt element, then this is a parse error.
                     if (_currentElement()->qualifiedName != Html::DT_TAG) {
@@ -2133,7 +2133,7 @@ export struct HtmlParser : HtmlSink {
                 _raise(diags, t.span, "unexpected button tag");
 
                 // 2. Generate implied end tags.
-                _generateImpliedEndTags(*this);
+                _generateImpliedEndTags();
 
                 // 3. Pop elements from the stack of open elements until a button element has been popped from the stack.
                 _openElements.popUntilOneOf(Html::BUTTON_TAG);
@@ -2173,7 +2173,7 @@ export struct HtmlParser : HtmlSink {
             // Otherwise, run these steps:
 
             // 1. Generate implied end tags.
-            _generateImpliedEndTags(*this);
+            _generateImpliedEndTags();
 
             // 2. If the current node is not an HTML element with the same tag name as that of the token,
             if (_currentElement()->qualifiedName.name != t.name) {
@@ -2204,7 +2204,7 @@ export struct HtmlParser : HtmlSink {
                 }
 
                 // 4. Generate implied end tags.
-                _generateImpliedEndTags(*this);
+                _generateImpliedEndTags();
 
                 // 5. If the current node is not node, then this is a parse error.
                 if (_currentElement() != node) {
@@ -2225,7 +2225,7 @@ export struct HtmlParser : HtmlSink {
                 }
 
                 // 2. Generate implied end tags.
-                _generateImpliedEndTags(*this);
+                _generateImpliedEndTags();
 
                 // 3. If the current node is not a form element, then this is a parse error.
                 if (_currentElement()->qualifiedName != Html::FORM_TAG) {
@@ -2268,7 +2268,7 @@ export struct HtmlParser : HtmlSink {
             // Otherwise, run these steps:
 
             // 1. Generate implied end tags, except for li elements.
-            _generateImpliedEndTags(*this, Html::LI_TAG);
+            _generateImpliedEndTags(Html::LI_TAG);
 
             // 2. If the current node is not an li element, then this is a parse error.
             if (_currentElement()->qualifiedName != Html::LI_TAG) {
@@ -2294,7 +2294,7 @@ export struct HtmlParser : HtmlSink {
             // Otherwise, run these steps:
 
             // 1. Generate implied end tags, except for HTML elements with the same tag name as the token.
-            _generateImpliedEndTags(*this, qualifiedName);
+            _generateImpliedEndTags(qualifiedName);
 
             // 2. If the current node is not an HTML element with the same tag name as that of the token, then this is a parse error.
             if (_currentElement()->qualifiedName != qualifiedName) {
@@ -2326,7 +2326,7 @@ export struct HtmlParser : HtmlSink {
             // Otherwise, run these steps:
 
             // 1. Generate implied end tags.
-            _generateImpliedEndTags(*this);
+            _generateImpliedEndTags();
 
             // 2. If the current node is not an HTML element with the same tag name as that of the token, then this is a parse error.
             if (_currentElement()->qualifiedName != Dom::QualifiedName{Html::NAMESPACE, t.name}) {
@@ -2435,7 +2435,7 @@ export struct HtmlParser : HtmlSink {
             // Otherwise, run these steps:
 
             // 1. Generate implied end tags.
-            _generateImpliedEndTags(*this);
+            _generateImpliedEndTags();
 
             // 2. If the current node is not an HTML element with the same tag name as that of the token,
             if (_currentElement()->qualifiedName.name == t.name) {
@@ -2663,7 +2663,7 @@ export struct HtmlParser : HtmlSink {
             // If the stack of open elements has a select element in scope:
             if (_hasElementInScope(Html::SELECT_TAG)) {
                 // 1. Generate implied end tags except for optgroup elements.
-                _generateImpliedEndTags(*this, Html::OPTGROUP_TAG);
+                _generateImpliedEndTags(Html::OPTGROUP_TAG);
 
                 // 2. If the stack of open elements has an option element in scope,
                 if (_hasElementInScope(Html::OPTION_TAG)) {
@@ -2692,7 +2692,7 @@ export struct HtmlParser : HtmlSink {
             // If the stack of open elements has a select element in scope:
             if (_hasElementInScope(Html::SELECT_TAG)) {
                 // 1. Generate implied end tags except for optgroup elements.
-                _generateImpliedEndTags(*this, Html::OPTGROUP_TAG);
+                _generateImpliedEndTags(Html::OPTGROUP_TAG);
 
                 // 2. If the stack of open elements has an option element in scope or has an optgroup element in scope,
                 if (_hasElementInScope(Html::OPTION_TAG) or _hasElementInScope(Html::OPTGROUP_TAG)) {
@@ -2721,7 +2721,7 @@ export struct HtmlParser : HtmlSink {
             // If the stack of open elements has a ruby element in scope,
             if (_hasElementInScope(Html::RUBY_TAG)) {
                 // then generate implied end tags.
-                _generateImpliedEndTags(*this);
+                _generateImpliedEndTags();
 
                 // If the current node is not now a ruby element,
                 if (_currentElement()->qualifiedName != Html::RUBY_TAG) {
@@ -2739,7 +2739,7 @@ export struct HtmlParser : HtmlSink {
             // If the stack of open elements has a ruby element in scope,
             if (_hasElementInScope(Html::RUBY_TAG)) {
                 // then generate implied end tags, except for rtc elements.
-                _generateImpliedEndTags(*this, Html::RTC_TAG);
+                _generateImpliedEndTags(Html::RTC_TAG);
 
                 // If the current node is not now a rtc element or a ruby element,
                 if (not oneOf(_currentElement()->qualifiedName, Html::RTC_TAG, Html::RUBY_TAG)) {
@@ -2822,7 +2822,7 @@ export struct HtmlParser : HtmlSink {
                 // 2. Loop: If node is an HTML element with the same tag name as the token, then:
                 if (node->qualifiedName.name == t.name) {
                     // 1. Generate implied end tags, except for HTML elements with the same tag name as the token.
-                    _generateImpliedEndTags(*this, node->qualifiedName);
+                    _generateImpliedEndTags(node->qualifiedName);
 
                     // 2. If node is not the current node, then this is a parse error.
                     if (node != _currentElement())
@@ -3196,7 +3196,7 @@ export struct HtmlParser : HtmlSink {
             // Otherwise:
 
             // Generate implied end tags.
-            _generateImpliedEndTags(*this);
+            _generateImpliedEndTags();
 
             // Now, if the current node is not a caption element, then this is a parse error.
             if (_currentElement()->qualifiedName != Html::CAPTION_TAG)
@@ -3569,7 +3569,7 @@ export struct HtmlParser : HtmlSink {
     void _handleInCell(HtmlToken& t, Diag::Collector& diags) {
         auto _closeTheCell = [&]() {
             // Generate implied end tags.
-            _generateImpliedEndTags(*this);
+            _generateImpliedEndTags();
 
             // If the current node is not now a td element or a th element, then this is a parse error.
             if (_currentElement()->qualifiedName != Html::TD_TAG and _currentElement()->qualifiedName != Html::TH_TAG) {
@@ -3600,7 +3600,7 @@ export struct HtmlParser : HtmlSink {
             // Otherwise:
 
             // Generate implied end tags.
-            _generateImpliedEndTags(*this);
+            _generateImpliedEndTags();
 
             // Now, if the current node is not an HTML element with the same tag name as the token,
             if (_currentElement()->qualifiedName != tokenQualifiedName) {
