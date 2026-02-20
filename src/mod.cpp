@@ -138,7 +138,7 @@ export Async::Task<> runAsync(
         logInfo("rendering {}...", input);
         if (options.flow == Flow::PAGINATE) {
             auto settings = options.preparePrintSettings();
-            window->print(settings) | forEach([&](Print::Page& page) {
+            window->print(settings) | ForEach([&](Print::Page& page) {
                 page.print(
                     *printer,
                     {.showBackgroundGraphics = true}

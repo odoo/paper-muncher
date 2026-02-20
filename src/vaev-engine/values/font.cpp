@@ -214,8 +214,8 @@ export struct FontWeight : _FontWeight {
 // https://www.w3.org/TR/css-fonts-4/#font-weight-absolute-values
 
 export template <>
-struct ValueParser<FontWeight> {
-    static Res<FontWeight> parse(Cursor<Css::Sst>& c) {
+struct ValueParser<Gfx::FontWeight> {
+    static Res<Gfx::FontWeight> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -223,12 +223,27 @@ struct ValueParser<FontWeight> {
             return Ok(Gfx::FontWeight::REGULAR);
         } else if (c.skip(Css::Token::ident("bold"))) {
             return Ok(Gfx::FontWeight::BOLD);
-        } else if (c.skip(Css::Token::ident("bolder"))) {
+        } else {
+            auto weight = try$(parseValue<Integer>(c));
+            if (weight < 0 or weight > 1000)
+                return Error::invalidData("font weight should be between 0 and 1000");
+            return Ok(Gfx::FontWeight{static_cast<u16>(weight)});
+        }
+    }
+};
+
+export template <>
+struct ValueParser<FontWeight> {
+    static Res<FontWeight> parse(Cursor<Css::Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+       if (c.skip(Css::Token::ident("bolder"))) {
             return Ok(RelativeFontWeight::BOLDER);
         } else if (c.skip(Css::Token::ident("lighter"))) {
             return Ok(RelativeFontWeight::LIGHTER);
         } else {
-            return Ok(Gfx::FontWeight{static_cast<u16>(clamp(try$(parseValue<Integer>(c)), 0, 1000))});
+            return Ok(try$(parseValue<Gfx::FontWeight>(c)));
         }
     }
 };

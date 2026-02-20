@@ -17,7 +17,6 @@ namespace Vaev::Browser {
 
 enum struct SidePanel {
     CLOSE,
-    BOOKMARKS,
     DEVELOPER_TOOLS,
 };
 
@@ -31,6 +30,11 @@ enum struct Status {
     LOADED,
 };
 
+struct Bookmark {
+    String name;
+    Ref::Url url;
+};
+
 struct State {
     Status status = Status::LOADED;
     Res<> loadingResult = Ok();
@@ -41,6 +45,7 @@ struct State {
     InspectState inspect = {};
     bool wireframe = false;
     String locationInput;
+    Vec<Bookmark> bookmarks;
 
     State(Rc<Dom::Window> window)
         : history{Navigate{window->location()}},
@@ -196,7 +201,6 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
             Ui::SINK<>,
             Mdi::BOOKMARK_OUTLINE, "Add bookmark..."
         ),
-        Kr::contextMenuItem(Model::bind(SidePanel::BOOKMARKS), Mdi::BOOKMARK, "Bookmarks"),
         Kr::separator(),
         Kr::contextMenuItem(
             not s.loadingResult
@@ -237,7 +241,7 @@ Ui::Child reloadButton(State const& s) {
            ) |
            Ui::insets(6) |
            Ui::center() |
-           Ui::minSize({36, 36}) |
+           Ui::minSize({32, 32}) |
            Ui::button(Model::bind<Reload>(), Ui::ButtonStyle::subtle());
 }
 
@@ -302,17 +306,25 @@ Ui::Child inspectorContent(State const& s) {
     );
 }
 
+Ui::Child bookmarkSidePanel(State const& s) {
+    if (not s.bookmarks) {
+        return Ui::labelMedium(Ui::GRAY500, "No bookmarks") |
+               Ui::center();
+    }
+
+    Ui::Children children;
+    for (auto& bm : s.bookmarks) {
+        children.pushBack(Ui::button(Model::bind<Navigate>(bm.url), Mdi::BOOKMARK, bm.name));
+    }
+
+    return Ui::vflow(
+        4,
+        std::move(children)
+    );
+}
+
 Ui::Child sidePanel(State const& s) {
     switch (s.sidePanel) {
-    case SidePanel::BOOKMARKS:
-        return Kr::sidePanelContent({
-            Kr::sidePanelTitle(Model::bind(SidePanel::CLOSE), "Bookmarks"),
-            Kr::separator(),
-            Ui::labelMedium(Ui::GRAY500, "No bookmarks") |
-                Ui::center() |
-                Ui::grow(),
-        });
-
     case SidePanel::DEVELOPER_TOOLS:
         return Kr::sidePanelContent({
             Kr::sidePanelTitle(Model::bind(SidePanel::CLOSE), "Developer Tools"),
@@ -350,20 +362,20 @@ Ui::Child webview(State const& s) {
 }
 
 Ui::Child appContent(State const& s) {
+    auto wv = webview(s) | Kr::scaffoldContent();
     if (s.sidePanel == SidePanel::CLOSE) {
-        return webview(s);
+        return wv;
     }
     return Ui::hflow(
-        webview(s) | Ui::grow(),
+        wv |
+            Ui::grow(),
         sidePanel(s) | Kr::resizable(Kr::ResizeHandle::START, {320}, NONE)
     );
 }
 
 export Ui::Child app(Rc<Dom::Window> window) {
     return Ui::reducer<Model>(
-        {
-            window,
-        },
+        window,
         [](State const& s) {
             auto scaffold = Kr::scaffold({
                 .icon = Mdi::SURFING,
@@ -391,6 +403,9 @@ export Ui::Child app(Rc<Dom::Window> window) {
                         ),
                     };
                 },
+                .sidebar = [&] {
+                    return Kr::sidenavContent({bookmarkSidePanel(s)});
+                },
                 .body = [&] {
                     return appContent(s);
                 },
@@ -399,7 +414,6 @@ export Ui::Child app(Rc<Dom::Window> window) {
                    Ui::keyboardShortcut(App::Key::R, App::KeyMod::CTRL, Model::bind<Reload>()) |
                    Ui::keyboardShortcut(App::Key::F5, Model::bind<Reload>()) |
                    Ui::keyboardShortcut(App::Key::F12, Model::bind(SidePanel::DEVELOPER_TOOLS)) |
-                   Ui::keyboardShortcut(App::Key::B, App::KeyMod::CTRL, Model::bind(SidePanel::BOOKMARKS)) |
                    Ui::keyboardShortcut(App::Key::P, App::KeyMod::CTRL, [&](auto& n) {
                        if (not s.loadingResult)
                            return;

@@ -1075,7 +1075,7 @@ export struct TableFormatingContext : FormatingContext {
 
             tableUsedWidth = max(capmin, *knownSizeX);
 
-            auto sumMinWithoutPerc = iter(minWithoutPerc).sum();
+            auto sumMinWithoutPerc = iter(minWithoutPerc) | Sum();
             if (sumMinWithoutPerc > tableUsedWidth) {
                 tableUsedWidth = sumMinWithoutPerc;
                 colWidth = minWithoutPerc;
@@ -1084,12 +1084,12 @@ export struct TableFormatingContext : FormatingContext {
 
             auto [minWithPerc, maxWithPerc] = computeMinMaxAutoWidths(tree, grid.size.x, *knownSizeX);
 
-            auto sumMaxWithoutPerc = iter(maxWithoutPerc).sum();
+            auto sumMaxWithoutPerc = iter(maxWithoutPerc) | Sum();
             Vec<Au>& distWOPToUse = sumMaxWithoutPerc < tableUsedWidth ? maxWithoutPerc : minWithoutPerc;
             Vec<Au>& distWPToUse = sumMaxWithoutPerc < tableUsedWidth ? maxWithPerc : minWithPerc;
 
-            auto sumWithPerc = iter(distWPToUse).sum();
-            auto sumWithoutPerc = iter(distWOPToUse).sum();
+            auto sumWithPerc = iter(distWPToUse) | Sum();
+            auto sumWithoutPerc = iter(distWOPToUse) | Sum();
 
             if (sumWithPerc > tableUsedWidth) {
                 Au totalDiff = sumWithPerc - sumWithoutPerc;
@@ -1116,8 +1116,8 @@ export struct TableFormatingContext : FormatingContext {
             }
         } else {
             auto [minColWidth, maxColWidth] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
-            auto sumMaxColWidths = iter(maxColWidth).sum();
-            auto sumMinColWidths = iter(minColWidth).sum();
+            auto sumMaxColWidths = iter(maxColWidth) | Sum();
+            auto sumMinColWidths = iter(minColWidth) | Sum();
 
             // TODO: Specs doesnt say if we should distribute extra width over columns;
             //       also would it be over min or max columns?
@@ -1288,7 +1288,7 @@ export struct TableFormatingContext : FormatingContext {
                 } else
                     unreachable();
 
-                tableUsedWidth = iter(colWidth).sum();
+                tableUsedWidth = iter(colWidth) | Sum();
             }
         } else
             computeFixedColWidths(tree, box, *input.knownSize.x);
@@ -1299,8 +1299,8 @@ export struct TableFormatingContext : FormatingContext {
         rowHeightPref = PrefixSum<Au>{rowHeight};
 
         tableBoxSize = Vec2Au{
-            iter(colWidth).sum() + spacing.x * Au{grid.size.x + 1},
-            iter(rowHeight).sum() + spacing.y * Au{grid.size.y + 1},
+            (iter(colWidth) | Sum()) + spacing.x * Au{grid.size.x + 1},
+            (iter(rowHeight) | Sum()) + spacing.y * Au{grid.size.y + 1},
         };
 
         if (numOfHeaderRows) {

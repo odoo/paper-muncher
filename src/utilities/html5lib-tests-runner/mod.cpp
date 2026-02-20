@@ -72,7 +72,7 @@ struct DocumentEmit {
 
             _indent();
 
-            auto attributes = element->attributes.iterUnordered().collect<Vec<Tuple<Dom::QualifiedName, Rc<Dom::Attr>>>>();
+            auto attributes = element->attributes.iterUnordered() | Collect<Vec<Tuple<Dom::QualifiedName, Rc<Dom::Attr>>>>();
 
             sort(attributes, [](auto const& a, auto const& b) {
                 return a.v0.name <=> b.v0.name;
