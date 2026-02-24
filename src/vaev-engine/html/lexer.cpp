@@ -602,6 +602,8 @@ export struct HtmlLexer {
             // the characters in the temporary buffer (in the order they
             // were added to the buffer). Reconsume in the RCDATA state.
             else {
+                _builder.clear();
+
                 _emit('<', loc, diags);
                 _emit('/', loc, diags);
                 for (Rune rune : iterRunes(_temp.str()))
@@ -672,6 +674,7 @@ export struct HtmlLexer {
             // treat it as per the "anything else" entry below.
             if ((rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') and
                 _isAppropriateEndTagToken()) {
+                _ensure().name = Symbol::from(_builder.take());
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
@@ -680,6 +683,7 @@ export struct HtmlLexer {
             // then switch to the self-closing start tag state. Otherwise,
             // treat it as per the "anything else" entry below.
             else if (rune == '/' and _isAppropriateEndTagToken()) {
+                _ensure().name = Symbol::from(_builder.take());
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
@@ -688,7 +692,7 @@ export struct HtmlLexer {
             // then switch to the data state and emit the current tag token.
             // Otherwise, treat it as per the "anything else" entry below.
             else if (rune == '>' and _isAppropriateEndTagToken()) {
-                _builder.clear();
+                _ensure().name = Symbol::from(_builder.take());
                 _switchTo(State::DATA);
                 _emit(diags);
             }
@@ -717,10 +721,13 @@ export struct HtmlLexer {
             // in the temporary buffer (in the order they were added to the
             // buffer). Reconsume in the RAWTEXT state.
             else {
+                _builder.clear();
+
                 _emit('<', loc, diags);
                 _emit('/', loc, diags);
                 for (Rune rune : iterRunes(_temp.str()))
                     _emit(rune, loc, diags);
+
                 _reconsumeIn(State::RAWTEXT, rune, loc, diags, isEof);
             }
 
@@ -797,6 +804,7 @@ export struct HtmlLexer {
 
             if ((rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') and
                 _isAppropriateEndTagToken()) {
+                _ensure().name = Symbol::from(_builder.take());
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
@@ -805,6 +813,7 @@ export struct HtmlLexer {
             // then switch to the self-closing start tag state. Otherwise,
             // treat it as per the "anything else" entry below.
             else if (rune == '/' and _isAppropriateEndTagToken()) {
+                _ensure().name = Symbol::from(_builder.take());
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
@@ -844,6 +853,8 @@ export struct HtmlLexer {
             // were added to the buffer). Reconsume in the script data
             // state.
             else {
+                _builder.clear();
+
                 _emit('<', loc, diags);
                 _emit('/', loc, diags);
                 for (Rune rune : iterRunes(_temp.str()))
@@ -1123,6 +1134,7 @@ export struct HtmlLexer {
             // it as per the "anything else" entry below.
             if ((rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') and
                 _isAppropriateEndTagToken()) {
+                _ensure().name = Symbol::from(_builder.take());
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
@@ -1131,6 +1143,7 @@ export struct HtmlLexer {
             // then switch to the self-closing start tag state. Otherwise, treat
             // it as per the "anything else" entry below.
             else if (rune == '/' and _isAppropriateEndTagToken()) {
+                _ensure().name = Symbol::from(_builder.take());
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
@@ -1140,6 +1153,7 @@ export struct HtmlLexer {
             // Otherwise, treat it as per the "anything else" entry below.
             else if (rune == '>' and _isAppropriateEndTagToken()) {
                 _switchTo(State::DATA);
+                _ensure().name = Symbol::from(_builder.take());
                 _emit(diags);
             }
 
@@ -1167,6 +1181,8 @@ export struct HtmlLexer {
             // in the temporary buffer (in the order they were added to the
             // buffer). Reconsume in the script data escaped state.
             else {
+                _builder.clear();
+
                 _emit('<', loc, diags);
                 _emit('/', loc, diags);
                 for (Rune rune : iterRunes(_temp.str()))
@@ -1424,6 +1440,8 @@ export struct HtmlLexer {
                 } else {
                     _switchTo(State::SCRIPT_DATA_DOUBLE_ESCAPED);
                 }
+
+                _emit(rune, loc, diags);
             }
 
             // ASCII upper alpha
@@ -1911,6 +1929,7 @@ export struct HtmlLexer {
             // EOF
             // Emit the comment. Emit an end-of-file token.
             else if (isEof) {
+                _ensure(HtmlToken::COMMENT).data = _builder.take();
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
                 _emit(diags);
