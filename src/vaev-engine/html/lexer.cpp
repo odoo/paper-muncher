@@ -46,7 +46,7 @@ export struct HtmlLexer {
     State _returnState = State::DATA;
 
     Opt<HtmlToken> _token;
-    Opt<HtmlToken> _last;
+    Opt<HtmlToken> _lastStartTag;
     HtmlSink* _sink = nullptr;
 
     Rune _currChar = 0;
@@ -82,7 +82,9 @@ export struct HtmlLexer {
             panic("no sink");
         logDebugIf(debugLexer, "emiting token: {}", _ensure());
         _sink->accept(_ensure(), diags);
-        _last = std::move(_token);
+
+        if (_token->type == HtmlToken::START_TAG)
+            _lastStartTag = std::move(_token);
     }
 
     void _emit(Rune rune, Io::Loc loc, Diag::Collector& diags) {
@@ -115,9 +117,9 @@ export struct HtmlLexer {
     }
 
     bool _isAppropriateEndTagToken() {
-        if (not _last or not _token)
+        if (not _lastStartTag)
             return false;
-        return _last.unwrap().name == _token.unwrap().name;
+        return _lastStartTag.unwrap().name == _builder.str();
     }
 
     void _flushCodePointsConsumedAsACharacterReference(Io::Loc loc, Diag::Collector& diags) {
