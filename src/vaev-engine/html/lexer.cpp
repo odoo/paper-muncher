@@ -138,6 +138,12 @@ export struct HtmlLexer {
                _returnState == State::ATTRIBUTE_VALUE_UNQUOTED;
     }
 
+    Symbol _commitSymbol() {
+        auto sym = Symbol::from(_builder.str());
+        _builder.clear();
+        return sym;
+    }
+
     void bind(HtmlSink& sink) {
         if (_sink)
             panic("sink already bound");
@@ -440,21 +446,21 @@ export struct HtmlLexer {
             // U+0020 SPACE
             // Switch to the before attribute name state.
             if (rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
             // U+002F SOLIDUS (/)
             // Switch to the self-closing start tag state.
             else if (rune == '/') {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
             // U+003E GREATER-THAN SIGN (>)
             // Switch to the data state. Emit the current tag token.
             else if (rune == '>') {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::DATA);
                 _emit(diags);
             }
@@ -554,7 +560,7 @@ export struct HtmlLexer {
             // treat it as per the "anything else" entry below.
             if ((rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') and
                 _isAppropriateEndTagToken()) {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
@@ -563,7 +569,7 @@ export struct HtmlLexer {
             // then switch to the self-closing start tag state. Otherwise,
             // treat it as per the "anything else" entry below.
             else if (rune == '/' and _isAppropriateEndTagToken()) {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
@@ -572,7 +578,7 @@ export struct HtmlLexer {
             // then switch to the data state and emit the current tag token.
             // Otherwise, treat it as per the "anything else" entry below.
             else if (rune == '>' and _isAppropriateEndTagToken()) {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::DATA);
                 _emit(diags);
             }
@@ -674,7 +680,7 @@ export struct HtmlLexer {
             // treat it as per the "anything else" entry below.
             if ((rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') and
                 _isAppropriateEndTagToken()) {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
@@ -683,7 +689,7 @@ export struct HtmlLexer {
             // then switch to the self-closing start tag state. Otherwise,
             // treat it as per the "anything else" entry below.
             else if (rune == '/' and _isAppropriateEndTagToken()) {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
@@ -692,7 +698,7 @@ export struct HtmlLexer {
             // then switch to the data state and emit the current tag token.
             // Otherwise, treat it as per the "anything else" entry below.
             else if (rune == '>' and _isAppropriateEndTagToken()) {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::DATA);
                 _emit(diags);
             }
@@ -804,7 +810,7 @@ export struct HtmlLexer {
 
             if ((rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') and
                 _isAppropriateEndTagToken()) {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
@@ -813,7 +819,7 @@ export struct HtmlLexer {
             // then switch to the self-closing start tag state. Otherwise,
             // treat it as per the "anything else" entry below.
             else if (rune == '/' and _isAppropriateEndTagToken()) {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
@@ -823,7 +829,7 @@ export struct HtmlLexer {
             // Otherwise, treat it as per the "anything else" entry below.
             else if (rune == '>' and _isAppropriateEndTagToken()) {
                 _switchTo(State::DATA);
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _emit(diags);
             }
 
@@ -1134,7 +1140,7 @@ export struct HtmlLexer {
             // it as per the "anything else" entry below.
             if ((rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') and
                 _isAppropriateEndTagToken()) {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
@@ -1143,7 +1149,7 @@ export struct HtmlLexer {
             // then switch to the self-closing start tag state. Otherwise, treat
             // it as per the "anything else" entry below.
             else if (rune == '/' and _isAppropriateEndTagToken()) {
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
@@ -1153,7 +1159,7 @@ export struct HtmlLexer {
             // Otherwise, treat it as per the "anything else" entry below.
             else if (rune == '>' and _isAppropriateEndTagToken()) {
                 _switchTo(State::DATA);
-                _ensure().name = Symbol::from(_builder.take());
+                _ensure().name = _commitSymbol();
                 _emit(diags);
             }
 
@@ -1528,14 +1534,14 @@ export struct HtmlLexer {
             // Reconsume in the after attribute name state.
             if (rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ' or
                 rune == '/' or rune == '>' or isEof) {
-                _lastAttr().name = Symbol::from(_builder.take());
+                _lastAttr().name = _commitSymbol();
                 _reconsumeIn(State::AFTER_ATTRIBUTE_NAME, rune, loc, diags, isEof);
             }
 
             // U+003D EQUALS SIGN (=)
             // Switch to the before attribute value state.
             else if (rune == '=') {
-                _lastAttr().name = Symbol::from(_builder.take());
+                _lastAttr().name = _commitSymbol();
                 _switchTo(State::BEFORE_ATTRIBUTE_VALUE);
             }
 
@@ -2462,14 +2468,14 @@ export struct HtmlLexer {
             // U+0020 SPACE
             // Switch to the after DOCTYPE name state.
             if (rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') {
-                _ensure(HtmlToken::DOCTYPE).name = Symbol::from(_builder.take());
+                _ensure(HtmlToken::DOCTYPE).name = _commitSymbol();
                 _switchTo(State::AFTER_DOCTYPE_NAME);
             }
 
             // U+003E GREATER-THAN SIGN (>)
             // Switch to the data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
-                _ensure(HtmlToken::DOCTYPE).name = Symbol::from(_builder.take());
+                _ensure(HtmlToken::DOCTYPE).name = _commitSymbol();
                 _switchTo(State::DATA);
                 _emit(diags);
             }
