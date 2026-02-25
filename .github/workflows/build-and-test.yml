@@ -27,7 +27,7 @@ jobs:
       - name: Setup Build Environment
         run: ./ck tools setup && ./ck tools doctor
 
-      - name: Instal Externs
+      - name: Install Externs
         run: ./ck install
 
       - name: Build Libraries
@@ -35,6 +35,12 @@ jobs:
 
       - name: Test Libraries
         run: ./ck test --props:async=${{ matrix.async }}
+
+      - name: Run html5lib Lexer Tests
+        run: ./ck html5lib-tests run -s tokenizer --props:async=${{ matrix.async }}
+
+      - name: Run html5lib Parser Tests
+        run: ./ck html5lib-tests run -s tree_construction --props:async=${{ matrix.async }}
 
       - name: Run Reftests
         run: ./ck reftests run --headless --props:async=${{ matrix.async }}
