@@ -4024,7 +4024,18 @@ export struct HtmlParser : HtmlSink {
     void write(Str str, Diag::Collector& diags) {
         Io::SScan s{str};
         while (not s.ended()) {
-            _lexer.consume(s.peek(), s.loc(), diags);
+            Rune r = s.peek();
+            Io::Loc loc = s.loc();
+
+            // https://infra.spec.whatwg.org/#normalize-newlines
+            if (r == '\r') {
+                if (s.ahead("\r\n")) {
+                    s.next();
+                }
+                r = '\n';
+            }
+
+            _lexer.consume(r, loc, diags);
             s.next();
         }
         // NOTE: '\3' (End of Text) is used here as a placeholder so we are directed to the EOF case
