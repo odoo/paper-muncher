@@ -1961,6 +1961,7 @@ export struct HtmlLexer {
         case State::MARKUP_DECLARATION_OPEN: {
             // 13.2.5.42 MARK: Markup declaration open state
             // If the next few characters are:
+            usize lastPeekLen = _peek.len();
             _peek.append(rune);
 
             // Two U+002D HYPHEN-MINUS characters (-)
@@ -1978,7 +1979,7 @@ export struct HtmlLexer {
             // ASCII case-insensitive match for the word "DOCTYPE"
             // Consume those characters and switch to the DOCTYPE state.
 
-            else if (auto r = startWith("DOCTYPE"s, _peek.str()); r != Match::NO) {
+            else if (auto r = startWith("DOCTYPE"s, _peek.str(), eqAsciiCi); r != Match::NO) {
                 if (r == Match::PARTIAL)
                     break;
 
@@ -2008,7 +2009,11 @@ export struct HtmlLexer {
             // comment token whose data is the empty string. Switch to the bogus
             // comment state (don't consume anything in the current state).
             else {
+                // NOTE: If there is a partial match over DOCTYPE or [CDATA[ it should be part of the bogus
+                //       comment, so we append it to the builder.
+                _builder.append(sub(_peek.str(), 0, lastPeekLen));
                 _peek.clear();
+
                 _raise(diags, loc, "incorrectly-opened-comment");
                 _begin(HtmlToken::COMMENT, loc);
                 _reconsumeIn(State::BOGUS_COMMENT, rune, loc, diags, isEof);
@@ -2522,6 +2527,7 @@ export struct HtmlLexer {
         case State::AFTER_DOCTYPE_NAME: {
             // 13.2.5.56 MARK: After DOCTYPE name state
             // Consume the next input character:
+            _peek.append(rune);
 
             // U+0009 CHARACTER TABULATION (tab)
             // U+000A LINE FEED (LF)
@@ -2556,7 +2562,11 @@ export struct HtmlLexer {
             // are an ASCII case-insensitive match for the word "PUBLIC", then
             // consume those characters and switch to the after DOCTYPE public
             // keyword state.
-            else if (rune == 'p' or rune == 'P') {
+            else if (auto r = startWith("PUBLIC"s, _peek.str(), eqAsciiCi); r != Match::NO) {
+                if (r == Match::PARTIAL)
+                    break;
+
+                _peek.clear();
                 _switchTo(State::AFTER_DOCTYPE_PUBLIC_KEYWORD);
             }
 
@@ -2564,7 +2574,11 @@ export struct HtmlLexer {
             // character are an ASCII case-insensitive match for the word
             // "SYSTEM", then consume those characters and switch to the after
             // DOCTYPE system keyword state.
-            else if (rune == 's' or rune == 'S') {
+            else if (auto r = startWith("SYSTEM"s, _peek.str(), eqAsciiCi); r != Match::NO) {
+                if (r == Match::PARTIAL)
+                    break;
+
+                _peek.clear();
                 _switchTo(State::AFTER_DOCTYPE_SYSTEM_KEYWORD);
             }
 
@@ -2574,6 +2588,7 @@ export struct HtmlLexer {
             // the bogus DOCTYPE state.
             else {
                 _raise(diags, loc, "invalid-character-sequence-after-doctype-name");
+                _peek.clear();
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _reconsumeIn(State::BOGUS_DOCTYPE, rune, loc, diags, isEof);
             }
@@ -3092,6 +3107,7 @@ export struct HtmlLexer {
             // U+0022 QUOTATION MARK (")
             // Switch to the after DOCTYPE system identifier state.
             if (rune == '"') {
+                _ensure(HtmlToken::DOCTYPE).systemIdent = _builder.take();
                 _switchTo(State::AFTER_DOCTYPE_SYSTEM_IDENTIFIER);
             }
 
@@ -3110,6 +3126,7 @@ export struct HtmlLexer {
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
                 _raise(diags, loc, "abrupt-doctype-system-identifier");
+                _ensure(HtmlToken::DOCTYPE).systemIdent = _builder.take();
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
                 _emit(diags);
@@ -3144,6 +3161,7 @@ export struct HtmlLexer {
             // U+0027 APOSTROPHE (')
             // Switch to the after DOCTYPE system identifier state.
             if (rune == '\'') {
+                _ensure(HtmlToken::DOCTYPE).systemIdent = _builder.take();
                 _switchTo(State::AFTER_DOCTYPE_SYSTEM_IDENTIFIER);
             }
 
@@ -3162,6 +3180,7 @@ export struct HtmlLexer {
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
                 _raise(diags, loc, "abrupt-doctype-system-identifier");
+                _ensure(HtmlToken::DOCTYPE).systemIdent = _builder.take();
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
                 _emit(diags);

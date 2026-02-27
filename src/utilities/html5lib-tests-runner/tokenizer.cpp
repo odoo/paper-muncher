@@ -124,21 +124,21 @@ Serde::Array serializeTokens(Slice<HtmlToken> const& tokens, bool doubleEscaped)
                 serializedToken.pushBack(t.name.str());
             }
 
-            if (t.publicIdent.len() > 0) {
+            if (t.publicIdent) {
                 if (doubleEscaped) {
-                    serializedToken.pushBack(escape(t.publicIdent));
+                    serializedToken.pushBack(escape(*t.publicIdent));
                 } else {
-                    serializedToken.pushBack(t.publicIdent);
+                    serializedToken.pushBack(*t.publicIdent);
                 }
             } else {
                 serializedToken.pushBack(NONE);
             }
 
-            if (t.systemIdent.len() > 0) {
+            if (t.systemIdent) {
                 if (doubleEscaped) {
-                    serializedToken.pushBack(escape(t.systemIdent));
+                    serializedToken.pushBack(escape(*t.systemIdent));
                 } else {
-                    serializedToken.pushBack(t.systemIdent);
+                    serializedToken.pushBack(*t.systemIdent);
                 }
             } else {
                 serializedToken.pushBack(NONE);
