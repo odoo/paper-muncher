@@ -272,11 +272,11 @@ def _saveTest(result: TestResult, root_dir: Path):
         (testDir / "input").write_bytes(result.input)
 
     if result.reference:
-        (testDir / "reference").write_text(str(result.reference))
+        (testDir / "reference").write_text(json.dumps(result.reference))
 
     for i, a in enumerate(result.actual):
         if result.actual:
-            (testDir / ("actual-" + str(i))).write_text(str(a))
+            (testDir / ("actual-" + str(i))).write_text(json.dumps(a))
 
     if result.error:
         (testDir / "error").write_text(result.error)
@@ -302,6 +302,16 @@ def _resultsToLines(testResults: list[TestResult]) -> list[str]:
         lines.append(result.fileName + "/" + h.hexdigest(8) + ": " + str(result.status) + "\n")
     lines.sort()
     return lines
+
+def _parseResultLines(lines: list[str]) -> dict[str, str]:
+    result = {}
+    for line in lines:
+        line = line.strip()
+        if ": " in line:
+            key, status = line.rsplit(": ", 1)
+            result[key] = status
+    return result
+
 
 
 @cli.command("html5lib-tests/run", "Run the tests")
@@ -350,6 +360,23 @@ def _(args: Html5libTestsArgs):
             diffPath = HTML5LIB_FLAKES_ROOT / args.suite / "expected.diff"
             diffPath.parent.mkdir(parents=True, exist_ok=True)
             diffPath.write_text("".join(diff))
+
+            expected_map = _parseResultLines(expected_lines)
+            actual_map = _parseResultLines(actual_lines)
+
+            new_fails   = [k for k, v in actual_map.items() if v == "FAIL"  and expected_map.get(k) != "FAIL"]
+            new_passes  = [k for k, v in actual_map.items() if v == "PASS"  and expected_map.get(k) != "PASS"]
+            new_panics  = [k for k, v in actual_map.items() if v == "PANIC" and expected_map.get(k) != "PANIC"]
+
+            base = HTML5LIB_FLAKES_ROOT / args.suite
+            (base / "new-fails.txt").write_text("\n".join(sorted(new_fails)))
+            (base / "new-passes.txt").write_text("\n".join(sorted(new_passes)))
+            (base / "new-panics.txt").write_text("\n".join(sorted(new_panics)))
+
+            print()
+            print(f"  {vt100.RED}New failures: {len(new_fails)}{vt100.RESET}")
+            print(f"  {vt100.GREEN}New passes:   {len(new_passes)}{vt100.RESET}")
+            print(f"  {vt100.PURPLE}New panics:   {len(new_panics)}{vt100.RESET}")
 
             raise RuntimeError(f"Test results differ from expected (see {diffPath.absolute()})")
     else:
