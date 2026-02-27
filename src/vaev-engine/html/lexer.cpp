@@ -3619,6 +3619,7 @@ export struct HtmlLexer {
             // Append the current input character to the temporary buffer.
             // Switch to the hexadecimal character reference start state.
             if (rune == 'x' or rune == 'X') {
+                _temp.append(rune);
                 _switchTo(State::HEXADECIMAL_CHARACTER_REFERENCE_START);
             }
 
@@ -3686,7 +3687,10 @@ export struct HtmlLexer {
             // version of the current input character (subtract 0x0030 from the
             // character's code point) to the character reference code.
             if (isAsciiDigit(rune)) {
-                _currChar = _currChar * 16 + rune - '0';
+                // NOTE: Protective measure against int overflow
+                if (isUnicode(_currChar)) {
+                    _currChar = _currChar * 16 + rune - '0';
+                }
             }
 
             // ASCII upper hex digit
@@ -3695,7 +3699,10 @@ export struct HtmlLexer {
             // (subtract 0x0037 from the character's code point) to the
             // character reference code.
             else if (isAsciiUpper(rune)) {
-                _currChar = _currChar * 16 + rune - '7';
+                // NOTE: Protective measure against int overflow
+                if (isUnicode(_currChar)) {
+                    _currChar = _currChar * 16 + rune - '7';
+                }
             }
 
             // ASCII lower hex digit
@@ -3704,7 +3711,10 @@ export struct HtmlLexer {
             // (subtract 0x0057 from the character's code point) to the
             // character reference code.
             else if (isAsciiLower(rune)) {
-                _currChar = _currChar * 16 + rune - 'W';
+                // NOTE: Protective measure against int overflow
+                if (isUnicode(_currChar)) {
+                    _currChar = _currChar * 16 + rune - 'W';
+                }
             }
 
             // U+003B SEMICOLON
@@ -3733,7 +3743,10 @@ export struct HtmlLexer {
             // version of the current input character (subtract 0x0030 from the
             // character's code point) to the character reference code.
             if (isAsciiDigit(rune)) {
-                _currChar = _currChar * 10 + rune - '0';
+                // NOTE: Protective measure against int overflow
+                if (isUnicode(_currChar)) {
+                    _currChar = _currChar * 10 + rune - '0';
+                }
             }
 
             // U+003B SEMICOLON
@@ -3767,7 +3780,7 @@ export struct HtmlLexer {
             // If the number is greater than 0x10FFFF, then this is a
             // character-reference-outside-unicode-range parse error. Set the
             // character reference code to 0xFFFD.
-            else if (isUnicode(rune)) {
+            else if (not isUnicode(_currChar)) {
                 _raise(diags, loc, "character-reference-outside-unicode-range");
                 _currChar = 0xFFFD;
             }
@@ -3775,7 +3788,7 @@ export struct HtmlLexer {
             // If the number is a surrogate, then this is a
             // surrogate-character-reference parse error. Set the character
             // reference code to 0xFFFD.
-            else if (isUnicodeSurrogate(rune)) {
+            else if (isUnicodeSurrogate(_currChar)) {
                 _raise(diags, loc, "surrogate-character-reference");
                 _currChar = 0xFFFD;
             }
