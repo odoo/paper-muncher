@@ -971,7 +971,7 @@ export struct HtmlLexer {
 
             // U+003C LESS-THAN SIGN (<)
             // Switch to the script data escaped less-than sign state.
-            if (rune == '<') {
+            else if (rune == '<') {
                 _switchTo(State::SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN);
             }
 
