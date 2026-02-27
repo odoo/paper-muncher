@@ -13,12 +13,12 @@ export struct DocumentType : Node {
     static constexpr auto TYPE = NodeType::DOCUMENT_TYPE;
 
     Symbol name = ""_sym;
-    String publicId;
-    String systemId;
+    Opt<String> publicId;
+    Opt<String> systemId;
 
     DocumentType() = default;
 
-    DocumentType(Symbol name, String publicId, String systemId)
+    DocumentType(Symbol name, Opt<String> publicId = NONE, Opt<String> systemId = NONE)
         : name(name), publicId(publicId), systemId(systemId) {
     }
 
