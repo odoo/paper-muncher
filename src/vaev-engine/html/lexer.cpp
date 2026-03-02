@@ -2804,6 +2804,7 @@ export struct HtmlLexer {
             // Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-doctype");
+                _ensure(HtmlToken::DOCTYPE).publicIdent = _builder.take();
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
@@ -2858,6 +2859,7 @@ export struct HtmlLexer {
             // Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-doctype");
+                _ensure(HtmlToken::DOCTYPE).publicIdent = _builder.take();
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
@@ -3174,6 +3176,7 @@ export struct HtmlLexer {
             // Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-doctype");
+                _ensure(HtmlToken::DOCTYPE).systemIdent = _builder.take();
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
@@ -3228,6 +3231,7 @@ export struct HtmlLexer {
             // Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-doctype");
+                _ensure(HtmlToken::DOCTYPE).systemIdent = _builder.take();
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
