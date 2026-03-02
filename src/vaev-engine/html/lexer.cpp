@@ -3645,6 +3645,7 @@ export struct HtmlLexer {
         case State::NUMERIC_CHARACTER_REFERENCE: {
             // 13.2.5.75 MARK: Numeric character reference state
             // Set the character reference code to zero (0).
+            _currChar = 0;
 
             // Consume the next input character:
 
@@ -3918,7 +3919,7 @@ export struct HtmlLexer {
             _temp.clear();
             _temp.append(_currChar);
             _flushCodePointsConsumedAsACharacterReference(loc, diags);
-            _switchTo(_returnState);
+            _reconsumeIn(_returnState, rune, loc, diags, isEof);
 
             break;
         }
