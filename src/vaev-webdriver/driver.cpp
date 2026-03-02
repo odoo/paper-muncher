@@ -27,10 +27,9 @@ export struct Session {
 
     // https://www.w3.org/TR/webdriver2/#dfn-current-browsing-context
     Res<Rc<Dom::Window>> currentBrowsingContext() {
-        auto maybeWindow = windows.tryGet(current);
-        if (not maybeWindow)
-            return Error::invalidInput("no current browsing context");
-        return Ok(maybeWindow.take());
+        return windows
+            .lookup(current)
+            .okOr(Error::invalidInput("no current browsing context"));
     }
 };
 
@@ -44,10 +43,9 @@ export struct WebDriver {
     // https://www.w3.org/TR/webdriver2/#sessions
 
     Res<Rc<Session>> getSession(Ref::Uuid sessionId) {
-        auto maybeSession = _sessions.tryGet(sessionId);
-        if (not maybeSession)
-            return Error::invalidInput("invalid session uuid");
-        return Ok(maybeSession.take());
+        return _sessions
+            .lookup(sessionId)
+            .okOr(Error::invalidInput("invalid session uuid"));
     }
 
     // https://www.w3.org/TR/webdriver2/#new-session
@@ -67,7 +65,7 @@ export struct WebDriver {
 
     // https://www.w3.org/TR/webdriver2/#delete-session
     Res<> deleteSession(Ref::Uuid sessionId) {
-        _sessions.del(sessionId);
+        try$(_sessions.remove(sessionId).okOr(Error::invalidInput("invalid session uuid")));
         return Ok();
     }
 
@@ -142,8 +140,8 @@ export struct WebDriver {
         auto session = try$(getSession(sessionId));
 
         // 3. Close session's current top-level browsing context.
-        if (not session->windows.del(session->current))
-            return Error::invalidInput("browsing context no longer open");
+        try$(session->windows.remove(session->current)
+                 .okOr(Error::invalidInput("browsing context no longer open")));
 
         // 4. If there are no more open top-level browsing contexts,
         //    then try to close the session.
@@ -152,7 +150,7 @@ export struct WebDriver {
             return Ok<Vec<Ref::Uuid>>();
         }
 
-        session->current = first(session->windows.keys());
+        session->current = session->windows.iter().next().unwrap();
 
         // 5. Return the result of running the remote end steps for the
         //    Get Window Handles command, with session, URL variables and parameters.
@@ -162,8 +160,7 @@ export struct WebDriver {
     // https://www.w3.org/TR/webdriver2/#switch-to-window
     Res<> switchToWindow(Ref::Uuid sessionId, Ref::Uuid windowHandle) {
         auto session = try$(getSession(sessionId));
-        if (not session->windows.has(windowHandle))
-            return Error::invalidInput("no such window");
+        try$(session->windows.lookup(windowHandle).okOr(Error::invalidInput("no such window")));
         session->current = windowHandle;
         return Ok();
     }
@@ -171,7 +168,7 @@ export struct WebDriver {
     // https://www.w3.org/TR/webdriver2/#get-window-handles
     Res<Vec<Ref::Uuid>> getWindowHandles(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
-        return Ok(session->windows.keys());
+        return Ok(session->windows.iter() | Collect<Vec<Ref::Uuid>>{});
     }
 
     // https://www.w3.org/TR/webdriver2/#new-window

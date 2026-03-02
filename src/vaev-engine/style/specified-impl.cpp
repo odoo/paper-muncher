@@ -8,7 +8,7 @@ SpecifiedValues const& SpecifiedValues::initial() {
     static SpecifiedValues computed = [] {
         SpecifiedValues values{};
         auto registry = defaultRegistry();
-        for (auto& [_, registration] : registry.registrations().iterUnordered())
+        for (auto& [_, registration] : registry.registrations().iterItems())
             if (not registration->flags().has(Property::SHORTHAND_PROPERTY))
                 registration->initial()->apply(values, values);
         return values;

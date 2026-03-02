@@ -12,7 +12,7 @@ export struct Namespace {
     Map<Symbol, Symbol> prefixes = {};
 
     Res<Symbol> lookup(Symbol sym) const {
-        auto maybeRes = prefixes.tryGet(sym);
+        auto maybeRes = prefixes.lookup(sym);
         if (maybeRes == NONE)
             return Error::invalidInput("unknown namespace prefix");
         return Ok(*maybeRes);

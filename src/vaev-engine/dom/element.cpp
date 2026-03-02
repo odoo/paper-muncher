@@ -62,7 +62,7 @@ export struct Element : Node {
         e(" qualifiedName={}", qualifiedName);
         if (this->attributes.len()) {
             e.indentNewline();
-            for (auto const& [name, attr] : this->attributes.iterUnordered()) {
+            for (auto const& [name, attr] : this->attributes.iterItems()) {
                 attr->repr(e);
             }
             e.deindent();
@@ -100,11 +100,11 @@ export struct Element : Node {
     }
 
     bool hasAttribute(QualifiedName name) const {
-        return this->attributes.tryGet(name) != NONE;
+        return this->attributes.contains(name);
     }
 
     bool hasAttributeUnqualified(Str name) const {
-        for (auto const& [qualifiedName, _] : this->attributes.iterUnordered()) {
+        for (auto const& [qualifiedName, _] : this->attributes.iterItems()) {
             if (qualifiedName.name.str() == name) {
                 return true;
             }
@@ -113,14 +113,14 @@ export struct Element : Node {
     }
 
     Opt<Str> getAttribute(QualifiedName name) const {
-        auto attr = this->attributes.tryGet(name);
+        auto attr = this->attributes.lookup(name);
         if (attr == NONE)
             return NONE;
         return (*attr)->value;
     }
 
     Opt<Str> getAttributeUnqualified(Symbol name) const {
-        for (auto const& [qualifiedName, attr] : this->attributes.iterUnordered())
+        for (auto const& [qualifiedName, attr] : this->attributes.iterItems())
             if (qualifiedName.name == name)
                 return attr->value;
         return NONE;
@@ -170,7 +170,7 @@ export struct Element : Node {
     }
 
     bool hasPseudoElement(Symbol type) const {
-        return _pseudoElements.has(type);
+        return _pseudoElements.contains(type);
     }
 
     void addPseudoElement(Rc<PseudoElement> pseudoElement) {
@@ -178,7 +178,7 @@ export struct Element : Node {
     }
 
     Opt<Rc<PseudoElement>> getPseudoElement(Symbol type) const {
-        return _pseudoElements.tryGet(type);
+        return _pseudoElements.lookup(type);
     }
 };
 

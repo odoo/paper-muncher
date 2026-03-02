@@ -246,7 +246,7 @@ Except<Value> ordinaryGet(Object& self, PropertyKey key, Value receiver) {
     auto maybeDesc = try$(self.getOwnProperty(key));
 
     // 2. If desc is undefined, then
-    if (maybeDesc == undefined) {
+    if (maybeDesc == NONE) {
         //    a. Let parent be ? O.[[GetPrototypeOf]]().
         auto parent = try$(self.getPrototypeOf());
 

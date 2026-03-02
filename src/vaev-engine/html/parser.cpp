@@ -220,15 +220,15 @@ struct _ActiveFormattingElementList {
 
             bool sameAttributes = entries[i].element()->attributes.len() == element->attributes.len();
             if (sameAttributes) {
-                for (auto const& attr : entries[i].element()->attributes.iterUnordered()) {
-                    auto other = element->getAttribute(attr.v0);
+                for (auto const& [name, attr] : entries[i].element()->attributes.iterItems()) {
+                    auto other = element->getAttribute(name);
 
                     if (not other) {
                         sameAttributes = false;
                         break;
                     }
 
-                    if (attr.v1->value != *other) {
+                    if (attr->value != *other) {
                         sameAttributes = false;
                         break;
                     }

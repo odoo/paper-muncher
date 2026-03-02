@@ -25,12 +25,12 @@ struct RuleIndex {
 
     usize _ruleCount = 0;
 
-    Map<Str, Vec<Entry>> _idRules;
-    Map<Str, Vec<Entry>> _classRules;
+    Map<Symbol, Vec<Entry>> _idRules;
+    Map<String, Vec<Entry>> _classRules;
     Map<Symbol, Vec<Entry>> _typeNameRules;
     Map<Symbol, Vec<Entry>> _pseudoRules;
     Map<Symbol, Vec<Entry>> _attrPresentRules;
-    Map<Tuple<Symbol, Str>, Vec<Entry>> _attrExactValueRules;
+    Map<Tuple<Symbol, String>, Vec<Entry>> _attrExactValueRules;
 
     Vec<Entry> _nonLookupRules;
 
@@ -46,16 +46,16 @@ struct RuleIndex {
                     return;
                 }
 
-                _typeNameRules.getOrDefault(qualifiedNameSelector.name.unwrap()).pushBack({ruleId, rule});
+                _typeNameRules.lookupOrPutDefault(qualifiedNameSelector.name.unwrap()).pushBack({ruleId, rule});
             },
             [&](PseudoElementSelector const& s) {
-                _pseudoRules.getOrDefault(s.type).pushBack({ruleId, rule});
+                _pseudoRules.lookupOrPutDefault(s.type).pushBack({ruleId, rule});
             },
             [&](IdSelector const& s) {
-                _idRules.getOrDefault(s.id.str()).pushBack({ruleId, rule});
+                _idRules.lookupOrPutDefault(s.id).pushBack({ruleId, rule});
             },
             [&](ClassSelector const& s) {
-                _classRules.getOrDefault(s.class_).pushBack({ruleId, rule});
+                _classRules.lookupOrPutDefault(s.class_).pushBack({ruleId, rule});
             },
             [&](AttributeSelector const& s) {
                 if (not isLookupEquivalentToMatch(s)) {
@@ -66,9 +66,9 @@ struct RuleIndex {
                 auto const& name = *s.qualifiedName.name;
 
                 if (s.match == AttributeSelector::Match::PRESENT) {
-                    _attrPresentRules.getOrDefault(name).pushBack({ruleId, rule});
+                    _attrPresentRules.lookupOrPutDefault(name).pushBack({ruleId, rule});
                 } else if (s.match == AttributeSelector::Match::EXACT) {
-                    _attrExactValueRules.getOrDefault({name, s.value}).pushBack({ruleId, rule});
+                    _attrExactValueRules.lookupOrPutDefault(Tuple{name, s.value}).pushBack({ruleId, rule});
                 }
             },
             [&](Infix const& s) {
@@ -151,7 +151,7 @@ struct RuleIndex {
 
     void _collectMatchedRulesCursors(Gc::Ref<Dom::Element> element, Opt<Symbol> pseudoElement) {
         auto considerCursorIfPresent = [&](auto& lookup, auto const& key) {
-            auto rules = lookup.access(key);
+            auto rules = lookup.lookup(key);
             if (rules)
                 _cursors.pushBack({rules->buf(), rules->len()});
         };
@@ -169,7 +169,7 @@ struct RuleIndex {
 
         considerCursorIfPresent(_typeNameRules, element->qualifiedName.name);
 
-        for (auto const& [name, value] : element->attributes.iterUnordered()) {
+        for (auto const& [name, value] : element->attributes.iterItems()) {
             auto const& attrName = name.name;
             auto key = Tuple<Symbol, Str>{attrName, value->value.str()};
 
@@ -206,7 +206,7 @@ struct RuleIndex {
             return true;
         }
 
-        auto neededCount = _ruleIdToNeededCount.tryGet(ruleId);
+        auto neededCount = _ruleIdToNeededCount.lookup(ruleId);
 
         if (not neededCount) {
             // This selector doesn't have a needed count, meaning that is has no lookupable selectors.

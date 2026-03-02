@@ -49,7 +49,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->delete_(
         "/session/{sessionId}",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             co_try$(webdriver->deleteSession(sessionId));
             co_trya$(_sendSuccessAsync(resp, {}, ct));
@@ -84,7 +84,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->get(
         "/session/{sessionId}/timeouts",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
             auto timeouts = co_try$(webdriver->getTimeouts(sessionId));
 
             co_trya$(_sendSuccessAsync(
@@ -105,7 +105,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->post(
         "/session/{sessionId}/timeouts",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
             Serde::Value timeouts = co_trya$(req->readJsonAsync(ct));
             TimeoutConfiguration configuration{};
 
@@ -133,7 +133,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->post(
         "/session/{sessionId}/url",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
             Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
 
             Ref::Url url;
@@ -154,7 +154,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->get(
         "/session/{sessionId}/url",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             auto url = co_try$(webdriver->getCurrentUrl(sessionId));
             co_trya$(_sendSuccessAsync(resp, url.str(), ct));
@@ -167,7 +167,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->post(
         "/session/{sessionId}/refresh",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             co_trya$(webdriver->refreshAsync(sessionId, ct));
             co_trya$(_sendSuccessAsync(resp, {}, ct));
@@ -180,7 +180,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->get(
         "/session/{sessionId}/title",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             auto title = co_try$(webdriver->getTitle(sessionId));
             co_trya$(_sendSuccessAsync(resp, title, ct));
@@ -196,7 +196,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->get(
         "/session/{sessionId}/window",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             auto windowHandle = co_try$(webdriver->getWindowHandle(sessionId));
             co_trya$(_sendSuccessAsync(resp, windowHandle.unparsed(), ct));
@@ -209,7 +209,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->delete_(
         "/session/{sessionId}/window",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             Serde::Array handles =
                 iter(co_try$(webdriver->closeWindow(sessionId))) | Select([](Ref::Uuid const& i) -> Serde::Value {
@@ -226,7 +226,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->post(
         "/session/{sessionId}/window",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
             Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
 
             Ref::Uuid handle;
@@ -247,7 +247,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->get(
         "/session/{sessionId}/window/handles",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             Serde::Array handles =
                 iter(co_try$(webdriver->getWindowHandles(sessionId))) |
@@ -265,7 +265,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->post(
         "/session/{sessionId}/window/new",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             auto windowHandle = co_trya$(webdriver->newWindowAsync(sessionId, ct));
 
@@ -289,7 +289,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->get(
         "/session/{sessionId}/window/rect",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             auto windowRect = co_try$(webdriver->getWindowRect(sessionId));
             co_trya$(_sendSuccessAsync(
@@ -311,7 +311,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->post(
         "/session/{sessionId}/window/rect",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
 
@@ -352,7 +352,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->get(
         "/session/{sessionId}/source",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             auto source = co_try$(webdriver->getPageSource(sessionId));
             co_trya$(_sendSuccessAsync(resp, source, ct));
@@ -365,7 +365,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->post(
         "/session/{sessionId}/execute/sync",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
             String script;
@@ -386,7 +386,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->post(
         "/session/{sessionId}/execute/async",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
             String script;
@@ -410,7 +410,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->get(
         "/session/{sessionId}/screenshot",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             auto screenshot = co_try$(webdriver->takeScreenshot(sessionId));
             co_trya$(_sendSuccessAsync(resp, std::move(screenshot), ct));
@@ -426,7 +426,7 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
     router->post(
         "/session/{sessionId}/print",
         [webdriver](Rc<Http::Request> req, Rc<Http::ResponseWriter> resp, Async::CancellationToken ct) mutable -> Async::Task<> {
-            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.tryGet("sessionId"s))));
+            Ref::Uuid sessionId = co_try$(Ref::Uuid::parse(co_try$(req->routeParams.lookup("sessionId"s))));
 
             Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
 

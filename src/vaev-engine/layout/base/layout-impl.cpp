@@ -353,7 +353,7 @@ Output layoutAndCommitBorderBox(Tree& tree, Box& box, Input input, Frag& parentF
 }
 
 Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings const& usedSpacings) {
-    Frag currFrag(&box);
+    Frag currFrag{box};
 
     auto output = layoutContentBox(tree, box, input.withFragment(&currFrag));
 

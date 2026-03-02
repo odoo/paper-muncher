@@ -741,7 +741,7 @@ export struct TableFormatingContext : FormatingContext {
         if (useBordersCollapse) {
             bordersStyleGrid.init(grid.size);
             computeBordersStructsCollapse(tree, box);
-            boxBorderMapping = Map<Box*, UsedBorders>{};
+            boxBorderMapping = Map<usize, UsedBorders>{};
         } else
             computeBordersStructsSeparate(tree);
     }
@@ -1334,7 +1334,7 @@ export struct TableFormatingContext : FormatingContext {
         };
     }
 
-    Opt<Map<Box*, UsedBorders>> boxBorderMapping;
+    Opt<Map<usize, UsedBorders>> boxBorderMapping;
 
     Tuple<Output, Au> layoutCell(Tree& tree, Input& input, TableCell& cell, MutCursor<Box> cellBox, usize startFrag, usize i, usize j, Au currPositionX, usize breakpointIndexOffset) {
         // breakpoint traversing for a cell that started in the previous fragmentainer is not trivial
@@ -1407,7 +1407,7 @@ export struct TableFormatingContext : FormatingContext {
                               : layoutBorderBox(tree, *cell.box, childInput, usedSpacings);
 
         if (input.fragment and useBordersCollapse) {
-            boxBorderMapping->put(cellBox, *collapsedBorders);
+            boxBorderMapping->put((usize)cellBox.buf(), *collapsedBorders);
         }
 
         if (tree.fc.isDiscoveryMode()) {

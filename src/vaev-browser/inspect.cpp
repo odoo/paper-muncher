@@ -28,20 +28,18 @@ export using InspectorAction = Union<ExpandNode, SelectNode, ChangeFilter>;
 
 export struct InspectState {
     String filter = ""s;
-    Map<Gc::Ref<Dom::Node>, bool> expandedNodes = {};
+    Set<Gc::Ref<Dom::Node>> expandedNodes = {};
     Gc::Ptr<Dom::Node> selectedNode = nullptr;
 
     void apply(InspectorAction& a) {
         a.visit(Visitor{
             [&](ExpandNode const& e) {
-                if (expandedNodes.has(e.node))
-                    expandedNodes.del(e.node);
-                else
-                    expandedNodes.put(e.node, true);
+                if (not expandedNodes.remove(e.node))
+                    expandedNodes.add(e.node);
             },
             [&](SelectNode const& e) {
                 if (e.node->hasChildren())
-                    expandedNodes.put(e.node, true);
+                    expandedNodes.add(e.node);
                 selectedNode = e.node;
             },
             [&](ChangeFilter const& f) {
@@ -150,7 +148,7 @@ Ui::Child item(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<Inspector
 }
 
 Ui::Child node(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, isize ident = 0) {
-    bool expanded = n->is<Dom::Document>() or s.expandedNodes.has(n);
+    bool expanded = n->is<Dom::Document>() or s.expandedNodes.contains(n);
     Ui::Children children{item(n, s, a, expanded, ident)};
 
     if (expanded) {
@@ -171,7 +169,7 @@ Ui::Child computedStyles(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::
         if (auto el = s.selectedNode->is<Dom::Element>()) {
             Ui::Children children;
 
-            for (auto const& [name, registration] : dom->registeredPropertySet.registrations().iterUnordered()) {
+            for (auto const& [name, registration] : dom->registeredPropertySet.registrations().iterItems()) {
                 if (s.filter and startWith(name.str(), s.filter) == Match::NO)
                     continue;
 

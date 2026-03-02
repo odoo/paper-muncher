@@ -53,6 +53,10 @@ export struct Node : Tree<Node> {
 
     void repr(Io::Emit& e) const;
 
+    u64 hash() const {
+        return Karm::hash(reinterpret_cast<usize>(this));
+    }
+
     bool operator==(Node const& other) const {
         return this == &other;
     }
