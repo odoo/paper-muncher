@@ -92,15 +92,20 @@ export struct HtmlLexer {
         _emit(diags);
     }
 
+    Opt<HtmlToken::Attr&> _currAttr = NONE;
+
     void _beginAttribute() {
-        _ensure().attrs.emplaceBack();
+        _currAttr = _ensure().attrs.emplaceBack();
     }
 
-    HtmlToken::Attr& _lastAttr() {
-        auto& token = _ensure();
-        if (token.attrs.len() == 0)
-            panic("_beginAttribute miss match");
-        return last(token.attrs);
+    void _removeCurrAttrIfDuplicate() {
+        for (isize i = 0; i < static_cast<isize>(_ensure().attrs.len()) - 1; i++) {
+            if (startWith(_currAttr->name.str(), _ensure().attrs[i].name.str(), eqAsciiCi) == Match::YES) {
+                _currAttr = NONE;
+                _ensure().attrs.popBack();
+                break;
+            }
+        }
     }
 
     void _reconsumeIn(State state, Rune rune, Io::Loc loc, Diag::Collector& diags, bool isEof) {
@@ -1524,6 +1529,21 @@ export struct HtmlLexer {
             // 13.2.5.33 MARK: Attribute name state
             // Consume the next input character:
 
+            // When the user agent leaves the attribute name state (and
+            // before emitting the tag token, if appropriate), the complete
+            // attribute's name must be compared to the other attributes on the
+            // same token; if there is already an attribute on the token with
+            // the exact same name, then this is a duplicate-attribute parse
+            // error and the new attribute must be removed from the token.
+            // If an attribute is so removed from a token, it, and the value
+            // that gets associated with it, if any, are never subsequently used
+            // by the parser, and are therefore effectively discarded. Removing
+            // the attribute in this way does not change its status as the
+            // "current attribute" for the purposes of the lexer, however.
+            auto leaveAttributeNameState = [&]() {
+                _removeCurrAttrIfDuplicate();
+            };
+
             // U+0009 CHARACTER TABULATION (tab)
             // U+000A LINE FEED (LF)
             // U+000C FORM FEED (FF)
@@ -1534,14 +1554,24 @@ export struct HtmlLexer {
             // Reconsume in the after attribute name state.
             if (rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ' or
                 rune == '/' or rune == '>' or isEof) {
-                _lastAttr().name = _commitSymbol();
+                if (_currAttr)
+                    _currAttr->name = _commitSymbol();
+                else
+                    _builder.clear();
+
+                leaveAttributeNameState();
                 _reconsumeIn(State::AFTER_ATTRIBUTE_NAME, rune, loc, diags, isEof);
             }
 
             // U+003D EQUALS SIGN (=)
             // Switch to the before attribute value state.
             else if (rune == '=') {
-                _lastAttr().name = _commitSymbol();
+                if (_currAttr)
+                    _currAttr->name = _commitSymbol();
+                else
+                    _builder.clear();
+
+                leaveAttributeNameState();
                 _switchTo(State::BEFORE_ATTRIBUTE_VALUE);
             }
 
@@ -1577,17 +1607,6 @@ export struct HtmlLexer {
                 _builder.append(rune);
             }
 
-            // TODO: When the user agent leaves the attribute name state (and
-            // before emitting the tag token, if appropriate), the complete
-            // attribute's name must be compared to the other attributes on the
-            // same token; if there is already an attribute on the token with
-            // the exact same name, then this is a duplicate-attribute parse
-            // error and the new attribute must be removed from the token.
-            // If an attribute is so removed from a token, it, and the value
-            // that gets associated with it, if any, are never subsequently used
-            // by the parser, and are therefore effectively discarded. Removing
-            // the attribute in this way does not change its status as the
-            // "current attribute" for the purposes of the lexer, however.
             break;
         }
 
@@ -1693,7 +1712,11 @@ export struct HtmlLexer {
             // U+0022 QUOTATION MARK (")
             // Switch to the after attribute value (quoted) state.
             if (rune == '"') {
-                _lastAttr().value = _builder.take();
+                if (_currAttr)
+                    _currAttr->value = _builder.take();
+                else
+                    _builder.clear();
+
                 _switchTo(State::AFTER_ATTRIBUTE_VALUE_QUOTED);
             }
 
@@ -1738,7 +1761,11 @@ export struct HtmlLexer {
             // U+0027 APOSTROPHE (')
             // Switch to the after attribute value (quoted) state.
             if (rune == '\'') {
-                _lastAttr().value = _builder.take();
+                if (_currAttr)
+                    _currAttr->value = _builder.take();
+                else
+                    _builder.clear();
+
                 _switchTo(State::AFTER_ATTRIBUTE_VALUE_QUOTED);
             }
 
@@ -1785,7 +1812,11 @@ export struct HtmlLexer {
             // U+0020 SPACE
             // Switch to the before attribute name state.
             if (rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') {
-                _lastAttr().value = _builder.take();
+                if (_currAttr)
+                    _currAttr->value = _builder.take();
+                else
+                    _builder.clear();
+
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
@@ -1800,7 +1831,11 @@ export struct HtmlLexer {
             // U+003E GREATER-THAN SIGN (>)
             // Switch to the data state. Emit the current tag token.
             else if (rune == '>') {
-                _lastAttr().value = _builder.take();
+                if (_currAttr)
+                    _currAttr->value = _builder.take();
+                else
+                    _builder.clear();
+
                 _switchTo(State::DATA);
                 _emit(diags);
             }
@@ -3503,7 +3538,6 @@ export struct HtmlLexer {
 
                     for (auto& entity : ENTITIES) {
                         if (entityName == entity.name) {
-
                             _temp.clear();
                             _temp.append(Slice<Rune>::fromNullterminated(entity.runes));
 
