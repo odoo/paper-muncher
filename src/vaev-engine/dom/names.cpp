@@ -15,6 +15,11 @@ export struct QualifiedName {
 
     bool operator==(QualifiedName const& other) const = default;
 
+    u64 hash() const {
+        return Karm::hash(ns) +
+               Karm::hash(name);
+    }
+
     void repr(Io::Emit& e) const;
 };
 

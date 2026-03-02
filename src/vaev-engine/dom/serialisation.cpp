@@ -113,7 +113,7 @@ export void serializeHtmlFragment(Gc::Ref<Node> node, Io::Emit& e) {
                 e("\"");
             }
             // - For each attribute:
-            for (auto& [qualifiedName, attr] : el->attributes.iterUnordered()) {
+            for (auto const& [qualifiedName, attr] : el->attributes.iterItems()) {
                 if (qualifiedName == Html::IS_ATTR)
                     continue;
                 //     Append space, attribute’s serialized name, "=", quote, escaped value, quote.

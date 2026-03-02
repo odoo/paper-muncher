@@ -89,6 +89,10 @@ struct CustomIdent {
 
     auto operator<=>(CustomIdent const& other) const = default;
 
+    u64 hash() const {
+        return Karm::hash(_symbol);
+    }
+
     void repr(Io::Emit& e) const {
         e("custom-ident '{}'", _symbol);
     }

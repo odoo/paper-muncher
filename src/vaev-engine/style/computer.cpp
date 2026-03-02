@@ -267,7 +267,7 @@ export struct Computer {
             return {};
 
         Vec<Rc<Property>> styleProps;
-        for (auto [attr, attrValue] : el->attributes.iterUnordered()) {
+        for (auto [attr, attrValue] : el->attributes.iterItems()) {
             if (auto property = _propertyRegistry.parsePresentationAttribute(attr.name, attrValue->value)) {
                 styleProps.pushBack(property.take());
             }

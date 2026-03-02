@@ -96,7 +96,7 @@ export struct SpecifiedValues {
     }
 
     Css::Content getCustomProp(Symbol varName) const {
-        auto value = variables->access(varName);
+        auto value = variables->lookup(varName);
         if (value)
             return *value;
         return {};

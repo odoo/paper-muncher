@@ -1,3 +1,7 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:layout.runningPosition;
 
 import Karm.Core;
@@ -38,7 +42,7 @@ struct RunningPositionMap {
             if (box.origin == nullptr)
                 return;
             RunningPositionInfo info = {pageNumber, *position, origin.upgrade()};
-            content.getOrDefault(position->customIdent)
+            content.lookupOrPutDefault(position->customIdent)
                 .pushBack(std::move(info));
         }
     }
@@ -46,11 +50,7 @@ struct RunningPositionMap {
     // https://www.w3.org/TR/css-gcpm-3/#using-named-strings
     Res<RunningPositionInfo> match(ElementContent elt, usize currentPage = 0) {
         auto id = elt.customIdent;
-        if (not content.has(id)) {
-            return Error::notFound("element not found");
-        }
-
-        auto const& list = content.get(id);
+        auto const& list = try$(content.lookup(id).okOr(Error::notFound("element not found")));
 
         switch (elt.target) {
         case ElementContent::Target::UNDEFINED:

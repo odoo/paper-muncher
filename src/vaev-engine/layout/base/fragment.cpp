@@ -121,13 +121,12 @@ export using FragContent = Union<
     SVGRootFrag>;
 
 export struct Frag {
-    MutCursor<Box> box;
+    Opt<Box&> box;
     Metrics metrics;
     FragContent content = Vec<Frag>{};
 
-    Frag(MutCursor<Box> box) : box{std::move(box)} {}
-
-    Frag() : box{nullptr} {}
+    Frag(Opt<Box&> box = NONE)
+        : box(box) {}
 
     Style::SpecifiedValues const& style() const {
         return *box->style;
@@ -137,7 +136,7 @@ export struct Frag {
     RectAu scrollableOverflow() const {
         // NOSPEC: This is just an approximation of the spec
         auto bound = metrics.borderBox();
-        for (auto c : children())
+        for (auto const& c : children())
             bound = bound.mergeWith(c.scrollableOverflow());
         return bound;
     }

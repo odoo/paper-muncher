@@ -40,26 +40,7 @@ export using Boolean = bool;
 export using String = _String<Utf16>;
 
 // https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type
-export struct Symbol {
-    // FIXME: That's not how symbols work. We need to implement a symbol table.
-    String _desc;
-
-    static Symbol make(String desc) {
-        return {std::move(desc)};
-    }
-
-    bool operator==(Symbol const& other) const {
-        return _desc == other._desc;
-    }
-
-    auto operator<=>(Symbol const& other) const {
-        return _desc <=> other._desc;
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(Symbol {#})", _desc);
-    }
-};
+// using Symbol = // NOTE: Karm::Symbol looks good enought
 
 // MARK: Numeric Types ---------------------------------------------------------
 // https://tc39.es/ecma262/#sec-ecmascript-language-types-number-type

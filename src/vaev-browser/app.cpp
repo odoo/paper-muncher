@@ -318,9 +318,10 @@ Ui::Child bookmarkSidePanel(State const& s) {
     }
 
     return Ui::vflow(
-        4,
-        std::move(children)
-    );
+               4,
+               std::move(children)
+           ) |
+           Ui::vscroll();
 }
 
 Ui::Child sidePanel(State const& s) {
@@ -374,8 +375,14 @@ Ui::Child appContent(State const& s) {
 }
 
 export Ui::Child app(Rc<Dom::Window> window) {
+    State state = window;
+    state.bookmarks.pushBack({.name = "smnx.sh"s, .url = "http://smnx.sh"_url});
+    state.bookmarks.pushBack({.name = "The Project (snapshot)"s, .url = "bundle://vaev-browser.main/www-the-project.html"_url});
+    state.bookmarks.pushBack({.name = "Google (snapshot)"s, .url = "bundle://vaev-browser.main/google.html"_url});
+    state.bookmarks.pushBack({.name = "Hackernews (snapshot)"s, .url = "bundle://vaev-browser.main/hackernews.html"_url});
+
     return Ui::reducer<Model>(
-        window,
+        std::move(state),
         [](State const& s) {
             auto scaffold = Kr::scaffold({
                 .icon = Mdi::SURFING,

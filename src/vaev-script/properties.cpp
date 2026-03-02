@@ -25,6 +25,10 @@ export struct PropertyKey {
     bool operator==(PropertyKey const& other) const {
         return store == other.store;
     }
+
+    u64 hash() const {
+        return Karm::hash(store);
+    }
 };
 
 // https://tc39.es/ecma262/#sec-property-attributes
@@ -111,7 +115,7 @@ struct PropertyStorage {
     }
 
     Opt<Property> get(PropertyKey key) {
-        return _props.tryGet(key);
+        return _props.lookup(key);
     }
 };
 

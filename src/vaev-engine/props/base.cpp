@@ -225,7 +225,7 @@ struct DeferredProperty : Property {
             return Ok(true);
 
         Symbol varName = Symbol::from(content->token.data);
-        if (auto ref = env.access(varName)) {
+        if (auto ref = env.lookup(varName)) {
             Cursor<Css::Sst> varContent = *ref;
             try$(_expandContent(varContent, env, out, depth));
             return Ok(true);
@@ -480,9 +480,9 @@ export struct PropertyRegistry {
     }
 
     Opt<Rc<Property::Registration>> resolveRegistration(Symbol propertyName, Flags<Options> options) {
-        propertyName = _legacyAlias.tryGet(propertyName).unwrapOr(propertyName);
+        propertyName = _legacyAlias.lookup(propertyName).unwrapOr(propertyName);
 
-        if (auto maybeRegistration = _registrations.tryGet(propertyName))
+        if (auto maybeRegistration = _registrations.lookup(propertyName))
             return maybeRegistration.take();
 
         if (options.has(GENERATE_CUSTOM_PROPERTY)) {
@@ -608,7 +608,7 @@ export struct PropertyRegistry {
 
     Opt<Rc<Property>> parsePresentationAttribute(Symbol attrName, Str value) const {
         Symbol lower = Symbol::from(toLower(attrName.str()));
-        auto registration = try$(_presentationAttributes.tryGet(lower));
+        auto registration = try$(_presentationAttributes.lookup(lower));
         return registration->parsePresentationAttribute(value).ok();
     }
 };
