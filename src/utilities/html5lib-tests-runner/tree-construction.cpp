@@ -33,7 +33,6 @@ struct DocumentEmit {
     void _deindent() {
         if (_ident == 0) [[unlikely]]
             panic("_deident() underflow");
-
         _ident--;
     }
 
@@ -43,7 +42,7 @@ struct DocumentEmit {
         return Ok();
     }
 
-    Res<> write(Gc::Ref<Dom::Node> const& node) {
+    Res<> write(Gc::Ref<Dom::Node> node) {
         if (node->nodeType() == Dom::NodeType::DOCUMENT) {
             for (auto child = node->firstChild(); child; child = child->nextSibling()) {
                 try$(write(*child));
@@ -72,7 +71,8 @@ struct DocumentEmit {
 
             _indent();
 
-            auto attributes = element->attributes.iterUnordered() | Collect<Vec<Tuple<Dom::QualifiedName, Rc<Dom::Attr>>>>();
+            auto attributes = element->attributes.iterItems() |
+                              Collect<Vec<Tuple<Dom::QualifiedName, Rc<Dom::Attr>>>>();
 
             sort(attributes, [](auto const& a, auto const& b) {
                 return a.v0.name <=> b.v0.name;
