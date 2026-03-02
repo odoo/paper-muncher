@@ -2156,6 +2156,7 @@ export struct HtmlLexer {
             // token. Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-comment");
+                _ensure(HtmlToken::COMMENT).data = _builder.take();
                 _emit(diags);
 
                 _begin(HtmlToken::END_OF_FILE, loc);
