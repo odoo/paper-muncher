@@ -80,7 +80,7 @@ export struct HtmlLexer {
     void _emit(Diag::Collector& diags) {
         if (not _sink)
             panic("no sink");
-        logDebugIf(debugLexer, "emiting token: {}", _ensure());
+        logDebugIf(debugLexer, "emitting token: {}", _ensure());
         _sink->accept(_ensure(), diags);
 
         if (_token->type == HtmlToken::START_TAG)
