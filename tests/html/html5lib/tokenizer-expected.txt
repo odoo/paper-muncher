@@ -87,7 +87,7 @@ entities.test/5e627b51124f92ac: PASS
 entities.test/654d499a9dbb0a9e: PASS
 entities.test/686e16193b78369c: PASS
 entities.test/69607dc23717abce: PASS
-entities.test/6a196df923ce506c: FAIL
+entities.test/6a196df923ce506c: PASS
 entities.test/6a36bd73e5f13275: FAIL
 entities.test/6bac8f55fe1890a2: FAIL
 entities.test/6cd4eb597764431d: PASS
@@ -97,7 +97,7 @@ entities.test/80bddcdac8e90bb7: PASS
 entities.test/821d8d5e9cd92960: PASS
 entities.test/87b081398eb2be6e: PASS
 entities.test/8e4c033f314e2307: PASS
-entities.test/92dee982f58ab9fb: FAIL
+entities.test/92dee982f58ab9fb: PASS
 entities.test/95f5c356d2b94f69: PASS
 entities.test/96ea9ecde05b1725: PASS
 entities.test/993f9865155a08e5: PASS
@@ -112,14 +112,14 @@ entities.test/b00867e263b010e9: PASS
 entities.test/b0f9ce125608d385: PASS
 entities.test/b29361ff80ad7849: PASS
 entities.test/b2fbbc0a36087ffc: PASS
-entities.test/b42a084bed23ff93: FAIL
+entities.test/b42a084bed23ff93: PASS
 entities.test/b75486ae5083fc08: PASS
 entities.test/b7f1405e86eddc63: PASS
 entities.test/ba13d584195117a6: PASS
 entities.test/ba4804c0cd544720: PASS
 entities.test/badc9a79f5e82545: PASS
 entities.test/bc52f90173fb4d0b: PASS
-entities.test/c0ee1fd2360ae03b: FAIL
+entities.test/c0ee1fd2360ae03b: PASS
 entities.test/c389ec84f22c5da7: PASS
 entities.test/c449c227d8db6ea8: PASS
 entities.test/c4ead115277e5050: PASS
@@ -4366,7 +4366,7 @@ numericEntities.test/05f06469b4605663: PASS
 numericEntities.test/061824fbacfb74df: PASS
 numericEntities.test/0632ae973ca46639: PASS
 numericEntities.test/074186d6632c69e2: PASS
-numericEntities.test/0742156160037835: FAIL
+numericEntities.test/0742156160037835: PASS
 numericEntities.test/07a07294dc671be1: PASS
 numericEntities.test/084237e40e3f5855: PASS
 numericEntities.test/08bc550b1fcceca9: PASS
@@ -4563,7 +4563,7 @@ numericEntities.test/98cf003ca8ecc038: PASS
 numericEntities.test/9a19fceac73c7198: PASS
 numericEntities.test/9a4ec5a7ca11b716: PASS
 numericEntities.test/9ae4c19af359d7bc: PASS
-numericEntities.test/9b8ec5f2c52f0cf4: FAIL
+numericEntities.test/9b8ec5f2c52f0cf4: PASS
 numericEntities.test/9c05c5d9116a2356: PASS
 numericEntities.test/9de7abd343e75ee3: PASS
 numericEntities.test/a1bad211859667d7: PASS
@@ -4607,7 +4607,7 @@ numericEntities.test/bf8d8484329a9bf1: PASS
 numericEntities.test/bfcc4ecd45b44726: PASS
 numericEntities.test/c0ddcd43bb52f0da: PASS
 numericEntities.test/c4670276431764d8: PASS
-numericEntities.test/c4b423afc60f5385: FAIL
+numericEntities.test/c4b423afc60f5385: PASS
 numericEntities.test/c5e11a94e6c34e1b: PASS
 numericEntities.test/c6eabf2b2cb69644: PASS
 numericEntities.test/c888592edfd7932c: PASS
@@ -4718,7 +4718,7 @@ test1.test/509303b0179a7851: PASS
 test1.test/51d39564085e937a: PASS
 test1.test/61277fc088cf3c5e: PASS
 test1.test/69eca9bd6f1f2182: PASS
-test1.test/6fa99c9266fa40c9: FAIL
+test1.test/6fa99c9266fa40c9: PASS
 test1.test/741fea8e2a2fad26: PASS
 test1.test/7600226dcf27b42e: PASS
 test1.test/765d295b6030cb26: PASS
@@ -4781,7 +4781,7 @@ test2.test/7b8f7f8130f16b90: PASS
 test2.test/81c3e95d65c99dc6: PASS
 test2.test/8645f15edceb47da: PASS
 test2.test/86c08febbe2f0090: PASS
-test2.test/92507ee9ca19b98f: FAIL
+test2.test/92507ee9ca19b98f: PASS
 test2.test/98a0b68b277b7503: PASS
 test2.test/9b17ad42b11d6d52: FAIL
 test2.test/a396aecb30a5bcd2: PASS
@@ -6439,10 +6439,10 @@ test4.test/9333780d97f9e276: PASS
 test4.test/9a9b5bb1f43c8562: PASS
 test4.test/9ebe2831a77b3619: PASS
 test4.test/9f65bbf532a9eba8: PASS
-test4.test/a6010435be304f7d: FAIL
+test4.test/a6010435be304f7d: PASS
 test4.test/a98a9f1d4d9037dd: PASS
 test4.test/aba75d9c7a9931ff: PASS
-test4.test/abe2c25a01083e67: FAIL
+test4.test/abe2c25a01083e67: PASS
 test4.test/ac6c079f8edb63f9: PASS
 test4.test/acfb4ccb415eebe8: PASS
 test4.test/b4d77b15ebe1288b: PASS
