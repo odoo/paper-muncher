@@ -34,9 +34,8 @@ Async::Task<> entryPointAsync([[maybe_unused]] Sys::Context& ctx, [[maybe_unused
     if (not cmd)
         co_return Ok();
 
-    if (not suiteArg.has()) {
+    if (not suiteArg.has())
         co_return Error::invalidInput("test suite required");
-    }
 
     auto input = inputArg.value() == "-" ? "fd:stdin"_url : Ref::parseUrlOrPath(inputArg.value(), co_try$(Sys::pwd()));
     auto inputString = co_try$(Sys::readAllUtf8(input));
@@ -50,12 +49,9 @@ Async::Task<> entryPointAsync([[maybe_unused]] Sys::Context& ctx, [[maybe_unused
         panic("unknown test suite");
     }
 
-    auto output = co_try$(Json::unparse(Serde::Object{
+    Serde::Object json = {
         {"reference"s, std::move(result.reference)},
         {"actual"s, std::move(result.actual)},
-    }));
-
-    Sys::println("{}", output);
-
-    co_return Ok();
+    };
+    co_return Json::unparse(Sys::out(), json);
 }

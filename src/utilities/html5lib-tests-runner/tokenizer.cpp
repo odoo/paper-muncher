@@ -23,8 +23,8 @@ struct TokenCollectorSink : HtmlSink {
     HtmlSink* sink;
     Vec<HtmlToken> collected{};
 
-    TokenCollectorSink(HtmlSink* sink) : sink(sink) {
-    }
+    TokenCollectorSink(HtmlSink* sink)
+        : sink(sink) {}
 
     void accept(HtmlToken& token, Diag::Collector& diags) override {
         collected.pushBack(token);
@@ -32,75 +32,65 @@ struct TokenCollectorSink : HtmlSink {
     }
 };
 
-String unescape(Str str) {
-    Io::SScan s = {str};
-    Io::StringWriter sw;
-
-    while (not s.ended()) {
-        if (s.skip('\\')) {
-            if (s.skip('u')) {
-                auto u = Io::atou(s, {.base = 16});
-                if (u) {
-                    sw.append(*u);
-                    continue;
-                }
-            }
-        }
-
-        sw.append(s.next());
-    }
-
-    return sw.take();
-}
-
 static String escape(Str s) {
     Io::StringWriter sw;
-    auto emit = Io::Emit{sw};
-
+    Io::Emit emit = sw;
     for (auto c : iterRunes(s)) {
-        if (c < 0x20 || c > 0x7E) {
+        if (c < 0x20 or c > 0x7E) {
             emit("\\u{04X}", c);
         } else {
             emit(c);
         }
     }
+    return sw.take();
+}
 
+String unescape(Str str) {
+    Io::SScan s = {str};
+    Io::StringWriter sw{str.len()};
+    while (not s.ended()) {
+        if (s.skip('\\') and s.skip('u')) {
+            if (auto u = Io::atou(s, {.base = 16})) {
+                sw.append(*u);
+                continue;
+            }
+        }
+        sw.append(s.next());
+    }
     return sw.take();
 }
 
 HtmlLexer::State stringToState(Str s) {
-    if (s == "Data state") {
-        return HtmlLexer::State::DATA;
-    } else if (s == "PLAINTEXT state") {
-        return HtmlLexer::State::PLAINTEXT;
-    } else if (s == "RCDATA state") {
-        return HtmlLexer::State::RCDATA;
-    } else if (s == "RAWTEXT state") {
-        return HtmlLexer::State::RAWTEXT;
-    } else if (s == "Script data state") {
-        return HtmlLexer::State::SCRIPT_DATA;
-    } else if (s == "CDATA section state") {
-        return HtmlLexer::State::CDATA_SECTION;
-    } else {
-        notImplemented();
+    static constexpr Array states = {
+        Tuple{"Data state"s, HtmlLexer::DATA},
+        Tuple{"PLAINTEXT state"s, HtmlLexer::PLAINTEXT},
+        Tuple{"RCDATA state"s, HtmlLexer::RCDATA},
+        Tuple{"RAWTEXT state"s, HtmlLexer::RAWTEXT},
+        Tuple{"Script data state"s, HtmlLexer::SCRIPT_DATA},
+        Tuple{"CDATA section state"s, HtmlLexer::CDATA_SECTION},
+    };
+
+    for (auto const& [name, state] : states) {
+        if (s == name)
+            return state;
     }
+
+    notImplemented();
 }
 
-Serde::Array serializeTokens(Slice<HtmlToken> const& tokens, bool doubleEscaped) {
+Serde::Array serializeTokens(Slice<HtmlToken> tokens, bool doubleEscaped) {
     Serde::Array serializedTokens;
     StringBuilder builder;
+
+    auto formatStr = [&](auto const& val) -> String {
+        return doubleEscaped ? escape(val) : String{val};
+    };
 
     auto flushCharacterBuffer = [&]() {
         if (builder.len() > 0) {
             Serde::Array charToken;
             charToken.pushBack("Character"s);
-
-            if (doubleEscaped) {
-                charToken.pushBack(escape(builder.take()));
-            } else {
-                charToken.pushBack(builder.take());
-            }
-
+            charToken.pushBack(formatStr(builder.take()));
             serializedTokens.pushBack(std::move(charToken));
         }
     };
@@ -115,77 +105,43 @@ Serde::Array serializeTokens(Slice<HtmlToken> const& tokens, bool doubleEscaped)
 
         Serde::Array serializedToken;
 
-        if (t.type == HtmlToken::DOCTYPE) {
+        switch (t.type) {
+        case HtmlToken::DOCTYPE:
             serializedToken.pushBack("DOCTYPE"s);
-
-            if (doubleEscaped) {
-                serializedToken.pushBack(escape(t.name.str()));
-            } else {
-                serializedToken.pushBack(t.name.str());
-            }
-
-            if (t.publicIdent) {
-                if (doubleEscaped) {
-                    serializedToken.pushBack(escape(*t.publicIdent));
-                } else {
-                    serializedToken.pushBack(*t.publicIdent);
-                }
-            } else {
-                serializedToken.pushBack(NONE);
-            }
-
-            if (t.systemIdent) {
-                if (doubleEscaped) {
-                    serializedToken.pushBack(escape(*t.systemIdent));
-                } else {
-                    serializedToken.pushBack(*t.systemIdent);
-                }
-            } else {
-                serializedToken.pushBack(NONE);
-            }
-
+            serializedToken.pushBack(formatStr(t.name.str()));
+            serializedToken.pushBack(t.publicIdent ? formatStr(*t.publicIdent) : Serde::Value{NONE});
+            serializedToken.pushBack(t.systemIdent ? formatStr(*t.systemIdent) : Serde::Value{NONE});
             serializedToken.pushBack(not t.forceQuirks);
+            break;
 
-        } else if (t.type == HtmlToken::START_TAG) {
+        case HtmlToken::START_TAG: {
             serializedToken.pushBack("StartTag"s);
-            if (doubleEscaped) {
-                serializedToken.pushBack(escape(t.name.str()));
-            } else {
-                serializedToken.pushBack(t.name.str());
-            }
+            serializedToken.pushBack(formatStr(t.name.str()));
 
             Serde::Object attrs;
             for (auto const& attr : t.attrs) {
-                if (doubleEscaped) {
-                    attrs.put(escape(attr.name.str()), escape(attr.value.str()));
-                } else {
-                    attrs.put(attr.name.str(), attr.value.str());
-                }
+                attrs.put(formatStr(attr.name.str()), formatStr(attr.value.str()));
             }
             serializedToken.pushBack(std::move(attrs));
 
             if (t.selfClosing) {
                 serializedToken.pushBack(true);
             }
+            break;
+        }
 
-        } else if (t.type == HtmlToken::END_TAG) {
+        case HtmlToken::END_TAG:
             serializedToken.pushBack("EndTag"s);
-            if (doubleEscaped) {
-                serializedToken.pushBack(escape(t.name.str()));
-            } else {
-                serializedToken.pushBack(t.name.str());
-            }
+            serializedToken.pushBack(formatStr(t.name.str()));
+            break;
 
-        } else if (t.type == HtmlToken::COMMENT) {
+        case HtmlToken::COMMENT:
             serializedToken.pushBack("Comment"s);
-            if (doubleEscaped) {
-                serializedToken.pushBack(escape(t.data.str()));
-            } else {
-                serializedToken.pushBack(t.data.str());
-            }
+            serializedToken.pushBack(formatStr(t.data.str()));
+            break;
 
-        } else {
-            continue;
+        default:
+            continue; // Ignore other token types silently as per original logic
         }
 
         serializedTokens.pushBack(std::move(serializedToken));
@@ -200,28 +156,20 @@ Serde::Array serializeTokens(Slice<HtmlToken> const& tokens, bool doubleEscaped)
 export Res<Result> run(Str inputStr) {
     auto testObject = try$(Json::parse(inputStr)).asObject();
 
-    auto input = testObject.get("input"s).asStr();
-    auto output = testObject.get("output"s).asArray();
-
-    auto doubleEscaped = testObject.getOrDefault("doubleEscaped"s, false);
-
+    auto input = try$(testObject.lookup("input"s).okOr(Error::invalidData("missing input"))).asStr();
+    auto output = try$(testObject.lookup("output"s).okOr(Error::invalidData("missing output"))).asArray();
+    auto doubleEscaped = testObject.lookup("doubleEscaped"s).unwrapOr(false);
     if (doubleEscaped) {
         input = unescape(input);
     }
-
-    auto initialStates = testObject.getOrDefault("initialStates"s, Serde::Array{"Data state"s}).asArray();
-
-    Opt<HtmlToken> lastStartTag = testObject.tryGet("lastStartTag"s).map([](Serde::Value const& val) {
-        return HtmlToken{
-            .name = Symbol::from(val.asStr()),
-        };
+    auto initialStates = testObject.lookup("initialStates"s).unwrapOr(Serde::Array{"Data state"s}).asArray();
+    Opt<HtmlToken> lastStartTag = testObject.lookup("lastStartTag"s).map([](Serde::Value const& val) {
+        return HtmlToken{HtmlToken::START_TAG, Symbol::from(val.asStr())};
     });
 
     Gc::Heap gc;
-
     Serde::Array actual;
     for (auto const& state : initialStates) {
-
         auto dom = gc.alloc<Dom::Document>(Ref::Url());
 
         HtmlParser parser{gc, dom};

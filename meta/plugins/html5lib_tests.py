@@ -27,7 +27,7 @@ TESTS_ROOT = Path(const.PROJECT_CK_DIR) / "tests" / "html5lib"
 
 def _buildTestRunner(args: model.TargetArgs) -> builder.ProductScope:
     scope = builder.TargetScope.use(args)
-    TestRunnerComponent = scope.registry.lookup("html5lib-tests-runner.main", model.Component)
+    TestRunnerComponent = scope.registry.lookup("html5lib-tests-runner", model.Component)
 
     if TestRunnerComponent is None:
         raise RuntimeError("html5lib-tests-runner not found")
