@@ -40,7 +40,7 @@ export using Boolean = bool;
 export using String = _String<Utf16>;
 
 // https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type
-// using Symbol = // NOTE: Karm::Symbol looks good enought
+// using Symbol = // NOTE: Karm::Symbol looks good enougt
 
 // MARK: Numeric Types ---------------------------------------------------------
 // https://tc39.es/ecma262/#sec-ecmascript-language-types-number-type
