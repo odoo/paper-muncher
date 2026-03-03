@@ -48,7 +48,7 @@ domjs.test/b8d9265f5301c3ba: PASS
 domjs.test/c1dc160355a55976: PASS
 domjs.test/c355e0638815cefc: PASS
 domjs.test/c5640a76d696960a: PASS
-domjs.test/cf08d801d64d87e0: FAIL
+domjs.test/cf08d801d64d87e0: PASS
 domjs.test/d90fd7ce883887ce: PASS
 domjs.test/dd5cb374c5524cdd: PASS
 domjs.test/e0daa56fca3e2ead: PASS
@@ -6802,5 +6802,5 @@ unicodeChars.test/ff7bf7c291e21464: PASS
 unicodeCharsProblematic.test/32187c7f19aa013e: PASS
 unicodeCharsProblematic.test/3a2257597c2a40d2: PASS
 unicodeCharsProblematic.test/8645c73c4260de55: PASS
-unicodeCharsProblematic.test/aa303f6b1215b273: FAIL
+unicodeCharsProblematic.test/aa303f6b1215b273: PASS
 unicodeCharsProblematic.test/f7ba93330e8d252a: PASS

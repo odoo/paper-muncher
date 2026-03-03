@@ -35,21 +35,56 @@ struct TokenCollectorSink : HtmlSink {
 static String escape(Str s) {
     Io::StringWriter sw;
     Io::Emit emit = sw;
-    for (auto c : iterRunes(s)) {
-        if (c < 0x20 or c > 0x7E) {
-            emit("\\u{04X}", c);
-        } else {
-            emit(c);
-        }
-    }
+    Json::escape(emit, s);
     return sw.take();
 }
 
+// NOTE: This works a bit differently from normal JSON unescaping since we must output invalid
+//       surrogate pairs as two runes instead of using a replacement character.
 String unescape(Str str) {
     Io::SScan s = {str};
     Io::StringWriter sw{str.len()};
     while (not s.ended()) {
         if (s.skip('\\') and s.skip('u')) {
+            auto parseCodeUnit = [&]() -> Res<Utf16::Unit> {
+                auto hex = s.token(Re::exactly(4, Re::xdigit()));
+                if (not hex)
+                    return Error::invalidData();
+
+                auto unit = Io::atou(hex, {.base = 16});
+                if (not unit)
+                    return Error::invalidData("expected 4 hex digits after \\u");
+
+                return Ok(*unit);
+            };
+
+            auto high = parseCodeUnit().unwrap();
+
+            Utf16::One units;
+            units.put(high);
+
+            if (Utf16::unitLen(high) == 2) {
+                if (s.skip('\\')) {
+                    if (s.skip('u')) {
+                        auto low = parseCodeUnit().unwrap();
+                        units.put(low);
+                    } else {
+                        panic("malformed unicode escape");
+                    }
+                }
+            }
+
+            Rune rune;
+            Cursor cursor{units.buf(), units.len()};
+
+            if (Utf16::decodeUnit(rune, cursor)) {
+                sw.append(rune);
+            } else {
+                sw.append(high);
+            }
+
+            continue;
+
             if (auto u = Io::atou(s, {.base = 16})) {
                 sw.append(*u);
                 continue;
