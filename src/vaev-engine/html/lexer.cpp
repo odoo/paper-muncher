@@ -54,6 +54,8 @@ export struct HtmlLexer {
     StringBuilder _temp;
     StringBuilder _peek;
 
+    bool _inForeignContent = false;
+
     Opt<usize> matchedCharReferenceNoSemiColon;
 
     HtmlToken& _begin(HtmlToken::Type type, Io::Loc loc) {
@@ -96,16 +98,6 @@ export struct HtmlLexer {
 
     void _beginAttribute() {
         _currAttr = _ensure().attrs.emplaceBack();
-    }
-
-    void _removeCurrAttrIfDuplicate() {
-        for (isize i = 0; i < static_cast<isize>(_ensure().attrs.len()) - 1; i++) {
-            if (startWith(_currAttr->name.str(), _ensure().attrs[i].name.str(), eqAsciiCi) == Match::YES) {
-                _currAttr = NONE;
-                _ensure().attrs.popBack();
-                break;
-            }
-        }
     }
 
     void _reconsumeIn(State state, Rune rune, Io::Loc loc, Diag::Collector& diags, bool isEof) {
@@ -1541,7 +1533,14 @@ export struct HtmlLexer {
             // the attribute in this way does not change its status as the
             // "current attribute" for the purposes of the lexer, however.
             auto leaveAttributeNameState = [&]() {
-                _removeCurrAttrIfDuplicate();
+                for (isize i = 0; i < static_cast<isize>(_ensure().attrs.len()) - 1; i++) {
+                    if (startWith(_currAttr->name.str(), _ensure().attrs[i].name.str(), eqAsciiCi) == Match::YES) {
+                        _currAttr = NONE;
+                        _ensure().attrs.popBack();
+                        _raise(diags, loc, "duplicate-attribute");
+                        break;
+                    }
+                }
             };
 
             // U+0009 CHARACTER TABULATION (tab)
@@ -2034,9 +2033,10 @@ export struct HtmlLexer {
                 if (r == Match::PARTIAL)
                     break;
 
-                // NOSPEC: This is in reallity more complicated
-                _peek.clear();
-                _switchTo(State::CDATA_SECTION);
+                if (_inForeignContent) {
+                    _peek.clear();
+                    _switchTo(State::CDATA_SECTION);
+                }
             }
 
             // Anything else
@@ -2274,6 +2274,7 @@ export struct HtmlLexer {
             // token. Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-comment");
+                _ensure(HtmlToken::COMMENT).data = _builder.take();
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
                 _emit(diags);
@@ -2320,6 +2321,7 @@ export struct HtmlLexer {
             // token. Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-comment");
+                _ensure(HtmlToken::COMMENT).data = _builder.take();
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
                 _emit(diags);
@@ -2544,6 +2546,7 @@ export struct HtmlLexer {
             // Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-doctype");
+                _ensure(HtmlToken::DOCTYPE).name = _commitSymbol();
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
@@ -2553,7 +2556,7 @@ export struct HtmlLexer {
             // Anything else
             // Append the current input character to the current DOCTYPE token's
             // name.
-            else if (isAsciiLower(rune)) {
+            else {
                 _builder.append(rune);
             }
 

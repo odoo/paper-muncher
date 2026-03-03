@@ -723,7 +723,7 @@ export struct HtmlParser : HtmlSink {
         //    localName, given namespace, null, and is. If will execute script
         //    is true, set the synchronous custom elements flag; otherwise,
         //    leave it unset.
-        auto el = _heap.alloc<Dom::Element>(Dom::QualifiedName{ns, t.name});
+        auto el = _heap.alloc<Dom::Element>(Dom::QualifiedName{ns, *t.name});
 
         // 10. Append each attribute in the given token to element.
         for (auto& [name, value] : t.attrs) {
@@ -1091,9 +1091,9 @@ export struct HtmlParser : HtmlSink {
         else if (t.type == HtmlToken::DOCTYPE) {
             _document->appendChild(
                 _heap.alloc<Dom::DocumentType>(
-                    t.name,
-                    t.publicIdent,
-                    t.systemIdent
+                    t.name.unwrapOr(""_sym),
+                    t.publicIdent.unwrapOr(""s),
+                    t.systemIdent.unwrapOr(""s)
                 )
             );
             _document->quirkMode = _whichQuirkMode(t);
@@ -1523,7 +1523,7 @@ export struct HtmlParser : HtmlSink {
         // https://html.spec.whatwg.org/multipage/parsing.html#adoption-agency-algorithm
         auto adoptionAgencyAlgorithm = [&](HtmlToken const& t, Diag::Collector& diags) {
             // 1. Let subject be token's tag name.
-            Symbol subject = t.name;
+            Symbol subject = *t.name;
 
             // 2. If the current node is an HTML element whose tag name is subject,
             //    and the current node is not in the list of active formatting elements,
@@ -2164,7 +2164,7 @@ export struct HtmlParser : HtmlSink {
         ) {
             // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name
             // as that of the token,
-            if (not _hasElementInScope(Dom::QualifiedName{Html::NAMESPACE, t.name})) {
+            if (not _hasElementInScope(Dom::QualifiedName{Html::NAMESPACE, *t.name})) {
                 // then this is a parse error; ignore the token.
                 _raise(diags, t.span, "unexpected end tag");
                 return;
@@ -2183,7 +2183,7 @@ export struct HtmlParser : HtmlSink {
 
             // 3. Pop elements from the stack of open elements until an HTML element with the same tag name as the
             // token has been popped from the stack.
-            _openElements.popUntilOneOf(Dom::QualifiedName{Html::NAMESPACE, t.name});
+            _openElements.popUntilOneOf(Dom::QualifiedName{Html::NAMESPACE, *t.name});
         }
 
         // An end tag whose tag name is "form"
@@ -2281,7 +2281,7 @@ export struct HtmlParser : HtmlSink {
 
         // An end tag whose tag name is one of: "dd", "dt"
         else if (t.type == HtmlToken::END_TAG and oneOf(t.name, "dd", "dt")) {
-            auto qualifiedName = Dom::QualifiedName{Html::NAMESPACE, t.name};
+            auto qualifiedName = Dom::QualifiedName{Html::NAMESPACE, *t.name};
 
             // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name
             // as that of the token,
@@ -2329,7 +2329,7 @@ export struct HtmlParser : HtmlSink {
             _generateImpliedEndTags();
 
             // 2. If the current node is not an HTML element with the same tag name as that of the token, then this is a parse error.
-            if (_currentElement()->qualifiedName != Dom::QualifiedName{Html::NAMESPACE, t.name}) {
+            if (_currentElement()->qualifiedName != Dom::QualifiedName{Html::NAMESPACE, *t.name}) {
                 // then this is a parse error.
                 _raise(diags, t.span, "unexpected end tag for h1-h6");
             }
@@ -2406,7 +2406,7 @@ export struct HtmlParser : HtmlSink {
         // A start tag whose tag name is one of: "applet", "marquee", "object"
         else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "applet", "marquee", "object")) {
             // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name as that of the token,
-            if (not _hasElementInScope(Dom::QualifiedName{Html::NAMESPACE, t.name})) {
+            if (not _hasElementInScope(Dom::QualifiedName{Html::NAMESPACE, *t.name})) {
                 // Reconstruct the active formatting elements, if any.
                 _reconstructActiveFormattingElements();
 
@@ -2424,7 +2424,7 @@ export struct HtmlParser : HtmlSink {
         // An end tag token whose tag name is one of: "applet", "marquee", "object"
         else if (t.type == HtmlToken::END_TAG and oneOf(t.name, "applet", "marquee", "object")) {
             // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name as that of the token,
-            if (not _hasElementInScope(Dom::QualifiedName{Html::NAMESPACE, t.name})) {
+            if (not _hasElementInScope(Dom::QualifiedName{Html::NAMESPACE, *t.name})) {
                 // then this is a parse error;
                 _raise(diags, t.span, "unexpected end tag");
 
@@ -2445,7 +2445,7 @@ export struct HtmlParser : HtmlSink {
 
             // 3. Pop elements from the stack of open elements until an HTML element with the
             // same tag name as the token has been popped from the stack.
-            _openElements.popUntilOneOf(Dom::QualifiedName{Html::NAMESPACE, t.name});
+            _openElements.popUntilOneOf(Dom::QualifiedName{Html::NAMESPACE, *t.name});
 
             // 4. Clear the list of active formatting elements up to the last marker.
             _activeFormattingElements.clearUpToLastMarker();
@@ -3392,7 +3392,7 @@ export struct HtmlParser : HtmlSink {
         else if (t.type == HtmlToken::END_TAG and (t.name == "tbody" or t.name == "tfoot" or t.name == "thead")) {
             // If the stack of open elements does not have an element in table scope that is an HTML element with the same
             // tag name as the token, this is a parse error; ignore the token.
-            if (not _hasElementInTableScope(Dom::QualifiedName{Html::NAMESPACE, t.name})) {
+            if (not _hasElementInTableScope(Dom::QualifiedName{Html::NAMESPACE, *t.name})) {
                 _raise(diags, t.span, "unexpected end tag");
                 return;
             }
@@ -3530,7 +3530,7 @@ export struct HtmlParser : HtmlSink {
             // If the stack of open elements does not have an element in table scope that is an HTML element with the same
             // tag name as the token,
 
-            if (not _hasElementInTableScope(Dom::QualifiedName{Html::NAMESPACE, t.name})) {
+            if (not _hasElementInTableScope(Dom::QualifiedName{Html::NAMESPACE, *t.name})) {
                 // this is a parse error; ignore the token.
                 _raise(diags, t.span, "unexpected end tag");
                 return;
@@ -3589,7 +3589,7 @@ export struct HtmlParser : HtmlSink {
         if (t.type == HtmlToken::END_TAG and (t.name == "td" or t.name == "th")) {
             // If the stack of open elements does not have an element in table scope that is an HTML element with the same
             // tag name as that of the token,
-            Dom::QualifiedName tokenQualifiedName{Html::NAMESPACE, t.name};
+            Dom::QualifiedName tokenQualifiedName{Html::NAMESPACE, *t.name};
 
             if (not _hasElementInTableScope(tokenQualifiedName)) {
                 // this is a parse error; ignore the token.
@@ -3649,7 +3649,7 @@ export struct HtmlParser : HtmlSink {
 
             // If the stack of open elements does not have an element in table scope that is an HTML element with the same
             // tag name as the token,
-            if (not _hasElementInTableScope(Dom::QualifiedName{Html::NAMESPACE, t.name})) {
+            if (not _hasElementInTableScope(Dom::QualifiedName{Html::NAMESPACE, *t.name})) {
                 // this is a parse error; ignore the token.
                 _raise(diags, t.span, "unexpected end tag");
                 return;
@@ -3800,7 +3800,7 @@ export struct HtmlParser : HtmlSink {
             // If the adjusted current node is an element in the SVG namespace
             if (_adjustedCurrentElement()->qualifiedName.ns == Svg::NAMESPACE) {
                 // and the token's tag name is one of the ones in the first column of the following table, change the tag name to the name given in the corresponding cell in the second column. (This fixes the case of SVG elements that are not all lowercase.)
-                t.name = Svg::qualifiedTagNameCased(t.name.str());
+                t.name = Svg::qualifiedTagNameCased(t.name->str());
             }
 
             // If the adjusted current node is an element in the SVG namespace, ...
@@ -3841,7 +3841,7 @@ export struct HtmlParser : HtmlSink {
             // Run these steps:
 
             // If node's tag name, converted to ASCII lowercase, is not the same as the tag name of the token, then this is a parse error.
-            if (not eqCi(_currentElement()->qualifiedName.name.str(), t.name.str())) {
+            if (not eqCi(_currentElement()->qualifiedName.name.str(), t.name->str())) {
                 _raise(diags, t.span, "unexpected end tag");
             }
 
@@ -3853,7 +3853,7 @@ export struct HtmlParser : HtmlSink {
                     return;
 
                 // If node's tag name, converted to ASCII lowercase, is the same as the tag name of the token,
-                if (eqCi(node->qualifiedName.name.str(), t.name.str())) {
+                if (eqCi(node->qualifiedName.name.str(), t.name->str())) {
                     // pop elements from the stack of open elements until node has been popped from the stack, and then return.
                     while (_currentElement() != node) {
                         _openElements.pop();

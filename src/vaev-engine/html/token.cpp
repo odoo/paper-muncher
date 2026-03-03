@@ -32,7 +32,7 @@ export struct HtmlToken {
     };
 
     Type type = NIL;
-    Symbol name = ""_sym;
+    Opt<Symbol> name = NONE;
     Rune rune = '\0';
     String data = ""s;
     Opt<String> publicIdent = NONE;
