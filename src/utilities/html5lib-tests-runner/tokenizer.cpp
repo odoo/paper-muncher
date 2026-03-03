@@ -82,8 +82,12 @@ Serde::Array serializeTokens(Slice<HtmlToken> tokens, bool doubleEscaped) {
     Serde::Array serializedTokens;
     StringBuilder builder;
 
-    auto formatStr = [&](auto const& val) -> String {
+    auto formatStr = [&](Str const& val) -> String {
         return doubleEscaped ? escape(val) : String{val};
+    };
+
+    auto formatSym = [&](Symbol const& val) -> String {
+        return formatStr(val.str());
     };
 
     auto flushCharacterBuffer = [&]() {
@@ -108,7 +112,7 @@ Serde::Array serializeTokens(Slice<HtmlToken> tokens, bool doubleEscaped) {
         switch (t.type) {
         case HtmlToken::DOCTYPE:
             serializedToken.pushBack("DOCTYPE"s);
-            serializedToken.pushBack(formatStr(t.name.str()));
+            serializedToken.pushBack(t.name.map(formatSym));
             serializedToken.pushBack(t.publicIdent ? formatStr(*t.publicIdent) : Serde::Value{NONE});
             serializedToken.pushBack(t.systemIdent ? formatStr(*t.systemIdent) : Serde::Value{NONE});
             serializedToken.pushBack(not t.forceQuirks);
@@ -116,7 +120,7 @@ Serde::Array serializeTokens(Slice<HtmlToken> tokens, bool doubleEscaped) {
 
         case HtmlToken::START_TAG: {
             serializedToken.pushBack("StartTag"s);
-            serializedToken.pushBack(formatStr(t.name.str()));
+            serializedToken.pushBack(t.name.map(formatSym));
 
             Serde::Object attrs;
             for (auto const& attr : t.attrs) {
@@ -132,7 +136,8 @@ Serde::Array serializeTokens(Slice<HtmlToken> tokens, bool doubleEscaped) {
 
         case HtmlToken::END_TAG:
             serializedToken.pushBack("EndTag"s);
-            serializedToken.pushBack(formatStr(t.name.str()));
+            serializedToken.pushBack(t.name.map(formatSym));
+
             break;
 
         case HtmlToken::COMMENT:

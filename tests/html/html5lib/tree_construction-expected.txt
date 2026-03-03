@@ -86,7 +86,7 @@ doctype01.dat/00da975762309f7e: FAIL
 doctype01.dat/01cc8ead40da8014: FAIL
 doctype01.dat/0286a2341bf02170: PASS
 doctype01.dat/0e86efefd55ad698: PASS
-doctype01.dat/13372447c6cbb830: FAIL
+doctype01.dat/13372447c6cbb830: PASS
 doctype01.dat/248ecc89989b0c8e: PASS
 doctype01.dat/2c7ab8e9134b0bab: PASS
 doctype01.dat/2d87b299e3b6e266: PASS
@@ -112,7 +112,7 @@ doctype01.dat/cbddb940b17a14c8: FAIL
 doctype01.dat/cc5ac6b857610361: FAIL
 doctype01.dat/d0c8e13728fe0443: PASS
 doctype01.dat/d2d33453f051ab03: PASS
-doctype01.dat/d823f6b13552bae8: FAIL
+doctype01.dat/d823f6b13552bae8: PASS
 doctype01.dat/dbd70a2608f186b8: PASS
 doctype01.dat/de628a2b97197cdc: PASS
 doctype01.dat/e60ebea5eec8627a: FAIL
@@ -355,7 +355,7 @@ html5test-com.dat/be1f6564e25b7090: FAIL
 html5test-com.dat/be7cd10d2d5d6870: PASS
 html5test-com.dat/c2983f143ce6eb6e: FAIL
 html5test-com.dat/c688caa39e80abb0: PASS
-html5test-com.dat/d7c08386af29b505: FAIL
+html5test-com.dat/d7c08386af29b505: PASS
 html5test-com.dat/d86f96b1a42cb88c: PASS
 html5test-com.dat/e1d317d987e23fb1: PASS
 html5test-com.dat/ea45ea6cf90f2fe9: PASS
@@ -1254,7 +1254,7 @@ tests2.dat/ded7e61986a6e946: PASS
 tests2.dat/e2afe8ddab8922ca: PASS
 tests2.dat/e5dd4570e3f70dbe: PASS
 tests2.dat/e7f0eeccc54120e3: PASS
-tests2.dat/e9766eb1315c6a6d: FAIL
+tests2.dat/e9766eb1315c6a6d: PASS
 tests2.dat/ebdb2501d1e6b8bb: PASS
 tests2.dat/ee7cd14ed0843e0d: FAIL
 tests2.dat/eef1ff7386ba0761: FAIL
@@ -1342,7 +1342,7 @@ tests21.dat/9dc4cd79d6e3003c: FAIL
 tests21.dat/9ef41b2f25e5d804: FAIL
 tests21.dat/a30db8d5861cf0a6: FAIL
 tests21.dat/b160d1365cd8c465: FAIL
-tests21.dat/b79e13770f71002c: FAIL
+tests21.dat/b79e13770f71002c: PASS
 tests21.dat/bad90e4886e3c99d: FAIL
 tests21.dat/be023901e2efede9: FAIL
 tests21.dat/c15fd88841a19b8a: FAIL
