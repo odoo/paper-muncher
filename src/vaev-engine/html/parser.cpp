@@ -1270,7 +1270,8 @@ export struct HtmlParser : HtmlSink {
 
         // A start tag whose tag name is "noscript", if the scripting flag is enabled
         // A start tag whose tag name is one of: "noframes", "style"
-        else if (t.type == HtmlToken::START_TAG and ((t.name == "noscript" and _scriptingEnabled) or t.name == "noframe" or t.name == "style")) {
+        else if (t.type == HtmlToken::START_TAG and ((t.name == "noscript" and _scriptingEnabled) or t.name == "noframes" or t.name == "style")) {
+            // Follow the generic raw text element parsing algorithm.
             _parseRawTextElement(t);
         }
 
@@ -1475,9 +1476,16 @@ export struct HtmlParser : HtmlSink {
              t.name == "script" or t.name == "style" or
              t.name == "template" or t.name == "title")
         ) {
+            // Parse error.
             _raise(diags, t.span, "unexpected start tag");
+
+            // Push the node pointed to by the head element pointer onto the stack of open elements.
             _openElements.push(_headElement.upgrade());
+
+            // Process the token using the rules for the "in head" insertion mode.
             _acceptIn(Mode::IN_HEAD, t, diags);
+
+            // Remove the node pointed to by the head element pointer from the stack of open elements. (It might not be the current node at this point.)
             _openElements.remove(*_headElement);
         }
 
@@ -3775,8 +3783,8 @@ export struct HtmlParser : HtmlSink {
                 //  - a MathML text integration point,
                 //  - an HTML integration point,
                 //  - or an element in the HTML namespace
-                if (_isMathMlTextIntegrationPoint(*el) and
-                    _isHtmlIntegrationPoint(*el) and
+                if (_isMathMlTextIntegrationPoint(*el) or
+                    _isHtmlIntegrationPoint(*el) or
                     el->qualifiedName.ns == Html::NAMESPACE) {
                     break;
                 }
@@ -4005,8 +4013,11 @@ export struct HtmlParser : HtmlSink {
         if (
             _openElements.isEmpty() or
             _currentElement()->qualifiedName.ns == Html::NAMESPACE or
-            (t.type == HtmlToken::START_TAG and _isHtmlIntegrationPoint(*_currentElement())) or
-            (t.type == HtmlToken::CHARACTER and _isMathMlTextIntegrationPoint(*_currentElement())) or
+            (_isMathMlTextIntegrationPoint(*_currentElement()) and t.type == HtmlToken::START_TAG and not oneOf(t.name, "mglyph", "malignmark")) or
+            (_isMathMlTextIntegrationPoint(*_currentElement()) and t.type == HtmlToken::CHARACTER) or
+            (_currentElement()->qualifiedName == MathMl::ANNOTATION_XML_TAG and t.type == HtmlToken::START_TAG and t.name == "svg") or
+            (_isHtmlIntegrationPoint(*_currentElement()) and t.type == HtmlToken::START_TAG) or
+            (_isHtmlIntegrationPoint(*_currentElement()) and t.type == HtmlToken::CHARACTER) or
             t.type == HtmlToken::END_OF_FILE
         ) {
             // Process the token according to the rules given in the section
