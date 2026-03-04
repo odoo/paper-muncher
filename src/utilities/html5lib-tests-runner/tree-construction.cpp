@@ -104,55 +104,84 @@ struct DocumentEmit {
     }
 };
 
-static auto const RE_DATA_HEADER = Re::word("#data");
-static auto const RE_ERRORS_HEADER = Re::word("#errors");
-static auto const RE_DOCUMENT_HEADER = Re::word("#document");
-
-static auto const RE_DATA = Re::until(
-    Re::single('\n') & RE_ERRORS_HEADER
-);
-
-static auto const RE_ERRORS = Re::until(
-    Re::single('\n') & RE_DOCUMENT_HEADER & Re::single('\n')
-);
-
 // https://github.com/html5lib/html5lib-tests/blob/master/tree-construction/README.md
 export Res<Result> run(Str input) {
-    auto s = Io::SScan{input};
+    auto r = Io::BufReader{bytes(input)};
+    auto w = Io::BufferWriter{};
 
-    if (not s.eat(RE_DATA_HEADER & Re::single('\n'))) {
-        return Error::invalidData();
+    auto data = StringBuilder{};
+    auto document = StringBuilder{};
+
+    enum TestParserState {
+        IN_DATA_HEADER,
+        IN_DATA_FIRST_LINE,
+        IN_DATA,
+        IN_ERRORS,
+        IN_DOCUMENT,
+    };
+
+    TestParserState state = IN_DATA_HEADER;
+
+    while (true) {
+        Array<u8, 1> newlineDelim = {'\n'};
+        auto [read, ok] = try$(Io::readLine(r, w, newlineDelim));
+
+        if (not ok) {
+            if (state != IN_DOCUMENT) {
+                return Error::invalidData();
+            }
+            break;
+        }
+
+        if (state == IN_DATA_HEADER) {
+            if (w.bytes() != "#data\n"_bytes) {
+                return Error::invalidData("expected #data header");
+            }
+
+            state = IN_DATA_FIRST_LINE;
+        } else if (state == IN_DATA_FIRST_LINE) {
+            if (w.bytes() == "#errors\n"_bytes) {
+                state = IN_ERRORS;
+            } else {
+                data.append(sub(w.bytes().cast<char>(), 0, w.bytes().len() - 1));
+                state = IN_DATA;
+            }
+        } else if (state == IN_DATA) {
+            if (w.bytes() == "#errors\n"_bytes) {
+                state = IN_ERRORS;
+            } else {
+                data.append('\n');
+                data.append(sub(w.bytes().cast<char>(), 0, w.bytes().len() - 1));
+            }
+        } else if (state == IN_ERRORS) {
+            if (w.bytes() == "#document\n"_bytes) {
+                state = IN_DOCUMENT;
+            }
+            // TODO: Parse optional sections
+        } else if (state == IN_DOCUMENT) {
+            document.append(Str{w.bytes().cast<char>()});
+        }
+
+        w.clear();
     }
-
-    auto data = s.token(RE_DATA);
-
-    if (not s.eat(Re::single('\n') & RE_ERRORS_HEADER)) {
-        return Error::invalidData();
-    }
-
-    s.token(RE_ERRORS);
-
-    if (not s.eat(Re::single('\n') & RE_DOCUMENT_HEADER & Re::single('\n'))) {
-        return Error::invalidData();
-    }
-
-    auto document = s.remStr();
 
     Gc::Heap gc;
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     Html::HtmlParser parser{gc, dom};
 
-    auto w = Io::StringWriter{};
-    auto e = DocumentEmit{w};
-
     auto diags = Diag::Collector{};
-    parser.write(data, diags);
+
+    // NOTE: Partial writes are not very well supported for now so we write in one pass.
+    parser.write(data.str(), diags);
+
+    auto sw = Io::StringWriter{};
+    auto e = DocumentEmit{sw};
 
     try$(e.write(*dom));
 
     return Ok(Result{
-        .reference = document,
-        .actual = {w.str()},
+        .reference = document.str(),
+        .actual = {sw.str()},
     });
 }
 
