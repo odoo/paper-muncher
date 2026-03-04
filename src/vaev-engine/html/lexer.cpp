@@ -56,7 +56,7 @@ export struct HtmlLexer {
 
     bool _inForeignContent = false;
 
-    Opt<usize> matchedCharReferenceNoSemiColon;
+    Opt<usize> _matchedCharReferenceNoSemiColon;
 
     HtmlToken& _begin(HtmlToken::Type type, Io::Loc loc) {
         _token = HtmlToken{
@@ -3506,22 +3506,32 @@ export struct HtmlLexer {
                 _temp.append(rune);
 
                 if (matchStateWithNextInputChar == Match::YES)
-                    matchedCharReferenceNoSemiColon = _temp.len();
+                    _matchedCharReferenceNoSemiColon = _temp.len();
 
                 break;
             }
 
             // If there is a match from before matchedCharReferenceNoSemiColon
-            if (matchStateWithNextInputChar == Match::NO and matchedCharReferenceNoSemiColon) {
+            if (matchStateWithNextInputChar == Match::NO and rune == ';' and _consumedAsPartOfAnAttribute() and _matchedCharReferenceNoSemiColon) {
+                _temp.append(rune);
+                _matchedCharReferenceNoSemiColon = NONE;
+                _flushCodePointsConsumedAsACharacterReference(loc, diags);
+                _switchTo(_returnState);
+            } else if (matchStateWithNextInputChar == Match::NO and _matchedCharReferenceNoSemiColon) {
                 // If the character reference was consumed as part of an attribute,
                 // and the last character matched is not a U+003B SEMICOLON
                 // character (;), and the next input character is either a U+003D
                 // EQUALS SIGN character (=) or an ASCII alphanumeric, then, for
                 // historical reasons, flush code points consumed as a character
                 // reference and switch to the return state.
+
+                // NOTE: chars past _matchedCharReferenceNoSemiColon in _temp were appended through
+                // hasPartialMatch, which only accepts alphanum, so their presence is sufficient.
+                auto nextCharIsAlphaNum = _matchedCharReferenceNoSemiColon.unwrap() < _temp.str().len() or isAsciiAlphaNum(rune);
+
                 if (
                     _consumedAsPartOfAnAttribute() and
-                    (rune == '=' or isAsciiAlphaNum(rune))
+                    (rune == '=' or nextCharIsAlphaNum)
                 ) {
                     _flushCodePointsConsumedAsACharacterReference(loc, diags);
                     _reconsumeIn(_returnState, rune, loc, diags, isEof);
@@ -3542,14 +3552,14 @@ export struct HtmlLexer {
                     // to the _temp buffer
 
                     auto _tempWithUnexpandedEntity = _temp.str();
-                    auto entityName = _Str<Utf8>(_tempWithUnexpandedEntity.begin(), matchedCharReferenceNoSemiColon.unwrap());
+                    auto entityName = _Str<Utf8>(_tempWithUnexpandedEntity.begin(), _matchedCharReferenceNoSemiColon.unwrap());
 
                     for (auto& entity : ENTITIES) {
                         if (entityName == entity.name) {
                             _temp.clear();
                             _temp.append(Slice<Rune>::fromNullterminated(entity.runes));
 
-                            for (usize i = matchedCharReferenceNoSemiColon.unwrap(); i < _tempWithUnexpandedEntity.len(); ++i) {
+                            for (usize i = _matchedCharReferenceNoSemiColon.unwrap(); i < _tempWithUnexpandedEntity.len(); ++i) {
                                 _temp.append(_tempWithUnexpandedEntity[i]);
                             }
                             break;
@@ -3558,7 +3568,7 @@ export struct HtmlLexer {
 
                     // Flush code points consumed as a character reference. Switch to
                     // the return state.
-                    matchedCharReferenceNoSemiColon = NONE;
+                    _matchedCharReferenceNoSemiColon = NONE;
                     _flushCodePointsConsumedAsACharacterReference(loc, diags);
                     _reconsumeIn(_returnState, rune, loc, diags, isEof);
                 }
@@ -3602,7 +3612,7 @@ export struct HtmlLexer {
 
                 // Flush code points consumed as a character reference. Switch to
                 // the return state.
-                matchedCharReferenceNoSemiColon = NONE;
+                _matchedCharReferenceNoSemiColon = NONE;
                 _flushCodePointsConsumedAsACharacterReference(loc, diags);
                 _switchTo(_returnState);
             }
