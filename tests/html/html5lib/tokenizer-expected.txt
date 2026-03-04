@@ -88,8 +88,8 @@ entities.test/654d499a9dbb0a9e: PASS
 entities.test/686e16193b78369c: PASS
 entities.test/69607dc23717abce: PASS
 entities.test/6a196df923ce506c: PASS
-entities.test/6a36bd73e5f13275: FAIL
-entities.test/6bac8f55fe1890a2: FAIL
+entities.test/6a36bd73e5f13275: PASS
+entities.test/6bac8f55fe1890a2: PASS
 entities.test/6cd4eb597764431d: PASS
 entities.test/71cccb37ee547345: PASS
 entities.test/7e9c8062f8108912: PASS
@@ -124,7 +124,7 @@ entities.test/c389ec84f22c5da7: PASS
 entities.test/c449c227d8db6ea8: PASS
 entities.test/c4ead115277e5050: PASS
 entities.test/c5cec1905ee0daa7: PASS
-entities.test/d127b4f4806a99fb: FAIL
+entities.test/d127b4f4806a99fb: PASS
 entities.test/df5cbba7c5b18f04: PASS
 entities.test/df7722afc32c6482: PASS
 entities.test/e0f8d06aa9e19340: PASS
@@ -4749,7 +4749,7 @@ test1.test/d4e6accdf4e34dd4: PASS
 test1.test/d9ed881946d835ae: PASS
 test1.test/dbba9c083eb694a1: PASS
 test1.test/df92f918a47a101f: PASS
-test1.test/e3080fa8744a9321: FAIL
+test1.test/e3080fa8744a9321: PASS
 test1.test/e390adf0dbbc50ae: PASS
 test1.test/e41ea6cb46023921: PASS
 test1.test/e4ddc79cc349b4c0: PASS
