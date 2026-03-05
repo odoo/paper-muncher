@@ -544,7 +544,7 @@ template.dat/0f11f44426a74a94: FAIL
 template.dat/10f4912ac792dd72: FAIL
 template.dat/1384ca15fb95e23a: FAIL
 template.dat/15c67a1ebae67779: FAIL
-template.dat/1915ee575224f799: FAIL
+template.dat/1915ee575224f799: PASS
 template.dat/1a15ba78a909732f: FAIL
 template.dat/1b3080eef447c2b8: FAIL
 template.dat/23fd48e09719ca81: FAIL
@@ -722,7 +722,7 @@ tests1.dat/9a939a760f6385cb: PASS
 tests1.dat/9b185870e0ec0212: FAIL
 tests1.dat/9cb0e814073b38bb: PASS
 tests1.dat/a0a2e722e364efb2: PASS
-tests1.dat/a159b6e135d78a6b: FAIL
+tests1.dat/a159b6e135d78a6b: PASS
 tests1.dat/a19f48019369253d: PASS
 tests1.dat/a40e82b2fec1d891: PASS
 tests1.dat/a5743bcb707613fe: PASS
@@ -848,7 +848,7 @@ tests15.dat/bc9ca222763ec889: PASS
 tests15.dat/bd6a6391a80fdc91: PASS
 tests15.dat/ccf28f32d0b617a4: PASS
 tests15.dat/e22d7467be18ee04: PASS
-tests15.dat/e6ef1dc56c87717b: FAIL
+tests15.dat/e6ef1dc56c87717b: PASS
 tests16.dat/010bc5db96b274f4: PASS
 tests16.dat/054097c2a2cb2c76: PASS
 tests16.dat/0668c8970a45203d: FAIL
@@ -1062,7 +1062,7 @@ tests17.dat/f18055ab78ec85c8: PASS
 tests18.dat/03b07eeff5c6d0ea: PASS
 tests18.dat/0649e3fdff095562: PASS
 tests18.dat/0eefbded279dbb17: PASS
-tests18.dat/1d6d48586d5ad9e5: FAIL
+tests18.dat/1d6d48586d5ad9e5: PASS
 tests18.dat/1fa09705ed47ec0a: PASS
 tests18.dat/32e17cabf1ca7d09: PASS
 tests18.dat/3914de90a258b2c0: PASS
@@ -1077,11 +1077,11 @@ tests18.dat/6bb7e508963361d0: PASS
 tests18.dat/791111505353ce95: PASS
 tests18.dat/7e4cf27587ca6955: FAIL
 tests18.dat/7e852b9da518b995: PASS
-tests18.dat/8b1aad60ccf63867: FAIL
+tests18.dat/8b1aad60ccf63867: PASS
 tests18.dat/90645248d910dd3a: PASS
 tests18.dat/94322b9c1dc81f05: PASS
 tests18.dat/9a670a34f3286b7e: PASS
-tests18.dat/9c77e45d26e7fa3f: FAIL
+tests18.dat/9c77e45d26e7fa3f: PASS
 tests18.dat/9fae1100880d5daa: FAIL
 tests18.dat/ae4a182d141c646a: FAIL
 tests18.dat/b8d2cad2e401b4b1: PASS
@@ -1097,7 +1097,7 @@ tests18.dat/fbcf8febb43ddbd4: PASS
 tests18.dat/febd95c894be4ce4: PASS
 tests19.dat/1064d6d29854f72c: PASS
 tests19.dat/11eef2ddba407a39: PASS
-tests19.dat/16f8ed8c53dbb52e: FAIL
+tests19.dat/16f8ed8c53dbb52e: PASS
 tests19.dat/18e852d962b1a393: PASS
 tests19.dat/1c788c9d0bd5dc07: PASS
 tests19.dat/1e85acc0db8a5640: PASS
@@ -1117,10 +1117,10 @@ tests19.dat/30465768659fe3e7: PASS
 tests19.dat/32e4015a3a8e4b32: FAIL
 tests19.dat/33a0f38e9699d26b: PASS
 tests19.dat/350ce1e4e59435a4: PASS
-tests19.dat/358ee08951b3c4b3: FAIL
+tests19.dat/358ee08951b3c4b3: PASS
 tests19.dat/3ddb0ca214ab0714: PASS
 tests19.dat/3e68d16f133dfd96: PASS
-tests19.dat/402bb44c26f061cc: FAIL
+tests19.dat/402bb44c26f061cc: PASS
 tests19.dat/417f8a18df8f0e6a: PASS
 tests19.dat/42594c64674bc232: PASS
 tests19.dat/426cb4840fe42251: FAIL
@@ -1133,7 +1133,7 @@ tests19.dat/51a36988e11afd34: PASS
 tests19.dat/5310d03bc8ce4a16: FAIL
 tests19.dat/59747afb16c98c5b: PASS
 tests19.dat/5a2bcadedb4a8199: PASS
-tests19.dat/5acaccf2db96d546: FAIL
+tests19.dat/5acaccf2db96d546: PASS
 tests19.dat/5c672af29d962825: PASS
 tests19.dat/605977c904d231e2: PASS
 tests19.dat/61865dcac91b17c4: PASS
@@ -1155,7 +1155,7 @@ tests19.dat/80a74a0556cce54b: PASS
 tests19.dat/83d051ea6080d033: PASS
 tests19.dat/84a0b41d4d4c88d4: FAIL
 tests19.dat/88fec90565313182: FAIL
-tests19.dat/8f3f41b74b7aad3a: FAIL
+tests19.dat/8f3f41b74b7aad3a: PASS
 tests19.dat/903f9af48528e807: PASS
 tests19.dat/9679956f43fd6d71: PASS
 tests19.dat/96962c1c8bb5269e: FAIL
@@ -1165,7 +1165,7 @@ tests19.dat/a4efaf89adfd08a4: PASS
 tests19.dat/a5114f1756834a2a: PASS
 tests19.dat/a53933c28fcc5dfc: PASS
 tests19.dat/af3fac0b5a454418: PASS
-tests19.dat/b68036170a88ae43: FAIL
+tests19.dat/b68036170a88ae43: PASS
 tests19.dat/bc2c8b52581f6a9e: PASS
 tests19.dat/bc819cfa482f0b5f: PASS
 tests19.dat/bd1b4a156c102353: PASS
@@ -1180,12 +1180,12 @@ tests19.dat/d0940677c29ce619: PASS
 tests19.dat/d1ab88e71acf8065: PASS
 tests19.dat/d8130337d3dc6f09: PASS
 tests19.dat/d889a9fa31d52480: PASS
-tests19.dat/dcd96e01952f69b2: FAIL
+tests19.dat/dcd96e01952f69b2: PASS
 tests19.dat/df13285da2278bdf: PASS
 tests19.dat/e08b34121b82e29b: PASS
 tests19.dat/e38d7c1c2b66700c: PASS
 tests19.dat/e81c4caabcdc6180: FAIL
-tests19.dat/eb59922a167221b8: FAIL
+tests19.dat/eb59922a167221b8: PASS
 tests19.dat/ee993943f7ab78bb: PASS
 tests19.dat/f506a2d8883fbf3f: PASS
 tests19.dat/f5881b822a04be3a: PASS
@@ -1198,7 +1198,7 @@ tests19.dat/fda3630f2ca4eeed: PASS
 tests19.dat/fdd5ef6afa087199: PASS
 tests19.dat/fea3da51961b5ee4: FAIL
 tests19.dat/ff25b086d73c3739: PASS
-tests2.dat/008faed9c8492d9c: FAIL
+tests2.dat/008faed9c8492d9c: PASS
 tests2.dat/020c1d020b0f682a: PASS
 tests2.dat/136a14b382733354: FAIL
 tests2.dat/1397b96737e7b722: PASS
@@ -1215,7 +1215,7 @@ tests2.dat/378b5ae3780518a6: FAIL
 tests2.dat/3a9348098b6d1565: FAIL
 tests2.dat/3afd0697a394fe13: PASS
 tests2.dat/3cfd6d0496129bb8: PASS
-tests2.dat/4447d247272641cf: FAIL
+tests2.dat/4447d247272641cf: PASS
 tests2.dat/4713d182a99b32ea: PASS
 tests2.dat/4777195d53e42b7e: PASS
 tests2.dat/483b78f930598951: PASS
@@ -1462,7 +1462,7 @@ tests5.dat/b31cd20478f74748: PASS
 tests5.dat/b3a550c6e0f9202e: PASS
 tests5.dat/b621ea11e6feecad: PASS
 tests5.dat/c8233e6c4425fc32: PASS
-tests6.dat/0118733aae13d726: FAIL
+tests6.dat/0118733aae13d726: PASS
 tests6.dat/01c988375231c6e5: FAIL
 tests6.dat/0305ca36a7002e1e: FAIL
 tests6.dat/06a53b1a6b9733cd: PASS
@@ -1471,7 +1471,7 @@ tests6.dat/234ccfb7c9623980: PASS
 tests6.dat/24a610ccecf0391a: PASS
 tests6.dat/251a1c65fc9b4bf3: PASS
 tests6.dat/27803eaa34c40a9c: FAIL
-tests6.dat/289bfeb8a0b1d043: FAIL
+tests6.dat/289bfeb8a0b1d043: PASS
 tests6.dat/2f04d619e45ba44b: PASS
 tests6.dat/34fbb0fcfbf924c0: FAIL
 tests6.dat/3b49104f0a26fa3e: PASS
@@ -1479,7 +1479,7 @@ tests6.dat/3c7ff158a52cf058: PASS
 tests6.dat/41f1c88dab933c17: PASS
 tests6.dat/444d3c853bc15c7e: PASS
 tests6.dat/4451f3232c6aae95: PASS
-tests6.dat/467a34b1bcd54c4c: FAIL
+tests6.dat/467a34b1bcd54c4c: PASS
 tests6.dat/4a77d0eb75214034: PASS
 tests6.dat/4cc75c325c5b36a1: PASS
 tests6.dat/4f5626802db6e651: FAIL
@@ -1487,8 +1487,8 @@ tests6.dat/51aefeea274704dd: PASS
 tests6.dat/5254fb4ec3d683e3: PASS
 tests6.dat/5523caf13c34d595: PASS
 tests6.dat/5cdc0a01229c558d: PASS
-tests6.dat/5e69749a2704e3e1: FAIL
-tests6.dat/6786c16bc8bdc8f2: FAIL
+tests6.dat/5e69749a2704e3e1: PASS
+tests6.dat/6786c16bc8bdc8f2: PASS
 tests6.dat/68ef1a5644486871: PASS
 tests6.dat/68fae944253ef950: PASS
 tests6.dat/6a41ac2c962e6ea7: FAIL
@@ -1507,7 +1507,7 @@ tests6.dat/c2c585d7b45d8192: PASS
 tests6.dat/c7d0d07d268e940c: PASS
 tests6.dat/d0caaf688d65cb32: PASS
 tests6.dat/d98c9f42216e9b39: PASS
-tests6.dat/dec2c0f2972bc1ae: FAIL
+tests6.dat/dec2c0f2972bc1ae: PASS
 tests6.dat/df70ef379f969e70: PASS
 tests6.dat/e856fad35af654b9: PASS
 tests6.dat/ecb0dc6840b6282e: FAIL
