@@ -2951,7 +2951,8 @@ export struct HtmlParser : HtmlSink {
             // Clear the stack back to a table context. (See below.)
             _clearTheStackBackToATableContext();
 
-            // TODO: Insert a marker at the end of the list of active formatting elements.
+            // Insert a marker at the end of the list of active formatting elements.
+            _activeFormattingElements.pushMarker();
 
             // Insert an HTML element for the token, then switch the insertion mode to "in caption".
             _insertHtmlElement(t);
@@ -3213,7 +3214,8 @@ export struct HtmlParser : HtmlSink {
             // Pop elements from this stack until a caption element has been popped from the stack.
             _openElements.popUntilOneOf(Html::CAPTION_TAG);
 
-            // TODO: Clear the list of active formatting elements up to the last marker.
+            // Clear the list of active formatting elements up to the last marker.
+            _activeFormattingElements.clearUpToLastMarker();
 
             // Switch the insertion mode to "in table".
             _switchTo(Mode::IN_TABLE);
@@ -3482,7 +3484,8 @@ export struct HtmlParser : HtmlSink {
             _insertHtmlElement(t);
             _switchTo(Mode::IN_CELL);
 
-            // TODO: Insert a marker at the end of the list of active formatting elements.
+            // Insert a marker at the end of the list of active formatting elements.
+            _activeFormattingElements.pushMarker();
         }
 
         // An end tag whose tag name is "tr"
@@ -3587,7 +3590,8 @@ export struct HtmlParser : HtmlSink {
             // Pop elements from the stack of open elements until a td element or a th element has been popped from the stack.
             _openElements.popUntilOneOf(Html::TD_TAG, Html::TH_TAG);
 
-            // TODO: Clear the list of active formatting elements up to the last marker.
+            // Clear the list of active formatting elements up to the last marker.
+            _activeFormattingElements.clearUpToLastMarker();
 
             // Switch the insertion mode to "in row".
             _switchTo(Mode::IN_ROW);
@@ -3620,7 +3624,8 @@ export struct HtmlParser : HtmlSink {
             // the token has been popped from the stack.
             _openElements.popUntilOneOf(tokenQualifiedName);
 
-            // TODO: Clear the list of active formatting elements up to the last marker.
+            // Clear the list of active formatting elements up to the last marker.
+            _activeFormattingElements.clearUpToLastMarker();
 
             // Switch the insertion mode to "in row".
             _switchTo(Mode::IN_ROW);
