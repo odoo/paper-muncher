@@ -71,7 +71,7 @@ export struct Element : Node {
 
     // MARK: Name --------------------------------------------------------------
 
-    Symbol namespaceUri() const {
+    Opt<Symbol> namespaceUri() const {
         return qualifiedName.ns;
     }
 

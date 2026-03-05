@@ -10,7 +10,7 @@ namespace Dom {
 // https://dom.spec.whatwg.org/#concept-element-qualified-name
 // https://dom.spec.whatwg.org/#concept-attribute-qualified-name
 export struct QualifiedName {
-    Symbol ns; // https://www.w3.org/TR/2011/WD-html5-20110525/namespaces.html
+    Opt<Symbol> ns; // https://www.w3.org/TR/2011/WD-html5-20110525/namespaces.html
     Symbol name;
 
     bool operator==(QualifiedName const& other) const = default;
@@ -59,7 +59,7 @@ export Array const IMPLIED_END_TAGS = {
     RT_TAG
 };
 
-#define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT##_ATTR = {NAMESPACE, Symbol::from(#VALUE)};
+#define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT##_ATTR = {NONE, Symbol::from(#VALUE)};
 #include "defs/ns-html-attr-names.inc"
 #undef ATTR
 
@@ -73,7 +73,7 @@ export Symbol NAMESPACE = "http://www.w3.org/2000/svg"_sym;
 #include "defs/ns-svg-tag-names.inc"
 #undef TAG
 
-#define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT##_ATTR = {NAMESPACE, Symbol::from(#VALUE)};
+#define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT##_ATTR = {NONE, Symbol::from(#VALUE)};
 #include "defs/ns-svg-attr-names.inc"
 #undef ATTR
 
@@ -107,7 +107,7 @@ export Symbol NAMESPACE = "http://www.w3.org/1998/Math/MathML"_sym;
 #include "defs/ns-mathml-tag-names.inc"
 #undef TAG
 
-#define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT##_ATTR = {NAMESPACE, Symbol::from(#VALUE)};
+#define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT##_ATTR = {NONE, Symbol::from(#VALUE)};
 #include "defs/ns-mathml-attr-names.inc"
 #undef ATTR
 
@@ -116,7 +116,12 @@ export Symbol NAMESPACE = "http://www.w3.org/1998/Math/MathML"_sym;
 namespace Dom {
 
 void Dom::QualifiedName::repr(Io::Emit& e) const {
-    Str displayNamespace = ns.str();
+    if (not ns) {
+        e(name.str());
+        return;
+    }
+
+    Str displayNamespace = ns->str();
 
     if (ns == Html::NAMESPACE) {
         displayNamespace = "html";
