@@ -71,7 +71,7 @@ comments01.dat/0d0a43682fd3c4db: PASS
 comments01.dat/238f50c9fbc0e00a: PASS
 comments01.dat/24940c987f3096c5: PASS
 comments01.dat/3de0d03820f17f6c: PASS
-comments01.dat/42cc881054c800a0: FAIL
+comments01.dat/42cc881054c800a0: PASS
 comments01.dat/4cb57e9f40b20a75: PASS
 comments01.dat/4f16afcc5dd32fc3: PASS
 comments01.dat/7f6ab8b0a637d8bb: PASS
@@ -79,7 +79,7 @@ comments01.dat/891045ad0f86a008: PASS
 comments01.dat/9bc85c69f699b530: PASS
 comments01.dat/9c50ad56844a7b79: PASS
 comments01.dat/a5a15c2cb152af52: PASS
-comments01.dat/f3a1738b6fc7fe83: FAIL
+comments01.dat/f3a1738b6fc7fe83: PASS
 comments01.dat/f4cc336f7f14b6eb: PASS
 comments01.dat/faf4827cb9f656ed: PASS
 doctype01.dat/00da975762309f7e: FAIL
