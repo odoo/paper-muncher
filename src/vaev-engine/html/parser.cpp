@@ -2506,6 +2506,22 @@ export struct HtmlParser : HtmlSink {
 
         // A start tag whose tag name is "input"
         else if (t.type == HtmlToken::START_TAG and t.name == "input") {
+            // TODO
+            // If the parser was created as part of the HTML fragment parsing algorithm (fragment case) and the
+            // context element passed to that algorithm is a select element:
+            // 1. Parse error.
+            // 2. Ignore the token.
+            // 3. Return.
+
+            // If the stack of open elements has a select element in scope:
+            if (_hasElementInScope(Html::SELECT_TAG)) {
+                // 1. Parse error.
+                _raise(diags, t.span, "unexpected input start tag");
+
+                // Pop elements from the stack of open elements until a select element has been popped from the stack.
+                _openElements.popUntilOneOf(Html::SELECT_TAG);
+            }
+
             // Reconstruct the active formatting elements, if any.
             _reconstructActiveFormattingElements();
 
@@ -2520,12 +2536,8 @@ export struct HtmlParser : HtmlSink {
             // or if it does, but that attribute's value is not an ASCII case-insensitive match for the string "hidden",
             bool hasHiddenAsTypeAttrValue = false;
             for (auto& [name, value] : t.attrs) {
-                if (name == "type") {
-                    // TODO: ASCII case-insensitive match
-                    if (value == "hidden") {
-                        hasHiddenAsTypeAttrValue = true;
-                    }
-
+                if (name == "type" and startWith(value, "hidden"s, eqAsciiCi) == Match::YES) {
+                    hasHiddenAsTypeAttrValue = true;
                     break;
                 }
             }
@@ -3075,37 +3087,34 @@ export struct HtmlParser : HtmlSink {
 
         // A start tag whose tag name is "input"
         else if (t.type == HtmlToken::START_TAG and t.name == "input") {
-
             // If the token does not have an attribute with the name "type",
             // or if it does, but that attribute's value is not an ASCII case-insensitive match for the string "hidden",
             bool hasHiddenAsTypeAttrValue = false;
             for (auto& [name, value] : t.attrs) {
-                if (name == "type") {
-                    // TODO: ASCII case-insensitive match
-                    if (eqCi(value.str(), "hidden"s)) {
-                        hasHiddenAsTypeAttrValue = true;
-                    }
-
+                if (name == "type" and startWith(value.str(), "hidden"s, eqAsciiCi) == Match::YES) {
+                    hasHiddenAsTypeAttrValue = true;
                     break;
                 }
             }
 
-            // then: act as described in the "anything else" entry below.
-            if (hasHiddenAsTypeAttrValue) {
+            if (not hasHiddenAsTypeAttrValue) {
+                // then: act as described in the "anything else" entry below.
                 _inTableModeAnythingElse(t, diags);
                 return;
             }
 
-            // Parse error.
+            // Otherwise:
+
+            // 1. Parse error.
             _raise(diags, t.span, "unexpected input start tag");
 
-            // Insert an HTML element for the token.
+            // 2. Insert an HTML element for the token.
             _insertHtmlElement(t);
 
-            // Pop that input element off the stack of open elements.
+            // 3. Pop that input element off the stack of open elements.
             _openElements.pop();
 
-            // Acknowledge the token's self-closing flag, if it is set.
+            // 4. Acknowledge the token's self-closing flag, if it is set.
             _acknowledgeSelfClosingFlag(t);
         }
 
