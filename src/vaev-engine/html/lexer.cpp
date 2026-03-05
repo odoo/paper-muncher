@@ -2359,6 +2359,7 @@ export struct HtmlLexer {
             // data state. Emit the current comment token.
             else if (rune == '>') {
                 _raise(diags, loc, "incorrectly-closed-comment");
+                _ensure(HtmlToken::COMMENT).data = _builder.take();
                 _switchTo(State::DATA);
                 _emit(diags);
             }
@@ -2368,6 +2369,7 @@ export struct HtmlLexer {
             // token. Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-comment");
+                _ensure(HtmlToken::COMMENT).data = _builder.take();
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
                 _emit(diags);
