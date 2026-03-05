@@ -10,7 +10,7 @@ namespace Dom {
 // https://dom.spec.whatwg.org/#concept-element-qualified-name
 // https://dom.spec.whatwg.org/#concept-attribute-qualified-name
 export struct QualifiedName {
-    Symbol ns; // https://www.w3.org/TR/2011/WD-html5-20110525/namespaces.html
+    Opt<Symbol> ns; // https://www.w3.org/TR/2011/WD-html5-20110525/namespaces.html
     Symbol name;
 
     bool operator==(QualifiedName const& other) const = default;
@@ -116,7 +116,12 @@ export Symbol NAMESPACE = "http://www.w3.org/1998/Math/MathML"_sym;
 namespace Dom {
 
 void Dom::QualifiedName::repr(Io::Emit& e) const {
-    Str displayNamespace = ns.str();
+    if (not ns) {
+        e(name.str());
+        return;
+    }
+
+    Str displayNamespace = ns->str();
 
     if (ns == Html::NAMESPACE) {
         displayNamespace = "html";

@@ -25,7 +25,7 @@ export struct XmlParser {
 
     // 2 MARK: Documents
     // https://www.w3.org/TR/xml/#sec-documents
-    Res<> parse(Io::SScan& s, Symbol ns, Dom::Document& doc) {
+    Res<> parse(Io::SScan& s, Opt<Symbol> ns, Dom::Document& doc) {
         // document :: = prolog element Misc *
 
         try$(_parseProlog(s, doc));
@@ -368,7 +368,7 @@ export struct XmlParser {
     // 3 MARK: Logical Structures
     // https://www.w3.org/TR/xml/#sec-logical-struct
 
-    Res<Gc::Ref<Dom::Element>> _parseElement(Io::SScan& s, Symbol ns) {
+    Res<Gc::Ref<Dom::Element>> _parseElement(Io::SScan& s, Opt<Symbol> ns) {
         // element ::= EmptyElemTag | STag content ETag
 
         auto rollback = s.rollbackPoint();
@@ -393,7 +393,7 @@ export struct XmlParser {
     // 3.1 MARK: Start-Tags, End-Tags, and Empty-Element Tags
     // https://www.w3.org/TR/xml/#sec-starttags
 
-    Res<Gc::Ref<Dom::Element>> _parseStartTag(Io::SScan& s, Symbol ns) {
+    Res<Gc::Ref<Dom::Element>> _parseStartTag(Io::SScan& s, Opt<Symbol> ns) {
         // STag ::= '<' Name (S Attribute)* S? '>'
 
         auto rollback = s.rollbackPoint();
@@ -416,7 +416,7 @@ export struct XmlParser {
         return Ok(el);
     }
 
-    Res<> _parseAttribute(Io::SScan& s, Symbol ns, Dom::Element& el) {
+    Res<> _parseAttribute(Io::SScan& s, Opt<Symbol> ns, Dom::Element& el) {
         // Attribute ::= Name Eq AttValue
 
         auto rollback = s.rollbackPoint();
@@ -488,7 +488,7 @@ export struct XmlParser {
         return Ok();
     }
 
-    Res<> _parseContentItem(Io::SScan& s, Symbol ns, Dom::Element& el) {
+    Res<> _parseContentItem(Io::SScan& s, Opt<Symbol> ns, Dom::Element& el) {
         // (element | Reference | CDSect | PI | Comment)
 
         if (auto r = _parseElement(s, ns)) {
@@ -505,7 +505,7 @@ export struct XmlParser {
         }
     }
 
-    Res<> _parseContent(Io::SScan& s, Symbol ns, Dom::Element& el) {
+    Res<> _parseContent(Io::SScan& s, Opt<Symbol> ns, Dom::Element& el) {
         // content ::= CharData? ((element | Reference | CDSect | PI | Comment) CharData?)*
 
         try$(_parseText(s, el));
@@ -540,7 +540,7 @@ export struct XmlParser {
         return Ok();
     }
 
-    Res<Gc::Ref<Dom::Element>> _parseEmptyElementTag(Io::SScan& s, Symbol ns) {
+    Res<Gc::Ref<Dom::Element>> _parseEmptyElementTag(Io::SScan& s, Opt<Symbol> ns) {
         // EmptyElemTag ::= '<' Name (S Attribute)* S? '/>'
 
         auto rollback = s.rollbackPoint();
@@ -668,7 +668,7 @@ export struct XmlParser {
     // https://www.w3.org/TR/xml-names/#scoping-defaulting
     // NOTE: Basically same code as attribute parsing, but we need to check for the namespace before parsing the attributes
 
-    Res<Symbol> _parseElementsNamespace(Io::SScan& s, Symbol originalNs) {
+    Res<Opt<Symbol>> _parseElementsNamespace(Io::SScan& s, Opt<Symbol> originalNs) {
         auto rollback = s.rollbackPoint();
         while (not s.skip('>') and not s.ended()) {
 

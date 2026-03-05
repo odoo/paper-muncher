@@ -680,14 +680,14 @@ export struct HtmlParser : HtmlSink {
     }
 
     // https://html.spec.whatwg.org/multipage/parsing.html#create-an-element-for-the-token
-    Gc::Ref<Dom::Element> _createElementFor(HtmlToken const& t, Symbol ns) {
+    Gc::Ref<Dom::Element> _createElementFor(HtmlToken const& t, Symbol ns, [[maybe_unused]] Gc::Ref<Dom::Node> parent) {
         // NOSPEC: Keep it simple for the POC
 
         // 1. If the active speculative HTML parser is not null, then return the
-        //    result of creating a speculative mock element given given namespace,
+        //    result of creating a speculative mock element given namespace,
         //    the tag name of the given token, and the attributes of the given token.
 
-        // 2. Otherwise, optionally create a speculative mock element given given
+        // 2. Otherwise, optionally create a speculative mock element given
         //    namespace, the tag name of the given token, and the attributes of
         //    the given token.
 
@@ -727,7 +727,7 @@ export struct HtmlParser : HtmlSink {
 
         // 10. Append each attribute in the given token to element.
         for (auto& [name, value] : t.attrs) {
-            el->setAttribute(Dom::QualifiedName{ns, name}, value);
+            el->setAttribute(Dom::QualifiedName{NONE, name}, value);
         }
 
         // 11. If will execute script is true, then:
@@ -771,7 +771,7 @@ export struct HtmlParser : HtmlSink {
         // 2. Let element be the result of creating an element for the token in the
         // given namespace, with the intended parent being the element in which the
         // adjusted insertion location finds itself.
-        auto el = _createElementFor(t, ns);
+        auto el = _createElementFor(t, ns, location.parent.upgrade());
 
         // 3. If onlyAddToElementStack is false, then run insert an element at the adjusted insertion location with element.
         if (not onlyAddToElementStack) {
@@ -1133,7 +1133,7 @@ export struct HtmlParser : HtmlSink {
 
         // A start tag whose tag name is "html"
         else if (t.type == HtmlToken::START_TAG and t.name == "html") {
-            auto el = _createElementFor(t, Html::NAMESPACE);
+            auto el = _createElementFor(t, Html::NAMESPACE, _document);
             _document->appendChild(el);
             _openElements.push(el);
             _switchTo(Mode::BEFORE_HEAD);
@@ -1283,12 +1283,12 @@ export struct HtmlParser : HtmlSink {
         // A start tag whose tag name is "script"
         else if (t.type == HtmlToken::START_TAG and (t.name == "script")) {
             // 1. Let the adjusted insertion location be the appropriate place for inserting a node.
-            auto localtion = _apropriatePlaceForInsertingANode();
+            auto location = _apropriatePlaceForInsertingANode();
 
             // 2. Create an element for the token in the HTML namespace, with
             //    the intended parent being the element in which the adjusted
             //    insertion location finds itself.
-            auto el = _createElementFor(t, Html::NAMESPACE);
+            auto el = _createElementFor(t, Html::NAMESPACE, location.parent.upgrade());
 
             // 3. Set the element's parser document to the Document, and set
             //    the element's force async to false.
@@ -1318,7 +1318,7 @@ export struct HtmlParser : HtmlSink {
             // NOSPEC: We don't support document.write()
 
             // 6. Insert the newly created element at the adjusted insertion location.
-            localtion.insert(el);
+            location.insert(el);
 
             // 7. Push the element onto the stack of open elements so that it is the new current node.
             _openElements.push(el);
@@ -1664,7 +1664,7 @@ export struct HtmlParser : HtmlSink {
                     // 6. Create an element for the token for which the element node was created, in the HTML namespace,
                     //    with commonAncestor as the intended parent;
                     auto nodeToken = _activeFormattingElements.findElement(node)->token();
-                    auto el = _createElementFor(nodeToken, Html::NAMESPACE);
+                    auto el = _createElementFor(nodeToken, Html::NAMESPACE, commonAncestor);
 
                     // replace the entry for node in the list of active formatting elements with an entry for the new element,
                     _activeFormattingElements.replace(node, el, nodeToken);
@@ -1696,7 +1696,7 @@ export struct HtmlParser : HtmlSink {
                 // 15. Create an element for the token for which formattingElement was created,
                 //     in the HTML namespace,with furthestBlock as the intended parent.
                 auto formattingElementToken = _activeFormattingElements.findElement(formattingElement)->token();
-                auto newEl = _createElementFor(formattingElementToken, Html::NAMESPACE);
+                auto newEl = _createElementFor(formattingElementToken, Html::NAMESPACE, furthestBlock.unwrap());
 
                 // 16. Take all of the child nodes of furthestBlock and append them to the element created in the last step.
                 while (auto child = furthestBlock.unwrap()->firstChild()) {
@@ -4159,7 +4159,7 @@ export struct HtmlParser : HtmlSink {
             }
 
             // Insert a foreign element for the token, with adjusted current node's namespace and false.
-            _insertAForeignElement(t, _currentElement()->qualifiedName.ns, false);
+            _insertAForeignElement(t, _currentElement()->qualifiedName.ns.unwrap(), false);
 
             // If the token has its self-closing flag set, then run the appropriate steps from the following list:
             if (t.selfClosing) {
