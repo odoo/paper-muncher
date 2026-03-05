@@ -272,11 +272,11 @@ def _saveTest(result: TestResult, root_dir: Path):
         (testDir / "input").write_bytes(result.input)
 
     if result.reference:
-        (testDir / "reference").write_text(json.dumps(result.reference))
+        (testDir / "reference").write_text(result.reference)
 
     for i, a in enumerate(result.actual):
         if result.actual:
-            (testDir / ("actual-" + str(i))).write_text(json.dumps(a))
+            (testDir / ("actual-" + str(i))).write_text(a)
 
     if result.error:
         (testDir / "error").write_text(result.error)
