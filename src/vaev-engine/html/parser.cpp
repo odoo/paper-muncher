@@ -3651,6 +3651,108 @@ export struct HtmlParser : HtmlSink {
         }
     }
 
+    // 13.2.6.4.16 The "in template" insertion mode
+    // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intemplate
+    void _handleInTemplate(HtmlToken& t, Diag::Collector& diags) {
+        // A character token
+        // A comment token
+        // A DOCTYPE token
+        if (t.type == HtmlToken::CHARACTER or t.type == HtmlToken::COMMENT or t.type == HtmlToken::DOCTYPE) {
+            _acceptIn(Mode::IN_BODY, t, diags);
+        }
+
+        // A start tag whose tag name is one of: "base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title"
+        // An end tag whose tag name is "template"
+        else if (
+            (t.type == HtmlToken::START_TAG and oneOf(t.name, "base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title")) or
+            (t.type == HtmlToken::END_TAG and t.name == "template")
+        ) {
+            _acceptIn(Mode::IN_HEAD, t, diags);
+        }
+
+        // A start tag whose tag name is one of: "caption", "colgroup", "tbody", "tfoot", "thead"
+        else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "caption", "colgroup", "tbody", "tfoot", "thead")) {
+            // TODO: Pop the current template insertion mode off the stack of template insertion modes.
+            // TODO: Push "in table" onto the stack of template insertion modes so that it is the new current template insertion mode.
+
+            // Switch the insertion mode to "in table", and reprocess the token.
+            _switchTo(Mode::IN_TABLE);
+            accept(t, diags);
+        }
+
+        // A start tag whose tag name is "col"
+        else if (t.type == HtmlToken::START_TAG and t.name == "col") {
+            // TODO: Pop the current template insertion mode off the stack of template insertion modes.
+            // TODO: Push "in column group" onto the stack of template insertion modes so that it is the new current template insertion mode.
+
+            // Switch the insertion mode to "in column group", and reprocess the token.
+            _switchTo(Mode::IN_COLUMN_GROUP);
+            accept(t, diags);
+        }
+
+        // A start tag whose tag name is "tr"
+        else if (t.type == HtmlToken::START_TAG and t.name == "col") {
+            // TODO: Pop the current template insertion mode off the stack of template insertion modes.
+            // TODO: Push "in table body" onto the stack of template insertion modes so that it is the new current template insertion mode.
+
+            // Switch the insertion mode to "in table body", and reprocess the token.
+            _switchTo(Mode::IN_TABLE_BODY);
+            accept(t, diags);
+        }
+
+        // A start tag whose tag name is one of: "td", "th"
+        else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "td", "th")) {
+            // TODO: Pop the current template insertion mode off the stack of template insertion modes.
+            // TODO: Push "in row" onto the stack of template insertion modes so that it is the new current template insertion mode.
+
+            // Switch the insertion mode to "in row", and reprocess the token.
+            _switchTo(Mode::IN_ROW);
+            accept(t, diags);
+        }
+
+        // Any other start tag
+        else if (t.type == HtmlToken::START_TAG) {
+            // TODO: Pop the current template insertion mode off the stack of template insertion modes.
+            // TODO: Push "in body" onto the stack of template insertion modes so that it is the new current template insertion mode.
+
+            // Switch the insertion mode to "in body", and reprocess the token.
+            _switchTo(Mode::IN_BODY);
+            accept(t, diags);
+        }
+
+        // Any other end tag
+        else if (t.type == HtmlToken::END_TAG) {
+            // Parse error. Ignore the token.
+            _raise(diags, t.span, "unexpected end tag");
+        }
+
+        // An end-of-file token
+        else if (t.type == HtmlToken::END_OF_FILE) {
+            // If there is no template element on the stack of open elements,
+            if (not _openElements.contains(Html::TEMPLATE_TAG)) {
+                //  then stop parsing. (fragment case)
+                return;
+            }
+
+            // Otherwise, this is a parse error.
+            _raise(diags, t.span, "unexpected end of file");
+
+            // Pop elements from the stack of open elements until a template element has been popped from the stack.
+            _openElements.popUntilOneOf(Html::TEMPLATE_TAG);
+
+            // Clear the list of active formatting elements up to the last marker.
+            _activeFormattingElements.clearUpToLastMarker();
+
+            // TODO: Pop the current template insertion mode off the stack of template insertion modes.
+
+            // Reset the insertion mode appropriately.
+            _resetTheInsertionModeAppropriately();
+
+            // Reprocess the token.
+            accept(t, diags);
+        }
+    }
+
     // 3.2.6.4.22 MARK: The "after after body" insertion mode
     // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-afterbody
     void _handleAfterBody(HtmlToken& t, Diag::Collector& diags) {
@@ -3697,6 +3799,148 @@ export struct HtmlParser : HtmlSink {
         }
     }
 
+    // 13.2.6.4.18 The "in frameset" insertion mode
+    // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inframeset
+    void _handleInFrameset(HtmlToken& t, Diag::Collector& diags) {
+        // A character token that is one of U+0009 CHARACTER TABULATION, U+000A LINE FEED (LF),
+        // U+000C FORM FEED (FF),U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
+        if (t.type == HtmlToken::CHARACTER and (t.rune == '\t' or t.rune == '\n' or t.rune == '\f' or t.rune == '\r' or t.rune == ' ')) {
+            // Insert the character.
+            _insertACharacter(t.rune);
+        }
+
+        // A comment token
+        else if (t.type == HtmlToken::COMMENT) {
+            // Insert a comment.
+            _insertAComment(t);
+        }
+
+        // A DOCTYPE token
+        else if (t.type == HtmlToken::DOCTYPE) {
+            // Parse error. Ignore the token.
+            _raise(diags, t.span, "unexpected doctype");
+        }
+
+        // A start tag whose tag name is "html"
+        else if (t.type == HtmlToken::START_TAG and t.name == "html") {
+            // Process the token using the rules for the "in body" insertion mode.
+            _acceptIn(Mode::IN_BODY, t, diags);
+        }
+
+        // A start tag whose tag name is "frameset"
+        else if (t.type == HtmlToken::START_TAG and t.name == "frameset") {
+            // Insert an HTML element for the token.
+            _insertHtmlElement(t);
+        }
+
+        // An end tag whose tag name is "frameset"
+        else if (t.type == HtmlToken::END_TAG and t.name == "frameset") {
+            // If the current node is the root html element,
+            if (_openElements.len() == 1) {
+                // then this is a parse error;
+                _raise(diags, t.span, "unexpected frameset end tag");
+                // ignore the token. (fragment case)
+                return;
+            }
+
+            // Otherwise, pop the current node from the stack of open elements.
+            _openElements.pop();
+
+            // TODO
+            // If the parser was not created as part of the HTML fragment parsing algorithm (fragment case),
+            // and the current node is no longer a frameset element,then switch the insertion mode to "after frameset".
+        }
+
+        // A start tag whose tag name is "frame"
+        else if (t.type == HtmlToken::START_TAG and t.name == "frame") {
+            // Insert an HTML element for the token.
+            _insertHtmlElement(t);
+
+            // Immediately pop the current node off the stack of open elements.
+            _openElements.pop();
+
+            // Acknowledge the token's self-closing flag, if it is set.
+            if (t.selfClosing) {
+                _acknowledgeSelfClosingFlag(t);
+            }
+        }
+
+        // A start tag whose tag name is "noframes"
+        else if (t.type == HtmlToken::START_TAG and t.name == "noframes") {
+            // Process the token using the rules for the "in head" insertion mode.
+            _acceptIn(Mode::IN_HEAD, t, diags);
+        }
+
+        // An end-of-file token
+        else if (t.type == HtmlToken::END_OF_FILE) {
+            // If the current node is not the root html element, then this is a parse error.
+            // NOTE: The current node can only be the root html element in the fragment case.
+            if (_openElements.len() == 1) {
+                _raise(diags, t.span, "unexpected end of file");
+            }
+
+            // Stop parsing.
+        }
+
+        // Anything else
+        else {
+            // Parse error. Ignore the token.
+            _raise(diags, t.span, "unexpected token");
+        }
+    }
+
+    // 13.2.6.4.19 The "after frameset" insertion mode
+    // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-afterframeset
+    void _handleAfterFrameset(HtmlToken& t, Diag::Collector& diags) {
+        // A character token that is one of U+0009 CHARACTER TABULATION, U+000A LINE FEED (LF),
+        // U+000C FORM FEED (FF),U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
+        if (t.type == HtmlToken::CHARACTER and (t.rune == '\t' or t.rune == '\n' or t.rune == '\f' or t.rune == '\r' or t.rune == ' ')) {
+            // Insert the character.
+            _insertACharacter(t.rune);
+        }
+
+        // A comment token
+        else if (t.type == HtmlToken::COMMENT) {
+            // Insert a comment.
+            _insertAComment(t);
+        }
+
+        // A DOCTYPE token
+        else if (t.type == HtmlToken::DOCTYPE) {
+            // Parse error. Ignore the token.
+            _raise(diags, t.span, "unexpected doctype");
+        }
+
+        // A start tag whose tag name is "html"
+        else if (t.type == HtmlToken::START_TAG and t.name == "html") {
+            // Process the token using the rules for the "in body" insertion mode.
+            _acceptIn(Mode::IN_BODY, t, diags);
+        }
+
+        // A end tag whose tag name is "html"
+        else if (t.type == HtmlToken::END_TAG and t.name == "html") {
+            // Switch the insertion mode to "after after frameset".
+            _switchTo(Mode::AFTER_AFTER_FRAMESET);
+        }
+
+        // A start tag whose tag name is "noframes"
+        else if (t.type == HtmlToken::START_TAG and t.name == "noframes") {
+            // Process the token using the rules for the "in head" insertion mode.
+            _acceptIn(Mode::IN_HEAD, t, diags);
+        }
+
+        // An end-of-file token
+        else if (t.type == HtmlToken::END_OF_FILE) {
+            // Stop parsing.
+        }
+
+        // Anything else
+        else {
+            // Parse error. Ignore the token.
+            _raise(diags, t.span, "unexpected token");
+        }
+    }
+
     // 13.2.6.4.17 MARK: The "after body" insertion mode
     // https://html.spec.whatwg.org/multipage/parsing.html#the-after-after-body-insertion-mode
     void _handleAfterAfterBody(HtmlToken& t, Diag::Collector& diags) {
@@ -3725,6 +3969,43 @@ export struct HtmlParser : HtmlSink {
             _raise(diags, t.span, "unexpected token");
             _switchTo(Mode::IN_BODY);
             accept(t, diags);
+        }
+    }
+
+    // 13.2.6.4.21 MARK: The "after after frameset" insertion mode
+    // https://html.spec.whatwg.org/multipage/parsing.html#the-after-after-frameset-insertion-mode
+    void _handleAfterAfterFrameset(HtmlToken& t, Diag::Collector& diags) {
+        // A comment token
+        if (t.type == HtmlToken::COMMENT) {
+            // Insert a comment.
+            _insertAComment(t);
+        }
+
+        // A DOCTYPE token
+        // A character token that is one of U+0009 CHARACTER TABULATION, U+000A LINE FEED (LF), U+000C FORM FEED (FF), U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
+        // A start tag whose tag name is "html"
+        else if (t.type == HtmlToken::DOCTYPE or
+                 (t.type == HtmlToken::CHARACTER and (t.rune == '\t' or t.rune == '\n' or t.rune == '\f' or t.rune == '\r' or t.rune == ' ')) or
+                 (t.type == HtmlToken::START_TAG and t.name == "html")) {
+            // Process the token using the rules for the "in body" insertion mode.
+            _acceptIn(Mode::IN_BODY, t, diags);
+         }
+
+        // An end-of-file token
+        else if (t.type == HtmlToken::END_OF_FILE) {
+            // Stop parsing.
+        }
+
+        // A start tag whose tag name is "noframes"
+        else if (t.type == HtmlToken::START_TAG and t.name == "noframes") {
+            // Process the token using the rules for the "in head" insertion mode.
+            _acceptIn(Mode::IN_HEAD, t, diags);
+        }
+
+        // Anything else
+        else {
+            // Parse error. Ignore the token.
+            _raise(diags, t.span, "unexpected token");
         }
     }
 
@@ -3978,8 +4259,9 @@ export struct HtmlParser : HtmlSink {
             _handleInCell(t, diags);
             break;
 
-        // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intemplate
+        // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intemplate
         case Mode::IN_TEMPLATE:
+            _handleInTemplate(t, diags);
             break;
 
         // https://html.spec.whatwg.org/multipage/parsing.html#the-after-body-insertion-mode
@@ -3987,20 +4269,23 @@ export struct HtmlParser : HtmlSink {
             _handleAfterBody(t, diags);
             break;
 
-        // TODO: https://html.spec.whatwg.org/multipage/parsing.html#the-in-frameset-insertion-mode
+        // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inframeset
         case Mode::IN_FRAMESET:
+            _handleInFrameset(t, diags);
             break;
 
-        // TODO: https://html.spec.whatwg.org/multipage/parsing.html#the-after-frameset-insertion-mode
+        // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-afterframeset
         case Mode::AFTER_FRAMESET:
+            _handleAfterFrameset(t, diags);
             break;
 
         case Mode::AFTER_AFTER_BODY:
             _handleAfterAfterBody(t, diags);
             break;
 
-        // TODO: https://html.spec.whatwg.org/multipage/parsing.html#the-after-after-frameset-insertion-mode
+        // https://html.spec.whatwg.org/multipage/parsing.html#the-after-after-frameset-insertion-mode
         case Mode::AFTER_AFTER_FRAMESET:
+            _handleAfterAfterFrameset(t, diags);
             break;
 
         default:
