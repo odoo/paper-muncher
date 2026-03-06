@@ -44,14 +44,10 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url 
     if (mime->is("text/html"_mime)) {
         Html::HtmlParser parser{heap, dom};
         parser.write(buf, diags);
-    } else if (mime->is("application/xhtml+xml"_mime)) {
+    } else if (mime->is("application/xhtml+xml"_mime) or mime->is("image/svg+xml"_mime)) {
         Io::SScan scan{buf};
         Xml::XmlParser parser{heap};
-        co_try$(parser.parse(scan, Html::NAMESPACE, *dom));
-    } else if (mime->is("image/svg+xml"_mime)) {
-        Io::SScan scan{buf};
-        Xml::XmlParser parser{heap};
-        co_try$(parser.parse(scan, Svg::NAMESPACE, *dom));
+        co_try$(parser.parse(scan, NONE, *dom));
     } else if (mime->is("text/markdown"_mime)) {
         auto doc = Md::parse(buf);
         logDebug("markdown: {}", doc);

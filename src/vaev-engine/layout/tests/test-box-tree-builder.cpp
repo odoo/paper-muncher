@@ -455,7 +455,7 @@ testAsync$("flex-blockify") {
 
 testAsync$("table-fixup") {
     Str xhtml =
-        "<html><body><table>"
+        "<html xmlns=\"http://www.w3.org/1999/xhtml\"><body><table>"
         "wrap me!"
         "<td>wrap me also! and in the same row!</td>"
         "<tr><td>dont wrap me!</td></tr>"
