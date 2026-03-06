@@ -346,8 +346,6 @@ struct _ActiveFormattingElementList {
     MODE(IN_TABLE_BODY)              \
     MODE(IN_ROW)                     \
     MODE(IN_CELL)                    \
-    MODE(IN_SELECT)                  \
-    MODE(IN_SELECT_IN_TABLE)         \
     MODE(IN_TEMPLATE)                \
     MODE(AFTER_BODY)                 \
     MODE(IN_FRAMESET)                \
@@ -856,97 +854,63 @@ export struct HtmlParser : HtmlSink {
             if (nodeIdx == 0)
                 _last = true;
 
-            // 4. If node is a select element, run these substeps:
-            if (node->qualifiedName == Html::SELECT_TAG) {
-                // 4.1 If last is true, jump to the step below labeled done.
-                if (_last) {
-                    _switchTo(HtmlParser::Mode::IN_SELECT);
-                    return;
-                }
-
-                // 4.2 Let ancestor be node.
-                auto ancestorIdx = _openElements.len() - 1;
-
-                // 4.3 Loop: If ancestor is the first node in the stack of open elements, jump to the step below labeled done.
-                while (ancestorIdx != 0) {
-                    // 4.4 Let ancestor be the node before ancestor in the stack of open elements.
-                    ancestorIdx--;
-
-                    // 4.5 If ancestor is a template node, jump to the step below labeled done.
-                    if (_openElements[ancestorIdx]->qualifiedName == Html::SELECT_TAG)
-                        break;
-
-                    // 4.6 If ancestor is a table node, switch the insertion mode to "in select in table" and return.
-                    if (_openElements[ancestorIdx]->qualifiedName == Html::TABLE_TAG) {
-                        _switchTo(HtmlParser::Mode::IN_SELECT_IN_TABLE);
-                        return;
-                    }
-
-                    // 4.7 Jump back to the step labeled loop.
-                }
-
-                // 4.8 Done: Switch the insertion mode to "in select" and return.]
-                _switchTo(HtmlParser::Mode::IN_SELECT);
-                return;
-            }
-
-            // 5. If node is a td or th element and last is false, then switch the insertion mode to "in cell" and return.
+            // 4. If node is a td or th element and last is false, then switch the insertion mode to "in cell" and return.
             if ((node->qualifiedName == Html::TD_TAG or node->qualifiedName == Html::TH_TAG) and not _last) {
                 _switchTo(HtmlParser::Mode::IN_CELL);
                 return;
             }
 
-            // 6. If node is a tr element, then switch the insertion mode to "in row" and return.
+            // 5. If node is a tr element, then switch the insertion mode to "in row" and return.
             if (node->qualifiedName == Html::TR_TAG) {
                 _switchTo(HtmlParser::Mode::IN_ROW);
                 return;
             }
 
-            // 7. If node is a tbody, thead, or tfoot element, then switch the insertion mode to "in table body" and return.
+            // 6. If node is a tbody, thead, or tfoot element, then switch the insertion mode to "in table body" and return.
             if (node->qualifiedName == Html::TBODY_TAG or node->qualifiedName == Html::THEAD_TAG or node->qualifiedName == Html::TFOOT_TAG) {
                 _switchTo(HtmlParser::Mode::IN_TABLE_BODY);
                 return;
             }
 
-            // 8. If node is a caption element, then switch the insertion mode to "in caption" and return.
+            // 7. If node is a caption element, then switch the insertion mode to "in caption" and return.
             if (node->qualifiedName == Html::CAPTION_TAG) {
                 _switchTo(HtmlParser::Mode::IN_CAPTION);
                 return;
             }
 
-            // 9. If node is a colgroup element, then switch the insertion mode to "in column group" and return.
+            // 8. If node is a colgroup element, then switch the insertion mode to "in column group" and return.
             if (node->qualifiedName == Html::COLGROUP_TAG) {
                 _switchTo(HtmlParser::Mode::IN_COLUMN_GROUP);
                 return;
             }
 
-            // 10. If node is a table element, then switch the insertion mode to "in table" and return.
+            // 9. If node is a table element, then switch the insertion mode to "in table" and return.
             if (node->qualifiedName == Html::TABLE_TAG) {
                 _switchTo(HtmlParser::Mode::IN_TABLE);
                 return;
             }
 
-            // 11. If node is a template element, then switch the insertion mode to the current template insertion mode and return.
+            // 10. If node is a template element, then switch the insertion mode to the current template insertion mode and return.
 
-            // 12. If node is a head element and last is false, then switch the insertion mode to "in head" and return.
+            // 11. If node is a head element and last is false, then switch the insertion mode to "in head" and return.
             if (node->qualifiedName == Html::HEAD_TAG and not _last) {
                 _switchTo(HtmlParser::Mode::IN_HEAD);
                 return;
             }
 
-            // 13. If node is a body element, then switch the insertion mode to "in body" and return.
+            // 12. If node is a body element, then switch the insertion mode to "in body" and return.
             if (node->qualifiedName == Html::BODY_TAG) {
                 _switchTo(HtmlParser::Mode::IN_BODY);
                 return;
             }
 
-            // 14. If node is a frameset element, then switch the insertion mode to "in frameset" and return. (fragment case)
+            // 13. If node is a frameset element, then switch the insertion mode to "in frameset" and return. (fragment case)
             if (node->qualifiedName == Html::FRAMESET_TAG) {
                 _switchTo(HtmlParser::Mode::IN_FRAMESET);
                 return;
             }
 
-            // 15. If node is an html element, run these substeps:
+            // 14. If node is an html element, run these substeps:
             if (node->qualifiedName == Html::HTML_TAG) {
                 // 15.1 If the head element pointer is null, switch the insertion mode to "before head" and return. (fragment case)
                 if (not _headElement)
@@ -3967,14 +3931,6 @@ export struct HtmlParser : HtmlSink {
 
         case Mode::IN_CELL:
             _handleInCell(t, diags);
-            break;
-
-        // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inselect
-        case Mode::IN_SELECT:
-            break;
-
-        // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inselectintable
-        case Mode::IN_SELECT_IN_TABLE:
             break;
 
         // TODO: https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intemplate
