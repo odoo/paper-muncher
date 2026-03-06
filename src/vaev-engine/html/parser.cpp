@@ -574,7 +574,7 @@ export struct HtmlParser : HtmlSink {
     // 13.2.6.1 MARK: Creating and inserting nodes
     // https://html.spec.whatwg.org/multipage/parsing.html#creating-and-inserting-nodes
 
-    struct AdjustedInsertionLocation {
+    struct InsertionLocation {
         Gc::Ptr<Dom::Node> parent;
         Gc::Ptr<Dom::Node> insertBefore;
 
@@ -603,7 +603,7 @@ export struct HtmlParser : HtmlSink {
     };
 
     // https://html.spec.whatwg.org/multipage/parsing.html#appropriate-place-for-inserting-a-node
-    AdjustedInsertionLocation _apropriatePlaceForInsertingANode(Gc::Ptr<Dom::Element> overrideTarget = nullptr) {
+    InsertionLocation _apropriatePlaceForInsertingANode(Gc::Ptr<Dom::Element> overrideTarget = nullptr) {
         // 1. If there was an override target specified, then let target be
         //    the override target.
         //
@@ -614,7 +614,7 @@ export struct HtmlParser : HtmlSink {
 
         // 2. Determine the adjusted insertion location using the first
         //    matching steps from the following list:
-        AdjustedInsertionLocation adjustedInsertionLocation;
+        InsertionLocation adjustedInsertionLocation;
 
         //    If foster parenting is enabled and target is a table, tbody, tfoot, thead, or tr element
         //    NOTE: Foster parenting happens when content is misnested in tables.
@@ -819,14 +819,13 @@ export struct HtmlParser : HtmlSink {
     }
 
     // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-comment
-    void _insertAComment(HtmlToken const& t) {
+    void _insertAComment(HtmlToken const& t, Opt<InsertionLocation> position = NONE) {
         // 1. Let data be the data given in the comment token being processed.
 
-        // TODO:
         // 2. If position was specified, then let the adjusted insertion
         //    location be position. Otherwise, let adjusted insertion location
         //    be the appropriate place for inserting a node.
-        auto location = _apropriatePlaceForInsertingANode();
+        auto location = position ? position.unwrap() : _apropriatePlaceForInsertingANode();
 
         // 3. Create a Comment node whose data attribute is set to data and
         //    whose node document is the same as that of the node in which
@@ -3653,8 +3652,54 @@ export struct HtmlParser : HtmlSink {
     }
 
     // 3.2.6.4.22 MARK: The "after after body" insertion mode
-    // https://html.spec.whatwg.org/multipage/parsing.html#the-after-after-body-insertion-mode
+    // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-afterbody
     void _handleAfterBody(HtmlToken& t, Diag::Collector& diags) {
+        // A comment token
+        if (t.type == HtmlToken::COMMENT) {
+            // Insert a comment as the last child of the first element in the stack of open elements (the html element).
+            _insertAComment(t, InsertionLocation{_openElements.bottom(), nullptr});
+        }
+
+        // A DOCTYPE token
+        else if (t.type == HtmlToken::DOCTYPE) {
+            // Parse error. Ignore the token.
+            _raise(diags, t.span, "unexpected doctype");
+        }
+
+        // A start tag whose tag name is "html"
+        else if (t.type == HtmlToken::START_TAG and t.name == "html") {
+            // Process the token using the rules for the "in body" insertion mode.
+            _acceptIn(Mode::IN_BODY, t, diags);
+        }
+
+        // An end tag whose tag name is "html"
+        else if (t.type == HtmlToken::END_TAG and t.name == "html") {
+            // TODO: If the parser was created as part of the HTML fragment parsing algorithm, this is a parse error;
+            // TODO: ignore the token. (fragment case)
+
+            // Otherwise, switch the insertion mode to "after after body".
+            _switchTo(Mode::AFTER_AFTER_BODY);
+        }
+
+        // An end-of-file token
+        else if (t.type == HtmlToken::END_OF_FILE) {
+            // Stop parsing.
+        }
+
+        // Anything else
+        else {
+            // Parse error.
+            _raise(diags, t.span, "unexpected token");
+
+            // Switch the insertion mode to "in body" and reprocess the token.
+            _switchTo(Mode::IN_BODY);
+            accept(t, diags);
+        }
+    }
+
+    // 13.2.6.4.17 MARK: The "after body" insertion mode
+    // https://html.spec.whatwg.org/multipage/parsing.html#the-after-after-body-insertion-mode
+    void _handleAfterAfterBody(HtmlToken& t, Diag::Collector& diags) {
         // A comment token
         if (t.type == HtmlToken::COMMENT) {
             // Insert a comment.
@@ -3937,8 +3982,9 @@ export struct HtmlParser : HtmlSink {
         case Mode::IN_TEMPLATE:
             break;
 
-        // TODO: https://html.spec.whatwg.org/multipage/parsing.html#the-after-body-insertion-mode
+        // https://html.spec.whatwg.org/multipage/parsing.html#the-after-body-insertion-mode
         case Mode::AFTER_BODY:
+            _handleAfterBody(t, diags);
             break;
 
         // TODO: https://html.spec.whatwg.org/multipage/parsing.html#the-in-frameset-insertion-mode
@@ -3950,7 +3996,7 @@ export struct HtmlParser : HtmlSink {
             break;
 
         case Mode::AFTER_AFTER_BODY:
-            _handleAfterBody(t, diags);
+            _handleAfterAfterBody(t, diags);
             break;
 
         // TODO: https://html.spec.whatwg.org/multipage/parsing.html#the-after-after-frameset-insertion-mode
