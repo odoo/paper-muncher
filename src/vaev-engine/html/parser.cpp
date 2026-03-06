@@ -262,9 +262,12 @@ struct _ActiveFormattingElementList {
 
     // https://html.spec.whatwg.org/multipage/parsing.html#clear-the-list-of-active-formatting-elements-up-to-the-last-marker
     void clearUpToLastMarker() {
+        if (isEmpty(entries))
+            return;
+
         while (true) {
             // 1. Let entry be the last (most recently added) entry in the list of active formatting elements.
-            auto const& entry = last();
+            auto entry = last();
 
             // 2. Remove entry from the list of active formatting elements.
             entries.popBack();
@@ -276,6 +279,15 @@ struct _ActiveFormattingElementList {
             }
 
             // 4. Go to step 1.
+        }
+
+        // NOTE: We must keep the invariant of indexAfterLastMarker
+        indexAfterLastMarker = 0;
+        for (isize i = entries.len() - 1; i >= 0; i--) {
+            if (entries[i] == MARKER) {
+                indexAfterLastMarker = i+1;
+                break;
+            }
         }
     }
 
@@ -2341,6 +2353,7 @@ export struct HtmlParser : HtmlSink {
 
         // A start tag whose tag name is one of: "b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u"
         else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u")) { // Reconstruct the active formatting elements, if any.
+            // Reconstruct the active formatting elements, if any.
             _reconstructActiveFormattingElements();
 
             // Insert an HTML element for the token. Push onto the list of active formatting elements that element.
