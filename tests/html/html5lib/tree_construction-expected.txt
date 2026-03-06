@@ -668,7 +668,7 @@ tests1.dat/2333f09ad63335e7: PASS
 tests1.dat/2523b666650bc351: PASS
 tests1.dat/2b1a17596b8c496a: PASS
 tests1.dat/2c9fe2103427041d: PASS
-tests1.dat/2ff688acadc3bf81: FAIL
+tests1.dat/2ff688acadc3bf81: PASS
 tests1.dat/3140f160e258e244: PASS
 tests1.dat/342c5a618e2bb09f: PASS
 tests1.dat/3448e0c06374648a: PASS
@@ -751,7 +751,7 @@ tests1.dat/d7b50546b86fcf37: PASS
 tests1.dat/d85838747bf40fff: PASS
 tests1.dat/d8bcd732da381160: PASS
 tests1.dat/df2e44fa15fbbef9: PASS
-tests1.dat/df4710ab00423bcc: FAIL
+tests1.dat/df4710ab00423bcc: PASS
 tests1.dat/e48794b0efee131d: PASS
 tests1.dat/e9749bfc68e11a46: PASS
 tests1.dat/ee4e22613b80f05b: PASS
@@ -1674,7 +1674,7 @@ tricky01.dat/6e5ae91f110c78eb: PASS
 tricky01.dat/73ed6be30dcaf315: PASS
 tricky01.dat/750f1d461deb1c06: PASS
 tricky01.dat/c11759c2fda031c4: PASS
-tricky01.dat/dc2fbe3d27c7cc6d: FAIL
+tricky01.dat/dc2fbe3d27c7cc6d: PASS
 webkit01.dat/00ba4f8cada5908c: PASS
 webkit01.dat/01f1075e864610cb: FAIL
 webkit01.dat/0302ae25fd7c0ac7: FAIL
