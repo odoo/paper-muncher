@@ -25,8 +25,10 @@ export struct Window {
     Gc::Heap _heap;
     Rc<Http::Client> _client;
     Style::Media _media = Style::Media::defaultMedia();
+    bool _shouldRecomputeStyle = true;
 
     Gc::Ptr<Document> _document = nullptr;
+    Opt<Layout::Tree> _layoutTree = NONE;
     Opt<Driver::RenderResult> _render = NONE;
 
     Window(Rc<Http::Client> client)
@@ -38,12 +40,12 @@ export struct Window {
 
     void changeMedia(Style::Media media) {
         _media = media;
-        invalidateRender();
+        _shouldRecomputeStyle = true;
     }
 
     void changeViewport(Vec2Au viewport) {
         if (_media.changeViewport(viewport))
-            invalidateRender();
+            _shouldRecomputeStyle = true;
     }
 
     Async::Task<> loadLocationAsync(Ref::Url url, Ref::Uti intent, Async::CancellationToken ct) {
@@ -76,10 +78,39 @@ export struct Window {
         return _document;
     }
 
+    void recomputeStyle() {
+        if (not _shouldRecomputeStyle)
+            return;
+        Style::Computer computer{
+            _media,
+            _document->registeredPropertySet,
+            *_document->styleSheets,
+            *_document->fontDatabase,
+        };
+
+        computer.build();
+        computer.styleDocument(*_document);
+        _shouldRecomputeStyle = false;
+        _layoutTree = NONE;
+    }
+
+    Layout::Tree& ensureLayoutTree() {
+        recomputeStyle();
+        if (not _layoutTree) {
+            _layoutTree = Layout::Tree{
+                Layout::build(_document.upgrade()),
+                {.small = _media.viewportSize()}
+            };
+        }
+        return *_layoutTree;
+    }
+
     Driver::RenderResult& ensureRender() {
         if (_render)
             return *_render;
-        _render = Driver::render(_document.upgrade(), _media, {.small = _media.viewportSize()});
+
+        recomputeStyle();
+        _render = Driver::render(_document.upgrade(), {.small = _media.viewportSize()});
         return *_render;
     }
 
@@ -95,6 +126,7 @@ export struct Window {
     }
 
     void invalidateRender() {
+        _shouldRecomputeStyle = true;
         _render = NONE;
     }
 

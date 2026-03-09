@@ -25,12 +25,12 @@ struct FakeInlineBox {
             return last(children);
         }
 
-        static ComparableInlineBox fromInlineBox(Layout::InlineBox const& inlineBox) {
+        static ComparableInlineBox fromInlineBox(Box const& inlineBox) {
             ComparableInlineBox comparableInlineBox;
 
             Vec<MutCursor<ComparableInlineBox>> stackInlineBoxes = {&comparableInlineBox};
             Vec<Opt<Rc<Gfx::Prose::Span>>> stackSpans = {NONE};
-            for (auto& span : inlineBox.prose->_spans) {
+            for (auto& span : inlineBox.content.unwrap<Rc<Gfx::Prose>>()->_spans) {
                 while (true) {
                     if (span->parent == NONE) {
                         if (last(stackSpans) == NONE)
@@ -67,7 +67,7 @@ struct FakeInlineBox {
         return true;
     }
 
-    bool matches(InlineBox const& inlineBox);
+    bool matches(Box const& inlineBox);
 };
 
 struct FakeBox {
@@ -79,7 +79,7 @@ struct FakeBox {
             return false;
 
         bool fakeBoxStablishesInline = content.is<FakeInlineBox>();
-        bool boxStablishesInline = b.content.is<Layout::InlineBox>();
+        bool boxStablishesInline = b.content.is<Rc<Gfx::Prose>>();
 
         // logDebug("box: {}, expected: {}", boxStablishesInline, fakeBoxStablishesInline);
 
@@ -87,7 +87,7 @@ struct FakeBox {
             return false;
 
         if (boxStablishesInline) {
-            return content.unwrap<FakeInlineBox>().matches(b.content.unwrap<Layout::InlineBox>());
+            return content.unwrap<FakeInlineBox>().matches(b);
         } else {
             auto& children = content.unwrap<Vec<FakeBox>>();
             // logDebug("box children: {} expected children: {}", b.children().len(), children.len());
@@ -103,12 +103,12 @@ struct FakeBox {
     }
 };
 
-bool FakeInlineBox::matches(InlineBox const& inlineBox) {
-    if (atomicBoxes.len() != inlineBox.atomicBoxes.len())
+bool FakeInlineBox::matches(Box const& inlineBox) {
+    if (atomicBoxes.len() != inlineBox.children().len())
         return false;
 
     for (usize i = 0; i < atomicBoxes.len(); ++i) {
-        if (not atomicBoxes[i].matches(*inlineBox.atomicBoxes[i]))
+        if (not atomicBoxes[i].matches(inlineBox.children()[i]))
             return false;
     }
 

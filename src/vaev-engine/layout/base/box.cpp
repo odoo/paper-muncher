@@ -12,59 +12,6 @@ namespace Vaev::Layout {
 export struct FormatingContext;
 export struct Box;
 
-export struct InlineBox {
-    /* NOTE:
-    This is a sketch implementation of the data model for InlineBox. We should be able to:
-        -   add different inline elements to it, from different types (Prose, Image, inline-block)
-        -   retrieve the added data to be displayed in the same Inline Formatting Context (break lines and display
-            into line boxes)
-        -   respect different styling for the same line (font, fontsize, color, etc)
-    */
-    Rc<Gfx::Prose> prose;
-    Vec<::Box<Box>> atomicBoxes;
-
-    InlineBox(Gfx::ProseStyle style) : prose(makeRc<Gfx::Prose>(style)) {}
-
-    InlineBox(Rc<Gfx::Prose> prose) : prose(prose) {}
-
-    void startInlineBox(Gfx::ProseStyle proseStyle) {
-        // FIXME: ugly workaround while we dont fix the Prose data structure
-        prose->pushSpan();
-        if (proseStyle.color)
-            prose->spanColor(proseStyle.color.unwrap());
-    }
-
-    void endInlineBox() {
-        prose->popSpan();
-    }
-
-    void add(Box&& b);
-
-    bool active() {
-        return prose->_runes.len() or atomicBoxes.len();
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(inline box {}", prose->_runes);
-        e.indentNewline();
-        for (auto& c : atomicBoxes) {
-            e("{}", c);
-            e.newline();
-        }
-        e.deindent();
-        e(")");
-    }
-
-    static InlineBox fromInterruptedInlineBox(InlineBox const& inlineBox) {
-        auto oldProse = inlineBox.prose;
-
-        auto newInlineBox = InlineBox{oldProse->_style};
-        newInlineBox.prose->overrideSpanStackWith(*oldProse);
-
-        return newInlineBox;
-    }
-};
-
 struct SVGRoot;
 
 namespace SVG {
@@ -113,16 +60,24 @@ void SVG::Group::repr(Io::Emit& e) const {
 
 export using Content = Union<
     None,
-    Vec<Box>,
-    InlineBox,
+    Rc<Gfx::Prose>,
     Rc<Scene::Node>,
     SVGRoot>;
 
 struct Box : Meta::NoCopy {
+
     Rc<Style::SpecifiedValues> style;
     Content content = NONE;
     Opt<Rc<FormatingContext>> formatingContext = NONE;
     Gc::Ptr<Dom::Element> origin;
+    Vec<Box> _children;
+
+    static Box fromInterruptedInlineBox(Box const& inlineBox) {
+        auto oldProse = inlineBox.content.unwrap<Rc<Gfx::Prose>>();
+        auto newProse = makeRc<Gfx::Prose>(oldProse->_style);
+        newProse->overrideSpanStackWith(*oldProse);
+        return {inlineBox.style, std::move(newProse), nullptr};
+    }
 
     Box(Rc<Style::SpecifiedValues> style, Gc::Ptr<Dom::Element> og)
         : style{std::move(style)}, origin{og} {}
@@ -131,25 +86,35 @@ struct Box : Meta::NoCopy {
         : style{std::move(style)}, content{std::move(content)}, origin{og} {}
 
     Slice<Box> children() const {
-        if (auto children = content.is<Vec<Box>>())
-            return *children;
-        return {};
+        return _children;
     }
 
     MutSlice<Box> children() {
-        if (auto children = content.is<Vec<Box>>()) {
-            return *children;
-        }
-        return {};
+        return _children;
+    }
+
+    void startInlineBox(Gfx::ProseStyle proseStyle) {
+        auto& prose = content.unwrap<Rc<Gfx::Prose>>();
+        prose->pushSpan();
+        if (proseStyle.color)
+            prose->spanColor(proseStyle.color.unwrap());
+    }
+
+    void endInlineBox() {
+        auto& prose = content.unwrap<Rc<Gfx::Prose>>();
+        prose->popSpan();
     }
 
     void add(Box&& box) {
-        if (content.is<None>())
-            content = Vec<Box>{};
-
-        if (auto children = content.is<Vec<Box>>()) {
-            children->pushBack(std::move(box));
+        if (auto prose = content.is<Rc<Gfx::Prose>>()) {
+            (*prose)->append(Gfx::Prose::StrutCell{_children.len()});
         }
+        _children.pushBack(std::move(box));
+    }
+
+    bool isActiveInlineBox() {
+        auto prose = content.is<Rc<Gfx::Prose>>();
+        return (prose and (*prose)->_runes.len()) or children().len();
     }
 
     bool isReplaced() {
@@ -165,13 +130,13 @@ struct Box : Meta::NoCopy {
                 e.newline();
             }
             e.deindent();
-        } else if (content.is<InlineBox>()) {
+        } else if (auto prose = content.is<Rc<Gfx::Prose>>()) {
             e.indentNewline();
-            e("{}", content.unwrap<InlineBox>());
+            e("{}", *prose);
             e.deindent();
-        } else if (content.is<SVGRoot>()) {
+        } else if (auto root = content.is<SVGRoot>()) {
             e.indentNewline();
-            e("{}", content.unwrap<SVGRoot>());
+            e("{}", *root);
             e.deindent();
         }
         e(")");
@@ -184,11 +149,6 @@ void SVG::Group::add(Element&& element) {
 
 void SVG::Group::add(Vaev::Layout::Box&& box) {
     add(Element{makeBox<Vaev::Layout::Box>(std::move(box))});
-}
-
-void InlineBox::add(Box&& b) {
-    prose->append(Gfx::Prose::StrutCell{atomicBoxes.len()});
-    atomicBoxes.pushBack(makeBox<Box>(std::move(b)));
 }
 
 } // namespace Vaev::Layout

@@ -25,9 +25,8 @@ struct InlineFormatingContext : FormatingContext {
         return output.firstBaselineSet;
     }
 
-    BaselinePositionsSet _computeBaselinePositions(InlineBox& inlineBox, Au baselinePosition) {
-        auto metrics = inlineBox.prose->_style.font.metrics();
-
+    BaselinePositionsSet _computeBaselinePositions(Box& inlineBox, Au baselinePosition) {
+        auto metrics = inlineBox.content.unwrap<Rc<Gfx::Prose>>()->_style.font.metrics();
         return BaselinePositionsSet{
             .alphabetic = Au{metrics.alphabeticBaseline()},
             .xHeight = Au{metrics.xHeight} + baselinePosition,
@@ -37,9 +36,6 @@ struct InlineFormatingContext : FormatingContext {
     }
 
     virtual Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
-        // NOTE: We are not supposed to get there if the content is not a prose
-        auto& inlineBox = box.content.unwrap<InlineBox>("inlineLayout");
-
         auto inlineSize = input.knownSize.x.unwrapOrElse([&] {
             if (input.intrinsic == IntrinsicSize::MIN_CONTENT) {
                 return 0_au;
@@ -50,13 +46,14 @@ struct InlineFormatingContext : FormatingContext {
             }
         });
 
-        auto& prose = inlineBox.prose;
+        // NOTE: We are not supposed to get there if the content is not a prose
+        auto prose = box.content.unwrap<Rc<Gfx::Prose>>();
 
         for (auto strutCell : prose->cellsWithStruts()) {
 
             auto& boxStrutCell = *strutCell->strut();
 
-            auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
+            auto& atomicBox = box.children()[boxStrutCell.id];
 
             if (impliesRemovingFromFlow(atomicBox.style->position))
                 continue;
@@ -97,15 +94,15 @@ struct InlineFormatingContext : FormatingContext {
         prose->_blocksMeasured = false;
         auto size = prose->layout(inlineSize);
 
-        auto firstBaselineSet = _computeBaselinePositions(inlineBox, first(prose->_lines).baseline);
-        auto lastBaselineSet = _computeBaselinePositions(inlineBox, last(prose->_lines).baseline);
+        auto firstBaselineSet = _computeBaselinePositions(box, first(prose->_lines).baseline);
+        auto lastBaselineSet = _computeBaselinePositions(box, last(prose->_lines).baseline);
 
         for (auto strutCell : prose->cellsWithStruts()) {
             auto runeIdx = strutCell->runeRange.start;
             auto positionInProse = prose->queryPosition(runeIdx);
 
             auto& boxStrutCell = *strutCell->strut();
-            auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
+            auto& atomicBox = box.children()[boxStrutCell.id];
 
             // FIXME:
             // Look for running position should be called at linebox generation.

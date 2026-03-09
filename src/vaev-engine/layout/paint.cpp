@@ -240,8 +240,8 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack, Opt<UsedBorders> usedBor
 
     _paintFragBordersAndBackgrounds(frag, stack, usedBorders);
 
-    if (auto ic = frag.box->content.is<InlineBox>()) {
-        stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
+    if (auto ic = frag.box->content.is<Rc<Gfx::Prose>>()) {
+        stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), *ic));
     } else if (auto image = frag.box->content.is<Rc<Scene::Node>>()) {
         auto bound = (*image)->bound();
 

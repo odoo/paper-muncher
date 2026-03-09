@@ -13,7 +13,7 @@ enum struct Suite {
     _LEN,
 };
 
-Async::Task<> entryPointAsync([[maybe_unused]] Sys::Context& ctx, [[maybe_unused]] Async::CancellationToken ct) {
+Async::Task<> entryPointAsync(Sys::Context& ctx, Async::CancellationToken ct) {
     auto suiteArg = Cli::option<Suite>('s', "suite"s, "The type of test to run"s);
     auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, {"-"s});
 

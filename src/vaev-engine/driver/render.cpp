@@ -20,23 +20,13 @@ export struct RenderResult {
     Rc<Layout::Frag> frag;
 };
 
-export RenderResult render(Gc::Ref<Dom::Document> dom, Style::Media const& media, Layout::Viewport viewport) {
-    Style::Computer computer{
-        media,
-        dom->registeredPropertySet,
-        *dom->styleSheets,
-        *dom->fontDatabase,
-    };
-
-    computer.build();
-    computer.styleDocument(*dom);
-
+export RenderResult render(Gc::Ref<Dom::Document> dom, Layout::Viewport viewport) {
     Layout::Tree tree = {
         Layout::build(dom),
         viewport
     };
 
-    auto [outDiscovery, root] = Layout::layoutAndCommitRoot(
+    auto [_, root] = Layout::layoutAndCommitRoot(
         tree,
         {
             .knownSize = {viewport.small.width, NONE},

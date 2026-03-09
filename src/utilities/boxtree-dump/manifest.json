@@ -1,0 +1,12 @@
+{
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+    "id": "boxtree-dump",
+    "description": "Dump the CSS box tree of an HTML document.",
+    "type": "exe",
+    "requires": [
+        "karm-cli",
+        "karm-diag",
+        "karm-core",
+        "vaev-engine"
+    ]
+}
