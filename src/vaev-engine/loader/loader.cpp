@@ -24,10 +24,10 @@ namespace Vaev::Loader {
 Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url url, Rc<Http::Response> resp, Async::CancellationToken ct) {
     auto dom = heap.alloc<Dom::Document>(url);
 
-    auto mime = resp->header.contentType();
+    auto contentType = resp->header.contentType().unwrapOr(Ref::Uti::PUBLIC_DATA);
 
-    if (not mime.has())
-        mime = Ref::sniffSuffix(url.path.suffix());
+    if (contentType == Ref::Uti::PUBLIC_DATA)
+        contentType = Ref::Uti::fromSuffix(url.path.suffix());
 
     if (not resp->body)
         co_return Error::invalidInput("response body is missing");
@@ -36,39 +36,40 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url 
     auto buf = co_trya$(Aio::readAllUtf8Async(*respBody, ct));
     Diag::Collector diags;
 
-    if (not mime.has() or mime->is("application/octet-stream"_mime)) {
-        mime = Ref::sniffBytes(bytes(buf));
-        logWarn("{} has unspecified mime type, mime sniffing yielded '{}'", url, mime);
+    if (contentType == Ref::Uti::PUBLIC_DATA) {
+        contentType = Ref::sniffBytes(bytes(buf));
+        logWarn("{} has unspecified content type, sniffing yielded '{}'", url, contentType);
     }
 
-    if (mime->is("text/html"_mime)) {
+    if (contentType.conformsTo(Ref::Uti::PUBLIC_HTML)) {
         Html::HtmlParser parser{heap, dom};
         parser.write(buf, diags);
-    } else if (mime->is("application/xhtml+xml"_mime) or mime->is("image/svg+xml"_mime) or mime->is("text/xml"_mime)) {
+    } else if (contentType.conformsTo(Ref::Uti::PUBLIC_XML)) {
         Io::SScan scan{buf};
         Xml::XmlParser parser{heap};
         co_try$(parser.parse(scan, NONE, *dom));
-    } else if (mime->is("text/markdown"_mime)) {
+    } else if (contentType.conformsTo(Ref::Uti::PUBLIC_MARKDOWN)) {
         auto doc = Md::parse(buf);
-        logDebug("markdown: {}", doc);
         auto html = Md::renderHtml(doc);
         Html::HtmlParser parser{heap, dom};
-
         // TODO: Find  a clean way to report inline html error in markdown
         Diag::Collector htmlDiags = Diag::Collector::ignore();
         parser.write(html, htmlDiags);
-    } else if (mime->is("text/plain"_mime)) {
+    } else if (contentType.conformsTo(Ref::Uti::PUBLIC_TEXT)) {
         auto text = heap.alloc<Dom::Text>();
         text->appendData(buf);
-
         auto body = heap.alloc<Dom::Element>(Html::BODY_TAG);
         body->appendChild(text);
-
+        dom->appendChild(body);
+    } else if (contentType.conformsTo(Ref::Uti::PUBLIC_IMAGE)) {
+        auto element = heap.alloc<Dom::Element>(Html::IMG_TAG);
+        element->setAttribute(Html::SRC_ATTR, url.str());
+        auto body = heap.alloc<Dom::Element>(Html::BODY_TAG);
+        body->appendChild(element);
         dom->appendChild(body);
     } else {
-        logError("unsupported MIME type: {}", mime);
-
-        co_return Error::invalidInput("unsupported MIME type");
+        logError("unsupported content type: {}", contentType);
+        co_return Error::invalidInput("unsupported content type");
     }
 
     if (diags.any()) {
