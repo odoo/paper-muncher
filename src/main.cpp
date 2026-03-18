@@ -20,7 +20,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx, Async::CancellationToken ct) {
 
     auto inputsArg = Cli::operand<Vec<Str>>("inputs"s, "Input files (default: stdin)"s, {"-"s});
     auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
-    auto formatArg = Cli::option<Str>('f', "format"s, "Override the output file format"s, ""s);
+    auto formatArg = Cli::option<Ref::Uti>('f', "format"s, "Override the output file format"s);
     auto densityArg = Cli::option<Str>(NONE, "density"s, "Density of the output document in css units (e.g. 96dpi)"s, "1x"s);
     auto backgroundArg = Cli::option<Str>(NONE, "background"s, "Background color of the output document (default: white for html, transparent for svg)"s, ""s);
 
@@ -111,13 +111,10 @@ Async::Task<> entryPointAsync(Sys::Context& ctx, Async::CancellationToken ct) {
     if (outputArg.value() != "-"s)
         output = Ref::parseUrlOrPath(outputArg.value(), co_try$(Sys::pwd()));
 
-    if (formatArg.value() != ""s) {
-        options.outputFormat = co_try$(Ref::Uti::fromMime({formatArg.value()}));
-    } else {
-        auto mime = Ref::sniffSuffix(output.path.suffix());
-        options.outputFormat = mime ? co_try$(Ref::Uti::fromMime(*mime)) : Ref::Uti::PUBLIC_PDF;
-    }
-
+    options.outputFormat =
+        formatArg.has()
+            ? formatArg.value()
+            : (Ref::Uti::fromSuffix(output.path.suffix() ?: "pdf"s));
     options.flow = flowArg.value();
     options.extend = extendArg.value();
 

@@ -28,7 +28,7 @@ Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::
     auto body = resp->body.unwrap();
 
     auto data = co_trya$(Aio::readAllAsync(*body, ct));
-    if (resp->header.contentType().unwrapOr(Ref::sniffBytes(data)) == "image/svg+xml"_mime) {
+    if (resp->header.contentType().unwrapOr(Ref::sniffBytes(data)).conformsTo(Ref::Uti::PUBLIC_SVG)) {
         auto subClient = makeRc<Http::Client>(client._transport);
         subClient->userAgent = client.userAgent;
         auto window = Dom::Window::create(subClient);
