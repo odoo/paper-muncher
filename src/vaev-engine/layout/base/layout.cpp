@@ -26,7 +26,7 @@ export InsetsAu computeBorders(Tree& tree, Box& box);
 
 export InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock);
 
-export Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size);
+export Math::Radii<Au> computeBorderRadii(Tree& tree, Box& box, Vec2Au size);
 
 export Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin = NONE);
 

@@ -307,16 +307,16 @@ static void _paintChildren(Frag& frag, Scene::Stack& stack, auto predicate) {
     }
 }
 
-static Math::Radiif _resolveRadii(Resolver& resolver, Math::Radii<CalcValue<PercentOr<Length>>> const& baseRadii, RectAu const& referenceBox) {
+static Math::Radiif _resolveBorderRadii(Resolver& resolver, BorderRadii const& baseRadii, RectAu const& referenceBox) {
     Math::Radiif radii;
-    radii.a = resolver.resolve(baseRadii.a, referenceBox.height).cast<f64>();
-    radii.b = resolver.resolve(baseRadii.b, referenceBox.width).cast<f64>();
-    radii.c = resolver.resolve(baseRadii.c, referenceBox.width).cast<f64>();
-    radii.d = resolver.resolve(baseRadii.d, referenceBox.height).cast<f64>();
-    radii.e = resolver.resolve(baseRadii.e, referenceBox.height).cast<f64>();
-    radii.f = resolver.resolve(baseRadii.f, referenceBox.width).cast<f64>();
-    radii.g = resolver.resolve(baseRadii.g, referenceBox.width).cast<f64>();
-    radii.h = resolver.resolve(baseRadii.h, referenceBox.height).cast<f64>();
+    radii.a = resolver.resolve(baseRadii.topLeft.h, referenceBox.height).cast<f64>();
+    radii.b = resolver.resolve(baseRadii.topLeft.v, referenceBox.width).cast<f64>();
+    radii.c = resolver.resolve(baseRadii.topRight.h, referenceBox.width).cast<f64>();
+    radii.d = resolver.resolve(baseRadii.topRight.v, referenceBox.height).cast<f64>();
+    radii.e = resolver.resolve(baseRadii.bottomRight.h, referenceBox.height).cast<f64>();
+    radii.f = resolver.resolve(baseRadii.bottomRight.v, referenceBox.width).cast<f64>();
+    radii.g = resolver.resolve(baseRadii.bottomLeft.h, referenceBox.width).cast<f64>();
+    radii.h = resolver.resolve(baseRadii.bottomLeft.v, referenceBox.height).cast<f64>();
     return radii;
 }
 
@@ -423,7 +423,7 @@ static Rc<Scene::Clip> _applyClip(Frag const& frag, Rc<Scene::Node> content) {
                 auto hSquared = Math::pow2(referenceBox.height.cast<f64>());
                 auto wSquared = Math::pow2(referenceBox.width.cast<f64>());
                 radius = resolver.resolve(
-                                     circle.radius.unwrap<CalcValue<PercentOr<Length>>>(),
+                                     circle.radius.unwrap<LengthPercentage>(),
                                      Au(Math::sqrt(hSquared + wSquared) / Math::sqrt(2.0))
                 )
                              .cast<f64>();
@@ -439,7 +439,7 @@ static Rc<Scene::Clip> _applyClip(Frag const& frag, Rc<Scene::Node> content) {
             resolved.top = resolver.resolve(inset.insets.top, referenceBox.height).cast<f64>();
             resolved.bottom = resolver.resolve(inset.insets.bottom, referenceBox.height).cast<f64>();
 
-            Math::Radiif resolvedRadii = _resolveRadii(resolver, inset.borderRadius, referenceBox);
+            Math::Radiif resolvedRadii = _resolveBorderRadii(resolver, inset.borderRadius, referenceBox);
 
             result.rect(referenceBox.cast<f64>().shrink(resolved), resolvedRadii);
 
@@ -452,7 +452,7 @@ static Rc<Scene::Clip> _applyClip(Frag const& frag, Rc<Scene::Node> content) {
             resolvedRect.width = resolver.resolve(xywh.rect.width, referenceBox.width).cast<f64>();
             resolvedRect.height = resolver.resolve(xywh.rect.height, referenceBox.height).cast<f64>();
 
-            Math::Radiif resolvedRadii = _resolveRadii(resolver, xywh.borderRadius, referenceBox);
+            Math::Radiif resolvedRadii = _resolveBorderRadii(resolver, xywh.borderRadius, referenceBox);
 
             result.rect(resolvedRect.offset(referenceBox.xy.cast<f64>()), resolvedRadii);
 
@@ -465,7 +465,7 @@ static Rc<Scene::Clip> _applyClip(Frag const& frag, Rc<Scene::Node> content) {
             resolvedInsets.bottom = resolver.resolve(rect.insets.bottom, referenceBox.height).cast<f64>();
             resolvedInsets.start = resolver.resolve(rect.insets.start, referenceBox.width).cast<f64>();
 
-            Math::Radiif resolvedRadii = _resolveRadii(resolver, rect.borderRadius, referenceBox);
+            Math::Radiif resolvedRadii = _resolveBorderRadii(resolver, rect.borderRadius, referenceBox);
 
             auto resultBox = referenceBox.cast<f64>();
             resultBox.width = max(resolvedInsets.end - resolvedInsets.start, 0);
@@ -487,7 +487,7 @@ static Rc<Scene::Clip> _applyClip(Frag const& frag, Rc<Scene::Node> content) {
                 rx = max(Math::abs(referenceBox.width.cast<f64>() - center.x), center.x);
             } else {
                 rx = resolver.resolve(
-                                 ellipse.rx.unwrap<CalcValue<PercentOr<Length>>>(),
+                                 ellipse.rx.unwrap<LengthPercentage>(),
                                  referenceBox.width
                 )
                          .cast<f64>();
@@ -500,7 +500,7 @@ static Rc<Scene::Clip> _applyClip(Frag const& frag, Rc<Scene::Node> content) {
                 ry = max(Math::abs(referenceBox.height.cast<f64>() - center.y), center.y);
             } else {
                 ry = resolver.resolve(
-                                 ellipse.ry.unwrap<CalcValue<PercentOr<Length>>>(),
+                                 ellipse.ry.unwrap<LengthPercentage>(),
                                  referenceBox.height
                 )
                          .cast<f64>();
@@ -583,7 +583,7 @@ static Vec2Au _resolveTransformOrigin(RectAu referenceBox, TransformOrigin origi
             [&](Keywords::Center) {
                 return referenceBox.center().x;
             },
-            [&](CalcValue<PercentOr<Length>> value) {
+            [&](LengthPercentage value) {
                 return referenceBox.start() + resolver.resolve(value, referenceBox.width);
             }
         }
@@ -600,7 +600,7 @@ static Vec2Au _resolveTransformOrigin(RectAu referenceBox, TransformOrigin origi
             [&](Keywords::Center) {
                 return referenceBox.center().y;
             },
-            [&](CalcValue<PercentOr<Length>> value) {
+            [&](LengthPercentage value) {
                 return referenceBox.top() + resolver.resolve(value, referenceBox.height);
             }
         }

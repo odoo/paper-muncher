@@ -84,33 +84,33 @@ test$("vaev-css-build-margin") {
 
     try$(testCase(
         "30px;",
-        Margin{Width{CalcValue<PercentOr<Length>>{Length{30_au}}}}
+        Margin{Width{LengthPercentage{Length{30_au}}}}
     ));
 
     try$(testCase(
         "1px 2px;",
         Margin{
-            Width{CalcValue<PercentOr<Length>>{Length{1_au}}},
-            Width{CalcValue<PercentOr<Length>>{Length{2_au}}},
+            Width{LengthPercentage{Length{1_au}}},
+            Width{LengthPercentage{Length{2_au}}},
         }
     ));
 
     try$(testCase(
         "1px 2px 3px;",
         Margin{
-            Width{CalcValue<PercentOr<Length>>{Length{1_au}}},
-            Width{CalcValue<PercentOr<Length>>{Length{2_au}}},
-            Width{CalcValue<PercentOr<Length>>{Length{3_au}}},
+            Width{LengthPercentage{Length{1_au}}},
+            Width{LengthPercentage{Length{2_au}}},
+            Width{LengthPercentage{Length{3_au}}},
         }
     ));
 
     try$(testCase(
         "1px 2px 3px 4px;",
         Margin{
-            Width{CalcValue<PercentOr<Length>>{Length{1_au}}},
-            Width{CalcValue<PercentOr<Length>>{Length{2_au}}},
-            Width{CalcValue<PercentOr<Length>>{Length{3_au}}},
-            Width{CalcValue<PercentOr<Length>>{Length{4_au}}},
+            Width{LengthPercentage{Length{1_au}}},
+            Width{LengthPercentage{Length{2_au}}},
+            Width{LengthPercentage{Length{3_au}}},
+            Width{LengthPercentage{Length{4_au}}},
         }
     ));
 

@@ -541,33 +541,29 @@ export struct BorderRadiusTopRightProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusTopRightProperty>(self(), makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderRadiusTopRightProperty>(self(), BorderRadius{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
-            return makeRc<BorderRadiusTopRightProperty>(self(), Array{
-                                                                    c.borders->radii.c,
-                                                                    c.borders->radii.d,
-                                                                });
+            return makeRc<BorderRadiusTopRightProperty>(self(), c.borders->radii.topRight);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto first = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-            Array value{first, first};
+            auto value = BorderRadius{try$(parseValue<LengthPercentage>(c))};
             if (not c.ended())
-                value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+                value.v = try$(parseValue<LengthPercentage>(c));
+
             return Ok(makeRc<BorderRadiusTopRightProperty>(self(), value));
         }
     };
 
-    Array<CalcValue<PercentOr<Length>>, 2> _value;
+    BorderRadius _value;
 
-    BorderRadiusTopRightProperty(Rc<Property::Registration> registration, Array<CalcValue<PercentOr<Length>>, 2> value)
+    BorderRadiusTopRightProperty(Rc<Property::Registration> registration, BorderRadius value)
         : Property(registration), _value(value) {}
 
     void apply(SpecifiedValues& c) const override {
-        c.borders.cow().radii.c = _value[0];
-        c.borders.cow().radii.d = _value[1];
+        c.borders.cow().radii.topRight = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -583,36 +579,28 @@ export struct BorderRadiusTopLeftProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusTopLeftProperty>(self(), makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderRadiusTopLeftProperty>(self(), BorderRadius{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
-            return makeRc<BorderRadiusTopLeftProperty>(
-                self(),
-                Array{
-                    c.borders->radii.a,
-                    c.borders->radii.b,
-                }
-            );
+            return makeRc<BorderRadiusTopLeftProperty>(self(), c.borders->radii.topLeft);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto first = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-            Array value{first, first};
+            auto value = BorderRadius{try$(parseValue<LengthPercentage>(c))};
             if (not c.ended())
-                value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+                value.v = try$(parseValue<LengthPercentage>(c));
             return Ok(makeRc<BorderRadiusTopLeftProperty>(self(), value));
         }
     };
 
-    Array<CalcValue<PercentOr<Length>>, 2> _value;
+    BorderRadius _value;
 
-    BorderRadiusTopLeftProperty(Rc<Property::Registration> registration, Array<CalcValue<PercentOr<Length>>, 2> value)
+    BorderRadiusTopLeftProperty(Rc<Property::Registration> registration, BorderRadius value)
         : Property(registration), _value(value) {}
 
     void apply(SpecifiedValues& c) const override {
-        c.borders.cow().radii.a = _value[1];
-        c.borders.cow().radii.b = _value[0];
+        c.borders.cow().radii.topLeft = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -628,33 +616,28 @@ export struct BorderRadiusBottomRightProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusBottomRightProperty>(self(), makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderRadiusBottomRightProperty>(self(), BorderRadius{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
-            return makeRc<BorderRadiusBottomRightProperty>(self(), Array{
-                                                                       c.borders->radii.e,
-                                                                       c.borders->radii.f,
-                                                                   });
+            return makeRc<BorderRadiusBottomRightProperty>(self(), c.borders->radii.bottomRight);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto first = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-            Array value{first, first};
+            auto value = BorderRadius{try$(parseValue<LengthPercentage>(c))};
             if (not c.ended())
-                value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+                value.v = try$(parseValue<LengthPercentage>(c));
             return Ok(makeRc<BorderRadiusBottomRightProperty>(self(), value));
         }
     };
 
-    Array<CalcValue<PercentOr<Length>>, 2> _value;
+    BorderRadius _value;
 
-    BorderRadiusBottomRightProperty(Rc<Property::Registration> registration, Array<CalcValue<PercentOr<Length>>, 2> value)
+    BorderRadiusBottomRightProperty(Rc<Property::Registration> registration, BorderRadius value)
         : Property(registration), _value(value) {}
 
     void apply(SpecifiedValues& c) const override {
-        c.borders.cow().radii.e = _value[1];
-        c.borders.cow().radii.f = _value[0];
+        c.borders.cow().radii.bottomRight = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -670,36 +653,29 @@ export struct BorderRadiusBottomLeftProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusBottomLeftProperty>(self(), makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderRadiusBottomLeftProperty>(self(), BorderRadius{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
-            return makeRc<BorderRadiusBottomLeftProperty>(
-                self(),
-                Array{
-                    c.borders->radii.g,
-                    c.borders->radii.h,
-                }
-            );
+            return makeRc<BorderRadiusBottomLeftProperty>(self(), c.borders->radii.bottomLeft);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto first = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
-            Array value{first, first};
+            BorderRadius value = BorderRadius{try$(parseValue<LengthPercentage>(c))};
+
             if (not c.ended())
-                value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+                value.v = try$(parseValue<LengthPercentage>(c));
             return Ok(makeRc<BorderRadiusBottomLeftProperty>(self(), value));
         }
     };
 
-    Array<CalcValue<PercentOr<Length>>, 2> _value;
+    BorderRadius _value;
 
-    BorderRadiusBottomLeftProperty(Rc<Property::Registration> registration, Array<CalcValue<PercentOr<Length>>, 2> value)
+    BorderRadiusBottomLeftProperty(Rc<Property::Registration> registration, BorderRadius value)
         : Property(registration), _value(value) {}
 
     void apply(SpecifiedValues& c) const override {
-        c.borders.cow().radii.g = _value[0];
-        c.borders.cow().radii.h = _value[1];
+        c.borders.cow().radii.bottomLeft = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -715,7 +691,7 @@ export struct BorderRadiusProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusProperty>(self(), Math::Radii{CalcValue<PercentOr<Length>>(Length{})});
+            return makeRc<BorderRadiusProperty>(self(), BorderRadii{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -723,13 +699,13 @@ export struct BorderRadiusProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderRadiusProperty>(self(), try$(parseValue<Math::Radii<CalcValue<PercentOr<Length>>>>(c))));
+            return Ok(makeRc<BorderRadiusProperty>(self(), try$(parseValue<BorderRadii>(c))));
         }
     };
 
-    Math::Radii<CalcValue<PercentOr<Length>>> _value;
+    BorderRadii _value;
 
-    BorderRadiusProperty(Rc<Property::Registration> registration, Math::Radii<CalcValue<PercentOr<Length>>> value)
+    BorderRadiusProperty(Rc<Property::Registration> registration, BorderRadii value)
         : Property(registration), _value(value) {}
 
     void apply(SpecifiedValues& c) const override {

@@ -114,9 +114,51 @@ export enum struct BorderEdge {
     END,
 };
 
+struct BorderRadius {
+    LengthPercentage h = Length{0_au};
+    LengthPercentage v = Length{0_au};
+
+    BorderRadius() = default;
+    BorderRadius(LengthPercentage val) : h(val), v(val) {}
+    BorderRadius(LengthPercentage h, LengthPercentage v) : h(h), v(v) {}
+
+    void repr(Io::Emit& e) const {
+        e("(border-radius {} {})", h, v);
+    }
+};
+
+struct BorderRadii {
+    BorderRadius topLeft{};
+    BorderRadius topRight{};
+    BorderRadius bottomRight{};
+    BorderRadius bottomLeft{};
+
+    BorderRadii(BorderRadius a, BorderRadius b, BorderRadius c, BorderRadius d)
+        : topLeft(a), topRight(b), bottomRight(c), bottomLeft(d) {}
+
+    BorderRadii(BorderRadius a, BorderRadius b, BorderRadius c)
+        : BorderRadii(a, b, c, b) {}
+
+    BorderRadii(BorderRadius a, BorderRadius b)
+        : BorderRadii(a, b, a, b) {}
+
+    BorderRadii(BorderRadius a)
+        : BorderRadii(a, a, a, a) {}
+
+    BorderRadii() = default;
+
+    void repr(Io::Emit& e) const {
+        e(
+            "(border-radius {} {} {} {} / {} {} {} {})",
+            topLeft.h, topRight.h, bottomRight.h, bottomLeft.h,
+            topLeft.v, topRight.v, bottomRight.v, bottomLeft.v
+        );
+    }
+};
+
 export struct BorderProps {
     Border top, start, bottom, end;
-    Math::Radii<CalcValue<PercentOr<Length>>> radii = {Length(0_au)};
+    BorderRadii radii;
 
     void all(Border b) {
         top = start = bottom = end = b;
@@ -141,37 +183,37 @@ export struct BorderProps {
         e(" start={}", start);
         e(" bottom={}", bottom);
         e(" end={}", end);
-        e(" radii={}", radii);
+        e(" radiis={}", radii);
         e(")");
     }
 };
 
-export template <typename T>
-struct ValueParser<Math::Radii<T>> {
-    static Res<Math::Radii<T>> parse(Cursor<Css::Sst>& c) {
+export template <>
+struct ValueParser<BorderRadii> {
+    static Res<BorderRadii> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        auto value1 = parseValue<PercentOr<Length>>(c);
+        auto value1 = parseValue<LengthPercentage>(c);
         if (not value1)
-            return Ok(parsePostSlash(c, Math::Radii<T>{Length{}}));
+            return Ok(parsePostSlash(c, BorderRadii{BorderRadius{}}));
 
-        auto value2 = parseValue<PercentOr<Length>>(c);
+        auto value2 = parseValue<LengthPercentage>(c);
         if (not value2)
-            return Ok(parsePostSlash(c, Math::Radii<T>{value1.take()}));
+            return Ok(parsePostSlash(c, BorderRadii{{value1.unwrap()}}));
 
-        auto value3 = parseValue<PercentOr<Length>>(c);
+        auto value3 = parseValue<LengthPercentage>(c);
         if (not value3)
-            return Ok(parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take()}));
+            return Ok(parsePostSlash(c, BorderRadii{value1.unwrap(), value2.unwrap()}));
 
-        auto value4 = parseValue<PercentOr<Length>>(c);
+        auto value4 = parseValue<LengthPercentage>(c);
         if (not value4)
-            return Ok(parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take(), value3.take(), value2.take()}));
+            return Ok(parsePostSlash(c, BorderRadii{value1.unwrap(), value2.unwrap(), value3.unwrap(), value2.unwrap()}));
 
-        return Ok(parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take(), value3.take(), value4.take()}));
+        return Ok(parsePostSlash(c, BorderRadii{value1.unwrap(), value2.unwrap(), value3.unwrap(), value4.unwrap()}));
     }
 
-    static Math::Radii<T> parsePostSlash(Cursor<Css::Sst>& c, Math::Radii<T> radii) {
+    static BorderRadii parsePostSlash(Cursor<Css::Sst>& c, BorderRadii radii) {
         // if parse a /
         // 1 value-- > border all(a, d, e, h)
         // 2 values-- > 1 = top - start + bottom - end 2 = the others
@@ -181,45 +223,46 @@ struct ValueParser<Math::Radii<T>> {
         if (not c.ended() and c.peek().token.data == "/"s) {
             c.next();
             eatWhitespace(c);
-            auto value1 = parseValue<PercentOr<Length>>(c);
+            auto value1 = parseValue<LengthPercentage>(c);
             if (not value1) {
                 return radii;
             }
 
-            auto value2 = parseValue<PercentOr<Length>>(c);
+            auto value2 = parseValue<LengthPercentage>(c);
             if (not value2) {
-                radii.a = value1.take();
-                radii.d = value1.take();
-                radii.e = value1.take();
-                radii.h = value1.take();
+                radii.topLeft.v = value1.unwrap();
+                radii.topRight.v = value1.unwrap();
+                radii.bottomRight.v = value1.unwrap();
+                radii.bottomLeft.v = value1.unwrap();
                 return radii;
             }
 
             eatWhitespace(c);
-            auto value3 = parseValue<PercentOr<Length>>(c);
+            auto value3 = parseValue<LengthPercentage>(c);
             if (not value3) {
-                radii.a = value1.take();
-                radii.d = value2.take();
-                radii.e = value1.take();
-                radii.h = value2.take();
+                radii.topLeft.v = value1.unwrap();
+                radii.topRight.v = value2.unwrap();
+                radii.bottomRight.v = value1.unwrap();
+                radii.bottomLeft.v = value2.unwrap();
                 return radii;
             }
 
             eatWhitespace(c);
-            auto value4 = parseValue<PercentOr<Length>>(c);
+            auto value4 = parseValue<LengthPercentage>(c);
             if (not value4) {
-                radii.a = value1.take();
-                radii.d = value2.take();
-                radii.e = value3.take();
-                radii.h = value2.take();
+                radii.topLeft.v = value1.unwrap();
+                radii.topRight.v = value2.unwrap();
+                radii.bottomRight.v = value3.unwrap();
+                radii.bottomLeft.v = value2.unwrap();
 
                 return radii;
             }
 
-            radii.a = value1.take();
-            radii.d = value2.take();
-            radii.e = value3.take();
-            radii.h = value4.take();
+            radii.topLeft.v = value1.unwrap();
+            radii.topRight.v = value2.unwrap();
+            radii.bottomRight.v = value3.unwrap();
+            radii.bottomLeft.v = value4.unwrap();
+
             return radii;
         }
 

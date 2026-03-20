@@ -261,7 +261,7 @@ export struct Resolver {
     Au resolve(Width const& value, Au relative) {
         if (value.is<Keywords::Auto>())
             return 0_au;
-        return resolve(value.unwrap<CalcValue<PercentOr<Length>>>(), relative);
+        return resolve(value.unwrap<LengthPercentage>(), relative);
     }
 
     Rad resolve(Angle const& value) {
@@ -303,78 +303,68 @@ export struct Resolver {
         }
     }
 
+
+    // HACK: This retrofits inside the current resolver model but will get reshaped when
+    //       as soon as Resolver gets refactored.
+    Au resolve(LengthPercentage const& value, Au relative) {
+        return value.visit(Visitor{
+            [&](CalcValueNg const& calc) {
+                if (auto it = calc.tree.is<NumericNode>()) {
+                    return it->value.visit(Visitor{
+                        [&](Length const& length) {
+                            return resolve(length);
+                        },
+                        [&](Percent const& percent) {
+                            return Au{relative.cast<f64>() * (percent.value() / 100.)};
+                        },
+                        [](auto&&) -> Au {
+                            // FIXME: Proper assert
+                            notImplemented();
+                        },
+                    });
+                } else {
+                    // FIXME: Proper assert
+                    notImplemented();
+                }
+            },
+            [&](Length const& length) {
+                return resolve(length);
+            },
+            [&](Percent const& percent) {
+                return Au{relative.cast<f64>() * (percent.value() / 100.)};
+            },
+        });
+    }
+
     // MARK: Eval --------------------------------------------------------------
 
-    template <typename T>
-    Resolved<T> _resolveUnary(CalcOp, Resolved<T>) {
-        notImplemented();
-    }
-
-    template <typename T>
-    Resolved<T> _resolveInfix(CalcOp op, Resolved<T> lhs, Resolved<T> rhs) {
-        switch (op) {
-        case CalcOp::ADD:
-            return lhs + rhs;
-        case CalcOp::SUBTRACT:
-            return lhs - rhs;
-        case CalcOp::MULTIPLY:
-            return lhs * rhs;
-        case CalcOp::DIVIDE:
-            return lhs / rhs;
-        default:
-            panic("unexpected operator");
-        }
-    }
-
+    // Hack: ...
     template <typename T, typename... Args>
     Resolved<T> resolve(CalcValue<T> const& calc, Args... args) {
-        auto resolveUnion = Visitor{
-            [&](T const& v) {
+        return calc._inner.visit(Visitor{
+            [&](T const& v) -> Resolved<T> {
                 return resolve(v, args...);
             },
-            [&](CalcValue<T>::Leaf const& v) {
-                return resolve<T>(*v, args...);
-            },
-            [&](Number const& v)
-                requires(not Meta::Same<T, Number>)
-            {
-                return Resolved<T>{v};
-            }
-            };
-
-        return calc.visit(Visitor{
-            [&](typename CalcValue<T>::Value const& v) {
-                return v.visit(resolveUnion);
-            },
-            [&](typename CalcValue<T>::Unary const& u) {
-                return _resolveUnary<T>(
-                    u.op,
-                    u.val.visit(resolveUnion)
-                );
-            },
-            [&](typename CalcValue<T>::Binary const& b) {
-                return _resolveInfix<T>(
-                    b.op,
-                    b.lhs.visit(resolveUnion),
-                    b.rhs.visit(resolveUnion)
-                );
+            [&](auto) -> Resolved<T> {
+                notImplemented();
             },
         });
     }
 };
 
 // MARK: Resolve during layout -------------------------------------------------
-
 // HACK: Temporary workaround while we don't properly evaluate computed values
-export bool isPurePercentage(CalcValue<PercentOr<Length>> calcValue) {
-    if (not calcValue._inner.is<CalcValue<PercentOr<Length>>::Value>())
-        return false;
-
-    auto const& value = calcValue._inner.unwrap<CalcValue<PercentOr<Length>>::Value>();
-    if (not value.is<PercentOr<Length>>())
-        return false;
-
-    return value.unwrap<PercentOr<Length>>().is<Percent>();
+export bool isPurePercentage(LengthPercentage calcValue) {
+    (void)calcValue;
+    return false;
+    // if (not calcValue._inner.is<LengthPercentage::Value>())
+    //     return false;
+    //
+    // auto const& value = calcValue._inner.unwrap<LengthPercentage::Value>();
+    // if (not value.is<PercentOr<Length>>())
+    //     return false;
+    //
+    // return value.unwrap<PercentOr<Length>>().is<Percent>();
 }
 
 export Au resolve(Tree const& tree, Box const& box, Length const& value) {

@@ -31,8 +31,8 @@ export struct TransformOriginProperty : Property {
             return makeRc<TransformOriginProperty>(
                 self(),
                 TransformOrigin{
-                    .xOffset = CalcValue<PercentOr<Length>>{Percent{50}},
-                    .yOffset = CalcValue<PercentOr<Length>>{Percent{50}},
+                    .xOffset = LengthPercentage{Percent{50}},
+                    .yOffset = LengthPercentage{Percent{50}},
                 }
             );
         }

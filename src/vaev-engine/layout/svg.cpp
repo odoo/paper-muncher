@@ -14,26 +14,29 @@ using namespace Karm;
 namespace Vaev::Layout {
 
 // SVG sizes shouldn't be defined using calc values
-Opt<PercentOr<Length>> extractValueFromCalc(CalcValue<PercentOr<Length>> const& size) {
-    return size.visit(
-        Visitor{
-            [](CalcValue<PercentOr<Length>>::Value const& v) {
-                return Opt<PercentOr<Length>>{v.unwrap<PercentOr<Length>>()};
-            },
-            [](auto const) {
-                return Opt<PercentOr<Length>>{NONE};
-            },
-        }
-    );
-}
+// Opt<PercentOr<Length>> extractValueFromCalc(LengthPercentage const& size) {
+//     return size.visit(
+//         Visitor{
+//             [](CalcValue<PercentOr<Length>>::Value const& v) {
+//                 return Opt<PercentOr<Length>>{v.unwrap<PercentOr<Length>>()};
+//             },
+//             [](auto const) {
+//                 return Opt<PercentOr<Length>>{NONE};
+//             },
+//         }
+//     );
+// }
 
 // FIXME: this should be targeted by the computer refactoring, so we have only resolved percentage or length values
 PercentOr<Length> fromSize(Size const& size) {
-    if (size.is<Keywords::Auto>())
-        return PercentOr<Length>{Percent{100}};
-
-    return extractValueFromCalc(size.unwrap<CalcValue<PercentOr<Length>>>())
-        .unwrapOr(PercentOr<Length>{Percent{100}});
+    (void)size;
+    return PercentOr<Length>{Percent{100}};
+    //
+    // if (size.is<Keywords::Auto>())
+    //     return PercentOr<Length>{Percent{100}};
+    //
+    // return extractValueFromCalc(size.unwrap<CalcValue<PercentOr<Length>>>())
+    //     .unwrapOr(PercentOr<Length>{Percent{100}});
 }
 
 // FIXME: already present in Resolver obj, but it doesnt make sense to instantiate one here; should also be targeted
@@ -400,19 +403,21 @@ Opt<Number> intrinsicAspectRatio(Opt<ViewBox> const& vb, Size const& width, Size
     // FIXME: again this should be targetted by the styling computation refactoring,
     // where Size will be resolved to a mix between Percent and Lengths
     auto absoluteValue = [](Size size) -> Opt<Length> {
-        if (not size.is<CalcValue<PercentOr<Length>>>())
-            return NONE;
-
-        auto calc = size.unwrap<CalcValue<PercentOr<Length>>>();
-
-        auto percOrLength = extractValueFromCalc(calc);
-        if (not percOrLength)
-            return NONE;
-
-        if (percOrLength->is<Percent>())
-            return NONE;
-
-        return percOrLength->unwrap<Length>();
+        (void)size;
+        return NONE;
+        // if (not size.is<LengthPercentage>())
+        //     return NONE;
+        //
+        // auto calc = size.unwrap<LengthPercentage>();
+        //
+        // auto percOrLength = extractValueFromCalc(calc);
+        // if (not percOrLength)
+        //     return NONE;
+        //
+        // if (percOrLength->is<Percent>())
+        //     return NONE;
+        //
+        // return percOrLength->unwrap<Length>();
     };
 
     auto absWidth = absoluteValue(width);

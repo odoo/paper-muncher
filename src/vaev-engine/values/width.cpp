@@ -13,6 +13,6 @@ namespace Vaev {
 
 export using Width = FlatUnion<
     Keywords::Auto,
-    CalcValue<PercentOr<Length>>>;
+    LengthPercentage>;
 
 } // namespace Vaev

@@ -788,7 +788,7 @@ export struct TableFormatingContext : FormatingContext {
         // NOTE: The table does not automatically expand to fill its containing block.
         //       (https://www.w3.org/TR/CSS22/tables.html#width-layout)
 
-        if (not(box.style->sizing->width.is<Keywords::Auto>() or box.style->sizing->width.is<CalcValue<PercentOr<Length>>>()))
+        if (not(box.style->sizing->width.is<Keywords::Auto>() or box.style->sizing->width.is<LengthPercentage>()))
             logWarn("width can't be anything other than 'auto' or a length in a table context");
 
         tableUsedWidth = knownSizeX;
@@ -802,10 +802,10 @@ export struct TableFormatingContext : FormatingContext {
         for (auto& col : cols) {
             auto const& width = col.el.style->sizing->width;
 
-            if (not(width.is<Keywords::Auto>() or width.is<CalcValue<PercentOr<Length>>>()))
+            if (not(width.is<Keywords::Auto>() or width.is<LengthPercentage>()))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
 
-            if (auto widthCalc = width.is<CalcValue<PercentOr<Length>>>()) {
+            if (auto widthCalc = width.is<LengthPercentage>()) {
                 for (usize x = col.start; x <= col.end; ++x) {
                     colWidthOrNone[x] = resolve(tree, col.el, *widthCalc, tableUsedWidth);
                 }
@@ -819,7 +819,7 @@ export struct TableFormatingContext : FormatingContext {
         while (x < grid.size.x) {
             auto cell = grid.at(x, 0);
 
-            auto cellBoxWidthCalc = cell.box->style->sizing->width.is<CalcValue<PercentOr<Length>>>();
+            auto cellBoxWidthCalc = cell.box->style->sizing->width.is<LengthPercentage>();
 
             if (not(cell.box->style->sizing->width.is<Keywords::Auto>() or cellBoxWidthCalc))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
@@ -897,10 +897,10 @@ export struct TableFormatingContext : FormatingContext {
                             usedSpacings.borders.horizontal() +
                             usedSpacings.margin.horizontal();
 
-        if (not(cell.box->style->sizing->width.is<Keywords::Auto>() or cell.box->style->sizing->width.is<CalcValue<PercentOr<Length>>>()))
+        if (not(cell.box->style->sizing->width.is<Keywords::Auto>() or cell.box->style->sizing->width.is<LengthPercentage>()))
             logWarn("width can't be anything other than 'auto' or a length in a table context");
 
-        if (auto cellBoxWidthCalc = cell.box->style->sizing->width.is<CalcValue<PercentOr<Length>>>()) {
+        if (auto cellBoxWidthCalc = cell.box->style->sizing->width.is<LengthPercentage>()) {
             auto cellPreferredWidth = resolve(
                 tree,
                 box,
@@ -989,7 +989,7 @@ export struct TableFormatingContext : FormatingContext {
     void computeAutoWidthOfColGroups(Tree& tree, Vec<Au>& minColWidth, Au tableWidth) {
         for (auto& group : colGroups) {
             auto columnGroupWidth = group.el.style->sizing->width;
-            auto columnGroupWidthCalc = columnGroupWidth.is<CalcValue<PercentOr<Length>>>();
+            auto columnGroupWidthCalc = columnGroupWidth.is<LengthPercentage>();
 
             if (not(columnGroupWidth.is<Keywords::Auto>() or columnGroupWidthCalc))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
@@ -1017,7 +1017,7 @@ export struct TableFormatingContext : FormatingContext {
     void computeAutoWidthOfCols(Tree& tree, Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
         for (auto& [start, end, el] : cols) {
             auto width = el.style->sizing->width;
-            auto widthCalc = width.is<CalcValue<PercentOr<Length>>>();
+            auto widthCalc = width.is<LengthPercentage>();
 
             if (not(width.is<Keywords::Auto>() or widthCalc))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
@@ -1151,7 +1151,7 @@ export struct TableFormatingContext : FormatingContext {
 
         for (auto& row : rows) {
             auto& height = row.el.style->sizing->height;
-            auto heightCalc = height.is<CalcValue<PercentOr<Length>>>();
+            auto heightCalc = height.is<LengthPercentage>();
 
             if (not(height.is<Keywords::Auto>() or heightCalc))
                 logWarn("height can't be anything other than 'auto' or a length in a table context");
@@ -1175,11 +1175,11 @@ export struct TableFormatingContext : FormatingContext {
                 // [A] CSS 2.2 does not specify how cells that span more than one row affect row height calculations except
                 // that the sum of the row heights involved must be great enough to encompass the cell spanning the rows.
 
-                if (not(cell.box->style->sizing->height.is<Keywords::Auto>() or cell.box->style->sizing->height.is<CalcValue<PercentOr<Length>>>()))
+                if (not(cell.box->style->sizing->height.is<Keywords::Auto>() or cell.box->style->sizing->height.is<LengthPercentage>()))
                     logWarn("height can't be anything other than 'auto' or a length in a table context");
 
                 auto rowSpan = cell.box->style->table->rowSpan;
-                if (auto cellBoxHeightCalc = cell.box->style->sizing->height.is<CalcValue<PercentOr<Length>>>()) {
+                if (auto cellBoxHeightCalc = cell.box->style->sizing->height.is<LengthPercentage>()) {
                     auto computedHeight = resolve(
                         tree,
                         *cell.box,

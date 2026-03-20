@@ -427,7 +427,7 @@ Sst consumeComponentValue(Lexer& lex, Diag::Collector& diags) {
 // https://www.w3.org/TR/css-syntax-3/#consume-a-simple-block
 Sst consumeBlock(Lexer& lex, Diag::Collector& diags, Token::Type term) {
     Sst block = Sst::BLOCK;
-    lex.next();
+    block.token = lex.next();
 
     while (true) {
         auto t = lex.peek();

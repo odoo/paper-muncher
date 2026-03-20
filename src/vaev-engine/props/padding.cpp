@@ -24,7 +24,7 @@ export struct PaddingTopProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingTopProperty>(self(), CalcValue<PercentOr<Length>>{Length{}});
+            return makeRc<PaddingTopProperty>(self(), LengthPercentage{Length{}});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -32,13 +32,13 @@ export struct PaddingTopProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingTopProperty>(self(), try$(parseValue<CalcValue<PercentOr<Length>>>(c))));
+            return Ok(makeRc<PaddingTopProperty>(self(), try$(parseValue<LengthPercentage>(c))));
         }
     };
 
-    CalcValue<PercentOr<Length>> _value;
+    LengthPercentage _value;
 
-    PaddingTopProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
+    PaddingTopProperty(Rc<Property::Registration> registration, LengthPercentage value)
         : Property(registration), _value(value) {}
 
     void apply(SpecifiedValues& c) const override {
@@ -57,7 +57,7 @@ export struct PaddingRightProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingRightProperty>(self(), CalcValue<PercentOr<Length>>{Length{}});
+            return makeRc<PaddingRightProperty>(self(), LengthPercentage{Length{}});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -65,13 +65,13 @@ export struct PaddingRightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingRightProperty>(self(), try$(parseValue<CalcValue<PercentOr<Length>>>(c))));
+            return Ok(makeRc<PaddingRightProperty>(self(), try$(parseValue<LengthPercentage>(c))));
         }
     };
 
-    CalcValue<PercentOr<Length>> _value;
+    LengthPercentage _value;
 
-    PaddingRightProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
+    PaddingRightProperty(Rc<Property::Registration> registration, LengthPercentage value)
         : Property(registration), _value(value) {}
 
     void apply(SpecifiedValues& c) const override {
@@ -90,7 +90,7 @@ export struct PaddingBottomProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingBottomProperty>(self(), CalcValue<PercentOr<Length>>{Length{}});
+            return makeRc<PaddingBottomProperty>(self(), LengthPercentage{Length{}});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -98,13 +98,13 @@ export struct PaddingBottomProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingBottomProperty>(self(), try$(parseValue<CalcValue<PercentOr<Length>>>(c))));
+            return Ok(makeRc<PaddingBottomProperty>(self(), try$(parseValue<LengthPercentage>(c))));
         }
     };
 
-    CalcValue<PercentOr<Length>> _value;
+    LengthPercentage _value;
 
-    PaddingBottomProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
+    PaddingBottomProperty(Rc<Property::Registration> registration, LengthPercentage value)
         : Property(registration), _value(value) {}
 
     void apply(SpecifiedValues& c) const override {
@@ -123,7 +123,7 @@ export struct PaddingLeftProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingLeftProperty>(self(), CalcValue<PercentOr<Length>>{Length{}});
+            return makeRc<PaddingLeftProperty>(self(), LengthPercentage{Length{}});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -131,13 +131,13 @@ export struct PaddingLeftProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingLeftProperty>(self(), try$(parseValue<CalcValue<PercentOr<Length>>>(c))));
+            return Ok(makeRc<PaddingLeftProperty>(self(), try$(parseValue<LengthPercentage>(c))));
         }
     };
 
-    CalcValue<PercentOr<Length>> _value;
+    LengthPercentage _value;
 
-    PaddingLeftProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
+    PaddingLeftProperty(Rc<Property::Registration> registration, LengthPercentage value)
         : Property(registration), _value(value) {}
 
     void apply(SpecifiedValues& c) const override {
@@ -156,7 +156,7 @@ export struct PaddingInlineStartProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingInlineStartProperty>(self(), CalcValue<PercentOr<Length>>{Length{}});
+            return makeRc<PaddingInlineStartProperty>(self(), LengthPercentage{Length{}});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -164,13 +164,13 @@ export struct PaddingInlineStartProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingInlineStartProperty>(self(), try$(parseValue<CalcValue<PercentOr<Length>>>(c))));
+            return Ok(makeRc<PaddingInlineStartProperty>(self(), try$(parseValue<LengthPercentage>(c))));
         }
     };
 
-    CalcValue<PercentOr<Length>> _value;
+    LengthPercentage _value;
 
-    PaddingInlineStartProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
+    PaddingInlineStartProperty(Rc<Property::Registration> registration, LengthPercentage value)
         : Property(registration), _value(value) {}
 
     void apply(SpecifiedValues& c) const override {
@@ -189,7 +189,7 @@ export struct PaddingInlineEndProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingInlineEndProperty>(self(), CalcValue<PercentOr<Length>>{Length{}});
+            return makeRc<PaddingInlineEndProperty>(self(), LengthPercentage{Length{}});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -197,13 +197,13 @@ export struct PaddingInlineEndProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingInlineEndProperty>(self(), try$(parseValue<CalcValue<PercentOr<Length>>>(c))));
+            return Ok(makeRc<PaddingInlineEndProperty>(self(), try$(parseValue<LengthPercentage>(c))));
         }
     };
 
-    CalcValue<PercentOr<Length>> _value;
+    LengthPercentage _value;
 
-    PaddingInlineEndProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
+    PaddingInlineEndProperty(Rc<Property::Registration> registration, LengthPercentage value)
         : Property(registration), _value(value) {}
 
     void apply(SpecifiedValues& c) const override {
@@ -226,7 +226,7 @@ export struct PaddingProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingProperty>(self(), Math::Insets<CalcValue<PercentOr<Length>>>{Length{}});
+            return makeRc<PaddingProperty>(self(), Math::Insets<LengthPercentage>{Length{}});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -234,13 +234,13 @@ export struct PaddingProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingProperty>(self(), try$(parseValue<Math::Insets<CalcValue<PercentOr<Length>>>>(c))));
+            return Ok(makeRc<PaddingProperty>(self(), try$(parseValue<Math::Insets<LengthPercentage>>(c))));
         }
     };
 
-    Math::Insets<CalcValue<PercentOr<Length>>> _value;
+    Math::Insets<LengthPercentage> _value;
 
-    PaddingProperty(Rc<Property::Registration> registration, Math::Insets<CalcValue<PercentOr<Length>>> value)
+    PaddingProperty(Rc<Property::Registration> registration, Math::Insets<LengthPercentage> value)
         : Property(registration), _value(value) {}
 
     Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {

@@ -34,17 +34,17 @@ export void layoutPositioned(Tree& tree, Frag& frag, RectAu containingBlock, Inp
         auto start = metrics.position.x;
 
         auto topOffset = style.offsets->top;
-        if (auto topOffsetCalc = topOffset.is<CalcValue<PercentOr<Length>>>()) {
+        if (auto topOffsetCalc = topOffset.is<LengthPercentage>()) {
             top = origin.y + resolve(tree, *frag.box, *topOffsetCalc, relativeTo.height);
         }
 
         auto startOffset = style.offsets->start;
-        if (auto startOffsetCalc = startOffset.is<CalcValue<PercentOr<Length>>>()) {
+        if (auto startOffsetCalc = startOffset.is<LengthPercentage>()) {
             start = origin.x + resolve(tree, *frag.box, *startOffsetCalc, relativeTo.width);
         }
 
         auto endOffset = frag.style().offsets->end;
-        if (auto endOffsetCalc = endOffset.is<CalcValue<PercentOr<Length>>>()) {
+        if (auto endOffsetCalc = endOffset.is<LengthPercentage>()) {
             start = (origin.x + relativeTo.width) - resolve(tree, *frag.box, *endOffsetCalc, relativeTo.width) - metrics.borderSize.width;
         }
 

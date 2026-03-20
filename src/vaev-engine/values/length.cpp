@@ -121,6 +121,39 @@ export struct [[gnu::packed]] Length {
         return not isAbsolute();
     }
 
+    constexpr bool isCanonical() const {
+        return unit() == PX;
+    }
+
+    constexpr Opt<Length> canonicalized() const {
+        switch (unit()) {
+        case PX:
+            return *this;
+        case CM:
+            return Length(val() * 96.0 / 2.54, PX);
+        case MM:
+            return Length(val() * 96.0 / 25.4, PX);
+        case IN:
+            return Length(val() * 96.0, PX);
+        case PT:
+            return Length(val() * 96.0 / 72.0, PX);
+        case PC:
+            return Length(val() * 96.0 / 6.0, PX);
+        case Q:
+            return Length(val() * 96.0 / 101.6, PX);
+        default:
+            return NONE;
+        }
+    }
+
+    constexpr Length negated() const {
+        return Length(-val(), unit());
+    }
+
+    constexpr Length inverted() const {
+        return Length(1.0 / val(), unit());
+    }
+
     constexpr bool operator==(Length const& other) const {
         return _val == other._val and _unit == other._unit;
     }

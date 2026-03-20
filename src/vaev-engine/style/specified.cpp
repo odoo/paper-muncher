@@ -14,8 +14,8 @@ namespace Vaev::Style {
 struct TransformProps {
     Transform transform = Keywords::NONE;
     TransformOrigin origin = {
-        .xOffset = CalcValue<PercentOr<Length>>{Percent{0}},
-        .yOffset = CalcValue<PercentOr<Length>>{Percent{0}},
+        .xOffset = Percent{0},
+        .yOffset = Percent{0},
     };
     TransformBox box = Keywords::BORDER_BOX;
 
@@ -35,7 +35,7 @@ export struct SpecifiedValues {
     Cow<Gaps> gaps;
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
-    Cow<Margin> margin = makeCow<Margin>(Width(CalcValue<PercentOr<Length>>(Length(0_au)))); // FIXME
+    Cow<Margin> margin = makeCow<Margin>(Width(Length(0_au))); // FIXME
     Cow<Outline> outline;
     Cow<Padding> padding = makeCow<Padding>(Length(0_au)); // FIXME
     Cow<SizingProps> sizing;

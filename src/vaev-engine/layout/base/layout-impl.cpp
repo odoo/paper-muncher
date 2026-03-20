@@ -123,18 +123,18 @@ InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
     return res;
 }
 
-Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size) {
+Math::Radii<Au> computeBorderRadii(Tree& tree, Box& box, Vec2Au size) {
     auto radii = box.style->borders->radii;
     Math::Radii<Au> res;
 
-    res.a = resolve(tree, box, radii.a, size.height);
-    res.b = resolve(tree, box, radii.b, size.width);
-    res.c = resolve(tree, box, radii.c, size.width);
-    res.d = resolve(tree, box, radii.d, size.height);
-    res.e = resolve(tree, box, radii.e, size.height);
-    res.f = resolve(tree, box, radii.f, size.width);
-    res.g = resolve(tree, box, radii.g, size.width);
-    res.h = resolve(tree, box, radii.h, size.height);
+    res.a = resolve(tree, box, radii.topLeft.h, size.height);
+    res.b = resolve(tree, box, radii.topLeft.v, size.width);
+    res.c = resolve(tree, box, radii.topRight.h, size.width);
+    res.d = resolve(tree, box, radii.topRight.v, size.height);
+    res.e = resolve(tree, box, radii.bottomRight.h, size.height);
+    res.f = resolve(tree, box, radii.bottomRight.v, size.width);
+    res.g = resolve(tree, box, radii.bottomLeft.h, size.width);
+    res.h = resolve(tree, box, radii.bottomLeft.v, size.height);
 
     return res;
 }
@@ -157,7 +157,7 @@ Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic
 }
 
 Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
-    if (auto calc = size.is<CalcValue<PercentOr<Length>>>()) {
+    if (auto calc = size.is<LengthPercentage>()) {
         auto specifiedWidth = resolve(tree, box, *calc, containingBlock.x);
         if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
             specifiedWidth += horizontalBorderBox;
@@ -186,7 +186,7 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au c
 }
 
 Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au verticalBorderBox) {
-    if (auto calc = size.is<CalcValue<PercentOr<Length>>>()) {
+    if (auto calc = size.is<LengthPercentage>()) {
         auto specifiedHeight = resolve(tree, box, *calc, containingBlock.y);
         if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
             specifiedHeight += verticalBorderBox;
@@ -365,7 +365,7 @@ Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Frag& parent
         .position = input.position - usedSpacings.borders.topStart() - usedSpacings.padding.topStart(),
         .borderSize = output.size + usedSpacings.borders.all() + usedSpacings.padding.all(),
         .margin = usedSpacings.margin,
-        .radii = computeRadii(tree, box, output.size + usedSpacings.borders.all() + usedSpacings.padding.all()),
+        .radii = computeBorderRadii(tree, box, output.size + usedSpacings.borders.all() + usedSpacings.padding.all()),
     };
 
     parentFrag.add(std::move(currFrag));

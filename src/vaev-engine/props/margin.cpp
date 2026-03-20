@@ -24,7 +24,7 @@ export struct MarginTopProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginTopProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
+            return makeRc<MarginTopProperty>(self(), Length{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -57,7 +57,7 @@ export struct MarginRightProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginRightProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
+            return makeRc<MarginRightProperty>(self(), Length{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -90,7 +90,7 @@ export struct MarginBottomProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginBottomProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
+            return makeRc<MarginBottomProperty>(self(), Length{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -123,7 +123,7 @@ export struct MarginLeftProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginLeftProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
+            return makeRc<MarginLeftProperty>(self(), Length{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -160,7 +160,7 @@ export struct MarginProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginProperty>(self(), Math::Insets<Width>{CalcValue<PercentOr<Length>>(Length{})});
+            return makeRc<MarginProperty>(self(), Math::Insets<Width>{Length{}});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -200,7 +200,7 @@ export struct MarginInlineStartProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginInlineStartProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
+            return makeRc<MarginInlineStartProperty>(self(), Length{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -234,7 +234,7 @@ export struct MarginInlineEndProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginInlineEndProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
+            return makeRc<MarginInlineEndProperty>(self(), Length{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -268,7 +268,7 @@ export struct MarginInlineProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginInlineProperty>(self(), Math::Insets<Width>{CalcValue<PercentOr<Length>>(Length{})});
+            return makeRc<MarginInlineProperty>(self(), Math::Insets<Width>{Length{}});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -303,7 +303,7 @@ export struct MarginBlockStartProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginBlockStartProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
+            return makeRc<MarginBlockStartProperty>(self(), Length{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -337,7 +337,7 @@ export struct MarginBlockEndProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginBlockEndProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
+            return makeRc<MarginBlockEndProperty>(self(), Length{});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
@@ -371,7 +371,7 @@ export struct MarginBlockProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginBlockProperty>(self(), Math::Insets<Width>{CalcValue<PercentOr<Length>>(Length{})});
+            return makeRc<MarginBlockProperty>(self(), Math::Insets<Width>{Length{}});
         }
 
         Rc<Property> load(SpecifiedValues const& c) const override {
