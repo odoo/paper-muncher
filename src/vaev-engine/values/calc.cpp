@@ -1179,8 +1179,8 @@ struct ValueParser<CalcValueNg> {
 };
 
 
-export template<Meta::Union T>
-T simplifyCalcWithinUnion(T u) {
+export template<typename T>
+T simplifyOrResolveCalc(T u) {
     return u.visit(Visitor{
         [](CalcValueNg const& calc) {
             return calc;
@@ -1193,50 +1193,5 @@ T simplifyCalcWithinUnion(T u) {
 
 // FIXME: Move somewhere else
 export using LengthPercentage = Union<Length, Percent, CalcValueNg>;
-
-template<typename Target>
-struct _ExtractUnion;
-
-template<typename... Ts>
-struct _ExtractUnion<Union<Ts...>> {
-    template<typename... Us>
-    static Opt<Union<Ts...>> extract(Union<Us...>& u) {
-        return u.visit(Visitor{
-            [](Meta::Contains<Ts...> auto& v) -> Opt<Union<Ts...>> {
-                return v;
-            },
-            [](auto&&) -> Opt<Union<Ts...>> {
-                return NONE;
-            }
-        });
-    }
-};
-
-export template<typename Target, typename... Us>
-Opt<Target> extractUnion(Union<Us...>& u) {
-    return _ExtractUnion<Target>::extract(u);
-}
-
-// export struct LengthPercentage : _LengthPercentage {
-//     using _LengthPercentage::_LengthPercentage;
-//
-//     LengthPercentage(_LengthPercentage const& other) : _LengthPercentage(other) {}
-//     LengthPercentage(_LengthPercentage&& other) : _LengthPercentage(std::move(other)) {}
-//
-//     LengthPercentage() : _LengthPercentage(Length{}) {}
-//
-//     void repr(Io::Emit& e) const {
-//         visit([&](auto&& val) {
-//             e("{}", val);
-//         });
-//     }
-// };
-//
-// export template <>
-// struct ValueParser<LengthPercentage> {
-//     static Res<_LengthPercentage> parse(Cursor<Css::Sst>& c) {
-//         return parseValue<_LengthPercentage>(c);
-//     }
-// };
 
 } // namespace Vaev

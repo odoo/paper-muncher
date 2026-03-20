@@ -261,7 +261,7 @@ export struct Resolver {
     Au resolve(Width const& value, Au relative) {
         if (value.is<Keywords::Auto>())
             return 0_au;
-        return resolve(value.unwrap<LengthPercentage>(), relative);
+        return resolve(value.subset<LengthPercentage>().unwrap(), relative);
     }
 
     Rad resolve(Angle const& value) {
@@ -389,6 +389,11 @@ export Au resolve(Tree const& tree, Box const& box, FontSize const& value) {
 
 export template <typename T, typename... Args>
 auto resolve(Tree const& tree, Box const& box, CalcValue<T> const& value, Args... args) -> Resolved<T> {
+    return Resolver::from(tree, box).resolve(value, args...);
+}
+
+export template <typename... Args>
+Au resolve(Tree const& tree, Box const& box, LengthPercentage const& value, Args... args) {
     return Resolver::from(tree, box).resolve(value, args...);
 }
 

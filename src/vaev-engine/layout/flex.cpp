@@ -264,15 +264,15 @@ struct FlexItem {
 
             // from now on flex basis is width
 
-            if (auto basisCalc = flexItemProps.basis.is<LengthPercentage>())
+            if (auto basisCalc = flexItemProps.basis.subset<LengthPercentage>())
                 return *basisCalc;
 
-            if (not fa.mainAxis(box->style->sizing).is<LengthPercentage>())
+            if (not fa.mainAxis(box->style->sizing).subset<LengthPercentage>())
                 return NONE;
 
             // TODO: solve definite values also min and max content
 
-            return fa.mainAxis(box->style->sizing).unwrap<LengthPercentage>();
+            return fa.mainAxis(box->style->sizing).subset<LengthPercentage>().unwrap();
         };
 
         if (auto flexBasisDefiniteSize = getDefiniteFlexBasisSize(flexItemProps, fa, box)) {
@@ -325,7 +325,7 @@ struct FlexItem {
     Au getMinAutoPrefMainSize(Tree& tree, Vec2Au containerSize) const {
         Opt<Au> definiteMaxMainSize;
         auto maxMainSize = box->style->sizing->maxSize(fa.isRowOriented ? Axis::HORIZONTAL : Axis::VERTICAL);
-        if (auto maxMainSizeCalc = maxMainSize.is<LengthPercentage>()) {
+        if (auto maxMainSizeCalc = maxMainSize.subset<LengthPercentage>()) {
             definiteMaxMainSize = resolve(
                 tree,
                 *box,
@@ -340,7 +340,7 @@ struct FlexItem {
             contentSizeSuggestion = min(contentSizeSuggestion, definiteMaxMainSize.unwrap());
 
         auto mainAxis = fa.mainAxis(box->style->sizing);
-        if (auto mainAxisCalc = mainAxis.is<LengthPercentage>()) {
+        if (auto mainAxisCalc = mainAxis.subset<LengthPercentage>()) {
             Au specifiedSizeSuggestion = resolve(
                 tree,
                 *box,
@@ -405,7 +405,7 @@ struct FlexItem {
         Au contentContribution = fa.mainAxis(isMin ? minContentSize : maxContentSize) + getMargin(BOTH_MAIN);
 
         auto mainAxis = fa.mainAxis(box->style->sizing);
-        if (auto mainAxisCalc = mainAxis.is<LengthPercentage>()) {
+        if (auto mainAxisCalc = mainAxis.subset<LengthPercentage>()) {
             contentContribution = max(
                 contentContribution,
                 resolve(
@@ -450,7 +450,7 @@ struct FlexItem {
             );
 
         auto crossAxis = fa.crossAxis(box->style->sizing);
-        if (auto crossAxisCalc = crossAxis.is<LengthPercentage>()) {
+        if (auto crossAxisCalc = crossAxis.subset<LengthPercentage>()) {
             contentContribution = max(
                 contentContribution,
                 resolve(
@@ -732,11 +732,11 @@ struct FlexFormatingContext : FormatingContext {
 
     void _determineFlexBaseSizeAndHypotheticalMainSize(Tree& tree, Box& box, Input input) {
         Opt<Au> containerDefiniteMainSize = fa.mainAxis(input.knownSize);
-        if (fa.mainAxis(box.style->sizing).is<LengthPercentage>()) {
+        if (fa.mainAxis(box.style->sizing).subset<LengthPercentage>()) {
             containerDefiniteMainSize = resolve(
                 tree,
                 box,
-                fa.mainAxis(box.style->sizing).unwrap<LengthPercentage>(),
+                fa.mainAxis(box.style->sizing).subset<LengthPercentage>().unwrap(),
                 fa.mainAxis(input.containingBlock)
             );
         }

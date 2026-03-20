@@ -284,7 +284,7 @@ export struct FlexProperty : Property {
 
             // default values if these parameters are omitted
             value.flexGrow = value.flexShrink = 1;
-            value.flexBasis = LengthPercentage(Length{});
+            value.flexBasis = Length{};
 
             auto parseGrowShrink = [](Cursor<Css::Sst>& c, FlexItemProps& value) -> Res<> {
                 auto grow = parseValue<Number>(c);

@@ -44,8 +44,8 @@ Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::
         // NOSPEC: The spec references a “default object size” but does not define explicit values.
         //         Historically, browsers (including Chrome) default to 300x150, as mentioned in older drafts:
         //         https://www.w3.org/TR/2011/WD-css3-images-20110908/#default-object-size
-        auto width = resolver.resolve(root->specifiedValues()->sizing->width.unwrapOr<LengthPercentage>(Length{300_au}), 300_au);
-        auto height = resolver.resolve(root->specifiedValues()->sizing->height.unwrapOr<LengthPercentage>(Length{300_au}), 300_au);
+        auto width = resolver.resolve(root->specifiedValues()->sizing->width.subset<LengthPercentage>().unwrapOr(Length{300_au}), 300_au);
+        auto height = resolver.resolve(root->specifiedValues()->sizing->height.subset<LengthPercentage>().unwrapOr(Length{300_au}), 300_au);
 
         window->changeMedia(Style::Media::forRender({width, height}, Resolution::fromDppx(1)));
         co_return Ok(window->render());

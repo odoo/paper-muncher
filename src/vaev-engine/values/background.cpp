@@ -156,7 +156,7 @@ struct ValueParser<BackgroundPosition> {
                 hAnchor = t;
                 hSet = true;
 
-                if (auto mesure = extractUnion<LengthPercentage>(items[1])) {
+                if (auto mesure = items[1].subset<LengthPercentage>()) {
                     hValue = *mesure;
                 } else {
                     secondPairIndex = 1;
@@ -175,7 +175,7 @@ struct ValueParser<BackgroundPosition> {
             [&](Meta::Contains<Keywords::Top, Keywords::Bottom> auto& t) -> Res<> {
                 vAnchor = t;
 
-                if (auto mesure = extractUnion<LengthPercentage>(items[1])) {
+                if (auto mesure = items[1].subset<LengthPercentage>()) {
                     vValue = *mesure;
                 } else {
                     secondPairIndex = 1;
@@ -202,7 +202,7 @@ struct ValueParser<BackgroundPosition> {
                 hAnchor = t;
 
                 if (secondPairIndex + 1 < items.len()) {
-                    if (auto mesure = extractUnion<LengthPercentage>(items[secondPairIndex + 1])) {
+                    if (auto mesure = items[secondPairIndex + 1].subset<LengthPercentage>()) {
                         hValue = *mesure;
                     } else {
                         return Error::invalidData("expected percent or length");
@@ -215,7 +215,7 @@ struct ValueParser<BackgroundPosition> {
                 vAnchor = t;
 
                 if (secondPairIndex + 1 < items.len()) {
-                    if (auto mesure = extractUnion<LengthPercentage>(items[secondPairIndex + 1])) {
+                    if (auto mesure = items[secondPairIndex + 1].subset<LengthPercentage>()) {
                         vValue = *mesure;
                     } else {
                         return Error::invalidData("unexpected last value");

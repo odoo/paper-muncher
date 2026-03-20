@@ -447,10 +447,10 @@ static Rc<Scene::Clip> _applyClip(Frag const& frag, Rc<Scene::Node> content) {
         },
         [&](Xywh const& xywh) {
             Math::Rectf resolvedRect;
-            resolvedRect.x = resolver.resolve(xywh.rect.x, referenceBox.width).cast<f64>();
-            resolvedRect.y = resolver.resolve(xywh.rect.y, referenceBox.height).cast<f64>();
-            resolvedRect.width = resolver.resolve(xywh.rect.width, referenceBox.width).cast<f64>();
-            resolvedRect.height = resolver.resolve(xywh.rect.height, referenceBox.height).cast<f64>();
+            resolvedRect.x = resolver.resolve(xywh.x, referenceBox.width).cast<f64>();
+            resolvedRect.y = resolver.resolve(xywh.y, referenceBox.height).cast<f64>();
+            resolvedRect.width = resolver.resolve(xywh.width, referenceBox.width).cast<f64>();
+            resolvedRect.height = resolver.resolve(xywh.height, referenceBox.height).cast<f64>();
 
             Math::Radiif resolvedRadii = _resolveBorderRadii(resolver, xywh.borderRadius, referenceBox);
 
