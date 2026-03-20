@@ -129,8 +129,7 @@ export struct XmlParser {
         while (
             s.ahead(RE_CHARDATA) and
             not s.ahead("]]>"_re) and
-            not s.ended()
-        ) {
+            not s.ended()) {
             sb.append(s.next());
             any = true;
         }

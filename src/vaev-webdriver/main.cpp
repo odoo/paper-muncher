@@ -1,5 +1,5 @@
-#include <karm/macros>
 #include <karm/entry>
+#include <karm/macros>
 
 import Karm.Core;
 import Karm.Http;

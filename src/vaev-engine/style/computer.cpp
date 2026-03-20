@@ -174,34 +174,6 @@ export struct Computer {
         return res;
     }
 
-    // https://www.w3.org/TR/css-backgrounds-3/#body-background
-    static void _propagateBodyBackgroundToHtml(Dom::Document& doc) {
-        // For documents whose root element is an HTML HTML element or an XHTML html element
-        auto html = doc.documentElement();
-        if (html->namespaceUri() != Html::NAMESPACE)
-            return;
-        auto htmlBg = html->specifiedValues()->backgrounds;
-
-        auto body = doc.body();
-        if (body == nullptr)
-            return;
-        auto bodyBg = body->specifiedValues()->backgrounds;
-
-        // If the computed value of background-image on the
-        // root element is none and its background-color is transparent
-        if (htmlBg->color == TRANSPARENT and not htmlBg->layers) {
-            // User agents must instead propagate the computed values of the
-            // background properties from that element’s first HTML BODY
-            // or XHTML body child element.
-            html->specifiedValues()->backgrounds = bodyBg;
-
-            // The used values of that BODY element’s background properties are
-            // their initial values, and the propagated values are treated
-            // as if they were specified on the root element.
-            body->specifiedValues()->backgrounds = makeCow<BackgroundProps>();
-        }
-    }
-
     static void _considerElementAttributes(SpecifiedValues& values, Gc::Ref<Dom::Element> el) {
         // https://html.spec.whatwg.org/multipage/tables.html#the-col-element
         // The element may have a span content attribute specified, whose value must
@@ -396,6 +368,101 @@ export struct Computer {
             if (auto childEl = child->is<Dom::Element>())
                 styleElement(*specifiedValues, *childEl);
         }
+    }
+
+    // MARK: Body Brackground --------------------------------------------------------
+
+    // https://www.w3.org/TR/css-backgrounds-3/#body-background
+    static void _propagateBodyBackgroundToHtml(Dom::Document& doc) {
+        // For documents whose root element is an HTML HTML element or an XHTML html element
+        auto html = doc.documentElement();
+        if (html->namespaceUri() != Html::NAMESPACE)
+            return;
+        auto htmlBg = html->specifiedValues()->backgrounds;
+
+        auto body = doc.body();
+        if (body == nullptr)
+            return;
+        auto bodyBg = body->specifiedValues()->backgrounds;
+
+        // If the computed value of background-image on the
+        // root element is none and its background-color is transparent
+        if (htmlBg->color == TRANSPARENT and not htmlBg->layers) {
+            // User agents must instead propagate the computed values of the
+            // background properties from that element’s first HTML BODY
+            // or XHTML body child element.
+            html->specifiedValues()->backgrounds = bodyBg;
+
+            // The used values of that BODY element’s background properties are
+            // their initial values, and the propagated values are treated
+            // as if they were specified on the root element.
+            body->specifiedValues()->backgrounds = makeCow<BackgroundProps>();
+        }
+    }
+
+    // MARK: Counters ----------------------------------------------------------
+
+    // https://drafts.csswg.org/css-lists/#inheriting-counters
+    CounterSet _inheriteCounters() {
+        // 1. Let element counters be an initially empty CSS counters set representing element’s own CSS counters set.
+
+        // 2. If element is the root of its document tree, return. (The element has an initially-empty counter map and inherits nothing.)
+
+        // 3. Let counter source be the CSS counters set of element’s preceding sibling, if it has one, or else of element’s parent if it does not.
+
+        // 4. Let value source be the CSS counters set of the element immediately preceding element in tree order.
+
+        // 5. For each (|=CSS counter/name=|, originating element, |=value=|) of value source:
+
+        // If counter source also contains a counter with the same |=CSS counter/name=| and originating element, then append a copy of value source’s counter (|=CSS counter/name=|, originating element, |=value=|) to element counters.
+    }
+
+    // https://drafts.csswg.org/css-lists/#instantiate-counter
+    void _instanciateCounter(CounterSet& counters) {
+        // Let counters be element’s CSS counters set.
+
+        // Let innermost counter be the last counter in counters with the name name. If innermost counter’s originating element is element or a previous sibling of element, remove innermost counter from counters.
+
+        // Append a new counter to counters with name name, originating element element, reversed being reversed, and initial value value (if given)
+    }
+
+    // https://drafts.csswg.org/css-lists/#instantiate-counter:~:text=dynamically%20calculate%20the%20initial%20value
+    Integer _dynamicallyCalculateCounterInitialValue() {
+        // 1. Let num be 0.
+        Integer num = 0;
+
+        // 2. Let lastNonZeroIncrementNegated be 0.
+
+        // 3. For each element or pseudo-element el that increments or sets the same counter in the same scope:
+        for (;;) {
+            // 1. Let incrementNegated be el’s counter-increment integer value for this counter, multiplied by -1.
+
+            // 2. If incrementNegated is not zero, then set lastNonZeroIncrementNegated to incrementNegated.
+
+            // 3. If el sets this counter with counter-set, then add that integer value to num and break this loop.
+
+            // 4. Add incrementNegated to num.
+        }
+
+        // 4. Add lastNonZeroIncrementNegated to num.
+
+        // 5. Return num.
+        return num;
+    }
+
+    // https://drafts.csswg.org/css-lists/#auto-numbering
+    CounterSet _resolveCounter(SpecifiedValues const& style) {
+        // 1. Existing counters are inherited from previous elements.
+        auto counters = _inheriteCounters();
+
+        // 2. New counters are instantiated (counter-reset).
+        _instanciateCounter(counters);
+
+        // 3. Counter values are incremented (counter-increment).
+
+        // 4. Counter values are explicitly set (counter-set).
+
+        // 5. Counter values are used (counter()/counters()).
     }
 
     void styleDocument(Dom::Document& doc) {

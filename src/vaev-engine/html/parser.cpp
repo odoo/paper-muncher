@@ -285,7 +285,7 @@ struct _ActiveFormattingElementList {
         indexAfterLastMarker = 0;
         for (isize i = entries.len() - 1; i >= 0; i--) {
             if (entries[i] == MARKER) {
-                indexAfterLastMarker = i+1;
+                indexAfterLastMarker = i + 1;
                 break;
             }
         }
@@ -2974,8 +2974,7 @@ export struct HtmlParser : HtmlSink {
         }
 
         // A start tag whose tag name is one of: "tbody", "tfoot", "thead"
-        else if (t.type == HtmlToken::START_TAG and
-                 (t.name == "tbody" or t.name == "tfoot" or t.name == "thead")) {
+        else if (t.type == HtmlToken::START_TAG and (t.name == "tbody" or t.name == "tfoot" or t.name == "thead")) {
             // Clear the stack back to a table context. (See below.)
             _clearTheStackBackToATableContext();
 
@@ -2985,8 +2984,7 @@ export struct HtmlParser : HtmlSink {
         }
 
         // A start tag whose tag name is one of: "td", "th", "tr"
-        else if (t.type == HtmlToken::START_TAG and
-                 (t.name == "td" or t.name == "th" or t.name == "tr")) {
+        else if (t.type == HtmlToken::START_TAG and (t.name == "td" or t.name == "th" or t.name == "tr")) {
             // Clear the stack back to a table context. (See below.)
             _clearTheStackBackToATableContext();
 
@@ -3039,18 +3037,13 @@ export struct HtmlParser : HtmlSink {
         }
 
         // An end tag whose tag name is one of: "body", "caption", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"
-        else if (t.type == HtmlToken::END_TAG and
-                 (t.name == "body" or t.name == "caption" or t.name == "col" or
-                  t.name == "colgroup" or t.name == "html" or t.name == "tbody" or
-                  t.name == "td" or t.name == "tfoot" or t.name == "th" or
-                  t.name == "thead" or t.name == "tr")) {
+        else if (t.type == HtmlToken::END_TAG and (t.name == "body" or t.name == "caption" or t.name == "col" or t.name == "colgroup" or t.name == "html" or t.name == "tbody" or t.name == "td" or t.name == "tfoot" or t.name == "th" or t.name == "thead" or t.name == "tr")) {
             // Parse error. Ignore the token.
             _raise(diags, t.span, "unexpected end tag");
         }
 
         // A start tag whose tag name is one of: "style", "script", "template"
-        else if (t.type == HtmlToken::START_TAG and
-                 (t.name == "style" or t.name == "script" or t.name == "template")) {
+        else if (t.type == HtmlToken::START_TAG and (t.name == "style" or t.name == "script" or t.name == "template")) {
             // Process the token using the rules for the "in head" insertion mode.
             _acceptIn(Mode::IN_HEAD, t, diags);
         }
@@ -3228,9 +3221,7 @@ export struct HtmlParser : HtmlSink {
         }
 
         // An end tag whose tag name is one of: "body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"
-        else if (t.type == HtmlToken::END_TAG and
-                 (t.name == "body" or t.name == "col" or t.name == "colgroup" or t.name == "html" or t.name == "tbody" or
-                  t.name == "td" or t.name == "tfoot" or t.name == "th" or t.name == "thead" or t.name == "tr")) {
+        else if (t.type == HtmlToken::END_TAG and (t.name == "body" or t.name == "col" or t.name == "colgroup" or t.name == "html" or t.name == "tbody" or t.name == "td" or t.name == "tfoot" or t.name == "th" or t.name == "thead" or t.name == "tr")) {
             // Parse error. Ignore the token.
             _raise(diags, t.span, "unexpected end tag");
         }
@@ -3350,8 +3341,7 @@ export struct HtmlParser : HtmlSink {
                 _currentElement()->qualifiedName != Html::TFOOT_TAG and
                 _currentElement()->qualifiedName != Html::THEAD_TAG and
                 _currentElement()->qualifiedName != Html::TEMPLATE_TAG and
-                _currentElement()->qualifiedName != Html::HTML_TAG
-            ) {
+                _currentElement()->qualifiedName != Html::HTML_TAG) {
                 _openElements.pop();
             }
         };
@@ -3494,10 +3484,7 @@ export struct HtmlParser : HtmlSink {
 
         // A start tag whose tag name is one of: "caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr"
         // An end tag whose tag name is "table"
-        else if ((t.type == HtmlToken::START_TAG and
-                  (t.name == "caption" or t.name == "col" or t.name == "colgroup" or
-                   t.name == "tbody" or t.name == "tfoot" or t.name == "thead" or t.name == "tr")) or
-                 (t.type == HtmlToken::END_TAG and t.name == "table")) {
+        else if ((t.type == HtmlToken::START_TAG and (t.name == "caption" or t.name == "col" or t.name == "colgroup" or t.name == "tbody" or t.name == "tfoot" or t.name == "thead" or t.name == "tr")) or (t.type == HtmlToken::END_TAG and t.name == "table")) {
 
             // If the stack of open elements does not have a tr element in table scope,
             if (not _hasElementInTableScope(Html::TR_TAG)) {
@@ -3546,10 +3533,7 @@ export struct HtmlParser : HtmlSink {
         }
 
         // An end tag whose tag name is one of: "body", "caption", "col", "colgroup", "html", "td", "th"
-        else if (t.type == HtmlToken::END_TAG and
-                 (t.name == "body" or t.name == "caption" or t.name == "col" or
-                  t.name == "colgroup" or t.name == "html" or
-                  t.name == "td" or t.name == "th")) {
+        else if (t.type == HtmlToken::END_TAG and (t.name == "body" or t.name == "caption" or t.name == "col" or t.name == "colgroup" or t.name == "html" or t.name == "td" or t.name == "th")) {
             // Parse error. Ignore the token.
             _raise(diags, t.span, "unexpected end tag");
         }
@@ -3617,10 +3601,7 @@ export struct HtmlParser : HtmlSink {
         }
 
         // A start tag whose tag name is one of: "caption", "col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr"
-        else if (t.type == HtmlToken::START_TAG and
-                 (t.name == "caption" or t.name == "col" or t.name == "colgroup" or
-                  t.name == "tbody" or t.name == "td" or t.name == "tfoot" or
-                  t.name == "th" or t.name == "thead" or t.name == "tr")) {
+        else if (t.type == HtmlToken::START_TAG and (t.name == "caption" or t.name == "col" or t.name == "colgroup" or t.name == "tbody" or t.name == "td" or t.name == "tfoot" or t.name == "th" or t.name == "thead" or t.name == "tr")) {
 
             // Assert: The stack of open elements has a td or th element in table scope.
             if (not _hasElementInTableScope(Html::TD_TAG) and not _hasElementInTableScope(Html::TR_TAG)) {
@@ -3634,16 +3615,13 @@ export struct HtmlParser : HtmlSink {
         }
 
         // An end tag whose tag name is one of: "body", "caption", "col", "colgroup", "html"
-        else if (t.type == HtmlToken::END_TAG and
-                 (t.name == "body" or t.name == "caption" or t.name == "col" or
-                  t.name == "colgroup" or t.name == "html")) {
+        else if (t.type == HtmlToken::END_TAG and (t.name == "body" or t.name == "caption" or t.name == "col" or t.name == "colgroup" or t.name == "html")) {
             // Parse error. Ignore the token.
             _raise(diags, t.span, "unexpected end tag");
         }
 
         // An end tag whose tag name is one of: "table", "tbody", "tfoot", "thead", "tr"
-        else if (t.type == HtmlToken::END_TAG and
-                 (t.name == "table" or t.name == "tbody" or t.name == "tfoot" or t.name == "thead" or t.name == "tr")) {
+        else if (t.type == HtmlToken::END_TAG and (t.name == "table" or t.name == "tbody" or t.name == "tfoot" or t.name == "thead" or t.name == "tr")) {
 
             // If the stack of open elements does not have an element in table scope that is an HTML element with the same
             // tag name as the token,
@@ -3966,9 +3944,7 @@ export struct HtmlParser : HtmlSink {
         // A DOCTYPE token
         // A character token that is one of U+0009 CHARACTER TABULATION, U+000A LINE FEED (LF), U+000C FORM FEED (FF), U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
         // A start tag whose tag name is "html"
-        else if (t.type == HtmlToken::DOCTYPE or
-                 (t.type == HtmlToken::CHARACTER and (t.rune == '\t' or t.rune == '\n' or t.rune == '\f' or t.rune == '\r' or t.rune == ' ')) or
-                 (t.type == HtmlToken::START_TAG and t.name == "html")) {
+        else if (t.type == HtmlToken::DOCTYPE or (t.type == HtmlToken::CHARACTER and (t.rune == '\t' or t.rune == '\n' or t.rune == '\f' or t.rune == '\r' or t.rune == ' ')) or (t.type == HtmlToken::START_TAG and t.name == "html")) {
             // Process the token using the rules for the "in body" insertion mode.
             _acceptIn(Mode::IN_BODY, t, diags);
         }
@@ -3997,12 +3973,10 @@ export struct HtmlParser : HtmlSink {
         // A DOCTYPE token
         // A character token that is one of U+0009 CHARACTER TABULATION, U+000A LINE FEED (LF), U+000C FORM FEED (FF), U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
         // A start tag whose tag name is "html"
-        else if (t.type == HtmlToken::DOCTYPE or
-                 (t.type == HtmlToken::CHARACTER and (t.rune == '\t' or t.rune == '\n' or t.rune == '\f' or t.rune == '\r' or t.rune == ' ')) or
-                 (t.type == HtmlToken::START_TAG and t.name == "html")) {
+        else if (t.type == HtmlToken::DOCTYPE or (t.type == HtmlToken::CHARACTER and (t.rune == '\t' or t.rune == '\n' or t.rune == '\f' or t.rune == '\r' or t.rune == ' ')) or (t.type == HtmlToken::START_TAG and t.name == "html")) {
             // Process the token using the rules for the "in body" insertion mode.
             _acceptIn(Mode::IN_BODY, t, diags);
-         }
+        }
 
         // An end-of-file token
         else if (t.type == HtmlToken::END_OF_FILE) {

@@ -155,7 +155,6 @@ struct Tree : Meta::Pinned {
         self._parent = nullptr;
     }
 
-
     void removeChild(this auto& self, Gc::Ptr<Node> node) {
         if (node->_parent != &self)
             panic("node is not a child");

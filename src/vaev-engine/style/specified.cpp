@@ -49,6 +49,7 @@ export struct SpecifiedValues {
     Cow<FlexProps> flex;
     Cow<BreakProps> break_;
     Cow<SVGProps> svg;
+    Cow<Counters> counters;
 
     Cow<Map<Symbol, Css::Content>> variables;
     Rc<Gfx::Fontface> fontFace;

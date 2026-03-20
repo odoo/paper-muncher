@@ -7,6 +7,7 @@ import :dom.node;
 import :dom.names;
 import :dom.text;
 import :dom.tokenList;
+import :style.counter;
 
 using namespace Karm;
 
@@ -26,6 +27,7 @@ export struct PseudoElement {
 
     Symbol type;
     Opt<Rc<Style::SpecifiedValues>> _specifiedValues = NONE;
+    Style::CounterSet counters;
 
     Rc<Style::SpecifiedValues> specifiedValues() const {
         return _specifiedValues.unwrap("unstyled pseudo-element");
@@ -47,6 +49,7 @@ export struct Element : Node {
     TokenList classList;
     Opt<Rc<Scene::Node>> imageContent;
     Map<Symbol, Rc<PseudoElement>> _pseudoElements;
+    Style::CounterSet counters;
 
     // MARK: Node --------------------------------------------------------------
 

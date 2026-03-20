@@ -26,8 +26,8 @@ export struct PropertyKey {
         return store == other.store;
     }
 
-    u64 hash() const {
-        return Karm::hash(store);
+    void hash(Hasher& h) const {
+        Karm::hash(h, store);
     }
 };
 
