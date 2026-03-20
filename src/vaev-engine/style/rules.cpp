@@ -195,8 +195,7 @@ export struct PageRule {
                 auto prop = registry.parseDeclaration(item, PropertyRegistry::TOP_LEVEL);
                 if (prop)
                     res.props.pushBack(prop.take());
-            } else if (item == Css::Sst::RULE and
-                       item.token == Css::Token::AT_KEYWORD) {
+            } else if (item == Css::Sst::RULE and item.token == Css::Token::AT_KEYWORD) {
                 auto rule = PageAreaRule::parse(registry, item);
                 if (rule)
                     res.areas.pushBack(*rule);

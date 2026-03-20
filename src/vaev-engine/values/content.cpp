@@ -33,24 +33,12 @@ export struct ElementContent {
     }
 };
 
-// https://drafts.csswg.org/css-lists/#auto-numbering
-export struct Counter {
-    enum struct Type {
-        PAGE,
-    };
-    Type type = Type::PAGE;
-
-    void repr(Io::Emit& e) const {
-        e("counter (type:'{}')", type);
-    }
-};
-
 export using Content = Union<
     Keywords::Normal,
     Keywords::None,
     ElementContent,
     String,
-    Counter>;
+    CounterFunc>;
 
 export template <>
 struct ValueParser<Content> {
