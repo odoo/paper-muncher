@@ -308,7 +308,7 @@ export struct Resolver {
     //       as soon as Resolver gets refactored.
     Au resolve(LengthPercentage const& value, Au relative) {
         return value.visit(Visitor{
-            [&](CalcValueNg const& calc) {
+            [&](CalcValueNg<Length, Percent> const& calc) {
                 if (auto it = calc.tree.is<NumericNode>()) {
                     return it->value.visit(Visitor{
                         [&](Length const& length) {

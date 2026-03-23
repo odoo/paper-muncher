@@ -208,4 +208,9 @@ struct ValueParser<Length> {
     }
 };
 
+namespace Computed {
+    using Length = Distinct<f32, struct ComputedLengthTag>;
+}
+
+
 } // namespace Vaev

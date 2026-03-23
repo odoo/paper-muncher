@@ -129,7 +129,7 @@ struct ValueParser<BackgroundPosition> {
                     vAnchor = t;
                     return Ok();
                 },
-            [&](Meta::Contains<Length, Percent, CalcValueNg> auto& t) -> Res<> {
+            [&](Meta::Constructible<LengthPercentage> auto& t) -> Res<> {
                 vValue = LengthPercentage{t};
                     return Ok();
                 },

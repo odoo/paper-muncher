@@ -157,6 +157,10 @@ struct NumericType {
     always_inline constexpr i32 const& operator[](NumericBaseType baseType) const {
         return _els[toUnderlyingType(baseType)];
     }
+
+    always_inline constexpr i32& operator[](NumericBaseType baseType) {
+        return _els[toUnderlyingType(baseType)];
+    }
 };
 
 using _NumericValue = Union<Length, Angle, Percent, Number, Integer>;
@@ -957,6 +961,7 @@ struct CalcValue {
     }
 };
 
+export template <typename... Ts>
 struct CalcValueNg {
     Rc<CalcNode> tree;
 
@@ -972,16 +977,32 @@ struct ValueParser<CalcValue<T>> {
             return Error::invalidData("unexpected end of input");
 
         if (c.peek() == Css::Sst::FUNC) {
-            return Ok(CalcValue<T>{try$(parseValue<CalcValueNg>(c)).tree});
+            return Ok(CalcValue<T>{try$(parseValue<CalcValueNg<T>>(c)).tree});
         }
 
         return parseValue<T>(c);
     }
 };
 
-export template <>
-struct ValueParser<CalcValueNg> {
-    static Res<CalcValueNg> parse(Cursor<Css::Sst>& c) {
+export template <typename... Ts>
+constexpr NumericType cppTypeToNumericType() {
+    NumericType type;
+    Opt<NumericType> percentHint = NONE;
+
+    if constexpr (Meta::Contains<Length, Ts...>) {
+        type[NumericBaseType::LENGTH] = 1;
+    }
+
+    if constexpr (Meta::Contains<Angle, Ts...>) {
+        type[NumericBaseType::ANGLE] = 1;
+    }
+
+    return type;
+}
+
+export template <typename... Ts>
+struct ValueParser<CalcValueNg<Ts...>> {
+    static Res<CalcValueNg<Ts...>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -990,7 +1011,13 @@ struct ValueParser<CalcValueNg> {
             logInfo("input: {}", CalcValueNg(root));
             root = simplify(root);
             logInfo("simpl: {}", CalcValueNg(root));
-            return Ok(CalcValueNg{root});
+
+            if (root->type != cppTypeToNumericType<Ts...>()) {
+                return Error::invalidData("incompatible math function return type");
+            }
+
+            return Ok(CalcValueNg<Ts...>{root});
+
         }
 
         return Error::invalidData();
@@ -1179,19 +1206,23 @@ struct ValueParser<CalcValueNg> {
 };
 
 
-export template<typename T>
-T simplifyOrResolveCalc(T u) {
-    return u.visit(Visitor{
-        [](CalcValueNg const& calc) {
-            return calc;
-        },
-        [](auto&& other) {
-            return other;
-        }
-    });
-}
+// export template<typename T>
+// T simplifyOrResolveCalc(T u) {
+//     return u.visit(Visitor{
+//         [](CalcValueNg const& calc) {
+//             // TODO
+//             return calc;
+//         },
+//         [](auto&& other) {
+//             return other;
+//         }
+//     });
+// }
 
-// FIXME: Move somewhere else
-export using LengthPercentage = Union<Length, Percent, CalcValueNg>;
+template <typename... Ts>
+using CalcUnion = Union<Ts..., CalcValueNg<Ts...>>;
+
+export using LengthPercentage = CalcUnion<Length, Percent>;
+
 
 } // namespace Vaev
