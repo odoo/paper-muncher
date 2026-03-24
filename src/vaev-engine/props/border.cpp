@@ -196,14 +196,6 @@ export struct BorderColorProperty : Property {
         };
     }
 
-    void apply(SpecifiedValues& c) const override {
-        auto& borders = c.borders.cow();
-        borders.start.color = _value.start;
-        borders.end.color = _value.end;
-        borders.top.color = _value.top;
-        borders.bottom.color = _value.bottom;
-    }
-
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }

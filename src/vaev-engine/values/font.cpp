@@ -238,7 +238,7 @@ struct ValueParser<FontWeight> {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-       if (c.skip(Css::Token::ident("bolder"))) {
+        if (c.skip(Css::Token::ident("bolder"))) {
             return Ok(RelativeFontWeight::BOLDER);
         } else if (c.skip(Css::Token::ident("lighter"))) {
             return Ok(RelativeFontWeight::LIGHTER);
