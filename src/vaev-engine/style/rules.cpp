@@ -113,14 +113,14 @@ export struct MediaRule {
 
 // https://www.w3.org/TR/css-fonts-4/#cssfontfacerule
 export struct FontFaceRule {
-    Vec<FontDesc> descs;
+    Vec<FontDescriptor> descriptors;
 
     static FontFaceRule parse(Css::Sst const& sst) {
-        return {parseDeclarations<FontDesc>(sst)};
+        return {parseDeclarations<FontDescriptor>(sst)};
     }
 
     void repr(Io::Emit& e) const {
-        e("(font-face-rule {})", descs);
+        e("(font-face-rule {})", descriptors);
     }
 };
 
@@ -195,8 +195,7 @@ export struct PageRule {
                 auto prop = registry.parseDeclaration(item, PropertyRegistry::TOP_LEVEL);
                 if (prop)
                     res.props.pushBack(prop.take());
-            } else if (item == Css::Sst::RULE and
-                       item.token == Css::Token::AT_KEYWORD) {
+            } else if (item == Css::Sst::RULE and item.token == Css::Token::AT_KEYWORD) {
                 auto rule = PageAreaRule::parse(registry, item);
                 if (rule)
                     res.areas.pushBack(*rule);

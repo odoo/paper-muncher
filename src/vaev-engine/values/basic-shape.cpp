@@ -2,7 +2,7 @@ module;
 
 #include <karm/macros>
 
-export module Vaev.Engine:values.basic_shape;
+export module Vaev.Engine:values.basicShape;
 
 import Karm.Core;
 import Karm.Gfx;

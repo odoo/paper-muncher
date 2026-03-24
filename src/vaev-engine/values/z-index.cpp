@@ -1,4 +1,4 @@
-export module Vaev.Engine:values.z_index;
+export module Vaev.Engine:values.zIndex;
 
 import Karm.Core;
 

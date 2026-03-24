@@ -174,34 +174,6 @@ export struct Computer {
         return res;
     }
 
-    // https://www.w3.org/TR/css-backgrounds-3/#body-background
-    static void _propagateBodyBackgroundToHtml(Dom::Document& doc) {
-        // For documents whose root element is an HTML HTML element or an XHTML html element
-        auto html = doc.documentElement();
-        if (html->namespaceUri() != Html::NAMESPACE)
-            return;
-        auto htmlBg = html->specifiedValues()->backgrounds;
-
-        auto body = doc.body();
-        if (body == nullptr)
-            return;
-        auto bodyBg = body->specifiedValues()->backgrounds;
-
-        // If the computed value of background-image on the
-        // root element is none and its background-color is transparent
-        if (htmlBg->color == TRANSPARENT and not htmlBg->layers) {
-            // User agents must instead propagate the computed values of the
-            // background properties from that element’s first HTML BODY
-            // or XHTML body child element.
-            html->specifiedValues()->backgrounds = bodyBg;
-
-            // The used values of that BODY element’s background properties are
-            // their initial values, and the propagated values are treated
-            // as if they were specified on the root element.
-            body->specifiedValues()->backgrounds = makeCow<BackgroundProps>();
-        }
-    }
-
     static void _considerElementAttributes(SpecifiedValues& values, Gc::Ref<Dom::Element> el) {
         // https://html.spec.whatwg.org/multipage/tables.html#the-col-element
         // The element may have a span content attribute specified, whose value must
@@ -395,6 +367,36 @@ export struct Computer {
         for (auto child = el.firstChild(); child; child = child->nextSibling()) {
             if (auto childEl = child->is<Dom::Element>())
                 styleElement(*specifiedValues, *childEl);
+        }
+    }
+
+    // MARK: Body Brackground --------------------------------------------------------
+
+    // https://www.w3.org/TR/css-backgrounds-3/#body-background
+    static void _propagateBodyBackgroundToHtml(Dom::Document& doc) {
+        // For documents whose root element is an HTML HTML element or an XHTML html element
+        auto html = doc.documentElement();
+        if (html->namespaceUri() != Html::NAMESPACE)
+            return;
+        auto htmlBg = html->specifiedValues()->backgrounds;
+
+        auto body = doc.body();
+        if (body == nullptr)
+            return;
+        auto bodyBg = body->specifiedValues()->backgrounds;
+
+        // If the computed value of background-image on the
+        // root element is none and its background-color is transparent
+        if (htmlBg->color == TRANSPARENT and not htmlBg->layers) {
+            // User agents must instead propagate the computed values of the
+            // background properties from that element’s first HTML BODY
+            // or XHTML body child element.
+            html->specifiedValues()->backgrounds = bodyBg;
+
+            // The used values of that BODY element’s background properties are
+            // their initial values, and the propagated values are treated
+            // as if they were specified on the root element.
+            body->specifiedValues()->backgrounds = makeCow<BackgroundProps>();
         }
     }
 

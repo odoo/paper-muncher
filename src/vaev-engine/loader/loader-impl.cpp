@@ -61,7 +61,7 @@ void _evalFontfaceRules(Style::Rule const& rule, Vec<Style::FontFace>& fontFaces
     rule.visit(Visitor{
         [&](Style::FontFaceRule const& r) {
             auto& fontFace = fontFaces.emplaceBack();
-            for (auto const& decl : r.descs)
+            for (auto const& decl : r.descriptors)
                 decl.apply(fontFace);
         },
         [&](auto const&) {
