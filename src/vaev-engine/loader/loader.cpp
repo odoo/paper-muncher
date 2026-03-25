@@ -23,7 +23,6 @@ namespace Vaev::Loader {
 
 Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url url, Rc<Http::Response> resp, Async::CancellationToken ct) {
     auto dom = heap.alloc<Dom::Document>(url);
-
     auto contentType = resp->header.contentType().unwrapOr(Ref::Uti::PUBLIC_DATA);
 
     if (contentType == Ref::Uti::PUBLIC_DATA)
