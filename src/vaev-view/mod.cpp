@@ -58,7 +58,7 @@ struct Viewport : Ui::View<Viewport> {
     void layout(Math::Recti bound) override {
         _listener.updateContainerBound(bound);
         _window->changeViewport(bound.size().cast<Au>());
-        _listener.updateContentBound(_window->ensureRender().frag->scrollableOverflow().cast<isize>());
+        _listener.updateContentBound(_window->scrollableOverflow().cast<isize>());
         Ui::View<Viewport>::layout(bound);
     }
 

@@ -102,6 +102,10 @@ export struct Window {
         return ensureRender().scenes;
     }
 
+    RectAu scrollableOverflow() {
+        return ensureRender().frag->scrollableOverflow();
+    }
+
     [[clang::coro_wrapper]]
     Yield<Print::Page> print(Print::Settings const& settings) const {
         return Driver::print(_document.upgrade(), settings);

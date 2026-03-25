@@ -12,7 +12,7 @@
             "tag": "v0.2.0"
         },
         "cute-engineering/ce-heap": {
-            "commit": "028c6accd7b8d735e04ebd5fa340953f5957827f",
+            "commit": "664de4bd5c3810da1a679724c3533204f30e80f8",
             "git": "https://codeberg.org/cute-engineering/ce-heap.git",
             "tag": "v1.3.0"
         },
@@ -47,7 +47,7 @@
             "tag": "main"
         },
         "skift/karm": {
-            "commit": "ac514276ee9c658c806c0b441a364904843cd875",
+            "commit": "3a6447a962d50f8ffa25fa578019e6e3bea2a8af",
             "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
         }
