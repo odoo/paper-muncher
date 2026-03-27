@@ -233,6 +233,12 @@ dd {
     margin-inline-start: 40px;
 }
 
+ol,
+ul,
+menu {
+    counter-reset: list-item;
+}
+
 dir,
 menu,
 ol,
@@ -338,4 +344,8 @@ hr {
 
 center {
     text-align: -vaev-block-center;
+}
+
+*::marker {
+    content: "• ";
 }

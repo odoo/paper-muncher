@@ -11,6 +11,11 @@ using namespace Karm;
 
 namespace Vaev {
 
+// MARK: Flexible Length -------------------------------------------------------
+// https://www.w3.org/TR/css-grid-2/#typedef-flex
+
+using Fr = Distinct<f64, struct _FrTag>;
+
 // MARK: FlexDirection ---------------------------------------------------------
 // https://drafts.csswg.org/css-flexbox-1/#flex-direction-property
 
@@ -111,3 +116,10 @@ export struct FlexProps {
 };
 
 } // namespace Vaev
+
+template <>
+struct Io::Formatter<Vaev::Fr> {
+    Res<> format(Io::TextWriter& e, Vaev::Fr const& v) {
+        return Io::format(e, "{}fr", v.value());
+    }
+};

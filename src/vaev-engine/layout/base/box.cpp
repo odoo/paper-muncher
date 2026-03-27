@@ -123,12 +123,19 @@ struct Box : Meta::NoCopy {
     Content content = NONE;
     Opt<Rc<FormatingContext>> formatingContext = NONE;
     Gc::Ptr<Dom::Element> origin;
+    Opt<Symbol> pseudoOrigin;
 
     Box(Rc<Style::SpecifiedValues> style, Gc::Ptr<Dom::Element> og)
         : style{std::move(style)}, origin{og} {}
 
+    Box(Rc<Style::SpecifiedValues> style, Opt<Symbol> pseudoOrigin)
+        : style{std::move(style)}, pseudoOrigin{pseudoOrigin} {}
+
     Box(Rc<Style::SpecifiedValues> style, Content content, Gc::Ptr<Dom::Element> og)
         : style{std::move(style)}, content{std::move(content)}, origin{og} {}
+
+    Box(Rc<Style::SpecifiedValues> style, Content content, Opt<Symbol> pseudoOrigin)
+        : style{std::move(style)}, content{std::move(content)}, pseudoOrigin{pseudoOrigin} {}
 
     Slice<Box> children() const {
         if (auto children = content.is<Vec<Box>>())
