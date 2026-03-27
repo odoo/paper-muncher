@@ -96,8 +96,10 @@ Async::Task<> entryPointAsync(Sys::Context& ctx, Async::CancellationToken ct) {
     if (backgroundArg.value())
         options.background = co_try$(Vaev::parseValue<Vaev::Color>(backgroundArg.value()));
 
-    options.paper = co_try$(Print::findPaperStock(paperArg.value()));
-    options.orientation = co_try$(Vaev::parseValue<Print::Orientation>(orientationArg.value()));
+    auto paper = co_try$(Print::findPaperStock(paperArg.value()));
+    auto orientation = co_try$(Vaev::parseValue<Print::Orientation>(orientationArg.value()));
+    options.defaultSize = paper.size(orientation);
+
     options.margins = marginArg.value();
 
     Vec<Ref::Url> inputs;

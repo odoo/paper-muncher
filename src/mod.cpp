@@ -68,8 +68,7 @@ export struct Option {
     Opt<Vaev::Length> width = NONE;
     Opt<Vaev::Length> height = NONE;
     Opt<Vaev::Color> background = NONE;
-    Print::PaperStock paper = Print::A4;
-    Print::Orientation orientation = Print::Orientation::PORTRAIT;
+    Vec2Au defaultSize = Print::A4.size(Print::Orientation::PORTRAIT);
     Print::Margins margins = Print::Margins::DEFAULT;
     Ref::Uti outputFormat = Ref::Uti::PUBLIC_DATA;
     Flow flow = Flow::AUTO;
@@ -79,22 +78,18 @@ export struct Option {
         Vaev::Layout::Resolver resolver;
         resolver.viewport.dpi = this->scale;
 
-        auto paper = this->paper;
-
-        if (this->orientation == Print::Orientation::LANDSCAPE)
-            paper = paper.landscape();
+        auto size = this->defaultSize;
 
         if (this->width or this->height) {
-            paper.name = "custom";
             if (this->width)
-                paper.width = resolver.resolve(*this->width).cast<f64>();
+                size.width = resolver.resolve(*this->width);
 
             if (this->height)
-                paper.height = resolver.resolve(*this->height).cast<f64>();
+                size.height = resolver.resolve(*this->height);
         }
 
         return {
-            .paper = paper,
+            .size = size,
             .margins = this->margins,
             .scale = this->scale.toDppx(),
         };
@@ -159,19 +154,14 @@ export Async::Task<> runAsync(
                 scene = makeRc<Scene::Clear>(scene, Gfx::WHITE);
             }
 
-            Print::PaperStock paper{
-                "image",
-                media.width.cast<f64>(),
-                media.height.cast<f64>(),
-            };
+            Math::Vec2f size = Vec2Au{media.width, media.height}.cast<f64>();
 
             if (options.extend == Extend::FIT) {
                 auto overflow = window->ensureRender().frag->scrollableOverflow();
-                paper.width = overflow.width.cast<f64>();
-                paper.height = overflow.height.cast<f64>();
+                size = overflow.size().cast<f64>();
             }
 
-            Print::Page page = {paper, scene};
+            Print::Page page = {size, scene};
             page.print(
                 *printer,
                 {.showBackgroundGraphics = true}

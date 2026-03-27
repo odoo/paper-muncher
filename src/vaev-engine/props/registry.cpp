@@ -16,6 +16,7 @@ import :props.margin;
 import :props.outline;
 import :props.overflow;
 import :props.padding;
+import :props.page;
 import :props.positioned;
 import :props.sizing;
 import :props.svg;
@@ -221,6 +222,9 @@ export PropertyRegistry defaultRegistry() {
     registry.registerProperty<SvgViewBoxProperty>();
     registry.registerProperty<FillOpacityProperty>();
     registry.registerProperty<StrokeWidthProperty>();
+
+    // Page
+    registry.registerProperty<PageSizeProperty>();
 
     return registry;
 }

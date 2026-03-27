@@ -12,7 +12,7 @@ static Media const TEST_MEDIA = {
     .type = MediaType::SCREEN,
     .width = 1920_au,
     .height = 1080_au,
-    .aspectRatio = 16.0 / 9.0,
+    .aspectRatio = 16.0_au / 9.0_au,
     .orientation = Print::Orientation::LANDSCAPE,
 
     .resolution = Resolution::fromDpi(96),
@@ -40,7 +40,7 @@ static Media const TEST_MEDIA = {
 
     .deviceWidth = 1920_au,
     .deviceHeight = 1080_au,
-    .deviceAspectRatio = 16.0 / 9.0,
+    .deviceAspectRatio = 16.0_au / 9.0_au,
 };
 
 test$("logical-and") {

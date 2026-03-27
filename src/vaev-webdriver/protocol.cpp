@@ -70,11 +70,11 @@ struct PrintSettings {
     f64 scale = 1.0;
     bool background = false;
     bool shrinkToFit = true;
-    Math::Vec2f paper = {
-        21.59,
-        27.94
+    Vec2Au paper = {
+        21.59_au,
+        27.94_au
     };
-    Math::Insetsf margins = 1.0;
+    InsetsAu margins = 1.0_au;
     Vec<urange> pageRanges{};
 
     static PrintSettings defaults() {
@@ -83,18 +83,16 @@ struct PrintSettings {
 
     Print::Settings toNative() const {
         return {
-            .paper = {
-                .name = "custom"s,
-                .width = paper.width * 10 * Print::UNIT,
-                .height = paper.height * 10 * Print::UNIT,
+            .size = {
+                .width = paper.width * 10_au * Print::UNIT,
+                .height = paper.height * 10_au * Print::UNIT,
             },
-            .margins = Math::Insetsf{
-                margins.top * 10 * Print::UNIT,
-                margins.end * 10 * Print::UNIT,
-                margins.bottom * 10 * Print::UNIT,
-                margins.start * 10 * Print::UNIT,
+            .margins = InsetsAu{
+                margins.top * 10_au * Print::UNIT,
+                margins.end * 10_au * Print::UNIT,
+                margins.bottom * 10_au * Print::UNIT,
+                margins.start * 10_au * Print::UNIT,
             },
-            .orientation = orientation,
             .scale = scale,
             .backgroundGraphics = background,
         };

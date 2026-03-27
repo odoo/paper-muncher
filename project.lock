@@ -12,7 +12,7 @@
             "tag": "v0.2.0"
         },
         "cute-engineering/ce-heap": {
-            "commit": "028c6accd7b8d735e04ebd5fa340953f5957827f",
+            "commit": "664de4bd5c3810da1a679724c3533204f30e80f8",
             "git": "https://codeberg.org/cute-engineering/ce-heap.git",
             "tag": "v1.3.0"
         },
