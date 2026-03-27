@@ -1,0 +1,42 @@
+<test name="toggle">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <body>
+            <div id="ref" class="foo"></div>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+
+    <rendering>
+        <div class="toggled">
+            <div class="toggled">
+                <div class="toggled">
+                    <div class="toggled">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <style>
+            .toggled {
+                background-color: toggle(red, green, blue);
+                margin: 10px;
+                padding: 10px;
+            }
+        </style>
+    </rendering>
+
+    <rendering>
+        <div style="background-color: red; margin: 10px; padding: 10px;">
+            <div style="background-color: green; margin: 10px; padding: 10px;">
+                <div style="background-color: blue; margin: 10px; padding: 10px;">
+                    <div style="background-color: red; margin: 10px; padding: 10px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </rendering>
+</test>

@@ -129,6 +129,16 @@ export struct Property : Meta::NoCopy {
 
     virtual void repr(Io::Emit& e) const = 0;
 
+    /// Evaluates and returns the computed value of this property without permanently
+    /// altering the target element's specified values.
+    Rc<Property> computedValue(SpecifiedValues const& parent, SpecifiedValues& child) const {
+        auto save = registration->load(child);
+        apply(parent, child);
+        auto result = registration->load(child);
+        save->apply(parent, child);
+        return result;
+    }
+
     bool isCustomProperty() const {
         return registration->flags().has(CUSTOM_PROPERTY);
     }
@@ -143,6 +153,13 @@ export struct Property : Meta::NoCopy {
 
     virtual bool isBogusProperty() const {
         return registration->flags().has(BOGUS_REGISTRATION);
+    }
+
+    bool operator==(Property const& other) const {
+        // HACK: This is a temporary implementation, it should be replaced
+        //       with a more robust equality check that compares the actual
+        //       values of the properties.
+        return Io::toStr(*this) == Io::toStr(other);
     }
 };
 
@@ -196,7 +213,50 @@ struct CustomProperty : Property {
     }
 };
 
-// MARK: Deferred Property ------------------------------------------------------
+// MARK: Toggle Property -------------------------------------------------------
+
+// https://drafts.csswg.org/css-values-5/#toggle-notation
+// The toggle() expression allows descendant elements to cycle over a list of values instead of inheriting the same value.
+struct ToggleProperty : Property {
+    Vec<Rc<Property>> _value;
+
+    ToggleProperty(Rc<Property::Registration> registration, Vec<Rc<Property>> value)
+        : Property(registration), _value(value) {}
+
+    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const& parent, SpecifiedValues& child) const override {
+        // If toggle() is used on a shorthand property, it sets each of its
+        // longhands to a toggle() value with arguments corresponding to what
+        // the longhand would have received had each of the original toggle()
+        // arguments been the sole value of the shorthand.
+        Map<Symbol, Vec<Rc<Property>>> props;
+        for (auto& shorthand : _value)
+            for (auto& longhand : shorthand->expandShorthand(registry, parent, child))
+                props.lookupOrPutDefault(longhand->registration->name()).pushBack(longhand);
+
+        return props.mutIterValue() |
+               Select([](Vec<Rc<Property>>& v) {
+                   return makeRc<ToggleProperty>(v[0]->registration, std::move(v));
+               }) |
+               Collect<Vec<Rc<Property>>>();
+    }
+
+    void apply(SpecifiedValues const& parent, SpecifiedValues& child) const override {
+        auto parentProperty = registration->load(parent);
+        usize index = 0;
+        for (auto& p : _value) {
+            index++;
+            if (parentProperty == p->computedValue(parent, child))
+                break;
+        }
+        _value[index % _value.len()]->apply(parent, child);
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("(toggle {})", _value);
+    }
+};
+
+// MARK: Deferred Property -----------------------------------------------------
 
 // NOTE: A property that could not be parsed, it's used to store the value
 //       as-is and apply it with the cascade and custom properties
@@ -445,8 +505,9 @@ export struct PropertyRegistry {
         GENERATE_CUSTOM_PROPERTY = 1 << 1,
         DEFER_UNPARSABLE = 1 << 2,
         ALLOW_DEFAULTING = 1 << 3,
+        ALLOW_TOGGLE = 1 << 4,
 
-        TOP_LEVEL = GENERATE_BOGUS | GENERATE_CUSTOM_PROPERTY | DEFER_UNPARSABLE | ALLOW_DEFAULTING,
+        TOP_LEVEL = GENERATE_BOGUS | GENERATE_CUSTOM_PROPERTY | DEFER_UNPARSABLE | ALLOW_DEFAULTING | ALLOW_TOGGLE,
     };
 
     using enum Options;
@@ -520,11 +581,28 @@ export struct PropertyRegistry {
         return Ok(makeRc<DefaultedProperty>(registration, value));
     }
 
+    Res<Rc<Property>> _parseToggle(Rc<Property::Registration> registration, Cursor<Css::Sst>& content) {
+        if (content.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (content.peek().prefix != Css::Token::function("toggle("))
+            return Error::invalidData("unknown declaration");
+
+        Vec<Rc<Property>> options;
+        Cursor<Css::Sst> toggleContent = content->content;
+        while (not toggleContent.ended()) {
+            options.pushBack(try$(registration->parse(toggleContent)));
+            skipOmmitableComma(toggleContent);
+        }
+        content.next();
+        return Ok(makeRc<ToggleProperty>(registration, std::move(options)));
+    }
+
     Rc<Property> _deferProperty(Rc<Property::Registration> registration, Slice<Css::Sst> content) {
         return makeRc<DeferredProperty>(registration, content);
     }
 
-    Res<Rc<Property>> parseValue(Symbol propertyName, Slice<Css::Sst> content, Flags<Options> options) {
+    Res<Rc<Property>> parseValue(Symbol propertyName, Cursor<Css::Sst> content, Flags<Options> options) {
         Cursor cursor = content;
 
         auto registration = try$(resolveRegistration(propertyName, options));
@@ -532,25 +610,25 @@ export struct PropertyRegistry {
             return Ok(makeRc<BogusProperty>(registration, content, Error::invalidData("unknow property")));
 
         eatWhitespace(cursor);
-        if (options.has(ALLOW_DEFAULTING)) {
+        if (options.has(ALLOW_DEFAULTING))
             if (auto defaulted = _parseDefaulted(registration, cursor))
-                return Ok(defaulted.take());
-        }
+                return defaulted;
+
+        if (options.has(ALLOW_TOGGLE))
+            if (auto toggle = _parseToggle(registration, cursor))
+                return toggle;
 
         auto maybeProp = registration->parse(cursor);
 
-        if (options.has(DEFER_UNPARSABLE)) {
-            if (not maybeProp)
-                return Ok(_deferProperty(registration, content));
+        if (options.has(DEFER_UNPARSABLE) and not maybeProp) {
+            return Ok(_deferProperty(registration, content));
         }
 
         eatWhitespace(cursor);
 
-        if (options.has(GENERATE_BOGUS)) {
-            if (not cursor.ended()) {
-                auto registration = makeRc<BogusProperty::Registration>(propertyName);
-                return Ok(makeRc<BogusProperty>(registration, content, Error::invalidData("un-consumed token in property value")));
-            }
+        if (options.has(GENERATE_BOGUS) and not cursor.ended()) {
+            auto registration = makeRc<BogusProperty::Registration>(propertyName);
+            return Ok(makeRc<BogusProperty>(registration, content, Error::invalidData("un-consumed token in property value")));
         }
 
         return maybeProp;
