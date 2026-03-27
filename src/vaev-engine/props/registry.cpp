@@ -8,10 +8,12 @@ import :props.base;
 import :props.baseline;
 import :props.border;
 import :props.breaks;
+import :props.counter;
 import :props.display;
 import :props.flex;
 import :props.floats;
 import :props.fonts;
+import :props.list;
 import :props.margin;
 import :props.outline;
 import :props.overflow;
@@ -221,6 +223,18 @@ export PropertyRegistry defaultRegistry() {
     registry.registerProperty<SvgViewBoxProperty>();
     registry.registerProperty<FillOpacityProperty>();
     registry.registerProperty<StrokeWidthProperty>();
+
+    // Counter
+    registry.registerProperty<CounterResetProperty>();
+    registry.registerProperty<CounterIncrementProperty>();
+    registry.registerProperty<CounterSetProperty>();
+
+    // List
+    registry.registerProperty<ListStyleImageProperty>();
+    registry.registerProperty<ListStyleTypeProperty>();
+    registry.registerProperty<ListStylePositionProperty>();
+    registry.registerProperty<ListStyleProperty>();
+    registry.registerProperty<MarkerSideProperty>();
 
     return registry;
 }

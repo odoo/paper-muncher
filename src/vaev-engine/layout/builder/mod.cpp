@@ -804,6 +804,12 @@ static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc:
 
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent) {
     auto el = parent->is<Dom::Element>();
+    if (el->specifiedValues()->display == Display::Item::YES) {
+        if (auto marker = el ? el->getPseudoElement(Dom::PseudoElement::MARKER) : NONE) {
+            _buildPseudoElement(bc, marker.unwrap());
+        }
+    }
+
     if (auto before = el ? el->getPseudoElement(Dom::PseudoElement::BEFORE) : NONE) {
         _buildPseudoElement(bc, before.unwrap());
     }
@@ -877,10 +883,10 @@ export Box _buildBlockPseudoElement(Dom::PseudoElement& el) {
     if (el.specifiedValues()->content.is<String>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle);
         prose->append(el.specifiedValues()->content.unwrap<String>().str());
-        return {el.specifiedValues(), InlineBox{prose}, nullptr};
+        return {el.specifiedValues(), InlineBox{prose}, el.type};
     }
 
-    return {el.specifiedValues(), nullptr};
+    return Box{el.specifiedValues(), el.type};
 }
 
 static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudoElement) {
@@ -947,33 +953,31 @@ export Box buildElement(Gc::Ref<Dom::Element> elt) {
 }
 
 export Box buildForPseudoElement(Dom::PseudoElement& el, usize currentPage, RunningPositionMap& runningPos) {
+    auto style = el.specifiedValues();
     auto proseStyle = _proseStyleFromStyle(*el.specifiedValues(), el.specifiedValues()->fontFace);
 
-    if (el.specifiedValues()->content.is<String>()) {
+    if (style->content.is<String>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle);
-        prose->append(el.specifiedValues()->content.unwrap<String>().str());
-        return {el.specifiedValues(), InlineBox{prose}, nullptr};
-    } else if (el.specifiedValues()->content.is<ElementContent>()) {
-        auto elt = el.specifiedValues()->content.unwrap<ElementContent>();
+        prose->append(style->content.unwrap<String>().str());
+        return {style, InlineBox{prose}, nullptr};
+    } else if (style->content.is<ElementFunc>()) {
+        auto elt = style->content.unwrap<ElementFunc>();
         if (auto infos = runningPos.match(elt, currentPage)) {
-            Box marginBox = {el.specifiedValues(), nullptr};
+            Box marginBox = {style, nullptr};
 
             Box box = buildElement(infos.unwrap().element);
             box.style->position = Keywords::STATIC;
             marginBox.add(std::move(box));
             return marginBox;
         }
-    } else if (el.specifiedValues()->content.is<Counter>()) {
-        auto elt = el.specifiedValues()->content.unwrap<Counter>();
-        if (elt.type == Counter::Type::PAGE) {
-            auto prose = makeRc<Gfx::Prose>(proseStyle);
-
-            prose->append(Io::toStr(currentPage + 1).str());
-            return {el.specifiedValues(), InlineBox{prose}, nullptr};
-        }
+    } else if (auto it = style->content.is<CounterFunc>()) {
+        auto prose = makeRc<Gfx::Prose>(proseStyle);
+        auto maybeCounter = el.counters.innerMost(it->name).v0;
+        prose->append("{}"_f(maybeCounter ? maybeCounter->value : 0).str());
+        return {style, InlineBox{prose}, nullptr};
     }
 
-    return {el.specifiedValues(), nullptr};
+    return {style, nullptr};
 }
 
 } // namespace Vaev::Layout

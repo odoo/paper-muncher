@@ -21,6 +21,90 @@ export struct Computer {
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
     RuleIndex _ruleIndex = {};
+    CountersStyle _counters = {};
+
+    // MARK: Counters ----------------------------------------------------------
+
+    // https://drafts.csswg.org/css-lists/#instantiate-counter:~:text=dynamically%20calculate%20the%20initial%20value
+    Integer _dynamicallyCalculateCounterInitialValue() {
+        // TODO: Implement reversed counter initial value.
+        // 1. Let num be 0.
+
+        // 2. Let lastNonZeroIncrementNegated be 0.
+
+        // 3. For each element or pseudo-element el that increments or sets the same counter in the same scope:
+        for (; false;) {
+            // 1. Let incrementNegated be el’s counter-increment integer value for this counter, multiplied by -1.
+
+            // 2. If incrementNegated is not zero, then set lastNonZeroIncrementNegated to incrementNegated.
+
+            // 3. If el sets this counter with counter-set, then add that integer value to num and break this loop.
+
+            // 4. Add incrementNegated to num.
+        }
+
+        // 4. Add lastNonZeroIncrementNegated to num.
+
+        // 5. Return num.
+        return 0;
+    }
+
+    // https://drafts.csswg.org/css-lists/#auto-numbering
+    CounterSet _resolveCounter(CounterSet& parent, CounterSet& sibling, ElementHandle el, SpecifiedValues const& style) {
+        auto const& countersStyle = *style.counters;
+
+        // 1. Existing counters are inherited from previous elements.
+        auto counters = CounterSet::inherits(parent, sibling);
+
+        // 2. New counters are instantiated (counter-reset).
+        for (auto& counterReset : countersStyle.reset) {
+            Integer initial = counterReset.value.unwrapOrElse([&] {
+                return counterReset.reversed ? _dynamicallyCalculateCounterInitialValue() : 0;
+            });
+            counters.instantiateCounter(el, counterReset, initial);
+        }
+
+        // 3. Counter values are incremented (counter-increment).
+        if (countersStyle.increment) {
+            for (auto& counterIncrement : countersStyle.increment) {
+                counters.increment(el, counterIncrement);
+            }
+        } else if (style.display == Display::Item::YES) {
+            // https://www.w3.org/TR/css-lists-3/#list-item-counter
+            counters.increment(el, {.name = "list-item"_sym, .value = 1});
+        }
+
+        // 4. Counter values are explicitly set (counter-set).
+        for (auto& counterSet : countersStyle.set)
+            counters.increment(el, counterSet);
+
+        return counters;
+    }
+
+    CounterSet _resolveCounters(CounterSet& parentCounters, CounterSet& siblingCounters, Dom::Element& el) {
+        if (!el._specifiedValues) {
+            return siblingCounters;
+        }
+        CounterSet currentCounters = _resolveCounter(
+            parentCounters,
+            siblingCounters,
+            &el,
+            *el.specifiedValues()
+        );
+        CounterSet childSiblingCounters = {};
+
+        for (auto child = el.firstChild(); child; child = child->nextSibling()) {
+            if (auto childEl = child->is<Dom::Element>()) {
+                childSiblingCounters = _resolveCounters(
+                    currentCounters,
+                    childSiblingCounters,
+                    *childEl
+                );
+            }
+        }
+
+        return currentCounters;
+    }
 
     // MARK: Cascading ---------------------------------------------------------
 
@@ -405,6 +489,13 @@ export struct Computer {
             auto rootSpecifiedValues = makeRc<SpecifiedValues>(SpecifiedValues::initial());
             rootSpecifiedValues->fontFace = _lookupFontface(*rootSpecifiedValues);
             styleElement(*rootSpecifiedValues, *el);
+            CounterSet rootParentCounters = {};
+            CounterSet rootSiblingCounters = {};
+            _resolveCounters(
+                rootParentCounters,
+                rootSiblingCounters,
+                *el
+            );
         }
         _propagateBodyBackgroundToHtml(doc);
     }

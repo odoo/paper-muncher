@@ -40,7 +40,8 @@ export struct Property : Meta::NoCopy {
         // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
         PRESENTATION_ATTRIBUTE = 1 << 3,
 
-        // Represent a miss-parsed property
+        /// Indicates that the property represents an invalid or unrecognized, CSS declaration.
+        /// Bogus properties are ignored during the cascade and do not affect computed styles.
         BOGUS_REGISTRATION = 1 << 4,
 
         // The property is not reset by all:
@@ -50,6 +51,12 @@ export struct Property : Meta::NoCopy {
 
     using enum Options;
 
+    /// Defines the metadata, lifecycle, and parsing rules for a specific CSS property.
+    ///
+    /// The `Registration` acts as a singleton-like factory and behavior contract
+    /// for all instances of a given property. It handles parsing raw CSS tokens
+    /// into a concrete `Property` instance and dictates how the property interacts
+    /// with the cascade (inheritance, initial values).
     // https://drafts.css-houdini.org/css-properties-values-api/#custom-property-registration
     struct Registration : Meta::NoCopy {
         Opt<Weak<Registration>> _self;
@@ -63,6 +70,7 @@ export struct Property : Meta::NoCopy {
 
         virtual ~Registration() = default;
 
+        /// Returns the canonical CSS identifier for this property (e.g., `color`, `margin-top`).
         virtual Symbol name() const = 0;
 
         // https://drafts.csswg.org/css-cascade-4/#legacy-name-alias
@@ -74,6 +82,7 @@ export struct Property : Meta::NoCopy {
             return {};
         }
 
+        // https://drafts.csswg.org/css-cascade/#initial-value
         virtual Rc<Property> initial() const = 0;
 
         virtual Rc<Property> load(SpecifiedValues const& c) const = 0;
@@ -83,7 +92,7 @@ export struct Property : Meta::NoCopy {
             //       commonly inherited. Any property marked with the INHERITED
             //       flag should override this method with a faster implementation.
             if (flags().has(INHERITED))
-                logFatal("property {#} marked as INHERITED is using the slow fallback path. override inherit()!", name());
+                logWarn("property {#} marked as INHERITED is using the slow fallback path. override inherit()!", name());
             load(parent)->apply(child);
         }
 
@@ -109,7 +118,7 @@ export struct Property : Meta::NoCopy {
 
     virtual Vec<Rc<Property>> expandShorthand(PropertyRegistry&, [[maybe_unused]] SpecifiedValues const& parent, [[maybe_unused]] SpecifiedValues& child) const {
         if (isBogusProperty())
-            logFatal("trying to expand {#} as a bug property");
+            logFatal("trying to expand {#} which is a bogus property");
 
         if (isShorthandProperty())
             logFatal("shorthand property {#} is missing expandShorthand() implementation", registration->name());
@@ -151,6 +160,7 @@ export struct Property : Meta::NoCopy {
         return false;
     }
 
+    /// Determines whether this property instance represents a parsing failure or an unrecognized CSS declaration.
     virtual bool isBogusProperty() const {
         return registration->flags().has(BOGUS_REGISTRATION);
     }
@@ -258,8 +268,8 @@ struct ToggleProperty : Property {
 
 // MARK: Deferred Property -----------------------------------------------------
 
-// NOTE: A property that could not be parsed, it's used to store the value
-//       as-is and apply it with the cascade and custom properties
+/// A property that could not be parsed, it's used to store the value
+/// as-is and apply it with the cascade and custom properties
 struct DeferredProperty : Property {
     Css::Content _value;
 
