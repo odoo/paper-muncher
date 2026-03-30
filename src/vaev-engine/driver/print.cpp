@@ -181,7 +181,7 @@ Pair<Vec<Layout::Breakpoint>, Vec<PageLayoutInfos>> collectBreakPointsAndRunning
         pageInfos.pushBack({pageBox, pageArea, pageStyle});
 
         Layout::Viewport vp{
-            .small = pageArea,
+            .small = pageArea.size(),
         };
 
         context.contentTree->viewport = vp;
