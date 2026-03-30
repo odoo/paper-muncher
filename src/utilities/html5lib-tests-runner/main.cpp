@@ -10,10 +10,11 @@ using namespace Karm;
 enum struct Suite {
     TOKENIZER,
     TREE_CONSTRUCTION,
+
     _LEN,
 };
 
-Async::Task<> entryPointAsync([[maybe_unused]] Sys::Context& ctx, [[maybe_unused]] Async::CancellationToken ct) {
+Async::Task<> entryPointAsync(Sys::Env& env, [[maybe_unused]] Async::CancellationToken ct) {
     auto suiteArg = Cli::option<Suite>('s', "suite"s, "The type of test to run"s);
     auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, {"-"s});
 
@@ -30,14 +31,14 @@ Async::Task<> entryPointAsync([[maybe_unused]] Sys::Context& ctx, [[maybe_unused
         }
     };
 
-    co_trya$(cmd.execAsync(ctx));
+    co_trya$(cmd.execAsync(env));
     if (not cmd)
         co_return Ok();
 
     if (not suiteArg.has())
         co_return Error::invalidInput("test suite required");
 
-    auto input = inputArg.value() == "-" ? "fd:stdin"_url : Ref::parseUrlOrPath(inputArg.value(), co_try$(Sys::pwd()));
+    auto input = inputArg.value() == "-" ? "fd:stdin"_url : Ref::parseUrlOrPath(inputArg.value(), env.cwd());
     auto inputString = co_try$(Sys::readAllUtf8(input));
 
     Html5LibTest::Result result;
@@ -46,7 +47,7 @@ Async::Task<> entryPointAsync([[maybe_unused]] Sys::Context& ctx, [[maybe_unused
     } else if (suiteArg.value() == Suite::TREE_CONSTRUCTION) {
         result = co_try$(Html5LibTest::TreeConstruction::run(inputString));
     } else {
-        panic("unknown test suite");
+        unreachable();
     }
 
     Serde::Object json = {
