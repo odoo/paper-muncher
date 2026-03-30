@@ -65,6 +65,11 @@ void _paintMargins(Style::PageSpecifiedValues& pageStyle, RectAu pageRect, RectA
     auto bottomLeftMarginCornerRect = RectAu::fromTwoPoint(pageRect.bottomStart(), pageContent.bottomStart());
     auto bottomRightMarginCornerRect = RectAu::fromTwoPoint(pageRect.bottomEnd(), pageContent.bottomEnd());
 
+    logInfo("topLeftMarginCornerRect: {}", topLeftMarginCornerRect);
+    logInfo("topRightMarginCornerRect: {}", topRightMarginCornerRect);
+    logInfo("bottomLeftMarginCornerRect: {}", bottomLeftMarginCornerRect);
+    logInfo("bottomRightMarginCornerRect: {}", bottomRightMarginCornerRect);
+
     // Paint corners
     _paintCornerMargin(pageStyle, stack, topLeftMarginCornerRect, Style::PageArea::TOP_LEFT_CORNER, currentPage, runningPosition);
     _paintCornerMargin(pageStyle, stack, topRightMarginCornerRect, Style::PageArea::TOP_RIGHT_CORNER, currentPage, runningPosition);
@@ -76,6 +81,11 @@ void _paintMargins(Style::PageSpecifiedValues& pageStyle, RectAu pageRect, RectA
     auto bottomRect = RectAu::fromTwoPoint(bottomLeftMarginCornerRect.topEnd(), bottomRightMarginCornerRect.bottomStart());
     auto leftRect = RectAu::fromTwoPoint(topLeftMarginCornerRect.bottomEnd(), bottomLeftMarginCornerRect.topStart());
     auto rightRect = RectAu::fromTwoPoint(topRightMarginCornerRect.bottomEnd(), bottomRightMarginCornerRect.topStart());
+
+    logInfo("topRect: {}", topRect);
+    logInfo("bottomRect: {}", bottomRect);
+    logInfo("leftRect: {}", leftRect);
+    logInfo("rightRect: {}", rightRect);
 
     // Paint main areas
     _paintMainMargin(pageStyle, stack, topRect, Style::PageArea::TOP, {Style::PageArea::TOP_LEFT, Style::PageArea::TOP_CENTER, Style::PageArea::TOP_RIGHT}, currentPage, runningPosition);
@@ -90,7 +100,7 @@ Style::PageContainers _computePageContainers(Style::PageContainers initialPageCo
     Layout::Resolver marginResolver{
         .rootFont = font,
         .boxFont = font,
-        .viewport = {.small = initialPageContainers.pageArea},
+        .viewport = {.small = initialPageContainers.pageArea.size()},
     };
 
     InsetsAu pageMargin = {
