@@ -15,6 +15,44 @@ import :style.ruleIndex;
 
 namespace Vaev::Style {
 
+// MARK: Page size ---------------------------------------------------------
+void _evalUnqualifiedPageRule(Rule const& rule, Media const& media, PageSpecifiedValues& c, PropertyRegistry& registry) {
+    rule.visit(Visitor{
+        [&](PageRule const& r) {
+            if (isEmpty(r.selectors)) {
+                for (auto const& desc : r.descriptors) {
+                    desc.apply(c);
+                }
+
+                r.apply(registry, c);
+            }
+        },
+        [&](MediaRule const& r) {
+            if (r.match(media)) {
+                for (auto const& subRule : r.rules) {
+                    _evalUnqualifiedPageRule(subRule, media, c, registry);
+                }
+            }
+        },
+        [](auto&&) {
+            return;
+        },
+    });
+}
+
+Rc<PageSpecifiedValues> computePageBaseSize(SpecifiedValues const& parent, StyleSheetList const& styleBook, Media const& media, PropertyRegistry& registry) {
+    auto computed = makeRc<PageSpecifiedValues>(parent);
+
+    for (auto const& sheet : styleBook.styleSheets) {
+        for (auto const& rule : sheet.rules) {
+            _evalUnqualifiedPageRule(rule, media, *computed, registry);
+        }
+    }
+
+    return computed;
+}
+
+
 export struct Computer {
     Media _media;
     PropertyRegistry& _propertyRegistry;
@@ -27,8 +65,13 @@ export struct Computer {
     void _evalRule(Rule const& rule, Page const& page, PageSpecifiedValues& c) {
         rule.visit(Visitor{
             [&](PageRule const& r) {
-                if (r.match(page))
+                if (r.match(page)) {
+                    for (auto const& desc : r.descriptors) {
+                        desc.apply(c);
+                    }
+
                     r.apply(_propertyRegistry, c);
+                }
             },
             [&](MediaRule const& r) {
                 if (r.match(_media))

@@ -52,16 +52,21 @@ export struct Page {
     bool blank;
 };
 
+export struct PageContainers {
+    RectAu pageBox;  /// Size of the paper
+    RectAu pageArea; /// Size of the viewport
+};
+
 export struct PageSpecifiedValues {
     using Areas = Array<Dom::PseudoElement, toUnderlyingType(PageArea::_LEN)>;
 
     Rc<SpecifiedValues> style;
     Areas _areas;
 
-    PageSpecifiedValues(SpecifiedValues const& initial)
-        : style(makeRc<SpecifiedValues>(initial)),
+    PageSpecifiedValues(SpecifiedValues const& initialValues)
+        : style(makeRc<SpecifiedValues>(initialValues)),
           _areas(Areas::fill([&](...) -> Dom::PseudoElement {
-              return {"::-vaev-page"_sym, makeRc<SpecifiedValues>(initial)};
+              return {"::-vaev-page"_sym, makeRc<SpecifiedValues>(initialValues)};
           })) {}
 
     Dom::PseudoElement& area(PageArea margin) {
@@ -227,6 +232,49 @@ export struct PageAreaRule {
 
     void repr(Io::Emit& e) const {
         e("(page-margin-rule\nmargin: {}\nprops: {})", area, props);
+    }
+};
+
+export struct SizeDescriptor {
+    PageSize value = initial();
+
+    static Str name() { return "size"; }
+
+    static PageSize initial() { return Keywords::AUTO; }
+
+    void apply(PageSpecifiedValues& c) const {
+        c.style->page.cow().size = value;
+    }
+
+    Res<> parse(Cursor<Css::Sst>& c) {
+        value = try$(parseValue<PageSize>(c));
+        return Ok();
+    }
+};
+
+using _PageDescriptor = Union<SizeDescriptor>;
+
+export struct PageDescriptor : _PageDescriptor {
+    using _PageDescriptor::_PageDescriptor;
+
+    Str name() const {
+        return visit([](auto const& p) {
+            return p.name();
+        });
+    }
+
+    void apply(PageSpecifiedValues& c) const {
+        visit([&](auto const& p) {
+            p.apply(c);
+        });
+    }
+
+    void repr(Io::Emit& e) const {
+        e("({}", name());
+        visit([&](auto const& p) {
+            e(" {}", p.value);
+        });
+        e(")");
     }
 };
 

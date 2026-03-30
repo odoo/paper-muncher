@@ -1,17 +1,55 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:values.ratio;
 
 import Karm.Core;
+import Karm.Math;
+
+import :values.primitives;
 
 using namespace Karm;
 
 namespace Vaev {
 
 export struct Ratio {
-    f64 num;
-    f64 den = 1.0;
+    Number num;
+    Number deno;
 
-    constexpr f64 eval() const {
-        return num / den;
+    Ratio() : num(0.0), deno(1.0) {}
+    Ratio(Number num, Number deno = 1.0) : num(num), deno(deno) {}
+    Ratio(Math::Frac<Au> frac) : num(frac.num), deno(frac.deno) {}
+
+    auto operator==(Ratio const& other) const {
+        return Math::epsilonEq(num / deno, other.num / other.deno);
+    }
+
+    auto operator<=>(Ratio const& other) const {
+        return num / deno <=> other.num / other.deno;
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(ratio {} {})", num, deno);
+    }
+};
+
+export template <>
+struct ValueParser<Ratio> {
+    static Res<Ratio> parse(Cursor<Css::Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (auto num = parseValue<Number>(c)) {
+            if (c.skip(Css::Token::delim("/"))) {
+                auto deno = try$(parseValue<Number>(c));
+                return Ok(Ratio(num.unwrap(), deno));
+            }
+
+            return Ok(Ratio(num.unwrap()));
+        }
+
+        return Error::invalidData("expected ratio");
     }
 };
 

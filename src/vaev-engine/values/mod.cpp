@@ -10,6 +10,7 @@ export import :values.borders;
 export import :values.breaks;
 export import :values.calc;
 export import :values.color;
+export import :values.computed;
 export import :values.content;
 export import :values.display;
 export import :values.flex;

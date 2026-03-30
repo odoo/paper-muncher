@@ -174,6 +174,7 @@ export struct PageRule {
     Vec<PageSelector> selectors;
     Vec<Rc<Property>> props;
     Vec<PageAreaRule> areas;
+    Vec<PageDescriptor> descriptors;
 
     static PageRule parse(PropertyRegistry& registry, Css::Sst const& sst) {
         if (sst != Css::Sst::RULE)
@@ -189,15 +190,17 @@ export struct PageRule {
         Cursor<Css::Sst> prefixContent = prefix->content;
         res.selectors = PageSelector::parseList(prefixContent);
 
-        // Parse the properties.
+        // Parse the properties and descriptors.
         for (auto const& item : sst.content) {
             if (item == Css::Sst::DECL) {
-                auto prop = registry.parseDeclaration(item, PropertyRegistry::TOP_LEVEL);
-                if (prop)
+                if (auto desc = parseDeclaration<PageDescriptor>(item)) {
+                    logInfo("Parsed descriptor: {}", desc);
+                    res.descriptors.pushBack(desc.take());
+                } else if (auto prop = registry.parseDeclaration(item, PropertyRegistry::TOP_LEVEL)) {
                     res.props.pushBack(prop.take());
+                }
             } else if (item == Css::Sst::RULE and item.token == Css::Token::AT_KEYWORD) {
-                auto rule = PageAreaRule::parse(registry, item);
-                if (rule)
+                if (auto rule = PageAreaRule::parse(registry, item))
                     res.areas.pushBack(*rule);
             } else {
                 logWarnIf(debugRule, "unexpected item in style rule: {}", item);
