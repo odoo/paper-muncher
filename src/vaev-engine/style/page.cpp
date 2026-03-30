@@ -53,20 +53,18 @@ export struct Page {
 };
 
 export struct PageContainers {
-    Vec2Au pageBox;  /// Size of the paper
-    Vec2Au pageArea; /// Size of the viewport
+    RectAu pageBox;  /// Size of the paper
+    RectAu pageArea; /// Size of the viewport
 };
 
 export struct PageSpecifiedValues {
     using Areas = Array<Dom::PseudoElement, toUnderlyingType(PageArea::_LEN)>;
 
     Rc<SpecifiedValues> style;
-    PageSize size;
     Areas _areas;
 
-    PageSpecifiedValues(SpecifiedValues const& initialValues, PageSize const& initialPageSize)
+    PageSpecifiedValues(SpecifiedValues const& initialValues)
         : style(makeRc<SpecifiedValues>(initialValues)),
-          size(initialPageSize),
           _areas(Areas::fill([&](...) -> Dom::PseudoElement {
               return {"::-vaev-page"_sym, makeRc<SpecifiedValues>(initialValues)};
           })) {}
@@ -245,7 +243,7 @@ export struct SizeDescriptor {
     static PageSize initial() { return Keywords::AUTO; }
 
     void apply(PageSpecifiedValues& c) const {
-        c.size = value;
+        c.style->page.cow().size = value;
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {

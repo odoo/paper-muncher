@@ -84,8 +84,8 @@ struct PrintSettings {
     Print::Settings toNative() const {
         return {
             .size = Vec2Au{
-                .width = paper.width * 10_au * Print::UNIT,
-                .height = paper.height * 10_au * Print::UNIT,
+                paper.width * 10_au * Print::UNIT,
+                paper.height * 10_au * Print::UNIT,
             },
             .margins = InsetsAu{
                 margins.top * 10_au * Print::UNIT,

@@ -40,8 +40,8 @@ void _evalUnqualifiedPageRule(Rule const& rule, Media const& media, PageSpecifie
     });
 }
 
-Rc<PageSpecifiedValues> computePageBaseSize(SpecifiedValues const& parent, PageSize const& initialPageSize, StyleSheetList const& styleBook, Media const& media, PropertyRegistry& registry) {
-    auto computed = makeRc<PageSpecifiedValues>(parent, initialPageSize);
+Rc<PageSpecifiedValues> computePageBaseSize(SpecifiedValues const& parent, StyleSheetList const& styleBook, Media const& media, PropertyRegistry& registry) {
+    auto computed = makeRc<PageSpecifiedValues>(parent);
 
     for (auto const& sheet : styleBook.styleSheets) {
         for (auto const& rule : sheet.rules) {
@@ -338,8 +338,8 @@ export struct Computer {
         return _evalCascade(parent, matchingRules);
     }
 
-    Rc<PageSpecifiedValues> computeFor(SpecifiedValues const& parent, PageSize const& initialPageSize, Page const& page) {
-        auto computed = makeRc<PageSpecifiedValues>(parent, initialPageSize);
+    Rc<PageSpecifiedValues> computeFor(SpecifiedValues const& parent, Page const& page) {
+        auto computed = makeRc<PageSpecifiedValues>(parent);
 
         for (auto const& sheet : _stylesheets.styleSheets)
             for (auto const& rule : sheet.rules)
