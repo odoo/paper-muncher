@@ -127,7 +127,6 @@ Style::PageContainers _computePageContainers(Style::PageContainers initialPageCo
 
 struct PaginationContext {
     Opt<Layout::Tree> contentTree;
-    Style::Media& media;
     Print::Settings const& settings;
     Style::Computer& computer;
     Style::SpecifiedValues& initialStyle;
@@ -167,6 +166,8 @@ Pair<Vec<Layout::Breakpoint>, Vec<PageLayoutInfos>> collectBreakPointsAndRunning
 
         auto [pageBox, pageArea] = _computePageContainers(context.initialPageContainers, *pageStyle);
 
+        // FIXME: styleDocument() should not be hidden in a trench inside a function that should probably get inlined.
+        // FIXME: Accessing internals of computer.
         if (first) {
             context.computer._media.changeDisplayArea(pageBox);
             context.computer.styleDocument(*context.dom);
@@ -241,11 +242,7 @@ export Yield<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings cons
         initialMargins = {};
     }
 
-    logInfo("Initial margins: {}", initialMargins);
     auto rect = RectAu{media.displayArea()};
-    logInfo("Rect: {}", rect);
-    logInfo("Shrinked Rect: {}", rect.shrink(initialMargins));
-    logInfo("Shrinked Rect Size: {}", rect.shrink(initialMargins).size());
 
     Style::PageContainers initialPageContainers = {
         .pageBox = media.displayArea(),
@@ -268,7 +265,6 @@ export Yield<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings cons
     Layout::RunningPositionMap runningPosition = {}; // Mapping the different Running positions to their respective names and their page.
     PaginationContext paginationContext{
         .contentTree = NONE,
-        .media = media,
         .settings = settings,
         .computer = computer,
         .initialStyle = initialStyle,

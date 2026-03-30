@@ -83,7 +83,7 @@ struct PrintSettings {
 
     Print::Settings toNative() const {
         return {
-            .size = {
+            .size = Vec2Au{
                 .width = paper.width * 10_au * Print::UNIT,
                 .height = paper.height * 10_au * Print::UNIT,
             },
