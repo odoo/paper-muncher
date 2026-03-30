@@ -9,7 +9,7 @@ import Vaev.Engine;
 
 using namespace Karm;
 
-Async::Task<> entryPointAsync(Sys::Context& ctx, Async::CancellationToken ct) {
+Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     auto sandboxedArg = Cli::flag(NONE, "sandboxed"s, "Disallow local file and http access"s);
     auto verboseArg = Cli::flag(NONE, "verbose"s, "Enable verbose logging"s);
     auto quietArg = Cli::flag(NONE, "quiet"s, "Suppress non-fatal logging"s);
@@ -68,7 +68,7 @@ Async::Task<> entryPointAsync(Sys::Context& ctx, Async::CancellationToken ct) {
         }
     };
 
-    co_trya$(cmd.execAsync(ctx));
+    co_trya$(cmd.execAsync(env));
     if (not cmd)
         co_return Ok();
 
@@ -105,11 +105,11 @@ Async::Task<> entryPointAsync(Sys::Context& ctx, Async::CancellationToken ct) {
         if (i == "-"s)
             inputs.pushBack("fd:stdin"_url);
         else
-            inputs.pushBack(Ref::parseUrlOrPath(i, co_try$(Sys::pwd())));
+            inputs.pushBack(Ref::parseUrlOrPath(i, env.cwd()));
 
     Ref::Url output = "fd:stdout"_url;
     if (outputArg.value() != "-"s)
-        output = Ref::parseUrlOrPath(outputArg.value(), co_try$(Sys::pwd()));
+        output = Ref::parseUrlOrPath(outputArg.value(), env.cwd());
 
     options.outputFormat =
         formatArg.has()
