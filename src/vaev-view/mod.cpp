@@ -16,7 +16,7 @@ namespace Vaev::View {
 
 export struct ViewportProps {
     bool wireframe = false;
-    Gc::Ptr<Dom::Node> selected = nullptr;
+    Opt<Dom::OriginatingElement> selected;
 };
 
 struct Viewport : Ui::View<Viewport> {
@@ -44,7 +44,7 @@ struct Viewport : Ui::View<Viewport> {
             Layout::wireframe(*_window->ensureRender().frag, g);
 
         if (_props.selected)
-            Layout::overlay(*_window->ensureRender().frag, g, _props.selected.upgrade());
+            Layout::overlay(*_window->ensureRender().frag, g, _props.selected.unwrap());
 
         g.pop();
 

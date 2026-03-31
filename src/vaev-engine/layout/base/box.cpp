@@ -1,7 +1,7 @@
 export module Vaev.Engine:layout.box;
 
 import Karm.Gfx;
-import :style.specified;
+import :style.computed;
 import :dom.element;
 import :layout.svg;
 
@@ -72,9 +72,9 @@ namespace SVG {
 struct Group {
     using Element = Union<Shape, SVGRoot, Karm::Box<Vaev::Layout::Box>, Group>;
     Vec<Element> elements = {};
-    Rc<Style::SpecifiedValues> style;
+    Rc<Style::ComputedValues> style;
 
-    Group(Rc<Style::SpecifiedValues> style)
+    Group(Rc<Style::ComputedValues> style)
         : style(style) {}
 
     void add(Element&& element);
@@ -87,7 +87,7 @@ struct Group {
 struct SVGRoot : SVG::Group {
     Opt<ViewBox> viewBox;
 
-    SVGRoot(Rc<Style::SpecifiedValues> style)
+    SVGRoot(Rc<Style::ComputedValues> style)
         : SVG::Group(style), viewBox(style->svg->viewBox) {}
 
     void repr(Io::Emit& e) const {
@@ -119,15 +119,15 @@ export using Content = Union<
     SVGRoot>;
 
 struct Box : Meta::NoCopy {
-    Rc<Style::SpecifiedValues> style;
+    Rc<Style::ComputedValues> style;
     Content content = NONE;
     Opt<Rc<FormatingContext>> formatingContext = NONE;
-    Gc::Ptr<Dom::Element> origin;
+    Opt<Dom::OriginatingElement> origin;
 
-    Box(Rc<Style::SpecifiedValues> style, Gc::Ptr<Dom::Element> og)
+    Box(Rc<Style::ComputedValues> style, Opt<Dom::OriginatingElement> og)
         : style{std::move(style)}, origin{og} {}
 
-    Box(Rc<Style::SpecifiedValues> style, Content content, Gc::Ptr<Dom::Element> og)
+    Box(Rc<Style::ComputedValues> style, Content content, Opt<Dom::OriginatingElement> og)
         : style{std::move(style)}, content{std::move(content)}, origin{og} {}
 
     Slice<Box> children() const {
@@ -154,6 +154,20 @@ struct Box : Meta::NoCopy {
 
     bool isReplaced() {
         return content.is<Rc<Scene::Node>>() or content.is<SVGRoot>();
+    }
+
+    bool isRootElementPrincipalBox() {
+        if (not origin)
+            return false;
+        if (origin->is<Rc<Dom::PseudoElement>>())
+            return false;
+
+        auto el = origin->unwrap<Gc::Ref<Dom::Element>>();
+        auto doc = el->ownerDocument();
+        if (not doc)
+            return false;
+
+        return doc->documentElement() == el;
     }
 
     void repr(Io::Emit& e) const {

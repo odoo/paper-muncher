@@ -112,7 +112,7 @@ Rc<Scene::Node> rectToSceneNode(Rectangle<f64> rect, Opt<Gfx::Fill> fill, Opt<Gf
     );
 }
 
-Rectangle<PercentOr<Length>> buildRectangle(Style::SpecifiedValues const& style) {
+Rectangle<PercentOr<Length>> buildRectangle(Style::ComputedValues const& style) {
     return {
         style.svg->x,
         style.svg->y,
@@ -158,7 +158,7 @@ Rc<Scene::Node> circleToSceneNode(Circle<f64> circle, Opt<Gfx::Fill> fill, Opt<G
     return makeRc<Scene::Shape>(path, stroke, fill);
 }
 
-Circle<PercentOr<Length>> buildCircle(Style::SpecifiedValues const& style) {
+Circle<PercentOr<Length>> buildCircle(Style::ComputedValues const& style) {
     return {
         style.svg->cx,
         style.svg->cy,
@@ -177,7 +177,7 @@ Circle<Au> resolve(Circle<PercentOr<Length>> const& circle, Karm::Vec2Au const& 
 // MARK: Path ----------------------------------------------------------------------------
 
 // https://svgwg.org/svg2-draft/paths.html
-Rc<Math::Path> buildPath(Style::SpecifiedValues const& style) {
+Rc<Math::Path> buildPath(Style::ComputedValues const& style) {
     if (auto d = style.svg->d.is<String>())
         return Karm::makeRc<Math::Path>(Math::Path::fromSvg(*d));
     return Karm::makeRc<Math::Path>(Math::Path{});
@@ -195,7 +195,7 @@ struct Shape {
     };
 
     Type type;
-    Rc<Style::SpecifiedValues> style;
+    Rc<Style::ComputedValues> style;
 
     static Type _getTypeFromTag(Dom::QualifiedName name) {
         if (name == Svg::PATH_TAG) {
@@ -208,7 +208,7 @@ struct Shape {
         unreachable();
     }
 
-    static Shape build(Rc<Style::SpecifiedValues> style, Dom::QualifiedName tagName) {
+    static Shape build(Rc<Style::ComputedValues> style, Dom::QualifiedName tagName) {
         return {
             _getTypeFromTag(tagName),
             style,
@@ -227,7 +227,7 @@ struct Frag {
     virtual ~Frag() = default;
     virtual RectAu objectBoundingBox() = 0;
     virtual RectAu strokeBoundingBox() = 0;
-    virtual Style::SpecifiedValues const& style() = 0;
+    virtual Style::ComputedValues const& style() = 0;
 };
 
 struct ShapeFrag : Frag {
@@ -319,7 +319,7 @@ struct ShapeFrag : Frag {
         return objectBoundingBox().grow((Au)(strokeWidth / 2_au));
     }
 
-    Style::SpecifiedValues const& style() override {
+    Style::ComputedValues const& style() override {
         return *box->style;
     }
 

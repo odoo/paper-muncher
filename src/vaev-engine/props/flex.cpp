@@ -7,7 +7,7 @@ export module Vaev.Engine:props.flex;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -26,7 +26,7 @@ export struct FlexBasisProperty : Property {
             return makeRc<FlexBasisProperty>(self(), Keywords::AUTO);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FlexBasisProperty>(self(), c.flex->basis);
         }
 
@@ -40,7 +40,7 @@ export struct FlexBasisProperty : Property {
     FlexBasisProperty(Rc<Property::Registration> registration, FlexBasis value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.flex.cow().basis = _value;
     }
 
@@ -60,7 +60,7 @@ export struct FlexDirectionProperty : Property {
             return makeRc<FlexDirectionProperty>(self(), FlexDirection::ROW);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FlexDirectionProperty>(self(), c.flex->direction);
         }
 
@@ -74,7 +74,7 @@ export struct FlexDirectionProperty : Property {
     FlexDirectionProperty(Rc<Property::Registration> registration, FlexDirection value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.flex.cow().direction = _value;
     }
 
@@ -94,7 +94,7 @@ export struct FlexGrowProperty : Property {
             return makeRc<FlexGrowProperty>(self(), Number{0});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FlexGrowProperty>(self(), c.flex->grow);
         }
 
@@ -108,7 +108,7 @@ export struct FlexGrowProperty : Property {
     FlexGrowProperty(Rc<Property::Registration> registration, Number value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.flex.cow().grow = _value;
     }
 
@@ -128,7 +128,7 @@ export struct FlexShrinkProperty : Property {
             return makeRc<FlexShrinkProperty>(self(), Number{1});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FlexShrinkProperty>(self(), c.flex->shrink);
         }
 
@@ -142,7 +142,7 @@ export struct FlexShrinkProperty : Property {
     FlexShrinkProperty(Rc<Property::Registration> registration, Number value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.flex.cow().shrink = _value;
     }
 
@@ -162,7 +162,7 @@ export struct FlexWrapProperty : Property {
             return makeRc<FlexWrapProperty>(self(), FlexWrap::NOWRAP);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FlexWrapProperty>(self(), c.flex->wrap);
         }
 
@@ -176,7 +176,7 @@ export struct FlexWrapProperty : Property {
     FlexWrapProperty(Rc<Property::Registration> registration, FlexWrap value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.flex.cow().wrap = _value;
     }
 
@@ -200,7 +200,7 @@ export struct FlexFlowProperty : Property {
             return makeRc<FlexFlowProperty>(self(), Tuple{FlexDirection::ROW, FlexWrap::NOWRAP});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FlexFlowProperty>(self(), Tuple{c.flex->direction, c.flex->wrap});
         }
 
@@ -237,7 +237,7 @@ export struct FlexFlowProperty : Property {
     FlexFlowProperty(Rc<Property::Registration> registration, Tuple<FlexDirection, FlexWrap> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<FlexDirectionProperty>(registry.resolveRegistration(Properties::FLEX_DIRECTION, {}).unwrap(), _value.v0),
             makeRc<FlexWrapProperty>(registry.resolveRegistration(Properties::FLEX_WRAP, {}).unwrap(), _value.v1),
@@ -264,7 +264,7 @@ export struct FlexProperty : Property {
             return makeRc<FlexProperty>(self(), FlexItemProps{Keywords::AUTO, 0, 1});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FlexProperty>(self(), FlexItemProps{c.flex->basis, c.flex->grow, c.flex->shrink});
         }
 
@@ -323,7 +323,7 @@ export struct FlexProperty : Property {
     FlexProperty(Rc<Property::Registration> registration, FlexItemProps value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<FlexBasisProperty>(registry.resolveRegistration(Properties::FLEX_BASIS, {}).unwrap(), _value.flexBasis),
             makeRc<FlexGrowProperty>(registry.resolveRegistration(Properties::FLEX_GROW, {}).unwrap(), _value.flexGrow),

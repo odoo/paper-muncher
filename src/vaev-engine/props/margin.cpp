@@ -7,7 +7,7 @@ export module Vaev.Engine:props.margin;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -27,7 +27,7 @@ export struct MarginTopProperty : Property {
             return makeRc<MarginTopProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MarginTopProperty>(self(), c.margin->top);
         }
 
@@ -41,7 +41,7 @@ export struct MarginTopProperty : Property {
     MarginTopProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.margin.cow().top = _value;
     }
 
@@ -60,7 +60,7 @@ export struct MarginRightProperty : Property {
             return makeRc<MarginRightProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MarginRightProperty>(self(), c.margin->end);
         }
 
@@ -74,7 +74,7 @@ export struct MarginRightProperty : Property {
     MarginRightProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.margin.cow().end = _value;
     }
 
@@ -93,7 +93,7 @@ export struct MarginBottomProperty : Property {
             return makeRc<MarginBottomProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MarginBottomProperty>(self(), c.margin->bottom);
         }
 
@@ -107,7 +107,7 @@ export struct MarginBottomProperty : Property {
     MarginBottomProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.margin.cow().bottom = _value;
     }
 
@@ -126,7 +126,7 @@ export struct MarginLeftProperty : Property {
             return makeRc<MarginLeftProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MarginLeftProperty>(self(), c.margin->start);
         }
 
@@ -140,7 +140,7 @@ export struct MarginLeftProperty : Property {
     MarginLeftProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.margin.cow().start = _value;
     }
 
@@ -163,7 +163,7 @@ export struct MarginProperty : Property {
             return makeRc<MarginProperty>(self(), Math::Insets<Width>{CalcValue<PercentOr<Length>>(Length{})});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MarginProperty>(self(), *c.margin);
         }
 
@@ -177,7 +177,7 @@ export struct MarginProperty : Property {
     MarginProperty(Rc<Property::Registration> registration, Math::Insets<Width> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.top),
             makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).unwrap(), _value.bottom),
@@ -203,7 +203,7 @@ export struct MarginInlineStartProperty : Property {
             return makeRc<MarginInlineStartProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MarginInlineStartProperty>(self(), c.margin->start);
         }
 
@@ -217,7 +217,7 @@ export struct MarginInlineStartProperty : Property {
     MarginInlineStartProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         // FIXME: Take writing mode into account
         c.margin.cow().start = _value;
     }
@@ -237,7 +237,7 @@ export struct MarginInlineEndProperty : Property {
             return makeRc<MarginInlineEndProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MarginInlineEndProperty>(self(), c.margin->end);
         }
 
@@ -251,7 +251,7 @@ export struct MarginInlineEndProperty : Property {
     MarginInlineEndProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         // FIXME: Take writing mode into account
         c.margin.cow().end = _value;
     }
@@ -271,7 +271,7 @@ export struct MarginInlineProperty : Property {
             return makeRc<MarginInlineProperty>(self(), Math::Insets<Width>{CalcValue<PercentOr<Length>>(Length{})});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MarginInlineProperty>(self(), Math::Insets{c.margin->start, c.margin->end});
         }
 
@@ -285,7 +285,7 @@ export struct MarginInlineProperty : Property {
     MarginInlineProperty(Rc<Property::Registration> registration, Math::Insets<Width> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         // FIXME: Take writing mode into account
         c.margin.cow().start = _value.start;
         c.margin.cow().end = _value.end;
@@ -306,7 +306,7 @@ export struct MarginBlockStartProperty : Property {
             return makeRc<MarginBlockStartProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MarginBlockStartProperty>(self(), c.margin->top);
         }
 
@@ -320,7 +320,7 @@ export struct MarginBlockStartProperty : Property {
     MarginBlockStartProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         // FIXME: Take writing mode into account
         c.margin.cow().top = _value;
     }
@@ -340,7 +340,7 @@ export struct MarginBlockEndProperty : Property {
             return makeRc<MarginBlockEndProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MarginBlockEndProperty>(self(), c.margin->bottom);
         }
 
@@ -354,7 +354,7 @@ export struct MarginBlockEndProperty : Property {
     MarginBlockEndProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         // FIXME: Take writing mode into account
         c.margin.cow().bottom = _value;
     }
@@ -374,7 +374,7 @@ export struct MarginBlockProperty : Property {
             return makeRc<MarginBlockProperty>(self(), Math::Insets<Width>{CalcValue<PercentOr<Length>>(Length{})});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MarginBlockProperty>(self(), Math::Insets{c.margin->top, c.margin->bottom});
         }
 
@@ -388,7 +388,7 @@ export struct MarginBlockProperty : Property {
     MarginBlockProperty(Rc<Property::Registration> registration, Math::Insets<Width> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         // FIXME: Take writing mode into account
         c.margin.cow().top = _value.top;
         c.margin.cow().bottom = _value.bottom;

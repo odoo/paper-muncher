@@ -7,7 +7,7 @@ export module Vaev.Engine:props.outline;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -26,7 +26,7 @@ export struct OutlineWidthProperty : Property {
             return makeRc<OutlineWidthProperty>(self(), LineWidth{Keywords::MEDIUM});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<OutlineWidthProperty>(self(), c.outline->width);
         }
 
@@ -40,7 +40,7 @@ export struct OutlineWidthProperty : Property {
     OutlineWidthProperty(Rc<Property::Registration> registration, LineWidth value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.outline.cow().width = _value;
     }
 
@@ -62,7 +62,7 @@ export struct OutlineStyleProperty : Property {
             return makeRc<OutlineStyleProperty>(self(), Value{Gfx::BorderStyle::NONE});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<OutlineStyleProperty>(self(), c.outline->style);
         }
 
@@ -76,7 +76,7 @@ export struct OutlineStyleProperty : Property {
     OutlineStyleProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.outline.cow().style = _value;
     }
 
@@ -98,7 +98,7 @@ export struct OutlineColorProperty : Property {
             return makeRc<OutlineColorProperty>(self(), Value{Keywords::AUTO});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<OutlineColorProperty>(self(), c.outline->color);
         }
 
@@ -112,7 +112,7 @@ export struct OutlineColorProperty : Property {
     OutlineColorProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.outline.cow().color = _value;
     }
 
@@ -132,7 +132,7 @@ export struct OutlineOffsetProperty : Property {
             return makeRc<OutlineOffsetProperty>(self(), CalcValue<Length>{0_au});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<OutlineOffsetProperty>(self(), c.outline->offset);
         }
 
@@ -146,7 +146,7 @@ export struct OutlineOffsetProperty : Property {
     OutlineOffsetProperty(Rc<Property::Registration> registration, CalcValue<Length> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.outline.cow().offset = _value;
     }
 
@@ -170,7 +170,7 @@ export struct OutlineProperty : Property {
             return makeRc<OutlineProperty>(self(), Outline{});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<OutlineProperty>(self(), *c.outline);
         }
 
@@ -216,7 +216,7 @@ export struct OutlineProperty : Property {
     OutlineProperty(Rc<Property::Registration> registration, Outline value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<OutlineWidthProperty>(registry.resolveRegistration(Properties::OUTLINE_WIDTH, {}).unwrap(), _value.width),
             makeRc<OutlineStyleProperty>(registry.resolveRegistration(Properties::OUTLINE_STYLE, {}).unwrap(), _value.style),

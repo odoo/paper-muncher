@@ -7,7 +7,7 @@ export module Vaev.Engine:props.display;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -24,7 +24,7 @@ export struct DisplayProperty : Property {
             return makeRc<DisplayProperty>(self(), Display{Display::FLOW, Display::INLINE});
         }
 
-        Rc<Property> load(SpecifiedValues const& s) const override {
+        Rc<Property> load(ComputedValues const& s) const override {
             return makeRc<DisplayProperty>(self(), s.display);
         }
 
@@ -38,7 +38,7 @@ export struct DisplayProperty : Property {
     DisplayProperty(Rc<Property::Registration> registration, Display value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& s) const override {
+    void apply(ComputedValues& s) const override {
         s.display = _value;
     }
 
@@ -59,7 +59,7 @@ export struct ContentProperty : Property {
             return makeRc<ContentProperty>(self(), Keywords::NORMAL);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<ContentProperty>(self(), c.content);
         }
 
@@ -73,7 +73,7 @@ export struct ContentProperty : Property {
     ContentProperty(Rc<Property::Registration> registration, Content value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.content = _value;
     }
 
@@ -93,7 +93,7 @@ export struct OrderProperty : Property {
             return makeRc<OrderProperty>(self(), Integer{0});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<OrderProperty>(self(), c.order);
         }
 
@@ -107,7 +107,7 @@ export struct OrderProperty : Property {
     OrderProperty(Rc<Property::Registration> registration, Integer value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.order = _value;
     }
 

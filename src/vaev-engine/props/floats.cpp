@@ -7,7 +7,7 @@ export module Vaev.Engine:props.floats;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -25,7 +25,7 @@ export struct FloatProperty : Property {
             return makeRc<FloatProperty>(self(), Float::NONE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FloatProperty>(self(), c.float_);
         }
 
@@ -39,7 +39,7 @@ export struct FloatProperty : Property {
     FloatProperty(Rc<Property::Registration> registration, Float value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.float_ = _value;
     }
 
@@ -58,7 +58,7 @@ export struct ClearProperty : Property {
             return makeRc<ClearProperty>(self(), Clear::NONE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<ClearProperty>(self(), c.clear);
         }
 
@@ -72,7 +72,7 @@ export struct ClearProperty : Property {
     ClearProperty(Rc<Property::Registration> registration, Clear value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.clear = _value;
     }
 

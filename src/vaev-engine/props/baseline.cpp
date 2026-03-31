@@ -7,7 +7,7 @@ export module Vaev.Engine:props.baseline;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -28,7 +28,13 @@ export struct LineHeightProperty : Property {
             return makeRc<LineHeightProperty>(self(), LineHeight::NORMAL);
         }
 
-        Rc<Property> load(SpecifiedValues const&) const override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+            // TODO
+            (void)parent;
+            (void)child;
+        }
+
+        Rc<Property> load(ComputedValues const&) const override {
             return makeRc<LineHeightProperty>(self(), LineHeight::NORMAL); // TODO
         }
 
@@ -42,7 +48,7 @@ export struct LineHeightProperty : Property {
     LineHeightProperty(Rc<Property::Registration> registration, LineHeight value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues&) const override {
+    void apply(ComputedValues&) const override {
         // TODO
     }
 
@@ -62,7 +68,7 @@ export struct DominantBaselineProperty : Property {
             return makeRc<DominantBaselineProperty>(self(), Keywords::AUTO);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<DominantBaselineProperty>(self(), c.baseline->dominant);
         }
 
@@ -76,7 +82,7 @@ export struct DominantBaselineProperty : Property {
     DominantBaselineProperty(Rc<Property::Registration> registration, DominantBaseline value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.baseline.cow().dominant = _value;
     }
 
@@ -96,7 +102,7 @@ export struct BaselineSourceProperty : Property {
             return makeRc<BaselineSourceProperty>(self(), Keywords::AUTO);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BaselineSourceProperty>(self(), c.baseline->source);
         }
 
@@ -110,7 +116,7 @@ export struct BaselineSourceProperty : Property {
     BaselineSourceProperty(Rc<Property::Registration> registration, BaselineSource value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.baseline.cow().source = _value;
     }
 
@@ -130,7 +136,7 @@ export struct AlignmentBaselineProperty : Property {
             return makeRc<AlignmentBaselineProperty>(self(), Keywords::BASELINE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<AlignmentBaselineProperty>(self(), c.baseline->alignment);
         }
 
@@ -144,7 +150,7 @@ export struct AlignmentBaselineProperty : Property {
     AlignmentBaselineProperty(Rc<Property::Registration> registration, AlignmentBaseline value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.baseline.cow().alignment = _value;
     }
 

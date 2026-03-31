@@ -19,7 +19,7 @@ import :layout.table;
 
 namespace Vaev::Layout {
 
-Opt<Gfx::Borders> buildBorders(Metrics const& metrics, Style::SpecifiedValues const& style, Gfx::Color currentColor) {
+Opt<Gfx::Borders> buildBorders(Metrics const& metrics, Style::ComputedValues const& style, Gfx::Color currentColor) {
     if (metrics.borders.zero())
         return NONE;
 
@@ -74,7 +74,7 @@ Opt<Gfx::Borders> buildBorders(UsedBorders const& border, Gfx::Color currentColo
     return borders;
 }
 
-Opt<Gfx::Outline> buildOutline(Metrics const& metrics, Style::SpecifiedValues const& style, Gfx::Color currentColor) {
+Opt<Gfx::Outline> buildOutline(Metrics const& metrics, Style::ComputedValues const& style, Gfx::Color currentColor) {
     if (metrics.outlineWidth == 0_au)
         return NONE;
 
@@ -110,17 +110,6 @@ static bool _needsNewStackingContext(Frag const& frag) {
            frag.style().opacity != 1.0;
 }
 
-static bool isRootElement(Gc::Ptr<Dom::Element> el) {
-    if (not el)
-        return false;
-
-    auto doc = el->ownerDocument();
-    if (not doc)
-        return false;
-
-    return doc->documentElement() == el;
-}
-
 static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack, Opt<UsedBorders> usedBorders = NONE) {
     auto const& cssBackground = frag.style().backgrounds;
 
@@ -128,7 +117,7 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack, Opt
     auto color = Vaev::resolve(cssBackground->color, frag.style().color);
 
     if (color.alpha != 0) {
-        if (not isRootElement(frag.box->origin))
+        if (not frag.box->isRootElementPrincipalBox())
             backgrounds.pushBack(color);
     }
 
@@ -146,7 +135,7 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack, Opt
 
         auto box = makeRc<Scene::Box>(bound, std::move(borders), outline.unwrapOr(Gfx::Outline{}), std::move(backgrounds));
         box->zIndex = _needsNewStackingContext(frag) ? Limits<isize>::MIN : 0;
-        if (isRootElement(frag.box->origin)) {
+        if (frag.box->isRootElementPrincipalBox()) {
             stack.add(makeRc<Scene::Clear>(box, color));
         } else {
             stack.add(box);
@@ -692,33 +681,33 @@ static void _paintStackingContext(Frag& frag, Scene::Stack& stack) {
     _paintFrag(frag, stack);
 
     // 2. the child stacking contexts with negative stack levels (most negative first).
-    _paintChildren(frag, stack, [](Style::SpecifiedValues const& s) -> bool {
-        return s.zIndex.unwrapOr<isize>(0) < 0;
+    _paintChildren(frag, stack, [](Style::ComputedValues const& cv) -> bool {
+        return cv.zIndex.unwrapOr<isize>(0) < 0;
     });
 
     // 3. the in-flow, non-inline-level, non-positioned descendants.
-    _paintChildren(frag, stack, [](Style::SpecifiedValues const& s) {
-        return s.zIndex == Keywords::AUTO and s.display != Display::INLINE and s.position == Keywords::STATIC;
+    _paintChildren(frag, stack, [](Style::ComputedValues const& cv) {
+        return cv.zIndex == Keywords::AUTO and cv.display != Display::INLINE and cv.position == Keywords::STATIC;
     });
 
     // 4. the non-positioned floats.
-    _paintChildren(frag, stack, [](Style::SpecifiedValues const& s) {
-        return s.zIndex == Keywords::AUTO and s.position == Keywords::STATIC and s.float_ != Float::NONE;
+    _paintChildren(frag, stack, [](Style::ComputedValues const& cv) {
+        return cv.zIndex == Keywords::AUTO and cv.position == Keywords::STATIC and cv.float_ != Float::NONE;
     });
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
-    _paintChildren(frag, stack, [](Style::SpecifiedValues const& s) {
-        return s.zIndex == Keywords::AUTO and s.display == Display::INLINE and s.position == Keywords::STATIC;
+    _paintChildren(frag, stack, [](Style::ComputedValues const& cv) {
+        return cv.zIndex == Keywords::AUTO and cv.display == Display::INLINE and cv.position == Keywords::STATIC;
     });
 
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
-    _paintChildren(frag, stack, [](Style::SpecifiedValues const& s) {
-        return s.zIndex.unwrapOr<isize>(0) == 0 and s.position != Keywords::STATIC;
+    _paintChildren(frag, stack, [](Style::ComputedValues const& cv) {
+        return cv.zIndex.unwrapOr<isize>(0) == 0 and cv.position != Keywords::STATIC;
     });
 
     // 7. the child stacking contexts with positive stack levels (least positive first).
-    _paintChildren(frag, stack, [](Style::SpecifiedValues const& s) {
-        return s.zIndex.unwrapOr<isize>(0) > 0;
+    _paintChildren(frag, stack, [](Style::ComputedValues const& cv) {
+        return cv.zIndex.unwrapOr<isize>(0) > 0;
     });
 }
 
@@ -760,8 +749,8 @@ export void wireframe(Frag& frag, Gfx::Canvas& g) {
 
 // MARK: Overlay ---------------------------------------------------------------
 
-export void overlay(Frag& frag, Gfx::Canvas& g, Gc::Ref<Dom::Node> node) {
-    if (frag.box->origin == node) {
+export void overlay(Frag& frag, Gfx::Canvas& g, Dom::OriginatingElement of) {
+    if (frag.box->origin == of) {
         Gfx::Borders border;
 
         // Margins
@@ -788,7 +777,7 @@ export void overlay(Frag& frag, Gfx::Canvas& g, Gc::Ref<Dom::Node> node) {
     }
 
     for (auto& c : frag.children())
-        overlay(c, g, node);
+        overlay(c, g, of);
 }
 
 } // namespace Vaev::Layout

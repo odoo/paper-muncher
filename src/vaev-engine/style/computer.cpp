@@ -9,7 +9,7 @@ import Karm.Logger;
 
 import :dom.document;
 import :dom.element;
-import :style.specified;
+import :style.computed;
 import :style.stylesheet;
 import :style.ruleIndex;
 
@@ -17,18 +17,18 @@ namespace Vaev::Style {
 
 export struct Computer {
     Media _media;
-    PropertyRegistry& _propertyRegistry;
+    RegisteredPropertySet& _registeredPropertySet;
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
     RuleIndex _ruleIndex = {};
 
     // MARK: Cascading ---------------------------------------------------------
 
-    void _evalRule(Rule const& rule, Page const& page, PageSpecifiedValues& c) {
+    void _evalRule(Rule const& rule, Page const& page, PageComputedValues& c) {
         rule.visit(Visitor{
             [&](PageRule const& r) {
                 if (r.match(page))
-                    r.apply(_propertyRegistry, c);
+                    r.apply(_registeredPropertySet, c);
             },
             [&](MediaRule const& r) {
                 if (r.match(_media))
@@ -41,7 +41,7 @@ export struct Computer {
         });
     }
 
-    Rc<SpecifiedValues> _evalCascade(SpecifiedValues const& parent, MatchingRules& matchingRules) {
+    Rc<ComputedValues> _evalCascade(ComputedValues const& parentComputedValues, MatchingRules& matchingRules) {
         // Sort origin and specificity
         stableSort(
             matchingRules,
@@ -53,15 +53,14 @@ export struct Computer {
         );
 
         // Compute computed style
-        auto computed = makeRc<SpecifiedValues>(SpecifiedValues::initial());
-        computed->inherit(parent);
+        auto computedValues = _registeredPropertySet.inheritsComputedValues(parentComputedValues);
         Vec<Rc<Property>> importantProps;
 
         // HACK: Apply custom properties first
         for (auto const& [styleRule, _] : matchingRules) {
             for (auto& prop : styleRule->props) {
                 if (prop->isCustomProperty())
-                    prop->apply(parent, *computed);
+                    prop->apply(parentComputedValues, *computedValues);
             }
         }
 
@@ -79,13 +78,13 @@ export struct Computer {
                 }
 
                 if (prop->isShorthandProperty()) {
-                    for (auto& longhand : prop->expandShorthand(_propertyRegistry, parent, *computed)) {
-                        longhand->apply(parent, *computed);
+                    for (auto& longhand : prop->expandShorthand(_registeredPropertySet, parentComputedValues, *computedValues)) {
+                        longhand->apply(parentComputedValues, *computedValues);
                     }
                     continue;
                 }
 
-                prop->apply(parent, *computed);
+                prop->apply(parentComputedValues, *computedValues);
             }
         }
 
@@ -94,21 +93,21 @@ export struct Computer {
                 continue;
 
             if (prop->isShorthandProperty()) {
-                for (auto& longhand : prop->expandShorthand(_propertyRegistry, parent, *computed)) {
-                    longhand->apply(parent, *computed);
+                for (auto& longhand : prop->expandShorthand(_registeredPropertySet, parentComputedValues, *computedValues)) {
+                    longhand->apply(parentComputedValues, *computedValues);
                 }
                 continue;
             }
 
-            prop->apply(parent, *computed);
+            prop->apply(parentComputedValues, *computedValues);
         }
 
-        return computed;
+        return computedValues;
     }
 
     // MARK: Computing ---------------------------------------------------------
 
-    Rc<Gfx::Fontface> _lookupFontface(SpecifiedValues& style) {
+    Rc<Gfx::Fontface> _lookupFontface(ComputedValues& style) {
         Font::Query fq{
             .weight = style.font->weight,
             .style = style.font->style.val,
@@ -133,7 +132,7 @@ export struct Computer {
         Vec<Rc<Property>> res;
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-fgcolor
         if (auto fgcolor = el->getAttribute(Html::FGCOLOR_ATTR)) {
-            if (auto property = _propertyRegistry.parseValue(
+            if (auto property = _registeredPropertySet.parseValue(
                     Properties::COLOR, fgcolor.unwrap(), {}
                 ))
                 res.pushBack(property.take());
@@ -141,7 +140,7 @@ export struct Computer {
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-bgcolor
         if (auto bgcolor = el->getAttribute(Html::BGCOLOR_ATTR)) {
-            if (auto property = _propertyRegistry.parseValue(
+            if (auto property = _registeredPropertySet.parseValue(
                     Properties::BACKGROUND_COLOR, bgcolor.unwrap(), {}
                 ))
                 res.pushBack(property.take());
@@ -149,7 +148,7 @@ export struct Computer {
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
         if (auto width = el->getAttribute(Html::WIDTH_ATTR)) {
-            if (auto property = _propertyRegistry.parseValue(
+            if (auto property = _registeredPropertySet.parseValue(
                     Properties::WIDTH, width.unwrap(), {}
                 ))
                 res.pushBack(property.take());
@@ -157,7 +156,7 @@ export struct Computer {
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
         if (auto height = el->getAttribute(Html::HEIGHT_ATTR)) {
-            if (auto property = _propertyRegistry.parseValue(
+            if (auto property = _registeredPropertySet.parseValue(
                     Properties::HEIGHT, height.unwrap(), {}
                 ))
                 res.pushBack(property.take());
@@ -165,7 +164,7 @@ export struct Computer {
 
         // https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
         if (auto size = el->getAttribute(Html::SIZE_ATTR)) {
-            if (auto property = _propertyRegistry.parseValue(
+            if (auto property = _registeredPropertySet.parseValue(
                     Properties::WIDTH, Io::format("{}ch", size), {}
                 ))
                 res.pushBack(property.take());
@@ -174,7 +173,7 @@ export struct Computer {
         return res;
     }
 
-    static void _considerElementAttributes(SpecifiedValues& values, Gc::Ref<Dom::Element> el) {
+    static void _considerElementAttributes(ComputedValues& values, Gc::Ref<Dom::Element> el) {
         // https://html.spec.whatwg.org/multipage/tables.html#the-col-element
         // The element may have a span content attribute specified, whose value must
         // be a valid non-negative integer greater than zero and less than or equal to 1000.
@@ -223,12 +222,12 @@ export struct Computer {
 
             if (not svgEl->hasAttribute(Svg::WIDTH_ATTR))
                 styleProps.pushBack(
-                    _propertyRegistry.parseValue(Properties::WIDTH, "300px", {}).unwrap()
+                    _registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).unwrap()
                 );
 
             if (not svgEl->hasAttribute(Svg::HEIGHT_ATTR))
                 styleProps.pushBack(
-                    _propertyRegistry.parseValue(Properties::HEIGHT, "150px", {}).unwrap()
+                    _registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).unwrap()
                 );
         }
     }
@@ -240,7 +239,7 @@ export struct Computer {
 
         Vec<Rc<Property>> styleProps;
         for (auto [attr, attrValue] : el->attributes.iterItems()) {
-            if (auto property = _propertyRegistry.parsePresentationAttribute(attr.name, attrValue->value)) {
+            if (auto property = _registeredPropertySet.parsePresentationAttribute(attr.name, attrValue->value)) {
                 styleProps.pushBack(property.take());
             }
         }
@@ -252,7 +251,7 @@ export struct Computer {
     }
 
     // https://drafts.csswg.org/css-cascade/#cascade-origin
-    Rc<SpecifiedValues> computeFor(SpecifiedValues const& parent, Gc::Ref<Dom::Element> el) {
+    Rc<ComputedValues> computeFor(ComputedValues const& parent, Gc::Ref<Dom::Element> el) {
         MatchingRules matchingRules = _ruleIndex.match(el, NONE);
 
         // Non-CSS Presentational Hints
@@ -266,9 +265,9 @@ export struct Computer {
         // Get the style attribute if any
         auto styleAttr = el->style();
         StyleRule styleRule{
-            .props = _propertyRegistry.parseDeclarations(
+            .props = _registeredPropertySet.parseDeclarations(
                 styleAttr ? *styleAttr : "",
-                PropertyRegistry::TOP_LEVEL
+                RegisteredPropertySet::TOP_LEVEL
             ),
             .origin = Origin::INLINE,
         };
@@ -290,21 +289,21 @@ export struct Computer {
         return values;
     }
 
-    Rc<SpecifiedValues> computeFor(SpecifiedValues const& parent, Gc::Ref<Dom::Element> el, Symbol pseudoElement) {
+    Rc<ComputedValues> computeFor(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Symbol pseudoElement) {
         MatchingRules matchingRules = _ruleIndex.match(el, pseudoElement);
         return _evalCascade(parent, matchingRules);
     }
 
-    Rc<PageSpecifiedValues> computeFor(SpecifiedValues const& parent, Page const& page) {
-        auto computed = makeRc<PageSpecifiedValues>(parent);
+    Rc<PageComputedValues> computeFor(ComputedValues const& parent, Page const& page) {
+        auto computed = makeRc<PageComputedValues>(parent);
 
         for (auto const& sheet : _stylesheets.styleSheets)
             for (auto const& rule : sheet.rules)
                 _evalRule(rule, page, *computed);
 
         for (auto& area : computed->_areas) {
-            auto font = _lookupFontface(*area.specifiedValues());
-            area.specifiedValues()->fontFace = font;
+            auto font = _lookupFontface(*area->computedValues());
+            area->computedValues()->fontFace = font;
         }
 
         return computed;
@@ -312,61 +311,61 @@ export struct Computer {
 
     // MARK: Styling -----------------------------------------------------------
 
-    void generatePseudoElement(SpecifiedValues const& parentSpecifiedValues, Dom::Element& el, Symbol type) {
-        auto specifiedValues = computeFor(parentSpecifiedValues, el, type);
+    void generatePseudoElement(ComputedValues const& parentComputedValues, Dom::Element& el, Symbol type) {
+        auto computedValues = computeFor(parentComputedValues, el, type);
 
         // HACK: This is basically nonsense to avoid doing too much font lookup,
         //       and it should be remove once the style engine get refactored
         //       and computed values are properly handled.
-        if (not parentSpecifiedValues.font.sameInstance(specifiedValues->font) and
-            (parentSpecifiedValues.font->families != specifiedValues->font->families or
-             parentSpecifiedValues.font->weight != specifiedValues->font->weight)) {
-            auto font = _lookupFontface(*specifiedValues);
-            specifiedValues->fontFace = font;
+        if (not parentComputedValues.font.sameInstance(computedValues->font) and
+            (parentComputedValues.font->families != computedValues->font->families or
+             parentComputedValues.font->weight != computedValues->font->weight)) {
+            auto font = _lookupFontface(*computedValues);
+            computedValues->fontFace = font;
         } else {
-            specifiedValues->fontFace = parentSpecifiedValues.fontFace;
+            computedValues->fontFace = parentComputedValues.fontFace;
         }
 
         // https://drafts.csswg.org/css-content/#valdef-content-none
         // On pseudo-elements it inhibits the creation of the pseudo-element as if it had display: none.
-        if (specifiedValues->content == Keywords::NONE)
+        if (computedValues->content == Keywords::NONE)
             return;
 
         // https://drafts.csswg.org/css-content/#valdef-content-normal
-        if (specifiedValues->content == Keywords::NORMAL and
+        if (computedValues->content == Keywords::NORMAL and
             (type == Dom::PseudoElement::BEFORE or
              type == Dom::PseudoElement::AFTER))
             return;
 
-        el.addPseudoElement(makeRc<Dom::PseudoElement>(type, specifiedValues));
+        el.addPseudoElement(makeRc<Dom::PseudoElement>(type, computedValues));
     }
 
-    void styleElement(SpecifiedValues const& parentSpecifiedValues, Dom::Element& el) {
-        auto specifiedValues = computeFor(parentSpecifiedValues, el);
-        el._specifiedValues = specifiedValues;
+    void styleElement(ComputedValues const& parentComputedValues, Dom::Element& el) {
+        auto computedValues = computeFor(parentComputedValues, el);
+        el._computedValues = computedValues;
 
         // HACK: This is basically nonsense to avoid doing too much font lookup,
         //       and it should be remove once the style engine get refactored
         //       and computed values are properly handled.
-        if (not parentSpecifiedValues.font.sameInstance(specifiedValues->font) and
-            (parentSpecifiedValues.font->families != specifiedValues->font->families or
-             parentSpecifiedValues.font->weight != specifiedValues->font->weight)) {
-            auto font = _lookupFontface(*specifiedValues);
-            specifiedValues->fontFace = font;
+        if (not parentComputedValues.font.sameInstance(computedValues->font) and
+            (parentComputedValues.font->families != computedValues->font->families or
+             parentComputedValues.font->weight != computedValues->font->weight)) {
+            auto font = _lookupFontface(*computedValues);
+            computedValues->fontFace = font;
         } else {
-            specifiedValues->fontFace = parentSpecifiedValues.fontFace;
+            computedValues->fontFace = parentComputedValues.fontFace;
         }
 
-        if (specifiedValues->display == Display::Item::YES) {
-            generatePseudoElement(*specifiedValues, el, Dom::PseudoElement::MARKER);
+        if (computedValues->display == Display::Item::YES) {
+            generatePseudoElement(*computedValues, el, Dom::PseudoElement::MARKER);
         }
 
-        generatePseudoElement(*specifiedValues, el, Dom::PseudoElement::AFTER);
-        generatePseudoElement(*specifiedValues, el, Dom::PseudoElement::BEFORE);
+        generatePseudoElement(*computedValues, el, Dom::PseudoElement::AFTER);
+        generatePseudoElement(*computedValues, el, Dom::PseudoElement::BEFORE);
 
         for (auto child = el.firstChild(); child; child = child->nextSibling()) {
             if (auto childEl = child->is<Dom::Element>())
-                styleElement(*specifiedValues, *childEl);
+                styleElement(*computedValues, *childEl);
         }
     }
 
@@ -378,12 +377,12 @@ export struct Computer {
         auto html = doc.documentElement();
         if (html->namespaceUri() != Html::NAMESPACE)
             return;
-        auto htmlBg = html->specifiedValues()->backgrounds;
+        auto htmlBg = html->computedValues()->backgrounds;
 
         auto body = doc.body();
         if (body == nullptr)
             return;
-        auto bodyBg = body->specifiedValues()->backgrounds;
+        auto bodyBg = body->computedValues()->backgrounds;
 
         // If the computed value of background-image on the
         // root element is none and its background-color is transparent
@@ -391,20 +390,20 @@ export struct Computer {
             // User agents must instead propagate the computed values of the
             // background properties from that element’s first HTML BODY
             // or XHTML body child element.
-            html->specifiedValues()->backgrounds = bodyBg;
+            html->computedValues()->backgrounds = bodyBg;
 
             // The used values of that BODY element’s background properties are
             // their initial values, and the propagated values are treated
             // as if they were specified on the root element.
-            body->specifiedValues()->backgrounds = makeCow<BackgroundProps>();
+            body->computedValues()->backgrounds = makeCow<BackgroundProps>();
         }
     }
 
     void styleDocument(Dom::Document& doc) {
         if (auto el = doc.documentElement()) {
-            auto rootSpecifiedValues = makeRc<SpecifiedValues>(SpecifiedValues::initial());
-            rootSpecifiedValues->fontFace = _lookupFontface(*rootSpecifiedValues);
-            styleElement(*rootSpecifiedValues, *el);
+            auto rootComputedValues = _registeredPropertySet.initialComputedValues();
+            rootComputedValues->fontFace = _lookupFontface(*rootComputedValues);
+            styleElement(*rootComputedValues, *el);
         }
         _propagateBodyBackgroundToHtml(doc);
     }

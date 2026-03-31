@@ -37,7 +37,7 @@ export struct Document : Node {
     Gc::Ptr<Style::StyleSheetList> styleSheets;
 
     // https://drafts.css-houdini.org/css-properties-values-api/#dom-window-registeredpropertyset-slot
-    Style::PropertyRegistry registeredPropertySet = Style::defaultRegistry();
+    Style::RegisteredPropertySet registeredPropertySet = Style::defaultRegistry();
 
     Opt<Rc<Font::Database>> fontDatabase;
 

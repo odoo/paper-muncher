@@ -1,4 +1,4 @@
-export module Vaev.Engine:style.specified;
+export module Vaev.Engine:style.computed;
 
 import Karm.Core;
 import Karm.Gfx;
@@ -26,12 +26,8 @@ struct TransformProps {
 
 using ClipProps = Opt<BasicShape>;
 
-// https://www.w3.org/TR/css-cascade/#specified
-export struct SpecifiedValues {
-    static SpecifiedValues const& initial();
-
-    SpecifiedValues() : fontFace(Gfx::Fontface::fallback()) {}
-
+// https://www.w3.org/TR/css-cascade/#computed
+export struct ComputedValues {
     Cow<Gaps> gaps;
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
@@ -50,7 +46,7 @@ export struct SpecifiedValues {
     Cow<BreakProps> break_;
     Cow<SVGProps> svg;
 
-    Cow<Map<Symbol, Css::Content>> variables;
+    Cow<Map<Symbol, Css::Content>> customProps;
     Rc<Gfx::Fontface> fontFace;
 
     // Inlined fields
@@ -72,34 +68,25 @@ export struct SpecifiedValues {
     Position position = Keywords::STATIC;
     BoxSizing boxSizing;
 
-    void inherit(SpecifiedValues const& parent) {
-        color = parent.color;
-        font = parent.font;
-        text = parent.text;
-        variables = parent.variables;
-        visibility = parent.visibility;
+    ComputedValues() : fontFace(Gfx::Fontface::fallback()) {}
 
-        if (not parent.svg.defaulted()) {
-            svg.cow().fillOpacity = parent.svg->fillOpacity;
-            svg.cow().strokeWidth = parent.svg->strokeWidth;
-            svg.cow().fill = parent.svg->fill;
-            svg.cow().stroke = parent.svg->stroke;
-        }
+    void setCustomProp(Str name, Css::Content value) {
+        setCustomProp(Symbol::from(name), value);
     }
 
-    void setCustomProp(Str varName, Css::Content value) {
-        setCustomProp(Symbol::from(varName), value);
+    void setCustomProp(Symbol name, Css::Content value) {
+        customProps.cow().put(name, value);
     }
 
-    void setCustomProp(Symbol varName, Css::Content value) {
-        variables.cow().put(varName, value);
-    }
-
-    Css::Content getCustomProp(Symbol varName) const {
-        auto value = variables->lookup(varName);
+    Css::Content getCustomProp(Symbol name) const {
+        auto value = customProps->lookup(name);
         if (value)
             return *value;
         return {};
+    }
+
+    bool hasCustomProp(Symbol name) const {
+        return customProps->contains(name);
     }
 
     void repr(Io::Emit& e) const {
@@ -132,7 +119,7 @@ export struct SpecifiedValues {
         e(" clear: {}", clear);
         e(" svg: {}", svg);
         e(" zIndex: {}", zIndex);
-        e(" variables: {}", variables);
+        e(" variables: {}", customProps);
         e(")");
     }
 };

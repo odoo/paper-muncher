@@ -29,7 +29,7 @@ bool isSegmentBreak(Rune rune) {
     return rune == '\n' or rune == '\r' or rune == '\f' or rune == '\v';
 }
 
-static Gfx::ProseStyle _proseStyleFromStyle(Style::SpecifiedValues& style, Rc<Gfx::Fontface> fontFace) {
+static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues& style, Rc<Gfx::Fontface> fontFace) {
     // FIXME: We should pass this around from the top in order to properly resolve rems
     Resolver resolver{
         .rootFont = Gfx::Font{fontFace, 16},
@@ -86,7 +86,7 @@ void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, TextTransfo
 
 // https://www.w3.org/TR/css-text-3/#white-space-phase-1
 // https://www.w3.org/TR/css-text-3/#white-space-phase-2
-void _appendTextToInlineBox(Io::SScan scan, Rc<Style::SpecifiedValues> parentStyle, InlineBox& rootInlineBox) {
+void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues> parentStyle, InlineBox& rootInlineBox) {
     auto whitespace = parentStyle->text->whiteSpace;
     bool whiteSpacesAreCollapsible =
         whitespace == WhiteSpace::NORMAL or
@@ -140,7 +140,7 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::SpecifiedValues> parentSty
     }
 }
 
-bool _buildText(Str text, Rc<Style::SpecifiedValues> parentStyle, InlineBox& rootInlineBox, bool skipIfWhitespace) {
+bool _buildText(Str text, Rc<Style::ComputedValues> parentStyle, InlineBox& rootInlineBox, bool skipIfWhitespace) {
     if (skipIfWhitespace) {
         Io::SScan scan{text};
         scan.eat(Re::space());
@@ -163,8 +163,7 @@ struct BuilderContext {
     };
 
     From const from;
-    Rc<Style::SpecifiedValues> const parentStyle;
-
+    Rc<Style::ComputedValues> const parentComputedValues;
     Box& _parent;
     MutCursor<InlineBox> _rootInlineBox;
 
@@ -174,12 +173,13 @@ struct BuilderContext {
             return;
 
         // The root inline box inherits from its parent block container, but is otherwise unstyleable.
-        auto style = makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial());
-        style->inherit(*parentStyle);
-        style->display = Display{Display::Inside::FLOW, Display::Outside::BLOCK};
+        // HACK: Use we should be using the document's RegisteredPropertySet,
+        //       but it's too impractical to string it down to here
+        auto computedStyle = Style::defaultRegistry().inheritsComputedValues(*parentComputedValues);
+        computedStyle->display = Display{Display::Inside::FLOW, Display::Outside::BLOCK};
 
         auto newInlineBox = InlineBox::fromInterruptedInlineBox(*_rootInlineBox);
-        _parent.add({style, std::move(*_rootInlineBox), nullptr});
+        _parent.add({computedStyle, std::move(*_rootInlineBox), NONE});
         *_rootInlineBox = std::move(newInlineBox);
     }
 
@@ -197,8 +197,8 @@ struct BuilderContext {
         *_rootInlineBox = std::move(newRootInlineBox);
     }
 
-    Rc<Style::SpecifiedValues> style() {
-        return parentStyle;
+    Rc<Style::ComputedValues> style() {
+        return parentComputedValues;
     }
 
     void addToParentBox(Box&& box) {
@@ -257,7 +257,7 @@ struct BuilderContext {
         };
     }
 
-    BuilderContext toInlineContext(Rc<Style::SpecifiedValues> parentStyle) {
+    BuilderContext toInlineContext(Rc<Style::ComputedValues> parentStyle) {
         return {
             From::INLINE,
             parentStyle,
@@ -294,7 +294,7 @@ static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudo
 // MARK: Build void/leaves ---------------------------------------------------------
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace#how_does_css_process_whitespace/
-static void _buildText(BuilderContext bc, Str text, Rc<Style::SpecifiedValues> parentStyle) {
+static void _buildText(BuilderContext bc, Str text, Rc<Style::ComputedValues> parentStyle) {
     // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
     // TODO: For tables, the default case is to skip whitespace text, but there are some extra checks to be done
 
@@ -327,12 +327,12 @@ static void _buildImage(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 }
 
 static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
-    auto font = el->specifiedValues()->fontFace;
+    auto font = el->computedValues()->fontFace;
     Resolver resolver{
         .rootFont = Gfx::Font{font, 16},
         .boxFont = Gfx::Font{font, 16},
     };
-    Gfx::ProseStyle proseStyle = _proseStyleFromStyle(*el->specifiedValues(), font);
+    Gfx::ProseStyle proseStyle = _proseStyleFromStyle(*el->computedValues(), font);
 
     auto value = ""s;
     if (el->hasAttribute(Html::VALUE_ATTR))
@@ -351,26 +351,26 @@ void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group);
 
 void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group& group) {
     if (SVG::isShape(el->qualifiedName)) {
-        group.add(SVG::Shape::build(el->specifiedValues(), el->qualifiedName));
+        group.add(SVG::Shape::build(el->computedValues(), el->qualifiedName));
     } else if (el->qualifiedName == Svg::G_TAG) {
-        SVG::Group nestedGroup{el->specifiedValues()};
+        SVG::Group nestedGroup{el->computedValues()};
         buildSVGAggregate(el, nestedGroup);
         group.add(std::move(nestedGroup));
     } else if (el->qualifiedName == Svg::SVG_TAG) {
-        SVGRoot newSvgRoot{el->specifiedValues()};
+        SVGRoot newSvgRoot{el->computedValues()};
         buildSVGAggregate(el, newSvgRoot);
         group.add(std::move(newSvgRoot));
     } else if (el->qualifiedName == Svg::FOREIGN_OBJECT_TAG) {
-        Box box{el->specifiedValues(), el};
+        Box box{el->computedValues(), el};
 
         InlineBox rootInlineBox{_proseStyleFromStyle(
-            *el->specifiedValues(),
-            el->specifiedValues()->fontFace
+            *el->computedValues(),
+            el->computedValues()->fontFace
         )};
 
         BuilderContext bc{
             BuilderContext::From::BLOCK,
-            el->specifiedValues(),
+            el->computedValues(),
             box,
             &rootInlineBox,
         };
@@ -394,7 +394,7 @@ void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group) {
 }
 
 SVGRoot _buildSVG(Gc::Ref<Dom::Element> el) {
-    SVGRoot svgRoot{el->specifiedValues()};
+    SVGRoot svgRoot{el->computedValues()};
     buildSVGAggregate(el, svgRoot);
     return svgRoot;
 }
@@ -476,7 +476,7 @@ bool _alwaysInlineBlock(Gc::Ref<Dom::Element> el) {
 
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent);
 
-static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::SpecifiedValues> style, Gc::Ref<Dom::Element> el) {
+static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::ComputedValues> style, Gc::Ref<Dom::Element> el) {
     if (el->qualifiedName == Html::BR_TAG) {
         bc.flushRootInlineBoxIntoAnonymousBox();
         return;
@@ -487,7 +487,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Spe
         return;
     }
 
-    auto proseStyle = _proseStyleFromStyle(*style, el->specifiedValues()->fontFace);
+    auto proseStyle = _proseStyleFromStyle(*style, el->computedValues()->fontFace);
 
     bc.startInlineBox(proseStyle);
     _buildChildren(bc.toInlineContext(style), el);
@@ -507,9 +507,9 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
     bc.finalizeParentBoxAndFlushInline();
 }
 
-static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::SpecifiedValues> style, Gc::Ref<Dom::Element> el, Display display) {
+static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::ComputedValues> style, Gc::Ref<Dom::Element> el, Display display) {
     Box box = {style, el};
-    InlineBox rootInlineBox{_proseStyleFromStyle(*style, el->specifiedValues()->fontFace)};
+    InlineBox rootInlineBox{_proseStyleFromStyle(*style, el->computedValues()->fontFace)};
 
     auto newBc = display == Display::Inside::FLEX
                      ? bc.toFlexContext(box, rootInlineBox)
@@ -522,7 +522,7 @@ static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::SpecifiedVa
 
 // MARK: Build Table -----------------------------------------------------------
 
-static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedValues> style, Display display);
+static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues> style, Display display);
 
 struct AnonymousTableBoxWrapper {
     Opt<Box> rowBox, cellBox;
@@ -532,26 +532,23 @@ struct AnonymousTableBoxWrapper {
 
     AnonymousTableBoxWrapper(BuilderContext& bc) : bc(bc) {}
 
-    void createRowIfNone(Rc<Style::SpecifiedValues> style) {
+    void createRowIfNone(Style::RegisteredPropertySet& registeredPropertySet, Rc<Style::ComputedValues> style) {
         if (rowBox)
             return;
 
-        auto rowStyle = makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial());
-        rowStyle->inherit(*style);
+        auto rowStyle = registeredPropertySet.inheritsComputedValues(*style);
         rowStyle->display = Display::Internal::TABLE_ROW;
-
-        rowBox = Box{rowStyle, nullptr};
+        rowBox = Box{rowStyle, NONE};
     }
 
-    void createCellIfNone(Rc<Style::SpecifiedValues> style) {
+    void createCellIfNone(Style::RegisteredPropertySet& registeredPropertySet, Rc<Style::ComputedValues> style) {
         if (cellBox)
             return;
 
-        auto cellStyle = makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial());
-        cellStyle->inherit(*style);
+        auto cellStyle = registeredPropertySet.inheritsComputedValues(*style);
         cellStyle->display = Display::Internal::TABLE_CELL;
 
-        cellBox = Box{cellStyle, nullptr};
+        cellBox = Box{cellStyle, NONE};
         rootInlineBoxForCell = InlineBox{_proseStyleFromStyle(*style, style->fontFace)};
     }
 
@@ -597,12 +594,13 @@ static void _buildCell(BuilderContext rowBuilderContext, Gc::Ref<Dom::Element> c
     _buildNode(rowBuilderContext, *cellEl);
 }
 
-static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, Gc::Ref<Dom::Element> parentEl, Rc<Style::SpecifiedValues> style, bool skipCaption, auto predForAccepted) {
+static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, Gc::Ref<Dom::Element> parentEl, Rc<Style::ComputedValues> style, bool skipCaption, auto predForAccepted) {
     AnonymousTableBoxWrapper anonTableWrapper{bc};
+    auto& registeredPropertySet = parentEl->ownerDocument()->registeredPropertySet;
 
     for (auto child = parentEl->firstChild(); child; child = child->nextSibling()) {
         if (auto childEL = child->is<Dom::Element>()) {
-            auto childStyle = childEL->specifiedValues();
+            auto childStyle = childEL->computedValues();
             auto display = childStyle->display;
 
             if (skipCaption and display == Display::Internal::TABLE_CAPTION)
@@ -620,27 +618,27 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
             } else {
                 // Unexpected display type for children, it will be wrapped by anonymous box
                 // First dispatching based on the parent's display type
-                if (bc.parentStyle->display == Display::Internal::TABLE_ROW) {
-                    anonTableWrapper.createCellIfNone(style);
+                if (bc.parentComputedValues->display == Display::Internal::TABLE_ROW) {
+                    anonTableWrapper.createCellIfNone(registeredPropertySet, style);
                     _buildNodeWrappedByCell(anonTableWrapper.cellBuilderContext(), *childEL);
                 } else {
                     if (display == Display::Internal::TABLE_CELL) {
                         anonTableWrapper.finalizeAndResetCell();
-                        anonTableWrapper.createRowIfNone(style);
+                        anonTableWrapper.createRowIfNone(registeredPropertySet, style);
 
                         _buildCell(anonTableWrapper.rowBuilderContext(), *childEL);
                     } else {
-                        anonTableWrapper.createRowIfNone(style);
-                        anonTableWrapper.createCellIfNone(style);
+                        anonTableWrapper.createRowIfNone(registeredPropertySet, style);
+                        anonTableWrapper.createCellIfNone(registeredPropertySet, style);
 
                         _buildNodeWrappedByCell(anonTableWrapper.cellBuilderContext(), *childEL);
                     }
                 }
             }
         } else if (auto text = child->is<Dom::Text>()) {
-            if (bc.parentStyle->display != Display::Internal::TABLE_ROW)
-                anonTableWrapper.createRowIfNone(style);
-            anonTableWrapper.createCellIfNone(style);
+            if (bc.parentComputedValues->display != Display::Internal::TABLE_ROW)
+                anonTableWrapper.createRowIfNone(registeredPropertySet, style);
+            anonTableWrapper.createCellIfNone(registeredPropertySet, style);
             _buildText(anonTableWrapper.cellBuilderContext(), text->data(), style);
         }
     }
@@ -650,7 +648,7 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
 }
 
 // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
-static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedValues> style, Display display) {
+static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues> style, Display display) {
     Box tableInternalBox = {style, el};
 
     switch (display.internal()) {
@@ -668,7 +666,7 @@ static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<
         // "Children of a table-column-group which are not a table-column." should be discarded
         for (auto child = el->firstChild(); child; child = child->nextSibling()) {
             if (auto el = child->is<Dom::Element>()) {
-                auto childStyle = el->specifiedValues();
+                auto childStyle = el->computedValues();
                 if (childStyle->display != Display::Internal::TABLE_COLUMN)
                     continue;
                 _buildTableInternal(bc.toTableContent(tableInternalBox), *el, childStyle, display);
@@ -701,11 +699,11 @@ static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<
     bc.addToParentBox(std::move(tableInternalBox));
 }
 
-static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedValues> tableBoxStyle) {
+static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues> tableBoxStyle) {
     auto searchAndBuildCaption = [&]() {
         for (auto child = el->firstChild(); child; child = child->nextSibling()) {
             if (auto childEl = child->is<Dom::Element>()) {
-                auto childStyle = childEl->specifiedValues();
+                auto childStyle = childEl->computedValues();
                 if (childStyle->display != Display::Internal::TABLE_CAPTION)
                     continue;
                 _buildNode(tableWrapperBc, *childEl);
@@ -741,16 +739,15 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
     }
 }
 
-static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::SpecifiedValues> tableStyle, Gc::Ref<Dom::Element> tableBoxEl) {
+static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::ComputedValues> tableStyle, Gc::Ref<Dom::Element> tableBoxEl) {
     // The computed values of properties 'position', 'float', 'margin-*', 'top',
     // 'right', 'bottom', and 'left' on the table element are used on the table
     // wrapper box and not the table box; all other values of non-inheritable
     // properties are used on the table box and not the table wrapper box.
     // https://www.w3.org/TR/CSS22/tables.html#model
+    auto& registeredPropertySet = tableBoxEl->ownerDocument()->registeredPropertySet;
 
-    auto const& initialStyle = Style::SpecifiedValues::initial();
-
-    auto wrapperStyle = makeRc<Style::SpecifiedValues>(initialStyle);
+    auto wrapperStyle = registeredPropertySet.initialComputedValues();
     wrapperStyle->display = tableStyle->display;
 
     wrapperStyle->margin = tableStyle->margin;
@@ -759,15 +756,16 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Specifi
     wrapperStyle->offsets = tableStyle->offsets;
 
     Box wrapper = {wrapperStyle, tableBoxEl};
-    InlineBox rootInlineBox{_proseStyleFromStyle(*wrapperStyle, tableBoxEl->specifiedValues()->fontFace)};
+    InlineBox rootInlineBox{_proseStyleFromStyle(*wrapperStyle, tableBoxEl->computedValues()->fontFace)};
 
     // SPEC: The table wrapper box establishes a block formatting context.
-    auto innerStyle = makeRc<Style::SpecifiedValues>(*tableStyle);
+    auto innerStyle = makeRc<Style::ComputedValues>(*tableStyle);
 
-    innerStyle->margin = initialStyle.margin;
-    innerStyle->position = initialStyle.position;
-    innerStyle->float_ = initialStyle.float_;
-    innerStyle->offsets = initialStyle.offsets;
+    auto initial = registeredPropertySet.initialComputedValues();
+    innerStyle->margin = initial->margin;
+    innerStyle->position = initial->position;
+    innerStyle->float_ = initial->float_;
+    innerStyle->offsets = initial->offsets;
 
     _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, innerStyle);
 
@@ -777,7 +775,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Specifi
 // MARK: Dispatch based on outside role -------------------------------------------------------------------------------
 
 // https://www.w3.org/TR/css-display-3/#outer-role
-static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedValues> style, Display display) {
+static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues> style, Display display) {
     if (display == Display::Inside::TABLE) {
         auto wrapper = _createTableWrapperAndBuildTable(bc, style, el);
         bc.addToParentBox(std::move(wrapper));
@@ -789,7 +787,7 @@ static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::
 }
 
 // https://www.w3.org/TR/css-display-3/#outer-role
-static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::SpecifiedValues> style, Display display) {
+static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues> style, Display display) {
     if (display == Display::Inside::TABLE) {
         auto wrapper = _createTableWrapperAndBuildTable(bc, style, el);
         bc.addToInlineRoot(std::move(wrapper));
@@ -826,13 +824,13 @@ static void _buildChildBoxDisplay(BuilderContext bc, Gc::Ref<Dom::Node> node, Di
 }
 
 // https://www.w3.org/TR/css-display-3/#layout-specific-display
-static void _buildChildInternalDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::SpecifiedValues> childStyle) {
+static void _buildChildInternalDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::ComputedValues> childStyle) {
     // FIXME: We should create wrapping boxes related to table or ruby, following the FC specification. However, for now,
     // we just wrap it in a single box.
     _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, childStyle->display);
 }
 
-static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::SpecifiedValues> childStyle, Display display) {
+static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::ComputedValues> childStyle, Display display) {
     if (bc.from == BuilderContext::From::FLEX) {
         display = childStyle->display = childStyle->display.blockify();
         _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
@@ -856,7 +854,7 @@ static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> c
 static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
     logDebugIf(DEBUG_BUILDER, "building node {} at context {}", node, bc.from);
     if (auto el = node->is<Dom::Element>()) {
-        auto childStyle = el->specifiedValues();
+        auto childStyle = el->computedValues();
         auto display = childStyle->display;
 
         if (display.type() == Display::Type::BOX) {
@@ -867,24 +865,25 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
             _buildChildDefaultDisplay(bc, *el, childStyle, display);
         }
     } else if (auto text = node->is<Dom::Text>()) {
-        _buildText(bc, text->data(), bc.parentStyle);
+        _buildText(bc, text->data(), bc.parentComputedValues);
     }
 }
 
-export Box _buildBlockPseudoElement(Dom::PseudoElement& el) {
-    auto proseStyle = _proseStyleFromStyle(*el.specifiedValues(), el.specifiedValues()->fontFace);
+export Box _buildBlockPseudoElement(Rc<Dom::PseudoElement> el) {
+    auto style = el->computedValues();
+    auto proseStyle = _proseStyleFromStyle(*style, style->fontFace);
 
-    if (el.specifiedValues()->content.is<String>()) {
+    if (style->content.is<String>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle);
-        prose->append(el.specifiedValues()->content.unwrap<String>().str());
-        return {el.specifiedValues(), InlineBox{prose}, nullptr};
+        prose->append(style->content.unwrap<String>().str());
+        return {style, InlineBox{prose}, el};
     }
 
-    return {el.specifiedValues(), nullptr};
+    return {style, el};
 }
 
 static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudoElement) {
-    auto style = pseudoElement->specifiedValues();
+    auto style = pseudoElement->computedValues();
     auto display = style->display;
     if (display == Display::NONE)
         return;
@@ -897,7 +896,7 @@ static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudo
         bc.endInlineBox();
     } else {
         bc.flushRootInlineBoxIntoAnonymousBox();
-        bc.addToParentBox(_buildBlockPseudoElement(*pseudoElement));
+        bc.addToParentBox(_buildBlockPseudoElement(pseudoElement));
     }
 }
 
@@ -905,75 +904,65 @@ static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudo
 
 static auto dumpBoxes = Debug::Flag::debug("web-boxes"s, "Dump the constructed boxes"s);
 
-export Box build(Gc::Ref<Dom::Document> doc) {
-    Box root{
-        makeRc<Style::SpecifiedValues>(Style::SpecifiedValues::initial()),
-        nullptr
-    };
-
-    if (auto el = doc->documentElement()) {
-        root = {el->specifiedValues(), el};
-        InlineBox rootInlineBox{_proseStyleFromStyle(*el->specifiedValues(), el->specifiedValues()->fontFace)};
-
-        BuilderContext bc{
-            BuilderContext::From::BLOCK,
-            el->specifiedValues(),
-            root,
-            &rootInlineBox,
-        };
-
-        buildBlockFlowFromElement(bc, *el);
-    }
-
-    logDebugIf(dumpBoxes, "document boxes: {}", root);
-
-    return root;
-}
-
 export Box buildElement(Gc::Ref<Dom::Element> elt) {
-    Box box = {elt->specifiedValues(), elt};
-    InlineBox rootInlineBox{_proseStyleFromStyle(*elt->specifiedValues(), elt->specifiedValues()->fontFace)};
-
-    BuilderContext bc{
-        BuilderContext::From::BLOCK,
-        elt->specifiedValues(),
-        box,
-        &rootInlineBox,
+    Box box = {elt->computedValues(), elt};
+    InlineBox rootInlineBox{
+        _proseStyleFromStyle(
+            *elt->computedValues(),
+            elt->computedValues()->fontFace
+        ),
     };
-
-    buildBlockFlowFromElement(bc, *elt);
-
+    buildBlockFlowFromElement(
+        {
+            BuilderContext::From::BLOCK,
+            elt->computedValues(),
+            box,
+            &rootInlineBox,
+        },
+        *elt
+    );
     return box;
 }
 
-export Box buildForPseudoElement(Dom::PseudoElement& el, usize currentPage, RunningPositionMap& runningPos) {
-    auto proseStyle = _proseStyleFromStyle(*el.specifiedValues(), el.specifiedValues()->fontFace);
+export Box buildElement(Dom::OriginatingElement& el) {
+    if (auto pseudoElement = el.is<Rc<Dom::PseudoElement>>()) {
+        return _buildBlockPseudoElement(*pseudoElement);
+    }
 
-    if (el.specifiedValues()->content.is<String>()) {
+    return buildElement(el.unwrap<Gc::Ref<Dom::Element>>());
+}
+
+export Box build(Gc::Ref<Dom::Document> doc) {
+    auto el = doc->documentElement();
+    if (!el)
+        return {doc->registeredPropertySet.initialComputedValues(), NONE};
+    return buildElement(el.upgrade());
+}
+
+export Box buildForPseudoElement(Rc<Dom::PseudoElement> el, usize currentPage, RunningPositionMap& runningPos) {
+    auto style = el->computedValues();
+    auto proseStyle = _proseStyleFromStyle(*style, style->fontFace);
+
+    if (style->content.is<String>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle);
-        prose->append(el.specifiedValues()->content.unwrap<String>().str());
-        return {el.specifiedValues(), InlineBox{prose}, nullptr};
-    } else if (el.specifiedValues()->content.is<ElementContent>()) {
-        auto elt = el.specifiedValues()->content.unwrap<ElementContent>();
+        prose->append(style->content.unwrap<String>().str());
+        return Box{style, InlineBox{prose}, el};
+    } else if (style->content.is<ElementContent>()) {
+        auto elt = style->content.unwrap<ElementContent>();
         if (auto infos = runningPos.match(elt, currentPage)) {
-            Box marginBox = {el.specifiedValues(), nullptr};
-
             Box box = buildElement(infos.unwrap().element);
             box.style->position = Keywords::STATIC;
-            marginBox.add(std::move(box));
-            return marginBox;
+            return box;
         }
-    } else if (el.specifiedValues()->content.is<Counter>()) {
-        auto elt = el.specifiedValues()->content.unwrap<Counter>();
-        if (elt.type == Counter::Type::PAGE) {
+    } else if (auto elt = style->content.is<Counter>()) {
+        if (elt->type == Counter::Type::PAGE) {
             auto prose = makeRc<Gfx::Prose>(proseStyle);
-
             prose->append(Io::toStr(currentPage + 1).str());
-            return {el.specifiedValues(), InlineBox{prose}, nullptr};
+            return Box{style, InlineBox{prose}, el};
         }
     }
 
-    return {el.specifiedValues(), nullptr};
+    return {style, el};
 }
 
 } // namespace Vaev::Layout

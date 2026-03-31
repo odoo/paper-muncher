@@ -7,7 +7,7 @@ export module Vaev.Engine:props.fonts;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -30,8 +30,12 @@ export struct FontFamilyProperty : Property {
             return makeRc<FontFamilyProperty>(self(), Vec<FontFamily>{"sans-serif"_sym});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FontFamilyProperty>(self(), c.font->families);
+        }
+
+        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+            child.font.cow().families = parent.font->families;
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -53,7 +57,7 @@ export struct FontFamilyProperty : Property {
     FontFamilyProperty(Rc<Property::Registration> registration, Vec<FontFamily> value)
         : Property(registration), _value(std::move(value)) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.font.cow().families = _value;
     }
 
@@ -73,7 +77,7 @@ export struct FontWeightProperty : Property {
             return makeRc<FontWeightProperty>(self(), FontWeight{Gfx::FontWeight::REGULAR});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FontWeightProperty>(self(), c.font->weight);
         }
 
@@ -87,11 +91,11 @@ export struct FontWeightProperty : Property {
     FontWeightProperty(Rc<Property::Registration> registration, FontWeight value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.font.cow().weight = _value.resolve();
     }
 
-    void apply(SpecifiedValues const& parent, SpecifiedValues& c) const override {
+    void apply(ComputedValues const& parent, ComputedValues& c) const override {
         c.font.cow().weight = _value.resolve(parent.font->weight);
     }
 
@@ -120,7 +124,11 @@ export struct FontWidthProperty : Property {
             return makeRc<FontWidthProperty>(self(), FontWidth::NORMAL);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+            child.font.cow().width = parent.font->width;
+        }
+
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FontWidthProperty>(self(), c.font->width);
         }
 
@@ -134,7 +142,7 @@ export struct FontWidthProperty : Property {
     FontWidthProperty(Rc<Property::Registration> registration, FontWidth value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.font.cow().width = _value;
     }
 
@@ -158,7 +166,11 @@ export struct FontStyleProperty : Property {
             return makeRc<FontStyleProperty>(self(), FontStyle::NORMAL);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+            child.font.cow().style = parent.font->style;
+        }
+
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FontStyleProperty>(self(), c.font->style);
         }
 
@@ -172,7 +184,7 @@ export struct FontStyleProperty : Property {
     FontStyleProperty(Rc<Property::Registration> registration, FontStyle value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.font.cow().style = _value;
     }
 
@@ -196,7 +208,11 @@ export struct FontSizeProperty : Property {
             return makeRc<FontSizeProperty>(self(), FontSize::MEDIUM);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+            child.font.cow().size = parent.font->size;
+        }
+
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FontSizeProperty>(self(), c.font->size);
         }
 
@@ -210,7 +226,7 @@ export struct FontSizeProperty : Property {
     FontSizeProperty(Rc<Property::Registration> registration, FontSize value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.font.cow().size = _value;
     }
 
@@ -234,7 +250,7 @@ export struct FontProperty : Property {
             return makeRc<FontProperty>(self(), FontProps{}, None{});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<FontProperty>(self(), *c.font, None{});
         }
 
@@ -290,7 +306,7 @@ export struct FontProperty : Property {
     FontProperty(Rc<Property::Registration> registration, FontProps value, Opt<FontWeight> unresolvedWeight)
         : Property(registration), _value(std::move(value)), _unresolvedWeight(unresolvedWeight) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         Vec<Rc<Property>> result;
         result.pushBack(makeRc<FontStyleProperty>(registry.resolveRegistration(Properties::FONT_STYLE, {}).unwrap(), _value.style));
         result.pushBack(makeRc<FontWidthProperty>(registry.resolveRegistration(Properties::FONT_WIDTH, {}).unwrap(), _value.width));

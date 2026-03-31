@@ -7,7 +7,7 @@ export module Vaev.Engine:props.padding;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -27,7 +27,7 @@ export struct PaddingTopProperty : Property {
             return makeRc<PaddingTopProperty>(self(), CalcValue<PercentOr<Length>>{Length{}});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<PaddingTopProperty>(self(), c.padding->top);
         }
 
@@ -41,7 +41,7 @@ export struct PaddingTopProperty : Property {
     PaddingTopProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.padding.cow().top = _value;
     }
 
@@ -60,7 +60,7 @@ export struct PaddingRightProperty : Property {
             return makeRc<PaddingRightProperty>(self(), CalcValue<PercentOr<Length>>{Length{}});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<PaddingRightProperty>(self(), c.padding->end);
         }
 
@@ -74,7 +74,7 @@ export struct PaddingRightProperty : Property {
     PaddingRightProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.padding.cow().end = _value;
     }
 
@@ -93,7 +93,7 @@ export struct PaddingBottomProperty : Property {
             return makeRc<PaddingBottomProperty>(self(), CalcValue<PercentOr<Length>>{Length{}});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<PaddingBottomProperty>(self(), c.padding->bottom);
         }
 
@@ -107,7 +107,7 @@ export struct PaddingBottomProperty : Property {
     PaddingBottomProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.padding.cow().bottom = _value;
     }
 
@@ -126,7 +126,7 @@ export struct PaddingLeftProperty : Property {
             return makeRc<PaddingLeftProperty>(self(), CalcValue<PercentOr<Length>>{Length{}});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<PaddingLeftProperty>(self(), c.padding->start);
         }
 
@@ -140,7 +140,7 @@ export struct PaddingLeftProperty : Property {
     PaddingLeftProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.padding.cow().start = _value;
     }
 
@@ -159,7 +159,7 @@ export struct PaddingInlineStartProperty : Property {
             return makeRc<PaddingInlineStartProperty>(self(), CalcValue<PercentOr<Length>>{Length{}});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<PaddingInlineStartProperty>(self(), c.padding->start);
         }
 
@@ -173,7 +173,7 @@ export struct PaddingInlineStartProperty : Property {
     PaddingInlineStartProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.padding.cow().start = _value;
     }
 
@@ -192,7 +192,7 @@ export struct PaddingInlineEndProperty : Property {
             return makeRc<PaddingInlineEndProperty>(self(), CalcValue<PercentOr<Length>>{Length{}});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<PaddingInlineEndProperty>(self(), c.padding->end);
         }
 
@@ -206,7 +206,7 @@ export struct PaddingInlineEndProperty : Property {
     PaddingInlineEndProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.padding.cow().end = _value;
     }
 
@@ -229,7 +229,7 @@ export struct PaddingProperty : Property {
             return makeRc<PaddingProperty>(self(), Math::Insets<CalcValue<PercentOr<Length>>>{Length{}});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<PaddingProperty>(self(), *c.padding);
         }
 
@@ -243,7 +243,7 @@ export struct PaddingProperty : Property {
     PaddingProperty(Rc<Property::Registration> registration, Math::Insets<CalcValue<PercentOr<Length>>> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<PaddingTopProperty>(registry.resolveRegistration(Properties::PADDING_TOP, {}).unwrap(), _value.top),
             makeRc<PaddingRightProperty>(registry.resolveRegistration(Properties::PADDING_RIGHT, {}).unwrap(), _value.end),

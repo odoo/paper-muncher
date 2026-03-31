@@ -7,7 +7,7 @@ export module Vaev.Engine:props.sizing;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -27,7 +27,7 @@ export struct BoxSizingProperty : Property {
             return makeRc<BoxSizingProperty>(self(), BoxSizing::CONTENT_BOX);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BoxSizingProperty>(self(), c.boxSizing);
         }
 
@@ -49,7 +49,7 @@ export struct BoxSizingProperty : Property {
     BoxSizingProperty(Rc<Property::Registration> registration, BoxSizing value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.boxSizing = _value;
     }
 
@@ -73,7 +73,7 @@ export struct WidthProperty : Property {
             return makeRc<WidthProperty>(self(), Size{Keywords::AUTO});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<WidthProperty>(self(), c.sizing->width);
         }
 
@@ -93,7 +93,7 @@ export struct WidthProperty : Property {
     WidthProperty(Rc<Property::Registration> registration, Size value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.sizing.cow().width = _value;
     }
 
@@ -118,7 +118,7 @@ export struct HeightProperty : Property {
             return makeRc<HeightProperty>(self(), Size{Keywords::AUTO});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<HeightProperty>(self(), c.sizing->height);
         }
 
@@ -138,7 +138,7 @@ export struct HeightProperty : Property {
     HeightProperty(Rc<Property::Registration> registration, Size value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.sizing.cow().height = _value;
     }
 
@@ -158,7 +158,7 @@ export struct MinWidthProperty : Property {
             return makeRc<MinWidthProperty>(self(), Size{Keywords::AUTO});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MinWidthProperty>(self(), c.sizing->minWidth);
         }
 
@@ -172,7 +172,7 @@ export struct MinWidthProperty : Property {
     MinWidthProperty(Rc<Property::Registration> registration, Size value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.sizing.cow().minWidth = _value;
     }
 
@@ -192,7 +192,7 @@ export struct MinHeightProperty : Property {
             return makeRc<MinHeightProperty>(self(), Size{Keywords::AUTO});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MinHeightProperty>(self(), c.sizing->minHeight);
         }
 
@@ -206,7 +206,7 @@ export struct MinHeightProperty : Property {
     MinHeightProperty(Rc<Property::Registration> registration, Size value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.sizing.cow().minHeight = _value;
     }
 
@@ -227,7 +227,7 @@ export struct MaxWidthProperty : Property {
             return makeRc<MaxWidthProperty>(self(), MaxSize{Keywords::NONE});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MaxWidthProperty>(self(), c.sizing->maxWidth);
         }
 
@@ -241,7 +241,7 @@ export struct MaxWidthProperty : Property {
     MaxWidthProperty(Rc<Property::Registration> registration, MaxSize value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.sizing.cow().maxWidth = _value;
     }
 
@@ -261,7 +261,7 @@ export struct MaxHeightProperty : Property {
             return makeRc<MaxHeightProperty>(self(), MaxSize{Keywords::NONE});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<MaxHeightProperty>(self(), c.sizing->maxHeight);
         }
 
@@ -275,7 +275,7 @@ export struct MaxHeightProperty : Property {
     MaxHeightProperty(Rc<Property::Registration> registration, MaxSize value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.sizing.cow().maxHeight = _value;
     }
 

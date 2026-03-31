@@ -97,7 +97,7 @@ export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http:
     co_return Ok(dom);
 }
 
-Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Style::PropertyRegistry& registry, Http::Client& client, Ref::Url url, Style::Origin origin, Async::CancellationToken ct) {
+Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Style::RegisteredPropertySet& registry, Http::Client& client, Ref::Url url, Style::Origin origin, Async::CancellationToken ct) {
     auto resp = co_trya$(client.getAsync(url, ct));
     if (not resp->body)
         co_return Error::notFound("could not load stylesheet");
@@ -124,7 +124,7 @@ Rc<Scene::Node> _missingImagePlaceholder() {
     return makeRc<Scene::Image>(placeholder->bound().cast<f64>(), placeholder);
 }
 
-Async::Task<> _fetchResourcesAsync(Style::PropertyRegistry& registry, Http::Client& client, Gc::Ref<Dom::Node> node, Style::StyleSheetList& sb, Async::CancellationToken ct) {
+Async::Task<> _fetchResourcesAsync(Style::RegisteredPropertySet& registry, Http::Client& client, Gc::Ref<Dom::Node> node, Style::StyleSheetList& sb, Async::CancellationToken ct) {
     auto el = node->is<Dom::Element>();
     if (el and el->qualifiedName == Html::IMG_TAG) {
         auto src = el->getAttribute(Html::SRC_ATTR);
