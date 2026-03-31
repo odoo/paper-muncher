@@ -66,15 +66,14 @@ struct TimeoutConfiguration {
 // MARK: 18. Print -------------------------------------------------------------
 
 struct PrintSettings {
-    Print::Orientation orientation = Print::Orientation::PORTRAIT;
     f64 scale = 1.0;
     bool background = false;
     bool shrinkToFit = true;
-    Math::Vec2f paper = {
-        21.59,
-        27.94
+    Print::PaperFormat paper = {
+        .stock = Print::LETTER,
+        .orientation = Print::Orientation::PORTRAIT,
     };
-    Math::Insetsf margins = 1.0;
+    InsetsAu margins = Print::mmToAu(1.0);
     Vec<urange> pageRanges{};
 
     static PrintSettings defaults() {
@@ -83,18 +82,16 @@ struct PrintSettings {
 
     Print::Settings toNative() const {
         return {
-            .paper = {
-                .name = "custom"s,
-                .width = paper.width * 10 * Print::UNIT,
-                .height = paper.height * 10 * Print::UNIT,
+            .size = Vec2Au{
+                paper.size().width * 10,
+                paper.size().height * 10,
             },
-            .margins = Math::Insetsf{
-                margins.top * 10 * Print::UNIT,
-                margins.end * 10 * Print::UNIT,
-                margins.bottom * 10 * Print::UNIT,
-                margins.start * 10 * Print::UNIT,
+            .margins = InsetsAu{
+                margins.top * 10,
+                margins.end * 10,
+                margins.bottom * 10,
+                margins.start * 10,
             },
-            .orientation = orientation,
             .scale = scale,
             .backgroundGraphics = background,
         };

@@ -54,7 +54,7 @@ namespace SVG {
 
 Au normalizedDiagonal(Vec2Au relativeTo) {
     return Au{
-        Math::sqrt(f64{(relativeTo.x * relativeTo.x) + (relativeTo.y * relativeTo.y)}) / Math::sqrt(2.0)
+        Math::sqrt(f64{relativeTo.x} * f64{relativeTo.x} + f64{relativeTo.y} * f64{relativeTo.y}) / Math::sqrt(2.0)
     };
 }
 
@@ -316,7 +316,7 @@ struct ShapeFrag : Frag {
     }
 
     RectAu strokeBoundingBox() override {
-        return objectBoundingBox().grow((Au)(strokeWidth / 2_au));
+        return objectBoundingBox().grow(strokeWidth / 2);
     }
 
     Style::ComputedValues const& style() override {
@@ -350,10 +350,10 @@ Math::Trans2f computeEquivalentTransformOfSVGViewport(ViewBox const& vb, Vec2Au 
     MeetOrSlice meetOrSlice{MeetOrSlice::MEET};
 
     // 5. Initialize scale-x to e-width/vb-width.
-    f64 scaleX = (f64)size.x / vb.width;
+    f64 scaleX = f64{size.x} / vb.width;
 
     // 6. Initialize scale-y to e-height/vb-height.
-    f64 scaleY = (f64)size.y / vb.height;
+    f64 scaleY = f64{size.y} / vb.height;
 
     // 7. If align is not 'none' and meetOrSlice is 'meet', set the larger of scale-x and scale-y to the smaller.
     // 8. Otherwise, if align is not 'none' and meetOrSlice is 'slice', set the smaller of scale-x and scale-y to
@@ -365,30 +365,30 @@ Math::Trans2f computeEquivalentTransformOfSVGViewport(ViewBox const& vb, Vec2Au 
     }
 
     // 9. Initialize translate-x to e-x - (vb-x * scale-x).
-    f64 translateX = (f64)position.x - (vb.minX * scaleX);
+    f64 translateX = f64{position.x} - (vb.minX * scaleX);
 
     // 10. Initialize translate-y to e-y - (vb-y * scale-y)
-    f64 translateY = (f64)position.y - (vb.minY * scaleY);
+    f64 translateY = f64{position.y} - (vb.minY * scaleY);
 
     if (align) {
         // 11. If align contains 'xMid', add (e-width - vb-width * scale-x) / 2 to translate-x.
         if (align->x == AlignAxisSVG::MID) {
-            translateX += ((f64)size.x - vb.width * scaleX) / 2;
+            translateX += (f64{size.x} - vb.width * scaleX) / 2;
         }
 
         // 12. If align contains 'xMax', add (e-width - vb-width * scale-x) to translate-x.
         if (align->x == AlignAxisSVG::MAX) {
-            translateX += ((f64)size.x - vb.width * scaleX);
+            translateX += (f64{size.x} - vb.width * scaleX);
         }
 
         // 13. If align contains 'yMid', add (e-height - vb-height * scale-y) / 2 to translate-y.
         if (align->y == AlignAxisSVG::MID) {
-            translateY += ((f64)size.y - vb.height * scaleY) / 2;
+            translateY += (f64{size.y} - vb.height * scaleY) / 2;
         }
 
         // 14. If align contains 'yMax', add (e-height - vb-height * scale-y) to translate-y.
         if (align->y == AlignAxisSVG::MAX) {
-            translateY += ((f64)size.y - vb.height * scaleY);
+            translateY += (f64{size.y} - vb.height * scaleY);
         }
     }
 
@@ -427,7 +427,7 @@ Opt<Number> intrinsicAspectRatio(Opt<ViewBox> const& vb, Size const& width, Size
 
     // 3. If the ‘viewBox’ on the ‘svg’ element is correctly specified:
     if (vb) {
-        return (f64)vb->width / vb->height;
+        return vb->width / vb->height;
     }
 
     return NONE;
