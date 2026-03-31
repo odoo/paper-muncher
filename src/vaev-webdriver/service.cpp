@@ -497,15 +497,15 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
                     .orientation = orientation.asStr() == "portrait" ? Print::Orientation::PORTRAIT : Print::Orientation::LANDSCAPE,
                     .scale = scale.asFloat(),
                     .background = background.asBool(),
-                    .paper = {
-                        pageWidth.asFloat(),
-                        pageHeight.asFloat(),
+                    .paper = Vec2Au{
+                        Au{pageWidth.asFloat()},
+                        Au{pageHeight.asFloat()},
                     },
-                    .margins = {
-                        marginTop.asFloat(),
-                        marginRight.asFloat(),
-                        marginBottom.asFloat(),
-                        marginLeft.asFloat(),
+                    .margins = InsetsAu{
+                        Au{marginTop.asFloat()},
+                        Au{marginRight.asFloat()},
+                        Au{marginBottom.asFloat()},
+                        Au{marginLeft.asFloat()},
                     },
                 }
             ));
