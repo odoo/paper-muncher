@@ -494,18 +494,15 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
             auto pdf = co_try$(webdriver->printPage(
                 sessionId,
                 {
-                    .orientation = orientation.asStr() == "portrait" ? Print::Orientation::PORTRAIT : Print::Orientation::LANDSCAPE,
                     .scale = scale.asFloat(),
                     .background = background.asBool(),
-                    .paper = {
-                        pageWidth.asFloat(),
-                        pageHeight.asFloat(),
-                    },
-                    .margins = {
-                        marginTop.asFloat(),
-                        marginRight.asFloat(),
-                        marginBottom.asFloat(),
-                        marginLeft.asFloat(),
+                    .stock = Print::PaperStock::custom(Au{pageWidth.asFloat()}, Au{pageHeight.asFloat()}),
+                    .orientation = orientation.asStr() == "portrait" ? Print::Orientation::PORTRAIT : Print::Orientation::LANDSCAPE,
+                    .margins = InsetsAu{
+                        Au{marginTop.asFloat()},
+                        Au{marginRight.asFloat()},
+                        Au{marginBottom.asFloat()},
+                        Au{marginLeft.asFloat()},
                     },
                 }
             ));

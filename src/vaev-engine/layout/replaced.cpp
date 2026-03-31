@@ -21,7 +21,7 @@ struct ReplacedFormatingContext : FormatingContext {
         // viewport. If no ‘viewBox’ is specified, then the value to use must be the percentage, in user units, of the
         // * of the SVG viewport.
         return root.viewBox
-                   ? Karm::Vec2Au{(Au)root.viewBox->width, (Au)root.viewBox->height}
+                   ? Karm::Vec2Au{Au{root.viewBox->width}, Au{root.viewBox->height}}
                    : svgFrag
                          .transf.inverse()
                          .applyVector(
@@ -86,13 +86,13 @@ struct ReplacedFormatingContext : FormatingContext {
         if (knownSize.x) {
             size.x = *knownSize.x;
             if (aspectRatio)
-                size.y = size.x / Au{*aspectRatio};
+                size.y = size.x / *aspectRatio;
         } else if (knownSize.y) {
             size.y = *knownSize.y;
             if (aspectRatio)
-                size.x = Au{*aspectRatio} * size.y;
+                size.x = size.y * (*aspectRatio);
         } else if (aspectRatio) {
-            size.y = size.x / Au{*aspectRatio};
+            size.y = size.x / *aspectRatio;
         }
         return size;
     }
