@@ -11,11 +11,13 @@ import :dom.tokenList;
 using namespace Karm;
 
 namespace Vaev::Style {
-export struct SpecifiedValues;
-
+export struct ComputedValues;
 } // namespace Vaev::Style
 
 namespace Vaev::Dom {
+
+export struct Element;
+export struct PseudoElement;
 
 // https://drafts.csswg.org/css-pseudo/#CSSPseudoElement-interface
 export struct PseudoElement {
@@ -23,12 +25,32 @@ export struct PseudoElement {
     static Symbol const BEFORE;
     static Symbol const AFTER;
     static Symbol const MARKER;
-
     Symbol type;
-    Opt<Rc<Style::SpecifiedValues>> _specifiedValues = NONE;
 
-    Rc<Style::SpecifiedValues> specifiedValues() const {
-        return _specifiedValues.unwrap("unstyled pseudo-element");
+    // https://drafts.csswg.org/css-pseudo/#dom-csspseudoelement-parent
+    Gc::Ptr<Element> parent;
+
+    Opt<Rc<Style::ComputedValues>> _computedValues = NONE;
+
+    PseudoElement(Symbol type, Rc<Style::ComputedValues> computedValues)
+        : type(type), _computedValues(computedValues) {}
+
+    Rc<Style::ComputedValues> computedValues() const {
+        return _computedValues.unwrap("unstyled pseudo-element");
+    }
+
+    // https://drafts.csswg.org/css-pseudo/#dom-csspseudoelement-element
+    // https://drafts.csswg.org/selectors-4/#ultimate-originating-element
+    Gc::Ref<Element> element() const {
+        return parent.upgrade();
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(pseudo-element {})", type);
+    }
+
+    bool operator==(PseudoElement const& other) const {
+        return this == &other;
     }
 };
 
@@ -43,7 +65,7 @@ export struct Element : Node {
     QualifiedName qualifiedName;
     // NOSPEC: Should be a NamedNodeMap
     Map<QualifiedName, Rc<Attr>> attributes;
-    Opt<Rc<Style::SpecifiedValues>> _specifiedValues; // FIXME: We should not have this store here
+    Opt<Rc<Style::ComputedValues>> _computedValues;
     TokenList classList;
     Opt<Rc<Scene::Node>> imageContent;
     Map<Symbol, Rc<PseudoElement>> _pseudoElements;
@@ -128,8 +150,8 @@ export struct Element : Node {
 
     // MARK: Style -------------------------------------------------------------
 
-    Rc<Style::SpecifiedValues> specifiedValues() const {
-        return _specifiedValues.unwrap("unstyled element");
+    Rc<Style::ComputedValues> computedValues() const {
+        return _computedValues.unwrap("unstyled element");
     }
 
     // MARK: Content -----------------------------------------------------------
@@ -174,11 +196,26 @@ export struct Element : Node {
     }
 
     void addPseudoElement(Rc<PseudoElement> pseudoElement) {
+        pseudoElement->parent = *this;
         _pseudoElements.put(pseudoElement->type, pseudoElement);
     }
 
     Opt<Rc<PseudoElement>> getPseudoElement(Symbol type) const {
         return _pseudoElements.lookup(type);
+    }
+};
+
+export struct OriginatingElement : Union<Gc::Ref<Element>, Rc<PseudoElement>> {
+    using Union::Union;
+
+    Rc<Style::ComputedValues> computedValues() {
+        return visit([](auto& el) {
+            return el->computedValues();
+        });
+    }
+
+    void repr(Io::Emit& e) const {
+        e("{}", static_cast<Union const&>(*this));
     }
 };
 

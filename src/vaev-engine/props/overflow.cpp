@@ -7,7 +7,7 @@ export module Vaev.Engine:props.overflow;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -26,7 +26,7 @@ export struct OverflowXProperty : Property {
             return makeRc<OverflowXProperty>(self(), Overflow::VISIBLE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<OverflowXProperty>(self(), c.overflows.x);
         }
 
@@ -40,7 +40,7 @@ export struct OverflowXProperty : Property {
     OverflowXProperty(Rc<Property::Registration> registration, Overflow value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.overflows.x = _value;
     }
 
@@ -60,7 +60,7 @@ export struct OverflowYProperty : Property {
             return makeRc<OverflowYProperty>(self(), Overflow::VISIBLE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<OverflowYProperty>(self(), c.overflows.y);
         }
 
@@ -74,7 +74,7 @@ export struct OverflowYProperty : Property {
     OverflowYProperty(Rc<Property::Registration> registration, Overflow value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.overflows.y = _value;
     }
 
@@ -94,7 +94,7 @@ export struct OverflowBlockProperty : Property {
             return makeRc<OverflowBlockProperty>(self(), Overflow::VISIBLE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<OverflowBlockProperty>(self(), c.overflows.block);
         }
 
@@ -108,7 +108,7 @@ export struct OverflowBlockProperty : Property {
     OverflowBlockProperty(Rc<Property::Registration> registration, Overflow value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.overflows.block = _value;
     }
 
@@ -128,7 +128,7 @@ export struct OverflowInlineProperty : Property {
             return makeRc<OverflowInlineProperty>(self(), Overflow::VISIBLE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<OverflowInlineProperty>(self(), c.overflows.inline_);
         }
 
@@ -142,7 +142,7 @@ export struct OverflowInlineProperty : Property {
     OverflowInlineProperty(Rc<Property::Registration> registration, Overflow value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.overflows.inline_ = _value;
     }
 
@@ -166,7 +166,7 @@ export struct OverflowProperty : Property {
             return makeRc<OverflowProperty>(self(), Pair{Overflow::VISIBLE, Overflow::VISIBLE});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<OverflowProperty>(self(), Pair{c.overflows.x, c.overflows.y});
         }
 
@@ -194,7 +194,7 @@ export struct OverflowProperty : Property {
     OverflowProperty(Rc<Property::Registration> registration, Pair<Overflow> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<OverflowXProperty>(registry.resolveRegistration(Properties::OVERFLOW_X, {}).unwrap(), _value.v0),
             makeRc<OverflowYProperty>(registry.resolveRegistration(Properties::OVERFLOW_Y, {}).unwrap(), _value.v1),

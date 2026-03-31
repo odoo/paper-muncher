@@ -28,7 +28,7 @@ export struct StyleRule {
     Vec<Rc<Property>> props;
     Origin origin = Origin::AUTHOR;
 
-    static StyleRule parse(PropertyRegistry& propertyRegistry, Css::Sst const& sst, Origin origin, Namespace& ns) {
+    static StyleRule parse(RegisteredPropertySet& propertyRegistry, Css::Sst const& sst, Origin origin, Namespace& ns) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
@@ -50,7 +50,7 @@ export struct StyleRule {
         // Parse the properties.
         for (auto const& item : sst.content) {
             if (item == Css::Sst::DECL) {
-                if (auto p = propertyRegistry.parseDeclaration(item, PropertyRegistry::TOP_LEVEL))
+                if (auto p = propertyRegistry.parseDeclaration(item, RegisteredPropertySet::TOP_LEVEL))
                     res.props.pushBack(p.take());
             } else {
                 logWarnIf(debugRule, "unexpected item in style rule: {}", item);
@@ -102,7 +102,7 @@ export struct MediaRule {
     MediaQuery media;
     Vec<Rule> rules;
 
-    static MediaRule parse(PropertyRegistry& registry, Css::Sst const& sst, Origin origin, Namespace& ns);
+    static MediaRule parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, Namespace& ns);
 
     bool match(Media const& m) const {
         return media.match(m);
@@ -175,7 +175,7 @@ export struct PageRule {
     Vec<Rc<Property>> props;
     Vec<PageAreaRule> areas;
 
-    static PageRule parse(PropertyRegistry& registry, Css::Sst const& sst) {
+    static PageRule parse(RegisteredPropertySet& registry, Css::Sst const& sst) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
@@ -192,7 +192,7 @@ export struct PageRule {
         // Parse the properties.
         for (auto const& item : sst.content) {
             if (item == Css::Sst::DECL) {
-                auto prop = registry.parseDeclaration(item, PropertyRegistry::TOP_LEVEL);
+                auto prop = registry.parseDeclaration(item, RegisteredPropertySet::TOP_LEVEL);
                 if (prop)
                     res.props.pushBack(prop.take());
             } else if (item == Css::Sst::RULE and item.token == Css::Token::AT_KEYWORD) {
@@ -219,7 +219,7 @@ export struct PageRule {
         return false;
     }
 
-    void apply(PropertyRegistry& registry, PageSpecifiedValues& c) const {
+    void apply(RegisteredPropertySet& registry, PageComputedValues& c) const {
         for (auto const& prop : props) {
             if (prop->isBogusProperty())
                 continue;
@@ -235,8 +235,8 @@ export struct PageRule {
         }
 
         for (auto const& area : areas) {
-            auto& areaPseudoElement = c.area(area.area);
-            area.apply(registry, *c.style, *areaPseudoElement.specifiedValues());
+            auto areaPseudoElement = c.area(area.area);
+            area.apply(registry, *c.style, *areaPseudoElement->computedValues());
         }
     }
 
@@ -257,7 +257,7 @@ using _Rule = Union<
 export struct Rule : _Rule {
     using _Rule::_Rule;
 
-    static Rule parse(PropertyRegistry& registry, Css::Sst const& sst, Origin origin, Namespace& ns) {
+    static Rule parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, Namespace& ns) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
@@ -286,7 +286,7 @@ export struct Rule : _Rule {
     }
 };
 
-MediaRule MediaRule::parse(PropertyRegistry& registry, Css::Sst const& sst, Origin origin, Namespace& ns) {
+MediaRule MediaRule::parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, Namespace& ns) {
     if (sst != Css::Sst::RULE)
         panic("expected rule");
 

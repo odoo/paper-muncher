@@ -71,7 +71,7 @@ struct GroupFrag : SVG::Frag {
         return _strokeBoundingBox;
     }
 
-    Style::SpecifiedValues const& style() override {
+    Style::ComputedValues const& style() override {
         return *box->style;
     }
 
@@ -128,7 +128,7 @@ export struct Frag {
     Frag(Opt<Box&> box = NONE)
         : box(box) {}
 
-    Style::SpecifiedValues const& style() const {
+    Style::ComputedValues const& style() const {
         return *box->style;
     }
 

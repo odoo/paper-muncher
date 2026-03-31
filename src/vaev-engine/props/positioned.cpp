@@ -7,7 +7,7 @@ export module Vaev.Engine:props.positioned;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -26,7 +26,7 @@ export struct PositionProperty : Property {
             return makeRc<PositionProperty>(self(), Position{Keywords::STATIC});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<PositionProperty>(self(), c.position);
         }
 
@@ -40,7 +40,7 @@ export struct PositionProperty : Property {
     PositionProperty(Rc<Property::Registration> registration, Position value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.position = _value;
     }
 
@@ -60,7 +60,7 @@ export struct TopProperty : Property {
             return makeRc<TopProperty>(self(), Width{Keywords::AUTO});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<TopProperty>(self(), c.offsets->top);
         }
 
@@ -74,7 +74,7 @@ export struct TopProperty : Property {
     TopProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.offsets.cow().top = _value;
     }
 
@@ -94,7 +94,7 @@ export struct RightProperty : Property {
             return makeRc<RightProperty>(self(), Width{Keywords::AUTO});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<RightProperty>(self(), c.offsets->end);
         }
 
@@ -108,7 +108,7 @@ export struct RightProperty : Property {
     RightProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.offsets.cow().end = _value;
     }
 
@@ -128,7 +128,7 @@ export struct BottomProperty : Property {
             return makeRc<BottomProperty>(self(), Width{Keywords::AUTO});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BottomProperty>(self(), c.offsets->bottom);
         }
 
@@ -142,7 +142,7 @@ export struct BottomProperty : Property {
     BottomProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.offsets.cow().bottom = _value;
     }
 
@@ -162,7 +162,7 @@ export struct LeftProperty : Property {
             return makeRc<LeftProperty>(self(), Width{Keywords::AUTO});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<LeftProperty>(self(), c.offsets->start);
         }
 
@@ -176,7 +176,7 @@ export struct LeftProperty : Property {
     LeftProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.offsets.cow().start = _value;
     }
 
@@ -196,7 +196,7 @@ export struct ZIndexProperty : Property {
             return makeRc<ZIndexProperty>(self(), ZIndex{Keywords::AUTO});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<ZIndexProperty>(self(), c.zIndex);
         }
 
@@ -210,7 +210,7 @@ export struct ZIndexProperty : Property {
     ZIndexProperty(Rc<Property::Registration> registration, ZIndex value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.zIndex = _value;
     }
 

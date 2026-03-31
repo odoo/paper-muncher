@@ -7,7 +7,7 @@ export module Vaev.Engine:props.align;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -27,7 +27,7 @@ export struct AlignContentProperty : Property {
             return makeRc<AlignContentProperty>(self(), Align::Keywords::STRETCH);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<AlignContentProperty>(self(), c.aligns.alignContent);
         }
 
@@ -41,7 +41,7 @@ export struct AlignContentProperty : Property {
     AlignContentProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.aligns.alignContent = _value;
     }
 
@@ -61,7 +61,7 @@ export struct JustifyContentProperty : Property {
             return makeRc<JustifyContentProperty>(self(), Align::Keywords::FLEX_START);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<JustifyContentProperty>(self(), c.aligns.justifyContent);
         }
 
@@ -75,7 +75,7 @@ export struct JustifyContentProperty : Property {
     JustifyContentProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.aligns.justifyContent = _value;
     }
 
@@ -95,7 +95,7 @@ export struct JustifySelfProperty : Property {
             return makeRc<JustifySelfProperty>(self(), Align{});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<JustifySelfProperty>(self(), c.aligns.justifySelf);
         }
 
@@ -109,7 +109,7 @@ export struct JustifySelfProperty : Property {
     JustifySelfProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.aligns.justifySelf = _value;
     }
 
@@ -129,7 +129,7 @@ export struct AlignSelfProperty : Property {
             return makeRc<AlignSelfProperty>(self(), Align::Keywords::AUTO);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<AlignSelfProperty>(self(), c.aligns.alignSelf);
         }
 
@@ -143,7 +143,7 @@ export struct AlignSelfProperty : Property {
     AlignSelfProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.aligns.alignSelf = _value;
     }
 
@@ -163,7 +163,7 @@ export struct JustifyItemsProperty : Property {
             return makeRc<JustifyItemsProperty>(self(), Align{});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<JustifyItemsProperty>(self(), c.aligns.justifyItems);
         }
 
@@ -177,7 +177,7 @@ export struct JustifyItemsProperty : Property {
     JustifyItemsProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.aligns.justifyItems = _value;
     }
 
@@ -197,7 +197,7 @@ export struct AlignItemsProperty : Property {
             return makeRc<AlignItemsProperty>(self(), Align::Keywords::STRETCH);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<AlignItemsProperty>(self(), c.aligns.alignItems);
         }
 
@@ -211,7 +211,7 @@ export struct AlignItemsProperty : Property {
     AlignItemsProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.aligns.alignItems = _value;
     }
 
@@ -236,7 +236,7 @@ export struct RowGapProperty : Property {
             return makeRc<RowGapProperty>(self(), Keywords::NORMAL);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<RowGapProperty>(self(), c.gaps->row);
         }
 
@@ -250,7 +250,7 @@ export struct RowGapProperty : Property {
     RowGapProperty(Rc<Property::Registration> registration, Gap value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.gaps.cow().row = _value;
     }
 
@@ -275,7 +275,7 @@ export struct ColumnGapProperty : Property {
             return makeRc<ColumnGapProperty>(self(), Keywords::NORMAL);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<ColumnGapProperty>(self(), c.gaps->col);
         }
 
@@ -289,7 +289,7 @@ export struct ColumnGapProperty : Property {
     ColumnGapProperty(Rc<Property::Registration> registration, Gap value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.gaps.cow().col = _value;
     }
 
@@ -319,7 +319,7 @@ export struct GapProperty : Property {
             );
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<GapProperty>(self(), *c.gaps);
         }
 
@@ -339,7 +339,7 @@ export struct GapProperty : Property {
     GapProperty(Rc<Property::Registration> registration, Gaps value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<RowGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.row),
             makeRc<ColumnGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.col),

@@ -20,9 +20,9 @@ namespace Vaev::Layout {
 export struct RunningPositionInfo {
     usize page;
     RunningPosition running;
-    Gc::Ref<Dom::Element> element;
+    Dom::OriginatingElement element;
 
-    RunningPositionInfo(usize page, RunningPosition running, Gc::Ref<Dom::Element> element)
+    RunningPositionInfo(usize page, RunningPosition running, Dom::OriginatingElement element)
         : page(page), running(running), element(element) {
     }
 
@@ -39,9 +39,9 @@ struct RunningPositionMap {
 
         if (auto position = style->position.is<RunningPosition>()) {
             auto const origin = box.origin;
-            if (box.origin == nullptr)
+            if (not box.origin)
                 return;
-            RunningPositionInfo info = {pageNumber, *position, origin.upgrade()};
+            RunningPositionInfo info = {pageNumber, *position, origin.unwrap()};
             content.lookupOrPutDefault(position->customIdent)
                 .pushBack(std::move(info));
         }

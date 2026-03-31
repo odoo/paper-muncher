@@ -7,7 +7,7 @@ export module Vaev.Engine:props.transform;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -37,7 +37,7 @@ export struct TransformOriginProperty : Property {
             );
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<TransformOriginProperty>(self(), c.transform->origin);
         }
 
@@ -51,7 +51,7 @@ export struct TransformOriginProperty : Property {
     TransformOriginProperty(Rc<Property::Registration> registration, TransformOrigin value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.transform.cow().origin = _value;
     }
 
@@ -71,7 +71,7 @@ export struct TransformBoxProperty : Property {
             return makeRc<TransformBoxProperty>(self(), TransformBox{Keywords::VIEW_BOX});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<TransformBoxProperty>(self(), c.transform->box);
         }
 
@@ -85,7 +85,7 @@ export struct TransformBoxProperty : Property {
     TransformBoxProperty(Rc<Property::Registration> registration, TransformBox value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.transform.cow().box = _value;
     }
 
@@ -109,7 +109,7 @@ export struct TransformProperty : Property {
             return makeRc<TransformProperty>(self(), Transform{Keywords::NONE});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<TransformProperty>(self(), c.transform->transform);
         }
 
@@ -163,7 +163,7 @@ export struct TransformProperty : Property {
     TransformProperty(Rc<Property::Registration> registration, Transform value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.transform.cow().transform = _value;
     }
 

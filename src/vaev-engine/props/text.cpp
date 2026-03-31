@@ -7,7 +7,7 @@ export module Vaev.Engine:props.text;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -32,7 +32,11 @@ export struct TextAlignProperty : Property {
             return makeRc<TextAlignProperty>(self(), TextAlign::LEFT);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+            child.text.cow().align = parent.text->align;
+        }
+
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<TextAlignProperty>(self(), c.text->align);
         }
 
@@ -68,7 +72,7 @@ export struct TextAlignProperty : Property {
     TextAlignProperty(Rc<Property::Registration> registration, TextAlign value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.text.cow().align = _value;
     }
 
@@ -93,7 +97,11 @@ export struct TextTransformProperty : Property {
             return makeRc<TextTransformProperty>(self(), TextTransform::NONE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+            child.text.cow().transform = parent.text->transform;
+        }
+
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<TextTransformProperty>(self(), c.text->transform);
         }
 
@@ -121,7 +129,7 @@ export struct TextTransformProperty : Property {
     TextTransformProperty(Rc<Property::Registration> registration, TextTransform value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.text.cow().transform = _value;
     }
 
@@ -146,7 +154,11 @@ export struct WhiteSpaceProperty : Property {
             return makeRc<WhiteSpaceProperty>(self(), WhiteSpace::NORMAL);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+            child.text.cow().whiteSpace = parent.text->whiteSpace;
+        }
+
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<WhiteSpaceProperty>(self(), c.text->whiteSpace);
         }
 
@@ -177,7 +189,7 @@ export struct WhiteSpaceProperty : Property {
     WhiteSpaceProperty(Rc<Property::Registration> registration, WhiteSpace value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.text.cow().whiteSpace = _value;
     }
 

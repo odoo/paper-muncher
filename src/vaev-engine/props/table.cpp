@@ -7,7 +7,7 @@ export module Vaev.Engine:props.table;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -24,7 +24,7 @@ export struct TableLayoutProperty : Property {
             return makeRc<TableLayoutProperty>(self(), TableLayout::AUTO);
         }
 
-        Rc<Property> load(SpecifiedValues const& s) const override {
+        Rc<Property> load(ComputedValues const& s) const override {
             return makeRc<TableLayoutProperty>(self(), s.table->tableLayout);
         }
 
@@ -38,7 +38,7 @@ export struct TableLayoutProperty : Property {
     TableLayoutProperty(Rc<Property::Registration> registration, TableLayout value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& s) const override {
+    void apply(ComputedValues& s) const override {
         s.table.cow().tableLayout = _value;
     }
 
@@ -62,7 +62,11 @@ export struct CaptionSideProperty : Property {
             return makeRc<CaptionSideProperty>(self(), CaptionSide::TOP);
         }
 
-        Rc<Property> load(SpecifiedValues const& s) const override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+            child.table.cow().captionSide = parent.table->captionSide;
+        }
+
+        Rc<Property> load(ComputedValues const& s) const override {
             return makeRc<CaptionSideProperty>(self(), s.table->captionSide);
         }
 
@@ -76,7 +80,7 @@ export struct CaptionSideProperty : Property {
     CaptionSideProperty(Rc<Property::Registration> registration, CaptionSide value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& s) const override {
+    void apply(ComputedValues& s) const override {
         s.table.cow().captionSide = _value;
     }
 

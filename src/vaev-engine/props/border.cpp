@@ -7,7 +7,7 @@ export module Vaev.Engine:props.border;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -26,7 +26,7 @@ export struct BorderTopColorProperty : Property {
             return makeRc<BorderTopColorProperty>(self(), BLACK);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderTopColorProperty>(self(), c.borders->top.color);
         }
 
@@ -40,7 +40,7 @@ export struct BorderTopColorProperty : Property {
     BorderTopColorProperty(Rc<Property::Registration> registration, Color value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().top.color = _value;
     }
 
@@ -60,7 +60,7 @@ export struct BorderRightColorProperty : Property {
             return makeRc<BorderRightColorProperty>(self(), BLACK);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderRightColorProperty>(self(), c.borders->end.color);
         }
 
@@ -74,7 +74,7 @@ export struct BorderRightColorProperty : Property {
     BorderRightColorProperty(Rc<Property::Registration> registration, Color value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().end.color = _value;
     }
 
@@ -94,7 +94,7 @@ export struct BorderBottomColorProperty : Property {
             return makeRc<BorderBottomColorProperty>(self(), BLACK);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderBottomColorProperty>(self(), c.borders->bottom.color);
         }
 
@@ -108,7 +108,7 @@ export struct BorderBottomColorProperty : Property {
     BorderBottomColorProperty(Rc<Property::Registration> registration, Color value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().bottom.color = _value;
     }
 
@@ -128,7 +128,7 @@ export struct BorderLeftColorProperty : Property {
             return makeRc<BorderLeftColorProperty>(self(), BLACK);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderLeftColorProperty>(self(), c.borders->start.color);
         }
 
@@ -142,7 +142,7 @@ export struct BorderLeftColorProperty : Property {
     BorderLeftColorProperty(Rc<Property::Registration> registration, Color value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().start.color = _value;
     }
 
@@ -165,7 +165,7 @@ export struct BorderColorProperty : Property {
             return makeRc<BorderColorProperty>(self(), Math::Insets<Color>{BLACK});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderColorProperty>(
                 self(),
                 Math::Insets{
@@ -187,7 +187,7 @@ export struct BorderColorProperty : Property {
     BorderColorProperty(Rc<Property::Registration> registration, Math::Insets<Color> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BorderTopColorProperty>(registry.resolveRegistration(Properties::BORDER_TOP_COLOR, {}).unwrap(), _value.top),
             makeRc<BorderRightColorProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_COLOR, {}).unwrap(), _value.end),
@@ -212,7 +212,7 @@ export struct BorderLeftStyleProperty : Property {
             return makeRc<BorderLeftStyleProperty>(self(), Gfx::BorderStyle::NONE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderLeftStyleProperty>(self(), c.borders->start.style);
         }
 
@@ -226,7 +226,7 @@ export struct BorderLeftStyleProperty : Property {
     BorderLeftStyleProperty(Rc<Property::Registration> registration, Gfx::BorderStyle value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().start.style = _value;
     }
 
@@ -246,7 +246,7 @@ export struct BorderTopStyleProperty : Property {
             return makeRc<BorderTopStyleProperty>(self(), Gfx::BorderStyle::NONE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderTopStyleProperty>(self(), c.borders->top.style);
         }
 
@@ -260,7 +260,7 @@ export struct BorderTopStyleProperty : Property {
     BorderTopStyleProperty(Rc<Property::Registration> registration, Gfx::BorderStyle value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().top.style = _value;
     }
 
@@ -280,7 +280,7 @@ export struct BorderRightStyleProperty : Property {
             return makeRc<BorderRightStyleProperty>(self(), Gfx::BorderStyle::NONE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderRightStyleProperty>(self(), c.borders->end.style);
         }
 
@@ -294,7 +294,7 @@ export struct BorderRightStyleProperty : Property {
     BorderRightStyleProperty(Rc<Property::Registration> registration, Gfx::BorderStyle value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().end.style = _value;
     }
 
@@ -314,7 +314,7 @@ export struct BorderBottomStyleProperty : Property {
             return makeRc<BorderBottomStyleProperty>(self(), Gfx::BorderStyle::NONE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderBottomStyleProperty>(self(), c.borders->bottom.style);
         }
 
@@ -328,7 +328,7 @@ export struct BorderBottomStyleProperty : Property {
     BorderBottomStyleProperty(Rc<Property::Registration> registration, Gfx::BorderStyle value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().bottom.style = _value;
     }
 
@@ -353,7 +353,7 @@ export struct BorderStyleProperty : Property {
             return makeRc<BorderStyleProperty>(self(), Math::Insets{Gfx::BorderStyle::NONE});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderStyleProperty>(
                 self(),
                 Math::Insets{
@@ -375,7 +375,7 @@ export struct BorderStyleProperty : Property {
     BorderStyleProperty(Rc<Property::Registration> registration, Math::Insets<Gfx::BorderStyle> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BorderTopStyleProperty>(registry.resolveRegistration(Properties::BORDER_TOP_STYLE, {}).unwrap(), _value.top),
             makeRc<BorderRightStyleProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_STYLE, {}).unwrap(), _value.end),
@@ -400,7 +400,7 @@ export struct BorderTopWidthProperty : Property {
             return makeRc<BorderTopWidthProperty>(self(), Keywords::MEDIUM);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderTopWidthProperty>(self(), c.borders->top.width);
         }
 
@@ -414,7 +414,7 @@ export struct BorderTopWidthProperty : Property {
     BorderTopWidthProperty(Rc<Property::Registration> registration, LineWidth value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().top.width = _value;
     }
 
@@ -434,7 +434,7 @@ export struct BorderRightWidthProperty : Property {
             return makeRc<BorderRightWidthProperty>(self(), Keywords::MEDIUM);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderRightWidthProperty>(self(), c.borders->end.width);
         }
 
@@ -448,7 +448,7 @@ export struct BorderRightWidthProperty : Property {
     BorderRightWidthProperty(Rc<Property::Registration> registration, LineWidth value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().end.width = _value;
     }
 
@@ -468,7 +468,7 @@ export struct BorderBottomWidthProperty : Property {
             return makeRc<BorderBottomWidthProperty>(self(), Keywords::MEDIUM);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderBottomWidthProperty>(self(), c.borders->bottom.width);
         }
 
@@ -482,7 +482,7 @@ export struct BorderBottomWidthProperty : Property {
     BorderBottomWidthProperty(Rc<Property::Registration> registration, LineWidth value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().bottom.width = _value;
     }
 
@@ -502,7 +502,7 @@ export struct BorderLeftWidthProperty : Property {
             return makeRc<BorderLeftWidthProperty>(self(), Keywords::MEDIUM);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderLeftWidthProperty>(self(), c.borders->start.width);
         }
 
@@ -516,7 +516,7 @@ export struct BorderLeftWidthProperty : Property {
     BorderLeftWidthProperty(Rc<Property::Registration> registration, LineWidth value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().start.width = _value;
     }
 
@@ -536,7 +536,7 @@ export struct BorderRadiusTopRightProperty : Property {
             return makeRc<BorderRadiusTopRightProperty>(self(), makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderRadiusTopRightProperty>(self(), Array{
                                                                     c.borders->radii.c,
                                                                     c.borders->radii.d,
@@ -557,7 +557,7 @@ export struct BorderRadiusTopRightProperty : Property {
     BorderRadiusTopRightProperty(Rc<Property::Registration> registration, Array<CalcValue<PercentOr<Length>>, 2> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().radii.c = _value[0];
         c.borders.cow().radii.d = _value[1];
     }
@@ -578,7 +578,7 @@ export struct BorderRadiusTopLeftProperty : Property {
             return makeRc<BorderRadiusTopLeftProperty>(self(), makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderRadiusTopLeftProperty>(
                 self(),
                 Array{
@@ -602,7 +602,7 @@ export struct BorderRadiusTopLeftProperty : Property {
     BorderRadiusTopLeftProperty(Rc<Property::Registration> registration, Array<CalcValue<PercentOr<Length>>, 2> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().radii.a = _value[1];
         c.borders.cow().radii.b = _value[0];
     }
@@ -623,7 +623,7 @@ export struct BorderRadiusBottomRightProperty : Property {
             return makeRc<BorderRadiusBottomRightProperty>(self(), makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderRadiusBottomRightProperty>(self(), Array{
                                                                        c.borders->radii.e,
                                                                        c.borders->radii.f,
@@ -644,7 +644,7 @@ export struct BorderRadiusBottomRightProperty : Property {
     BorderRadiusBottomRightProperty(Rc<Property::Registration> registration, Array<CalcValue<PercentOr<Length>>, 2> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().radii.e = _value[1];
         c.borders.cow().radii.f = _value[0];
     }
@@ -665,7 +665,7 @@ export struct BorderRadiusBottomLeftProperty : Property {
             return makeRc<BorderRadiusBottomLeftProperty>(self(), makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderRadiusBottomLeftProperty>(
                 self(),
                 Array{
@@ -689,7 +689,7 @@ export struct BorderRadiusBottomLeftProperty : Property {
     BorderRadiusBottomLeftProperty(Rc<Property::Registration> registration, Array<CalcValue<PercentOr<Length>>, 2> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().radii.g = _value[0];
         c.borders.cow().radii.h = _value[1];
     }
@@ -710,7 +710,7 @@ export struct BorderRadiusProperty : Property {
             return makeRc<BorderRadiusProperty>(self(), Math::Radii{CalcValue<PercentOr<Length>>(Length{})});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderRadiusProperty>(self(), c.borders->radii);
         }
 
@@ -724,7 +724,7 @@ export struct BorderRadiusProperty : Property {
     BorderRadiusProperty(Rc<Property::Registration> registration, Math::Radii<CalcValue<PercentOr<Length>>> value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.borders.cow().radii = _value;
     }
 
@@ -748,7 +748,7 @@ export struct BorderTopProperty : Property {
             return makeRc<BorderTopProperty>(self(), Border{});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderTopProperty>(self(), c.borders->top);
         }
 
@@ -784,7 +784,7 @@ export struct BorderTopProperty : Property {
     BorderTopProperty(Rc<Property::Registration> registration, Border value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BorderTopWidthProperty>(registry.resolveRegistration(Properties::BORDER_TOP_WIDTH, {}).unwrap(), _value.width),
             makeRc<BorderTopStyleProperty>(registry.resolveRegistration(Properties::BORDER_TOP_STYLE, {}).unwrap(), _value.style),
@@ -812,7 +812,7 @@ export struct BorderRightProperty : Property {
             return makeRc<BorderRightProperty>(self(), Border{});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderRightProperty>(self(), c.borders->end);
         }
 
@@ -848,7 +848,7 @@ export struct BorderRightProperty : Property {
     BorderRightProperty(Rc<Property::Registration> registration, Border value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BorderRightWidthProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_WIDTH, {}).unwrap(), _value.width),
             makeRc<BorderRightStyleProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_STYLE, {}).unwrap(), _value.style),
@@ -876,7 +876,7 @@ export struct BorderBottomProperty : Property {
             return makeRc<BorderBottomProperty>(self(), Border{});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderBottomProperty>(self(), c.borders->bottom);
         }
 
@@ -912,7 +912,7 @@ export struct BorderBottomProperty : Property {
     BorderBottomProperty(Rc<Property::Registration> registration, Border value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BorderBottomWidthProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_WIDTH, {}).unwrap(), _value.width),
             makeRc<BorderBottomStyleProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_STYLE, {}).unwrap(), _value.style),
@@ -940,7 +940,7 @@ export struct BorderLeftProperty : Property {
             return makeRc<BorderLeftProperty>(self(), Border{});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderLeftProperty>(self(), c.borders->start);
         }
 
@@ -976,7 +976,7 @@ export struct BorderLeftProperty : Property {
     BorderLeftProperty(Rc<Property::Registration> registration, Border value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BorderLeftWidthProperty>(registry.resolveRegistration(Properties::BORDER_LEFT_WIDTH, {}).unwrap(), _value.width),
             makeRc<BorderLeftStyleProperty>(registry.resolveRegistration(Properties::BORDER_LEFT_STYLE, {}).unwrap(), _value.style),
@@ -1004,7 +1004,7 @@ export struct BorderProperty : Property {
             return makeRc<BorderProperty>(self(), Border{});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderProperty>(self(), c.borders->top);
         }
 
@@ -1018,7 +1018,7 @@ export struct BorderProperty : Property {
     BorderProperty(Rc<Property::Registration> registration, Border value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BorderTopWidthProperty>(registry.resolveRegistration(Properties::BORDER_TOP_WIDTH, {}).unwrap(), _value.width),
             makeRc<BorderTopStyleProperty>(registry.resolveRegistration(Properties::BORDER_TOP_STYLE, {}).unwrap(), _value.style),
@@ -1058,7 +1058,7 @@ export struct BorderWidthProperty : Property {
             return makeRc<BorderWidthProperty>(self(), Math::Insets{LineWidth{Keywords::MEDIUM}});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderWidthProperty>(
                 self(),
                 Math::Insets{
@@ -1080,7 +1080,7 @@ export struct BorderWidthProperty : Property {
     BorderWidthProperty(Rc<Property::Registration> registration, Math::Insets<LineWidth> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(PropertyRegistry& registry, SpecifiedValues const&, SpecifiedValues&) const override {
+    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BorderTopWidthProperty>(registry.resolveRegistration(Properties::BORDER_TOP_WIDTH, {}).unwrap(), _value.top),
             makeRc<BorderRightWidthProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_WIDTH, {}).unwrap(), _value.end),
@@ -1111,7 +1111,11 @@ export struct BorderCollapseProperty : Property {
             return makeRc<BorderCollapseProperty>(self(), BorderCollapse::SEPARATE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+            child.table.cow().collapse = parent.table->collapse;
+        }
+
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderCollapseProperty>(self(), c.table->collapse);
         }
 
@@ -1125,7 +1129,7 @@ export struct BorderCollapseProperty : Property {
     BorderCollapseProperty(Rc<Property::Registration> registration, BorderCollapse value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.table.cow().collapse = _value;
     }
 
@@ -1149,7 +1153,11 @@ export struct BorderSpacingProperty : Property {
             return makeRc<BorderSpacingProperty>(self(), BorderSpacing{0_au, 0_au});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+            child.table.cow().spacing = parent.table->spacing;
+        }
+
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderSpacingProperty>(self(), c.table->spacing);
         }
 
@@ -1163,7 +1171,7 @@ export struct BorderSpacingProperty : Property {
     BorderSpacingProperty(Rc<Property::Registration> registration, BorderSpacing value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.table.cow().spacing = _value;
     }
 

@@ -7,7 +7,7 @@ export module Vaev.Engine:props.visibility;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -24,7 +24,7 @@ export struct VisibilityProperty : Property {
             return makeRc<VisibilityProperty>(self(), Visibility::VISIBLE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<VisibilityProperty>(self(), c.visibility);
         }
 
@@ -49,7 +49,7 @@ export struct VisibilityProperty : Property {
     VisibilityProperty(Rc<Property::Registration> registration, Visibility value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.visibility = _value;
     }
 
@@ -69,7 +69,7 @@ export struct OpacityProperty : Property {
             return makeRc<OpacityProperty>(self(), Number{1});
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<OpacityProperty>(self(), c.opacity);
         }
 
@@ -87,7 +87,7 @@ export struct OpacityProperty : Property {
     OpacityProperty(Rc<Property::Registration> registration, Number value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.opacity = _value;
     }
 
@@ -109,7 +109,7 @@ export struct ClipPathProperty : Property {
             return makeRc<ClipPathProperty>(self(), Keywords::NONE);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             if (c.clip->has())
                 return makeRc<ClipPathProperty>(self(), c.clip->unwrap());
             return makeRc<ClipPathProperty>(self(), Keywords::NONE);
@@ -125,7 +125,7 @@ export struct ClipPathProperty : Property {
     ClipPathProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         if (auto clipShape = _value.is<BasicShape>())
             c.clip.cow() = *clipShape;
         else

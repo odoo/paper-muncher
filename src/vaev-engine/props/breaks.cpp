@@ -7,7 +7,7 @@ export module Vaev.Engine:props.breaks;
 import Karm.Core;
 import :props.base;
 import :css.parser;
-import :style.specified;
+import :style.computed;
 
 using namespace Karm;
 
@@ -26,7 +26,7 @@ export struct BreakAfterProperty : Property {
             return makeRc<BreakAfterProperty>(self(), BreakBetween::AUTO);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BreakAfterProperty>(self(), c.break_->after);
         }
 
@@ -40,7 +40,7 @@ export struct BreakAfterProperty : Property {
     BreakAfterProperty(Rc<Property::Registration> registration, BreakBetween value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.break_.cow().after = _value;
     }
 
@@ -60,7 +60,7 @@ export struct BreakBeforeProperty : Property {
             return makeRc<BreakBeforeProperty>(self(), BreakBetween::AUTO);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BreakBeforeProperty>(self(), c.break_->before);
         }
 
@@ -74,7 +74,7 @@ export struct BreakBeforeProperty : Property {
     BreakBeforeProperty(Rc<Property::Registration> registration, BreakBetween value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.break_.cow().before = _value;
     }
 
@@ -94,7 +94,7 @@ export struct BreakInsideProperty : Property {
             return makeRc<BreakInsideProperty>(self(), BreakInside::AUTO);
         }
 
-        Rc<Property> load(SpecifiedValues const& c) const override {
+        Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BreakInsideProperty>(self(), c.break_->inside);
         }
 
@@ -108,7 +108,7 @@ export struct BreakInsideProperty : Property {
     BreakInsideProperty(Rc<Property::Registration> registration, BreakInside value)
         : Property(registration), _value(value) {}
 
-    void apply(SpecifiedValues& c) const override {
+    void apply(ComputedValues& c) const override {
         c.break_.cow().inside = _value;
     }
 
