@@ -802,6 +802,12 @@ static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc:
 
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent) {
     auto el = parent->is<Dom::Element>();
+    if (el->computedValues()->display == Display::Item::YES) {
+        if (auto marker = el ? el->getPseudoElement(Dom::PseudoElement::MARKER) : NONE) {
+            _buildPseudoElement(bc, marker.unwrap());
+        }
+    }
+
     if (auto before = el ? el->getPseudoElement(Dom::PseudoElement::BEFORE) : NONE) {
         _buildPseudoElement(bc, before.unwrap());
     }
@@ -885,18 +891,57 @@ export Box _buildBlockPseudoElement(Rc<Dom::PseudoElement> el) {
 static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudoElement) {
     auto style = pseudoElement->computedValues();
     auto display = style->display;
+
     if (display == Display::NONE)
         return;
 
-    if (display == Display::INLINE or
-        display == Display::CONTENTS) {
+    bool isBeforeOrAfter = (pseudoElement->type == Dom::PseudoElement::BEFORE or pseudoElement->type == Dom::PseudoElement::AFTER);
+    if (isBeforeOrAfter and (style->content.is<Keywords::Normal>() or style->content.is<Keywords::None>())) {
+        return;
+    }
+
+    auto generateInnerContent = [&](BuilderContext& innerBc) {
+        if (pseudoElement->type == Dom::PseudoElement::MARKER and style->content.is<Keywords::Normal>()) {
+            String marker = ""s;
+            auto listStyleType = pseudoElement->element()->computedValues()->list->type;
+            if (listStyleType == CustomIdent{"disc"_sym}) {
+                marker = "\u2022 "s;
+            } else if (listStyleType == CustomIdent{"circle"_sym}) {
+                marker = "\u25E6 "s;
+            } else if (listStyleType == CustomIdent{"square"_sym}) {
+                marker = "\u25AA "s;
+            } else if (listStyleType == CustomIdent{"decimal"_sym}) {
+                auto value =
+                    pseudoElement->element()->counters.innerMostValue(CustomIdent{"list-item"_sym});
+                marker = Io::format("{}. ", value);
+            }
+            _buildText(innerBc, marker.str(), style);
+        } else if (style->content.is<String>()) {
+            // TODO: Expand this to iterate over a Vector of content items (Strings, URLs, Counters)
+            _buildText(innerBc, style->content.unwrap<String>().str(), style);
+        }
+    };
+
+    if (display == Display::INLINE or display == Display::CONTENTS) {
         bc.startInlineBox(_proseStyleFromStyle(*style, style->fontFace));
-        if (auto maybeStr = style->content.is<String>())
-            _buildText(bc, maybeStr->str(), style);
+        generateInnerContent(bc);
         bc.endInlineBox();
     } else {
         bc.flushRootInlineBoxIntoAnonymousBox();
-        bc.addToParentBox(_buildBlockPseudoElement(pseudoElement));
+
+        Box pseudoBox = {style, pseudoElement}; // Ensure Box constructor accepts pseudo type
+        InlineBox rootInlineBox{_proseStyleFromStyle(*style, style->fontFace)};
+
+        BuilderContext pseudoBc = (display == Display::Inside::FLEX)
+                                      ? bc.toFlexContext(pseudoBox, rootInlineBox)
+                                      : bc.toBlockContext(pseudoBox, rootInlineBox);
+
+        pseudoBc.startInlineBox(_proseStyleFromStyle(*style, style->fontFace));
+        generateInnerContent(pseudoBc);
+        pseudoBc.endInlineBox();
+
+        pseudoBc.finalizeParentBoxAndFlushInline();
+        bc.addToParentBox(std::move(pseudoBox));
     }
 }
 
@@ -947,22 +992,21 @@ export Box buildForPseudoElement(Rc<Dom::PseudoElement> el, usize currentPage, R
         auto prose = makeRc<Gfx::Prose>(proseStyle);
         prose->append(style->content.unwrap<String>().str());
         return Box{style, InlineBox{prose}, el};
-    } else if (style->content.is<ElementContent>()) {
-        auto elt = style->content.unwrap<ElementContent>();
+    } else if (style->content.is<ElementFunc>()) {
+        auto elt = style->content.unwrap<ElementFunc>();
         if (auto infos = runningPos.match(elt, currentPage)) {
             Box box = buildElement(infos.unwrap().element);
             box.style->position = Keywords::STATIC;
             return box;
         }
-    } else if (auto elt = style->content.is<Counter>()) {
-        if (elt->type == Counter::Type::PAGE) {
-            auto prose = makeRc<Gfx::Prose>(proseStyle);
-            prose->append(Io::toStr(currentPage + 1).str());
-            return Box{style, InlineBox{prose}, el};
-        }
+    } else if (auto it = style->content.is<CounterFunc>()) {
+        auto prose = makeRc<Gfx::Prose>(proseStyle);
+        auto maybeCounter = el->counters.innerMost(it->name).v0;
+        prose->append("{}"_f(maybeCounter ? maybeCounter->value : 0).str());
+        return {style, InlineBox{prose}, NONE};
     }
 
-    return {style, el};
+    return {style, NONE};
 }
 
 } // namespace Vaev::Layout

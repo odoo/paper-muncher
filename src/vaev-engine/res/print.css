@@ -2,6 +2,7 @@
 
 @page {
     margin: 0.5in;
+    counter-increment: page 1;
 
     @footnote {
         margin-top: 10px;
@@ -116,6 +117,7 @@
         text-align: right;
         vertical-align: middle;
         flex-grow: 1;
+        content: counter(page);
     }
 
     @bottom-right-corner {

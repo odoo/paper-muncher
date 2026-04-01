@@ -231,12 +231,16 @@ struct BlockFormatingContext : FormatingContext {
                 .margin = computeMargins(tree, c, childInput)
             };
 
-            if (not impliesRemovingFromFlow(c.style->position)) {
+            if (not(impliesRemovingFromFlow(c.style->position) or c.isPseudoElement(Dom::PseudoElement::MARKER))) {
                 // TODO: collapsed margins for sibling elements
                 blockSize += max(usedSpacings.margin.top, lastMarginBottom) - lastMarginBottom;
             }
 
             childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
+
+            if (c.isPseudoElement(Dom::PseudoElement::MARKER)) {
+                childInput.position.x -= computeIntrinsicContentSize(tree, c, IntrinsicSize::MAX_CONTENT).x;
+            }
 
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
             //       and avoid duplicating the layout code
@@ -250,7 +254,7 @@ struct BlockFormatingContext : FormatingContext {
                               ? layoutAndCommitBorderBox(tree, c, childInput, *input.fragment, usedSpacings)
                               : layoutBorderBox(tree, c, childInput, usedSpacings);
 
-            if (not impliesRemovingFromFlow(c.style->position)) {
+            if (not(impliesRemovingFromFlow(c.style->position) or c.isPseudoElement(Dom::PseudoElement::MARKER))) {
                 blockSize += output.size.y + usedSpacings.margin.bottom;
                 lastMarginBottom = usedSpacings.margin.bottom;
             }

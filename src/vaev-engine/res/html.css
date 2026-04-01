@@ -233,6 +233,22 @@ dd {
     margin-inline-start: 40px;
 }
 
+ol,
+ul,
+menu {
+    counter-reset: list-item;
+}
+
+ol {
+    list-style-type: decimal;
+}
+
+ul {
+    /* FIXME: Once we get a resolution for https://github.com/w3c/csswg-drafts/issues/13753 */
+    /* list-style-type: toggle(disc, circle, square); */
+    list-style-type: disc;
+}
+
 dir,
 menu,
 ol,
