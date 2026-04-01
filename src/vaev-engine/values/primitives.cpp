@@ -20,7 +20,7 @@ namespace Vaev {
 export using Integer = isize;
 
 export template <>
-struct ValueParser<Integer> {
+struct ValueTraits<Integer> : DefaultValueTraits<Integer> {
     static Res<Integer> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -43,7 +43,7 @@ struct ValueParser<Integer> {
 export using Number = f64;
 
 export template <>
-struct ValueParser<Number> {
+struct ValueTraits<Number> : DefaultValueTraits<Number> {
     static Res<Number> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -59,7 +59,7 @@ struct ValueParser<Number> {
 };
 
 export template <>
-struct ValueParser<bool> {
+struct ValueTraits<bool> : DefaultValueTraits<bool> {
     static Res<bool> parse(Cursor<Css::Sst>& c) {
         return Ok(try$(parseValue<Integer>(c)) > 0);
     }
@@ -69,7 +69,7 @@ struct ValueParser<bool> {
 // https://drafts.csswg.org/css-values/#strings
 
 export template <>
-struct ValueParser<String> {
+struct ValueTraits<String> : DefaultValueTraits<String> {
     static Res<String> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -99,7 +99,7 @@ struct CustomIdent {
 };
 
 export template <>
-struct ValueParser<CustomIdent> {
+struct ValueTraits<CustomIdent> : DefaultValueTraits<CustomIdent> {
     static Res<CustomIdent> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -143,14 +143,14 @@ export Res<String> parseUrlIntoString(Cursor<Css::Sst>& c) {
 }
 
 export template <>
-struct ValueParser<Ref::Url> {
+struct ValueTraits<Ref::Url> : DefaultValueTraits<Ref::Url> {
     static Res<Ref::Url> parse(Cursor<Css::Sst>& c) {
         return Ok(Ref::Url::parse(try$(parseUrlIntoString(c))));
     }
 };
 
 export template <ValueParseable... Ts>
-struct ValueParser<Union<Ts...>> {
+struct ValueTraits<Union<Ts...>> {
     static Res<Union<Ts...>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

@@ -83,7 +83,7 @@ export struct [[gnu::packed]] Align {
 };
 
 export template <>
-struct ValueParser<Align> {
+struct ValueTraits<Align> : DefaultValueTraits<Align> {
     static Res<Align> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

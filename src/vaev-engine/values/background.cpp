@@ -73,7 +73,7 @@ export struct BackgroundPosition {
 };
 
 export template <>
-struct ValueParser<BackgroundPosition> {
+struct ValueTraits<BackgroundPosition> : DefaultValueTraits<BackgroundPosition> {
     static Res<BackgroundPosition> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

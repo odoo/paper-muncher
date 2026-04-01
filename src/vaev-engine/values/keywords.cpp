@@ -22,7 +22,7 @@ struct Keyword {
 };
 
 export template <StrLit K>
-struct ValueParser<Keyword<K>> {
+struct ValueTraits<Keyword<K>> {
     static Res<Keyword<K>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

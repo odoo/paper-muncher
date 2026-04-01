@@ -14,7 +14,7 @@ namespace Vaev {
 // https://drafts.csswg.org/mediaqueries/#orientation
 
 export template <>
-struct ValueParser<Print::Orientation> {
+struct ValueTraits<Print::Orientation> : DefaultValueTraits<Print::Orientation> {
     static Res<Print::Orientation> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
