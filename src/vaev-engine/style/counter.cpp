@@ -163,6 +163,8 @@ export struct CounterStyle {
     // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-speak-as
     CounterSpeakAs speakAs;
 
+    CounterStyle extends(CounterStyle const& other);
+
     template <typename Descriptor>
     auto load() {
         return Descriptor::load(*this);
@@ -171,6 +173,199 @@ export struct CounterStyle {
 
 struct CountersStyle {
     Map<CustomIdent, Counter> _counters;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#cyclic-system
+    Opt<Vec<CounterSymbol>> _constructCyclicCounter(CounterStyle const& style, Integer value) {
+        if (not style.symbols)
+            return NONE;
+        isize i = (value - 1) % style.symbols.len();
+        if (i < 0)
+            i += style.symbols.len();
+        return Vec<CounterSymbol>{style.symbols[i]};
+    }
+
+    // https://drafts.csswg.org/css-counter-styles-3/#fixed-system
+    Opt<Vec<CounterSymbol>> _constructFixedCounter(CounterStyle const& style, FixedCounterSystem const& system, Integer value) {
+        if (not style.symbols)
+            return NONE;
+        value -= system.number.unwrapOr(0);
+        value -= 1;
+        if (value < 0)
+            return NONE;
+        if (value >= style.symbols.len())
+            return NONE;
+        return Vec<CounterSymbol>{style.symbols[value]};
+    }
+
+    // https://drafts.csswg.org/css-counter-styles-3/#symbolic-system
+    Opt<Vec<CounterSymbol>> _constructSymbolicCounter(CounterStyle const& style, Integer value) {
+        if (not style.symbols)
+            return NONE;
+        if (value < 0)
+            return NONE;
+
+        auto n = style.symbols.len();
+        Vec<CounterSymbol> s;
+
+        //  1. Let the chosen symbol be symbol( (value - 1) mod N).
+        auto chosen = style.symbols[(value - 1) % n];
+        //  2. Let the representation length be ceil( value / N ).
+        auto representationLength = Math::ceil(value / static_cast<f64>(n));
+        //  3. Append the chosen symbol to S a number of times equal to the representation length.
+        s.resize(representationLength, chosen);
+
+        // Finally, return S.
+        return s;
+    }
+
+    // https://drafts.csswg.org/css-counter-styles-3/#alphabetic-system
+    Opt<Vec<CounterSymbol>> _constructAlphabeticCounter(CounterStyle const& style, Integer value) {
+        if (style.symbols.len() < 2)
+            return NONE;
+        if (value <= 0)
+            return NONE;
+
+        // Let N be the length of the list of counter symbols
+        auto n = style.symbols.len();
+        Vec<CounterSymbol> s;
+
+        // While value is not equal to 0:
+        while (value != 0) {
+            //  1. Set value to value - 1.
+            value = value - 1;
+            //  2. Prepend symbol( value mod N ) to S.
+            s.pushFront(style.symbols[value % n]);
+            //  3. Set value to floor( value / N ).
+            value = value / n;
+        }
+
+        // Finally, return S.
+        return s;
+    }
+
+    // https://drafts.csswg.org/css-counter-styles-3/#numeric-system
+    Opt<Vec<CounterSymbol>> _constructNumericCounter(CounterStyle const& style, Integer value) {
+        if (style.symbols.len() < 2)
+            return NONE;
+
+        // Let N be the length of the list of counter symbols, value initially be the counter value, S initially be the empty string, and symbol(n) be the nth counter symbol in the list of counter symbols (0-indexed).
+        auto n = style.symbols.len();
+        Vec<CounterSymbol> s;
+
+        // If value is 0, append symbol(0) to S and return S.
+        if (value == 0) {
+            s.pushBack(style.symbols[value]);
+            return s;
+        }
+
+        // While value is not equal to 0:
+        while (value != 0) {
+            //  1. Prepend symbol( value mod N ) to S.
+            s.pushFront(style.symbols[value % n]);
+            //  2. Set value to floor( value / N ).
+            value = value / n;
+        }
+
+        // Return S.
+        return s;
+    }
+
+    // https://drafts.csswg.org/css-counter-styles-3/#additive-system
+    Opt<Vec<CounterSymbol>> _constructAdditiveCounter(CounterStyle const& style, Integer value) {
+        if (not style.additiveSymbols.len())
+            return NONE;
+
+        // 1. Let value initially be the counter value, S initially be the empty
+        //    string, and symbol list initially be the list of additive tuples.
+        Vec<CounterSymbol> s;
+
+        // 2. If value is zero:
+        if (value == 0) {
+            // 1. If symbol list contains a tuple with a weight of zero,
+            //    append that tuple’s counter symbol to S and return S.
+            auto zeroSym =
+                iter(style.additiveSymbols) |
+                Find([](AdditiveCounterSymbol const& it) {
+                    return it.value == 0;
+                });
+
+            if (zeroSym) {
+                s.pushBack(zeroSym->symbol);
+                return s;
+            }
+
+            // 2. Otherwise, the given counter value cannot be represented by
+            //    this counter style, and must instead be represented by the
+            //    fallback counter style.
+            return NONE;
+        }
+
+        // 3. For each tuple in symbol list:
+        for (auto const& [weight, symbol] : style.additiveSymbols) {
+            // 1. Let symbol and weight be tuple’s counter symbol and weight, respectively.
+            // 2. If weight is zero, or weight is greater than value, continue.
+            if (weight == 0 or weight > value)
+                continue;
+
+            // 3. Let reps be floor( value / weight ).
+            auto reps = value / weight;
+
+            // 4. Append symbol to S reps times.
+            for (auto i : urange::zeroTo(reps))
+                s.pushBack(symbol);
+
+            // 5. Decrement value by weight * reps.
+            value -= weight * reps;
+
+            // 6. If value is zero, return S.
+            if (value == 0)
+                return s;
+        }
+
+        // 4. Assertion: value is still non-zero.
+        if (value != 0)
+            return NONE;
+
+        return s;
+    }
+
+    // https://drafts.csswg.org/css-counter-styles-3/#extends-system
+    void _constructExtendedCounter(CounterStyle const& style) {
+    }
+
+    Opt<Vec<CounterSymbol>> _constructCounterRepresentation(CounterStyle const& style, Integer value) {
+        Opt<Vec<CounterSymbol>> result = style.system.visit(
+            [&](Keywords::Cyclic) {
+                return _constructCyclicCounter(style, value);
+            },
+            [&](FixedCounterSystem const& it) {
+                return _constructFixedCounter(style, it, value);
+            },
+            [&](Keywords::Numeric) {
+                _constructNumericCounter();
+            },
+            [&](Keywords::Alphabetic) {
+                _constructAlphabeticCounter();
+            },
+            [&](Keywords::Symbolic) {
+                _constructSymbolicCounter();
+            },
+            [&](Keywords::Additive) {
+                _constructAdditiveCounter();
+            },
+
+            [&](ExtendsCounterSystem) {
+                _constructExtendedCounter();
+            }
+        );
+    }
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-system
+    String constructCounterRepresentation(CustomIdent counterStyleName, Integer value) {
+    }
+
+    String constructCounterRepresentation(CounterStyle const& anonymousStyle, Integer value) {
+    }
 };
 
 // MARK: Descriptor ------------------------------------------------------------

@@ -21,7 +21,6 @@ export struct Computer {
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
     RuleIndex _ruleIndex = {};
-    CountersStyle _counters = {};
 
     // MARK: Counters ----------------------------------------------------------
 
