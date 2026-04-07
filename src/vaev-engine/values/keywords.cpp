@@ -46,4 +46,19 @@ namespace Keywords {
 
 } // namespace Keywords
 
+template <>
+struct ValueTraits<Keywords::Auto> : DefaultValueTraits<Keywords::Auto> {
+    static Res<Keywords::Auto> parse(Cursor<Css::Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c->token == Css::Token::ident("auto")) {
+            c.next();
+            return Ok(Keywords::Auto{});
+        }
+
+        return Error::invalidData("expected keyword");
+    }
+};
+
 } // namespace Vaev

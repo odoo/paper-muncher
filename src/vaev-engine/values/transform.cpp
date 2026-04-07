@@ -40,6 +40,58 @@ export struct TransformOrigin {
 };
 
 export template <>
+struct ValueTraits<TransformOrigin::XOffset> {
+    using Computed = CalcValue<PercentOr<Length>>;
+
+    static Res<TransformOrigin::XOffset> parse(Cursor<Css::Sst>& c) {
+        return parseOneOf<TransformOrigin::XOffset>(c);
+    }
+
+    static Computed compute(TransformOrigin::XOffset const& xOffset, ComputationContext& ctx) {
+        return xOffset.visit(Visitor{
+            [](Keywords::Left) {
+                return Percent{0};
+            },
+            [](Keywords::Center) {
+                return Percent{50};
+            },
+            [](Keywords::Right) {
+                return Percent{100};
+            },
+            [&](CalcValue<PercentOr<Length>> const& calc) {
+                return computeValue(calc, ctx);
+            }
+        });
+    }
+};
+
+export template <>
+struct ValueTraits<TransformOrigin::YOffset> {
+    using Computed = CalcValue<PercentOr<Length>>;
+
+    static Res<TransformOrigin::YOffset> parse(Cursor<Css::Sst>& c) {
+        return parseOneOf<TransformOrigin::YOffset>(c);
+    }
+
+    static Computed compute(TransformOrigin::YOffset const& yOffset, ComputationContext& ctx) {
+        return yOffset.visit(Visitor{
+            [](Keywords::Top) {
+                return Percent{0};
+            },
+            [](Keywords::Center) {
+                return Percent{50};
+            },
+            [](Keywords::Bottom) {
+                return Percent{100};
+            },
+            [&](CalcValue<PercentOr<Length>> const& calc) {
+                return computeValue(calc, ctx);
+            }
+        });
+    }
+};
+
+export template <>
 struct ValueTraits<TransformOrigin> : DefaultValueTraits<TransformOrigin> {
     static Res<TransformOrigin> _twoValues(Cursor<Css::Sst>& c) {
         auto xoffset = try$(parseValue<TransformOrigin::XOffset>(c));

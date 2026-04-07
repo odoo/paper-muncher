@@ -108,7 +108,7 @@ struct CalcValue {
 };
 
 export template <typename T>
-struct ValueTraits<CalcValue<T>> {
+struct ValueTraits<CalcValue<T>> : DefaultValueTraits<CalcValue<T>> {
     static Res<CalcValue<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -171,6 +171,76 @@ struct ValueTraits<CalcValue<T>> {
         }
 
         return Ok(try$(parseValue<T>(c)));
+    }
+};
+
+export template <typename T>
+struct ComputedValueTraits<CalcValue<T>> {
+    using Resolved = __Resolved<T>;
+
+    static Resolved resolve(CalcValue<T> const& calc, ResolutionContext const& ctx) {
+        auto resolveUnion = Visitor{
+            [&](T const& v) {
+                return resolveValue(v, ctx);
+            },
+            [&](CalcValue<T>::Leaf const& v) {
+                return resolveValue<T>(*v, ctx);
+            },
+            [&](Number const& v)
+                requires(not Meta::Same<T, Number>)
+            {
+                // HACK: Special case for Au
+                if constexpr (Meta::Same<__Resolved<T>, Au>) {
+                    return Au(v);
+                } else {
+                    return __Resolved<T>{v};
+                }
+            }
+        };
+
+        return calc.visit(Visitor{
+            [&](typename CalcValue<T>::Value const& v) {
+                return v.visit(resolveUnion);
+            },
+            [&](typename CalcValue<T>::Unary const& u) {
+                return _resolveUnary<T>(
+                    u.op,
+                    u.val.visit(resolveUnion)
+                );
+            },
+            [&](typename CalcValue<T>::Binary const& b) {
+                return _resolveInfix(
+                    b.op,
+                    b.lhs.visit(resolveUnion),
+                    b.rhs.visit(resolveUnion)
+                );
+            },
+        });
+    }
+
+    static __Resolved<T> _resolveInfix(CalcOp op, __Resolved<T> lhs, __Resolved<T> rhs) {
+        switch (op) {
+        case CalcOp::ADD:
+            return lhs + rhs;
+        case CalcOp::SUBTRACT:
+            return lhs - rhs;
+        case CalcOp::MULTIPLY:
+            // HACK: Bypass dimensions restrictions
+            if constexpr (Meta::Same<__Resolved<T>, Au>) {
+                return Au(f64{lhs} * f64{rhs});
+            } else {
+                return lhs * rhs;
+            }
+        case CalcOp::DIVIDE:
+            // HACK: Bypass dimensions restrictions
+            if constexpr (Meta::Same<__Resolved<T>, Au>) {
+                return Au(f64{lhs} / f64{rhs});
+            } else {
+                return lhs / rhs;
+            }
+        default:
+            panic("unexpected operator");
+        }
     }
 };
 

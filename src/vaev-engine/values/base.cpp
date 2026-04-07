@@ -1,3 +1,7 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:values.base;
 
 import Karm.Core;
@@ -26,11 +30,11 @@ export bool skipOmmitableComma(Cursor<Css::Sst>& c) {
 // FIXME: Those types should be extracted to a place where they can't cause recursive imports.
 export struct _Viewport {
     // https://drafts.csswg.org/css-values/#small-viewport-size
-    RectAu small;
+    Math::Rectf small;
     // https://drafts.csswg.org/css-values/#large-viewport-size
-    RectAu large = small;
+    Math::Rectf large = small;
     // https://drafts.csswg.org/css-values/#dynamic-viewport-size
-    RectAu dynamic = small;
+    Math::Rectf dynamic = small;
 };
 
 export enum struct _WritingMode : u8 {
@@ -46,18 +50,12 @@ struct ComputationContext {
     Opt<Gfx::Font> rootFont = NONE;
     Opt<Gfx::Font> font = NONE;
     _WritingMode writingMode = _WritingMode::HORIZONTAL_TB;
-    _Viewport viewport = {.small = {800_au, 600_au}}; /// Viewport of the current box
-    Vec2Au displayArea = {800_au, 600_au};
+    _Viewport viewport = {.small = {800, 600}}; /// Viewport of the current box
+    Math::Vec2f displayArea = {800, 600};
 };
 
-export template <typename T>
-struct ValueTraits {
-    using Computed = T;
-
-    static Computed compute(T const& val, [[maybe_unused]] ComputationContext& ctx) {
-        return val;
-    }
-};
+export template <typename>
+struct ValueTraits {};
 
 export template <typename T>
 Res<T> parseValue(Cursor<Css::Sst>& c) {
@@ -77,6 +75,16 @@ export template <typename T>
 concept ValueParseable = requires(T a, Cursor<Css::Sst> c) {
     parseValue<T>(c);
 };
+
+export template <ValueParseable T>
+Res<T> parseOneOf(Cursor<Css::Sst>& c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    return T::any([&]<typename E>() -> Res<T> {
+        return parseValue<E>(c);
+    });
+}
 
 export template <typename T>
 using Computed = ValueTraits<T>::Computed;
@@ -99,6 +107,31 @@ struct DefaultValueTraits {
     using Computed = T;
 
     static Computed compute(T const& val, ComputationContext&) { return val; }
+};
+
+export struct ResolutionContext {
+    Au inlineSize = 0_au;
+    Opt<Au> blockSize = NONE;
+};
+
+export template <typename T>
+struct ComputedValueTraits {
+    using Resolved = T;
+
+    static Resolved resolve(T const& val, ResolutionContext const&) { return val; }
+};
+
+export template <typename T>
+using __Resolved = ComputedValueTraits<T>::Resolved;
+
+export template <typename T>
+__Resolved<T> resolveValue(T const& a, ResolutionContext const& ctx) {
+    return ComputedValueTraits<T>::resolve(a, ctx);
+}
+
+export template <typename T>
+concept ComputedValue = requires(T const& a, ResolutionContext const& ctx) {
+    { resolveValue(a, ctx) };
 };
 
 } // namespace Vaev

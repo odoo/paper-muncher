@@ -152,12 +152,7 @@ struct ValueTraits<Ref::Url> : DefaultValueTraits<Ref::Url> {
 export template <ValueParseable... Ts>
 struct ValueTraits<Union<Ts...>> {
     static Res<Union<Ts...>> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        return Meta::any<Ts...>([&c]<typename T>() -> Res<Union<Ts...>> {
-            return Ok(try$(parseValue<T>(c)));
-        });
+        return parseOneOf<Union<Ts...>>(c);
     }
 };
 

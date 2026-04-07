@@ -17,87 +17,87 @@ namespace Vaev::Style {
 export struct Media {
     /// 2.3. Media Types
     /// https://drafts.csswg.org/mediaqueries/#media-types
-    Computed<MediaType> type;
+    MediaType type;
 
     // 4. MARK: Viewport/Page Dimensions Media Features
 
     /// 4.1. Width: the width feature
     /// https://drafts.csswg.org/mediaqueries/#width
-    Computed<Length> width;
+    Au width;
 
     /// 4.2. Height: the height feature
     /// https://drafts.csswg.org/mediaqueries/#height
-    Computed<Length> height;
+    Au height;
 
     /// 4.3. Device Width: the device-width feature
     /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
-    Computed<Ratio> aspectRatio;
+    Ratio aspectRatio;
 
     /// 4.4. Orientation: the orientation feature
     /// https://drafts.csswg.org/mediaqueries/#orientation
-    Computed<Print::Orientation> orientation;
+    Print::Orientation orientation;
 
     // 5. MARK: Display Quality Media Features
 
     /// 5.1. Resolution: the resolution feature
     /// https://drafts.csswg.org/mediaqueries/#resolution
-    Computed<Resolution> resolution;
+    Resolution resolution;
 
     /// 5.2. Scan: the scan feature
     /// https://drafts.csswg.org/mediaqueries/#scan
-    Computed<Scan> scan = Scan::PROGRESSIVE;
+    Scan scan = Scan::PROGRESSIVE;
 
     /// 5.3. Grid: the grid feature
     /// https://drafts.csswg.org/mediaqueries/#grid
-    Computed<bool> grid = false;
+    bool grid = false;
 
     /// 5.4. Update: the update feature
     /// https://drafts.csswg.org/mediaqueries/#update
-    Computed<Update> update;
+    Update update;
 
     /// 5.5. Overflow Block: the overflow-block feature
     /// https://drafts.csswg.org/mediaqueries/#mf-overflow-block
-    Computed<OverflowBlock> overflowBlock;
+    OverflowBlock overflowBlock;
 
     /// 5.6. Overflow Inline: the overflow-inline feature
     /// https://drafts.csswg.org/mediaqueries/#mf-overflow-inline
-    Computed<OverflowInline> overflowInline;
+    OverflowInline overflowInline;
 
     //  6. MARK: Color Media Features
 
     // 6.1. Color: the color feature
     /// https://drafts.csswg.org/mediaqueries/#color
-    Computed<Integer> color;
+    Integer color;
 
     /// 6.2. Color Index: the color-index feature
     /// https://drafts.csswg.org/mediaqueries/#color-index
-    Computed<Integer> colorIndex;
+    Integer colorIndex;
 
     /// 6.3. Monochrome: the monochrome feature
     /// https://drafts.csswg.org/mediaqueries/#monochrome
-    Computed<Integer> monochrome;
+    Integer monochrome;
 
     /// 6.4. Color Gamut: the color-gamut feature
     /// https://drafts.csswg.org/mediaqueries/#color-gamut
-    Computed<ColorGamut> colorGamut;
+    ColorGamut colorGamut;
 
     // 7. MARK: Interaction Media Features
 
     /// 7.1. Pointer: the pointer feature
     /// https://drafts.csswg.org/mediaqueries/#pointer
-    Computed<Pointer> pointer;
+    Pointer pointer;
 
     /// 7.2. Hover: the hover feature
     /// https://drafts.csswg.org/mediaqueries/#hover
-    Computed<Hover> hover;
+    Hover hover;
 
     /// 7.3. Any Pointer: the any-pointer feature
     /// https://drafts.csswg.org/mediaqueries/#any-input
-    Computed<Pointer> anyPointer;
+    Pointer anyPointer;
 
     /// 7.4. Any Hover: the any-hover feature
     /// https://drafts.csswg.org/mediaqueries/#any-input
-    Computed<Hover> anyHover;
+    Hover anyHover;
 
     // 11. MARK: User Preference Media Features
 
@@ -105,37 +105,37 @@ export struct Media {
     //       the prefers-reduced-motion feature
     //
     // https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-motion
-    Computed<ReducedMotion> prefersReducedMotion;
+    ReducedMotion prefersReducedMotion;
 
     // 11.2. Detecting the desire for reduced transparency on the page:
     //       the prefers-reduced-transparency feature
     // https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-transparency
-    Computed<ReducedTransparency> prefersReducedTransparency;
+    ReducedTransparency prefersReducedTransparency;
 
     // 11.3. Detecting the desire for increased or decreased color contrast
     //       from elements on the page: the prefers-contrast feature
     //
     // https://drafts.csswg.org/mediaqueries-5/#prefers-contrast
-    Computed<Contrast> prefersContrast;
+    Contrast prefersContrast;
 
     // 11.4. Detecting Forced Colors Mode: the forced-colors feature
     // https://drafts.csswg.org/mediaqueries-5/#forced-colors
-    Computed<Colors> forcedColors;
+    Colors forcedColors;
 
     // 11.5. Detecting the desire for light or dark color schemes:
     //       the prefers-color-scheme feature
     // https://drafts.csswg.org/mediaqueries-5/#prefers-color-scheme
-    Computed<ColorScheme> prefersColorScheme;
+    ColorScheme prefersColorScheme;
 
     // 11.6. Detecting the desire for reduced data usage when loading a page:
     //       the prefers-reduced-data feature
     // https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-data
-    Computed<ReducedData> prefersReducedData;
+    ReducedData prefersReducedData;
 
     // Appendix A: Deprecated Media Features
-    Computed<Length> deviceWidth;
-    Computed<Length> deviceHeight;
-    Computed<Ratio> deviceAspectRatio;
+    Au deviceWidth;
+    Au deviceHeight;
+    Ratio deviceAspectRatio;
 
     // Viewport for continuous media and page box for paged media.
     bool changeDisplayArea(Vec2Au displayArea) {
@@ -163,8 +163,8 @@ export struct Media {
             .rootFont = Gfx::Font{Gfx::Fontface::fallback(), 16},
             .font = Gfx::Font{Gfx::Fontface::fallback(), 16},
             .writingMode = _WritingMode::HORIZONTAL_TB,
-            .viewport = {.small = displayArea()},
-            .displayArea = displayArea(),
+            .viewport = {.small = displayArea().cast<f64>()},
+            .displayArea = displayArea().cast<f64>(),
         };
     }
 
@@ -350,20 +350,20 @@ struct RangeFeature {
         bool result = true;
 
         if (lower.type == Bound::INCLUSIVE) {
-            result &= actual >= computeValue(lower.value, ctx);
+            result &= actual >= resolveValue(computeValue(lower.value, ctx), ResolutionContext{});
         } else if (lower.type == Bound::EXCLUSIVE) {
-            result &= actual > computeValue(lower.value, ctx);
+            result &= actual > resolveValue(computeValue(lower.value, ctx), ResolutionContext{});
         }
 
         if (upper.type == Bound::INCLUSIVE) {
-            result &= actual <= computeValue(upper.value, ctx);
+            result &= actual <= resolveValue(computeValue(upper.value, ctx), ResolutionContext{});
         } else if (upper.type == Bound::EXCLUSIVE) {
-            result &= actual < computeValue(upper.value, ctx);
+            result &= actual < resolveValue(computeValue(upper.value, ctx), ResolutionContext{});
         }
 
         // both types are NONE, evaluate in boolean context
         if (not lower.type and not upper.type) {
-            result = actual != Computed<T>{};
+            result = actual != Resolved<T>{};
         }
 
         return result;
@@ -444,7 +444,7 @@ struct DiscreteFeature {
 
         if (type == Type::NONE)
             return actual != T{};
-        return actual == computeValue(value, ctx);
+        return actual == resolveValue(computeValue(value, ctx), ResolutionContext{});
     }
 
     void repr(Io::Emit& e) const {
