@@ -135,7 +135,8 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues> parentStyl
         } else if (whitespace == WhiteSpace::PRE) {
             rootInlineBox.prose->append(rune);
         } else {
-            panic("unimplemented whitespace case");
+            // FIXME: Handle other Whitespace cases
+            rootInlineBox.prose->append(rune);
         }
     }
 }
@@ -165,7 +166,7 @@ struct BuilderContext {
     From const from;
     Rc<Style::ComputedValues> const parentComputedValues;
     Box& _parent;
-    MutCursor<InlineBox> _rootInlineBox;
+    Opt<InlineBox&> _rootInlineBox;
 
     // https://www.w3.org/TR/css-inline-3/#model
     void flushRootInlineBoxIntoAnonymousBox() {
@@ -206,7 +207,7 @@ struct BuilderContext {
     }
 
     InlineBox& rootInlineBox() {
-        if (_rootInlineBox == nullptr)
+        if (not _rootInlineBox)
             panic("no root inline box set for the current builder context");
         return *_rootInlineBox;
     }
@@ -233,7 +234,7 @@ struct BuilderContext {
             From::BLOCK,
             parent.style,
             parent,
-            &rootInlineBox,
+            rootInlineBox,
         };
     }
 
@@ -244,7 +245,7 @@ struct BuilderContext {
             From::FLEX,
             parent.style,
             parent,
-            &rootInlineBox,
+            rootInlineBox,
         };
     }
 
@@ -253,7 +254,7 @@ struct BuilderContext {
             From::BLOCK,
             parent.style,
             parent,
-            nullptr,
+            NONE,
         };
     }
 
@@ -274,7 +275,7 @@ struct BuilderContext {
             From::TABLE,
             parent.style,
             parent,
-            nullptr,
+            NONE,
         };
     }
 
@@ -283,7 +284,7 @@ struct BuilderContext {
             From::TABLE,
             parent.style,
             parent,
-            &rootInlineBox,
+            rootInlineBox,
         };
     }
 };
@@ -372,7 +373,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group& group) {
             BuilderContext::From::BLOCK,
             el->computedValues(),
             box,
-            &rootInlineBox,
+            rootInlineBox,
         };
 
         buildBlockFlowFromElement(bc, *el);
@@ -689,11 +690,12 @@ static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<
     case Display::Internal::TABLE_BOX:
     case Display::Internal::TABLE_CAPTION:
     case Display::Internal::TABLE_CELL: {
-        panic("table internal display in wrong flow");
-        break;
+        logWarn("table internal display in wrong flow");
+        return;
     }
     default:
-        panic("non-table internal display in wrong flow");
+        logWarn("non-table internal display in wrong flow");
+        return;
     }
 
     bc.addToParentBox(std::move(tableInternalBox));
@@ -711,7 +713,6 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
         }
     };
 
-    tableBoxStyle->display = Display::Internal::TABLE_BOX;
     Box tableBox = {tableBoxStyle, el};
 
     bool captionsOnTop = tableBoxStyle->table->captionSide == CaptionSide::TOP;
@@ -762,6 +763,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
     auto innerStyle = makeRc<Style::ComputedValues>(*tableStyle);
 
     auto initial = registeredPropertySet.initialComputedValues();
+    innerStyle->display = Display::Internal::TABLE_BOX;
     innerStyle->margin = initial->margin;
     innerStyle->position = initial->position;
     innerStyle->float_ = initial->float_;
@@ -912,12 +914,19 @@ export Box buildElement(Gc::Ref<Dom::Element> elt) {
             elt->computedValues()->fontFace
         ),
     };
+
+    BuilderContext bc{
+        BuilderContext::From::BLOCK,
+        elt->computedValues(),
+        box,
+        rootInlineBox,
+    };
     buildBlockFlowFromElement(
         {
             BuilderContext::From::BLOCK,
             elt->computedValues(),
             box,
-            &rootInlineBox,
+            rootInlineBox,
         },
         *elt
     );

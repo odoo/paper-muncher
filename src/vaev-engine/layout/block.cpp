@@ -231,7 +231,7 @@ struct BlockFormatingContext : FormatingContext {
                 .margin = computeMargins(tree, c, childInput)
             };
 
-            if (not impliesRemovingFromFlow(c.style->position)) {
+            if (not c.isRemovedFromFlow()) {
                 // TODO: collapsed margins for sibling elements
                 blockSize += max(usedSpacings.margin.top, lastMarginBottom) - lastMarginBottom;
             }
@@ -250,7 +250,7 @@ struct BlockFormatingContext : FormatingContext {
                               ? layoutAndCommitBorderBox(tree, c, childInput, *input.fragment, usedSpacings)
                               : layoutBorderBox(tree, c, childInput, usedSpacings);
 
-            if (not impliesRemovingFromFlow(c.style->position)) {
+            if (not c.isRemovedFromFlow()) {
                 blockSize += output.size.y + usedSpacings.margin.bottom;
                 lastMarginBottom = usedSpacings.margin.bottom;
             }

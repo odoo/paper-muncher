@@ -486,7 +486,8 @@ export struct TableFormatingContext : FormatingContext {
         while (start < grid.size.x) {
             while (
                 start < grid.size.x and
-                grid.at(start, i).anchorIdx == grid.at(start, i + 1).anchorIdx)
+                grid.at(start, i).anchorIdx == grid.at(start, i + 1).anchorIdx
+            )
                 start++;
 
             if (start == grid.size.x)
@@ -535,7 +536,8 @@ export struct TableFormatingContext : FormatingContext {
         while (start < grid.size.y) {
             while (
                 start < grid.size.y and
-                grid.at(j, start).anchorIdx == grid.at(j + 1, start).anchorIdx)
+                grid.at(j, start).anchorIdx == grid.at(j + 1, start).anchorIdx
+            )
                 start++;
 
             if (start == grid.size.y)
@@ -1283,13 +1285,15 @@ export struct TableFormatingContext : FormatingContext {
                     colWidth = minContent;
                 else if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
                     colWidth = maxContent;
-                } else
+                } else {
                     unreachable();
+                }
 
                 tableUsedWidth = iter(colWidth) | Sum();
             }
-        } else
+        } else {
             computeFixedColWidths(tree, box, *input.knownSize.x);
+        }
 
         computeRowHeights(tree);
 

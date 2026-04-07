@@ -147,10 +147,13 @@ Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic
     auto output = _contentLayout(
         tree,
         box,
-        {.intrinsic = intrinsic,
-         .knownSize = {NONE, NONE},
-         .capmin = capmin},
-        0, NONE
+        {
+            .intrinsic = intrinsic,
+            .knownSize = {NONE, NONE},
+            .capmin = capmin,
+        },
+        0,
+        NONE
     );
 
     return output.size;

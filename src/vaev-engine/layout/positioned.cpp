@@ -24,7 +24,7 @@ export void layoutPositioned(Tree& tree, Frag& frag, RectAu containingBlock, Inp
 
     auto& metrics = frag.metrics;
 
-    if (impliesRemovingFromFlow(style.position) or style.position == Keywords::RELATIVE) {
+    if (frag.box->isRemovedFromFlow() or style.position == Keywords::RELATIVE) {
         auto origin = _resolveOrigin(metrics.position, containingBlock.topStart(), style.position);
         auto relativeTo = style.position == Keywords::FIXED
                               ? tree.viewport.small
