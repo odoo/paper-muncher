@@ -36,10 +36,7 @@ struct InlineFormatingContext : FormatingContext {
         };
     }
 
-    virtual Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
-        // NOTE: We are not supposed to get there if the content is not a prose
-        auto& inlineBox = box.content.unwrap<InlineBox>("inlineLayout");
-
+    Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
         auto inlineSize = input.knownSize.x.unwrapOrElse([&] {
             if (input.intrinsic == IntrinsicSize::MIN_CONTENT) {
                 return 0_au;
@@ -50,15 +47,15 @@ struct InlineFormatingContext : FormatingContext {
             }
         });
 
+        // NOTE: We are not supposed to get there if the content is not a prose
+        auto& inlineBox = box.content.unwrap<InlineBox>("inlineLayout");
         auto& prose = inlineBox.prose;
 
         for (auto strutCell : prose->cellsWithStruts()) {
-
             auto& boxStrutCell = *strutCell->strut();
-
             auto& atomicBox = *inlineBox.atomicBoxes[boxStrutCell.id];
 
-            if (impliesRemovingFromFlow(atomicBox.style->position))
+            if (atomicBox.isRemovedFromFlow())
                 continue;
 
             Input childInput{
@@ -131,7 +128,7 @@ struct InlineFormatingContext : FormatingContext {
                 .borders = computeBorders(tree, atomicBox),
             };
 
-            if (impliesRemovingFromFlow(atomicBox.style->position)) {
+            if (atomicBox.isRemovedFromFlow()) {
                 childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
                     tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
                     usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
@@ -149,11 +146,12 @@ struct InlineFormatingContext : FormatingContext {
                 layoutBorderBox(tree, atomicBox, childInput, usedSpacings);
         }
 
-        if (tree.fc.allowBreak() and not tree.fc.acceptsFit(
-                                         input.position.y,
-                                         size.y,
-                                         input.pendingVerticalSizes
-                                     )) {
+        if (tree.fc.allowBreak() and
+            not tree.fc.acceptsFit(
+                input.position.y,
+                size.y,
+                input.pendingVerticalSizes
+            )) {
             return {
                 .size = {},
                 .completelyLaidOut = false,

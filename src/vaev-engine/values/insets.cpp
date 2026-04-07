@@ -24,10 +24,6 @@ export struct RunningPosition {
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-position
 export using Position = Union<Keywords::Static, Keywords::Relative, Keywords::Absolute, Keywords::Fixed, Keywords::Sticky, RunningPosition>;
 
-export bool impliesRemovingFromFlow(Position position) {
-    return position == Keywords::ABSOLUTE || position == Keywords::FIXED || position.is<RunningPosition>();
-}
-
 export template <>
 struct ValueParser<Position> {
     // https://drafts.csswg.org/css-position-3/#propdef-position

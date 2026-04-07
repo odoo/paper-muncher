@@ -170,6 +170,12 @@ struct Box : Meta::NoCopy {
         return doc->documentElement() == el;
     }
 
+    bool isRemovedFromFlow() const {
+        return style->position == Keywords::ABSOLUTE or
+               style->position == Keywords::FIXED or
+               style->position.is<RunningPosition>();
+    }
+
     void repr(Io::Emit& e) const {
         e("(box {} {}", style->display, style->position);
         if (children()) {

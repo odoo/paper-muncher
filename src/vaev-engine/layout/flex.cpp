@@ -667,7 +667,7 @@ struct FlexFormatingContext : FormatingContext {
             // Here it could register multiple time the same box.
             lookForRunningPosition(input, c);
 
-            if (impliesRemovingFromFlow(c.style->position))
+            if (c.isRemovedFromFlow())
                 continue;
             _items.emplaceBack(tree, c, _flex.isRowOriented(), containingBlock);
         }
