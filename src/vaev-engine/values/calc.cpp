@@ -109,6 +109,8 @@ struct CalcValue {
 
 export template <typename T>
 struct ValueTraits<CalcValue<T>> : DefaultValueTraits<CalcValue<T>> {
+    using Computed = CalcValue<typename ValueTraits<T>::Computed>;
+
     static Res<CalcValue<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -172,19 +174,59 @@ struct ValueTraits<CalcValue<T>> : DefaultValueTraits<CalcValue<T>> {
 
         return Ok(try$(parseValue<T>(c)));
     }
+
+    static Computed compute(CalcValue<T> const& calc, ComputationContext const& ctx) {
+        using InValue = typename CalcValue<T>::Value;
+        using InUnary = typename CalcValue<T>::Unary;
+        using InBinary = typename CalcValue<T>::Binary;
+
+        auto valueVisitor = Visitor{
+            [&](auto const& val) -> Computed {
+                return Computed(typename Computed::Value(computeValue(val, ctx)));
+            },
+            [&](Box<CalcValue<T>> const& val) -> Computed {
+                auto computedInner = compute(*val, ctx);
+                return Computed(typename Computed::Value(makeBox<Computed>(computedInner)));
+            },
+            [&](Number const& val) -> Computed {
+                return Computed(typename Computed::Value(val));
+            },
+        };
+
+        return calc.visit(Visitor{
+            [&](InValue const& v) -> Computed {
+                return v.visit(valueVisitor);
+            },
+            [&](InUnary const& u) -> Computed {
+                Computed computed_val = compute(CalcValue<T>(u.val), ctx);
+
+                auto leafVal = typename Computed::Value(makeBox<Computed>(computed_val));
+                return Computed(u.op, leafVal);
+            },
+            [&](InBinary const& b) -> Computed {
+                Computed computed_lhs = compute(CalcValue<T>(b.lhs), ctx);
+                Computed computed_rhs = compute(CalcValue<T>(b.rhs), ctx);
+
+                auto leafLhs = typename Computed::Value(makeBox<Computed>(computed_lhs));
+                auto leafRhs = typename Computed::Value(makeBox<Computed>(computed_rhs));
+
+                return Computed(b.op, leafLhs, leafRhs);
+            },
+        });
+    }
 };
 
 export template <typename T>
 struct ComputedValueTraits<CalcValue<T>> {
     using Resolved = __Resolved<T>;
 
-    static Resolved resolve(CalcValue<T> const& calc, ResolutionContext const& ctx) {
+    static Resolved resolve(CalcValue<T> const& calc, Opt<Au> relative) {
         auto resolveUnion = Visitor{
             [&](T const& v) {
-                return resolveValue(v, ctx);
+                return resolveValue(v, relative);
             },
             [&](CalcValue<T>::Leaf const& v) {
-                return resolveValue<T>(*v, ctx);
+                return resolveValue(*v, relative);
             },
             [&](Number const& v)
                 requires(not Meta::Same<T, Number>)
@@ -196,14 +238,14 @@ struct ComputedValueTraits<CalcValue<T>> {
                     return __Resolved<T>{v};
                 }
             }
-        };
+            };
 
         return calc.visit(Visitor{
             [&](typename CalcValue<T>::Value const& v) {
                 return v.visit(resolveUnion);
             },
             [&](typename CalcValue<T>::Unary const& u) {
-                return _resolveUnary<T>(
+                return _resolveUnary(
                     u.op,
                     u.val.visit(resolveUnion)
                 );
@@ -218,7 +260,11 @@ struct ComputedValueTraits<CalcValue<T>> {
         });
     }
 
-    static __Resolved<T> _resolveInfix(CalcOp op, __Resolved<T> lhs, __Resolved<T> rhs) {
+    static Resolved _resolveUnary(CalcOp, Resolved) {
+        notImplemented();
+    }
+
+    static Resolved _resolveInfix(CalcOp op, Resolved lhs, Resolved rhs) {
         switch (op) {
         case CalcOp::ADD:
             return lhs + rhs;

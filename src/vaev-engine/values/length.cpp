@@ -136,7 +136,7 @@ export template <>
 struct ComputedValueTraits<Px> {
     using Resolved = Au;
 
-    static Resolved resolve(Px px, ResolutionContext const&) {
+    static Resolved resolve(Px px, Opt<Au>) {
         return Au{px.value()};
     }
 };
@@ -147,47 +147,47 @@ struct _Resolved<Length> {
 };
 
 export template <>
-struct ValueTraits<Length> : DefaultValueTraits<Length> {
+struct ValueTraits<Length> {
     using Computed = Px;
 
-    static Computed compute(Length const val, ComputationContext& ctx) {
+    static Computed compute(Length const val, ComputationContext const& ctx) {
         switch (val.unit()) {
             // https://drafts.csswg.org/css-values/#font-relative-lengths
         case Length::EM:
-            return Px(val.val() * ctx.font.unwrap().fontSize());
+            return Px(val.val() * ctx.font->fontSize());
 
         case Length::REM:
-            return Px(val.val() * ctx.rootFont.unwrap().fontSize());
+            return Px(val.val() * ctx.rootFont->fontSize());
 
         case Length::EX:
-            return Px(val.val() * ctx.font.unwrap().xHeight());
+            return Px(val.val() * ctx.font->xHeight());
 
         case Length::REX:
-            return Px(val.val() * ctx.rootFont.unwrap().xHeight());
+            return Px(val.val() * ctx.rootFont->xHeight());
 
         case Length::CAP:
-            return Px(val.val() * ctx.font.unwrap().capHeight());
+            return Px(val.val() * ctx.font->capHeight());
 
         case Length::RCAP:
-            return Px(val.val() * ctx.rootFont.unwrap().capHeight());
+            return Px(val.val() * ctx.rootFont->capHeight());
 
         case Length::CH:
-            return Px(val.val() * ctx.font.unwrap().zeroAdvance());
+            return Px(val.val() * ctx.font->zeroAdvance());
 
         case Length::RCH:
-            return Px(val.val() * ctx.rootFont.unwrap().zeroAdvance());
+            return Px(val.val() * ctx.rootFont->zeroAdvance());
 
         case Length::IC:
-            return Px(val.val() * ctx.font.unwrap().zeroAdvance());
+            return Px(val.val() * ctx.font->zeroAdvance());
 
         case Length::RIC:
-            return Px(val.val() * ctx.rootFont.unwrap().zeroAdvance());
+            return Px(val.val() * ctx.rootFont->zeroAdvance());
 
         case Length::LH:
-            return Px(val.val() * ctx.font.unwrap().lineHeight());
+            return Px(val.val() * ctx.font->lineHeight());
 
         case Length::RLH:
-            return Px(val.val() * ctx.rootFont.unwrap().lineHeight());
+            return Px(val.val() * ctx.rootFont->lineHeight());
 
             // https://drafts.csswg.org/css-values/#viewport-relative-lengths
 

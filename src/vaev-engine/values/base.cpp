@@ -87,15 +87,15 @@ Res<T> parseOneOf(Cursor<Css::Sst>& c) {
 }
 
 export template <typename T>
-using Computed = ValueTraits<T>::Computed;
+using Computed = typename ValueTraits<T>::Computed;
 
 export template <typename T>
-Computed<T> computeValue(T const& a, ComputationContext& ctx) {
+ValueTraits<T>::Computed computeValue(T const& a, ComputationContext const& ctx) {
     return ValueTraits<T>::compute(a, ctx);
 }
 
 export template <typename T>
-concept ValueComputable = requires(T const& a, ComputationContext& ctx) {
+concept ValueComputable = requires(T const& a, ComputationContext const& ctx) {
     { computeValue(a, ctx) };
 };
 
@@ -106,32 +106,27 @@ export template <typename T>
 struct DefaultValueTraits {
     using Computed = T;
 
-    static Computed compute(T const& val, ComputationContext&) { return val; }
-};
-
-export struct ResolutionContext {
-    Au inlineSize = 0_au;
-    Opt<Au> blockSize = NONE;
+    static Computed compute(T const& val, ComputationContext const&) { return val; }
 };
 
 export template <typename T>
 struct ComputedValueTraits {
     using Resolved = T;
 
-    static Resolved resolve(T const& val, ResolutionContext const&) { return val; }
+    static Resolved resolve(T const& val, Opt<Au>) { return val; }
 };
 
 export template <typename T>
 using __Resolved = ComputedValueTraits<T>::Resolved;
 
 export template <typename T>
-__Resolved<T> resolveValue(T const& a, ResolutionContext const& ctx) {
-    return ComputedValueTraits<T>::resolve(a, ctx);
+ComputedValueTraits<T>::Resolved resolveValue(T const& a, Opt<Au> relative) {
+    return ComputedValueTraits<T>::resolve(a, relative);
 }
 
 export template <typename T>
-concept ComputedValue = requires(T const& a, ResolutionContext const& ctx) {
-    { resolveValue(a, ctx) };
+concept ComputedValue = requires(T const& a, Opt<Au> relative) {
+    { resolveValue(a, relative) };
 };
 
 } // namespace Vaev

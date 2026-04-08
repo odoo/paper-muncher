@@ -32,8 +32,31 @@ struct ValueTraits<Percent> : DefaultValueTraits<Percent> {
     }
 };
 
+export template <>
+struct ComputedValueTraits<Percent> {
+    using Resolved = Au;
+
+    static Resolved resolve(Percent const& percent, Opt<Au> relative) {
+        if (not relative)
+            return 0_au;
+
+        return *relative * percent.value();
+    }
+};
+
 export template <typename T>
 using PercentOr = Union<Percent, T>;
+
+export template <typename T>
+struct ComputedValueTraits<PercentOr<T>> {
+    using Resolved = Au;
+
+    static Resolved resolve(PercentOr<T> const& percentOr, Opt<Au> relative) {
+        return percentOr.visit([&](auto&& v) -> Resolved {
+            return resolveValue(v, relative);
+        });
+    }
+};
 
 export template <typename T>
 struct _Resolved<PercentOr<T>> {

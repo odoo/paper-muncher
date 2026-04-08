@@ -23,6 +23,10 @@ struct Keyword {
 
 export template <StrLit K>
 struct ValueTraits<Keyword<K>> {
+    // FIXME: Plz remove
+    using Computed = Keyword<K>;
+    static Computed compute(Keyword<K> const& val, ComputationContext const&) { return val; }
+
     static Res<Keyword<K>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

@@ -232,7 +232,7 @@ struct ValueTraits<BackgroundPosition> : DefaultValueTraits<BackgroundPosition> 
     }
 
     // FIXME: This is very ugly, should be refactored after calc is refactored
-    static Computed compute(BackgroundPosition const& val, ComputationContext& ctx) {
+    static Computed compute(BackgroundPosition const& val, ComputationContext const& ctx) {
         auto computeOffset = [&](Percent base, Math::Sign sign, Opt<CalcValue<PercentOr<Length>>> relativeOffset) -> CalcValue<PercentOr<Px>> {
             if (not relativeOffset) {
                 return PercentOr<Px>{base};

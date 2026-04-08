@@ -350,15 +350,15 @@ struct RangeFeature {
         bool result = true;
 
         if (lower.type == Bound::INCLUSIVE) {
-            result &= actual >= resolveValue(computeValue(lower.value, ctx), ResolutionContext{});
+            result &= actual >= resolveValue(computeValue(lower.value, ctx), 0_au);
         } else if (lower.type == Bound::EXCLUSIVE) {
-            result &= actual > resolveValue(computeValue(lower.value, ctx), ResolutionContext{});
+            result &= actual > resolveValue(computeValue(lower.value, ctx), 0_au);
         }
 
         if (upper.type == Bound::INCLUSIVE) {
-            result &= actual <= resolveValue(computeValue(upper.value, ctx), ResolutionContext{});
+            result &= actual <= resolveValue(computeValue(upper.value, ctx), 0_au);
         } else if (upper.type == Bound::EXCLUSIVE) {
-            result &= actual < resolveValue(computeValue(upper.value, ctx), ResolutionContext{});
+            result &= actual < resolveValue(computeValue(upper.value, ctx), 0_au);
         }
 
         // both types are NONE, evaluate in boolean context
@@ -444,7 +444,7 @@ struct DiscreteFeature {
 
         if (type == Type::NONE)
             return actual != T{};
-        return actual == resolveValue(computeValue(value, ctx), ResolutionContext{});
+        return actual == resolveValue(computeValue(value, ctx), 0_au);
     }
 
     void repr(Io::Emit& e) const {

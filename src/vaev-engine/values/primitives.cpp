@@ -151,8 +151,27 @@ struct ValueTraits<Ref::Url> : DefaultValueTraits<Ref::Url> {
 
 export template <ValueParseable... Ts>
 struct ValueTraits<Union<Ts...>> {
+    using Computed = Union<typename ValueTraits<Ts>::Computed...>;
+
     static Res<Union<Ts...>> parse(Cursor<Css::Sst>& c) {
         return parseOneOf<Union<Ts...>>(c);
+    }
+
+    static Computed compute(Union<Ts...> const& u, ComputationContext const& ctx) {
+        return u.visit([&](auto&& v) -> Computed {
+            return computeValue(v, ctx);
+        });
+    }
+};
+
+export template <Value... Ts>
+struct ComputedValueTraits<Union<Ts...>> {
+    using Resolved = Union<typename ComputedValueTraits<Ts>::Resolved...>;
+
+    static Resolved resolve(Union<Ts...> const& u, Opt<Au> relative) {
+        return u.visit([&](auto&& v) -> Resolved {
+            return resolveValue(v, relative);
+        });
     }
 };
 
