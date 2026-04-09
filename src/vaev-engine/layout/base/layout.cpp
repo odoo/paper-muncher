@@ -20,7 +20,7 @@ struct UsedSpacings {
     }
 };
 
-export InsetsAu computeMargins(Tree& tree, Box& box, Input input);
+export InsetsAu computeMargins(Tree& tree, Box& box, Vec2Au containingBlock);
 
 export InsetsAu computeBorders(Tree& tree, Box& box);
 
@@ -28,11 +28,11 @@ export InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock);
 
 export Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size);
 
-export Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin = NONE);
+export Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au availableInlineSize, Au horizontalBorderBox, Opt<Au> capmin = NONE);
 
 export Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au verticalBorderBox);
 
-export Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin = NONE);
+export Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin = NONE, Au availableInlineSpace = 0_au);
 
 // MARK: Layout ---------------------------------------------------------------------
 

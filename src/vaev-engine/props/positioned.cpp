@@ -61,7 +61,7 @@ export struct TopProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TopProperty>(self(), c.offsets->top);
+            return makeRc<TopProperty>(self(), c.insets->top);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -75,7 +75,7 @@ export struct TopProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.offsets.cow().top = _value;
+        c.insets.cow().top = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -95,7 +95,7 @@ export struct RightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<RightProperty>(self(), c.offsets->end);
+            return makeRc<RightProperty>(self(), c.insets->end);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -109,7 +109,7 @@ export struct RightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.offsets.cow().end = _value;
+        c.insets.cow().end = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -129,7 +129,7 @@ export struct BottomProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BottomProperty>(self(), c.offsets->bottom);
+            return makeRc<BottomProperty>(self(), c.insets->bottom);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -143,7 +143,7 @@ export struct BottomProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.offsets.cow().bottom = _value;
+        c.insets.cow().bottom = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -163,7 +163,7 @@ export struct LeftProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<LeftProperty>(self(), c.offsets->start);
+            return makeRc<LeftProperty>(self(), c.insets->start);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -177,7 +177,7 @@ export struct LeftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.offsets.cow().start = _value;
+        c.insets.cow().start = _value;
     }
 
     void repr(Io::Emit& e) const override {

@@ -63,11 +63,8 @@ export using Margin = Math::Insets<Width>;
 
 export using Padding = Math::Insets<CalcValue<PercentOr<Length>>>;
 
-// https://www.w3.org/TR/CSS22/visuren.html#propdef-top
-// https://www.w3.org/TR/CSS22/visuren.html#propdef-right
-// https://www.w3.org/TR/CSS22/visuren.html#propdef-bottom
-// https://www.w3.org/TR/CSS22/visuren.html#propdef-left
-export using Offsets = Math::Insets<Width>;
+// https://www.w3.org/TR/css-position-3/#propdef-inset
+export using BoxInsets = Math::Insets<Width>;
 
 export template <typename T>
 struct ValueParser<Math::Insets<T>> {

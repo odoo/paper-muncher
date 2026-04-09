@@ -753,7 +753,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
     wrapperStyle->margin = tableStyle->margin;
     wrapperStyle->position = tableStyle->position;
     wrapperStyle->float_ = tableStyle->float_;
-    wrapperStyle->offsets = tableStyle->offsets;
+    wrapperStyle->insets = tableStyle->insets;
 
     Box wrapper = {wrapperStyle, tableBoxEl};
     InlineBox rootInlineBox{_proseStyleFromStyle(*wrapperStyle, tableBoxEl->computedValues()->fontFace)};
@@ -765,7 +765,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
     innerStyle->margin = initial->margin;
     innerStyle->position = initial->position;
     innerStyle->float_ = initial->float_;
-    innerStyle->offsets = initial->offsets;
+    innerStyle->insets = initial->insets;
 
     _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, innerStyle);
 
@@ -936,7 +936,14 @@ export Box build(Gc::Ref<Dom::Document> doc) {
     auto el = doc->documentElement();
     if (!el)
         return {doc->registeredPropertySet.initialComputedValues(), NONE};
-    return buildElement(el.upgrade());
+
+    auto tree = buildElement(el.upgrade());
+
+    if (dumpBoxes) {
+        logInfo("BOX TREE: {}", tree);
+    }
+
+    return tree;
 }
 
 export Box buildForPseudoElement(Rc<Dom::PseudoElement> el, usize currentPage, RunningPositionMap& runningPos) {

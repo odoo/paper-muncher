@@ -36,7 +36,7 @@ export struct ComputedValues {
     Cow<Padding> padding = makeCow<Padding>(Length(0_au)); // FIXME
     Cow<SizingProps> sizing;
     Cow<Baseline> baseline;
-    Cow<Offsets> offsets = makeCow<Offsets>(Width(Keywords::AUTO)); // FIXME
+    Cow<BoxInsets> insets = makeCow<BoxInsets>(Width(Keywords::AUTO)); // FIXME
     Cow<ClipProps> clip;
     Cow<TransformProps> transform;
     Cow<TableProps> table;
@@ -104,7 +104,7 @@ export struct ComputedValues {
         e(" sizing: {}", sizing);
         e(" overflows: {}", overflows);
         e(" position: {}", position);
-        e(" offsets: {}", offsets);
+        e(" insets: {}", insets);
         e(" writingMode: {}", writingMode);
         e(" direction: {}", direction);
         e(" display: {}", display);

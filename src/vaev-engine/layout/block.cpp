@@ -140,7 +140,7 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, Use
             }
         } else {
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                tree, child, child.style->sizing->width, childInput.containingBlock,
+                tree, child, child.style->sizing->width, childInput.containingBlock, childInput.availableSpace.width,
                 usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal(),
                 childInput.capmin
             );
@@ -167,7 +167,7 @@ struct BlockFormatingContext : FormatingContext {
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, c, containingBlock),
                     .borders = computeBorders(tree, c),
-                    .margin = computeMargins(tree, c, {.containingBlock = containingBlock})
+                    .margin = computeMargins(tree, c, containingBlock)
                 };
 
                 capmin = max(
@@ -228,7 +228,7 @@ struct BlockFormatingContext : FormatingContext {
             UsedSpacings usedSpacings{
                 .padding = computePaddings(tree, c, childInput.containingBlock),
                 .borders = computeBorders(tree, c),
-                .margin = computeMargins(tree, c, childInput)
+                .margin = computeMargins(tree, c, childInput.containingBlock)
             };
 
             if (not impliesRemovingFromFlow(c.style->position)) {

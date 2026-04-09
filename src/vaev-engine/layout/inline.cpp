@@ -75,7 +75,7 @@ struct InlineFormatingContext : FormatingContext {
             };
 
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
+                tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock, childInput.availableSpace.width,
                 usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
             );
 
@@ -133,7 +133,7 @@ struct InlineFormatingContext : FormatingContext {
 
             if (impliesRemovingFromFlow(atomicBox.style->position)) {
                 childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                    tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
+                    tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock, childInput.availableSpace.width,
                     usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
                 );
 

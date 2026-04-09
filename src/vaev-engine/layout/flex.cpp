@@ -237,12 +237,12 @@ struct FlexItem {
         speculativeMargin = computeMargins(
             t,
             *box,
-            input
+            input.containingBlock
         );
 
         if (not input.knownSize.width)
             input.knownSize.width = computeSpecifiedBorderBoxWidth(
-                t, *box, box->style->sizing->width, input.containingBlock,
+                t, *box, box->style->sizing->width, input.containingBlock, input.availableSpace.width,
                 borders.horizontal() + padding.horizontal()
             );
 

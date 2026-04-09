@@ -60,7 +60,7 @@ Output _contentLayout(Tree& tree, Box& box, Input input, usize startAt, Opt<usiz
     return box.formatingContext.unwrap()->run(tree, box, input, startAt, stopAt);
 }
 
-InsetsAu computeMargins(Tree& tree, Box& box, Input input) {
+InsetsAu computeMargins(Tree& tree, Box& box, Vec2Au containingBlock) {
     // Boxes that make up a table do not have margins.
     if (box.style->display.isTableInternal())
         return {};
@@ -68,10 +68,10 @@ InsetsAu computeMargins(Tree& tree, Box& box, Input input) {
     InsetsAu res;
     auto margin = box.style->margin;
 
-    res.top = resolve(tree, box, margin->top, input.containingBlock.height);
-    res.end = resolve(tree, box, margin->end, input.containingBlock.width);
-    res.bottom = resolve(tree, box, margin->bottom, input.containingBlock.height);
-    res.start = resolve(tree, box, margin->start, input.containingBlock.width);
+    res.top = resolve(tree, box, margin->top, containingBlock.height);
+    res.end = resolve(tree, box, margin->end, containingBlock.width);
+    res.bottom = resolve(tree, box, margin->bottom, containingBlock.height);
+    res.start = resolve(tree, box, margin->start, containingBlock.width);
 
     return res;
 }
@@ -107,7 +107,7 @@ InsetsAu computeBorders(Tree& tree, Box& box) {
     return res;
 }
 
-InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
+InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlockSize) {
     // In a table only table cell have padding
     if (box.style->display.isTableInternal() and box.style->display != Display::TABLE_CELL)
         return {};
@@ -115,10 +115,10 @@ InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
     InsetsAu res;
     auto padding = box.style->padding;
 
-    res.top = resolve(tree, box, padding->top, containingBlock.width);
-    res.end = resolve(tree, box, padding->end, containingBlock.width);
-    res.bottom = resolve(tree, box, padding->bottom, containingBlock.width);
-    res.start = resolve(tree, box, padding->start, containingBlock.width);
+    res.top = resolve(tree, box, padding->top, containingBlockSize.width);
+    res.end = resolve(tree, box, padding->end, containingBlockSize.width);
+    res.bottom = resolve(tree, box, padding->bottom, containingBlockSize.width);
+    res.start = resolve(tree, box, padding->start, containingBlockSize.width);
 
     return res;
 }
@@ -139,29 +139,36 @@ Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size) {
     return res;
 }
 
-Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin) {
+Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin, Au availableInlineSpace) {
     if (intrinsic == IntrinsicSize::AUTO) {
         panic("bad argument");
     }
 
+    auto input = Input{
+        .intrinsic = intrinsic,
+        .availableSpace = {availableInlineSpace, 0_au},
+        .capmin = capmin,
+    };
+
     auto output = _contentLayout(
         tree,
         box,
-        {.intrinsic = intrinsic,
-         .knownSize = {NONE, NONE},
-         .capmin = capmin},
+        input,
         0, NONE
     );
 
     return output.size;
 }
 
-Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
+Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au availableInlineSpace, Au horizontalBorderBox, Opt<Au> capmin) {
     if (auto calc = size.is<CalcValue<PercentOr<Length>>>()) {
         auto specifiedWidth = resolve(tree, box, *calc, containingBlock.x);
         if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
             specifiedWidth += horizontalBorderBox;
+        } else {
+            specifiedWidth = max(specifiedWidth, horizontalBorderBox);
         }
+
         return specifiedWidth;
     }
 
@@ -172,9 +179,9 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au c
         auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
         return intrinsicSize.x + horizontalBorderBox;
     } else if (size.is<FitContent>()) {
-        auto minIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
-        auto maxIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
-        auto stretchIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, capmin);
+        auto minIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin, availableInlineSpace);
+        auto maxIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin, availableInlineSpace);
+        auto stretchIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, capmin, availableInlineSpace);
 
         return clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x) + horizontalBorderBox;
     } else if (size.is<Keywords::Auto>()) {
@@ -381,7 +388,7 @@ Output layoutRoot(Tree& tree, Input input) {
 
     if (not input.knownSize.width)
         input.knownSize.width = computeSpecifiedBorderBoxWidth(
-            tree, tree.root, tree.root.style->sizing->width, input.containingBlock,
+            tree, tree.root, tree.root.style->sizing->width, input.containingBlock, input.availableSpace.x,
             usedSpacings.borders.horizontal() + usedSpacings.padding.horizontal()
         );
 
@@ -406,7 +413,7 @@ Tuple<Output, Frag> layoutAndCommitRoot(Tree& tree, Input input) {
 
     if (not input.knownSize.width)
         input.knownSize.width = computeSpecifiedBorderBoxWidth(
-            tree, tree.root, tree.root.style->sizing->width, input.containingBlock,
+            tree, tree.root, tree.root.style->sizing->width, input.containingBlock, input.availableSpace.x,
             usedSpacings.borders.horizontal() + usedSpacings.padding.horizontal()
         );
 
@@ -420,7 +427,7 @@ Tuple<Output, Frag> layoutAndCommitRoot(Tree& tree, Input input) {
 
     auto fragOfRoot = std::move(parentFragOfRoot.children()[0]);
 
-    layoutPositioned(tree, fragOfRoot, input.containingBlock, input);
+    layoutPositioned(tree, fragOfRoot, input.containingBlock);
 
     return {out, std::move(fragOfRoot)};
 }
