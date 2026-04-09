@@ -822,8 +822,10 @@ MediaQuery _parseMediaQueryInfix(Cursor<Css::Sst>& c) {
     eatWhitespace(c);
     while (not c.ended()) {
         if (c.skip(Css::Token::ident("and"))) {
+            eatWhitespace(c);
             lhs = MediaQuery::combineAnd(lhs, _parseMediaQueryLeaf(c));
         } else if (c.skip(Css::Token::ident("or"))) {
+            eatWhitespace(c);
             lhs = MediaQuery::combineOr(lhs, _parseMediaQueryLeaf(c));
         } else {
             break;
