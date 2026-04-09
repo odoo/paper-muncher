@@ -3747,8 +3747,15 @@ export struct HtmlParser : HtmlSink {
     // 3.2.6.4.22 MARK: The "after after body" insertion mode
     // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-afterbody
     void _handleAfterBody(HtmlToken& t, Diag::Collector& diags) {
+        // A character token that is one of U+0009 CHARACTER TABULATION, U+000A LINE FEED (LF),
+        // U+000C FORM FEED (FF),U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
+        if (t.type == HtmlToken::CHARACTER and (t.rune == '\t' or t.rune == '\n' or t.rune == '\f' or t.rune == '\r' or t.rune == ' ')) {
+            // Process the token using the rules for the "in body" insertion mode.
+            _acceptIn(Mode::IN_BODY, t, diags);
+        }
+
         // A comment token
-        if (t.type == HtmlToken::COMMENT) {
+        else if (t.type == HtmlToken::COMMENT) {
             // Insert a comment as the last child of the first element in the stack of open elements (the html element).
             _insertAComment(t, InsertionLocation{_openElements.bottom(), nullptr});
         }
@@ -3782,6 +3789,7 @@ export struct HtmlParser : HtmlSink {
         // Anything else
         else {
             // Parse error.
+            logInfo("Token {}", t);
             _raise(diags, t.span, "unexpected token");
 
             // Switch the insertion mode to "in body" and reprocess the token.
