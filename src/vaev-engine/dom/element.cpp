@@ -7,6 +7,7 @@ import :dom.node;
 import :dom.names;
 import :dom.text;
 import :dom.tokenList;
+import :style.counter;
 
 using namespace Karm;
 
@@ -26,11 +27,12 @@ export struct PseudoElement {
     static Symbol const AFTER;
     static Symbol const MARKER;
     Symbol type;
-
+    
     // https://drafts.csswg.org/css-pseudo/#dom-csspseudoelement-parent
     Gc::Ptr<Element> parent;
-
+    
     Opt<Rc<Style::ComputedValues>> _computedValues = NONE;
+    Style::CounterSet counters = {};
 
     PseudoElement(Symbol type, Rc<Style::ComputedValues> computedValues)
         : type(type), _computedValues(computedValues) {}
@@ -69,6 +71,7 @@ export struct Element : Node {
     TokenList classList;
     Opt<Rc<Scene::Node>> imageContent;
     Map<Symbol, Rc<PseudoElement>> _pseudoElements;
+    Style::CounterSet counters;
 
     // MARK: Node --------------------------------------------------------------
 

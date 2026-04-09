@@ -83,11 +83,15 @@ struct ValueParser<String> {
 // https://www.w3.org/TR/css-values-4/#identifier-value
 
 struct CustomIdent {
-    Symbol _symbol;
+    Symbol _symbol = ""_sym;
 
     bool operator==(CustomIdent const& other) const = default;
 
     auto operator<=>(CustomIdent const& other) const = default;
+
+    Str str() const {
+        return _symbol.str();
+    }
 
     void hash(Hasher& h) const {
         Karm::hash(h, _symbol);
@@ -149,6 +153,10 @@ struct ValueParser<Ref::Url> {
     }
 };
 
+// MARK: Combinator ------------------------------------------------------------
+// https://drafts.csswg.org/css-values-4/#component-combinators
+
+// https://drafts.csswg.org/css-values-4/#comb-one
 export template <ValueParseable... Ts>
 struct ValueParser<Union<Ts...>> {
     static Res<Union<Ts...>> parse(Cursor<Css::Sst>& c) {
@@ -158,6 +166,26 @@ struct ValueParser<Union<Ts...>> {
         return Meta::any<Ts...>([&c]<typename T>() -> Res<Union<Ts...>> {
             return Ok(try$(parseValue<T>(c)));
         });
+    }
+};
+
+// MARK: Component Value Multipliers -------------------------------------------
+// https://drafts.csswg.org/css-values-4/#component-multipliers
+
+// https://drafts.csswg.org/css-values-4/#mult-zero-plus
+export template <ValueParseable T>
+struct ValueParser<Vec<T>> {
+    static Res<Vec<T>> parse(Cursor<Css::Sst>& c) {
+        Vec<T> result = {};
+
+        while (true) {
+            if (c.ended())
+                return Ok(std::move(result));
+            auto maybeValue = parseValue<T>(c);
+            if (not maybeValue)
+                return Ok(std::move(result));
+            result.pushBack(maybeValue.take());
+        }
     }
 };
 

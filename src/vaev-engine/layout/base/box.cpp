@@ -152,6 +152,13 @@ struct Box : Meta::NoCopy {
         }
     }
 
+    bool isPseudoElement(Symbol type) {
+        if (not origin or not origin->is<Rc<Dom::PseudoElement>>())
+            return false;
+
+        return origin->unwrap<Rc<Dom::PseudoElement>>()->type == type;
+    }
+
     bool isReplaced() {
         return content.is<Rc<Scene::Node>>() or content.is<SVGRoot>();
     }

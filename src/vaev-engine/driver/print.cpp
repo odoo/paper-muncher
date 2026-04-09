@@ -186,7 +186,6 @@ Pair<Vec<Layout::Breakpoint>, Vec<PageLayoutInfos>> collectBreakPointsAndRunning
 
 export Yield<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
     auto media = Style::Media::forPrint(settings);
-
     Style::Computer computer{
         media,
         dom->registeredPropertySet,
