@@ -1677,7 +1677,7 @@ tricky01.dat/c11759c2fda031c4: PASS
 tricky01.dat/dc2fbe3d27c7cc6d: PASS
 webkit01.dat/00ba4f8cada5908c: PASS
 webkit01.dat/01f1075e864610cb: FAIL
-webkit01.dat/0302ae25fd7c0ac7: FAIL
+webkit01.dat/0302ae25fd7c0ac7: PASS
 webkit01.dat/04b203fb66fb3d02: PASS
 webkit01.dat/0811c8669b440a80: PASS
 webkit01.dat/14444908a0fffbdd: PASS
