@@ -89,6 +89,10 @@ struct CustomIdent {
 
     auto operator<=>(CustomIdent const& other) const = default;
 
+    Str str() const {
+        return _symbol.str();
+    }
+
     void hash(Hasher& h) const {
         Karm::hash(h, _symbol);
     }

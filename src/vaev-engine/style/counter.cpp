@@ -163,7 +163,20 @@ export struct CounterStyle {
     // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-speak-as
     CounterSpeakAs speakAs;
 
-    CounterStyle extends(CounterStyle const& other);
+    static CounterStyle initial() {
+        return {
+            .system = Keywords::SYMBOLIC,
+            .negative = {.prepended = String{"-"s}, .appended = NONE},
+            .prefix = String{""s},
+            .suffix = String{". "s},
+            .range = Keywords::AUTO,
+            .pad = {0, String{""s}},
+            .fallback = CustomIdent{"decimal"_sym},
+            .symbols = {},
+            .additiveSymbols = {},
+            .speakAs = Keywords::AUTO,
+        };
+    }
 
     template <typename Descriptor>
     auto load() {
@@ -171,8 +184,8 @@ export struct CounterStyle {
     }
 };
 
-struct CountersStyle {
-    Map<CustomIdent, Counter> _counters;
+struct CounterStyleSet {
+    Map<CustomIdent, CounterStyle> _counters;
 
     // https://drafts.csswg.org/css-counter-styles-3/#cyclic-system
     Opt<Vec<CounterSymbol>> _constructCyclicCounter(CounterStyle const& style, Integer value) {
@@ -192,7 +205,7 @@ struct CountersStyle {
         value -= 1;
         if (value < 0)
             return NONE;
-        if (value >= style.symbols.len())
+        if (value >= static_cast<isize>(style.symbols.len()))
             return NONE;
         return Vec<CounterSymbol>{style.symbols[value]};
     }
@@ -311,7 +324,7 @@ struct CountersStyle {
             auto reps = value / weight;
 
             // 4. Append symbol to S reps times.
-            for (auto i : urange::zeroTo(reps))
+            for (auto _ : urange::zeroTo(reps))
                 s.pushBack(symbol);
 
             // 5. Decrement value by weight * reps.
@@ -329,12 +342,8 @@ struct CountersStyle {
         return s;
     }
 
-    // https://drafts.csswg.org/css-counter-styles-3/#extends-system
-    void _constructExtendedCounter(CounterStyle const& style) {
-    }
-
-    Opt<Vec<CounterSymbol>> _constructCounterRepresentation(CounterStyle const& style, Integer value) {
-        Opt<Vec<CounterSymbol>> result = style.system.visit(
+    Opt<Vec<CounterSymbol>> _dispatchCounterSystem(CounterStyle const& style, Integer value) {
+        return style.system.visit(
             [&](Keywords::Cyclic) {
                 return _constructCyclicCounter(style, value);
             },
@@ -342,29 +351,197 @@ struct CountersStyle {
                 return _constructFixedCounter(style, it, value);
             },
             [&](Keywords::Numeric) {
-                _constructNumericCounter();
+                return _constructNumericCounter(style, value);
             },
             [&](Keywords::Alphabetic) {
-                _constructAlphabeticCounter();
+                return _constructAlphabeticCounter(style, value);
             },
             [&](Keywords::Symbolic) {
-                _constructSymbolicCounter();
+                return _constructSymbolicCounter(style, value);
             },
             [&](Keywords::Additive) {
-                _constructAdditiveCounter();
+                return _constructAdditiveCounter(style, value);
             },
 
-            [&](ExtendsCounterSystem) {
-                _constructExtendedCounter();
+            [&](ExtendsCounterSystem) -> Opt<Vec<CounterSymbol>> {
+                // NOTE: This should be unreachable because all `extends` should
+                //       have been resolved away by `CounterDescriptorsSet`.
+                unreachable();
             }
         );
     }
 
-    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-system
-    String constructCounterRepresentation(CustomIdent counterStyleName, Integer value) {
+    Opt<bool> _counterDefinedFor(CounterStyle const& style, Integer value) {
+        auto range = style.range;
+        if (auto it = range.is<Vec<Pair<Union<Integer, Keywords::Infinite>>>>()) {
+            for (auto& r : *it) {
+                auto lower = r.v0.visit(
+                    [](Integer i) {
+                        return i;
+                    },
+                    [](Keywords::Infinite) {
+                        return Limits<Integer>::MIN;
+                    }
+                );
+
+                auto upper = r.v1.visit(
+                    [](Integer i) {
+                        return i;
+                    },
+                    [](Keywords::Infinite) {
+                        return Limits<Integer>::MAX;
+                    }
+                );
+
+                if (value >= lower and value <= upper)
+                    return true;
+            }
+            return false;
+        }
+
+        return NONE;
     }
 
-    String constructCounterRepresentation(CounterStyle const& anonymousStyle, Integer value) {
+    CounterStyle const& _fallbackToDecimal() {
+        return _counters.lookup(CustomIdent{"decimal"_sym}).unwrap();
+    }
+
+    CounterStyle const& _lookupCounterOrFallbackToDecimal(CustomIdent counterStyleName) {
+        return _counters
+            .lookup(counterStyleName)
+            .unwrapOrElse([&] {
+                return _fallbackToDecimal();
+            });
+    }
+
+    Vec<CounterSymbol> _fallbackCounter(CounterStyle const& style, Integer value, Set<CustomIdent>& seen) {
+        if (seen.contains(style.fallback))
+            return _dispatchCounterFallback(_fallbackToDecimal(), value, seen);
+        auto const& style = _lookupCounterOrFallbackToDecimal(style.fallback);
+        seen.add(style.fallback);
+        return _dispatchCounterFallback(style, value, seen);
+    }
+
+    usize _measureRepresentation(Vec<CounterSymbol>& repr) {
+        usize len = 0;
+        for (auto& i : repr) {
+            len += i.visit(
+                [](auto const& s) {
+                    return Icu::countGrapheneClusters(s.str());
+                }
+            );
+        }
+        return len;
+    }
+
+    // https://drafts.csswg.org/css-counter-styles-3/#generate-a-counter
+    Vec<CounterSymbol> _dispatchCounterFallback(CounterStyle const& style, Integer value, Set<CustomIdent>& seen) {
+        // 2. If the counter value is outside the range of the counter style,
+        //    exit this algorithm and instead generate a counter representation
+        //    using the counter style’s fallback style and the same counter value.
+        auto defined = _counterDefinedFor(style, value);
+        if (defined == false)
+            return _fallbackCounter(style, value, seen);
+        auto maybeRepr = _dispatchCounterSystem(style, value);
+        if (maybeRepr == NONE)
+            return _fallbackCounter(style, Math::abs(value), seen);
+        auto repr = maybeRepr.take();
+
+        // 4. Prepend symbols to the representation as specified in the pad descriptor.
+        if (style.pad) {
+            auto& [padLen, padSym] = style.pad;
+            auto reprLen = _measureRepresentation(repr);
+            if (reprLen < padLen) {
+                for (auto _ : urange::fromStartEnd(reprLen, padLen))
+                    repr.pushFront(padSym);
+            }
+        }
+
+        repr.pushFront(style.prefix);
+        if (value < 0) {
+            repr.pushFront(style.negative.prepended);
+
+            // 5. If the counter value is negative and the counter style
+            //    uses a negative sign, wrap the representation in the
+            //    counter style’s negative sign as specified in the
+            //    negative descriptor.
+            if (style.negative.appended)
+                repr.pushBack(*style.negative.appended);
+        }
+        repr.pushBack(style.suffix);
+
+        // 6. Return the representation.
+        return repr;
+    }
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-system
+    Vec<CounterSymbol> constructCounterRepresentation(CustomIdent counterStyleName, Integer value) {
+        auto const& style = _lookupCounterOrFallbackToDecimal(counterStyleName);
+        Set seen = {counterStyleName};
+        return _dispatchCounterFallback(style, value, seen);
+    }
+
+    Vec<CounterSymbol> constructCounterRepresentation(CounterStyle const& anonymousStyle, Integer value) {
+        Set<CustomIdent> seen = {};
+        return _dispatchCounterFallback(anonymousStyle, value, seen);
+    }
+};
+
+export struct CounterDescriptors {
+    // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-system
+    Opt<CounterSystem> system;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-negative
+    Opt<CounterNegative> negative;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-prefix
+    Opt<CounterSymbol> prefix;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-suffix
+    Opt<CounterSymbol> suffix;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-range
+    Opt<CounterRange> range;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-pad
+    Opt<Tuple<Integer, CounterSymbol>> pad;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-fallback
+    Opt<CustomIdent> fallback;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-symbols
+    Opt<Vec<CounterSymbol>> symbols;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-additive-symbols
+    Opt<Vec<AdditiveCounterSymbol>> additiveSymbols;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-speak-as
+    Opt<CounterSpeakAs> speakAs;
+
+    CounterStyle extends(CounterStyle& other) {
+        return {
+            .system = system.unwrapOr(other.system),
+            .negative = negative.unwrapOr(other.negative),
+            .prefix = prefix.unwrapOr(other.prefix),
+            .suffix = suffix.unwrapOr(other.suffix),
+            .range = range.unwrapOr(other.range),
+            .pad = pad.unwrapOr(other.pad),
+            .fallback = fallback.unwrapOr(other.fallback),
+            .symbols = symbols.unwrapOr(other.symbols),
+            .additiveSymbols = additiveSymbols.unwrapOr(other.additiveSymbols),
+            .speakAs = speakAs.unwrapOr(other.speakAs),
+        };
+    }
+};
+
+struct CounterDescriptorsSet {
+    Map<CustomIdent, CounterDescriptors> _counters;
+    Map<CustomIdent, CounterStyle> _resolved = {};
+
+    CounterStyleSet resolveExtends() {
+        for (auto const& [k, v] : _counters.iterItems()) {
+        }
+        return {std::move(_resolved)};
     }
 };
 

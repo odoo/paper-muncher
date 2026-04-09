@@ -9,17 +9,17 @@ import :values.image;
 
 namespace Vaev {
 
-using CounterSymbolsType = Union<
+export using CounterSymbolsType = Union<
     Keywords::Cyclic,
     Keywords::Numeric,
     Keywords::Alphabetic,
     Keywords::Fixed>;
 
 // https://drafts.csswg.org/css-counter-styles-3/#typedef-symbol
-using CounterSymbol = Union<String, /* Image ,*/ CustomIdent>;
+export using CounterSymbol = Union<String, /* Image ,*/ CustomIdent>;
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-additive-symbols
-struct AdditiveCounterSymbol {
+export struct AdditiveCounterSymbol {
     Integer value;
     CounterSymbol symbol;
 
@@ -29,7 +29,7 @@ struct AdditiveCounterSymbol {
 };
 
 // https://drafts.csswg.org/css-counter-styles-3/#symbols-function
-struct CounterSymbolsFunc {
+export struct CounterSymbolsFunc {
     Opt<CounterSymbolsType> type;
     Vec<CounterSymbol> symbols;
 
@@ -59,7 +59,7 @@ struct ValueParser<CounterSymbolsFunc> {
 };
 
 // https://drafts.csswg.org/css-counter-styles-3/#counter-style-system
-struct FixedCounterSystem {
+export struct FixedCounterSystem {
     Opt<Integer> number;
 
     void repr(Io::Emit& e) const {
@@ -67,7 +67,7 @@ struct FixedCounterSystem {
     }
 };
 
-struct ExtendsCounterSystem {
+export struct ExtendsCounterSystem {
     CustomIdent name;
 
     void repr(Io::Emit& e) const {
@@ -75,7 +75,7 @@ struct ExtendsCounterSystem {
     }
 };
 
-using CounterSystem = Union<
+export using CounterSystem = Union<
     Keywords::Cyclic,
     Keywords::Numeric,
     Keywords::Alphabetic,
@@ -85,8 +85,8 @@ using CounterSystem = Union<
     ExtendsCounterSystem>;
 
 // https://drafts.csswg.org/css-counter-styles-3/#counter-style-negative
-struct CounterNegative {
-    Opt<CounterSymbol> prepended;
+export struct CounterNegative {
+    CounterSymbol prepended;
     Opt<CounterSymbol> appended;
 
     void repr(Io::Emit& e) const {
@@ -95,10 +95,10 @@ struct CounterNegative {
 };
 
 // https://drafts.csswg.org/css-counter-styles-3/#counter-style-range
-using CounterRange = Union<Pair<Union<Integer, Keywords::Infinite>>, Keywords::Auto>;
+export using CounterRange = Union<Vec<Pair<Union<Integer, Keywords::Infinite>>>, Keywords::Auto>;
 
 // https://drafts.csswg.org/css-counter-styles-3/#counter-style-speak-as
-using CounterSpeakAs = Union<
+export using CounterSpeakAs = Union<
     Keywords::Auto,
     Keywords::Bullets,
     Keywords::Number,

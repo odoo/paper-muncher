@@ -40,7 +40,7 @@ export struct Document : Node {
     Style::RegisteredPropertySet registeredPropertySet = Style::defaultRegistry();
 
     Opt<Rc<Font::Database>> fontDatabase;
-    Style::CountersStyle counters = {};
+    Style::CounterStyleSet counters = {};
 
     Document(Ref::Url url)
         : _url(url) {
