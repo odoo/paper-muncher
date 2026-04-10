@@ -198,9 +198,28 @@ struct BlockFormatingContext : FormatingContext {
 
         Au lastMarginBottom = 0_au;
 
+        SmallVec<OutOfFlowBox, 2> outOfFlowChildren;
+
         for (usize i = startAt; i < endChildren; ++i) {
             auto& c = box.children()[i];
             lookForRunningPosition(input, c);
+
+            if (oneOf(c.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
+                if (input.fragment) {
+                    // https://www.w3.org/TR/css-position-3/#staticpos-rect
+                    RectAu staticPositionRect = {
+                        Vec2Au{input.position.x, input.position.y + blockSize},
+                        Vec2Au{input.knownSize.width.unwrapOr(0_au), 0_au}
+                    };
+
+                    outOfFlowChildren.pushBack(OutOfFlowBox{
+                        .box = c,
+                        .staticPositionRect = staticPositionRect
+                    });
+                }
+
+                continue;
+            }
 
             try$(
                 processBreakpointsBeforeChild(
@@ -250,6 +269,8 @@ struct BlockFormatingContext : FormatingContext {
                               ? layoutAndCommitBorderBox(tree, c, childInput, *input.fragment, usedSpacings)
                               : layoutBorderBox(tree, c, childInput, usedSpacings);
 
+            outOfFlowChildren.pushBack(output.outOfFlowStash);
+
             if (not impliesRemovingFromFlow(c.style->position)) {
                 blockSize += output.size.y + usedSpacings.margin.bottom;
                 lastMarginBottom = usedSpacings.margin.bottom;
@@ -283,6 +304,37 @@ struct BlockFormatingContext : FormatingContext {
             inlineSize = max(inlineSize, output.size.x + usedSpacings.margin.horizontal());
         }
 
+        SmallVec<OutOfFlowBox, 2> outOfFlowStash;
+
+        if (input.fragment) {
+            for (auto oofChild : outOfFlowChildren) {
+                if (oofChild.box.style->position == Keywords::ABSOLUTE and isAbsolutePositionedContainingBlock(box)) {
+                    RectAu containingBlock = {
+                        input.position.x, input.position.y,
+                        input.knownSize.x.unwrapOr(inlineSize), input.knownSize.y.unwrapOr(blockSize)
+                    };
+
+                    auto [knownSize, availableSpace, usedSpacings] = layoutAbsolutePositioned(tree, oofChild.box, containingBlock, oofChild.staticPositionRect);
+
+                    Input childInput = {
+                        .intrinsic = input.intrinsic,
+                        .knownSize = {knownSize.x, knownSize.y},
+                        .position = availableSpace.topStart(),
+                        .availableSpace = availableSpace.size(),
+                        .containingBlock = containingBlock.size(),
+                        .runningPosition = input.runningPosition,
+                        .pageNumber = input.pageNumber,
+                        .pendingVerticalSizes = input.pendingVerticalSizes,
+                    };
+
+                    layoutAndCommitBorderBox(tree, oofChild.box, childInput, *input.fragment, usedSpacings);
+                } else {
+                    // TODO: Also handle other cases
+                    outOfFlowStash.pushBack(oofChild);
+                }
+            }
+        }
+
         return {
             .size = Vec2Au{
                 input.knownSize.x.unwrapOr(inlineSize),
@@ -292,6 +344,7 @@ struct BlockFormatingContext : FormatingContext {
             .breakpoint = currentBreakpoint,
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,
+            .outOfFlowStash = std::move(outOfFlowStash),
         };
     }
 };

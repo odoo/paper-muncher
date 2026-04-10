@@ -92,7 +92,7 @@ export struct JustifySelfProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<JustifySelfProperty>(self(), Align{});
+            return makeRc<JustifySelfProperty>(self(), Align::Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

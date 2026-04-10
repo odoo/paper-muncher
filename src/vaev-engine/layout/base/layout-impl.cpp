@@ -315,12 +315,7 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
         if (isMonolithicDisplay)
             tree.fc.leaveMonolithicBox();
 
-        return {
-            .size = out.size,
-            .completelyLaidOut = out.completelyLaidOut,
-            .firstBaselineSet = out.firstBaselineSet,
-            .lastBaselineSet = out.lastBaselineSet,
-        };
+        return out;
     }
 }
 
@@ -375,6 +370,10 @@ Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Frag& parent
         .radii = computeRadii(tree, box, output.size + usedSpacings.borders.all() + usedSpacings.padding.all()),
     };
 
+    if (box.style->position == Keywords::RELATIVE) {
+        currFrag.offset(resolveRelativePositionedOffset(tree, box, input.containingBlock));
+    }
+
     parentFrag.add(std::move(currFrag));
 
     return output;
@@ -427,7 +426,7 @@ Tuple<Output, Frag> layoutAndCommitRoot(Tree& tree, Input input) {
 
     auto fragOfRoot = std::move(parentFragOfRoot.children()[0]);
 
-    layoutPositioned(tree, fragOfRoot, input.containingBlock);
+    // layoutPositioned(tree, fragOfRoot, input.containingBlock);
 
     return {out, std::move(fragOfRoot)};
 }

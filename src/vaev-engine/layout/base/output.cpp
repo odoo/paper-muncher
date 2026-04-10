@@ -5,6 +5,7 @@ import Karm.Core;
 import :values;
 
 import :layout.breaks;
+import :layout.box;
 
 namespace Vaev::Layout {
 
@@ -47,6 +48,11 @@ export struct BaselinePositionsSet {
     }
 };
 
+struct OutOfFlowBox {
+    Box& box;
+    RectAu staticPositionRect;
+};
+
 export struct Output {
     // size of subtree maximizing displayed content while respecting
     // - endchild constraint or
@@ -68,6 +74,8 @@ export struct Output {
 
     BaselinePositionsSet const firstBaselineSet = {};
     BaselinePositionsSet const lastBaselineSet = {};
+
+    SmallVec<OutOfFlowBox, 2> outOfFlowStash = {};
 
     static Output fromSize(Vec2Au size) {
         return {
