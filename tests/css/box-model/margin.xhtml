@@ -40,6 +40,16 @@
         <div class="foo" style="margin-left: 100px"></div>
     </rendering>
 
+    <rendering help="negative top margin block static">
+        <div style="width:0px;height:0px;margin-bottom:50px"></div>
+        <div class="foo" style="margin-left: 100px;margin-top:-50px"></div>
+    </rendering>
+
+    <rendering help="negative bottom margin block static">
+        <div class="foo" style="margin-left: 100px;margin-bottom:-50px"></div>
+        <div style="width:0px;height:0px;margin-top:50px"></div>
+    </rendering>
+
     <rendering help="negative margin block absolute" skip="true">
         <div class="foo" style="position:absolute;left:150px;margin-left: -50px"></div>
     </rendering>

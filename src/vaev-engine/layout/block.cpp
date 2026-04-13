@@ -233,7 +233,12 @@ struct BlockFormatingContext : FormatingContext {
 
             if (not c.isRemovedFromFlow()) {
                 // TODO: collapsed margins for sibling elements
-                blockSize += max(usedSpacings.margin.top, lastMarginBottom) - lastMarginBottom;
+
+                Au maxPositive = max(0_au, usedSpacings.margin.top, lastMarginBottom);
+                Au minNegative = min(0_au, usedSpacings.margin.top, lastMarginBottom);
+
+                Au collapsedMargin = maxPositive - Math::abs(minNegative);
+                blockSize += collapsedMargin - lastMarginBottom;
             }
 
             childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
