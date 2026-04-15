@@ -402,11 +402,11 @@ struct CounterStyleSet {
         return NONE;
     }
 
-    CounterStyle const& _fallbackToDecimal() {
+    CounterStyle _fallbackToDecimal() {
         return _counters.lookup(CustomIdent{"decimal"_sym}).unwrap();
     }
 
-    CounterStyle const& _lookupCounterOrFallbackToDecimal(CustomIdent counterStyleName) {
+    CounterStyle _lookupCounterOrFallbackToDecimal(CustomIdent counterStyleName) {
         return _counters
             .lookup(counterStyleName)
             .unwrapOrElse([&] {
@@ -414,16 +414,16 @@ struct CounterStyleSet {
             });
     }
 
-    Vec<CounterSymbol> _fallbackCounter(CounterStyle const& style, Integer value, Set<CustomIdent>& seen) {
+    Vec<CounterSymbol> _dispatchToFallbackCounter(CounterStyle const& style, Integer value, Set<CustomIdent>& seen) {
         if (seen.contains(style.fallback))
             return _dispatchCounterFallback(_fallbackToDecimal(), value, seen);
-        auto const& style = _lookupCounterOrFallbackToDecimal(style.fallback);
+        auto const& fallbackStyle = _lookupCounterOrFallbackToDecimal(style.fallback);
         seen.add(style.fallback);
-        return _dispatchCounterFallback(style, value, seen);
+        return _dispatchCounterFallback(fallbackStyle, value, seen);
     }
 
-    usize _measureRepresentation(Vec<CounterSymbol>& repr) {
-        usize len = 0;
+    Integer _measureRepresentation(Vec<CounterSymbol>& repr) {
+        Integer len = 0;
         for (auto& i : repr) {
             len += i.visit(
                 [](auto const& s) {
@@ -441,10 +441,10 @@ struct CounterStyleSet {
         //    using the counter style’s fallback style and the same counter value.
         auto defined = _counterDefinedFor(style, value);
         if (defined == false)
-            return _fallbackCounter(style, value, seen);
+            return _dispatchToFallbackCounter(style, value, seen);
         auto maybeRepr = _dispatchCounterSystem(style, value);
         if (maybeRepr == NONE)
-            return _fallbackCounter(style, Math::abs(value), seen);
+            return _dispatchToFallbackCounter(style, Math::abs(value), seen);
         auto repr = maybeRepr.take();
 
         // 4. Prepend symbols to the representation as specified in the pad descriptor.
@@ -518,7 +518,7 @@ export struct CounterDescriptors {
     // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-speak-as
     Opt<CounterSpeakAs> speakAs;
 
-    CounterStyle extends(CounterStyle& other) {
+    CounterStyle extends(CounterStyle const& other) const {
         return {
             .system = system.unwrapOr(other.system),
             .negative = negative.unwrapOr(other.negative),
@@ -534,16 +534,46 @@ export struct CounterDescriptors {
     }
 };
 
-struct CounterDescriptorsSet {
-    Map<CustomIdent, CounterDescriptors> _counters;
-    Map<CustomIdent, CounterStyle> _resolved = {};
+export using CounterDescriptorSet = Map<CustomIdent, CounterDescriptors>;
 
-    CounterStyleSet resolveExtends() {
-        for (auto const& [k, v] : _counters.iterItems()) {
+export CounterStyleSet resolveExtends(Map<CustomIdent, CounterDescriptors> const& counters) {
+    Map<CustomIdent, CounterStyle> resolved = {};
+    auto resolveOne = [&](this auto const& recurse, CustomIdent name, Set<CustomIdent>& seen) -> CounterStyle {
+        if (auto it = resolved.lookup(name))
+            return it.unwrap();
+
+        if (seen.contains(name))
+            return CounterStyle::initial();
+
+        auto descOpt = counters.lookup(name);
+        if (not descOpt)
+            return CounterStyle::initial();
+
+        seen.add(name);
+        auto& desc = descOpt.unwrap();
+
+        CounterStyle base = CounterStyle::initial();
+
+        if (desc.system and desc.system->is<ExtendsCounterSystem>()) {
+            auto const& ext = desc.system->unwrap<ExtendsCounterSystem>();
+            base = recurse(ext.name, seen);
         }
-        return {std::move(_resolved)};
+
+        CounterStyle resolvedStyle = desc.extends(base);
+        if (desc.system and desc.system->is<ExtendsCounterSystem>())
+            resolvedStyle.system = base.system;
+
+        resolved.put(name, resolvedStyle);
+        return resolvedStyle;
+    };
+
+    for (auto const& [k, v] : counters.iterItems()) {
+        Set<CustomIdent> seen;
+        resolveOne(k, seen);
     }
-};
+
+    return {std::move(resolved)};
+}
 
 // MARK: Descriptor ------------------------------------------------------------
 

@@ -89,6 +89,10 @@ struct CustomIdent {
 
     auto operator<=>(CustomIdent const& other) const = default;
 
+    explicit operator bool() const {
+        return static_cast<bool>(_symbol);
+    }
+
     Str str() const {
         return _symbol.str();
     }

@@ -17,8 +17,8 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     auto& args = env.args();
     if (args.len() < 1)
         co_return Error::invalidInput("Usage: vaev-view <url>");
-
     auto url = Ref::parseUrlOrPath(args[0], env.cwd());
+
     auto window = Dom::Window::create();
     co_trya$(window->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
     co_return co_await Ui::runAsync(
