@@ -125,7 +125,9 @@ Output fragmentEmptyBox(Tree& tree, Input input) {
     }
 }
 
-void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, UsedSpacings const& usedSpacings, Opt<Au> blockInlineSize) {
+Math::Vec2<Opt<Au>> _computeChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, UsedSpacings const& usedSpacings, Opt<Au> blockInlineSize) {
+    Math::Vec2<Opt<Au>> knownSize = {};
+
     if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Display::INLINE) {
         if (child.style->sizing->width.is<Keywords::Auto>()) {
             // https://www.w3.org/TR/css-tables-3/#layout-principles
@@ -134,23 +136,26 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, Use
             // This is different from most block-level boxes, which behave as if they had stretch instead.
             if (child.style->display == Display::TABLE_BOX) {
                 // Do nothing. 'fit-content' is kinda intrinsic size, when we don't populate knownSize.
+                logInfo("table box");
             } else if (blockInlineSize) {
                 // When the inline size is not known, we cannot enforce it to the child. (?)
-                childInput.knownSize.width = blockInlineSize.unwrap() - usedSpacings.margin.horizontal();
+                knownSize.width = blockInlineSize.unwrap() - usedSpacings.margin.horizontal();
             }
         } else {
-            childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
+            knownSize.width = computeSpecifiedBorderBoxWidth(
                 tree, child, child.style->sizing->width, childInput.containingBlock,
                 usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal(),
                 childInput.capmin
             );
         }
 
-        childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
+        knownSize.height = computeSpecifiedBorderBoxHeight(
             tree, child, child.style->sizing->height, childInput.containingBlock,
             usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
         );
     }
+
+    return knownSize;
 }
 
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
@@ -179,6 +184,63 @@ struct BlockFormatingContext : FormatingContext {
         }
 
         return capmin;
+    }
+
+    InsetsAu _computeMargins(Tree& tree, Box& box, Input input, Opt<Au> borderBoxWidth) {
+        InsetsAu res;
+        auto styleMargin = box.style->margin;
+
+        if (styleMargin->start.is<Keywords::Auto>()) {
+            logInfo("{}", styleMargin);
+        }
+
+        // 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
+        if (!box.isReplaced()) {
+            if (box.style->margin->start.is<Keywords::Auto>() and box.style->margin->end.is<Keywords::Auto>()) {
+                if (borderBoxWidth) {
+                    res.start = (input.containingBlock.width - *borderBoxWidth) / 2;
+                } else {
+                    res.start = 0_au;
+                }
+
+                res.end = res.start;
+            } else if (styleMargin->start.is<Keywords::Auto>()) {
+                res.end = resolve(tree, box, *styleMargin->end.is<CalcValue<PercentOr<Length>>>(), input.containingBlock.width);
+
+                if (styleMargin->start.is<Keywords::Auto>()) {
+                    logInfo("end margin: {}", styleMargin->end);
+                    logInfo("width of containing block: {}", input.containingBlock.width);
+                    logInfo("border box width: {}", borderBoxWidth);
+                    logInfo("------------------------");
+                }
+
+                if (borderBoxWidth) {
+                    res.start = input.containingBlock.width - *borderBoxWidth - res.end;
+                } else {
+                    res.start = 0_au;
+                }
+            } else if (styleMargin->end.is<Keywords::Auto>()) {
+                res.start = resolve(tree, box, *styleMargin->start.is<CalcValue<PercentOr<Length>>>(), input.containingBlock.width);
+
+                if (borderBoxWidth) {
+                    res.end = input.containingBlock.width - *borderBoxWidth - res.start;
+                } else {
+                    res.end = 0_au;
+                }
+            } else {
+                res.start = resolve(tree, box, *styleMargin->start.is<CalcValue<PercentOr<Length>>>(), input.containingBlock.width);
+                res.end = resolve(tree, box, *styleMargin->end.is<CalcValue<PercentOr<Length>>>(), input.containingBlock.width);
+            }
+        } else {
+            // FIXME
+            res.start = resolve(tree, box, styleMargin->start, input.containingBlock.width);
+            res.end = resolve(tree, box, styleMargin->end, input.containingBlock.width);
+        }
+
+        res.top = resolve(tree, box, styleMargin->top, input.containingBlock.height);
+        res.bottom = resolve(tree, box, styleMargin->bottom, input.containingBlock.height);
+
+        return res;
     }
 
     Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
@@ -224,12 +286,21 @@ struct BlockFormatingContext : FormatingContext {
                 .breakpointTraverser = input.breakpointTraverser.traverseInsideUsingIthChild(i),
                 .pendingVerticalSizes = input.pendingVerticalSizes,
             };
+            auto padding = computePaddings(tree, c, childInput.containingBlock);
+            auto borders = computeBorders(tree, c);
 
             UsedSpacings usedSpacings{
-                .padding = computePaddings(tree, c, childInput.containingBlock),
-                .borders = computeBorders(tree, c),
-                .margin = computeMargins(tree, c, childInput)
+                .padding = padding,
+                .borders = borders,
+                .margin = computeMargins(tree, box, input),
             };
+
+            if (c.style->margin->start.is<Keywords::Auto>()) {
+                logInfo("display {}", c.style->display);
+            }
+
+            childInput.knownSize = _computeChildSpecifiedSizes(tree, c, childInput, usedSpacings, input.knownSize.x);
+            usedSpacings.margin = _computeMargins(tree, c, childInput, childInput.knownSize.width);
 
             if (not c.isRemovedFromFlow()) {
                 // TODO: collapsed margins for sibling elements
@@ -244,11 +315,13 @@ struct BlockFormatingContext : FormatingContext {
                 childInput.capmin = _computeCapmin(tree, box, input, inlineSize);
             }
 
-            _populateChildSpecifiedSizes(tree, c, childInput, usedSpacings, input.knownSize.x);
-
             auto output = input.fragment
                               ? layoutAndCommitBorderBox(tree, c, childInput, *input.fragment, usedSpacings)
                               : layoutBorderBox(tree, c, childInput, usedSpacings);
+
+            if (c.style->margin->start.is<Keywords::Auto>()) {
+                logInfo("output {}", output.size);
+            }
 
             if (not c.isRemovedFromFlow()) {
                 blockSize += output.size.y + usedSpacings.margin.bottom;
