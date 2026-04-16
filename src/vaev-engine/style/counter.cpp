@@ -131,6 +131,20 @@ struct CounterSet {
 
 // MARK: Counter ---------------------------------------------------------------
 
+// https://drafts.csswg.org/css-counter-styles-3/#counter-style-pad
+export struct CounterPad {
+    Integer value;
+    CounterSymbol symbol;
+
+    explicit operator bool() const {
+        return value and symbol;
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(counter-pad {})", value, symbol);
+    }
+};
+
 // https://drafts.csswg.org/css-counter-styles-3/#the-counter-style-rule
 export struct CounterStyle {
     // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-system
@@ -149,7 +163,7 @@ export struct CounterStyle {
     CounterRange range = Keywords::AUTO;
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-pad
-    Tuple<Integer, CounterSymbol> pad = {0, String{""s}};
+    CounterPad pad = {0, String{""s}};
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-fallback
     CustomIdent fallback;
@@ -504,7 +518,7 @@ export struct CounterDescriptors {
     Opt<CounterRange> range;
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-pad
-    Opt<Tuple<Integer, CounterSymbol>> pad;
+    Opt<CounterPad> pad;
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-fallback
     Opt<CustomIdent> fallback;
@@ -664,7 +678,7 @@ struct RangeCounterDescriptor {
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-pad
 struct PadCounterDescriptor {
-    Tuple<Integer, CounterSymbol> value;
+    CounterPad value;
 
     static Str name() {
         return "pad"s;

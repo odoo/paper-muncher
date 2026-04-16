@@ -24,29 +24,56 @@ export struct Computer {
 
     // MARK: Counters ----------------------------------------------------------
 
-    // https://drafts.csswg.org/css-lists/#instantiate-counter:~:text=dynamically%20calculate%20the%20initial%20value
-    Integer _dynamicallyCalculateCounterInitialValue() {
-        // TODO: Implement reversed counter initial value.
+    Yield<Dom::OriginatingElement> _iterElementInScope() {}
 
+    // https://drafts.csswg.org/css-lists/#instantiate-counter:~:text=dynamically%20calculate%20the%20initial%20value
+    Integer _dynamicallyCalculateCounterInitialValue(CustomIdent counter) {
         // 1. Let num be 0.
+        Integer num = 0;
 
         // 2. Let lastNonZeroIncrementNegated be 0.
+        Integer lastNonZeroIncrementNegated = 0;
 
         // 3. For each element or pseudo-element el that increments or sets the same counter in the same scope:
-        for (; false;) {
+        for (auto el : _iterElementInScope()) {
+            auto maybeCounterIncrement =
+                iter(el.computedValues()->counters->increment) |
+                Find([&](CounterProps::Increment const& increment) {
+                    return increment.name == counter;
+                });
+
             // 1. Let incrementNegated be el’s counter-increment integer value for this counter, multiplied by -1.
+            Integer incrementNegated =
+                maybeCounterIncrement
+                    .unwrapOr({counter, 1})
+                    .value.unwrapOr(1) *
+                -1;
 
             // 2. If incrementNegated is not zero, then set lastNonZeroIncrementNegated to incrementNegated.
+            if (incrementNegated != 0)
+                lastNonZeroIncrementNegated = incrementNegated;
 
             // 3. If el sets this counter with counter-set, then add that integer value to num and break this loop.
+            auto maybeCounterSet =
+                iter(el.computedValues()->counters->set) |
+                Find([&](CounterProps::Set const& set) {
+                    return set.name == counter;
+                });
+
+            if (maybeCounterSet) {
+                num += maybeCounterSet->value.unwrapOr(0);
+                break;
+            }
 
             // 4. Add incrementNegated to num.
+            num += incrementNegated;
         }
 
         // 4. Add lastNonZeroIncrementNegated to num.
+        num += lastNonZeroIncrementNegated;
 
         // 5. Return num.
-        return 0;
+        return num;
     }
 
     // https://drafts.csswg.org/css-lists/#auto-numbering
@@ -59,7 +86,7 @@ export struct Computer {
         // 2. New counters are instantiated (counter-reset).
         for (auto& counterReset : countersStyle.reset) {
             Integer initial = counterReset.value.unwrapOrElse([&] {
-                return counterReset.reversed ? _dynamicallyCalculateCounterInitialValue() : 0;
+                return counterReset.reversed ? _dynamicallyCalculateCounterInitialValue(counterReset.name) : 0;
             });
             counters.instantiateCounter(el, counterReset, initial);
         }
