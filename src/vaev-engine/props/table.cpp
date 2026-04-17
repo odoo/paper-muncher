@@ -62,7 +62,7 @@ export struct CaptionSideProperty : Property {
             return makeRc<CaptionSideProperty>(self(), CaptionSide::TOP);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.table.cow().captionSide = parent.table->captionSide;
         }
 

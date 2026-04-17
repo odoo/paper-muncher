@@ -32,7 +32,7 @@ export struct TextAlignProperty : Property {
             return makeRc<TextAlignProperty>(self(), TextAlign::LEFT);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.text.cow().align = parent.text->align;
         }
 
@@ -97,7 +97,7 @@ export struct TextTransformProperty : Property {
             return makeRc<TextTransformProperty>(self(), TextTransform::NONE);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.text.cow().transform = parent.text->transform;
         }
 
@@ -154,7 +154,7 @@ export struct WhiteSpaceProperty : Property {
             return makeRc<WhiteSpaceProperty>(self(), WhiteSpace::NORMAL);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.text.cow().whiteSpace = parent.text->whiteSpace;
         }
 

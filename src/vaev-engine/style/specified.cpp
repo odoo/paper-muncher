@@ -26,6 +26,8 @@ struct TransformProps {
 
 using ClipProps = Opt<BasicShape>;
 
+export struct Inherited {};
+
 // https://www.w3.org/TR/css-cascade/#computed
 export struct ComputedValues {
     Cow<Gaps> gaps;
@@ -78,11 +80,8 @@ export struct ComputedValues {
         customProps.cow().put(name, value);
     }
 
-    Css::Content getCustomProp(Symbol name) const {
-        auto value = customProps->lookup(name);
-        if (value)
-            return *value;
-        return {};
+    Opt<Css::Content const&> getCustomProp(Symbol name) const {
+        return customProps->lookup(name);
     }
 
     bool hasCustomProp(Symbol name) const {

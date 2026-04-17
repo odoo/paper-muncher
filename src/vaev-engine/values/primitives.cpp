@@ -89,7 +89,7 @@ struct CustomIdent {
 
     auto operator<=>(CustomIdent const& other) const = default;
 
-    void hash(Hasher& h) const {
+    void hash(Meta::Derive<Hasher> auto& h) const {
         Karm::hash(h, _symbol);
     }
 

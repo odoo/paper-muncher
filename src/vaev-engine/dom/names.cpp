@@ -15,7 +15,7 @@ export struct QualifiedName {
 
     bool operator==(QualifiedName const& other) const = default;
 
-    void hash(Hasher& h) const {
+    void hash(Meta::Derive<Hasher> auto& h) const {
         Karm::hash(h, ns);
         Karm::hash(h, name);
     }
