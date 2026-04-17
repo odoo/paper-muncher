@@ -28,7 +28,7 @@ export struct LineHeightProperty : Property {
             return makeRc<LineHeightProperty>(self(), LineHeight::NORMAL);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             // TODO
             (void)parent;
             (void)child;

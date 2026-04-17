@@ -131,7 +131,7 @@ struct RuleIndex {
     }
 
     static bool isLookupEquivalentToMatch(TypeSelector const& selector) {
-        return selector.qualifiedName.ns == NONE &&
+        return selector.qualifiedName.ns == NONE and
                selector.qualifiedName.name != NONE;
     }
 
@@ -171,7 +171,7 @@ struct RuleIndex {
 
         for (auto const& [name, value] : element->attributes.iterItems()) {
             auto const& attrName = name.name;
-            auto key = Tuple<Symbol, Str>{attrName, value->value.str()};
+            auto key = Tuple{attrName, value->value.str()};
 
             considerCursorIfPresent(_attrPresentRules, attrName);
             considerCursorIfPresent(_attrExactValueRules, key);

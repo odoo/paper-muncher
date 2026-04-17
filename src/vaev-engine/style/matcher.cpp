@@ -15,8 +15,8 @@ namespace Vaev::Style {
 static auto debugMatching = Debug::Flag::debug("web-style-matching", "Log failures to match selectors");
 static auto featureNthChild = Debug::Flag::feature("web-style-nth_child", "Enable :nth-child() and related selectors");
 
-static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> pseudoElement);
-export Opt<Spec> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> pseudoElement);
+static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement);
+export Opt<Spec> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement);
 
 // https://www.w3.org/TR/selectors-4/#descendant-combinators
 static bool _matchDescendant(Selector const& selector, Gc::Ref<Dom::Element> element) {
@@ -66,7 +66,7 @@ static bool _matchSubsequent(Selector const& selector, Gc::Ref<Dom::Element> ele
     return false;
 }
 
-static bool _match(Infix const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> pseudoElement) {
+static bool _match(Infix const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement) {
     if (not _matchSelector(selector.rhs.unwrap(), element, pseudoElement))
         return false;
 
@@ -89,7 +89,7 @@ static bool _match(Infix const& selector, Gc::Ref<Dom::Element> element, Opt<Sym
     }
 }
 
-static bool _match(Nfix const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> pseudoElement) {
+static bool _match(Nfix const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement) {
     switch (selector.type) {
     case Nfix::AND:
         for (auto& inner : selector.inners)
@@ -279,7 +279,7 @@ static bool _matchNthOfType(AnB const& anb, Gc::Ref<Dom::Element> element, bool 
     return anb.match(index + 1);
 }
 
-static bool _match(PseudoElementSelector const& selector, Gc::Ref<Dom::Element>, Opt<Symbol> pseudoElement) {
+static bool _match(PseudoElementSelector const& selector, Gc::Ref<Dom::Element>, Opt<Symbol> const& pseudoElement) {
     if (not pseudoElement)
         return false;
 
@@ -326,7 +326,7 @@ static bool _match(PseudoClassSelector const& selector, Gc::Ref<Dom::Element> el
 
 // MARK: Selector --------------------------------------------------------------
 
-static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> pseudoElement) {
+static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement) {
     // Route the selector to the appropriate matching function.
     return selector.visit(Visitor{[&](auto const& s) {
         if constexpr (requires { _match(s, element, pseudoElement); })
@@ -339,7 +339,7 @@ static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> eleme
     }});
 }
 
-export Opt<Spec> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> pseudoElement = NONE) {
+export Opt<Spec> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement = NONE) {
     if (auto n = selector.is<Nfix>(); n and n->type == Nfix::OR) {
         Opt<Spec> specificity;
         for (auto& inner : n->inners) {

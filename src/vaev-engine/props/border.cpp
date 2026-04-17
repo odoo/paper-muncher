@@ -1111,7 +1111,7 @@ export struct BorderCollapseProperty : Property {
             return makeRc<BorderCollapseProperty>(self(), BorderCollapse::SEPARATE);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.table.cow().collapse = parent.table->collapse;
         }
 
@@ -1153,7 +1153,7 @@ export struct BorderSpacingProperty : Property {
             return makeRc<BorderSpacingProperty>(self(), BorderSpacing{0_au, 0_au});
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.table.cow().spacing = parent.table->spacing;
         }
 

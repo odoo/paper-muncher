@@ -72,7 +72,7 @@ export struct Window {
         return _document.upgrade()->url();
     }
 
-    Gc::Ptr<Document> document() {
+    Gc::Ptr<Document> document() const {
         return _document;
     }
 

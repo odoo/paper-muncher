@@ -45,7 +45,14 @@ export struct Property : Meta::NoCopy {
 
         // The property is not reset by all:
         // https://drafts.csswg.org/css-cascade/#all-shorthand
-        ALL_EXCLUDED = 1 << 5
+        ALL_EXCLUDED = 1 << 5,
+
+        /// The property participates in a bulk-inheritance optimization.
+        ///
+        /// Instead of calling the virtual `inherit()` method for every individual
+        /// property, the engine performs a "fast-path" copy of large state blocks
+        /// (e.g., Custom Properties) from parent to child.
+        BULK_INHERITED = 1 << 6,
     };
 
     using enum Options;
@@ -78,7 +85,7 @@ export struct Property : Meta::NoCopy {
 
         virtual Rc<Property> load(ComputedValues const& c) const = 0;
 
-        virtual void inherit(ComputedValues const& parent, ComputedValues& child) {
+        virtual void inherit(ComputedValues const& parent, ComputedValues& child) const {
             // NOTE: This is the slow fallback path for properties that are not
             //       commonly inherited. Any property marked with the INHERITED
             //       flag should override this method with a faster implementation.
@@ -179,7 +186,12 @@ struct CustomProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED, CUSTOM_PROPERTY, ALL_EXCLUDED};
+            return {
+                INHERITED,
+                CUSTOM_PROPERTY,
+                ALL_EXCLUDED,
+                BULK_INHERITED,
+            };
         }
 
         Rc<Property> initial() const override {
@@ -188,13 +200,13 @@ struct CustomProperty : Property {
             );
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
-            if (parent.hasCustomProp(_name))
-                child.setCustomProp(_name, parent.getCustomProp(_name));
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
+            if (auto maybeProp = parent.getCustomProp(_name))
+                child.setCustomProp(_name, maybeProp.unwrap());
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<CustomProperty>(self(), c.getCustomProp(_name));
+            return makeRc<CustomProperty>(self(), c.getCustomProp(_name).unwrapOr({}));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -246,6 +258,9 @@ struct ToggleProperty : Property {
     }
 
     void apply(ComputedValues const& parent, ComputedValues& child) const override {
+        if (isEmpty(_value))
+            return;
+
         auto parentProperty = registration->load(parent);
         usize index = 0;
         for (auto& p : _value) {
@@ -521,7 +536,7 @@ export struct RegisteredPropertySet {
         return _registrations;
     }
 
-    void registerProperty(Symbol propertyName, Rc<Property::Registration> registration) {
+    void registerProperty(Symbol const& propertyName, Rc<Property::Registration> registration) {
         if (registration->flags().has(Property::PRESENTATION_ATTRIBUTE))
             _presentationAttributes.put(propertyName, registration);
 
@@ -538,15 +553,18 @@ export struct RegisteredPropertySet {
         registerProperty(registration->name(), registration);
     }
 
-    Rc<Property::Registration> registerCustomProperty(Symbol propertyName) {
+    Rc<Property::Registration> registerCustomProperty(Symbol const& propertyName) {
         auto registration = makeRc<CustomProperty::Registration>(propertyName);
         registration->_self = registration;
         registerProperty(propertyName, registration);
         return registration;
     }
 
-    Opt<Rc<Property::Registration>> resolveRegistration(Symbol propertyName, Flags<Options> options) {
-        propertyName = _legacyAlias.lookup(propertyName).unwrapOr(propertyName);
+    Opt<Rc<Property::Registration>> resolveRegistration(Symbol const& unresolvedPropertyName, Flags<Options> options) {
+        auto const& propertyName =
+            _legacyAlias
+                .lookup(unresolvedPropertyName)
+                .unwrapOr(unresolvedPropertyName);
 
         if (auto maybeRegistration = _registrations.lookup(propertyName))
             return maybeRegistration.take();
@@ -570,21 +588,33 @@ export struct RegisteredPropertySet {
     // MARK: Initial -----------------------------------------------------------
 
     // https://www.w3.org/TR/css-cascade-4/#initial-values
+    mutable Opt<Rc<ComputedValues>> _memoInitialComputedValues = NONE;
+
     Rc<ComputedValues> initialComputedValues() const {
-        auto cv = makeRc<ComputedValues>();
-        for (auto& [_, registration] : registrations().iterItems())
-            if (not registration->flags().has(Property::SHORTHAND_PROPERTY))
-                registration->initial()->apply(*cv, *cv);
-        return cv;
+        if (not _memoInitialComputedValues) {
+            auto initial = makeRc<ComputedValues>();
+            for (auto& [_, registration] : registrations().iterItems())
+                if (not registration->flags().has(Property::SHORTHAND_PROPERTY))
+                    registration->initial()->apply(*initial, *initial);
+            _memoInitialComputedValues = initial;
+        }
+        return makeRc<ComputedValues>(**_memoInitialComputedValues);
     }
 
     // MARK: Inherit -----------------------------------------------------------
 
     // https://www.w3.org/TR/css-cascade-4/#inheriting
     void inheritsComputedValues(ComputedValues const& parent, ComputedValues& child) const {
-        for (auto v : _registrations.iterValue()) {
-            if (v->flags().has({Property::INHERITED}))
+        // Apply defaulted inheritance fast path for property that supports it.
+        child.customProps = parent.customProps;
+
+        // Handle the rest of the properties
+        for (auto& v : _registrations.iterValue()) {
+            auto registrationFlags = v->flags();
+            if (registrationFlags.has({Property::INHERITED}) and
+                not registrationFlags.has({Property::BULK_INHERITED})) {
                 v->inherit(parent, child);
+            }
         }
     }
 
@@ -634,7 +664,7 @@ export struct RegisteredPropertySet {
         return makeRc<DeferredProperty>(registration, content);
     }
 
-    Res<Rc<Property>> parseValue(Symbol propertyName, Cursor<Css::Sst> content, Flags<Options> options) {
+    Res<Rc<Property>> parseValue(Symbol const& propertyName, Cursor<Css::Sst> content, Flags<Options> options) {
         Cursor cursor = content;
 
         auto registration = try$(resolveRegistration(propertyName, options));
@@ -666,7 +696,7 @@ export struct RegisteredPropertySet {
         return maybeProp;
     }
 
-    Res<Rc<Property>> parseValue(Symbol propertyName, Str propertyValue, Flags<Options> options) {
+    Res<Rc<Property>> parseValue(Symbol const& propertyName, Str propertyValue, Flags<Options> options) {
         Css::Lexer lex{propertyValue};
         Diag::Collector diags = Diag::Collector::ignore();
         auto [content, _] = Css::consumeDeclarationValue(lex, diags);

@@ -267,7 +267,7 @@ export struct ColorProperty : Property {
             return makeRc<ColorProperty>(self(), BLACK);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.color = parent.color;
         }
 

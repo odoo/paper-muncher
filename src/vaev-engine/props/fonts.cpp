@@ -34,7 +34,7 @@ export struct FontFamilyProperty : Property {
             return makeRc<FontFamilyProperty>(self(), c.font->families);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.font.cow().families = parent.font->families;
         }
 
@@ -124,7 +124,7 @@ export struct FontWidthProperty : Property {
             return makeRc<FontWidthProperty>(self(), FontWidth::NORMAL);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.font.cow().width = parent.font->width;
         }
 
@@ -166,7 +166,7 @@ export struct FontStyleProperty : Property {
             return makeRc<FontStyleProperty>(self(), FontStyle::NORMAL);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.font.cow().style = parent.font->style;
         }
 
@@ -208,7 +208,7 @@ export struct FontSizeProperty : Property {
             return makeRc<FontSizeProperty>(self(), FontSize::MEDIUM);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.font.cow().size = parent.font->size;
         }
 

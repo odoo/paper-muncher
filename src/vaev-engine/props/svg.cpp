@@ -240,7 +240,7 @@ export struct SvgFillProperty : Property {
             return makeRc<SvgFillProperty>(self(), Paint{Color{Gfx::BLACK}});
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             // NOTE: We bail out early if the parent has the default SVG values.
             //       This avoids needlessly writing into the child's style, which would
             //       trigger a copy-on-write of the whole property group for nothing.
@@ -404,7 +404,7 @@ export struct SvgStrokeProperty : Property {
             return makeRc<SvgStrokeProperty>(self(), Paint{NONE});
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             // NOTE: We bail out early if the parent has the default SVG values.
             //       This avoids needlessly writing into the child's style, which would
             //       trigger a copy-on-write of the whole property group for nothing.
@@ -494,7 +494,7 @@ export struct FillOpacityProperty : Property {
             return makeRc<FillOpacityProperty>(self(), c.svg->fillOpacity);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             // NOTE: We bail out early if the parent has the default SVG values.
             //       This avoids needlessly writing into the child's style, which would
             //       trigger a copy-on-write of the whole property group for nothing.
@@ -542,7 +542,7 @@ export struct StrokeWidthProperty : Property {
             return makeRc<StrokeWidthProperty>(self(), PercentOr<Length>{Length{1_au}});
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) override {
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             // NOTE: We bail out early if the parent has the default SVG values.
             //       This avoids needlessly writing into the child's style, which would
             //       trigger a copy-on-write of the whole property group for nothing.
