@@ -6,6 +6,7 @@ import Karm.Font;
 import Karm.Ref;
 import Karm.Math;
 import Karm.Logger;
+import Karm.Tracing;
 
 import :dom.document;
 import :dom.element;
@@ -400,6 +401,8 @@ export struct Computer {
     }
 
     void styleDocument(Dom::Document& doc) {
+        Tracing::Scope _{"style-computer", "style document"};
+
         if (auto el = doc.documentElement()) {
             auto rootComputedValues = _registeredPropertySet.initialComputedValues();
             rootComputedValues->fontFace = _lookupFontface(*rootComputedValues);

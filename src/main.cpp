@@ -4,12 +4,14 @@ import Karm.Cli;
 import PaperMuncher;
 import Karm.Print;
 import Karm.Logger;
+import Karm.Tracing;
 
 import Vaev.Engine;
 
 using namespace Karm;
 
 Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
+    Tracing::enable();
     auto sandboxedArg = Cli::flag(NONE, "sandboxed"s, "Disallow local file and http access"s);
     auto verboseArg = Cli::flag(NONE, "verbose"s, "Enable verbose logging"s);
     auto quietArg = Cli::flag(NONE, "quiet"s, "Suppress non-fatal logging"s);

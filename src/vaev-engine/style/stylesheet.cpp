@@ -3,6 +3,7 @@ export module Vaev.Engine:style.stylesheet;
 import Karm.Core;
 import Karm.Ref;
 import Karm.Logger;
+import Karm.Tracing;
 
 import :style.rules;
 
@@ -24,6 +25,7 @@ export struct StyleSheet {
 
         StyleSheet res;
         for (auto const& item : sst.content) {
+            Tracing::Scope _{"style", "parse rule"};
             if (item == Css::Sst::RULE) {
                 res.rules.pushBack(Rule::parse(registry, item, origin, ns));
             } else {
@@ -38,6 +40,7 @@ export struct StyleSheet {
     }
 
     static StyleSheet parse(RegisteredPropertySet& registry, Io::SScan& s, Diag::Collector& diags, Ref::Url href, Origin origin = Origin::AUTHOR) {
+        Tracing::Scope _{"style", "parse stylesheet"};
         Css::Lexer lex{s};
         Css::Sst sst = consumeRuleList(lex, true, diags);
         return parse(registry, sst, href, origin);

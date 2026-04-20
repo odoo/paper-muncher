@@ -6,6 +6,7 @@ import Karm.Font;
 import Karm.Gfx;
 import Karm.Math;
 import Karm.Logger;
+import Karm.Tracing;
 
 import :layout;
 import :style;

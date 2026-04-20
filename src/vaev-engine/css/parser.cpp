@@ -2,6 +2,7 @@ export module Vaev.Engine:css.parser;
 
 import Karm.Logger;
 import Karm.Diag;
+import Karm.Tracing;
 
 import :css.lexer;
 
@@ -146,6 +147,8 @@ Opt<Sst> consumeRule(Lexer& lex, Diag::Collector& diags) {
 
 // https://www.w3.org/TR/css-syntax-3/#consume-list-of-rules
 export Content consumeRuleList(Lexer& lex, bool topLevel, Diag::Collector& diags) {
+    Tracing::Scope _{"css", "consume rule list"};
+
     Content list{};
 
     while (true) {

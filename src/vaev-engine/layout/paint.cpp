@@ -8,6 +8,7 @@ import Karm.Image;
 import Karm.Logger;
 import Karm.Math;
 import Karm.Scene;
+import Karm.Tracing;
 
 import :style;
 import :values;
@@ -728,6 +729,8 @@ static void _establishStackingContext(Frag& frag, Scene::Stack& stack) {
 }
 
 export void paint(Frag& frag, Scene::Stack& stack) {
+    Tracing::Scope _{"layout", "build paint scene"};
+
     // The root element forms the root stacking context.
     _establishStackingContext(frag, stack);
 }

@@ -13,6 +13,7 @@ import Karm.Ref;
 import Karm.Sys;
 import Karm.Logger;
 import Karm.Image;
+import Karm.Tracing;
 
 import :dom.document;
 import :html;
@@ -22,6 +23,8 @@ import :style;
 namespace Vaev::Loader {
 
 Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url url, Rc<Http::Response> resp, Async::CancellationToken ct) {
+    Tracing::Scope _{"loader", "load document"};
+
     auto dom = heap.alloc<Dom::Document>(url);
     auto contentType = resp->header.contentType().unwrapOr(Ref::Uti::PUBLIC_DATA);
 
@@ -98,7 +101,10 @@ export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http:
 }
 
 Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Style::RegisteredPropertySet& registry, Http::Client& client, Ref::Url url, Style::Origin origin, Async::CancellationToken ct) {
+    Tracing::Scope _{"loader", "fetch stylesheet"};
+
     auto resp = co_trya$(client.getAsync(url, ct));
+
     if (not resp->body)
         co_return Error::notFound("could not load stylesheet");
 
@@ -127,6 +133,7 @@ Rc<Scene::Node> _missingImagePlaceholder() {
 Async::Task<> _fetchResourcesAsync(Style::RegisteredPropertySet& registry, Http::Client& client, Gc::Ref<Dom::Node> node, Style::StyleSheetList& sb, Async::CancellationToken ct) {
     auto el = node->is<Dom::Element>();
     if (el and el->qualifiedName == Html::IMG_TAG) {
+        Tracing::Scope _{"loader", "fetch image"};
         auto src = el->getAttribute(Html::SRC_ATTR);
         if (not src) {
             el->imageContent = _missingImagePlaceholder();
@@ -187,6 +194,8 @@ static auto dumpStylesheets = Debug::Flag::debug("web-stylesheets", "Dump the lo
 
 // https://fetch.spec.whatwg.org/#scheme-fetch
 export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url, Async::CancellationToken ct) {
+    Tracing::Scope _{"loader", "fetch document"};
+
     Ref::Url resolvedUrl = url;
 
     // If request’s current URL’s path is the string "blank",

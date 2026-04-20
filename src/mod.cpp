@@ -16,6 +16,7 @@ import Karm.Logger;
 import Karm.Scene;
 import Karm.Core;
 import Karm.Ref;
+import Karm.Tracing;
 
 import Vaev.Engine;
 
@@ -131,6 +132,8 @@ export Async::Task<> runAsync(
     );
 
     for (auto& input : inputs) {
+        Tracing::Scope _{"main", "process input"};
+
         logInfo("loading {}...", input);
         auto window = Vaev::Dom::Window::create(client);
         co_trya$(window->loadLocationAsync(input, Ref::Uti::PUBLIC_OPEN, ct));

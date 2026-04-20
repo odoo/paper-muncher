@@ -20,6 +20,7 @@
     "requires": [
         "vaev-script",
         "karm-core",
+        "karm-tracing",
         "karm-gc",
         "karm-gfx",
         "karm-http",

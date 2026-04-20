@@ -3,6 +3,7 @@ export module Vaev.Engine:html.parser;
 import Karm.Gc;
 import Karm.Debug;
 import Karm.Logger;
+import Karm.Tracing;
 
 import :dom.document;
 import :dom.documentType;
@@ -4328,6 +4329,8 @@ export struct HtmlParser : HtmlSink {
     }
 
     void write(Str str, Diag::Collector& diags) {
+        Tracing::Scope _{"html-parser", "parse html"};
+
         Io::SScan s{str};
         while (not s.ended()) {
             Rune r = s.peek();
