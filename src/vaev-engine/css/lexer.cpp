@@ -233,7 +233,7 @@ export struct Lexer {
 
     // https://www.w3.org/TR/css-syntax-3/#check-if-two-code-points-are-a-valid-escape
     bool _checkValidEscape(Io::SScan& s) {
-        if (s.rem() < 2)
+        if (s.ended())
             return false;
         // If the first code point is not U+005C REVERSE SOLIDUS (\), return false.
         if (s.peek() != '\\')
@@ -247,9 +247,6 @@ export struct Lexer {
 
     // https://www.w3.org/TR/css-syntax-3/#consume-an-escaped-code-point
     Rune _consumeEscapeCodepoint(Io::SScan& s) const {
-        if (not s.skip('\\'))
-            return U'�';
-
         // hex digit
         if (auto hex = s.token(Re::nOrN(1, 5, Re::xdigit()))) {
             // Consume as many hex digits as possible, but no more than 5.
@@ -307,11 +304,12 @@ export struct Lexer {
             }
             // U+005C REVERSE SOLIDUS (\)
             else if (s.peek() == '\\') {
-                // If the next input code point is EOF, do nothing.
-                if (s.rem() == 1)
-                    s.next();
+                s.next();
+                if (s.ended()) {
+                    // If the next input code point is EOF, do nothing.
+                }
                 // Otherwise, if the next input code point is a newline, consume it.
-                else if (s.skip('\\'_re & RE_NEWLINE))
+                else if (s.skip(RE_NEWLINE))
                     /* consumed by skip() */;
                 // Otherwise, (the stream starts with a valid escape) consume an escaped code point and append the returned code point to the <string-token>’s value.
                 else
