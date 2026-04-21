@@ -117,8 +117,8 @@ Pair<Vec<Layout::Breakpoint>, Vec<PageLayoutInfos>> collectBreakPointsAndRunning
 
         Rc<Style::PageComputedValues> pageStyle = context.computer.computeFor(*context.initialStyle, page);
         RectAu pageRect{
-            context.media.width / context.media.resolution.toDppx(),
-            context.media.height / context.media.resolution.toDppx()
+            Layout::resolveLength(context.media.width) / context.media.resolution.toDppx(),
+            Layout::resolveLength(context.media.height) / context.media.resolution.toDppx()
         };
 
         auto pageSize = pageRect.size().cast<f64>();

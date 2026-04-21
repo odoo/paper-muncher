@@ -17,36 +17,45 @@ namespace Vaev {
 // MARK: Line Width -------------------------------------------------------------
 // https://drafts.csswg.org/css-backgrounds/#typedef-line-width
 
+// FIXME: Remove
 export constexpr Au THIN_VALUE = 1_au;
 export constexpr Au MEDIUM_VALUE = 3_au;
 export constexpr Au THICK_VALUE = 5_au;
 
+// FIXME: Calc is missing
 export using LineWidth = Union<
     Keywords::Thin,
     Keywords::Medium,
     Keywords::Thick,
-    CalcValue<Length>>;
+    Length>;
 
 export template <>
-struct ValueTraits<LineWidth> : DefaultValueTraits<LineWidth> {
+struct ValueTraits<LineWidth> {
+    using ComputedType = Px;
+
     static Res<LineWidth> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
+        return parseOneOf<LineWidth>(c);
+    }
 
-        if (c.peek() == Css::Token::ident("thin")) {
-            c.next();
-            return Ok(Keywords::THIN);
-        }
-        if (c.peek() == Css::Token::ident("medium")) {
-            c.next();
-            return Ok(Keywords::MEDIUM);
-        }
-        if (c.peek() == Css::Token::ident("thick")) {
-            c.next();
-            return Ok(Keywords::THICK);
-        }
+    static ComputedType compute(LineWidth const& lineWidth, ComputationContext const& ctx) {
+        return lineWidth.visit(Visitor{
+            [](Keywords::Thin) {
+                return Px(1);
+            },
+            [](Keywords::Medium) {
+                return Px(3);
+            },
+            [](Keywords::Thick) {
+                return Px(5);
+            },
+            [&](Length const& length) {
+                return computeValue(length, ctx).snapped();
+            }
+        });
+    }
 
-        return Ok(try$(parseValue<CalcValue<Length>>(c)));
+    static LineWidth fromComputed(ComputedType const& computed) {
+        return Length(computed.value(), Length::PX);
     }
 };
 

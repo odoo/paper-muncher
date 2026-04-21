@@ -1,3 +1,7 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:values.insets;
 
 import Karm.Core;
@@ -110,16 +114,16 @@ struct ValueTraits<Gap> {
         });
     }
 
-    // static Gap fromComputed(ComputedType const& computed) {
-    //     return computed.visit(Visitor{
-    //         [](Computed<CalcValue<PercentOr<Length>>> const& calc) -> Gap {
-    //             return valueFromComputed<CalcValue<PercentOr<Length>>>(calc);
-    //         },
-    //         [](auto&& val) -> Gap {
-    //             return val;
-    //         }
-    //     });
-    // }
+    static Gap fromComputed(ComputedType const& computed) {
+        return computed.visit(Visitor{
+            [](Computed<CalcValue<PercentOr<Length>>> const& calc) -> Gap {
+                return valueFromComputed<CalcValue<PercentOr<Length>>>(calc);
+            },
+            [](auto&& val) -> Gap {
+                return val;
+            }
+        });
+    }
 };
 
 export struct Gaps {
@@ -144,6 +148,17 @@ export template <>
 struct ValueTraits<Gaps> {
     using ComputedType = ComputedGaps;
 
+    static Res<Gaps> parse(Cursor<Css::Sst>& c) {
+        auto rowGap = try$(parseValue<Gap>(c));
+        eatWhitespace(c);
+        auto colGap = parseValue<Gap>(c);
+
+        if (not colGap)
+            return Ok(Gaps{rowGap, rowGap});
+
+        return Ok(Gaps{rowGap, colGap.take()});
+    }
+
     static ComputedType compute(Gaps const& gaps, ComputationContext const& ctx) {
         return ComputedGaps {
             .row = computeValue(gaps.row, ctx),
@@ -151,12 +166,12 @@ struct ValueTraits<Gaps> {
         };
     }
 
-    // static Gaps fromComputed(ComputedType const& computed) {
-    //     return Gaps {
-    //         .row = valueFromComputed<Gap>(computed.row),
-    //         .col = valueFromComputed<Gap>(computed.col)
-    //     };
-    // }
+    static Gaps fromComputed(ComputedType const& computed) {
+        return Gaps {
+            .row = valueFromComputed<Gap>(computed.row),
+            .col = valueFromComputed<Gap>(computed.col)
+        };
+    }
 };
 
 

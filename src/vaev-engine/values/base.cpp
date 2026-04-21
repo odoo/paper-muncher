@@ -49,6 +49,7 @@ struct ComputationContext {
     //        by mut reference. Ideally they should be replaced by a richer version of
     Opt<Gfx::Font> rootFont = NONE;
     Opt<Gfx::Font> font = NONE;
+    Gfx::Color currentColor = Gfx::BLACK;
     _WritingMode writingMode = _WritingMode::HORIZONTAL_TB;
     _Viewport viewport = {.small = {800, 600}}; /// Viewport of the current box
     Math::Vec2f displayArea = {800, 600};
@@ -86,6 +87,51 @@ Res<T> parseOneOf(Cursor<Css::Sst>& c) {
     });
 }
 
+export template <Meta::DefaultConstructible T, auto T::* F1, auto T::* F2, auto T::* F3>
+Res<T> parseOneOrMoreUnordered(Cursor<Css::Sst>& c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    auto result = T{};
+
+    bool fstSet = false;
+    bool sndSet = false;
+    bool thrdSet = false;
+
+    while (not c.ended()) {
+        if (auto val = parseValue<Meta::RemoveConstVolatileRef<decltype(T{}.*F1)>>(c)) {
+            if (fstSet)
+                return Error::invalidData("setting value twice");
+
+            result.*F1 = val.take();
+            fstSet = true;
+            continue;
+        }
+
+        if (auto val = parseValue<Meta::RemoveConstVolatileRef<decltype(T{}.*F2)>>(c)) {
+            if (sndSet)
+                return Error::invalidData("setting value twice");
+
+            result.*F2 = val.take();
+            sndSet = true;
+            continue;
+        }
+
+        if (auto val = parseValue<Meta::RemoveConstVolatileRef<decltype(T{}.*F3)>>(c)) {
+            if (thrdSet)
+                return Error::invalidData("setting value twice");
+
+            result.*F3 = val.take();
+            thrdSet = true;
+            continue;
+        }
+
+        return Error::invalidData("invalid value");
+    }
+
+    return Ok(result);
+}
+
 export template <typename T>
 using Computed = typename ValueTraits<T>::ComputedType;
 
@@ -104,40 +150,27 @@ concept ValueComputable = requires(T const& a, ComputationContext const& ctx) {
     { computeValue(a, ctx) };
 };
 
-// export template <typename T>
-// concept ValueFromComputed = requires(Computed<T> const& a) {
-//     { valueFromComputed<T>(a) };
-// };
-//
 export template <typename T>
-concept Value = ValueParseable<T> and ValueComputable<T>;
+concept ValueFromComputed = requires(Computed<T> const& a) {
+    { valueFromComputed<T>(a) };
+};
+
+export template <typename T>
+concept Value = ValueParseable<T> and ValueComputable<T> and ValueFromComputed<T>;
 
 export template <typename T>
 struct DefaultValueTraits {
     using ComputedType = T;
 
     static ComputedType compute(T const& val, ComputationContext const&) { return val; }
+
     static T fromComputed(ComputedType const& computed) { return computed; }
 };
 
+// FIXME: Move somewhere in layout
 export template <typename T>
-struct ComputedValueTraits {
-    using Resolved = T;
-
-    static Resolved resolve(T const& val, Opt<Au>) { return val; }
-};
-
-export template <typename T>
-using __Resolved = ComputedValueTraits<T>::Resolved;
-
-export template <typename T>
-ComputedValueTraits<T>::Resolved resolveValue(T const& a, Opt<Au> relative) {
-    return ComputedValueTraits<T>::resolve(a, relative);
-}
-
-export template <typename T>
-concept ComputedValue = requires(T const& a, Opt<Au> relative) {
-    { resolveValue(a, relative) };
+concept PercentValue = requires(T const& a, Au relative) {
+    { resolvePercent(a, relative) };
 };
 
 } // namespace Vaev

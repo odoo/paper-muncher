@@ -16,7 +16,7 @@ import Karm.Sys;
 import Karm.Font;
 
 import :dom.window;
-import :layout.values;
+import :layout.base;
 
 namespace Vaev::Loader {
 
@@ -41,13 +41,13 @@ Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::
         auto root = window->document()->documentElement();
 
         auto computedWidth = computeValue(root->computedValues()->sizing->width.unwrapOr<CalcValue<PercentOr<Length>>>(Length{300_au}), {});
-        auto computedHeight = computeValue(root->computedValues()->sizing->height.unwrapOr<CalcValue<PercentOr<Length>>>(Length{300_au}), {});
+        auto computedHeight = computeValue(root->computedValues()->sizing->height.unwrapOr<CalcValue<PercentOr<Length>>>(Length{150_au}), {});
 
         // NOSPEC: The spec references a “default object size” but does not define explicit values.
         //         Historically, browsers (including Chrome) default to 300x150, as mentioned in older drafts:
         //         https://www.w3.org/TR/2011/WD-css3-images-20110908/#default-object-size
-        auto width = resolveValue(computedWidth, 300_au);
-        auto height = resolveValue(computedHeight, 300_au);
+        auto width = Layout::resolvePercentLength(computedWidth, 300_au);
+        auto height = Layout::resolvePercentLength(computedHeight, 150_au);
 
         window->changeMedia(Style::Media::forRender({width, height}, Resolution::fromDppx(1)));
         co_return Ok(window->render());

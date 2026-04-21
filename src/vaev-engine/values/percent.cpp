@@ -32,28 +32,34 @@ struct ValueTraits<Percent> : DefaultValueTraits<Percent> {
     }
 };
 
-export template <>
-struct ComputedValueTraits<Percent> {
-    using Resolved = Au;
-
-    static Resolved resolve(Percent const& percent, Opt<Au> relative) {
-        if (not relative)
-            return 0_au;
-
-        return *relative * percent.value();
-    }
-};
-
 export template <typename T>
 using PercentOr = Union<Percent, T>;
 
+// FIXME: Refactor during calc refactor to look something like this:
+//        LengthPercentage = Length | Percent | Calc
 export template <typename T>
-struct ComputedValueTraits<PercentOr<T>> {
-    using Resolved = Au;
+struct ValueTraits<PercentOr<T>> {
+    // https://drafts.csswg.org/css-values-4/#combine-mixed
+    using ComputedType = Union<Percent, Computed<T>>;
 
-    static Resolved resolve(PercentOr<T> const& percentOr, Opt<Au> relative) {
-        return percentOr.visit([&](auto&& v) -> Resolved {
-            return resolveValue(v, relative);
+    static Res<PercentOr<T>> parse(Cursor<Css::Sst>& c) {
+        return parseOneOf<PercentOr<T>>(c);
+    }
+
+    static ComputedType compute(PercentOr<T> const& percentOr, ComputationContext const& ctx) {
+        return percentOr.visit([&](auto&& v) -> ComputedType {
+            return computeValue(v, ctx);
+        });
+    }
+
+    static PercentOr<T> fromComputed(ComputedType const& computed) {
+        return computed.visit(Visitor{
+            [](Computed<T> const& val) -> PercentOr<T> {
+                return valueFromComputed<T>(val);
+            },
+            [](Percent const& percent) -> PercentOr<T> {
+                return valueFromComputed<Percent>(percent);
+            }
         });
     }
 };

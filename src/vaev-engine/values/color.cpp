@@ -251,8 +251,65 @@ export Opt<SystemColor> parseSystemColor(Str name) {
     return NONE;
 }
 
+static Array<Gfx::Color, static_cast<usize>(SystemColor::_LEN)> SYSTEM_COLOR = {
+#define COLOR(NAME, _, VALUE) Gfx::Color::fromHex(VALUE),
+#include "defs/system-colors.inc"
+
+#undef COLOR
+};
+
+export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor);
+
+export Gfx::Color resolve(Color const& c, Gfx::Color currentColor) {
+    return c.visit(Visitor{
+        [&](Gfx::Color const& srgb) {
+            return srgb;
+        },
+        [&](Keywords::CurrentColor) {
+            return currentColor;
+        },
+        [&](SystemColor const& system) {
+            return SYSTEM_COLOR[static_cast<usize>(system)];
+        },
+        [&](ColorMix const& mix) {
+            return resolve(mix, currentColor);
+        },
+    });
+}
+
+export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor) {
+    Gfx::Color lhsColor = resolve(cm.lhs.color, currentColor);
+    Percent lhsPerc = cm.lhs.perc.unwrapOrElse([&] {
+        return Percent{100} - cm.rhs.perc.unwrapOr(Percent{50});
+    });
+
+    Gfx::Color rhsColor = resolve(cm.rhs.color, currentColor);
+    Percent rhsPerc = cm.rhs.perc.unwrapOrElse([&] {
+        return Percent{100} - cm.lhs.perc.unwrapOr(Percent{50});
+    });
+
+    if (lhsPerc == rhsPerc and lhsPerc == Percent{0}) {
+        logWarn("cannot mix colors when both have zero percentages");
+        return Gfx::WHITE;
+    }
+
+    Percent rhsPercNorm = rhsPerc;
+
+    if (lhsPerc + rhsPerc != Percent{100})
+        rhsPercNorm = rhsPercNorm / (lhsPerc + rhsPerc);
+    else
+        rhsPercNorm /= Percent{100};
+
+    Gfx::Color resColor = cm.colorSpace.interpolate(lhsColor, rhsColor, rhsPercNorm.value());
+    if (lhsPerc + rhsPerc < Percent{100})
+        resColor = resColor.withOpacity((lhsPerc + rhsPerc).value() / 100.0);
+
+    return resColor;
+}
+
 export template <>
 struct ValueTraits<Color> : DefaultValueTraits<Color> {
+    using ComputedType = Gfx::Color;
 
     static Res<Gfx::Color> _parseHexColor(Io::SScan& s) {
         if (s.next() != '#')
@@ -675,62 +732,15 @@ struct ValueTraits<Color> : DefaultValueTraits<Color> {
 
         return Error::invalidData("expected color");
     }
-};
 
-static Array<Gfx::Color, static_cast<usize>(SystemColor::_LEN)> SYSTEM_COLOR = {
-#define COLOR(NAME, _, VALUE) Gfx::Color::fromHex(VALUE),
-#include "defs/system-colors.inc"
-
-#undef COLOR
-};
-
-export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor);
-
-export Gfx::Color resolve(Color const& c, Gfx::Color currentColor) {
-    return c.visit(Visitor{
-        [&](Gfx::Color const& srgb) {
-            return srgb;
-        },
-        [&](Keywords::CurrentColor) {
-            return currentColor;
-        },
-        [&](SystemColor const& system) {
-            return SYSTEM_COLOR[static_cast<usize>(system)];
-        },
-        [&](ColorMix const& mix) {
-            return resolve(mix, currentColor);
-        },
-    });
-}
-
-export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor) {
-    Gfx::Color lhsColor = resolve(cm.lhs.color, currentColor);
-    Percent lhsPerc = cm.lhs.perc.unwrapOrElse([&] {
-        return Percent{100} - cm.rhs.perc.unwrapOr(Percent{50});
-    });
-
-    Gfx::Color rhsColor = resolve(cm.rhs.color, currentColor);
-    Percent rhsPerc = cm.rhs.perc.unwrapOrElse([&] {
-        return Percent{100} - cm.lhs.perc.unwrapOr(Percent{50});
-    });
-
-    if (lhsPerc == rhsPerc and lhsPerc == Percent{0}) {
-        logWarn("cannot mix colors when both have zero percentages");
-        return Gfx::WHITE;
+    static ComputedType compute(Color const& color, ComputationContext const& ctx) {
+        // FIXME: Inline resolve() here
+        return resolve(color, ctx.currentColor);
     }
 
-    Percent rhsPercNorm = rhsPerc;
-
-    if (lhsPerc + rhsPerc != Percent{100})
-        rhsPercNorm = rhsPercNorm / (lhsPerc + rhsPerc);
-    else
-        rhsPercNorm /= Percent{100};
-
-    Gfx::Color resColor = cm.colorSpace.interpolate(lhsColor, rhsColor, rhsPercNorm.value());
-    if (lhsPerc + rhsPerc < Percent{100})
-        resColor = resColor.withOpacity((lhsPerc + rhsPerc).value() / 100.0);
-
-    return resColor;
-}
+    static Color fromComputed(ComputedType const& computed) {
+        return computed;
+    }
+};
 
 } // namespace Vaev

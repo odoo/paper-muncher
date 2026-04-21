@@ -237,7 +237,7 @@ export struct RowGapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<RowGapProperty>(self(), c.gaps->row.visit([](auto&& value) { return Gap(value); }));
+            return makeRc<RowGapProperty>(self(), valueFromComputed<Gap>(c.gaps->row));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -251,7 +251,8 @@ export struct RowGapProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.gaps.cow().row = _value;
+        // FIXME: Pass proper context
+        c.gaps.cow().row = computeValue(_value, {});
     }
 
     void repr(Io::Emit& e) const override {
@@ -276,7 +277,7 @@ export struct ColumnGapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ColumnGapProperty>(self(), c.gaps->col);
+            return makeRc<ColumnGapProperty>(self(), valueFromComputed<Gap>(c.gaps->col));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -290,7 +291,8 @@ export struct ColumnGapProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.gaps.cow().col = _value;
+        // FIXME: Proper context
+        c.gaps.cow().col = computeValue(_value, {});
     }
 
     void repr(Io::Emit& e) const override {
@@ -324,13 +326,7 @@ export struct GapProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto rowGap = try$(parseValue<Gap>(c));
-            eatWhitespace(c);
-            auto colGap = parseValue<Gap>(c);
-
-            if (not colGap)
-                return Ok(makeRc<GapProperty>(self(), Gaps{rowGap, rowGap}));
-            return Ok(makeRc<GapProperty>(self(), Gaps{rowGap, colGap.take()}));
+            return Ok(makeRc<GapProperty>(self(), try$(parseValue<Gaps>(c))));
         }
     };
 

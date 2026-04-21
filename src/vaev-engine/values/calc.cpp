@@ -214,79 +214,45 @@ struct ValueTraits<CalcValue<T>> : DefaultValueTraits<CalcValue<T>> {
             },
         });
     }
-};
 
-export template <typename T>
-struct ComputedValueTraits<CalcValue<T>> {
-    using Resolved = __Resolved<T>;
+    static CalcValue<T> fromComputed(ComputedType const& computed) {
+        using InValue = Computed<CalcValue<T>>::Value;
+        using InUnary = Computed<CalcValue<T>>::Unary;
+        using InBinary = Computed<CalcValue<T>>::Binary;
 
-    static Resolved resolve(CalcValue<T> const& calc, Opt<Au> relative) {
-        auto resolveUnion = Visitor{
-            [&](T const& v) {
-                return resolveValue(v, relative);
+        auto valueVisitor = Visitor{
+            [&](auto const& val) -> CalcValue<T> {
+                return CalcValue<T>(typename CalcValue<T>::Value(valueFromComputed<T>(val)));
             },
-            [&](CalcValue<T>::Leaf const& v) {
-                return resolveValue(*v, relative);
+            [&](Box<ComputedType> const& val) -> CalcValue<T> {
+                auto inner = fromComputed(*val);
+                return CalcValue<T>(typename CalcValue<T>::Value(makeBox<CalcValue<T>>(inner)));
             },
-            [&](Number const& v)
-                requires(not Meta::Same<T, Number>)
-            {
-                // HACK: Special case for Au
-                if constexpr (Meta::Same<__Resolved<T>, Au>) {
-                    return Au(v);
-                } else {
-                    return __Resolved<T>{v};
-                }
-            }
-            };
+            [&](Number const& val) -> CalcValue<T> {
+                return CalcValue<T>(typename CalcValue<T>::Value(val));
+            },
+        };
 
-        return calc.visit(Visitor{
-            [&](typename CalcValue<T>::Value const& v) {
-                return v.visit(resolveUnion);
+        return computed.visit(Visitor{
+            [&](InValue const& v) -> CalcValue<T> {
+                return v.visit(valueVisitor);
             },
-            [&](typename CalcValue<T>::Unary const& u) {
-                return _resolveUnary(
-                    u.op,
-                    u.val.visit(resolveUnion)
-                );
+            [&](InUnary const& u) -> CalcValue<T> {
+                CalcValue<T> val = fromComputed(ComputedType(u.val));
+
+                auto leafVal = typename CalcValue<T>::Value(makeBox<CalcValue<T>>(val));
+                return CalcValue<T>(u.op, leafVal);
             },
-            [&](typename CalcValue<T>::Binary const& b) {
-                return _resolveInfix(
-                    b.op,
-                    b.lhs.visit(resolveUnion),
-                    b.rhs.visit(resolveUnion)
-                );
+            [&](InBinary const& b) -> CalcValue<T> {
+                CalcValue<T> computed_lhs = fromComputed(ComputedType(b.lhs));
+                CalcValue<T> computed_rhs = fromComputed(ComputedType(b.rhs));
+
+                auto leafLhs = typename CalcValue<T>::Value(makeBox<CalcValue<T>>(computed_lhs));
+                auto leafRhs = typename CalcValue<T>::Value(makeBox<CalcValue<T>>(computed_rhs));
+
+                return CalcValue<T>(b.op, leafLhs, leafRhs);
             },
         });
-    }
-
-    static Resolved _resolveUnary(CalcOp, Resolved) {
-        notImplemented();
-    }
-
-    static Resolved _resolveInfix(CalcOp op, Resolved lhs, Resolved rhs) {
-        switch (op) {
-        case CalcOp::ADD:
-            return lhs + rhs;
-        case CalcOp::SUBTRACT:
-            return lhs - rhs;
-        case CalcOp::MULTIPLY:
-            // HACK: Bypass dimensions restrictions
-            if constexpr (Meta::Same<__Resolved<T>, Au>) {
-                return Au(f64{lhs} * f64{rhs});
-            } else {
-                return lhs * rhs;
-            }
-        case CalcOp::DIVIDE:
-            // HACK: Bypass dimensions restrictions
-            if constexpr (Meta::Same<__Resolved<T>, Au>) {
-                return Au(f64{lhs} / f64{rhs});
-            } else {
-                return lhs / rhs;
-            }
-        default:
-            panic("unexpected operator");
-        }
     }
 };
 

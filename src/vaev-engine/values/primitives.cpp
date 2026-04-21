@@ -164,14 +164,29 @@ struct ValueTraits<Union<Ts...>> {
     }
 };
 
-export template <Value... Ts>
-struct ComputedValueTraits<Union<Ts...>> {
-    using Resolved = Union<typename ComputedValueTraits<Ts>::Resolved...>;
+export template <ValueParseable T>
+struct ValueTraits<Pair<T>> {
+    using ComputedType = Pair<Computed<T>>;
 
-    static Resolved resolve(Union<Ts...> const& u, Opt<Au> relative) {
-        return u.visit([&](auto&& v) -> Resolved {
-            return resolveValue(v, relative);
-        });
+    static Res<Pair<T>> parse(Cursor<Css::Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        auto v0 = try$(parseValue<T>(c));
+
+        auto v1 = parseValue<T>();
+        if (not v1)
+            return {v0};
+
+        return {v0, v1};
+    }
+
+    static ComputedType compute(Pair<T> const& pair, ComputationContext const& ctx) {
+        return {computeValue(pair.v0), computeValue(pair.v1)};
+    }
+
+    static Pair<T> fromComputed(ComputedType const& computed) {
+        return {valueFromComputed<T>(computed.v0), valueFromComputed<T>(computed.v1)};
     }
 };
 

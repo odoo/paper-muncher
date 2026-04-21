@@ -32,7 +32,7 @@ export struct Inherited {};
 export struct ComputedValues {
     Cow<Computed<Gaps>> gaps;
     Cow<BackgroundProps> backgrounds;
-    Cow<BorderProps> borders;
+    Cow<Computed<BorderProps>> borders;
     Cow<Margin> margin = makeCow<Margin>(Width(CalcValue<PercentOr<Length>>(Length(0_au)))); // FIXME
     Cow<Outline> outline;
     Cow<Padding> padding = makeCow<Padding>(Length(0_au)); // FIXME

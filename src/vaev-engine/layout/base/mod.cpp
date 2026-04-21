@@ -7,5 +7,6 @@ export import :layout.fragment;
 export import :layout.input;
 export import :layout.layout;
 export import :layout.output;
+export import :layout.percent;
 export import :layout.values;
 export import :layout.runningPosition;
