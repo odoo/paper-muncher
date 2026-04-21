@@ -109,7 +109,7 @@ struct CalcValue {
 
 export template <typename T>
 struct ValueTraits<CalcValue<T>> : DefaultValueTraits<CalcValue<T>> {
-    using Computed = CalcValue<typename ValueTraits<T>::Computed>;
+    using ComputedType = CalcValue<typename ValueTraits<T>::ComputedType>;
 
     static Res<CalcValue<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
@@ -175,42 +175,42 @@ struct ValueTraits<CalcValue<T>> : DefaultValueTraits<CalcValue<T>> {
         return Ok(try$(parseValue<T>(c)));
     }
 
-    static Computed compute(CalcValue<T> const& calc, ComputationContext const& ctx) {
+    static ComputedType compute(CalcValue<T> const& calc, ComputationContext const& ctx) {
         using InValue = typename CalcValue<T>::Value;
         using InUnary = typename CalcValue<T>::Unary;
         using InBinary = typename CalcValue<T>::Binary;
 
         auto valueVisitor = Visitor{
-            [&](auto const& val) -> Computed {
-                return Computed(typename Computed::Value(computeValue(val, ctx)));
+            [&](auto const& val) -> ComputedType {
+                return ComputedType(typename ComputedType::Value(computeValue(val, ctx)));
             },
-            [&](Box<CalcValue<T>> const& val) -> Computed {
+            [&](Box<CalcValue<T>> const& val) -> ComputedType {
                 auto computedInner = compute(*val, ctx);
-                return Computed(typename Computed::Value(makeBox<Computed>(computedInner)));
+                return ComputedType(typename ComputedType::Value(makeBox<ComputedType>(computedInner)));
             },
-            [&](Number const& val) -> Computed {
-                return Computed(typename Computed::Value(val));
+            [&](Number const& val) -> ComputedType {
+                return ComputedType(typename ComputedType::Value(val));
             },
         };
 
         return calc.visit(Visitor{
-            [&](InValue const& v) -> Computed {
+            [&](InValue const& v) -> ComputedType {
                 return v.visit(valueVisitor);
             },
-            [&](InUnary const& u) -> Computed {
-                Computed computed_val = compute(CalcValue<T>(u.val), ctx);
+            [&](InUnary const& u) -> ComputedType {
+                ComputedType computed_val = compute(CalcValue<T>(u.val), ctx);
 
-                auto leafVal = typename Computed::Value(makeBox<Computed>(computed_val));
-                return Computed(u.op, leafVal);
+                auto leafVal = typename ComputedType::Value(makeBox<ComputedType>(computed_val));
+                return ComputedType(u.op, leafVal);
             },
-            [&](InBinary const& b) -> Computed {
-                Computed computed_lhs = compute(CalcValue<T>(b.lhs), ctx);
-                Computed computed_rhs = compute(CalcValue<T>(b.rhs), ctx);
+            [&](InBinary const& b) -> ComputedType {
+                ComputedType computed_lhs = compute(CalcValue<T>(b.lhs), ctx);
+                ComputedType computed_rhs = compute(CalcValue<T>(b.rhs), ctx);
 
-                auto leafLhs = typename Computed::Value(makeBox<Computed>(computed_lhs));
-                auto leafRhs = typename Computed::Value(makeBox<Computed>(computed_rhs));
+                auto leafLhs = typename ComputedType::Value(makeBox<ComputedType>(computed_lhs));
+                auto leafRhs = typename ComputedType::Value(makeBox<ComputedType>(computed_rhs));
 
-                return Computed(b.op, leafLhs, leafRhs);
+                return ComputedType(b.op, leafLhs, leafRhs);
             },
         });
     }

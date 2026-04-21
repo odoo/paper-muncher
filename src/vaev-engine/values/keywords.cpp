@@ -24,8 +24,9 @@ struct Keyword {
 export template <StrLit K>
 struct ValueTraits<Keyword<K>> {
     // FIXME: Plz remove
-    using Computed = Keyword<K>;
-    static Computed compute(Keyword<K> const& val, ComputationContext const&) { return val; }
+    using ComputedType = Keyword<K>;
+    static ComputedType compute(Keyword<K> const& val, ComputationContext const&) { return val; }
+    static Keyword<K> fromComputed(ComputedType const& computed) { return computed; }
 
     static Res<Keyword<K>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())

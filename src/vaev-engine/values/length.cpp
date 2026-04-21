@@ -18,6 +18,8 @@ namespace Vaev {
 // 6. MARK: Distance Units: the <length> type
 // https://drafts.csswg.org/css-values/#lengths
 
+export using Px = Distinct<f64, struct _PxTag>;
+
 export struct [[gnu::packed]] Length {
     enum struct Unit : u8 {
 #define LENGTH(NAME, ...) NAME,
@@ -45,6 +47,9 @@ export struct [[gnu::packed]] Length {
 
     constexpr Length(f64 val, Unit unit)
         : _val(val), _unit(unit) {}
+
+    constexpr Length(Px val)
+        : _val(val.value()) {}
 
     constexpr Length(Au val)
         : _val(val) {}
@@ -130,8 +135,6 @@ export struct [[gnu::packed]] Length {
     }
 };
 
-export using Px = Distinct<f64, struct _PxTag>;
-
 export template <>
 struct ComputedValueTraits<Px> {
     using Resolved = Au;
@@ -148,9 +151,9 @@ struct _Resolved<Length> {
 
 export template <>
 struct ValueTraits<Length> {
-    using Computed = Px;
+    using ComputedType = Px;
 
-    static Computed compute(Length const val, ComputationContext const& ctx) {
+    static ComputedType compute(Length const val, ComputationContext const& ctx) {
         switch (val.unit()) {
             // https://drafts.csswg.org/css-values/#font-relative-lengths
         case Length::EM:
@@ -330,6 +333,10 @@ struct ValueTraits<Length> {
         default:
             panic("invalid unit");
         }
+    }
+
+    static Length fromComputed(ComputedType const& computed) {
+        return Length(computed.value(), Length::PX);
     }
 
     static Res<Length::Unit> _parseLengthUnit(Str unit) {

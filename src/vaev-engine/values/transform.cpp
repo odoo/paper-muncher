@@ -41,24 +41,24 @@ export struct TransformOrigin {
 
 export template <>
 struct ValueTraits<TransformOrigin::XOffset> {
-    using Computed = CalcValue<PercentOr<Px>>;
+    using ComputedType = CalcValue<PercentOr<Px>>;
 
     static Res<TransformOrigin::XOffset> parse(Cursor<Css::Sst>& c) {
         return parseOneOf<TransformOrigin::XOffset>(c);
     }
 
-    static Computed compute(TransformOrigin::XOffset const& xOffset, ComputationContext const& ctx) {
+    static ComputedType compute(TransformOrigin::XOffset const& xOffset, ComputationContext const& ctx) {
         return xOffset.visit(Visitor{
-            [](Keywords::Left) -> Computed {
+            [](Keywords::Left) -> ComputedType {
                 return Percent{0};
             },
-            [](Keywords::Center) -> Computed {
+            [](Keywords::Center) -> ComputedType {
                 return Percent{50};
             },
-            [](Keywords::Right) -> Computed {
+            [](Keywords::Right) -> ComputedType {
                 return Percent{100};
             },
-            [&](CalcValue<PercentOr<Length>> const& calc) -> Computed {
+            [&](CalcValue<PercentOr<Length>> const& calc) -> ComputedType {
                 return computeValue(calc, ctx);
             }
         });
@@ -67,24 +67,24 @@ struct ValueTraits<TransformOrigin::XOffset> {
 
 export template <>
 struct ValueTraits<TransformOrigin::YOffset> {
-    using Computed = CalcValue<PercentOr<Px>>;
+    using ComputedType = CalcValue<PercentOr<Px>>;
 
     static Res<TransformOrigin::YOffset> parse(Cursor<Css::Sst>& c) {
         return parseOneOf<TransformOrigin::YOffset>(c);
     }
 
-    static Computed compute(TransformOrigin::YOffset const& yOffset, ComputationContext const& ctx) {
+    static ComputedType compute(TransformOrigin::YOffset const& yOffset, ComputationContext const& ctx) {
         return yOffset.visit(Visitor{
-            [](Keywords::Top) -> Computed {
+            [](Keywords::Top) -> ComputedType {
                 return Percent{0};
             },
-            [](Keywords::Center) -> Computed {
+            [](Keywords::Center) -> ComputedType {
                 return Percent{50};
             },
-            [](Keywords::Bottom) -> Computed {
+            [](Keywords::Bottom) -> ComputedType {
                 return Percent{100};
             },
-            [&](CalcValue<PercentOr<Length>> const& calc) -> Computed {
+            [&](CalcValue<PercentOr<Length>> const& calc) -> ComputedType {
                 return computeValue(calc, ctx);
             }
         });

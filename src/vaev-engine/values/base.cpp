@@ -87,11 +87,16 @@ Res<T> parseOneOf(Cursor<Css::Sst>& c) {
 }
 
 export template <typename T>
-using Computed = typename ValueTraits<T>::Computed;
+using Computed = typename ValueTraits<T>::ComputedType;
 
 export template <typename T>
-ValueTraits<T>::Computed computeValue(T const& a, ComputationContext const& ctx) {
-    return ValueTraits<T>::compute(a, ctx);
+ValueTraits<T>::ComputedType computeValue(T const& value, ComputationContext const& ctx) {
+    return ValueTraits<T>::compute(value, ctx);
+}
+
+export template <typename T>
+T valueFromComputed(Computed<T> const& computed) {
+    return ValueTraits<T>::fromComputed(computed);
 }
 
 export template <typename T>
@@ -99,14 +104,20 @@ concept ValueComputable = requires(T const& a, ComputationContext const& ctx) {
     { computeValue(a, ctx) };
 };
 
+// export template <typename T>
+// concept ValueFromComputed = requires(Computed<T> const& a) {
+//     { valueFromComputed<T>(a) };
+// };
+//
 export template <typename T>
 concept Value = ValueParseable<T> and ValueComputable<T>;
 
 export template <typename T>
 struct DefaultValueTraits {
-    using Computed = T;
+    using ComputedType = T;
 
-    static Computed compute(T const& val, ComputationContext const&) { return val; }
+    static ComputedType compute(T const& val, ComputationContext const&) { return val; }
+    static T fromComputed(ComputedType const& computed) { return computed; }
 };
 
 export template <typename T>

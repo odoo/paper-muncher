@@ -74,7 +74,7 @@ export struct BackgroundPosition {
 
 export template <>
 struct ValueTraits<BackgroundPosition> : DefaultValueTraits<BackgroundPosition> {
-    using Computed = Pair<CalcValue<PercentOr<Px>>>;
+    using ComputedType = Pair<CalcValue<PercentOr<Px>>>;
 
     static Res<BackgroundPosition> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
@@ -232,7 +232,7 @@ struct ValueTraits<BackgroundPosition> : DefaultValueTraits<BackgroundPosition> 
     }
 
     // FIXME: This is very ugly, should be refactored after calc is refactored
-    static Computed compute(BackgroundPosition const& val, ComputationContext const& ctx) {
+    static ComputedType compute(BackgroundPosition const& val, ComputationContext const& ctx) {
         auto computeOffset = [&](Percent base, Math::Sign sign, Opt<CalcValue<PercentOr<Length>>> relativeOffset) -> CalcValue<PercentOr<Px>> {
             if (not relativeOffset) {
                 return PercentOr<Px>{base};

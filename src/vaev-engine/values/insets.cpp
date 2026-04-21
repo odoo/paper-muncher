@@ -95,6 +95,33 @@ export using Gap = Union<
     Keywords::Normal,
     CalcValue<PercentOr<Length>>>;
 
+export template <>
+struct ValueTraits<Gap> {
+    // Computed value: specified keyword, else a computed <length-percentage> value
+    using ComputedType = FlatUnion<Keywords::Normal, Computed<CalcValue<PercentOr<Length>>>>;
+
+    static Res<Gap> parse(Cursor<Css::Sst>& c) {
+        return parseOneOf<Gap>(c);
+    }
+
+    static ComputedType compute(Gap const& gap, ComputationContext const& ctx) {
+        return gap.visit([&](auto&& v) -> ComputedType {
+            return computeValue(v, ctx);
+        });
+    }
+
+    // static Gap fromComputed(ComputedType const& computed) {
+    //     return computed.visit(Visitor{
+    //         [](Computed<CalcValue<PercentOr<Length>>> const& calc) -> Gap {
+    //             return valueFromComputed<CalcValue<PercentOr<Length>>>(calc);
+    //         },
+    //         [](auto&& val) -> Gap {
+    //             return val;
+    //         }
+    //     });
+    // }
+};
+
 export struct Gaps {
     Gap row = Keywords::NORMAL;
     Gap col = Keywords::NORMAL;
@@ -103,5 +130,34 @@ export struct Gaps {
         e("(gaps {} {})", row, col);
     }
 };
+
+export struct ComputedGaps {
+    Computed<Gap> row = Keywords::NORMAL;
+    Computed<Gap> col = Keywords::NORMAL;
+
+    void repr(Io::Emit& e) const {
+        e("(gaps {} {})", row, col);
+    }
+};
+
+export template <>
+struct ValueTraits<Gaps> {
+    using ComputedType = ComputedGaps;
+
+    static ComputedType compute(Gaps const& gaps, ComputationContext const& ctx) {
+        return ComputedGaps {
+            .row = computeValue(gaps.row, ctx),
+            .col = computeValue(gaps.col, ctx)
+        };
+    }
+
+    // static Gaps fromComputed(ComputedType const& computed) {
+    //     return Gaps {
+    //         .row = valueFromComputed<Gap>(computed.row),
+    //         .col = valueFromComputed<Gap>(computed.col)
+    //     };
+    // }
+};
+
 
 } // namespace Vaev
