@@ -146,14 +146,14 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack, Opt
 static void _establishStackingContext(Frag& frag, Scene::Stack& stack);
 static void _paintStackingContext(Frag& frag, Scene::Stack& stack);
 
-Rc<Scene::Node> _paintSVGRoot(SVGRootFrag& svgRoot, Gfx::Color currentColor);
-Rc<Scene::Stack> _paintSVGAggregate(SVG::GroupFrag& group, Gfx::Color currentColor, RectAu viewBox);
+Rc<Scene::Node> _paintSVGRoot(SvgRootFrag& svgRoot, Gfx::Color currentColor);
+Rc<Scene::Stack> _paintSVGAggregate(SvgGroupFrag& group, Gfx::Color currentColor, RectAu viewBox);
 
-static RectAu _resolveTransformReferenceSVG(SVG::Frag& svgFrag, RectAu viewBox, TransformBox box);
+static RectAu _resolveTransformReferenceSVG(SvgFrag& svgFrag, RectAu viewBox, TransformBox box);
 static Rc<Scene::Node> _applyTransform(Vaev::Style::TransformProps const& transform, RectAu referenceBox, Rc<Scene::Node> content);
 
 // FIXME: move this closer to transform painting?
-Rc<Scene::Node> _applyTransformIfNeeded(SVG::Frag& svgFrag, RectAu viewBox, Rc<Scene::Node> content) {
+Rc<Scene::Node> _applyTransformIfNeeded(SvgFrag& svgFrag, RectAu viewBox, Rc<Scene::Node> content) {
     auto const& transform = *svgFrag.style().transform;
     if (not transform.has())
         return content;
@@ -161,18 +161,18 @@ Rc<Scene::Node> _applyTransformIfNeeded(SVG::Frag& svgFrag, RectAu viewBox, Rc<S
     return _applyTransform(transform, referenceBox, content);
 }
 
-Rc<Scene::Node> _paintSVGElement(SVG::GroupFrag::Element& element, Gfx::Color currentColor, RectAu viewBox) {
-    if (auto shape = element.is<SVG::ShapeFrag>()) {
+Rc<Scene::Node> _paintSVGElement(SvgGroupFrag::Element& element, Gfx::Color currentColor, RectAu viewBox) {
+    if (auto shape = element.is<SvgShapeFrag>()) {
         return _applyTransformIfNeeded(
             *shape, viewBox,
             shape->toSceneNode(currentColor)
         );
-    } else if (auto nestedGroup = element.is<SVG::GroupFrag>()) {
+    } else if (auto nestedGroup = element.is<SvgGroupFrag>()) {
         return _applyTransformIfNeeded(
             *nestedGroup, viewBox,
             _paintSVGAggregate(*nestedGroup, currentColor, viewBox)
         );
-    } else if (auto nestedRoot = element.is<SVGRootFrag>()) {
+    } else if (auto nestedRoot = element.is<SvgRootFrag>()) {
         return _applyTransformIfNeeded(
             *nestedRoot, viewBox,
             makeRc<Scene::Clip>(
@@ -193,7 +193,7 @@ Rc<Scene::Node> _paintSVGElement(SVG::GroupFrag::Element& element, Gfx::Color cu
     unreachable();
 }
 
-Rc<Scene::Stack> _paintSVGAggregate(SVG::GroupFrag& group, Gfx::Color currentColor, RectAu viewBox) {
+Rc<Scene::Stack> _paintSVGAggregate(SvgGroupFrag& group, Gfx::Color currentColor, RectAu viewBox) {
     // NOTE: A SVG group does not create a stacking context, but its easier to manipulate a group if itself is its own node
     Scene::Stack stack;
     for (auto& element : group.elements) {
@@ -202,9 +202,9 @@ Rc<Scene::Stack> _paintSVGAggregate(SVG::GroupFrag& group, Gfx::Color currentCol
     return makeRc<Scene::Stack>(std::move(stack));
 }
 
-Rc<Scene::Node> _paintSVGRoot(SVGRootFrag& svgRoot, Gfx::Color currentColor) {
+Rc<Scene::Node> _paintSVGRoot(SvgRootFrag& svgRoot, Gfx::Color currentColor) {
     // FIXME: Ugly cast because we need to upcast, should be fixed once we unify SVGRootFrag with Frag
-    SVGRoot const& rootBox = *static_cast<SVGRoot const*>(svgRoot.box.buf());
+    SvgRootBox const& rootBox = *static_cast<SvgRootBox const*>(svgRoot.box.buf());
 
     // https://drafts.csswg.org/css-transforms/#transform-box
     // SPEC: The reference box is positioned at the origin of the coordinate system established
@@ -247,7 +247,7 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack, Opt<UsedBorders> usedBor
             node = makeRc<Scene::Clip>(node, std::move(path));
         }
         stack.add(node);
-    } else if (auto svgRoot = frag.content.is<SVGRootFrag>()) {
+    } else if (auto svgRoot = frag.content.is<SvgRootFrag>()) {
         if (min(frag.metrics.borderSize.x, frag.metrics.borderSize.y) == 0_au)
             return;
 
@@ -509,7 +509,7 @@ static Rc<Scene::Clip> _applyClip(Frag const& frag, Rc<Scene::Node> content) {
 // MARK: Transformations -------------------------------------------------------
 
 // https://www.w3.org/TR/css-transforms-1/#transform-box
-static RectAu _resolveTransformReferenceSVG(SVG::Frag& svgFrag, RectAu viewBox, TransformBox box) {
+static RectAu _resolveTransformReferenceSVG(SvgFrag& svgFrag, RectAu viewBox, TransformBox box) {
     // For SVG elements without associated CSS layout box, the used value
     // for content-box is fill-box and for border-box is stroke-box.
     return box.visit(

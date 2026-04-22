@@ -46,7 +46,7 @@ export struct ComputedValues {
     Cow<TextProps> text;
     Cow<FlexProps> flex;
     Cow<BreakProps> break_;
-    Cow<SVGProps> svg;
+    Cow<SvgProps> svg;
 
     Cow<Map<Symbol, Css::Content>> customProps;
     Rc<Gfx::Fontface> fontFace;

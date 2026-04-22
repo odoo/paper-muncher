@@ -20,7 +20,7 @@ namespace Vaev {
 
 // MARK: PreserveAspectRatio
 // https://svgwg.org/svg2-draft/coords.html#PreserveAspectRatioAttribute
-export struct AlignAxisSVG {
+export struct SvgAlignAxis {
     enum struct _AlignAxis {
         MIN,
         MID,
@@ -33,10 +33,10 @@ export struct AlignAxisSVG {
     _AlignAxis y;
 };
 
-export using AlignSVG = Union<None, AlignAxisSVG>;
+export using SvgAlign = Union<None, SvgAlignAxis>;
 
 // https://svgwg.org/svg2-draft/coords.html#PreserveAspectRatioAttribute
-export enum struct MeetOrSlice {
+export enum struct SvgMeetOrSlice {
     MEET,
     SLICE
 };
@@ -44,10 +44,10 @@ export enum struct MeetOrSlice {
 // MARK: Paint
 // TODO: still not complete type
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
-export using Paint = Union<Color, None>;
+export using SvgPaint = Union<Color, None>;
 
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
-export struct ViewBox {
+export struct SvgViewBox {
     Number minX;
     Number minY;
     Number width;
@@ -58,7 +58,7 @@ export struct ViewBox {
     }
 };
 
-export struct SVGProps {
+export struct SvgProps {
     PercentOr<Length> x = Length{0_au};
     PercentOr<Length> y = Length{0_au};
     PercentOr<Length> cx = Length{0_au};
@@ -69,9 +69,9 @@ export struct SVGProps {
     PercentOr<Length> strokeWidth = Length{1_au};
     Number strokeOpacity = 1;
     Union<String, None> d = NONE;
-    Paint fill = Color{Gfx::BLACK};
-    Paint stroke = NONE;
-    Opt<ViewBox> viewBox = NONE;
+    SvgPaint fill = Color{Gfx::BLACK};
+    SvgPaint stroke = NONE;
+    Opt<SvgViewBox> viewBox = NONE;
 
     void repr(Io::Emit& e) const {
         e("(svg");
@@ -93,8 +93,8 @@ export struct SVGProps {
 // MARK: Paint
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export template <>
-struct ValueParser<Paint> {
-    static Res<Paint> parse(Cursor<Css::Sst>& c) {
+struct ValueParser<SvgPaint> {
+    static Res<SvgPaint> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 

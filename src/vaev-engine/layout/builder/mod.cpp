@@ -348,17 +348,17 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 }
 
 static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> el);
-void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group);
+void buildSVGAggregate(Gc::Ref<Dom::Element> el, SvgGroupBox& group);
 
-void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group& group) {
-    if (SVG::isShape(el->qualifiedName)) {
-        group.add(SVG::Shape::build(el->computedValues(), el->qualifiedName));
+void buildSVGElement(Gc::Ref<Dom::Element> el, SvgGroupBox& group) {
+    if (isShape(el->qualifiedName)) {
+        group.add(SvgShapeBox::build(el->computedValues(), el->qualifiedName));
     } else if (el->qualifiedName == Svg::G_TAG) {
-        SVG::Group nestedGroup{el->computedValues()};
+        SvgGroupBox nestedGroup{el->computedValues()};
         buildSVGAggregate(el, nestedGroup);
         group.add(std::move(nestedGroup));
     } else if (el->qualifiedName == Svg::SVG_TAG) {
-        SVGRoot newSvgRoot{el->computedValues()};
+        SvgRootBox newSvgRoot{el->computedValues()};
         buildSVGAggregate(el, newSvgRoot);
         group.add(std::move(newSvgRoot));
     } else if (el->qualifiedName == Svg::FOREIGN_OBJECT_TAG) {
@@ -385,7 +385,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, SVG::Group& group) {
     }
 }
 
-void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group) {
+void buildSVGAggregate(Gc::Ref<Dom::Element> el, SvgGroupBox& group) {
     for (auto child = el->firstChild(); child; child = child->nextSibling()) {
         if (auto el = child->is<Dom::Element>()) {
             buildSVGElement(*el, group);
@@ -394,8 +394,8 @@ void buildSVGAggregate(Gc::Ref<Dom::Element> el, SVG::Group& group) {
     }
 }
 
-SVGRoot _buildSVG(Gc::Ref<Dom::Element> el) {
-    SVGRoot svgRoot{el->computedValues()};
+SvgRootBox _buildSVG(Gc::Ref<Dom::Element> el) {
+    SvgRootBox svgRoot{el->computedValues()};
     buildSVGAggregate(el, svgRoot);
     return svgRoot;
 }

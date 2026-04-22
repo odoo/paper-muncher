@@ -14,7 +14,7 @@ import :layout.layout;
 namespace Vaev::Layout {
 
 struct ReplacedFormatingContext : FormatingContext {
-    Vec2Au updateRelativeTo(SVGRoot& root, SVGRootFrag& svgFrag) {
+    Vec2Au updateRelativeTo(SvgRootBox& root, SvgRootFrag& svgFrag) {
         // https://svgwg.org/svg2-draft/coords.html#Units
         // SPEC: For <percentage> values that are defined to be relative to the size of SVG viewport:
         // the value to use must be the percentage, in user units, of the * parameter of the ‘viewBox’ applied to that
@@ -34,15 +34,15 @@ struct ReplacedFormatingContext : FormatingContext {
                          .cast<Au>();
     }
 
-    SVG::GroupFrag::Element buildSVGFrag(Tree& tree, SVG::Group::Element& element, Vec2Au resolveTo) {
-        if (auto shape = element.is<SVG::Shape>()) {
-            return SVG::ShapeFrag::fromShape(*shape, resolveTo);
-        } else if (auto nestedGroup = element.is<SVG::Group>()) {
-            SVG::GroupFrag nestedGroupFrag{&(*nestedGroup)};
-            buildSVGAggregateFrag(tree, nestedGroup, &nestedGroupFrag, resolveTo);
+    SvgGroupFrag::Element buildSVGFrag(Tree& tree, SvgGroupBox::Element& element, Vec2Au resolveTo) {
+        if (auto shape = element.is<SvgShapeBox>()) {
+            return SvgShapeFrag::fromShape(*shape, resolveTo);
+        } else if (auto nestedGroup = element.is<SvgGroupBox>()) {
+            SvgGroupFrag nestedGroupFrag{&(*nestedGroup)};
+            buildSVGAggregateFrag(tree, *nestedGroup, nestedGroupFrag, resolveTo);
             return nestedGroupFrag;
-        } else if (auto nestedRoot = element.is<SVGRoot>()) {
-            auto resolvedRect = SVG::resolve(SVG::buildRectangle(*nestedRoot->style), resolveTo);
+        } else if (auto nestedRoot = element.is<SvgRootBox>()) {
+            auto resolvedRect = resolve(buildRectangle(*nestedRoot->style), resolveTo);
 
             return buildSVGRootFrag(
                 tree, *nestedRoot,
@@ -50,9 +50,9 @@ struct ReplacedFormatingContext : FormatingContext {
                 {resolvedRect.width, resolvedRect.height}
             );
         } else if (auto box = element.is<::Box<Box>>()) {
-            auto resolvedRect = SVG::resolve(SVG::buildRectangle(*(*box)->style), resolveTo);
+            auto resolvedRect = resolve(buildRectangle(*(*box)->style), resolveTo);
 
-            auto frag = Layout::Frag();
+            auto frag = Frag();
             Input childInput{
                 .knownSize = {resolvedRect.width, resolvedRect.height},
                 .position = {resolvedRect.x, resolvedRect.y},
@@ -64,15 +64,15 @@ struct ReplacedFormatingContext : FormatingContext {
         unreachable();
     }
 
-    void buildSVGAggregateFrag(Tree& tree, SVG::Group* group, SVG::GroupFrag* groupFrag, Vec2Au resolveTo) {
-        for (auto& element : group->elements) {
-            groupFrag->add(buildSVGFrag(tree, element, resolveTo));
+    void buildSVGAggregateFrag(Tree& tree, SvgGroupBox& group, SvgGroupFrag& groupFrag, Vec2Au resolveTo) {
+        for (auto& element : group.elements) {
+            groupFrag.add(buildSVGFrag(tree, element, resolveTo));
         }
     }
 
-    SVGRootFrag buildSVGRootFrag(Tree& tree, SVGRoot& root, Vec2Au position, Vec2Au size) {
-        SVGRootFrag svgFrag = SVGRootFrag::build(root, position, size);
-        buildSVGAggregateFrag(tree, &root, &svgFrag, updateRelativeTo(root, svgFrag));
+    SvgRootFrag buildSVGRootFrag(Tree& tree, SvgRootBox& root, Vec2Au position, Vec2Au size) {
+        SvgRootFrag svgFrag = SvgRootFrag::build(root, position, size);
+        buildSVGAggregateFrag(tree, root, svgFrag, updateRelativeTo(root, svgFrag));
         return svgFrag;
     }
 
@@ -102,25 +102,26 @@ struct ReplacedFormatingContext : FormatingContext {
 
         if (auto image = box.content.is<Rc<Scene::Node>>()) {
             size = (*image)->bound().size().cast<Au>();
-        } else if (auto svg = box.content.is<SVGRoot>()) {
-            auto aspectRatio = SVG::intrinsicAspectRatio(box.style->svg->viewBox, box.style->sizing->width, box.style->sizing->height);
+        } else if (auto svg = box.content.is<SvgRootBox>()) {
+            auto aspectRatio = intrinsicAspectRatio(box.style->svg->viewBox, box.style->sizing->width, box.style->sizing->height);
 
             size = _defaultSizing(input.knownSize, aspectRatio, input.containingBlock);
 
             if (input.fragment) {
                 auto svgFrag = buildSVGRootFrag(tree, *svg, input.position, size);
-                SVG::GroupFrag::computeBoundingBoxes(&svgFrag);
+                svgFrag.computeBoundingBoxes();
                 input.fragment->content = svgFrag;
             }
         } else {
             panic("unsupported replaced content");
         }
 
-        if (tree.fc.allowBreak() and not tree.fc.acceptsFit(
-                                         input.position.y,
-                                         size.y,
-                                         input.pendingVerticalSizes
-                                     )) {
+        if (tree.fc.allowBreak() and
+            not tree.fc.acceptsFit(
+                input.position.y,
+                size.y,
+                input.pendingVerticalSizes
+            )) {
             return {
                 .size = {},
                 .completelyLaidOut = false,
