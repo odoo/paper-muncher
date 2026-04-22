@@ -41,7 +41,7 @@ export struct MarginTopProperty : Property {
     MarginTopProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.margin.cow().top = _value;
     }
 
@@ -74,7 +74,7 @@ export struct MarginRightProperty : Property {
     MarginRightProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.margin.cow().end = _value;
     }
 
@@ -107,7 +107,7 @@ export struct MarginBottomProperty : Property {
     MarginBottomProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.margin.cow().bottom = _value;
     }
 
@@ -140,7 +140,7 @@ export struct MarginLeftProperty : Property {
     MarginLeftProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.margin.cow().start = _value;
     }
 
@@ -217,7 +217,7 @@ export struct MarginInlineStartProperty : Property {
     MarginInlineStartProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         // FIXME: Take writing mode into account
         c.margin.cow().start = _value;
     }
@@ -251,7 +251,7 @@ export struct MarginInlineEndProperty : Property {
     MarginInlineEndProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         // FIXME: Take writing mode into account
         c.margin.cow().end = _value;
     }
@@ -285,7 +285,7 @@ export struct MarginInlineProperty : Property {
     MarginInlineProperty(Rc<Property::Registration> registration, Math::Insets<Width> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         // FIXME: Take writing mode into account
         c.margin.cow().start = _value.start;
         c.margin.cow().end = _value.end;
@@ -320,7 +320,7 @@ export struct MarginBlockStartProperty : Property {
     MarginBlockStartProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         // FIXME: Take writing mode into account
         c.margin.cow().top = _value;
     }
@@ -354,7 +354,7 @@ export struct MarginBlockEndProperty : Property {
     MarginBlockEndProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         // FIXME: Take writing mode into account
         c.margin.cow().bottom = _value;
     }
@@ -388,7 +388,7 @@ export struct MarginBlockProperty : Property {
     MarginBlockProperty(Rc<Property::Registration> registration, Math::Insets<Width> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         // FIXME: Take writing mode into account
         c.margin.cow().top = _value.top;
         c.margin.cow().bottom = _value.bottom;

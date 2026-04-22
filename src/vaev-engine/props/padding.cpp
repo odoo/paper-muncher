@@ -41,7 +41,7 @@ export struct PaddingTopProperty : Property {
     PaddingTopProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.padding.cow().top = _value;
     }
 
@@ -74,7 +74,7 @@ export struct PaddingRightProperty : Property {
     PaddingRightProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.padding.cow().end = _value;
     }
 
@@ -107,7 +107,7 @@ export struct PaddingBottomProperty : Property {
     PaddingBottomProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.padding.cow().bottom = _value;
     }
 
@@ -140,7 +140,7 @@ export struct PaddingLeftProperty : Property {
     PaddingLeftProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.padding.cow().start = _value;
     }
 
@@ -173,7 +173,7 @@ export struct PaddingInlineStartProperty : Property {
     PaddingInlineStartProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.padding.cow().start = _value;
     }
 
@@ -206,7 +206,7 @@ export struct PaddingInlineEndProperty : Property {
     PaddingInlineEndProperty(Rc<Property::Registration> registration, CalcValue<PercentOr<Length>> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.padding.cow().end = _value;
     }
 

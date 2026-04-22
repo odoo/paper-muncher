@@ -41,7 +41,7 @@ export struct AlignContentProperty : Property {
     AlignContentProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.aligns.alignContent = _value;
     }
 
@@ -75,7 +75,7 @@ export struct JustifyContentProperty : Property {
     JustifyContentProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.aligns.justifyContent = _value;
     }
 
@@ -109,7 +109,7 @@ export struct JustifySelfProperty : Property {
     JustifySelfProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.aligns.justifySelf = _value;
     }
 
@@ -143,7 +143,7 @@ export struct AlignSelfProperty : Property {
     AlignSelfProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.aligns.alignSelf = _value;
     }
 
@@ -177,7 +177,7 @@ export struct JustifyItemsProperty : Property {
     JustifyItemsProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.aligns.justifyItems = _value;
     }
 
@@ -211,7 +211,7 @@ export struct AlignItemsProperty : Property {
     AlignItemsProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.aligns.alignItems = _value;
     }
 
@@ -250,7 +250,7 @@ export struct RowGapProperty : Property {
     RowGapProperty(Rc<Property::Registration> registration, Gap value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         // FIXME: Pass proper context
         c.gaps.cow().row = computeValue(_value, {});
     }
@@ -290,7 +290,7 @@ export struct ColumnGapProperty : Property {
     ColumnGapProperty(Rc<Property::Registration> registration, Gap value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         // FIXME: Proper context
         c.gaps.cow().col = computeValue(_value, {});
     }

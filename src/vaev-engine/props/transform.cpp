@@ -51,7 +51,7 @@ export struct TransformOriginProperty : Property {
     TransformOriginProperty(Rc<Property::Registration> registration, TransformOrigin value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.transform.cow().origin = _value;
     }
 
@@ -85,7 +85,7 @@ export struct TransformBoxProperty : Property {
     TransformBoxProperty(Rc<Property::Registration> registration, TransformBox value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.transform.cow().box = _value;
     }
 
@@ -163,7 +163,7 @@ export struct TransformProperty : Property {
     TransformProperty(Rc<Property::Registration> registration, Transform value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.transform.cow().transform = _value;
     }
 

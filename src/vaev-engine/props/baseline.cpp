@@ -48,7 +48,7 @@ export struct LineHeightProperty : Property {
     LineHeightProperty(Rc<Property::Registration> registration, LineHeight value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues&) const override {
+    void apply(ComputedValues&, ComputationContext const&) const override {
         // TODO
     }
 
@@ -82,7 +82,7 @@ export struct DominantBaselineProperty : Property {
     DominantBaselineProperty(Rc<Property::Registration> registration, DominantBaseline value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.baseline.cow().dominant = _value;
     }
 
@@ -116,7 +116,7 @@ export struct BaselineSourceProperty : Property {
     BaselineSourceProperty(Rc<Property::Registration> registration, BaselineSource value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.baseline.cow().source = _value;
     }
 
@@ -150,7 +150,7 @@ export struct AlignmentBaselineProperty : Property {
     AlignmentBaselineProperty(Rc<Property::Registration> registration, AlignmentBaseline value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.baseline.cow().alignment = _value;
     }
 
