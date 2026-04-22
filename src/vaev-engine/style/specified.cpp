@@ -30,9 +30,41 @@ export struct Inherited {};
 
 // https://www.w3.org/TR/css-cascade/#computed
 export struct ComputedValues {
+    struct BorderProps {
+        Computed<Border> top, start, bottom, end;
+        Computed<BorderRadii> radii;
+
+        void all(Computed<Border> b) {
+            top = start = bottom = end = b;
+        }
+
+        Computed<Border> const& get(BorderEdge edge) const {
+            switch (edge) {
+            case BorderEdge::TOP:
+                return top;
+            case BorderEdge::START:
+                return start;
+            case BorderEdge::BOTTOM:
+                return bottom;
+            case BorderEdge::END:
+                return end;
+            }
+        }
+
+        void repr(Io::Emit& e) const {
+            e("(borders");
+            e(" top={}", top);
+            e(" start={}", start);
+            e(" bottom={}", bottom);
+            e(" end={}", end);
+            e(" radii={}", radii);
+            e(")");
+        }
+    };
+
     Cow<Computed<Gaps>> gaps;
     Cow<BackgroundProps> backgrounds;
-    Cow<Computed<BorderProps>> borders;
+    Cow<BorderProps> borders;
     Cow<Margin> margin = makeCow<Margin>(Width(CalcValue<PercentOr<Length>>(Length(0_au)))); // FIXME
     Cow<Outline> outline;
     Cow<Padding> padding = makeCow<Padding>(Length(0_au)); // FIXME
@@ -93,7 +125,7 @@ export struct ComputedValues {
         e(" color: {}", color);
         e(" opacity: {}", opacity);
         e(" aligns: {}", aligns);
-        e(" gaps: {}", gaps);
+        e(" gaps: {}", valueFromComputed<Gaps>(*gaps));
         e(" backgrounds: {}", backgrounds);
         e(" baseline: {}", baseline);
         e(" borders: {}", borders);

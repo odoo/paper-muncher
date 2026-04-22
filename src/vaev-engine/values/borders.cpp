@@ -48,34 +48,23 @@ struct ValueTraits<Gfx::BorderStyle> : DefaultValueTraits<Gfx::BorderStyle> {
 
 // MARK: Border ----------------------------------------------------------------
 
-template <typename T>
-struct _Border {
-    T width;
+struct Border {
+    LineWidth width = Keywords::MEDIUM;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
     Color color = Keywords::CURRENT_COLOR;
-
-    _Border();
-    _Border(T width, Gfx::BorderStyle style, Color color)
-        : width(width), style(style), color(color) {};
 
     void repr(Io::Emit& e) const {
         e("(border {} {} {})", width, style, color);
     }
 };
 
-export using Border = _Border<LineWidth>;
-
 // FIXME: Remove
-template <>
-_Border<LineWidth>::_Border() : width(Keywords::MEDIUM) {}
-
-// FIXME: Remove
-export using UsedBorder = _Border<Au>;
+export struct UsedBorder {
+    Au width{};
+    Gfx::BorderStyle style{};
+    Color color{};
+};
 export using UsedBorders = Math::Insets<UsedBorder>;
-
-// FIXME: Remove
-template <>
-_Border<Au>::_Border() : width(0_au) {}
 
 export template <>
 struct ValueTraits<Border> {
@@ -119,6 +108,15 @@ using BorderRadius = Pair<CalcValue<PercentOr<Length>>>;
 export struct BorderRadii {
     BorderRadius topLeft, topRight, bottomRight, bottomLeft;
 
+    constexpr BorderRadii(BorderRadius all = {})
+        : topLeft(all), topRight(all), bottomRight(all), bottomLeft(all) {}
+
+    constexpr BorderRadii(BorderRadius startEnd, BorderRadius endStart)
+        : BorderRadii(startEnd, endStart, startEnd, endStart) {}
+
+    constexpr BorderRadii(BorderRadius topLeft, BorderRadius topRight, BorderRadius bottomRight, BorderRadius bottomLeft)
+        : topLeft(topLeft), topRight(topRight), bottomRight(bottomRight), bottomLeft(bottomLeft) {}
+
     void repr(Io::Emit& e) const {
         e("(border-radii");
         e(" topLeft={}", topLeft);
@@ -129,29 +127,33 @@ export struct BorderRadii {
     }
 };
 
-export template <typename T>
+export template <>
 struct ValueTraits<BorderRadii> {
+    using ComputedType = struct {
+        Computed<BorderRadius> topLeft, topRight, bottomRight, bottomLeft;
+    };
+
     static Res<BorderRadii> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        auto value1 = parseValue<PercentOr<Length>>(c);
+        auto value1 = parseValue<CalcValue<PercentOr<Length>>>(c);
         if (not value1)
-            return Ok(parsePostSlash(c, Math::Radii<T>{Length{}}));
+            return Ok(parsePostSlash(c, BorderRadii{}));
 
-        auto value2 = parseValue<PercentOr<Length>>(c);
+        auto value2 = parseValue<CalcValue<PercentOr<Length>>>(c);
         if (not value2)
-            return Ok(parsePostSlash(c, Math::Radii<T>{value1.take()}));
+            return Ok(parsePostSlash(c, BorderRadii{{value1.take()}}));
 
         auto value3 = parseValue<PercentOr<Length>>(c);
         if (not value3)
-            return Ok(parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take()}));
+            return Ok(parsePostSlash(c, BorderRadii{{value1.take()}, {value2.take()}}));
 
         auto value4 = parseValue<PercentOr<Length>>(c);
         if (not value4)
-            return Ok(parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take(), value3.take(), value2.take()}));
+            return Ok(parsePostSlash(c, BorderRadii{{value1.take()}, {value2.take()}, {value3.take()}, {value2.take()}}));
 
-        return Ok(parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take(), value3.take(), value4.take()}));
+        return Ok(parsePostSlash(c, BorderRadii{{value1.take()}, {value2.take()}, {value3.take()}, {value4.take()}}));
     }
 
     static BorderRadii parsePostSlash(Cursor<Css::Sst>& c, BorderRadii radii) {
@@ -171,81 +173,61 @@ struct ValueTraits<BorderRadii> {
 
             auto value2 = parseValue<PercentOr<Length>>(c);
             if (not value2) {
-                radii.topLeft.vertical = value1.unwrap();
-                radii.topRight.vertical = value1.unwrap();
-                radii.bottomRight.vertical = value1.unwrap();
-                radii.bottomLeft.vertical = value1.unwrap();
+                radii.topLeft.v1 = value1.unwrap();
+                radii.topRight.v1 = value1.unwrap();
+                radii.bottomRight.v1 = value1.unwrap();
+                radii.bottomLeft.v1 = value1.unwrap();
                 return radii;
             }
 
             eatWhitespace(c);
             auto value3 = parseValue<PercentOr<Length>>(c);
             if (not value3) {
-                radii.topLeft.vertical = value1.unwrap();
-                radii.topRight.vertical = value2.unwrap();
-                radii.bottomRight.vertical = value1.unwrap();
-                radii.bottomLeft.vertical = value2.unwrap();
+                radii.topLeft.v1 = value1.unwrap();
+                radii.topRight.v1 = value2.unwrap();
+                radii.bottomRight.v1 = value1.unwrap();
+                radii.bottomLeft.v1 = value2.unwrap();
                 return radii;
             }
 
             eatWhitespace(c);
             auto value4 = parseValue<PercentOr<Length>>(c);
             if (not value4) {
-                radii.topLeft.vertical = value1.take();
-                radii.topRight.vertical = value2.take();
-                radii.bottomRight.vertical = value3.take();
-                radii.bottomLeft.vertical = value2.take();
+                radii.topLeft.v1 = value1.take();
+                radii.topRight.v1 = value2.take();
+                radii.bottomRight.v1 = value3.take();
+                radii.bottomLeft.v1 = value2.take();
 
                 return radii;
             }
 
-            radii.topLeft.vertical = value1.take();
-            radii.topRight.vertical = value2.take();
-            radii.bottomRight.vertical = value3.take();
-            radii.bottomLeft.vertical = value4.take();
+            radii.topLeft.v1 = value1.take();
+            radii.topRight.v1 = value2.take();
+            radii.bottomRight.v1 = value3.take();
+            radii.bottomLeft.v1 = value4.take();
             return radii;
         }
 
         return radii;
     }
-};
 
-
-export struct BorderProps {
-    Border top, start, bottom, end;
-    BorderRadii radii;
-
-    void all(Border b) {
-        top = start = bottom = end = b;
+    static ComputedType compute(BorderRadii const& radii, ComputationContext const& ctx) {
+        return {
+            .topLeft = computeValue(radii.topLeft, ctx),
+            .topRight = computeValue(radii.topRight, ctx),
+            .bottomRight = computeValue(radii.bottomRight, ctx),
+            .bottomLeft = computeValue(radii.bottomLeft, ctx),
+        };
     }
 
-    Border const& get(BorderEdge edge) const {
-        switch (edge) {
-        case BorderEdge::TOP:
-            return top;
-        case BorderEdge::START:
-            return start;
-        case BorderEdge::BOTTOM:
-            return bottom;
-        case BorderEdge::END:
-            return end;
-        }
+    static BorderRadii fromComputed(ComputedType const& computed) {
+        return {
+            .topLeft = valueFromComputed<BorderRadius>(computed.topLeft),
+            .topRight = valueFromComputed<BorderRadius>(computed.topRight),
+            .bottomRight = valueFromComputed<BorderRadius>(computed.bottomRight),
+            .bottomLeft = valueFromComputed<BorderRadius>(computed.bottomLeft),
+        };
     }
-
-    void repr(Io::Emit& e) const {
-        e("(borders");
-        e(" top={}", top);
-        e(" start={}", start);
-        e(" bottom={}", bottom);
-        e(" end={}", end);
-        e(" radii={}", radii);
-        e(")");
-    }
-};
-
-export template <>
-struct ValueTraits<BorderProps> {
-    // using ComputedType;
 };
 
 } // namespace Vaev

@@ -109,7 +109,8 @@ export struct BorderBottomColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.borders.cow().bottom.color = _value;
+        // FIXME: Real c
+        c.borders.cow().bottom.color = computeValue(_value, {});
     }
 
     void repr(Io::Emit& e) const override {
