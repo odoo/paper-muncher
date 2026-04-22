@@ -31,11 +31,11 @@ export struct Inherited {};
 // https://www.w3.org/TR/css-cascade/#computed
 export struct ComputedValues {
     struct BorderProps {
-        Computed<Border> top, start, bottom, end;
+        Computed<Border> top, right, bottom, left;
         Computed<BorderRadii> radii;
 
         void all(Computed<Border> b) {
-            top = start = bottom = end = b;
+            top = right = bottom = left = b;
         }
 
         Computed<Border> const& get(BorderEdge edge) const {
@@ -43,20 +43,20 @@ export struct ComputedValues {
             case BorderEdge::TOP:
                 return top;
             case BorderEdge::START:
-                return start;
+                return left;
             case BorderEdge::BOTTOM:
                 return bottom;
             case BorderEdge::END:
-                return end;
+                return right;
             }
         }
 
         void repr(Io::Emit& e) const {
             e("(borders");
             e(" top={}", top);
-            e(" start={}", start);
+            e(" right={}", right);
             e(" bottom={}", bottom);
-            e(" end={}", end);
+            e(" left={}", left);
             e(" radii={}", radii);
             e(")");
         }

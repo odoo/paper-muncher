@@ -53,6 +53,12 @@ struct ComputationContext {
     _WritingMode writingMode = _WritingMode::HORIZONTAL_TB;
     _Viewport viewport = {.small = {800, 600}}; /// Viewport of the current box
     Math::Vec2f displayArea = {800, 600};
+
+    ComputationContext withCurrentColor(Gfx::Color currentColor) {
+        ComputationContext newCtx = *this;
+        newCtx.currentColor = currentColor;
+        return newCtx;
+    }
 };
 
 export template <typename>

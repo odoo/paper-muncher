@@ -1,3 +1,7 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:values.borders;
 
 import Karm.Gfx;
@@ -48,6 +52,94 @@ struct ValueTraits<Gfx::BorderStyle> : DefaultValueTraits<Gfx::BorderStyle> {
 
 // MARK: Border ----------------------------------------------------------------
 
+export template <typename T>
+struct Edges<T> {
+    T top;
+    T right;
+    T bottom;
+    T left;
+
+    Edges(T a) : top(a), right(a), bottom(a), left(a) {}
+
+    Edges(T a, T b) : top(a), right(b), bottom(a), left(b) {}
+
+    Edges(T a, T b, T c) : top(a), right(b), bottom(c), left(b) {}
+
+    Edges(T a, T b, T c, T d) : top(a), right(b), bottom(c), left(d) {}
+};
+
+export template <typename T>
+struct ValueTraits<Edges<T>> {
+    Res<Edges<T>> parse(Cursor<Css::Sst> c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        auto v0 = try$(parseValue<T>(c));
+
+        if (c.ended())
+            return Ok(Edges<T>{v0});
+
+        auto v1 = try$(parseValue<T>(c));
+
+        if (c.ended())
+            return Ok(Edges<T>{v0, v1});
+
+        auto v2 = try$(parseValue<T>(c));
+
+        if (c.ended())
+            return Ok(Edges<T>{v0, v1, v2});
+
+        auto v3 = try$(parseValue<T>(c));
+
+        if (c.ended())
+            return Ok(Edges<T>{v0, v1, v2, v3});
+    }
+};
+
+export template <typename T>
+struct Corners<T> {
+    T topLeft;
+    T topRight;
+    T bottomLeft;
+    T bottomRight;
+
+    Corners(T a) : topLeft(a), topRight(a), bottomLeft(a), bottomRight(a) {}
+
+    Corners(T a, T b) : topLeft(a), topRight(b), bottomLeft(a), bottomRight(b) {}
+
+    Corners(T a, T b, T c) : topLeft(a), topRight(b), bottomLeft(c), bottomRight(b) {}
+
+    Corners(T a, T b, T c, T d) : topLeft(a), topRight(b), bottomLeft(c), bottomRight(d) {}
+};
+
+export template <typename T>
+struct ValueTraits<Corners<T>> {
+    Res<Edges<T>> parse(Cursor<Css::Sst> c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        auto v0 = try$(parseValue<T>(c));
+
+        if (c.ended())
+            return Ok(Corners<T>{v0});
+
+        auto v1 = try$(parseValue<T>(c));
+
+        if (c.ended())
+            return Ok(Corners<T>{v0, v1});
+
+        auto v2 = try$(parseValue<T>(c));
+
+        if (c.ended())
+            return Ok(Corners<T>{v0, v1, v2});
+
+        auto v3 = try$(parseValue<T>(c));
+
+        if (c.ended())
+            return Ok(Corners<T>{v0, v1, v2, v3});
+    }
+};
+
 struct Border {
     LineWidth width = Keywords::MEDIUM;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
@@ -62,8 +154,9 @@ struct Border {
 export struct UsedBorder {
     Au width{};
     Gfx::BorderStyle style{};
-    Color color{};
+    Gfx::Color color{};
 };
+
 export using UsedBorders = Math::Insets<UsedBorder>;
 
 export template <>
@@ -87,7 +180,7 @@ struct ValueTraits<Border> {
     }
 
     static Border fromComputed(ComputedType const& computed) {
-        return Border {
+        return Border{
             .width = valueFromComputed<LineWidth>(computed.width),
             .style = valueFromComputed<Gfx::BorderStyle>(computed.style),
             .color = valueFromComputed<Color>(computed.color),
@@ -107,12 +200,6 @@ using BorderRadius = Pair<CalcValue<PercentOr<Length>>>;
 
 export struct BorderRadii {
     BorderRadius topLeft, topRight, bottomRight, bottomLeft;
-
-    constexpr BorderRadii(BorderRadius all = {})
-        : topLeft(all), topRight(all), bottomRight(all), bottomLeft(all) {}
-
-    constexpr BorderRadii(BorderRadius startEnd, BorderRadius endStart)
-        : BorderRadii(startEnd, endStart, startEnd, endStart) {}
 
     constexpr BorderRadii(BorderRadius topLeft, BorderRadius topRight, BorderRadius bottomRight, BorderRadius bottomLeft)
         : topLeft(topLeft), topRight(topRight), bottomRight(bottomRight), bottomLeft(bottomLeft) {}
@@ -134,81 +221,33 @@ struct ValueTraits<BorderRadii> {
     };
 
     static Res<BorderRadii> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
+        auto horizonal = try$(parseValue<Corners<CalcValue<PercentOr<Length>>>>(c));
 
-        auto value1 = parseValue<CalcValue<PercentOr<Length>>>(c);
-        if (not value1)
-            return Ok(parsePostSlash(c, BorderRadii{}));
-
-        auto value2 = parseValue<CalcValue<PercentOr<Length>>>(c);
-        if (not value2)
-            return Ok(parsePostSlash(c, BorderRadii{{value1.take()}}));
-
-        auto value3 = parseValue<PercentOr<Length>>(c);
-        if (not value3)
-            return Ok(parsePostSlash(c, BorderRadii{{value1.take()}, {value2.take()}}));
-
-        auto value4 = parseValue<PercentOr<Length>>(c);
-        if (not value4)
-            return Ok(parsePostSlash(c, BorderRadii{{value1.take()}, {value2.take()}, {value3.take()}, {value2.take()}}));
-
-        return Ok(parsePostSlash(c, BorderRadii{{value1.take()}, {value2.take()}, {value3.take()}, {value4.take()}}));
-    }
-
-    static BorderRadii parsePostSlash(Cursor<Css::Sst>& c, BorderRadii radii) {
-        // if parse a /
-        // 1 value-- > border all(a, d, e, h)
-        // 2 values-- > 1 = top - start + bottom - end 2 = the others
-        // 3 values-- > 1 = top - start, 2 = top - end + bottom - start, 3 = bottom - end
-        // 4 values-- > 1 = top - start, 2 = top - end 3 = bottom - end, 4 = bottom - start
         eatWhitespace(c);
         if (not c.ended() and c.peek().token.data == "/"s) {
             c.next();
             eatWhitespace(c);
-            auto value1 = parseValue<PercentOr<Length>>(c);
-            if (not value1) {
-                return radii;
-            }
 
-            auto value2 = parseValue<PercentOr<Length>>(c);
-            if (not value2) {
-                radii.topLeft.v1 = value1.unwrap();
-                radii.topRight.v1 = value1.unwrap();
-                radii.bottomRight.v1 = value1.unwrap();
-                radii.bottomLeft.v1 = value1.unwrap();
-                return radii;
-            }
+            auto vertical = try$(parseValue<Corners<CalcValue<PercentOr<Length>>>>(c));
 
-            eatWhitespace(c);
-            auto value3 = parseValue<PercentOr<Length>>(c);
-            if (not value3) {
-                radii.topLeft.v1 = value1.unwrap();
-                radii.topRight.v1 = value2.unwrap();
-                radii.bottomRight.v1 = value1.unwrap();
-                radii.bottomLeft.v1 = value2.unwrap();
-                return radii;
-            }
-
-            eatWhitespace(c);
-            auto value4 = parseValue<PercentOr<Length>>(c);
-            if (not value4) {
-                radii.topLeft.v1 = value1.take();
-                radii.topRight.v1 = value2.take();
-                radii.bottomRight.v1 = value3.take();
-                radii.bottomLeft.v1 = value2.take();
-
-                return radii;
-            }
-
-            radii.topLeft.v1 = value1.take();
-            radii.topRight.v1 = value2.take();
-            radii.bottomRight.v1 = value3.take();
-            radii.bottomLeft.v1 = value4.take();
-            return radii;
+            return Ok(
+                BorderRadii(
+                    {horizonal.topLeft, vertical.topLeft},
+                    {horizonal.topRight, vertical.topRight},
+                    {horizonal.bottomLeft, vertical.bottomLeft},
+                    {horizonal.bottomRight, vertical.bottomRight}
+                )
+            );
         }
 
-        return radii;
+        return Ok(
+            BorderRadii(
+                {horizonal.topLeft},
+                {horizonal.topRight},
+                {horizonal.bottomLeft},
+                {horizonal.bottomRight}
+            )
+        );
     }
 
     static ComputedType compute(BorderRadii const& radii, ComputationContext const& ctx) {
