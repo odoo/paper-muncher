@@ -65,16 +65,14 @@ export struct InlineBox {
     }
 };
 
-struct SVGRoot;
+struct SvgRootBox;
 
-namespace SVG {
-
-struct Group {
-    using Element = Union<Shape, SVGRoot, Karm::Box<Vaev::Layout::Box>, Group>;
+struct SvgGroupBox {
+    using Element = Union<SvgShapeBox, SvgRootBox, Karm::Box<Vaev::Layout::Box>, SvgGroupBox>;
     Vec<Element> elements = {};
     Rc<Style::ComputedValues> style;
 
-    Group(Rc<Style::ComputedValues> style)
+    SvgGroupBox(Rc<Style::ComputedValues> style)
         : style(style) {}
 
     void add(Element&& element);
@@ -82,16 +80,15 @@ struct Group {
 
     void repr(Io::Emit& e) const;
 };
-} // namespace SVG
 
-struct SVGRoot : SVG::Group {
-    Opt<ViewBox> viewBox;
+struct SvgRootBox : SvgGroupBox {
+    Opt<SvgViewBox> viewBox;
 
-    SVGRoot(Rc<Style::ComputedValues> style)
-        : SVG::Group(style), viewBox(style->svg->viewBox) {}
+    SvgRootBox(Rc<Style::ComputedValues> style)
+        : SvgGroupBox(style), viewBox(style->svg->viewBox) {}
 
     void repr(Io::Emit& e) const {
-        e("(SVG {} viewBox:{}", SVG::buildRectangle(*style), viewBox);
+        e("(SVG {} viewBox:{}", buildRectangle(*style), viewBox);
         e.indentNewline();
         for (auto const& el : elements) {
             e("{}", el);
@@ -101,7 +98,7 @@ struct SVGRoot : SVG::Group {
     }
 };
 
-void SVG::Group::repr(Io::Emit& e) const {
+void SvgGroupBox::repr(Io::Emit& e) const {
     e("(Group {} ");
     e.indentNewline();
     for (auto const& el : elements) {
@@ -116,7 +113,7 @@ export using Content = Union<
     Vec<Box>,
     InlineBox,
     Rc<Scene::Node>,
-    SVGRoot>;
+    SvgRootBox>;
 
 struct Box : Meta::NoCopy {
     Rc<Style::ComputedValues> style;
@@ -153,7 +150,7 @@ struct Box : Meta::NoCopy {
     }
 
     bool isReplaced() {
-        return content.is<Rc<Scene::Node>>() or content.is<SVGRoot>();
+        return content.is<Rc<Scene::Node>>() or content.is<SvgRootBox>();
     }
 
     bool isRootElementPrincipalBox() {
@@ -189,20 +186,20 @@ struct Box : Meta::NoCopy {
             e.indentNewline();
             e("{}", content.unwrap<InlineBox>());
             e.deindent();
-        } else if (content.is<SVGRoot>()) {
+        } else if (content.is<SvgRootBox>()) {
             e.indentNewline();
-            e("{}", content.unwrap<SVGRoot>());
+            e("{}", content.unwrap<SvgRootBox>());
             e.deindent();
         }
         e(")");
     }
 };
 
-void SVG::Group::add(Element&& element) {
+void SvgGroupBox::add(Element&& element) {
     elements.pushBack(std::move(element));
 }
 
-void SVG::Group::add(Vaev::Layout::Box&& box) {
+void SvgGroupBox::add(Vaev::Layout::Box&& box) {
     add(Element{makeBox<Vaev::Layout::Box>(std::move(box))});
 }
 

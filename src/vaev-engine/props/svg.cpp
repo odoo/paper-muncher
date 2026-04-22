@@ -237,7 +237,7 @@ export struct SvgFillProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<SvgFillProperty>(self(), Paint{Color{Gfx::BLACK}});
+            return makeRc<SvgFillProperty>(self(), SvgPaint{Color{Gfx::BLACK}});
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -254,13 +254,13 @@ export struct SvgFillProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgFillProperty>(self(), try$(parseValue<Paint>(c))));
+            return Ok(makeRc<SvgFillProperty>(self(), try$(parseValue<SvgPaint>(c))));
         }
     };
 
-    Paint _value;
+    SvgPaint _value;
 
-    SvgFillProperty(Rc<Property::Registration> registration, Paint value)
+    SvgFillProperty(Rc<Property::Registration> registration, SvgPaint value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
@@ -350,7 +350,7 @@ export struct SvgViewBoxProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<SvgViewBoxProperty>(self(), Opt<ViewBox>{NONE});
+            return makeRc<SvgViewBoxProperty>(self(), Opt<SvgViewBox>{NONE});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -358,7 +358,7 @@ export struct SvgViewBoxProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            ViewBox viewBox;
+            SvgViewBox viewBox;
 
             viewBox.minX = try$(parseValue<Number>(c));
 
@@ -371,13 +371,13 @@ export struct SvgViewBoxProperty : Property {
             c.skip(Css::Token::comma());
             viewBox.height = try$(parseValue<Number>(c));
 
-            return Ok(makeRc<SvgViewBoxProperty>(self(), Opt<ViewBox>{std::move(viewBox)}));
+            return Ok(makeRc<SvgViewBoxProperty>(self(), Opt<SvgViewBox>{std::move(viewBox)}));
         }
     };
 
-    Opt<ViewBox> _value;
+    Opt<SvgViewBox> _value;
 
-    SvgViewBoxProperty(Rc<Property::Registration> registration, Opt<ViewBox> value)
+    SvgViewBoxProperty(Rc<Property::Registration> registration, Opt<SvgViewBox> value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues& c) const override {
@@ -401,7 +401,7 @@ export struct SvgStrokeProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<SvgStrokeProperty>(self(), Paint{NONE});
+            return makeRc<SvgStrokeProperty>(self(), SvgPaint{NONE});
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -418,13 +418,13 @@ export struct SvgStrokeProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgStrokeProperty>(self(), try$(parseValue<Paint>(c))));
+            return Ok(makeRc<SvgStrokeProperty>(self(), try$(parseValue<SvgPaint>(c))));
         }
     };
 
-    Paint _value;
+    SvgPaint _value;
 
-    SvgStrokeProperty(Rc<Property::Registration> registration, Paint value)
+    SvgStrokeProperty(Rc<Property::Registration> registration, SvgPaint value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
