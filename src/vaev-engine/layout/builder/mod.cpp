@@ -290,7 +290,7 @@ struct BuilderContext {
 };
 
 static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node);
-static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudoElement);
+static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> pseudoElement);
 
 // MARK: Build void/leaves ---------------------------------------------------------
 
@@ -871,7 +871,7 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
     }
 }
 
-export Box _buildBlockPseudoElement(Rc<Dom::PseudoElement> el) {
+export Box _buildBlockPseudoElement(Gc::Ref<Dom::PseudoElement> el) {
     auto style = el->computedValues();
     auto proseStyle = _proseStyleFromStyle(*style, style->fontFace);
 
@@ -884,7 +884,7 @@ export Box _buildBlockPseudoElement(Rc<Dom::PseudoElement> el) {
     return {style, el};
 }
 
-static void _buildPseudoElement(BuilderContext bc, Rc<Dom::PseudoElement> pseudoElement) {
+static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> pseudoElement) {
     auto style = pseudoElement->computedValues();
     auto display = style->display;
     if (display == Display::NONE)
@@ -934,21 +934,14 @@ export Box buildElement(Gc::Ref<Dom::Element> elt) {
 }
 
 export Box buildElement(Dom::OriginatingElement& el) {
-    if (auto pseudoElement = el.is<Rc<Dom::PseudoElement>>()) {
+    if (auto pseudoElement = el.is<Gc::Ref<Dom::PseudoElement>>()) {
         return _buildBlockPseudoElement(*pseudoElement);
     }
 
     return buildElement(el.unwrap<Gc::Ref<Dom::Element>>());
 }
 
-export Box build(Gc::Ref<Dom::Document> doc) {
-    auto el = doc->documentElement();
-    if (!el)
-        return {doc->registeredPropertySet.initialComputedValues(), NONE};
-    return buildElement(el.upgrade());
-}
-
-export Box buildForPseudoElement(Rc<Dom::PseudoElement> el, usize currentPage, RunningPositionMap& runningPos) {
+export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize currentPage, RunningPositionMap& runningPos) {
     auto style = el->computedValues();
     auto proseStyle = _proseStyleFromStyle(*style, style->fontFace);
 
@@ -972,6 +965,13 @@ export Box buildForPseudoElement(Rc<Dom::PseudoElement> el, usize currentPage, R
     }
 
     return {style, el};
+}
+
+export Box buildDocument(Gc::Ref<Dom::Document> doc) {
+    auto el = doc->documentElement();
+    if (!el)
+        return {doc->registeredPropertySet.initialComputedValues(), NONE};
+    return buildElement(el.upgrade());
 }
 
 } // namespace Vaev::Layout

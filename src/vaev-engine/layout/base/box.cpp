@@ -159,7 +159,7 @@ struct Box : Meta::NoCopy {
     bool isRootElementPrincipalBox() {
         if (not origin)
             return false;
-        if (origin->is<Rc<Dom::PseudoElement>>())
+        if (origin->is<Gc::Ref<Dom::PseudoElement>>())
             return false;
 
         auto el = origin->unwrap<Gc::Ref<Dom::Element>>();

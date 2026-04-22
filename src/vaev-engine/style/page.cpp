@@ -53,18 +53,18 @@ export struct Page {
 };
 
 export struct PageComputedValues {
-    using Areas = Array<Rc<Dom::PseudoElement>, toUnderlyingType(PageArea::_LEN)>;
+    using Areas = Array<Gc::Ref<Dom::PseudoElement>, toUnderlyingType(PageArea::_LEN)>;
 
     Rc<ComputedValues> style;
     Areas _areas;
 
-    PageComputedValues(ComputedValues const& initial)
+    PageComputedValues(Gc::Heap& heap, ComputedValues const& initial)
         : style(makeRc<ComputedValues>(initial)),
-          _areas(Areas::fill([&](...) -> Rc<Dom::PseudoElement> {
-              return makeRc<Dom::PseudoElement>("::-vaev-page"_sym, makeRc<ComputedValues>(initial));
+          _areas(Areas::fill([&](...) -> Gc::Ref<Dom::PseudoElement> {
+              return heap.alloc<Dom::PseudoElement>("::-vaev-page"_sym, makeRc<ComputedValues>(initial));
           })) {}
 
-    Rc<Dom::PseudoElement> area(PageArea margin) {
+    Gc::Ref<Dom::PseudoElement> area(PageArea margin) {
         return _areas[toUnderlyingType(margin)];
     }
 };

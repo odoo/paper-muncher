@@ -16,6 +16,7 @@ import :style.ruleIndex;
 namespace Vaev::Style {
 
 export struct Computer {
+    Gc::Heap& _heap;
     Media _media;
     RegisteredPropertySet& _registeredPropertySet;
     StyleSheetList const& _stylesheets;
@@ -295,7 +296,7 @@ export struct Computer {
     }
 
     Rc<PageComputedValues> computeFor(ComputedValues const& parent, Page const& page) {
-        auto computed = makeRc<PageComputedValues>(parent);
+        auto computed = makeRc<PageComputedValues>(_heap, parent);
 
         for (auto const& sheet : _stylesheets.styleSheets)
             for (auto const& rule : sheet.rules)
@@ -337,7 +338,7 @@ export struct Computer {
              type == Dom::PseudoElement::AFTER))
             return;
 
-        el.addPseudoElement(makeRc<Dom::PseudoElement>(type, computedValues));
+        el.addPseudoElement(_heap.alloc<Dom::PseudoElement>(type, computedValues));
     }
 
     void styleElement(ComputedValues const& parentComputedValues, Dom::Element& el) {

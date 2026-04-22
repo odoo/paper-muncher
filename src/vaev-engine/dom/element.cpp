@@ -20,7 +20,7 @@ export struct Element;
 export struct PseudoElement;
 
 // https://drafts.csswg.org/css-pseudo/#CSSPseudoElement-interface
-export struct PseudoElement {
+export struct PseudoElement : Tree<PseudoElement> {
     // https://drafts.csswg.org/css-pseudo/#dom-csspseudoelement-type
     static Symbol const BEFORE;
     static Symbol const AFTER;
@@ -68,7 +68,7 @@ export struct Element : Node {
     Opt<Rc<Style::ComputedValues>> _computedValues;
     TokenList classList;
     Opt<Rc<Scene::Node>> imageContent;
-    Map<Symbol, Rc<PseudoElement>> _pseudoElements;
+    Map<Symbol, Gc::Ref<PseudoElement>> _pseudoElements;
 
     // MARK: Node --------------------------------------------------------------
 
@@ -195,17 +195,17 @@ export struct Element : Node {
         return _pseudoElements.contains(type);
     }
 
-    void addPseudoElement(Rc<PseudoElement> pseudoElement) {
+    void addPseudoElement(Gc::Ref<PseudoElement> pseudoElement) {
         pseudoElement->parent = *this;
         _pseudoElements.put(pseudoElement->type, pseudoElement);
     }
 
-    Opt<Rc<PseudoElement>> getPseudoElement(Symbol type) const {
+    Opt<Gc::Ref<PseudoElement>> getPseudoElement(Symbol type) const {
         return _pseudoElements.lookup(type);
     }
 };
 
-export struct OriginatingElement : Union<Gc::Ref<Element>, Rc<PseudoElement>> {
+export struct OriginatingElement : Union<Gc::Ref<Element>, Gc::Ref<PseudoElement>> {
     using Union::Union;
 
     Rc<Style::ComputedValues> computedValues() {

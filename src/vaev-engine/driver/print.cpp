@@ -22,7 +22,7 @@ namespace Vaev::Driver {
 
 void _paintCornerMargin(Style::PageComputedValues& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea area, usize currentPage, Layout::RunningPositionMap& runningPosition) {
     Layout::Tree tree{
-        .root = Layout::buildForPseudoElement(pageStyle.area(area), currentPage, runningPosition),
+        .root = Layout::buildElement(pageStyle.area(area), currentPage, runningPosition),
         .viewport = Layout::Viewport{.small = rect.size()}
     };
     auto [_, frag] = Layout::layoutAndCommitRoot(
@@ -38,9 +38,9 @@ void _paintCornerMargin(Style::PageComputedValues& pageStyle, Scene::Stack& stac
 }
 
 void _paintMainMargin(Style::PageComputedValues& pageStyle, Scene::Stack& stack, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas, usize currentPage, Layout::RunningPositionMap& runningPosition) {
-    auto box = Layout::buildForPseudoElement(pageStyle.area(mainArea), currentPage, runningPosition);
+    auto box = Layout::buildElement(pageStyle.area(mainArea), currentPage, runningPosition);
     for (auto subArea : subAreas) {
-        box.add(Layout::buildForPseudoElement(pageStyle.area(subArea), currentPage, runningPosition));
+        box.add(Layout::buildElement(pageStyle.area(subArea), currentPage, runningPosition));
     }
     Layout::Tree tree{
         .root = std::move(box),
@@ -184,10 +184,11 @@ Pair<Vec<Layout::Breakpoint>, Vec<PageLayoutInfos>> collectBreakPointsAndRunning
     return {breakpoints, pageInfos};
 }
 
-export Yield<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
+export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Print::Settings const& settings) {
     auto media = Style::Media::forPrint(settings);
 
     Style::Computer computer{
+        heap,
         media,
         dom->registeredPropertySet,
         *dom->styleSheets,
@@ -207,7 +208,7 @@ export Yield<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings cons
     // MARK: Page Content ------------------------------------------------------
 
     Layout::Tree contentTree = {
-        Layout::build(dom),
+        Layout::buildDocument(dom),
     };
 
     Layout::RunningPositionMap runningPosition = {}; // Mapping the different Running positions to their respective names and their page.
