@@ -24,7 +24,9 @@ export struct Computer {
 
     // MARK: Counters ----------------------------------------------------------
 
-    Yield<Dom::OriginatingElement> _iterElementInScope() {}
+    Yield<Dom::OriginatingElement> _iterElementInScope() {
+        co_return;
+    }
 
     // https://drafts.csswg.org/css-lists/#instantiate-counter:~:text=dynamically%20calculate%20the%20initial%20value
     Integer _dynamicallyCalculateCounterInitialValue(CustomIdent counter) {
@@ -38,7 +40,7 @@ export struct Computer {
         for (auto el : _iterElementInScope()) {
             auto maybeCounterIncrement =
                 iter(el.computedValues()->counters->increment) |
-                Find([&](CounterProps::Increment const& increment) {
+                FindFirst([&](CounterProps::Increment const& increment) {
                     return increment.name == counter;
                 });
 
@@ -56,7 +58,7 @@ export struct Computer {
             // 3. If el sets this counter with counter-set, then add that integer value to num and break this loop.
             auto maybeCounterSet =
                 iter(el.computedValues()->counters->set) |
-                Find([&](CounterProps::Set const& set) {
+                FindFirst([&](CounterProps::Set const& set) {
                     return set.name == counter;
                 });
 

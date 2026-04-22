@@ -312,7 +312,7 @@ struct CounterStyleSet {
             //    append that tuple’s counter symbol to S and return S.
             auto zeroSym =
                 iter(style.additiveSymbols) |
-                Find([](AdditiveCounterSymbol const& it) {
+                FindFirst([](AdditiveCounterSymbol const& it) {
                     return it.value == 0;
                 });
 
