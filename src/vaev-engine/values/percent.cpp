@@ -17,7 +17,7 @@ namespace Vaev {
 export using Percent = Distinct<f64, struct _PercentTag>;
 
 export template <>
-struct ValueParser<Percent> {
+struct ValueTraits<Percent> : DefaultValueTraits<Percent> {
     static Res<Percent> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

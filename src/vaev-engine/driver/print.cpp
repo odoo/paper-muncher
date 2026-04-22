@@ -249,7 +249,7 @@ export Yield<Print::Page> print(Gc::Ref<Dom::Document> dom, Print::Settings cons
         pageStack->prepare();
 
         co_yield Print::Page(
-            settings.paper,
+            settings.size.cast<f64>(),
             makeRc<Scene::Transform>(
                 pageStack,
                 Math::Trans2f::scale(media.resolution.toDppx())

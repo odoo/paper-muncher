@@ -25,7 +25,7 @@ export struct RunningPosition {
 export using Position = Union<Keywords::Static, Keywords::Relative, Keywords::Absolute, Keywords::Fixed, Keywords::Sticky, RunningPosition>;
 
 export template <>
-struct ValueParser<Position> {
+struct ValueTraits<Position> : DefaultValueTraits<Position> {
     // https://drafts.csswg.org/css-position-3/#propdef-position
     static Res<Position> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
@@ -66,7 +66,7 @@ export using Padding = Math::Insets<CalcValue<PercentOr<Length>>>;
 export using Offsets = Math::Insets<Width>;
 
 export template <typename T>
-struct ValueParser<Math::Insets<T>> {
+struct ValueTraits<Math::Insets<T>> {
     static Res<Math::Insets<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

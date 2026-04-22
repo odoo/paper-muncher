@@ -125,12 +125,6 @@ export struct [[gnu::packed]] Length {
         return _val == other._val and _unit == other._unit;
     }
 
-    constexpr std::partial_ordering operator<=>(Length const& other) const {
-        if (_unit != other._unit)
-            return std::partial_ordering::unordered;
-        return _val <=> other._val;
-    }
-
     void repr(Io::Emit& e) const {
         e("{}{}", _val, _unit);
     }
@@ -142,7 +136,191 @@ struct _Resolved<Length> {
 };
 
 export template <>
-struct ValueParser<Length> {
+struct ValueTraits<Length> : DefaultValueTraits<Length> {
+    using Computed = Au;
+
+    static Computed compute(Length const val, ComputationContext& ctx) {
+        switch (val.unit()) {
+            // https://drafts.csswg.org/css-values/#font-relative-lengths
+        case Length::EM:
+            return Au::fromFloatNearest(val.val() * ctx.font.unwrap().fontSize());
+
+        case Length::REM:
+            return Au::fromFloatNearest(val.val() * ctx.rootFont.unwrap().fontSize());
+
+        case Length::EX:
+            return Au::fromFloatNearest(val.val() * ctx.font.unwrap().xHeight());
+
+        case Length::REX:
+            return Au::fromFloatNearest(val.val() * ctx.rootFont.unwrap().xHeight());
+
+        case Length::CAP:
+            return Au::fromFloatNearest(val.val() * ctx.font.unwrap().capHeight());
+
+        case Length::RCAP:
+            return Au::fromFloatNearest(val.val() * ctx.rootFont.unwrap().capHeight());
+
+        case Length::CH:
+            return Au::fromFloatNearest(val.val() * ctx.font.unwrap().zeroAdvance());
+
+        case Length::RCH:
+            return Au::fromFloatNearest(val.val() * ctx.rootFont.unwrap().zeroAdvance());
+
+        case Length::IC:
+            return Au::fromFloatNearest(val.val() * ctx.font.unwrap().zeroAdvance());
+
+        case Length::RIC:
+            return Au::fromFloatNearest(val.val() * ctx.rootFont.unwrap().zeroAdvance());
+
+        case Length::LH:
+            return Au::fromFloatNearest(val.val() * ctx.font.unwrap().lineHeight());
+
+        case Length::RLH:
+            return Au::fromFloatNearest(val.val() * ctx.rootFont.unwrap().lineHeight());
+
+            // https://drafts.csswg.org/css-values/#viewport-relative-lengths
+
+            // https://drafts.csswg.org/css-values/#vw
+            // Equal to 1% of the width of current viewport.
+        case Length::VW:
+        case Length::LVW:
+            return Au::fromFloatNearest(val.val() * ctx.viewport.large.width.cast<f64>() / 100);
+
+        case Length::SVW:
+            return Au::fromFloatNearest(val.val() * ctx.viewport.small.width.cast<f64>() / 100);
+
+        case Length::DVW:
+            return Au::fromFloatNearest(val.val() * ctx.viewport.dynamic.width.cast<f64>() / 100);
+
+            // https://drafts.csswg.org/css-values/#vh
+            // Equal to 1% of the height of current viewport.
+        case Length::VH:
+        case Length::LVH:
+            return Au::fromFloatNearest(val.val() * ctx.viewport.large.height.cast<f64>() / 100);
+
+        case Length::SVH:
+            return Au::fromFloatNearest(val.val() * ctx.viewport.small.height.cast<f64>() / 100);
+
+        case Length::DVH:
+            return Au::fromFloatNearest(val.val() * ctx.viewport.dynamic.height.cast<f64>() / 100);
+
+            // https://drafts.csswg.org/css-values/#vi
+            // Equal to 1% of the size of the viewport in the box’s inline axis.
+        case Length::VI:
+        case Length::LVI:
+            if (ctx.writingMode == _WritingMode::HORIZONTAL_TB) {
+                return Au::fromFloatNearest(val.val() * ctx.viewport.large.width.cast<f64>() / 100);
+            } else {
+                return Au::fromFloatNearest(val.val() * ctx.viewport.large.height.cast<f64>() / 100);
+            }
+
+        case Length::SVI:
+            if (ctx.writingMode == _WritingMode::HORIZONTAL_TB) {
+                return Au::fromFloatNearest(val.val() * ctx.viewport.small.width.cast<f64>() / 100);
+            } else {
+                return Au::fromFloatNearest(val.val() * ctx.viewport.small.height.cast<f64>() / 100);
+            }
+
+        case Length::DVI:
+            if (ctx.writingMode == _WritingMode::HORIZONTAL_TB) {
+                return Au::fromFloatNearest(val.val() * ctx.viewport.dynamic.width.cast<f64>() / 100);
+            } else {
+                return Au::fromFloatNearest(val.val() * ctx.viewport.dynamic.height.cast<f64>() / 100);
+            }
+
+            // https://drafts.csswg.org/css-values/#vb
+            // Equal to 1% of the size of the viewport in the box’s block axis.
+        case Length::VB:
+        case Length::LVB:
+            if (ctx.writingMode == _WritingMode::HORIZONTAL_TB) {
+                return Au::fromFloatNearest(val.val() * ctx.viewport.large.width.cast<f64>() / 100);
+            } else {
+                return Au::fromFloatNearest(val.val() * ctx.viewport.large.height.cast<f64>() / 100);
+            }
+
+        case Length::SVB:
+            if (ctx.writingMode == _WritingMode::HORIZONTAL_TB) {
+                return Au::fromFloatNearest(val.val() * ctx.viewport.small.width.cast<f64>() / 100);
+            } else {
+                return Au::fromFloatNearest(val.val() * ctx.viewport.small.height.cast<f64>() / 100);
+            }
+
+        case Length::DVB:
+            if (ctx.writingMode == _WritingMode::HORIZONTAL_TB) {
+                return Au::fromFloatNearest(val.val() * ctx.viewport.dynamic.width.cast<f64>() / 100);
+            } else {
+                return Au::fromFloatNearest(val.val() * ctx.viewport.dynamic.height.cast<f64>() / 100);
+            }
+
+            // https://drafts.csswg.org/css-values/#vmin
+            // Equal to the smaller of vw and vh.
+        case Length::VMIN:
+        case Length::LVMIN:
+            return min(
+                computeValue(Length(val.val(), Length::VW), ctx),
+                computeValue(Length(val.val(), Length::VH), ctx)
+            );
+
+        case Length::SVMIN:
+            return min(
+                computeValue(Length(val.val(), Length::SVW), ctx),
+                computeValue(Length(val.val(), Length::SVH), ctx)
+            );
+
+        case Length::DVMIN:
+            return min(
+                computeValue(Length(val.val(), Length::DVW), ctx),
+                computeValue(Length(val.val(), Length::DVH), ctx)
+            );
+
+        // https://drafts.csswg.org/css-values/#vmax
+        // Equal to the larger of vw and vh.
+        case Length::VMAX:
+        case Length::LVMAX:
+            return max(
+                computeValue(Length(val.val(), Length::VW), ctx),
+                computeValue(Length(val.val(), Length::VH), ctx)
+            );
+
+        case Length::DVMAX:
+            return max(
+                computeValue(Length(val.val(), Length::DVW), ctx),
+                computeValue(Length(val.val(), Length::DVH), ctx)
+            );
+
+        case Length::SVMAX:
+            return max(
+                computeValue(Length(val.val(), Length::SVW), ctx),
+                computeValue(Length(val.val(), Length::SVH), ctx)
+            );
+
+            // https://drafts.csswg.org/css-values/#absolute-lengths
+        case Length::CM:
+            return Au::fromFloatNearest(val.val() * 96 / 2.54);
+
+        case Length::MM:
+            return Au::fromFloatNearest(val.val() * 96 / 25.4);
+
+        case Length::Q:
+            return Au::fromFloatNearest(val.val() * 96 / 101.6);
+
+        case Length::IN:
+            return Au::fromFloatNearest(val.val() * 96);
+
+        case Length::PT:
+            return Au::fromFloatNearest(val.val() * 96 / 72.0);
+
+        case Length::PC:
+            return Au::fromFloatNearest(val.val() * 96 / 6.0);
+
+        case Length::PX:
+            return Au::fromFloatNearest(val.val());
+
+        default:
+            panic("invalid unit");
+        }
+    }
+
     static Res<Length::Unit> _parseLengthUnit(Str unit) {
 #define LENGTH(NAME, ...)      \
     if (eqCi(unit, #NAME ""s)) \
