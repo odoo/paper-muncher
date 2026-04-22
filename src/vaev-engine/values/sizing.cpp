@@ -36,7 +36,7 @@ export struct FitContent {
 };
 
 export template <>
-struct ValueParser<FitContent> {
+struct ValueTraits<FitContent> : DefaultValueTraits<FitContent> {
     static Res<FitContent> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

@@ -28,7 +28,7 @@ export using LineWidth = Union<
     CalcValue<Length>>;
 
 export template <>
-struct ValueParser<LineWidth> {
+struct ValueTraits<LineWidth> : DefaultValueTraits<LineWidth> {
     static Res<LineWidth> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

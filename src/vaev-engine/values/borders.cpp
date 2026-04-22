@@ -17,7 +17,7 @@ namespace Vaev {
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 
 export template <>
-struct ValueParser<Gfx::BorderStyle> {
+struct ValueTraits<Gfx::BorderStyle> : DefaultValueTraits<Gfx::BorderStyle> {
     static Res<Gfx::BorderStyle> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of property");
@@ -75,7 +75,7 @@ template <>
 _Border<Au>::_Border() : width(0_au) {}
 
 export template <>
-struct ValueParser<Border> {
+struct ValueTraits<Border> : DefaultValueTraits<Border> {
     static Res<Border> parse(Cursor<Css::Sst>& c) {
         Border border;
         while (not c.ended()) {
@@ -147,7 +147,7 @@ export struct BorderProps {
 };
 
 export template <typename T>
-struct ValueParser<Math::Radii<T>> {
+struct ValueTraits<Math::Radii<T>> {
     static Res<Math::Radii<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

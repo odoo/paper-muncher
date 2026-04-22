@@ -24,7 +24,7 @@ export enum struct Float : u8 {
 };
 
 export template <>
-struct ValueParser<Float> {
+struct ValueTraits<Float> : DefaultValueTraits<Float> {
     static Res<Float> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -58,7 +58,7 @@ export enum struct Clear : u8 {
 };
 
 export template <>
-struct ValueParser<Clear> {
+struct ValueTraits<Clear> : DefaultValueTraits<Clear> {
     static Res<Clear> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

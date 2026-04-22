@@ -189,7 +189,7 @@ export struct WebDriver {
     Res<RectAu> getWindowRect(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
         auto window = try$(session->currentBrowsingContext());
-        return Ok(window->_media.viewportSize());
+        return Ok(window->_media.displayArea());
     }
 
     // https://www.w3.org/TR/webdriver2/#set-window-rect
@@ -263,7 +263,7 @@ export struct WebDriver {
         auto data = try$(
             Karm::Image::save(
                 scene,
-                window->_media.viewportSize().cast<isize>(),
+                window->_media.displayArea().cast<isize>(),
                 {
                     // NOSPEC: Should be PUBLIC_PNG but we don't support PNG encoding yet
                     .format = Ref::Uti::PUBLIC_BMP,

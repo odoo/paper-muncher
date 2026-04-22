@@ -322,7 +322,7 @@ export struct Display {
 };
 
 export template <>
-struct ValueParser<Display> {
+struct ValueTraits<Display> : DefaultValueTraits<Display> {
     static Res<Display> _parseLegacyDisplay(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

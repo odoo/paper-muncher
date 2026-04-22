@@ -108,7 +108,7 @@ struct CalcValue {
 };
 
 export template <typename T>
-struct ValueParser<CalcValue<T>> {
+struct ValueTraits<CalcValue<T>> {
     static Res<CalcValue<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
