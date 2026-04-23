@@ -38,8 +38,8 @@ export struct DisplayProperty : Property {
     DisplayProperty(Rc<Property::Registration> registration, Display value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& s) const override {
-        s.display = _value;
+    void apply(ComputedValues& c, ComputationContext const&) const override {
+        c.display = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -73,7 +73,7 @@ export struct ContentProperty : Property {
     ContentProperty(Rc<Property::Registration> registration, Content value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.content = _value;
     }
 
@@ -107,7 +107,7 @@ export struct OrderProperty : Property {
     OrderProperty(Rc<Property::Registration> registration, Integer value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.order = _value;
     }
 

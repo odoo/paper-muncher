@@ -43,7 +43,7 @@ export struct BackgroundColorProperty : Property {
     BackgroundColorProperty(Rc<Property::Registration> registration, Color value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.backgrounds.cow().color = _value;
     }
 
@@ -89,7 +89,7 @@ export struct BackgroundAttachmentProperty : Property {
     BackgroundAttachmentProperty(Rc<Property::Registration> registration, Vec<BackgroundAttachment> value)
         : Property(registration), _value(std::move(value)) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         auto& layers = c.backgrounds.cow().layers;
         layers.resize(max(layers.len(), _value.len()));
         for (usize i = 0; i < _value.len(); ++i)
@@ -285,7 +285,7 @@ export struct ColorProperty : Property {
     ColorProperty(Rc<Property::Registration> registration, Color value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.color = resolve(_value, Gfx::BLACK);
     }
 

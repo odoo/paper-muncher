@@ -40,7 +40,7 @@ export struct OverflowXProperty : Property {
     OverflowXProperty(Rc<Property::Registration> registration, Overflow value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.overflows.x = _value;
     }
 
@@ -74,7 +74,7 @@ export struct OverflowYProperty : Property {
     OverflowYProperty(Rc<Property::Registration> registration, Overflow value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.overflows.y = _value;
     }
 
@@ -108,7 +108,7 @@ export struct OverflowBlockProperty : Property {
     OverflowBlockProperty(Rc<Property::Registration> registration, Overflow value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.overflows.block = _value;
     }
 
@@ -142,7 +142,7 @@ export struct OverflowInlineProperty : Property {
     OverflowInlineProperty(Rc<Property::Registration> registration, Overflow value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.overflows.inline_ = _value;
     }
 

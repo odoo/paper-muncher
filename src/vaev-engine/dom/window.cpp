@@ -41,8 +41,10 @@ export struct Window {
         invalidateRender();
     }
 
+    // FIXME: This should be renamed to changeDisplayArea, and we should make sure that
+    //        its input is the page box and not the page area.
     void changeViewport(Vec2Au viewport) {
-        if (_media.changeViewport(viewport))
+        if (_media.changeDisplayArea(viewport))
             invalidateRender();
     }
 
@@ -79,7 +81,7 @@ export struct Window {
     Driver::RenderResult& ensureRender() {
         if (_render)
             return *_render;
-        _render = Driver::render(_heap, _document.upgrade(), _media, {.small = _media.viewportSize()});
+        _render = Driver::render(_heap, _document.upgrade(), _media, {.small = _media.displayArea()});
         return *_render;
     }
 

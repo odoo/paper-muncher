@@ -90,7 +90,7 @@ export struct SVGProps {
 // MARK: Paint
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export template <>
-struct ValueParser<Paint> {
+struct ValueTraits<Paint> : DefaultValueTraits<Paint> {
     static Res<Paint> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

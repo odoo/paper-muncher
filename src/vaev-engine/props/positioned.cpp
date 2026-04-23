@@ -40,7 +40,7 @@ export struct PositionProperty : Property {
     PositionProperty(Rc<Property::Registration> registration, Position value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.position = _value;
     }
 
@@ -74,7 +74,7 @@ export struct TopProperty : Property {
     TopProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.offsets.cow().top = _value;
     }
 
@@ -108,7 +108,7 @@ export struct RightProperty : Property {
     RightProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.offsets.cow().end = _value;
     }
 
@@ -142,7 +142,7 @@ export struct BottomProperty : Property {
     BottomProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.offsets.cow().bottom = _value;
     }
 
@@ -176,7 +176,7 @@ export struct LeftProperty : Property {
     LeftProperty(Rc<Property::Registration> registration, Width value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.offsets.cow().start = _value;
     }
 
@@ -210,7 +210,7 @@ export struct ZIndexProperty : Property {
     ZIndexProperty(Rc<Property::Registration> registration, ZIndex value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.zIndex = _value;
     }
 

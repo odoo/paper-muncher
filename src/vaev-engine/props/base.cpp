@@ -125,7 +125,7 @@ export struct Property : Meta::NoCopy {
         return {};
     }
 
-    virtual void apply(ComputedValues&) const {
+    virtual void apply(ComputedValues&, ComputationContext const& = {}) const {
         logFatal("longhand property {#} is missing apply() implementation", registration->name());
     }
 
@@ -221,7 +221,7 @@ struct CustomProperty : Property {
     CustomProperty(Rc<Property::Registration> registration, Css::Content value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& child) const override {
+    void apply(ComputedValues& child, ComputationContext const&) const override {
         child.setCustomProp(registration->name(), _value);
     }
 

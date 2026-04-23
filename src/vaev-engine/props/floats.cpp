@@ -39,7 +39,7 @@ export struct FloatProperty : Property {
     FloatProperty(Rc<Property::Registration> registration, Float value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.float_ = _value;
     }
 
@@ -72,7 +72,7 @@ export struct ClearProperty : Property {
     ClearProperty(Rc<Property::Registration> registration, Clear value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.clear = _value;
     }
 

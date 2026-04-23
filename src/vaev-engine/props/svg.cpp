@@ -48,7 +48,7 @@ export struct SvgXProperty : Property {
     SvgXProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.svg.cow().x = _value;
     }
 
@@ -90,7 +90,7 @@ export struct SvgYProperty : Property {
     SvgYProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.svg.cow().y = _value;
     }
 
@@ -132,7 +132,7 @@ export struct SvgCXProperty : Property {
     SvgCXProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.svg.cow().cx = _value;
     }
 
@@ -174,7 +174,7 @@ export struct SvgCYProperty : Property {
     SvgCYProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.svg.cow().cy = _value;
     }
 
@@ -216,7 +216,7 @@ export struct SvgRProperty : Property {
     SvgRProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.svg.cow().r = _value;
     }
 
@@ -263,7 +263,7 @@ export struct SvgFillProperty : Property {
     SvgFillProperty(Rc<Property::Registration> registration, Paint value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.svg.cow().fill = _value;
     }
 
@@ -329,7 +329,7 @@ export struct SvgDProperty : Property {
     SvgDProperty(Rc<Property::Registration> registration, Union<String, None> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.svg.cow().d = _value;
     }
 
@@ -380,7 +380,7 @@ export struct SvgViewBoxProperty : Property {
     SvgViewBoxProperty(Rc<Property::Registration> registration, Opt<ViewBox> value)
         : Property(registration), _value(std::move(value)) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.svg.cow().viewBox = _value;
     }
 
@@ -427,7 +427,7 @@ export struct SvgStrokeProperty : Property {
     SvgStrokeProperty(Rc<Property::Registration> registration, Paint value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.svg.cow().stroke = _value;
     }
 
@@ -466,7 +466,7 @@ export struct SvgStrokeOpacityProperty : Property {
     SvgStrokeOpacityProperty(Rc<Property::Registration> registration, Number value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.svg.cow().strokeOpacity = _value;
     }
 
@@ -518,7 +518,7 @@ export struct FillOpacityProperty : Property {
     FillOpacityProperty(Rc<Property::Registration> registration, Number value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.svg.cow().fillOpacity = _value;
     }
 
@@ -569,7 +569,7 @@ export struct StrokeWidthProperty : Property {
     StrokeWidthProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.svg.cow().strokeWidth = _value;
     }
 

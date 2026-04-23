@@ -40,7 +40,7 @@ export struct FlexBasisProperty : Property {
     FlexBasisProperty(Rc<Property::Registration> registration, FlexBasis value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.flex.cow().basis = _value;
     }
 
@@ -74,7 +74,7 @@ export struct FlexDirectionProperty : Property {
     FlexDirectionProperty(Rc<Property::Registration> registration, FlexDirection value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.flex.cow().direction = _value;
     }
 
@@ -108,7 +108,7 @@ export struct FlexGrowProperty : Property {
     FlexGrowProperty(Rc<Property::Registration> registration, Number value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.flex.cow().grow = _value;
     }
 
@@ -142,7 +142,7 @@ export struct FlexShrinkProperty : Property {
     FlexShrinkProperty(Rc<Property::Registration> registration, Number value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.flex.cow().shrink = _value;
     }
 
@@ -176,7 +176,7 @@ export struct FlexWrapProperty : Property {
     FlexWrapProperty(Rc<Property::Registration> registration, FlexWrap value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.flex.cow().wrap = _value;
     }
 

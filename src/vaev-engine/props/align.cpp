@@ -41,7 +41,7 @@ export struct AlignContentProperty : Property {
     AlignContentProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.aligns.alignContent = _value;
     }
 
@@ -75,7 +75,7 @@ export struct JustifyContentProperty : Property {
     JustifyContentProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.aligns.justifyContent = _value;
     }
 
@@ -109,7 +109,7 @@ export struct JustifySelfProperty : Property {
     JustifySelfProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.aligns.justifySelf = _value;
     }
 
@@ -143,7 +143,7 @@ export struct AlignSelfProperty : Property {
     AlignSelfProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.aligns.alignSelf = _value;
     }
 
@@ -177,7 +177,7 @@ export struct JustifyItemsProperty : Property {
     JustifyItemsProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.aligns.justifyItems = _value;
     }
 
@@ -211,7 +211,7 @@ export struct AlignItemsProperty : Property {
     AlignItemsProperty(Rc<Property::Registration> registration, Align value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply(ComputedValues& c, ComputationContext const&) const override {
         c.aligns.alignItems = _value;
     }
 
@@ -237,7 +237,7 @@ export struct RowGapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<RowGapProperty>(self(), c.gaps->row);
+            return makeRc<RowGapProperty>(self(), valueFromComputed<Gap>(c.gaps->row));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -250,8 +250,9 @@ export struct RowGapProperty : Property {
     RowGapProperty(Rc<Property::Registration> registration, Gap value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
-        c.gaps.cow().row = _value;
+    void apply(ComputedValues& c, ComputationContext const&) const override {
+        // FIXME: Pass proper context
+        c.gaps.cow().row = computeValue(_value, {});
     }
 
     void repr(Io::Emit& e) const override {
@@ -276,7 +277,7 @@ export struct ColumnGapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ColumnGapProperty>(self(), c.gaps->col);
+            return makeRc<ColumnGapProperty>(self(), valueFromComputed<Gap>(c.gaps->col));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -289,8 +290,9 @@ export struct ColumnGapProperty : Property {
     ColumnGapProperty(Rc<Property::Registration> registration, Gap value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
-        c.gaps.cow().col = _value;
+    void apply(ComputedValues& c, ComputationContext const&) const override {
+        // FIXME: Proper context
+        c.gaps.cow().col = computeValue(_value, {});
     }
 
     void repr(Io::Emit& e) const override {
@@ -320,17 +322,11 @@ export struct GapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<GapProperty>(self(), *c.gaps);
+            return makeRc<GapProperty>(self(), valueFromComputed<Gaps>(*c.gaps));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto rowGap = try$(parseValue<Gap>(c));
-            eatWhitespace(c);
-            auto colGap = parseValue<Gap>(c);
-
-            if (not colGap)
-                return Ok(makeRc<GapProperty>(self(), Gaps{rowGap, rowGap}));
-            return Ok(makeRc<GapProperty>(self(), Gaps{rowGap, colGap.take()}));
+            return Ok(makeRc<GapProperty>(self(), try$(parseValue<Gaps>(c))));
         }
     };
 

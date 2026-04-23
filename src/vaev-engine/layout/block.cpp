@@ -237,7 +237,7 @@ struct BlockFormatingContext : FormatingContext {
                 Au maxPositive = max(0_au, usedSpacings.margin.top, lastMarginBottom);
                 Au minNegative = min(0_au, usedSpacings.margin.top, lastMarginBottom);
 
-                Au collapsedMargin = maxPositive - Math::abs(minNegative);
+                Au collapsedMargin = maxPositive - abs(minNegative);
                 blockSize += collapsedMargin - lastMarginBottom;
             }
 

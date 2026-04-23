@@ -21,7 +21,7 @@ export enum struct Overflow : u8 {
 };
 
 export template <>
-struct ValueParser<Overflow> {
+struct ValueTraits<Overflow> : DefaultValueTraits<Overflow> {
     static Res<Overflow> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

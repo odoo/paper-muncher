@@ -40,7 +40,59 @@ export struct TransformOrigin {
 };
 
 export template <>
-struct ValueParser<TransformOrigin> {
+struct ValueTraits<TransformOrigin::XOffset> {
+    using ComputedType = CalcValue<PercentOr<Px>>;
+
+    static Res<TransformOrigin::XOffset> parse(Cursor<Css::Sst>& c) {
+        return parseOneOf<TransformOrigin::XOffset>(c);
+    }
+
+    static ComputedType compute(TransformOrigin::XOffset const& xOffset, ComputationContext const& ctx) {
+        return xOffset.visit(Visitor{
+            [](Keywords::Left) -> ComputedType {
+                return Percent{0};
+            },
+            [](Keywords::Center) -> ComputedType {
+                return Percent{50};
+            },
+            [](Keywords::Right) -> ComputedType {
+                return Percent{100};
+            },
+            [&](CalcValue<PercentOr<Length>> const& calc) -> ComputedType {
+                return computeValue(calc, ctx);
+            }
+        });
+    }
+};
+
+export template <>
+struct ValueTraits<TransformOrigin::YOffset> {
+    using ComputedType = CalcValue<PercentOr<Px>>;
+
+    static Res<TransformOrigin::YOffset> parse(Cursor<Css::Sst>& c) {
+        return parseOneOf<TransformOrigin::YOffset>(c);
+    }
+
+    static ComputedType compute(TransformOrigin::YOffset const& yOffset, ComputationContext const& ctx) {
+        return yOffset.visit(Visitor{
+            [](Keywords::Top) -> ComputedType {
+                return Percent{0};
+            },
+            [](Keywords::Center) -> ComputedType {
+                return Percent{50};
+            },
+            [](Keywords::Bottom) -> ComputedType {
+                return Percent{100};
+            },
+            [&](CalcValue<PercentOr<Length>> const& calc) -> ComputedType {
+                return computeValue(calc, ctx);
+            }
+        });
+    }
+};
+
+export template <>
+struct ValueTraits<TransformOrigin> : DefaultValueTraits<TransformOrigin> {
     static Res<TransformOrigin> _twoValues(Cursor<Css::Sst>& c) {
         auto xoffset = try$(parseValue<TransformOrigin::XOffset>(c));
         if (c.ended())
@@ -138,7 +190,7 @@ export struct MatrixTransform {
 };
 
 export template <>
-struct ValueParser<MatrixTransform> {
+struct ValueTraits<MatrixTransform> : DefaultValueTraits<MatrixTransform> {
     static Res<MatrixTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -176,7 +228,7 @@ export struct TranslateTransform {
 };
 
 export template <>
-struct ValueParser<TranslateTransform> {
+struct ValueTraits<TranslateTransform> : DefaultValueTraits<TranslateTransform> {
     static Res<TranslateTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -240,7 +292,7 @@ export struct ScaleTransform {
 };
 
 export template <>
-struct ValueParser<ScaleTransform> {
+struct ValueTraits<ScaleTransform> : DefaultValueTraits<ScaleTransform> {
     static Res<ScaleTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -304,7 +356,7 @@ export struct RotateTransform {
 };
 
 export template <>
-struct ValueParser<RotateTransform> {
+struct ValueTraits<RotateTransform> : DefaultValueTraits<RotateTransform> {
     static Res<RotateTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -337,7 +389,7 @@ export struct SkewTransform {
 };
 
 export template <>
-struct ValueParser<SkewTransform> {
+struct ValueTraits<SkewTransform> : DefaultValueTraits<SkewTransform> {
     static Res<SkewTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -378,7 +430,7 @@ export struct SkewXTransform {
 };
 
 export template <>
-struct ValueParser<SkewXTransform> {
+struct ValueTraits<SkewXTransform> : DefaultValueTraits<SkewXTransform> {
     static Res<SkewXTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -410,7 +462,7 @@ export struct SkewYTransform {
 };
 
 export template <>
-struct ValueParser<SkewYTransform> {
+struct ValueTraits<SkewYTransform> : DefaultValueTraits<SkewYTransform> {
     static Res<SkewYTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -447,7 +499,7 @@ export using TransformFunction = Union<
 export using Transform = Union<Keywords::None, Vec<TransformFunction>>;
 
 export template <>
-struct ValueParser<Transform> {
+struct ValueTraits<Transform> : DefaultValueTraits<Transform> {
     static Res<Transform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
