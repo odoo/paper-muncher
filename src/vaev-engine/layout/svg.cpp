@@ -326,10 +326,6 @@ struct SvgShapeFrag : SvgFrag {
     }
 };
 
-bool isShape(Dom::QualifiedName name) {
-    return name == Svg::PATH_TAG or name == Svg::CIRCLE_TAG or name == Svg::RECT_TAG;
-}
-
 // MARK: Root ----------------------------------------------------------------------------
 
 // https://svgwg.org/svg2-draft/coords.html#ComputingAViewportsTransform
