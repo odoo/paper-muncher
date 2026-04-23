@@ -117,8 +117,8 @@ Pair<Vec<Layout::Breakpoint>, Vec<PageLayoutInfos>> collectBreakPointsAndRunning
 
         Rc<Style::PageComputedValues> pageStyle = context.computer.computeFor(*context.initialStyle, page);
         RectAu pageRect{
-            context.media.width / context.media.resolution.toDppx(),
-            context.media.height / context.media.resolution.toDppx()
+            Layout::resolveLength(context.media.width) / context.media.resolution.toDppx(),
+            Layout::resolveLength(context.media.height) / context.media.resolution.toDppx()
         };
 
         auto pageSize = pageRect.size().cast<f64>();
@@ -250,7 +250,7 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
         pageStack->prepare();
 
         co_yield Print::Page(
-            settings.size.cast<f64>(),
+            settings.pageSize().cast<f64>(),
             makeRc<Scene::Transform>(
                 pageStack,
                 Math::Trans2f::scale(media.resolution.toDppx())

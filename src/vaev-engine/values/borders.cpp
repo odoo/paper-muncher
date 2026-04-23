@@ -17,7 +17,7 @@ namespace Vaev {
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 
 export template <>
-struct ValueParser<Gfx::BorderStyle> {
+struct ValueTraits<Gfx::BorderStyle> : DefaultValueTraits<Gfx::BorderStyle> {
     static Res<Gfx::BorderStyle> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of property");
@@ -48,61 +48,50 @@ struct ValueParser<Gfx::BorderStyle> {
 
 // MARK: Border ----------------------------------------------------------------
 
-template <typename T>
-struct _Border {
-    T width;
+struct Border {
+    LineWidth width = Keywords::MEDIUM;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
     Color color = Keywords::CURRENT_COLOR;
-
-    _Border();
-    _Border(T width, Gfx::BorderStyle style, Color color)
-        : width(width), style(style), color(color) {};
 
     void repr(Io::Emit& e) const {
         e("(border {} {} {})", width, style, color);
     }
 };
 
-export using Border = _Border<LineWidth>;
-
-template <>
-_Border<LineWidth>::_Border() : width(Keywords::MEDIUM) {}
-
-export using UsedBorder = _Border<Au>;
+// FIXME: Remove
+export struct UsedBorder {
+    Au width{};
+    Gfx::BorderStyle style{};
+    Color color = BLACK;
+};
 export using UsedBorders = Math::Insets<UsedBorder>;
 
-template <>
-_Border<Au>::_Border() : width(0_au) {}
-
 export template <>
-struct ValueParser<Border> {
+struct ValueTraits<Border> {
+    struct ComputedType {
+        Computed<LineWidth> width;
+        Computed<Gfx::BorderStyle> style;
+        Computed<Color> color;
+    };
+
     static Res<Border> parse(Cursor<Css::Sst>& c) {
-        Border border;
-        while (not c.ended()) {
-            eatWhitespace(c);
+        return parseOneOrMoreUnordered<Border, &Border::width, &Border::style, &Border::color>(c);
+    }
 
-            auto width = parseValue<LineWidth>(c);
-            if (width) {
-                border.width = width.unwrap();
-                continue;
-            }
+    static ComputedType compute(Border const& border, ComputationContext const& ctx) {
+        return {
+            .width = computeValue(border.width, ctx),
+            .style = computeValue(border.style, ctx),
+            .color = computeValue(border.color, ctx),
+        };
+    }
 
-            auto color = parseValue<Color>(c);
-            if (color) {
-                border.color = color.unwrap();
-                continue;
-            }
-
-            auto style = parseValue<Gfx::BorderStyle>(c);
-            if (style) {
-                border.style = style.unwrap();
-                continue;
-            }
-
-            break;
-        }
-
-        return Ok(border);
+    static Border fromComputed(ComputedType const& computed) {
+        return Border {
+            .width = valueFromComputed<LineWidth>(computed.width),
+            .style = valueFromComputed<Gfx::BorderStyle>(computed.style),
+            .color = valueFromComputed<Color>(computed.color),
+        };
     }
 };
 
@@ -147,7 +136,7 @@ export struct BorderProps {
 };
 
 export template <typename T>
-struct ValueParser<Math::Radii<T>> {
+struct ValueTraits<Math::Radii<T>> : DefaultValueTraits<Math::Radii<T>> {
     static Res<Math::Radii<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

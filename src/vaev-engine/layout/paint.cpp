@@ -315,17 +315,17 @@ static Math::Vec2f _resolveBackgroundPosition(Resolver& resolver, BackgroundPosi
     Math::Vec2f result;
 
     if (position.horizontalAnchor.is<Keywords::Left>()) {
-        result.x = resolver.resolve(position.horizontal, referenceBox.width).cast<f64>();
+        result.x = resolver.resolve(position.horizontal.unwrapOr(Percent{0}), referenceBox.width).cast<f64>();
     } else if (position.horizontalAnchor.is<Keywords::Right>()) {
-        result.x = (referenceBox.width - resolver.resolve(position.horizontal, referenceBox.width)).cast<f64>();
+        result.x = (referenceBox.width - resolver.resolve(position.horizontal.unwrapOr(Percent{0}), referenceBox.width)).cast<f64>();
     } else if (position.horizontalAnchor.is<Keywords::Center>()) {
         result.x = referenceBox.width.cast<f64>() / 2.0;
     }
 
     if (position.verticalAnchor.is<Keywords::Top>()) {
-        result.y = resolver.resolve(position.vertical, referenceBox.height).cast<f64>();
+        result.y = resolver.resolve(position.vertical.unwrapOr(Percent{0}), referenceBox.height).cast<f64>();
     } else if (position.verticalAnchor.is<Keywords::Bottom>()) {
-        result.y = (referenceBox.height - resolver.resolve(position.vertical, referenceBox.height)).cast<f64>();
+        result.y = (referenceBox.height - resolver.resolve(position.vertical.unwrapOr(Percent{0}), referenceBox.height)).cast<f64>();
     } else if (position.verticalAnchor.is<Keywords::Center>()) {
         result.y = referenceBox.height.cast<f64>() / 2.0;
     }

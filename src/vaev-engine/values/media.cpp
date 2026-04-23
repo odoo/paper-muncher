@@ -22,7 +22,7 @@ export enum struct MediaType {
 };
 
 export template <>
-struct ValueParser<MediaType> {
+struct ValueTraits<MediaType> : DefaultValueTraits<MediaType> {
     static Res<MediaType> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -68,7 +68,7 @@ export enum struct Scan {
 };
 
 export template <>
-struct ValueParser<Scan> {
+struct ValueTraits<Scan> : DefaultValueTraits<Scan> {
     static Res<Scan> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -94,7 +94,7 @@ export enum struct Update {
 };
 
 export template <>
-struct ValueParser<Update> {
+struct ValueTraits<Update> : DefaultValueTraits<Update> {
     static Res<Update> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -122,7 +122,7 @@ export enum struct OverflowBlock {
 };
 
 export template <>
-struct ValueParser<OverflowBlock> {
+struct ValueTraits<OverflowBlock> : DefaultValueTraits<OverflowBlock> {
     static Res<OverflowBlock> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -149,7 +149,7 @@ export enum struct OverflowInline {
 };
 
 export template <>
-struct ValueParser<OverflowInline> {
+struct ValueTraits<OverflowInline> : DefaultValueTraits<OverflowInline> {
     static Res<OverflowInline> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -175,7 +175,7 @@ export enum struct ColorGamut {
 };
 
 export template <>
-struct ValueParser<ColorGamut> {
+struct ValueTraits<ColorGamut> : DefaultValueTraits<ColorGamut> {
     static Res<ColorGamut> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -203,7 +203,7 @@ export enum struct Pointer {
 };
 
 export template <>
-struct ValueParser<Pointer> {
+struct ValueTraits<Pointer> : DefaultValueTraits<Pointer> {
     static Res<Pointer> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -230,7 +230,7 @@ export enum struct Hover {
 };
 
 export template <>
-struct ValueParser<Hover> {
+struct ValueTraits<Hover> : DefaultValueTraits<Hover> {
     static Res<Hover> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -255,7 +255,7 @@ export enum struct ReducedMotion {
 };
 
 export template <>
-struct ValueParser<ReducedMotion> {
+struct ValueTraits<ReducedMotion> : DefaultValueTraits<ReducedMotion> {
     static Res<ReducedMotion> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -280,7 +280,7 @@ export enum struct ReducedTransparency {
 };
 
 export template <>
-struct ValueParser<ReducedTransparency> {
+struct ValueTraits<ReducedTransparency> : DefaultValueTraits<ReducedTransparency> {
     static Res<ReducedTransparency> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -306,7 +306,7 @@ export enum struct Contrast {
 };
 
 export template <>
-struct ValueParser<Contrast> {
+struct ValueTraits<Contrast> : DefaultValueTraits<Contrast> {
     static Res<Contrast> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -331,7 +331,7 @@ export enum struct Colors {
 };
 
 export template <>
-struct ValueParser<Colors> {
+struct ValueTraits<Colors> : DefaultValueTraits<Colors> {
     static Res<Colors> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -356,7 +356,7 @@ export enum struct ColorScheme {
 };
 
 export template <>
-struct ValueParser<ColorScheme> {
+struct ValueTraits<ColorScheme> : DefaultValueTraits<ColorScheme> {
     static Res<ColorScheme> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -381,7 +381,7 @@ export enum struct ReducedData {
 };
 
 export template <>
-struct ValueParser<ReducedData> {
+struct ValueTraits<ReducedData> : DefaultValueTraits<ReducedData> {
     static Res<ReducedData> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -394,5 +394,10 @@ struct ValueParser<ReducedData> {
             return Error::invalidData("expected reduced data value");
     }
 };
+
+// FIXME:
+// // https://drafts.csswg.org/mediaqueries/#typedef-mq-boolean
+// export template <>
+// struct _Computed<bool> : IdentityComputed<bool> {};
 
 } // namespace Vaev

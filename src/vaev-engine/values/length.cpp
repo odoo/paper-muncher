@@ -18,6 +18,37 @@ namespace Vaev {
 // 6. MARK: Distance Units: the <length> type
 // https://drafts.csswg.org/css-values/#lengths
 
+// export using Px = Distinct<f64, struct _PxTag>;
+
+export struct Px : Distinct<f64, struct _PxTag> {
+    using Distinct::Distinct;
+
+    // https://drafts.csswg.org/css-values-4/#snap-a-length-as-a-border-width
+    Px snapped() {
+        // 1. Assert: len is non-negative.
+        if (value() <= 0.0f) {
+            panic("border snapping negative length");
+        }
+
+        // 2. If len is an integer number of device pixels, do nothing.
+        if (Math::abs(value() - Math::round(value())) < Limits<f32>::EPSILON) {
+            return Px(Math::round(value()));
+        }
+
+        // 3. If len is greater than zero, but less than 1 device pixel, round len up to 1 device pixel.
+        if (value() <= 1.0f) {
+            return Px(1.0f);
+        }
+
+        // 4. If len is greater than 1 device pixel, round it down to the nearest integer number of device pixels.
+        return Px(Math::floor(value()));
+    }
+
+    void repr(Io::Emit& e) const {
+        e("{}px", value());
+    }
+};
+
 export struct [[gnu::packed]] Length {
     enum struct Unit : u8 {
 #define LENGTH(NAME, ...) NAME,
@@ -46,8 +77,11 @@ export struct [[gnu::packed]] Length {
     constexpr Length(f64 val, Unit unit)
         : _val(val), _unit(unit) {}
 
+    constexpr Length(Px val)
+        : _val(val.value()) {}
+
     constexpr Length(Au val)
-        : _val(val.cast<f64>()) {}
+        : _val(val) {}
 
     constexpr bool isAbsolute() const {
         switch (_unit) {
@@ -125,12 +159,6 @@ export struct [[gnu::packed]] Length {
         return _val == other._val and _unit == other._unit;
     }
 
-    constexpr std::partial_ordering operator<=>(Length const& other) const {
-        if (_unit != other._unit)
-            return std::partial_ordering::unordered;
-        return _val <=> other._val;
-    }
-
     void repr(Io::Emit& e) const {
         e("{}{}", _val, _unit);
     }
@@ -142,7 +170,195 @@ struct _Resolved<Length> {
 };
 
 export template <>
-struct ValueParser<Length> {
+struct ValueTraits<Length> {
+    using ComputedType = Px;
+
+    static ComputedType compute(Length const val, ComputationContext const& ctx) {
+        switch (val.unit()) {
+            // https://drafts.csswg.org/css-values/#font-relative-lengths
+        case Length::EM:
+            return Px(val.val() * ctx.font->fontSize());
+
+        case Length::REM:
+            return Px(val.val() * ctx.rootFont->fontSize());
+
+        case Length::EX:
+            return Px(val.val() * ctx.font->xHeight());
+
+        case Length::REX:
+            return Px(val.val() * ctx.rootFont->xHeight());
+
+        case Length::CAP:
+            return Px(val.val() * ctx.font->capHeight());
+
+        case Length::RCAP:
+            return Px(val.val() * ctx.rootFont->capHeight());
+
+        case Length::CH:
+            return Px(val.val() * ctx.font->zeroAdvance());
+
+        case Length::RCH:
+            return Px(val.val() * ctx.rootFont->zeroAdvance());
+
+        case Length::IC:
+            return Px(val.val() * ctx.font->zeroAdvance());
+
+        case Length::RIC:
+            return Px(val.val() * ctx.rootFont->zeroAdvance());
+
+        case Length::LH:
+            return Px(val.val() * ctx.font->lineHeight());
+
+        case Length::RLH:
+            return Px(val.val() * ctx.rootFont->lineHeight());
+
+            // https://drafts.csswg.org/css-values/#viewport-relative-lengths
+
+            // https://drafts.csswg.org/css-values/#vw
+            // Equal to 1% of the width of current viewport.
+        case Length::VW:
+        case Length::LVW:
+            return Px(val.val() * ctx.viewport.large.width / 100);
+
+        case Length::SVW:
+            return Px(val.val() * ctx.viewport.small.width / 100);
+
+        case Length::DVW:
+            return Px(val.val() * ctx.viewport.dynamic.width / 100);
+
+            // https://drafts.csswg.org/css-values/#vh
+            // Equal to 1% of the height of current viewport.
+        case Length::VH:
+        case Length::LVH:
+            return Px(val.val() * ctx.viewport.large.height / 100);
+
+        case Length::SVH:
+            return Px(val.val() * ctx.viewport.small.height / 100);
+
+        case Length::DVH:
+            return Px(val.val() * ctx.viewport.dynamic.height / 100);
+
+            // https://drafts.csswg.org/css-values/#vi
+            // Equal to 1% of the size of the viewport in the box’s inline axis.
+        case Length::VI:
+        case Length::LVI:
+            if (ctx.writingMode == _WritingMode::HORIZONTAL_TB) {
+                return Px(val.val() * ctx.viewport.large.width / 100);
+            } else {
+                return Px(val.val() * ctx.viewport.large.height / 100);
+            }
+
+        case Length::SVI:
+            if (ctx.writingMode == _WritingMode::HORIZONTAL_TB) {
+                return Px(val.val() * ctx.viewport.small.width / 100);
+            } else {
+                return Px(val.val() * ctx.viewport.small.height / 100);
+            }
+
+        case Length::DVI:
+            if (ctx.writingMode == _WritingMode::HORIZONTAL_TB) {
+                return Px(val.val() * ctx.viewport.dynamic.width / 100);
+            } else {
+                return Px(val.val() * ctx.viewport.dynamic.height / 100);
+            }
+
+            // https://drafts.csswg.org/css-values/#vb
+            // Equal to 1% of the size of the viewport in the box’s block axis.
+        case Length::VB:
+        case Length::LVB:
+            if (ctx.writingMode == _WritingMode::HORIZONTAL_TB) {
+                return Px(val.val() * ctx.viewport.large.width / 100);
+            } else {
+                return Px(val.val() * ctx.viewport.large.height / 100);
+            }
+
+        case Length::SVB:
+            if (ctx.writingMode == _WritingMode::HORIZONTAL_TB) {
+                return Px(val.val() * ctx.viewport.small.width / 100);
+            } else {
+                return Px(val.val() * ctx.viewport.small.height / 100);
+            }
+
+        case Length::DVB:
+            if (ctx.writingMode == _WritingMode::HORIZONTAL_TB) {
+                return Px(val.val() * ctx.viewport.dynamic.width / 100);
+            } else {
+                return Px(val.val() * ctx.viewport.dynamic.height / 100);
+            }
+
+            // https://drafts.csswg.org/css-values/#vmin
+            // Equal to the smaller of vw and vh.
+        case Length::VMIN:
+        case Length::LVMIN:
+            return min(
+                computeValue(Length(val.val(), Length::VW), ctx),
+                computeValue(Length(val.val(), Length::VH), ctx)
+            );
+
+        case Length::SVMIN:
+            return min(
+                computeValue(Length(val.val(), Length::SVW), ctx),
+                computeValue(Length(val.val(), Length::SVH), ctx)
+            );
+
+        case Length::DVMIN:
+            return min(
+                computeValue(Length(val.val(), Length::DVW), ctx),
+                computeValue(Length(val.val(), Length::DVH), ctx)
+            );
+
+        // https://drafts.csswg.org/css-values/#vmax
+        // Equal to the larger of vw and vh.
+        case Length::VMAX:
+        case Length::LVMAX:
+            return max(
+                computeValue(Length(val.val(), Length::VW), ctx),
+                computeValue(Length(val.val(), Length::VH), ctx)
+            );
+
+        case Length::DVMAX:
+            return max(
+                computeValue(Length(val.val(), Length::DVW), ctx),
+                computeValue(Length(val.val(), Length::DVH), ctx)
+            );
+
+        case Length::SVMAX:
+            return max(
+                computeValue(Length(val.val(), Length::SVW), ctx),
+                computeValue(Length(val.val(), Length::SVH), ctx)
+            );
+
+            // https://drafts.csswg.org/css-values/#absolute-lengths
+        case Length::CM:
+            return Px(val.val() * 96 / 2.54);
+
+        case Length::MM:
+            return Px(val.val() * 96 / 25.4);
+
+        case Length::Q:
+            return Px(val.val() * 96 / 101.6);
+
+        case Length::IN:
+            return Px(val.val() * 96);
+
+        case Length::PT:
+            return Px(val.val() * 96 / 72.0);
+
+        case Length::PC:
+            return Px(val.val() * 96 / 6.0);
+
+        case Length::PX:
+            return Px(val.val());
+
+        default:
+            panic("invalid unit");
+        }
+    }
+
+    static Length fromComputed(ComputedType const& computed) {
+        return Length(computed.value(), Length::PX);
+    }
+
     static Res<Length::Unit> _parseLengthUnit(Str unit) {
 #define LENGTH(NAME, ...)      \
     if (eqCi(unit, #NAME ""s)) \

@@ -178,7 +178,7 @@ export struct OutlineProperty : Property {
             Outline value;
             bool styleSet = false;
             while (not c.ended()) {
-                auto width = parseValue<CalcValue<Length>>(c);
+                auto width = parseValue<LineWidth>(c);
                 if (width) {
                     value.width = width.unwrap();
                     continue;

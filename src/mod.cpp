@@ -156,7 +156,7 @@ export Async::Task<> runAsync(
                 scene = makeRc<Scene::Clear>(scene, Gfx::WHITE);
             }
 
-            Math::Vec2f size = Vec2Au{media.width, media.height}.cast<f64>();
+            Math::Vec2f size = Vec2Au{Au{media.width.value()}, Au{media.height.value()}}.cast<f64>();
 
             if (options.extend == Extend::FIT) {
                 auto overflow = window->ensureRender().frag->scrollableOverflow();

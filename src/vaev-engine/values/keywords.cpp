@@ -22,7 +22,12 @@ struct Keyword {
 };
 
 export template <StrLit K>
-struct ValueParser<Keyword<K>> {
+struct ValueTraits<Keyword<K>> {
+    // FIXME: Plz remove
+    using ComputedType = Keyword<K>;
+    static ComputedType compute(Keyword<K> const& val, ComputationContext const&) { return val; }
+    static Keyword<K> fromComputed(ComputedType const& computed) { return computed; }
+
     static Res<Keyword<K>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -45,5 +50,20 @@ namespace Keywords {
 #undef KEYWORD
 
 } // namespace Keywords
+
+template <>
+struct ValueTraits<Keywords::Auto> : DefaultValueTraits<Keywords::Auto> {
+    static Res<Keywords::Auto> parse(Cursor<Css::Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c->token == Css::Token::ident("auto")) {
+            c.next();
+            return Ok(Keywords::Auto{});
+        }
+
+        return Error::invalidData("expected keyword");
+    }
+};
 
 } // namespace Vaev

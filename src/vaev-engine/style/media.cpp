@@ -23,15 +23,15 @@ export struct Media {
 
     /// 4.1. Width: the width feature
     /// https://drafts.csswg.org/mediaqueries/#width
-    Au width;
+    Px width;
 
     /// 4.2. Height: the height feature
     /// https://drafts.csswg.org/mediaqueries/#height
-    Au height;
+    Px height;
 
     /// 4.3. Device Width: the device-width feature
     /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
-    Number aspectRatio;
+    Ratio aspectRatio;
 
     /// 4.4. Orientation: the orientation feature
     /// https://drafts.csswg.org/mediaqueries/#orientation
@@ -133,34 +133,48 @@ export struct Media {
     ReducedData prefersReducedData;
 
     // Appendix A: Deprecated Media Features
-    Au deviceWidth;
-    Au deviceHeight;
-    Number deviceAspectRatio;
+    Px deviceWidth;
+    Px deviceHeight;
+    Ratio deviceAspectRatio;
 
-    bool changeViewport(Vec2Au viewport) {
-        if (width == viewport.width and height == viewport.height)
+    // Viewport for continuous media and page box for paged media.
+    bool changeDisplayArea(Vec2Au displayArea) {
+        if (width == Px(f32{displayArea.width}) and height == Px(f32{displayArea.height}))
             return false;
 
-        f64 ratio = static_cast<f64>(Au{viewport.width / viewport.height});
+        width = Px(f32{displayArea.width});
+        height = Px(f32{displayArea.height});
+        aspectRatio = displayArea.width / displayArea.height;
 
-        width = Au{viewport.width};
-        height = Au{viewport.height};
-        aspectRatio = ratio;
+        orientation = Print::orientationFromSize(displayArea);
 
-        deviceWidth = Au{viewport.width};
-        deviceHeight = Au{viewport.height};
-        deviceAspectRatio = ratio;
+        deviceWidth = Px(f32{displayArea.width});
+        deviceHeight = Px(f32{displayArea.height});
+        deviceAspectRatio = displayArea.width / displayArea.height;
 
         return true;
     }
 
-    static Media forView(Math::Vec2i viewport, ColorScheme colorScheme) {
+    ComputationContext computationContext() const {
+        // HACK: The page box is used as the viewport instead of the page area.
+        //       This best-effort approximation is acceptable since using viewport
+        //       units inside @media is a pathological case.
+        return ComputationContext{
+            .rootFont = Gfx::Font{Gfx::Fontface::fallback(), 16},
+            .font = Gfx::Font{Gfx::Fontface::fallback(), 16},
+            .writingMode = _WritingMode::HORIZONTAL_TB,
+            .viewport = {.small = displayArea().cast<f64>()},
+            .displayArea = displayArea().cast<f64>(),
+        };
+    }
+
+    static Media forView(Vec2Au viewport, ColorScheme colorScheme) {
         return {
             .type = MediaType::SCREEN,
-            .width = Au{viewport.width},
-            .height = Au{viewport.height},
-            .aspectRatio = viewport.width / (f64)viewport.height,
-            .orientation = Print::Orientation::LANDSCAPE,
+            .width = Px(f32{viewport.width}),
+            .height = Px(f32{viewport.height}),
+            .aspectRatio = viewport.width / viewport.height,
+            .orientation = Print::orientationFromSize(viewport),
 
             .resolution = Resolution::fromDpi(96),
             .scan = Scan::PROGRESSIVE,
@@ -187,23 +201,23 @@ export struct Media {
             .prefersReducedData = ReducedData::NO_PREFERENCE,
 
             // NOTE: Deprecated Media Features
-            .deviceWidth = Au{viewport.width},
-            .deviceHeight = Au{viewport.height},
-            .deviceAspectRatio = viewport.width / (f64)viewport.height,
+            .deviceWidth = Px(f32{viewport.width}),
+            .deviceHeight = Px(f32{viewport.height}),
+            .deviceAspectRatio = viewport.width / viewport.height,
         };
     }
 
     static Media defaultMedia() {
-        return forView({800, 600}, ColorScheme::LIGHT);
+        return forView({800_au, 600_au}, ColorScheme::LIGHT);
     }
 
     static Media forRender(Vec2Au viewport, Resolution scale) {
         return {
             .type = MediaType::SCREEN,
-            .width = viewport.width,
-            .height = viewport.height,
-            .aspectRatio = Number{viewport.width} / Number{viewport.height},
-            .orientation = Print::Orientation::PORTRAIT,
+            .width = Px(f32{viewport.width}),
+            .height = Px(f32{viewport.height}),
+            .aspectRatio = viewport.width / viewport.height,
+            .orientation = Print::orientationFromSize(viewport),
 
             .resolution = scale,
             .scan = Scan::PROGRESSIVE,
@@ -230,20 +244,19 @@ export struct Media {
             .prefersReducedData = ReducedData::NO_PREFERENCE,
 
             // NOTE: Deprecated Media Features
-            .deviceWidth = viewport.width,
-            .deviceHeight = viewport.height,
-            .deviceAspectRatio = Number{viewport.width} / Number{viewport.height},
+            .deviceWidth = Px(f32{viewport.width}),
+            .deviceHeight = Px(f32{viewport.height}),
+            .deviceAspectRatio = viewport.width / viewport.height,
         };
     }
 
     static Media forPrint(Print::Settings const& settings) {
         return {
             .type = MediaType::PRINT,
-            .width = Au{settings.size.width},
-            .height = Au{settings.size.height},
-            .aspectRatio = f64{settings.size.width} / f64{settings.size.height},
-            .orientation = Print::orientationFromSize(settings.size),
-
+            .width = Px(f32{settings.pageSize().width}),
+            .height = Px(f32{settings.pageSize().height}),
+            .aspectRatio = settings.pageSize().width / settings.pageSize().height,
+            .orientation = Print::orientationFromSize(settings.pageSize()),
             .resolution = Resolution{settings.scale, Resolution::X},
             .scan = Scan::PROGRESSIVE,
             .grid = false,
@@ -269,14 +282,16 @@ export struct Media {
             .prefersReducedData = ReducedData::NO_PREFERENCE,
 
             // NOTE: Deprecated Media Features
-            .deviceWidth = Au{settings.size.width},
-            .deviceHeight = Au{settings.size.height},
-            .deviceAspectRatio = settings.size.width / settings.size.height,
+            // NOTE: This is only correct for paged media
+            .deviceWidth = Px(f32{settings.pageSize().width}),
+            .deviceHeight = Px(f32{settings.pageSize().height}),
+            .deviceAspectRatio = settings.pageSize().width / settings.pageSize().height,
         };
     }
 
-    Vec2Au viewportSize() const {
-        return {width, height};
+    // Viewport for continuous media and page box for paged media.
+    Vec2Au displayArea() const {
+        return {Au{width.value()}, Au{height.value()}};
     }
 };
 
@@ -291,7 +306,7 @@ export enum struct RangePrefix {
     _LEN,
 };
 
-export template <typename T>
+export template <Value T>
 struct RangeBound {
     enum Type : u8 {
         NONE,
@@ -315,7 +330,7 @@ struct RangeBound {
     }
 };
 
-export template <StrLit NAME, typename T, auto Media::* F>
+export template <StrLit NAME, Value T, auto Media::* F>
 struct RangeFeature {
     using Bound = RangeBound<T>;
     using Inner = T;
@@ -327,31 +342,31 @@ struct RangeFeature {
         return NAME;
     }
 
-    bool match(T actual) const {
+    bool match(Media const& media) const {
+        auto actual = media.*F;
+
+        auto ctx = media.computationContext();
+
         bool result = true;
 
         if (lower.type == Bound::INCLUSIVE) {
-            result &= actual >= lower.value;
+            result &= actual >= computeValue(lower.value, ctx);
         } else if (lower.type == Bound::EXCLUSIVE) {
-            result &= actual > lower.value;
+            result &= actual > computeValue(lower.value, ctx);
         }
 
         if (upper.type == Bound::INCLUSIVE) {
-            result &= actual <= upper.value;
+            result &= actual <= computeValue(upper.value, ctx);
         } else if (upper.type == Bound::EXCLUSIVE) {
-            result &= actual < upper.value;
+            result &= actual < computeValue(upper.value, ctx);
         }
 
         // both types are NONE, evaluate in boolean context
         if (not lower.type and not upper.type) {
-            result = actual != T{};
+            result = actual != Computed<T>{};
         }
 
         return result;
-    }
-
-    bool match(Media const& media) const {
-        return match(media.*F);
     }
 
     static RangeFeature min(T value) {
@@ -398,7 +413,7 @@ struct RangeFeature {
     }
 };
 
-export template <StrLit NAME, typename T, auto Media::* F>
+export template <StrLit NAME, Value T, auto Media::* F>
 struct DiscreteFeature {
     using Inner = T;
 
@@ -422,14 +437,14 @@ struct DiscreteFeature {
         return {value};
     }
 
-    bool match(T actual) const {
+    bool match(Media const& media) const {
+        auto actual = media.*F;
+
+        auto ctx = media.computationContext();
+
         if (type == Type::NONE)
             return actual != T{};
-        return actual == value;
-    }
-
-    bool match(Media const& media) const {
-        return match(media.*F);
+        return actual == computeValue(value, ctx);
     }
 
     void repr(Io::Emit& e) const {
@@ -453,7 +468,7 @@ export using HeightFeature = RangeFeature<"height", Length, &Media::height>;
 
 /// 4.3. Aspect-Ratio: the aspect-ratio feature
 /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
-export using AspectRatioFeature = RangeFeature<"aspect-ratio", Number, &Media::aspectRatio>;
+export using AspectRatioFeature = RangeFeature<"aspect-ratio", Ratio, &Media::aspectRatio>;
 
 /// 4.4. Orientation: the orientation feature
 /// https://drafts.csswg.org/mediaqueries/#orientation
@@ -557,7 +572,7 @@ export using PrefersReducedDataFeature = DiscreteFeature<"prefers-reduced-data",
 // Appendix A: Deprecated Media Features
 export using DeviceWidthFeature = RangeFeature<"device-width", Length, &Media::deviceWidth>;
 export using DeviceHeightFeature = RangeFeature<"device-height", Length, &Media::deviceHeight>;
-export using DeviceAspectRatioFeature = RangeFeature<"device-aspect-ratio", Number, &Media::deviceAspectRatio>;
+export using DeviceAspectRatioFeature = RangeFeature<"device-aspect-ratio", Ratio, &Media::deviceAspectRatio>;
 
 // MARK: Media Feature ---------------------------------------------------------
 
@@ -725,21 +740,25 @@ export struct MediaQuery {
     }
 
     bool match(Media const& media) const {
-        return _store.visit(Visitor{[&](auto const& value) {
-                                        return value.match(media);
-                                    },
-                                    [](None) {
-                                        return true;
-                                    }});
+        return _store.visit(Visitor{
+            [&](auto const& value) {
+                return value.match(media);
+            },
+            [](None) {
+                return true;
+            },
+        });
     }
 
     void repr(Io::Emit& e) const {
-        _store.visit(Visitor{[&](auto const& value) {
-                                 e("{}", value);
-                             },
-                             [&](None) {
-                                 e("all");
-                             }});
+        _store.visit(Visitor{
+            [&](auto const& value) {
+                e("{}", value);
+            },
+            [&](None) {
+                e("all");
+            },
+        });
     }
 };
 

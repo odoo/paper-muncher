@@ -33,7 +33,7 @@ export enum struct BreakBetween {
 };
 
 export template <>
-struct ValueParser<BreakBetween> {
+struct ValueTraits<BreakBetween> : DefaultValueTraits<BreakBetween> {
     static Res<BreakBetween> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -82,7 +82,7 @@ export enum struct BreakInside : u8 {
 };
 
 export template <>
-struct ValueParser<BreakInside> {
+struct ValueTraits<BreakInside> : DefaultValueTraits<BreakInside> {
     static Res<BreakInside> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
