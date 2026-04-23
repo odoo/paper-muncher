@@ -161,7 +161,7 @@ export using UsedBorders = Math::Insets<UsedBorder>;
 
 export template <>
 struct ValueTraits<Border> {
-    using ComputedType = struct {
+    struct ComputedType {
         Computed<LineWidth> width;
         Computed<Gfx::BorderStyle> style;
         Computed<Color> color;
