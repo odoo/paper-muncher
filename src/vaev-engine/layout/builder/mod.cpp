@@ -351,7 +351,9 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
 void buildSVGAggregate(Gc::Ref<Dom::Element> el, SvgGroupBox& group);
 
 void buildSVGElement(Gc::Ref<Dom::Element> el, SvgGroupBox& group) {
-    if (isShape(el->qualifiedName)) {
+    if (el->qualifiedName == Svg::PATH_TAG or
+        el->qualifiedName == Svg::CIRCLE_TAG or
+        el->qualifiedName == Svg::RECT_TAG) {
         group.add(SvgShapeBox::build(el->computedValues(), el->qualifiedName));
     } else if (el->qualifiedName == Svg::G_TAG) {
         SvgGroupBox nestedGroup{el->computedValues()};
