@@ -154,8 +154,8 @@ Async::Task<> runSingleAsync(
         }
 
         Math::Vec2Au size{
-            media.width,
-            media.height,
+            Math::Au{media.width.value()},
+            Math::Au{media.height.value()},
         };
 
         if (options.extend == Extend::FIT) {

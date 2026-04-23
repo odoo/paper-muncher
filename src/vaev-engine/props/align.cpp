@@ -237,7 +237,7 @@ export struct RowGapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<RowGapProperty>(self(), c.gaps->row);
+            return makeRc<RowGapProperty>(self(), valueFromComputed<Gap>(c.gaps->row));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -251,7 +251,8 @@ export struct RowGapProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.gaps.cow().row = _value;
+        // FIXME: Pass proper context
+        c.gaps.cow().row = computeValue(_value, {});
     }
 
     void repr(Io::Emit& e) const override {
@@ -276,7 +277,7 @@ export struct ColumnGapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ColumnGapProperty>(self(), c.gaps->col);
+            return makeRc<ColumnGapProperty>(self(), valueFromComputed<Gap>(c.gaps->col));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -290,7 +291,8 @@ export struct ColumnGapProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.gaps.cow().col = _value;
+        // FIXME: Proper context
+        c.gaps.cow().col = computeValue(_value, {});
     }
 
     void repr(Io::Emit& e) const override {
@@ -312,15 +314,15 @@ export struct GapProperty : Property {
         Rc<Property> initial() const override {
             return makeRc<GapProperty>(
                 self(),
-                Gaps{
+                Array<Gap, 2>{
                     Keywords::NORMAL,
-                    Keywords::NORMAL,
+                    Keywords::NORMAL
                 }
             );
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<GapProperty>(self(), *c.gaps);
+            return makeRc<GapProperty>(self(), Array{valueFromComputed<Gap>(c.gaps->row), valueFromComputed<Gap>(c.gaps->row)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -329,25 +331,26 @@ export struct GapProperty : Property {
             auto colGap = parseValue<Gap>(c);
 
             if (not colGap)
-                return Ok(makeRc<GapProperty>(self(), Gaps{rowGap, rowGap}));
-            return Ok(makeRc<GapProperty>(self(), Gaps{rowGap, colGap.take()}));
+                return Ok(makeRc<GapProperty>(self(), Array{rowGap, rowGap}));
+
+            return Ok(makeRc<GapProperty>(self(), Array{rowGap, colGap.take()}));
         }
     };
 
-    Gaps _value;
+    Array<Gap, 2> _value;
 
-    GapProperty(Rc<Property::Registration> registration, Gaps value)
+    GapProperty(Rc<Property::Registration> registration, Array<Gap, 2> value)
         : Property(registration), _value(value) {}
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<RowGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.row),
-            makeRc<ColumnGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.col),
+            makeRc<RowGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value[0]),
+            makeRc<ColumnGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value[1]),
         };
     }
 
     void repr(Io::Emit& e) const override {
-        e("{}", _value);
+        e("(gaps row={} col={})", _value[0], _value[1]);
     }
 };
 

@@ -23,15 +23,15 @@ export struct Media {
 
     /// 4.1. Width: the width feature
     /// https://drafts.csswg.org/mediaqueries/#width
-    Au width;
+    Px width;
 
     /// 4.2. Height: the height feature
     /// https://drafts.csswg.org/mediaqueries/#height
-    Au height;
+    Px height;
 
     /// 4.3. Device Width: the device-width feature
     /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
-    Number aspectRatio;
+    Ratio aspectRatio;
 
     /// 4.4. Orientation: the orientation feature
     /// https://drafts.csswg.org/mediaqueries/#orientation
@@ -133,22 +133,22 @@ export struct Media {
     ReducedData prefersReducedData;
 
     // Appendix A: Deprecated Media Features
-    Au deviceWidth;
-    Au deviceHeight;
-    Number deviceAspectRatio;
+    Px deviceWidth;
+    Px deviceHeight;
+    Ratio deviceAspectRatio;
 
     bool changeViewport(Vec2Au viewport) {
-        if (width == viewport.width and height == viewport.height)
+        if (Au{width.value()} == viewport.width and Au{height.value()} == viewport.height)
             return false;
 
         f64 ratio = static_cast<f64>(Au{viewport.width / viewport.height});
 
-        width = Au{viewport.width};
-        height = Au{viewport.height};
+        width = Px(f32{viewport.width});
+        height = Px(f32{viewport.height});
         aspectRatio = ratio;
 
-        deviceWidth = Au{viewport.width};
-        deviceHeight = Au{viewport.height};
+        deviceWidth = Px(f32{viewport.width});
+        deviceHeight = Px(f32{viewport.height});
         deviceAspectRatio = ratio;
 
         return true;
@@ -157,9 +157,9 @@ export struct Media {
     static Media forView(Math::Vec2i viewport, ColorScheme colorScheme) {
         return {
             .type = MediaType::SCREEN,
-            .width = Au{viewport.width},
-            .height = Au{viewport.height},
-            .aspectRatio = viewport.width / (f64)viewport.height,
+            .width = Px(viewport.width),
+            .height = Px(viewport.height),
+            .aspectRatio = Ratio(viewport.width, viewport.height),
             .orientation = Print::Orientation::LANDSCAPE,
 
             .resolution = Resolution::fromDpi(96),
@@ -187,9 +187,9 @@ export struct Media {
             .prefersReducedData = ReducedData::NO_PREFERENCE,
 
             // NOTE: Deprecated Media Features
-            .deviceWidth = Au{viewport.width},
-            .deviceHeight = Au{viewport.height},
-            .deviceAspectRatio = viewport.width / (f64)viewport.height,
+            .deviceWidth = Px(viewport.width),
+            .deviceHeight = Px(viewport.height),
+            .deviceAspectRatio = Ratio(viewport.width, viewport.height),
         };
     }
 
@@ -200,9 +200,9 @@ export struct Media {
     static Media forRender(Vec2Au viewport, Resolution scale) {
         return {
             .type = MediaType::SCREEN,
-            .width = viewport.width,
-            .height = viewport.height,
-            .aspectRatio = Number{viewport.width} / Number{viewport.height},
+            .width = Px(f32{viewport.width}),
+            .height = Px(f32{viewport.height}),
+            .aspectRatio = Ratio(f32{viewport.width}, f32{viewport.height}),
             .orientation = Print::Orientation::PORTRAIT,
 
             .resolution = scale,
@@ -230,9 +230,9 @@ export struct Media {
             .prefersReducedData = ReducedData::NO_PREFERENCE,
 
             // NOTE: Deprecated Media Features
-            .deviceWidth = viewport.width,
-            .deviceHeight = viewport.height,
-            .deviceAspectRatio = Number{viewport.width} / Number{viewport.height},
+            .deviceWidth = Px(f32{viewport.width}),
+            .deviceHeight = Px(f32{viewport.height}),
+            .deviceAspectRatio = Ratio(f32{viewport.width} / f32{viewport.height}),
         };
     }
 
@@ -241,9 +241,9 @@ export struct Media {
 
         return {
             .type = MediaType::PRINT,
-            .width = pageSize.width,
-            .height = pageSize.height,
-            .aspectRatio = pageSize.width / pageSize.height,
+            .width = Px(f32{pageSize.width}),
+            .height = Px(f32{pageSize.height}),
+            .aspectRatio = Ratio(f32{pageSize.width}, f32{pageSize.height}),
             .orientation = settings.orientation,
 
             .resolution = Resolution{settings.scale, Resolution::X},
@@ -271,17 +271,29 @@ export struct Media {
             .prefersReducedData = ReducedData::NO_PREFERENCE,
 
             // NOTE: Deprecated Media Features
-            .deviceWidth = pageSize.width,
-            .deviceHeight = pageSize.height,
-            .deviceAspectRatio = pageSize.width / pageSize.height,
+            .deviceWidth = Px(f32{pageSize.width}),
+            .deviceHeight = Px(f32{pageSize.height}),
+            .deviceAspectRatio = Ratio(f32{pageSize.width} / f32{pageSize.height}),
+        };
+    }
+
+    ComputationContext computationContext() const {
+        // HACK: The page box is used as the viewport instead of the page area.
+        //       This best-effort approximation is acceptable since using viewport
+        //       units inside @media is a pathological case.
+        return ComputationContext{
+            .rootFont = Gfx::Font{Gfx::Fontface::fallback(), 16},
+            .font = Gfx::Font{Gfx::Fontface::fallback(), 16},
+            .writingMode = _WritingMode::HORIZONTAL_TB,
+            .viewport = {.small = viewportSize().cast<f64>()},
+            .displayArea = viewportSize().cast<f64>(),
         };
     }
 
     Vec2Au viewportSize() const {
-        return {width, height};
+        return {Au{width.value()}, Au{height.value()}};
     }
 };
-
 // MARK: Media Features --------------------------------------------------------
 
 export enum struct RangePrefix {
@@ -293,7 +305,7 @@ export enum struct RangePrefix {
     _LEN,
 };
 
-export template <typename T>
+export template <Value T>
 struct RangeBound {
     enum Type : u8 {
         NONE,
@@ -317,7 +329,7 @@ struct RangeBound {
     }
 };
 
-export template <StrLit NAME, typename T, auto Media::* F>
+export template <StrLit NAME, Value T, auto Media::* F>
 struct RangeFeature {
     using Bound = RangeBound<T>;
     using Inner = T;
@@ -329,31 +341,31 @@ struct RangeFeature {
         return NAME;
     }
 
-    bool match(T actual) const {
+    bool match(Media const& media) const {
+        auto actual = media.*F;
+
+        auto ctx = media.computationContext();
+
         bool result = true;
 
         if (lower.type == Bound::INCLUSIVE) {
-            result &= actual >= lower.value;
+            result &= actual >= computeValue(lower.value, ctx);
         } else if (lower.type == Bound::EXCLUSIVE) {
-            result &= actual > lower.value;
+            result &= actual > computeValue(lower.value, ctx);
         }
 
         if (upper.type == Bound::INCLUSIVE) {
-            result &= actual <= upper.value;
+            result &= actual <= computeValue(upper.value, ctx);
         } else if (upper.type == Bound::EXCLUSIVE) {
-            result &= actual < upper.value;
+            result &= actual < computeValue(upper.value, ctx);
         }
 
         // both types are NONE, evaluate in boolean context
         if (not lower.type and not upper.type) {
-            result = actual != T{};
+            result = actual != Computed<T>{};
         }
 
         return result;
-    }
-
-    bool match(Media const& media) const {
-        return match(media.*F);
     }
 
     static RangeFeature min(T value) {
@@ -400,7 +412,7 @@ struct RangeFeature {
     }
 };
 
-export template <StrLit NAME, typename T, auto Media::* F>
+export template <StrLit NAME, Value T, auto Media::* F>
 struct DiscreteFeature {
     using Inner = T;
 
@@ -424,14 +436,14 @@ struct DiscreteFeature {
         return {value};
     }
 
-    bool match(T actual) const {
+    bool match(Media const& media) const {
+        auto actual = media.*F;
+
+        auto ctx = media.computationContext();
+
         if (type == Type::NONE)
             return actual != T{};
-        return actual == value;
-    }
-
-    bool match(Media const& media) const {
-        return match(media.*F);
+        return actual == computeValue(value, ctx);
     }
 
     void repr(Io::Emit& e) const {
@@ -455,7 +467,7 @@ export using HeightFeature = RangeFeature<"height", Length, &Media::height>;
 
 /// 4.3. Aspect-Ratio: the aspect-ratio feature
 /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
-export using AspectRatioFeature = RangeFeature<"aspect-ratio", Number, &Media::aspectRatio>;
+export using AspectRatioFeature = RangeFeature<"aspect-ratio", Ratio, &Media::aspectRatio>;
 
 /// 4.4. Orientation: the orientation feature
 /// https://drafts.csswg.org/mediaqueries/#orientation
@@ -559,7 +571,7 @@ export using PrefersReducedDataFeature = DiscreteFeature<"prefers-reduced-data",
 // Appendix A: Deprecated Media Features
 export using DeviceWidthFeature = RangeFeature<"device-width", Length, &Media::deviceWidth>;
 export using DeviceHeightFeature = RangeFeature<"device-height", Length, &Media::deviceHeight>;
-export using DeviceAspectRatioFeature = RangeFeature<"device-aspect-ratio", Number, &Media::deviceAspectRatio>;
+export using DeviceAspectRatioFeature = RangeFeature<"device-aspect-ratio", Ratio, &Media::deviceAspectRatio>;
 
 // MARK: Media Feature ---------------------------------------------------------
 
@@ -727,21 +739,25 @@ export struct MediaQuery {
     }
 
     bool match(Media const& media) const {
-        return _store.visit(Visitor{[&](auto const& value) {
-                                        return value.match(media);
-                                    },
-                                    [](None) {
-                                        return true;
-                                    }});
+        return _store.visit(Visitor{
+            [&](auto const& value) {
+                return value.match(media);
+            },
+            [](None) {
+                return true;
+            },
+        });
     }
 
     void repr(Io::Emit& e) const {
-        _store.visit(Visitor{[&](auto const& value) {
-                                 e("{}", value);
-                             },
-                             [&](None) {
-                                 e("all");
-                             }});
+        _store.visit(Visitor{
+            [&](auto const& value) {
+                e("{}", value);
+            },
+            [&](None) {
+                e("all");
+            },
+        });
     }
 };
 

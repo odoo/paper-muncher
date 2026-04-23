@@ -41,6 +41,8 @@ export struct Window {
         invalidateRender();
     }
 
+    // FIXME: This should be renamed to changeDisplayArea, and we should make sure that
+    //        its input is the page box and not the page area.
     void changeViewport(Vec2Au viewport) {
         if (_media.changeViewport(viewport))
             invalidateRender();

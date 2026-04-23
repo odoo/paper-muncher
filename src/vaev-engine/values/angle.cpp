@@ -115,7 +115,7 @@ export struct Angle {
 };
 
 export template <>
-struct ValueParser<Angle> {
+struct ValueTraits<Angle> : DefaultValueTraits<Angle> {
     static Res<Angle::Unit> _parseAngleUnit(Str unit) {
         if (eqCi(unit, "deg"s))
             return Ok(Angle::Unit::DEGREE);

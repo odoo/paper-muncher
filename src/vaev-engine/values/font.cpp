@@ -90,7 +90,7 @@ export struct FontWidth {
 };
 
 export template <>
-struct ValueParser<FontWidth> {
+struct ValueTraits<FontWidth> : DefaultValueTraits<FontWidth> {
     static Res<FontWidth> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -147,7 +147,7 @@ export struct FontStyle {
 };
 
 export template <>
-struct ValueParser<FontStyle> {
+struct ValueTraits<FontStyle> : DefaultValueTraits<FontStyle> {
     static Res<FontStyle> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -214,7 +214,7 @@ export struct FontWeight : _FontWeight {
 // https://www.w3.org/TR/css-fonts-4/#font-weight-absolute-values
 
 export template <>
-struct ValueParser<Gfx::FontWeight> {
+struct ValueTraits<Gfx::FontWeight> : DefaultValueTraits<Gfx::FontWeight> {
     static Res<Gfx::FontWeight> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -233,7 +233,7 @@ struct ValueParser<Gfx::FontWeight> {
 };
 
 export template <>
-struct ValueParser<FontWeight> {
+struct ValueTraits<FontWeight> : DefaultValueTraits<FontWeight> {
     static Res<FontWeight> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -305,7 +305,7 @@ export struct FontSize {
 };
 
 export template <>
-struct ValueParser<FontSize> {
+struct ValueTraits<FontSize> : DefaultValueTraits<FontSize> {
     static Res<FontSize> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -428,7 +428,7 @@ export struct FontSource {
 // MARK: FontFamily ------------------------------------------------------------
 
 export template <>
-struct ValueParser<FontFamily> {
+struct ValueTraits<FontFamily> : DefaultValueTraits<FontFamily> {
     static Res<FontFamily> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

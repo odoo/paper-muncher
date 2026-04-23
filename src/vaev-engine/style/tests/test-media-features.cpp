@@ -11,9 +11,9 @@ namespace Vaev::Style::Tests {
 
 static Media const TEST_MEDIA = {
     .type = MediaType::SCREEN,
-    .width = 1920_au,
-    .height = 1080_au,
-    .aspectRatio = 16.0 / 9.0,
+    .width = Px{1920},
+    .height = Px{1080},
+    .aspectRatio = Ratio{16.0, 9.0},
     .orientation = Print::Orientation::LANDSCAPE,
 
     .resolution = Resolution::fromDpi(96),
@@ -39,9 +39,9 @@ static Media const TEST_MEDIA = {
     .prefersColorScheme = ColorScheme::LIGHT,
     .prefersReducedData = ReducedData::REDUCE,
 
-    .deviceWidth = 1920_au,
-    .deviceHeight = 1080_au,
-    .deviceAspectRatio = 16.0 / 9.0,
+    .deviceWidth = Px{1920},
+    .deviceHeight = Px{1080},
+    .deviceAspectRatio = Ratio{16.0, 9.0},
 };
 
 test$("feature-type") {

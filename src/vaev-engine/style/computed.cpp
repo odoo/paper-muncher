@@ -24,13 +24,22 @@ struct TransformProps {
     }
 };
 
+export struct GapProps {
+    Computed<Gap> row = Keywords::NORMAL;
+    Computed<Gap> col = Keywords::NORMAL;
+
+    void repr(Io::Emit& e) const {
+        e("(gaps {} {})", row, col);
+    }
+};
+
 using ClipProps = Opt<BasicShape>;
 
 export struct Inherited {};
 
 // https://www.w3.org/TR/css-cascade/#computed
 export struct ComputedValues {
-    Cow<Gaps> gaps;
+    Cow<GapProps> gaps;
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
     Cow<Margin> margin = makeCow<Margin>(Width(CalcValue<PercentOr<Length>>(Length(0_au)))); // FIXME

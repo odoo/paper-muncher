@@ -34,7 +34,7 @@ export struct LineHeight {
 };
 
 export template <>
-struct ValueParser<LineHeight> {
+struct ValueTraits<LineHeight> : DefaultValueTraits<LineHeight> {
     static Res<LineHeight> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
