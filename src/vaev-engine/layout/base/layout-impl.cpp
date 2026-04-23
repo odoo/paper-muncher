@@ -79,8 +79,8 @@ InsetsAu computeMargins(Tree& tree, Box& box, Input input) {
 // https://www.w3.org/TR/css-values-4/#snap-a-length-as-a-border-width
 Au _snapLengthAsBorderWidth(Au v) {
     if (v < 1_au)
-        return ceil(v);
-    return floor(v);
+        return Math::ceil(v);
+    return Math::floor(v);
 }
 
 InsetsAu computeBorders(Tree& tree, Box& box) {

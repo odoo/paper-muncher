@@ -230,7 +230,7 @@ struct FlexItem {
     }
 
     Au getScaledFlexShrinkFactor() const {
-        return flexBaseSize * Au{flexItemProps.shrink};
+        return flexBaseSize * flexItemProps.shrink;
     }
 
     void speculateValues(Tree& t, Input input) {
@@ -494,7 +494,7 @@ struct FlexItem {
                 (lineCrossSize -
                  fa.crossAxis(usedSize) -
                  getMargin(BOTH_CROSS)) /
-                2_au;
+                2;
             fa.crossAxis(position) = startOfBlock + getMargin(START_CROSS);
         }
     }
@@ -580,9 +580,9 @@ struct FlexLine {
 
     // https://www.w3.org/TR/css-flexbox-1/#valdef-justify-content-space-around
     void alignMainSpaceAround(Au mainSize, Au occupiedSize) {
-        Au gapSize = (mainSize - occupiedSize) / Au{items.len()};
+        Au gapSize = (mainSize - occupiedSize) / items.len();
 
-        Au currPositionMainAxis{gapSize / 2_au};
+        Au currPositionMainAxis = gapSize / 2;
         for (auto& flexItem : items) {
             fa.mainAxis(flexItem.position) =
                 currPositionMainAxis + flexItem.getMargin(FlexItem::START_MAIN);
@@ -593,7 +593,7 @@ struct FlexLine {
 
     // https://www.w3.org/TR/css-flexbox-1/#valdef-justify-content-space-between
     void alignMainSpaceBetween(Au mainSize, Au occupiedSize) {
-        Au gapSize = (mainSize - occupiedSize) / Au{items.len() - 1};
+        Au gapSize = (mainSize - occupiedSize) / (items.len() - 1);
 
         Au currPositionMainAxis{0};
         for (auto& flexItem : items) {
@@ -606,7 +606,7 @@ struct FlexLine {
 
     // https://www.w3.org/TR/css-flexbox-1/#valdef-justify-content-center
     void alignMainCenter(Au mainSize, Au occupiedSize) {
-        Au currPositionMainAxis{(mainSize - occupiedSize) / 2_au};
+        Au currPositionMainAxis = (mainSize - occupiedSize) / 2;
         for (auto& flexItem : items) {
             fa.mainAxis(flexItem.position) =
                 currPositionMainAxis + flexItem.getMargin(FlexItem::START_MAIN);
@@ -868,7 +868,7 @@ struct FlexFormatingContext : FormatingContext {
 
                 itemContribution += _items[ei].getMargin(FlexItem::BOTH_MAIN);
                 // TODO: ignoring breaks for now
-                if (currLineSize + itemContribution <= _usedMainSize + Au{0.01} or currLineSize == 0_au) {
+                if (currLineSize + itemContribution <= _usedMainSize + 0.01_au or currLineSize == 0_au) {
                     currLineSize += itemContribution;
                     ei++;
                 } else
@@ -978,7 +978,7 @@ struct FlexFormatingContext : FormatingContext {
                         if (sumScaledFlexShrinkFactor == 0_au) {
                             fa.mainAxis(flexItem->usedSize) = flexItem->flexBaseSize;
                         } else {
-                            Au ratio = flexItem->getScaledFlexShrinkFactor() / sumScaledFlexShrinkFactor;
+                            f64 ratio = flexItem->getScaledFlexShrinkFactor() / sumScaledFlexShrinkFactor;
                             fa.mainAxis(flexItem->usedSize) =
                                 flexItem->flexBaseSize - ratio * Au{Math::abs(freeSpace)};
                         }
@@ -1182,7 +1182,7 @@ struct FlexFormatingContext : FormatingContext {
             for (auto& flexLine : _lines)
                 sumOfCrossSizes += flexLine.crossSize;
             if (fa.crossAxis(availableSpace) > sumOfCrossSizes) {
-                Au toDistribute = (fa.crossAxis(availableSpace) - sumOfCrossSizes) / Au{_lines.len()};
+                Au toDistribute = (fa.crossAxis(availableSpace) - sumOfCrossSizes) / _lines.len();
                 for (auto& flexLine : _lines) {
                     flexLine.crossSize += toDistribute;
                 }
@@ -1265,7 +1265,7 @@ struct FlexFormatingContext : FormatingContext {
                 }
 
                 if (countOfAutos) {
-                    Au marginsSize = (_usedMainSize - occupiedMainSize) / Au{countOfAutos};
+                    Au marginsSize = (_usedMainSize - occupiedMainSize) / countOfAutos;
                     for (auto& flexItem : flexLine.items) {
                         if (fa.startMainAxis(*flexItem.box->style->margin).is<Keywords::Auto>())
                             fa.startMainAxis(flexItem.margin) = marginsSize;
@@ -1332,7 +1332,7 @@ struct FlexFormatingContext : FormatingContext {
                         } else {
                             Au freeCrossSpace = l.crossSize - fa.crossAxis(i.usedSize);
                             fa.endCrossAxis(i.margin) =
-                                fa.startCrossAxis(i.margin) = freeCrossSpace / 2_au;
+                                fa.startCrossAxis(i.margin) = freeCrossSpace / 2;
                         }
                         fa.crossAxis(i.position) = i.getMargin(FlexItem::START_CROSS);
                     } else {
@@ -1400,7 +1400,7 @@ struct FlexFormatingContext : FormatingContext {
         };
 
         auto alignContentCenter = [&]() {
-            Au currPositionCross{availableCrossSpace / 2_au};
+            Au currPositionCross = availableCrossSpace / 2;
             for (auto& flexLine : _lines) {
                 fa.crossAxis(flexLine.position) = currPositionCross;
                 currPositionCross += flexLine.crossSize;
@@ -1426,9 +1426,9 @@ struct FlexFormatingContext : FormatingContext {
             if (availableCrossSpace < 0_au) {
                 alignContentCenter();
             } else {
-                Au gapSize = availableCrossSpace / Au{_lines.len()};
+                Au gapSize = availableCrossSpace / _lines.len();
 
-                Au currPositionCross{gapSize / 2_au};
+                Au currPositionCross = gapSize / 2;
                 for (auto& flexLine : _lines) {
                     fa.crossAxis(flexLine.position) = currPositionCross;
                     currPositionCross += flexLine.crossSize + gapSize;
@@ -1441,7 +1441,7 @@ struct FlexFormatingContext : FormatingContext {
             if (availableCrossSpace < 0_au or _lines.len() == 1)
                 alignContentFlexStart();
             else {
-                Au gapSize = availableCrossSpace / Au{_lines.len() - 1};
+                Au gapSize = availableCrossSpace / (_lines.len() - 1);
 
                 Au currPositionCross{0};
                 for (auto& flexLine : _lines) {

@@ -239,9 +239,9 @@ export struct Media {
     static Media forPrint(Print::Settings const& settings) {
         return {
             .type = MediaType::PRINT,
-            .width = Au{settings.paper.width},
-            .height = Au{settings.paper.height},
-            .aspectRatio = settings.paper.width / f64{settings.paper.height},
+            .width = Au{settings.pageSize().width},
+            .height = Au{settings.pageSize().height},
+            .aspectRatio = f64{settings.pageSize().width} / f64{settings.pageSize().height},
             .orientation = settings.orientation,
 
             .resolution = Resolution{settings.scale, Resolution::X},
@@ -269,9 +269,9 @@ export struct Media {
             .prefersReducedData = ReducedData::NO_PREFERENCE,
 
             // NOTE: Deprecated Media Features
-            .deviceWidth = Au{settings.paper.width},
-            .deviceHeight = Au{settings.paper.height},
-            .deviceAspectRatio = settings.paper.width / settings.paper.height,
+            .deviceWidth = Au{settings.pageSize().width},
+            .deviceHeight = Au{settings.pageSize().height},
+            .deviceAspectRatio = settings.pageSize().width / settings.pageSize().height,
         };
     }
 
