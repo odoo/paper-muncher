@@ -45,22 +45,22 @@ export struct BackgroundPosition {
     using VerticalAnchor = Union<Keywords::Top, Keywords::Center, Keywords::Bottom>;
 
     HorizontalAnchor horizontalAnchor;
-    CalcValue<PercentOr<Length>> horizontal;
+    Opt<CalcValue<PercentOr<Length>>> horizontal;
     VerticalAnchor verticalAnchor;
-    CalcValue<PercentOr<Length>> vertical;
+    Opt<CalcValue<PercentOr<Length>>> vertical;
 
     constexpr BackgroundPosition()
         : horizontalAnchor(Keywords::LEFT),
-          horizontal(Percent{0}),
+          horizontal(NONE),
           verticalAnchor(Keywords::TOP),
-          vertical(Percent{0}) {
+          vertical(NONE) {
     }
 
-    constexpr BackgroundPosition(CalcValue<PercentOr<Length>> horizontal, CalcValue<PercentOr<Length>> vertical)
+    constexpr BackgroundPosition(Opt<CalcValue<PercentOr<Length>>> horizontal, Opt<CalcValue<PercentOr<Length>>> vertical)
         : horizontalAnchor(Keywords::LEFT), horizontal(horizontal), verticalAnchor(Keywords::TOP), vertical(vertical) {
     }
 
-    constexpr BackgroundPosition(HorizontalAnchor horizontalAnchor, CalcValue<PercentOr<Length>> horizontal, VerticalAnchor verticalAnchor, CalcValue<PercentOr<Length>> vertical)
+    constexpr BackgroundPosition(HorizontalAnchor horizontalAnchor, Opt<CalcValue<PercentOr<Length>>> horizontal, VerticalAnchor verticalAnchor, Opt<CalcValue<PercentOr<Length>>> vertical)
         : horizontalAnchor(horizontalAnchor), horizontal(horizontal), verticalAnchor(verticalAnchor), vertical(vertical) {
     }
 
@@ -73,7 +73,9 @@ export struct BackgroundPosition {
 };
 
 export template <>
-struct ValueParser<BackgroundPosition> {
+struct ValueTraits<BackgroundPosition> : DefaultValueTraits<BackgroundPosition> {
+    using ComputedType = Pair<CalcValue<PercentOr<Px>>>;
+
     static Res<BackgroundPosition> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -143,18 +145,16 @@ struct ValueParser<BackgroundPosition> {
 
         // case 3
         BackgroundPosition::HorizontalAnchor hAnchor = Keywords::LEFT;
-        CalcValue<PercentOr<Length>> hValue = {Percent(0)};
-        bool hSet = false;
+        Opt<CalcValue<PercentOr<Length>>> hValue = NONE;
 
         BackgroundPosition::VerticalAnchor vAnchor = Keywords::TOP;
-        CalcValue<PercentOr<Length>> vValue = {Percent(0)};
+        Opt<CalcValue<PercentOr<Length>>> vValue = NONE;
 
         usize secondPairIndex = 2;
 
         try$(items[0].visit(Visitor{
             [&](Meta::Contains<Keywords::Left, Keywords::Right> auto& t) -> Res<> {
                 hAnchor = t;
-                hSet = true;
 
                 if (auto mesure = items[1].is<CalcValue<PercentOr<Length>>>()) {
                     hValue = *mesure;
@@ -166,7 +166,6 @@ struct ValueParser<BackgroundPosition> {
             },
             [&](Keywords::Center& t) -> Res<> {
                 hAnchor = t;
-                hSet = true;
 
                 secondPairIndex = 1;
 
@@ -190,7 +189,7 @@ struct ValueParser<BackgroundPosition> {
 
         try$(items[secondPairIndex].visit(Visitor{
             [&](Meta::Contains<Keywords::Left, Keywords::Right> auto& t) -> Res<> {
-                if (hSet) {
+                if (hValue.has()) {
                     if (hAnchor.is<Keywords::Center>()) { // the first center was aimed at the vertical part so we exchange
                         vAnchor = Keywords::CENTER;
                         vValue = hValue;
@@ -230,6 +229,71 @@ struct ValueParser<BackgroundPosition> {
         }));
 
         return Ok(BackgroundPosition(hAnchor, hValue, vAnchor, vValue));
+    }
+
+    // FIXME: This is very ugly, should be refactored after calc is refactored
+    static ComputedType compute(BackgroundPosition const& val, ComputationContext const& ctx) {
+        auto computeOffset = [&](Percent base, Math::Sign sign, Opt<CalcValue<PercentOr<Length>>> relativeOffset) -> CalcValue<PercentOr<Px>> {
+            if (not relativeOffset) {
+                return PercentOr<Px>{base};
+            }
+
+            return relativeOffset.visit(Visitor{
+                [&](PercentOr<Length> const& percentOrLength) -> CalcValue<PercentOr<Px>> {
+                    return percentOrLength.visit(Visitor{
+                        [&](Percent const& percent) -> CalcValue<PercentOr<Px>> {
+                            if (percent.value() == 0.0) {
+                                return base;
+                            }
+
+                            if (sign == Math::Sign::POSITIVE) {
+                                return base + percent;
+                            } else {
+                                return base - percent;
+                            }
+                        },
+                        [&](Length const& length) -> CalcValue<PercentOr<Px>> {
+                            if (length.val() == 0.0) {
+                                return base;
+                            }
+
+                            auto op = (sign == Math::Sign::POSITIVE) ? CalcOp::ADD : CalcOp::SUBTRACT;
+                            return {op, PercentOr<Px>{base}, PercentOr<Px>{computeValue(length, ctx)}};
+                        },
+                    });
+                },
+                [&]([[maybe_unused]] auto&& calc) -> CalcValue<PercentOr<Px>> {
+                    // TODO
+                    notImplemented();
+                },
+            });
+        };
+
+        auto horizontal = val.horizontalAnchor.visit(Visitor{
+            [&](Keywords::Left) {
+                return computeOffset(Percent{0}, Math::Sign::POSITIVE, val.horizontal);
+            },
+            [&](Keywords::Center) {
+                return PercentOr<Px>{Percent{50}};
+            },
+            [&](Keywords::Right) {
+                return computeOffset(Percent{100}, Math::Sign::NEGATIVE, val.horizontal);
+            },
+        });
+
+        auto vertical = val.verticalAnchor.visit(Visitor{
+            [&](Keywords::Top) {
+                return computeOffset(Percent{0}, Math::Sign::POSITIVE, *val.vertical);
+            },
+            [&](Keywords::Center) {
+                return Percent{50};
+            },
+            [&](Keywords::Bottom) {
+                return computeOffset(Percent{100}, Math::Sign::NEGATIVE, val.vertical);
+            },
+        });
+
+        return {horizontal, vertical};
     }
 };
 

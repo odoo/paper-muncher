@@ -120,7 +120,7 @@ export struct Resolution {
 };
 
 export template <>
-struct ValueParser<Resolution> {
+struct ValueTraits<Resolution> : DefaultValueTraits<Resolution> {
     static Res<Resolution::Unit> _parseResolutionUnit(Str unit) {
         if (eqCi(unit, "dpi"s))
             return Ok(Resolution::Unit::DPI);

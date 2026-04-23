@@ -30,7 +30,7 @@ export struct Inherited {};
 
 // https://www.w3.org/TR/css-cascade/#computed
 export struct ComputedValues {
-    Cow<Gaps> gaps;
+    Cow<Computed<Gaps>> gaps;
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
     Cow<Margin> margin = makeCow<Margin>(Width(CalcValue<PercentOr<Length>>(Length(0_au)))); // FIXME

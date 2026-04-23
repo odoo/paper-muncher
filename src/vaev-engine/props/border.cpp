@@ -473,7 +473,7 @@ export struct BorderBottomWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderBottomWidthProperty>(self(), try$(parseValue<CalcValue<Length>>(c))));
+            return Ok(makeRc<BorderBottomWidthProperty>(self(), try$(parseValue<LineWidth>(c))));
         }
     };
 
@@ -755,7 +755,7 @@ export struct BorderTopProperty : Property {
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             Border value;
             while (not c.ended()) {
-                auto width = parseValue<CalcValue<Length>>(c);
+                auto width = parseValue<LineWidth>(c);
                 if (width) {
                     value.width = width.unwrap();
                     continue;
@@ -819,7 +819,7 @@ export struct BorderRightProperty : Property {
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             Border value;
             while (not c.ended()) {
-                auto width = parseValue<CalcValue<Length>>(c);
+                auto width = parseValue<LineWidth>(c);
                 if (width) {
                     value.width = width.unwrap();
                     continue;
@@ -883,7 +883,7 @@ export struct BorderBottomProperty : Property {
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             Border value;
             while (not c.ended()) {
-                auto width = parseValue<CalcValue<Length>>(c);
+                auto width = parseValue<LineWidth>(c);
                 if (width) {
                     value.width = width.unwrap();
                     continue;
@@ -947,7 +947,7 @@ export struct BorderLeftProperty : Property {
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             Border value;
             while (not c.ended()) {
-                auto width = parseValue<CalcValue<Length>>(c);
+                auto width = parseValue<LineWidth>(c);
                 if (width) {
                     value.width = width.unwrap();
                     continue;

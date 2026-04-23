@@ -79,22 +79,19 @@ export struct Option {
         Vaev::Layout::Resolver resolver;
         resolver.viewport.dpi = this->scale;
 
-        auto paper = this->paper;
-
-        if (this->orientation == Print::Orientation::LANDSCAPE)
-            paper = paper.landscape();
+        auto size = this->paper.size(this->orientation);
 
         if (this->width or this->height) {
-            paper.name = "custom";
             if (this->width)
-                paper.width = resolver.resolve(*this->width).cast<f64>();
+                size.width = resolver.resolve(*this->width);
 
             if (this->height)
-                paper.height = resolver.resolve(*this->height).cast<f64>();
+                size.height = resolver.resolve(*this->height);
         }
 
         return {
-            .paper = paper,
+            .stock = this->paper,
+            .orientation = this->orientation,
             .margins = this->margins,
             .scale = this->scale.toDppx(),
         };
@@ -159,19 +156,14 @@ export Async::Task<> runAsync(
                 scene = makeRc<Scene::Clear>(scene, Gfx::WHITE);
             }
 
-            Print::PaperStock paper{
-                "image",
-                media.width.cast<f64>(),
-                media.height.cast<f64>(),
-            };
+            Math::Vec2f size = Vec2Au{Au{media.width.value()}, Au{media.height.value()}}.cast<f64>();
 
             if (options.extend == Extend::FIT) {
                 auto overflow = window->ensureRender().frag->scrollableOverflow();
-                paper.width = overflow.width.cast<f64>();
-                paper.height = overflow.height.cast<f64>();
+                size = overflow.size().cast<f64>();
             }
 
-            Print::Page page = {paper, scene};
+            Print::Page page = {size, scene};
             page.print(
                 *printer,
                 {.showBackgroundGraphics = true}

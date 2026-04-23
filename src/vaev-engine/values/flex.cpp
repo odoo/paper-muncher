@@ -24,7 +24,7 @@ export enum struct FlexDirection {
 };
 
 export template <>
-struct ValueParser<FlexDirection> {
+struct ValueTraits<FlexDirection> : DefaultValueTraits<FlexDirection> {
     static Res<FlexDirection> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -54,7 +54,7 @@ export enum struct FlexWrap {
 };
 
 export template <>
-struct ValueParser<FlexWrap> {
+struct ValueTraits<FlexWrap> : DefaultValueTraits<FlexWrap> {
     static Res<FlexWrap> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

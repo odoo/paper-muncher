@@ -68,7 +68,7 @@ export struct Circle {
 };
 
 export template <>
-struct ValueParser<Circle> {
+struct ValueTraits<Circle> : DefaultValueTraits<Circle> {
     static Res<Circle> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -114,7 +114,7 @@ export struct Ellipse {
 };
 
 export template <>
-struct ValueParser<Ellipse> {
+struct ValueTraits<Ellipse> : DefaultValueTraits<Ellipse> {
     static Res<Ellipse> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -161,7 +161,7 @@ export struct Inset {
 };
 
 export template <>
-struct ValueParser<Inset> {
+struct ValueTraits<Inset> : DefaultValueTraits<Inset> {
     static Res<Inset> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -208,7 +208,7 @@ export struct Path {
 };
 
 export template <>
-struct ValueParser<Path> {
+struct ValueTraits<Path> : DefaultValueTraits<Path> {
     static Res<Path> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -257,7 +257,7 @@ export struct Polygon {
 };
 
 export template <>
-struct ValueParser<Polygon> {
+struct ValueTraits<Polygon> : DefaultValueTraits<Polygon> {
     static Res<Polygon> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -306,7 +306,7 @@ export struct Rect {
 };
 
 export template <>
-struct ValueParser<Rect> {
+struct ValueTraits<Rect> : DefaultValueTraits<Rect> {
     static Res<Rect> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -362,7 +362,7 @@ export struct Xywh {
 };
 
 export template <>
-struct ValueParser<Xywh> {
+struct ValueTraits<Xywh> : DefaultValueTraits<Xywh> {
     static Res<Xywh> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -419,7 +419,7 @@ export struct BasicShape {
 };
 
 export template <>
-struct ValueParser<BasicShape> {
+struct ValueTraits<BasicShape> : DefaultValueTraits<BasicShape> {
     static Res<BasicShape> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
