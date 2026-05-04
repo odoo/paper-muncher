@@ -82,7 +82,7 @@ struct PrintSettings {
         return {};
     }
 
-    Print::Settings toNative() const {
+    Print::Settings derivePrintSettings() const {
         return {
             .stock = Print::PaperStock::custom(
                 Print::mmToAu(paper.width * 10),
