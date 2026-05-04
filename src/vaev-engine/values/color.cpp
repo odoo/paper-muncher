@@ -15,6 +15,7 @@ import :values.keywords;
 import :values.percent;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 // https://www.w3.org/TR/css-color-4
 
@@ -697,8 +698,8 @@ export Gfx::Color resolve(Color const& c, Gfx::Color currentColor) {
         [&](SystemColor const& system) {
             return SYSTEM_COLOR[static_cast<usize>(system)];
         },
-        [&](ColorMix const& mix) {
-            return resolve(mix, currentColor);
+        [&](Box<ColorMix> const& mix) {
+            return resolve(*mix, currentColor);
         },
     });
 }

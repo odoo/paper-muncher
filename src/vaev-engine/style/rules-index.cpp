@@ -72,8 +72,8 @@ struct RuleIndex {
                 }
             },
             [&](Infix const& s) {
-                if (isLookupEquivalentToMatch(s.rhs) or s.rhs->is<Nfix>()) {
-                    _add(rule, ruleId, s.rhs);
+                if (isLookupEquivalentToMatch(*s.rhs) or s.rhs->is<Nfix>()) {
+                    _add(rule, ruleId, *s.rhs);
                 } else {
                     _nonLookupRules.pushBack({ruleId, rule});
                 }

@@ -3,6 +3,7 @@
 import Vaev.Engine;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style::Tests {
 

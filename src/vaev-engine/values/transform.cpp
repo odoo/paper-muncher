@@ -15,6 +15,8 @@ import :values.keywords;
 import :values.percent;
 import :values.primitives;
 
+using namespace Karm::Math::Literals;
+
 namespace Vaev {
 
 // https://drafts.csswg.org/css-transforms

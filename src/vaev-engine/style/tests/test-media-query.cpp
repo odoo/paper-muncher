@@ -5,6 +5,7 @@ import Karm.Math;
 import Vaev.Engine;
 
 using namespace Karm;
+using namespace Karm::Math::Literals;
 
 namespace Vaev::Style::Tests {
 

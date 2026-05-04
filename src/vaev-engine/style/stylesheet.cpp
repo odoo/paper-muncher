@@ -6,6 +6,9 @@ import Karm.Logger;
 
 import :style.rules;
 
+using namespace Karm::Literals;
+using namespace Karm::Ref::Literals;
+
 namespace Vaev::Style {
 
 // https://www.w3.org/TR/cssom-1/#css-style-sheets

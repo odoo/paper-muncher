@@ -6,6 +6,7 @@ export module Vaev.Engine:values.primitives;
 
 import Karm.Core;
 import Karm.Ref;
+import Karm.Math;
 
 import :css;
 import :values.base;

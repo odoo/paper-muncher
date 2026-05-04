@@ -12,6 +12,8 @@ import :values.calc;
 import :values.keywords;
 import :values.length;
 
+using namespace Karm::Math::Literals;
+
 namespace Vaev {
 
 // MARK: Line Width -------------------------------------------------------------

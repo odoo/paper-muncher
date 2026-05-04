@@ -13,6 +13,9 @@ import :values.color;
 import :values.length;
 import :values.percent;
 
+using namespace Karm::Literals;
+using namespace Karm::Math::Literals;
+
 namespace Vaev {
 
 // MARK: PreserveAspectRatio

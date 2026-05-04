@@ -5,6 +5,8 @@ import Karm.Core;
 import Karm.Gc;
 
 using namespace Karm;
+using namespace Karm::Literals;
+
 using namespace Vaev;
 
 Async::Task<> entryPointAsync(Sys::Env&, Async::CancellationToken) {

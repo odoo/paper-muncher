@@ -16,6 +16,7 @@ import Vaev.Engine;
 import :protocol;
 
 using namespace Karm;
+using namespace Karm::Ref::Literals;
 
 namespace Vaev::WebDriver {
 

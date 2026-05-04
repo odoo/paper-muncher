@@ -5,6 +5,7 @@ import Karm.Core;
 import :dom.node;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Dom {
 

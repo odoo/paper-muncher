@@ -6,6 +6,7 @@ import Karm.Ref;
 import Karm.Diag;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Dom::Tests {
 
