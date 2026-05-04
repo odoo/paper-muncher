@@ -230,7 +230,7 @@ struct FlexItem {
     }
 
     Au getScaledFlexShrinkFactor() const {
-        return flexBaseSize * Au{flexItemProps.shrink};
+        return flexBaseSize * flexItemProps.shrink;
     }
 
     void speculateValues(Tree& t, Input input) {
@@ -494,7 +494,7 @@ struct FlexItem {
                 (lineCrossSize -
                  fa.crossAxis(usedSize) -
                  getMargin(BOTH_CROSS)) /
-                2_au;
+                2;
             fa.crossAxis(position) = startOfBlock + getMargin(START_CROSS);
         }
     }
@@ -580,7 +580,7 @@ struct FlexLine {
 
     // https://www.w3.org/TR/css-flexbox-1/#valdef-justify-content-space-around
     void alignMainSpaceAround(Au mainSize, Au occupiedSize) {
-        Au gapSize = (mainSize - occupiedSize) / Au{items.len()};
+        Au gapSize = (mainSize - occupiedSize) / items.len();
 
         Au currPositionMainAxis{gapSize / 2_au};
         for (auto& flexItem : items) {
@@ -593,7 +593,7 @@ struct FlexLine {
 
     // https://www.w3.org/TR/css-flexbox-1/#valdef-justify-content-space-between
     void alignMainSpaceBetween(Au mainSize, Au occupiedSize) {
-        Au gapSize = (mainSize - occupiedSize) / Au{items.len() - 1};
+        Au gapSize = (mainSize - occupiedSize) / (items.len() - 1);
 
         Au currPositionMainAxis{0};
         for (auto& flexItem : items) {
@@ -978,9 +978,9 @@ struct FlexFormatingContext : FormatingContext {
                         if (sumScaledFlexShrinkFactor == 0_au) {
                             fa.mainAxis(flexItem->usedSize) = flexItem->flexBaseSize;
                         } else {
-                            Au ratio = flexItem->getScaledFlexShrinkFactor() / sumScaledFlexShrinkFactor;
+                            auto ratio = flexItem->getScaledFlexShrinkFactor() / sumScaledFlexShrinkFactor;
                             fa.mainAxis(flexItem->usedSize) =
-                                flexItem->flexBaseSize - ratio * Au{Math::abs(freeSpace)};
+                                flexItem->flexBaseSize - Au{ratio * Math::abs(freeSpace)};
                         }
                     }
                 }
@@ -1182,7 +1182,7 @@ struct FlexFormatingContext : FormatingContext {
             for (auto& flexLine : _lines)
                 sumOfCrossSizes += flexLine.crossSize;
             if (fa.crossAxis(availableSpace) > sumOfCrossSizes) {
-                Au toDistribute = (fa.crossAxis(availableSpace) - sumOfCrossSizes) / Au{_lines.len()};
+                Au toDistribute = (fa.crossAxis(availableSpace) - sumOfCrossSizes) / _lines.len();
                 for (auto& flexLine : _lines) {
                     flexLine.crossSize += toDistribute;
                 }
@@ -1265,7 +1265,7 @@ struct FlexFormatingContext : FormatingContext {
                 }
 
                 if (countOfAutos) {
-                    Au marginsSize = (_usedMainSize - occupiedMainSize) / Au{countOfAutos};
+                    Au marginsSize = (_usedMainSize - occupiedMainSize) / countOfAutos;
                     for (auto& flexItem : flexLine.items) {
                         if (fa.startMainAxis(*flexItem.box->style->margin).is<Keywords::Auto>())
                             fa.startMainAxis(flexItem.margin) = marginsSize;
@@ -1426,7 +1426,7 @@ struct FlexFormatingContext : FormatingContext {
             if (availableCrossSpace < 0_au) {
                 alignContentCenter();
             } else {
-                Au gapSize = availableCrossSpace / Au{_lines.len()};
+                Au gapSize = availableCrossSpace / (_lines.len());
 
                 Au currPositionCross{gapSize / 2_au};
                 for (auto& flexLine : _lines) {
@@ -1441,7 +1441,7 @@ struct FlexFormatingContext : FormatingContext {
             if (availableCrossSpace < 0_au or _lines.len() == 1)
                 alignContentFlexStart();
             else {
-                Au gapSize = availableCrossSpace / Au{_lines.len() - 1};
+                Au gapSize = availableCrossSpace / (_lines.len() - 1);
 
                 Au currPositionCross{0};
                 for (auto& flexLine : _lines) {

@@ -4,6 +4,8 @@ import Karm.Core;
 import Karm.Logger;
 
 using namespace Karm;
+using namespace Karm::Literals;
+using namespace Karm::Re::Literals;
 
 namespace Vaev::Css {
 

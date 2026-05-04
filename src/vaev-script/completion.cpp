@@ -4,6 +4,7 @@ import Karm.Core;
 import :value;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Script {
 

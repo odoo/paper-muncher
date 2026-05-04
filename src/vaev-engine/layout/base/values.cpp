@@ -318,9 +318,23 @@ export struct Resolver {
         case CalcOp::SUBTRACT:
             return lhs - rhs;
         case CalcOp::MULTIPLY:
-            return lhs * rhs;
+            // NOTE: Normally, direct multiplication on Au is not allowed.
+            //       However, CSS calc() treats pixel units as floating-point numbers,
+            //       permitting all standard math operations between them.
+            if constexpr (Meta::Same<Resolved<T>, Au>) {
+                return Au(f64{lhs} * f64{rhs});
+            } else {
+                return lhs * rhs;
+            }
         case CalcOp::DIVIDE:
-            return lhs / rhs;
+            // NOTE: Normally, direct multiplication on Au is not allowed.
+            //       However, CSS calc() treats pixel units as floating-point numbers,
+            //       permitting all standard math operations between them.
+            if constexpr (Meta::Same<Resolved<T>, Au>) {
+                return Au(f64{lhs} / f64{rhs});
+            } else {
+                return lhs / rhs;
+            }
         default:
             panic("unexpected operator");
         }

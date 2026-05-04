@@ -3,6 +3,7 @@ export module Vaev.Engine:layout.fragment;
 import Karm.Core;
 import Karm.Math;
 
+import :values.length;
 import :layout.svg;
 import :layout.box;
 
@@ -95,7 +96,7 @@ struct SVGRootFrag : SVG::GroupFrag {
     }
 
     static SVGRootFrag build(SVGRoot const& box, Vec2Au position, Vec2Au viewportSize) {
-        SVG::Rectangle<Karm::Au> rect{position.x, position.y, viewportSize.x, viewportSize.y};
+        SVG::Rectangle<Au> rect{position.x, position.y, viewportSize.x, viewportSize.y};
 
         Math::Trans2f transf =
             box.viewBox ? SVG::computeEquivalentTransformOfSVGViewport(*box.viewBox, position, viewportSize)

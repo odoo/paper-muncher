@@ -14,6 +14,8 @@ import Vaev.Engine;
 import :testResult;
 
 using namespace Karm;
+using namespace Karm::Literals;
+
 using namespace Vaev;
 using namespace Vaev::Html;
 

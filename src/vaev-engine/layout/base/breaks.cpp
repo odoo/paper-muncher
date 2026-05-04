@@ -3,6 +3,8 @@ export module Vaev.Engine:layout.breaks;
 import Karm.Core;
 import Karm.Math;
 
+import :values.length;
+
 using namespace Karm;
 
 namespace Vaev::Layout {

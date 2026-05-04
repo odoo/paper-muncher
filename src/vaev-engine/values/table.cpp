@@ -10,6 +10,7 @@ import :values.percent;
 import :values.width;
 
 using namespace Karm;
+using namespace Karm::Math::Literals;
 
 namespace Vaev {
 

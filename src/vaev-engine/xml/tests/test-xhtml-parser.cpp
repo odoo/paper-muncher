@@ -5,6 +5,7 @@ import Karm.Ref;
 import Vaev.Engine;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Dom::Tests {
 

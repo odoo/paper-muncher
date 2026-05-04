@@ -3,6 +3,7 @@ export module Vaev.Engine:dom.names;
 import Karm.Core;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev {
 

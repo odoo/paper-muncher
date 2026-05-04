@@ -54,7 +54,7 @@ namespace SVG {
 
 Au normalizedDiagonal(Vec2Au relativeTo) {
     return Au{
-        Math::sqrt(f64{(relativeTo.x * relativeTo.x) + (relativeTo.y * relativeTo.y)}) / Math::sqrt(2.0)
+        Math::sqrt(f64{(relativeTo.x.cast<f64>() * relativeTo.x.cast<f64>()) + (relativeTo.y.cast<f64>() * relativeTo.y.cast<f64>())}) / Math::sqrt(2.0)
     };
 }
 
@@ -121,7 +121,7 @@ Rectangle<PercentOr<Length>> buildRectangle(Style::ComputedValues const& style) 
     };
 }
 
-Rectangle<Au> resolve(Rectangle<PercentOr<Length>> const& rect, Karm::Vec2Au const& relativeTo) {
+Rectangle<Au> resolve(Rectangle<PercentOr<Length>> const& rect, Vec2Au const& relativeTo) {
     return {
         Vaev::Layout::resolve(rect.x, relativeTo.x),
         Vaev::Layout::resolve(rect.y, relativeTo.y),
@@ -166,7 +166,7 @@ Circle<PercentOr<Length>> buildCircle(Style::ComputedValues const& style) {
     };
 }
 
-Circle<Au> resolve(Circle<PercentOr<Length>> const& circle, Karm::Vec2Au const& relativeTo) {
+Circle<Au> resolve(Circle<PercentOr<Length>> const& circle, Vec2Au const& relativeTo) {
     return {
         Vaev::Layout::resolve(circle.cx, relativeTo.x),
         Vaev::Layout::resolve(circle.cy, relativeTo.y),

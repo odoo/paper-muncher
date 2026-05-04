@@ -4,6 +4,7 @@ import Karm.Core;
 import Karm.Diag;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Html {
 

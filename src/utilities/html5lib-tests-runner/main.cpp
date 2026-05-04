@@ -6,6 +6,8 @@ import Karm.Cli;
 import Html5LibTest;
 
 using namespace Karm;
+using namespace Karm::Literals;
+using namespace Karm::Ref::Literals;
 
 enum struct Suite {
     TOKENIZER,
