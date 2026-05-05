@@ -148,7 +148,6 @@ export struct BorderLeftColorProperty : Property {
             };
         }
 
-
         Rc<Property> initial() const override {
             return makeRc<BorderLeftColorProperty>(self(), BLACK);
         }

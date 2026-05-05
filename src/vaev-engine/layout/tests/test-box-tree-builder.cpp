@@ -26,12 +26,12 @@ struct FakeInlineBox {
             return last(children);
         }
 
-        static ComparableInlineBox fromInlineBox(Layout::InlineBox const& inlineBox) {
+        static ComparableInlineBox fromInlineBox(Box const& inlineBox) {
             ComparableInlineBox comparableInlineBox;
 
             Vec<MutCursor<ComparableInlineBox>> stackInlineBoxes = {&comparableInlineBox};
             Vec<Opt<Rc<Gfx::Prose::Span>>> stackSpans = {NONE};
-            for (auto& span : inlineBox.prose->_spans) {
+            for (auto& span : inlineBox.content.unwrap<Rc<Gfx::Prose>>()->_spans) {
                 while (true) {
                     if (span->parent == NONE) {
                         if (last(stackSpans) == NONE)
@@ -68,19 +68,23 @@ struct FakeInlineBox {
         return true;
     }
 
-    bool matches(InlineBox const& inlineBox);
+    bool operator==(Box const& inlineBox);
+
+    void repr(Io::Emit& e) const {
+        e("(inline-box atomic:{} children:{})", atomicBoxes, children);
+    }
 };
 
 struct FakeBox {
     bool isInternal = false;
     Union<FakeInlineBox, Vec<FakeBox>> content = Vec<FakeBox>{};
 
-    bool matches(Box const& b) {
+    bool operator==(Box const& b) {
         if (not(b.style->display.is(Display::Type::DEFAULT) or (isInternal and b.style->display.is(Display::Type::INTERNAL))))
             return false;
 
         bool fakeBoxStablishesInline = content.is<FakeInlineBox>();
-        bool boxStablishesInline = b.content.is<Layout::InlineBox>();
+        bool boxStablishesInline = b.content.is<Rc<Gfx::Prose>>();
 
         // logDebug("box: {}, expected: {}", boxStablishesInline, fakeBoxStablishesInline);
 
@@ -88,7 +92,7 @@ struct FakeBox {
             return false;
 
         if (boxStablishesInline) {
-            return content.unwrap<FakeInlineBox>().matches(b.content.unwrap<Layout::InlineBox>());
+            return content.unwrap<FakeInlineBox>() == b;
         } else {
             auto& children = content.unwrap<Vec<FakeBox>>();
             // logDebug("box children: {} expected children: {}", b.children().len(), children.len());
@@ -96,20 +100,24 @@ struct FakeBox {
                 return false;
 
             for (usize i = 0; i < children.len(); ++i) {
-                if (not children[i].matches(b.children()[i]))
+                if (children[i] != b.children()[i])
                     return false;
             }
             return true;
         }
     }
+
+    void repr(Io::Emit& e) const {
+        e("(box {})", content);
+    }
 };
 
-bool FakeInlineBox::matches(InlineBox const& inlineBox) {
-    if (atomicBoxes.len() != inlineBox.atomicBoxes.len())
+bool FakeInlineBox::operator==(Box const& inlineBox) {
+    if (atomicBoxes.len() != inlineBox.children().len())
         return false;
 
     for (usize i = 0; i < atomicBoxes.len(); ++i) {
-        if (not atomicBoxes[i].matches(*inlineBox.atomicBoxes[i]))
+        if (atomicBoxes[i] != inlineBox.children()[i])
             return false;
     }
 
@@ -131,7 +139,7 @@ testAsync$("empty-body") {
             // body
         };
 
-    co_expect$(expectedBodySubtree.matches(body));
+    co_expectEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -147,7 +155,7 @@ testAsync$("no span") {
             }
         };
 
-    co_expect$(expectedBodySubtree.matches(body));
+    co_expectEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -174,7 +182,7 @@ testAsync$("no span with br") {
             }
         };
 
-    co_expect$(expectedBodySubtree.matches(body));
+    co_expectEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -205,7 +213,7 @@ testAsync$("no span, breaking block") {
             }
         };
 
-    co_expect$(expectedBodySubtree.matches(body));
+    co_expectEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -273,7 +281,7 @@ testAsync$("span and breaking block 1") {
             },
         };
 
-    co_expect$(expectedBodySubtree.matches(body));
+    co_expectEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -360,7 +368,7 @@ testAsync$("span and breaking block 2") {
             }
         };
 
-    co_expect$(expectedBodySubtree.matches(body));
+    co_expectEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -407,7 +415,7 @@ testAsync$("inline-block") {
             }
         };
 
-    co_expect$(expectedBodySubtree.matches(body));
+    co_expectEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -450,7 +458,7 @@ testAsync$("flex-blockify") {
             }
         };
 
-    co_expect$(expectedBodySubtree.matches(body));
+    co_expectEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -466,7 +474,7 @@ testAsync$("table-fixup") {
 
     auto window = Dom::Window::create();
     co_trya$(window->loadLocationAsync(Ref::Url::data("application/xhtml+xml"_mime, bytes(xhtml)), Ref::Uti::PUBLIC_OPEN, ct));
-    Box root = std::move(window->ensureRender().layout->children()[0]);
+    Box body = std::move(window->ensureRender().layout->children()[0]);
 
     auto expectedBodySubtree =
         FakeBox{
@@ -532,7 +540,7 @@ testAsync$("table-fixup") {
             }
         };
 
-    co_expect$(expectedBodySubtree.matches(root));
+    co_expectEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 

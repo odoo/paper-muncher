@@ -209,7 +209,7 @@ test$("parse-comment") {
     auto comment = el->firstChild()->is<Comment>();
     expectNe$(comment, nullptr);
     expect$(comment->nodeType() == NodeType::COMMENT);
-    expect$(comment->data() == " comment ");
+    expect$(comment->data() == " comment "s);
 
     return Ok();
 }
@@ -226,7 +226,7 @@ test$("parse-doctype") {
 
     auto doctype = dom->firstChild()->is<DocumentType>();
     expectNe$(doctype, nullptr);
-    expect$(doctype->name == "html");
+    expect$(doctype->name == "html"s);
 
     return Ok();
 }
@@ -238,7 +238,7 @@ test$("parse-title") {
     auto s = Io::SScan("<title>the title</title>");
     auto dom = gc.alloc<Dom::Document>(Ref::Url());
     try$(p.parse(s, Html::NAMESPACE, *dom));
-    expect$(dom->title() == "the title");
+    expect$(dom->title() == "the title"s);
     return Ok();
 }
 
@@ -263,7 +263,7 @@ test$("parse-comment-with-gt-symb") {
     auto comment = title->nextSibling()->is<Comment>();
     expectNe$(comment, nullptr);
     expect$(comment->nodeType() == NodeType::COMMENT);
-    expect$(comment->data() == " a b <meta> c d ");
+    expect$(comment->data() == " a b <meta> c d "s);
 
     return Ok();
 }

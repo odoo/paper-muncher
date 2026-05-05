@@ -20,6 +20,7 @@ export using Math::InsetsAu;
 export using Math::RectAu;
 export using Math::Vec2Au;
 export using Math::RadiiAu;
+export using Math::EllipseAu;
 
 // 6. MARK: Distance Units: the <length> type
 // https://drafts.csswg.org/css-values/#lengths

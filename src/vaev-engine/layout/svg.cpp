@@ -5,8 +5,9 @@ import Karm.Scene;
 import Karm.Gfx;
 import Karm.Math;
 
-import :style;
 import :dom.names;
+import :layout.base;
+import :style;
 import :values;
 
 using namespace Karm;
@@ -48,375 +49,297 @@ Au normalizedDiagonal(Vec2Au relativeTo) {
     };
 }
 
-// MARK: Rectangle ----------------------------------------------------------------------------
-
-template <typename T>
-struct SvgRectangle {
-    T x;
-    T y;
-    T width;
-    T height;
-
-    template <typename U>
-    SvgRectangle<U> cast() const {
-        return {
-            static_cast<U>(x),
-            static_cast<U>(y),
-            static_cast<U>(width),
-            static_cast<U>(height),
-        };
-    }
-
-    Math::Rect<T> toRect() const {
-        return {x, y, width, height};
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(Rectangle {} {} {} {})", x, y, width, height);
-    }
-};
-
-Rc<Scene::Node> rectToSceneNode(SvgRectangle<f64> rect, Opt<Gfx::Fill> fill, Opt<Gfx::Stroke> const& stroke) {
-    Gfx::Borders borders;
-    if (stroke) {
-        borders = Gfx::Borders{
-            Math::Radiif{},
-            Math::Insetsf{stroke->width},
-            Array<Gfx::Fill, 4>::fill(stroke->fill),
-            Array<Gfx::BorderStyle, 4>::fill(Gfx::BorderStyle::SOLID),
-        };
-
-        // FIXME: needed due to mismatch between SVG's and Scene's box model
-        // svg's stroke's center is at the shape's edges
-        rect.width += stroke->width;
-        rect.height += stroke->width;
-        rect.x -= stroke->width / 2;
-        rect.y -= stroke->width / 2;
-    }
-
-    return makeRc<Scene::Box>(
-        Math::Rectf{rect.x, rect.y, rect.width, rect.height},
-        borders,
-        Gfx::Outline{},
-        fill ? Vec<Gfx::Fill>{fill.unwrap()} : Vec<Gfx::Fill>{}
-    );
-}
-
-SvgRectangle<PercentOr<Length>> buildRectangle(Style::ComputedValues const& style) {
-    return {
-        style.svg->x,
-        style.svg->y,
-        fromSize(style.sizing->width),
-        fromSize(style.sizing->height)
-    };
-}
-
-SvgRectangle<Au> resolve(SvgRectangle<PercentOr<Length>> const& rect, Vec2Au const& relativeTo) {
-    return {
-        Vaev::Layout::resolve(rect.x, relativeTo.x),
-        Vaev::Layout::resolve(rect.y, relativeTo.y),
-        Vaev::Layout::resolve(rect.width, relativeTo.x),
-        Vaev::Layout::resolve(rect.height, relativeTo.y)
-    };
-}
-
-// MARK: Circle ----------------------------------------------------------------------------
-
-template <typename T>
-struct SvgCircle {
-    T cx;
-    T cy;
-    T r;
-
-    template <typename U>
-    SvgCircle<U> cast() const {
-        return {
-            static_cast<U>(cx),
-            static_cast<U>(cy),
-            static_cast<U>(r),
-        };
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(Circle {} {} {})", cx, cy, r);
-    }
-};
-
-Rc<Scene::Node> circleToSceneNode(SvgCircle<f64> circle, Opt<Gfx::Fill> fill, Opt<Gfx::Stroke> stroke) {
-    Math::Path path;
-    path.ellipse(Math::Ellipse{circle.cx, circle.cy, circle.r});
-    return makeRc<Scene::Shape>(path, stroke, fill);
-}
-
-SvgCircle<PercentOr<Length>> buildCircle(Style::ComputedValues const& style) {
-    return {
-        style.svg->cx,
-        style.svg->cy,
-        style.svg->r,
-    };
-}
-
-SvgCircle<Au> resolve(SvgCircle<PercentOr<Length>> const& circle, Vec2Au const& relativeTo) {
-    return {
-        Vaev::Layout::resolve(circle.cx, relativeTo.x),
-        Vaev::Layout::resolve(circle.cy, relativeTo.y),
-        Vaev::Layout::resolve(circle.r, relativeTo.x),
-    };
-}
-
-// MARK: Path ----------------------------------------------------------------------------
-
-// https://svgwg.org/svg2-draft/paths.html
-Rc<Math::Path> buildPath(Style::ComputedValues const& style) {
-    if (auto d = style.svg->d.is<String>())
-        return Karm::makeRc<Math::Path>(Math::Path::fromSvg(*d));
-    return Karm::makeRc<Math::Path>(Math::Path{});
-}
-
-// MARK: Shape ----------------------------------------------------------------------------
-
-// https://svgwg.org/svg2-draft/shapes.html#TermShapeElement
-
-struct SvgShapeBox {
-    enum struct Type {
-        RECT,
-        CIRCLE,
-        PATH
-    };
-
-    Type type;
-    Rc<Style::ComputedValues> style;
-
-    static Type _getTypeFromTag(Dom::QualifiedName name) {
-        if (name == Svg::PATH_TAG) {
-            return Type::PATH;
-        } else if (name == Svg::CIRCLE_TAG) {
-            return Type::CIRCLE;
-        } else if (name == Svg::RECT_TAG) {
-            return Type::RECT;
-        }
-        unreachable();
-    }
-
-    static SvgShapeBox build(Rc<Style::ComputedValues> style, Dom::QualifiedName tagName) {
-        return {
-            _getTypeFromTag(tagName),
-            style,
-        };
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(Shape {})", type);
-    }
-};
-
-template <typename T>
-using _Shape = Union<SvgRectangle<T>, SvgCircle<T>, Rc<Math::Path>>;
-
-struct SvgFrag {
-    virtual ~SvgFrag() = default;
-    virtual RectAu objectBoundingBox() = 0;
-    virtual RectAu strokeBoundingBox() = 0;
-    virtual Style::ComputedValues const& style() = 0;
-};
-
-struct SvgShapeFrag : SvgFrag {
-    _Shape<Au> shape;
-    Karm::Cursor<SvgShapeBox> box;
-    Au strokeWidth;
-
-    SvgShapeFrag(_Shape<Au> shape, Cursor<SvgShapeBox> box, Au strokeWidth)
-        : shape(shape), box(box), strokeWidth(strokeWidth) {}
-
-    static SvgShapeFrag fromShape(SvgShapeBox const& shape, Vec2Au relativeTo) {
-        Au resolvedStrokeWidth = Vaev::Layout::resolve(shape.style->svg->strokeWidth, normalizedDiagonal(relativeTo));
-
-        switch (shape.type) {
-        case SvgShapeBox::Type::RECT: {
-            return {
-                resolve(buildRectangle(*shape.style), relativeTo),
-                &shape,
-                resolvedStrokeWidth,
-            };
-        }
-        case SvgShapeBox::Type::CIRCLE: {
-            return {
-                resolve(buildCircle(*shape.style), relativeTo),
-                &shape,
-                resolvedStrokeWidth,
-            };
-        }
-        case SvgShapeBox::Type::PATH: {
-            return {
-                buildPath(*shape.style),
-                &shape,
-                resolvedStrokeWidth,
-            };
-        }
-        }
-        unreachable();
-    }
-
-    Opt<Gfx::Stroke> _resolveStroke(SvgProps const& style) const {
-        Opt<Gfx::Color> color = style.stroke;
-        if (not color)
-            return NONE;
-
-        if (Math::epsilonEq(style.strokeOpacity, 0.))
-            return NONE;
-
-        color = color->withOpacity(style.strokeOpacity);
-
-        if (strokeWidth == 0_au)
-            return NONE;
-
-        return Gfx::Stroke{*color, static_cast<f64>(strokeWidth)};
-    }
-
-    Rc<Scene::Node> toSceneNode() const {
-        auto const& style = *box->style->svg;
-
-        Opt<Gfx::Color> resolvedFill = style.fill.map([&](auto fill) {
-            return fill.withOpacity(style.fillOpacity);
-        });
-
-        Opt<Gfx::Stroke> resolvedStroke = _resolveStroke(style);
-
-        if (auto rect = shape.is<SvgRectangle<Au>>()) {
-            return rectToSceneNode(rect->cast<f64>(), resolvedFill, resolvedStroke);
-        } else if (auto circle = shape.is<SvgCircle<Au>>()) {
-            return circleToSceneNode(circle->cast<f64>(), resolvedFill, resolvedStroke);
-        } else if (auto path = shape.is<Rc<Math::Path>>()) {
-            return makeRc<Scene::Shape>(*(*path), resolvedStroke, resolvedFill);
-        };
-        unreachable();
-    }
-
-    RectAu objectBoundingBox() override {
-        if (auto rect = shape.is<SvgRectangle<Au>>()) {
-            return rect->toRect();
-        } else if (auto circle = shape.is<SvgCircle<Au>>()) {
-            Math::Path path;
-            path.ellipse(Math::Ellipse{circle->cx, circle->cy, circle->r}.cast<f64>());
-            return path.bound().cast<Au>();
-        } else if (auto path = shape.is<Rc<Math::Path>>()) {
-            return (*path)->bound().cast<Au>();
-        };
-        unreachable();
-    }
-
-    RectAu strokeBoundingBox() override {
-        return objectBoundingBox().grow((Au)(strokeWidth / 2_au));
-    }
-
-    Style::ComputedValues const& style() override {
-        return *box->style;
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(ShapeFrag {} {})", shape, strokeWidth);
-    }
-};
-
 // MARK: Root ----------------------------------------------------------------------------
 
-// https://svgwg.org/svg2-draft/coords.html#ComputingAViewportsTransform
-Math::Trans2f computeEquivalentTransformOfSVGViewport(SvgViewBox const& vb, Vec2Au const& position, Vec2Au const& size) {
-    // 1. Let vb-x, vb-y, vb-width, vb-height be the min-x, min-y, width and height values of the viewBox attribute
-    // respectively.
-    // 2. Let e-x, e-y, e-width, e-height be the position and size of the element respectively.
+struct SvgFormatingContext : FormatingContext {
+    // https://svgwg.org/svg2-draft/coords.html#SizingSVGInCSS
+    Opt<Number> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, Size const& width, Size const& height) {
+        // FIXME: again this should be targetted by the styling computation refactoring,
+        // where Size will be resolved to a mix between Percent and Lengths
+        auto absoluteValue = [](Size size) -> Opt<Length> {
+            if (not size.is<CalcValue<PercentOr<Length>>>())
+                return NONE;
 
-    // 3. Let align be the align value of preserveAspectRatio, or 'xMidYMid' if preserveAspectRatio is not defined.
-    // FIXME: preserveAspectRatio still not implemented
-    Opt<SvgAlignAxis> align{SvgAlignAxis{SvgAlignAxis::MID, SvgAlignAxis::MID}};
+            auto calc = size.unwrap<CalcValue<PercentOr<Length>>>();
 
-    // 4. Let meetOrSlice be the meetOrSlice value of preserveAspectRatio, or 'meet' if preserveAspectRatio is not
-    // defined or if meetOrSlice is missing from this value.
-    // FIXME: preserveAspectRatio still not implemented
-    SvgMeetOrSlice meetOrSlice{SvgMeetOrSlice::MEET};
+            auto percOrLength = extractValueFromCalc(calc);
+            if (not percOrLength)
+                return NONE;
 
-    // 5. Initialize scale-x to e-width/vb-width.
-    f64 scaleX = (f64)size.x / vb.width;
+            if (percOrLength->is<Percent>())
+                return NONE;
 
-    // 6. Initialize scale-y to e-height/vb-height.
-    f64 scaleY = (f64)size.y / vb.height;
+            return percOrLength->unwrap<Length>();
+        };
 
-    // 7. If align is not 'none' and meetOrSlice is 'meet', set the larger of scale-x and scale-y to the smaller.
-    // 8. Otherwise, if align is not 'none' and meetOrSlice is 'slice', set the smaller of scale-x and scale-y to
-    // the larger.
-    if (align != NONE and meetOrSlice == SvgMeetOrSlice::MEET) {
-        scaleY = scaleX = min(scaleX, scaleY);
-    } else if (align != NONE and meetOrSlice == SvgMeetOrSlice::SLICE) {
-        scaleY = scaleX = max(scaleX, scaleY);
+        auto absWidth = absoluteValue(width);
+        auto absHeight = absoluteValue(height);
+
+        // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
+        if (absWidth and absHeight)
+            return absWidth->val() / absHeight->val();
+
+        // 2. If an SVG View is active:
+        // TODO
+
+        // 3. If the ‘viewBox’ on the ‘svg’ element is correctly specified:
+        if (vb)
+            return (f64)vb->width / vb->height;
+
+        return NONE;
     }
 
-    // 9. Initialize translate-x to e-x - (vb-x * scale-x).
-    f64 translateX = (f64)position.x - (vb.minX * scaleX);
+    Vec2Au _resolvePercentageRelative(Opt<SvgViewBox> const& viewbox, SvgRootFrag& svgFrag) {
+        // https://svgwg.org/svg2-draft/coords.html#Units
+        // SPEC: For <percentage> values that are defined to be relative to the size of SVG viewport:
+        // the value to use must be the percentage, in user units, of the * parameter of the ‘viewBox’ applied to that
+        // viewport. If no ‘viewBox’ is specified, then the value to use must be the percentage, in user units, of the
+        // * of the SVG viewport.
+        return viewbox
+                   ? Vec2Au{Au{viewbox->width}, Au{viewbox->height}}
+                   : svgFrag
+                         .transf.inverse()
+                         .applyVector(
+                             Vec2Au{
+                                 svgFrag.boundingBox.width,
+                                 svgFrag.boundingBox.height,
+                             }
+                                 .cast<f64>()
+                         )
+                         .cast<Au>();
+    }
 
-    // 10. Initialize translate-y to e-y - (vb-y * scale-y)
-    f64 translateY = (f64)position.y - (vb.minY * scaleY);
+    // https://svgwg.org/svg2-draft/paths.html
+    static Rc<Math::Path> _resolveShape(Style::ComputedValues const& style) {
+        if (auto d = style.svg->d.is<String>())
+            return Karm::makeRc<Math::Path>(Math::Path::fromSvg(*d));
+        return Karm::makeRc<Math::Path>(Math::Path{});
+    }
 
-    if (align) {
-        // 11. If align contains 'xMid', add (e-width - vb-width * scale-x) / 2 to translate-x.
-        if (align->x == SvgAlignAxis::MID) {
-            translateX += ((f64)size.x - vb.width * scaleX) / 2;
+    static RectAu _resolveRectangle(Style::ComputedValues const& style, Vec2Au const& relativeTo) {
+        return {
+            Layout::resolve(style.svg->x, relativeTo.x),
+            Layout::resolve(style.svg->y, relativeTo.y),
+            Layout::resolve(fromSize(style.sizing->width), relativeTo.x),
+            Layout::resolve(fromSize(style.sizing->height), relativeTo.y)
+        };
+    }
+
+    static EllipseAu _resolveCircle(Style::ComputedValues const& style, Vec2Au const& relativeTo) {
+        return {
+            Vaev::Layout::resolve(style.svg->cx, relativeTo.x),
+            Vaev::Layout::resolve(style.svg->cy, relativeTo.y),
+            Vaev::Layout::resolve(style.svg->r, relativeTo.x),
+        };
+    }
+
+    static SvgShapeFrag _commitShape(Box& box, Vec2Au relativeTo) {
+        Au resolvedStrokeWidth = Vaev::Layout::resolve(box.style->svg->strokeWidth, normalizedDiagonal(relativeTo));
+        auto shape = box.content.unwrap<SvgShapeElement>();
+
+        switch (shape) {
+        case SvgShapeElement::RECT: {
+            return {
+                _resolveRectangle(*box.style, relativeTo),
+                box,
+                resolvedStrokeWidth,
+            };
+        }
+        case SvgShapeElement::CIRCLE: {
+            return {
+                _resolveCircle(*box.style, relativeTo),
+                box,
+                resolvedStrokeWidth,
+            };
+        }
+        case SvgShapeElement::PATH: {
+            return {
+                _resolveShape(*box.style),
+                box,
+                resolvedStrokeWidth,
+            };
         }
 
-        // 12. If align contains 'xMax', add (e-width - vb-width * scale-x) to translate-x.
-        if (align->x == SvgAlignAxis::MAX) {
-            translateX += ((f64)size.x - vb.width * scaleX);
-        }
-
-        // 13. If align contains 'yMid', add (e-height - vb-height * scale-y) / 2 to translate-y.
-        if (align->y == SvgAlignAxis::MID) {
-            translateY += ((f64)size.y - vb.height * scaleY) / 2;
-        }
-
-        // 14. If align contains 'yMax', add (e-height - vb-height * scale-y) to translate-y.
-        if (align->y == SvgAlignAxis::MAX) {
-            translateY += ((f64)size.y - vb.height * scaleY);
+        default:
+            unreachable();
         }
     }
 
-    return Math::Trans2f::translate({(f64)translateX, (f64)translateY}).scaled({(f64)scaleX, (f64)scaleY});
-}
+    SvgGroupFrag::Element _commitElement(Tree& tree, Box& box, Vec2Au resolveTo) {
+        if (box.content.is<SvgShapeElement>()) {
+            return _commitShape(box, resolveTo);
+        } else if (box.isSvgRootBox()) {
+            auto resolvedRect = _resolveRectangle(*box.style, resolveTo);
+            return _commitRoot(
+                tree,
+                box,
+                {resolvedRect.x, resolvedRect.y},
+                {resolvedRect.width, resolvedRect.height}
+            );
+        } else if (box.isSvgForeignObjectBox()) {
+            auto resolvedRect = _resolveRectangle(*box.style, resolveTo);
 
-// https://svgwg.org/svg2-draft/coords.html#SizingSVGInCSS
-Opt<Number> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, Size const& width, Size const& height) {
-    // FIXME: again this should be targetted by the styling computation refactoring,
-    // where Size will be resolved to a mix between Percent and Lengths
-    auto absoluteValue = [](Size size) -> Opt<Length> {
-        if (not size.is<CalcValue<PercentOr<Length>>>())
-            return NONE;
-
-        auto calc = size.unwrap<CalcValue<PercentOr<Length>>>();
-
-        auto percOrLength = extractValueFromCalc(calc);
-        if (not percOrLength)
-            return NONE;
-
-        if (percOrLength->is<Percent>())
-            return NONE;
-
-        return percOrLength->unwrap<Length>();
-    };
-
-    auto absWidth = absoluteValue(width);
-    auto absHeight = absoluteValue(height);
-
-    // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
-    if (absWidth and absHeight)
-        return absWidth->val() / absHeight->val();
-
-    // 2. If an SVG View is active:
-    // TODO
-
-    // 3. If the ‘viewBox’ on the ‘svg’ element is correctly specified:
-    if (vb) {
-        return (f64)vb->width / vb->height;
+            auto frag = Frag();
+            Input childInput{
+                .knownSize = {resolvedRect.width, resolvedRect.height},
+                .position = {resolvedRect.x, resolvedRect.y},
+            };
+            auto output = layoutAndCommitBorderBox(tree, box, childInput, frag, UsedSpacings{});
+            return makeBox<Frag>(std::move(frag.children()[0]));
+        } else if (box.isSvg()) {
+            SvgGroupFrag nestedGroupFrag{box};
+            _commitChildren(tree, box, nestedGroupFrag, resolveTo);
+            return nestedGroupFrag;
+        } else {
+            unreachable();
+        }
     }
 
-    return NONE;
+    void _commitChildren(Tree& tree, Box& group, SvgGroupFrag& groupFrag, Vec2Au resolveTo) {
+        for (auto& c : group.children())
+            groupFrag.add(_commitElement(tree, c, resolveTo));
+    }
+
+    // https://svgwg.org/svg2-draft/coords.html#ComputingAViewportsTransform
+    Math::Trans2f _computeEquivalentTransformOfSVGViewport(SvgViewBox const& vb, Vec2Au const& position, Vec2Au const& size) {
+        // 1. Let vb-x, vb-y, vb-width, vb-height be the min-x, min-y, width and height values of the viewBox attribute
+        // respectively.
+        // 2. Let e-x, e-y, e-width, e-height be the position and size of the element respectively.
+
+        // 3. Let align be the align value of preserveAspectRatio, or 'xMidYMid' if preserveAspectRatio is not defined.
+        // FIXME: preserveAspectRatio still not implemented
+        Opt<SvgAlignAxis> align{SvgAlignAxis{SvgAlignAxis::MID, SvgAlignAxis::MID}};
+
+        // 4. Let meetOrSlice be the meetOrSlice value of preserveAspectRatio, or 'meet' if preserveAspectRatio is not
+        // defined or if meetOrSlice is missing from this value.
+        // FIXME: preserveAspectRatio still not implemented
+        SvgMeetOrSlice meetOrSlice{SvgMeetOrSlice::MEET};
+
+        // 5. Initialize scale-x to e-width/vb-width.
+        f64 scaleX = (f64)size.x / vb.width;
+
+        // 6. Initialize scale-y to e-height/vb-height.
+        f64 scaleY = (f64)size.y / vb.height;
+
+        // 7. If align is not 'none' and meetOrSlice is 'meet', set the larger of scale-x and scale-y to the smaller.
+        // 8. Otherwise, if align is not 'none' and meetOrSlice is 'slice', set the smaller of scale-x and scale-y to
+        // the larger.
+        if (align != NONE and meetOrSlice == SvgMeetOrSlice::MEET) {
+            scaleY = scaleX = min(scaleX, scaleY);
+        } else if (align != NONE and meetOrSlice == SvgMeetOrSlice::SLICE) {
+            scaleY = scaleX = max(scaleX, scaleY);
+        }
+
+        // 9. Initialize translate-x to e-x - (vb-x * scale-x).
+        f64 translateX = (f64)position.x - (vb.minX * scaleX);
+
+        // 10. Initialize translate-y to e-y - (vb-y * scale-y)
+        f64 translateY = (f64)position.y - (vb.minY * scaleY);
+
+        if (align) {
+            // 11. If align contains 'xMid', add (e-width - vb-width * scale-x) / 2 to translate-x.
+            if (align->x == SvgAlignAxis::MID) {
+                translateX += ((f64)size.x - vb.width * scaleX) / 2;
+            }
+
+            // 12. If align contains 'xMax', add (e-width - vb-width * scale-x) to translate-x.
+            if (align->x == SvgAlignAxis::MAX) {
+                translateX += ((f64)size.x - vb.width * scaleX);
+            }
+
+            // 13. If align contains 'yMid', add (e-height - vb-height * scale-y) / 2 to translate-y.
+            if (align->y == SvgAlignAxis::MID) {
+                translateY += ((f64)size.y - vb.height * scaleY) / 2;
+            }
+
+            // 14. If align contains 'yMax', add (e-height - vb-height * scale-y) to translate-y.
+            if (align->y == SvgAlignAxis::MAX) {
+                translateY += ((f64)size.y - vb.height * scaleY);
+            }
+        }
+
+        return Math::Trans2f::translate({(f64)translateX, (f64)translateY}).scaled({(f64)scaleX, (f64)scaleY});
+    }
+
+    SvgRootFrag _commitRoot(Tree& tree, Box& box, Vec2Au position, Vec2Au size) {
+        auto viewbox = box.style->svg->viewBox;
+
+        Math::Trans2f trans = Math::Trans2f::translate(position.cast<f64>());
+        if (viewbox)
+            trans = _computeEquivalentTransformOfSVGViewport(*viewbox, position, size);
+
+        SvgRootFrag svgFrag = {
+            box,
+            trans,
+            {position, size},
+        };
+
+        _commitChildren(tree, box, svgFrag, _resolvePercentageRelative(viewbox, svgFrag));
+        return svgFrag;
+    }
+
+    // https://www.w3.org/TR/css-images-3/#default-sizing
+    // NOTE: not fully compliant
+    Vec2Au _defaultSizing(Math::Vec2<Opt<Au>> knownSize, Opt<f64> aspectRatio, Vec2Au defaultSize) {
+        if (knownSize.x and knownSize.y)
+            return {*knownSize.x, *knownSize.y};
+
+        Vec2Au size = defaultSize;
+        if (knownSize.x) {
+            size.x = *knownSize.x;
+            if (aspectRatio)
+                size.y = size.x / *aspectRatio;
+        } else if (knownSize.y) {
+            size.y = *knownSize.y;
+            if (aspectRatio)
+                size.x = size.y * *aspectRatio;
+        } else if (aspectRatio) {
+            size.y = size.x / *aspectRatio;
+        }
+
+        return size;
+    }
+
+    Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        auto aspectRatio = intrinsicAspectRatio(
+            box.style->svg->viewBox,
+            box.style->sizing->width,
+            box.style->sizing->height
+        );
+        auto size = _defaultSizing(input.knownSize, aspectRatio, input.containingBlock);
+
+        if (input.fragment) {
+            auto svgFrag = _commitRoot(tree, box, input.position, size);
+            svgFrag.computeBoundingBoxes();
+            input.fragment->content = svgFrag;
+        }
+
+        if (tree.fc.allowBreak() and
+            not tree.fc.acceptsFit(
+                input.position.y,
+                size.y,
+                input.pendingVerticalSizes
+            )) {
+            return {
+                .size = {},
+                .completelyLaidOut = false,
+                .breakpoint = Breakpoint::overflow(),
+                .firstBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
+                .lastBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
+            };
+        }
+
+        return {
+            .size = size,
+            .completelyLaidOut = true,
+            .firstBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
+            .lastBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
+        };
+    }
+};
+
+export Rc<FormatingContext> constructSvgFormatingContext(Box&) {
+    return makeRc<SvgFormatingContext>();
 }
 
 } // namespace Vaev::Layout
