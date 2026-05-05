@@ -161,7 +161,7 @@ export struct Value {
     }
 
     bool isBoolean() const {
-        return store.is<Boolean>();
+        return static_cast<bool>(store.is<Boolean>());
     }
 
     Boolean asBoolean() const {
@@ -169,7 +169,7 @@ export struct Value {
     }
 
     bool isString() const {
-        return store.is<String>();
+        return static_cast<bool>(store.is<String>());
     }
 
     String asString() const {
@@ -177,7 +177,7 @@ export struct Value {
     }
 
     bool isSymbol() const {
-        return store.is<Symbol>();
+        return static_cast<bool>(store.is<Symbol>());
     }
 
     Symbol asSymbol() const {
@@ -185,7 +185,7 @@ export struct Value {
     }
 
     bool isNumber() const {
-        return store.is<Number>();
+        return static_cast<bool>(store.is<Number>());
     }
 
     Number asNumber() const {
@@ -193,7 +193,7 @@ export struct Value {
     }
 
     Boolean isObject() const {
-        return store.is<Gc::Ref<Object>>();
+        return static_cast<Boolean>(store.is<Gc::Ref<Object>>());
     }
 
     Gc::Ref<Object> asObject() {

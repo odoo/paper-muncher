@@ -354,7 +354,7 @@ export struct Resolver {
             {
                 return Resolved<T>{v};
             }
-        };
+            };
 
         return calc.visit(
             [&](typename CalcValue<T>::Value const& v) {

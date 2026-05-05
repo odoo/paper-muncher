@@ -152,11 +152,78 @@ Rc<Scene::Node> _applyTransformIfNeeded(SvgFrag& svgFrag, RectAu viewBox, Rc<Sce
     return _applyTransform(transform, referenceBox, content);
 }
 
+Opt<Gfx::Stroke> _resolveStroke(SvgShapeFrag& frag, SvgProps const& style) {
+    Opt<Gfx::Color> color = style.stroke;
+    if (not color)
+        return NONE;
+
+    if (Math::epsilonEq(style.strokeOpacity, 0.))
+        return NONE;
+
+    color = color->withOpacity(style.strokeOpacity);
+
+    if (frag.strokeWidth == 0_au)
+        return NONE;
+
+    return Gfx::Stroke{*color, static_cast<f64>(frag.strokeWidth)};
+}
+
+Rc<Scene::Node> _paintSvgRectangle(Math::Rectf rect, Opt<Gfx::Fill> fill, Opt<Gfx::Stroke> const& stroke) {
+    Gfx::Borders borders;
+    if (stroke) {
+        borders = Gfx::Borders{
+            Math::Radiif{},
+            Math::Insetsf{stroke->width},
+            Array<Gfx::Fill, 4>::fill(stroke->fill),
+            Array<Gfx::BorderStyle, 4>::fill(Gfx::BorderStyle::SOLID),
+        };
+
+        // FIXME: needed due to mismatch between SVG's and Scene's box model
+        // svg's stroke's center is at the shape's edges
+        rect.width += stroke->width;
+        rect.height += stroke->width;
+        rect.x -= stroke->width / 2;
+        rect.y -= stroke->width / 2;
+    }
+
+    return makeRc<Scene::Box>(
+        Math::Rectf{rect.x, rect.y, rect.width, rect.height},
+        borders,
+        Gfx::Outline{},
+        fill ? Vec<Gfx::Fill>{fill.unwrap()} : Vec<Gfx::Fill>{}
+    );
+}
+
+Rc<Scene::Node> _paintSvgCircle(Math::Ellipsef circle, Opt<Gfx::Fill> fill, Opt<Gfx::Stroke> stroke) {
+    Math::Path path;
+    path.ellipse(circle);
+    return makeRc<Scene::Shape>(path, stroke, fill);
+}
+
+Rc<Scene::Node> _paintSvgShapeElement(SvgShapeFrag& frag) {
+    auto const& style = *frag.box->style->svg;
+
+    Opt<Gfx::Color> resolvedFill = style.fill.map([&](auto fill) {
+        return fill.withOpacity(style.fillOpacity);
+    });
+
+    Opt<Gfx::Stroke> resolvedStroke = _resolveStroke(frag, style);
+
+    if (auto rect = frag.shape.is<RectAu>()) {
+        return _paintSvgRectangle(rect->cast<f64>(), resolvedFill, resolvedStroke);
+    } else if (auto circle = frag.shape.is<EllipseAu>()) {
+        return _paintSvgCircle(circle->cast<f64>(), resolvedFill, resolvedStroke);
+    } else if (auto path = frag.shape.is<Rc<Math::Path>>()) {
+        return makeRc<Scene::Shape>(*(*path), resolvedStroke, resolvedFill);
+    };
+    unreachable();
+}
+
 Rc<Scene::Node> _paintSVGElement(SvgGroupFrag::Element& element, RectAu viewBox) {
     if (auto shape = element.is<SvgShapeFrag>()) {
         return _applyTransformIfNeeded(
             *shape, viewBox,
-            shape->toSceneNode()
+            _paintSvgShapeElement(*shape)
         );
     } else if (auto nestedGroup = element.is<SvgGroupFrag>()) {
         return _applyTransformIfNeeded(
@@ -168,7 +235,7 @@ Rc<Scene::Node> _paintSVGElement(SvgGroupFrag::Element& element, RectAu viewBox)
             *nestedRoot, viewBox,
             makeRc<Scene::Clip>(
                 _paintSVGRoot(*nestedRoot),
-                nestedRoot->boundingBox.toRect().cast<f64>()
+                nestedRoot->boundingBox.cast<f64>()
             )
         );
     } else if (auto foreignObject = element.is<::Box<Frag>>()) {
@@ -194,19 +261,17 @@ Rc<Scene::Stack> _paintSVGAggregate(SvgGroupFrag& group, RectAu viewBox) {
 }
 
 Rc<Scene::Node> _paintSVGRoot(SvgRootFrag& svgRoot) {
-    // FIXME: Ugly cast because we need to upcast, should be fixed once we unify SVGRootFrag with Frag
-    SvgRootBox const& rootBox = *static_cast<SvgRootBox const*>(svgRoot.box.buf());
+    auto rootBoxViewBox = svgRoot.box->style->svg->viewBox;
 
     // https://drafts.csswg.org/css-transforms/#transform-box
     // SPEC: The reference box is positioned at the origin of the coordinate system established
     // by the viewBox attribute.
-    // NOTE: Origin here was interpreted as (0, 0) instead of (minX, minY).
     // NOTE: It is not clear whether '(SPEC) the nearest SVG viewport' includes the root's viewBox itself.
     // We assume it doesn't.
     RectAu viewBox =
-        rootBox.viewBox
-            ? Math::Rect<f64>{Math::Vec2<f64>{rootBox.viewBox->width, rootBox.viewBox->height}}.cast<Au>()
-            : svgRoot.boundingBox.toRect();
+        rootBoxViewBox
+            ? Math::Rectf{rootBoxViewBox->width, rootBoxViewBox->height}.cast<Au>()
+            : svgRoot.boundingBox;
 
     auto content = _paintSVGAggregate(svgRoot, viewBox);
     return makeRc<Scene::Transform>(content, svgRoot.transf);
@@ -220,8 +285,8 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack, Opt<UsedBorders> usedBor
 
     _paintFragBordersAndBackgrounds(frag, stack, usedBorders);
 
-    if (auto ic = frag.box->content.is<InlineBox>()) {
-        stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), ic->prose));
+    if (auto prose = frag.box->content.is<Rc<Gfx::Prose>>()) {
+        stack.add(makeRc<Scene::Text>(frag.metrics.contentBox().topStart().cast<f64>(), *prose));
     } else if (auto image = frag.box->content.is<Rc<Scene::Node>>()) {
         auto bound = (*image)->bound();
 
