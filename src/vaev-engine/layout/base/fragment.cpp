@@ -4,7 +4,6 @@ import Karm.Core;
 import Karm.Math;
 
 import :values.length;
-import :layout.svg;
 import :layout.box;
 
 using namespace Karm;
@@ -48,6 +47,47 @@ export struct Metrics {
 export struct Frag;
 struct SvgRootFrag;
 
+struct SvgFrag {
+    virtual ~SvgFrag() = default;
+    virtual RectAu objectBoundingBox() = 0;
+    virtual RectAu strokeBoundingBox() = 0;
+    virtual Style::ComputedValues const& style() = 0;
+};
+
+struct SvgShapeFrag : SvgFrag {
+    using _SvgShape = Union<RectAu, EllipseAu, Rc<Math::Path>>;
+    _SvgShape shape;
+    Opt<Box&> box;
+    Au strokeWidth;
+
+    SvgShapeFrag(_SvgShape shape, Opt<Box&> box, Au strokeWidth)
+        : shape(shape), box(box), strokeWidth(strokeWidth) {}
+
+    RectAu objectBoundingBox() override {
+        if (auto rect = shape.is<RectAu>()) {
+            return *rect;
+        } else if (auto circle = shape.is<EllipseAu>()) {
+            return circle->bound().cast<Au>();
+        } else if (auto path = shape.is<Rc<Math::Path>>()) {
+            return (*path)->bound().cast<Au>();
+        } else {
+            unreachable();
+        }
+    }
+
+    RectAu strokeBoundingBox() override {
+        return objectBoundingBox().grow(Au{strokeWidth / 2_au});
+    }
+
+    Style::ComputedValues const& style() override {
+        return *box->style;
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(ShapeFrag {} {})", shape, strokeWidth);
+    }
+};
+
 struct SvgGroupFrag : SvgFrag {
     using Element = Union<SvgShapeFrag, SvgRootFrag, Karm::Box<Frag>, SvgGroupFrag>;
 
@@ -55,10 +95,10 @@ struct SvgGroupFrag : SvgFrag {
     RectAu _objectBoundingBox{};
     RectAu _strokeBoundingBox{};
 
-    Cursor<SvgGroupBox> box;
+    Opt<Box const&> box;
 
-    SvgGroupFrag(Cursor<SvgGroupBox> group)
-        : box(group) {}
+    SvgGroupFrag(Opt<Box const&> box)
+        : box(box) {}
 
     void computeBoundingBoxes();
 
@@ -85,20 +125,10 @@ struct SvgRootFrag : SvgGroupFrag {
     // NOTE: SVG viewports have these intrinsic transformations; choosing to store these transforms is more compliant
     // and somewhat rendering-friendly but makes it harder to debug
     Math::Trans2f transf;
-    SvgRectangle<Au> boundingBox;
+    RectAu boundingBox;
 
-    SvgRootFrag(Cursor<SvgGroupBox> group, Math::Trans2f transf, SvgRectangle<Au> boundingBox)
-        : SvgGroupFrag(group), transf(transf), boundingBox(boundingBox) {
-    }
-
-    static SvgRootFrag build(SvgRootBox const& box, Vec2Au position, Vec2Au viewportSize) {
-        SvgRectangle<Au> rect{position.x, position.y, viewportSize.x, viewportSize.y};
-
-        Math::Trans2f transf =
-            box.viewBox ? computeEquivalentTransformOfSVGViewport(*box.viewBox, position, viewportSize)
-                        : Math::Trans2f::translate(position.cast<f64>());
-
-        return SvgRootFrag{&box, transf, rect};
+    SvgRootFrag(Opt<Box const&> box, Math::Trans2f transf, RectAu boundingBox)
+        : SvgGroupFrag(box), transf(transf), boundingBox(boundingBox) {
     }
 
     void repr(Io::Emit& e) const {

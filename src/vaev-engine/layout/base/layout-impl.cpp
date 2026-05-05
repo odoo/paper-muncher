@@ -24,9 +24,11 @@ namespace Vaev::Layout {
 static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     auto display = box.style->display;
 
-    if (box.isReplaced()) {
+    if (box.isSvg() and not box.isSvgForeignObjectBox()) {
+        return constructSvgFormatingContext(box);
+    } else if (box.isReplaced()) {
         return constructReplacedFormatingContext(box);
-    } else if (box.content.is<InlineBox>()) {
+    } else if (box.content.is<Rc<Gfx::Prose>>()) {
         return constructInlineFormatingContext(box);
     } else if (
         display == Display::FLOW or

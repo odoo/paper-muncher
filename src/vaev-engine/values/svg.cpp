@@ -58,6 +58,15 @@ export struct SvgViewBox {
     }
 };
 
+// https://svgwg.org/svg2-draft/shapes.html#TermShapeElement
+enum struct SvgShapeElement {
+    RECT,
+    CIRCLE,
+    PATH,
+
+    _LEN
+};
+
 export struct SvgProps {
     PercentOr<Length> x = Length{0_au};
     PercentOr<Length> y = Length{0_au};
