@@ -39,15 +39,16 @@ export struct Node : Tree<Node> {
     }
 
     template <typename T>
-    Gc::Ptr<T> is() const {
+    Gc::Ptr<T const> is() const {
         if (nodeType() != T::TYPE)
             return nullptr;
-        return {MOVE, static_cast<T*>(this)};
+        return {MOVE, static_cast<T const*>(this)};
     }
 
     Ref::Url baseURI();
 
     Gc::Ptr<Document> ownerDocument();
+    Gc::Ptr<Document const> ownerDocument() const;
 
     virtual void _repr(Io::Emit&) const {}
 

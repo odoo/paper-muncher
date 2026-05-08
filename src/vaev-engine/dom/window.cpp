@@ -22,7 +22,7 @@ namespace Vaev::Dom {
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#the-window-object
 export struct Window {
-    Gc::Heap _heap;
+    mutable Gc::Heap _heap;
     Rc<Http::Client> _client;
     Style::Media _media = Style::Media::defaultMedia();
 
@@ -108,7 +108,7 @@ export struct Window {
     }
 
     [[clang::coro_wrapper]]
-    Yield<Print::Page> print(Print::Settings const& settings) {
+    Yield<Print::Page> print(Print::Settings const& settings) const {
         return Driver::print(_heap, _document.upgrade(), settings);
     }
 };
