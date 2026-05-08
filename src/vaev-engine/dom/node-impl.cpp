@@ -24,6 +24,14 @@ Gc::Ptr<Document> Node::ownerDocument() {
     return nullptr;
 }
 
+// https://dom.spec.whatwg.org/#ref-for-dom-node-ownerdocument%E2%91%A0
+Gc::Ptr<Document const> Node::ownerDocument() const {
+    for (auto curr = parentNode(); curr; curr = curr->parentNode())
+        if (auto doc = curr->is<Document>())
+            return *doc;
+    return nullptr;
+}
+
 void Node::repr(Io::Emit& e) const {
     e("({}", nodeType());
     _repr(e);
