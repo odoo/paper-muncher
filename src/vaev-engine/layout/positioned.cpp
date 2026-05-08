@@ -18,44 +18,43 @@ Vec2Au _resolveOrigin(Vec2Au fragPosition, Vec2Au containingBlockOrigin, Positio
     }
 }
 
-export void layoutPositioned(Tree& tree, Frag& frag, RectAu containingBlock, Input input) {
-
+export void layoutPositioned(Tree& tree, Fragment& frag, RectAu containingBlock, Input input) {
+    auto& box = frag.originatingBox();
     auto& style = frag.style();
+    auto borderBox = frag.borderBox();
 
-    auto& metrics = frag.metrics;
-
-    if (frag.box->isRemovedFromFlow() or style.position == Keywords::RELATIVE) {
-        auto origin = _resolveOrigin(metrics.position, containingBlock.topStart(), style.position);
+    if (box.isRemovedFromFlow() or style.position == Keywords::RELATIVE) {
+        auto origin = _resolveOrigin(borderBox.xy, containingBlock.topStart(), style.position);
         auto relativeTo = style.position == Keywords::FIXED
                               ? tree.viewport.small
                               : containingBlock;
 
-        auto top = metrics.position.y;
-        auto start = metrics.position.x;
+        auto top = borderBox.top();
+        auto start = borderBox.start();
 
         auto topOffset = style.offsets->top;
         if (auto topOffsetCalc = topOffset.is<CalcValue<PercentOr<Length>>>()) {
-            top = origin.y + resolve(tree, *frag.box, *topOffsetCalc, relativeTo.height);
+            top = origin.y + resolve(tree, box, *topOffsetCalc, relativeTo.height);
         }
 
         auto startOffset = style.offsets->start;
         if (auto startOffsetCalc = startOffset.is<CalcValue<PercentOr<Length>>>()) {
-            start = origin.x + resolve(tree, *frag.box, *startOffsetCalc, relativeTo.width);
+            start = origin.x + resolve(tree, box, *startOffsetCalc, relativeTo.width);
         }
 
         auto endOffset = frag.style().offsets->end;
         if (auto endOffsetCalc = endOffset.is<CalcValue<PercentOr<Length>>>()) {
-            start = (origin.x + relativeTo.width) - resolve(tree, *frag.box, *endOffsetCalc, relativeTo.width) - metrics.borderSize.width;
+            start = (origin.x + relativeTo.width) - resolve(tree, box, *endOffsetCalc, relativeTo.width) - borderBox.width;
         }
 
-        Vec2Au newPositionOffset = Vec2Au{start, top} - metrics.position;
+        Vec2Au newPositionOffset = Vec2Au{start, top} - borderBox.xy;
         frag.offset(newPositionOffset);
 
-        containingBlock = metrics.contentBox();
+        containingBlock = frag.contentBox();
     }
 
     for (auto& c : frag.children()) {
-        layoutPositioned(tree, c, containingBlock, input);
+        layoutPositioned(tree, *c, containingBlock, input);
     }
 }
 

@@ -91,7 +91,7 @@ struct SvgFormatingContext : FormatingContext {
         return NONE;
     }
 
-    Vec2Au _resolvePercentageRelative(Opt<SvgViewBox> const& viewbox, SvgRootFrag& svgFrag) {
+    Vec2Au _resolvePercentageRelative(Opt<SvgViewBox> const& viewbox, SvgRootFragment& svgFrag) {
         // https://svgwg.org/svg2-draft/coords.html#Units
         // SPEC: For <percentage> values that are defined to be relative to the size of SVG viewport:
         // the value to use must be the percentage, in user units, of the * parameter of the ‘viewBox’ applied to that
@@ -100,7 +100,7 @@ struct SvgFormatingContext : FormatingContext {
         return viewbox
                    ? Vec2Au{Au{viewbox->width}, Au{viewbox->height}}
                    : svgFrag
-                         .transf.inverse()
+                         .transform.inverse()
                          .applyVector(
                              Vec2Au{
                                  svgFrag.boundingBox.width,
@@ -135,7 +135,7 @@ struct SvgFormatingContext : FormatingContext {
         };
     }
 
-    static SvgShapeFrag _commitShape(Box& box, Vec2Au relativeTo) {
+    static SvgShapeFragment _commitShape(Box& box, Vec2Au relativeTo) {
         Au resolvedStrokeWidth = Vaev::Layout::resolve(box.style->svg->strokeWidth, normalizedDiagonal(relativeTo));
         auto shape = box.content.unwrap<SvgShapeElement>();
 
@@ -167,7 +167,7 @@ struct SvgFormatingContext : FormatingContext {
         }
     }
 
-    SvgGroupFrag::Element _commitElement(Tree& tree, Box& box, Vec2Au resolveTo) {
+    SvgGroupFragment::Element _commitElement(Tree& tree, Box& box, Vec2Au resolveTo) {
         if (box.content.is<SvgShapeElement>()) {
             return _commitShape(box, resolveTo);
         } else if (box.isSvgRootBox()) {
@@ -181,15 +181,15 @@ struct SvgFormatingContext : FormatingContext {
         } else if (box.isSvgForeignObjectBox()) {
             auto resolvedRect = _resolveRectangle(*box.style, resolveTo);
 
-            auto frag = Frag();
+            auto frag = Fragment();
             Input childInput{
                 .knownSize = {resolvedRect.width, resolvedRect.height},
                 .position = {resolvedRect.x, resolvedRect.y},
             };
             auto output = layoutAndCommitBorderBox(tree, box, childInput, frag, UsedSpacings{});
-            return makeBox<Frag>(std::move(frag.children()[0]));
+            return makeBox<Fragment>(std::move(frag.children()[0]));
         } else if (box.isSvg()) {
-            SvgGroupFrag nestedGroupFrag{box};
+            SvgGroupFragment nestedGroupFrag{box};
             _commitChildren(tree, box, nestedGroupFrag, resolveTo);
             return nestedGroupFrag;
         } else {
@@ -197,7 +197,7 @@ struct SvgFormatingContext : FormatingContext {
         }
     }
 
-    void _commitChildren(Tree& tree, Box& group, SvgGroupFrag& groupFrag, Vec2Au resolveTo) {
+    void _commitChildren(Tree& tree, Box& group, SvgGroupFragment& groupFrag, Vec2Au resolveTo) {
         for (auto& c : group.children())
             groupFrag.add(_commitElement(tree, c, resolveTo));
     }
@@ -263,14 +263,14 @@ struct SvgFormatingContext : FormatingContext {
         return Math::Trans2f::translate({(f64)translateX, (f64)translateY}).scaled({(f64)scaleX, (f64)scaleY});
     }
 
-    SvgRootFrag _commitRoot(Tree& tree, Box& box, Vec2Au position, Vec2Au size) {
+    SvgRootFragment _commitRoot(Tree& tree, Box& box, Vec2Au position, Vec2Au size) {
         auto viewbox = box.style->svg->viewBox;
 
         Math::Trans2f trans = Math::Trans2f::translate(position.cast<f64>());
         if (viewbox)
             trans = _computeEquivalentTransformOfSVGViewport(*viewbox, position, size);
 
-        SvgRootFrag svgFrag = {
+        SvgRootFragment svgFrag = {
             box,
             trans,
             {position, size},
