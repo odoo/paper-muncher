@@ -10,6 +10,7 @@ import Karm.Logger;
 import :dom.document;
 import :dom.element;
 import :style.computed;
+import :style.cascaded;
 import :style.stylesheet;
 import :style.ruleIndex;
 
@@ -26,7 +27,7 @@ export struct Computer {
     // MARK: Cascading ---------------------------------------------------------
 
     void _evalRule(Rule const& rule, Page const& page, PageComputedValues& c) {
-        rule.visit(Visitor{
+        rule.visit(
             [&](PageRule const& r) {
                 if (r.match(page))
                     r.apply(_registeredPropertySet, c);
@@ -38,72 +39,8 @@ export struct Computer {
             },
             [&](auto const&) {
                 // Ignore other rule types
-            },
-        });
-    }
-
-    Rc<ComputedValues> _evalCascade(ComputedValues const& parentComputedValues, MatchingRules& matchingRules) {
-        // Sort origin and specificity
-        stableSort(
-            matchingRules,
-            [](auto const& a, auto const& b) {
-                if (a.v0->origin != b.v0->origin)
-                    return a.v0->origin <=> b.v0->origin;
-                return a.v1 <=> b.v1;
             }
         );
-
-        // Compute computed style
-        auto computedValues = _registeredPropertySet.inheritsComputedValues(parentComputedValues);
-        Vec<Rc<Property>> importantProps;
-
-        // HACK: Apply custom properties first
-        for (auto const& [styleRule, _] : matchingRules) {
-            for (auto& prop : styleRule->props) {
-                if (prop->isCustomProperty())
-                    prop->apply(parentComputedValues, *computedValues);
-            }
-        }
-
-        for (auto const& [styleRule, _] : matchingRules) {
-            for (auto& prop : styleRule->props) {
-                if (prop->isBogusProperty())
-                    continue;
-
-                if (prop->isCustomProperty())
-                    continue;
-
-                if (prop->important == Css::Important::YES) {
-                    importantProps.pushBack(prop);
-                    continue;
-                }
-
-                if (prop->isShorthandProperty()) {
-                    for (auto& longhand : prop->expandShorthand(_registeredPropertySet, parentComputedValues, *computedValues)) {
-                        longhand->apply(parentComputedValues, *computedValues);
-                    }
-                    continue;
-                }
-
-                prop->apply(parentComputedValues, *computedValues);
-            }
-        }
-
-        for (auto const& prop : importantProps) {
-            if (prop->isBogusProperty())
-                continue;
-
-            if (prop->isShorthandProperty()) {
-                for (auto& longhand : prop->expandShorthand(_registeredPropertySet, parentComputedValues, *computedValues)) {
-                    longhand->apply(parentComputedValues, *computedValues);
-                }
-                continue;
-            }
-
-            prop->apply(parentComputedValues, *computedValues);
-        }
-
-        return computedValues;
     }
 
     // MARK: Computing ---------------------------------------------------------
@@ -126,17 +63,16 @@ export struct Computer {
     }
 
     // https://www.w3.org/TR/css-cascade-4/#author-presentational-hint-origin
-    Vec<Rc<Property>> _considerPresentationalHint(Gc::Ref<Dom::Element> el) {
+    void _considerHtmlPresentationalHint(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
         if (el->namespaceUri() != Html::NAMESPACE)
-            return {};
+            return;
 
-        Vec<Rc<Property>> res;
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-fgcolor
         if (auto fgcolor = el->getAttribute(Html::FGCOLOR_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::COLOR, fgcolor.unwrap(), {}
                 ))
-                res.pushBack(property.take());
+                cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-bgcolor
@@ -144,7 +80,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::BACKGROUND_COLOR, bgcolor.unwrap(), {}
                 ))
-                res.pushBack(property.take());
+                cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
@@ -152,7 +88,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::WIDTH, width.unwrap(), {}
                 ))
-                res.pushBack(property.take());
+                cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
@@ -160,7 +96,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::HEIGHT, height.unwrap(), {}
                 ))
-                res.pushBack(property.take());
+                cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
@@ -168,10 +104,19 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::WIDTH, Io::format("{}ch", size), {}
                 ))
-                res.pushBack(property.take());
+                cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
+    }
 
-        return res;
+    void _considerInlineStyleAttribute(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
+        auto styleAttr = el->style();
+
+        auto declarations = _registeredPropertySet.parseDeclarations(
+            styleAttr ? *styleAttr : "",
+            RegisteredPropertySet::TOP_LEVEL
+        );
+        for (auto& decl : declarations)
+            cascadedValues.put(decl, Origin::INLINE, INLINE_SPEC);
     }
 
     static void _considerElementAttributes(ComputedValues& values, Gc::Ref<Dom::Element> el) {
@@ -208,7 +153,7 @@ export struct Computer {
     }
 
     // https://svgwg.org/specs/integration/#svg-css-sizing
-    void _applySVGElementSizingRules(Gc::Ref<Dom::Element> svgEl, Vec<Rc<Property>>& styleProps) {
+    void _applySvgElementSizingRules(Gc::Ref<Dom::Element> svgEl, CascadedValues& cascadedValues) {
         if (auto parentEl = svgEl->parentNode()->is<Dom::Element>()) {
             // **If we have an <svg> element inside a CSS context**
             if (parentEl->qualifiedName.ns == Svg::NAMESPACE)
@@ -222,77 +167,60 @@ export struct Computer {
                 return;
 
             if (not svgEl->hasAttribute(Svg::WIDTH_ATTR))
-                styleProps.pushBack(
-                    _registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).unwrap()
+                cascadedValues.put(
+                    _registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).unwrap(),
+                    Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
                 );
 
             if (not svgEl->hasAttribute(Svg::HEIGHT_ATTR))
-                styleProps.pushBack(
-                    _registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).unwrap()
+                cascadedValues.put(
+                    _registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).unwrap(),
+                    Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
                 );
         }
     }
 
     // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
-    Vec<Rc<Property>> _considerPresentationAttributes(Gc::Ref<Dom::Element> el) {
-        if (el->qualifiedName.ns != Svg::NAMESPACE)
-            return {};
+    void _considerSvgPresentationAttributes(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
+        // Presentation attributes contribute to the author level of the cascade, followed by all other author-level
+        // style sheets, and have specificity 0.
 
-        Vec<Rc<Property>> styleProps;
-        for (auto [attr, attrValue] : el->attributes.iterItems()) {
-            if (auto property = _registeredPropertySet.parsePresentationAttribute(attr.name, attrValue->value)) {
-                styleProps.pushBack(property.take());
-            }
-        }
+        if (el->qualifiedName.ns != Svg::NAMESPACE)
+            return;
+
+        for (auto [attr, attrValue] : el->attributes.iterItems())
+            if (auto property = _registeredPropertySet.parsePresentationAttribute(attr.name, attrValue->value))
+                cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
 
         if (el->qualifiedName == Svg::SVG_TAG)
-            _applySVGElementSizingRules(el, styleProps);
-
-        return styleProps;
+            _applySvgElementSizingRules(el, cascadedValues);
     }
 
     // https://drafts.csswg.org/css-cascade/#cascade-origin
-    Rc<ComputedValues> computeFor(ComputedValues const& parent, Gc::Ref<Dom::Element> el) {
-        MatchingRules matchingRules = _ruleIndex.match(el, NONE);
+    Rc<ComputedValues> computeFor(ComputedValues const& parentComputedValues, Gc::Ref<Dom::Element> el) {
+        MatchingRules const matchingRules = _ruleIndex.match(el, NONE);
+        CascadedValues cascadedValues;
+        for (auto const& [styleRule, specificity] : matchingRules)
+            for (auto& prop : styleRule->props)
+                cascadedValues.put(prop, styleRule->origin, specificity);
 
-        // Non-CSS Presentational Hints
-        auto hints = _considerPresentationalHint(el);
-        StyleRule presentationHints{
-            .props = std::move(hints),
-            .origin = Origin::AUTHOR,
-        };
-        matchingRules.pushBack({&presentationHints, PRESENTATION_HINT_SPEC});
-
-        // Get the style attribute if any
-        auto styleAttr = el->style();
-        StyleRule styleRule{
-            .props = _registeredPropertySet.parseDeclarations(
-                styleAttr ? *styleAttr : "",
-                RegisteredPropertySet::TOP_LEVEL
-            ),
-            .origin = Origin::INLINE,
-        };
-        matchingRules.pushBack({&styleRule, INLINE_SPEC});
-
-        // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
-        // Presentation attributes contribute to the author level of the cascade, followed by all other author-level
-        // style sheets, and have specificity 0.
-        StyleRule presentationAttributes{
-            .props = _considerPresentationAttributes(el),
-            .origin = Origin::AUTHOR,
-        };
-        matchingRules.pushBack({&presentationAttributes, PRESENTATION_ATTR_SPEC});
-
-        auto values = _evalCascade(parent, matchingRules);
-
+        _considerHtmlPresentationalHint(el, cascadedValues);
+        _considerInlineStyleAttribute(el, cascadedValues);
+        _considerSvgPresentationAttributes(el, cascadedValues);
+        auto values = cascadedValues.apply(parentComputedValues, _registeredPropertySet);
         _considerElementAttributes(*values, el);
-
         return values;
     }
 
     Rc<ComputedValues> computeFor(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Symbol pseudoElement) {
         MatchingRules matchingRules = _ruleIndex.match(el, pseudoElement);
-        return _evalCascade(parent, matchingRules);
+
+        CascadedValues cascadedValues;
+        for (auto const& [styleRule, specificity] : matchingRules)
+            for (auto& prop : styleRule->props)
+                cascadedValues.put(prop, styleRule->origin, specificity);
+
+        return cascadedValues.apply(parent, _registeredPropertySet);
     }
 
     Rc<PageComputedValues> computeFor(ComputedValues const& parent, Page const& page) {
@@ -418,7 +346,7 @@ export struct Computer {
     }
 
     void _addRuleToLookup(Cursor<Rule> rule) {
-        rule->visit(Visitor{
+        rule->visit(
             [&](StyleRule const& r) {
                 _ruleIndex.add(r);
             },
@@ -429,8 +357,8 @@ export struct Computer {
             },
             [&](auto const&) {
                 // Ignore other rule types
-            },
-        });
+            }
+        );
     }
 };
 

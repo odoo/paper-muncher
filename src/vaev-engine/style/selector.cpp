@@ -1037,19 +1037,19 @@ export void unparse(Selector const& sel, Io::Emit& e) {
 // MARK: Selector Specificity --------------------------------------------------
 // https://www.w3.org/TR/selectors-3/#specificity
 
-export struct Spec {
+export struct Specificity {
     // a: The number of ID selectors in the selector.
     // b: The number of class selectors, attributes selectors, and pseudo-classes in the selector.
     // c: The number of type selectors and pseudo-elements in the selector.
     isize a, b, c;
 
-    static Spec const NOMATCH;
-    static Spec const ZERO, A, B, C;
+    static Specificity const NOMATCH;
+    static Specificity const ZERO, A, B, C;
 
-    Spec(isize a, isize b, isize c)
+    Specificity(isize a, isize b, isize c)
         : a(a), b(b), c(c) {}
 
-    Spec operator+(Spec const& other) const {
+    Specificity operator+(Specificity const& other) const {
         return {
             a + other.a,
             b + other.b,
@@ -1057,7 +1057,7 @@ export struct Spec {
         };
     }
 
-    Spec operator and(Spec const& other) const {
+    Specificity operator and(Specificity const& other) const {
         return {
             a + other.a,
             b + other.b,
@@ -1065,13 +1065,13 @@ export struct Spec {
         };
     }
 
-    Spec operator or(Spec const& other) const {
+    Specificity operator or(Specificity const& other) const {
         if (*this > other)
             return *this;
         return other;
     }
 
-    Spec operator not() const {
+    Specificity operator not() const {
         return {
             a,
             b,
@@ -1079,32 +1079,32 @@ export struct Spec {
         };
     }
 
-    bool operator==(Spec const& other) const = default;
-    auto operator<=>(Spec const& other) const = default;
+    bool operator==(Specificity const& other) const = default;
+    auto operator<=>(Specificity const& other) const = default;
 
     void repr(Io::Emit& e) const {
         e("{}-{}-{}", a, b, c);
     }
 };
 
-inline Spec const Spec::ZERO = {0, 0, 0};
-inline Spec const Spec::A = {1, 0, 0};
-inline Spec const Spec::B = {0, 1, 0};
-inline Spec const Spec::C = {0, 0, 1};
+inline Specificity const Specificity::ZERO = {0, 0, 0};
+inline Specificity const Specificity::A = {1, 0, 0};
+inline Specificity const Specificity::B = {0, 1, 0};
+inline Specificity const Specificity::C = {0, 0, 1};
 
-Spec const INLINE_SPEC = Spec::ZERO;
-Spec const PRESENTATION_ATTR_SPEC = Spec::ZERO;
-Spec const PRESENTATION_HINT_SPEC = Spec::ZERO;
+Specificity const INLINE_SPEC = Specificity::ZERO;
+Specificity const PRESENTATION_ATTR_SPEC = Specificity::ZERO;
+Specificity const PRESENTATION_HINT_SPEC = Specificity::ZERO;
 
 // https://www.w3.org/TR/selectors-4/#specificity-rules
-export Spec spec(Selector const& s) {
+export Specificity spec(Selector const& s) {
     return s.visit(Visitor{
         [](Nfix const& n) {
             // FIXME: missing other pseudo class selectors implemented as nfix
             if (n.type == Nfix::WHERE)
-                return Spec::ZERO;
+                return Specificity::ZERO;
 
-            Spec sum = Spec::ZERO;
+            Specificity sum = Specificity::ZERO;
             for (auto& inner : n.inners)
                 sum = sum + spec(inner);
             return sum;
@@ -1113,29 +1113,29 @@ export Spec spec(Selector const& s) {
             return spec(*i.lhs) + spec(*i.rhs);
         },
         [](EmptySelector const&) {
-            return Spec::ZERO;
+            return Specificity::ZERO;
         },
         [](IdSelector const&) {
-            return Spec::A;
+            return Specificity::A;
         },
         [](TypeSelector const& s) {
             if (s.qualifiedName.name)
-                return Spec::C;
+                return Specificity::C;
             else
-                return Spec::ZERO;
+                return Specificity::ZERO;
         },
         [](ClassSelector const&) {
-            return Spec::B;
+            return Specificity::B;
         },
         [](PseudoClassSelector const&) {
-            return Spec::B;
+            return Specificity::B;
         },
         [](AttributeSelector const&) {
-            return Spec::B;
+            return Specificity::B;
         },
         [](auto const& s) {
             logWarnIf(DEBUG_SELECTORS, "unimplemented selector: {}", s);
-            return Spec::ZERO;
+            return Specificity::ZERO;
         },
     });
 }

@@ -222,6 +222,8 @@ export RegisteredPropertySet const& defaultRegistry() {
         registry.registerProperty<FillOpacityProperty>();
         registry.registerProperty<StrokeWidthProperty>();
 
+        registry.resolvePropertyDependencies();
+
         return registry;
     }();
 

@@ -61,7 +61,7 @@ export struct StyleRule {
         return res;
     }
 
-    Opt<Spec> match(Gc::Ref<Dom::Element> element, Opt<Symbol> pseudoElement) const {
+    Opt<Specificity> match(Gc::Ref<Dom::Element> element, Opt<Symbol> pseudoElement) const {
         return matchSelector(selector, element, pseudoElement);
     }
 
@@ -328,6 +328,6 @@ void MediaRule::repr(Io::Emit& e) const {
     }
 }
 
-using MatchingRules = Vec<Tuple<Cursor<StyleRule>, Spec>>;
+using MatchingRules = Vec<Tuple<Cursor<StyleRule>, Specificity>>;
 
 } // namespace Vaev::Style

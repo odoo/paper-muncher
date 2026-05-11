@@ -11,6 +11,7 @@ export enum struct Origin : u8 {
     // NOTE: The order of these values is important
     USER_AGENT,
     USER,
+    AUTHOR_PRESENTATIONAL_HINT,
     AUTHOR,
     INLINE, //< Declarations from style attributes
 };
