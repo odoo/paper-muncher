@@ -40,14 +40,14 @@ export Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize in
 export Output layoutContentBox(Tree& tree, Box& box, Input input);
 
 // Fragment/commit wrapper for content box layout
-export Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings const& usedSpacings);
+export Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Fragment& parentFrag, UsedSpacings const& usedSpacings);
 
 // Border box wrappers for content box layout functions
 export Output layoutBorderBox(Tree& tree, Box& box, Input input, UsedSpacings const& usedSpacings);
-export Output layoutAndCommitBorderBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings const& usedSpacings);
+export Output layoutAndCommitBorderBox(Tree& tree, Box& box, Input input, Fragment& parentFrag, UsedSpacings const& usedSpacings);
 
 // Layout wrappers for root elements
 export Output layoutRoot(Tree& tree, Input input);
-export Tuple<Output, Frag> layoutAndCommitRoot(Tree& tree, Input input);
+export Tuple<Output, Fragment> layoutAndCommitRoot(Tree& tree, Input input);
 
 } // namespace Vaev::Layout

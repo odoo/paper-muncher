@@ -24,9 +24,11 @@ namespace Vaev::Layout {
 static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     auto display = box.style->display;
 
-    if (box.isReplaced()) {
+    if (box.isSvg() and not box.isSvgForeignObjectBox()) {
+        return constructSvgFormatingContext(box);
+    } else if (box.isReplaced()) {
         return constructReplacedFormatingContext(box);
-    } else if (box.content.is<InlineBox>()) {
+    } else if (box.content.is<Rc<Gfx::Prose>>()) {
         return constructInlineFormatingContext(box);
     } else if (
         display == Display::FLOW or
@@ -348,19 +350,19 @@ Output layoutBorderBox(Tree& tree, Box& box, Input input, UsedSpacings const& us
     return output;
 }
 
-Output layoutAndCommitBorderBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings const& usedSpacings) {
+Output layoutAndCommitBorderBox(Tree& tree, Box& box, Input input, Fragment& parentFrag, UsedSpacings const& usedSpacings) {
     input = _adaptToContentBox(input, usedSpacings);
     auto output = layoutAndCommitContentBox(tree, box, input, parentFrag, usedSpacings);
     output.size = output.size + usedSpacings.borders.all() + usedSpacings.padding.all();
     return output;
 }
 
-Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings const& usedSpacings) {
-    Frag currFrag{box};
+Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Fragment& parentFrag, UsedSpacings const& usedSpacings) {
+    Fragment currFrag{box};
 
     auto output = layoutContentBox(tree, box, input.withFragment(&currFrag));
 
-    currFrag.metrics = Metrics{
+    currFrag.metrics = BoxMetrics{
         .padding = usedSpacings.padding,
         .borders = usedSpacings.borders,
         .outlineOffset = resolve(tree, box, box.style->outline->offset),
@@ -399,8 +401,8 @@ Output layoutRoot(Tree& tree, Input input) {
     return output;
 }
 
-Tuple<Output, Frag> layoutAndCommitRoot(Tree& tree, Input input) {
-    auto parentFragOfRoot = Layout::Frag();
+Tuple<Output, Fragment> layoutAndCommitRoot(Tree& tree, Input input) {
+    auto parentFragOfRoot = Layout::Fragment();
 
     UsedSpacings usedSpacings{
         .padding = computePaddings(tree, tree.root, input.containingBlock),
