@@ -60,6 +60,7 @@ export struct Property : Meta::NoCopy {
     // https://drafts.css-houdini.org/css-properties-values-api/#custom-property-registration
     struct Registration : Meta::NoCopy {
         Opt<Weak<Registration>> _self;
+        Integer resolutionOrder = 0;
 
         Rc<Registration> self() const {
             return _self
@@ -71,6 +72,10 @@ export struct Property : Meta::NoCopy {
         virtual ~Registration() = default;
 
         virtual Symbol name() const = 0;
+
+        virtual Vec<Symbol> dependencies() const {
+            return {};
+        }
 
         // https://drafts.csswg.org/css-cascade-4/#legacy-name-alias
         virtual Vec<Symbol> legacyAlias() const {
@@ -179,6 +184,7 @@ struct CustomProperty : Property {
         Symbol _name;
 
         Registration(Symbol name) : _name(name) {
+            resolutionOrder = -1;
         }
 
         Symbol name() const override {
@@ -583,6 +589,48 @@ export struct RegisteredPropertySet {
 
     Opt<Rc<Property::Registration>> resolveRegistration(Str propertyName, Flags<Options> options) {
         return resolveRegistration(Symbol::from(propertyName), options);
+    }
+
+    void resolvePropertyDependencies() {
+        auto resolve = [&](this auto& self, Rc<Property::Registration>& reg, Set<Symbol>& visited) -> void {
+            if (reg->flags().has(Property::CUSTOM_PROPERTY)) {
+                reg->resolutionOrder = -1;
+                return;
+            }
+
+            if (visited.contains(reg->name())) {
+                logFatal("circular dependency detected: {}", visited);
+                return;
+            }
+
+            if (reg->resolutionOrder != 0)
+                return;
+
+            visited.add(reg->name());
+
+            Integer maxPriority = 0;
+
+            for (auto dep : reg->dependencies()) {
+                auto prop = this->resolveRegistration(dep, {});
+                if (not prop) {
+                    logFatal("unresolved dependency: {}", dep);
+                    return;
+                }
+
+                self(*prop, visited);
+
+                maxPriority = max(maxPriority, (*prop)->resolutionOrder);
+            }
+
+            reg->resolutionOrder = maxPriority + 1;
+            visited.remove(reg->name());
+        };
+
+        Set<Symbol> visited = {};
+        for (Rc<Property::Registration>& r : _registrations.mutIterValue()) {
+            if (r->resolutionOrder == 0)
+                resolve(r, visited);
+        }
     }
 
     // MARK: Initial -----------------------------------------------------------
