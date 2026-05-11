@@ -1,3 +1,7 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:values.insets;
 
 import Karm.Core;
@@ -25,7 +29,7 @@ export struct RunningPosition {
 export using Position = Union<Keywords::Static, Keywords::Relative, Keywords::Absolute, Keywords::Fixed, Keywords::Sticky, RunningPosition>;
 
 export template <>
-struct ValueParser<Position> {
+struct ValueTraits<Position> : DefaultValueTraits<Position> {
     // https://drafts.csswg.org/css-position-3/#propdef-position
     static Res<Position> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
@@ -66,7 +70,7 @@ export using Padding = Math::Insets<CalcValue<PercentOr<Length>>>;
 export using Offsets = Math::Insets<Width>;
 
 export template <typename T>
-struct ValueParser<Math::Insets<T>> {
+struct ValueTraits<Math::Insets<T>> {
     static Res<Math::Insets<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -95,13 +99,32 @@ export using Gap = Union<
     Keywords::Normal,
     CalcValue<PercentOr<Length>>>;
 
-export struct Gaps {
-    Gap row = Keywords::NORMAL;
-    Gap col = Keywords::NORMAL;
+export template <>
+struct ValueTraits<Gap> {
+    // Computed value: specified keyword, else a computed <length-percentage> value
+    using ComputedType = FlatUnion<Keywords::Normal, Computed<CalcValue<PercentOr<Length>>>>;
 
-    void repr(Io::Emit& e) const {
-        e("(gaps {} {})", row, col);
+    static Res<Gap> parse(Cursor<Css::Sst>& c) {
+        return parseOneOf<Gap>(c);
+    }
+
+    static ComputedType compute(Gap const& gap, ComputationContext const& ctx) {
+        return gap.visit([&](auto&& v) -> ComputedType {
+            return computeValue(v, ctx);
+        });
+    }
+
+    static Gap fromComputed(ComputedType const& computed) {
+        return computed.visit(Visitor{
+            [](Computed<CalcValue<PercentOr<Length>>> const& calc) -> Gap {
+                return valueFromComputed<CalcValue<PercentOr<Length>>>(calc);
+            },
+            [](auto&& val) -> Gap {
+                return val;
+            }
+        });
     }
 };
+
 
 } // namespace Vaev

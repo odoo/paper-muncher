@@ -53,7 +53,7 @@ export using Content = Union<
     Counter>;
 
 export template <>
-struct ValueParser<Content> {
+struct ValueTraits<Content> : DefaultValueTraits<Content> {
     // https://www.w3.org/TR/css-content-3/
     // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
     static Res<Content> parse(Cursor<Css::Sst>& c) {
@@ -84,13 +84,13 @@ struct ValueParser<Content> {
 };
 
 export template <>
-struct ValueParser<ElementContent> {
+struct ValueTraits<ElementContent> : DefaultValueTraits<ElementContent> {
     // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
     static Res<ElementContent> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        auto ident = ValueParser<CustomIdent>::parse(c);
+        auto ident = ValueTraits<CustomIdent>::parse(c);
 
         if (not ident) {
             return Error::invalidData("ill formed custom ident in content");
@@ -118,7 +118,7 @@ struct ValueParser<ElementContent> {
 };
 
 export template <>
-struct ValueParser<Counter> {
+struct ValueTraits<Counter> : DefaultValueTraits<Counter> {
     // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
     static Res<Counter> parse(Cursor<Css::Sst>& c) {
         if (c.ended())

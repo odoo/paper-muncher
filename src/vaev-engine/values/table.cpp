@@ -25,7 +25,7 @@ export enum struct TableLayout {
 };
 
 export template <>
-struct ValueParser<TableLayout> {
+struct ValueTraits<TableLayout> : DefaultValueTraits<TableLayout> {
     static Res<TableLayout> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -51,7 +51,7 @@ export enum struct CaptionSide {
 };
 
 export template <>
-struct ValueParser<CaptionSide> {
+struct ValueTraits<CaptionSide> : DefaultValueTraits<CaptionSide> {
     static Res<CaptionSide> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -75,7 +75,7 @@ export enum struct BorderCollapse {
 };
 
 export template <>
-struct ValueParser<BorderCollapse> {
+struct ValueTraits<BorderCollapse> : DefaultValueTraits<BorderCollapse> {
     static Res<BorderCollapse> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -102,7 +102,7 @@ export struct BorderSpacing {
 };
 
 export template <>
-struct ValueParser<BorderSpacing> {
+struct ValueTraits<BorderSpacing> : DefaultValueTraits<BorderSpacing> {
     static Res<BorderSpacing> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

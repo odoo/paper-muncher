@@ -238,13 +238,13 @@ export struct Resolver {
     Au resolve(LineWidth const& value) {
         return value.visit(Visitor{
             [](Keywords::Thin const&) {
-                return THIN_VALUE;
+                return 1_au;
             },
             [](Keywords::Medium const&) {
-                return MEDIUM_VALUE;
+                return 3_au;
             },
             [](Keywords::Thick const&) {
-                return THICK_VALUE;
+                return 5_au;
             },
             [&](auto const& length) {
                 return resolve(length);
