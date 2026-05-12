@@ -15,6 +15,9 @@
         "props",
         "style",
         "values",
+        "values/computed",
+        "values/specified",
+        "values/common",
         "xml"
     ],
     "requires": [

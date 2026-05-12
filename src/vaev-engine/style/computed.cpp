@@ -7,6 +7,8 @@ import Karm.Math;
 import :css;
 import :values;
 
+import :values.computed;
+
 using namespace Karm;
 
 namespace Vaev::Style {
@@ -42,7 +44,7 @@ export struct ComputedValues {
     Cow<ClipProps> clip;
     Cow<TransformProps> transform;
     Cow<TableProps> table;
-    Cow<FontProps> font;
+    Cow<Experimental::FontProps> font;
     Cow<TextProps> text;
     Cow<FlexProps> flex;
     Cow<BreakProps> break_;
@@ -65,7 +67,7 @@ export struct ComputedValues {
     Float float_ = Float::NONE;
     Clear clear = Clear::NONE;
     Visibility visibility;
-    WritingMode writingMode;
+    Experimental::WritingMode writingMode;
     Direction direction;
     Position position = Keywords::STATIC;
     BoxSizing boxSizing;
