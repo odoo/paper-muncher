@@ -44,7 +44,7 @@ struct Viewport : Ui::View<Viewport> {
             Layout::wireframe(*_window->ensureRender().frag, g);
 
         if (_props.selected)
-            Layout::overlay(*_window->ensureRender().frag, g, _props.selected.unwrap());
+            Layout::overlay(_window->scrollableOverflow().cast<f64>(), *_window->ensureRender().frag, g, _props.selected.unwrap());
 
         g.pop();
 
