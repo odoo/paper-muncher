@@ -26,15 +26,23 @@ export struct ChangeFilter {
     String filter;
 };
 
-export using InspectorAction = Union<ExpandNode, SelectNode, ChangeFilter>;
+export struct ToggleWireframe {
+};
+
+export using InspectorAction = Union<
+    ExpandNode,
+    SelectNode,
+    ChangeFilter,
+    ToggleWireframe>;
 
 export struct InspectState {
     String filter = ""s;
     Set<Gc::Ref<Dom::Node>> expandedNodes = {};
     Gc::Ptr<Dom::Node> selectedNode = nullptr;
+    bool wireframe = false;
 
     void apply(InspectorAction& a) {
-        a.visit(Visitor{
+        a.visit(
             [&](ExpandNode const& e) {
                 if (not expandedNodes.remove(e.node))
                     expandedNodes.add(e.node);
@@ -47,7 +55,10 @@ export struct InspectState {
             [&](ChangeFilter const& f) {
                 filter = f.filter;
             },
-        });
+            [&](ToggleWireframe const&) {
+                wireframe = not wireframe;
+            }
+        );
     }
 };
 

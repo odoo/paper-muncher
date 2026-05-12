@@ -11,163 +11,20 @@ import Karm.Ui;
 import Karm.Gfx;
 import Vaev.Engine;
 import Vaev.View;
-import :inspect;
 import :dialogs;
+import :model;
 
 using namespace Karm::Literals;
 using namespace Karm::Ref::Literals;
 
 namespace Vaev::Browser {
 
-enum struct SidePanel {
-    CLOSE,
-    DEVELOPER_TOOLS,
-};
-
-struct Navigate {
-    Ref::Url url;
-    Ref::Uti action = Ref::Uti::PUBLIC_OPEN;
-};
-
-enum struct Status {
-    LOADING,
-    LOADED,
-};
-
-struct Bookmark {
-    String name;
-    Ref::Url url;
-};
-
-struct State {
-    Status status = Status::LOADED;
-    Res<> loadingResult = Ok();
-    usize currentIndex = 0;
-    Vec<Navigate> history;
-    Rc<Dom::Window> window;
-    SidePanel sidePanel = SidePanel::CLOSE;
-    InspectState inspect = {};
-    bool wireframe = false;
-    String locationInput;
-    Vec<Bookmark> bookmarks;
-
-    State(Rc<Dom::Window> window)
-        : history{Navigate{window->location()}},
-          window{window},
-          locationInput(window->location().str()) {}
-
-    bool canGoBack() const {
-        return currentIndex > 0;
-    }
-
-    bool canGoForward() const {
-        return currentIndex < history.len() - 1;
-    }
-
-    Navigate const& currentUrl() const {
-        return history[currentIndex];
-    }
-};
-
-struct Reload {};
-
-struct Loaded {
-    Res<> result;
-};
-
-struct GoBack {};
-
-struct GoForward {};
-
-struct ToggleWireframe {};
-
-struct UpdateLocation {
-    String location;
-};
-
-struct NavigateLocation {
-};
-
-using Action = Union<
-    Reload,
-    Loaded,
-    GoBack,
-    GoForward,
-    ToggleWireframe,
-    SidePanel,
-    InspectorAction,
-    Navigate,
-    UpdateLocation,
-    NavigateLocation>;
-
-Async::_Task<Opt<Action>> navigateAsync(Rc<Dom::Window> window, Navigate nav, Async::CancellationToken ct) {
-    co_return Loaded{(co_await window->loadLocationAsync(nav.url, nav.action, ct))};
-}
-
-Ui::Task<Action> reduce(State& s, Action a) {
-    return a.visit(Visitor{
-        [&](Reload) -> Ui::Task<Action> {
-            if (s.status == Status::LOADING)
-                return NONE;
-            s.status = Status::LOADING;
-            return navigateAsync(s.window, s.currentUrl(), Async::CancellationToken::uninterruptible());
-        },
-        [&](Loaded l) -> Ui::Task<Action> {
-            s.status = Status::LOADED;
-            s.loadingResult = l.result;
-            s.locationInput = s.currentUrl().url.str();
-            return NONE;
-        },
-        [&](GoBack) -> Ui::Task<Action> {
-            s.currentIndex--;
-            return reduce(s, Reload{});
-        },
-        [&](GoForward) -> Ui::Task<Action> {
-            s.currentIndex++;
-            return reduce(s, Reload{});
-        },
-        [&](ToggleWireframe) -> Ui::Task<Action> {
-            s.wireframe = not s.wireframe;
-            return NONE;
-        },
-        [&](SidePanel p) -> Ui::Task<Action> {
-            if (s.sidePanel == p) {
-                s.sidePanel = SidePanel::CLOSE;
-            } else {
-                s.sidePanel = p;
-            }
-            return NONE;
-        },
-        [&](InspectorAction a) -> Ui::Task<Action> {
-            s.inspect.apply(a);
-            return NONE;
-        },
-        [&](Navigate n) -> Ui::Task<Action> {
-            s.history.trunc(s.currentIndex + 1);
-            s.history.pushBack(n);
-            s.currentIndex++;
-            return reduce(s, Reload{});
-        },
-        [&](UpdateLocation u) -> Ui::Task<Action> {
-            s.locationInput = u.location;
-            return NONE;
-        },
-        [&](NavigateLocation) -> Ui::Task<Action> {
-            return reduce(s, Navigate{Ref::Url::parse(s.locationInput)});
-        },
-    });
-
-    return NONE;
-}
-
-using Model = Ui::Model<State, Action, reduce>;
-
 #ifdef __ck_host__
 
-Ui::Child openInDefaultBrowser(State const& s) {
+Ui::Child openInDefaultBrowser(TabState const& s) {
     return Kr::contextMenuItem(
         [&](auto& n) {
-            auto url = s.currentUrl().url;
+            auto url = s.history.current().url;
             if (url.scheme != "http" and url.scheme != "https" and url.scheme != "file") {
                 Ui::showDialog(
                     n,
@@ -181,7 +38,7 @@ Ui::Child openInDefaultBrowser(State const& s) {
 
             auto res = Sys::launch({
                 .action = Ref::Uti::PUBLIC_OPEN,
-                .objects = {s.currentUrl().url},
+                .objects = {s.history.current().url},
             });
 
             if (not res)
@@ -199,7 +56,13 @@ Ui::Child openInDefaultBrowser(State const& s) {
 
 #endif
 
-Ui::Child mainMenu([[maybe_unused]] State const& s) {
+Ui::Child mainMenu([[maybe_unused]] TabState const& s, Ui::Send<TabAction> send) {
+    Opt<Ui::Send<>> printAction = NONE;
+    if (s.loadingResult)
+        printAction = [window = s.window](auto& n) {
+            Ui::showDialog(n, View::printDialog(window));
+        };
+
     return Kr::contextMenuContent({
         Kr::contextMenuItem(
             Ui::SINK<>,
@@ -207,22 +70,15 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
         ),
         Kr::separator(),
         Kr::contextMenuItem(
-            not s.loadingResult
-                ? Opt<Ui::Send<>>{NONE}
-                : [window = s.window](auto& n) {
-                      Ui::showDialog(
-                          n,
-                          View::printDialog(window)
-                      );
-                  },
+            printAction,
             Mdi::PRINTER, "Print..."
         ),
 #ifdef __ck_host__
         openInDefaultBrowser(s),
 #endif
         Kr::separator(),
-        Kr::contextMenuItem(Model::bind(SidePanel::DEVELOPER_TOOLS), Mdi::CODE_TAGS, "Developer Tools"),
-        Kr::contextMenuCheck(Model::bind<ToggleWireframe>(), s.wireframe, "Show wireframe"),
+        Kr::contextMenuItem(rbind(send, ToggleDeveloperMode{}), Mdi::CODE_TAGS, "Developer Tools"),
+        Kr::contextMenuCheck(rbind(send, ToggleWireframe{}), s.inspect.wireframe, "Show wireframe"),
         Kr::separator(),
         Kr::contextMenuItem(Ui::SINK<>, Mdi::COG, "Settings"),
     });
@@ -237,7 +93,7 @@ Ui::Child addressMenu() {
     });
 }
 
-Ui::Child reloadButton(State const& s) {
+Ui::Child reloadButton(TabState const& s, Ui::Send<TabAction> send) {
     return (
                s.status == Status::LOADING
                    ? Kr::progress()
@@ -246,55 +102,78 @@ Ui::Child reloadButton(State const& s) {
            Ui::insets(6) |
            Ui::center() |
            Ui::minSize({32, 32}) |
-           Ui::button(Model::bind<Reload>(), Ui::ButtonStyle::subtle());
+           Ui::button(rbind(send, Reload{}), Ui::ButtonStyle::subtle());
 }
 
-Ui::Child addressBar(State const& s) {
+Ui::Child addressBar(TabState const& s, Ui::Send<TabAction> send) {
+    Ui::Send<> showPopoverAction = [&](auto& n) {
+        Ui::showPopover(n, n.bound().bottomStart(), addressMenu());
+    };
+
+    Ui::Send<String> updateLocationAction = [send](auto& n, String text) {
+        send(n, UpdateLocation{text});
+    };
+
     return Ui::hflow(
                Ui::button(
-                   [&](auto& n) {
-                       Ui::showPopover(n, n.bound().bottomStart(), addressMenu());
-                   },
+                   showPopoverAction,
                    Ui::ButtonStyle::subtle(), Mdi::TUNE_VARIANT
                ),
-               Ui::input(Ui::TextStyles::labelMedium(), s.locationInput, Model::map<UpdateLocation>()) |
-                   Ui::vcenter() |
-                   Ui::hscroll() |
-                   Ui::grow()
+               Ui::input(
+                   Ui::TextStyles::labelMedium(),
+                   s.locationInput,
+                   updateLocationAction
+               ) | Ui::vcenter() |
+                   Ui::hscroll() | Ui::grow()
            ) |
            Ui::box({
                .padding = {0, 0, 0, 0},
                .borderRadii = 4,
                .backgroundFill = Ui::GRAY800,
            }) |
-           Ui::keyboardShortcut(App::Key::ENTER, Model::bind<NavigateLocation>()) |
+           Ui::keyboardShortcut(
+               App::Key::ENTER,
+               rbind(send, NavigateLocation{})
+           ) |
            Ui::focusable() |
            Ui::keyboardShortcut(App::Key::L, App::KeyMod::CTRL);
 }
 
-Ui::Child contextMenu(State const& s) {
+Ui::Child contextMenu(TabState const& s, Ui::Send<TabAction> send) {
+    Opt<Ui::Send<>> goBackAction = NONE;
+    if (s.history.canGoBack())
+        goBackAction = rbind(GoBack{});
+
+    Opt<Ui::Send<>> goForwardAction = NONE;
+    if (s.history.canGoForward())
+        goForwardAction = rbind(GoForward{});
+
+    Ui::Send<> viewSourceAction = rbind(
+        send,
+        Navigate{s.history.current().url, Ref::Uti::PUBLIC_MODIFY}
+    );
+
     return Kr::contextMenuContent({
         Kr::contextMenuDock({
-            Kr::contextMenuIcon(Model::bindIf<GoBack>(s.canGoBack()), Mdi::ARROW_LEFT),
-            Kr::contextMenuIcon(Model::bindIf<GoForward>(s.canGoForward()), Mdi::ARROW_RIGHT),
-            Kr::contextMenuIcon(Model::bind<Reload>(), Mdi::REFRESH),
+            Kr::contextMenuIcon(goBackAction, Mdi::ARROW_LEFT),
+            Kr::contextMenuIcon(goForwardAction, Mdi::ARROW_RIGHT),
+            Kr::contextMenuIcon(rbind(send, Reload{}), Mdi::REFRESH),
         }),
         Kr::separator(),
         Kr::contextMenuItem(
-            Model::bind<Navigate>(
-                s.currentUrl().url,
-                Ref::Uti::PUBLIC_MODIFY
-            ),
-            Mdi::CODE_TAGS, "View Source..."
+            viewSourceAction,
+            Mdi::CODE_TAGS,
+            "View Source..."
         ),
         Kr::contextMenuItem(
-            Model::bind(SidePanel::DEVELOPER_TOOLS),
-            Mdi::BUTTON_CURSOR, "Inspect"
+            rbind(send, ToggleDeveloperMode{}),
+            Mdi::BUTTON_CURSOR,
+            "Inspect"
         ),
     });
 }
 
-Ui::Child inspectorContent(State const& s) {
+Ui::Child inspectorContent(TabState const& s, Ui::Send<TabAction> send) {
     if (not s.loadingResult) {
         return Ui::labelMedium(Ui::GRAY500, "No document") |
                Ui::center();
@@ -303,8 +182,8 @@ Ui::Child inspectorContent(State const& s) {
     return Vaev::Browser::inspect(
         s.window,
         s.inspect,
-        [&](auto& n, auto a) {
-            Model::bubble(n, a);
+        [send](auto& n, auto a) {
+            send(n, a);
         }
     );
 }
@@ -317,7 +196,13 @@ Ui::Child bookmarkSidePanel(State const& s) {
 
     Ui::Children children;
     for (auto& bm : s.bookmarks) {
-        children.pushBack(Ui::button(Model::bind<Navigate>(bm.url), Mdi::BOOKMARK, bm.name));
+        children.pushBack(
+            Ui::button(
+                Model::bind<Navigate>(bm.url),
+                Mdi::BOOKMARK,
+                bm.name
+            )
+        );
     }
 
     return Ui::vflow(
@@ -327,34 +212,28 @@ Ui::Child bookmarkSidePanel(State const& s) {
            Ui::vscroll();
 }
 
-Ui::Child sidePanel(State const& s) {
-    switch (s.sidePanel) {
-    case SidePanel::DEVELOPER_TOOLS:
-        return Kr::sidePanelContent({
-            Kr::sidePanelTitle(Model::bind(SidePanel::CLOSE), "Developer Tools"),
-            Kr::separator(),
-            inspectorContent(s) | Ui::grow(),
-        });
-
-    default:
-        return Ui::empty();
-    }
+Ui::Child inspectorSidePanel(TabState const& s, Ui::Send<TabAction> send) {
+    return Kr::sidePanelContent({
+        Kr::sidePanelTitle(Model::bind<ToggleDeveloperMode>(), "Developer Tools"),
+        Kr::separator(),
+        inspectorContent(s, send) | Ui::grow(),
+    });
 }
 
-Ui::Child alert(State const& s, String title, String body) {
+Ui::Child alert(TabState const& s, String title, String body, Ui::Send<TabAction> send) {
     return Kr::errorPageContent({
         Kr::errorPageTitle(Mdi::GOOGLE_DOWNASAUR, title),
         Kr::errorPageBody(body),
         Kr::errorPageFooter({
-            Ui::button(Model::bindIf<GoBack>(s.canGoBack()), "Go Back"),
+            Ui::button(Model::bindIf<GoBack>(s.history.canGoBack()), "Go Back"),
             Ui::button(Model::bind<Reload>(), Ui::ButtonStyle::primary(), "Reload"),
         }),
     });
 }
 
-Ui::Child webview(State const& s) {
+Ui::Child webview(TabState const& s, Ui::Send<TabAction> send) {
     if (not s.loadingResult)
-        return alert(s, "The page could not be loaded"s, Io::toStr(s.loadingResult));
+        return alert(s, "The page could not be loaded"s, Io::toStr(s.loadingResult), send);
 
     Opt<Dom::OriginatingElement> selected = NONE;
     if (s.inspect.selectedNode) {
@@ -365,27 +244,29 @@ Ui::Child webview(State const& s) {
     return View::viewport(
                s.window,
                {
-                   .wireframe = s.wireframe,
+                   .wireframe = s.inspect.wireframe,
                    .selected = selected,
                }
            ) |
            Ui::box({
                .backgroundFill = Gfx::WHITE,
            }) |
-           Kr::contextMenu([&] {
-               return contextMenu(s);
+           Kr::contextMenu([&, send] {
+               return contextMenu(s, send);
            });
 }
 
-Ui::Child appContent(State const& s) {
-    auto wv = webview(s) | Kr::scaffoldContent();
-    if (s.sidePanel == SidePanel::CLOSE) {
+Ui::Child appContent(TabState const& s, Ui::Send<TabAction> send) {
+    auto wv = webview(s, send) | Kr::scaffoldContent();
+
+    if (not s.developerMode)
         return wv;
-    }
+
     return Ui::hflow(
-        wv |
-            Ui::grow(),
-        sidePanel(s) | Kr::resizable(Kr::ResizeHandle::START, {320}, NONE)
+        wv | Ui::grow(),
+        inspectorSidePanel(s, send) |
+            Kr::resizable(Kr::ResizeHandle::START, {320}, NONE) |
+            Kr::scaffoldContent()
     );
 }
 
@@ -404,21 +285,30 @@ export Ui::Child app(Rc<Dom::Window> window) {
                 .title = "Browser"s,
                 .startTools = [&] -> Ui::Children {
                     return {
-                        Ui::button(Model::bindIf<GoBack>(s.canGoBack()), Ui::ButtonStyle::subtle(), Mdi::ARROW_LEFT) | Ui::keyboardShortcut(App::Key::LEFT, App::KeyMod::ALT, Model::bind<GoBack>()) |
+                        Ui::button(
+                            Model::bindIf<GoBack>(s.tab.history.canGoBack()),
+                            Ui::ButtonStyle::subtle(),
+                            Mdi::ARROW_LEFT
+                        ) | Ui::keyboardShortcut(App::Key::LEFT, App::KeyMod::ALT, Model::bind<GoBack>()) |
                             Ui::keyboardShortcut(App::Key::LEFT, App::KeyMod::ALT),
-                        Ui::button(Model::bindIf<GoForward>(s.canGoForward()), Ui::ButtonStyle::subtle(), Mdi::ARROW_RIGHT) |
+                        Ui::button(
+                            Model::bindIf<GoForward>(
+                                s.tab.history.canGoForward()
+                            ),
+                            Ui::ButtonStyle::subtle(), Mdi::ARROW_RIGHT
+                        ) |
                             Ui::keyboardShortcut(App::Key::RIGHT, App::KeyMod::ALT),
-                        reloadButton(s),
+                        reloadButton(s.tab, Model::map<TabAction>()),
                     };
                 },
                 .middleTools = [&] -> Ui::Children {
-                    return {addressBar(s) | Ui::grow()};
+                    return {addressBar(s.tab, Model::map<TabAction>()) | Ui::grow()};
                 },
                 .endTools = [&] -> Ui::Children {
                     return {
                         Ui::button(
                             [&](Ui::Node& n) {
-                                Ui::showPopover(n, n.bound().bottomEnd(), mainMenu(s));
+                                Ui::showPopover(n, n.bound().bottomEnd(), mainMenu(s.tab, Model::map<TabAction>()));
                             },
                             Ui::ButtonStyle::subtle(),
                             Mdi::DOTS_HORIZONTAL
@@ -429,20 +319,19 @@ export Ui::Child app(Rc<Dom::Window> window) {
                     return Kr::sidenavContent({bookmarkSidePanel(s)});
                 },
                 .body = [&] {
-                    return appContent(s);
+                    return appContent(s.tab, Model::map<TabAction>());
                 },
             });
             return scaffold |
                    Ui::keyboardShortcut(App::Key::R, App::KeyMod::CTRL, Model::bind<Reload>()) |
                    Ui::keyboardShortcut(App::Key::F5, Model::bind<Reload>()) |
-                   Ui::keyboardShortcut(App::Key::F12, Model::bind(SidePanel::DEVELOPER_TOOLS)) |
+                   Ui::keyboardShortcut(App::Key::F12, Model::bind<ToggleDeveloperMode>()) |
                    Ui::keyboardShortcut(App::Key::P, App::KeyMod::CTRL, [&](auto& n) {
-                       if (not s.loadingResult)
+                       if (not s.tab.loadingResult)
                            return;
-
                        Ui::showDialog(
                            n,
-                           View::printDialog(s.window)
+                           View::printDialog(s.tab.window)
                        );
                    });
         }
