@@ -749,7 +749,7 @@ export void wireframe(Frag& frag, Gfx::Canvas& g) {
 
 // MARK: Overlay ---------------------------------------------------------------
 
-export void overlay(Frag& frag, Gfx::Canvas& g, Dom::OriginatingElement of) {
+export void overlay(Math::Rectf viewport, Frag& frag, Gfx::Canvas& g, Dom::OriginatingElement of) {
     if (frag.box->origin == of) {
         Gfx::Borders border;
 
@@ -772,12 +772,39 @@ export void overlay(Frag& frag, Gfx::Canvas& g, Dom::OriginatingElement of) {
         border.paint(g, frag.metrics.paddingBox().cast<f64>());
 
         // Content Box
+        auto contentBox = frag.metrics.contentBox().cast<f64>();
         g.fillStyle(Gfx::BLUE.withOpacity(0.5));
-        g.fill(frag.metrics.contentBox().cast<f64>());
+        g.fill(contentBox);
+
+        g.strokeStyle(Gfx::stroke(Gfx::CYAN).withDash({2, 2}));
+        g.stroke(Math::Edgef{
+            contentBox.start(),
+            viewport.top(),
+            contentBox.start(),
+            viewport.bottom(),
+        });
+        g.stroke(Math::Edgef{
+            contentBox.end(),
+            viewport.top(),
+            contentBox.end(),
+            viewport.bottom(),
+        });
+        g.stroke(Math::Edgef{
+            viewport.start(),
+            contentBox.top(),
+            viewport.end(),
+            contentBox.top(),
+        });
+        g.stroke(Math::Edgef{
+            viewport.start(),
+            contentBox.bottom(),
+            viewport.end(),
+            contentBox.bottom(),
+        });
     }
 
     for (auto& c : frag.children())
-        overlay(c, g, of);
+        overlay(viewport, c, g, of);
 }
 
 } // namespace Vaev::Layout
