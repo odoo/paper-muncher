@@ -688,7 +688,7 @@ static Array<Gfx::Color, static_cast<usize>(SystemColor::_LEN)> SYSTEM_COLOR = {
 export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor);
 
 export Gfx::Color resolve(Color const& c, Gfx::Color currentColor) {
-    return c.visit(Visitor{
+    return c.visit(
         [&](Gfx::Color const& srgb) {
             return srgb;
         },
@@ -700,8 +700,8 @@ export Gfx::Color resolve(Color const& c, Gfx::Color currentColor) {
         },
         [&](Box<ColorMix> const& mix) {
             return resolve(*mix, currentColor);
-        },
-    });
+        }
+    );
 }
 
 export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor) {

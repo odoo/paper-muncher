@@ -114,9 +114,9 @@ export struct HtmlLexer {
     }
 
     bool _isAppropriateEndTagToken() {
-        if (not _lastStartTag)
-            return false;
-        return _lastStartTag.unwrap().name == _builder.str();
+        if (auto const& [lastStartTag] = _lastStartTag)
+            return lastStartTag.name == _builder.str();
+        return false;
     }
 
     void _flushCodePointsConsumedAsACharacterReference(Io::Loc loc, Diag::Collector& diags) {

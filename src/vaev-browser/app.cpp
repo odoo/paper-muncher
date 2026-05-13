@@ -105,7 +105,7 @@ Async::_Task<Opt<Action>> navigateAsync(Rc<Dom::Window> window, Navigate nav, As
 }
 
 Ui::Task<Action> reduce(State& s, Action a) {
-    return a.visit(Visitor{
+    return a.visit(
         [&](Reload) -> Ui::Task<Action> {
             if (s.status == Status::LOADING)
                 return NONE;
@@ -154,8 +154,8 @@ Ui::Task<Action> reduce(State& s, Action a) {
         },
         [&](NavigateLocation) -> Ui::Task<Action> {
             return reduce(s, Navigate{Ref::Url::parse(s.locationInput)});
-        },
-    });
+        }
+    );
 
     return NONE;
 }

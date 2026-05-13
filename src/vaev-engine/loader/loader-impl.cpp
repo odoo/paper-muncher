@@ -58,7 +58,7 @@ Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::
 }
 
 void _evalFontfaceRules(Style::Rule const& rule, Vec<Style::FontFace>& fontFaces) {
-    rule.visit(Visitor{
+    rule.visit(
         [&](Style::FontFaceRule const& r) {
             auto& fontFace = fontFaces.emplaceBack();
             for (auto const& decl : r.descriptors)
@@ -66,8 +66,8 @@ void _evalFontfaceRules(Style::Rule const& rule, Vec<Style::FontFace>& fontFaces
         },
         [&](auto const&) {
             // Ignore other rule types
-        },
-    });
+        }
+    );
 }
 
 Async::Task<Rc<Gfx::Fontface>> _loadFontfaceAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct) {

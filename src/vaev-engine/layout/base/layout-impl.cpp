@@ -55,9 +55,9 @@ Output _contentLayout(Tree& tree, Box& box, Input input, usize startAt, Opt<usiz
         if (box.formatingContext)
             box.formatingContext.unwrap()->build(tree, box);
     }
-    if (not box.formatingContext)
-        return Output{};
-    return box.formatingContext.unwrap()->run(tree, box, input, startAt, stopAt);
+    if (auto& [formatingContext] = box.formatingContext) 
+        return formatingContext->run(tree, box, input, startAt, stopAt);
+    return Output{};
 }
 
 InsetsAu computeMargins(Tree& tree, Box& box, Input input) {
