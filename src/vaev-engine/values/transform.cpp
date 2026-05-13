@@ -73,7 +73,7 @@ struct ValueParser<TransformOrigin> {
         if (c.ended())
             return Error::invalidData("unexpected end of input after single value");
 
-        return singleValue.visit(Visitor{
+        return singleValue.visit(
             [&](Keywords::Center) -> Res<TransformOrigin> {
                 return Ok(TransformOrigin{
                     .xOffset = Keywords::CENTER,
@@ -112,8 +112,8 @@ struct ValueParser<TransformOrigin> {
                     .xOffset = std::move(value),
                     .yOffset = Keywords::CENTER, // default y-offset
                 });
-            },
-        });
+            }
+        );
     }
 };
 

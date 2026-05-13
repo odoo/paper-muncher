@@ -30,8 +30,8 @@ export struct InlineBox {
     void startInlineBox(Gfx::ProseStyle proseStyle) {
         // FIXME: ugly workaround while we dont fix the Prose data structure
         prose->pushSpan();
-        if (proseStyle.color)
-            prose->spanColor(proseStyle.color.unwrap());
+        if (auto const& [color] = proseStyle.color)
+            prose->spanColor(color);
     }
 
     void endInlineBox() {

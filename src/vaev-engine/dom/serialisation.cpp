@@ -107,9 +107,9 @@ export void serializeHtmlFragment(Gc::Ref<Node> node, Io::Emit& e) {
             }
 
             // - If current node has an is value not present as an attribute, append ' is="<escaped is value>"'.
-            if (auto isValue = el->getAttribute(Html::IS_ATTR)) {
+            if (auto const& [isValue] = el->getAttribute(Html::IS_ATTR)) {
                 e(" is=\"");
-                escapeString(e, isValue.unwrap(), true);
+                escapeString(e, isValue, true);
                 e("\"");
             }
             // - For each attribute:

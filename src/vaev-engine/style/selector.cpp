@@ -987,7 +987,7 @@ export struct Selector : _Selector {
 // MARK: Unparsing -------------------------------------------------------------
 
 export void unparse(Selector const& sel, Io::Emit& e) {
-    sel.visit(Visitor{
+    sel.visit(
         [&](Nfix const& s) {
             if (s.type == Nfix::OR) {
                 for (usize i = 0; i < s.inners.len(); i++) {
@@ -1030,8 +1030,8 @@ export void unparse(Selector const& sel, Io::Emit& e) {
         },
         [&](auto const& s) -> void {
             e("{}", s);
-        },
-    });
+        }
+    );
 }
 
 // MARK: Selector Specificity --------------------------------------------------
@@ -1098,7 +1098,7 @@ Specificity const PRESENTATION_HINT_SPEC = Specificity::ZERO;
 
 // https://www.w3.org/TR/selectors-4/#specificity-rules
 export Specificity spec(Selector const& s) {
-    return s.visit(Visitor{
+    return s.visit(
         [](Nfix const& n) {
             // FIXME: missing other pseudo class selectors implemented as nfix
             if (n.type == Nfix::WHERE)
@@ -1136,8 +1136,8 @@ export Specificity spec(Selector const& s) {
         [](auto const& s) {
             logWarnIf(DEBUG_SELECTORS, "unimplemented selector: {}", s);
             return Specificity::ZERO;
-        },
-    });
+        }
+    );
 }
 
 } // namespace Vaev::Style

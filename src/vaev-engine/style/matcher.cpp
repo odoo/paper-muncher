@@ -328,15 +328,17 @@ static bool _match(PseudoClassSelector const& selector, Gc::Ref<Dom::Element> el
 
 static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement) {
     // Route the selector to the appropriate matching function.
-    return selector.visit(Visitor{[&](auto const& s) {
-        if constexpr (requires { _match(s, element, pseudoElement); })
-            return _match(s, element, pseudoElement);
-        if constexpr (requires { _match(s, element); })
-            return _match(s, element);
+    return selector.visit(
+        [&](auto const& s) {
+            if constexpr (requires { _match(s, element, pseudoElement); })
+                return _match(s, element, pseudoElement);
+            if constexpr (requires { _match(s, element); })
+                return _match(s, element);
 
-        logWarnIf(debugMatching, "unimplemented selector: {}", s);
-        return false;
-    }});
+            logWarnIf(debugMatching, "unimplemented selector: {}", s);
+            return false;
+        }
+    );
 }
 
 export Opt<Specificity> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement = NONE) {

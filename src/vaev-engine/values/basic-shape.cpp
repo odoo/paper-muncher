@@ -40,14 +40,14 @@ export using FillRule = Union<
     Keywords::Evenodd>;
 
 export Gfx::FillRule fillRuleToGfx(FillRule rule) {
-    return rule.visit(Visitor{
+    return rule.visit(
         [](Keywords::Nonzero&) {
             return Gfx::FillRule::NONZERO;
         },
         [](Keywords::Evenodd&) {
             return Gfx::FillRule::EVENODD;
-        },
-    });
+        }
+    );
 }
 
 export using ShapeRadius = Union<

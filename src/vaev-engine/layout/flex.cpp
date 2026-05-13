@@ -275,14 +275,14 @@ struct FlexItem {
             return fa.mainAxis(box->style->sizing).unwrap<CalcValue<PercentOr<Length>>>();
         };
 
-        if (auto flexBasisDefiniteSize = getDefiniteFlexBasisSize(flexItemProps, fa, box)) {
+        if (auto const& [flexBasisDefiniteSize] = getDefiniteFlexBasisSize(flexItemProps, fa, box)) {
             // https://developer.mozilla.org/en-US/docs/Web/CSS/flex-basis#width
             // SPEC: If the flex container's size is indefinite, the used value for flex-basis is content.
-            if (not isPurePercentage(flexBasisDefiniteSize.unwrap()) or mainContainerSize) {
+            if (not isPurePercentage(flexBasisDefiniteSize) or mainContainerSize) {
                 flexBaseSize = resolve(
                     tree,
                     *box,
-                    flexBasisDefiniteSize.unwrap(),
+                    flexBasisDefiniteSize,
                     mainContainerSize.unwrapOr(0_au)
                 );
 

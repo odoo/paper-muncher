@@ -37,7 +37,7 @@ struct RuleIndex {
     Map<usize, usize> _ruleIdToNeededCount;
 
     void _add(Cursor<StyleRule> rule, usize ruleId, Selector const& selector) {
-        selector.visit(Visitor{
+        selector.visit(
             [&](TypeSelector const& s) {
                 auto const& qualifiedNameSelector = s.qualifiedName;
 
@@ -113,8 +113,8 @@ struct RuleIndex {
             },
             [&](auto const&) {
                 _nonLookupRules.pushBack({ruleId, rule});
-            },
-        });
+            }
+        );
     }
 
     void add(StyleRule const& rule) {

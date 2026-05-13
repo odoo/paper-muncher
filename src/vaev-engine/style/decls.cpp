@@ -52,13 +52,11 @@ Res<P> parseDeclaration(Css::Sst const& sst) {
     Res<P> resDecl = Error::invalidData("unknown declaration");
 
     P::any(
-        Visitor{
-            [&]<typename T>() -> bool {
-                if (sst.token != Css::Token::ident(T::name()))
-                    return false;
-                resDecl = _parseDeclaration<P, T>(sst);
-                return true;
-            }
+        [&]<typename T>() -> bool {
+            if (sst.token != Css::Token::ident(T::name()))
+                return false;
+            resDecl = _parseDeclaration<P, T>(sst);
+            return true;
         }
     );
 

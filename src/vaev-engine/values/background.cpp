@@ -110,7 +110,7 @@ struct ValueParser<BackgroundPosition> {
             BackgroundPosition::VerticalAnchor vAnchor = Keywords::TOP;
             CalcValue<PercentOr<Length>> vValue = {Percent(0)};
 
-            try$(items[0].visit(Visitor{
+            try$(items[0].visit(
                 [&](Meta::Contains<Keywords::Left, Keywords::Right, Keywords::Center> auto& t) -> Res<> {
                     hAnchor = t;
                     return Ok();
@@ -121,10 +121,10 @@ struct ValueParser<BackgroundPosition> {
                 },
                 [](auto&) -> Res<> {
                     return Error::invalidData("invalid horizontal anchor");
-                },
-            }));
+                }
+            ));
 
-            try$(items[1].visit(Visitor{
+            try$(items[1].visit(
                 [&](Meta::Contains<Keywords::Bottom, Keywords::Top, Keywords::Center> auto& t) -> Res<> {
                     vAnchor = t;
                     return Ok();
@@ -135,8 +135,8 @@ struct ValueParser<BackgroundPosition> {
                 },
                 [](auto&) -> Res<> {
                     return Error::invalidData("invalid vertical anchor");
-                },
-            }));
+                }
+            ));
 
             return Ok(BackgroundPosition(hAnchor, hValue, vAnchor, vValue));
         }
@@ -151,7 +151,7 @@ struct ValueParser<BackgroundPosition> {
 
         usize secondPairIndex = 2;
 
-        try$(items[0].visit(Visitor{
+        try$(items[0].visit(
             [&](Meta::Contains<Keywords::Left, Keywords::Right> auto& t) -> Res<> {
                 hAnchor = t;
                 hSet = true;
@@ -185,10 +185,10 @@ struct ValueParser<BackgroundPosition> {
             },
             [](auto&) -> Res<> {
                 return Error::invalidData("invalid anchor");
-            },
-        }));
+            }
+        ));
 
-        try$(items[secondPairIndex].visit(Visitor{
+        try$(items[secondPairIndex].visit(
             [&](Meta::Contains<Keywords::Left, Keywords::Right> auto& t) -> Res<> {
                 if (hSet) {
                     if (hAnchor.is<Keywords::Center>()) { // the first center was aimed at the vertical part so we exchange
@@ -226,8 +226,8 @@ struct ValueParser<BackgroundPosition> {
             },
             [](auto&) -> Res<> {
                 return Error::invalidData("invalid anchor");
-            },
-        }));
+            }
+        ));
 
         return Ok(BackgroundPosition(hAnchor, hValue, vAnchor, vValue));
     }
