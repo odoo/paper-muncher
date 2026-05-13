@@ -236,7 +236,7 @@ export struct Resolver {
     }
 
     Au resolve(LineWidth const& value) {
-        return value.visit(Visitor{
+        return value.visit(
             [](Keywords::Thin const&) {
                 return THIN_VALUE;
             },
@@ -248,8 +248,8 @@ export struct Resolver {
             },
             [&](auto const& length) {
                 return resolve(length);
-            },
-        });
+            }
+        );
     }
 
     Au resolve(PercentOr<Length> const& value, Au relative) {
@@ -354,9 +354,9 @@ export struct Resolver {
             {
                 return Resolved<T>{v};
             }
-            };
+        };
 
-        return calc.visit(Visitor{
+        return calc.visit(
             [&](typename CalcValue<T>::Value const& v) {
                 return v.visit(resolveUnion);
             },
@@ -372,8 +372,8 @@ export struct Resolver {
                     b.lhs.visit(resolveUnion),
                     b.rhs.visit(resolveUnion)
                 );
-            },
-        });
+            }
+        );
     }
 };
 

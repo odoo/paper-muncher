@@ -16,13 +16,11 @@ namespace Vaev::Layout {
 // SVG sizes shouldn't be defined using calc values
 Opt<PercentOr<Length>> extractValueFromCalc(CalcValue<PercentOr<Length>> const& size) {
     return size.visit(
-        Visitor{
-            [](CalcValue<PercentOr<Length>>::Value const& v) {
-                return Opt<PercentOr<Length>>{v.unwrap<PercentOr<Length>>()};
-            },
-            [](auto const) {
-                return Opt<PercentOr<Length>>{NONE};
-            },
+        [](CalcValue<PercentOr<Length>>::Value const& v) {
+            return Opt{v.unwrap<PercentOr<Length>>()};
+        },
+        [](auto const) {
+            return Opt<PercentOr<Length>>{NONE};
         }
     );
 }

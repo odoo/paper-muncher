@@ -34,7 +34,7 @@ export struct InspectState {
     Gc::Ptr<Dom::Node> selectedNode = nullptr;
 
     void apply(InspectorAction& a) {
-        a.visit(Visitor{
+        a.visit(
             [&](ExpandNode const& e) {
                 if (not expandedNodes.remove(e.node))
                     expandedNodes.add(e.node);
@@ -46,8 +46,8 @@ export struct InspectState {
             },
             [&](ChangeFilter const& f) {
                 filter = f.filter;
-            },
-        });
+            }
+        );
     }
 };
 

@@ -79,7 +79,7 @@ struct CalcValue {
     }
 
     auto visit(this auto& self, auto visitor) {
-        return self._inner.visit(Visitor{
+        return self._inner.visit(
             [&](Value const& v) {
                 return visitor(v);
             },
@@ -88,12 +88,16 @@ struct CalcValue {
             },
             [&](Box<Binary> const& b) {
                 return visitor(*b);
-            },
-        });
+            }
+        );
+    }
+
+    always_inline auto visit(this auto& self, auto&&... visitors) {
+        return self.visit(Visitor{std::forward<decltype(visitors)>(visitors)...});
     }
 
     void repr(Io::Emit& e) const {
-        visit(Visitor{
+        visit(
             [&](Value const& v) {
                 e("{}", v);
             },
@@ -102,8 +106,8 @@ struct CalcValue {
             },
             [&](Binary const& b) {
                 e("(calc {} {} {})", b.op, b.lhs, b.rhs);
-            },
-        });
+            }
+        );
     }
 };
 

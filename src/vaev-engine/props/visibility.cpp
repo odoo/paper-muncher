@@ -110,8 +110,8 @@ export struct ClipPathProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            if (c.clip->has())
-                return makeRc<ClipPathProperty>(self(), c.clip->unwrap());
+            if (auto const& [clip] = *c.clip)
+                return makeRc<ClipPathProperty>(self(), clip);
             return makeRc<ClipPathProperty>(self(), Keywords::NONE);
         }
 

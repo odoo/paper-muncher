@@ -52,12 +52,12 @@ export struct Computer {
         };
 
         for (auto family : style.font->families) {
-            if (auto font = _fontDatabase->queryClosest(family.name, fq))
-                return font.unwrap();
+            if (auto const& [font] = _fontDatabase->queryClosest(family.name, fq))
+                return font;
         }
 
-        if (auto font = _fontDatabase->queryClosest("system"_sym))
-            return font.unwrap();
+        if (auto const& [font] = _fontDatabase->queryClosest("system"_sym))
+            return font;
 
         return Gfx::Fontface::fallback();
     }
@@ -68,39 +68,39 @@ export struct Computer {
             return;
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-fgcolor
-        if (auto fgcolor = el->getAttribute(Html::FGCOLOR_ATTR)) {
+        if (auto const& [fgcolor] = el->getAttribute(Html::FGCOLOR_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(
-                    Properties::COLOR, fgcolor.unwrap(), {}
+                    Properties::COLOR, fgcolor, {}
                 ))
                 cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-bgcolor
-        if (auto bgcolor = el->getAttribute(Html::BGCOLOR_ATTR)) {
+        if (auto const& [bgcolor] = el->getAttribute(Html::BGCOLOR_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(
-                    Properties::BACKGROUND_COLOR, bgcolor.unwrap(), {}
+                    Properties::BACKGROUND_COLOR, bgcolor, {}
                 ))
                 cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
-        if (auto width = el->getAttribute(Html::WIDTH_ATTR)) {
+        if (auto const& [width] = el->getAttribute(Html::WIDTH_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(
-                    Properties::WIDTH, width.unwrap(), {}
+                    Properties::WIDTH, width, {}
                 ))
                 cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
-        if (auto height = el->getAttribute(Html::HEIGHT_ATTR)) {
+        if (auto const& [height] = el->getAttribute(Html::HEIGHT_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(
-                    Properties::HEIGHT, height.unwrap(), {}
+                    Properties::HEIGHT, height, {}
                 ))
                 cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
-        if (auto size = el->getAttribute(Html::SIZE_ATTR)) {
+        if (auto const& [size] = el->getAttribute(Html::SIZE_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::WIDTH, Io::format("{}ch", size), {}
                 ))
@@ -123,8 +123,8 @@ export struct Computer {
         // https://html.spec.whatwg.org/multipage/tables.html#the-col-element
         // The element may have a span content attribute specified, whose value must
         // be a valid non-negative integer greater than zero and less than or equal to 1000.
-        if (auto span = el->getAttribute(Html::SPAN_ATTR)) {
-            auto value = parseValue<Integer>(span.unwrap()).unwrapOr(0);
+        if (auto const& [span] = el->getAttribute(Html::SPAN_ATTR)) {
+            auto value = parseValue<Integer>(span).unwrapOr(0);
             if (value <= 0 or value > 1000)
                 value = 1;
             values.table.cow().span = value;
@@ -133,8 +133,8 @@ export struct Computer {
         // https://html.spec.whatwg.org/multipage/tables.html#attributes-common-to-td-and-th-elements
         // The td and th elements may have a colspan content attribute specified,
         // whose value must be a valid non-negative integer greater than zero and less than or equal to 1000.
-        if (auto colSpan = el->getAttribute(Html::COLSPAN_ATTR)) {
-            auto value = parseValue<Integer>(colSpan.unwrap()).unwrapOr(0);
+        if (auto const& [colSpan] = el->getAttribute(Html::COLSPAN_ATTR)) {
+            auto value = parseValue<Integer>(colSpan).unwrapOr(0);
             if (value <= 0 or value > 1000)
                 value = 1;
             values.table.cow().colSpan = value;
@@ -142,8 +142,8 @@ export struct Computer {
 
         // The td and th elements may also have a rowspan content attribute specified,
         // whose value must be a valid non-negative integer less than or equal to 65534.
-        if (auto rowSpan = el->getAttribute(Html::ROWSPAN_ATTR)) {
-            auto value = parseValue<Integer>(rowSpan.unwrap()).unwrapOr(0);
+        if (auto const& [rowSpan] = el->getAttribute(Html::ROWSPAN_ATTR)) {
+            auto value = parseValue<Integer>(rowSpan).unwrapOr(0);
             if (value < 0)
                 value = 0;
             if (value > 65534)
@@ -189,8 +189,8 @@ export struct Computer {
             return;
 
         for (auto [attr, attrValue] : el->attributes.iterItems())
-            if (auto property = _registeredPropertySet.parsePresentationAttribute(attr.name, attrValue->value))
-                cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            if (auto const& [property] = _registeredPropertySet.parsePresentationAttribute(attr.name, attrValue->value))
+                cascadedValues.put(property, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
 
         if (el->qualifiedName == Svg::SVG_TAG)
             _applySvgElementSizingRules(el, cascadedValues);
