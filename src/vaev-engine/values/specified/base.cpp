@@ -34,8 +34,9 @@ export struct _Viewport {
     Math::Rectf dynamic = small;
 };
 
-struct ComputationContext {
+export struct ComputationContext {
     Opt<Gfx::Font> rootFont;
+    Px userFontSize;
     _Viewport viewport;
     Math::Vec2f displayArea;
 };
@@ -62,7 +63,7 @@ concept ValueParseable = requires(T a, Cursor<Css::Sst> c) {
     parseValue<T>(c);
 };
 
-export template <ValueParseable T>
+export template <typename T>
 Res<T> parseOneOf(Cursor<Css::Sst>& c) {
     if (c.ended())
         return Error::invalidData("unexpected end of input");
@@ -126,8 +127,8 @@ export template <typename T>
 using Computed = typename ValueTraits<T>::ComputedType;
 
 export template <typename T>
-ValueTraits<T>::ComputedType computeValue(T const& value, ComputationContext const& ctx, Style::ComputedValues const& computedValues) {
-    return ValueTraits<T>::compute(value, ctx, computedValues);
+ValueTraits<T>::ComputedType computeValue(T const& value, ComputationContext const& ctx, Style::ComputedValues const& computed) {
+    return ValueTraits<T>::compute(value, ctx, computed);
 }
 
 export template <typename T>

@@ -46,13 +46,34 @@ export struct Computer {
     // MARK: Computing ---------------------------------------------------------
 
     Rc<Gfx::Fontface> _lookupFontface(ComputedValues& style) {
+        Gfx::FontStyle gfxStyle = style.font->style.visit(
+            [](Experimental::Keywords::Normal) {
+                return Gfx::FontStyle::NORMAL;
+            },
+            [](Experimental::Keywords::Italic) {
+                return Gfx::FontStyle::ITALIC;
+            },
+            [](Pair<Experimental::Keywords::Oblique, Experimental::Degree>) {
+                // FIXME: Use the provided angle.
+                return Gfx::FontStyle::OBLIQUE;
+            },
+            [](Experimental::Keywords::Left) {
+                // FIXME: Implement in karm-gfx.
+                return Gfx::FontStyle::NORMAL;
+            },
+            [](Experimental::Keywords::Right) {
+                // FIXME: Implement in karm-gfx.
+                return Gfx::FontStyle::NORMAL;
+            }
+        );
+
         Font::Query fq{
-            .weight = style.font->weight,
-            .style = style.font->style.val,
+            .weight = Gfx::FontWeight{static_cast<u16>(style.font->weight)},
+            .style = gfxStyle,
         };
 
         for (auto family : style.font->families) {
-            if (auto font = _fontDatabase->queryClosest(family.name, fq))
+            if (auto font = _fontDatabase->queryClosest(family, fq))
                 return font.unwrap();
         }
 

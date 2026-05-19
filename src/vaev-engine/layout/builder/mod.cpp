@@ -30,15 +30,10 @@ bool isSegmentBreak(Rune rune) {
 }
 
 static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues& style, Rc<Gfx::Fontface> fontFace) {
-    // FIXME: We should pass this around from the top in order to properly resolve rems
-    Resolver resolver{
-        .rootFont = Gfx::Font{fontFace, 16},
-        .boxFont = Gfx::Font{fontFace, 16},
-    };
     Gfx::ProseStyle proseStyle{
         .font = {
             fontFace,
-            resolver.resolve(style.font->size).cast<f64>(),
+            style.font->size.value(),
         },
         .color = style.color,
         .multiline = true,

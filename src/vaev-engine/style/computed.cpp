@@ -89,39 +89,5 @@ export struct ComputedValues {
     bool hasCustomProp(Symbol name) const {
         return customProps->contains(name);
     }
-
-    void repr(Io::Emit& e) const {
-        e("(computed");
-        e(" color: {}", color);
-        e(" opacity: {}", opacity);
-        e(" aligns: {}", aligns);
-        e(" gaps: {}", gaps);
-        e(" backgrounds: {}", backgrounds);
-        e(" baseline: {}", baseline);
-        e(" borders: {}", borders);
-        e(" margin: {}", margin);
-        e(" padding: {}", padding);
-        e(" boxSizing: {}", boxSizing);
-        e(" sizing: {}", sizing);
-        e(" overflows: {}", overflows);
-        e(" position: {}", position);
-        e(" offsets: {}", offsets);
-        e(" writingMode: {}", writingMode);
-        e(" direction: {}", direction);
-        e(" display: {}", display);
-        e(" order: {}", order);
-        e(" visibility: {}", visibility);
-        e(" table: {}", table);
-        e(" font: {}", font);
-        e(" text: {}", text);
-        e(" flex: {}", flex);
-        e(" break: {}", break_);
-        e(" float: {}", float_);
-        e(" clear: {}", clear);
-        e(" svg: {}", svg);
-        e(" zIndex: {}", zIndex);
-        e(" variables: {}", customProps);
-        e(")");
-    }
 };
 } // namespace Vaev::Style

@@ -135,46 +135,46 @@ export template <>
 struct ValueTraits<Length> {
     using ComputedType = Px;
 
-    static ComputedType compute(Length const val, ComputationContext const& ctx, Style::ComputedValues& computedValues) {
+    static ComputedType compute(Length const& val, ComputationContext const& ctx, Style::ComputedValues const& computedValues) {
         auto font = Gfx::Font{computedValues.fontFace, computedValues.font->size.value()};
 
         switch (val.unit()) {
             // https://drafts.csswg.org/css-values/#font-relative-lengths
         case Length::EM:
-            return Px(val.val() * font.fontSize());
+            return Px{val.val() * font.fontSize()};
 
         case Length::REM:
-            return Px(val.val() * ctx.rootFont->fontSize());
+            return Px{val.val() * ctx.rootFont->fontSize()};
 
         case Length::EX:
-            return Px(val.val() * font.xHeight());
+            return Px{val.val() * font.xHeight()};
 
         case Length::REX:
-            return Px(val.val() * ctx.rootFont->xHeight());
+            return Px{val.val() * ctx.rootFont->xHeight()};
 
         case Length::CAP:
-            return Px(val.val() * font.capHeight());
+            return Px{val.val() * font.capHeight()};
 
         case Length::RCAP:
-            return Px(val.val() * ctx.rootFont->capHeight());
+            return Px{val.val() * ctx.rootFont->capHeight()};
 
         case Length::CH:
-            return Px(val.val() * font.zeroAdvance());
+            return Px{val.val() * font.zeroAdvance()};
 
         case Length::RCH:
-            return Px(val.val() * ctx.rootFont->zeroAdvance());
+            return Px{val.val() * ctx.rootFont->zeroAdvance()};
 
         case Length::IC:
-            return Px(val.val() * font.zeroAdvance());
+            return Px{val.val() * font.zeroAdvance()};
 
         case Length::RIC:
-            return Px(val.val() * ctx.rootFont->zeroAdvance());
+            return Px{val.val() * ctx.rootFont->zeroAdvance()};
 
         case Length::LH:
-            return Px(val.val() * font.lineHeight());
+            return Px{val.val() * font.lineHeight()};
 
         case Length::RLH:
-            return Px(val.val() * ctx.rootFont->lineHeight());
+            return Px{val.val() * ctx.rootFont->lineHeight()};
 
             // https://drafts.csswg.org/css-values/#viewport-relative-lengths
 
@@ -182,48 +182,48 @@ struct ValueTraits<Length> {
             // Equal to 1% of the width of current viewport.
         case Length::VW:
         case Length::LVW:
-            return Px(val.val() * ctx.viewport.large.width / 100);
+            return Px{val.val() * ctx.viewport.large.width / 100};
 
         case Length::SVW:
-            return Px(val.val() * ctx.viewport.small.width / 100);
+            return Px{val.val() * ctx.viewport.small.width / 100};
 
         case Length::DVW:
-            return Px(val.val() * ctx.viewport.dynamic.width / 100);
+            return Px{val.val() * ctx.viewport.dynamic.width / 100};
 
             // https://drafts.csswg.org/css-values/#vh
             // Equal to 1% of the height of current viewport.
         case Length::VH:
         case Length::LVH:
-            return Px(val.val() * ctx.viewport.large.height / 100);
+            return Px{val.val() * ctx.viewport.large.height / 100};
 
         case Length::SVH:
-            return Px(val.val() * ctx.viewport.small.height / 100);
+            return Px{val.val() * ctx.viewport.small.height / 100};
 
         case Length::DVH:
-            return Px(val.val() * ctx.viewport.dynamic.height / 100);
+            return Px{val.val() * ctx.viewport.dynamic.height / 100};
 
             // https://drafts.csswg.org/css-values/#vi
             // Equal to 1% of the size of the viewport in the box’s inline axis.
         case Length::VI:
         case Length::LVI:
             if (computedValues.writingMode == WritingMode::HORIZONTAL_TB) {
-                return Px(val.val() * ctx.viewport.large.width / 100);
+                return Px{val.val() * ctx.viewport.large.width / 100};
             } else {
-                return Px(val.val() * ctx.viewport.large.height / 100);
+                return Px{val.val() * ctx.viewport.large.height / 100};
             }
 
         case Length::SVI:
             if (computedValues.writingMode == WritingMode::HORIZONTAL_TB) {
-                return Px(val.val() * ctx.viewport.small.width / 100);
+                return Px{val.val() * ctx.viewport.small.width / 100};
             } else {
-                return Px(val.val() * ctx.viewport.small.height / 100);
+                return Px{val.val() * ctx.viewport.small.height / 100};
             }
 
         case Length::DVI:
             if (computedValues.writingMode == WritingMode::HORIZONTAL_TB) {
-                return Px(val.val() * ctx.viewport.dynamic.width / 100);
+                return Px{val.val() * ctx.viewport.dynamic.width / 100};
             } else {
-                return Px(val.val() * ctx.viewport.dynamic.height / 100);
+                return Px{val.val() * ctx.viewport.dynamic.height / 100};
             }
 
             // https://drafts.csswg.org/css-values/#vb
@@ -231,23 +231,23 @@ struct ValueTraits<Length> {
         case Length::VB:
         case Length::LVB:
             if (computedValues.writingMode == WritingMode::HORIZONTAL_TB) {
-                return Px(val.val() * ctx.viewport.large.width / 100);
+                return Px{val.val() * ctx.viewport.large.width / 100};
             } else {
-                return Px(val.val() * ctx.viewport.large.height / 100);
+                return Px{val.val() * ctx.viewport.large.height / 100};
             }
 
         case Length::SVB:
             if (computedValues.writingMode == WritingMode::HORIZONTAL_TB) {
-                return Px(val.val() * ctx.viewport.small.width / 100);
+                return Px{val.val() * ctx.viewport.small.width / 100};
             } else {
-                return Px(val.val() * ctx.viewport.small.height / 100);
+                return Px{val.val() * ctx.viewport.small.height / 100};
             }
 
         case Length::DVB:
             if (computedValues.writingMode == WritingMode::HORIZONTAL_TB) {
-                return Px(val.val() * ctx.viewport.dynamic.width / 100);
+                return Px{val.val() * ctx.viewport.dynamic.width / 100};
             } else {
-                return Px(val.val() * ctx.viewport.dynamic.height / 100);
+                return Px{val.val() * ctx.viewport.dynamic.height / 100};
             }
 
             // https://drafts.csswg.org/css-values/#vmin
@@ -294,25 +294,25 @@ struct ValueTraits<Length> {
 
             // https://drafts.csswg.org/css-values/#absolute-lengths
         case Length::CM:
-            return Px(val.val() * 96 / 2.54);
+            return Px{val.val() * 96 / 2.54};
 
         case Length::MM:
-            return Px(val.val() * 96 / 25.4);
+            return Px{val.val() * 96 / 25.4};
 
         case Length::Q:
-            return Px(val.val() * 96 / 101.6);
+            return Px{val.val() * 96 / 101.6};
 
         case Length::IN:
-            return Px(val.val() * 96);
+            return Px{val.val() * 96};
 
         case Length::PT:
-            return Px(val.val() * 96 / 72.0);
+            return Px{val.val() * 96 / 72.0};
 
         case Length::PC:
-            return Px(val.val() * 96 / 6.0);
+            return Px{val.val() * 96 / 6.0};
 
         case Length::PX:
-            return Px(val.val());
+            return Px{val.val()};
 
         default:
             panic("invalid unit");

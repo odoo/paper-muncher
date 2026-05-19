@@ -9,6 +9,7 @@ import Karm.Logger;
 import Karm.Debug;
 import :css.parser;
 import :style.computed;
+import :values.specified;
 
 using namespace Karm;
 
@@ -137,6 +138,11 @@ export struct Property : Meta::NoCopy {
     virtual void apply(ComputedValues const& parent, ComputedValues& child) const {
         (void)parent;
         apply(child);
+    }
+
+    virtual void apply(Experimental::ComputationContext const& ctx, ComputedValues const& parent, ComputedValues& child) const {
+        (void)ctx;
+        apply(parent, child);
     }
 
     virtual void repr(Io::Emit& e) const = 0;

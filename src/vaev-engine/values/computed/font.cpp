@@ -3,29 +3,19 @@ export module Vaev.Engine:values.computed.font;
 import Karm.Core;
 
 import :values.common;
-import :values.computed.length;
+import :values.computed.dimensions;
 
 using namespace Karm;
-using namespace Karm::Literals;
+using namespace Vaev::Experimental::Literals;
 
 namespace Vaev::Experimental {
 
-struct FontFamily {
-    Symbol name;
-
-    FontFamily(Symbol name)
-        : name(name) {
-    }
-
-    bool operator==(FontFamily const&) const = default;
-    auto operator<=>(FontFamily const&) const = default;
-};
-
 export struct FontProps {
-    Vec<FontFamily> families;
-    Number weight;
-    Percentage width;
-    Px size;
+    Vec<Symbol> families = {};
+    f64 weight = 0;
+    Percentage width = Percentage{0};
+    _FontStyle<Degree> style = Keywords::NORMAL;
+    Px size = 0_px;
 };
 
 } // namespace Vaev::Experimental
