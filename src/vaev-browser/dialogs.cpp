@@ -1,4 +1,4 @@
-export module Hideo.Browser:dialogs;
+export module Vaev.Browser:dialogs;
 
 import Karm.Core;
 import Karm.Gc;

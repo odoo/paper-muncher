@@ -1,4 +1,4 @@
-export module Hideo.Browser:inspect;
+export module Vaev.Browser:inspect;
 
 import Vaev.Engine;
 import Karm.Kira;
@@ -186,7 +186,7 @@ Ui::Child computedStyles(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::
         }
 
     return Ui::vflow(
-               Kr::sidePanelTitle("Computed Styles") | Ui::dragRegion({0, -1}),
+               Kr::sidePanelTitle("Computed Styles") | Ui::dragRegion(),
                Kr::separator(),
                Kr::input(Mdi::FILTER, "Filter..."s, s.filter, [send](auto& n, auto text) {
                    send(n, ChangeFilter{text});
@@ -199,8 +199,8 @@ Ui::Child computedStyles(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::
 export Ui::Child inspect(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectorAction> send) {
     auto document = window->document().upgrade();
     return Ui::vflow(
-        node(document, s, send) | Ui::vscroll() | Ui::grow(),
-        computedStyles(document, s, send) | Kr::resizable(Kr::ResizeHandle::TOP, {128}, NONE)
+        node(document, s, send) | Ui::vscroll() | Kr::scaffoldContent() | Ui::grow(),
+        computedStyles(document, s, send) | Kr::scaffoldContent() | Kr::resizable(Kr::ResizeHandlePosition::TOP, {256}, NONE)
     );
 }
 
