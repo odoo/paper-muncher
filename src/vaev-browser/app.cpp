@@ -1,4 +1,4 @@
-export module Hideo.Browser:app;
+export module Vaev.Browser:app;
 
 import Mdi;
 import Karm.App;
@@ -13,154 +13,12 @@ import Vaev.Engine;
 import Vaev.View;
 import :inspect;
 import :dialogs;
+import :model;
 
 using namespace Karm::Literals;
 using namespace Karm::Ref::Literals;
 
 namespace Vaev::Browser {
-
-enum struct SidePanel {
-    CLOSE,
-    DEVELOPER_TOOLS,
-};
-
-struct Navigate {
-    Ref::Url url;
-    Ref::Uti action = Ref::Uti::PUBLIC_OPEN;
-};
-
-enum struct Status {
-    LOADING,
-    LOADED,
-};
-
-struct Bookmark {
-    String name;
-    Ref::Url url;
-};
-
-struct State {
-    Status status = Status::LOADED;
-    Res<> loadingResult = Ok();
-    usize currentIndex = 0;
-    Vec<Navigate> history;
-    Rc<Dom::Window> window;
-    SidePanel sidePanel = SidePanel::CLOSE;
-    InspectState inspect = {};
-    bool wireframe = false;
-    String locationInput;
-    Vec<Bookmark> bookmarks;
-
-    State(Rc<Dom::Window> window)
-        : history{Navigate{window->location()}},
-          window{window},
-          locationInput(window->location().str()) {}
-
-    bool canGoBack() const {
-        return currentIndex > 0;
-    }
-
-    bool canGoForward() const {
-        return currentIndex < history.len() - 1;
-    }
-
-    Navigate const& currentUrl() const {
-        return history[currentIndex];
-    }
-};
-
-struct Reload {};
-
-struct Loaded {
-    Res<> result;
-};
-
-struct GoBack {};
-
-struct GoForward {};
-
-struct ToggleWireframe {};
-
-struct UpdateLocation {
-    String location;
-};
-
-struct NavigateLocation {
-};
-
-using Action = Union<
-    Reload,
-    Loaded,
-    GoBack,
-    GoForward,
-    ToggleWireframe,
-    SidePanel,
-    InspectorAction,
-    Navigate,
-    UpdateLocation,
-    NavigateLocation>;
-
-Async::_Task<Opt<Action>> navigateAsync(Rc<Dom::Window> window, Navigate nav, Async::CancellationToken ct) {
-    co_return Loaded{(co_await window->loadLocationAsync(nav.url, nav.action, ct))};
-}
-
-Ui::Task<Action> reduce(State& s, Action a) {
-    return a.visit(
-        [&](Reload) -> Ui::Task<Action> {
-            if (s.status == Status::LOADING)
-                return NONE;
-            s.status = Status::LOADING;
-            return navigateAsync(s.window, s.currentUrl(), Async::CancellationToken::uninterruptible());
-        },
-        [&](Loaded l) -> Ui::Task<Action> {
-            s.status = Status::LOADED;
-            s.loadingResult = l.result;
-            s.locationInput = s.currentUrl().url.str();
-            return NONE;
-        },
-        [&](GoBack) -> Ui::Task<Action> {
-            s.currentIndex--;
-            return reduce(s, Reload{});
-        },
-        [&](GoForward) -> Ui::Task<Action> {
-            s.currentIndex++;
-            return reduce(s, Reload{});
-        },
-        [&](ToggleWireframe) -> Ui::Task<Action> {
-            s.wireframe = not s.wireframe;
-            return NONE;
-        },
-        [&](SidePanel p) -> Ui::Task<Action> {
-            if (s.sidePanel == p) {
-                s.sidePanel = SidePanel::CLOSE;
-            } else {
-                s.sidePanel = p;
-            }
-            return NONE;
-        },
-        [&](InspectorAction a) -> Ui::Task<Action> {
-            s.inspect.apply(a);
-            return NONE;
-        },
-        [&](Navigate n) -> Ui::Task<Action> {
-            s.history.trunc(s.currentIndex + 1);
-            s.history.pushBack(n);
-            s.currentIndex++;
-            return reduce(s, Reload{});
-        },
-        [&](UpdateLocation u) -> Ui::Task<Action> {
-            s.locationInput = u.location;
-            return NONE;
-        },
-        [&](NavigateLocation) -> Ui::Task<Action> {
-            return reduce(s, Navigate{Ref::Url::parse(s.locationInput)});
-        }
-    );
-
-    return NONE;
-}
-
-using Model = Ui::Model<State, Action, reduce>;
 
 #ifdef __ck_host__
 
@@ -221,7 +79,7 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
         openInDefaultBrowser(s),
 #endif
         Kr::separator(),
-        Kr::contextMenuItem(Model::bind(SidePanel::DEVELOPER_TOOLS), Mdi::CODE_TAGS, "Developer Tools"),
+        Kr::contextMenuItem(Model::bind<ToggleDeveloperMode>(), Mdi::CODE_TAGS, "Developer Tools"),
         Kr::contextMenuCheck(Model::bind<ToggleWireframe>(), s.wireframe, "Show wireframe"),
         Kr::separator(),
         Kr::contextMenuItem(Ui::SINK<>, Mdi::COG, "Settings"),
@@ -288,7 +146,7 @@ Ui::Child contextMenu(State const& s) {
             Mdi::CODE_TAGS, "View Source..."
         ),
         Kr::contextMenuItem(
-            Model::bind(SidePanel::DEVELOPER_TOOLS),
+            Model::bind<ToggleDeveloperMode>(),
             Mdi::BUTTON_CURSOR, "Inspect"
         ),
     });
@@ -297,48 +155,16 @@ Ui::Child contextMenu(State const& s) {
 Ui::Child inspectorContent(State const& s) {
     if (not s.loadingResult) {
         return Ui::labelMedium(Ui::GRAY500, "No document") |
-               Ui::center();
+               Ui::center() | Kr::scaffoldContent();
     }
 
-    return Vaev::Browser::inspect(
+    return inspect(
         s.window,
         s.inspect,
         [&](auto& n, auto a) {
             Model::bubble(n, a);
         }
     );
-}
-
-Ui::Child bookmarkSidePanel(State const& s) {
-    if (not s.bookmarks) {
-        return Ui::labelMedium(Ui::GRAY500, "No bookmarks") |
-               Ui::center();
-    }
-
-    Ui::Children children;
-    for (auto& bm : s.bookmarks) {
-        children.pushBack(Ui::button(Model::bind<Navigate>(bm.url), Mdi::BOOKMARK, bm.name));
-    }
-
-    return Ui::vflow(
-               4,
-               std::move(children)
-           ) |
-           Ui::vscroll();
-}
-
-Ui::Child sidePanel(State const& s) {
-    switch (s.sidePanel) {
-    case SidePanel::DEVELOPER_TOOLS:
-        return Kr::sidePanelContent({
-            Kr::sidePanelTitle(Model::bind(SidePanel::CLOSE), "Developer Tools"),
-            Kr::separator(),
-            inspectorContent(s) | Ui::grow(),
-        });
-
-    default:
-        return Ui::empty();
-    }
 }
 
 Ui::Child alert(State const& s, String title, String body) {
@@ -379,23 +205,17 @@ Ui::Child webview(State const& s) {
 
 Ui::Child appContent(State const& s) {
     auto wv = webview(s) | Kr::scaffoldContent();
-    if (s.sidePanel == SidePanel::CLOSE) {
+    if (not s.developerMode)
         return wv;
-    }
+
     return Ui::hflow(
         wv |
             Ui::grow(),
-        sidePanel(s) | Kr::resizable(Kr::ResizeHandle::START, {320}, NONE)
+        inspectorContent(s) | Kr::resizable(Kr::ResizeHandlePosition::START, {320}, NONE)
     );
 }
 
-export Ui::Child app(Rc<Dom::Window> window) {
-    State state = window;
-    state.bookmarks.pushBack({.name = "smnx.sh"s, .url = "http://smnx.sh"_url});
-    state.bookmarks.pushBack({.name = "The Project (snapshot)"s, .url = "bundle://vaev-browser.main/www-the-project.html"_url});
-    state.bookmarks.pushBack({.name = "Google (snapshot)"s, .url = "bundle://vaev-browser.main/google.html"_url});
-    state.bookmarks.pushBack({.name = "Hackernews (snapshot)"s, .url = "bundle://vaev-browser.main/hackernews.html"_url});
-
+export Ui::Child app(State state) {
     return Ui::reducer<Model>(
         std::move(state),
         [](State const& s) {
@@ -412,7 +232,11 @@ export Ui::Child app(Rc<Dom::Window> window) {
                     };
                 },
                 .middleTools = [&] -> Ui::Children {
-                    return {addressBar(s) | Ui::grow()};
+                    return {
+                        Ui::empty(36),
+                        addressBar(s) | Ui::grow(),
+                        Ui::empty(36),
+                    };
                 },
                 .endTools = [&] -> Ui::Children {
                     return {
@@ -425,17 +249,15 @@ export Ui::Child app(Rc<Dom::Window> window) {
                         ),
                     };
                 },
-                .sidebar = [&] {
-                    return Kr::sidenavContent({bookmarkSidePanel(s)});
-                },
                 .body = [&] {
                     return appContent(s);
                 },
+                .size = {1024, 768},
             });
             return scaffold |
                    Ui::keyboardShortcut(App::Key::R, App::KeyMod::CTRL, Model::bind<Reload>()) |
                    Ui::keyboardShortcut(App::Key::F5, Model::bind<Reload>()) |
-                   Ui::keyboardShortcut(App::Key::F12, Model::bind(SidePanel::DEVELOPER_TOOLS)) |
+                   Ui::keyboardShortcut(App::Key::F12, Model::bind<ToggleDeveloperMode>()) |
                    Ui::keyboardShortcut(App::Key::P, App::KeyMod::CTRL, [&](auto& n) {
                        if (not s.loadingResult)
                            return;

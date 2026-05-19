@@ -1,13 +1,14 @@
 {
-  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-  "id": "vaev-browser",
-  "type": "lib",
-  "description": "Browse the web",
-  "requires": [
-    "karm-kira",
-    "karm-print.dialog",
-    "vaev-view",
-    "vaev-engine",
-    "fonts-all"
-  ]
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+    "id": "vaev-browser",
+    "type": "exe",
+    "description": "Browse the web",
+    "requires": [
+        "fonts-all",
+        "karm-cli",
+        "karm-kira",
+        "karm-print.dialog",
+        "vaev-engine",
+        "vaev-view"
+    ]
 }
