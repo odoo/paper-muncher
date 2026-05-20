@@ -186,7 +186,7 @@ Ui::Child computedStyles(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::
         }
 
     return Ui::vflow(
-               Kr::sidePanelTitle("Computed Styles") | Ui::dragRegion({0, -1}),
+               Kr::sidePanelTitle("Computed Styles"),
                Kr::separator(),
                Kr::input(Mdi::FILTER, "Filter..."s, s.filter, [send](auto& n, auto text) {
                    send(n, ChangeFilter{text});
@@ -200,7 +200,7 @@ export Ui::Child inspect(Rc<Dom::Window> window, InspectState const& s, Ui::Acti
     auto document = window->document().upgrade();
     return Ui::vflow(
         node(document, s, send) | Ui::vscroll() | Ui::grow(),
-        computedStyles(document, s, send) | Kr::resizable(Kr::ResizeHandle::TOP, {128}, NONE)
+        computedStyles(document, s, send)
     );
 }
 

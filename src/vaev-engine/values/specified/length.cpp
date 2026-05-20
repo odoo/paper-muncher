@@ -137,6 +137,7 @@ struct ValueTraits<Length> {
 
     static ComputedType compute(Length const& val, ComputationContext const& ctx, Style::ComputedValues const& computedValues) {
         auto font = Gfx::Font{computedValues.fontFace, computedValues.font->size.value()};
+        auto rootFont = ctx.rootFont ? *ctx.rootFont : font;
 
         switch (val.unit()) {
             // https://drafts.csswg.org/css-values/#font-relative-lengths
@@ -144,37 +145,37 @@ struct ValueTraits<Length> {
             return Px{val.val() * font.fontSize()};
 
         case Length::REM:
-            return Px{val.val() * ctx.rootFont->fontSize()};
+            return Px{val.val() * rootFont.fontSize()};
 
         case Length::EX:
             return Px{val.val() * font.xHeight()};
 
         case Length::REX:
-            return Px{val.val() * ctx.rootFont->xHeight()};
+            return Px{val.val() * rootFont.xHeight()};
 
         case Length::CAP:
             return Px{val.val() * font.capHeight()};
 
         case Length::RCAP:
-            return Px{val.val() * ctx.rootFont->capHeight()};
+            return Px{val.val() * rootFont.capHeight()};
 
         case Length::CH:
             return Px{val.val() * font.zeroAdvance()};
 
         case Length::RCH:
-            return Px{val.val() * ctx.rootFont->zeroAdvance()};
+            return Px{val.val() * rootFont.zeroAdvance()};
 
         case Length::IC:
             return Px{val.val() * font.zeroAdvance()};
 
         case Length::RIC:
-            return Px{val.val() * ctx.rootFont->zeroAdvance()};
+            return Px{val.val() * rootFont.zeroAdvance()};
 
         case Length::LH:
             return Px{val.val() * font.lineHeight()};
 
         case Length::RLH:
-            return Px{val.val() * ctx.rootFont->lineHeight()};
+            return Px{val.val() * rootFont.lineHeight()};
 
             // https://drafts.csswg.org/css-values/#viewport-relative-lengths
 

@@ -23,6 +23,7 @@ export struct Computer {
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
     RuleIndex _ruleIndex = {};
+    Experimental::ComputationContext ctx = {};
 
     // MARK: Cascading ---------------------------------------------------------
 
@@ -217,8 +218,13 @@ export struct Computer {
             _applySvgElementSizingRules(el, cascadedValues);
     }
 
+    enum struct ComputedTarget {
+        Root,
+        Child
+    };
+
     // https://drafts.csswg.org/css-cascade/#cascade-origin
-    Rc<ComputedValues> computeFor(ComputedValues const& parentComputedValues, Gc::Ref<Dom::Element> el) {
+    Rc<ComputedValues> computeFor(ComputedValues const& parentComputedValues, Gc::Ref<Dom::Element> el, Experimental::ComputationContext const& ctx) {
         MatchingRules const matchingRules = _ruleIndex.match(el, NONE);
         CascadedValues cascadedValues;
         for (auto const& [styleRule, specificity] : matchingRules)
@@ -228,7 +234,7 @@ export struct Computer {
         _considerHtmlPresentationalHint(el, cascadedValues);
         _considerInlineStyleAttribute(el, cascadedValues);
         _considerSvgPresentationAttributes(el, cascadedValues);
-        auto values = cascadedValues.apply(parentComputedValues, _registeredPropertySet);
+        auto values = cascadedValues.apply(ctx, parentComputedValues, _registeredPropertySet);
         _considerElementAttributes(*values, el);
         return values;
     }
@@ -241,7 +247,7 @@ export struct Computer {
             for (auto& prop : styleRule->props)
                 cascadedValues.put(prop, styleRule->origin, specificity);
 
-        return cascadedValues.apply(parent, _registeredPropertySet);
+        return cascadedValues.apply(ctx, parent, _registeredPropertySet);
     }
 
     Rc<PageComputedValues> computeFor(ComputedValues const& parent, Page const& page) {
@@ -290,8 +296,8 @@ export struct Computer {
         el.addPseudoElement(_heap.alloc<Dom::PseudoElement>(type, computedValues));
     }
 
-    void styleElement(ComputedValues const& parentComputedValues, Dom::Element& el) {
-        auto computedValues = computeFor(parentComputedValues, el);
+    Rc<ComputedValues> _computeElementStyle(ComputedValues const& parentComputedValues, Dom::Element& el, Experimental::ComputationContext const& ctx) {
+        auto computedValues = computeFor(parentComputedValues, el, ctx);
         el._computedValues = computedValues;
 
         // HACK: This is basically nonsense to avoid doing too much font lookup,
@@ -313,9 +319,29 @@ export struct Computer {
         generatePseudoElement(*computedValues, el, Dom::PseudoElement::AFTER);
         generatePseudoElement(*computedValues, el, Dom::PseudoElement::BEFORE);
 
+        return computedValues;
+    }
+
+    void styleRootElement(Dom::Element& root, Experimental::ComputationContext& ctx) {
+        auto initialComputedValues = _registeredPropertySet.initialComputedValues();
+        initialComputedValues->fontFace = _lookupFontface(*initialComputedValues);
+
+        auto computedValues = _computeElementStyle(*initialComputedValues, root, ctx);
+
+        ctx.rootFont = Gfx::Font{computedValues->fontFace, computedValues->font->size.value()};
+
+        for (auto child = root.firstChild(); child; child = child->nextSibling()) {
+            if (auto childEl = child->is<Dom::Element>())
+                styleElement(*computedValues, *childEl, ctx);
+        }
+    }
+
+    void styleElement(ComputedValues const& parentComputedValues, Dom::Element& el, Experimental::ComputationContext const& ctx) {
+        auto computedValues = _computeElementStyle(parentComputedValues, el, ctx);
+
         for (auto child = el.firstChild(); child; child = child->nextSibling()) {
             if (auto childEl = child->is<Dom::Element>())
-                styleElement(*computedValues, *childEl);
+                styleElement(*computedValues, *childEl, ctx);
         }
     }
 
@@ -350,10 +376,15 @@ export struct Computer {
     }
 
     void styleDocument(Dom::Document& doc) {
+        auto ctx = Experimental::ComputationContext{
+            .rootFont = NONE,
+            .userFontSize = 16_px,
+            .viewport = {.small = _media.viewportSize().cast<f64>()},
+            .displayArea = _media.viewportSize().cast<f64>(),
+        };
+
         if (auto el = doc.documentElement()) {
-            auto rootComputedValues = _registeredPropertySet.initialComputedValues();
-            rootComputedValues->fontFace = _lookupFontface(*rootComputedValues);
-            styleElement(*rootComputedValues, *el);
+            styleRootElement(*el, ctx);
         }
         _propagateBodyBackgroundToHtml(doc);
     }

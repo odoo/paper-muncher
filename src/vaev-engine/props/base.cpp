@@ -133,6 +133,7 @@ export struct Property : Meta::NoCopy {
 
     virtual void apply(ComputedValues&) const {
         logFatal("longhand property {#} is missing apply() implementation", registration->name());
+        panic("foo");
     }
 
     virtual void apply(ComputedValues const& parent, ComputedValues& child) const {
@@ -649,7 +650,8 @@ export struct RegisteredPropertySet {
             auto initial = makeRc<ComputedValues>();
             for (auto& [_, registration] : registrations().iterItems())
                 if (not registration->flags().has(Property::SHORTHAND_PROPERTY))
-                    registration->initial()->apply(*initial, *initial);
+                    // NOTE: By design, initial values do not depend on the context to be computed, so we pass a stub.
+                    registration->initial()->apply({}, *initial, *initial);
             _memoInitialComputedValues = initial;
         }
         return makeRc<ComputedValues>(**_memoInitialComputedValues);

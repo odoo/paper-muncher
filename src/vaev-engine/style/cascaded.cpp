@@ -63,7 +63,7 @@ export struct CascadedValues {
         return entries;
     }
 
-    Rc<ComputedValues> apply(ComputedValues const& parentComputedValues, RegisteredPropertySet& registeredPropertySet) {
+    Rc<ComputedValues> apply(Experimental::ComputationContext const& ctx, ComputedValues const& parentComputedValues, RegisteredPropertySet& registeredPropertySet) {
         auto computedValues = registeredPropertySet.inheritsComputedValues(parentComputedValues);
         for (auto& entry : _resolveDependencies()) {
             auto& property = entry.property;
@@ -73,12 +73,12 @@ export struct CascadedValues {
 
             if (property->isShorthandProperty()) {
                 for (auto& longhandProperty : property->expandShorthand(registeredPropertySet, parentComputedValues, *computedValues)) {
-                    longhandProperty->apply(parentComputedValues, *computedValues);
+                    longhandProperty->apply(ctx, parentComputedValues, *computedValues);
                 }
                 continue;
             }
 
-            property->apply(parentComputedValues, *computedValues);
+            property->apply(ctx, parentComputedValues, *computedValues);
         }
 
         return computedValues;

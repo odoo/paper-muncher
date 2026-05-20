@@ -36,7 +36,7 @@ export struct _Viewport {
 
 export struct ComputationContext {
     Opt<Gfx::Font> rootFont;
-    Px userFontSize;
+    Px userFontSize = 16_px;
     _Viewport viewport;
     Math::Vec2f displayArea;
 };

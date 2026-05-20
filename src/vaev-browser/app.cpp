@@ -385,7 +385,7 @@ Ui::Child appContent(State const& s) {
     return Ui::hflow(
         wv |
             Ui::grow(),
-        sidePanel(s) | Kr::resizable(Kr::ResizeHandle::START, {320}, NONE)
+        sidePanel(s)
     );
 }
 
