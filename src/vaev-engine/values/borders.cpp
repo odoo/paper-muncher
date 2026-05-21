@@ -48,36 +48,46 @@ struct ValueParser<Gfx::BorderStyle> {
 
 // MARK: Border ----------------------------------------------------------------
 
-template <typename T>
-struct _Border {
-    T width;
+export struct SpecifiedBorder {
+    LineWidth width = Keywords::MEDIUM;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
     Color color = Keywords::CURRENT_COLOR;
 
-    _Border();
-    _Border(T width, Gfx::BorderStyle style, Color color)
-        : width(width), style(style), color(color) {};
-
     void repr(Io::Emit& e) const {
-        e("(border {} {} {})", width, style, color);
+        e("(specified-border {} {} {})", width, style, color);
     }
 };
 
-export using Border = _Border<LineWidth>;
+export struct ComputedBorder {
+    LineWidth width = Keywords::MEDIUM;
+    Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
+    Gfx::Color color = Gfx::BLACK;
 
-template <>
-_Border<LineWidth>::_Border() : width(Keywords::MEDIUM) {}
+    operator SpecifiedBorder() const {
+        return {width, style, color};
+    }
 
-export using UsedBorder = _Border<Au>;
+    void repr(Io::Emit& e) const {
+        e("(computed-border {} {} {})", width, style, color);
+    }
+};
+
+export struct UsedBorder {
+    Au width;
+    Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
+    Gfx::Color color = Gfx::BLACK;
+
+    void repr(Io::Emit& e) const {
+        e("(used-border {} {} {})", width, style, color);
+    }
+};
+
 export using UsedBorders = Math::Insets<UsedBorder>;
 
-template <>
-_Border<Au>::_Border() : width(0_au) {}
-
 export template <>
-struct ValueParser<Border> {
-    static Res<Border> parse(Cursor<Css::Sst>& c) {
-        Border border;
+struct ValueParser<SpecifiedBorder> {
+    static Res<SpecifiedBorder> parse(Cursor<Css::Sst>& c) {
+        SpecifiedBorder border;
         while (not c.ended()) {
             eatWhitespace(c);
 
@@ -115,14 +125,10 @@ export enum struct BorderEdge {
 };
 
 export struct BorderProps {
-    Border top, start, bottom, end;
+    ComputedBorder top, start, bottom, end;
     Math::Radii<CalcValue<PercentOr<Length>>> radii = {Length(0_au)};
 
-    void all(Border b) {
-        top = start = bottom = end = b;
-    }
-
-    Border const& get(BorderEdge edge) const {
+    ComputedBorder const& get(BorderEdge edge) const {
         switch (edge) {
         case BorderEdge::TOP:
             return top;

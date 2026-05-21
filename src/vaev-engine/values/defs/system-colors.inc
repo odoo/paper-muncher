@@ -1,4 +1,4 @@
-COLOR(ACCENT_COLOR, AccentColor, 0xff0000)
+COLOR(ACCENT_COLOR, AccentColor, 0x3b82f6)
 COLOR(ACCENT_COLOR_TEXT, AccentColorText, 0xffffff)
 COLOR(ACTIVE_TEXT, ActiveText, 0x0000ff)
 COLOR(BUTTON_BORDER, ButtonBorder, 0x000000)

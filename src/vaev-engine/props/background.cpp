@@ -25,6 +25,12 @@ export struct BackgroundColorProperty : Property {
             return Properties::BACKGROUND_COLOR;
         }
 
+        Vec<Symbol> dependencies() const override {
+            return {
+                Properties::COLOR,
+            };
+        }
+
         Rc<Property> initial() const override {
             return makeRc<BackgroundColorProperty>(self(), TRANSPARENT);
         }
@@ -44,7 +50,7 @@ export struct BackgroundColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.backgrounds.cow().color = _value;
+        c.backgrounds.cow().color = resolve(_value, c.color);
     }
 
     void repr(Io::Emit& e) const override {
@@ -219,7 +225,7 @@ export struct BackgroundProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BackgroundProperty>(self(), BackgroundProps{TRANSPARENT});
+            return makeRc<BackgroundProperty>(self(), SpecifiedBackground{TRANSPARENT});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -227,15 +233,15 @@ export struct BackgroundProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            BackgroundProps value;
+            SpecifiedBackground value;
             value.color = try$(parseValue<Color>(c));
             return Ok(makeRc<BackgroundProperty>(self(), std::move(value)));
         }
     };
 
-    BackgroundProps _value;
+    SpecifiedBackground _value;
 
-    BackgroundProperty(Rc<Property::Registration> registration, BackgroundProps value)
+    BackgroundProperty(Rc<Property::Registration> registration, SpecifiedBackground value)
         : Property(registration), _value(std::move(value)) {}
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {

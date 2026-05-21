@@ -34,7 +34,7 @@ export struct ComputedValues {
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
     Cow<Margin> margin = makeCow<Margin>(Width(CalcValue<PercentOr<Length>>(Length(0_au)))); // FIXME
-    Cow<Outline> outline;
+    Cow<OutlineProps> outline;
     Cow<Padding> padding = makeCow<Padding>(Length(0_au)); // FIXME
     Cow<SizingProps> sizing;
     Cow<Baseline> baseline;

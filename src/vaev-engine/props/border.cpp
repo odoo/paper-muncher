@@ -22,6 +22,12 @@ export struct BorderTopColorProperty : Property {
             return Properties::BORDER_TOP_COLOR;
         }
 
+        Vec<Symbol> dependencies() const override {
+            return {
+                Properties::COLOR,
+            };
+        }
+
         Rc<Property> initial() const override {
             return makeRc<BorderTopColorProperty>(self(), BLACK);
         }
@@ -41,7 +47,7 @@ export struct BorderTopColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.borders.cow().top.color = _value;
+        c.borders.cow().top.color = resolve(_value, c.color);
     }
 
     void repr(Io::Emit& e) const override {
@@ -54,6 +60,12 @@ export struct BorderRightColorProperty : Property {
     struct Registration : Property::Registration {
         Symbol name() const override {
             return Properties::BORDER_RIGHT_COLOR;
+        }
+
+        Vec<Symbol> dependencies() const override {
+            return {
+                Properties::COLOR,
+            };
         }
 
         Rc<Property> initial() const override {
@@ -75,7 +87,7 @@ export struct BorderRightColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.borders.cow().end.color = _value;
+        c.borders.cow().end.color = resolve(_value, c.color);
     }
 
     void repr(Io::Emit& e) const override {
@@ -88,6 +100,12 @@ export struct BorderBottomColorProperty : Property {
     struct Registration : Property::Registration {
         Symbol name() const override {
             return Properties::BORDER_BOTTOM_COLOR;
+        }
+
+        Vec<Symbol> dependencies() const override {
+            return {
+                Properties::COLOR,
+            };
         }
 
         Rc<Property> initial() const override {
@@ -109,7 +127,7 @@ export struct BorderBottomColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.borders.cow().bottom.color = _value;
+        c.borders.cow().bottom.color = resolve(_value, c.color);
     }
 
     void repr(Io::Emit& e) const override {
@@ -123,6 +141,13 @@ export struct BorderLeftColorProperty : Property {
         Symbol name() const override {
             return Properties::BORDER_LEFT_COLOR;
         }
+
+        Vec<Symbol> dependencies() const override {
+            return {
+                Properties::COLOR,
+            };
+        }
+
 
         Rc<Property> initial() const override {
             return makeRc<BorderLeftColorProperty>(self(), BLACK);
@@ -143,7 +168,7 @@ export struct BorderLeftColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.borders.cow().start.color = _value;
+        c.borders.cow().start.color = resolve(_value, c.color);
     }
 
     void repr(Io::Emit& e) const override {
@@ -174,6 +199,7 @@ export struct BorderColorProperty : Property {
                     c.borders->top.color,
                     c.borders->bottom.color,
                 }
+                    .cast<Color>()
             );
         }
 
@@ -745,7 +771,7 @@ export struct BorderTopProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderTopProperty>(self(), Border{});
+            return makeRc<BorderTopProperty>(self(), SpecifiedBorder{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -753,7 +779,7 @@ export struct BorderTopProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            Border value;
+            SpecifiedBorder value;
             while (not c.ended()) {
                 auto width = parseValue<CalcValue<Length>>(c);
                 if (width) {
@@ -779,9 +805,9 @@ export struct BorderTopProperty : Property {
         }
     };
 
-    Border _value;
+    SpecifiedBorder _value;
 
-    BorderTopProperty(Rc<Property::Registration> registration, Border value)
+    BorderTopProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
         : Property(registration), _value(value) {}
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -809,7 +835,7 @@ export struct BorderRightProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRightProperty>(self(), Border{});
+            return makeRc<BorderRightProperty>(self(), SpecifiedBorder{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -817,35 +843,13 @@ export struct BorderRightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            Border value;
-            while (not c.ended()) {
-                auto width = parseValue<CalcValue<Length>>(c);
-                if (width) {
-                    value.width = width.unwrap();
-                    continue;
-                }
-
-                auto color = parseValue<Color>(c);
-                if (color) {
-                    value.color = color.unwrap();
-                    continue;
-                }
-
-                auto style = parseValue<Gfx::BorderStyle>(c);
-                if (style) {
-                    value.style = style.unwrap();
-                    continue;
-                }
-
-                break;
-            }
-            return Ok(makeRc<BorderRightProperty>(self(), value));
+            return Ok(makeRc<BorderRightProperty>(self(), try$(parseValue<SpecifiedBorder>(c))));
         }
     };
 
-    Border _value;
+    SpecifiedBorder _value;
 
-    BorderRightProperty(Rc<Property::Registration> registration, Border value)
+    BorderRightProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
         : Property(registration), _value(value) {}
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -873,7 +877,7 @@ export struct BorderBottomProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderBottomProperty>(self(), Border{});
+            return makeRc<BorderBottomProperty>(self(), SpecifiedBorder{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -881,35 +885,13 @@ export struct BorderBottomProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            Border value;
-            while (not c.ended()) {
-                auto width = parseValue<CalcValue<Length>>(c);
-                if (width) {
-                    value.width = width.unwrap();
-                    continue;
-                }
-
-                auto color = parseValue<Color>(c);
-                if (color) {
-                    value.color = color.unwrap();
-                    continue;
-                }
-
-                auto style = parseValue<Gfx::BorderStyle>(c);
-                if (style) {
-                    value.style = style.unwrap();
-                    continue;
-                }
-
-                break;
-            }
-            return Ok(makeRc<BorderBottomProperty>(self(), value));
+            return Ok(makeRc<BorderBottomProperty>(self(), try$(parseValue<SpecifiedBorder>(c))));
         }
     };
 
-    Border _value;
+    SpecifiedBorder _value;
 
-    BorderBottomProperty(Rc<Property::Registration> registration, Border value)
+    BorderBottomProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
         : Property(registration), _value(value) {}
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -937,7 +919,7 @@ export struct BorderLeftProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderLeftProperty>(self(), Border{});
+            return makeRc<BorderLeftProperty>(self(), SpecifiedBorder{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -945,35 +927,13 @@ export struct BorderLeftProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            Border value;
-            while (not c.ended()) {
-                auto width = parseValue<CalcValue<Length>>(c);
-                if (width) {
-                    value.width = width.unwrap();
-                    continue;
-                }
-
-                auto color = parseValue<Color>(c);
-                if (color) {
-                    value.color = color.unwrap();
-                    continue;
-                }
-
-                auto style = parseValue<Gfx::BorderStyle>(c);
-                if (style) {
-                    value.style = style.unwrap();
-                    continue;
-                }
-
-                break;
-            }
-            return Ok(makeRc<BorderLeftProperty>(self(), value));
+            return Ok(makeRc<BorderLeftProperty>(self(), try$(parseValue<SpecifiedBorder>(c))));
         }
     };
 
-    Border _value;
+    SpecifiedBorder _value;
 
-    BorderLeftProperty(Rc<Property::Registration> registration, Border value)
+    BorderLeftProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
         : Property(registration), _value(value) {}
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -1001,7 +961,7 @@ export struct BorderProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderProperty>(self(), Border{});
+            return makeRc<BorderProperty>(self(), SpecifiedBorder{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -1009,13 +969,13 @@ export struct BorderProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderProperty>(self(), try$(parseValue<Border>(c))));
+            return Ok(makeRc<BorderProperty>(self(), try$(parseValue<SpecifiedBorder>(c))));
         }
     };
 
-    Border _value;
+    SpecifiedBorder _value;
 
-    BorderProperty(Rc<Property::Registration> registration, Border value)
+    BorderProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
         : Property(registration), _value(value) {}
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {

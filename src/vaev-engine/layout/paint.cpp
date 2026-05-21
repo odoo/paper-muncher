@@ -19,7 +19,7 @@ import :layout.table;
 
 namespace Vaev::Layout {
 
-Opt<Gfx::Borders> buildBorders(Metrics const& metrics, Style::ComputedValues const& style, Gfx::Color currentColor) {
+Opt<Gfx::Borders> buildBorders(Metrics const& metrics, Style::ComputedValues const& style) {
     if (metrics.borders.zero())
         return NONE;
 
@@ -37,15 +37,15 @@ Opt<Gfx::Borders> buildBorders(Metrics const& metrics, Style::ComputedValues con
     borders.styles[2] = bordersStyle.bottom.style;
     borders.styles[3] = bordersStyle.start.style;
 
-    borders.fills[0] = Vaev::resolve(bordersStyle.top.color, currentColor);
-    borders.fills[1] = Vaev::resolve(bordersStyle.end.color, currentColor);
-    borders.fills[2] = Vaev::resolve(bordersStyle.bottom.color, currentColor);
-    borders.fills[3] = Vaev::resolve(bordersStyle.start.color, currentColor);
+    borders.fills[0] = bordersStyle.top.color;
+    borders.fills[1] = bordersStyle.end.color;
+    borders.fills[2] = bordersStyle.bottom.color;
+    borders.fills[3] = bordersStyle.start.color;
 
     return borders;
 }
 
-Opt<Gfx::Borders> buildBorders(UsedBorders const& border, Gfx::Color currentColor) {
+Opt<Gfx::Borders> buildBorders(UsedBorders const& border) {
     if (border.map(
                   [](auto b) {
                       return b.width;
@@ -66,15 +66,15 @@ Opt<Gfx::Borders> buildBorders(UsedBorders const& border, Gfx::Color currentColo
     borders.styles[2] = border.bottom.style;
     borders.styles[3] = border.start.style;
 
-    borders.fills[0] = Vaev::resolve(border.top.color, currentColor);
-    borders.fills[1] = Vaev::resolve(border.end.color, currentColor);
-    borders.fills[2] = Vaev::resolve(border.bottom.color, currentColor);
-    borders.fills[3] = Vaev::resolve(border.start.color, currentColor);
+    borders.fills[0] = border.top.color;
+    borders.fills[1] = border.end.color;
+    borders.fills[2] = border.bottom.color;
+    borders.fills[3] = border.start.color;
 
     return borders;
 }
 
-Opt<Gfx::Outline> buildOutline(Metrics const& metrics, Style::ComputedValues const& style, Gfx::Color currentColor) {
+Opt<Gfx::Outline> buildOutline(Metrics const& metrics, Style::ComputedValues const& style) {
     if (metrics.outlineWidth == 0_au)
         return NONE;
 
@@ -90,15 +90,7 @@ Opt<Gfx::Outline> buildOutline(Metrics const& metrics, Style::ComputedValues con
         outline.style = outlineStyle.style.unwrap<Gfx::BorderStyle>();
     }
 
-    if (outlineStyle.color.is<Keywords::Auto>()) {
-        if (outlineStyle.style.is<Keywords::Auto>()) {
-            outline.fill = resolve(Color(SystemColor::ACCENT_COLOR), currentColor);
-        } else {
-            outline.fill = currentColor;
-        }
-    } else {
-        outline.fill = resolve(outlineStyle.color.unwrap<Color>(), currentColor);
-    }
+    outline.fill = outlineStyle.color;
 
     return outline;
 }
@@ -114,18 +106,17 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack, Opt
     auto const& cssBackground = frag.style().backgrounds;
 
     Vec<Gfx::Fill> backgrounds;
-    auto color = Vaev::resolve(cssBackground->color, frag.style().color);
+    auto color = cssBackground->color;
 
     if (color.alpha != 0) {
         if (not frag.box->isRootElementPrincipalBox())
             backgrounds.pushBack(color);
     }
 
-    auto currentColor = Vaev::resolve(frag.style().color, color);
     auto bordersWithoutRadii = usedBorders
-                                   ? buildBorders(*usedBorders, Vaev::resolve(frag.style().color, currentColor))
-                                   : buildBorders(frag.metrics, frag.style(), Vaev::resolve(frag.style().color, currentColor));
-    auto outline = buildOutline(frag.metrics, frag.style(), Vaev::resolve(frag.style().color, currentColor));
+                                   ? buildBorders(*usedBorders)
+                                   : buildBorders(frag.metrics, frag.style());
+    auto outline = buildOutline(frag.metrics, frag.style());
     Math::Rectf bound = frag.metrics.borderBox().round().cast<f64>();
 
     if (any(backgrounds) or bordersWithoutRadii or outline) {
@@ -146,8 +137,8 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack, Opt
 static void _establishStackingContext(Frag& frag, Scene::Stack& stack);
 static void _paintStackingContext(Frag& frag, Scene::Stack& stack);
 
-Rc<Scene::Node> _paintSVGRoot(SvgRootFrag& svgRoot, Gfx::Color currentColor);
-Rc<Scene::Stack> _paintSVGAggregate(SvgGroupFrag& group, Gfx::Color currentColor, RectAu viewBox);
+Rc<Scene::Node> _paintSVGRoot(SvgRootFrag& svgRoot);
+Rc<Scene::Stack> _paintSVGAggregate(SvgGroupFrag& group, RectAu viewBox);
 
 static RectAu _resolveTransformReferenceSVG(SvgFrag& svgFrag, RectAu viewBox, TransformBox box);
 static Rc<Scene::Node> _applyTransform(Vaev::Style::TransformProps const& transform, RectAu referenceBox, Rc<Scene::Node> content);
@@ -161,22 +152,22 @@ Rc<Scene::Node> _applyTransformIfNeeded(SvgFrag& svgFrag, RectAu viewBox, Rc<Sce
     return _applyTransform(transform, referenceBox, content);
 }
 
-Rc<Scene::Node> _paintSVGElement(SvgGroupFrag::Element& element, Gfx::Color currentColor, RectAu viewBox) {
+Rc<Scene::Node> _paintSVGElement(SvgGroupFrag::Element& element, RectAu viewBox) {
     if (auto shape = element.is<SvgShapeFrag>()) {
         return _applyTransformIfNeeded(
             *shape, viewBox,
-            shape->toSceneNode(currentColor)
+            shape->toSceneNode()
         );
     } else if (auto nestedGroup = element.is<SvgGroupFrag>()) {
         return _applyTransformIfNeeded(
             *nestedGroup, viewBox,
-            _paintSVGAggregate(*nestedGroup, currentColor, viewBox)
+            _paintSVGAggregate(*nestedGroup, viewBox)
         );
     } else if (auto nestedRoot = element.is<SvgRootFrag>()) {
         return _applyTransformIfNeeded(
             *nestedRoot, viewBox,
             makeRc<Scene::Clip>(
-                _paintSVGRoot(*nestedRoot, currentColor),
+                _paintSVGRoot(*nestedRoot),
                 nestedRoot->boundingBox.toRect().cast<f64>()
             )
         );
@@ -193,16 +184,16 @@ Rc<Scene::Node> _paintSVGElement(SvgGroupFrag::Element& element, Gfx::Color curr
     unreachable();
 }
 
-Rc<Scene::Stack> _paintSVGAggregate(SvgGroupFrag& group, Gfx::Color currentColor, RectAu viewBox) {
+Rc<Scene::Stack> _paintSVGAggregate(SvgGroupFrag& group, RectAu viewBox) {
     // NOTE: A SVG group does not create a stacking context, but its easier to manipulate a group if itself is its own node
     Scene::Stack stack;
     for (auto& element : group.elements) {
-        stack.add(_paintSVGElement(element, currentColor, viewBox));
+        stack.add(_paintSVGElement(element, viewBox));
     }
     return makeRc<Scene::Stack>(std::move(stack));
 }
 
-Rc<Scene::Node> _paintSVGRoot(SvgRootFrag& svgRoot, Gfx::Color currentColor) {
+Rc<Scene::Node> _paintSVGRoot(SvgRootFrag& svgRoot) {
     // FIXME: Ugly cast because we need to upcast, should be fixed once we unify SVGRootFrag with Frag
     SvgRootBox const& rootBox = *static_cast<SvgRootBox const*>(svgRoot.box.buf());
 
@@ -217,7 +208,7 @@ Rc<Scene::Node> _paintSVGRoot(SvgRootFrag& svgRoot, Gfx::Color currentColor) {
             ? Math::Rect<f64>{Math::Vec2<f64>{rootBox.viewBox->width, rootBox.viewBox->height}}.cast<Au>()
             : svgRoot.boundingBox.toRect();
 
-    auto content = _paintSVGAggregate(svgRoot, currentColor, viewBox);
+    auto content = _paintSVGAggregate(svgRoot, viewBox);
     return makeRc<Scene::Transform>(content, svgRoot.transf);
 }
 
@@ -253,7 +244,7 @@ static void _paintFrag(Frag& frag, Scene::Stack& stack, Opt<UsedBorders> usedBor
 
         stack.add(
             makeRc<Scene::Clip>(
-                _paintSVGRoot(*svgRoot, s.color),
+                _paintSVGRoot(*svgRoot),
                 frag.metrics.contentBox().cast<f64>()
             )
         );

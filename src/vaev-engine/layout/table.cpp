@@ -644,16 +644,16 @@ export struct TableFormatingContext : FormatingContext {
 
     struct {
         usize gridWidth = 0;
-        Buf<Math::Insets<Color>> color;
+        Buf<Math::Insets<Gfx::Color>> color;
         Buf<Math::Insets<Gfx::BorderStyle>> style;
 
-        void init(Math::Vec2u size) {
+        void init(Math::Vec2u size, Gfx::Color currentColor) {
             gridWidth = size.x;
-            color.resize(size.x * size.y, Color{Keywords::CURRENT_COLOR});
+            color.resize(size.x * size.y, currentColor);
             style.resize(size.x * size.y, Gfx::BorderStyle::NONE);
         }
 
-        Math::Insets<Color>& colorAt(usize i, usize j) {
+        Math::Insets<Gfx::Color>& colorAt(usize i, usize j) {
             return color[i * gridWidth + j];
         }
 
@@ -688,7 +688,7 @@ export struct TableFormatingContext : FormatingContext {
     }
 
     void computeBordersStructsCollapse(Tree& tree, Box& box) {
-        bordersStyleGrid.init(grid.size);
+        bordersStyleGrid.init(grid.size, box.style->color);
 
         for (usize i = 0; i + 1 < grid.size.y; ++i)
             resolveConflictForBordersAtHorizontalAxis(tree, i);
@@ -739,7 +739,7 @@ export struct TableFormatingContext : FormatingContext {
         bordersGrid.init(grid.size);
 
         if (useBordersCollapse) {
-            bordersStyleGrid.init(grid.size);
+            bordersStyleGrid.init(grid.size, box.style->color);
             computeBordersStructsCollapse(tree, box);
             boxBorderMapping = Map<usize, UsedBorders>{};
         } else

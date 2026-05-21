@@ -44,7 +44,13 @@ export enum struct SvgMeetOrSlice {
 // MARK: Paint
 // TODO: still not complete type
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
-export using SvgPaint = Union<Color, None>;
+export using SvgPaint = Opt<Color>;
+
+Opt<Gfx::Color> resolve(SvgPaint color, Gfx::Color currentColor) {
+    if (color == NONE)
+        return NONE;
+    return Vaev::resolve(color.unwrap(), currentColor);
+}
 
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
 export struct SvgViewBox {
@@ -69,8 +75,8 @@ export struct SvgProps {
     PercentOr<Length> strokeWidth = Length{1_au};
     Number strokeOpacity = 1;
     Union<String, None> d = NONE;
-    SvgPaint fill = Color{Gfx::BLACK};
-    SvgPaint stroke = NONE;
+    Opt<Gfx::Color> fill = Gfx::BLACK;
+    Opt<Gfx::Color> stroke = NONE;
     Opt<SvgViewBox> viewBox = NONE;
 
     void repr(Io::Emit& e) const {
