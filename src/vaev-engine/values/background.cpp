@@ -110,33 +110,37 @@ struct ValueParser<BackgroundPosition> {
             BackgroundPosition::VerticalAnchor vAnchor = Keywords::TOP;
             CalcValue<PercentOr<Length>> vValue = {Percent(0)};
 
-            try$(items[0].visit(
-                [&](Meta::Contains<Keywords::Left, Keywords::Right, Keywords::Center> auto& t) -> Res<> {
-                    hAnchor = t;
-                    return Ok();
-                },
-                [&](CalcValue<PercentOr<Length>>& t) -> Res<> {
-                    hValue = t;
-                    return Ok();
-                },
-                [](auto&) -> Res<> {
-                    return Error::invalidData("invalid horizontal anchor");
-                }
-            ));
+            try$(
+                items[0].visit(
+                    [&](Meta::Contains<Keywords::Left, Keywords::Right, Keywords::Center> auto& t) -> Res<> {
+                        hAnchor = t;
+                        return Ok();
+                    },
+                    [&](CalcValue<PercentOr<Length>>& t) -> Res<> {
+                        hValue = t;
+                        return Ok();
+                    },
+                    [](auto&) -> Res<> {
+                        return Error::invalidData("invalid horizontal anchor");
+                    }
+                )
+            );
 
-            try$(items[1].visit(
-                [&](Meta::Contains<Keywords::Bottom, Keywords::Top, Keywords::Center> auto& t) -> Res<> {
-                    vAnchor = t;
-                    return Ok();
-                },
-                [&](CalcValue<PercentOr<Length>>& t) -> Res<> {
-                    vValue = t;
-                    return Ok();
-                },
-                [](auto&) -> Res<> {
-                    return Error::invalidData("invalid vertical anchor");
-                }
-            ));
+            try$(
+                items[1].visit(
+                    [&](Meta::Contains<Keywords::Bottom, Keywords::Top, Keywords::Center> auto& t) -> Res<> {
+                        vAnchor = t;
+                        return Ok();
+                    },
+                    [&](CalcValue<PercentOr<Length>>& t) -> Res<> {
+                        vValue = t;
+                        return Ok();
+                    },
+                    [](auto&) -> Res<> {
+                        return Error::invalidData("invalid vertical anchor");
+                    }
+                )
+            );
 
             return Ok(BackgroundPosition(hAnchor, hValue, vAnchor, vValue));
         }
@@ -151,83 +155,87 @@ struct ValueParser<BackgroundPosition> {
 
         usize secondPairIndex = 2;
 
-        try$(items[0].visit(
-            [&](Meta::Contains<Keywords::Left, Keywords::Right> auto& t) -> Res<> {
-                hAnchor = t;
-                hSet = true;
+        try$(
+            items[0].visit(
+                [&](Meta::Contains<Keywords::Left, Keywords::Right> auto& t) -> Res<> {
+                    hAnchor = t;
+                    hSet = true;
 
-                if (auto mesure = items[1].is<CalcValue<PercentOr<Length>>>()) {
-                    hValue = *mesure;
-                } else {
-                    secondPairIndex = 1;
-                }
-
-                return Ok();
-            },
-            [&](Keywords::Center& t) -> Res<> {
-                hAnchor = t;
-                hSet = true;
-
-                secondPairIndex = 1;
-
-                return Ok();
-            },
-            [&](Meta::Contains<Keywords::Top, Keywords::Bottom> auto& t) -> Res<> {
-                vAnchor = t;
-
-                if (auto mesure = items[1].is<CalcValue<PercentOr<Length>>>()) {
-                    vValue = *mesure;
-                } else {
-                    secondPairIndex = 1;
-                }
-
-                return Ok();
-            },
-            [](auto&) -> Res<> {
-                return Error::invalidData("invalid anchor");
-            }
-        ));
-
-        try$(items[secondPairIndex].visit(
-            [&](Meta::Contains<Keywords::Left, Keywords::Right> auto& t) -> Res<> {
-                if (hSet) {
-                    if (hAnchor.is<Keywords::Center>()) { // the first center was aimed at the vertical part so we exchange
-                        vAnchor = Keywords::CENTER;
-                        vValue = hValue;
-                    } else {
-                        return Error::invalidData("expected vertical anchor");
-                    }
-                }
-
-                hAnchor = t;
-
-                if (secondPairIndex + 1 < items.len()) {
-                    if (auto mesure = items[secondPairIndex + 1].is<CalcValue<PercentOr<Length>>>())
+                    if (auto mesure = items[1].is<CalcValue<PercentOr<Length>>>()) {
                         hValue = *mesure;
-                    else {
-                        return Error::invalidData("expected percent or length");
+                    } else {
+                        secondPairIndex = 1;
                     }
-                }
 
-                return Ok();
-            },
-            [&](Meta::Contains<Keywords::Top, Keywords::Bottom, Keywords::Center> auto& t) -> Res<> {
-                vAnchor = t;
+                    return Ok();
+                },
+                [&](Keywords::Center& t) -> Res<> {
+                    hAnchor = t;
+                    hSet = true;
 
-                if (secondPairIndex + 1 < items.len()) {
-                    if (auto mesure = items[secondPairIndex + 1].is<CalcValue<PercentOr<Length>>>())
+                    secondPairIndex = 1;
+
+                    return Ok();
+                },
+                [&](Meta::Contains<Keywords::Top, Keywords::Bottom> auto& t) -> Res<> {
+                    vAnchor = t;
+
+                    if (auto mesure = items[1].is<CalcValue<PercentOr<Length>>>()) {
                         vValue = *mesure;
-                    else {
-                        return Error::invalidData("unexpected last value");
+                    } else {
+                        secondPairIndex = 1;
                     }
-                }
 
-                return Ok();
-            },
-            [](auto&) -> Res<> {
-                return Error::invalidData("invalid anchor");
-            }
-        ));
+                    return Ok();
+                },
+                [](auto&) -> Res<> {
+                    return Error::invalidData("invalid anchor");
+                }
+            )
+        );
+
+        try$(
+            items[secondPairIndex].visit(
+                [&](Meta::Contains<Keywords::Left, Keywords::Right> auto& t) -> Res<> {
+                    if (hSet) {
+                        if (hAnchor.is<Keywords::Center>()) { // the first center was aimed at the vertical part so we exchange
+                            vAnchor = Keywords::CENTER;
+                            vValue = hValue;
+                        } else {
+                            return Error::invalidData("expected vertical anchor");
+                        }
+                    }
+
+                    hAnchor = t;
+
+                    if (secondPairIndex + 1 < items.len()) {
+                        if (auto mesure = items[secondPairIndex + 1].is<CalcValue<PercentOr<Length>>>())
+                            hValue = *mesure;
+                        else {
+                            return Error::invalidData("expected percent or length");
+                        }
+                    }
+
+                    return Ok();
+                },
+                [&](Meta::Contains<Keywords::Top, Keywords::Bottom, Keywords::Center> auto& t) -> Res<> {
+                    vAnchor = t;
+
+                    if (secondPairIndex + 1 < items.len()) {
+                        if (auto mesure = items[secondPairIndex + 1].is<CalcValue<PercentOr<Length>>>())
+                            vValue = *mesure;
+                        else {
+                            return Error::invalidData("unexpected last value");
+                        }
+                    }
+
+                    return Ok();
+                },
+                [](auto&) -> Res<> {
+                    return Error::invalidData("invalid anchor");
+                }
+            )
+        );
 
         return Ok(BackgroundPosition(hAnchor, hValue, vAnchor, vValue));
     }
@@ -277,9 +285,28 @@ export struct BackgroundLayer {
     }
 };
 
-export struct BackgroundProps {
+export struct SpecifiedBackground {
     Color color = TRANSPARENT;
     Vec<BackgroundLayer> layers = {};
+
+    void repr(Io::Emit& e) const {
+        e("(specified-background");
+        e(" color={}", color);
+        e(" layers={}", layers);
+        e(")");
+    }
+};
+
+export struct BackgroundProps {
+    Gfx::Color color = TRANSPARENT;
+    Vec<BackgroundLayer> layers = {};
+
+    operator SpecifiedBackground() const {
+        return {
+            color,
+            layers,
+        };
+    }
 
     void repr(Io::Emit& e) const {
         e("(background");

@@ -42,12 +42,6 @@ Au resolve(PercentOr<Length> const& value, Au relative) {
     return Au{relative.cast<f64>() * (value.unwrap<Percent>().value() / 100.)};
 }
 
-Opt<Gfx::Color> resolve(SvgPaint color, Gfx::Color currentColor) {
-    if (color.is<None>())
-        return NONE;
-    return Vaev::resolve(color.unwrap<Color>(), currentColor);
-}
-
 Au normalizedDiagonal(Vec2Au relativeTo) {
     return Au{
         Math::sqrt(f64{(relativeTo.x.cast<f64>() * relativeTo.x.cast<f64>()) + (relativeTo.y.cast<f64>() * relativeTo.y.cast<f64>())}) / Math::sqrt(2.0)
@@ -263,8 +257,8 @@ struct SvgShapeFrag : SvgFrag {
         unreachable();
     }
 
-    Opt<Gfx::Stroke> _resolveStroke(SvgProps const& style, Gfx::Color currentColor) const {
-        Opt<Gfx::Color> color = Vaev::Layout::resolve(style.stroke, currentColor);
+    Opt<Gfx::Stroke> _resolveStroke(SvgProps const& style) const {
+        Opt<Gfx::Color> color = style.stroke;
         if (not color)
             return NONE;
 
@@ -279,14 +273,14 @@ struct SvgShapeFrag : SvgFrag {
         return Gfx::Stroke{*color, static_cast<f64>(strokeWidth)};
     }
 
-    Rc<Scene::Node> toSceneNode(Gfx::Color currentColor) const {
+    Rc<Scene::Node> toSceneNode() const {
         auto const& style = *box->style->svg;
 
-        Opt<Gfx::Color> resolvedFill = Vaev::Layout::resolve(style.fill, currentColor).map([&](auto fill) {
+        Opt<Gfx::Color> resolvedFill = style.fill.map([&](auto fill) {
             return fill.withOpacity(style.fillOpacity);
         });
 
-        Opt<Gfx::Stroke> resolvedStroke = _resolveStroke(style, currentColor);
+        Opt<Gfx::Stroke> resolvedStroke = _resolveStroke(style);
 
         if (auto rect = shape.is<SvgRectangle<Au>>()) {
             return rectToSceneNode(rect->cast<f64>(), resolvedFill, resolvedStroke);

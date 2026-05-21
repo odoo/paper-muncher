@@ -8,8 +8,7 @@ import :values.lineWidth;
 
 namespace Vaev {
 
-// https://drafts.csswg.org/css-ui/#outline
-export struct Outline {
+export struct SpecifiedOutline {
     LineWidth width = Keywords::MEDIUM;
     CalcValue<Length> offset = 0_au;
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
@@ -17,6 +16,23 @@ export struct Outline {
 
     void repr(Io::Emit& e) const {
         e("(outline {} {} {} {})", width, offset, style, color);
+    }
+};
+
+// https://drafts.csswg.org/css-ui/#outline
+export struct OutlineProps {
+    LineWidth width = Keywords::MEDIUM;
+    CalcValue<Length> offset = 0_au;
+    Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
+    Gfx::Color color = Gfx::BLUE500;
+
+    operator SpecifiedOutline() const {
+        return {
+            width,
+            offset,
+            style,
+            Color{color}
+        };
     }
 };
 
