@@ -34,11 +34,16 @@ export struct _Viewport {
     Math::Rectf dynamic = small;
 };
 
+
+
 export struct ComputationContext {
     Opt<Gfx::Font> rootFont;
-    Px userFontSize = 16_px;
+    Opt<Gfx::Font> font;
     _Viewport viewport;
-    Math::Vec2f displayArea;
+};
+
+export struct CalcContext {
+    Opt<Gfx::Font> 
 };
 
 export template <typename>
@@ -127,7 +132,7 @@ export template <typename T>
 using Computed = typename ValueTraits<T>::ComputedType;
 
 export template <typename T>
-ValueTraits<T>::ComputedType computeValue(T const& value, ComputationContext const& ctx, Style::ComputedValues const& computed) {
+ValueTraits<T>::ComputedType computeValue(T const& value, ComputationContext const& ctx, Style::ComputedValues const& computed, Opt<f64> relativeTo = NONE) {
     return ValueTraits<T>::compute(value, ctx, computed);
 }
 
