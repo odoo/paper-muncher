@@ -221,6 +221,7 @@ export RegisteredPropertySet const& defaultRegistry() {
         registry.registerProperty<SvgViewBoxProperty>();
         registry.registerProperty<FillOpacityProperty>();
         registry.registerProperty<StrokeWidthProperty>();
+        registry.registerProperty<FontFacePhonyProperty>();
 
         registry.resolvePropertyDependencies();
 

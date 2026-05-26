@@ -4,6 +4,8 @@ module;
 
 export module Vaev.Engine:props.fonts;
 
+import Karm.Font;
+
 import Karm.Core;
 import :props.base;
 import :css.parser;
@@ -319,6 +321,79 @@ export struct FontProperty : Property {
 
     void repr(Io::Emit& e) const override {
         e("{}", _value);
+    }
+};
+
+export struct FontFacePhonyProperty : Property {
+    struct Registration : Property::Registration {
+        Symbol name() const override {
+            return Properties::Phony::FONT_FACE;
+        }
+
+        Flags<Options> flags() const override {
+            return {PHONY};
+        }
+
+        Vec<Symbol> dependencies() const override {
+            return {
+                Properties::FONT_FAMILY,
+                Properties::FONT_WIDTH,
+                Properties::FONT_WEIGHT,
+                Properties::FONT_STYLE,
+                Properties::FONT_SIZE,
+            };
+        }
+
+        Rc<Property> initial() const override {
+            return makeRc<FontFacePhonyProperty>(self(), NONE);
+        }
+
+        Rc<Property> load(ComputedValues const& c) const override {
+            (void)c;
+            panic("load() on a phony property registration");
+        }
+
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
+            child.fontFace = parent.fontFace;
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            (void)c;
+            panic("parse() on a phony property registration");
+        }
+    };
+
+    Opt<Rc<Font::Database>> _fontDatabase;
+
+    FontFacePhonyProperty(Rc<Property::Registration> registration, Opt<Rc<Font::Database>> fontDatabase)
+        : Property(registration), _fontDatabase(fontDatabase) {}
+
+    Rc<Gfx::Fontface> _lookupFontface(ComputedValues& style) const {
+        Font::Query fq{
+            .weight = style.font->weight,
+            .style = style.font->style.val,
+        };
+
+        for (auto family : style.font->families) {
+            if (auto const& [font] = (*_fontDatabase)->queryClosest(family.name, fq))
+                return font;
+        }
+
+        if (auto const& [font] = (*_fontDatabase)->queryClosest("system"_sym))
+            return font;
+
+        return Gfx::Fontface::fallback();
+    }
+
+    void apply(ComputedValues& c) const override {
+        if (_fontDatabase)
+            c.fontFace =  _lookupFontface(c);
+        else
+            c.fontFace = Gfx::Fontface::fallback();
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("");
     }
 };
 
