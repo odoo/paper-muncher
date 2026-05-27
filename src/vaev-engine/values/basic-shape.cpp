@@ -22,7 +22,7 @@ using namespace Karm;
 
 namespace Vaev {
 
-// https://drafts.fxtf.org/css-masking/#typedef-geometry-box
+// https://drafts.csswg.org/css-masking/#typedef-geometry-box
 export using ShapeBox = FlatUnion<
     Keywords::BorderBox,
     Keywords::PaddingBox,
@@ -403,7 +403,7 @@ struct ValueParser<Xywh> {
 };
 
 // MARK: Basic Shape -----------------------------------------------------------
-// https://drafts.fxtf.org/css-masking/#the-clip-path
+// https://drafts.csswg.org/css-masking/#the-clip-path
 //  [ <basic-shape> || <geometry-box> ]
 
 export using BasicShapeFunction = Union<

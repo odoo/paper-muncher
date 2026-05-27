@@ -96,7 +96,7 @@ export struct OpacityProperty : Property {
     }
 };
 
-// https://drafts.fxtf.org/css-masking/#the-clip-path
+// https://drafts.csswg.org/css-masking/#the-clip-path
 export struct ClipPathProperty : Property {
     using Value = Union</* Url, */ BasicShape, Keywords::None>;
 
