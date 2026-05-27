@@ -1502,6 +1502,11 @@ struct FlexFormatingContext : FormatingContext {
         //       Proper reset logic to be implemented in a future commit.
         *this = {*box.style->flex};
 
+        tree.fc.enterMonolithicBox();
+        Defer _ = [&] {
+            tree.fc.leaveMonolithicBox();
+        };
+
         // 1. Generate anonymous flex items
         // NOTE: Done during box building phase
 
