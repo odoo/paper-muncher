@@ -69,13 +69,6 @@ export struct Output {
     BaselinePositionsSet const firstBaselineSet = {};
     BaselinePositionsSet const lastBaselineSet = {};
 
-    static Output fromSize(Vec2Au size) {
-        return {
-            .size = size,
-            .completelyLaidOut = true
-        };
-    }
-
     Au width() const {
         return size.x;
     }

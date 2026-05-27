@@ -332,6 +332,7 @@ struct SvgFormatingContext : FormatingContext {
         return {
             .size = size,
             .completelyLaidOut = true,
+            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
             .firstBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
             .lastBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
         };
