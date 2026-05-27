@@ -197,7 +197,9 @@ export struct Computer {
     }
 
     // https://drafts.csswg.org/css-cascade/#cascade-origin
-    Rc<ComputedValues> computeFor(ComputedValues const& parentComputedValues, Gc::Ref<Dom::Element> el) {
+    Rc<ComputedValues> computeFor(ComputedValues const& parent, Gc::Ref<Dom::Element> el) {
+        auto values = _registeredPropertySet.inheritsComputedValues(parent);
+
         MatchingRules const matchingRules = _ruleIndex.match(el, NONE);
         CascadedValues cascadedValues;
         for (auto const& [styleRule, specificity] : matchingRules)
@@ -207,12 +209,33 @@ export struct Computer {
         _considerHtmlPresentationalHint(el, cascadedValues);
         _considerInlineStyleAttribute(el, cascadedValues);
         _considerSvgPresentationAttributes(el, cascadedValues);
-        auto values = cascadedValues.apply(parentComputedValues, _registeredPropertySet);
+
+        cascadedValues.apply(Property::ComputationPhase::CUSTOM_PROPERTY, parent, *values);
+        cascadedValues.expandShorthands(parent, *values, _registeredPropertySet);
+
+        cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, *values);
+        cascadedValues.apply(Property::ComputationPhase::FONT, parent, *values);
+
+        if (not parent.font.sameInstance(values->font) and
+            (parent.font->families != values->font->families or
+             parent.font->weight != values->font->weight)) {
+            auto font = _lookupFontface(*values);
+            values->fontFace = font;
+        } else {
+            values->fontFace = parent.fontFace;
+        }
+
+        cascadedValues.apply(Property::ComputationPhase::NORMAL, parent, *values);
+        cascadedValues.apply(Property::ComputationPhase::LATE, parent, *values);
+
         _considerElementAttributes(*values, el);
+
         return values;
     }
 
     Rc<ComputedValues> computeFor(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Symbol pseudoElement) {
+        auto values = _registeredPropertySet.inheritsComputedValues(parent);
+
         MatchingRules matchingRules = _ruleIndex.match(el, pseudoElement);
 
         CascadedValues cascadedValues;
@@ -220,7 +243,25 @@ export struct Computer {
             for (auto& prop : styleRule->props)
                 cascadedValues.put(prop, styleRule->origin, specificity);
 
-        return cascadedValues.apply(parent, _registeredPropertySet);
+        cascadedValues.apply(Property::ComputationPhase::CUSTOM_PROPERTY, parent, *values);
+        cascadedValues.expandShorthands(parent, *values, _registeredPropertySet);
+
+        cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, *values);
+        cascadedValues.apply(Property::ComputationPhase::FONT, parent, *values);
+
+        if (not parent.font.sameInstance(values->font) and
+            (parent.font->families != values->font->families or
+             parent.font->weight != values->font->weight)) {
+            auto font = _lookupFontface(*values);
+            values->fontFace = font;
+        } else {
+            values->fontFace = parent.fontFace;
+        }
+
+        cascadedValues.apply(Property::ComputationPhase::NORMAL, parent, *values);
+        cascadedValues.apply(Property::ComputationPhase::LATE, parent, *values);
+
+        return values;
     }
 
     Rc<PageComputedValues> computeFor(ComputedValues const& parent, Page const& page) {
@@ -243,18 +284,6 @@ export struct Computer {
     void generatePseudoElement(ComputedValues const& parentComputedValues, Dom::Element& el, Symbol type) {
         auto computedValues = computeFor(parentComputedValues, el, type);
 
-        // HACK: This is basically nonsense to avoid doing too much font lookup,
-        //       and it should be remove once the style engine get refactored
-        //       and computed values are properly handled.
-        if (not parentComputedValues.font.sameInstance(computedValues->font) and
-            (parentComputedValues.font->families != computedValues->font->families or
-             parentComputedValues.font->weight != computedValues->font->weight)) {
-            auto font = _lookupFontface(*computedValues);
-            computedValues->fontFace = font;
-        } else {
-            computedValues->fontFace = parentComputedValues.fontFace;
-        }
-
         // https://drafts.csswg.org/css-content/#valdef-content-none
         // On pseudo-elements it inhibits the creation of the pseudo-element as if it had display: none.
         if (computedValues->content == Keywords::NONE)
@@ -272,18 +301,6 @@ export struct Computer {
     void styleElement(ComputedValues const& parentComputedValues, Dom::Element& el) {
         auto computedValues = computeFor(parentComputedValues, el);
         el._computedValues = computedValues;
-
-        // HACK: This is basically nonsense to avoid doing too much font lookup,
-        //       and it should be remove once the style engine get refactored
-        //       and computed values are properly handled.
-        if (not parentComputedValues.font.sameInstance(computedValues->font) and
-            (parentComputedValues.font->families != computedValues->font->families or
-             parentComputedValues.font->weight != computedValues->font->weight)) {
-            auto font = _lookupFontface(*computedValues);
-            computedValues->fontFace = font;
-        } else {
-            computedValues->fontFace = parentComputedValues.fontFace;
-        }
 
         if (computedValues->display == Display::Item::YES) {
             generatePseudoElement(*computedValues, el, Dom::PseudoElement::MARKER);

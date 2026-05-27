@@ -22,13 +22,7 @@ export struct CascadedValues {
         Specificity specificity;
         usize declarationOrder;
 
-        auto priority() const {
-            return property->registration->resolutionOrder;
-        }
-
         auto operator<=>(Entry const& other) const {
-            if (priority() != other.priority())
-                return priority() <=> other.priority();
             if (important != other.important)
                 return important <=> other.important;
             if (origin != other.origin)
@@ -42,12 +36,19 @@ export struct CascadedValues {
     Map<Symbol, Entry> _entries;
     usize _declarationOrder = 0;
 
-    void put(Rc<Property> property, Origin origin, Specificity specificity) {
+    void _putLonghand(Rc<Property> property, Origin origin, Specificity specificity, Css::Important important, usize declarationOrder) {
         auto name = property->registration->name();
-        Entry entry{property, property->important, origin, specificity, _declarationOrder++};
+        Entry entry{property, important, origin, specificity, declarationOrder};
         auto& existing = _entries.lookupOrPutDefault(name, entry);
-        if (existing.property != property and entry >= existing)
+        if (entry >= existing)
             existing = entry;
+    }
+
+    void put(Rc<Property> property, Origin origin, Specificity specificity) {
+        if (property->isBogusProperty())
+            return;
+
+        _putLonghand(property, origin, specificity, property->important, _declarationOrder++);
     }
 
     void clear() {
@@ -55,33 +56,31 @@ export struct CascadedValues {
         _entries.clear();
     }
 
-    Vec<Entry> _resolveDependencies() const {
-        auto entries =
-            _entries.iterValue() |
-            Collect<Vec<Entry>>();
-        stableSort(entries);
-        return entries;
-    }
-
-    Rc<ComputedValues> apply(ComputedValues const& parentComputedValues, RegisteredPropertySet& registeredPropertySet) {
-        auto computedValues = registeredPropertySet.inheritsComputedValues(parentComputedValues);
-        for (auto& entry : _resolveDependencies()) {
-            auto& property = entry.property;
-
-            if (property->isBogusProperty())
-                continue;
-
-            if (property->isShorthandProperty()) {
-                for (auto& longhandProperty : property->expandShorthand(registeredPropertySet, parentComputedValues, *computedValues)) {
-                    longhandProperty->apply(parentComputedValues, *computedValues);
-                }
-                continue;
-            }
-
-            property->apply(parentComputedValues, *computedValues);
+    void expandShorthands(ComputedValues const& parent, ComputedValues& child, RegisteredPropertySet& registeredPropertySet) {
+        Vec<Entry> shorthandEntries;
+        for (auto const& entry : _entries.iterValue()) {
+            if (entry.property->isShorthandProperty())
+                shorthandEntries.pushBack(entry);
         }
 
-        return computedValues;
+        for (auto& entry : shorthandEntries) {
+            auto& prop = entry.property;
+            _entries.remove(prop->registration->name()).unwrap();
+            for (auto& longhandProperty : prop->expandShorthand(registeredPropertySet, parent, child)) {
+                _putLonghand(longhandProperty, entry.origin, entry.specificity, prop->important, entry.declarationOrder);
+            }
+        }
+    }
+
+    void apply(Property::ComputationPhase computationPhase, ComputedValues const& parent, ComputedValues& child) {
+        for (auto& entry : _entries.iterValue()) {
+            auto& prop = entry.property;
+
+            if (prop->registration->computationPhase() != computationPhase)
+                continue;
+
+            prop->apply(parent, child);
+        }
     }
 };
 

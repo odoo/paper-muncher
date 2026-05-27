@@ -396,12 +396,6 @@ export struct SvgStrokeProperty : Property {
             return Properties::STROKE;
         }
 
-        Vec<Symbol> dependencies() const override {
-            return {
-                Properties::COLOR,
-            };
-        }
-
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE};
         }
