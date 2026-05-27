@@ -98,6 +98,17 @@ struct Box : Meta::NoCopy {
         return content.is<Rc<Scene::Node>>();
     }
 
+    bool isRunningPositionedBox() const {
+        return style->position.is<RunningPosition>();
+    }
+
+    // https://www.w3.org/TR/css-break-3/#monolithic
+    bool isMonolithic() const {
+        return isReplaced() or
+               style->display == Display::Inside::FLEX or
+               style->display == Display::Inside::GRID;
+    }
+
     bool isRootElementPrincipalBox() const {
         if (not origin)
             return false;

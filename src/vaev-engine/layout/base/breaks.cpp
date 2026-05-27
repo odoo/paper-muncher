@@ -4,6 +4,7 @@ import Karm.Core;
 import Karm.Math;
 
 import :values.length;
+import :layout.box;
 
 using namespace Karm;
 
@@ -31,7 +32,7 @@ export struct Fragmentainer {
     }
 
     bool isMonolithicBox() {
-        return _monolithicCount == 0;
+        return _monolithicCount != 0;
     }
 
     void enterMonolithicBox() {
@@ -47,7 +48,7 @@ export struct Fragmentainer {
     }
 
     bool allowBreak() {
-        return not hasInfiniteDimensions() and _monolithicCount == 0;
+        return not hasInfiniteDimensions() and not isMonolithicBox();
     }
 
     bool acceptsFit(Au verticalPosition, Au verticalSize, Au pendingVerticalSizes) {
@@ -83,6 +84,16 @@ export struct Breakpoint {
     Appeal appeal = Appeal::EMPTY;
     Vec<Opt<Breakpoint>> children = {};
     Advance advance;
+    bool completelyLaidOut = false;
+
+    static Breakpoint bottomOfMonolithicBox(Box& box) {
+        return {
+            .endIdx = box.children().len(),
+            .appeal = Breakpoint::Appeal::CLASS_B,
+            .advance = Breakpoint::Advance::WITHOUT_CHILDREN,
+            .completelyLaidOut = true,
+        };
+    }
 
     static Breakpoint forced(usize endIdx) {
         return {

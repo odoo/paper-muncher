@@ -682,13 +682,18 @@ struct FlexFormatingContext : FormatingContext {
 
     // 0. MARK: Empty flex items list ------------------------------------------------------
 
-    Res<None, Output> returnIfNoFlexItems(Input input) {
+    Res<None, Output> returnIfNoFlexItems(Box& box, Input input) {
         if (_items.len())
             return Ok(NONE);
 
-        return Output::fromSize(
-            {input.knownSize.x.unwrapOr(0_au), input.knownSize.y.unwrapOr(0_au)}
-        );
+        return Output{
+            .size = {
+                input.knownSize.x.unwrapOr(0_au),
+                input.knownSize.y.unwrapOr(0_au),
+            },
+            .completelyLaidOut = true,
+            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
+        };
     }
 
     // 2. MARK: Available main and cross space for the flex items --------------
@@ -1506,7 +1511,7 @@ struct FlexFormatingContext : FormatingContext {
         // XX. Handle absolute positioned children
         _layoutAbsolutePositionedChildren();
 
-        try$(returnIfNoFlexItems(input));
+        try$(returnIfNoFlexItems(box, input));
 
         // 2. Determine the available main and cross space for the flex items.
         _determineAvailableMainAndCrossSpace(tree, input);
@@ -1557,7 +1562,11 @@ struct FlexFormatingContext : FormatingContext {
         if (input.fragment)
             _commit(tree, input);
 
-        return Output::fromSize(fa.buildPair(_usedMainSize, _usedCrossSize));
+        return {
+            .size = fa.buildPair(_usedMainSize, _usedCrossSize),
+            .completelyLaidOut = true,
+            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
+        };
     }
 };
 

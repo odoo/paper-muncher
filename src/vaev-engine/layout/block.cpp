@@ -201,6 +201,8 @@ struct BlockFormatingContext : FormatingContext {
         for (usize i = startAt; i < endChildren; ++i) {
             auto& c = box.children()[i];
             lookForRunningPosition(input, c);
+            if (c.isRunningPositionedBox())
+                continue;
 
             try$(
                 processBreakpointsBeforeChild(

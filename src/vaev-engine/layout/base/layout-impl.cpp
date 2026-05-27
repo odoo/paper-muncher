@@ -51,7 +51,7 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     }
 }
 
-Output _contentLayout(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) {
+Output _dispatchFormatingContext(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) {
     if (box.formatingContext == NONE) {
         box.formatingContext = _constructFormatingContext(box);
         if (box.formatingContext)
@@ -146,7 +146,7 @@ Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic
         panic("bad argument");
     }
 
-    auto output = _contentLayout(
+    auto output = _dispatchFormatingContext(
         tree,
         box,
         {
@@ -219,6 +219,9 @@ Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au 
 }
 
 static Res<None, Output> _shouldAbortFragmentingBeforeLayout(Fragmentainer& fc, Input input) {
+    if (not fc.isDiscoveryMode())
+        return Ok(NONE);
+
     if (not fc.acceptsFit(
             input.position.y,
             0_au,
@@ -233,93 +236,28 @@ static Res<None, Output> _shouldAbortFragmentingBeforeLayout(Fragmentainer& fc, 
     return Ok(NONE);
 }
 
-static void _maybeSetMonolithicBreakpoint(Fragmentainer& fc, bool isMonolticDisplay, bool childCompletelyLaidOut, usize boxChildrenLen, Opt<Breakpoint>& outputBreakpoint) {
-    if (not fc.isMonolithicBox() or
-        not isMonolticDisplay or
-        fc.hasInfiniteDimensions())
-        return;
-
-    if (not childCompletelyLaidOut)
-        panic("monolitic blocks should always be completly laid out");
-
-    // NOTE: wont abstract this since this is currently a workaround since we dont have fragmentation for table,flex
-    Breakpoint bottomOfContentBreakForTopMonolitic{
-        .endIdx = boxChildrenLen,
-        .appeal = Breakpoint::Appeal::CLASS_B,
-        .advance = Breakpoint::Advance::WITHOUT_CHILDREN
-    };
-
-    outputBreakpoint = bottomOfContentBreakForTopMonolitic;
-}
-
 Output layoutContentBox(Tree& tree, Box& box, Input input) {
-    bool isMonolithicDisplay =
-        box.style->display == Display::Inside::FLEX or
-        box.style->display == Display::Inside::GRID;
+    auto startAt = tree.fc.allowBreak() ? input.breakpointTraverser.getStart().unwrapOr(0uz) : 0uz;
+    auto stopAt = tree.fc.allowBreak() and not tree.fc.isDiscoveryMode() ? input.breakpointTraverser.getEnd() : NONE;
+    try$(_shouldAbortFragmentingBeforeLayout(tree.fc, input));
 
-    usize startAt = tree.fc.allowBreak() ? input.breakpointTraverser.getStart().unwrapOr(0) : 0;
+    if (box.isMonolithic())
+        tree.fc.enterMonolithicBox();
 
-    if (tree.fc.isDiscoveryMode()) {
-        try$(_shouldAbortFragmentingBeforeLayout(tree.fc, input));
+    auto out = _dispatchFormatingContext(
+        tree, box, input, startAt, stopAt
+    );
 
-        if (isMonolithicDisplay)
-            tree.fc.enterMonolithicBox();
+    if (box.isMonolithic())
+        tree.fc.leaveMonolithicBox();
 
-        // TODO: Class C breakpoint
-
-        auto out = _contentLayout(tree, box, input, startAt, NONE);
-
-        // NOTE: assert since algo is still a bit experimental
-        if (not out.completelyLaidOut and out.breakpoint == NONE)
-            panic("if it was not completely laid out, there should be a breakpoint");
-
-        _maybeSetMonolithicBreakpoint(
-            tree.fc,
-            isMonolithicDisplay,
-            out.completelyLaidOut,
-            box.children().len(),
-            out.breakpoint
-        );
-
-        if (isMonolithicDisplay)
-            tree.fc.leaveMonolithicBox();
-
-        return {
-            .size = out.size,
-            .completelyLaidOut = out.completelyLaidOut,
-            .breakpoint = out.breakpoint,
-            .firstBaselineSet = out.firstBaselineSet,
-            .lastBaselineSet = out.lastBaselineSet,
-        };
-    } else {
-        Opt<usize> stopAt = tree.fc.allowBreak()
-                                ? input.breakpointTraverser.getEnd()
-                                : NONE;
-
-        if (box.style->position.is<RunningPosition>()) {
-            return Output{
-                .size = {},
-                .completelyLaidOut = true,
-                .firstBaselineSet = {},
-                .lastBaselineSet = {},
-            };
-        }
-
-        if (isMonolithicDisplay)
-            tree.fc.enterMonolithicBox();
-
-        auto out = _contentLayout(tree, box, input, startAt, stopAt);
-
-        if (isMonolithicDisplay)
-            tree.fc.leaveMonolithicBox();
-
-        return {
-            .size = out.size,
-            .completelyLaidOut = out.completelyLaidOut,
-            .firstBaselineSet = out.firstBaselineSet,
-            .lastBaselineSet = out.lastBaselineSet,
-        };
-    }
+    return {
+        .size = out.size,
+        .completelyLaidOut = out.completelyLaidOut,
+        .breakpoint = out.breakpoint,
+        .firstBaselineSet = out.firstBaselineSet,
+        .lastBaselineSet = out.lastBaselineSet,
+    };
 }
 
 Input _adaptToContentBox(Input input, UsedSpacings const& usedSpacings) {
@@ -402,7 +340,7 @@ Output layoutRoot(Tree& tree, Input input) {
 }
 
 Tuple<Output, Frag> layoutAndCommitRoot(Tree& tree, Input input) {
-    auto parentFragOfRoot = Layout::Frag();
+    Frag parentFragOfRoot{};
 
     UsedSpacings usedSpacings{
         .padding = computePaddings(tree, tree.root, input.containingBlock),

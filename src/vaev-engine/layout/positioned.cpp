@@ -63,7 +63,7 @@ export void lookForRunningPosition(Input& input, Box& box) {
     if (not input.runningPosition)
         return;
 
-    if (box.style->position.is<RunningPosition>()) {
+    if (box.isRunningPositionedBox()) {
         auto& runningMap = input.runningPosition.peek();
         runningMap.add(input.pageNumber, box);
     }

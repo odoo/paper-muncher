@@ -69,7 +69,7 @@ Rc<Http::Transport> _createHttpTransport(bool sandboxed) {
 export Rc<Http::Client> defaultHttpClient(bool sandboxed) {
     auto transport = _createHttpTransport(sandboxed);
     auto client = makeRc<Http::Client>(transport);
-    client->userAgent = "Paper-Muncher/" stringify$(__ck_version_value) ""s;
+    client->userAgent = "Mozilla/5.0 Paper-Muncher/" stringify$(__ck_version_value) ""s;
     return client;
 }
 

@@ -143,11 +143,13 @@ Ui::Child contextMenu(State const& s) {
                 s.currentUrl().url,
                 Ref::Uti::PUBLIC_MODIFY
             ),
-            Mdi::CODE_TAGS, "View Source..."
+            Mdi::CODE_TAGS,
+            "View Source..."
         ),
         Kr::contextMenuItem(
             Model::bind<ToggleDeveloperMode>(),
-            Mdi::BUTTON_CURSOR, "Inspect"
+            Mdi::BUTTON_CURSOR,
+            "Inspect"
         ),
     });
 }
