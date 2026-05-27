@@ -38,13 +38,13 @@ struct Viewport : Ui::View<Viewport> {
         g.origin(_listener.scroll() + _listener.containerBound().xy);
 
         auto paintRect = rect.offset(-_listener.containerBound().xy - _listener.scroll().cast<isize>());
-        _window->render()->paint(g, paintRect.cast<f64>());
+        auto& render = _window->ensureRender();
 
+        render.scenes->paint(g, paintRect.cast<f64>());
         if (_props.wireframe)
-            Layout::wireframe(*_window->ensureRender().frag, g);
-
+            render.frag->paintWireframe(g);
         if (_props.selected)
-            Layout::overlay(_window->scrollableOverflow().cast<f64>(), *_window->ensureRender().frag, g, _props.selected.unwrap());
+            render.frag->paintOverlay(g, _props.selected.unwrap(), _window->scrollableOverflow().cast<f64>());
 
         g.pop();
 
