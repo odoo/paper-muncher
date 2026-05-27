@@ -21,10 +21,27 @@ export struct Computer {
     Media _media;
     RegisteredPropertySet& _registeredPropertySet;
     StyleSheetList const& _stylesheets;
-    Rc<Font::Database> _fontDatabase;
     RuleIndex _ruleIndex = {};
+    Rc<Property> _fontFaceProp;
 
     // MARK: Cascading ---------------------------------------------------------
+
+    Computer(
+        Gc::Heap& heap,
+        Media const& media,
+        RegisteredPropertySet& registeredPropertySet,
+        StyleSheetList const& stylesheets,
+        Rc<Font::Database> const& fontDatabase,
+        RuleIndex const& ruleIndex
+    )
+        : _heap(heap),
+          _media(media),
+          _registeredPropertySet(registeredPropertySet),
+          _stylesheets(stylesheets),
+          _ruleIndex(ruleIndex) {
+
+        _fontFaceProp = makeRc<FontFacePhonyProperty>(*_registeredPropertySet.resolveRegistration(Properties::Phony::FONT_FACE, {}), fontDatabase);
+    }
 
     void _evalRule(Rule const& rule, Page const& page, PageComputedValues& c) {
         rule.visit(
@@ -44,23 +61,6 @@ export struct Computer {
     }
 
     // MARK: Computing ---------------------------------------------------------
-
-    Rc<Gfx::Fontface> _lookupFontface(ComputedValues& style) {
-        Font::Query fq{
-            .weight = style.font->weight,
-            .style = style.font->style.val,
-        };
-
-        for (auto family : style.font->families) {
-            if (auto const& [font] = _fontDatabase->queryClosest(family.name, fq))
-                return font;
-        }
-
-        if (auto const& [font] = _fontDatabase->queryClosest("system"_sym))
-            return font;
-
-        return Gfx::Fontface::fallback();
-    }
 
     // https://www.w3.org/TR/css-cascade-4/#author-presentational-hint-origin
     void _considerHtmlPresentationalHint(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
@@ -202,7 +202,10 @@ export struct Computer {
         CascadedValues cascadedValues;
         for (auto const& [styleRule, specificity] : matchingRules)
             for (auto& prop : styleRule->props)
-                cascadedValues.put(prop, styleRule->origin, specificity);
+
+                if (oneOf(prop->registration->name(), Properties::FONT_FAMILY, Properties::FONT_WIDTH, Properties::FONT_WEIGHT, Properties::FONT_STYLE, Properties::FONT_SIZE)) {
+                    cascadedValues.put(_fontFaceProp, Origin::AUTHOR, Specificity::A);
+                }
 
         _considerHtmlPresentationalHint(el, cascadedValues);
         _considerInlineStyleAttribute(el, cascadedValues);
@@ -272,18 +275,6 @@ export struct Computer {
     void styleElement(ComputedValues const& parentComputedValues, Dom::Element& el) {
         auto computedValues = computeFor(parentComputedValues, el);
         el._computedValues = computedValues;
-
-        // HACK: This is basically nonsense to avoid doing too much font lookup,
-        //       and it should be remove once the style engine get refactored
-        //       and computed values are properly handled.
-        if (not parentComputedValues.font.sameInstance(computedValues->font) and
-            (parentComputedValues.font->families != computedValues->font->families or
-             parentComputedValues.font->weight != computedValues->font->weight)) {
-            auto font = _lookupFontface(*computedValues);
-            computedValues->fontFace = font;
-        } else {
-            computedValues->fontFace = parentComputedValues.fontFace;
-        }
 
         if (computedValues->display == Display::Item::YES) {
             generatePseudoElement(*computedValues, el, Dom::PseudoElement::MARKER);

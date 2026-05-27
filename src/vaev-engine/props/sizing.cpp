@@ -69,6 +69,10 @@ export struct WidthProperty : Property {
             return {PRESENTATION_ATTRIBUTE};
         }
 
+        Vec<Symbol> dependencies() const override {
+            return {Properties::Phony::FONT_FACE};
+        }
+
         Rc<Property> initial() const override {
             return makeRc<WidthProperty>(self(), Size{Keywords::AUTO});
         }

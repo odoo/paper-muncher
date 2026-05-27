@@ -7,10 +7,12 @@ export module Vaev.Engine:props.base;
 import Karm.Core;
 import Karm.Logger;
 import Karm.Debug;
+import Karm.Sys;
 import :css.parser;
 import :style.computed;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -22,29 +24,33 @@ namespace Properties {
 #include "defs/properties.inc"
 #undef PROPERTY
 
+namespace Phony {
+export Symbol FONT_FACE = Symbol::from("$font-face");
+} // namespace Phony
+
 } // namespace Properties
 
 export struct RegisteredPropertySet;
 
 export struct Property : Meta::NoCopy {
     enum struct Options : u8 {
-        // https://drafts.csswg.org/css-cascade-5/#inherited-value
+        /// https://drafts.csswg.org/css-cascade-5/#inherited-value
         INHERITED = 1 << 0,
 
-        // https://drafts.csswg.org/css-cascade-5/#shorthand
+        /// https://drafts.csswg.org/css-cascade-5/#shorthand
         SHORTHAND_PROPERTY = 1 << 1,
 
-        // https://drafts.csswg.org/css-variables-2/#custom-property
+        /// https://drafts.csswg.org/css-variables-2/#custom-property
         CUSTOM_PROPERTY = 1 << 2,
 
-        // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
+        /// https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
         PRESENTATION_ATTRIBUTE = 1 << 3,
 
-        // Represent a miss-parsed property
+        /// Represent a miss-parsed property
         BOGUS_REGISTRATION = 1 << 4,
 
-        // The property is not reset by all:
-        // https://drafts.csswg.org/css-cascade/#all-shorthand
+        /// The property is not reset by all:
+        /// https://drafts.csswg.org/css-cascade/#all-shorthand
         ALL_EXCLUDED = 1 << 5,
 
         /// The property participates in a bulk-inheritance optimization.
@@ -53,6 +59,9 @@ export struct Property : Meta::NoCopy {
         /// property, the engine performs a "fast-path" copy of large state blocks
         /// (e.g., Custom Properties) from parent to child.
         BULK_INHERITED = 1 << 6,
+
+        /// Indicate that it only exists as an intermediate result.
+        PHONY = 1 << 7,
     };
 
     using enum Options;
@@ -60,7 +69,7 @@ export struct Property : Meta::NoCopy {
     // https://drafts.css-houdini.org/css-properties-values-api/#custom-property-registration
     struct Registration : Meta::NoCopy {
         Opt<Weak<Registration>> _self;
-        Integer resolutionOrder = 0;
+        isize resolutionOrder = 0;
 
         Rc<Registration> self() const {
             return _self
@@ -525,6 +534,7 @@ export struct RegisteredPropertySet {
     Map<Symbol, Symbol> _legacyAlias;
     Map<Symbol, Rc<Property::Registration>> _registrations;
     Map<Symbol, Rc<Property::Registration>> _presentationAttributes;
+    isize _fontFaceBarrier = Limits<isize>::MIN;
 
     enum struct Options : u8 {
         GENERATE_BOGUS = 1 << 0,
@@ -608,8 +618,10 @@ export struct RegisteredPropertySet {
 
             visited.add(reg->name());
 
-            Integer maxPriority = 0;
+            if (reg->flags().has(Property::SHORTHAND_PROPERTY))
+                return;
 
+            isize maxPriority = 0;
             for (auto dep : reg->dependencies()) {
                 auto prop = this->resolveRegistration(dep, {});
                 if (not prop) {
@@ -617,12 +629,17 @@ export struct RegisteredPropertySet {
                     return;
                 }
 
+                if ((*prop)->flags().has(Property::SHORTHAND_PROPERTY))
+                    logFatal("dependency on shorthand: {} -> {}", reg->name(), (*prop)->name());
+
+
                 self(*prop, visited);
 
                 maxPriority = max(maxPriority, (*prop)->resolutionOrder);
             }
 
             reg->resolutionOrder = maxPriority + 1;
+
             visited.remove(reg->name());
         };
 
@@ -631,6 +648,12 @@ export struct RegisteredPropertySet {
             if (r->resolutionOrder == 0)
                 resolve(r, visited);
         }
+
+        auto file = Sys::File::openOrCreate(Ref::Url::parse("file:graph.dot"));
+        file.unwrap().truncate(0).unwrap();
+
+        auto enc = Io::TextEncoder{file.unwrap()};
+        debug(enc).unwrap();
     }
 
     // MARK: Initial -----------------------------------------------------------
@@ -798,6 +821,40 @@ export struct RegisteredPropertySet {
         Symbol lower = Symbol::from(toLower(attrName.str()));
         auto registration = try$(_presentationAttributes.lookup(lower));
         return registration->parsePresentationAttribute(value).ok();
+    }
+
+    Res<> debug(Io::TextWriter& w) {
+        // collect connected nodes
+        Set<Symbol> connected;
+        for (auto const& r : _registrations.iterValue()) {
+            for (auto const& dep : r->dependencies()) {
+                connected.add(r->name());
+                connected.add(dep);
+            }
+        }
+
+        try$(w.writeStr("digraph {\n"s));
+        try$(w.writeStr("  rankdir=TB;\n"s));
+        try$(w.writeStr("  ranksep=0.8;\n"s));
+        try$(w.writeStr("  nodesep=0.4;\n"s));
+
+        // nodes
+        for (auto const& r : _registrations.iterValue()) {
+            // if (not connected.contains(r->name()))
+            //     continue;
+            try$(Io::format(w, "  \"{}\" [label=\"{} ({})\"];\n", r->name(), r->name(), r->resolutionOrder));
+        }
+
+        for (auto const& r : _registrations.iterValue()) {
+            // if (not connected.contains(r->name()))
+            //     continue;
+            for (auto const& dep : r->dependencies()) {
+                try$(Io::format(w, "  \"{}\"->\"{}\";\n", r->name(), dep));
+            }
+        }
+
+        try$(w.writeStr("}\n"s));
+        return Ok();
     }
 };
 
