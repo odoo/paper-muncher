@@ -16,18 +16,18 @@ class CLIReport(Reporter):
 
     def addTestCase(self, test: TestCase, passed: bool):
         if passed:
-            print(f"{vt100.GREEN}●{vt100.RESET}", end="", flush=True)
+            print(f"{vt100.GREEN}·{vt100.RESET}", end="", flush=True)
         else:
-            print(f"{vt100.RED}●{vt100.RESET}", end="", flush=True)
+            print(f"{vt100.RED}⨯{vt100.RESET}", end="", flush=True)
 
     def addTestCategory(self, props, file: Path, results):
         pass
 
     def addSkippedFile(self, props):
-        print(f"{vt100.YELLOW}○{vt100.RESET}", end="", flush=True)
+        print(f"{vt100.YELLOW}‣{vt100.RESET}", end="", flush=True)
 
     def addSkippedCase(self, test: TestCase):
-        print(f"{vt100.YELLOW}○{vt100.RESET}", end="", flush=True)
+        print(f"{vt100.YELLOW}‣{vt100.RESET}", end="", flush=True)
 
     def finish(self, manifests: model.Registry, results, context):
         print()
