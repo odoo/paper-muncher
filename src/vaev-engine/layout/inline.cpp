@@ -35,6 +35,11 @@ struct InlineFormatingContext : FormatingContext {
     }
 
     Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        tree.fc.enterMonolithicBox();
+        Defer _ = [&] {
+            tree.fc.leaveMonolithicBox();
+        };
+
         auto inlineSize = input.knownSize.x.unwrapOrElse([&] {
             if (input.intrinsic == IntrinsicSize::MIN_CONTENT) {
                 return 0_au;
@@ -162,6 +167,7 @@ struct InlineFormatingContext : FormatingContext {
                 input.knownSize.y.unwrapOr(size.y),
             },
             .completelyLaidOut = true,
+            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,
         };

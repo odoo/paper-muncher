@@ -15,6 +15,11 @@ namespace Vaev::Layout {
 
 struct ReplacedFormatingContext : FormatingContext {
     Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        tree.fc.enterMonolithicBox();
+        Defer _ = [&] {
+            tree.fc.leaveMonolithicBox();
+        };
+
         Vec2Au size = {};
 
         if (auto image = box.content.is<Rc<Scene::Node>>()) {

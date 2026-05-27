@@ -301,6 +301,11 @@ struct SvgFormatingContext : FormatingContext {
     }
 
     Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        tree.fc.enterMonolithicBox();
+        Defer _ = [&] {
+            tree.fc.leaveMonolithicBox();
+        };
+
         auto aspectRatio = intrinsicAspectRatio(
             box.style->svg->viewBox,
             box.style->sizing->width,

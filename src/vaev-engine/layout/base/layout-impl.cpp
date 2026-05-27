@@ -240,24 +240,9 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
     auto startAt = tree.fc.allowBreak() ? input.breakpointTraverser.getStart().unwrapOr(0uz) : 0uz;
     auto stopAt = tree.fc.allowBreak() and not tree.fc.isDiscoveryMode() ? input.breakpointTraverser.getEnd() : NONE;
     try$(_shouldAbortFragmentingBeforeLayout(tree.fc, input));
-
-    if (box.isMonolithic())
-        tree.fc.enterMonolithicBox();
-
-    auto out = _dispatchFormatingContext(
+    return _dispatchFormatingContext(
         tree, box, input, startAt, stopAt
     );
-
-    if (box.isMonolithic())
-        tree.fc.leaveMonolithicBox();
-
-    return {
-        .size = out.size,
-        .completelyLaidOut = out.completelyLaidOut,
-        .breakpoint = out.breakpoint,
-        .firstBaselineSet = out.firstBaselineSet,
-        .lastBaselineSet = out.lastBaselineSet,
-    };
 }
 
 Input _adaptToContentBox(Input input, UsedSpacings const& usedSpacings) {
@@ -288,13 +273,6 @@ Output layoutBorderBox(Tree& tree, Box& box, Input input, UsedSpacings const& us
     return output;
 }
 
-Output layoutAndCommitBorderBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings const& usedSpacings) {
-    input = _adaptToContentBox(input, usedSpacings);
-    auto output = layoutAndCommitContentBox(tree, box, input, parentFrag, usedSpacings);
-    output.size = output.size + usedSpacings.borders.all() + usedSpacings.padding.all();
-    return output;
-}
-
 Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings const& usedSpacings) {
     Frag currFrag{box};
 
@@ -316,6 +294,13 @@ Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Frag& parent
     return output;
 }
 
+Output layoutAndCommitBorderBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings const& usedSpacings) {
+    input = _adaptToContentBox(input, usedSpacings);
+    auto output = layoutAndCommitContentBox(tree, box, input, parentFrag, usedSpacings);
+    output.size = output.size + usedSpacings.borders.all() + usedSpacings.padding.all();
+    return output;
+}
+
 Output layoutRoot(Tree& tree, Input input) {
     UsedSpacings usedSpacings{
         .padding = computePaddings(tree, tree.root, input.containingBlock),
@@ -334,9 +319,7 @@ Output layoutRoot(Tree& tree, Input input) {
             usedSpacings.borders.vertical() + usedSpacings.padding.vertical()
         );
 
-    auto output = layoutBorderBox(tree, tree.root, input, usedSpacings);
-
-    return output;
+    return layoutBorderBox(tree, tree.root, input, usedSpacings);
 }
 
 Tuple<Output, Frag> layoutAndCommitRoot(Tree& tree, Input input) {
