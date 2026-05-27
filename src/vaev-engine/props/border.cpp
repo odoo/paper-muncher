@@ -22,12 +22,6 @@ export struct BorderTopColorProperty : Property {
             return Properties::BORDER_TOP_COLOR;
         }
 
-        Vec<Symbol> dependencies() const override {
-            return {
-                Properties::COLOR,
-            };
-        }
-
         Rc<Property> initial() const override {
             return makeRc<BorderTopColorProperty>(self(), BLACK);
         }
@@ -47,7 +41,7 @@ export struct BorderTopColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.borders.cow().top.color = resolve(_value, c.color);
+        c.borders.cow().top.color = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -60,12 +54,6 @@ export struct BorderRightColorProperty : Property {
     struct Registration : Property::Registration {
         Symbol name() const override {
             return Properties::BORDER_RIGHT_COLOR;
-        }
-
-        Vec<Symbol> dependencies() const override {
-            return {
-                Properties::COLOR,
-            };
         }
 
         Rc<Property> initial() const override {
@@ -87,7 +75,7 @@ export struct BorderRightColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.borders.cow().end.color = resolve(_value, c.color);
+        c.borders.cow().end.color = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -100,12 +88,6 @@ export struct BorderBottomColorProperty : Property {
     struct Registration : Property::Registration {
         Symbol name() const override {
             return Properties::BORDER_BOTTOM_COLOR;
-        }
-
-        Vec<Symbol> dependencies() const override {
-            return {
-                Properties::COLOR,
-            };
         }
 
         Rc<Property> initial() const override {
@@ -127,7 +109,7 @@ export struct BorderBottomColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.borders.cow().bottom.color = resolve(_value, c.color);
+        c.borders.cow().bottom.color = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -140,12 +122,6 @@ export struct BorderLeftColorProperty : Property {
     struct Registration : Property::Registration {
         Symbol name() const override {
             return Properties::BORDER_LEFT_COLOR;
-        }
-
-        Vec<Symbol> dependencies() const override {
-            return {
-                Properties::COLOR,
-            };
         }
 
         Rc<Property> initial() const override {
@@ -167,7 +143,7 @@ export struct BorderLeftColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.borders.cow().start.color = resolve(_value, c.color);
+        c.borders.cow().start.color = _value;
     }
 
     void repr(Io::Emit& e) const override {

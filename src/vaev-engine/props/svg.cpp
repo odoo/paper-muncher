@@ -232,12 +232,6 @@ export struct SvgFillProperty : Property {
             return Properties::FILL;
         }
 
-        Vec<Symbol> dependencies() const override {
-            return {
-                Properties::COLOR,
-            };
-        }
-
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE};
         }
@@ -270,7 +264,7 @@ export struct SvgFillProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.svg.cow().fill = resolve(_value, c.color);
+        c.svg.cow().fill = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -440,7 +434,7 @@ export struct SvgStrokeProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.svg.cow().stroke = resolve(_value, c.color);
+        c.svg.cow().stroke = _value;
     }
 
     void repr(Io::Emit& e) const override {

@@ -25,12 +25,6 @@ export struct BackgroundColorProperty : Property {
             return Properties::BACKGROUND_COLOR;
         }
 
-        Vec<Symbol> dependencies() const override {
-            return {
-                Properties::COLOR,
-            };
-        }
-
         Rc<Property> initial() const override {
             return makeRc<BackgroundColorProperty>(self(), TRANSPARENT);
         }
@@ -50,7 +44,7 @@ export struct BackgroundColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues& c) const override {
-        c.backgrounds.cow().color = resolve(_value, c.color);
+        c.backgrounds.cow().color = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -291,12 +285,9 @@ export struct ColorProperty : Property {
     ColorProperty(Rc<Property::Registration> registration, Color value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
-        c.color = resolve(_value, Gfx::BLACK);
-    }
-
-    void apply(ComputedValues const& parent, ComputedValues& c) const override {
-        c.color = resolve(_value, parent.color);
+    void apply(ComputedValues const& parent, ComputedValues& child) const override {
+        // In the color property, the used value of currentcolor is the resolved inherited value.
+        child.color = resolve(_value, parent.color);
     }
 
     void repr(Io::Emit& e) const override {

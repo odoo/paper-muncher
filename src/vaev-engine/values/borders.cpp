@@ -61,7 +61,7 @@ export struct SpecifiedBorder {
 export struct ComputedBorder {
     LineWidth width = Keywords::MEDIUM;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
-    Gfx::Color color = Gfx::BLACK;
+    Color color = Gfx::BLACK;
 
     operator SpecifiedBorder() const {
         return {width, style, color};

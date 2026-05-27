@@ -298,7 +298,7 @@ export struct SpecifiedBackground {
 };
 
 export struct BackgroundProps {
-    Gfx::Color color = TRANSPARENT;
+    Color color = TRANSPARENT;
     Vec<BackgroundLayer> layers = {};
 
     operator SpecifiedBackground() const {

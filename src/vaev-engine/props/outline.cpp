@@ -95,10 +95,7 @@ export struct OutlineColorProperty : Property {
         }
 
         Vec<Symbol> dependencies() const override {
-            return {
-                Properties::OUTLINE_STYLE,
-                Properties::COLOR,
-            };
+            return {Properties::OUTLINE_STYLE};
         }
 
         Rc<Property> initial() const override {
