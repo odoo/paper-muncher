@@ -24,7 +24,7 @@ export struct OutlineProps {
     LineWidth width = Keywords::MEDIUM;
     CalcValue<Length> offset = 0_au;
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
-    Gfx::Color color = Gfx::BLUE500;
+    Color color = Gfx::BLUE500;
 
     operator SpecifiedOutline() const {
         return {

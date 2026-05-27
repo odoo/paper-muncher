@@ -21,7 +21,7 @@ UsedBorder resolve(Tree const& tree, Box const& box, BorderEdge const edge) {
             ? 0_au
             : Vaev::Layout::resolve(tree, box, border.width),
         border.style,
-        border.color,
+        resolve(border.color, box.style->color),
     };
 }
 

@@ -37,10 +37,10 @@ Opt<Gfx::Borders> buildBorders(Metrics const& metrics, Style::ComputedValues con
     borders.styles[2] = bordersStyle.bottom.style;
     borders.styles[3] = bordersStyle.start.style;
 
-    borders.fills[0] = bordersStyle.top.color;
-    borders.fills[1] = bordersStyle.end.color;
-    borders.fills[2] = bordersStyle.bottom.color;
-    borders.fills[3] = bordersStyle.start.color;
+    borders.fills[0] = resolve(bordersStyle.top.color, style.color);
+    borders.fills[1] = resolve(bordersStyle.end.color, style.color);
+    borders.fills[2] = resolve(bordersStyle.bottom.color, style.color);
+    borders.fills[3] = resolve(bordersStyle.start.color, style.color);
 
     return borders;
 }
@@ -90,7 +90,7 @@ Opt<Gfx::Outline> buildOutline(Metrics const& metrics, Style::ComputedValues con
         outline.style = outlineStyle.style.unwrap<Gfx::BorderStyle>();
     }
 
-    outline.fill = outlineStyle.color;
+    outline.fill = resolve(outlineStyle.color, style.color);
 
     return outline;
 }
@@ -106,7 +106,7 @@ static void _paintFragBordersAndBackgrounds(Frag& frag, Scene::Stack& stack, Opt
     auto const& cssBackground = frag.style().backgrounds;
 
     Vec<Gfx::Fill> backgrounds;
-    auto color = cssBackground->color;
+    auto color = resolve(cssBackground->color, frag.style().color);
 
     if (color.alpha != 0) {
         if (not frag.box->isRootElementPrincipalBox())
@@ -153,7 +153,10 @@ Rc<Scene::Node> _applyTransformIfNeeded(SvgFrag& svgFrag, RectAu viewBox, Rc<Sce
 }
 
 Opt<Gfx::Stroke> _resolveStroke(SvgShapeFrag& frag, SvgProps const& style) {
-    Opt<Gfx::Color> color = style.stroke;
+    Opt<Gfx::Color> color = style.stroke.map([&](Color const& stroke) {
+        return resolve(stroke, frag.style().color);
+    });
+
     if (not color)
         return NONE;
 
@@ -204,7 +207,7 @@ Rc<Scene::Node> _paintSvgShapeElement(SvgShapeFrag& frag) {
     auto const& style = *frag.box->style->svg;
 
     Opt<Gfx::Color> resolvedFill = style.fill.map([&](auto fill) {
-        return fill.withOpacity(style.fillOpacity);
+        return resolve(fill, frag.style().color).withOpacity(style.fillOpacity);
     });
 
     Opt<Gfx::Stroke> resolvedStroke = _resolveStroke(frag, style);
