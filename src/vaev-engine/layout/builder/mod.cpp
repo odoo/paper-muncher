@@ -993,7 +993,11 @@ export Box buildDocument(Gc::Ref<Dom::Document> doc) {
     auto el = doc->documentElement();
     if (!el)
         return {doc->registeredPropertySet.initialComputedValues(), NONE};
-    return buildElement(el.upgrade());
+    auto root = buildElement(el.upgrade());
+
+    logDebugIf(dumpBoxes, "{}", root);
+
+    return root;
 }
 
 } // namespace Vaev::Layout
