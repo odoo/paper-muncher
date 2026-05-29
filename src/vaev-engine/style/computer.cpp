@@ -48,6 +48,7 @@ export struct Computer {
     Rc<Gfx::Fontface> _lookupFontface(ComputedValues& style) {
         Font::Query fq{
             .weight = style.font->weight,
+            .stretch = Gfx::FontStretch{static_cast<u16>(Math::roundi(style.font->width.val().value() * 10.0))},
             .style = style.font->style.val,
         };
 
@@ -216,9 +217,12 @@ export struct Computer {
         cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, *values);
         cascadedValues.apply(Property::ComputationPhase::FONT, parent, *values);
 
+        // FIXME: Use a font-dirty flag instead.
         if (not parent.font.sameInstance(values->font) and
             (parent.font->families != values->font->families or
-             parent.font->weight != values->font->weight)) {
+             parent.font->weight != values->font->weight or
+             parent.font->style != values->font->style or
+             parent.font->width != values->font->width)) {
             auto font = _lookupFontface(*values);
             values->fontFace = font;
         } else {
@@ -249,9 +253,12 @@ export struct Computer {
         cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, *values);
         cascadedValues.apply(Property::ComputationPhase::FONT, parent, *values);
 
+        // FIXME: Use a font-dirty flag instead.
         if (not parent.font.sameInstance(values->font) and
             (parent.font->families != values->font->families or
-             parent.font->weight != values->font->weight)) {
+             parent.font->weight != values->font->weight or
+             parent.font->style != values->font->style or
+             parent.font->width != values->font->width)) {
             auto font = _lookupFontface(*values);
             values->fontFace = font;
         } else {

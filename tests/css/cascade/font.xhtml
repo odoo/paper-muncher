@@ -1,0 +1,158 @@
+<test id="cascade-font-family" name="cascade: font-family">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <body>
+        <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="font-family: serif">
+            Foo Bar
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="font-family: serif; display: contents">
+            <div>
+                Foo Bar
+            </div>
+        </div>
+    </rendering>
+
+    <error>
+        <div>
+            Foo Bar
+        </div>
+    </error>
+</test>
+
+<test id="cascade-font-weight" name="cascade: font-weight">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <body>
+        <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="font-weight: bold;">
+            Foo Bar
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="font-weight: bold; display: contents">
+            <div>
+                Foo Bar
+            </div>
+        </div>
+    </rendering>
+
+    <error>
+        <div>
+            Foo Bar
+        </div>
+    </error>
+</test>
+
+<test id="cascade-font-width" name="cascade: font-width">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <body>
+    <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div style="font-width: 50%">
+        Foo Bar
+    </div>
+</rendering>
+
+<rendering>
+    <div style="font-width: 50%; display: contents">
+        <div>
+            Foo Bar
+        </div>
+    </div>
+</rendering>
+
+<!--No error case for now because we don't implement synthesized font width.-->
+
+</test>
+
+<test id="cascade-font-style" name="cascade: font-style">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <body>
+    <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div style="font-style: italic">
+        Foo Bar
+    </div>
+</rendering>
+
+<rendering>
+    <div style="font-style: italic; display: contents">
+        <div>
+            Foo Bar
+        </div>
+    </div>
+</rendering>
+
+<error>
+    <div>
+        Foo Bar
+    </div>
+</error>
+
+</test>
+
+<test id="cascade-font-size" name="cascade: font-size">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <body>
+    <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div style="font-size: large">
+        Foo Bar
+    </div>
+</rendering>
+
+<rendering>
+    <div style="font-size: large; display: contents">
+        <div>
+            Foo Bar
+        </div>
+    </div>
+</rendering>
+
+<error>
+    <div>
+        Foo Bar
+    </div>
+</error>
+
+</test>
