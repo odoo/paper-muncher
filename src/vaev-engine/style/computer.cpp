@@ -1,11 +1,12 @@
 export module Vaev.Engine:style.computer;
 
+import Karm.Debug;
+import Karm.Font;
 import Karm.Gc;
 import Karm.Gfx;
-import Karm.Font;
-import Karm.Ref;
-import Karm.Math;
 import Karm.Logger;
+import Karm.Math;
+import Karm.Ref;
 
 import :dom.document;
 import :dom.element;
@@ -13,8 +14,11 @@ import :style.computed;
 import :style.cascaded;
 import :style.stylesheet;
 import :style.ruleIndex;
+import :style.counter;
 
 namespace Vaev::Style {
+
+static auto debugCounters = Debug::Flag::debug("web-css-counters", "Log all the registered CSS counters");
 
 export struct Computer {
     Gc::Heap& _heap;
@@ -464,7 +468,25 @@ export struct Computer {
         }
     }
 
+    CounterStyleSet _resolveCounterStyle(StyleSheetList const& stylesheets) {
+        CounterDescriptorSet counters;
+        for (auto const& sheet : stylesheets.styleSheets) {
+            for (auto const& rule : sheet.rules) {
+                if (auto it = rule.is<CounterRule>()) {
+                    CounterDescriptors descriptor;
+                    for (auto const& d : it->descriptors)
+                        d.apply(descriptor);
+                    counters.put(it->name, descriptor);
+                }
+            }
+        }
+        return resolveExtends(counters);
+    }
+
     void styleDocument(Dom::Document& doc) {
+        doc.counters = _resolveCounterStyle(*doc.styleSheets);
+        logDebugIf(debugCounters, "counters: {}", doc.counters);
+
         if (auto el = doc.documentElement()) {
             auto rootComputedValues = _registeredPropertySet.initialComputedValues();
             rootComputedValues->fontFace = _lookupFontface(*rootComputedValues);
@@ -477,6 +499,7 @@ export struct Computer {
                 *el
             );
         }
+
         _propagateBodyBackgroundToHtml(doc);
     }
 

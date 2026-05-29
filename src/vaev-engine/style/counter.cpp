@@ -193,14 +193,94 @@ export struct CounterStyle {
         };
     }
 
-    template <typename Descriptor>
-    auto load() {
-        return Descriptor::load(*this);
+    void repr(Io::Emit& e) const {
+        e("(counter-style");
+        e.indentNewline();
+        e("system: {}\n", system);
+        e("negative: {}\n", negative);
+        e("prefix: {}\n", prefix);
+        e("suffix: {}\n", suffix);
+        e("range: {}\n", range);
+        e("pad: {}\n", pad);
+        e("fallback: {}\n", fallback);
+        e("symbols: {}\n", symbols);
+        e("additiveSymbols: {}\n", additiveSymbols);
+        e("speakAs: {}\n", speakAs);
+        e.deindent();
+        e(")");
+    }
+};
+
+export struct CounterDescriptors {
+    // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-system
+    Opt<CounterSystem> system;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-negative
+    Opt<CounterNegative> negative;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-prefix
+    Opt<CounterSymbol> prefix;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-suffix
+    Opt<CounterSymbol> suffix;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-range
+    Opt<CounterRange> range;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-pad
+    Opt<CounterPad> pad;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-fallback
+    Opt<CustomIdent> fallback;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-symbols
+    Opt<Vec<CounterSymbol>> symbols;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-additive-symbols
+    Opt<Vec<AdditiveCounterSymbol>> additiveSymbols;
+
+    // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-speak-as
+    Opt<CounterSpeakAs> speakAs;
+
+    CounterStyle extends(CounterStyle const& other) const {
+        return {
+            .system = system.unwrapOr(other.system),
+            .negative = negative.unwrapOr(other.negative),
+            .prefix = prefix.unwrapOr(other.prefix),
+            .suffix = suffix.unwrapOr(other.suffix),
+            .range = range.unwrapOr(other.range),
+            .pad = pad.unwrapOr(other.pad),
+            .fallback = fallback.unwrapOr(other.fallback),
+            .symbols = symbols.unwrapOr(other.symbols),
+            .additiveSymbols = additiveSymbols.unwrapOr(other.additiveSymbols),
+            .speakAs = speakAs.unwrapOr(other.speakAs),
+        };
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(counter-descriptors");
+        e.indentNewline();
+        e("system: {}\n", system);
+        e("negative: {}\n", negative);
+        e("prefix: {}\n", prefix);
+        e("suffix: {}\n", suffix);
+        e("range: {}\n", range);
+        e("pad: {}\n", pad);
+        e("fallback: {}\n", fallback);
+        e("symbols: {}\n", symbols);
+        e("additiveSymbols: {}\n", additiveSymbols);
+        e("speakAs: {}\n", speakAs);
+        e.deindent();
+        e(")");
     }
 };
 
 struct CounterStyleSet {
     Map<CustomIdent, CounterStyle> _counters;
+
+    void put(CustomIdent ident, CounterStyle style) {
+        _counters.put(ident, style);
+    }
 
     // https://drafts.csswg.org/css-counter-styles-3/#cyclic-system
     Opt<Vec<CounterSymbol>> _constructCyclicCounter(CounterStyle const& style, Integer value) {
@@ -500,58 +580,15 @@ struct CounterStyleSet {
         Set<CustomIdent> seen = {};
         return _dispatchCounterFallback(anonymousStyle, value, seen);
     }
-};
 
-export struct CounterDescriptors {
-    // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-system
-    Opt<CounterSystem> system;
-
-    // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-negative
-    Opt<CounterNegative> negative;
-
-    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-prefix
-    Opt<CounterSymbol> prefix;
-
-    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-suffix
-    Opt<CounterSymbol> suffix;
-
-    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-range
-    Opt<CounterRange> range;
-
-    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-pad
-    Opt<CounterPad> pad;
-
-    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-fallback
-    Opt<CustomIdent> fallback;
-
-    // https://drafts.csswg.org/css-counter-styles-3/#counter-style-symbols
-    Opt<Vec<CounterSymbol>> symbols;
-
-    // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-additive-symbols
-    Opt<Vec<AdditiveCounterSymbol>> additiveSymbols;
-
-    // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-speak-as
-    Opt<CounterSpeakAs> speakAs;
-
-    CounterStyle extends(CounterStyle const& other) const {
-        return {
-            .system = system.unwrapOr(other.system),
-            .negative = negative.unwrapOr(other.negative),
-            .prefix = prefix.unwrapOr(other.prefix),
-            .suffix = suffix.unwrapOr(other.suffix),
-            .range = range.unwrapOr(other.range),
-            .pad = pad.unwrapOr(other.pad),
-            .fallback = fallback.unwrapOr(other.fallback),
-            .symbols = symbols.unwrapOr(other.symbols),
-            .additiveSymbols = additiveSymbols.unwrapOr(other.additiveSymbols),
-            .speakAs = speakAs.unwrapOr(other.speakAs),
-        };
+    void repr(Io::Emit& e) const {
+        e("(counter-style-set {})", _counters);
     }
 };
 
 export using CounterDescriptorSet = Map<CustomIdent, CounterDescriptors>;
 
-export CounterStyleSet resolveExtends(Map<CustomIdent, CounterDescriptors> const& counters) {
+export CounterStyleSet resolveExtends(CounterDescriptorSet const& counters) {
     Map<CustomIdent, CounterStyle> resolved = {};
     auto resolveOne = [&](this auto const& recurse, CustomIdent name, Set<CustomIdent>& seen) -> CounterStyle {
         if (auto it = resolved.lookup(name))
@@ -600,11 +637,11 @@ struct SystemCounterDescriptor {
         return "system"s;
     }
 
-    static auto load(CounterStyle& s) {
+    static auto load(CounterDescriptors& s) {
         return s.system;
     }
 
-    void apply(CounterStyle& s) const {
+    void apply(CounterDescriptors& s) const {
         s.system = value;
     }
 };
@@ -617,11 +654,11 @@ struct NegativeCounterDescriptor {
         return "negative"s;
     }
 
-    static auto load(CounterStyle& s) {
+    static auto load(CounterDescriptors& s) {
         return s.system;
     }
 
-    void apply(CounterStyle& s) const {
+    void apply(CounterDescriptors& s) const {
         s.negative = value;
     }
 };
@@ -634,11 +671,11 @@ struct PrefixCounterDescriptor {
         return "prefix"s;
     }
 
-    static auto load(CounterStyle& s) {
+    static auto load(CounterDescriptors& s) {
         return s.prefix;
     }
 
-    void apply(CounterStyle& s) const {
+    void apply(CounterDescriptors& s) const {
         s.prefix = value;
     }
 };
@@ -651,11 +688,11 @@ struct SuffixCounterDescriptor {
         return "suffix"s;
     }
 
-    static auto load(CounterStyle& s) {
+    static auto load(CounterDescriptors& s) {
         return s.suffix;
     }
 
-    void apply(CounterStyle& s) const {
+    void apply(CounterDescriptors& s) const {
         s.suffix = value;
     }
 };
@@ -668,11 +705,11 @@ struct RangeCounterDescriptor {
         return "range"s;
     }
 
-    static auto load(CounterStyle& s) {
+    static auto load(CounterDescriptors& s) {
         return s.range;
     }
 
-    void apply(CounterStyle& s) const {
+    void apply(CounterDescriptors& s) const {
         s.range = value;
     }
 };
@@ -685,11 +722,11 @@ struct PadCounterDescriptor {
         return "pad"s;
     }
 
-    static auto load(CounterStyle& s) {
+    static auto load(CounterDescriptors& s) {
         return s.pad;
     }
 
-    void apply(CounterStyle& s) const {
+    void apply(CounterDescriptors& s) const {
         s.pad = value;
     }
 };
@@ -702,11 +739,11 @@ struct FallbackCounterDescriptor {
         return "fallback"s;
     }
 
-    static auto load(CounterStyle& s) {
+    static auto load(CounterDescriptors& s) {
         return s.fallback;
     }
 
-    void apply(CounterStyle& s) const {
+    void apply(CounterDescriptors& s) const {
         s.fallback = value;
     }
 };
@@ -719,11 +756,11 @@ struct SymbolsCounterDescriptor {
         return "symbols"s;
     }
 
-    static auto load(CounterStyle& s) {
+    static auto load(CounterDescriptors& s) {
         return s.symbols;
     }
 
-    void apply(CounterStyle& s) const {
+    void apply(CounterDescriptors& s) const {
         s.symbols = value;
     }
 };
@@ -736,11 +773,11 @@ struct AdditiveSymbolsCounterDescriptor {
         return "additive-symbols"s;
     }
 
-    static auto load(CounterStyle& s) {
+    static auto load(CounterDescriptors& s) {
         return s.additiveSymbols;
     }
 
-    void apply(CounterStyle& s) const {
+    void apply(CounterDescriptors& s) const {
         s.additiveSymbols = value;
     }
 };
@@ -753,11 +790,11 @@ struct SpeakAsCounterDescriptor {
         return "speak-as"s;
     }
 
-    static auto load(CounterStyle& s) {
+    static auto load(CounterDescriptors& s) {
         return s.speakAs;
     }
 
-    void apply(CounterStyle& s) const {
+    void apply(CounterDescriptors& s) const {
         s.speakAs = value;
     }
 };
@@ -783,7 +820,7 @@ export struct CounterDescriptor : _CounterDescriptor {
         });
     }
 
-    void apply(CounterStyle& c) const {
+    void apply(CounterDescriptors& c) const {
         visit([&](auto const& p) {
             p.apply(c);
         });
