@@ -124,6 +124,21 @@ export struct FontFaceRule {
     }
 };
 
+// https://drafts.csswg.org/css-counter-styles-3/#the-counter-style-rule
+struct CounterRule {
+    Vec<CounterDescriptor> descriptors;
+
+    static CounterRule parse(Css::Sst const& sst) {
+        return {
+            parseDeclarations<CounterDescriptor>(sst),
+        };
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(counter-rule {})", descriptors);
+    }
+};
+
 // https://drafts.csswg.org/css-namespaces/#syntax
 export struct NamespaceRule {
     Opt<Symbol> prefix;
@@ -249,6 +264,7 @@ export struct PageRule {
 using _Rule = Union<
     StyleRule,
     FontFaceRule,
+    CounterRule,
     MediaRule,
     ImportRule,
     NamespaceRule,
@@ -268,6 +284,8 @@ export struct Rule : _Rule {
             return ImportRule::parse(sst);
         else if (tok.data == "@font-face")
             return FontFaceRule::parse(sst);
+        else if (tok.data == "@counter-style")
+            return CounterRule::parse(sst);
         else if (tok.data == "@page")
             return PageRule::parse(registry, sst);
         else if (tok.data == "@supports") {
