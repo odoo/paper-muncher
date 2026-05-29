@@ -332,3 +332,28 @@ h2 {
 iframe {
     border: none;
 }
+
+.panic-info {
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: color-mix(in srgb, var(--failed) 15%, transparent);
+    border: 1px solid var(--failed);
+    border-radius: 0.25rem;
+    color: var(--failed);
+}
+
+.panic-info strong {
+    font-weight: 600;
+}
+
+.panic-info pre {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: var(--bg);
+    border-radius: 0.25rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}

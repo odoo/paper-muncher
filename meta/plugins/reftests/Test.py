@@ -56,6 +56,7 @@ class TestCase:
         global _currentTestId
         self.outputImage: bytes | None = None
         self.addInfos = []
+        self.panicInfo: str | None = None  # Store engine panic details
         self.id = _currentTestId
         _currentTestId += 1
 
@@ -77,8 +78,14 @@ class TestCase:
 
         runPaperMuncher(paperMuncher, self)
 
-        with self.outputPath.open("rb") as imageFile:
-            self.outputImage = imageFile.read()
+        if self.panicInfo:
+            self.addInfos.append("PANIC")
+        elif self.outputPath.exists():
+            with self.outputPath.open("rb") as imageFile:
+                self.outputImage = imageFile.read()
+        else:
+            self.panicInfo = "Engine produced no output"
+            self.addInfos.append("NO OUTPUT")
 
     def run(self, paperMuncher, reference: TestReference) -> bool:
         self.render(paperMuncher)
@@ -107,7 +114,10 @@ def runPaperMuncher(executable, test: TestCase):
         test.inputPath,
     ]
 
-    executable.popen(*command)
+    try:
+        executable.popen(*command)
+    except Exception as panic_error:
+        test.panicInfo = f"Process error: {str(panic_error)[:200]}"
 
 
 def areImagesIdentical(image1: bytes, image2: bytes) -> bool:

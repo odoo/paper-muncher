@@ -15,7 +15,9 @@ class CLIReport(Reporter):
         self.test_report: Path = test_report
 
     def addTestCase(self, test: TestCase, passed: bool):
-        if passed:
+        if test.panicInfo:
+            print(f"{vt100.RED}⚠{vt100.RESET}", end="", flush=True)
+        elif passed:
             print(f"{vt100.GREEN}·{vt100.RESET}", end="", flush=True)
         else:
             print(f"{vt100.RED}⨯{vt100.RESET}", end="", flush=True)
@@ -31,6 +33,13 @@ class CLIReport(Reporter):
 
     def finish(self, manifests: model.Registry, results, context):
         print()
+        
+        if results.panicTests:
+            print(f"{vt100.RED}Engine Panics Detected:{vt100.RESET}")
+            for test_id, panic_info in results.panicTests:
+                print(f"  Test {test_id}: {panic_info[:100]}...")
+            print()
+        
         if results.failed:
             print(
                 f"{vt100.BRIGHT_GREEN}// {fetchMessage(manifests, 'witty')}{vt100.RESET}"
