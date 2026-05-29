@@ -26,6 +26,10 @@ export struct FontFamilyProperty : Property {
             return {INHERITED};
         }
 
+        ComputationPhase computationPhase() const override {
+            return ComputationPhase::FONT;
+        }
+
         Rc<Property> initial() const override {
             return makeRc<FontFamilyProperty>(self(), Vec<FontFamily>{"sans-serif"_sym});
         }
@@ -73,8 +77,20 @@ export struct FontWeightProperty : Property {
             return Properties::FONT_WEIGHT;
         }
 
+        Flags<Options> flags() const override {
+            return {INHERITED};
+        }
+
+        ComputationPhase computationPhase() const override {
+            return ComputationPhase::FONT;
+        }
+
         Rc<Property> initial() const override {
             return makeRc<FontWeightProperty>(self(), FontWeight{Gfx::FontWeight::REGULAR});
+        }
+
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
+            child.font.cow().weight = parent.font->weight;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -120,6 +136,10 @@ export struct FontWidthProperty : Property {
             return {INHERITED};
         }
 
+        ComputationPhase computationPhase() const override {
+            return ComputationPhase::FONT;
+        }
+
         Rc<Property> initial() const override {
             return makeRc<FontWidthProperty>(self(), FontWidth::NORMAL);
         }
@@ -162,6 +182,10 @@ export struct FontStyleProperty : Property {
             return {INHERITED};
         }
 
+        ComputationPhase computationPhase() const override {
+            return ComputationPhase::FONT;
+        }
+
         Rc<Property> initial() const override {
             return makeRc<FontStyleProperty>(self(), FontStyle::NORMAL);
         }
@@ -202,6 +226,10 @@ export struct FontSizeProperty : Property {
 
         Flags<Options> flags() const override {
             return {INHERITED};
+        }
+
+        ComputationPhase computationPhase() const override {
+            return ComputationPhase::FONT;
         }
 
         Rc<Property> initial() const override {
