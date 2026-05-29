@@ -40,6 +40,10 @@ class WebReport(Reporter):
 
     def addTestCase(self, test: TestCase, passed: bool):
         addInfos = " - ".join(test.addInfos)
+        panic_section = ""
+        if test.panicInfo:
+            panic_section = f'<div class="panic-info"><strong>Engine Panic:</strong><pre>{test.panicInfo}</pre></div>'
+        
         self.testHtml += f"""
                 <details id="case-{test.id}" class="test-case {passed and "passed" or "failed"}">
                     <summary>
@@ -52,6 +56,7 @@ class WebReport(Reporter):
                             </div>
                         </div>
                     </summary>
+                    {panic_section}
                     <div class="outputs">
                         <div>
                             <img class="actual" data-src="{self.test_report / f"{test.id}.bmp"}" />
