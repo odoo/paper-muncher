@@ -201,6 +201,20 @@ Except<Value> call(Agent& agent, Value f, Value v, Slice<Value> args) {
     return f.asObject()->call(v.asObject(), args);
 }
 
+// https://tc39.es/ecma262/#sec-createdataproperty
+Except<Boolean> createDataProperty(Object& obj, PropertyKey propertyKey, Value value) {
+    // 1. Let newDesc be the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
+    auto newDesc = PropertyDescriptor{
+        .value = value,
+        .writable = true,
+        .enumerable = true,
+        .configurable = true,
+    };
+
+    // 2. Return ? obj.[[DefineOwnProperty]](propertyKey, newDesc).
+    return obj.defineOwnProperty(propertyKey, newDesc);
+}
+
 // MARK: Operations on Iterator Objects ----------------------------------------
 
 } // namespace Vaev::Script

@@ -71,6 +71,9 @@ Except<Value> get(Object& o, PropertyKey p);
 // https://tc39.es/ecma262/#sec-call
 Except<Value> call(Agent& agent, Value f, Value v, Slice<Value> args = {});
 
+// https://tc39.es/ecma262/#sec-createdataproperty
+Except<Boolean> createDataProperty(Object& obj, PropertyKey propertyKey, Value value);
+
 // MARK: Operations on Iterator Objects ----------------------------------------
 
 } // namespace Vaev::Script
