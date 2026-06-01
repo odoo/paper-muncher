@@ -40,7 +40,7 @@ export struct OutlineWidthProperty : Property {
     OutlineWidthProperty(Rc<Property::Registration> registration, LineWidth value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
         c.outline.cow().width = _value;
     }
 
@@ -76,7 +76,7 @@ export struct OutlineStyleProperty : Property {
     OutlineStyleProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
         c.outline.cow().style = _value;
     }
 
@@ -117,7 +117,7 @@ export struct OutlineColorProperty : Property {
     OutlineColorProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
         c.outline.cow().color = _value.visit(
             // https://drafts.csswg.org/css-ui/#valdef-outline-color-auto
             [&](Keywords::Auto) {
@@ -163,7 +163,7 @@ export struct OutlineOffsetProperty : Property {
     OutlineOffsetProperty(Rc<Property::Registration> registration, CalcValue<Length> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& c) const override {
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
         c.outline.cow().offset = _value;
     }
 

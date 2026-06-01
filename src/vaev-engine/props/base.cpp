@@ -118,7 +118,7 @@ export struct Property : Meta::NoCopy {
             //       flag should override this method with a faster implementation.
             if (flags().has(INHERITED))
                 logFatal("property {#} marked as INHERITED is using the slow fallback path. override inherit()!", name());
-            load(parent)->apply(child);
+            load(parent)->apply(parent, child);
         }
 
         virtual Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const = 0;
@@ -152,13 +152,8 @@ export struct Property : Meta::NoCopy {
         return {};
     }
 
-    virtual void apply(ComputedValues&) const {
+    virtual void apply([[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child) const {
         logFatal("longhand property {#} is missing apply() implementation", registration->name());
-    }
-
-    virtual void apply(ComputedValues const& parent, ComputedValues& child) const {
-        (void)parent;
-        apply(child);
     }
 
     virtual void repr(Io::Emit& e) const = 0;
@@ -251,8 +246,8 @@ struct CustomProperty : Property {
     CustomProperty(Rc<Property::Registration> registration, Css::Content value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues& child) const override {
-        child.setCustomProp(registration->name(), _value);
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
+        c.setCustomProp(registration->name(), _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -471,13 +466,13 @@ struct DefaultedProperty : Property {
             // The inherit CSS-wide keyword represents the property’s
             // computed value on the parent element.
             // https://drafts.csswg.org/css-cascade/#inherit
-            registration->load(parent)->apply(child);
+            registration->load(parent)->apply(parent, child);
         } else if (_value == Default::UNSET) {
             // The unset CSS-wide keyword acts as either inherit or initial,
             // depending on whether the property is inherited or not.
             // https://drafts.csswg.org/css-cascade/#inherit-initial
             if (registration->flags().has(INHERITED))
-                registration->load(parent)->apply(child);
+                registration->load(parent)->apply(parent, child);
             else
                 registration->initial()->apply(parent, child);
 
