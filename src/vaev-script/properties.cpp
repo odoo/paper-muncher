@@ -106,6 +106,17 @@ struct PropertyStorage {
     struct Property {
         Union<Value, Accessor> value;
         Attributes attributes;
+
+        // https://tc39.es/ecma262/#sec-object-type
+        bool isData() {
+            // A data property associates a key value with an ECMAScript language value and a set of Boolean attributes.
+            return value.is<Value>();
+        }
+
+        // https://tc39.es/ecma262/#sec-object-type
+        bool isAccessor() {
+            return value.is<Accessor>();
+        }
     };
 
     Map<PropertyKey, Property> _props;
@@ -116,6 +127,10 @@ struct PropertyStorage {
 
     Opt<Property> get(PropertyKey key) {
         return _props.lookup(key);
+    }
+
+    bool has(PropertyKey key) {
+        return _props.contains(key);
     }
 };
 
