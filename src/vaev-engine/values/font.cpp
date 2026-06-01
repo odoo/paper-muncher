@@ -125,7 +125,9 @@ struct ValueParser<FontWidth> {
 export struct FontStyle {
     using enum Gfx::FontStyle;
     Gfx::FontStyle val;
-    Angle obliqueAngle;
+
+    // The lack of an <angle> represents 14deg.
+    Angle obliqueAngle = Angle(14.0, Angle::Unit::DEGREE);
 
     constexpr FontStyle(Gfx::FontStyle named = NORMAL)
         : val(named) {
