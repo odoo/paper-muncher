@@ -10,6 +10,10 @@ namespace Vaev::Dom {
 export struct TokenList {
     Vec<String> _tokens;
 
+    void clear() {
+        _tokens.clear();
+    }
+
     usize length() const {
         return _tokens.len();
     }

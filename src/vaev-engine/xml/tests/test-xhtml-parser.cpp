@@ -306,4 +306,34 @@ test$("parse-xml-different-namespace") {
     return Ok();
 }
 
+test$("parse-xml-prefixed-names") {
+    Gc::Heap gc;
+    Xml::XmlParser p{gc};
+
+    auto s = Io::SScan(
+        "<root xmlns:a=\"http://www.example.org/a\">"
+        "<child a:foo=\"bar\"/>"
+        "<a:item/>"
+        "</root>"
+    );
+    auto dom = gc.alloc<Dom::Document>(Ref::Url());
+    try$(p.parse(s, NONE, *dom));
+
+    auto root = dom->firstChild()->is<Element>();
+    expectNe$(root, nullptr);
+    expect$((root->qualifiedName == Dom::QualifiedName{NONE, "root"_sym}));
+
+    auto child = root->firstChild()->is<Element>();
+    expectNe$(child, nullptr);
+    expect$((child->qualifiedName == Dom::QualifiedName{NONE, "child"_sym}));
+    expect$(child->hasAttribute(Dom::QualifiedName{"http://www.example.org/a"_sym, "foo"_sym}));
+    expect$(child->getAttribute(Dom::QualifiedName{"http://www.example.org/a"_sym, "foo"_sym}) == "bar");
+
+    auto item = child->nextSibling()->is<Element>();
+    expectNe$(item, nullptr);
+    expect$((item->qualifiedName == Dom::QualifiedName{"http://www.example.org/a"_sym, "item"_sym}));
+
+    return Ok();
+}
+
 } // namespace Vaev::Dom::Tests

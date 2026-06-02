@@ -16,6 +16,60 @@ using namespace Karm;
 
 namespace Vaev::Xml {
 
+struct UnresolvedQualifiedName {
+    Opt<Symbol> prefix;
+    Symbol localName;
+};
+
+// Namespace bindings are scoped per element, and the default namespace
+// applies to element names but not to unprefixed attributes.
+// https://www.w3.org/TR/xml-names/#scoping-defaulting
+// https://www.w3.org/TR/xml-names/#ns-qualnames
+struct NamespaceContext {
+    Opt<Symbol> default_;
+    Cow<Map<Symbol, Symbol>> prefixes;
+
+    static NamespaceContext make(Opt<Symbol> default_) {
+        NamespaceContext context{};
+        context.default_ = default_;
+        context.prefixes.cow().put("xml"_sym, Xml::NAMESPACE);
+        context.prefixes.cow().put("xmlns"_sym, Xmlns::NAMESPACE);
+        return context;
+    }
+
+    Res<Dom::QualifiedName> resolveElementName(UnresolvedQualifiedName const& parsedName) const {
+        if (not parsedName.prefix)
+            return Ok(Dom::QualifiedName{default_, parsedName.localName});
+
+        auto ns = prefixes->lookup(parsedName.prefix.unwrap());
+        if (not ns)
+            return Error::invalidData("unknown namespace prefix");
+
+        return Ok(Dom::QualifiedName{*ns, parsedName.localName});
+    }
+
+    Res<Dom::QualifiedName> resolveAttributeName(UnresolvedQualifiedName const& parsedName) const {
+        if (not parsedName.prefix)
+            return Ok(Dom::QualifiedName{NONE, parsedName.localName});
+
+        auto ns = prefixes->lookup(parsedName.prefix.unwrap());
+        if (not ns)
+            return Error::invalidData("unknown namespace prefix");
+
+        return Ok(Dom::QualifiedName{*ns, parsedName.localName});
+    }
+
+    void declarePrefix(Symbol prefix, Opt<Symbol> ns) {
+        if (prefix == "xml"_sym or prefix == "xmlns"_sym)
+            return;
+
+        if (ns)
+            prefixes.cow().put(prefix, *ns);
+        else
+            (void)prefixes.cow().remove(prefix);
+    }
+};
+
 export struct XmlParser {
     Gc::Heap& _heap;
 
@@ -29,7 +83,7 @@ export struct XmlParser {
         // document :: = prolog element Misc *
 
         try$(_parseProlog(s, doc));
-        doc.appendChild(try$(_parseElement(s, ns)));
+        doc.appendChild(try$(_parseElement(s, NamespaceContext::make(ns))));
         while (_parseMisc(s, doc))
             ;
 
@@ -99,6 +153,36 @@ export struct XmlParser {
 
     static constexpr auto RE_NAME = RE_NAME_START_CHAR & Re::zeroOrMore(RE_NAME_CHAR);
 
+    static Res<UnresolvedQualifiedName> _parseQualifiedName(Str name) {
+        Opt<usize> separator = NONE;
+
+        for (usize i = 0; i < name.len(); i++) {
+            if (name[i] != ':')
+                continue;
+
+            if (separator)
+                return Error::invalidData("expected a single namespace separator");
+
+            separator = i;
+        }
+
+        if (not separator)
+            return Ok(UnresolvedQualifiedName{NONE, Symbol::from(name)});
+
+        auto separatorIndex = separator.unwrap();
+        if (separatorIndex == 0 or separatorIndex + 1 == name.len())
+            return Error::invalidData("expected namespace prefix and local name");
+
+        return Ok(UnresolvedQualifiedName{
+            Symbol::from(sub(name, 0, separatorIndex)),
+            Symbol::from(sub(name, separatorIndex + 1, name.len())),
+        });
+    }
+
+    Res<UnresolvedQualifiedName> _parseQualifiedName(Io::SScan& s) {
+        return _parseQualifiedName(try$(_parseName(s)));
+    }
+
     Res<> _parseS(Io::SScan& s) {
         // S ::= (#x20 | #x9 | #xD | #xA)+
 
@@ -129,7 +213,8 @@ export struct XmlParser {
         while (
             s.ahead(RE_CHARDATA) and
             not s.ahead("]]>"_re) and
-            not s.ended()) {
+            not s.ended()
+        ) {
             sb.append(s.next());
             any = true;
         }
@@ -368,19 +453,23 @@ export struct XmlParser {
     // https://www.w3.org/TR/xml/#sec-logical-struct
 
     Res<Gc::Ref<Dom::Element>> _parseElement(Io::SScan& s, Opt<Symbol> const& ns) {
+        return _parseElement(s, NamespaceContext::make(ns));
+    }
+
+    Res<Gc::Ref<Dom::Element>> _parseElement(Io::SScan& s, NamespaceContext const& context) {
         // element ::= EmptyElemTag | STag content ETag
 
         auto rollback = s.rollbackPoint();
 
-        if (auto r = _parseEmptyElementTag(s, ns)) {
+        if (auto r = _parseEmptyElementTag(s, context)) {
             rollback.disarm();
             return r;
         }
 
-        if (auto r = _parseStartTag(s, ns)) {
-            auto el = r.unwrap();
-            try$(_parseContent(s, el->namespaceUri(), *el));
-            try$(_parseEndTag(s, *el));
+        if (auto r = _parseStartTag(s, context)) {
+            auto [el, childContext] = r.unwrap();
+            try$(_parseContent(s, childContext, *el));
+            try$(_parseEndTag(s, childContext, *el));
 
             rollback.disarm();
             return Ok(el);
@@ -392,34 +481,34 @@ export struct XmlParser {
     // 3.1 MARK: Start-Tags, End-Tags, and Empty-Element Tags
     // https://www.w3.org/TR/xml/#sec-starttags
 
-    Res<Gc::Ref<Dom::Element>> _parseStartTag(Io::SScan& s, Opt<Symbol> const& ns) {
+    Res<Tuple<Gc::Ref<Dom::Element>, NamespaceContext>> _parseStartTag(Io::SScan& s, NamespaceContext const& context) {
         // STag ::= '<' Name (S Attribute)* S? '>'
 
         auto rollback = s.rollbackPoint();
         if (not s.skip('<'))
             return Error::invalidData("expected '<'");
 
-        auto name = try$(_parseName(s));
+        auto parsedName = try$(_parseQualifiedName(s));
         try$(_parseS(s));
 
-        Opt<Symbol> newNs = try$(_parseElementsNamespace(s, ns));
-        auto el = _heap.alloc<Dom::Element>(Dom::QualifiedName{newNs, Symbol::from(name)});
+        auto childContext = try$(_parseNamespaceContext(s, context));
+        auto el = _heap.alloc<Dom::Element>(try$(childContext.resolveElementName(parsedName)));
 
         while (not s.skip('>') and not s.ended()) {
-            try$(_parseAttribute(s, *el));
+            try$(_parseAttribute(s, *el, childContext));
             try$(_parseS(s));
         }
 
         rollback.disarm();
-        return Ok(el);
+        return Ok(Tuple{el, childContext});
     }
 
-    Res<> _parseAttribute(Io::SScan& s, Dom::Element& el) {
+    Res<> _parseAttribute(Io::SScan& s, Dom::Element& el, NamespaceContext const& context) {
         // Attribute ::= Name Eq AttValue
 
         auto rollback = s.rollbackPoint();
 
-        auto name = try$(_parseName(s));
+        auto parsedName = try$(_parseQualifiedName(s));
 
         if (not s.skip('='))
             return Error::invalidData("expected '='");
@@ -429,8 +518,13 @@ export struct XmlParser {
         // FIXME: the parsing allows rollback so it can be that a warning is emitted when setting an attribute of an element
         // that won't compose the final dom (due to a rollback after a failed parsing)
         // FIXME: this is not a fully compliant XML parser and thus we skip adding xmlns as an attribute to the DOM
-        if (name != "xmlns")
-            el.setAttribute(Dom::QualifiedName{NONE, Symbol::from(name)}, value);
+        if ((not parsedName.prefix and parsedName.localName == "xmlns"_sym) or
+            parsedName.prefix == "xmlns"_sym) {
+            rollback.disarm();
+            return Ok();
+        }
+
+        el.setAttribute(try$(context.resolveAttributeName(parsedName)), value);
 
         rollback.disarm();
         return Ok();
@@ -465,7 +559,7 @@ export struct XmlParser {
         return Ok(sb.take());
     }
 
-    Res<> _parseEndTag(Io::SScan& s, Dom::Element& el) {
+    Res<> _parseEndTag(Io::SScan& s, NamespaceContext const& context, Dom::Element& el) {
         // '</' Name S? '>'
 
         auto rollback = s.rollbackPoint();
@@ -473,8 +567,7 @@ export struct XmlParser {
         if (not s.skip("</"_re))
             return Error::invalidData("expected '</'");
 
-        auto name = try$(_parseName(s));
-        if (name != el.qualifiedName.name)
+        if (try$(context.resolveElementName(try$(_parseQualifiedName(s)))) != el.qualifiedName)
             return Error::invalidData("expected end tag name to match start tag name");
 
         try$(_parseS(s));
@@ -486,10 +579,10 @@ export struct XmlParser {
         return Ok();
     }
 
-    Res<> _parseContentItem(Io::SScan& s, Opt<Symbol> const& ns, Dom::Element& el) {
+    Res<> _parseContentItem(Io::SScan& s, NamespaceContext const& context, Dom::Element& el) {
         // (element | Reference | CDSect | PI | Comment)
 
-        if (auto r = _parseElement(s, ns)) {
+        if (auto r = _parseElement(s, context)) {
             el.appendChild(r.unwrap());
             return Ok();
         } else if (auto r = _parsePi(s)) {
@@ -503,11 +596,11 @@ export struct XmlParser {
         }
     }
 
-    Res<> _parseContent(Io::SScan& s, Opt<Symbol> const& ns, Dom::Element& el) {
+    Res<> _parseContent(Io::SScan& s, NamespaceContext const& context, Dom::Element& el) {
         // content ::= CharData? ((element | Reference | CDSect | PI | Comment) CharData?)*
 
         try$(_parseText(s, el));
-        while (_parseContentItem(s, ns, el))
+        while (_parseContentItem(s, context, el))
             try$(_parseText(s, el));
 
         return Ok();
@@ -538,19 +631,20 @@ export struct XmlParser {
         return Ok();
     }
 
-    Res<Gc::Ref<Dom::Element>> _parseEmptyElementTag(Io::SScan& s, Opt<Symbol> const& ns) {
+    Res<Gc::Ref<Dom::Element>> _parseEmptyElementTag(Io::SScan& s, NamespaceContext const& context) {
         // EmptyElemTag ::= '<' Name (S Attribute)* S? '/>'
 
         auto rollback = s.rollbackPoint();
         if (not s.skip('<'))
             return Error::invalidData("expected '<'");
 
-        auto name = try$(_parseName(s));
+        auto parsedName = try$(_parseQualifiedName(s));
 
-        auto el = _heap.alloc<Dom::Element>(Dom::QualifiedName{ns, Symbol::from(name)});
         try$(_parseS(s));
+        auto childContext = try$(_parseNamespaceContext(s, context));
+        auto el = _heap.alloc<Dom::Element>(try$(childContext.resolveElementName(parsedName)));
         while (not s.skip("/>"_re) and not s.ended()) {
-            try$(_parseAttribute(s, *el));
+            try$(_parseAttribute(s, *el, childContext));
             try$(_parseS(s));
         }
 
@@ -666,23 +760,28 @@ export struct XmlParser {
     // https://www.w3.org/TR/xml-names/#scoping-defaulting
     // NOTE: Basically same code as attribute parsing, but we need to check for the namespace before parsing the attributes
 
-    Res<Opt<Symbol>> _parseElementsNamespace(Io::SScan& s, Opt<Symbol> const& originalNs) {
+    Res<NamespaceContext> _parseNamespaceContext(Io::SScan& s, NamespaceContext const& originalContext) {
         auto rollback = s.rollbackPoint();
-        while (not s.skip('>') and not s.ended()) {
+        auto context = originalContext;
 
-            auto name = try$(_parseName(s));
+        while (not s.ahead(">"_re) and not s.ahead("/>"_re) and not s.ended()) {
+
+            auto parsedName = try$(_parseQualifiedName(s));
 
             if (not s.skip('='))
                 return Error::invalidData("expected '='");
 
             auto value = try$(_parseAttValue(s));
 
-            if (name == "xmlns")
-                return Ok(Symbol::from(value));
+            if (not parsedName.prefix and parsedName.localName == "xmlns"_sym)
+                context.default_ = Symbol::from(value);
+            else if (parsedName.prefix == "xmlns"_sym)
+                context.declarePrefix(parsedName.localName, Symbol::from(value));
 
             try$(_parseS(s));
         }
-        return Ok(originalNs);
+
+        return Ok(context);
     }
 };
 

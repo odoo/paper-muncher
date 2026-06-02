@@ -8,6 +8,7 @@ using namespace Karm::Literals;
 namespace Vaev {
 
 namespace Dom {
+
 // https://dom.spec.whatwg.org/#concept-element-qualified-name
 // https://dom.spec.whatwg.org/#concept-attribute-qualified-name
 export struct QualifiedName {
@@ -114,6 +115,18 @@ export Symbol NAMESPACE = "http://www.w3.org/1998/Math/MathML"_sym;
 
 } // namespace MathMl
 
+namespace Xml {
+
+export Symbol NAMESPACE = "http://www.w3.org/XML/1998/namespace"_sym;
+
+} // namespace Xml
+
+namespace Xmlns {
+
+export Symbol NAMESPACE = "http://www.w3.org/2000/xmlns/"_sym;
+
+} // namespace Xmlns
+
 namespace Dom {
 
 void Dom::QualifiedName::repr(Io::Emit& e) const {
@@ -130,6 +143,10 @@ void Dom::QualifiedName::repr(Io::Emit& e) const {
         displayNamespace = "svg";
     } else if (ns == MathMl::NAMESPACE) {
         displayNamespace = "mathml";
+    } else if (ns == Xml::NAMESPACE) {
+        displayNamespace = "xml";
+    } else if (ns == Xmlns::NAMESPACE) {
+        displayNamespace = "xmlns";
     }
 
     e("{}:{}", displayNamespace, name);

@@ -113,10 +113,12 @@ export struct Element : Node {
 
     void setAttribute(QualifiedName name, String value) {
         if (name == Html::CLASS_ATTR or name == Svg::CLASS_ATTR) {
+            this->classList.clear();
             for (auto class_ : iterSplit(value, ' ')) {
+                if (isEmpty(class_))
+                    continue;
                 this->classList.add(class_);
             }
-            return;
         }
         this->attributes.put(name, makeRc<Attr>(name, value));
     }
