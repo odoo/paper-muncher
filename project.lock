@@ -32,12 +32,12 @@
             "tag": "v0.7.0"
         },
         "cute-engineering/ce-stdcpp": {
-            "commit": "54a1c8783805930d3e8f1107dda877fbb6b61b67",
+            "commit": "06db4b3f98fde9346b8e77414e90068a0cebefdc",
             "git": "https://codeberg.org/cute-engineering/ce-stdcpp.git",
             "tag": "v1.6.1"
         },
         "cute-engineering/ce-targets": {
-            "commit": "9c0064dc613d43c40e5f00bb972ed54977a82e00",
+            "commit": "54fc9441b676200f106da06d0c8ec4a2b1ddef41",
             "git": "https://codeberg.org/cute-engineering/ce-targets.git",
             "tag": "v0.6.0"
         },
@@ -47,7 +47,7 @@
             "tag": "main"
         },
         "skift/karm": {
-            "commit": "5dd6da3d10b09fe35498533d8ea639b507165ae5",
+            "commit": "e0c15f583782a18bdd57e4600480991bf18df30f",
             "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
         }

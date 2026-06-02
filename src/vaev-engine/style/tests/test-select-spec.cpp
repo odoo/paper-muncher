@@ -72,6 +72,77 @@ test$("select-attr-spec-contains") {
         expectEq$(matchSelector(sel, el), NONE);
     }
 
+    {
+        el->setAttribute(Html::ID_ATTR, "some\ttest\nvalue"s);
+        Selector sel = AttributeSelector{
+            .qualifiedName = Html::ID_ATTR,
+            .case_ = AttributeSelector::SENSITIVE,
+            .match = AttributeSelector::CONTAINS,
+            .value = "test"s,
+        };
+        expectNe$(matchSelector(sel, el), NONE);
+    }
+
+    return Ok();
+}
+
+test$("select-attr-spec-namespace") {
+    Gc::Heap gc;
+    auto el = gc.alloc<Dom::Element>(Html::DIV_TAG);
+
+    el->setAttribute(Dom::QualifiedName{Svg::NAMESPACE, "title"_sym}, "svg-title"s);
+
+    {
+        Selector sel = AttributeSelector{
+            .qualifiedName = QualifiedNameSelector{NONE, "title"_sym},
+            .case_ = AttributeSelector::SENSITIVE,
+            .match = AttributeSelector::PRESENT,
+            .value = ""s,
+        };
+        expectEq$(matchSelector(sel, el), NONE);
+    }
+
+    {
+        Selector sel = AttributeSelector{
+            .qualifiedName = QualifiedNameSelector{UNIVERSAL, "title"_sym},
+            .case_ = AttributeSelector::SENSITIVE,
+            .match = AttributeSelector::PRESENT,
+            .value = ""s,
+        };
+        expectNe$(matchSelector(sel, el), NONE);
+    }
+
+    {
+        Selector sel = AttributeSelector{
+            .qualifiedName = QualifiedNameSelector{Svg::NAMESPACE, "title"_sym},
+            .case_ = AttributeSelector::SENSITIVE,
+            .match = AttributeSelector::EXACT,
+            .value = "svg-title"s,
+        };
+        expectNe$(matchSelector(sel, el), NONE);
+    }
+
+    {
+        el->setAttribute(Html::CLASS_ATTR, "t bar u"s);
+        Selector sel = AttributeSelector{
+            .qualifiedName = QualifiedNameSelector{NONE, "class"_sym},
+            .case_ = AttributeSelector::SENSITIVE,
+            .match = AttributeSelector::CONTAINS,
+            .value = "bar"s,
+        };
+        expectNe$(matchSelector(sel, el), NONE);
+    }
+
+    {
+        Selector sel = AttributeSelector{
+            .qualifiedName = QualifiedNameSelector{Html::NAMESPACE, "class"_sym},
+            .case_ = AttributeSelector::SENSITIVE,
+            .match = AttributeSelector::CONTAINS,
+            .value = "bar"s,
+        };
+        expectEq$(matchSelector(sel, el), NONE);
+    }
+
     return Ok();
 }
 

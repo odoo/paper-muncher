@@ -136,12 +136,39 @@ static bool _match(ClassSelector const& selector, Gc::Ref<Dom::Element> element)
 
 // 6. Attribute Selector
 // https://www.w3.org/TR/selectors-4/#attribute-selectors
+
+static Opt<Str> _getAttributeValue(AttributeSelector const& selector, Gc::Ref<Dom::Element> element) {
+    auto name = selector.qualifiedName.exactName();
+    if (not name)
+        return NONE;
+
+    if (selector.qualifiedName.ns.is<Universal>())
+        return element->getAttributeUnqualified(name.unwrap());
+
+    return element->getAttribute(selector.qualifiedName.fullyQualified());
+}
+
+static bool _matchContainsWord(Str attrValue, Str word, auto cmp) {
+    usize tokenStart = 0;
+    while (tokenStart < attrValue.len()) {
+        while (tokenStart < attrValue.len() and isAsciiSpace(attrValue[tokenStart]))
+            tokenStart++;
+
+        usize tokenEnd = tokenStart;
+        while (tokenEnd < attrValue.len() and not isAsciiSpace(attrValue[tokenEnd]))
+            tokenEnd++;
+
+        if (tokenStart != tokenEnd and startWith(sub(attrValue, tokenStart, tokenEnd), word, cmp) == Match::YES)
+            return true;
+
+        tokenStart = tokenEnd;
+    }
+
+    return false;
+}
+
 static bool _match(AttributeSelector const& selector, Gc::Ref<Dom::Element> element) {
-    // TODO: What should we do if there are multiple attributes
-    //       with the same name but different namespaces?
-    auto maybeAttrValue = selector.qualifiedName.isWildcard()
-                              ? element->getAttributeUnqualified(selector.qualifiedName.name.unwrap("unexpected wildcard attribute selector"))
-                              : element->getAttribute(selector.qualifiedName.fullyQualified());
+    auto maybeAttrValue = _getAttributeValue(selector, element);
 
     if (selector.match == AttributeSelector::PRESENT) {
         // Represents an element with the att attribute, whatever the value of the attribute.
@@ -174,15 +201,7 @@ static bool _match(AttributeSelector const& selector, Gc::Ref<Dom::Element> elem
 
         // Represents an element with the att attribute whose value is a whitespace-separated list of words,
         // one of which is exactly "val".
-        for (auto piece : split(attrValue, ' ')) {
-            if (piece.len() == 0)
-                continue;
-
-            if (startWith(piece, selector.value, cmp) == Match::YES)
-                return true;
-        }
-
-        return false;
+        return _matchContainsWord(attrValue, selector.value, cmp);
     } else if (selector.match == AttributeSelector::HYPHENATED) {
         // Represents an element with the att attribute, its value either being exactly "val"
         auto prefixMatch = startWith(attrValue, selector.value.str(), cmp);

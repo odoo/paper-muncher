@@ -44,53 +44,116 @@ export struct SelectorUnparser {
     }
 };
 
+export struct NullNamespace {
+    bool operator==(NullNamespace const&) const = default;
+};
+
+export constexpr NullNamespace NULL_NAMESPACE = {};
+
+export struct Universal {
+    bool operator==(Universal const&) const = default;
+};
+
+export constexpr Universal UNIVERSAL = {};
+
 export struct QualifiedNameSelector {
-    Opt<Symbol> ns;   // If namespace is NONE, it means any namespace is accepted.
-    Opt<Symbol> name; // If name is NONE, it means any name is accepted.
+    using NamespacePattern = Union<NullNamespace, Universal, Symbol>;
+    using NamePattern = Union<Universal, Symbol>;
+
+    NamespacePattern ns; // Null namespace, universal namespace, or an exact namespace.
+    NamePattern name;    // Universal name or an exact name.
 
     QualifiedNameSelector()
-        : ns(NONE), name(NONE) {}
+        : ns(UNIVERSAL), name(UNIVERSAL) {}
 
-    QualifiedNameSelector(Opt<Symbol> ns, Opt<Symbol> name)
+    QualifiedNameSelector(NamespacePattern ns, NamePattern name)
         : ns(ns), name(name) {}
 
+    QualifiedNameSelector(Symbol ns, Symbol name)
+        : QualifiedNameSelector(NamespacePattern{ns}, NamePattern{name}) {}
+
+    QualifiedNameSelector(Opt<Symbol> ns, Opt<Symbol> name)
+        : ns(ns ? NamespacePattern{*ns}
+                : NamespacePattern{NULL_NAMESPACE}),
+          name(name ? NamePattern{*name}
+                    : NamePattern{UNIVERSAL}) {}
+
     QualifiedNameSelector(Dom::QualifiedName const& qualifiedName)
-        : ns(qualifiedName.ns), name(qualifiedName.name) {}
+        : ns(qualifiedName.ns ? NamespacePattern{*qualifiedName.ns}
+                              : NamespacePattern{NULL_NAMESPACE}),
+          name(qualifiedName.name) {}
 
     static QualifiedNameSelector wildcard() {
-        return {NONE, NONE};
+        return {UNIVERSAL, UNIVERSAL};
+    }
+
+    Opt<Symbol> exactName() const {
+        if (auto exact = name.is<Symbol>())
+            return *exact;
+        return NONE;
     }
 
     bool match(Dom::QualifiedName const& q) const {
-        if (ns and q.ns != *ns)
+        if (
+            not ns.visit(
+                [&](NullNamespace const&) {
+                    return q.ns == NONE;
+                },
+                [&](Universal const&) {
+                    return true;
+                },
+                [&](Symbol const& exact) {
+                    return q.ns == exact;
+                }
+            )
+        )
             return false;
-        if (name and q.name != *name)
+
+        if (
+            not name.visit(
+                [&](Universal const&) {
+                    return true;
+                },
+                [&](Symbol const& exact) {
+                    return q.name == exact;
+                }
+            )
+        )
             return false;
+
         return true;
     }
 
-    void repr(Io::Emit& e) const {
-        if (ns and name)
-            e("{}|{}", *ns, *name);
-        else if (name)
-            e("{}", *name);
-        else if (ns)
-            e("{}|*", *ns);
-        else
-            e("*");
-    }
-
-    bool isWildcard() const {
-        return not ns or not name;
-    }
-
     Dom::QualifiedName fullyQualified() const {
-        if (isWildcard())
+        auto exactName = this->exactName();
+
+        if (ns.is<Universal>() or not exactName)
             panic("cannot fully qualify a wildcard selector");
-        return {ns.unwrap(), name.unwrap()};
+
+        if (ns.is<NullNamespace>())
+            return {NONE, exactName.unwrap()};
+
+        return {*ns.is<Symbol>(), exactName.unwrap()};
     }
 
     bool operator==(QualifiedNameSelector const&) const = default;
+
+    void repr(Io::Emit& e) const {
+        auto exactName = this->exactName();
+
+        if (ns.is<Universal>() and exactName)
+            e("*|{}", exactName.unwrap());
+        else if (auto exactNs = ns.is<Symbol>(); exactNs and exactName)
+            e("{}|{}", *exactNs, exactName.unwrap());
+        else if (exactName)
+            e("{}", exactName.unwrap());
+        else if (ns.is<Universal>())
+            e("*");
+        else if (auto exactNs = ns.is<Symbol>())
+            e("{}|*", *exactNs);
+        else
+            e("|*");
+    }
 };
 
 struct EmptySelector {
@@ -151,6 +214,12 @@ export struct Nfix {
 export struct TypeSelector {
     QualifiedNameSelector qualifiedName;
 
+    TypeSelector(QualifiedNameSelector::NamespacePattern ns, QualifiedNameSelector::NamePattern name)
+        : qualifiedName(ns, name) {}
+
+    TypeSelector(Symbol ns, Symbol name)
+        : qualifiedName(ns, name) {}
+
     TypeSelector(Opt<Symbol> ns, Opt<Symbol> name)
         : qualifiedName(ns, name) {}
 
@@ -158,10 +227,10 @@ export struct TypeSelector {
         : qualifiedName(qualifiedName) {}
 
     TypeSelector(Dom::QualifiedName const& qualifiedName)
-        : qualifiedName(qualifiedName.ns, qualifiedName.name) {}
+        : qualifiedName(qualifiedName) {}
 
     static TypeSelector universal() {
-        return {QualifiedNameSelector::wildcard()};
+        return {UNIVERSAL, UNIVERSAL};
     }
 
     void repr(Io::Emit& e) const {
@@ -591,11 +660,20 @@ export struct Selector : _Selector {
         if (cur.ended())
             return Error::invalidData("expected qualified name selector, got empty input");
 
+        enum struct NamespacePrefix {
+            OMITTED,
+            IDENT,
+            STAR,
+        };
+
+        auto namespacePrefix = NamespacePrefix::OMITTED;
         Opt<Symbol> firstName = NONE;
         if (cur->token == Css::Token::IDENT) {
+            namespacePrefix = NamespacePrefix::IDENT;
             firstName = Symbol::from(cur->token.data);
             cur.next();
         } else if (cur.skip(Css::Token::delim("*"))) {
+            namespacePrefix = NamespacePrefix::STAR;
             firstName = NONE;
         }
 
@@ -615,75 +693,99 @@ export struct Selector : _Selector {
             secondName = NONE;
         }
 
-        if (firstName != NONE)
+        if (namespacePrefix == NamespacePrefix::IDENT)
             firstName = try$(ns.lookup(*firstName));
 
         return Ok(QualifiedNameSelector{
-            firstName,
-            secondName,
+            namespacePrefix == NamespacePrefix::STAR
+                ? QualifiedNameSelector::NamespacePattern{UNIVERSAL}
+                : namespacePrefix == NamespacePrefix::IDENT
+                    ? QualifiedNameSelector::NamespacePattern{firstName.unwrap()}
+                    : QualifiedNameSelector::NamespacePattern{NULL_NAMESPACE},
+            secondName
+                ? QualifiedNameSelector::NamePattern{secondName.unwrap()}
+                : QualifiedNameSelector::NamePattern{UNIVERSAL},
         });
     }
 
-    static Res<Selector> _parseAttributeSelector(Slice<Css::Sst> content, Namespace const&) {
-        auto case_ = AttributeSelector::INSENSITIVE;
-        QualifiedNameSelector qualifiedName;
-        String value = ""s;
+    static Res<Selector> _parseAttributeSelector(Slice<Css::Sst> content, Namespace const& ns) {
+        auto case_ = AttributeSelector::SENSITIVE;
         auto match = AttributeSelector::PRESENT;
-
-        usize step = 0;
+        String value = ""s;
         Cursor cur = content;
 
-        while (not cur.ended() and cur->token.data != "]"s) {
-            if (cur.skip(Css::Token::WHITESPACE))
-                continue;
+        eatWhitespace(cur);
+        if (cur.ended())
+            return Error::invalidData("expected attribute name");
 
-            switch (step) {
-            case 0:
-                qualifiedName = {NONE, Symbol::from(cur->token.data)};
-                step++;
-                break;
-            case 1:
-                if (cur->token.data != "="s) {
-                    auto attrSelectorCase = cur.next().token.data;
+        auto qualifiedName = try$(_parseQualifiedNameSelector(cur, ns, NONE));
 
-                    if (cur.ended())
-                        break;
+        eatWhitespace(cur);
+        if (cur.ended()) {
+            return Ok(AttributeSelector{
+                qualifiedName,
+                case_,
+                match,
+                value,
+            });
+        }
 
-                    if (not(cur.peek() == (Css::Token::delim("="))))
-                        break;
+        if (cur.skip(Css::Token::delim("="))) {
+            match = AttributeSelector::EXACT;
+        } else {
+            if (*cur != Css::Sst::TOKEN or cur->token.type != Css::Token::DELIM)
+                return Error::invalidData("unexpected attribute selector operator");
 
-                    if (attrSelectorCase == "~") {
-                        match = AttributeSelector::CONTAINS;
-                    } else if (attrSelectorCase == "|") {
-                        match = AttributeSelector::HYPHENATED;
-                    } else if (attrSelectorCase == "^") {
-                        match = AttributeSelector::STR_START_WITH;
-                    } else if (attrSelectorCase == "$") {
-                        match = AttributeSelector::STR_END_WITH;
-                    } else if (attrSelectorCase == "*") {
-                        match = AttributeSelector::STR_CONTAIN;
-                    } else {
-                        break;
-                    }
-                } else {
-                    match = AttributeSelector::EXACT;
-                }
-                step++;
-                break;
-            case 2:
-                value = parseValue<String>(cur).unwrapOr(""s);
-                step++;
-                break;
-            case 3:
-                if (cur->token.data == "s") {
-                    case_ = AttributeSelector::SENSITIVE;
-                }
-                break;
+            auto attrSelectorCase = cur->token.data;
+            cur.next();
+
+            if (cur.ended() or not cur.skip(Css::Token::delim("=")))
+                return Error::invalidData("expected '=' after attribute selector operator");
+
+            if (attrSelectorCase == "~") {
+                match = AttributeSelector::CONTAINS;
+            } else if (attrSelectorCase == "|") {
+                match = AttributeSelector::HYPHENATED;
+            } else if (attrSelectorCase == "^") {
+                match = AttributeSelector::STR_START_WITH;
+            } else if (attrSelectorCase == "$") {
+                match = AttributeSelector::STR_END_WITH;
+            } else if (attrSelectorCase == "*") {
+                match = AttributeSelector::STR_CONTAIN;
+            } else {
+                return Error::invalidData("unexpected attribute selector operator");
+            }
+        }
+
+        eatWhitespace(cur);
+        if (auto maybeValue = parseValue<String>(cur)) {
+            value = maybeValue.take();
+        } else if (*cur == Css::Token::IDENT) {
+            value = cur->token.data;
+            cur.next();
+        } else {
+            return Error::invalidData("expected attribute selector value");
+        }
+
+        eatWhitespace(cur);
+        if (not cur.ended()) {
+            if (*cur != Css::Sst::TOKEN or cur->token != Css::Token::IDENT)
+                return Error::invalidData("unexpected attribute selector modifier");
+
+            if (cur->token.data == "s") {
+                case_ = AttributeSelector::SENSITIVE;
+            } else if (cur->token.data == "i") {
+                case_ = AttributeSelector::INSENSITIVE;
+            } else {
+                return Error::invalidData("unexpected attribute selector modifier");
             }
 
-            if (not cur.ended())
-                cur.next();
+            cur.next();
+            eatWhitespace(cur);
         }
+
+        if (not cur.ended())
+            return Error::invalidData("unexpected attribute selector content");
 
         return Ok(AttributeSelector{
             qualifiedName,
@@ -796,6 +898,7 @@ export struct Selector : _Selector {
         }
 
         Selector val = Selector::empty();
+        bool consumed = false;
         if (*cur == Css::Sst::TOKEN) {
             switch (cur->token.type) {
             case Css::Token::WHITESPACE:
@@ -805,15 +908,21 @@ export struct Selector : _Selector {
             case Css::Token::HASH:
                 val = IdSelector{Symbol::from(next(cur->token.data, 1))};
                 break;
-            case Css::Token::IDENT:
-                val = TypeSelector{ns.default_, Symbol::from(cur->token.data)};
-                break;
+            case Css::Token::IDENT: {
+                Cursor qualifiedNameCur = cur;
+                val = TypeSelector{try$(_parseQualifiedNameSelector(qualifiedNameCur, ns, ns.default_))};
+                cur = qualifiedNameCur;
+                consumed = true;
+            } break;
             case Css::Token::DELIM:
                 if (cur->token.data == ".") {
                     cur.next();
                     val = ClassSelector{cur->token.data};
                 } else if (cur->token.data == "*") {
-                    val = TypeSelector{ns.default_, NONE};
+                    Cursor qualifiedNameCur = cur;
+                    val = TypeSelector{try$(_parseQualifiedNameSelector(qualifiedNameCur, ns, ns.default_))};
+                    cur = qualifiedNameCur;
+                    consumed = true;
                 }
                 break;
             case Css::Token::COLON:
@@ -856,7 +965,8 @@ export struct Selector : _Selector {
             return Error::invalidData("unexpected selector element");
         }
 
-        cur.next();
+        if (not consumed)
+            cur.next();
         if (not cur.ended()) {
             Cursor rb = cur;
             OpCode nextOpCode = _peekOpCode(cur);
@@ -961,8 +1071,12 @@ export struct Selector : _Selector {
         Selector currentSelector = try$(_parseSelectorElement(c, OpCode::NOP, ns));
 
         while (not c.ended()) {
+            auto oldC = c;
             currentSelector = try$(_parseInfixExpr(currentSelector, c, OpCode::NOP, ns));
+            if (not c.ended() and oldC == c)
+                return Error::invalidData("unexpected token after selector");
         }
+
         return Ok(currentSelector);
     }
 
@@ -1119,7 +1233,7 @@ export Specificity spec(Selector const& s) {
             return Specificity::A;
         },
         [](TypeSelector const& s) {
-            if (s.qualifiedName.name)
+            if (s.qualifiedName.exactName())
                 return Specificity::C;
             else
                 return Specificity::ZERO;
