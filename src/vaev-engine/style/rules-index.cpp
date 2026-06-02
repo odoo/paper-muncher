@@ -46,7 +46,7 @@ struct RuleIndex {
                     return;
                 }
 
-                _typeNameRules.lookupOrPutDefault(qualifiedNameSelector.name.unwrap()).pushBack({ruleId, rule});
+                _typeNameRules.lookupOrPutDefault(qualifiedNameSelector.exactName().unwrap()).pushBack({ruleId, rule});
             },
             [&](PseudoElementSelector const& s) {
                 _pseudoRules.lookupOrPutDefault(s.type).pushBack({ruleId, rule});
@@ -63,7 +63,7 @@ struct RuleIndex {
                     return;
                 }
 
-                auto const& name = *s.qualifiedName.name;
+                auto name = s.qualifiedName.exactName().unwrap();
 
                 if (s.match == AttributeSelector::Match::PRESENT) {
                     _attrPresentRules.lookupOrPutDefault(name).pushBack({ruleId, rule});
@@ -127,12 +127,13 @@ struct RuleIndex {
             selector.match != AttributeSelector::Match::EXACT)
             return false;
 
-        return selector.qualifiedName.ns != NONE;
+         return selector.qualifiedName.ns.is<Universal>() and
+             selector.qualifiedName.exactName() != NONE;
     }
 
     static bool isLookupEquivalentToMatch(TypeSelector const& selector) {
-        return selector.qualifiedName.ns == NONE and
-               selector.qualifiedName.name != NONE;
+         return selector.qualifiedName.ns.is<Universal>() and
+             selector.qualifiedName.exactName() != NONE;
     }
 
     static bool isLookupEquivalentToMatch(Selector const& selector) {

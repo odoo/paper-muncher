@@ -515,15 +515,8 @@ export struct XmlParser {
 
         auto value = try$(_parseAttValue(s));
 
-        // FIXME: the parsing allows rollback so it can be that a warning is emitted when setting an attribute of an element
+        // FIXME: The parsing allows rollback so it can be that a warning is emitted when setting an attribute of an element
         // that won't compose the final dom (due to a rollback after a failed parsing)
-        // FIXME: this is not a fully compliant XML parser and thus we skip adding xmlns as an attribute to the DOM
-        if ((not parsedName.prefix and parsedName.localName == "xmlns"_sym) or
-            parsedName.prefix == "xmlns"_sym) {
-            rollback.disarm();
-            return Ok();
-        }
-
         el.setAttribute(try$(context.resolveAttributeName(parsedName)), value);
 
         rollback.disarm();

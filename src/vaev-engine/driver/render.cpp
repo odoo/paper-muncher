@@ -14,6 +14,8 @@ import :values;
 
 namespace Vaev::Driver {
 
+static auto dumpFragments = Debug::Flag::debug("web-fragments"s, "Dump the constructed fragments"s);
+
 export struct RenderResult {
     Rc<Layout::Box> layout;
     Rc<Scene::Node> scenes;
@@ -49,6 +51,9 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
     auto sceneRoot = makeRc<Scene::Stack>();
     Layout::paint(root, *sceneRoot);
     sceneRoot->prepare();
+
+    if (dumpFragments)
+        logDebugIf(dumpFragments, "fragments: {}", root);
 
     return {
         makeRc<Layout::Box>(std::move(tree.root)),

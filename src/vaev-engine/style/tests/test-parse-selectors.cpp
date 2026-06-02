@@ -152,6 +152,22 @@ test$("vaev-style-parse-subsequent-selectors") {
     return Ok();
 }
 
+test$("vaev-style-reject-trailing-combinators") {
+    expect$(
+        not Selector::parse("html~").has()
+    );
+
+    expect$(
+        not Selector::parse("html+").has()
+    );
+
+    expect$(
+        not Selector::parse("html>").has()
+    );
+
+    return Ok();
+}
+
 test$("vaev-style-parse-mixed-selectors") {
     expectEq$(
         try$(Selector::parse("html > .className#idName")),
@@ -448,7 +464,7 @@ test$("vaev-style-parse-attribute-selectors") {
             ClassSelector{"className"s},
             AttributeSelector{
                 QualifiedNameSelector{NONE, "type"_sym},
-                AttributeSelector::INSENSITIVE,
+                AttributeSelector::SENSITIVE,
                 AttributeSelector::PRESENT,
                 ""s,
             },
@@ -461,7 +477,7 @@ test$("vaev-style-parse-attribute-selectors") {
             ClassSelector{"className"s},
             AttributeSelector{
                 QualifiedNameSelector{NONE, "type"_sym},
-                AttributeSelector::INSENSITIVE,
+                AttributeSelector::SENSITIVE,
                 AttributeSelector::EXACT,
                 "text"s,
             },
@@ -474,7 +490,7 @@ test$("vaev-style-parse-attribute-selectors") {
             ClassSelector{"className"s},
             AttributeSelector{
                 QualifiedNameSelector{NONE, "type"_sym},
-                AttributeSelector::INSENSITIVE,
+                AttributeSelector::SENSITIVE,
                 AttributeSelector::EXACT,
                 "text"s,
             },
@@ -487,7 +503,7 @@ test$("vaev-style-parse-attribute-selectors") {
             ClassSelector{"className"s},
             AttributeSelector{
                 QualifiedNameSelector{NONE, "type"_sym},
-                AttributeSelector::INSENSITIVE,
+                AttributeSelector::SENSITIVE,
                 AttributeSelector::STR_CONTAIN,
                 "text"s,
             },
@@ -503,6 +519,37 @@ test$("vaev-style-parse-attribute-selectors") {
                 AttributeSelector::SENSITIVE,
                 AttributeSelector::EXACT,
                 "text"s,
+            },
+        })
+    );
+
+    expectEq$(
+        try$(Selector::parse("*|p")),
+        (TypeSelector{UNIVERSAL, "p"_sym})
+    );
+
+    expectEq$(
+        try$(Selector::parse("*|*[*|title^='si on']")),
+        Selector::and_({
+            TypeSelector{UNIVERSAL, UNIVERSAL},
+            AttributeSelector{
+                QualifiedNameSelector{UNIVERSAL, "title"_sym},
+                AttributeSelector::SENSITIVE,
+                AttributeSelector::STR_START_WITH,
+                "si on"s,
+            },
+        })
+    );
+
+    expectEq$(
+        try$(Selector::parse("*|*[title^='si on']")),
+        Selector::and_({
+            TypeSelector{UNIVERSAL, UNIVERSAL},
+            AttributeSelector{
+                QualifiedNameSelector{NULL_NAMESPACE, "title"_sym},
+                AttributeSelector::SENSITIVE,
+                AttributeSelector::STR_START_WITH,
+                "si on"s,
             },
         })
     );
