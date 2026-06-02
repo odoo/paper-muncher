@@ -31,24 +31,31 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url 
     if (not resp->body)
         co_return Error::invalidInput("response body is missing");
 
-    auto respBody = resp->body.unwrap();
-    auto buf = co_trya$(Aio::readAllUtf8Async(*respBody, ct));
+    auto bodyStream = resp->body.unwrap();
+    auto bodyRaw = co_trya$(Aio::readAllUtf8Async(*bodyStream, ct));
+
+    // Strip the UTF-8 BOM if present.
+    auto body = bodyRaw.str();
+    if (startWith(body, "\xef\xbb\xbf"s) == Match::PARTIAL) {
+        body = sub(body, 3, body.len());
+    }
+
     Diag::Collector diags;
 
     if (contentType == Ref::Uti::PUBLIC_DATA) {
-        contentType = Ref::sniffBytes(bytes(buf));
+        contentType = Ref::sniffBytes(bytes(body));
         logWarn("{} has unspecified content type, sniffing yielded '{}'", url, contentType);
     }
 
     if (contentType.conformsTo(Ref::Uti::PUBLIC_HTML)) {
         Html::HtmlParser parser{heap, dom};
-        parser.write(buf, diags);
+        parser.write(body, diags);
     } else if (contentType.conformsTo(Ref::Uti::PUBLIC_XML)) {
-        Io::SScan scan{buf};
+        Io::SScan scan{body};
         Xml::XmlParser parser{heap};
         co_try$(parser.parse(scan, NONE, *dom));
     } else if (contentType.conformsTo(Ref::Uti::PUBLIC_MARKDOWN)) {
-        auto doc = Md::parse(buf);
+        auto doc = Md::parse(body);
         auto html = Md::renderHtml(doc);
         Html::HtmlParser parser{heap, dom};
         // TODO: Find  a clean way to report inline html error in markdown
@@ -56,16 +63,16 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url 
         parser.write(html, htmlDiags);
     } else if (contentType.conformsTo(Ref::Uti::PUBLIC_TEXT)) {
         auto text = heap.alloc<Dom::Text>();
-        text->appendData(buf);
-        auto body = heap.alloc<Dom::Element>(Html::BODY_TAG);
-        body->appendChild(text);
-        dom->appendChild(body);
+        text->appendData(body);
+        auto bodyEl = heap.alloc<Dom::Element>(Html::BODY_TAG);
+        bodyEl->appendChild(text);
+        dom->appendChild(bodyEl);
     } else if (contentType.conformsTo(Ref::Uti::PUBLIC_IMAGE)) {
         auto element = heap.alloc<Dom::Element>(Html::IMG_TAG);
         element->setAttribute(Html::SRC_ATTR, url.str());
-        auto body = heap.alloc<Dom::Element>(Html::BODY_TAG);
-        body->appendChild(element);
-        dom->appendChild(body);
+        auto bodyEl = heap.alloc<Dom::Element>(Html::BODY_TAG);
+        bodyEl->appendChild(element);
+        dom->appendChild(bodyEl);
     } else {
         logError("unsupported content type: {}", contentType);
         co_return Error::invalidInput("unsupported content type");
