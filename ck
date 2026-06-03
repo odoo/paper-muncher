@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -xe
 
 if [ "$EUID" -eq 0 ]; then
     echo "Please do not run this script as root."

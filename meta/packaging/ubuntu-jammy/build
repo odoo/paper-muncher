@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
-set -e
+set -xe
 
 rm -rf .cutekit/venv
 rm -rf .cutekit/tools-ready
 rm -rf sysroot/
+mkdir -p $HOME/.cutekit/toolchain
 
 podman run \
     --rm \
     -v "$PWD:/src" \
+    -v "$HOME/.cutekit/toolchain:/root/.cutekit/toolchain" \
     -w "/src" \
     -e CUTEKIT_ALLOW_ROOT=1 \
     ubuntu:jammy \

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -xe
 
 if [ "$EUID" -eq 0 ]; then
     export CUTEKIT_ELEVATOR=""
@@ -45,10 +45,13 @@ function is_arch() {
 if [ "$1" == "tools" -a "$2" == "setup" ]; then
     if is_ubuntu; then
         $CUTEKIT_ELEVATOR ./meta/scripts/setup-ubuntu.sh
+        ./meta/scripts/setup-llvm.sh
     elif is_debian; then
         $CUTEKIT_ELEVATOR ./meta/scripts/setup-debian.sh
+        ./meta/scripts/setup-llvm.sh
     elif is_arch; then
         $CUTEKIT_ELEVATOR ./meta/scripts/setup-arch.sh
+        ./meta/scripts/setup-llvm.sh
     elif is_darwin; then
         ./meta/scripts/setup-darwin.sh
     fi
@@ -58,20 +61,22 @@ if [ "$1" == "tools" -a "$2" == "setup" ]; then
     exit 0
 fi
 
-if is_ubuntu; then
-    source ./meta/scripts/env-ubuntu.sh
-elif is_darwin; then
-    source ./meta/scripts/env-darwin.sh
-fi
-
-if [ -d "$XDG_BIN_HOME" ]; then
+if [ -n "$XDG_BIN_HOME" ] && [ -d "$XDG_BIN_HOME" ]; then
     export PATH="$XDG_BIN_HOME:$PATH"
 fi
 
-if [ -d "$XDG_DATA_HOME/../bin" ]; then
+if [ -n "$XDG_DATA_HOME" ] && [ -d "$XDG_DATA_HOME/../bin" ]; then
     export PATH="$XDG_DATA_HOME/../bin:$PATH"
 fi
 
 if [ -d "$HOME/.local/bin" ]; then
     export PATH="$HOME/.local/bin:$PATH"
+fi
+
+if is_ubuntu; then
+    source ./meta/scripts/env-ubuntu.sh
+elif is_debian; then
+    source ./meta/scripts/env-ubuntu.sh
+elif is_darwin; then
+    source ./meta/scripts/env-darwin.sh
 fi
