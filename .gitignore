@@ -11,4 +11,6 @@ _local/
 *.code-workspace
 *.iml
 *.trace
+sysroot
+dist
 compile_commands.json

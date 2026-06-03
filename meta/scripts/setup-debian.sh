@@ -1,13 +1,4 @@
 #!/bin/bash
-
-set -e
-
+set -xe
 apt-get update -y --no-install-recommends
-apt-get install -y --no-install-recommends build-essential git ninja-build liburing-dev jq libseccomp-dev pkg-config
-
-# Install llvm
-apt-get install -y --no-install-recommends wget lsb-release software-properties-common gnupg
-bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm 22 all
-
-# Install UV
-apt-get install -y --no-install-recommends curl
+apt-get install -y --no-install-recommends build-essential git ninja-build liburing-dev jq libseccomp-dev pkg-config libseccomp-dev ca-certificates curl

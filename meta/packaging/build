@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 
-set -e
+set -xe
 
-meta/packaging/debian-bookworm/build
-meta/packaging/debian-trixie/build
-meta/packaging/ubuntu-jammy/build
-meta/packaging/ubuntu-noble/build
-meta/packaging/ubuntu-plucky/build
+log_step() {
+    local prefix="$1"
+    "${@:2}" 2>&1 | sed "s|^|${prefix} |"
+}
+
+log_step "[debian/bookworm]" meta/packaging/debian-bookworm/build
+log_step "[debian/trixie]" meta/packaging/debian-trixie/build
+log_step "[ubuntu/jammy]" meta/packaging/ubuntu-jammy/build
+log_step "[ubuntu/noble]" meta/packaging/ubuntu-noble/build
+log_step "[ubuntu/plucky]" meta/packaging/ubuntu-plucky/build

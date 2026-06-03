@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-export PATH=/usr/lib/llvm-20/bin:$PATH
+export PATH="$HOME/.cutekit/toolchain/bin:$PATH"
+export LD_LIBRARY_PATH="$HOME/.cutekit/toolchain/lib:$LD_LIBRARY_PATH"
