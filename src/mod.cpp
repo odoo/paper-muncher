@@ -204,16 +204,15 @@ export Async::Task<> runBatchAsync(
         logInfo("saving {}...", output);
         Io::BufferWriter bw;
         co_try$(printer->write(bw));
-        co_trya$(client->doAsync(
-            Http::Request::from(
-                Http::Method::PUT,
-                output,
-                Http::Body::from(bw.take())
-            ),
-            ct
-        ));
+        auto request = Http::Request::from(
+            Http::Method::PUT,
+            output,
+            Http::Body::from(bw.take())
+        );
+        request->header.put(Http::Header::CONNECTION, "close"s);
+        co_trya$(client->doAsync(request, ct));
     } else {
-        for (auto& input : inputs) {
+        for (auto [input, index] : iter(inputs) | Index()) {
             auto fileUrl = output / "{}.{}"_f(input.path.stem(), options.outputFormat.primarySuffix());
             auto printer = co_try$(
                 Print::FilePrinter::create(
@@ -224,17 +223,20 @@ export Async::Task<> runBatchAsync(
                 )
             );
             co_trya$(runSingleAsync(client, input, *printer, options, ct));
+
             logInfo("saving {}...", fileUrl);
             Io::BufferWriter bw;
             co_try$(printer->write(bw));
-            co_trya$(client->doAsync(
-                Http::Request::from(
-                    Http::Method::PUT,
-                    fileUrl,
-                    Http::Body::from(bw.take())
-                ),
-                ct
-            ));
+
+            auto request = Http::Request::from(
+                Http::Method::PUT,
+                fileUrl,
+                Http::Body::from(bw.take())
+            );
+            if (index + 1 == inputs.len())
+                request->header.put(Http::Header::CONNECTION, "close"s);
+
+            co_trya$(client->doAsync(request, ct));
         }
     }
 
