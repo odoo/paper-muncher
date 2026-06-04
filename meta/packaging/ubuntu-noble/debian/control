@@ -1,6 +1,6 @@
 Package: paper-muncher
 Description: Munch the web into crisp documents
-Version: 0.1.0-alpha
+Version: 0.3.1-1
 Section: utils
 Priority: optional
 Architecture: amd64
