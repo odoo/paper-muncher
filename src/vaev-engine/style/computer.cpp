@@ -1,11 +1,12 @@
 export module Vaev.Engine:style.computer;
 
+import Karm.Debug;
+import Karm.Font;
 import Karm.Gc;
 import Karm.Gfx;
-import Karm.Font;
-import Karm.Ref;
-import Karm.Math;
 import Karm.Logger;
+import Karm.Math;
+import Karm.Ref;
 
 import :dom.document;
 import :dom.element;
@@ -13,8 +14,11 @@ import :style.computed;
 import :style.cascaded;
 import :style.stylesheet;
 import :style.ruleIndex;
+import :style.counter;
 
 namespace Vaev::Style {
+
+static auto debugCounters = Debug::Flag::debug("web-css-counters", "Log all the registered CSS counters");
 
 export struct Computer {
     Gc::Heap& _heap;
@@ -23,6 +27,118 @@ export struct Computer {
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
     RuleIndex _ruleIndex = {};
+
+    // MARK: Counters ----------------------------------------------------------
+
+    Yield<Dom::OriginatingElement> _iterElementInScope() {
+        // TODO: Implement
+        co_return;
+    }
+
+    // https://drafts.csswg.org/css-lists/#instantiate-counter:~:text=dynamically%20calculate%20the%20initial%20value
+    Integer _dynamicallyCalculateCounterInitialValue(CustomIdent counter) {
+        // 1. Let num be 0.
+        Integer num = 0;
+
+        // 2. Let lastNonZeroIncrementNegated be 0.
+        Integer lastNonZeroIncrementNegated = 0;
+
+        // 3. For each element or pseudo-element el that increments or sets the same counter in the same scope:
+        for (auto el : _iterElementInScope()) {
+            auto maybeCounterIncrement =
+                iter(el.computedValues()->counters->increment) |
+                FindFirst([&](CounterProps::Increment const& increment) {
+                    return increment.name == counter;
+                });
+
+            // 1. Let incrementNegated be el’s counter-increment integer value for this counter, multiplied by -1.
+            Integer incrementNegated =
+                maybeCounterIncrement
+                    .unwrapOr({counter, 1})
+                    .value.unwrapOr(1) *
+                -1;
+
+            // 2. If incrementNegated is not zero, then set lastNonZeroIncrementNegated to incrementNegated.
+            if (incrementNegated != 0)
+                lastNonZeroIncrementNegated = incrementNegated;
+
+            // 3. If el sets this counter with counter-set, then add that integer value to num and break this loop.
+            auto maybeCounterSet =
+                iter(el.computedValues()->counters->set) |
+                FindFirst([&](CounterProps::Set const& set) {
+                    return set.name == counter;
+                });
+
+            if (maybeCounterSet) {
+                num += maybeCounterSet->value.unwrapOr(0);
+                break;
+            }
+
+            // 4. Add incrementNegated to num.
+            num += incrementNegated;
+        }
+
+        // 4. Add lastNonZeroIncrementNegated to num.
+        num += lastNonZeroIncrementNegated;
+
+        // 5. Return num.
+        return num;
+    }
+
+    // https://drafts.csswg.org/css-lists/#auto-numbering
+    CounterSet _resolveCounter(CounterSet& parent, CounterSet& sibling, ElementHandle el, ComputedValues const& style) {
+        auto const& countersStyle = *style.counters;
+
+        // 1. Existing counters are inherited from previous elements.
+        auto counters = CounterSet::inherits(parent, sibling);
+
+        // 2. New counters are instantiated (counter-reset).
+        for (auto& counterReset : countersStyle.reset) {
+            Integer initial = counterReset.value.unwrapOrElse([&] {
+                return counterReset.reversed ? _dynamicallyCalculateCounterInitialValue(counterReset.name) : 0;
+            });
+            counters.instantiateCounter(el, counterReset, initial);
+        }
+
+        // 3. Counter values are incremented (counter-increment).
+        if (countersStyle.increment) {
+            for (auto& counterIncrement : countersStyle.increment) {
+                counters.increment(el, counterIncrement);
+            }
+        } else if (style.display == Display::Item::YES) {
+            // https://www.w3.org/TR/css-lists-3/#list-item-counter
+            counters.increment(el, {.name = CustomIdent{"list-item"_sym}, .value = 1});
+        }
+
+        // 4. Counter values are explicitly set (counter-set).
+        for (auto& counterSet : countersStyle.set)
+            counters.increment(el, counterSet);
+
+        return counters;
+    }
+
+    CounterSet _resolveCounters(CounterSet& parentCounters, CounterSet& siblingCounters, Dom::Element& el) {
+        CounterSet currentCounters = _resolveCounter(
+            parentCounters,
+            siblingCounters,
+            &el,
+            *el.computedValues()
+        );
+        CounterSet childSiblingCounters = {};
+
+        for (auto child = el.firstChild(); child; child = child->nextSibling()) {
+            if (auto childEl = child->is<Dom::Element>()) {
+                childSiblingCounters = _resolveCounters(
+                    currentCounters,
+                    childSiblingCounters,
+                    *childEl
+                );
+                childEl->counters = childSiblingCounters;
+            }
+        }
+
+        return currentCounters;
+    }
 
     // MARK: Cascading ---------------------------------------------------------
 
@@ -352,12 +468,38 @@ export struct Computer {
         }
     }
 
+    CounterStyleSet _resolveCounterStyle(StyleSheetList const& stylesheets) {
+        CounterDescriptorSet counters;
+        for (auto const& sheet : stylesheets.styleSheets) {
+            for (auto const& rule : sheet.rules) {
+                if (auto it = rule.is<CounterRule>()) {
+                    CounterDescriptors descriptor;
+                    for (auto const& d : it->descriptors)
+                        d.apply(descriptor);
+                    counters.put(it->name, descriptor);
+                }
+            }
+        }
+        return resolveExtends(counters);
+    }
+
     void styleDocument(Dom::Document& doc) {
+        doc.counters = _resolveCounterStyle(*doc.styleSheets);
+        logDebugIf(debugCounters, "counters: {}", doc.counters);
+
         if (auto el = doc.documentElement()) {
             auto rootComputedValues = _registeredPropertySet.initialComputedValues();
             rootComputedValues->fontFace = _lookupFontface(*rootComputedValues);
             styleElement(*rootComputedValues, *el);
+            CounterSet rootParentCounters = {};
+            CounterSet rootSiblingCounters = {};
+            _resolveCounters(
+                rootParentCounters,
+                rootSiblingCounters,
+                *el
+            );
         }
+
         _propagateBodyBackgroundToHtml(doc);
     }
 

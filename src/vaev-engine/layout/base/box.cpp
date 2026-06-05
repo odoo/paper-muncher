@@ -54,6 +54,8 @@ struct Box : Meta::NoCopy {
     }
 
     void startInlineBox(Gfx::ProseStyle proseStyle) {
+        if (content == NONE)
+            content = makeRc<Gfx::Prose>(proseStyle);
         auto prose = content.unwrap<Rc<Gfx::Prose>>();
         prose->pushSpan();
         if (proseStyle.color)
@@ -119,6 +121,14 @@ struct Box : Meta::NoCopy {
         return style->position == Keywords::ABSOLUTE or
                style->position == Keywords::FIXED or
                style->position.is<RunningPosition>();
+    }
+
+    bool isPseudoElement(Symbol type) const {
+        if (not origin)
+            return false;
+        if (auto it = origin->is<Gc::Ref<Dom::PseudoElement>>())
+            return (*it)->type == type;
+        return false;
     }
 
     bool isActive() const {

@@ -55,6 +55,7 @@ class TestResults:
         self.failed: int = 0
         self.skipped: int = 0
         self.failedDetails: str = ""
+        self.panicTests: list[tuple[int, str]] = []  # (test_id, panic_info)
 
     def addPassed(self) -> None:
         self.passed += 1
@@ -67,12 +68,17 @@ class TestResults:
     def addSkipped(self) -> None:
         self.skipped += 1
 
+    def addPanic(self, test_id: int, panic_info: str) -> None:
+        """Record a test panic."""
+        self.panicTests.append((test_id, panic_info))
+
     def addWith(self, other: 'TestResults') -> None:
         """add another TestResults into this one."""
         self.passed += other.passed
         self.failed += other.failed
         self.skipped += other.skipped
         self.failedDetails += other.failedDetails
+        self.panicTests.extend(other.panicTests)
 
 
 class TestRunnerContext:
@@ -171,6 +177,9 @@ class TestRunner:
             file://{test.inputPath}
             file://{TEST_REPORT / "report.html"}#case-{test.id}
             """
+            if test.panicInfo:
+                failureDetails += f"\nEngine panic: {test.panicInfo}\n"
+                self._context.results.addPanic(test.id, test.panicInfo)
             self._context.results.addFailed(failureDetails)
         else:
             self._context.results.addPassed()
