@@ -51,14 +51,14 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     }
 }
 
-Output _dispatchFormatingContext(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) {
+Output _dispatchFormatingContext(Tree& tree, Box& box, Input input) {
     if (box.formatingContext == NONE) {
         box.formatingContext = _constructFormatingContext(box);
         if (box.formatingContext)
             box.formatingContext.unwrap()->build(tree, box);
     }
     if (auto& [formatingContext] = box.formatingContext)
-        return formatingContext->run(tree, box, input, startAt, stopAt);
+        return formatingContext->run(tree, box, input);
     return Output{};
 }
 
@@ -237,11 +237,9 @@ static Res<None, Output> _shouldAbortFragmentingBeforeLayout(Fragmentainer& fc, 
 }
 
 Output layoutContentBox(Tree& tree, Box& box, Input input) {
-    auto startAt = tree.fc.allowBreak() ? input.breakpointTraverser.getStart().unwrapOr(0uz) : 0uz;
-    auto stopAt = tree.fc.allowBreak() and not tree.fc.isDiscoveryMode() ? input.breakpointTraverser.getEnd() : NONE;
     try$(_shouldAbortFragmentingBeforeLayout(tree.fc, input));
     return _dispatchFormatingContext(
-        tree, box, input, startAt, stopAt
+        tree, box, input
     );
 }
 

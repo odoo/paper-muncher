@@ -692,7 +692,6 @@ struct FlexFormatingContext : FormatingContext {
                 input.knownSize.y.unwrapOr(0_au),
             },
             .completelyLaidOut = true,
-            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
         };
     }
 
@@ -1570,7 +1569,6 @@ struct FlexFormatingContext : FormatingContext {
         return {
             .size = fa.buildPair(_usedMainSize, _usedCrossSize),
             .completelyLaidOut = true,
-            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
         };
     }
 };

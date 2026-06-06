@@ -148,6 +148,7 @@ struct InlineFormatingContext : FormatingContext {
                 layoutBorderBox(tree, atomicBox, childInput, usedSpacings);
         }
 
+        // TODO: Introduce line breakpoints instead of behaving like a monolithic box.
         if (tree.fc.allowBreak() and
             not tree.fc.acceptsFit(
                 input.position.y,
@@ -157,7 +158,7 @@ struct InlineFormatingContext : FormatingContext {
             return {
                 .size = {},
                 .completelyLaidOut = false,
-                .breakpoint = Breakpoint::overflow()
+                .breakpoint = _Breakpoint::lastResort(),
             };
         }
 
@@ -167,7 +168,6 @@ struct InlineFormatingContext : FormatingContext {
                 input.knownSize.y.unwrapOr(size.y),
             },
             .completelyLaidOut = true,
-            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,
         };

@@ -32,7 +32,7 @@ struct FormatingContext {
 
     virtual void build(Tree&, Box&) {};
 
-    virtual Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) = 0;
+    virtual Output run(Tree& tree, Box& box, Input input) = 0;
 };
 
 } // namespace Vaev::Layout

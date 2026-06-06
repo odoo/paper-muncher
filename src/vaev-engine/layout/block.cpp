@@ -1,6 +1,7 @@
 module;
 
 #include <karm/macros>
+#include <utility>
 
 export module Vaev.Engine:layout.block;
 
@@ -14,115 +15,65 @@ import :layout.positioned;
 
 namespace Vaev::Layout {
 
-void maybeProcessChildBreakpoint(Fragmentainer& fc, Breakpoint& currentBreakpoint, usize childIndex, bool currBoxIsBreakAvoid, Opt<Breakpoint> maybeChildBreakpoint) {
-    if (not fc.isDiscoveryMode())
-        return;
+static _Breakpoint _breakBefore(usize childIndex, Style::ComputedValues const& style) {
+    if (style.break_->before == BreakBetween::PAGE) {
+        return _Breakpoint::before(childIndex, _Breakpoint::PERFECT, true);
+    }
 
-    // if we are in a monolitic context, we might not have breakpoints
-    if (not maybeChildBreakpoint)
-        return;
+    // TODO: Support other fragmentainers.
+    if (oneOf(style.break_->before, BreakBetween::AVOID, BreakBetween::AVOID_PAGE)) {
+        return _Breakpoint::before(childIndex, _Breakpoint::IGNORING_BREAK_AVOID, false);
+    }
 
-    // breakpoint inside child (from this blocks perspective)
-    // BREAK CLASS X (recursive case)
-    currentBreakpoint.overrideIfBetter(
-        Breakpoint::fromChild(
-            std::move(maybeChildBreakpoint.unwrap()),
-            childIndex + 1,
-            currBoxIsBreakAvoid
-        )
-    );
+    // NOTE: Other unimplemented values are treated as `auto`.
+    return _Breakpoint::before(childIndex, _Breakpoint::PERFECT, false);
 }
 
-Res<None, Output> processBreakpointsAfterChild(Fragmentainer& fc, Breakpoint& currentBreakpoint, Box& parentBox, usize childIndex, Vec2Au currentBoxSize, bool childCompletelyLaidOut) {
-    if (not fc.isDiscoveryMode())
-        return Ok(NONE);
+static _Breakpoint _breakInside(usize childIndex, _Breakpoint&& childBreakpoint, Style::ComputedValues const& style) {
+    _Breakpoint::Appeal appeal = _Breakpoint::PERFECT;
 
-    // last child was not completly laid out, we need to abort with our best breakpoint
-    if (not childCompletelyLaidOut) {
-        return Output{
-            .size = currentBoxSize,
-            .completelyLaidOut = false,
-            .breakpoint = currentBreakpoint
-        };
+    // TODO: Support other fragmentainers.
+    if (oneOf(style.break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE)) {
+        appeal = _Breakpoint::IGNORING_BREAK_AVOID;
     }
 
-    Box& childBox = parentBox.children()[childIndex];
-    bool isLastChild = childIndex + 1 == parentBox.children().len();
-
-    // breakpoint right after child
-    // this can only happen IF child was fully laid out and its not last child (not class C)
-    // BREAK CLASS A
-    if (not isLastChild) {
-        bool breakIsAvoided =
-            parentBox.style->break_->inside == BreakInside::AVOID or
-            childBox.style->break_->after == BreakBetween::AVOID or
-            (not isLastChild and parentBox.children()[childIndex + 1].style->break_->before == BreakBetween::AVOID);
-
-        currentBreakpoint.overrideIfBetter(
-            Breakpoint::classB(
-                childIndex + 1,
-                breakIsAvoided
-            )
-        );
-    }
-
-    // FORCED BREAK
-    if (childBox.style->break_->after == BreakBetween::PAGE) {
-        return Output{
-            .size = currentBoxSize,
-            .completelyLaidOut = false,
-            .breakpoint = Breakpoint::forced(
-                childIndex + 1
-            )
-        };
-    }
-
-    return Ok(NONE);
+    appeal = min(appeal, childBreakpoint.appeal);
+    return _Breakpoint::inside(childIndex, appeal, childBreakpoint.isForced, makeBox(std::move(childBreakpoint)));
 }
 
-Res<None, Output> processBreakpointsBeforeChild(usize endAt, Vec2Au currentSize, bool forcedBreakBefore, usize startAt) {
-    // FORCED BREAK
-    if (forcedBreakBefore and not(startAt == endAt)) {
-        return Output{
-            .size = currentSize,
-            .completelyLaidOut = false,
-            .breakpoint = Breakpoint::forced(endAt)
-        };
+static _Breakpoint _breakAfter(usize childIndex, Style::ComputedValues const& style) {
+    if (style.break_->after == BreakBetween::PAGE) {
+        return _Breakpoint::after(childIndex, _Breakpoint::PERFECT, true);
     }
 
-    return Ok(NONE);
+    // TODO: Support other fragmentainers.
+    if (oneOf(style.break_->after, BreakBetween::AVOID, BreakBetween::AVOID_PAGE)) {
+        return _Breakpoint::after(childIndex, _Breakpoint::IGNORING_BREAK_AVOID, false);
+    }
+
+    // NOTE: Other unimplemented values are treated as `auto`.
+    return _Breakpoint::before(childIndex, _Breakpoint::PERFECT, false);
 }
 
-Output fragmentEmptyBox(Tree& tree, Input input) {
-    // put this here instead of in layout.py since we want to know if its the empty box case
+// Fragments a monolithic box (no children, known dimensions).
+static Output _fragmentMonolithicBox(Fragmentainer const& fc, Input input) {
     Vec2Au knownSize{input.knownSize.x.unwrapOr(0_au), input.knownSize.y.unwrapOr(0_au)};
-    if (tree.fc.isDiscoveryMode()) {
-        if (tree.fc.acceptsFit(
-                input.position.y,
-                knownSize.y,
-                input.pendingVerticalSizes
-            )) {
-            return Output{
-                .size = knownSize,
-                .completelyLaidOut = true,
-            };
-        } else {
-            return Output{
-                .size = {},
-                .completelyLaidOut = false,
-                .breakpoint = Breakpoint::overflow()
-            };
-        }
-    } else {
-        // FIXME: we should be breaking empty boxes using pixels or percentages, this behaviour is not compliant
-        Au verticalSpaceLeft = tree.fc.leftVerticalSpace(
-            input.position.y, input.pendingVerticalSizes
-        );
+    if (fc.acceptsFit(
+            input.position.y,
+            knownSize.y,
+            input.pendingVerticalSizes
+        )) {
         return Output{
-            .size = {knownSize.x, min(knownSize.y, verticalSpaceLeft)},
-            .completelyLaidOut = verticalSpaceLeft >= knownSize.y,
+            .size = knownSize,
+            .completelyLaidOut = true,
         };
     }
+
+    return Output{
+        .size = {},
+        .completelyLaidOut = false,
+        .breakpoint = _Breakpoint::lastResort(),
+    };
 }
 
 void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, UsedSpacings const& usedSpacings, Opt<Au> blockInlineSize) {
@@ -181,37 +132,46 @@ struct BlockFormatingContext : FormatingContext {
         return capmin;
     }
 
-    Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
+    Output run(Tree& tree, Box& box, Input input) override {
         Au blockSize = 0_au;
         Au inlineSize = input.knownSize.width.unwrapOr(0_au);
 
         if (box.children().len() == 0) {
-            return fragmentEmptyBox(tree, input);
+            return _fragmentMonolithicBox(tree.fc, input);
         }
 
-        Breakpoint currentBreakpoint;
+        Opt<_Breakpoint> bestBreakpoint = NONE;
         BaselinePositionsSet firstBaselineSet, lastBaselineSet;
-
-        usize endChildren = stopAt.unwrapOr(box.children().len());
 
         bool blockWasCompletelyLaidOut = false;
 
         Au lastMarginBottom = 0_au;
 
-        for (usize i = startAt; i < endChildren; ++i) {
+        auto st
+
+        for (usize i = startAt; i < box.children().len(); ++i) {
             auto& c = box.children()[i];
             lookForRunningPosition(input, c);
             if (c.isRunningPositionedBox())
                 continue;
 
-            try$(
-                processBreakpointsBeforeChild(
-                    i,
-                    Vec2Au{inlineSize, blockSize},
-                    c.style->break_->before == BreakBetween::PAGE,
-                    startAt
-                )
-            );
+            // We don't process break-before until some progress has been made to avoid infinite loops.
+            if (tree.fc.allowBreak() and i > startAt) {
+                auto breakpoint = _breakBefore(i, *c.style);
+                if (breakpoint.isForced) {
+                    return Output{
+                        .size = Vec2Au{inlineSize, blockSize},
+                        .completelyLaidOut = false,
+                        .breakpoint = breakpoint,
+                    };
+                }
+
+                if (bestBreakpoint) {
+                    bestBreakpoint->overrideIfBetter(std::move(breakpoint));
+                } else {
+                    *bestBreakpoint = std::move(breakpoint);
+                }
+            }
 
             // TODO: Implement floating
             // if (c.style->float_ != Float::NONE)
@@ -262,26 +222,43 @@ struct BlockFormatingContext : FormatingContext {
                 lastMarginBottom = usedSpacings.margin.bottom;
             }
 
-            maybeProcessChildBreakpoint(
-                tree.fc,
-                currentBreakpoint,
-                i,
-                box.style->break_->inside == BreakInside::AVOID,
-                output.breakpoint
-            );
+            if (tree.fc.allowBreak() and output.breakpoint) {
+                auto breakpoint = _breakInside(i, output.breakpoint.take(), *c.style);
+                if (breakpoint.isForced) {
+                    return Output{
+                        .size = Vec2Au{inlineSize, blockSize},
+                        .completelyLaidOut = false,
+                        .breakpoint = breakpoint,
+                    };
+                }
+
+                if (bestBreakpoint) {
+                    bestBreakpoint->overrideIfBetter(std::move(breakpoint));
+                } else {
+                    *bestBreakpoint = std::move(breakpoint);
+                }
+            }
 
             if (i == startAt)
                 firstBaselineSet = output.firstBaselineSet.translate(childInput.position.y - input.position.y);
             lastBaselineSet = output.lastBaselineSet.translate(childInput.position.y - input.position.y);
 
-            try$(processBreakpointsAfterChild(
-                tree.fc,
-                currentBreakpoint,
-                box,
-                i,
-                Vec2Au{inlineSize, blockSize},
-                output.completelyLaidOut
-            ));
+            if (tree.fc.allowBreak() and i < endChildren - 1) {
+                auto breakpoint = _breakAfter(i, *c.style);
+                if (breakpoint.isForced) {
+                    return Output{
+                        .size = Vec2Au{inlineSize, blockSize},
+                        .completelyLaidOut = false,
+                        .breakpoint = breakpoint,
+                    };
+                }
+
+                if (bestBreakpoint) {
+                    bestBreakpoint->overrideIfBetter(std::move(breakpoint));
+                } else {
+                    *bestBreakpoint = std::move(breakpoint);
+                }
+            }
 
             if (tree.fc.allowBreak() and i + 1 == endChildren) {
                 blockWasCompletelyLaidOut = output.completelyLaidOut and i + 1 == box.children().len();
@@ -296,7 +273,7 @@ struct BlockFormatingContext : FormatingContext {
                 input.knownSize.y.unwrapOr(blockSize)
             },
             .completelyLaidOut = blockWasCompletelyLaidOut,
-            .breakpoint = currentBreakpoint,
+            .breakpoint = bestBreakpoint,
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,
         };

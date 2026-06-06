@@ -64,7 +64,7 @@ export struct Output {
     bool completelyLaidOut;
 
     // only to be used in discovery mode
-    Opt<Breakpoint> breakpoint = NONE;
+    Opt<_Breakpoint> breakpoint = NONE;
 
     BaselinePositionsSet const firstBaselineSet = {};
     BaselinePositionsSet const lastBaselineSet = {};

@@ -1412,11 +1412,12 @@ export struct TableFormatingContext : FormatingContext {
             boxBorderMapping->put((usize)cellBox.buf(), *collapsedBorders);
         }
 
-        if (tree.fc.isDiscoveryMode()) {
-            if (cellBox->style->break_->inside == BreakInside::AVOID) {
-                outputCell.breakpoint.unwrap().withAppeal(Breakpoint::Appeal::AVOID);
-            }
-        }
+        // FIXME
+        // if (tree.fc.isDiscoveryMode()) {
+        //     if (cellBox->style->break_->inside == BreakInside::AVOID) {
+        //         outputCell.breakpoint.unwrap().withAppeal(Breakpoint::Appeal::AVOID);
+        //     }
+        // }
 
         return {
             outputCell,
@@ -1438,10 +1439,11 @@ export struct TableFormatingContext : FormatingContext {
         startPositionOfRow[i] = currPosition.y;
 
         RowOutput outputRow;
-        if (tree.fc.isDiscoveryMode()) {
-            outputRow.breakpoints = Buf<Opt<Breakpoint>>::init(grid.size.x, NONE);
-            outputRow.isBottom = Buf<bool>::init(grid.size.x, false);
-        }
+        // FIXME
+        // if (tree.fc.isDiscoveryMode()) {
+        //     outputRow.breakpoints = Buf<Opt<Breakpoint>>::init(grid.size.x, NONE);
+        //     outputRow.isBottom = Buf<bool>::init(grid.size.x, false);
+        // }
 
         currPosition.x += spacing.x;
         for (usize j = 0; j < grid.size.x; currPosition.x += colWidth[j] + spacing.x, j++) {
@@ -1453,22 +1455,27 @@ export struct TableFormatingContext : FormatingContext {
 
             bool isBottomCell = cell.anchorIdx.y + cellBox->style->table->rowSpan - 1 == i;
 
-            if (not tree.fc.isDiscoveryMode() and not(isBottomCell or isBreakpointedRow)) {
+            // FIXME
+            // if (not tree.fc.isDiscoveryMode() and not(isBottomCell or isBreakpointedRow)) {
+            //     continue;
+            // }
+            if (not(isBottomCell or isBreakpointedRow)) {
                 continue;
             }
 
             auto [outputCell, cellHeight] = layoutCell(tree, input, cell, cellBox, startFrag, i, j, currPosition.x, breakpointIndexOffset);
 
-            if (tree.fc.isDiscoveryMode()) {
-                if (isBottomCell)
-                    outputRow.sizeY = max(outputRow.sizeY, cellHeight);
-
-                outputRow.breakpoints[j] = outputCell.breakpoint;
-                outputRow.isBottom[j] = isBottomCell;
-                outputRow.allBottomsAndCompletelyLaidOut &= isBottomCell and outputCell.completelyLaidOut;
-            } else {
+            // FIXME
+            // if (tree.fc.isDiscoveryMode()) {
+            //     if (isBottomCell)
+            //         outputRow.sizeY = max(outputRow.sizeY, cellHeight);
+            //
+            //     outputRow.breakpoints[j] = outputCell.breakpoint;
+            //     outputRow.isBottom[j] = isBottomCell;
+            //     outputRow.allBottomsAndCompletelyLaidOut &= isBottomCell and outputCell.completelyLaidOut;
+            // } else {
                 outputRow.sizeY = max(outputRow.sizeY, cellHeight);
-            }
+            // }
             outputRow.someBottomsUncompleteLaidOut |= isBottomCell and not outputCell.completelyLaidOut;
         };
 
@@ -1582,13 +1589,14 @@ export struct TableFormatingContext : FormatingContext {
         bool completelyLaidOut = false;
         Opt<Breakpoint> rowBreakpoint = NONE;
 
-        if (tree.fc.isDiscoveryMode()) {
-            completelyLaidOut = true;
-            rowBreakpoint = Breakpoint();
-
-            if (shouldRepeatHeaderAndFooter)
-                input = input.addPendingVerticalSize(footerSize.y);
-        }
+        // FIXME
+        // if (tree.fc.isDiscoveryMode()) {
+        //     completelyLaidOut = true;
+        //     rowBreakpoint = Breakpoint();
+        //
+        //     if (shouldRepeatHeaderAndFooter)
+        //         input = input.addPendingVerticalSize(footerSize.y);
+        // }
 
         for (usize i = startAt; i < stopAt; i++) {
             auto rowOutput = layoutRow(
@@ -1599,15 +1607,19 @@ export struct TableFormatingContext : FormatingContext {
                 shouldRepeatHeaderAndFooter ? dataRowsInterval.x : 0
             );
 
-            if (tree.fc.isDiscoveryMode()) {
-                if (
-                    not handleUnforcedBreakpointsInsideAndAfterRow(box, rowBreakpoint.unwrap(), rowOutput, i, tree.fc.size()) or
-                    not handlePossibleForcedBreakpointAfterRow(rowBreakpoint.unwrap(), rowOutput.allBottomsAndCompletelyLaidOut, (i + 1 == stopAt), i)
-                ) {
-                    completelyLaidOut = false;
-                    break;
-                }
-            } else if (i == (shouldRepeatHeaderAndFooter ? dataRowsInterval.y : grid.size.y - 1)) {
+            // if (tree.fc.isDiscoveryMode()) {
+            //     if (
+            //         not handleUnforcedBreakpointsInsideAndAfterRow(box, rowBreakpoint.unwrap(), rowOutput, i, tree.fc.size()) or
+            //         not handlePossibleForcedBreakpointAfterRow(rowBreakpoint.unwrap(), rowOutput.allBottomsAndCompletelyLaidOut, (i + 1 == stopAt), i)
+            //     ) {
+            //         completelyLaidOut = false;
+            //         break;
+            //     }
+            // } else if (i == (shouldRepeatHeaderAndFooter ? dataRowsInterval.y : grid.size.y - 1)) {
+            //     completelyLaidOut = not rowOutput.someBottomsUncompleteLaidOut;
+            // }
+
+            if (i == (shouldRepeatHeaderAndFooter ? dataRowsInterval.y : grid.size.y - 1)) {
                 completelyLaidOut = not rowOutput.someBottomsUncompleteLaidOut;
             }
 
@@ -1631,15 +1643,15 @@ export struct TableFormatingContext : FormatingContext {
     Tuple<usize, usize> computeLayoutIntervals(Tree& tree, bool shouldRepeatHeaderAndFooter, usize startAtTable, Opt<usize> stopAtTable) {
         usize startAt = startAtTable + (shouldRepeatHeaderAndFooter ? dataRowsInterval.x : 0);
         usize stopAt;
-        if (tree.fc.isDiscoveryMode()) {
-            stopAt = shouldRepeatHeaderAndFooter
-                         ? dataRowsInterval.y + 1
-                         : grid.size.y;
-        } else {
+        // if (tree.fc.isDiscoveryMode()) {
+        //     stopAt = shouldRepeatHeaderAndFooter
+        //                  ? dataRowsInterval.y + 1
+        //                  : grid.size.y;
+        // } else {
             stopAt = shouldRepeatHeaderAndFooter
                          ? dataRowsInterval.x + stopAtTable.unwrapOr(dataRowsInterval.y - dataRowsInterval.x + 1)
                          : stopAtTable.unwrapOr(grid.size.y);
-        }
+        // }
 
         return {startAt, stopAt};
     }
@@ -1683,9 +1695,9 @@ export struct TableFormatingContext : FormatingContext {
             shouldRepeatHeaderAndFooter
         );
 
-        if (tree.fc.isDiscoveryMode() and shouldRepeatHeaderAndFooter) {
-            breakpoint.unwrap().endIdx -= dataRowsInterval.x;
-        }
+        // if (tree.fc.isDiscoveryMode() and shouldRepeatHeaderAndFooter) {
+        //     breakpoint.unwrap().endIdx -= dataRowsInterval.x;
+        // }
 
         if (shouldRepeatHeaderAndFooter)
             layoutHeaderFooterRows(
@@ -1698,7 +1710,7 @@ export struct TableFormatingContext : FormatingContext {
         return Output{
             .size = {tableUsedWidth, currPositionY - startingPositionY},
             .completelyLaidOut = completelyLaidOut,
-            .breakpoint = tree.fc.isDiscoveryMode() ? Opt{breakpoint} : NONE,
+            // .breakpoint = tree.fc.isDiscoveryMode() ? Opt{breakpoint} : NONE,
         };
     }
 };

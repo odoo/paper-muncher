@@ -168,7 +168,6 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
             .runningPosition = {&runningPosition},
             .pageNumber = pageNumber,
         };
-        contentTree.fc.enterDiscovery();
 
         auto [output, frag] = Layout::layoutAndCommitRoot(
             contentTree,
@@ -179,8 +178,6 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
             output.completelyLaidOut
                 ? Layout::Breakpoint::classB(1, false)
                 : output.breakpoint.unwrap();
-
-        contentTree.fc.leaveDiscovery();
 
         auto pageStack = makeRc<Scene::Stack>();
         if (settings.headerFooter and settings.margins != Print::Margins::NONE)

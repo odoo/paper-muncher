@@ -37,7 +37,7 @@ struct ReplacedFormatingContext : FormatingContext {
             return {
                 .size = {},
                 .completelyLaidOut = false,
-                .breakpoint = Breakpoint::overflow(),
+                .breakpoint = _Breakpoint::lastResort(),
                 .firstBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
                 .lastBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
             };
@@ -46,7 +46,6 @@ struct ReplacedFormatingContext : FormatingContext {
         return {
             .size = size,
             .completelyLaidOut = true,
-            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
             .firstBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
             .lastBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
         };

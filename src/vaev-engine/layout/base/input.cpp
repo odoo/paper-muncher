@@ -29,7 +29,7 @@ export struct Input {
     MutCursor<RunningPositionMap> runningPosition = nullptr;
     usize pageNumber = 0;
 
-    BreakpointTraverser breakpointTraverser = {};
+    BreakpointReplayer breakpointReplayer = {};
 
     // To be used between table wrapper and table box
     Opt<Au> capmin = NONE;
