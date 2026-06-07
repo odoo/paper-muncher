@@ -133,6 +133,13 @@ struct BlockFormatingContext : FormatingContext {
     }
 
     Output run(Tree& tree, Box& box, Input input) override {
+        if (input.breakpointReplayer.isActive()) {
+            auto& c = box.children()[input.breakpointReplayer.current->index];
+            (*c.formatingContext)->run(tree, c, {
+                .breakpointReplayer = input.breakpointReplayer.forRecursion(),
+            });
+        }
+
         Au blockSize = 0_au;
         Au inlineSize = input.knownSize.width.unwrapOr(0_au);
 
@@ -147,10 +154,15 @@ struct BlockFormatingContext : FormatingContext {
 
         Au lastMarginBottom = 0_au;
 
-        auto st
+        usize startAt = input.breakpointReplayer.current ? input.breakpointReplayer.current->index : 0;
 
         for (usize i = startAt; i < box.children().len(); ++i) {
             auto& c = box.children()[i];
+
+            if (input.breakpointReplayer.isActive()) {
+                c.formatingContext.has()
+            }
+
             lookForRunningPosition(input, c);
             if (c.isRunningPositionedBox())
                 continue;

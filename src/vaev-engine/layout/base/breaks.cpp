@@ -123,6 +123,17 @@ export struct BreakpointReplayer {
         return current.has();
     }
 
+    Opt<usize> childRecurseIndex() {
+        if (not current or current->type != _Breakpoint::Type::INSIDE)
+            return NONE;
+
+        return current->index;
+    }
+
+    BreakpointReplayer forRecursion() {
+        return BreakpointReplayer(*(current->bestChildBreakpoint));
+    }
+
     bool shouldRecurseInto(usize childIndex) {
         return current and
                current->type == _Breakpoint::Type::BEFORE and
