@@ -29,6 +29,7 @@ class TestCase:
         self.type = props.get("type")  # the type of test [render (default) | print]
         self.xsize = props.get("size", "200")
         self.ysize = self.xsize
+        self.margins = props.get("margins")
 
         if props.get("size") == "full":
             self.xsize = "800"
@@ -81,6 +82,9 @@ def runPaperMuncher(executable, test: TestCase):
 
     if test.page:
         command.extend(["--page", test.page])
+
+    if test.margins:
+        command.extend(["--margins", test.margins])
 
     command += [
         "-o",
