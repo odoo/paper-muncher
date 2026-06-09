@@ -6,6 +6,9 @@
         <field name="model">reftest.reftest</field>
         <field name="arch" type="xml">
             <list>
+                <header>
+                    <button name="action_run_all" string="Run All" type="object" class="btn-primary" display="always"/>
+                </header>
                 <field name="report_id"/>
                 <field name="res_model" invisible="1"/>
                 <field name="res_id"/>
