@@ -43,7 +43,6 @@ class Reftest(models.Model):
         readonly=True,
         store=True,
         digits=(5, 2),
-        group_operator='avg',
     )
     report_id = fields.Many2one("ir.actions.report", required=True, domain=[('report_type', 'in', ['qweb-pdf'] + [x[0] for x in ENGINES])])
     res_model = fields.Char(related='report_id.model')
@@ -136,10 +135,10 @@ class Reftest(models.Model):
             diff = ImageChops.difference(left, right)
             stat = ImageStat.Stat(diff)
             if not stat.rms:
-                return 100.0
+                return 1.0
             rms = sum(stat.rms) / len(stat.rms)
-            similarity = max(0.0, 100.0 * (1.0 - (rms / 255.0)))
-            return round(similarity, 2)
+            similarity = max(0.0, 1.0 - (rms / 255.0))
+            return round(similarity, 4)
 
     def _create_pdf_attachments(self, report_name, record_name, timestamp, reference_pdf_content, test_pdf_content):
         self.ensure_one()
@@ -196,7 +195,7 @@ class Reftest(models.Model):
             </div>
             """
         ).format(
-            score=similarity_score,
+            score=similarity_score * 100.0,
             reference_id=reference_preview.id,
             test_id=test_preview.id,
         )
@@ -341,5 +340,5 @@ class Reftest(models.Model):
             test.state = 'run'
             print(
                 f"[reftest] Completed {index}/{total}: "
-                f"report={test.report_id.display_name} layout={test.layout_id.name} similarity={test.similarity_score:.2f}%"
+                f"report={test.report_id.display_name} layout={test.layout_id.name} similarity={test.similarity_score * 100:.2f}%"
             )

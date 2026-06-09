@@ -10,7 +10,7 @@
                     <button name="action_run_all" string="Run All" type="object" class="btn-primary" display="always"/>
                 </header>
                 <field name="report_id" width="320px"/>
-                <field name="similarity_score" string="Similarity %" width="110px" widget="percentage"/>
+                <field name="similarity_score" string="Similarity %" width="110px" widget="percentage" avg="Average"/>
                 <field name="res_model" invisible="1"/>
                 <field name="res_id"/>
                 <field name="layout_id"/>
@@ -38,7 +38,7 @@
                             <field name="layout_id"/>
                         </group>
                         <group>
-                            <field name="similarity_score" widget="percentage"/>
+                            <field name="similarity_score" widget="percentage" string="Similarity %"/>
                             <field name="reference_engine"/>
                             <field name="engine"/>
                         </group>
