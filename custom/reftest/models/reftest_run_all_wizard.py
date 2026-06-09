@@ -60,10 +60,7 @@ class ReftestRunAllWizard(models.TransientModel):
             raise UserError('Please select at least one runnable report.')
 
         if self.clear_previous:
-            existing_tests = reftest_model.search([])
-            existing_attachments = existing_tests.output_pdf_ids | existing_tests.preview_image_ids
-            existing_tests.unlink()
-            existing_attachments.unlink()
+            reftest_model.search([]).unlink()
 
         values_list = reftest_model._prepare_run_all_values(
             reports,

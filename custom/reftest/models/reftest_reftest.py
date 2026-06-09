@@ -12,7 +12,7 @@ from odoo.exceptions import UserError
 
 try:
     from PIL import Image, ImageChops, ImageStat
-except ImportError:  # pragma: no cover - depends on the local runtime
+except ImportError:
     Image = None
     ImageChops = None
     ImageStat = None
@@ -264,10 +264,7 @@ class Reftest(models.Model):
     @api.model
     def action_run_all(self, *args):
         reftest_model = self.env['reftest.reftest']
-        existing_tests = reftest_model.search([])
-        existing_attachments = existing_tests.output_pdf_ids | existing_tests.preview_image_ids
-        existing_tests.unlink()
-        existing_attachments.unlink()
+        reftest_model.search([]).unlink()
 
         layouts = self._get_run_all_layouts()
         if not layouts:
