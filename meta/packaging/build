@@ -12,3 +12,5 @@ log_step "[debian/trixie]" meta/packaging/debian-trixie/build
 log_step "[ubuntu/jammy]" meta/packaging/ubuntu-jammy/build
 log_step "[ubuntu/noble]" meta/packaging/ubuntu-noble/build
 log_step "[ubuntu/plucky]" meta/packaging/ubuntu-plucky/build
+log_step "[generic/epoll]" meta/packaging/generic-epoll/build
+log_step "[generic/uring]" meta/packaging/generic-uring/build
