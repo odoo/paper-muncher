@@ -36,6 +36,7 @@
                             <field name="report_id"/>
                             <field name="res_model" invisible="1"/>
                             <field name="res_id"/>
+                            <field name="html_report_url" widget="url" string="HTML Report" readonly="1"/>
                             <field name="layout_id"/>
                         </group>
                         <group>

@@ -47,6 +47,7 @@ class Reftest(models.Model):
     report_id = fields.Many2one("ir.actions.report", required=True, domain=[('report_type', 'in', ['qweb-pdf'] + [x[0] for x in ENGINES])])
     res_model = fields.Char(related='report_id.model')
     res_id = fields.Many2oneReference(required=True, model_field='res_model')
+    html_report_url = fields.Char(string='HTML Report', compute='_compute_html_report_url')
     layout_id = fields.Many2one('report.layout', required=True)
     reference_engine = fields.Selection(ENGINES, required=True)
     engine = fields.Selection(ENGINES, required=True)
@@ -72,6 +73,14 @@ class Reftest(models.Model):
     @api.onchange('report_id')
     def _onchange_report_id(self):
         self.res_id = False
+
+    @api.depends('report_id.report_name', 'res_id')
+    def _compute_html_report_url(self):
+        for record in self:
+            if record.report_id and record.report_id.report_name and record.res_id:
+                record.html_report_url = f"/report/html/{record.report_id.report_name}/{record.res_id}"
+            else:
+                record.html_report_url = False
 
     def _get_test_company(self):
         self.ensure_one()
