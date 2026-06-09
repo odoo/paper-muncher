@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -xe
+
+rm -rf .cutekit/venv
+rm -rf .cutekit/tools-ready
+rm -rf sysroot/
+mkdir -p $HOME/.cutekit/toolchain
+
+podman run \
+    --rm \
+    -v "$PWD:/src" \
+    -v "$HOME/.cutekit/toolchain:/root/.cutekit/toolchain" \
+    -w "/src" \
+    -e CUTEKIT_ALLOW_ROOT=1 \
+    ubuntu:latest \
+    bash -c " \
+        ./ck tools setup && \
+        ./ck package --props:async=epoll --release --prefix=/usr --sysroot=/src/sysroot ${COMPONENT} && \
+        mkdir -p /src/dist && \
+        cd /src/sysroot && \
+        tar -czf /src/dist/${COMPONENT}_${VERSION}_generic_epoll_amd64.tar.gz *"
