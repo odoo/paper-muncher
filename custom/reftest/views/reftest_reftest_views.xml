@@ -9,7 +9,8 @@
                 <header>
                     <button name="action_run_all" string="Run All" type="object" class="btn-primary" display="always"/>
                 </header>
-                <field name="report_id"/>
+                <field name="report_id" width="320px"/>
+                <field name="similarity_score" string="Similarity %" width="110px" widget="percentage"/>
                 <field name="res_model" invisible="1"/>
                 <field name="res_id"/>
                 <field name="layout_id"/>
@@ -37,6 +38,7 @@
                             <field name="layout_id"/>
                         </group>
                         <group>
+                            <field name="similarity_score" widget="percentage"/>
                             <field name="reference_engine"/>
                             <field name="engine"/>
                         </group>
@@ -47,6 +49,7 @@
                         </page>
                     </notebook>
                 </sheet>
+                <chatter reload_on_attachment="True"/>
             </form>
         </field>
     </record>
@@ -55,6 +58,7 @@
         <field name="name">Reftests</field>
         <field name="res_model">reftest.reftest</field>
         <field name="view_mode">list,form</field>
+        <field name="context">{'group_by': ['report_id']}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create your first Reftest record!
