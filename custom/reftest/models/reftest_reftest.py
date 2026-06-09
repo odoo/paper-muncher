@@ -232,6 +232,27 @@ class Reftest(models.Model):
         return model.with_context(active_test=False).search([], order='id', limit=1)
 
     @api.model
+    def action_open_run_all_wizard(self, *args):
+        return self.env.ref('reftest.reftest_run_all_wizard_action').read()[0]
+
+    @api.model
+    def _prepare_run_all_values(self, reports, layouts, reference_engine=DEFAULT_REFERENCE_ENGINE, engine=DEFAULT_ENGINE):
+        values_list = []
+        for report in reports:
+            record = self._get_run_all_record(report)
+            if not record:
+                continue
+            for layout in layouts:
+                values_list.append({
+                    'report_id': report.id,
+                    'res_id': record.id,
+                    'layout_id': layout.id,
+                    'reference_engine': reference_engine,
+                    'engine': engine,
+                })
+        return values_list
+
+    @api.model
     def action_run_all(self, *args):
         reftest_model = self.env['reftest.reftest']
         existing_tests = reftest_model.search([])
@@ -244,19 +265,7 @@ class Reftest(models.Model):
             raise UserError("No report layout is available to run the reftests.")
 
         reports = self._get_run_all_reports()
-        values_list = []
-        for report in reports:
-            record = self._get_run_all_record(report)
-            if not record:
-                continue
-            for layout in layouts:
-                values_list.append({
-                    'report_id': report.id,
-                    'res_id': record.id,
-                    'layout_id': layout.id,
-                    'reference_engine': DEFAULT_REFERENCE_ENGINE,
-                    'engine': DEFAULT_ENGINE,
-                })
+        values_list = self._prepare_run_all_values(reports, layouts)
 
         if not values_list:
             raise UserError("No runnable reports with demo data were found.")

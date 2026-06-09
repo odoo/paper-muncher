@@ -2,8 +2,8 @@
 <odoo>
 
     <menuitem id="reftest_menu_root"
-              name="Reftest App"
-              web_icon="your_module_name,static/description/icon.png"
+              name="Reftest"
+              web_icon="reftest,static/description/icon.png"
               sequence="10">
 
         <menuitem id="reftest_menu_operations"
