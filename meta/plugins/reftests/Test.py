@@ -1,10 +1,21 @@
 from pathlib import Path
 from cutekit import const
-import textwrap
-import re
 
 TEST_REPORT = (Path(const.PROJECT_CK_DIR) / "tests" / "report").absolute()
 
+SUPPORTED_PROPS = {
+    "name": None,
+    "width": "200px",
+    "height": "200px",
+    "flow": None,
+    "margins": None,
+    "skip": None,
+}
+
+SUPPORTED_CASE_PROPS = {
+    "help": None,
+    "skip": None,
+}
 
 class TestReference:
     def __init__(self, path: Path, imagePath: Path, image: bytes | None = None):
@@ -12,13 +23,35 @@ class TestReference:
         self.imagePath = imagePath
         self.image = image
 
-
 _currentTestId = 0
 
-
 class TestCase:
+    id: int
+
+    width: str | None
+    height: str | None
+    flow: str | None
+    help: str | None
+    skipped: bool
+
+    tag: str
+    testDocument: str
+    inputPath: Path
+    outputPath: Path
+    outputImage: bytes | None
+    addInfo: list[str]
+
+
     def __init__(self, props: dict[str, str], tag: str, testDocument: str,
-                 caseProps: dict[str, str], container=None):
+                 caseProps: dict[str, str]):
+        for p in props:
+            if p not in SUPPORTED_PROPS:
+                raise RuntimeError(f"Unsupported property on test: {p}")
+
+        for p in caseProps:
+            if p not in SUPPORTED_CASE_PROPS:
+                raise RuntimeError(f"Unsupported property on test case: {p}")
+
         self.ref = None
         global _currentTestId
         self.outputImage: bytes | None = None
@@ -26,35 +59,21 @@ class TestCase:
         self.id = _currentTestId
         _currentTestId += 1
 
-        self.type = props.get("type")  # the type of test [render (default) | print]
-        self.xsize = props.get("size", "200")
-        self.ysize = self.xsize
+        self.width = props.get("width", SUPPORTED_PROPS["width"])
+        self.height = props.get("height", SUPPORTED_PROPS["height"])
+        self.flow = props.get("flow", SUPPORTED_PROPS["flow"])
+        self.margins = props.get("margins", SUPPORTED_PROPS["margins"])
+        self.help = caseProps.get("help", SUPPORTED_CASE_PROPS["help"])
+        self.skipped = caseProps.get("skip", SUPPORTED_CASE_PROPS["skip"]) == "true"
 
-        if props.get("size") == "full":
-            self.xsize = "800"
-            self.ysize = "600"
-
-        self.page = props.get("page")  # page size
         self.inputPath: Path = TEST_REPORT / f"{self.id}.xhtml"  # path to test case's document
         self.outputPath: Path = TEST_REPORT / f"{self.id}.bmp"  # path to the output image
-        self.help = caseProps.get("help", "")
-        self.skipped = caseProps.get("skip", False)
         self.tag = tag  # test tag [rendering | error]
-
-        if not container:
-            container = '<html xmlns="http://www.w3.org/1999/xhtml"><body><slot /></body></html>'
-
-        self.container = container
         self.testDocument = testDocument
 
     def render(self, paperMuncher):  #
-        def updateTempFile(path, rendering):
-            # write xhtml into the temporary file
-            xhtml = re.sub(r"<slot\s*/>", rendering, self.container) if self.container else rendering
-            with path.open("w") as f:
-                f.write(f"<!DOCTYPE html>\n{textwrap.dedent(xhtml)}")
-
-        updateTempFile(self.inputPath, self.testDocument)
+        with self.inputPath.open("w") as f:
+            f.write(f"<!DOCTYPE html>\n{self.testDocument}")
 
         runPaperMuncher(paperMuncher, self)
 
@@ -70,17 +89,17 @@ class TestCase:
 def runPaperMuncher(executable, test: TestCase):
     command = ["--feature", "*=on", "--quiet"]
 
-    if test.type == "print":
-        command.extend(["--flow", "paginate"])
+    if test.flow:
+        command.extend(["--flow", test.flow])
 
-    if test.xsize or not test.page:
-        command.extend(["--width", (test.xsize or 200) + "px"])
+    if test.width:
+        command.extend(["--width", test.width])
 
-    if test.ysize or not test.page:
-        command.extend(["--height", (test.ysize or 200) + "px"])
+    if test.height:
+        command.extend(["--height", test.height])
 
-    if test.page:
-        command.extend(["--page", test.page])
+    if test.margins:
+        command.extend(["--margins", test.margins])
 
     command += [
         "-o",

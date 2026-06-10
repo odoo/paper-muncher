@@ -1,7 +1,8 @@
 from cutekit import vt100, cli, builder, model, const
 from pathlib import Path
-
-import re
+import xml.etree.ElementTree as ET
+import dataclasses as dc
+import copy
 
 # Local imports
 from .reporters.WebReport import WebReport
@@ -99,49 +100,82 @@ class TestRunnerContext:
         return self.args.fast
 
 
-REG_INFO = re.compile(r"""(\w+)=['"]([^'"]+)['"]""")
-REG_TESTS = re.compile(r"""<(rendering|error)([^>]*)>([\w\W]+?)</(?:rendering|error)>""")
-REG_TEST_BLOCKS = re.compile(r"""<test([^>]*)>([\w\W]+?)</test>""")
-REG_CONTAINER = re.compile(r"""<container>([\w\W]+?)</container>""")
+DEFAULT_CONTAINER = '<container><html xmlns="http://www.w3.org/1999/xhtml"><body><slot /></body></html></container>'
 
-DEFAULT_CONTAINER = '<html xmlns="http://www.w3.org/1999/xhtml"><body><slot /></body></html>'
-
+@dc.dataclass
+class TestCategory:
+    props: dict[str, str]
+    testCases: list[TestCase]
 
 class TestParser:
     """Handles all test file parsing operations."""
 
     @staticmethod
-    def parseProperties(text: str) -> dict[str, str]:
-        """Parse properties from XML-like attributes."""
-        return {prop: value for prop, value in REG_INFO.findall(text)}
+    def _getNs(el):
+        if el.tag.startswith("{"):
+            return el.tag[1:el.tag.index("}")]
+        return None
 
     @staticmethod
-    def parseTestCases(content: str, props: dict[str, str], container=None) -> list[TestCase]:
+    def _setNamespace(el, ns):
+        el.tag = f"{{{ns}}}{el.tag}" if not el.tag.startswith("{") else el.tag
+        for child in el:
+            TestParser._setNamespace(child, ns)
+
+    @staticmethod
+    def parseTestFile(path: Path) -> list[TestCategory]:
         """Parse individual test cases (rendering/error tags)."""
-        testCasesInfos = REG_TESTS.findall(content)
-        testCases: list[TestCase] = []
-        for tag, info, testDocument in testCasesInfos:
-            caseProps: dict[str, str] = TestParser.parseProperties(info)
 
-            test = TestCase(props, tag, testDocument, caseProps, container=container)
+        tree = ET.parse(path)
 
-            testCases.append(test)
+        tests = tree.getroot()
 
-        return testCases
+        if (tests.tag != "tests"):
+            raise RuntimeError(f"{path}: Root element should be <tests>")
 
-    @staticmethod
-    def parseTestBlocks(content: str) -> list[tuple[str, str]]:
-        """Parse test blocks from file content."""
-        return REG_TEST_BLOCKS.findall(content)
+        categories: list[TestCategory] = []
 
-    @staticmethod
-    def extractContainer(content: str) -> str:
-        """Extract container from test content or return default."""
-        match = REG_CONTAINER.search(content)
-        if match:
-            return match.group(1)
-        return DEFAULT_CONTAINER
+        for test in tests:
+            testCases: list[TestCase] = []
 
+            if (test.tag != "test"):
+                raise RuntimeError(f"{path}: Child of <tests> is <{test.tag}> instead of <test>")
+
+            container = test.find("container")
+            if container is None:
+                container = ET.fromstring(DEFAULT_CONTAINER)
+
+            html = container.find(".//{*}html")
+            if html is None:
+                raise RuntimeError(f"{path}: Root of container should be <html>")
+
+            for case in test:
+                if case.tag not in ("rendering", "error"):
+                    continue
+
+                htmlCopy = copy.deepcopy(html)
+                
+                slotCopy = htmlCopy.find(".//{*}slot")
+                parent = htmlCopy.find(".//{*}slot/..")
+                assert parent is not None and slotCopy is not None
+
+                ns = TestParser._getNs(parent)
+                slotIndex = list(parent).index(slotCopy)
+                parent.remove(slotCopy)
+
+                for i, child in enumerate(case):
+                    childCopy = copy.deepcopy(child)
+                    if ns:
+                        TestParser._setNamespace(childCopy, ns)
+                    parent.insert(slotIndex + i, childCopy)
+
+                doc = ET.tostring(htmlCopy, encoding="unicode")
+                testCase = TestCase(test.attrib, case.tag, doc, case.attrib)
+                testCases.append(testCase)
+            
+            categories.append(TestCategory(test.attrib, testCases))
+
+        return categories
 
 class TestRunner:
     """Handles test execution logic."""
@@ -179,20 +213,17 @@ class TestRunner:
 
         return ok
 
-    def _runTestCategory(self, test_content: str, props: dict[str, str],
-                         container: str, file: Path, categorySkipped: bool = False) -> TestResults:
-        """Run all test cases in a category."""
+    def _runTestCategory(self, category: TestCategory, file: Path) -> TestResults:
         categoryResults: TestResults = TestResults()
-        testCases: list[TestCase] = self._parser.parseTestCases(test_content, props, container=container)
         reference: TestReference | None = None
 
-        for test in testCases:
+        for test in category.testCases:
             # First test case is the reference
             if not reference:
                 reference = self._generateReferenceImage(test)
                 continue
 
-            testSkipped: bool = categorySkipped or test.skipped
+            testSkipped: bool = category.props.get("skip", None) == "true" or test.skipped
 
             if testSkipped and not self._context.shouldRunSkipped():
                 categoryResults.addSkipped()
@@ -208,7 +239,7 @@ class TestRunner:
             if self._context.shouldStopOnFailure():
                 break
 
-        self._reporter.addTestCategory(props, file, categoryResults)
+        self._reporter.addTestCategory(category.props, file, categoryResults)
 
         return categoryResults
 
@@ -217,24 +248,8 @@ class TestRunner:
         fileResults: TestResults = TestResults()
         print(f"Running {file.relative_to(TESTS_DIR)}...")
 
-        with file.open() as f:
-            content: str = f.read()
-
-        testBlocks: list[tuple[str, str]] = self._parser.parseTestBlocks(content)
-
-        for info, test_content in testBlocks:
-            props: dict[str, str] = self._parser.parseProperties(info)
-            categorySkipped: bool = "skip" in props
-
-            if categorySkipped and not self._context.shouldRunSkipped():
-                fileResults.addSkipped()
-                self._reporter.addSkippedFile(props)
-                continue
-
-            container: str = self._parser.extractContainer(test_content)
-            categoryResults: TestResults = self._runTestCategory(
-                test_content, props, container, file, categorySkipped
-            )
+        for category in self._parser.parseTestFile(file):
+            categoryResults: TestResults = self._runTestCategory(category, file)
             fileResults.addWith(categoryResults)
 
         print()

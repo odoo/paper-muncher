@@ -64,7 +64,7 @@ class WebReport(Reporter):
                         </div>
 
                         <div>
-                            <div class="iframe-placeholder" data-src="{test.inputPath}" style="width: {test.xsize}px; height: {test.ysize}px;"></div>
+                            <div class="iframe-placeholder" data-src="{test.inputPath}" style="width: {test.width}; height: {test.height};"></div>
                             <figcaption>Rendition</figcaption>
                         </div>
                     </div>
