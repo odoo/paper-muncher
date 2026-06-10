@@ -1,0 +1,278 @@
+<tests>
+
+<test name="forced-page-break-bfc" flow="paginate" margins="minimum">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                :root {
+                    background-color: white;
+                }
+
+                .box {
+                    width: auto;
+                    margin: 5px;
+                    height: 20px;
+                }
+
+                .box:nth-child(3n+1) { background-color: salmon; }
+                .box:nth-child(3n+2) { background-color: lightseagreen; }
+                .box:nth-child(3n+3) { background-color: rebeccapurple; }
+            </style>
+        </head>
+
+        <body>
+        <slot/>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="box" style="break-after: page"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+    </rendering>
+
+    <rendering>
+        <div class="box"></div>
+        <div class="box" style="break-before: page"></div>
+        <div class="box"></div>
+    </rendering>
+
+    <rendering>
+        <div class="box" style="break-after: avoid"></div>
+        <div class="box" style="break-before: page"></div>
+        <div class="box"></div>
+    </rendering>
+
+    <rendering>
+        <div class="box" style="break-after: avoid-page"></div>
+        <div class="box" style="break-before: page"></div>
+        <div class="box"></div>
+    </rendering>
+</test>
+
+<test name="unforced-page-break-bfc" flow="paginate" margins="minimum">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            .box {
+                width: auto;
+                margin: 5px;
+                height: 20px;
+            }
+
+            .box:nth-child(3n+1) { background-color: salmon; }
+            .box:nth-child(3n+2) { background-color: lightseagreen; }
+            .box:nth-child(3n+3) { background-color: rebeccapurple; }
+        </style>
+    </head>
+
+    <body>
+    <slot/>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box" style="break-after: page"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+</rendering>
+
+<rendering skip="true">
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box" style="break-after: avoid"></div>
+    <div class="box"></div>
+</rendering>
+
+<rendering skip="true">
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box" style="break-after: avoid-page"></div>
+    <div class="box"></div>
+</rendering>
+
+<rendering skip="true">
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box" style="break-before: avoid"></div>
+</rendering>
+
+<rendering skip="true">
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box" style="break-before: avoid-page"></div>
+</rendering>
+
+<error>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+</error>
+
+</test>
+
+<test name="forced-page-break-inside-bfc" flow="paginate" margins="minimum">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .box {
+                width: auto;
+                margin: 5px;
+                height: 20px;
+            }
+
+            .box:nth-child(3n+1) { background-color: salmon; }
+            .box:nth-child(3n+2) { background-color: lightseagreen; }
+            .box:nth-child(3n+3) { background-color: rebeccapurple; }
+
+            .container {
+                background-color: gray;
+                padding: 5px;
+            }
+
+            .fake-box {
+                width: 180px;
+                margin: 5px;
+                height: 20px;
+            }
+
+            .fake-container-p1 {
+                background-color: gray;
+                padding: 5px;
+                width: 200px;
+                height: 200px;
+                break-after: page;
+            }
+
+            .fake-container-p2 {
+                background-color: gray;
+                padding: 5px;
+                padding-top: 0;
+                width: 200px;
+                height: 55px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot/>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="fake-container-p1">
+        <div class="fake-box" style="background-color: salmon"></div>
+    </div>
+
+    <div class="fake-container-p2">
+        <div class="fake-box" style="background-color: lightseagreen"></div>
+        <div class="fake-box" style="background-color: rebeccapurple"></div>
+    </div>
+</rendering>
+
+<rendering skip="true">
+    <div class="container">
+        <div class="box" style="break-after: page"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+    </div>
+</rendering>
+
+</test>
+
+<test name="nop-forced-page-break" flow="paginate" margins="minimum">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            .box {
+                width: auto;
+                margin: 5px;
+                height: 20px;
+            }
+
+            .box:nth-child(3n+1) { background-color: salmon; }
+            .box:nth-child(3n+2) { background-color: lightseagreen; }
+            .box:nth-child(3n+3) { background-color: rebeccapurple; }
+        </style>
+    </head>
+
+    <body>
+    <slot/>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="box" style="break-before: page"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+</rendering>
+
+<rendering skip="true">
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box" style="break-after: page"></div>
+</rendering>
+
+</test>
+
+</tests>
