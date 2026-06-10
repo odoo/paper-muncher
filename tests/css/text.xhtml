@@ -1,31 +1,17 @@
+<tests>
+
 <test name="text: basic">
     <rendering>
-        <html xmlns="http://www.w3.org/1999/xhtml">
-
-        <body>
         <div>abc def ghi</div>
-        </body>
-
-        </html>
     </rendering>
 
-    <rendering name="text no-wrap" skip="true">
-        <html xmlns="http://www.w3.org/1999/xhtml">
-
-        <body>
+    <rendering help="text no-wrap" skip="true">
         <div style="width: 30px; text-wrap: nowrap;">abc def ghi</div>
-        </body>
-
-        </html>
     </rendering>
 
     <error>
-        <html xmlns="http://www.w3.org/1999/xhtml">
-
-        <body>
         <div style="width: 30px;">abc def ghi</div>
-        </body>
-
-        </html>
     </error>
 </test>
+
+</tests>
