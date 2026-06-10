@@ -19,7 +19,7 @@ static auto dumpFragments = Debug::Flag::debug("web-fragments"s, "Dump the const
 export struct RenderResult {
     Rc<Layout::Box> layout;
     Rc<Scene::Node> scenes;
-    Rc<Layout::Frag> frag;
+    Rc<Layout::Fragment> frag;
 };
 
 export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Media const& media, Layout::Viewport viewport) {
@@ -58,7 +58,7 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
     return {
         makeRc<Layout::Box>(std::move(tree.root)),
         sceneRoot,
-        makeRc<Layout::Frag>(std::move(root)),
+        root,
     };
 }
 

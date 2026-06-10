@@ -9,7 +9,9 @@ import :props.base;
 import :props.registry;
 
 namespace Vaev::Style {
+
 export struct StyleSheetList;
+
 } // namespace Vaev::Style
 
 namespace Vaev::Dom {
@@ -27,7 +29,7 @@ export struct Document : Node {
     static constexpr auto TYPE = NodeType::DOCUMENT;
 
     Ref::Url _url;
-    QuirkMode quirkMode{QuirkMode::NO};
+    QuirkMode quirkMode = QuirkMode::NO;
 
     String xmlVersion;
     String xmlEncoding;
