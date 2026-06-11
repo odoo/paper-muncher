@@ -6,6 +6,18 @@ import :layout.runningPosition;
 
 namespace Vaev::Layout {
 
+// MARK: AvailableSpace --------------------------------------------------------
+// https://www.w3.org/TR/css-sizing-3/#available
+
+using AvailableSpaceAxis = Union<Au, Keywords::MinContent, Keywords::MaxContent>;
+
+struct AvailableSpace {
+    AvailableSpaceAxis x;
+    AvailableSpaceAxis y;
+};
+
+// MARK: Input -----------------------------------------------------------------
+
 export enum struct IntrinsicSize {
     AUTO,
     MIN_CONTENT,
