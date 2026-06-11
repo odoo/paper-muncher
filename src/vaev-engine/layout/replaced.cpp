@@ -23,7 +23,16 @@ struct ReplacedFormatingContext : FormatingContext {
         Vec2Au size = {};
 
         if (auto image = box.content.is<Rc<Scene::Node>>()) {
-            size = (*image)->bound().size().cast<Au>();
+            auto naturalSize = (*image)->bound().size().cast<Au>();
+
+            auto naturalDimensions = ObjectNaturalDimensions{
+                .size = {naturalSize.width, naturalSize.height},
+                .aspectRatio = naturalSize.width / naturalSize.height,
+            };
+
+            auto specifiedSize = resolvePreferredSize(tree, box, input.containingBlock);
+            auto tentativeSize = resolveObjectDefaultSizing(naturalDimensions, specifiedSize);
+            size = applyMinMaxSizeConstraints(tree, box, tentativeSize, input.containingBlock);
         } else {
             panic("unsupported replaced content");
         }
