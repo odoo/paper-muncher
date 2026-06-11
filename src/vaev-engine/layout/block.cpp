@@ -8,7 +8,6 @@ import Karm.Math;
 import Karm.Core;
 
 import :values;
-import :layout.sizing;
 import :layout.base;
 import :layout.layout;
 import :layout.positioned;
