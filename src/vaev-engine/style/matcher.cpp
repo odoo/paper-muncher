@@ -13,7 +13,7 @@ using namespace Karm;
 namespace Vaev::Style {
 
 static auto debugMatching = Debug::Flag::debug("web-style-matching", "Log failures to match selectors");
-static auto featureNthChild = Debug::Flag::feature("web-style-nth_child", "Enable :nth-child() and related selectors");
+static auto featureNthChild = Debug::Flag::feature("web-style-nth_child", "Enable :nth-child() and related selectors", true);
 
 static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement);
 export Opt<Specificity> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement);

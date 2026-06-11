@@ -1,0 +1,153 @@
+<tests>
+
+<test name="margin-auto-center">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                    width: 300px;
+                }
+
+                .foo {
+                    background-color: #b98af1;
+                    width: 100px;
+                    height: 100px;
+                }
+
+                .good {
+                    position: absolute;
+                    left: 100px;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="good foo"></div>
+    </rendering>
+
+    <rendering help="both margins auto center the box">
+        <div class="foo" style="margin: 0 auto"></div>
+    </rendering>
+
+    <rendering help="margin shorthand auto centers the box">
+        <div class="foo" style="margin: auto"></div>
+    </rendering>
+
+    <rendering help="margin-left auto absorbs the remaining space">
+        <div class="foo" style="margin-left: auto; margin-right: 100px"></div>
+    </rendering>
+
+    <rendering help="auto margins center a width-auto table">
+        <table style="margin: 0 auto; border-spacing: 0">
+            <tr>
+                <td style="padding: 0">
+                    <div class="foo"></div>
+                </td>
+            </tr>
+        </table>
+    </rendering>
+
+</test>
+
+<test name="margin-auto-table-end">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                    width: 300px;
+                }
+
+                .foo {
+                    background-color: #b98af1;
+                    width: 100px;
+                    height: 100px;
+                }
+
+                .good {
+                    position: absolute;
+                    left: 200px;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="good foo"></div>
+    </rendering>
+
+    <rendering help="margin-left auto pushes a width-auto table to the end">
+        <table style="margin-left: auto; border-spacing: 0">
+            <tr>
+                <td style="padding: 0">
+                    <div class="foo"></div>
+                </td>
+            </tr>
+        </table>
+    </rendering>
+
+</test>
+
+<test name="margin-auto-zero">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                    width: 300px;
+                }
+
+                .foo {
+                    background-color: #b98af1;
+                    width: 100px;
+                    height: 100px;
+                }
+
+                .good {
+                    position: absolute;
+                    left: 0px;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="good foo"></div>
+    </rendering>
+
+    <rendering help="margin-right auto does not move the box">
+        <div class="foo" style="margin-right: auto"></div>
+    </rendering>
+
+    <rendering help="auto margins resolve to zero when width is auto">
+        <div style="margin: 0 auto">
+            <div class="foo"></div>
+        </div>
+    </rendering>
+
+</test>
+
+</tests>

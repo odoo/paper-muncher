@@ -8,6 +8,7 @@ import Karm.Math;
 import Karm.Core;
 
 import :values;
+import :layout.sizing;
 import :layout.base;
 import :layout.layout;
 import :layout.positioned;
@@ -125,6 +126,26 @@ Output fragmentEmptyBox(Tree& tree, Input input) {
     }
 }
 
+// https://www.w3.org/TR/CSS22/tables.html#model
+// The table wrapper box inline size is the table grid box inline size, computed
+// here from its intrinsic sizes since tables with 'width: auto' size to
+// fit-content instead of stretching like other block-level boxes.
+Opt<Au> _tableWrapperFitContentWidth(Tree& tree, Box& wrapper, Au availableWidth) {
+    for (auto& gridBox : wrapper.children()) {
+        if (gridBox.style->display != Display::Internal::TABLE_BOX)
+            continue;
+
+        // TODO: Specified widths live on the table grid box and may be percentages,
+        //       which we cannot resolve during intrinsic sizing; bail out for now.
+        if (not gridBox.style->sizing->width.is<Keywords::Auto>())
+            return NONE;
+
+        return computeFitContentInlineSize(tree, wrapper, availableWidth);
+    }
+
+    return NONE;
+}
+
 void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, UsedSpacings const& usedSpacings, Opt<Au> blockInlineSize) {
     if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Display::INLINE) {
         if (child.style->sizing->width.is<Keywords::Auto>()) {
@@ -136,7 +157,13 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, Use
                 // Do nothing. 'fit-content' is kinda intrinsic size, when we don't populate knownSize.
             } else if (blockInlineSize) {
                 // When the inline size is not known, we cannot enforce it to the child. (?)
-                childInput.knownSize.width = blockInlineSize.unwrap() - usedSpacings.margin.horizontal();
+                Au availableWidth = blockInlineSize.unwrap() - usedSpacings.margin.horizontal();
+                if (child.style->display == Display::TABLE) {
+                    childInput.knownSize.width = _tableWrapperFitContentWidth(tree, child, availableWidth)
+                                                     .unwrapOr(availableWidth);
+                } else {
+                    childInput.knownSize.width = availableWidth;
+                }
             }
         } else {
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
@@ -150,6 +177,40 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, Use
             tree, child, child.style->sizing->height, childInput.containingBlock,
             usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
         );
+    }
+}
+
+// https://www.w3.org/TR/CSS22/visudet.html#blockwidth
+// If both 'margin-left' and 'margin-right' are 'auto', their used values are equal,
+// horizontally centering the box within its containing block. If only one of them is
+// 'auto', it absorbs the remaining free space. This only applies when both the
+// containing block inline size and the box inline size are known; otherwise 'auto'
+// margins resolve to zero.
+void _resolveAutoHorizontalMargins(Box& child, Input& childInput, UsedSpacings& usedSpacings, Opt<Au> blockInlineSize) {
+    bool startIsAuto = child.style->margin->start.is<Keywords::Auto>();
+    bool endIsAuto = child.style->margin->end.is<Keywords::Auto>();
+
+    if (not(startIsAuto or endIsAuto))
+        return;
+
+    if (not blockInlineSize)
+        return;
+
+    if (not childInput.knownSize.width)
+        return;
+
+    // NOTE: 'auto' margins were resolved to zero when computing usedSpacings.
+    Au freeSpace = blockInlineSize.unwrap() - childInput.knownSize.width.unwrap() - usedSpacings.margin.horizontal();
+    if (freeSpace <= 0_au)
+        return;
+
+    if (startIsAuto and endIsAuto) {
+        usedSpacings.margin.start = freeSpace / 2;
+        usedSpacings.margin.end = freeSpace - usedSpacings.margin.start;
+    } else if (startIsAuto) {
+        usedSpacings.margin.start = freeSpace;
+    } else {
+        usedSpacings.margin.end = freeSpace;
     }
 }
 
@@ -243,8 +304,6 @@ struct BlockFormatingContext : FormatingContext {
                 blockSize += collapsedMargin - lastMarginBottom;
             }
 
-            childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
-
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
             //       and avoid duplicating the layout code
             if (c.style->display == Display::Internal::TABLE_BOX) {
@@ -252,6 +311,11 @@ struct BlockFormatingContext : FormatingContext {
             }
 
             _populateChildSpecifiedSizes(tree, c, childInput, usedSpacings, input.knownSize.x);
+
+            if (not c.isRemovedFromFlow())
+                _resolveAutoHorizontalMargins(c, childInput, usedSpacings, input.knownSize.x);
+
+            childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
 
             auto output = input.fragment
                               ? layoutAndCommitBorderBox(tree, c, childInput, *input.fragment, usedSpacings)
