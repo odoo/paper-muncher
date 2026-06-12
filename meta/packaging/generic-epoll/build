@@ -12,10 +12,10 @@ podman run \
     -v "$HOME/.cutekit/toolchain:/root/.cutekit/toolchain" \
     -w "/src" \
     -e CUTEKIT_ALLOW_ROOT=1 \
-    ubuntu:latest \
+    ubuntu:resolute \
     bash -c " \
         ./ck tools setup && \
-        ./ck package --props:async=epoll --release --prefix=/usr --sysroot=/src/sysroot ${COMPONENT} && \
+        ./ck package --props:async=epoll --release --prefix=/opt/${COMPONENT} --sysroot=/src/sysroot ${COMPONENT} && \
         mkdir -p /src/dist && \
         cd /src/sysroot && \
         tar -czf /src/dist/${COMPONENT}_${VERSION}_generic_epoll_amd64.tar.gz *"

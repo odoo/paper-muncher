@@ -15,7 +15,7 @@ podman run \
     ubuntu:resolute \
     bash -c " \
         ./ck tools setup && \
-        ./ck package --props:async=uring --release --prefix=/usr --sysroot=/src/sysroot ${COMPONENT} && \
+        ./ck package --props:async=uring --release --prefix=/opt/${COMPONENT} --sysroot=/src/sysroot ${COMPONENT} && \
         mkdir -p /src/dist && \
         cd /src/sysroot && \
         tar -czf /src/dist/${COMPONENT}_${VERSION}_generic_uring_amd64.tar.gz *"
