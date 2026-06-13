@@ -27,10 +27,20 @@ export struct Tree {
     Fragmentainer fc = {};
 };
 
+// https://www.w3.org/TR/css-layout-api-1/#intrinsic-sizes
+export struct IntrinsicSizes {
+    Au minContentSize;
+    Au maxContentSize;
+};
+
 struct FormatingContext {
     virtual ~FormatingContext() = default;
 
     virtual void build(Tree&, Box&) {};
+
+    virtual IntrinsicSizes intrinsicSizes(Tree&, Box& box, Input) {
+        panic("intrinsicSizes not implemented for formatting context");
+    }
 
     virtual Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) = 0;
 };

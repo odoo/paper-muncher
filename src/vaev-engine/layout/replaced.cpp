@@ -14,6 +14,19 @@ import :layout.layout;
 namespace Vaev::Layout {
 
 struct ReplacedFormatingContext : FormatingContext {
+    IntrinsicSizes intrinsicSizes(Tree&, Box& box, Input) {
+        if (auto image = box.content.is<Rc<Scene::Node>>()) {
+            auto inlineSize = inlineSizeOf((*image)->bound().size().cast<Au>(), box.style->writingMode);
+
+            return {
+                .minContentSize = inlineSize,
+                .maxContentSize = inlineSize,
+            };
+        } else {
+            panic("unsupported replaced content");
+        }
+    }
+
     Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
         tree.fc.enterMonolithicBox();
         Defer _ = [&] {
@@ -30,9 +43,18 @@ struct ReplacedFormatingContext : FormatingContext {
                 .aspectRatio = naturalSize.width / naturalSize.height,
             };
 
-            auto specifiedSize = resolvePreferredSize(tree, box, input.containingBlock);
+            auto inlineSize = resolveInlineLength(tree, box, input.containingBlock, [&](IntrinsicSize) -> Opt<Au> {
+                return naturalDimensions.size.width;
+            });
+
+            auto blockSize = resolveBlockLength(tree, box, input.containingBlock, [&](IntrinsicSize) -> Opt<Au> {
+                return naturalDimensions.size.height;
+            });
+
+            auto specifiedSize = Math::Vec2{inlineSize, blockSize};
+
             auto tentativeSize = resolveObjectDefaultSizing(naturalDimensions, specifiedSize);
-            size = applyMinMaxSizeConstraints(tree, box, tentativeSize, input.containingBlock);
+            size = applyReplacedSizeConstraints(tree, box, tentativeSize, input.containingBlock, specifiedSize);
         } else {
             panic("unsupported replaced content");
         }

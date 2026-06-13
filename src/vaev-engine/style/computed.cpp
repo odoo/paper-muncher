@@ -88,6 +88,17 @@ export struct ComputedValues {
         return customProps->contains(name);
     }
 
+    Size inlineSize() const {
+        bool isHorizontal = writingMode == WritingMode::HORIZONTAL_TB;
+        return isHorizontal ? sizing->width : sizing->height;
+    }
+
+    Size blockSize() const {
+        bool isHorizontal = writingMode == WritingMode::HORIZONTAL_TB;
+        return isHorizontal ? sizing->height : sizing->width;
+    }
+
+
     void repr(Io::Emit& e) const {
         e("(computed");
         e(" color: {}", color);

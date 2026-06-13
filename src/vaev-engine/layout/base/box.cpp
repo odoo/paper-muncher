@@ -23,7 +23,7 @@ struct Box : Meta::NoCopy {
     Rc<Style::ComputedValues> style;
     Content content = NONE;
     Vec<Box> _children;
-    Opt<Rc<FormatingContext>> formatingContext = NONE;
+    Opt<Rc<FormatingContext>> _formatingContext = NONE;
     Opt<Dom::OriginatingElement> origin;
 
     static Box fromInterruptedInlineBox(Box const& inlineBox) {
@@ -127,6 +127,14 @@ struct Box : Meta::NoCopy {
 
         return children().len() > 0;
     }
+
+    bool Rc<FormatingContext> formatingContext() {
+        if (_formatingContext == NONE) {
+            _formatingContext = _constructFormatingContext(box);
+            if (box.formatingContext)
+                box.formatingContext.unwrap()->build(tree, box);
+        }
+    };
 
     void repr(Io::Emit& e) const {
         e("(box {} {} {}", style->display, style->position, content);

@@ -7,6 +7,72 @@ import :layout.values;
 
 namespace Vaev::Layout {
 
+export Au inlineSizeOf(Vec2Au physicalSize, WritingMode writingMode) {
+    if (writingMode == WritingMode::HORIZONTAL_TB) {
+        return physicalSize.width;
+    } else {
+        return physicalSize.height;
+    }
+}
+
+export Au blockSizeOf(Vec2Au physicalSize, WritingMode writingMode) {
+    if (writingMode == WritingMode::HORIZONTAL_TB) {
+        return physicalSize.height;
+    } else {
+        return physicalSize.width;
+    }
+}
+
+export template <typename ContentSizeFunc>
+Opt<Au> resolveInlineLength(Tree& tree, Box& box, Vec2Au containingBlock, ContentSizeFunc&& contentSizeFunc) {
+    auto const& s = *box.style;
+
+    return s.inlineSize().visit(
+        [](Keywords::Auto) -> Opt<Au> {
+            return NONE;
+        },
+        [&](CalcValue<PercentOr<Length>> const& value) -> Opt<Au> {
+            return resolve(tree, box, value, inlineSizeOf(containingBlock, s.writingMode));
+        },
+        [&](Keywords::MinContent) -> Opt<Au> {
+            box.formatingContext
+
+            return contentSizeFunc(IntrinsicSize::MIN_CONTENT);
+        },
+        [&](Keywords::MaxContent) -> Opt<Au> {
+            return contentSizeFunc(IntrinsicSize::MAX_CONTENT);
+        },
+        [&](FitContent const&) -> Opt<Au> {
+            logWarn("fit-content not implemented");
+            return NONE;
+        }
+    );
+}
+
+export template <typename ContentSizeFunc>
+Opt<Au> resolveBlockLength(Tree& tree, Box& box, Vec2Au containingBlock, ContentSizeFunc&& contentSizeFunc) {
+    auto const& s = *box.style;
+
+    return s.blockSize().visit(
+        [](Keywords::Auto) -> Opt<Au> {
+            return NONE;
+        },
+        [&](CalcValue<PercentOr<Length>> const& value) -> Opt<Au> {
+            return resolve(tree, box, value, blockSizeOf(containingBlock, s.writingMode));
+        },
+        [&](Keywords::MinContent) -> Opt<Au> {
+            return contentSizeFunc(IntrinsicSize::MIN_CONTENT);
+        },
+        [&](Keywords::MaxContent) -> Opt<Au> {
+            return contentSizeFunc(IntrinsicSize::MAX_CONTENT);
+        },
+        [&](FitContent const&) -> Opt<Au> {
+            logWarn("fit-content not implemented");
+            return NONE;
+        }
+    );
+}
+
 // MARK: Fit content size ------------------------------------------------------
 // https://www.w3.org/TR/css-sizing-3/#fit-content-size
 // NOTE: This is called the “shrink-to-fit” width in CSS2
@@ -48,28 +114,9 @@ export Au computeFitContentBlockSize(Tree& tree, Box& box, AvailableSpaceAxis av
     return computeFitContentSize(tree, box, {INDEFINITE, availableSpace}).y;
 }
 
-// https://www.w3.org/TR/css-sizing-3/#preferred-size-properties
-// FIXME: Values other than <length-percentage> are currently treated as 'auto'.
-export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box, Vec2Au containingBlock) {
-    auto const& style = *box.style;
-
-    Opt<Au> width = NONE;
-    Opt<Au> height = NONE;
-
-    if (auto calc = style.sizing->width.is<CalcValue<PercentOr<Length>>>()) {
-        width = resolve(tree, box, *calc, containingBlock.width);
-    }
-
-    if (auto calc = style.sizing->height.is<CalcValue<PercentOr<Length>>>()) {
-        height = resolve(tree, box, *calc, containingBlock.height);
-    }
-
-    return {width, height};
-}
-
 // https://www.w3.org/TR/CSS22/visudet.html#min-max-widths
 // FIXME: Values other than <length-percentage> are currently treated as 'auto'.
-export Vec2Au applyMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2Au tentative, Vec2Au containingBlock) {
+export Vec2Au applyReplacedSizeConstraints(Tree const& tree, Box const& box, Vec2Au tentative, Vec2Au containingBlock, Math::Vec2<Opt<Au>> specifiedSize) {
     auto const& style = *box.style;
 
     Au minWidth = 0_au;
@@ -93,6 +140,17 @@ export Vec2Au applyMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2A
     auto w = tentative.width;
     auto h = tentative.height;
 
+    bool widthIsAuto  = not specifiedSize.width.has();
+    bool heightIsAuto = not specifiedSize.height.has();
+
+    if (not widthIsAuto and not heightIsAuto)
+        return {clamp(w, minWidth, maxWidth), clamp(h, minHeight, maxHeight)};
+
+    if (not widthIsAuto and heightIsAuto) {
+        w = clamp(w, minWidth, maxWidth);
+        return {w, clamp(tentative.height, minHeight, maxHeight)};
+    }
+
     // Fallback for degenerate tentative.
     if (w == 0_au or h == 0_au)
         return {clamp(w, minWidth, maxWidth), clamp(h, minHeight, maxHeight)};
@@ -110,9 +168,9 @@ export Vec2Au applyMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2A
 
     if (w < minWidth and h < minHeight) {
         if (minWidth / w > minHeight / h) {
-            return {minWidth, min(maxHeight, minWidth * (h/w))};
+            return {minWidth, min(maxHeight, minWidth * (h / w))};
         } else {
-            return {min(maxWidth, minHeight * (w/h)), minHeight};
+            return {min(maxWidth, minHeight * (w / h)), minHeight};
         }
     }
 
