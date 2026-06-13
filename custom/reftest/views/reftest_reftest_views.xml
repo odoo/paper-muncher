@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="reftest_reftest_view_list" model="ir.ui.view">
+        <field name="name">reftest.reftest.view.list</field>
+        <field name="model">reftest.reftest</field>
+        <field name="arch" type="xml">
+            <list expand="1">
+                <header>
+                    <button name="action_open_run_all_wizard" string="Run All" type="object" class="btn-primary" display="always"/>
+                </header>
+                <field name="report_id" width="320px"/>
+                <field name="state" widget="badge" decoration-success="state == 'run'" decoration-danger="state == 'dnf'" decoration-muted="state == 'draft'"/>
+                <field name="similarity_score" string="Similarity %" width="110px" widget="percentage" avg="Average"/>
+                <field name="res_model" invisible="1"/>
+                <field name="res_id"/>
+                <field name="layout_id"/>
+                <field name="reference_engine"/>
+                <field name="engine"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="reftest_reftest_view_form" model="ir.ui.view">
+        <field name="name">reftest.reftest.view.form</field>
+        <field name="model">reftest.reftest</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="run_test" string="Run" type="object" class="btn-primary"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="report_id"/>
+                            <field name="res_model" invisible="1"/>
+                            <field name="res_id"/>
+                            <field name="html_report_url" widget="url" string="HTML Report" readonly="1"/>
+                            <field name="layout_id"/>
+                        </group>
+                        <group>
+                            <field name="similarity_score" widget="percentage" string="Similarity %"/>
+                            <field name="reference_engine"/>
+                            <field name="engine"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="documents" string="Documents">
+                            <field name="output_pdf_ids" widget="many2many_binary" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter reload_on_attachment="True"/>
+            </form>
+        </field>
+    </record>
+
+    <record id="reftest_reftest_action" model="ir.actions.act_window">
+        <field name="name">Reftests</field>
+        <field name="res_model">reftest.reftest</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'group_by': ['report_id']}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Reftest record!
+            </p>
+        </field>
+    </record>
+
+    <record id="reftest_run_all_wizard_view_form" model="ir.ui.view">
+        <field name="name">reftest.run.all.wizard.view.form</field>
+        <field name="model">reftest.run.all.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Configure Run All">
+                <group>
+                    <group>
+                        <field name="layout_scope"/>
+                        <field name="layout_ids" widget="many2many_tags" invisible="layout_scope != 'selected'"/>
+                    </group>
+                    <group>
+                        <field name="report_scope"/>
+                        <field name="report_ids" widget="many2many_tags" invisible="report_scope != 'selected'"/>
+                    </group>
+                </group>
+                <group>
+                    <group>
+                        <field name="reference_engine"/>
+                        <field name="engine"/>
+                    </group>
+                    <group>
+                        <field name="clear_previous"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_run" type="object" string="Run" class="btn-primary"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="reftest_run_all_wizard_action" model="ir.actions.act_window">
+        <field name="name">Configure Run All</field>
+        <field name="res_model">reftest.run.all.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="reftest_run_all_wizard_view_form"/>
+    </record>
+
+</odoo>

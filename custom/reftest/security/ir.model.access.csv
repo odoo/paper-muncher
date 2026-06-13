@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+reftest_reftest_access_user,reftest.user,model_reftest_reftest,base.group_user,1,1,1,1
+reftest_run_all_wizard_access_user,reftest.run.all.wizard.user,model_reftest_run_all_wizard,base.group_user,1,1,1,1

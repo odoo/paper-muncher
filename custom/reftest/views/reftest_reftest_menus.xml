@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="reftest_menu_root"
+              name="Reftest"
+              web_icon="reftest,static/description/icon.png"
+              sequence="10">
+
+        <menuitem id="reftest_menu_operations"
+                  name="Operations"
+                  sequence="10">
+
+            <menuitem id="reftest_reftest_menu"
+                      name="Reftests"
+                      action="reftest_reftest_action"
+                      sequence="10"/>
+
+        </menuitem>
+
+    </menuitem>
+
+</odoo>
