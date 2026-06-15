@@ -121,6 +121,14 @@ struct Box : Meta::NoCopy {
                style->position.is<RunningPosition>();
     }
 
+    // https://www.w3.org/TR/CSS22/zindex.html
+    bool impliesNewStackingContext() const {
+        return style->zIndex != Keywords::AUTO or
+               style->clip->has() or
+               style->transform->has() or
+               style->opacity != 1.0;
+    }
+
     bool isActive() const {
         if (auto it = content.is<Rc<Gfx::Prose>>())
             return (*it)->_runes.len() > 0;

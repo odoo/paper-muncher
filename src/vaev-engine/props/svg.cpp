@@ -250,7 +250,7 @@ export struct SvgFillProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgFillProperty>(self(), c.svg->fill);
+            return makeRc<SvgFillProperty>(self(), SvgPaint{c.svg->fill});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -414,7 +414,7 @@ export struct SvgStrokeProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgStrokeProperty>(self(), c.svg->stroke);
+            return makeRc<SvgStrokeProperty>(self(), SvgPaint{c.svg->stroke});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {

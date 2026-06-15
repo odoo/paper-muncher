@@ -10,9 +10,297 @@ using namespace Karm;
 
 namespace Vaev::Layout {
 
-// MARK: Fragment --------------------------------------------------------------
+struct SvgRootFragment;
 
-export struct Metrics {
+struct Fragment {
+    Box const& _box;
+    Vec<Rc<Fragment>> _children;
+
+    Fragment(Box const& box)
+        : _box(box) {}
+
+    virtual ~Fragment() = default;
+
+    // https://www.w3.org/TR/SVG2/coords.html#TermObjectBoundingBox
+    virtual RectAu objectBoundingBox() const {
+        return borderBox();
+    }
+
+    // https://www.w3.org/TR/SVG2/coords.html#TermStrokeBoundingBox
+    virtual RectAu strokeBoundingBox() const {
+        return borderBox();
+    }
+
+    // https://www.w3.org/TR/css-box-3/#border-box
+    virtual RectAu borderBox() const = 0;
+
+    // https://www.w3.org/TR/css-box-3/#padding-box
+    virtual RectAu paddingBox() const = 0;
+
+    // https://www.w3.org/TR/css-box-3/#content-box
+    virtual RectAu contentBox() const = 0;
+
+    // https://www.w3.org/TR/css-box-3/#margin-box
+    virtual RectAu marginBox() const = 0;
+
+    // https://drafts.csswg.org/css-overflow-3/#scrollable
+    RectAu scrollableOverflow() const {
+        auto bound = borderBox();
+        for (auto const& c : _children)
+            bound = bound.mergeWith(c->scrollableOverflow());
+        return bound;
+    }
+
+    Style::ComputedValues const& style() const {
+        return *_box.style;
+    }
+
+    Box const& originatingBox() const {
+        return _box;
+    }
+
+    Opt<Dom::OriginatingElement> const& originatingElement() const {
+        return _box.origin;
+    }
+
+    virtual void offset(Vec2Au d) {
+        for (auto& c : _children)
+            c->offset(d);
+    }
+
+    void add(Rc<Fragment>&& frag) {
+        _children.pushBack(std::move(frag));
+    }
+
+    MutSlice<Rc<Fragment>> children() {
+        return _children;
+    }
+
+    Slice<Rc<Fragment>> children() const {
+        return _children;
+    }
+
+    virtual void repr(Io::Emit& e) const = 0;
+
+    virtual void paintOwnWireframe(Gfx::Canvas& g) const {
+        g.strokeStyle({
+            .fill = Gfx::GREEN,
+            .width = 1,
+            .align = Gfx::INSIDE_ALIGN,
+        });
+        g.stroke(borderBox().cast<f64>());
+    }
+
+    void paintWireframe(Gfx::Canvas& g) {
+        for (auto& c : children())
+            c->paintWireframe(g);
+        paintOwnWireframe(g);
+    }
+
+    virtual void paintOwnOverlay(Gfx::Canvas& g) const {
+        g.fillStyle(Gfx::BLUE.withOpacity(0.5));
+        g.fill(borderBox().cast<f64>());
+    }
+
+    void _paintContentBoxGuides(Gfx::Canvas& g, Math::Rectf viewport) {
+        auto cb = contentBox().cast<f64>();
+        g.strokeStyle(
+            Gfx::stroke(Gfx::CYAN)
+                .withDash({2, 2})
+        );
+        g.stroke(Math::Edgef{
+            cb.start(),
+            viewport.top(),
+            cb.start(),
+            viewport.bottom(),
+        });
+        g.stroke(Math::Edgef{
+            cb.end(),
+            viewport.top(),
+            cb.end(),
+            viewport.bottom(),
+        });
+        g.stroke(Math::Edgef{
+            viewport.start(),
+            cb.top(),
+            viewport.end(),
+            cb.top(),
+        });
+        g.stroke(Math::Edgef{
+            viewport.start(),
+            cb.bottom(),
+            viewport.end(),
+            cb.bottom(),
+        });
+    }
+
+    void paintOverlay(Gfx::Canvas& g, Dom::OriginatingElement of, Math::Rectf viewport) {
+        if (originatingElement() == of) {
+            _paintContentBoxGuides(g, viewport);
+            paintOwnOverlay(g);
+        }
+
+        for (auto& c : children())
+            c->paintOverlay(g, of, viewport);
+    }
+};
+
+using SvgShape = Union<RectAu, EllipseAu, Math::Path>;
+
+struct SvgShapeFragment : Fragment {
+    SvgShape shape;
+    Au strokeWidth;
+
+    SvgShapeFragment(Box& box, SvgShape shape, Au strokeWidth)
+        : Fragment(box), shape(shape), strokeWidth(strokeWidth) {}
+
+    RectAu objectBoundingBox() const override {
+        return shape.visit(
+            [](auto const& s) {
+                return s.bound().template cast<Au>();
+            }
+        );
+    }
+
+    RectAu strokeBoundingBox() const override {
+        return objectBoundingBox().grow(Au{strokeWidth / 2_au});
+    }
+
+    RectAu marginBox() const override {
+        // NOTE: Blanket implementation, because in most
+        //       cases the strokeBoundingBox behave like
+        //       the margin box of the shape.
+        return strokeBoundingBox();
+    }
+
+    RectAu borderBox() const override {
+        // NOTE: Blanket implementation, because in most
+        //       cases the strokeBoundingBox behave like
+        //       the border box of the shape.
+        return strokeBoundingBox();
+    }
+
+    RectAu paddingBox() const override {
+        // NOTE: Blanket implementation, because in most
+        //       cases the objectBoundingBox behave like
+        //       the padding box of the shape.
+        return objectBoundingBox();
+    }
+
+    RectAu contentBox() const override {
+        // NOTE: Blanket implementation, because in most
+        //       cases the objectBoundingBox behave like
+        //       the content box of the shape.
+        return objectBoundingBox();
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("(svg-shape-frag {} {})", shape, strokeWidth);
+    }
+};
+
+struct SvgGroupFragment : Fragment {
+    SvgGroupFragment(Box& box)
+        : Fragment(box) {}
+
+    RectAu objectBoundingBox() const override {
+        if (not _children)
+            return {};
+        auto bound = _children[0]->objectBoundingBox();
+        for (auto const& c : next(_children, 1))
+            bound = bound.mergeWith(c->objectBoundingBox());
+        return bound;
+    }
+
+    RectAu strokeBoundingBox() const override {
+        if (not _children)
+            return {};
+        auto bound = _children[0]->strokeBoundingBox();
+        for (auto const& c : next(_children, 1))
+            bound = bound.mergeWith(c->strokeBoundingBox());
+        return bound;
+    }
+
+    RectAu marginBox() const override {
+        // NOTE: Blanket implementation, because in most
+        //       cases the strokeBoundingBox behave like
+        //       the margin box of the shape.
+        return strokeBoundingBox();
+    }
+
+    RectAu borderBox() const override {
+        // NOTE: Blanket implementation, because in most
+        //       cases the strokeBoundingBox behave like
+        //       the border box of the shape.
+        return strokeBoundingBox();
+    }
+
+    RectAu paddingBox() const override {
+        // NOTE: Blanket implementation, because in most
+        //       cases the objectBoundingBox behave like
+        //       the padding box of the shape.
+        return objectBoundingBox();
+    }
+
+    RectAu contentBox() const override {
+        // NOTE: Blanket implementation, because in most
+        //       cases the objectBoundingBox behave like
+        //       the content box of the shape.
+        return objectBoundingBox();
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("(svg-group-frag  children:{})", _children);
+    }
+};
+
+struct SvgRootFragment : Fragment {
+    // NOTE: SVG viewports have these intrinsic transformations; choosing 
+    //       to store these transforms is more compliant and somewhat 
+    //       rendering-friendly but makes it harder to debug
+    Math::Trans2f transform;
+    RectAu boundingBox;
+
+    SvgRootFragment(Box& box, Math::Trans2f transf, RectAu boundingBox)
+        : Fragment(box), transform(transf), boundingBox(boundingBox) {
+    }
+
+    RectAu objectBoundingBox() const override {
+        return boundingBox;
+    }
+
+    RectAu strokeBoundingBox() const override {
+        return boundingBox;
+    }
+
+    RectAu marginBox() const override {
+        return boundingBox;
+    }
+
+    RectAu borderBox() const override {
+        return boundingBox;
+    }
+
+    RectAu paddingBox() const override {
+        return boundingBox;
+    }
+
+    RectAu contentBox() const override {
+        return boundingBox;
+    }
+
+    void offset(Vec2Au d) override {
+        transform = transform.translated(d.cast<f64>());
+        Fragment::offset(d);
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("(svg-root-frag transform:{} boundingBox:{} children:{})", transform, boundingBox, _children);
+    }
+};
+
+// https://www.w3.org/TR/css-box-3/#box-model
+export struct BoxMetrics {
     InsetsAu padding{};
     InsetsAu borders{};
     Au outlineOffset{};
@@ -21,11 +309,6 @@ export struct Metrics {
     Vec2Au borderSize;
     InsetsAu margin{};
     RadiiAu radii{};
-
-    void repr(Io::Emit& e) const {
-        e("(layout paddings: {} borders: {} position: {} borderSize: {} margin: {} radii: {})",
-          padding, borders, position, borderSize, margin, radii);
-    }
 
     RectAu borderBox() const {
         return RectAu{position, borderSize};
@@ -42,236 +325,69 @@ export struct Metrics {
     RectAu marginBox() const {
         return borderBox().grow(margin);
     }
-};
-
-export struct Frag;
-struct SvgRootFrag;
-
-struct SvgFrag {
-    virtual ~SvgFrag() = default;
-    virtual RectAu objectBoundingBox() = 0;
-    virtual RectAu strokeBoundingBox() = 0;
-    virtual Style::ComputedValues const& style() = 0;
-};
-
-struct SvgShapeFrag : SvgFrag {
-    using _SvgShape = Union<RectAu, EllipseAu, Rc<Math::Path>>;
-    _SvgShape shape;
-    Opt<Box&> box;
-    Au strokeWidth;
-
-    SvgShapeFrag(_SvgShape shape, Opt<Box&> box, Au strokeWidth)
-        : shape(shape), box(box), strokeWidth(strokeWidth) {}
-
-    RectAu objectBoundingBox() override {
-        return shape.visit(
-            [](RectAu const& rect) {
-                return rect;
-            },
-            [](EllipseAu const& circle) {
-                return circle.bound().cast<Au>();
-            },
-            [](Rc<Math::Path> const& path) {
-                return path->bound().cast<Au>();
-            }
-        );
-    }
-
-    RectAu strokeBoundingBox() override {
-        return objectBoundingBox().grow(Au{strokeWidth / 2_au});
-    }
-
-    Style::ComputedValues const& style() override {
-        return *box->style;
-    }
 
     void repr(Io::Emit& e) const {
-        e("(ShapeFrag {} {})", shape, strokeWidth);
+        e("(layout paddings: {} borders: {} position: {} borderSize: {} margin: {} radii: {})",
+          padding, borders, position, borderSize, margin, radii);
     }
 };
 
-struct SvgGroupFrag : SvgFrag {
-    using Element = Union<SvgShapeFrag, SvgRootFrag, Karm::Box<Frag>, SvgGroupFrag>;
+export struct BoxFragment : Fragment {
+    BoxMetrics metrics;
 
-    Vec<Element> elements = {};
-    RectAu _objectBoundingBox{};
-    RectAu _strokeBoundingBox{};
+    BoxFragment(Box& box, BoxMetrics metrics = {})
+        : Fragment(box), metrics(metrics) {}
 
-    Opt<Box const&> box;
-
-    SvgGroupFrag(Opt<Box const&> box)
-        : box(box) {}
-
-    void computeBoundingBoxes();
-
-    RectAu objectBoundingBox() override {
-        return _objectBoundingBox;
+    RectAu borderBox() const override {
+        return metrics.borderBox();
     }
 
-    RectAu strokeBoundingBox() override {
-        return _strokeBoundingBox;
+    RectAu paddingBox() const override {
+        return metrics.paddingBox();
     }
 
-    Style::ComputedValues const& style() override {
-        return *box->style;
+    RectAu contentBox() const override {
+        return metrics.contentBox();
     }
 
-    void add(Element&& element);
-
-    void repr(Io::Emit& e) const {
-        e("(GroupFrag)");
-    }
-};
-
-struct SvgRootFrag : SvgGroupFrag {
-    // NOTE: SVG viewports have these intrinsic transformations; choosing to store these transforms is more compliant
-    // and somewhat rendering-friendly but makes it harder to debug
-    Math::Trans2f transf;
-    RectAu boundingBox;
-
-    SvgRootFrag(Opt<Box const&> box, Math::Trans2f transf, RectAu boundingBox)
-        : SvgGroupFrag(box), transf(transf), boundingBox(boundingBox) {
+    RectAu marginBox() const override {
+        return metrics.marginBox();
     }
 
-    void repr(Io::Emit& e) const {
-        e("(SVGRootFrag)");
-    }
-
-    void offsetBoxFrags(Vec2Au d);
-
-    void offset(Vec2Au d) {
-        transf = transf.translated(d.cast<f64>());
-        offsetBoxFrags(d);
-    }
-};
-
-export using FragContent = Union<
-    Vec<Frag>,
-    SvgRootFrag>;
-
-export struct Frag {
-    Opt<Box&> box;
-    Metrics metrics;
-    FragContent content = Vec<Frag>{};
-
-    Frag(Opt<Box&> box = NONE)
-        : box(box) {}
-
-    Style::ComputedValues const& style() const {
-        return *box->style;
-    }
-
-    // https://drafts.csswg.org/css-overflow-3/#scrollable
-    RectAu scrollableOverflow() const {
-        // NOSPEC: This is just an approximation of the spec
-        auto bound = metrics.borderBox();
-        for (auto const& c : children())
-            bound = bound.mergeWith(c.scrollableOverflow());
-        return bound;
-    }
-
-    /// Offset the position of this fragment and its subtree.
-    void offset(Vec2Au d) {
+    void offset(Vec2Au d) override {
         metrics.position = metrics.position + d;
-
-        if (auto children = content.is<Vec<Frag>>()) {
-            for (auto& c : *children)
-                c.offset(d);
-        } else if (auto svg = content.is<SvgRootFrag>()) {
-            svg->offset(d);
-        }
+        Fragment::offset(d);
     }
 
-    Slice<Frag> children() const {
-        if (auto children = content.is<Vec<Frag>>()) {
-            return *children;
-        }
-        return {};
+    void paintOwnOverlay(Gfx::Canvas& g) const override {
+        Gfx::Borders border;
+
+        // Margins
+        border.widths = metrics.margin.cast<f64>();
+        border.withFill(Gfx::YELLOW800.withOpacity(0.5));
+        border.withStyle(Gfx::BorderStyle::SOLID);
+        border.paint(g, metrics.marginBox().cast<f64>());
+
+        // Borders
+        border.widths = metrics.borders.cast<f64>();
+        border.withFill(Gfx::YELLOW500.withOpacity(0.5));
+        border.withStyle(Gfx::BorderStyle::SOLID);
+        border.paint(g, metrics.borderBox().cast<f64>());
+
+        // Paddings
+        border.widths = metrics.padding.cast<f64>();
+        border.withFill(Gfx::GREEN500.withOpacity(0.5));
+        border.withStyle(Gfx::BorderStyle::SOLID);
+        border.paint(g, metrics.paddingBox().cast<f64>());
+
+        // Content Box
+        g.fillStyle(Gfx::BLUE.withOpacity(0.5));
+        g.fill(metrics.contentBox().cast<f64>());
     }
 
-    MutSlice<Frag> children() {
-        if (auto children = content.is<Vec<Frag>>()) {
-            return *children;
-        }
-        return {};
-    }
-
-    /// Add a child fragment.
-    void add(Frag&& frag) {
-        if (auto children = content.is<Vec<Frag>>()) {
-            children->pushBack(std::move(frag));
-        }
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(frag matrics: {} content: {})", metrics, content);
+    void repr(Io::Emit& e) const override {
+        e("(box-frag matrics: {} children: {})", metrics, _children);
     }
 };
-
-void SvgGroupFrag::add(Element&& el) {
-    elements.pushBack(std::move(el));
-}
-
-void SvgRootFrag::offsetBoxFrags(Vec2Au d) {
-    for (auto& element : elements) {
-        if (auto frag = element.is<::Box<Frag>>()) {
-            (*frag)->offset(d);
-        } else if (auto nestedRoot = element.is<SvgRootFrag>()) {
-            nestedRoot->offsetBoxFrags(d);
-        }
-    }
-}
-
-void SvgGroupFrag::computeBoundingBoxes() {
-    if (elements.len() == 0)
-        return;
-
-    // FIXME: this could be implemented in the Union type
-    auto upcast = [&](Element& element, auto upcaster) {
-        return element.visit(upcaster);
-    };
-
-    auto toSVGFrag = [&]<typename T>(T& el) -> SvgFrag* {
-        if constexpr (Meta::Derive<T, SvgFrag>) {
-            return static_cast<SvgFrag*>(&el);
-        }
-        return nullptr;
-    };
-
-    auto toSVGGroupFrag = [&]<typename T>(T& el) -> SvgGroupFrag* {
-        if constexpr (Meta::Derive<T, SvgGroupFrag>) {
-            return static_cast<SvgGroupFrag*>(&el);
-        }
-        return nullptr;
-    };
-
-    auto getElementBoundingBoxes = [&](Element& element) -> Pair<RectAu> {
-        if (auto frag = element.is<::Box<Frag>>()) {
-            return {
-                (*frag)->metrics.borderBox(),
-                (*frag)->metrics.borderBox()
-            };
-        } else if (auto svgFrag = upcast(element, toSVGFrag)) {
-            if (auto svgGroupFrag = upcast(element, toSVGGroupFrag)) {
-                svgGroupFrag->computeBoundingBoxes();
-            }
-            return {
-                svgFrag->objectBoundingBox(),
-                svgFrag->strokeBoundingBox()
-            };
-        } else
-            unreachable();
-    };
-
-    auto [objectBoundingBox, strokeBoundingBox] = getElementBoundingBoxes(elements[0]);
-    for (usize i = 1; i < elements.len(); i++) {
-        auto [nextObjectBoundingBox, nextStrokeBoundingBox] = getElementBoundingBoxes(elements[i]);
-        objectBoundingBox = objectBoundingBox.mergeWith(nextObjectBoundingBox);
-        strokeBoundingBox = strokeBoundingBox.mergeWith(nextStrokeBoundingBox);
-    }
-
-    _objectBoundingBox = objectBoundingBox;
-    _strokeBoundingBox = strokeBoundingBox;
-}
 
 } // namespace Vaev::Layout
