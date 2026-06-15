@@ -32,7 +32,7 @@ export bool isMinMaxIntrinsicSize(IntrinsicSize intrinsic) {
 
 export struct Input {
     /// Parent fragment where the layout will be attached.
-    MutCursor<Frag> fragment = nullptr;
+    MutCursor<Fragment> fragment = nullptr;
     IntrinsicSize intrinsic = IntrinsicSize::AUTO;
     Math::Vec2<Opt<Au>> knownSize = {};
     Vec2Au position = {};
@@ -50,7 +50,7 @@ export struct Input {
     // "availableSpaceInFragmentainer" parameter
     Au pendingVerticalSizes = {};
 
-    Input withFragment(MutCursor<Frag> f) const {
+    Input withFragment(MutCursor<Fragment> f) const {
         auto copy = *this;
         copy.fragment = f;
         return copy;

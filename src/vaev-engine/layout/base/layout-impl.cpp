@@ -273,12 +273,16 @@ Output layoutBorderBox(Tree& tree, Box& box, Input input, UsedSpacings const& us
     return output;
 }
 
-Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings const& usedSpacings) {
-    Frag currFrag{box};
+Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Fragment& parentFrag, UsedSpacings const& usedSpacings) {
+    // HACK: SVG Create boxes itself.
+    if (box.isSvgRootBox())
+        return layoutContentBox(tree, box, input.withFragment(&parentFrag));
 
-    auto output = layoutContentBox(tree, box, input.withFragment(&currFrag));
+    Rc<BoxFragment> currFrag = makeRc<BoxFragment>(box, BoxMetrics{});
 
-    currFrag.metrics = Metrics{
+    auto output = layoutContentBox(tree, box, input.withFragment(&*currFrag));
+
+    currFrag->metrics = BoxMetrics{
         .padding = usedSpacings.padding,
         .borders = usedSpacings.borders,
         .outlineOffset = resolve(tree, box, box.style->outline->offset),
@@ -294,7 +298,7 @@ Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Frag& parent
     return output;
 }
 
-Output layoutAndCommitBorderBox(Tree& tree, Box& box, Input input, Frag& parentFrag, UsedSpacings const& usedSpacings) {
+Output layoutAndCommitBorderBox(Tree& tree, Box& box, Input input, Fragment& parentFrag, UsedSpacings const& usedSpacings) {
     input = _adaptToContentBox(input, usedSpacings);
     auto output = layoutAndCommitContentBox(tree, box, input, parentFrag, usedSpacings);
     output.size = output.size + usedSpacings.borders.all() + usedSpacings.padding.all();
@@ -322,8 +326,7 @@ Output layoutRoot(Tree& tree, Input input) {
     return layoutBorderBox(tree, tree.root, input, usedSpacings);
 }
 
-Tuple<Output, Frag> layoutAndCommitRoot(Tree& tree, Input input) {
-    Frag parentFragOfRoot{};
+Tuple<Output, Rc<Fragment>> layoutAndCommitRoot(Tree& tree, Input input) {
 
     UsedSpacings usedSpacings{
         .padding = computePaddings(tree, tree.root, input.containingBlock),
@@ -342,12 +345,10 @@ Tuple<Output, Frag> layoutAndCommitRoot(Tree& tree, Input input) {
             usedSpacings.borders.vertical() + usedSpacings.padding.vertical()
         );
 
-    auto out = layoutAndCommitBorderBox(tree, tree.root, input, parentFragOfRoot, usedSpacings);
-
-    auto fragOfRoot = std::move(parentFragOfRoot.children()[0]);
-
+    Rc<Layout::Fragment> parentFragOfRoot = makeRc<BoxFragment>(tree.root, BoxMetrics{});
+    auto out = layoutAndCommitBorderBox(tree, tree.root, input, *parentFragOfRoot, usedSpacings);
+    auto fragOfRoot = std::move(parentFragOfRoot->children()[0]);
     layoutPositioned(tree, fragOfRoot, input.containingBlock, input);
-
     return {out, std::move(fragOfRoot)};
 }
 
