@@ -29,6 +29,11 @@ bool isSegmentBreak(Rune rune) {
     return rune == '\n' or rune == '\r' or rune == '\f' or rune == '\v';
 }
 
+// http://drafts.csswg.org/css-text/#white-space-property
+bool _allowsWrap(WhiteSpace whiteSpace) {
+    return oneOf(whiteSpace, WhiteSpace::NORMAL, WhiteSpace::PRE_WRAP, WhiteSpace::BREAK_SPACES, WhiteSpace::PRE_LINE);
+}
+
 static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues& style, Rc<Gfx::Fontface> fontFace) {
     // FIXME: We should pass this around from the top in order to properly resolve rems
     Resolver resolver{
@@ -41,6 +46,7 @@ static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues& style, Rc<Gfx
             resolver.resolve(style.font->size).cast<f64>(),
         },
         .color = style.color,
+        .wordwrap = _allowsWrap(style.text->whiteSpace),
         .multiline = true,
     };
 
