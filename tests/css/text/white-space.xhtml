@@ -1,0 +1,45 @@
+<tests>
+
+<test name="white-space-nowrap">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml" >
+
+        <head>
+            <style>
+                .container {
+                    width: 100px;
+                    border: 1px solid red;
+                    background: #fee;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot/>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="container" style="white-space: nowrap">I'd just like to interject for a moment. What you're refering to as Vaev, is in fact, Karm/Vaev, or as I've recently taken to calling it, Karm plus Vaev.</div>
+    </rendering>
+
+    <rendering>
+        <div class="container" style="white-space: pre">I'd just like to interject for a moment. What you're refering to as Vaev, is in fact, Karm/Vaev, or as I've recently taken to calling it, Karm plus Vaev.</div>
+    </rendering>
+
+    <error>
+        <div class="container" style="white-space: pre-wrap">I'd just like to interject for a moment. What you're refering to as Vaev, is in fact, Karm/Vaev, or as I've recently taken to calling it, Karm plus Vaev.</div>
+    </error>
+
+    <error>
+        <div class="container" style="white-space: normal">I'd just like to interject for a moment. What you're refering to as Vaev, is in fact, Karm/Vaev, or as I've recently taken to calling it, Karm plus Vaev.</div>
+    </error>
+
+    <error>
+        <div class="container" style="white-space: break-spaces">I'd just like to interject for a moment. What you're refering to as Vaev, is in fact, Karm/Vaev, or as I've recently taken to calling it, Karm plus Vaev.</div>
+    </error>
+</test>
+
+</tests>
