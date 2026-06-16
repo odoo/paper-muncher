@@ -54,9 +54,9 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer& fc, Breakpoint& cu
     // BREAK CLASS A
     if (not isLastChild) {
         bool breakIsAvoided =
-            parentBox.style->break_->inside == BreakInside::AVOID or
-            childBox.style->break_->after == BreakBetween::AVOID or
-            (not isLastChild and parentBox.children()[childIndex + 1].style->break_->before == BreakBetween::AVOID);
+            oneOf(parentBox.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE) or
+            oneOf(childBox.style->break_->after, BreakBetween::AVOID, BreakBetween::AVOID_PAGE) or
+            (not isLastChild and oneOf(parentBox.children()[childIndex + 1].style->break_->before, BreakBetween::AVOID, BreakBetween::AVOID_PAGE));
 
         currentBreakpoint.overrideIfBetter(
             Breakpoint::classB(
@@ -329,7 +329,7 @@ struct BlockFormatingContext : FormatingContext {
                 tree.fc,
                 currentBreakpoint,
                 i,
-                box.style->break_->inside == BreakInside::AVOID,
+                oneOf(box.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE),
                 output.breakpoint
             );
 

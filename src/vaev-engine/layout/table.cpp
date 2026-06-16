@@ -1411,7 +1411,7 @@ export struct TableFormatingContext : FormatingContext {
         }
 
         if (tree.fc.isDiscoveryMode()) {
-            if (cellBox->style->break_->inside == BreakInside::AVOID) {
+            if (oneOf(cellBox->style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE)) {
                 outputCell.breakpoint.unwrap().withAppeal(Breakpoint::Appeal::AVOID);
             }
         }
@@ -1535,15 +1535,15 @@ export struct TableFormatingContext : FormatingContext {
     bool handleUnforcedBreakpointsInsideAndAfterRow(Box& box, Breakpoint& currentBreakpoint, RowOutput outputRow, usize i, Vec2Au fragmentainerSize) {
         bool rowIsFreelyFragmentable = isFreelyFragmentableRow(i, fragmentainerSize);
 
-        bool avoidBreakInsideTable = box.style->break_->inside == BreakInside::AVOID;
+        bool avoidBreakInsideTable = oneOf(box.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE);
 
         bool avoidBreakInsideRow =
             rowGroupIdxs[i].axisIdx and
-            rows[rowGroupIdxs[i].axisIdx.unwrap()].el.style->break_->inside == BreakInside::AVOID;
+            oneOf(rows[rowGroupIdxs[i].axisIdx.unwrap()].el.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE);
 
         bool avoidBreakInsideRowGroup =
             rowGroupIdxs[i].groupIdx and
-            rowGroups[rowGroupIdxs[i].groupIdx.unwrap()].el.style->break_->inside == BreakInside::AVOID;
+            oneOf(rowGroups[rowGroupIdxs[i].groupIdx.unwrap()].el.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE);
 
         if (rowIsFreelyFragmentable) {
             // breakpoint inside of row, take in consideration ALL breakpoints
