@@ -211,6 +211,12 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
     stylesheets->add((co_await _fetchStylesheetAsync(dom->registeredPropertySet, client, "bundle://vaev-engine/html.css"_url, Style::Origin::USER_AGENT, ct))
                          .take("user agent stylesheet not available"));
 
+    if (dom->quirkMode == Dom::QuirkMode::YES) {
+        logWarn("quirky document, using quirky stylesheet");
+        stylesheets->add((co_await _fetchStylesheetAsync(dom->registeredPropertySet, client, "bundle://vaev-engine/html-quirk.css"_url, Style::Origin::USER_AGENT, ct))
+                             .take("user agent stylesheet not available"));
+    }
+
     stylesheets->add((co_await _fetchStylesheetAsync(dom->registeredPropertySet, client, "bundle://vaev-engine/print.css"_url, Style::Origin::USER_AGENT, ct))
                          .take("user agent stylesheet not available"));
 

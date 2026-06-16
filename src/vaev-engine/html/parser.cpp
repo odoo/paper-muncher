@@ -1077,6 +1077,7 @@ export struct HtmlParser : HtmlSink {
 
         // Anything else
         else {
+            _document->quirkMode = Dom::QuirkMode::YES;
             _switchTo(Mode::BEFORE_HTML);
             accept(t, diags);
         }
@@ -3341,7 +3342,8 @@ export struct HtmlParser : HtmlSink {
                 _currentElement()->qualifiedName != Html::TFOOT_TAG and
                 _currentElement()->qualifiedName != Html::THEAD_TAG and
                 _currentElement()->qualifiedName != Html::TEMPLATE_TAG and
-                _currentElement()->qualifiedName != Html::HTML_TAG) {
+                _currentElement()->qualifiedName != Html::HTML_TAG
+            ) {
                 _openElements.pop();
             }
         };
