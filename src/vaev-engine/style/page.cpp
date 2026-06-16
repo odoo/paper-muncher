@@ -149,7 +149,7 @@ export struct PageSelector {
         for (auto const& pseudo : pseudos) {
             switch (pseudo) {
             case PagePseudo::FIRST:
-                if (page.number != 1)
+                if (not page.number)
                     return false;
                 break;
             case PagePseudo::BLANK:
