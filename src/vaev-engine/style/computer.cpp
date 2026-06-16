@@ -152,6 +152,7 @@ export struct Computer {
             values.table.cow().rowSpan = value;
         }
 
+        // https://html.spec.whatwg.org/multipage/obsolete.html#attr-table-align
         if (auto const& [align] = el->getAttribute(Html::ALIGN_ATTR)) {
             if (align == "left") {
                 values.text.cow().align = TextAlign::LEFT;

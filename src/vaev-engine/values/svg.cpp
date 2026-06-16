@@ -84,8 +84,8 @@ export struct SvgProps {
     PercentOr<Length> strokeWidth = Length{1_au};
     Number strokeOpacity = 1;
     Union<String, None> d = NONE;
-    Opt<Color> fill = Gfx::BLACK;
-    Opt<Color> stroke = NONE;
+    Opt<Gfx::Color> fill = Gfx::BLACK;
+    Opt<Gfx::Color> stroke = NONE;
     Opt<SvgViewBox> viewBox = NONE;
 
     void repr(Io::Emit& e) const {

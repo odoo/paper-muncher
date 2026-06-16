@@ -137,34 +137,52 @@ static RectAu _resolveTransformReferenceSVG(Fragment& svgFrag, RectAu viewBox, T
 static Rc<Scene::Node> _applyTransform(Vaev::Style::TransformProps const& transform, RectAu referenceBox, Rc<Scene::Node> content);
 
 // FIXME: move this closer to transform painting?
-Rc<Scene::Node> _applyTransformIfNeeded(Fragment& svgFrag, RectAu viewBox, Rc<Scene::Node> content) {
+Opt<Rc<Scene::Node>> _applyTransformIfNeeded(Fragment& svgFrag, RectAu viewBox, Opt<Rc<Scene::Node>> content) {
+    if (not content)
+        return NONE;
     auto const& transform = *svgFrag.style().transform;
     if (not transform.has())
         return content;
     auto referenceBox = _resolveTransformReferenceSVG(svgFrag, viewBox, transform.box);
-    return _applyTransform(transform, referenceBox, content);
+    return _applyTransform(transform, referenceBox, content.unwrap());
 }
 
 Opt<Gfx::Stroke> _resolveStroke(SvgShapeFragment& frag, SvgProps const& style) {
-    Opt<Gfx::Color> color = style.stroke.map([&](Color const& stroke) {
-        return resolve(stroke, frag.style().color);
-    });
-
-    if (not color)
-        return NONE;
-
     if (Math::epsilonEq(style.strokeOpacity, 0.))
         return NONE;
-
-    color = color->withOpacity(style.strokeOpacity);
 
     if (frag.strokeWidth == 0_au)
         return NONE;
 
-    return Gfx::Stroke{*color, static_cast<f64>(frag.strokeWidth)};
+    if (not style.stroke)
+        return NONE;
+
+    auto color = style.stroke.unwrap();
+    if (color.transparent())
+        return NONE;
+
+    color = color.withOpacity(style.strokeOpacity);
+
+    return Gfx::Stroke{color, static_cast<f64>(frag.strokeWidth)};
 }
 
-Rc<Scene::Node> _paintSvgRectangle(Math::Rectf rect, Opt<Gfx::Fill> fill, Opt<Gfx::Stroke> const& stroke) {
+Opt<Gfx::Fill> _resolveFill(SvgProps const& style) {
+    if (Math::epsilonEq(style.fillOpacity, 0.))
+        return NONE;
+
+    if (not style.fill)
+        return NONE;
+
+    auto color = style.fill.unwrap();
+    if (color.transparent())
+        return NONE;
+
+    color = color.withOpacity(style.fillOpacity);
+
+    return Gfx::Fill{color};
+}
+
+Rc<Scene::Node> _paintSvgRectangle(Math::Rectf rect, Gfx::Fill fill, Opt<Gfx::Stroke> const& stroke) {
     Gfx::Borders borders;
     if (stroke) {
         borders = Gfx::Borders{
@@ -186,7 +204,7 @@ Rc<Scene::Node> _paintSvgRectangle(Math::Rectf rect, Opt<Gfx::Fill> fill, Opt<Gf
         Math::Rectf{rect.x, rect.y, rect.width, rect.height},
         borders,
         Gfx::Outline{},
-        fill ? Vec<Gfx::Fill>{fill.unwrap()} : Vec<Gfx::Fill>{}
+        Vec<Gfx::Fill>{fill}
     );
 }
 
@@ -196,26 +214,26 @@ Rc<Scene::Node> _paintSvgCircle(Math::Ellipsef circle, Opt<Gfx::Fill> fill, Opt<
     return makeRc<Scene::Shape>(path, stroke, fill);
 }
 
-Rc<Scene::Node> _paintSvgShapeElement(SvgShapeFragment& frag) {
+Opt<Rc<Scene::Node>> _paintSvgShapeElement(SvgShapeFragment& frag) {
     auto const& style = *frag.originatingBox().style->svg;
 
-    Opt<Gfx::Color> resolvedFill = style.fill.map([&](auto fill) {
-        return resolve(fill, frag.style().color).withOpacity(style.fillOpacity);
-    });
-
+    Opt<Gfx::Fill> resolvedFill = _resolveFill(style);
     Opt<Gfx::Stroke> resolvedStroke = _resolveStroke(frag, style);
 
+    if (not(resolvedFill or resolvedStroke))
+        return NONE;
+
     if (auto rect = frag.shape.is<RectAu>()) {
-        return _paintSvgRectangle(rect->cast<f64>(), resolvedFill, resolvedStroke);
+        return _paintSvgRectangle(rect->cast<f64>(), resolvedFill.unwrap(), resolvedStroke);
     } else if (auto circle = frag.shape.is<EllipseAu>()) {
-        return _paintSvgCircle(circle->cast<f64>(), resolvedFill, resolvedStroke);
+        return _paintSvgCircle(circle->cast<f64>(), resolvedFill.unwrap(), resolvedStroke);
     } else if (auto path = frag.shape.is<Math::Path>()) {
         return makeRc<Scene::Shape>(*path, resolvedStroke, resolvedFill);
     };
     unreachable();
 }
 
-Rc<Scene::Node> _paintSVGElement(Rc<Fragment> element, RectAu viewBox) {
+Opt<Rc<Scene::Node>> _paintSVGElement(Rc<Fragment> element, RectAu viewBox) {
     if (auto shape = element.is<SvgShapeFragment>()) {
         return _applyTransformIfNeeded(
             *shape, viewBox,
@@ -249,8 +267,10 @@ Rc<Scene::Node> _paintSVGElement(Rc<Fragment> element, RectAu viewBox) {
 Rc<Scene::Stack> _paintSVGAggregate(Fragment& group, RectAu viewBox) {
     // NOTE: A SVG group does not create a stacking context, but its easier to manipulate a group if itself is its own node
     Scene::Stack stack;
-    for (auto& element : group.children())
-        stack.add(_paintSVGElement(element, viewBox));
+    for (auto& element : group.children()) {
+        if (auto [node] = _paintSVGElement(element, viewBox))
+            stack.add(node);
+    }
     return makeRc<Scene::Stack>(std::move(stack));
 }
 
