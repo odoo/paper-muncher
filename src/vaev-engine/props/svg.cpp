@@ -268,7 +268,9 @@ export struct SvgFillProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
-        c.svg.cow().fill = _value;
+        c.svg.cow().fill = _value.map([&](Color color) {
+            return resolve(color, c.color);
+        });
     }
 
     void repr(Io::Emit& e) const override {
@@ -436,7 +438,9 @@ export struct SvgStrokeProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
-        c.svg.cow().stroke = _value;
+        c.svg.cow().stroke = _value.map([&](Color color) {
+            return resolve(color, c.color);
+        });
     }
 
     void repr(Io::Emit& e) const override {
