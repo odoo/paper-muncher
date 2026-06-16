@@ -233,7 +233,11 @@ export struct SvgFillProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {PRESENTATION_ATTRIBUTE};
+            return {PRESENTATION_ATTRIBUTE, INHERITED};
+        }
+
+        ComputationPhase computationPhase() const override {
+            return ComputationPhase::LATE;
         }
 
         Rc<Property> initial() const override {
@@ -371,7 +375,7 @@ export struct SvgViewBoxProperty : Property {
             c.skip(Css::Token::comma());
             viewBox.height = try$(parseValue<Number>(c));
 
-            return Ok(makeRc<SvgViewBoxProperty>(self(), Opt<SvgViewBox>{std::move(viewBox)}));
+            return Ok(makeRc<SvgViewBoxProperty>(self(), Opt{std::move(viewBox)}));
         }
     };
 
@@ -397,7 +401,11 @@ export struct SvgStrokeProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {PRESENTATION_ATTRIBUTE};
+            return {PRESENTATION_ATTRIBUTE, INHERITED};
+        }
+
+        ComputationPhase computationPhase() const override {
+            return ComputationPhase::LATE;
         }
 
         Rc<Property> initial() const override {
@@ -410,7 +418,7 @@ export struct SvgStrokeProperty : Property {
             //       trigger a copy-on-write of the whole property group for nothing.
             if (parent.svg.defaulted())
                 return;
-            child.svg.cow().fillOpacity = parent.svg->fillOpacity;
+            child.svg.cow().stroke = parent.svg->stroke;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -443,12 +451,25 @@ export struct SvgStrokeOpacityProperty : Property {
             return Properties::STROKE_OPACITY;
         }
 
+        Flags<Options> flags() const override {
+            return {INHERITED};
+        }
+
         Rc<Property> initial() const override {
             return makeRc<SvgStrokeOpacityProperty>(self(), Number{1});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<SvgStrokeOpacityProperty>(self(), c.svg->strokeOpacity);
+        }
+
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
+            // NOTE: We bail out early if the parent has the default SVG values.
+            //       This avoids needlessly writing into the child's style, which would
+            //       trigger a copy-on-write of the whole property group for nothing.
+            if (parent.svg.defaulted())
+                return;
+            child.svg.cow().strokeOpacity = parent.svg->strokeOpacity;
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -483,7 +504,7 @@ export struct FillOpacityProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {PRESENTATION_ATTRIBUTE};
+            return {PRESENTATION_ATTRIBUTE, INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -535,7 +556,7 @@ export struct StrokeWidthProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {PRESENTATION_ATTRIBUTE};
+            return {PRESENTATION_ATTRIBUTE, INHERITED};
         }
 
         Rc<Property> initial() const override {
