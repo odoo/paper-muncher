@@ -56,6 +56,7 @@ static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues& style, Rc<Gfx
         break;
 
     case TextAlign::CENTER:
+    case TextAlign::BLOCK_CENTER:
         proseStyle.align = Gfx::TextAlign::CENTER;
         break;
 
