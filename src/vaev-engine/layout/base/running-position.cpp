@@ -79,6 +79,7 @@ struct RunningPositionMap {
     }
 
     Slice<RunningPositionInfo> _searchPage(Slice<RunningPositionInfo> list, usize page) {
+        page++; // pages are 1-indexed
         // binary search of all running positions that match the page
 
         auto res = search(list, [&](RunningPositionInfo const& info) {

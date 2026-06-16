@@ -124,7 +124,7 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
         media.height / media.resolution.toDppx()
     };
 
-    usize pageNumber = 1;
+    usize pageNumber = 0;
     Layout::Breakpoint prevBreakpoint{
         .endIdx = 0,
         .advance = Layout::Breakpoint::Advance::WITHOUT_CHILDREN
@@ -166,7 +166,8 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
             .availableSpace = pageContent.size(),
             .containingBlock = pageContent.size(),
             .runningPosition = {&runningPosition},
-            .pageNumber = pageNumber,
+            // NOTE: CSS page counters are 1-indexed.
+            .pageNumber = pageNumber + 1,
         };
         contentTree.fc.enterDiscovery();
 
