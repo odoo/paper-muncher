@@ -152,6 +152,13 @@ export struct Breakpoint {
         return b;
     }
 
+    static Breakpoint startOfDocument() {
+        return {
+            .endIdx = 0,
+            .advance = Advance::WITHOUT_CHILDREN
+        };
+    }
+
     static Breakpoint overflow() {
         // this is a placeholder breakpoint and should be overriden
         return {

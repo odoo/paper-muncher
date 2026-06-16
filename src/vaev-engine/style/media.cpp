@@ -280,6 +280,17 @@ export struct Media {
     Vec2Au viewportSize() const {
         return {width, height};
     }
+
+    f64 scale() const {
+        return resolution.toDppx();
+    }
+
+    Vec2Au scaledViewport() const {
+        return {
+            width / scale(),
+            height / scale()
+        };
+    }
 };
 
 // MARK: Media Features --------------------------------------------------------

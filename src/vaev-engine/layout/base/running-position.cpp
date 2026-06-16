@@ -18,19 +18,20 @@ namespace Vaev::Layout {
 // MARK: RunningPos ------------------------------------------------------------
 
 export struct RunningPositionInfo {
-    usize page;
+    usize pageNumber;
     RunningPosition running;
     Dom::OriginatingElement element;
 
     RunningPositionInfo(usize page, RunningPosition running, Dom::OriginatingElement element)
-        : page(page), running(running), element(element) {
+        : pageNumber(page), running(running), element(element) {
     }
 
     void repr(Io::Emit& e) const {
-        e("runningPosInfos \nrunning:{} \npage:{} \nelement:{}", running, page, element);
+        e("(runningPosInfos running:{} page:{} element:{})", running, pageNumber, element);
     }
 };
 
+// Mapping the different Running positions to their respective names and their page.
 struct RunningPositionMap {
     Map<CustomIdent, Vec<RunningPositionInfo>> content;
 
@@ -48,7 +49,7 @@ struct RunningPositionMap {
     }
 
     // https://www.w3.org/TR/css-gcpm-3/#using-named-strings
-    Res<RunningPositionInfo> match(ElementContent elt, usize currentPage = 0) {
+    Res<RunningPositionInfo> match(ElementContent elt, usize pageNumber) {
         auto id = elt.customIdent;
         auto const& list = try$(content.lookup(id).okOr(Error::notFound("element not found")));
 
@@ -59,7 +60,7 @@ struct RunningPositionMap {
         case ElementContent::Target::START:
             for (usize i = 0; i < list.len(); i++) {
                 auto elt = list[i];
-                if (elt.page == currentPage and i > 0) {
+                if (elt.pageNumber == pageNumber and i > 0) {
                     return Ok(list[i - 1]);
                 }
             }
@@ -67,46 +68,41 @@ struct RunningPositionMap {
 
         case ElementContent::Target::FIRST:
         case ElementContent::Target::FIRST_EXCEPT: {
-            auto elements = _searchPage(list, currentPage);
+            auto elements = _searchPage(list, pageNumber);
             return Ok(elements[0]);
         }
 
         case ElementContent::Target::LAST: {
-            auto elements = _searchPage(list, currentPage);
+            auto elements = _searchPage(list, pageNumber);
             return Ok(elements[elements.len() - 1]);
         }
         }
     }
 
     Slice<RunningPositionInfo> _searchPage(Slice<RunningPositionInfo> list, usize page) {
-        page++; // pages are 1-indexed
         // binary search of all running positions that match the page
-
         auto res = search(list, [&](RunningPositionInfo const& info) {
-            if (info.page == page) {
+            if (info.pageNumber == page) {
                 return std::strong_ordering::equal;
             }
-            return info.page <=> page;
+            return info.pageNumber <=> page;
         });
 
-        if (not res) {
+        if (not res)
             return sub(list, 0, 1);
-        }
 
         // a random element of the page
         auto index = res.take();
 
         // search left side for first element of the page
         usize l = index;
-        while (l > 0 and list[l - 1].page == page) {
+        while (l > 0 and list[l - 1].pageNumber == page)
             l--;
-        }
 
         // search right side for last element of the page
         usize r = index;
-        while (r < list.len() - 1 and list[r + 1].page == page) {
+        while (r < list.len() - 1 and list[r + 1].pageNumber == page)
             r++;
-        }
 
         return sub(list, l, r + 1);
     }

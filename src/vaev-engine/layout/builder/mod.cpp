@@ -963,7 +963,7 @@ export Box buildElement(Dom::OriginatingElement& el) {
     return buildElement(el.unwrap<Gc::Ref<Dom::Element>>());
 }
 
-export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize currentPage, RunningPositionMap& runningPos) {
+export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, RunningPositionMap& runningPos) {
     auto style = el->computedValues();
     auto proseStyle = _proseStyleFromStyle(*style, style->fontFace);
 
@@ -973,7 +973,7 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize currentPage, Runni
         return Box{style, prose, el};
     } else if (style->content.is<ElementContent>()) {
         auto elt = style->content.unwrap<ElementContent>();
-        if (auto infos = runningPos.match(elt, currentPage)) {
+        if (auto infos = runningPos.match(elt, pageNumber)) {
             Box box = buildElement(infos.unwrap().element);
             box.style->position = Keywords::STATIC;
             return box;
@@ -981,7 +981,7 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize currentPage, Runni
     } else if (auto elt = style->content.is<Counter>()) {
         if (elt->type == Counter::Type::PAGE) {
             auto prose = makeRc<Gfx::Prose>(proseStyle);
-            prose->append(Io::toStr(currentPage + 1).str());
+            prose->append(Io::toStr(pageNumber).str());
             return Box{style, prose, el};
         }
     }
@@ -995,7 +995,7 @@ export Box buildDocument(Gc::Ref<Dom::Document> doc) {
         return {doc->registeredPropertySet.initialComputedValues(), NONE};
     auto root = buildElement(el.upgrade());
 
-    logDebugIf(dumpBoxes, "{}", root);
+    logDebugIf(dumpBoxes, "boxes: {}", root);
 
     return root;
 }
