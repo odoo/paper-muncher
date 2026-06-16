@@ -326,9 +326,8 @@ struct BlockFormatingContext : FormatingContext {
 
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
             //       and avoid duplicating the layout code
-            if (c.style->display == Display::Internal::TABLE_BOX) {
+            if (c.style->display == Display::Internal::TABLE_BOX)
                 childInput.capmin = _computeCapmin(tree, box, input, inlineSize);
-            }
 
             _populateChildSpecifiedSizes(tree, c, childInput, usedSpacings, input.knownSize.x);
 
@@ -336,6 +335,8 @@ struct BlockFormatingContext : FormatingContext {
                 _resolveAutoHorizontalMargins(c, childInput, usedSpacings, input.knownSize.x);
 
             childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
+            if (c.style->text->align == TextAlign::BLOCK_CENTER)
+                childInput.position.x += inlineSize / 2 - layoutBorderBox(tree, c, childInput, usedSpacings).width() / 2;
 
             auto output = layoutBorderBox(tree, c, childInput);
             if (auto [frag] = output.fragment)
