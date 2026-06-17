@@ -27,11 +27,11 @@ export struct Fragmentainer {
 
     void leaveDiscovery() { _isDiscoveryMode = false; }
 
-    bool isDiscoveryMode() {
+    bool isDiscoveryMode() const {
         return allowBreak() and _isDiscoveryMode;
     }
 
-    bool isMonolithicBox() {
+    bool isMonolithicBox() const {
         return _monolithicCount != 0;
     }
 
@@ -43,20 +43,20 @@ export struct Fragmentainer {
         _monolithicCount--;
     }
 
-    bool hasInfiniteDimensions() {
+    bool hasInfiniteDimensions() const {
         return _size == Vec2Au::MAX;
     }
 
-    bool allowBreak() {
+    bool allowBreak() const {
         return not hasInfiniteDimensions() and not isMonolithicBox();
     }
 
-    bool acceptsFit(Au verticalPosition, Au verticalSize, Au pendingVerticalSizes) {
+    bool acceptsFit(Au verticalPosition, Au verticalSize, Au pendingVerticalSizes) const {
         // TODO: consider apply this check only when in discovery mode
         return verticalPosition + verticalSize + pendingVerticalSizes <= _size.y;
     }
 
-    Au leftVerticalSpace(Au verticalPosition, Au pendingVerticalSizes) {
+    Au leftVerticalSpace(Au verticalPosition, Au pendingVerticalSizes) const {
         return _size.y - verticalPosition - pendingVerticalSizes;
     }
 };

@@ -3,6 +3,7 @@ export module Vaev.Engine:layout.output;
 import Karm.Math;
 import Karm.Core;
 import :values;
+import :layout.fragment;
 
 import :layout.breaks;
 
@@ -48,6 +49,8 @@ export struct BaselinePositionsSet {
 };
 
 export struct Output {
+    Opt<Rc<Fragment>> fragment;
+
     // size of subtree maximizing displayed content while respecting
     // - endchild constraint or
     // - not overflowing fragmentainer or

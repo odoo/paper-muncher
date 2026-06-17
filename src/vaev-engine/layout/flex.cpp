@@ -237,7 +237,7 @@ struct FlexItem {
         speculativeMargin = computeMargins(
             t,
             *box,
-            input
+            input.containingBlock
         );
 
         if (not input.knownSize.width)
@@ -252,7 +252,12 @@ struct FlexItem {
                 borders.vertical() + padding.vertical()
             );
 
-        speculativeSize = layoutBorderBox(t, *box, input, UsedSpacings{.padding = padding, .borders = borders}).size;
+        input.usedSpacings = UsedSpacings{
+            .padding = padding,
+            .borders = borders,
+        };
+
+        speculativeSize = layoutBorderBox(t, *box, input).size;
     }
 
     // https://www.w3.org/TR/css-flexbox-1/#valdef-flex-basis-auto
@@ -682,15 +687,18 @@ struct FlexFormatingContext : FormatingContext {
 
     // 0. MARK: Empty flex items list ------------------------------------------------------
 
-    Res<None, Output> returnIfNoFlexItems(Box& box, Input input) {
+    Res<None, Output> returnIfNoFlexItems(Box& box, FragmentBuilder& fragBuilder, Input input) {
         if (_items.len())
             return Ok(NONE);
 
+        auto size = Vec2Au{
+            input.knownSize.x.unwrapOr(0_au),
+            input.knownSize.y.unwrapOr(0_au),
+        };
+
         return Output{
-            .size = {
-                input.knownSize.x.unwrapOr(0_au),
-                input.knownSize.y.unwrapOr(0_au),
-            },
+            .fragment = fragBuilder.buildBoxFromInput(input, size),
+            .size = size,
             .completelyLaidOut = true,
             .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
         };
@@ -1292,7 +1300,7 @@ struct FlexFormatingContext : FormatingContext {
                 }
             }
 
-            if (input.fragment) {
+            if (input.generateFragment) {
                 // This is done after any flexible lengths and any auto margins have been resolved.
                 // NOTE: justifying doesnt change sizes/margins, thus will only run when committing and setting positions
                 auto justifyContent = box.style->aligns.justifyContent.keyword;
@@ -1465,7 +1473,10 @@ struct FlexFormatingContext : FormatingContext {
 
     // XX. MARK: Commit --------------------------------------------------------
 
-    void _commit(Tree& tree, Input input) {
+    Opt<Rc<Fragment>> _commit(Tree& tree, FragmentBuilder& fragBuilder, Input input) {
+        if (not input.generateFragment)
+            return NONE;
+
         // NOTE: Flex items positions are relative to their flex lines;
         //       however, since flex lines are virtual elements,
         //       items positions need to be adapted before committing
@@ -1482,6 +1493,8 @@ struct FlexFormatingContext : FormatingContext {
                 };
 
                 Input childInput{
+                    .generateFragment = true,
+                    .usedSpacings = usedSpacings,
                     .knownSize = {flexItem.usedSize.x, flexItem.usedSize.y},
                     .position = flexItem.position,
                     .availableSpace = availableSpace,
@@ -1489,15 +1502,22 @@ struct FlexFormatingContext : FormatingContext {
                     .pageNumber = input.pageNumber,
                 };
 
-                layoutAndCommitBorderBox(tree, *flexItem.box, childInput, *input.fragment, usedSpacings);
+                auto output = layoutBorderBox(tree, *flexItem.box, childInput);
+
+                if (auto [frag] = output.fragment)
+                    fragBuilder.addChild(frag);
             }
         }
+
+        return fragBuilder.buildBox(input.position, fa.buildPair(_usedMainSize, _usedCrossSize), input.usedSpacings);
     }
 
     // MARK: Public API --------------------------------------------------------
 
     // FIXME: auto, min and max content values for flex container dimensions are not working as in Chrome; add tests
     Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        auto fragBuilder = FragmentBuilder{tree, box};
+
         // HACK: Quick reset for formating context reuse.
         //       Proper reset logic to be implemented in a future commit.
         *this = {*box.style->flex};
@@ -1516,7 +1536,7 @@ struct FlexFormatingContext : FormatingContext {
         // XX. Handle absolute positioned children
         _layoutAbsolutePositionedChildren();
 
-        try$(returnIfNoFlexItems(box, input));
+        try$(returnIfNoFlexItems(box, fragBuilder, input));
 
         // 2. Determine the available main and cross space for the flex items.
         _determineAvailableMainAndCrossSpace(tree, input);
@@ -1564,10 +1584,10 @@ struct FlexFormatingContext : FormatingContext {
         _alignAllFlexLines(box);
 
         // XX. Commit
-        if (input.fragment)
-            _commit(tree, input);
+        auto fragment = _commit(tree, fragBuilder, input);
 
         return {
+            .fragment = fragment,
             .size = fa.buildPair(_usedMainSize, _usedCrossSize),
             .completelyLaidOut = true,
             .breakpoint = Breakpoint::bottomOfMonolithicBox(box),

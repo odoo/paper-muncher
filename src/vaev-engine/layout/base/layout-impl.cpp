@@ -62,7 +62,7 @@ Output _dispatchFormatingContext(Tree& tree, Box& box, Input input, usize startA
     return Output{};
 }
 
-InsetsAu computeMargins(Tree& tree, Box& box, Input input) {
+InsetsAu computeMargins(Tree& tree, Box& box, Vec2Au containingBlock) {
     // Boxes that make up a table do not have margins.
     if (box.style->display.isTableInternal())
         return {};
@@ -70,10 +70,10 @@ InsetsAu computeMargins(Tree& tree, Box& box, Input input) {
     InsetsAu res;
     auto margin = box.style->margin;
 
-    res.top = resolve(tree, box, margin->top, input.containingBlock.height);
-    res.end = resolve(tree, box, margin->end, input.containingBlock.width);
-    res.bottom = resolve(tree, box, margin->bottom, input.containingBlock.height);
-    res.start = resolve(tree, box, margin->start, input.containingBlock.width);
+    res.top = resolve(tree, box, margin->top, containingBlock.height);
+    res.end = resolve(tree, box, margin->end, containingBlock.width);
+    res.bottom = resolve(tree, box, margin->bottom, containingBlock.height);
+    res.start = resolve(tree, box, margin->start, containingBlock.width);
 
     return res;
 }
@@ -218,6 +218,28 @@ Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au 
     }
 }
 
+BoxMetrics computeBoxMetrics(Tree& tree, Box& box, Vec2Au position, Vec2Au size, UsedSpacings const& usedSpacings) {
+    return BoxMetrics{
+        .padding = usedSpacings.padding,
+        .borders = usedSpacings.borders,
+        .outlineOffset = resolve(tree, box, box.style->outline->offset),
+        .outlineWidth = resolve(tree, box, box.style->outline->width),
+        .position = position - usedSpacings.borders.topStart() - usedSpacings.padding.topStart(),
+        .borderSize = size + usedSpacings.borders.all() + usedSpacings.padding.all(),
+        .margin = usedSpacings.margin,
+        .radii = computeRadii(tree, box, size + usedSpacings.borders.all() + usedSpacings.padding.all()),
+    };
+}
+
+Opt<Rc<Fragment>> createBoxFragmentIfRequested(Tree& tree, Box& box, Input input, Vec2Au size, Vec<Rc<Fragment>> children) {
+    if (input.generateFragment) {
+        auto boxMetrics = computeBoxMetrics(tree, box, input.position, size, input.usedSpacings);
+        return makeRc<BoxFragment>(box,  boxMetrics, std::move(children));
+    }
+
+    return NONE;
+}
+
 static Res<None, Output> _shouldAbortFragmentingBeforeLayout(Fragmentainer& fc, Input input) {
     if (not fc.isDiscoveryMode())
         return Ok(NONE);
@@ -228,6 +250,7 @@ static Res<None, Output> _shouldAbortFragmentingBeforeLayout(Fragmentainer& fc, 
             input.pendingVerticalSizes
         ))
         return Output{
+            .fragment = NONE,
             .size = Vec2Au{0_au, 0_au},
             .completelyLaidOut = false,
             .breakpoint = Breakpoint::overflow()
@@ -266,42 +289,10 @@ Input _adaptToContentBox(Input input, UsedSpacings const& usedSpacings) {
     return input;
 }
 
-Output layoutBorderBox(Tree& tree, Box& box, Input input, UsedSpacings const& usedSpacings) {
-    input = _adaptToContentBox(input, usedSpacings);
+Output layoutBorderBox(Tree& tree, Box& box, Input input) {
+    input = _adaptToContentBox(input, input.usedSpacings);
     auto output = layoutContentBox(tree, box, input);
-    output.size = output.size + usedSpacings.borders.all() + usedSpacings.padding.all();
-    return output;
-}
-
-Output layoutAndCommitContentBox(Tree& tree, Box& box, Input input, Fragment& parentFrag, UsedSpacings const& usedSpacings) {
-    // HACK: SVG Create boxes itself.
-    if (box.isSvgRootBox())
-        return layoutContentBox(tree, box, input.withFragment(&parentFrag));
-
-    Rc<BoxFragment> currFrag = makeRc<BoxFragment>(box, BoxMetrics{});
-
-    auto output = layoutContentBox(tree, box, input.withFragment(&*currFrag));
-
-    currFrag->metrics = BoxMetrics{
-        .padding = usedSpacings.padding,
-        .borders = usedSpacings.borders,
-        .outlineOffset = resolve(tree, box, box.style->outline->offset),
-        .outlineWidth = resolve(tree, box, box.style->outline->width),
-        .position = input.position - usedSpacings.borders.topStart() - usedSpacings.padding.topStart(),
-        .borderSize = output.size + usedSpacings.borders.all() + usedSpacings.padding.all(),
-        .margin = usedSpacings.margin,
-        .radii = computeRadii(tree, box, output.size + usedSpacings.borders.all() + usedSpacings.padding.all()),
-    };
-
-    parentFrag.add(std::move(currFrag));
-
-    return output;
-}
-
-Output layoutAndCommitBorderBox(Tree& tree, Box& box, Input input, Fragment& parentFrag, UsedSpacings const& usedSpacings) {
-    input = _adaptToContentBox(input, usedSpacings);
-    auto output = layoutAndCommitContentBox(tree, box, input, parentFrag, usedSpacings);
-    output.size = output.size + usedSpacings.borders.all() + usedSpacings.padding.all();
+    output.size = output.size + input.usedSpacings.borders.all() + input.usedSpacings.padding.all();
     return output;
 }
 
@@ -311,27 +302,7 @@ Output layoutRoot(Tree& tree, Input input) {
         .borders = computeBorders(tree, tree.root),
     };
 
-    if (not input.knownSize.width)
-        input.knownSize.width = computeSpecifiedBorderBoxWidth(
-            tree, tree.root, tree.root.style->sizing->width, input.containingBlock,
-            usedSpacings.borders.horizontal() + usedSpacings.padding.horizontal()
-        );
-
-    if (not input.knownSize.height)
-        input.knownSize.height = computeSpecifiedBorderBoxHeight(
-            tree, tree.root, tree.root.style->sizing->height, input.containingBlock,
-            usedSpacings.borders.vertical() + usedSpacings.padding.vertical()
-        );
-
-    return layoutBorderBox(tree, tree.root, input, usedSpacings);
-}
-
-Tuple<Output, Rc<Fragment>> layoutAndCommitRoot(Tree& tree, Input input) {
-
-    UsedSpacings usedSpacings{
-        .padding = computePaddings(tree, tree.root, input.containingBlock),
-        .borders = computeBorders(tree, tree.root),
-    };
+    input.usedSpacings = usedSpacings;
 
     if (not input.knownSize.width)
         input.knownSize.width = computeSpecifiedBorderBoxWidth(
@@ -345,11 +316,15 @@ Tuple<Output, Rc<Fragment>> layoutAndCommitRoot(Tree& tree, Input input) {
             usedSpacings.borders.vertical() + usedSpacings.padding.vertical()
         );
 
-    Rc<Layout::Fragment> parentFragOfRoot = makeRc<BoxFragment>(tree.root, BoxMetrics{});
-    auto out = layoutAndCommitBorderBox(tree, tree.root, input, *parentFragOfRoot, usedSpacings);
-    auto fragOfRoot = std::move(parentFragOfRoot->children()[0]);
-    layoutPositioned(tree, fragOfRoot, input.containingBlock, input);
-    return {out, std::move(fragOfRoot)};
+    auto out = layoutBorderBox(tree, tree.root, input);
+
+    // FIXME: Totally breaks the immutable fragment model, needs to go elsewhere.
+    //        My day is ruined and my disappointment is immeasurable.
+    //        - lufio
+    if (input.generateFragment)
+        layoutPositioned(tree, *out.fragment, input.containingBlock, input);
+
+    return out;
 }
 
 } // namespace Vaev::Layout
