@@ -16,8 +16,8 @@ struct Fragment {
     Box const& _box;
     Vec<Rc<Fragment>> _children;
 
-    Fragment(Box const& box)
-        : _box(box) {}
+    Fragment(Box const& box, Vec<Rc<Fragment>> children)
+        : _box(box), _children(std::move(children)) {}
 
     virtual ~Fragment() = default;
 
@@ -66,10 +66,6 @@ struct Fragment {
     virtual void offset(Vec2Au d) {
         for (auto& c : _children)
             c->offset(d);
-    }
-
-    void add(Rc<Fragment>&& frag) {
-        _children.pushBack(std::move(frag));
     }
 
     MutSlice<Rc<Fragment>> children() {
@@ -151,8 +147,8 @@ struct SvgShapeFragment : Fragment {
     SvgShape shape;
     Au strokeWidth;
 
-    SvgShapeFragment(Box& box, SvgShape shape, Au strokeWidth)
-        : Fragment(box), shape(shape), strokeWidth(strokeWidth) {}
+    SvgShapeFragment(Box& box, SvgShape shape, Au strokeWidth, Vec<Rc<Fragment>> children = {})
+        : Fragment(box, std::move(children)), shape(shape), strokeWidth(strokeWidth) {}
 
     RectAu objectBoundingBox() const override {
         return shape.visit(
@@ -200,8 +196,8 @@ struct SvgShapeFragment : Fragment {
 };
 
 struct SvgGroupFragment : Fragment {
-    SvgGroupFragment(Box& box)
-        : Fragment(box) {}
+    SvgGroupFragment(Box& box, Vec<Rc<Fragment>> children = {})
+        : Fragment(box, std::move(children)) {}
 
     RectAu objectBoundingBox() const override {
         if (not _children)
@@ -255,14 +251,14 @@ struct SvgGroupFragment : Fragment {
 };
 
 struct SvgRootFragment : Fragment {
-    // NOTE: SVG viewports have these intrinsic transformations; choosing 
-    //       to store these transforms is more compliant and somewhat 
+    // NOTE: SVG viewports have these intrinsic transformations; choosing
+    //       to store these transforms is more compliant and somewhat
     //       rendering-friendly but makes it harder to debug
     Math::Trans2f transform;
     RectAu boundingBox;
 
-    SvgRootFragment(Box& box, Math::Trans2f transf, RectAu boundingBox)
-        : Fragment(box), transform(transf), boundingBox(boundingBox) {
+    SvgRootFragment(Box& box, Math::Trans2f transf, RectAu boundingBox, Vec<Rc<Fragment>> children = {})
+        : Fragment(box, std::move(children)), transform(transf), boundingBox(boundingBox) {
     }
 
     RectAu objectBoundingBox() const override {
@@ -335,8 +331,8 @@ export struct BoxMetrics {
 export struct BoxFragment : Fragment {
     BoxMetrics metrics;
 
-    BoxFragment(Box& box, BoxMetrics metrics = {})
-        : Fragment(box), metrics(metrics) {}
+    BoxFragment(Box& box, BoxMetrics metrics = {}, Vec<Rc<Fragment>> children = {})
+        : Fragment(box, std::move(children)), metrics(metrics) {}
 
     RectAu borderBox() const override {
         return metrics.borderBox();

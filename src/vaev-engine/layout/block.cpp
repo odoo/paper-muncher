@@ -33,13 +33,14 @@ void maybeProcessChildBreakpoint(Fragmentainer& fc, Breakpoint& currentBreakpoin
     );
 }
 
-Res<None, Output> processBreakpointsAfterChild(Fragmentainer& fc, Breakpoint& currentBreakpoint, Box& parentBox, usize childIndex, Vec2Au currentBoxSize, bool childCompletelyLaidOut) {
+Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, FragmentBuilder& fragBuilder, Breakpoint& currentBreakpoint, Box& parentBox, usize childIndex, Vec2Au currentBoxSize, bool childCompletelyLaidOut, Input input) {
     if (not fc.isDiscoveryMode())
         return Ok(NONE);
 
     // last child was not completly laid out, we need to abort with our best breakpoint
     if (not childCompletelyLaidOut) {
         return Output{
+            .fragment = fragBuilder.buildBoxFromInput(input, currentBoxSize),
             .size = currentBoxSize,
             .completelyLaidOut = false,
             .breakpoint = currentBreakpoint
@@ -69,6 +70,7 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer& fc, Breakpoint& cu
     // FORCED BREAK
     if (childBox.style->break_->after == BreakBetween::PAGE) {
         return Output{
+            .fragment = fragBuilder.buildBoxFromInput(input, currentBoxSize),
             .size = currentBoxSize,
             .completelyLaidOut = false,
             .breakpoint = Breakpoint::forced(
@@ -80,10 +82,11 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer& fc, Breakpoint& cu
     return Ok(NONE);
 }
 
-Res<None, Output> processBreakpointsBeforeChild(usize endAt, Vec2Au currentSize, bool forcedBreakBefore, usize startAt) {
+Res<None, Output> processBreakpointsBeforeChild(FragmentBuilder& fragBuilder, usize endAt, Vec2Au currentSize, bool forcedBreakBefore, usize startAt, Input input) {
     // FORCED BREAK
     if (forcedBreakBefore and not(startAt == endAt)) {
         return Output{
+            .fragment = fragBuilder.buildBoxFromInput(input, currentSize),
             .size = currentSize,
             .completelyLaidOut = false,
             .breakpoint = Breakpoint::forced(endAt)
@@ -93,21 +96,24 @@ Res<None, Output> processBreakpointsBeforeChild(usize endAt, Vec2Au currentSize,
     return Ok(NONE);
 }
 
-Output fragmentEmptyBox(Tree& tree, Input input) {
+Output fragmentEmptyBox(Fragmentainer const& fc, FragmentBuilder& fragBuilder, Input input) {
     // put this here instead of in layout.py since we want to know if its the empty box case
     Vec2Au knownSize{input.knownSize.x.unwrapOr(0_au), input.knownSize.y.unwrapOr(0_au)};
-    if (tree.fc.isDiscoveryMode()) {
-        if (tree.fc.acceptsFit(
+    if (fc.isDiscoveryMode()) {
+        if (fc.acceptsFit(
                 input.position.y,
                 knownSize.y,
                 input.pendingVerticalSizes
             )) {
+
             return Output{
+                .fragment = fragBuilder.buildBoxFromInput(input, knownSize),
                 .size = knownSize,
                 .completelyLaidOut = true,
             };
         } else {
             return Output{
+                .fragment = fragBuilder.buildBoxFromInput(input, {}),
                 .size = {},
                 .completelyLaidOut = false,
                 .breakpoint = Breakpoint::overflow()
@@ -115,11 +121,18 @@ Output fragmentEmptyBox(Tree& tree, Input input) {
         }
     } else {
         // FIXME: we should be breaking empty boxes using pixels or percentages, this behaviour is not compliant
-        Au verticalSpaceLeft = tree.fc.leftVerticalSpace(
+        Au verticalSpaceLeft = fc.leftVerticalSpace(
             input.position.y, input.pendingVerticalSizes
         );
+
+        Vec2Au size = {
+            knownSize.x,
+            min(knownSize.y, verticalSpaceLeft),
+        };
+
         return Output{
-            .size = {knownSize.x, min(knownSize.y, verticalSpaceLeft)},
+            .fragment = fragBuilder.buildBoxFromInput(input, size),
+            .size = size,
             .completelyLaidOut = verticalSpaceLeft >= knownSize.y,
         };
     }
@@ -227,7 +240,7 @@ struct BlockFormatingContext : FormatingContext {
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, c, containingBlock),
                     .borders = computeBorders(tree, c),
-                    .margin = computeMargins(tree, c, {.containingBlock = containingBlock})
+                    .margin = computeMargins(tree, c, containingBlock)
                 };
 
                 capmin = max(
@@ -242,11 +255,13 @@ struct BlockFormatingContext : FormatingContext {
     }
 
     Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
+        auto fragBuilder = FragmentBuilder{tree, box};
+
         Au blockSize = 0_au;
         Au inlineSize = input.knownSize.width.unwrapOr(0_au);
 
         if (box.children().len() == 0) {
-            return fragmentEmptyBox(tree, input);
+            return fragmentEmptyBox(tree.fc, fragBuilder, input);
         }
 
         Breakpoint currentBreakpoint;
@@ -266,10 +281,12 @@ struct BlockFormatingContext : FormatingContext {
 
             try$(
                 processBreakpointsBeforeChild(
+                    fragBuilder,
                     i,
                     Vec2Au{inlineSize, blockSize},
                     c.style->break_->before == BreakBetween::PAGE,
-                    startAt
+                    startAt,
+                    input
                 )
             );
 
@@ -277,20 +294,24 @@ struct BlockFormatingContext : FormatingContext {
             // if (c.style->float_ != Float::NONE)
             //     continue;
 
+            auto childContainingBlock = Vec2Au{inlineSize, input.knownSize.y.unwrapOr(0_au)};
+
+            auto usedSpacings = UsedSpacings{
+                .padding = computePaddings(tree, c, childContainingBlock),
+                .borders = computeBorders(tree, c),
+                .margin = computeMargins(tree, c, childContainingBlock)
+            };
+
             Input childInput = {
+                .generateFragment = input.generateFragment,
+                .usedSpacings = usedSpacings,
                 .intrinsic = input.intrinsic,
                 .availableSpace = {input.availableSpace.x, 0_au},
-                .containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_au)},
+                .containingBlock = childContainingBlock,
                 .runningPosition = input.runningPosition,
                 .pageNumber = input.pageNumber,
                 .breakpointTraverser = input.breakpointTraverser.traverseInsideUsingIthChild(i),
                 .pendingVerticalSizes = input.pendingVerticalSizes,
-            };
-
-            UsedSpacings usedSpacings{
-                .padding = computePaddings(tree, c, childInput.containingBlock),
-                .borders = computeBorders(tree, c),
-                .margin = computeMargins(tree, c, childInput)
             };
 
             if (not c.isRemovedFromFlow()) {
@@ -316,9 +337,9 @@ struct BlockFormatingContext : FormatingContext {
 
             childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
 
-            auto output = input.fragment
-                              ? layoutAndCommitBorderBox(tree, c, childInput, *input.fragment, usedSpacings)
-                              : layoutBorderBox(tree, c, childInput, usedSpacings);
+            auto output = layoutBorderBox(tree, c, childInput);
+            if (auto [frag] = output.fragment)
+                fragBuilder.addChild(frag);
 
             if (not c.isRemovedFromFlow()) {
                 blockSize += output.size.y + usedSpacings.margin.bottom;
@@ -339,11 +360,13 @@ struct BlockFormatingContext : FormatingContext {
 
             try$(processBreakpointsAfterChild(
                 tree.fc,
+                fragBuilder,
                 currentBreakpoint,
                 box,
                 i,
                 Vec2Au{inlineSize, blockSize},
-                output.completelyLaidOut
+                output.completelyLaidOut,
+                input
             ));
 
             if (tree.fc.allowBreak() and i + 1 == endChildren) {
@@ -353,11 +376,14 @@ struct BlockFormatingContext : FormatingContext {
             inlineSize = max(inlineSize, output.size.x + usedSpacings.margin.horizontal());
         }
 
+        auto size = Vec2Au{
+            input.knownSize.x.unwrapOr(inlineSize),
+            input.knownSize.y.unwrapOr(blockSize)
+        };
+
         return {
-            .size = Vec2Au{
-                input.knownSize.x.unwrapOr(inlineSize),
-                input.knownSize.y.unwrapOr(blockSize)
-            },
+            .fragment = fragBuilder.buildBoxFromInput(input, size),
+            .size = size,
             .completelyLaidOut = blockWasCompletelyLaidOut,
             .breakpoint = currentBreakpoint,
             .firstBaselineSet = firstBaselineSet,

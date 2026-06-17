@@ -33,16 +33,17 @@ void _paintCornerMargin(PageLayoutInfos& infos, Scene::Stack& stack, RectAu cons
         .root = Layout::buildElement(infos.pageStyle->area(area), infos.pageNumber, runningPosition),
         .viewport = Layout::Viewport{.small = rect.size()}
     };
-    auto [_, frag] = Layout::layoutAndCommitRoot(
+    auto output = Layout::layoutRoot(
         tree,
         {
+            .generateFragment = true,
             .knownSize = rect.size().cast<Opt<Au>>(),
             .position = rect.topStart(),
             .availableSpace = rect.size(),
             .containingBlock = rect.size(),
         }
     );
-    Layout::paint(frag, stack);
+    Layout::paint(*output.fragment, stack);
 }
 
 void _paintMainMargin(PageLayoutInfos& infos, Scene::Stack& stack, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas, Layout::RunningPositionMap& runningPosition) {
@@ -54,16 +55,17 @@ void _paintMainMargin(PageLayoutInfos& infos, Scene::Stack& stack, RectAu const&
         .root = std::move(box),
         .viewport = Layout::Viewport{.small = rect.size()}
     };
-    auto [_, frag] = Layout::layoutAndCommitRoot(
+    auto output = Layout::layoutRoot(
         tree,
         {
+            .generateFragment = true,
             .knownSize = rect.size().cast<Opt<Au>>(),
             .position = rect.topStart(),
             .availableSpace = rect.size(),
             .containingBlock = rect.size(),
         }
     );
-    Layout::paint(frag, stack);
+    Layout::paint(*output.fragment, stack);
 }
 
 void _paintMargins(PageLayoutInfos& infos, Scene::Stack& stack, Layout::RunningPositionMap& runningPosition) {
@@ -225,6 +227,7 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
 
     for (auto [infos, i] : iter(pageInfos) | Index()) {
         Layout::Input pageLayoutInput{
+            .generateFragment = true,
             .knownSize = {infos.pageContent.width, NONE},
             .position = infos.pageContent.topStart(),
             .availableSpace = infos.pageContent.size(),
@@ -239,7 +242,7 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
         contentTree.viewport = {
             .small = infos.pageContent.size(),
         };
-        auto [_, fragment] = Layout::layoutAndCommitRoot(
+        auto output = Layout::layoutRoot(
             contentTree,
             pageLayoutInput
         );
@@ -252,7 +255,7 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
                 runningPosition
             );
 
-        Layout::paint(fragment, *pageStack);
+        Layout::paint(*output.fragment, *pageStack);
         pageStack->prepare();
 
         co_yield Print::Page(

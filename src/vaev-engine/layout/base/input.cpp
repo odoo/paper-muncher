@@ -30,9 +30,21 @@ export bool isMinMaxIntrinsicSize(IntrinsicSize intrinsic) {
            intrinsic == IntrinsicSize::MAX_CONTENT;
 }
 
+struct UsedSpacings {
+    InsetsAu padding{};
+    InsetsAu borders{};
+    InsetsAu margin{};
+
+    void repr(Io::Emit& e) const {
+        e("(used spacings paddings: {} borders: {} margin: {})",
+          padding, borders, margin);
+    }
+};
+
 export struct Input {
     /// Parent fragment where the layout will be attached.
-    MutCursor<Fragment> fragment = nullptr;
+    bool generateFragment = false;
+    UsedSpacings usedSpacings = {};
     IntrinsicSize intrinsic = IntrinsicSize::AUTO;
     Math::Vec2<Opt<Au>> knownSize = {};
     Vec2Au position = {};
@@ -49,12 +61,6 @@ export struct Input {
     // TODO: instead of stringing this around, maybe change this (and check method of fragmentainer) to a
     // "availableSpaceInFragmentainer" parameter
     Au pendingVerticalSizes = {};
-
-    Input withFragment(MutCursor<Fragment> f) const {
-        auto copy = *this;
-        copy.fragment = f;
-        return copy;
-    }
 
     Input withIntrinsic(IntrinsicSize i) const {
         auto copy = *this;

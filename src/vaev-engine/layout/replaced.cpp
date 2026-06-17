@@ -15,6 +15,8 @@ namespace Vaev::Layout {
 
 struct ReplacedFormatingContext : FormatingContext {
     Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        auto fragBuilder = FragmentBuilder{tree, box};
+
         tree.fc.enterMonolithicBox();
         Defer _ = [&] {
             tree.fc.leaveMonolithicBox();
@@ -43,7 +45,9 @@ struct ReplacedFormatingContext : FormatingContext {
                 size.y,
                 input.pendingVerticalSizes
             )) {
+
             return {
+                .fragment = fragBuilder.buildBoxFromInput(input, {}),
                 .size = {},
                 .completelyLaidOut = false,
                 .breakpoint = Breakpoint::overflow(),
@@ -53,6 +57,7 @@ struct ReplacedFormatingContext : FormatingContext {
         }
 
         return {
+            .fragment = fragBuilder.buildBoxFromInput(input, size),
             .size = size,
             .completelyLaidOut = true,
             .breakpoint = Breakpoint::bottomOfMonolithicBox(box),

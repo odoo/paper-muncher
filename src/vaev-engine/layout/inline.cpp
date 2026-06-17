@@ -35,6 +35,8 @@ struct InlineFormatingContext : FormatingContext {
     }
 
     Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        auto fragBuilder = FragmentBuilder{tree, box};
+
         tree.fc.enterMonolithicBox();
         Defer _ = [&] {
             tree.fc.leaveMonolithicBox();
@@ -60,17 +62,21 @@ struct InlineFormatingContext : FormatingContext {
             if (atomicBox.isRemovedFromFlow())
                 continue;
 
-            Input childInput{
-                .availableSpace = {inlineSize, input.availableSpace.y},
-                .containingBlock = {
-                    input.knownSize.x.unwrapOr(0_au),
-                    input.knownSize.y.unwrapOr(0_au)
-                },
+            auto childContainingBlock = Vec2Au{
+                input.knownSize.x.unwrapOr(0_au),
+                input.knownSize.y.unwrapOr(0_au),
             };
 
             UsedSpacings usedSpacings{
-                .padding = computePaddings(tree, atomicBox, childInput.containingBlock),
+                .padding = computePaddings(tree, atomicBox, childContainingBlock),
                 .borders = computeBorders(tree, atomicBox),
+            };
+
+            Input childInput{
+                .generateFragment = input.generateFragment,
+                .usedSpacings = usedSpacings,
+                .availableSpace = {inlineSize, input.availableSpace.y},
+                .containingBlock = childContainingBlock,
             };
 
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
@@ -85,7 +91,7 @@ struct InlineFormatingContext : FormatingContext {
 
             // NOTE: We set the same availableSpace to child inline boxes since line wrapping is possible i.e. in the
             // worst case, they will take up the whole availableSpace, and a line break will be done right before them
-            auto atomicBoxOutput = layoutBorderBox(tree, atomicBox, childInput, usedSpacings);
+            auto atomicBoxOutput = layoutBorderBox(tree, atomicBox, childInput);
 
             boxStrutCell.size = atomicBoxOutput.size;
             // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
@@ -111,23 +117,27 @@ struct InlineFormatingContext : FormatingContext {
             // Here it could register multiple time the same box.
             lookForRunningPosition(input, atomicBox);
 
+            auto childContainingBlock = Vec2Au{
+                input.knownSize.x.unwrapOr(0_au),
+                input.knownSize.y.unwrapOr(0_au),
+            };
+
+            UsedSpacings usedSpacings{
+                .padding = computePaddings(tree, atomicBox, childContainingBlock),
+                .borders = computeBorders(tree, atomicBox),
+            };
+
             Input childInput{
+                .generateFragment = input.generateFragment,
+                .usedSpacings = usedSpacings,
                 .knownSize = {
                     boxStrutCell.size.x,
                     boxStrutCell.size.y
                 },
                 .position = input.position + positionInProse,
-                .containingBlock = {
-                    input.knownSize.x.unwrapOr(0_au),
-                    input.knownSize.y.unwrapOr(0_au),
-                },
+                .containingBlock = childContainingBlock,
                 .runningPosition = input.runningPosition,
                 .pageNumber = input.pageNumber,
-            };
-
-            UsedSpacings usedSpacings{
-                .padding = computePaddings(tree, atomicBox, childInput.containingBlock),
-                .borders = computeBorders(tree, atomicBox),
             };
 
             if (atomicBox.isRemovedFromFlow()) {
@@ -142,10 +152,10 @@ struct InlineFormatingContext : FormatingContext {
                 );
             }
 
-            if (input.fragment)
-                layoutAndCommitBorderBox(tree, atomicBox, childInput, *input.fragment, usedSpacings);
-            else
-                layoutBorderBox(tree, atomicBox, childInput, usedSpacings);
+            auto output = layoutBorderBox(tree, atomicBox, childInput);
+
+            if (auto [frag] = output.fragment)
+                fragBuilder.addChild(frag);
         }
 
         if (tree.fc.allowBreak() and
@@ -155,17 +165,21 @@ struct InlineFormatingContext : FormatingContext {
                 input.pendingVerticalSizes
             )) {
             return {
+                .fragment = fragBuilder.buildBoxFromInput(input, {}),
                 .size = {},
                 .completelyLaidOut = false,
                 .breakpoint = Breakpoint::overflow()
             };
         }
 
+        auto outputSize = Vec2Au{
+            input.knownSize.x.unwrapOr(size.x),
+            input.knownSize.y.unwrapOr(size.y),
+        };
+
         return {
-            .size = {
-                input.knownSize.x.unwrapOr(size.x),
-                input.knownSize.y.unwrapOr(size.y),
-            },
+            .fragment = fragBuilder.buildBoxFromInput(input, outputSize),
+            .size = outputSize,
             .completelyLaidOut = true,
             .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
             .firstBaselineSet = firstBaselineSet,

@@ -40,9 +40,10 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
         viewport
     };
 
-    auto [outDiscovery, root] = Layout::layoutAndCommitRoot(
+    auto outDiscovery = Layout::layoutRoot(
         tree,
         {
+            .generateFragment = true,
             .knownSize = {viewport.small.width, NONE},
             .availableSpace = {viewport.small.width, 0_au},
             .containingBlock = {viewport.small.width, viewport.small.height},
@@ -50,11 +51,11 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
     );
 
     auto sceneRoot = makeRc<Scene::Stack>();
-    Layout::paint(root, *sceneRoot);
+    Layout::paint(*outDiscovery.fragment, *sceneRoot);
     sceneRoot->prepare();
 
     if (dumpFragments)
-        logDebugIf(dumpFragments, "fragments: {}", root);
+        logDebugIf(dumpFragments, "fragments: {}", *outDiscovery.fragment);
 
     if (dumpScene)
         logDebugIf(dumpScene, "scene: {}", sceneRoot);
@@ -62,7 +63,7 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
     return {
         makeRc<Layout::Box>(std::move(tree.root)),
         sceneRoot,
-        root,
+        *outDiscovery.fragment,
     };
 }
 
