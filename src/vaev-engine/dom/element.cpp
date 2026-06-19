@@ -158,14 +158,9 @@ export struct Element : Node {
 
     // MARK: Content -----------------------------------------------------------
 
-    // https://dom.spec.whatwg.org/#concept-descendant-text-content
-    String textContent() {
-        StringBuilder sb;
-        for (auto child : iterDepthFirst()) {
-            if (auto text = child->is<Text>())
-                sb.append(text->data());
-        }
-        return sb.take();
+    void getTextContent(StringBuilder& sb) const override {
+        for (auto child : iterChildren())
+            child->getTextContent(sb);
     }
 
     // MARK: Element -----------------------------------------------------------
