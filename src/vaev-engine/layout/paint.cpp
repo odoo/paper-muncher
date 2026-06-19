@@ -157,29 +157,32 @@ Opt<Gfx::Stroke> _resolveStroke(SvgShapeFragment& frag, SvgProps const& style) {
     if (not style.stroke)
         return NONE;
 
-    auto color = style.stroke.unwrap();
-    if (color.transparent())
-        return NONE;
+    if (auto [color] = resolve(style.stroke, frag.style().color)) {
+        color = color.withOpacity(style.strokeOpacity);
+        if (color.transparent())
+            return NONE;
 
-    color = color.withOpacity(style.strokeOpacity);
+        return Gfx::Stroke{color, static_cast<f64>(frag.strokeWidth)};
+    }
 
-    return Gfx::Stroke{color, static_cast<f64>(frag.strokeWidth)};
+    return NONE;
 }
 
-Opt<Gfx::Fill> _resolveFill(SvgProps const& style) {
+Opt<Gfx::Fill> _resolveFill(Fragment& frag, SvgProps const& style) {
     if (Math::epsilonEq(style.fillOpacity, 0.))
         return NONE;
 
     if (not style.fill)
         return NONE;
 
-    auto color = style.fill.unwrap();
-    if (color.transparent())
-        return NONE;
+    if (auto [color] = resolve(style.fill, frag.style().color)) {
+        color = color.withOpacity(style.fillOpacity);
+        if (color.transparent())
+            return NONE;
+        return Gfx::Fill{color};
+    }
 
-    color = color.withOpacity(style.fillOpacity);
-
-    return Gfx::Fill{color};
+    return NONE;
 }
 
 Rc<Scene::Node> _paintSvgRectangle(Math::Rectf rect, Gfx::Fill fill, Opt<Gfx::Stroke> const& stroke) {
@@ -217,7 +220,7 @@ Rc<Scene::Node> _paintSvgCircle(Math::Ellipsef circle, Opt<Gfx::Fill> fill, Opt<
 Opt<Rc<Scene::Node>> _paintSvgShapeElement(SvgShapeFragment& frag) {
     auto const& style = *frag.originatingBox().style->svg;
 
-    Opt<Gfx::Fill> resolvedFill = _resolveFill(style);
+    Opt<Gfx::Fill> resolvedFill = _resolveFill(frag, style);
     Opt<Gfx::Stroke> resolvedStroke = _resolveStroke(frag, style);
 
     if (not(resolvedFill or resolvedStroke))
