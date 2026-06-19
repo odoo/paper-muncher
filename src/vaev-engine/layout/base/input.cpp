@@ -103,6 +103,12 @@ export struct Input {
         copy.pendingVerticalSizes += newPendingVerticalSize;
         return copy;
     }
+
+    Input withGenerateFragment(bool value) const {
+        auto copy = *this;
+        copy.generateFragment = value;
+        return copy;
+    }
 };
 
 } // namespace Vaev::Layout
