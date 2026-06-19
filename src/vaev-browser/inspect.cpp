@@ -6,10 +6,12 @@ import Karm.Ui;
 import Karm.Gc;
 import Karm.Gfx;
 import Karm.Core;
+import Karm.Logger;
 import Mdi;
 
 using namespace Karm;
 using namespace Karm::Literals;
+using namespace Karm::Fmt::Literals;
 using namespace Vaev;
 
 namespace Vaev::Browser {
@@ -71,10 +73,63 @@ auto idented(isize ident) {
     };
 }
 
+Opt<Str> directInnerText(Dom::Element const& el) {
+    if (not el.hasChildren())
+        return NONE;
+    if (el.countChildren() != 1)
+        return NONE;
+    if (auto text = el.firstChild()->is<Dom::Text>()) {
+        auto data = text->data();
+        if (Re::match(Re::zeroOrMore(Re::space()), data) == Match::YES)
+            return ""s;
+        if (data.len() > 64 or contains(data, "\n"s))
+            return "…";
+        return data;
+    }
+    return NONE;
+}
+
 Ui::Child elementStartTag(Dom::Element const& el, bool expanded) {
+    auto prose = makeRc<Gfx::Prose>(Ui::TextStyles::codeSmall().withColor(Ui::ACCENT500).withMultiline(false));
+    prose->append("<"s);
+    prose->append(Io::toStr(el.qualifiedName));
+
+    prose->pushSpan();
+    prose->spanColor(Ui::ACCENT400);
+
+    for (auto [k, attr] : el.attributes.iterItems()) {
+        prose->append(" "s);
+        prose->append(Io::toStr(k));
+        prose->append("=\""s);
+
+        prose->pushSpan();
+        prose->spanColor(Gfx::AMBER500);
+        prose->append(attr->value);
+        prose->popSpan();
+
+        prose->append("\""s);
+    }
+    prose->popSpan();
+
+    auto text = directInnerText(el);
+    if (el.hasChildren() and text != ""s) {
+        prose->append(">"s);
+        if (not expanded) {
+            prose->pushSpan();
+            prose->spanColor(Ui::GRAY300);
+            prose->append(text.unwrapOr("…"));
+            prose->popSpan();
+
+            prose->append("</"s);
+            prose->append(Io::toStr(el.qualifiedName));
+            prose->append(">"s);
+        }
+    } else {
+        prose->append("/>"s);
+    }
+
     return Ui::text(
-        Ui::TextStyles::codeSmall().withColor(Ui::ACCENT500),
-        expanded ? "<{}>" : "<{}> … </{}>", el.qualifiedName, el.qualifiedName
+        prose
     );
 }
 
@@ -85,17 +140,32 @@ Ui::Child elementEndTag(Dom::Element const& el) {
     );
 }
 
-Ui::Child itemHeader(Gc::Ref<Dom::Node> n, Ui::Action<InspectorAction> a, bool expanded) {
+Str displayToBadge(Display d) {
+    if (d == Display::GRID)
+        return "grid";
+    else if (d == Display::FLEX)
+        return "flex";
+    else if (d == Display::TABLE)
+        return "grid";
+    else
+        return "";
+}
+
+Opt<Ui::Child> itemHeader(Gc::Ref<Dom::Node> n, Ui::Action<InspectorAction> a, bool expanded) {
     if (n->is<Dom::Document>()) {
         return Ui::codeMedium("#document");
     } else if (n->is<Dom::DocumentType>()) {
         return Ui::codeMedium("#document-type");
     } else if (auto tx = n->is<Dom::Text>()) {
-        return Ui::codeMedium("{#}", tx->data());
+        auto data = tx->data();
+        if (Re::match(Re::zeroOrMore(Re::space()), data) == Match::YES)
+            return NONE;
+        return Ui::codeMedium(Ui::GRAY300, "{}", data);
     } else if (auto el = n->is<Dom::Element>()) {
         if (not el->hasChildren())
             return elementStartTag(*el, false);
 
+        auto displayBagde = displayToBadge(el->computedValues()->display);
         return Ui::hflow(
             Ui::icon(
                 expanded ? Mdi::CHEVRON_DOWN : Mdi::CHEVRON_RIGHT
@@ -106,7 +176,8 @@ Ui::Child itemHeader(Gc::Ref<Dom::Node> n, Ui::Action<InspectorAction> a, bool e
                     },
                     Ui::ButtonStyle::subtle()
                 ),
-            elementStartTag(*el, expanded)
+            elementStartTag(*el, expanded),
+            Kr::badge(Ui::GRAY500, displayBagde) | Ui::cond(displayBagde != "")
         );
     } else if (auto c = n->is<Dom::Comment>()) {
         return Ui::codeMedium(Gfx::GREEN, "<!-- {} -->", c->data());
@@ -138,24 +209,31 @@ Ui::ButtonStyle selected() {
     };
 }
 
-Ui::Child item(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, bool expanded, isize ident) {
+Opt<Ui::Child> item(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, bool expanded, isize ident) {
     auto style = s.selectedNode == n ? selected() : Ui::ButtonStyle::subtle().withRadii(0);
+    auto header = itemHeader(n, a, expanded);
+    if (not header)
+        return NONE;
     return Ui::button(
         [n, a](auto& btn) {
             a(btn, SelectNode{n});
         },
         style,
-        itemHeader(n, a, expanded) | idented(ident)
+        header.unwrap() | idented(ident)
     );
 }
 
-Ui::Child node(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, isize ident = 0) {
+Opt<Ui::Child> node(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, isize ident = 0) {
     bool expanded = n->is<Dom::Document>() or s.expandedNodes.contains(n);
-    Ui::Children children{item(n, s, a, expanded, ident)};
+    auto i = item(n, s, a, expanded, ident);
+    if (not i)
+        return NONE;
 
+    Ui::Children children{i.unwrap()};
     if (expanded) {
         for (auto child = n->firstChild(); child; child = child->nextSibling()) {
-            children.pushBack(node(child.upgrade(), s, a, n->is<Dom::Document>() ? 0 : ident + 1));
+            if (auto [item] = node(child.upgrade(), s, a, n->is<Dom::Document>() ? 0 : ident + 1))
+                children.pushBack(item);
         }
         children.pushBack(itemFooter(n, ident));
     }
@@ -176,8 +254,15 @@ Ui::Child computedStyles(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::
                     continue;
 
                 auto property = registration->load(*el->computedValues());
+                auto prose = makeRc<Gfx::Prose>(Ui::TextStyles::codeSmall().withColor(Ui::ACCENT400));
+                prose->append(name.str());
+                prose->pushSpan();
+                prose->spanColor(Ui::GRAY300);
+                prose->append(": {}"_f(*property));
+                prose->popSpan();
+
                 children.pushBack(
-                    Ui::text(Ui::TextStyles::codeSmall(), "{}: {}", name, *property) |
+                    Ui::text(prose) |
                     Ui::insets({4, 8})
                 );
             }
@@ -199,7 +284,7 @@ Ui::Child computedStyles(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::
 export Ui::Child inspect(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectorAction> send) {
     auto document = window->document().upgrade();
     return Ui::vflow(
-        node(document, s, send) | Ui::vscroll() | Kr::scaffoldContent() | Ui::grow(),
+        node(document, s, send).unwrap() | Ui::vhscroll() | Kr::scaffoldContent() | Ui::grow(),
         computedStyles(document, s, send) | Kr::scaffoldContent() | Kr::resizable(Kr::ResizeHandlePosition::TOP, {256}, NONE)
     );
 }

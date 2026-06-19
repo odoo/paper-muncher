@@ -29,6 +29,10 @@ export struct CharacterData : Node {
         return _data.str();
     }
 
+    void getTextContent(StringBuilder& sb) const override {
+        sb.append(data());
+    }
+
     void _repr(Io::Emit& e) const override {
         e(" data={#}", data());
     }

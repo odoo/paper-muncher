@@ -50,6 +50,16 @@ export struct Node : Tree<Node> {
     Gc::Ptr<Document> ownerDocument();
     Gc::Ptr<Document const> ownerDocument() const;
 
+    // https://dom.spec.whatwg.org/#get-text-content
+    virtual void getTextContent(StringBuilder&) const {};
+
+    // https://dom.spec.whatwg.org/#dom-node-textcontent
+    String textContent() const {
+        StringBuilder sb;
+        getTextContent(sb);
+        return sb.take();
+    }
+
     virtual void _repr(Io::Emit&) const {}
 
     void repr(Io::Emit& e) const;

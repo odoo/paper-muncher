@@ -175,6 +175,11 @@ struct Tree : Meta::Pinned {
         for (auto child = firstChild(); child; child = child->nextSibling())
             co_yield child.upgrade();
     }
+
+    Yield<Gc::Ref<Node>> iterChildren() const {
+        for (auto child = firstChild(); child; child = child->nextSibling())
+            co_yield child.upgrade();
+    }
 };
 
 } // namespace Vaev::Dom
