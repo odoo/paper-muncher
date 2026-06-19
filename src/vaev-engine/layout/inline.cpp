@@ -102,8 +102,8 @@ struct InlineFormatingContext : FormatingContext {
         prose->_blocksMeasured = false;
         auto size = prose->layout(inlineSize);
 
-        auto firstBaselineSet = _computeBaselinePositions(prose->_style.font.metrics(), first(prose->_lines).baseline);
-        auto lastBaselineSet = _computeBaselinePositions(prose->_style.font.metrics(), last(prose->_lines).baseline);
+        auto firstBaselineSet = _computeBaselinePositions(prose->_rootSpan->style.font.metrics(), first(prose->_lines).baseline);
+        auto lastBaselineSet = _computeBaselinePositions(prose->_rootSpan->style.font.metrics(), last(prose->_lines).baseline);
 
         for (auto strutCell : prose->cellsWithStruts()) {
             auto runeIdx = strutCell->runeRange.start;
