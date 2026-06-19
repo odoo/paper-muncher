@@ -236,10 +236,6 @@ export struct SvgFillProperty : Property {
             return {PRESENTATION_ATTRIBUTE, INHERITED};
         }
 
-        ComputationPhase computationPhase() const override {
-            return ComputationPhase::LATE;
-        }
-
         Rc<Property> initial() const override {
             return makeRc<SvgFillProperty>(self(), SvgPaint{Color{Gfx::BLACK}});
         }
@@ -268,9 +264,7 @@ export struct SvgFillProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
-        c.svg.cow().fill = _value.map([&](Color color) {
-            return resolve(color, c.color);
-        });
+        c.svg.cow().fill = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -406,10 +400,6 @@ export struct SvgStrokeProperty : Property {
             return {PRESENTATION_ATTRIBUTE, INHERITED};
         }
 
-        ComputationPhase computationPhase() const override {
-            return ComputationPhase::LATE;
-        }
-
         Rc<Property> initial() const override {
             return makeRc<SvgStrokeProperty>(self(), SvgPaint{NONE});
         }
@@ -438,9 +428,7 @@ export struct SvgStrokeProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
-        c.svg.cow().stroke = _value.map([&](Color color) {
-            return resolve(color, c.color);
-        });
+        c.svg.cow().stroke = _value;
     }
 
     void repr(Io::Emit& e) const override {
