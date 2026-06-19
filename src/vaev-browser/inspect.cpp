@@ -90,20 +90,19 @@ Opt<Str> directInnerText(Dom::Element const& el) {
 }
 
 Ui::Child elementStartTag(Dom::Element const& el, bool expanded) {
-    auto prose = makeRc<Gfx::Prose>(Ui::TextStyles::codeSmall().withColor(Ui::ACCENT500).withMultiline(false));
+    auto style = Ui::TextStyles::codeSmall().withColor(Ui::ACCENT500).withMultiline(false);
+    auto prose = makeRc<Gfx::Prose>(style, style);
     prose->append("<"s);
     prose->append(Io::toStr(el.qualifiedName));
 
-    prose->pushSpan();
-    prose->spanColor(Ui::ACCENT400);
+    prose->pushSpan(prose->currentSpanStyle().withColor(Ui::ACCENT400));
 
     for (auto [k, attr] : el.attributes.iterItems()) {
         prose->append(" "s);
         prose->append(Io::toStr(k));
         prose->append("=\""s);
 
-        prose->pushSpan();
-        prose->spanColor(Gfx::AMBER500);
+        prose->pushSpan(prose->currentSpanStyle().withColor(Gfx::AMBER500));
         prose->append(attr->value);
         prose->popSpan();
 
@@ -115,8 +114,7 @@ Ui::Child elementStartTag(Dom::Element const& el, bool expanded) {
     if (el.hasChildren() and text != ""s) {
         prose->append(">"s);
         if (not expanded) {
-            prose->pushSpan();
-            prose->spanColor(Ui::GRAY300);
+            prose->pushSpan(prose->currentSpanStyle().withColor(Ui::GRAY300));
             prose->append(text.unwrapOr("…"));
             prose->popSpan();
 
@@ -254,10 +252,10 @@ Ui::Child computedStyles(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::
                     continue;
 
                 auto property = registration->load(*el->computedValues());
-                auto prose = makeRc<Gfx::Prose>(Ui::TextStyles::codeSmall().withColor(Ui::ACCENT400));
+                auto style = Ui::TextStyles::codeSmall().withColor(Ui::ACCENT400);
+                auto prose = makeRc<Gfx::Prose>(style, style);
                 prose->append(name.str());
-                prose->pushSpan();
-                prose->spanColor(Ui::GRAY300);
+                prose->pushSpan(prose->currentSpanStyle().withColor(Ui::GRAY300));
                 prose->append(": {}"_f(*property));
                 prose->popSpan();
 

@@ -30,22 +30,16 @@ struct FakeInlineBox {
             ComparableInlineBox comparableInlineBox;
 
             Vec<MutCursor<ComparableInlineBox>> stackInlineBoxes = {&comparableInlineBox};
-            Vec<Opt<Rc<Gfx::Prose::Span>>> stackSpans = {NONE};
-            for (auto& span : inlineBox.content.unwrap<Rc<Gfx::Prose>>()->_spans) {
-                while (true) {
-                    if (span->parent == NONE) {
-                        if (last(stackSpans) == NONE)
-                            break;
+            Vec<Opt<Rc<Gfx::Prose::Span>>> stackSpans = {};
+            for (auto& span : inlineBox.content.unwrap<Rc<Gfx::Prose>>()->_spanHistory) {
+                if (span->parent == NONE) {
+                    stackSpans.pushBack(span);
+                    continue;
+                }
 
-                        (void)stackSpans.popBack();
-                        stackInlineBoxes.popBack();
-                    } else {
-                        if (span->parent->_cell == last(stackSpans)->_cell)
-                            break;
-
-                        (void)stackSpans.popBack();
-                        stackInlineBoxes.popBack();
-                    }
+                while (span->parent->_cell != last(stackSpans)->_cell) {
+                    (void)stackSpans.popBack();
+                    stackInlineBoxes.popBack();
                 }
 
                 stackSpans.pushBack(span);
