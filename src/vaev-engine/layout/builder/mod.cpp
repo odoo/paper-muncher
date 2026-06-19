@@ -30,25 +30,17 @@ bool isSegmentBreak(Rune rune) {
 }
 
 // http://drafts.csswg.org/css-text/#white-space-property
-bool _allowsWrap(WhiteSpace whiteSpace) {
+static bool _allowsWrap(WhiteSpace whiteSpace) {
     return oneOf(whiteSpace, WhiteSpace::NORMAL, WhiteSpace::PRE_WRAP, WhiteSpace::BREAK_SPACES, WhiteSpace::PRE_LINE);
 }
 
-static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues& style, Rc<Gfx::Fontface> fontFace) {
-    // FIXME: We should pass this around from the top in order to properly resolve rems
-    Resolver resolver{
-        .rootFont = Gfx::Font{fontFace, 16},
-        .boxFont = Gfx::Font{fontFace, 16},
-    };
-    Gfx::ProseStyle proseStyle{
-        .font = {
-            fontFace,
-            resolver.resolve(style.font->size).cast<f64>(),
-        },
-        .color = style.color,
-        .wordwrap = _allowsWrap(style.text->whiteSpace),
-        .multiline = true,
-    };
+// http://drafts.csswg.org/css-text/#white-space-property
+static bool _honorsNewlines(WhiteSpace whiteSpace) {
+    return oneOf(whiteSpace, WhiteSpace::PRE, WhiteSpace::PRE_WRAP, WhiteSpace::PRE_LINE, WhiteSpace::BREAK_SPACES);
+}
+
+static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues const& style) {
+    Gfx::ProseStyle proseStyle{};
 
     switch (style.text->align) {
     case TextAlign::START:
@@ -73,6 +65,28 @@ static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues& style, Rc<Gfx
 
     return proseStyle;
 }
+
+static Gfx::Prose::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
+    // FIXME: We should resolve font during the cascade
+    Resolver resolver{
+        .rootFont = Gfx::Font{style.fontFace, 16},
+        .boxFont = Gfx::Font{style.fontFace, 16},
+    };
+    return {
+        .font = {
+            style.fontFace,
+            resolver.resolve(style.font->size).cast<f64>(),
+        },
+        .color = style.color,
+        // FIXME: Should be done during prose layout
+        .marginLeft = resolver.resolve(style.margin->start, 0_au),
+        .marginRight = resolver.resolve(style.margin->end, 0_au),
+
+        .wordwrap = _allowsWrap(style.text->whiteSpace),
+        .multiline = _honorsNewlines(style.text->whiteSpace),
+    };
+}
+
 
 void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, TextTransform transform) {
     switch (transform) {
@@ -234,8 +248,8 @@ struct BuilderContext {
     }
 
     // FIXME: find me a better name
-    void startInlineBox(Gfx::ProseStyle proseStyle) {
-        rootInlineBox().startInlineBox(proseStyle);
+    void startInlineBox(Gfx::Prose::SpanStyle spanStyle) {
+        rootInlineBox().startInlineBox(spanStyle);
     }
 
     void endInlineBox() {
@@ -345,12 +359,8 @@ static void _buildImage(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 }
 
 static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
-    auto font = el->computedValues()->fontFace;
-    Resolver resolver{
-        .rootFont = Gfx::Font{font, 16},
-        .boxFont = Gfx::Font{font, 16},
-    };
-    Gfx::ProseStyle proseStyle = _proseStyleFromStyle(*el->computedValues(), font);
+    Gfx::ProseStyle proseStyle = _proseStyleFromStyle(*el->computedValues());
+    Gfx::Prose::SpanStyle spanStyle = _spanStyleFromStyle(*el->computedValues());
 
     auto value = ""s;
     if (el->hasAttribute(Html::VALUE_ATTR))
@@ -358,7 +368,7 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
     else if (el->hasAttribute(Html::PLACEHOLDER_ATTR))
         value = el->getAttribute(Html::PLACEHOLDER_ATTR).unwrap();
 
-    auto prose = makeRc<Gfx::Prose>(proseStyle, value);
+    auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle, value);
 
     // FIXME: we should guarantee that input has no children (not added before nor to add after)
     bc.content() = prose;
@@ -386,7 +396,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, Box& group) {
         Box box{el->computedValues(), el};
         Box rootInlineBox{
             el->computedValues(),
-            makeRc<Gfx::Prose>(_proseStyleFromStyle(*el->computedValues(), el->computedValues()->fontFace)),
+            makeRc<Gfx::Prose>(_proseStyleFromStyle(*el->computedValues()), _spanStyleFromStyle(*el->computedValues())),
             NONE,
         };
 
@@ -503,9 +513,9 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Com
         return;
     }
 
-    auto proseStyle = _proseStyleFromStyle(*style, el->computedValues()->fontFace);
+    auto spanStyle = _spanStyleFromStyle(*style);
 
-    bc.startInlineBox(proseStyle);
+    bc.startInlineBox(spanStyle);
     _buildChildren(bc.toInlineContext(style), el);
     bc.endInlineBox();
 }
@@ -528,7 +538,8 @@ static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::ComputedVal
     Box rootInlineBox = {
         style,
         makeRc<Gfx::Prose>(
-            _proseStyleFromStyle(*style, el->computedValues()->fontFace)
+            _proseStyleFromStyle(*style),
+            _spanStyleFromStyle(*style)
         ),
         NONE,
     };
@@ -573,7 +584,10 @@ struct AnonymousTableBoxWrapper {
         cellBox = Box{cellStyle, NONE};
         rootInlineBoxForCell = Box{
             style,
-            makeRc<Gfx::Prose>(_proseStyleFromStyle(*style, style->fontFace)),
+            makeRc<Gfx::Prose>(
+                _proseStyleFromStyle(*style),
+                _spanStyleFromStyle(*style)
+            ),
             NONE,
         };
     }
@@ -897,10 +911,11 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
 
 export Box _buildBlockPseudoElement(Gc::Ref<Dom::PseudoElement> el) {
     auto style = el->computedValues();
-    auto proseStyle = _proseStyleFromStyle(*style, style->fontFace);
+    auto proseStyle = _proseStyleFromStyle(*style);
+    auto spanStyle = _spanStyleFromStyle(*style);
 
     if (style->content.is<String>()) {
-        auto prose = makeRc<Gfx::Prose>(proseStyle);
+        auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
         prose->append(style->content.unwrap<String>().str());
         return {style, prose, el};
     }
@@ -916,7 +931,7 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
 
     if (display == Display::INLINE or
         display == Display::CONTENTS) {
-        bc.startInlineBox(_proseStyleFromStyle(*style, style->fontFace));
+        bc.startInlineBox(_spanStyleFromStyle(*style));
         if (auto maybeStr = style->content.is<String>())
             _buildText(bc, maybeStr->str(), style);
         bc.endInlineBox();
@@ -937,10 +952,10 @@ export Box buildElement(Gc::Ref<Dom::Element> elt) {
     };
     Box rootInlineBox = {
         elt->computedValues(),
-        makeRc<Gfx::Prose>(_proseStyleFromStyle(
-            *elt->computedValues(),
-            elt->computedValues()->fontFace
-        )),
+        makeRc<Gfx::Prose>(
+            _proseStyleFromStyle(*elt->computedValues()),
+            _spanStyleFromStyle(*elt->computedValues())
+        ),
         NONE,
     };
 
@@ -972,10 +987,11 @@ export Box buildElement(Dom::OriginatingElement& el) {
 
 export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, RunningPositionMap& runningPos) {
     auto style = el->computedValues();
-    auto proseStyle = _proseStyleFromStyle(*style, style->fontFace);
+    auto proseStyle = _proseStyleFromStyle(*style);
+    auto spanStyle = _spanStyleFromStyle(*style);
 
     if (style->content.is<String>()) {
-        auto prose = makeRc<Gfx::Prose>(proseStyle);
+        auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
         prose->append(style->content.unwrap<String>().str());
         return Box{style, prose, el};
     } else if (style->content.is<ElementContent>()) {
@@ -987,7 +1003,7 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, Runnin
         }
     } else if (auto elt = style->content.is<Counter>()) {
         if (elt->type == Counter::Type::PAGE) {
-            auto prose = makeRc<Gfx::Prose>(proseStyle);
+            auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
             prose->append(Io::toStr(pageNumber).str());
             return Box{style, prose, el};
         }
