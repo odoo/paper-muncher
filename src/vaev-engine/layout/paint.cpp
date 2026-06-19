@@ -335,15 +335,15 @@ static void _paintFrag(Rc<Fragment> frag, Scene::Stack& stack, Opt<UsedBorders> 
     }
 }
 
-static void _paintChildren(Fragment& frag, Scene::Stack& stack, auto predicate) {
-    Opt<Map<usize, UsedBorders> const&> tableBoxBorderMapping;
-    if (frag.style().display == Display::TABLE_BOX) {
-        // FIXME: downcasting like this?
-        TableFormatingContext const* tableFormattingContext = static_cast<TableFormatingContext const*>(&*frag.originatingBox().formatingContext.unwrap());
-        tableBoxBorderMapping = tableFormattingContext->boxBorderMapping;
+static void _paintChildren(Rc<Fragment> frag, Scene::Stack& stack, auto predicate) {
+    Opt<Map<usize, UsedBorders> const&> tableBoxBorderMapping = NONE;
+
+    if (auto it = frag.is<TableBoxFragment>()) {
+        if (it->borderMapping)
+            tableBoxBorderMapping = *it->borderMapping;
     }
 
-    for (auto& c : frag.children()) {
+    for (auto& c : frag->children()) {
         auto& s = c->style();
 
         if (c->originatingBox().impliesNewStackingContext()) {
@@ -369,7 +369,7 @@ static void _paintChildren(Fragment& frag, Scene::Stack& stack, auto predicate) 
         }
 
         if (not c.is<SvgRootFragment>())
-            _paintChildren(*c, stack, predicate);
+            _paintChildren(c, stack, predicate);
     }
 }
 
@@ -755,32 +755,32 @@ static void _paintStackingContext(Rc<Fragment> frag, Scene::Stack& stack) {
         return;
 
     // 2. the child stacking contexts with negative stack levels (most negative first).
-    _paintChildren(*frag, stack, [](Style::ComputedValues const& cv) -> bool {
+    _paintChildren(frag, stack, [](Style::ComputedValues const& cv) -> bool {
         return cv.zIndex.unwrapOr<isize>(0) < 0;
     });
 
     // 3. the in-flow, non-inline-level, non-positioned descendants.
-    _paintChildren(*frag, stack, [](Style::ComputedValues const& cv) {
+    _paintChildren(frag, stack, [](Style::ComputedValues const& cv) {
         return cv.zIndex == Keywords::AUTO and cv.display != Display::INLINE and cv.position == Keywords::STATIC;
     });
 
     // 4. the non-positioned floats.
-    _paintChildren(*frag, stack, [](Style::ComputedValues const& cv) {
+    _paintChildren(frag, stack, [](Style::ComputedValues const& cv) {
         return cv.zIndex == Keywords::AUTO and cv.position == Keywords::STATIC and cv.float_ != Float::NONE;
     });
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
-    _paintChildren(*frag, stack, [](Style::ComputedValues const& cv) {
+    _paintChildren(frag, stack, [](Style::ComputedValues const& cv) {
         return cv.zIndex == Keywords::AUTO and cv.display == Display::INLINE and cv.position == Keywords::STATIC;
     });
 
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
-    _paintChildren(*frag, stack, [](Style::ComputedValues const& cv) {
+    _paintChildren(frag, stack, [](Style::ComputedValues const& cv) {
         return cv.zIndex.unwrapOr<isize>(0) == 0 and cv.position != Keywords::STATIC;
     });
 
     // 7. the child stacking contexts with positive stack levels (least positive first).
-    _paintChildren(*frag, stack, [](Style::ComputedValues const& cv) {
+    _paintChildren(frag, stack, [](Style::ComputedValues const& cv) {
         return cv.zIndex.unwrapOr<isize>(0) > 0;
     });
 }
