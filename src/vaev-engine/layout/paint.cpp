@@ -185,7 +185,7 @@ Opt<Gfx::Fill> _resolveFill(Fragment& frag, SvgProps const& style) {
     return NONE;
 }
 
-Rc<Scene::Node> _paintSvgRectangle(Math::Rectf rect, Gfx::Fill fill, Opt<Gfx::Stroke> const& stroke) {
+Rc<Scene::Node> _paintSvgRectangle(Math::Rectf rect, Opt<Gfx::Fill> fill, Opt<Gfx::Stroke> const& stroke) {
     Gfx::Borders borders;
     if (stroke) {
         borders = Gfx::Borders{
@@ -203,11 +203,15 @@ Rc<Scene::Node> _paintSvgRectangle(Math::Rectf rect, Gfx::Fill fill, Opt<Gfx::St
         rect.y -= stroke->width / 2;
     }
 
+    Vec<Gfx::Fill> fills;
+    if (fill)
+        fills.pushBack(*fill);
+
     return makeRc<Scene::Box>(
         Math::Rectf{rect.x, rect.y, rect.width, rect.height},
         borders,
         Gfx::Outline{},
-        Vec<Gfx::Fill>{fill}
+        fills
     );
 }
 
@@ -227,9 +231,9 @@ Opt<Rc<Scene::Node>> _paintSvgShapeElement(SvgShapeFragment& frag) {
         return NONE;
 
     if (auto rect = frag.shape.is<RectAu>()) {
-        return _paintSvgRectangle(rect->cast<f64>(), resolvedFill.unwrap(), resolvedStroke);
+        return _paintSvgRectangle(rect->cast<f64>(), resolvedFill, resolvedStroke);
     } else if (auto circle = frag.shape.is<EllipseAu>()) {
-        return _paintSvgCircle(circle->cast<f64>(), resolvedFill.unwrap(), resolvedStroke);
+        return _paintSvgCircle(circle->cast<f64>(), resolvedFill, resolvedStroke);
     } else if (auto path = frag.shape.is<Math::Path>()) {
         return makeRc<Scene::Shape>(*path, resolvedStroke, resolvedFill);
     };
