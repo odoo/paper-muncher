@@ -224,7 +224,7 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
 
     auto startOfDocument = Layout::Breakpoint::startOfDocument();
     auto pageInfos = collectBreakPointsAndRunningPositions(runningPosition, paginationContext);
-
+    Layout::RunningPositionMap finalRunningPosition = {};
     for (auto [infos, i] : iter(pageInfos) | Index()) {
         Layout::Input pageLayoutInput{
             .generateFragment = true,
@@ -236,7 +236,8 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
             .breakpointTraverser = {
                 i == 0 ? &startOfDocument : &pageInfos[i - 1].breakpoint,
                 &infos.breakpoint,
-            }
+            },
+            .runningPosition = {&finalRunningPosition}
         };
 
         contentTree.viewport = {
@@ -252,7 +253,7 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
             _paintMargins(
                 infos,
                 *pageStack,
-                runningPosition
+                finalRunningPosition
             );
 
         Layout::paint(*output.fragment, *pageStack);
