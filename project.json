@@ -2,7 +2,7 @@
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.project.v1",
     "id": "odoo/paper-muncher",
     "type": "project",
-    "version": "v0.4.1",
+    "version": "v0.5.0",
     "description": "An experimental document-generation tool",
     "extern": {
         "skift/karm": {
