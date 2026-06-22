@@ -49,7 +49,7 @@ export struct FontFamilyProperty : Property {
                 value.pushBack(try$(parseValue<FontFamily>(c)));
 
                 eatWhitespace(c);
-                c.skip(Css::Token::comma());
+                c.skip(Css::Token::COMMA);
                 eatWhitespace(c);
             }
             return Ok(makeRc<FontFamilyProperty>(self(), std::move(value)));
