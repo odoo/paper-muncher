@@ -84,6 +84,20 @@ Async::Task<Rc<Gfx::Fontface>> _loadFontfaceAsync(Http::Client& client, Ref::Url
     co_return Font::loadFontface(mem.seal());
 }
 
+// Formats the engine cannot decode (no woff/woff2/brotli unwrap, no svg/eot
+// font support). Sources carrying one of these format() hints are skipped
+// before fetching; sources with no hint are still tried (we can only know by
+// parsing). See https://www.w3.org/TR/css-fonts-4/#font-format-values
+static bool _isDecodableFontFormat(Str format) {
+    // format() keywords are ASCII case-insensitive (CSS Fonts 4).
+    return not(
+        eqCi(format, "woff"s) or
+        eqCi(format, "woff2"s) or
+        eqCi(format, "svg"s) or
+        eqCi(format, "embedded-opentype"s)
+    );
+}
+
 Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Style::StyleSheetList const& stylesheets, Async::CancellationToken ct) {
     auto fontDatabase = makeRc<Font::Database>(Font::globalDatabase());
     for (auto const& sheet : stylesheets.styleSheets) {
@@ -105,6 +119,11 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Style
                     break;
                 }
 
+                // Skip sources whose declared format() we cannot decode,
+                // avoiding a fetch + guaranteed parse failure.
+                if (src.format and not _isDecodableFontFormat(src.format.unwrap()))
+                    continue;
+
                 auto fontUrl = src.identifier.unwrap<Ref::Url>();
 
                 auto resolvedUrl = Ref::Url::resolveReference(sheet.href, fontUrl);
@@ -125,6 +144,10 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Style
                     .face = fontface.unwrap(),
                     .adjust = ff.adjustments(),
                 });
+
+                // First decodable source won; ignore the remaining fallbacks
+                // for this face (matches the local() branch below).
+                break;
             }
         }
     }
