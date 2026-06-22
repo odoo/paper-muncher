@@ -1,0 +1,128 @@
+<tests>
+
+<test name="image-natural-size">
+    <rendering help="reference: explicit 100x100">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 100px; height: 100px" />
+    </rendering>
+    <rendering help="no specified size resolves to the natural size">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block" />
+    </rendering>
+</test>
+
+<test name="image-width-resolves-height-via-ratio">
+    <rendering help="reference: explicit 50x50">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 50px; height: 50px" />
+    </rendering>
+    <rendering help="height: auto resolves through the natural ratio">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 50px" />
+    </rendering>
+</test>
+
+<test name="image-height-resolves-width-via-ratio">
+    <rendering help="reference: explicit 80x80">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 80px; height: 80px" />
+    </rendering>
+    <rendering help="width: auto resolves through the natural ratio">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; height: 80px" />
+    </rendering>
+</test>
+
+<test name="image-percentage-width">
+    <rendering help="reference: explicit 100x100">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 100px; height: 100px" />
+    </rendering>
+    <rendering help="50% of an explicit 200px containing block, height via ratio">
+        <div style="width: 200px">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 50%" />
+        </div>
+    </rendering>
+</test>
+
+<test name="image-both-specified-ignores-ratio">
+    <rendering help="reference: explicit distorted 50x120">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 50px; height: 120px" />
+    </rendering>
+    <error help="ratio must NOT win over two specified sizes; width alone gives 50x50">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 50px" />
+    </error>
+</test>
+
+<test name="image-max-width-preserves-ratio">
+    <rendering help="reference: explicit 50x50">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 50px; height: 50px" />
+    </rendering>
+    <rendering help="w > max-width: height follows the ratio down">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; max-width: 50px" />
+    </rendering>
+    <error help="naive per-axis clamp would give 50x100">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 50px; height: 100px" />
+    </error>
+</test>
+
+<test name="image-min-width-preserves-ratio">
+    <rendering help="reference: explicit 150x150">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 150px; height: 150px" />
+    </rendering>
+    <rendering help="w &lt; min-width: height follows the ratio up">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; min-width: 150px" />
+    </rendering>
+    <error help="naive per-axis clamp would give 150x100">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 150px; height: 100px" />
+    </error>
+</test>
+
+<test name="image-max-height-preserves-ratio">
+    <rendering help="reference: explicit 50x50">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 50px; height: 50px" />
+    </rendering>
+    <rendering help="h > max-height: width follows the ratio down">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; max-height: 50px" />
+    </rendering>
+</test>
+
+<test name="image-min-height-preserves-ratio">
+    <rendering help="reference: explicit 150x150">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 150px; height: 150px" />
+    </rendering>
+    <rendering help="h &lt; min-height: width follows the ratio up">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; min-height: 150px" />
+    </rendering>
+</test>
+
+<test name="image-min-wins-over-max">
+    <rendering help="reference: explicit 150x150">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 150px; height: 150px" />
+    </rendering>
+    <rendering help="min-width > max-width: min wins, max is normalized up">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; min-width: 150px; max-width: 100px" />
+    </rendering>
+</test>
+
+<test name="image-both-axes-over-max">
+    <rendering help="reference: explicit 50x50">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 50px; height: 50px" />
+    </rendering>
+    <rendering help="w > max-width and h > max-height: stricter constraint (max-width) wins, ratio preserved">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; max-width: 50px; max-height: 80px" />
+    </rendering>
+</test>
+
+<test name="image-min-max-cross-violation">
+    <rendering help="reference: explicit 150x50">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 150px; height: 50px" />
+    </rendering>
+    <rendering help="w &lt; min-width and h > max-height: both pinned, ratio sacrificed">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; min-width: 150px; max-height: 50px" />
+    </rendering>
+</test>
+
+<test name="image-specified-size-clamped-with-ratio">
+    <rendering help="reference: explicit 80x80">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 80px; height: 40px" />
+    </rendering>
+    <rendering help="specified 40x40 raised by min-width to 80px, height stays at 40px (both axes specified, no ratio preservation)">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAAAAABVicqIAAAAPUlEQVR42u3NAQkAAAwDoEVf9LU4HLSA6YFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUTyPxmMBYke15yysgAAAABJRU5ErkJggg==" style="display: block; width: 40px; height: 40px; min-width: 80px" />
+    </rendering>
+</test>
+
+</tests>
