@@ -132,7 +132,7 @@ export struct SrcFontDescriptor {
                 continue;
             }
 
-            auto fontSrc = fontSrcs.emplaceBack(try$(parseValue<Ref::Url>(c)));
+            auto& fontSrc = fontSrcs.emplaceBack(try$(parseValue<Ref::Url>(c)));
             eatWhitespace(c);
 
             if (not c.ended() and c.peek() == Css::Sst::FUNC and c.peek().prefix == Css::Token::function("format(")) {
