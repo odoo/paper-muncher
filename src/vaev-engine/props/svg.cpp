@@ -362,13 +362,13 @@ export struct SvgViewBoxProperty : Property {
 
             viewBox.minX = try$(parseValue<Number>(c));
 
-            c.skip(Css::Token::comma());
+            c.skip(Css::Token::COMMA);
             viewBox.minY = try$(parseValue<Number>(c));
 
-            c.skip(Css::Token::comma());
+            c.skip(Css::Token::COMMA);
             viewBox.width = try$(parseValue<Number>(c));
 
-            c.skip(Css::Token::comma());
+            c.skip(Css::Token::COMMA);
             viewBox.height = try$(parseValue<Number>(c));
 
             return Ok(makeRc<SvgViewBoxProperty>(self(), Opt{std::move(viewBox)}));
