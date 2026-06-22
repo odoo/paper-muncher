@@ -34,7 +34,7 @@ struct ReplacedFormatingContext : FormatingContext {
 
             auto specifiedSize = resolvePreferredSize(tree, box, input.containingBlock);
             auto tentativeSize = resolveObjectDefaultSizing(naturalDimensions, specifiedSize);
-            size = applyMinMaxSizeConstraints(tree, box, tentativeSize, input.containingBlock);
+            size = applyReplacedMinMaxSizeConstraints(tree, box, tentativeSize, input.containingBlock, specifiedSize);
         } else {
             panic("unsupported replaced content");
         }

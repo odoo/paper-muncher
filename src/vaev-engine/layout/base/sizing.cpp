@@ -49,7 +49,7 @@ export Au computeFitContentBlockSize(Tree& tree, Box& box, AvailableSpaceAxis av
 }
 
 // https://www.w3.org/TR/css-sizing-3/#preferred-size-properties
-// FIXME: Values other than <length-percentage> are currently treated as 'auto'.
+// FIXME: Move this to a more generic width/height computation function.
 export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box, Vec2Au containingBlock) {
     auto const& style = *box.style;
 
@@ -69,7 +69,7 @@ export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box
 
 // https://www.w3.org/TR/CSS22/visudet.html#min-max-widths
 // FIXME: Values other than <length-percentage> are currently treated as 'auto'.
-export Vec2Au applyMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2Au tentative, Vec2Au containingBlock) {
+export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2Au tentative, Vec2Au containingBlock, Math::Vec2<Opt<Au>> specifiedSize) {
     auto const& style = *box.style;
 
     Au minWidth = 0_au;
@@ -92,6 +92,17 @@ export Vec2Au applyMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2A
 
     auto w = tentative.width;
     auto h = tentative.height;
+
+    bool widthIsAuto  = not specifiedSize.width.has();
+    bool heightIsAuto = not specifiedSize.height.has();
+
+    if (not widthIsAuto and not heightIsAuto)
+        return {clamp(w, minWidth, maxWidth), clamp(h, minHeight, maxHeight)};
+
+    if (not widthIsAuto and heightIsAuto) {
+        w = clamp(w, minWidth, maxWidth);
+        return {w, clamp(tentative.height, minHeight, maxHeight)};
+    }
 
     // Fallback for degenerate tentative.
     if (w == 0_au or h == 0_au)
