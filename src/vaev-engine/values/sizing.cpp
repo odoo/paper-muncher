@@ -22,6 +22,7 @@ namespace Vaev {
 export enum struct BoxSizing : u8 {
     CONTENT_BOX,
     BORDER_BOX,
+    _LEN,
 };
 
 // MARK: FitContent
