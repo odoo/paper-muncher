@@ -98,4 +98,40 @@
 </rendering>
 </test>
 
+
+<test name="custom-properties-initial-value">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            div {
+                width: 100px;
+                height: 100px;
+                border-radius: 7px;
+            }
+
+            unused {
+                --foo: cornflowerblue;
+            }
+        </style>
+    </head>
+
+    <body>
+    <slot/>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div style="background:lightsalmon;"></div>
+</rendering>
+
+<rendering help="variable set to initial value with fallback">
+    <div style="background: var(--foo, lightsalmon);"></div>
+</rendering>
+
+</test>
+
 </tests>
