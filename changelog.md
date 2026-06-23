@@ -12,13 +12,15 @@
 
 ## Changes
 
-- Added support for `whitespace: no-wrap`
-- Added support for `<center>` and `text-align: -vaev-block-center;`
-- Added support for the `align=` HTML attribute.
-- Added support for `break: avoid-page;`
-- Fix build on MacOS
-- Fix build on Linux Mint
-- Fix `--sandbox` crashing
+- Added smarter font fetching (PR [#244](https://github.com/odoo/paper-muncher/pull/244))
+- Improved rich text support (PR [#247](https://github.com/odoo/paper-muncher/pull/247))
+- Added support for `whitespace: no-wrap`  (PR [#238](https://github.com/odoo/paper-muncher/pull/238))
+- Added support for `<center>` and `text-align: -vaev-block-center;` (PR [#233](https://github.com/odoo/paper-muncher/pull/233))
+- Added support for the `align=` HTML attribute (PR [#233](https://github.com/odoo/paper-muncher/pull/233))
+- Added support for `break: avoid-page;` (PR [#232](https://github.com/odoo/paper-muncher/pull/232))
+- Fixed build on Linux Mint (PR [#235](https://github.com/odoo/paper-muncher/pull/235))
+- Fixed build on MacOS
+- Fixed `--sandbox` crashing
 
 [GitHub Link](https://github.com/odoo/paper-muncher/releases/tag/v0.5.0)
 
