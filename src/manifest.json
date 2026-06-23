@@ -8,7 +8,7 @@
         "karm-sys",
         "karm-image",
         "vaev-engine",
-        "fonts-all"
+        "fonts"
     ],
     "provides": [
         "pm",

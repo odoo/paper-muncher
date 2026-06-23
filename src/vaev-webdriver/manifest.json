@@ -4,7 +4,6 @@
     "type": "exe",
     "requires": [
         "vaev-engine",
-        "karm-cli",
-        "fonts-all"
+        "karm-cli"
     ]
 }

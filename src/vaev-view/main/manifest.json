@@ -4,7 +4,6 @@
     "type": "exe",
     "requires": [
         "vaev-view",
-        "karm-ui",
-        "fonts-all"
+        "karm-ui"
     ]
 }
