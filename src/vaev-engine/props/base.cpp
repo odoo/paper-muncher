@@ -311,6 +311,7 @@ struct DeferredProperty : Property {
     DeferredProperty(Rc<Property::Registration> registration, Css::Content value)
         : Property(registration), _value(value) {}
 
+    // https://www.w3.org/TR/css-variables-1/#substitute-a-var
     static Res<bool> _expandVariable(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out, usize depth) {
         if (depth > 32)
             return Error::invalidData("likely dependency cycle in variables");
@@ -330,10 +331,14 @@ struct DeferredProperty : Property {
             return Ok(true);
 
         Symbol varName = Symbol::from(content->token.data);
-        if (auto ref = env.lookup(varName)) {
+
+        if (Opt<Css::Content> ref = env.lookup(varName)) {
             Cursor<Css::Sst> varContent = *ref;
-            try$(_expandContent(varContent, env, out, depth));
-            return Ok(true);
+
+            if (varContent.peek() != Css::Token::GUARANTEED_INVALID) {
+                try$(_expandContent(varContent, env, out, depth));
+                return Ok(true);
+            }
         }
         content.next();
 

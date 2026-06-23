@@ -56,7 +56,7 @@ export struct Sst {
 
     // https://drafts.csswg.org/css-variables-2/#guaranteed-invalid
     static Sst guaranteedInvalid() {
-        return Token::badString("");
+        return Token::guaranteedInvalid("");
     }
 
     void repr(Io::Emit& e) const {

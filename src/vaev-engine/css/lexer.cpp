@@ -36,7 +36,8 @@ namespace Vaev::Css {
     TOKEN(LEFT_PARENTHESIS, leftParenthesis)        /* ( */          \
     TOKEN(RIGHT_PARENTHESIS, rightParenthesis)      /* ) */          \
     TOKEN(COMMENT, comment)                         /* */            \
-    TOKEN(END_OF_FILE, endOfFile)                   /* EOF */
+    TOKEN(END_OF_FILE, endOfFile)                   /* EOF */        \
+    TOKEN(GUARANTEED_INVALID, guaranteedInvalid)    /* unset --foo */
 
 export struct Token {
     enum struct Type {
