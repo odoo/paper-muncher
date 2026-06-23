@@ -14,6 +14,7 @@ export enum struct Origin : u8 {
     AUTHOR_PRESENTATIONAL_HINT,
     AUTHOR,
     INLINE, //< Declarations from style attributes
+    _LEN,
 };
 
 export std::strong_ordering operator<=>(Origin a, Origin b) {
