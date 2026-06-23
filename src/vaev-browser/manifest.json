@@ -4,7 +4,6 @@
     "type": "exe",
     "description": "Browse the web",
     "requires": [
-        "fonts-all",
         "karm-cli",
         "karm-kira",
         "karm-print.dialog",

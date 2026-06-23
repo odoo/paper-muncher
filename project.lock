@@ -1,15 +1,15 @@
 {
-    "$schema": "https://schemas.cute.engineering/stable/cutekit.lockfile.v1",
-    "extern": {
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.lockfile.v2",
+    "externs": {
         "cute-engineering/cat": {
-            "commit": "3306e60135e72a9e8d0f4b8b1d2a44c8a785afd4",
+            "commit": "90d53f480be8552ffffed64861c551830a06746d",
             "git": "https://codeberg.org/cute-engineering/cat.git",
-            "tag": "v0.13.0"
+            "tag": "v0.14.0"
         },
         "cute-engineering/ce-bootfs": {
-            "commit": "8b53ffa6c801345b2050fa996da605c30caa04df",
+            "commit": "1ca848e2f9d4c82f8d699fe077e20470d869ff24",
             "git": "https://codeberg.org/cute-engineering/ce-bootfs.git",
-            "tag": "v0.2.0"
+            "tag": "v0.3.0"
         },
         "cute-engineering/ce-heap": {
             "commit": "664de4bd5c3810da1a679724c3533204f30e80f8",
@@ -17,37 +17,37 @@
             "tag": "v1.3.0"
         },
         "cute-engineering/ce-libc": {
-            "commit": "2e8e4b6eedb25b12f3f0a662b01d40583bbf7730",
+            "commit": "f7bc62eeef96e8525818ee97184da685b26badef",
             "git": "https://codeberg.org/cute-engineering/ce-libc.git",
-            "tag": "v1.3.1"
+            "tag": "v1.5.0"
         },
         "cute-engineering/ce-libm": {
-            "commit": "24a1b42a44db053bcb332675a9a3f82690362f4c",
+            "commit": "8301826a0f0eac2cfa98fe0e88205225196a1a59",
             "git": "https://codeberg.org/cute-engineering/ce-libm.git",
-            "tag": "v1.2.1"
+            "tag": "v1.4.0"
         },
         "cute-engineering/ce-mdi": {
-            "commit": "950f40cbb8f67ec645f0d5844ee3a468b8169dce",
+            "commit": "6403ae0f9867c2a01b7d982081fe554b627cda8e",
             "git": "https://codeberg.org/cute-engineering/ce-mdi.git",
-            "tag": "v0.7.0"
+            "tag": "v0.8.0"
         },
         "cute-engineering/ce-stdcpp": {
-            "commit": "06db4b3f98fde9346b8e77414e90068a0cebefdc",
+            "commit": "824e797c2dc6d546fe106d6e80d8c040d45b71cd",
             "git": "https://codeberg.org/cute-engineering/ce-stdcpp.git",
-            "tag": "v1.7.0"
+            "tag": "v1.9.0"
         },
         "cute-engineering/ce-targets": {
-            "commit": "54fc9441b676200f106da06d0c8ec4a2b1ddef41",
+            "commit": "89ee78db3cbf12b246ac70b3b8def6cebbba66bb",
             "git": "https://codeberg.org/cute-engineering/ce-targets.git",
-            "tag": "v0.7.0"
+            "tag": "v0.8.0"
         },
         "skift/assets": {
-            "commit": "d311e1f13f9d6d91fc2aa5a6c896ef6a714363e6",
+            "commit": "52ff6480ff3c4b25d1e7b7bda820e9c7e4fc5488",
             "git": "https://codeberg.org/skift/assets.git",
-            "tag": "main"
+            "tag": "v0.2.0"
         },
         "skift/karm": {
-            "commit": "c6fc93a0045b93eb9cb4c6076f845e4a347854dd",
+            "commit": "dbe4ab494a38c737759b476a23db23dc1808d6f8",
             "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
         }
