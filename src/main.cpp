@@ -44,14 +44,21 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     auto widthArg = Cli::option<Str>(NONE, "width"s, "Width of the output document in css units (e.g. 800px)"s, ""s);
     auto heightArg = Cli::option<Str>(NONE, "height"s, "Height of the output document in css units (e.g. 600px)"s, ""s);
     auto scaleArg = Cli::option<Str>(NONE, "scale"s, "Scale of the input document in css units (e.g. 1x)"s, "1x"s);
-    auto extendArg = Cli::option<PaperMuncher::Extend>(NONE, "extend"s, "How content extending past the initial viewport is handled (default: crop)"s, PaperMuncher::Extend::CROP);
-    auto flowArg = Cli::option<PaperMuncher::Flow>(NONE, "flow"s, "Flow of the document (default: paginate for PDF, otherwise continuous)"s, PaperMuncher::Flow::AUTO);
 
     Cli::Section viewportSection{
         "Viewport Options"s,
         {widthArg, heightArg, scaleArg},
     };
 
+    auto headerArg = Cli::option<Str>(NONE, "header"s, "Add a header to the document"s);
+    auto footerArg = Cli::option<Str>(NONE, "footer"s, "Add a footer to the document"s);
+    Cli::Section decorationSection{
+        .title = "Document decoration"s,
+        .options = {headerArg, footerArg},
+        .epilog = "Headers and footers repeat on every page, appearing respectively above and below the main content within the page margins."s
+    };
+
+    auto flowArg = Cli::option<PaperMuncher::Flow>(NONE, "flow"s, "Flow of the document (default: paginate for PDF, otherwise continuous)"s, PaperMuncher::Flow::AUTO);
     Cli::Section flowSection{
         .title = "Document flow"s,
         .options = {flowArg},
@@ -60,6 +67,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
                   "continuous: If the content exceeds the viewport, extend the viewport"s
     };
 
+    auto extendArg = Cli::option<PaperMuncher::Extend>(NONE, "extend"s, "How content extending past the initial viewport is handled (default: crop)"s, PaperMuncher::Extend::CROP);
     Cli::Section extendSection{
         .title = "Document extend"s,
         .options = {extendArg},
@@ -83,6 +91,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
             inOutSection,
             paperSection,
             viewportSection,
+            decorationSection,
             flowSection,
             extendSection,
             formatSection,
@@ -140,6 +149,12 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     Ref::Url output = "fd:stdout"_url;
     if (outputArg.value() != "-"s)
         output = Ref::parseUrlOrPath(outputArg.value(), env.cwd());
+
+    if (headerArg.has())
+        options.header = Ref::parseUrlOrPath(headerArg.value(), env.cwd());
+
+    if (footerArg.has())
+        options.footer = Ref::parseUrlOrPath(footerArg.value(), env.cwd());
 
     options.outputFormat =
         formatArg.has()
