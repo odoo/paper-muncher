@@ -88,10 +88,11 @@ export struct Option {
     Extend extend = Extend::CROP;
     Opt<Ref::Url> header = NONE;
     Opt<Ref::Url> footer = NONE;
+    Union<Vaev::Keywords::Auto, Vaev::Length> headerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::Length> footerSize = Vaev::Keywords::AUTO;
 
     auto derivePrintSettings() const -> Print::Settings {
         Vaev::Layout::Resolver resolver;
-        resolver.viewport.dpi = this->density;
 
         auto stock = this->stock;
         if (this->width or this->height)
@@ -134,22 +135,34 @@ export struct Option {
 struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
     Opt<Rc<Vaev::Dom::Window>> headerWindow;
     Opt<Rc<Vaev::Dom::Window>> footerWindow;
+    Union<Vaev::Keywords::Auto, Vaev::Length> headerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::Length> footerSize = Vaev::Keywords::AUTO;
     Map<Math::Vec2Au, Pair<Vaev::Au>> _memo;
 
     Vaev::RectAu layout(Vaev::Style::Media const& media, Vaev::Driver::PageLayoutInfos const& infos) override {
         auto [headerHeight, footerHeight] = _memo.lookupOrPut(infos.pageDecoration.size(), [&] {
+            Vaev::Layout::Resolver resolver;
             Vaev::Au headerHeight = 0_au;
             Vaev::Au footerHeight = 0_au;
-            if (auto& [w] = headerWindow) {
-                w->changeMedia(media);
-                w->changeViewport(infos.pageDecoration.size());
-                headerHeight = w->ensureRender().frag->borderBox().height;
+
+            if (headerSize == Vaev::Keywords::AUTO) {
+                if (auto& [w] = headerWindow) {
+                    w->changeMedia(media);
+                    w->changeViewport(infos.pageDecoration.size());
+                    headerHeight = w->ensureRender().frag->borderBox().height;
+                }
+            } else {
+                headerHeight = resolver.resolve(headerSize.unwrap<Vaev::Length>());
             }
 
-            if (auto& [w] = footerWindow) {
-                w->changeMedia(media);
-                w->changeViewport(infos.pageDecoration.size());
-                footerHeight = w->ensureRender().frag->borderBox().height;
+            if (footerSize == Vaev::Keywords::AUTO) {
+                if (auto& [w] = footerWindow) {
+                    w->changeMedia(media);
+                    w->changeViewport(infos.pageDecoration.size());
+                    footerHeight = w->ensureRender().frag->borderBox().height;
+                }
+            } else {
+                footerHeight = resolver.resolve(footerSize.unwrap<Vaev::Length>());
             }
 
             return Pair{headerHeight, footerHeight};
@@ -190,6 +203,7 @@ Async::Task<> runSingleAsync(
 
     logInfo("rendering {}...", input);
     if (options.flow == Flow::PAGINATE) {
+        Vaev::Layout::Resolver resolver;
         HeaderFooterDecorator decorator;
         if (auto& [header] = options.header) {
             logInfo("loading header {}...", header);
@@ -198,12 +212,16 @@ Async::Task<> runSingleAsync(
             decorator.headerWindow = window;
         }
 
+        decorator.headerSize = options.headerSize;
+
         if (auto& [footer] = options.footer) {
             logInfo("loading footer {}...", footer);
             auto window = Vaev::Dom::Window::create(client);
             co_trya$(window->loadLocationAsync(footer, Ref::Uti::PUBLIC_OPEN, ct));
             decorator.footerWindow = window;
         }
+
+        decorator.footerSize = options.footerSize;
 
         auto settings = options.derivePrintSettings();
         window->print(settings, decorator) | ForEach([&](Print::Page& page) {

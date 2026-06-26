@@ -108,10 +108,18 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     };
 
     auto headerArg = Cli::option<Opt<Ref::Url>>(NONE, "header"s, "Add a header to the document"s, NONE);
+    auto headerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::Length>>(NONE, "header-size"s, "Add a header to the document"s, Vaev::Keywords::AUTO);
     auto footerArg = Cli::option<Opt<Ref::Url>>(NONE, "footer"s, "Add a footer to the document"s, NONE);
+    auto footerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::Length>>(NONE, "footer-size"s, "Add a header to the document"s, Vaev::Keywords::AUTO);
+
     Cli::Section decorationSection{
         .title = "Document decoration"s,
-        .options = {headerArg, footerArg},
+        .options = {
+            headerArg,
+            headerSizeArg,
+            footerArg,
+            footerSizeArg,
+        },
         .epilog = "Headers and footers repeat on every page, appearing respectively above and below the main content within the page margins."s
     };
 
@@ -202,6 +210,8 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     options.header = headerArg.value();
     options.footer = footerArg.value();
+    options.headerSize = headerSizeArg.value();
+    options.footerSize = footerSizeArg.value();
 
     options.outputFormat = formatArg.value().unwrapOrElse([&] -> Ref::Uti {
         if (output.path.suffix())
