@@ -1,15 +1,65 @@
 #include <karm/entry>
 
 import Karm.Cli;
-import PaperMuncher;
 import Karm.Print;
 import Karm.Logger;
+import Karm.Math;
 
 import Vaev.Engine;
+import PaperMuncher;
 
 using namespace Karm;
 using namespace Karm::Literals;
 using namespace Karm::Ref::Literals;
+
+template <Vaev::ValueParseable T>
+    requires(not Meta::Enum<T>)
+struct Cli::ValueParser<T> {
+    static Res<> usage(Io::TextWriter& w) {
+        return w.writeStr("value"s);
+    }
+
+    static Res<T> parse(Cursor<Token>& c) {
+        if (c.ended() or c->kind != Token::OPERAND)
+            return Error::invalidData("expected css value");
+
+        auto res = try$(Vaev::parseValue<T>(c->value));
+        c.next();
+        return Ok(std::move(res));
+    }
+};
+
+template <>
+struct Cli::ValueParser<Vaev::Color> {
+    static Res<> usage(Io::TextWriter& w) {
+        return w.writeStr("value"s);
+    }
+
+    static Res<Vaev::Color> parse(Cursor<Token>& c) {
+        if (c.ended() or c->kind != Token::OPERAND)
+            return Error::invalidData("expected css color");
+
+        auto res = try$(Vaev::parseValue<Vaev::Color>(c->value));
+        c.next();
+        return Ok(std::move(res));
+    }
+};
+
+template <>
+struct Cli::ValueParser<Print::PaperStock> {
+    static Res<> usage(Io::TextWriter& w) {
+        return w.writeStr("value"s);
+    }
+
+    static Res<Print::PaperStock> parse(Cursor<Token>& c) {
+        if (c.ended() or c->kind != Token::OPERAND)
+            return Error::invalidData("expected paper stock");
+
+        auto res = try$(Print::lookupStockByName(c->value));
+        c.next();
+        return Ok(std::move(res));
+    }
+};
 
 Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     auto sandboxedArg = Cli::flag(NONE, "sandboxed"s, "Disallow local file and http access"s);
@@ -23,42 +73,49 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     auto inputsArg = Cli::operand<Vec<Str>>("inputs"s, "Input files (default: stdin)"s, {"-"s});
     auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
     auto batchArg = Cli::option<PaperMuncher::Batch>(NONE, "batch"s, "What to do when multiple document are passed as input (default: concat)"s, PaperMuncher::Batch::CONCAT);
-    auto formatArg = Cli::option<Ref::Uti>('f', "format"s, "Override the output file format"s);
-    auto densityArg = Cli::option<Str>(NONE, "density"s, "Density of the output document in css units (e.g. 96dpi)"s, "1x"s);
-    auto backgroundArg = Cli::option<Str>(NONE, "background"s, "Background color of the output document (default: white for html, transparent for svg)"s, ""s);
+    auto formatArg = Cli::option<Opt<Ref::Uti>>('f', "format"s, "Override the output file format"s, NONE);
+    auto densityArg = Cli::option<Vaev::Resolution>(NONE, "density"s, "Density of the output document in css units (e.g. 96dpi)"s, Vaev::Resolution::fromDppx(1));
+    auto backgroundArg = Cli::option<Opt<Vaev::Color>>(NONE, "background"s, "Background color of the output document (default: white for html, transparent for svg)"s, NONE);
 
     Cli::Section inOutSection{
-        "Input/Output Options"s,
-        {inputsArg, outputArg, batchArg, formatArg, densityArg, backgroundArg},
+        .title = "Input/Output Options"s,
+        .options = {inputsArg, outputArg, batchArg, formatArg, densityArg, backgroundArg},
+        .epilog = "When handling multiple inputs, separate batch mode generates individually named files matching the source stems."s
     };
 
-    auto paperArg = Cli::option<Str>(NONE, "paper"s, "Paper size for printing (default: A4)"s, "A4"s);
-    auto orientationArg = Cli::option<Str>(NONE, "orientation"s, "Page orientation (default: portrait)"s, "portrait"s);
-    auto marginArg = Cli::option<Print::Margins::Named>(NONE, "margins"s, "Page margins (default: default)"s, Print::Margins::DEFAULT);
+    enum struct PaperList {
+        LIST,
+        _LEN
+    };
+
+    auto paperArg = Cli::option<Union<Print::PaperStock, PaperList>>(NONE, "paper"s, "Paper size for printing (default: A4)"s, Print::A4);
+    auto orientationArg = Cli::option<Print::Orientation>(NONE, "orientation"s, "Page orientation (default: portrait)"s, Print::Orientation::PORTRAIT);
+    auto marginArg = Cli::option<Union<Print::MarginOption, Math::Insets<Vaev::Length>>>(NONE, "margins"s, "Page margins (default: default)"s, Print::MarginOption::DEFAULT);
     Cli::Section paperSection{
         .title = "Paper Options"s,
         .options = {paperArg, orientationArg, marginArg},
-        .epilog = "Use --paper list to display the list of supported paper size"s
+        .epilog = "Use '--paper list' to display all supported standard paper sizes."s
     };
 
-    auto widthArg = Cli::option<Str>(NONE, "width"s, "Width of the output document in css units (e.g. 800px)"s, ""s);
-    auto heightArg = Cli::option<Str>(NONE, "height"s, "Height of the output document in css units (e.g. 600px)"s, ""s);
-    auto scaleArg = Cli::option<Str>(NONE, "scale"s, "Scale of the input document in css units (e.g. 1x)"s, "1x"s);
+    auto widthArg = Cli::option<Opt<Vaev::Length>>(NONE, "width"s, "Width of the output document in css units (e.g. 800px)"s, NONE);
+    auto heightArg = Cli::option<Opt<Vaev::Length>>(NONE, "height"s, "Height of the output document in css units (e.g. 600px)"s, NONE);
+    auto scaleArg = Cli::option<Vaev::Resolution>(NONE, "scale"s, "Scale of the input document in css units (e.g. 1x)"s, Vaev::Resolution::fromDppx(1));
 
     Cli::Section viewportSection{
-        "Viewport Options"s,
-        {widthArg, heightArg, scaleArg},
+        .title = "Viewport Options"s,
+        .options = {widthArg, heightArg, scaleArg},
+        .epilog = "Explicit --width and --height dimensions take precedence over --paper dimensions."s
     };
 
-    auto headerArg = Cli::option<Str>(NONE, "header"s, "Add a header to the document"s);
-    auto footerArg = Cli::option<Str>(NONE, "footer"s, "Add a footer to the document"s);
+    auto headerArg = Cli::option<Opt<Ref::Url>>(NONE, "header"s, "Add a header to the document"s, NONE);
+    auto footerArg = Cli::option<Opt<Ref::Url>>(NONE, "footer"s, "Add a footer to the document"s, NONE);
     Cli::Section decorationSection{
         .title = "Document decoration"s,
         .options = {headerArg, footerArg},
         .epilog = "Headers and footers repeat on every page, appearing respectively above and below the main content within the page margins."s
     };
 
-    auto flowArg = Cli::option<PaperMuncher::Flow>(NONE, "flow"s, "Flow of the document (default: paginate for PDF, otherwise continuous)"s, PaperMuncher::Flow::AUTO);
+    auto flowArg = Cli::option<PaperMuncher::Flow>(NONE, "flow"s, "Flow of the document (default: auto)"s, PaperMuncher::Flow::AUTO);
     Cli::Section flowSection{
         .title = "Document flow"s,
         .options = {flowArg},
@@ -80,7 +137,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
         .prolog =
             "Input: HTML, XHTML, SVG, Markdown\n"
             "Output: PDF or image\n"
-            "Image formats: BMP, PNG, JPEG, TGA, QOI, SVG"s
+            "Image: BMP, PNG, JPEG, TGA, QOI, SVG"s
     };
 
     Cli::Command cmd{
@@ -102,7 +159,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     if (not cmd)
         co_return Ok();
 
-    if (paperArg.value() == "list") {
+    if (paperArg.value() == PaperList::LIST) {
         for (auto& serie : Print::SERIES) {
             Sys::println("{}:", serie.name);
             for (auto& stock : serie.stocks)
@@ -123,20 +180,13 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     PaperMuncher::Option options{};
 
-    options.scale = co_try$(Vaev::parseValue<Vaev::Resolution>(scaleArg.value()));
-    options.density = co_try$(Vaev::parseValue<Vaev::Resolution>(densityArg.value()));
-
-    if (widthArg.value())
-        options.width = co_try$(Vaev::parseValue<Vaev::Length>(widthArg.value()));
-
-    if (heightArg.value())
-        options.height = co_try$(Vaev::parseValue<Vaev::Length>(heightArg.value()));
-
-    if (backgroundArg.value())
-        options.background = co_try$(Vaev::parseValue<Vaev::Color>(backgroundArg.value()));
-
-    options.stock = co_try$(Print::lookupStockByName(paperArg.value()));
-    options.orientation = co_try$(Vaev::parseValue<Print::Orientation>(orientationArg.value()));
+    options.scale = scaleArg.value();
+    options.density = densityArg.value();
+    options.width = widthArg.value();
+    options.height = heightArg.value();
+    options.background = backgroundArg.value();
+    options.stock = paperArg.value().unwrap<Print::PaperStock>();
+    options.orientation = orientationArg.value();
     options.margins = marginArg.value();
 
     Vec<Ref::Url> inputs;
@@ -150,16 +200,14 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     if (outputArg.value() != "-"s)
         output = Ref::parseUrlOrPath(outputArg.value(), env.cwd());
 
-    if (headerArg.has())
-        options.header = Ref::parseUrlOrPath(headerArg.value(), env.cwd());
+    options.header = headerArg.value();
+    options.footer = footerArg.value();
 
-    if (footerArg.has())
-        options.footer = Ref::parseUrlOrPath(footerArg.value(), env.cwd());
-
-    options.outputFormat =
-        formatArg.has()
-            ? formatArg.value()
-            : (Ref::Uti::fromSuffix(output.path.suffix() ?: "pdf"s));
+    options.outputFormat = formatArg.value().unwrapOrElse([&] -> Ref::Uti {
+        if (output.path.suffix())
+            Ref::Uti::fromSuffix(output.path.suffix());
+        return Ref::Uti::PUBLIC_PDF;
+    });
     options.flow = flowArg.value();
     options.extend = extendArg.value();
 

@@ -116,30 +116,34 @@ struct PaginationContext {
 };
 
 static InsetsAu _resolvePageMargin(Print::Margins marginSetting, Margin const& margin, RectAu pageRect) {
-    switch (marginSetting.named) {
-    case Print::Margins::NONE:
-        return {};
+    return marginSetting.visit(
+        [&](Print::MarginOption option) -> InsetsAu {
+            switch (option) {
+            case Print::MarginOption::NONE:
+                return {};
 
-    case Print::Margins::DEFAULT: {
-        Layout::Resolver resolver{};
-        return {
-            resolver.resolve(margin.top, pageRect.height),
-            resolver.resolve(margin.end, pageRect.width),
-            resolver.resolve(margin.bottom, pageRect.height),
-            resolver.resolve(margin.start, pageRect.width),
-        };
-    }
+            case Print::MarginOption::DEFAULT: {
+                Layout::Resolver resolver{};
+                return {
+                    resolver.resolve(margin.top, pageRect.height),
+                    resolver.resolve(margin.end, pageRect.width),
+                    resolver.resolve(margin.bottom, pageRect.height),
+                    resolver.resolve(margin.start, pageRect.width),
+                };
+            }
 
-    case Print::Margins::MINIMUM:
-        // FIXME: Supposed to be the minimum supported by the printer
-        return {};
+            case Print::MarginOption::MINIMUM:
+                // FIXME: Supposed to be the minimum supported by the printer
+                return {};
 
-    case Print::Margins::CUSTOM:
-        return marginSetting.custom.cast<Au>();
-
-    default:
-        unreachable();
-    }
+            default:
+                unreachable();
+            }
+        },
+        [](InsetsAu custom) {
+            return custom;
+        }
+    );
 }
 
 Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& context) {
@@ -259,7 +263,7 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
         );
 
         auto pageStack = makeRc<Scene::Stack>();
-        if (settings.headerFooter and settings.margins != Print::Margins::NONE)
+        if (settings.headerFooter and settings.margins != Print::MarginOption::NONE)
             _paintMargins(
                 infos,
                 *pageStack,

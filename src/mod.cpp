@@ -81,7 +81,7 @@ export struct Option {
     Opt<Vaev::Color> background = NONE;
     Print::PaperStock stock = Print::A4;
     Print::Orientation orientation = Print::Orientation::PORTRAIT;
-    Print::Margins margins = Print::Margins::DEFAULT;
+    Union<Print::MarginOption, Math::Insets<Vaev::Length>> margins = Print::MarginOption::DEFAULT;
     Ref::Uti outputFormat = Ref::Uti::PUBLIC_DATA;
     Batch batch = Batch::CONCAT;
     Flow flow = Flow::AUTO;
@@ -100,10 +100,22 @@ export struct Option {
                 this->height ? resolver.resolve(*this->height) : stock.majorAxis
             );
 
+        Print::Margins margins = Print::MarginOption::DEFAULT;
+        this->margins.visit(
+            [&](Print::MarginOption n) {
+                margins = n;
+            },
+            [&](Math::Insets<Vaev::Length> const& insets) {
+                margins = insets.map([&](Vaev::Length l) {
+                    return resolver.resolve(l);
+                });
+            }
+        );
+
         return {
             .stock = stock,
             .orientation = this->orientation,
-            .margins = this->margins,
+            .margins = margins,
             .scale = this->scale.toDppx(),
         };
     }
