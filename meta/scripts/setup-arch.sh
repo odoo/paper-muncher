@@ -1,3 +1,3 @@
 #!/bin/bash
 
-pacman -S base-devel git ninja extra/llvm clang liburing libseccomp
+pacman -S base-devel git ninja extra/llvm clang liburing libseccomp libunwind

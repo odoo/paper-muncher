@@ -12,5 +12,6 @@ apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     libseccomp-dev \
-    liburing-dev
+    liburing-dev \
+    libunwind-dev
 
