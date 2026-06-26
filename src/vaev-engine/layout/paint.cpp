@@ -308,7 +308,11 @@ static void _paintFrag(Rc<Fragment> frag, Scene::Stack& stack, Opt<UsedBorders> 
         _paintFragBordersAndBackgrounds(*boxFragment, stack, usedBorders);
 
         if (auto prose = boxFragment->originatingBox().content.is<Rc<Gfx::Prose>>()) {
-            stack.add(makeRc<Scene::Text>(boxFragment->contentBox().topStart().cast<f64>(), *prose));
+            for (auto [run, span, offset] : (*prose)->genRuns()) {
+                auto absOffset = boxFragment->contentBox().topStart().cast<f64>() + offset;
+                stack.add(makeRc<Scene::Text>(absOffset, std::move(run), span->style.font, span->style.color));
+            }
+
         } else if (auto image = boxFragment->originatingBox().content.is<Rc<Scene::Node>>()) {
             auto bound = (*image)->bound();
 
