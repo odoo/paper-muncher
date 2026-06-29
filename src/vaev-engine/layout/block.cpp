@@ -82,6 +82,64 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
     return Ok(NONE);
 }
 
+Opt<Breakpoint> forcedBreakBefore(Style::ComputedValues const& style, usize childIndex, usize startIndex) {
+    if (childIndex == startIndex)
+        return NONE;
+
+    // User agents must not apply these properties to absolutely-positioned boxes.
+    if (style.position == Keywords::ABSOLUTE)
+        return NONE;
+
+    if (oneOf(style.break_->before, BreakBetween::AVOID, BreakBetween::AVOID_PAGE)) {
+        return Breakpoint::forced(childIndex);
+    }
+
+    if (oneOf(style.break_->before, BreakBetween::AVOID, BreakBetween::AVOID_PAGE)) {
+        return Breakpoint{
+            .appeal = Breakpoint::Appeal::AVOID,
+            .advance = Breakpoint::Advance::WITHOUT_CHILDREN,
+        };
+    }
+
+    // Treat the rest as `auto`.
+    return Breakpoint{
+        .appeal = Breakpoint::Appeal::CLASS_B,
+        .advance = Breakpoint::Advance::WITHOUT_CHILDREN,
+    };
+}
+
+Opt<Breakpoint> forcedBreakAfter(Style::ComputedValues const& style, usize childIndex, usize endIndex) {
+    if (childIndex == endIndex)
+        return NONE;
+
+    // User agents must not apply these properties to absolutely-positioned boxes.
+    if (style.position == Keywords::ABSOLUTE)
+        return NONE;
+
+    if (oneOf(style.break_->before, BreakBetween::AVOID, BreakBetween::AVOID_PAGE)) {
+        return Breakpoint::forced(childIndex);
+    }
+
+    if (oneOf(style.break_->before, BreakBetween::AVOID, BreakBetween::AVOID_PAGE)) {
+        return Breakpoint{
+            .appeal = Breakpoint::Appeal::AVOID,
+            .advance = Breakpoint::Advance::WITHOUT_CHILDREN,
+        };
+    }
+
+    // Treat the rest as `auto`.
+    return Breakpoint{
+        .appeal = Breakpoint::Appeal::CLASS_B,
+        .advance = Breakpoint::Advance::WITHOUT_CHILDREN,
+    };
+}
+
+Opt<Breakpoint> softBreakBetween(Style::ComputedValues const& a, Style::ComputedValues const& b) {
+    if (oneOf(a.break_->after, BreakBetween::AVOID, BreakBetween::AVOID_PAGE) and oneOf(b.break_->before, BreakBetween::AVOID, BreakBetween::AVOID_PAGE)) {
+    }
+}
+
+
 Res<None, Output> processBreakpointsBeforeChild(FragmentBuilder& fragBuilder, usize endAt, Vec2Au currentSize, bool forcedBreakBefore, usize startAt, Input input) {
     // FORCED BREAK
     if (forcedBreakBefore and not(startAt == endAt)) {
@@ -226,6 +284,19 @@ void _resolveAutoHorizontalMargins(Box& child, Input& childInput, UsedSpacings& 
     }
 }
 
+struct BlockItem {
+    Box const& box;
+    Vec2Au position;
+    Vec2Au size;
+};
+
+struct BlockMeasures {
+    Vec<BlockItem> items;
+    Vec2Au size;
+    Opt<Breakpoint> breakpoint;
+};
+
+
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
 struct BlockFormatingContext : FormatingContext {
     Au _computeCapmin(Tree& tree, Box& box, Input input, Au inlineSize) {
@@ -254,15 +325,166 @@ struct BlockFormatingContext : FormatingContext {
         return capmin;
     }
 
-    Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
-        auto fragBuilder = FragmentBuilder{tree, box};
+    BlockMeasures _measure(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) {
+        Vec<BlockItem> blockItems = {};
 
         Au blockSize = 0_au;
         Au inlineSize = input.knownSize.width.unwrapOr(0_au);
 
+        Breakpoint currentBreakpoint;
+        BaselinePositionsSet firstBaselineSet, lastBaselineSet;
+
+        Opt<Breakpoint> bestBreakpoint = NONE;
+
+        usize endChildren = stopAt.unwrapOr(box.children().len());
+
+        bool blockWasCompletelyLaidOut = false;
+
+        Au lastMarginBottom = 0_au;
+
+        for (usize i = startAt; i < endChildren; ++i) {
+            auto& c = box.children()[i];
+            lookForRunningPosition(input, c);
+            if (c.isRunningPositionedBox())
+                continue;
+
+            if (auto [breakpoint] = candidateBreakBefore(*box.style, i, startAt)) {
+                if (lastAfterBreak) {
+                    if (lastAfterBreak->appeal == Breakpoint::Appeal::FORCED) {
+
+                    }
+                }
+
+                if (candidateBreakpoints.contains())
+                if (lastAfterBreak) {
+                    if (lastAfterBreak->appeal == Breakpoint::Appeal::AVOID) {
+                        candidateBreakpoints.pushBack(lastAfterBreak.take());
+                    }
+                } else if (breakpoint.appeal == Breakpoint::Appeal::AVOID) {
+                }
+                    candidateBreakpoints.pushBack(lastAfterBreak.take());
+                    candidateBreakpoints.pushBack(std::move(breakpoint));
+
+
+                candidateBreakpoints.pushBack(std::move(breakpoint));
+            }
+
+            // TODO: Implement floating
+            // if (c.style->float_ != Float::NONE)
+            //     continue;
+
+            auto childContainingBlock = Vec2Au{inlineSize, input.knownSize.y.unwrapOr(0_au)};
+
+            auto usedSpacings = UsedSpacings{
+                .padding = computePaddings(tree, c, childContainingBlock),
+                .borders = computeBorders(tree, c),
+                .margin = computeMargins(tree, c, childContainingBlock)
+            };
+
+            Input childInput = {
+                .usedSpacings = usedSpacings,
+                .intrinsic = input.intrinsic,
+                .availableSpace = {input.availableSpace.x, 0_au},
+                .containingBlock = childContainingBlock,
+                .runningPosition = input.runningPosition,
+                .pageNumber = input.pageNumber,
+                .breakpointTraverser = input.breakpointTraverser.traverseInsideUsingIthChild(i),
+                .pendingVerticalSizes = input.pendingVerticalSizes,
+            };
+
+            if (not c.isRemovedFromFlow()) {
+                // TODO: collapsed margins for sibling elements
+
+                Au maxPositive = max(0_au, usedSpacings.margin.top, lastMarginBottom);
+                Au minNegative = min(0_au, usedSpacings.margin.top, lastMarginBottom);
+
+                Au collapsedMargin = maxPositive - Math::abs(minNegative);
+                blockSize += collapsedMargin - lastMarginBottom;
+            }
+
+            // HACK: Table Box mostly behaves like a block box, let's compute its capmin
+            //       and avoid duplicating the layout code
+            if (c.style->display == Display::Internal::TABLE_BOX)
+                childInput.capmin = _computeCapmin(tree, box, input, inlineSize);
+
+            _populateChildSpecifiedSizes(tree, c, childInput, usedSpacings, input.knownSize.x);
+
+            if (not c.isRemovedFromFlow())
+                _resolveAutoHorizontalMargins(c, childInput, usedSpacings, input.knownSize.x);
+
+            childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
+            if (box.style->text->align == TextAlign::BLOCK_CENTER)
+                childInput.position.x += inlineSize / 2 - layoutBorderBox(tree, c, childInput.withGenerateFragment(false)).width() / 2;
+
+            auto output = layoutBorderBox(tree, c, childInput);
+
+            if (not c.isRemovedFromFlow()) {
+                blockSize += output.size.y + usedSpacings.margin.bottom;
+                lastMarginBottom = usedSpacings.margin.bottom;
+            }
+
+            if (i == startAt)
+                firstBaselineSet = output.firstBaselineSet.translate(childInput.position.y - input.position.y);
+            lastBaselineSet = output.lastBaselineSet.translate(childInput.position.y - input.position.y);
+
+            inlineSize = max(inlineSize, output.size.x + usedSpacings.margin.horizontal());
+
+            if (auto [breakpoint] = candidateBreakAfter(*box.style, i, endChildren - 1)) {
+                if (breakpoint.appeal == Breakpoint::Appeal::FORCED) {
+                    auto size = Vec2Au{
+                        input.knownSize.x.unwrapOr(inlineSize),
+                        input.knownSize.y.unwrapOr(blockSize)
+                    };
+
+                    return BlockMeasures {
+                        .items = std::move(blockItems),
+                        .size = size,
+                        .breakpoint = Opt{std::move(breakpoint)},
+                    };
+                }
+
+                lastAfterBreak = std::move(breakpoint);
+            }
+
+            if (tree.fc.allowBreak() and i + 1 == endChildren) {
+                blockWasCompletelyLaidOut = output.completelyLaidOut and i + 1 == box.children().len();
+            }
+        }
+
+        for ()
+
+
+        auto size = Vec2Au{
+            input.knownSize.x.unwrapOr(inlineSize),
+            input.knownSize.y.unwrapOr(blockSize)
+        };
+
+        return {
+            .fragment = fragBuilder.buildBoxFromInput(input, size),
+            .size = size,
+            .completelyLaidOut = blockWasCompletelyLaidOut,
+            .breakpoint = currentBreakpoint,
+            .firstBaselineSet = firstBaselineSet,
+            .lastBaselineSet = lastBaselineSet,
+        };
+    }
+    }
+
+    Rc<Fragment> _commit(FragmentBuilder& fragBuilder) {
+
+    }
+
+    Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
+        auto fragBuilder = FragmentBuilder{tree, box};
+
         if (box.children().len() == 0) {
             return fragmentEmptyBox(tree.fc, fragBuilder, input);
         }
+
+        Vec<BlockItem> blockItems = {};
+
+        Au blockSize = 0_au;
+        Au inlineSize = input.knownSize.width.unwrapOr(0_au);
 
         Breakpoint currentBreakpoint;
         BaselinePositionsSet firstBaselineSet, lastBaselineSet;
