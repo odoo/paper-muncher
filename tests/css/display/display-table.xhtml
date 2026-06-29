@@ -2649,4 +2649,53 @@
     </rendering>
 </test>
 
+<test name="table: missing cell" width="320px" height="320px">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                table {
+                    border-spacing: 0;
+                    width: 60px;
+                }
+
+                td {
+                    padding: 0;
+                    width: 30px;
+                    height: 30px;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 30px;height: 30px; background: green;"></div>
+        <div style="width: 60px;height: 30px; background: blue;"></div>
+    </rendering>
+
+    <rendering>
+        <table style="table-layout: fixed">
+            <tbody>
+            <tr>
+                <td colspan="1" style="background: green;"></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="background: blue;"></td>
+            </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
 </tests>
