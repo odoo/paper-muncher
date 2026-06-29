@@ -1,5 +1,6 @@
 from pathlib import Path
 from cutekit import const
+from enum import Enum
 
 TEST_REPORT = (Path(const.PROJECT_CK_DIR) / "tests" / "report").absolute()
 
@@ -18,12 +19,17 @@ SUPPORTED_CASE_PROPS = {
 }
 
 class TestReference:
-    def __init__(self, path: Path, imagePath: Path, image: bytes | None = None):
+    def __init__(self, path: Path, imagePath: Path, image: bytes):
         self.path = path  # path to the reference document
         self.imagePath = imagePath
         self.image = image
 
 _currentTestId = 0
+
+class TestStatus(Enum):
+    PASSED = "passed",
+    FAILED = "failed",
+    SKIPPED = "skipped"
 
 class TestCase:
     id: int
@@ -38,8 +44,7 @@ class TestCase:
     testDocument: str
     inputPath: Path
     outputPath: Path
-    outputImage: bytes | None
-    addInfo: list[str]
+    addInfos: list[str]
 
 
     def __init__(self, props: dict[str, str], tag: str, testDocument: str,
@@ -54,7 +59,6 @@ class TestCase:
 
         self.ref = None
         global _currentTestId
-        self.outputImage: bytes | None = None
         self.addInfos = []
         self.id = _currentTestId
         _currentTestId += 1
@@ -66,24 +70,24 @@ class TestCase:
         self.help = caseProps.get("help", SUPPORTED_CASE_PROPS["help"])
         self.skipped = caseProps.get("skip", SUPPORTED_CASE_PROPS["skip"]) == "true"
 
-        self.inputPath: Path = TEST_REPORT / f"{self.id}.xhtml"  # path to test case's document
-        self.outputPath: Path = TEST_REPORT / f"{self.id}.bmp"  # path to the output image
+        self.inputPath = TEST_REPORT / f"{self.id}.xhtml"  # path to test case's document
+        self.outputPath = TEST_REPORT / f"{self.id}.bmp"  # path to the output image
         self.tag = tag  # test tag [rendering | error]
         self.testDocument = testDocument
 
-    def render(self, paperMuncher):  #
+    def render(self, paperMuncher) -> bytes:
         with self.inputPath.open("w") as f:
             f.write(f"<!DOCTYPE html>\n{self.testDocument}")
 
         runPaperMuncher(paperMuncher, self)
 
         with self.outputPath.open("rb") as imageFile:
-            self.outputImage = imageFile.read()
+            return imageFile.read()
 
     def run(self, paperMuncher, reference: TestReference) -> bool:
-        self.render(paperMuncher)
+        output = self.render(paperMuncher)
         self.ref = reference
-        return areImagesIdentical(reference.image, self.outputImage) == (self.tag == "rendering")
+        return areImagesIdentical(reference.image, output) == (self.tag == "rendering")
 
 
 def runPaperMuncher(executable, test: TestCase):

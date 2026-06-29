@@ -19,9 +19,9 @@ def fetchFile(manifests: model.Registry, component: str, path: str) -> str:
     Raises:
         AssertionError: If the specified component is not found in the registry.
     """
-    component = manifests.lookup(component, model.Component)
-    assert component is not None
-    p = Path(component.dirname()) / path
+    c = manifests.lookup(component, model.Component)
+    assert c is not None
+    p = Path(c.dirname()) / path
     with p.open() as f:
         return f.read()
 

@@ -2,9 +2,14 @@ from cutekit import model, vt100, const
 from pathlib import Path
 
 from ..utils import fetchMessage
-from ..Test import TestCase
-from .reporter import Reporter
+from ..test import TestCase,TestStatus
+from .base import Reporter
 
+STATUS = {
+    TestStatus.PASSED : f"{vt100.GREEN}·{vt100.RESET}",
+    TestStatus.FAILED:  f"{vt100.RED}⨯{vt100.RESET}",
+    TestStatus.SKIPPED:  f"{vt100.YELLOW}‣{vt100.RESET}",
+}
 
 class CLIReport(Reporter):
     """
@@ -14,20 +19,11 @@ class CLIReport(Reporter):
     def __init__(self, source_dir: Path, test_report: Path):
         self.test_report: Path = test_report
 
-    def addTestCase(self, test: TestCase, passed: bool):
-        if passed:
-            print(f"{vt100.GREEN}·{vt100.RESET}", end="", flush=True)
-        else:
-            print(f"{vt100.RED}⨯{vt100.RESET}", end="", flush=True)
+    def addTestCase(self, test: TestCase, status: TestStatus):
+        print(STATUS[status], end="", flush=True)
 
     def addTestCategory(self, props, file: Path, results):
         pass
-
-    def addSkippedFile(self, props):
-        print(f"{vt100.YELLOW}‣{vt100.RESET}", end="", flush=True)
-
-    def addSkippedCase(self, test: TestCase):
-        print(f"{vt100.YELLOW}‣{vt100.RESET}", end="", flush=True)
 
     def finish(self, manifests: model.Registry, results, context):
         print()

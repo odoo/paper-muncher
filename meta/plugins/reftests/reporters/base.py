@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 from cutekit import model
 from pathlib import Path
 
-from ..Test import TestCase
-
+from ..test import TestCase, TestStatus
 
 class Reporter(ABC):
     """
@@ -14,19 +13,11 @@ class Reporter(ABC):
         pass
 
     @abstractmethod
-    def addTestCase(self, test: TestCase, passed: bool, ):
+    def addTestCase(self, test: TestCase, status : TestStatus):
         pass
 
     @abstractmethod
     def addTestCategory(self, props, file: Path, results):
-        pass
-
-    @abstractmethod
-    def addSkippedFile(self, props):
-        pass
-
-    @abstractmethod
-    def addSkippedCase(self, test: TestCase):
         pass
 
     @abstractmethod

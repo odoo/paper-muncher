@@ -5,11 +5,11 @@ import dataclasses as dc
 import copy
 
 # Local imports
-from .reporters.WebReport import WebReport
-from .reporters.CLIReport import CLIReport
-from .reporters.ReportDispatcher import ReportDispatcher
-from .reporters.reporter import Reporter
-from .Test import TestCase, TestReference
+from .reporters.web import WebReport
+from .reporters.cli import CLIReport
+from .reporters.dispatcher import ReportDispatcher
+from .reporters.base import Reporter, TestStatus
+from .test import TestCase, TestReference
 
 SOURCE_DIR: Path = Path(__file__).parent
 TESTS_DIR: Path = SOURCE_DIR.parent.parent.parent / "tests"
@@ -104,6 +104,7 @@ DEFAULT_CONTAINER = '<container><html xmlns="http://www.w3.org/1999/xhtml"><body
 
 @dc.dataclass
 class TestCategory:
+    path : Path
     props: dict[str, str]
     testCases: list[TestCase]
 
@@ -154,7 +155,7 @@ class TestParser:
                     continue
 
                 htmlCopy = copy.deepcopy(html)
-                
+
                 slotCopy = htmlCopy.find(".//{*}slot")
                 parent = htmlCopy.find(".//{*}slot/..")
                 assert parent is not None and slotCopy is not None
@@ -172,8 +173,8 @@ class TestParser:
                 doc = ET.tostring(htmlCopy, encoding="unicode")
                 testCase = TestCase(test.attrib, case.tag, doc, case.attrib)
                 testCases.append(testCase)
-            
-            categories.append(TestCategory(test.attrib, testCases))
+
+            categories.append(TestCategory(path, test.attrib, testCases))
 
         return categories
 
@@ -187,11 +188,11 @@ class TestRunner:
 
     def _generateReferenceImage(self, testCase: TestCase) -> TestReference:
         """Generate reference image from a test case."""
-        testCase.render(self._context.paperMuncher)
+        output = testCase.render(self._context.paperMuncher)
         return TestReference(
             testCase.inputPath,
             testCase.outputPath,
-            testCase.outputImage
+            output
         )
 
     def _runSingleTestCase(self, test: TestCase, reference: TestReference, skipped: bool = False) -> bool:
@@ -209,7 +210,7 @@ class TestRunner:
         else:
             self._context.results.addPassed()
 
-        self._reporter.addTestCase(test, ok)
+        self._reporter.addTestCase(test, TestStatus.PASSED if ok else TestStatus.FAILED)
 
         return ok
 
@@ -227,7 +228,7 @@ class TestRunner:
 
             if testSkipped and not self._context.shouldRunSkipped():
                 categoryResults.addSkipped()
-                self._reporter.addSkippedCase(test)
+                self._reporter.addTestCase(test, TestStatus.SKIPPED)
                 continue
 
             success: bool = self._runSingleTestCase(test, reference, testSkipped)
