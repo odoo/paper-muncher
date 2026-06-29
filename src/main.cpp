@@ -85,7 +85,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     Cli::Command cmd{
         "paper-muncher"s,
-        "Convert web pages (HTML, XHTML, or SVG) into printable or viewable documents like PDFs or images."s,
+        "Convert web content into printable or viewable documents like PDFs or images."s,
         {
             runtimeSection,
             inOutSection,

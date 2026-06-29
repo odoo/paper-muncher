@@ -112,6 +112,11 @@ struct CalcValue {
 };
 
 export template <typename T>
+struct _Resolved<CalcValue<T>> {
+    using Type = _Resolved<T>;
+};
+
+export template <typename T>
 struct ValueParser<CalcValue<T>> {
     static Res<CalcValue<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())

@@ -361,7 +361,7 @@ export struct Computer {
             // The used values of that BODY element’s background properties are
             // their initial values, and the propagated values are treated
             // as if they were specified on the root element.
-            body->computedValues()->backgrounds = makeCow<BackgroundProps>();
+            body->computedValues()->backgrounds = {};
         }
     }
 
