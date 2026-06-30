@@ -26,6 +26,9 @@ struct Box : Meta::NoCopy {
     Opt<Rc<FormatingContext>> formatingContext = NONE;
     Opt<Dom::OriginatingElement> origin;
 
+    // White-space phase 2: collapsed space held until following line content materializes it.
+    bool pendingCollapsibleSpace = false;
+
     static Box fromInterruptedInlineBox(Box const& inlineBox) {
         auto oldProse = inlineBox.content.unwrap<Rc<Gfx::Prose>>();
         Rc<Gfx::Prose> prose = makeRc<Gfx::Prose>(oldProse->_style, oldProse->_currentSpan);
@@ -47,8 +50,11 @@ struct Box : Meta::NoCopy {
     }
 
     void add(Box&& box) {
-        if (auto it = content.is<Rc<Gfx::Prose>>())
+        if (auto it = content.is<Rc<Gfx::Prose>>()) {
             (*it)->append(Gfx::Prose::StrutCell{_children.len()});
+            // Atomic inline box ends the line's pending space; drop it to keep boxes gapless.
+            pendingCollapsibleSpace = false;
+        }
         _children.pushBack(std::move(box));
     }
 
