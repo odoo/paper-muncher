@@ -8,6 +8,7 @@ import :values.base;
 import :values.width;
 
 using namespace Karm;
+using namespace Karm::Math::Literals;
 
 namespace Vaev {
 
@@ -55,15 +56,30 @@ struct ValueParser<Position> {
     }
 };
 
-export using Margin = Math::Insets<Width>;
+export struct Margin : Math::Insets<Width> {
+    using Insets::Insets;
 
-export using Padding = Math::Insets<CalcValue<PercentOr<Length>>>;
+    Margin()
+        : Insets(Width(CalcValue<PercentOr<Length>>(Length(0_au)))) {}
+};
+
+export struct Padding : Math::Insets<CalcValue<PercentOr<Length>>> {
+    using Insets::Insets;
+
+    Padding()
+        : Padding(Length(0_au)) {}
+};
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-top
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-right
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-bottom
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-left
-export using Offsets = Math::Insets<Width>;
+export struct Offsets : Math::Insets<Width> {
+    using Insets::Insets;
+
+    Offsets()
+        : Offsets(Width(Keywords::AUTO)) {}
+};
 
 export template <typename T>
 struct ValueParser<Math::Insets<T>> {

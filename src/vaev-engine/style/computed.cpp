@@ -33,12 +33,12 @@ export struct ComputedValues {
     Cow<Gaps> gaps;
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
-    Cow<Margin> margin = makeCow<Margin>(Width(CalcValue<PercentOr<Length>>(Length(0_au)))); // FIXME
+    Cow<Margin> margin;
     Cow<OutlineProps> outline;
-    Cow<Padding> padding = makeCow<Padding>(Length(0_au)); // FIXME
+    Cow<Padding> padding;
     Cow<SizingProps> sizing;
     Cow<Baseline> baseline;
-    Cow<Offsets> offsets = makeCow<Offsets>(Width(Keywords::AUTO)); // FIXME
+    Cow<Offsets> offsets;
     Cow<ClipProps> clip;
     Cow<TransformProps> transform;
     Cow<TableProps> table;
