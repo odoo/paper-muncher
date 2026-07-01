@@ -45,7 +45,6 @@ export struct Input {
     /// Parent fragment where the layout will be attached.
     bool generateFragment = false;
     UsedSpacings usedSpacings = {};
-    IntrinsicSize intrinsic = IntrinsicSize::AUTO;
     Math::Vec2<Opt<Au>> knownSize = {};
     Vec2Au position = {};
     Vec2Au availableSpace = {};
@@ -61,12 +60,6 @@ export struct Input {
     // TODO: instead of stringing this around, maybe change this (and check method of fragmentainer) to a
     // "availableSpaceInFragmentainer" parameter
     Au pendingVerticalSizes = {};
-
-    Input withIntrinsic(IntrinsicSize i) const {
-        auto copy = *this;
-        copy.intrinsic = i;
-        return copy;
-    }
 
     Input withKnownSize(Math::Vec2<Opt<Au>> size) const {
         auto copy = *this;

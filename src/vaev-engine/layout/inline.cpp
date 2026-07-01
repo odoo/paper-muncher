@@ -34,6 +34,74 @@ struct InlineFormatingContext : FormatingContext {
         };
     }
 
+    enum struct StrutMeasureMode {
+        Fixed,
+        MinContent,
+        MaxContent,
+    };
+
+    void measureStrutCells(Tree& tree, Box& box, Rc<Gfx::Prose>& prose, StrutMeasureMode mode, bool generateFragment, Vec2Au containingBlock, Au fixedInlineSize = 0_au) {
+        for (auto strutCell : prose->cellsWithStruts()) {
+            auto& boxStrutCell = *strutCell->strut();
+            auto& atomicBox = box.children()[boxStrutCell.id];
+
+            if (atomicBox.isRemovedFromFlow())
+                continue;
+
+            UsedSpacings usedSpacings{
+                .padding = computePaddings(tree, atomicBox, containingBlock),
+                .borders = computeBorders(tree, atomicBox),
+            };
+
+            Au strutInline;
+            if (mode == StrutMeasureMode::Fixed) {
+                strutInline = fixedInlineSize;
+            } else {
+                auto childIntrinsic = computeIntrinsicInlineSizes(tree, atomicBox);
+                strutInline = (mode == StrutMeasureMode::MinContent)
+                                  ? childIntrinsic.minContent
+                                  : childIntrinsic.maxContent;
+            }
+
+            Input childInput{
+                .generateFragment = generateFragment,
+                .usedSpacings = usedSpacings,
+                .availableSpace = {strutInline, 0_au},
+                .containingBlock = containingBlock,
+            };
+
+            // Author-specified width/height still override the intrinsic constraint.
+            childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
+                tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
+                usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
+            );
+            childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
+                tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
+                usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
+            );
+
+            auto atomicBoxOutput = layoutBorderBox(tree, atomicBox, childInput);
+
+            boxStrutCell.size = atomicBoxOutput.size;
+            // FIXME: hard-coding alphabetic; missing alignment-baseline / dominant-baseline
+            boxStrutCell.baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
+        }
+    }
+
+    IntrinsicSizes intrinsicInlineContentSizes(Tree& tree, Box& box) override {
+        auto& prose = box.content.unwrap<Rc<Gfx::Prose>>();
+        Vec2Au cb = {0_au, 0_au};
+
+        // struts must be sized at THEIR min for min-content, THEIR max for max-content
+        measureStrutCells(tree, box, prose, StrutMeasureMode::MaxContent, false, cb);
+        Au maxContent = prose->maxContentWidth();
+
+        measureStrutCells(tree, box, prose, StrutMeasureMode::MinContent, false, cb);
+        Au minContent = prose->minContentWidth();
+
+        return {minContent, maxContent};
+    }
+
     Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
         auto fragBuilder = FragmentBuilder{tree, box};
 
@@ -42,61 +110,13 @@ struct InlineFormatingContext : FormatingContext {
             tree.fc.leaveMonolithicBox();
         };
 
-        auto inlineSize = input.knownSize.x.unwrapOrElse([&] {
-            if (input.intrinsic == IntrinsicSize::MIN_CONTENT) {
-                return 0_au;
-            } else if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
-                return Limits<Au>::MAX;
-            } else {
-                return input.availableSpace.x;
-            }
-        });
+        auto inlineSize = input.knownSize.x.unwrapOr(input.availableSpace.x);
 
         // NOTE: We are not supposed to get there if the content is not a prose
         auto& prose = box.content.unwrap<Rc<Gfx::Prose>>();
 
-        for (auto strutCell : prose->cellsWithStruts()) {
-            auto& boxStrutCell = *strutCell->strut();
-            auto& atomicBox = box.children()[boxStrutCell.id];
-
-            if (atomicBox.isRemovedFromFlow())
-                continue;
-
-            auto childContainingBlock = Vec2Au{
-                input.knownSize.x.unwrapOr(0_au),
-                input.knownSize.y.unwrapOr(0_au),
-            };
-
-            UsedSpacings usedSpacings{
-                .padding = computePaddings(tree, atomicBox, childContainingBlock),
-                .borders = computeBorders(tree, atomicBox),
-            };
-
-            Input childInput{
-                .generateFragment = input.generateFragment,
-                .usedSpacings = usedSpacings,
-                .availableSpace = {inlineSize, input.availableSpace.y},
-                .containingBlock = childContainingBlock,
-            };
-
-            childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
-                usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
-            );
-
-            childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
-                tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
-                usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
-            );
-
-            // NOTE: We set the same availableSpace to child inline boxes since line wrapping is possible i.e. in the
-            // worst case, they will take up the whole availableSpace, and a line break will be done right before them
-            auto atomicBoxOutput = layoutBorderBox(tree, atomicBox, childInput);
-
-            boxStrutCell.size = atomicBoxOutput.size;
-            // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
-            boxStrutCell.baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
-        }
+        auto childCb = Vec2Au{input.knownSize.x.unwrapOr(0_au), input.knownSize.y.unwrapOr(0_au)};
+        measureStrutCells(tree, box, prose, StrutMeasureMode::Fixed, input.generateFragment, childCb, inlineSize);
 
         // FIXME: prose has a ongoing state that is not reset between layout calls, but it should be
         prose->_blocksMeasured = false;

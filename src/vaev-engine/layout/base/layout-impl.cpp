@@ -51,6 +51,18 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     }
 }
 
+Opt<FormatingContext&> _getOrConstructFormatingContext(Tree& tree, Box& box) {
+    if (box.formatingContext == NONE) {
+        box.formatingContext = _constructFormatingContext(box);
+        if (box.formatingContext)
+            box.formatingContext.unwrap()->build(tree, box);
+    }
+    if (auto& [formatingContext] = box.formatingContext)
+        return *formatingContext;
+
+    return NONE;
+}
+
 Output _dispatchFormatingContext(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) {
     if (box.formatingContext == NONE) {
         box.formatingContext = _constructFormatingContext(box);
@@ -141,27 +153,97 @@ Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size) {
     return res;
 }
 
-Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin) {
-    if (intrinsic == IntrinsicSize::AUTO) {
-        panic("bad argument");
+IntrinsicSizes computeIntrinsicInlineSizes(Tree& tree, Box& box) {
+    // FIXME: Might not always be the right axis depending on writing mode.
+    auto size = box.style->sizing->width;
+
+    if (auto calc = size.is<CalcValue<PercentOr<Length>>>()) {
+        Au contentWidth = resolve(tree, box, *calc, 0_au);
+
+        if (box.style->boxSizing == BoxSizing::BORDER_BOX) {
+            auto paddings = computePaddings(tree, box, {});
+            auto borders = computeBorders(tree, box);
+            contentWidth = max(0_au, contentWidth - paddings.horizontal() - borders.horizontal());
+        }
+
+        return IntrinsicSizes{contentWidth, contentWidth};
     }
 
-    auto output = _dispatchFormatingContext(
-        tree,
-        box,
-        {
-            .intrinsic = intrinsic,
-            .knownSize = {NONE, NONE},
-            .capmin = capmin,
-        },
-        0,
-        NONE
-    );
+    auto formatingContext = _getOrConstructFormatingContext(tree, box);
+    if (!formatingContext)
+        return IntrinsicSizes{};
 
-    return output.size;
+    auto intrinsicSizes = formatingContext->intrinsicInlineContentSizes(tree, box);
+
+    if (size.is<Keywords::Auto>()) {
+        return intrinsicSizes;
+    }
+
+    if (size.is<Keywords::MinContent>()) {
+        return IntrinsicSizes{intrinsicSizes.minContent, intrinsicSizes.minContent};
+    }
+
+    if (size.is<Keywords::MaxContent>()) {
+        return IntrinsicSizes{intrinsicSizes.maxContent, intrinsicSizes.maxContent};
+    }
+
+    // TODO: Fit content
+    unreachable();
 }
 
-Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
+Au computeIntrinsicBlockSize(Tree& tree, Box& box, Au inlineSize) {
+    // FIXME: Might not always be the right axis depending on writing mode.
+    auto size = box.style->sizing->height;
+
+    if (auto calc = size.is<CalcValue<PercentOr<Length>>>()) {
+        Au contentHeight = resolve(tree, box, *calc, 0_au);
+
+        if (box.style->boxSizing == BoxSizing::BORDER_BOX) {
+            auto paddings = computePaddings(tree, box, {});
+            auto borders = computeBorders(tree, box);
+            contentHeight = max(0_au, contentHeight - paddings.vertical() - borders.vertical());
+        }
+
+        return contentHeight;
+    }
+
+    auto formatingContext = _getOrConstructFormatingContext(tree, box);
+    if (!formatingContext)
+        return 0_au;
+
+    auto input = Input{
+        .generateFragment = false,
+        .knownSize = {inlineSize, NONE},
+        .availableSpace = Vec2Au{inlineSize, Limits<Au>::MAX},
+        .containingBlock = {inlineSize, 0_au},
+    };
+
+    auto output = formatingContext->run(tree, box, input, 0, NONE);
+
+    return output.size.height;
+}
+
+// Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin) {
+//     if (intrinsic == IntrinsicSize::AUTO) {
+//         panic("bad argument");
+//     }
+//
+//     auto output = _dispatchFormatingContext(
+//         tree,
+//         box,
+//         {
+//             .intrinsic = intrinsic,
+//             .knownSize = {NONE, NONE},
+//             .capmin = capmin,
+//         },
+//         0,
+//         NONE
+//     );
+//
+//     return output.size;
+// }
+
+Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au>) {
     if (auto calc = size.is<CalcValue<PercentOr<Length>>>()) {
         auto specifiedWidth = resolve(tree, box, *calc, containingBlock.x);
         if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
@@ -171,17 +253,13 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au c
     }
 
     if (size.is<Keywords::MinContent>()) {
-        auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
-        return intrinsicSize.x + horizontalBorderBox;
+        auto intrinsicSize = computeIntrinsicInlineSizes(tree, box).minContent;
+        return intrinsicSize + horizontalBorderBox;
     } else if (size.is<Keywords::MaxContent>()) {
-        auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
-        return intrinsicSize.x + horizontalBorderBox;
-    } else if (size.is<FitContent>()) {
-        auto minIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
-        auto maxIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
-        auto stretchIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, capmin);
-
-        return clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x) + horizontalBorderBox;
+        auto intrinsicSize = computeIntrinsicInlineSizes(tree, box).maxContent;
+        return intrinsicSize + horizontalBorderBox;
+    } else if (auto it = size.is<FitContent>()) {
+        return computeFitContentInlineSize(tree, box, resolve(tree, box, it->value, containingBlock.x));
     } else if (size.is<Keywords::Auto>()) {
         return NONE;
     } else {
