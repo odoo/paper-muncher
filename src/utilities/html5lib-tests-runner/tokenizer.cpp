@@ -212,7 +212,7 @@ export Res<Result> run(Str inputStr) {
     Gc::Heap gc;
     Serde::Array actual;
     for (auto const& state : initialStates) {
-        auto dom = gc.alloc<Dom::Document>(Ref::Url());
+        auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
 
         HtmlParser parser{gc, dom};
         parser._lexer._lastStartTag = lastStartTag;
