@@ -1,0 +1,19 @@
+/* https://github.blog/changelog/2021-11-24-specify-theme-context-for-images-in-markdown/ */
+img[src$="#gh-dark-mode-only"] {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    img[src$="#gh-light-mode-only"] {
+        display: none;
+    }
+
+    img[src$="#gh-dark-mode-only"] {
+        display: block;
+    }
+
+    :root {
+        background-color: black;
+        color: white;
+    }
+}

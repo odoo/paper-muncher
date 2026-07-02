@@ -31,6 +31,7 @@ export struct Document : Node {
     static constexpr auto TYPE = NodeType::DOCUMENT;
 
     Ref::Url _url;
+    Ref::Uti _uti;
     QuirkMode quirkMode = QuirkMode::NO;
 
     String xmlVersion;
@@ -45,8 +46,8 @@ export struct Document : Node {
 
     Opt<Rc<Font::Database>> fontDatabase;
 
-    Document(Ref::Url url)
-        : _url(url) {
+    Document(Ref::Url url, Ref::Uti uti)
+        : _url(url), _uti(uti) {
     }
 
     NodeType nodeType() const override {
@@ -65,6 +66,11 @@ export struct Document : Node {
 
     Ref::Url const& url() const {
         return _url;
+    }
+
+    // https://dom.spec.whatwg.org/#ref-for-dom-document-contenttype%E2%91%A0
+    Ref::Uti contentType() const {
+        return _uti;
     }
 
     // https://dom.spec.whatwg.org/#document-element
