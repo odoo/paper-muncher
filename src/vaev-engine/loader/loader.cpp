@@ -22,7 +22,6 @@ import :style;
 namespace Vaev::Loader {
 
 Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url url, Rc<Http::Response> resp, Async::CancellationToken ct) {
-    auto dom = heap.alloc<Dom::Document>(url);
     auto contentType = resp->header.contentType().unwrapOr(Ref::Uti::PUBLIC_DATA);
 
     if (contentType == Ref::Uti::PUBLIC_DATA)
@@ -47,6 +46,7 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url 
         logWarn("{} has unspecified content type, sniffing yielded '{}'", url, contentType);
     }
 
+    auto dom = heap.alloc<Dom::Document>(url, contentType);
     if (contentType.conformsTo(Ref::Uti::PUBLIC_HTML)) {
         Html::HtmlParser parser{heap, dom};
         parser.write(body, diags);
@@ -93,7 +93,7 @@ export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http:
     auto respBody = resp->body.unwrap();
     auto buf = co_trya$(Aio::readAllUtf8Async(*respBody, ct));
 
-    auto dom = heap.alloc<Dom::Document>(url);
+    auto dom = heap.alloc<Dom::Document>(url, Ref::Uti::PUBLIC_HTML);
     auto body = heap.alloc<Dom::Element>(Html::BODY_TAG);
     dom->appendChild(body);
     auto pre = heap.alloc<Dom::Element>(Html::PRE_TAG);
@@ -214,6 +214,11 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
     if (dom->quirkMode == Dom::QuirkMode::YES) {
         logWarn("quirky document, using quirky stylesheet");
         stylesheets->add((co_await _fetchStylesheetAsync(dom->registeredPropertySet, client, "bundle://vaev-engine/html-quirk.css"_url, Style::Origin::USER_AGENT, ct))
+                             .take("user agent stylesheet not available"));
+    }
+
+    if (dom->contentType() == Ref::Uti::PUBLIC_MARKDOWN) {
+        stylesheets->add((co_await _fetchStylesheetAsync(dom->registeredPropertySet, client, "bundle://vaev-engine/markdown.css"_url, Style::Origin::USER_AGENT, ct))
                              .take("user agent stylesheet not available"));
     }
 
