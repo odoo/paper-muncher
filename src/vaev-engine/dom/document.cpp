@@ -3,6 +3,8 @@ export module Vaev.Engine:dom.document;
 import Karm.Gc;
 import Karm.Ref;
 import Karm.Font;
+import Karm.Sys;
+
 import :dom.node;
 import :dom.element;
 import :props.base;
@@ -51,7 +53,7 @@ export struct Document : Node {
         return TYPE;
     }
 
-    String title() {
+    String title() const {
         for (auto node : iterDepthFirst()) {
             if (auto element = node->is<Element>())
                 if (element->qualifiedName == Html::TITLE_TAG) {
@@ -90,6 +92,14 @@ export struct Document : Node {
         }
 
         return nullptr;
+    }
+
+    Rc<Style::ComputedValues> initialComputedValues() const {
+        auto initialStyle = registeredPropertySet.initialComputedValues();
+        initialStyle->setCustomProp("-vaev-url", {Css::Token::string(Io::format("\"{}\"", url()))});
+        initialStyle->setCustomProp("-vaev-title", {Css::Token::string(Io::format("\"{}\"", title()))});
+        initialStyle->setCustomProp("-vaev-datetime", {Css::Token::string(Io::format("\"{}\"", Sys::now()))});
+        return initialStyle;
     }
 };
 

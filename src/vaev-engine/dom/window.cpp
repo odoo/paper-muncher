@@ -108,8 +108,8 @@ export struct Window {
     }
 
     [[clang::coro_wrapper]]
-    Yield<Print::Page> print(Print::Settings const& settings) const {
-        return Driver::print(_heap, _document.upgrade(), settings);
+    Yield<Print::Page> print(Print::Settings const& settings, Opt<Driver::PageDecorator&> decorator = NONE) const {
+        return Driver::print(_heap, _document.upgrade(), settings, decorator);
     }
 };
 

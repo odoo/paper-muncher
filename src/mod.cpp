@@ -81,15 +81,18 @@ export struct Option {
     Opt<Vaev::Color> background = NONE;
     Print::PaperStock stock = Print::A4;
     Print::Orientation orientation = Print::Orientation::PORTRAIT;
-    Print::Margins margins = Print::Margins::DEFAULT;
+    Union<Print::MarginOption, Math::Insets<Vaev::Length>> margins = Print::MarginOption::DEFAULT;
     Ref::Uti outputFormat = Ref::Uti::PUBLIC_DATA;
     Batch batch = Batch::CONCAT;
     Flow flow = Flow::AUTO;
     Extend extend = Extend::CROP;
+    Opt<Ref::Url> header = NONE;
+    Opt<Ref::Url> footer = NONE;
+    Union<Vaev::Keywords::Auto, Vaev::Length> headerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::Length> footerSize = Vaev::Keywords::AUTO;
 
     auto derivePrintSettings() const -> Print::Settings {
         Vaev::Layout::Resolver resolver;
-        resolver.viewport.dpi = this->density;
 
         auto stock = this->stock;
         if (this->width or this->height)
@@ -98,10 +101,22 @@ export struct Option {
                 this->height ? resolver.resolve(*this->height) : stock.majorAxis
             );
 
+        Print::Margins margins = Print::MarginOption::DEFAULT;
+        this->margins.visit(
+            [&](Print::MarginOption n) {
+                margins = n;
+            },
+            [&](Math::Insets<Vaev::Length> const& insets) {
+                margins = insets.map([&](Vaev::Length l) {
+                    return resolver.resolve(l);
+                });
+            }
+        );
+
         return {
             .stock = stock,
             .orientation = this->orientation,
-            .margins = this->margins,
+            .margins = margins,
             .scale = this->scale.toDppx(),
         };
     }
@@ -114,6 +129,64 @@ export struct Option {
             {width, height},
             this->scale
         );
+    }
+};
+
+struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
+    Opt<Rc<Vaev::Dom::Window>> headerWindow;
+    Opt<Rc<Vaev::Dom::Window>> footerWindow;
+    Union<Vaev::Keywords::Auto, Vaev::Length> headerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::Length> footerSize = Vaev::Keywords::AUTO;
+    Map<Math::Vec2Au, Pair<Vaev::Au>> _memo;
+
+    Vaev::RectAu layout(Vaev::Style::Media const& media, Vaev::Driver::PageLayoutInfos const& infos) override {
+        auto [headerHeight, footerHeight] = _memo.lookupOrPut(infos.pageDecoration.size(), [&] {
+            Vaev::Layout::Resolver resolver;
+            Vaev::Au headerHeight = 0_au;
+            Vaev::Au footerHeight = 0_au;
+
+            if (headerSize == Vaev::Keywords::AUTO) {
+                if (auto& [w] = headerWindow) {
+                    w->changeMedia(media);
+                    w->changeViewport(infos.pageDecoration.size());
+                    headerHeight = w->ensureRender().frag->borderBox().height;
+                }
+            } else {
+                headerHeight = resolver.resolve(headerSize.unwrap<Vaev::Length>());
+            }
+
+            if (footerSize == Vaev::Keywords::AUTO) {
+                if (auto& [w] = footerWindow) {
+                    w->changeMedia(media);
+                    w->changeViewport(infos.pageDecoration.size());
+                    footerHeight = w->ensureRender().frag->borderBox().height;
+                }
+            } else {
+                footerHeight = resolver.resolve(footerSize.unwrap<Vaev::Length>());
+            }
+
+            return Pair{headerHeight, footerHeight};
+        });
+        return infos.pageDecoration.shrink({headerHeight, 0_au, footerHeight});
+    }
+
+    void decorate(Vaev::Style::Media const& media, Vaev::Driver::PageLayoutInfos const& infos, [[maybe_unused]] usize pageCount, Scene::Stack& pageStack) override {
+        auto decorationWidth = infos.pageDecoration.width;
+        auto [headerHeight, footerHeight] = _memo.lookup(infos.pageDecoration.size()).unwrap();
+
+        if (auto& [w] = headerWindow) {
+            w->changeMedia(media);
+            w->changeViewport({decorationWidth, headerHeight});
+            auto tranform = Math::Trans2f::translate(infos.pageDecoration.topStart().cast<f64>());
+            pageStack.add(makeRc<Scene::Transform>(w->render(), tranform));
+        }
+
+        if (auto& [w] = footerWindow) {
+            w->changeMedia(media);
+            w->changeViewport({decorationWidth, footerHeight});
+            auto transform = Math::Trans2f::translate((infos.pageDecoration.bottomStart() - Math::Vec2Au{0_au, footerHeight}).cast<f64>());
+            pageStack.add(makeRc<Scene::Transform>(w->render(), transform));
+        }
     }
 };
 
@@ -130,8 +203,28 @@ Async::Task<> runSingleAsync(
 
     logInfo("rendering {}...", input);
     if (options.flow == Flow::PAGINATE) {
+        Vaev::Layout::Resolver resolver;
+        HeaderFooterDecorator decorator;
+        if (auto& [header] = options.header) {
+            logInfo("loading header {}...", header);
+            auto window = Vaev::Dom::Window::create(client);
+            co_trya$(window->loadLocationAsync(header, Ref::Uti::PUBLIC_OPEN, ct));
+            decorator.headerWindow = window;
+        }
+
+        decorator.headerSize = options.headerSize;
+
+        if (auto& [footer] = options.footer) {
+            logInfo("loading footer {}...", footer);
+            auto window = Vaev::Dom::Window::create(client);
+            co_trya$(window->loadLocationAsync(footer, Ref::Uti::PUBLIC_OPEN, ct));
+            decorator.footerWindow = window;
+        }
+
+        decorator.footerSize = options.footerSize;
+
         auto settings = options.derivePrintSettings();
-        window->print(settings) | ForEach([&](Print::Page& page) {
+        window->print(settings, decorator) | ForEach([&](Print::Page& page) {
             page.print(
                 output,
                 {.showBackgroundGraphics = true}
@@ -200,7 +293,13 @@ export Async::Task<> runBatchAsync(
             )
         );
         for (auto& input : inputs)
-            co_trya$(runSingleAsync(client, input, *printer, options, ct));
+            co_trya$(runSingleAsync(
+                client,
+                input,
+                *printer,
+                options,
+                ct
+            ));
         logInfo("saving {}...", output);
         Io::BufferWriter bw;
         co_try$(printer->write(bw));

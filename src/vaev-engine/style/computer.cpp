@@ -367,7 +367,7 @@ export struct Computer {
 
     void styleDocument(Dom::Document& doc) {
         if (auto el = doc.documentElement()) {
-            auto rootComputedValues = _registeredPropertySet.initialComputedValues();
+            auto rootComputedValues = doc.initialComputedValues();
             rootComputedValues->fontFace = _lookupFontface(*rootComputedValues);
             styleElement(*rootComputedValues, *el);
         }

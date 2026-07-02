@@ -164,20 +164,17 @@ struct Tree : Meta::Pinned {
 
     // Iteration ---------------------------------------------------------------
 
-    Yield<Gc::Ref<Node>> iterDepthFirst(this auto& self) {
-        co_yield Gc::Ref(self);
+    template <typename Self>
+    auto iterDepthFirst(this Self& self) -> Yield<Gc::Ref<Meta::CopyConst<Self, Node>>> {
+        co_yield self;
         for (auto child = self.firstChild(); child; child = child->nextSibling())
             for (auto i : child->iterDepthFirst())
                 co_yield i;
     }
 
-    Yield<Gc::Ref<Node>> iterChildren() {
-        for (auto child = firstChild(); child; child = child->nextSibling())
-            co_yield child.upgrade();
-    }
-
-    Yield<Gc::Ref<Node>> iterChildren() const {
-        for (auto child = firstChild(); child; child = child->nextSibling())
+    template <typename Self>
+    auto iterChildren(this Self& self) -> Yield<Gc::Ref<Meta::CopyConst<Self, Node>>> {
+        for (auto child = self.firstChild(); child; child = child->nextSibling())
             co_yield child.upgrade();
     }
 };

@@ -7,7 +7,7 @@
             "tag": "v0.14.0"
         },
         "cute-engineering/ce-bootfs": {
-            "commit": "1ca848e2f9d4c82f8d699fe077e20470d869ff24",
+            "commit": "07f00223a9dc333ce81e11016887331b11d8e78b",
             "git": "https://codeberg.org/cute-engineering/ce-bootfs.git",
             "tag": "v0.3.0"
         },
@@ -32,7 +32,7 @@
             "tag": "v0.8.0"
         },
         "cute-engineering/ce-stdcpp": {
-            "commit": "824e797c2dc6d546fe106d6e80d8c040d45b71cd",
+            "commit": "e92e902d4b3ebad8c79cebc7e059b7a1b4f075ff",
             "git": "https://codeberg.org/cute-engineering/ce-stdcpp.git",
             "tag": "v1.9.0"
         },
@@ -47,7 +47,7 @@
             "tag": "v0.2.0"
         },
         "skift/karm": {
-            "commit": "be96a8067cc0a4b85cc5c09e04f85d2c4f3bc492",
+            "commit": "1eed20ea4c16b4336d1f67401d14f4070ca8fca8",
             "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
         }
