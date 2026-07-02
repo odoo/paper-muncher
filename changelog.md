@@ -2,6 +2,12 @@
 
 ## Changes
 
+- Added --header, --footer, --header-size, and --footer-size flags to the CLI.
+- --margins "<left> <top> <right> <bottom>" is now supported in the CLI.
+- Fixed a crash related to missing table cells.
+- Improved the handling of guaranteed invalid CSS properties.
+- Dumped the backtrace to stderr when panicking.
+- Greatly improved support for markdown.
 - Removed Herobrine.
 
 [GitHub Link](https://github.com/odoo/paper-muncher/)
