@@ -208,6 +208,9 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
     auto dom = co_trya$(_loadDocumentAsync(heap, url, resp, ct));
     auto stylesheets = heap.alloc<Style::StyleSheetList>();
 
+    stylesheets->add((co_await _fetchStylesheetAsync(dom->registeredPropertySet, client, "bundle://vaev-engine/counters.css"_url, Style::Origin::USER_AGENT, ct))
+                         .take("user agent stylesheet not available"));
+
     stylesheets->add((co_await _fetchStylesheetAsync(dom->registeredPropertySet, client, "bundle://vaev-engine/html.css"_url, Style::Origin::USER_AGENT, ct))
                          .take("user agent stylesheet not available"));
 

@@ -338,11 +338,18 @@ struct BlockFormatingContext : FormatingContext {
             if (box.style->text->align == TextAlign::BLOCK_CENTER)
                 childInput.position.x += inlineSize / 2 - layoutBorderBox(tree, c, childInput.withGenerateFragment(false)).width() / 2;
 
+            if (c.isPseudoElement(Dom::PseudoElement::MARKER)) {
+                // NOSPEC: The spec doesn't define where the marker should be placed.
+                auto width = computeIntrinsicContentSize(tree, c, IntrinsicSize::MAX_CONTENT).x;
+                childInput.position.x -= width * 2.5;
+                childInput.knownSize.x = width;
+            }
+
             auto output = layoutBorderBox(tree, c, childInput);
             if (auto [frag] = output.fragment)
                 fragBuilder.addChild(frag);
 
-            if (not c.isRemovedFromFlow()) {
+            if (not(c.isRemovedFromFlow() or c.isPseudoElement(Dom::PseudoElement::MARKER))) {
                 blockSize += output.size.y + usedSpacings.margin.bottom;
                 lastMarginBottom = usedSpacings.margin.bottom;
             }

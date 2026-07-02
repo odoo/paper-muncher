@@ -8,12 +8,13 @@ import Karm.Core;
 import :css;
 import :values.keywords;
 import :values.primitives;
+import :values.counter;
 
 namespace Vaev {
 
 // https://www.w3.org/TR/css-content-3/
 // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
-export struct ElementContent {
+export struct ElementFunc {
     enum struct Target {
         UNDEFINED,
         FIRST,
@@ -25,7 +26,7 @@ export struct ElementContent {
     CustomIdent customIdent = {""_sym};
     Target target = Target::UNDEFINED;
 
-    explicit ElementContent(CustomIdent customIdent, Target target = Target::UNDEFINED)
+    explicit ElementFunc(CustomIdent customIdent, Target target = Target::UNDEFINED)
         : customIdent(customIdent), target(target) {}
 
     void repr(Io::Emit& e) const {
@@ -33,24 +34,13 @@ export struct ElementContent {
     }
 };
 
-// https://drafts.csswg.org/css-lists/#auto-numbering
-export struct Counter {
-    enum struct Type {
-        PAGE,
-    };
-    Type type = Type::PAGE;
-
-    void repr(Io::Emit& e) const {
-        e("counter (type:'{}')", type);
-    }
-};
-
 export using Content = Union<
     Keywords::Normal,
     Keywords::None,
-    ElementContent,
     String,
-    Counter>;
+    ElementFunc,
+    CounterFunc,
+    CountersFunc>;
 
 export template <>
 struct ValueParser<Content> {
@@ -66,16 +56,15 @@ struct ValueParser<Content> {
             return Ok(String{"“"});
         else if (c.skip(Css::Token::ident("close-quote")))
             return Ok(String{"”"});
-        else if (c->type == Css::Sst::FUNC and c->prefix == Css::Token::function("element(")) {
+        else if (c->prefix == Css::Token::function("element(")) {
             Cursor<Css::Sst> cur = c->content;
-            auto element = try$(parseValue<ElementContent>(cur));
+            auto element = try$(parseValue<ElementFunc>(cur));
             c.next();
             return Ok(element);
-        } else if (c->type == Css::Sst::FUNC and c->prefix == Css::Token::function("counter(")) {
-            Cursor<Css::Sst> cur = c->content;
-            auto element = try$(parseValue<Counter>(cur));
-            c.next();
-            return Ok(element);
+        } else if (c->prefix == Css::Token::function("counter(")) {
+            return parseValue<CounterFunc>(c);
+        } else if (c->prefix == Css::Token::function("counters(")) {
+            return parseValue<CountersFunc>(c);
         } else if (c->type == Css::Sst::TOKEN and c->token.type == Css::Token::STRING) {
             return Ok(try$(parseValue<String>(c)));
         } else
@@ -84,9 +73,9 @@ struct ValueParser<Content> {
 };
 
 export template <>
-struct ValueParser<ElementContent> {
+struct ValueParser<ElementFunc> {
     // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
-    static Res<ElementContent> parse(Cursor<Css::Sst>& c) {
+    static Res<ElementFunc> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -97,40 +86,23 @@ struct ValueParser<ElementContent> {
         }
 
         if (c.ended())
-            return Ok(ElementContent{ident.take()});
+            return Ok(ElementFunc{ident.take()});
 
         skipOmmitableComma(c);
 
-        ElementContent::Target target = ElementContent::Target::UNDEFINED;
+        ElementFunc::Target target = ElementFunc::Target::UNDEFINED;
         if (c.skip(Css::Token::ident("first"))) {
-            target = ElementContent::Target::FIRST;
+            target = ElementFunc::Target::FIRST;
         } else if (c.skip(Css::Token::ident("last"))) {
-            target = ElementContent::Target::LAST;
+            target = ElementFunc::Target::LAST;
         } else if (c.skip(Css::Token::ident("start"))) {
-            target = ElementContent::Target::START;
+            target = ElementFunc::Target::START;
         } else if (c.skip(Css::Token::ident("first-except"))) {
-            target = ElementContent::Target::FIRST_EXCEPT;
+            target = ElementFunc::Target::FIRST_EXCEPT;
         }
 
         eatWhitespace(c);
-        return (Ok(ElementContent{ident.take(), target}));
-    }
-};
-
-export template <>
-struct ValueParser<Counter> {
-    // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
-    static Res<Counter> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        Counter::Type type = Counter::Type::PAGE;
-        if (c.skip(Css::Token::ident("page"))) {
-            type = Counter::Type::PAGE;
-        } else {
-            return Error::invalidData("unsupported counter");
-        }
-        return (Ok(Counter{type}));
+        return (Ok(ElementFunc{ident.take(), target}));
     }
 };
 

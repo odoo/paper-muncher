@@ -17,7 +17,6 @@ Res<T> _parseDeclarationValue(Cursor<Css::Sst>& c) {
     if constexpr (requires { T{}.parse(c); }) {
         T t;
         try$(t.parse(c));
-
         return Ok(std::move(t));
     } else {
         return Error::notImplemented("missing parser for declaration");
@@ -31,12 +30,8 @@ Res<P> _parseDeclaration(Css::Sst const& sst) {
     eatWhitespace(content);
     P prop = try$(_parseDeclarationValue<T>(content));
 
-    if constexpr (requires { P::important; })
-        prop.important = sst.important;
-
-    if (not content.ended()) {
+    if (not content.ended())
         return Error::invalidData("unknown tokens in content");
-    }
 
     return Ok(std::move(prop));
 }
@@ -68,15 +63,14 @@ Vec<P> parseDeclarations(Css::Content const& sst) {
     Vec<P> res;
 
     for (auto const& item : sst) {
-        if (item != Css::Sst::DECL) {
+        if (item != Css::Sst::DECL)
             continue;
-        }
 
         auto prop = parseDeclaration<P>(item);
 
-        if (not prop) {
+        if (not prop)
             continue;
-        }
+
         res.pushBack(prop.take());
     }
 
