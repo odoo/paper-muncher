@@ -335,7 +335,7 @@ struct DeferredProperty : Property {
         if (Opt<Css::Content> ref = env.lookup(varName)) {
             Cursor<Css::Sst> varContent = *ref;
 
-            if (varContent.peek() != Css::Token::GUARANTEED_INVALID) {
+            if (varContent and varContent.peek() != Css::Token::GUARANTEED_INVALID) {
                 try$(_expandContent(varContent, env, out, depth));
                 return Ok(true);
             }
