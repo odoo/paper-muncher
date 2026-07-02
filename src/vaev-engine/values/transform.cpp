@@ -446,7 +446,8 @@ export using TransformFunction = Union<
 // MARK: Transform -------------------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#propdef-transform
 
-export using Transform = Union<Keywords::None, Vec<TransformFunction>>;
+export using TransformList = Vec<TransformFunction>;
+export using Transform = Union<Keywords::None, TransformList>;
 
 export template <>
 struct ValueParser<Transform> {

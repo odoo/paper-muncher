@@ -19,6 +19,8 @@ import :dom.element;
 import :layout.values;
 import :layout.svg;
 
+using namespace Karm::Fmt::Literals;
+
 namespace Vaev::Layout {
 
 static constexpr bool DEBUG_BUILDER = false;
@@ -836,6 +838,12 @@ static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc:
 
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent) {
     auto el = parent->is<Dom::Element>();
+    if (el->computedValues()->display == Display::Item::YES) {
+        if (auto marker = el ? el->getPseudoElement(Dom::PseudoElement::MARKER) : NONE) {
+            _buildPseudoElement(bc, marker.unwrap());
+        }
+    }
+
     if (auto before = el ? el->getPseudoElement(Dom::PseudoElement::BEFORE) : NONE) {
         _buildPseudoElement(bc, before.unwrap());
     }
@@ -920,18 +928,70 @@ export Box _buildBlockPseudoElement(Gc::Ref<Dom::PseudoElement> el) {
 static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> pseudoElement) {
     auto style = pseudoElement->computedValues();
     auto display = style->display;
+
     if (display == Display::NONE)
         return;
+
+    bool isBeforeOrAfter = (pseudoElement->type == Dom::PseudoElement::BEFORE or pseudoElement->type == Dom::PseudoElement::AFTER);
+    if (isBeforeOrAfter and (style->content.is<Keywords::Normal>() or style->content.is<Keywords::None>()))
+        return;
+
+    auto generateInnerContent = [&](BuilderContext& innerBc) {
+        if (pseudoElement->type == Dom::PseudoElement::MARKER and style->content.is<Keywords::Normal>()) {
+            String marker = ""s;
+            auto listStyleType = pseudoElement->element()->computedValues()->list->type;
+            if (listStyleType == CustomIdent{"disc"_sym}) {
+                // NOSPEC: By default chrome and other browser seems to make this a bit larger
+                style->transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
+                marker = "\u2022"s;
+            } else if (listStyleType == CustomIdent{"circle"_sym}) {
+                // NOSPEC: By default chrome and other browser seems to make this a bit larger
+                style->transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
+                marker = "\u25E6"s;
+            } else if (listStyleType == CustomIdent{"square"_sym}) {
+                // NOSPEC: By default chrome and other browser seems to make this a bit larger
+                style->transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
+                marker = "\u25AA"s;
+            } else if (listStyleType == CustomIdent{"decimal"_sym}) {
+                auto value =
+                    pseudoElement->element()->counters.innerMostValue(CustomIdent{"list-item"_sym});
+                marker = Io::format("{}.", value);
+            }
+            _buildText(innerBc, marker.str(), style);
+        } else if (style->content.is<String>()) {
+            // TODO: Expand this to iterate over a Vector of content items (Strings, URLs, Counters)
+            _buildText(innerBc, style->content.unwrap<String>().str(), style);
+        }
+    };
 
     if (display == Display::INLINE or
         display == Display::CONTENTS) {
         bc.startInlineBox(_spanStyleFromStyle(*style));
-        if (auto maybeStr = style->content.is<String>())
-            _buildText(bc, maybeStr->str(), style);
+        generateInnerContent(bc);
         bc.endInlineBox();
     } else {
         bc.flushRootInlineBoxIntoAnonymousBox();
-        bc.addToParentBox(_buildBlockPseudoElement(pseudoElement));
+        Box pseudoBox = {style, pseudoElement};
+
+        auto proseStyle = _proseStyleFromStyle(*style);
+        auto spanStyle = _spanStyleFromStyle(*style);
+
+        Box pseudoBoxInlineBox = {
+            style,
+            makeRc<Gfx::Prose>(proseStyle, spanStyle),
+            NONE,
+        };
+
+        BuilderContext pseudoBc = (display == Display::Inside::FLEX)
+                                      ? bc.toFlexContext(pseudoBox, pseudoBoxInlineBox)
+                                      : bc.toBlockContext(pseudoBox, pseudoBoxInlineBox);
+
+        pseudoBc.startInlineBox(spanStyle);
+        generateInnerContent(pseudoBc);
+        pseudoBc.endInlineBox();
+
+        pseudoBc.finalizeParentBoxAndFlushInline();
+        bc.addToParentBox(std::move(pseudoBox));
     }
 }
 
@@ -988,19 +1048,23 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, Runnin
         auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
         prose->append(style->content.unwrap<String>().str());
         return Box{style, prose, el};
-    } else if (style->content.is<ElementContent>()) {
-        auto elt = style->content.unwrap<ElementContent>();
+    } else if (style->content.is<ElementFunc>()) {
+        auto elt = style->content.unwrap<ElementFunc>();
         if (auto infos = runningPos.match(elt, pageNumber)) {
             Box box = buildElement(infos.unwrap().element);
             box.style->position = Keywords::STATIC;
             return box;
         }
-    } else if (auto elt = style->content.is<Counter>()) {
-        if (elt->type == Counter::Type::PAGE) {
-            auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
+    } else if (auto it = style->content.is<CounterFunc>()) {
+        auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
+        if (it->name == CustomIdent{"page"_sym}) {
+            // FIXME: Special case for the page counter for now, remove this once we figure out the pseudo element tree for page margins
             prose->append(Io::toStr(pageNumber).str());
-            return Box{style, prose, el};
+        } else {
+            auto maybeCounter = el->counters.innerMost(it->name).v0;
+            prose->append("{}"_f(maybeCounter ? maybeCounter->value : 0).str());
         }
+        return {style, prose, el};
     }
 
     return {style, el};

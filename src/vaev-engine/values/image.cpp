@@ -7,6 +7,7 @@ import Karm.Math;
 import :values.angle;
 import :values.color;
 import :values.percent;
+import :values.flex;
 
 // https://www.w3.org/TR/css-images-4/
 
@@ -101,19 +102,20 @@ export struct CrossFade {
 };
 
 // MARK: Stripes ---------------------------------------------------------------
+
+// https://www.w3.org/TR/css-images-4/#typedef-color-stripex
+export struct ColorStrip {
+    Gfx::Color color;
+    Union<Percent, Fr> thickness;
+
+    void repr(Io::Emit& e) const {
+        e("({} {})", color, thickness);
+    }
+};
+
 // https://www.w3.org/TR/css-images-4/#stripes
-
 export struct Stripes {
-    struct Strip {
-        Gfx::Color color;
-        Percent size;
-
-        void repr(Io::Emit& e) const {
-            e("({} {})", color, size);
-        }
-    };
-
-    Vec<Strip> stripes;
+    Vec<ColorStrip> stripes;
 
     void repr(Io::Emit& e) const {
         e("(stripes {}", stripes);
@@ -124,7 +126,7 @@ export struct Stripes {
 // https://www.w3.org/TR/css-images-4/#typedef-image
 
 using _Image = Union<
-    Gfx::Color,
+    Color,
     LinearGradient,
     RadialGradient,
     ConicGradient,
@@ -139,6 +141,13 @@ export struct Image : _Image {
         visit([&](auto const& i) {
             e("{}", i);
         });
+    }
+};
+
+export template <>
+struct ValueParser<Image> {
+    static Res<Image> parse(Cursor<Css::Sst>& c) {
+        return parseValue<Ref::Url>(c);
     }
 };
 
