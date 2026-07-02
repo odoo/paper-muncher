@@ -1271,7 +1271,7 @@ export struct TableFormatingContext : FormatingContext {
 
         CacheParametersFromInput(Input const& i)
             : containingBlockX(i.containingBlock.x),
-              capmin(i.capmin.unwrap()),
+              capmin(i.capmin.unwrapOr(0_au)),
               knownSizeX(i.knownSize.x) {
         }
 

@@ -175,6 +175,11 @@ struct FlexItem {
     }
 
     void computeContentSizes(Tree& tree) {
+        logDebug("[item.content] box={} min=({},{}) max=({},{}) pad.v={} bord.v={}",
+         (usize)box, minContentSize.x, minContentSize.y,
+         maxContentSize.x, maxContentSize.y,
+         padding.vertical(), borders.vertical());
+
         auto [minInlineSize, maxInlineSize] = computeIntrinsicInlineSizes(tree, *box);
 
         minContentSize.x = minInlineSize + padding.horizontal() + borders.horizontal();
@@ -1075,14 +1080,13 @@ struct FlexFormatingContext : FormatingContext {
     // 7. MARK: Determine the hypothetical cross size of each item -------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-cross-item
 
-    void _determineHypotheticalCrossSize(Tree& tree) {
+    void _determineHypotheticalCrossSize(Tree& tree, IntrinsicSize& intrinsic) {
         for (auto& i : _items) {
             Au availableCrossSpace = fa.crossAxis(availableSpace) - i.getMargin(FlexItem::BOTH_CROSS);
 
-            // FIXME: Wtf ?
-            // if (fa.mainAxis(i.box->style->sizing).is<Keywords::Auto>() and
-            //     fa.crossAxis(i.box->style->sizing).is<Keywords::Auto>())
-            //     input.intrinsic = IntrinsicSize::STRETCH_TO_FIT;
+            if (fa.mainAxis(i.box->style->sizing).is<Keywords::Auto>() and
+                fa.crossAxis(i.box->style->sizing).is<Keywords::Auto>())
+                intrinsic = IntrinsicSize::STRETCH_TO_FIT;
 
             i.speculateValues(
                 tree,
@@ -1547,7 +1551,7 @@ struct FlexFormatingContext : FormatingContext {
         _resolveFlexibleLengths(tree);
 
         // 7. Determine the hypothetical cross size of each item
-        _determineHypotheticalCrossSize(tree);
+        _determineHypotheticalCrossSize(tree, intrinsic);
 
         // 8. Calculate the cross size of each flex line
         _calculateCrossSizeOfEachFlexLine(tree, input, intrinsic);
@@ -1593,8 +1597,10 @@ struct FlexFormatingContext : FormatingContext {
     Opt<Vec2Au> _maxContentSize = NONE;
 
     IntrinsicSizes intrinsicInlineContentSizes(Tree& tree, Box& box) override {
+        logDebug("[flex.intrinsic] box={} cached={}", (usize)&box, bool(_minContentSize));
+
         if (_minContentSize and _maxContentSize)
-            return IntrinsicSizes{_minContentSize->width, _maxContentSize->height};
+            return IntrinsicSizes{_minContentSize->width, _maxContentSize->width};
 
         Output minPassOutput = _runFlexAlgorithm(tree, box, {}, IntrinsicSize::MIN_CONTENT);
         Output maxPassOutput = _runFlexAlgorithm(tree, box, {}, IntrinsicSize::MAX_CONTENT);;
@@ -1602,11 +1608,16 @@ struct FlexFormatingContext : FormatingContext {
         _minContentSize = minPassOutput.size;
         _maxContentSize = maxPassOutput.size;
 
-        return IntrinsicSizes{_minContentSize->width, _maxContentSize->height};
+        return IntrinsicSizes{_minContentSize->width, _maxContentSize->width};
     }
 
     // FIXME: auto, min and max content values for flex container dimensions are not working as in Chrome; add tests
     Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        logDebug("[flex.run] box={} isRow={} knownSize=({},{}) avail=({},{})",
+         (usize)&box, fa.isRowOriented,
+         input.knownSize.x, input.knownSize.y,
+         input.availableSpace.x, input.availableSpace.y);
+
         return _runFlexAlgorithm(tree, box, input, IntrinsicSize::AUTO);
     }
 };

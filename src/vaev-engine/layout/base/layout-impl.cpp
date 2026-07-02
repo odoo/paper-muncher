@@ -220,6 +220,8 @@ Au computeIntrinsicBlockSize(Tree& tree, Box& box, Au inlineSize) {
 
     auto output = formatingContext->run(tree, box, input, 0, NONE);
 
+    logDebug("[blockprobe] box={} inlineSize={} -> height={}", (usize)&box, inlineSize, output.size.height);
+
     return output.size.height;
 }
 

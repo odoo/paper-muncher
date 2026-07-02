@@ -12,7 +12,7 @@ namespace Vaev::Layout {
 // NOTE: This is called the “shrink-to-fit” width in CSS2
 
 export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availableSpace) {
-    auto [minInlineSize, maxInlineSize ] = computeIntrinsicInlineSizes(tree, box);
+    auto [minInlineSize, maxInlineSize] = computeIntrinsicInlineSizes(tree, box);
 
     Vec2Au size = {INDEFINITE, INDEFINITE};
 
