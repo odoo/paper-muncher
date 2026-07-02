@@ -11,22 +11,6 @@ elif [ -x "$(command -v doas)" ]; then
 fi
 
 
-function is_ubuntu() {
-    if [ -f /etc/os-release ]; then
-        grep -q "ubuntu" /etc/os-release
-        return $?
-    fi
-    return 1
-}
-
-function is_mint() {
-    if [ -f /etc/os-release ]; then
-        grep -q "ID=linuxmint" /etc/os-release
-        return $?
-    fi
-    return 1
-}
-
 function is_debian() {
     if [ -f /etc/os-release ]; then
         grep -q "debian" /etc/os-release
@@ -51,18 +35,10 @@ function is_arch() {
 }
 
 if [ "$1" == "tools" -a "$2" == "setup" ]; then
-    if is_mint; then
-        $CUTEKIT_ELEVATOR ./meta/scripts/setup-ubuntu.sh
-        ./meta/scripts/setup-llvm.sh
-    elif is_ubuntu; then
-        $CUTEKIT_ELEVATOR ./meta/scripts/setup-ubuntu.sh
-        ./meta/scripts/setup-llvm.sh
-    elif is_debian; then
+    if is_debian; then
         $CUTEKIT_ELEVATOR ./meta/scripts/setup-debian.sh
-        ./meta/scripts/setup-llvm.sh
     elif is_arch; then
         $CUTEKIT_ELEVATOR ./meta/scripts/setup-arch.sh
-        ./meta/scripts/setup-llvm.sh
     elif is_darwin; then
         ./meta/scripts/setup-darwin.sh
     fi
@@ -84,12 +60,6 @@ if [ -d "$HOME/.local/bin" ]; then
     export PATH="$HOME/.local/bin:$PATH"
 fi
 
-if is_mint; then
-    source ./meta/scripts/env-ubuntu.sh
-elif is_ubuntu; then
-    source ./meta/scripts/env-ubuntu.sh
-elif is_debian; then
-    source ./meta/scripts/env-ubuntu.sh
-elif is_darwin; then
+if is_darwin; then
     source ./meta/scripts/env-darwin.sh
 fi
