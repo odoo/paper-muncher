@@ -187,14 +187,14 @@ main {
     overflow: hidden;
 }
 
-.wrapper>.test-case {
+.wrapper > .test-case {
     padding: 1rem 1.5rem;
     background-color: var(--bg2);
     cursor: pointer;
     list-style: none;
 }
 
-.wrapper>.test-case::-webkit-details-marker {
+.wrapper > .test-case::-webkit-details-marker {
     display: none;
 }
 
@@ -210,8 +210,8 @@ main {
     transition: transform 0.2s;
 }
 
-.wrapper[open]>summary>.test-header::before,
-.test-case[open]>summary>.test-header::before {
+.wrapper[open] > summary > .test-header::before,
+.test-case[open] > summary > .test-header::before {
     transform: rotate(90deg);
 }
 
@@ -274,11 +274,8 @@ main {
 }
 
 .test-case.failed {
-    border-left: 16px solid var(--failed);
-}
-
-.test-case.passed {
-    border-left: 16px solid var(--passed);
+    background-color: color-mix(in srgb, var(--failed) 15%, var(--bg2));
+    border: 1px solid var(--failed);
 }
 
 .test-case.skipped {
@@ -320,7 +317,7 @@ h2 {
     width: fit-content;
 }
 
-.outputs>div {
+.outputs > div {
     display: flex;
     gap: 0.5rem;
     flex-direction: column-reverse;

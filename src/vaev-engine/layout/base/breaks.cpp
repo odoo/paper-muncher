@@ -83,7 +83,7 @@ export struct Breakpoint {
     usize endIdx = 0;
     Appeal appeal = Appeal::EMPTY;
     Vec<Opt<Breakpoint>> children = {};
-    Advance advance;
+    Advance advance = Advance::WITHOUT_CHILDREN;
     bool completelyLaidOut = false;
 
     static Breakpoint bottomOfMonolithicBox(Box& box) {

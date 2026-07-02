@@ -10,9 +10,7 @@ using namespace Karm;
 
 namespace Vaev::Layout {
 
-struct SvgRootFragment;
-
-struct Fragment {
+export struct Fragment {
     Box const& _box;
     Vec<Rc<Fragment>> _children;
 
@@ -141,9 +139,9 @@ struct Fragment {
     }
 };
 
-using SvgShape = Union<RectAu, EllipseAu, Math::Path>;
+export using SvgShape = Union<RectAu, EllipseAu, Math::Path>;
 
-struct SvgShapeFragment : Fragment {
+export struct SvgShapeFragment : Fragment {
     SvgShape shape;
     Au strokeWidth;
 
@@ -195,7 +193,7 @@ struct SvgShapeFragment : Fragment {
     }
 };
 
-struct SvgGroupFragment : Fragment {
+export struct SvgGroupFragment : Fragment {
     SvgGroupFragment(Box& box, Vec<Rc<Fragment>> children = {})
         : Fragment(box, std::move(children)) {}
 
@@ -250,7 +248,7 @@ struct SvgGroupFragment : Fragment {
     }
 };
 
-struct SvgRootFragment : Fragment {
+export struct SvgRootFragment : Fragment {
     // NOTE: SVG viewports have these intrinsic transformations; choosing
     //       to store these transforms is more compliant and somewhat
     //       rendering-friendly but makes it harder to debug

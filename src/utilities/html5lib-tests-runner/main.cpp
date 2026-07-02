@@ -17,7 +17,7 @@ enum struct Suite {
 };
 
 Async::Task<> entryPointAsync(Sys::Env& env, [[maybe_unused]] Async::CancellationToken ct) {
-    auto suiteArg = Cli::option<Suite>('s', "suite"s, "The type of test to run"s);
+    auto suiteArg = Cli::option<Opt<Suite>>('s', "suite"s, "The type of test to run"s);
     auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, {"-"s});
 
     auto mainSection = Cli::Section{
@@ -37,7 +37,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, [[maybe_unused]] Async::Cancellatio
     if (not cmd)
         co_return Ok();
 
-    if (not suiteArg.has())
+    if (not suiteArg.value())
         co_return Error::invalidInput("test suite required");
 
     auto input = inputArg.value() == "-" ? "fd:stdin"_url : Ref::parseUrlOrPath(inputArg.value(), env.cwd());
