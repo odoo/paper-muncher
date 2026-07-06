@@ -98,9 +98,9 @@ static bool _isDecodableFontFormat(Str format) {
     );
 }
 
-Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Style::StyleSheetList const& stylesheets, Async::CancellationToken ct) {
-    auto fontDatabase = makeRc<Font::Database>(Font::globalDatabase());
-    for (auto const& sheet : stylesheets.styleSheets) {
+Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Dom::Document const& document, Async::CancellationToken ct) {
+    auto fontDatabase = document.fontDatabase;
+    for (auto const& sheet : document.styleSheets->items) {
         Vec<Style::FontFace> fontFaces;
         for (auto const& rule : sheet.rules)
             _evalFontfaceRules(rule, fontFaces);

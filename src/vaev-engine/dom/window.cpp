@@ -89,7 +89,7 @@ export struct Window {
             _media,
             _document->registeredPropertySet,
             *_document->styleSheets,
-            *_document->fontDatabase,
+            _document->fontDatabase,
         };
         computer.build();
         computer.styleDocument(*_document);

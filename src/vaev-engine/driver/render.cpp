@@ -29,7 +29,7 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
         media,
         dom->registeredPropertySet,
         *dom->styleSheets,
-        *dom->fontDatabase,
+        dom->fontDatabase,
     };
 
     computer.build();

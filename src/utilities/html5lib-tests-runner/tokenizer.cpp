@@ -209,10 +209,10 @@ export Res<Result> run(Str inputStr) {
         return HtmlToken{HtmlToken::START_TAG, Symbol::from(val.asStr())};
     });
 
-    Gc::Heap gc;
     Serde::Array actual;
     for (auto const& state : initialStates) {
-        auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+        Gc::Heap gc;
+        auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
 
         HtmlParser parser{gc, dom};
         parser._lexer._lastStartTag = lastStartTag;

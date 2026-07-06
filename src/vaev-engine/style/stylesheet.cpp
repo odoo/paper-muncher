@@ -69,15 +69,16 @@ export struct StyleSheet {
     }
 };
 
+// https://drafts.csswg.org/cssom/#the-stylesheetlist-interface
 export struct StyleSheetList {
-    Vec<StyleSheet> styleSheets;
+    Vec<StyleSheet> items = {};
 
     void add(StyleSheet&& sheet) {
-        styleSheets.pushBack(std::move(sheet));
+        items.pushBack(std::move(sheet));
     }
 
     void repr(Io::Emit& e) const {
-        e("(style-sheet-list {})", styleSheets);
+        e("(style-sheet-list {})", items);
     }
 };
 
