@@ -127,13 +127,13 @@ struct RuleIndex {
             selector.match != AttributeSelector::Match::EXACT)
             return false;
 
-         return selector.qualifiedName.ns.is<Universal>() and
-             selector.qualifiedName.exactName() != NONE;
+        return selector.qualifiedName.ns.is<Universal>() and
+               selector.qualifiedName.exactName() != NONE;
     }
 
     static bool isLookupEquivalentToMatch(TypeSelector const& selector) {
-         return selector.qualifiedName.ns.is<Universal>() and
-             selector.qualifiedName.exactName() != NONE;
+        return selector.qualifiedName.ns.is<Universal>() and
+               selector.qualifiedName.exactName() != NONE;
     }
 
     static bool isLookupEquivalentToMatch(Selector const& selector) {

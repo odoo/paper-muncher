@@ -234,7 +234,7 @@ BoxMetrics computeBoxMetrics(Tree& tree, Box& box, Vec2Au position, Vec2Au size,
 Opt<Rc<Fragment>> createBoxFragmentIfRequested(Tree& tree, Box& box, Input input, Vec2Au size, Vec<Rc<Fragment>> children) {
     if (input.generateFragment) {
         auto boxMetrics = computeBoxMetrics(tree, box, input.position, size, input.usedSpacings);
-        return makeRc<BoxFragment>(box,  boxMetrics, std::move(children));
+        return makeRc<BoxFragment>(box, boxMetrics, std::move(children));
     }
 
     return NONE;

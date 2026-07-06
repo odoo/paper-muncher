@@ -3342,8 +3342,7 @@ export struct HtmlParser : HtmlSink {
                 _currentElement()->qualifiedName != Html::TFOOT_TAG and
                 _currentElement()->qualifiedName != Html::THEAD_TAG and
                 _currentElement()->qualifiedName != Html::TEMPLATE_TAG and
-                _currentElement()->qualifiedName != Html::HTML_TAG
-            ) {
+                _currentElement()->qualifiedName != Html::HTML_TAG) {
                 _openElements.pop();
             }
         };

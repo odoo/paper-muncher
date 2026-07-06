@@ -122,8 +122,7 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url 
         co_return _loadTextDocument(heap, url, contentType, body);
     }
     // a supported image, video, or audio type
-    else if (contentType.conformsTo(Ref::Uti::PUBLIC_IMAGE) or
-             contentType.conformsTo(Ref::Uti::PUBLIC_AV)) {
+    else if (contentType.conformsTo(Ref::Uti::PUBLIC_IMAGE) or contentType.conformsTo(Ref::Uti::PUBLIC_AV)) {
         // Return the result of loading a media document given navigationParams and type.
         co_return _loadMediaDocument(heap, url, contentType);
     } else {
@@ -254,6 +253,9 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
     auto document = co_trya$(_loadDocumentAsync(heap, url, response, ct));
 
     document->styleSheets->add((co_await _fetchStylesheetAsync(client, *document, "bundle://vaev-engine/html.css"_url, Style::Origin::USER_AGENT, ct))
+                                   .take("user agent stylesheet not available"));
+
+    document->styleSheets->add((co_await _fetchStylesheetAsync(client, *document, "bundle://vaev-engine/counters.css"_url, Style::Origin::USER_AGENT, ct))
                                    .take("user agent stylesheet not available"));
 
     if (document->quirkMode == Dom::QuirkMode::YES) {

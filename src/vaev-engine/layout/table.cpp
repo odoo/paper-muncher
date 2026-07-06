@@ -509,8 +509,7 @@ export struct TableFormatingContext : FormatingContext {
             while (
                 start < grid.size.x and
                 (grid.at(start, i).anchorIdx == grid.at(start, i + 1).anchorIdx or
-                 (not grid.at(start, i).box and not grid.at(start, i + 1).box))
-            )
+                 (not grid.at(start, i).box and not grid.at(start, i + 1).box)))
                 start++;
 
             if (start == grid.size.x)
@@ -561,8 +560,7 @@ export struct TableFormatingContext : FormatingContext {
             while (
                 start < grid.size.y and
                 (grid.at(j, start).anchorIdx == grid.at(j + 1, start).anchorIdx or
-                 (not grid.at(j, start).box and not grid.at(j + 1, start).box))
-            )
+                 (not grid.at(j, start).box and not grid.at(j + 1, start).box)))
                 start++;
 
             if (start == grid.size.y)

@@ -126,6 +126,14 @@ struct Box : Meta::NoCopy {
                style->opacity != 1.0;
     }
 
+    bool isPseudoElement(Symbol type) const {
+        if (not origin)
+            return false;
+        if (auto it = origin->is<Gc::Ref<Dom::PseudoElement>>())
+            return (*it)->type == type;
+        return false;
+    }
+
     bool isActive() const {
         if (auto it = content.is<Rc<Gfx::Prose>>())
             return (*it)->_runes.len() > 0;
