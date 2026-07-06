@@ -2,6 +2,7 @@
 
 @page {
     margin: 0.5in;
+    counter-increment: page 1;
 
     @footnote {
         margin-top: 10px;

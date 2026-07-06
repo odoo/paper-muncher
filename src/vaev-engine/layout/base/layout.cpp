@@ -74,5 +74,4 @@ export struct FragmentBuilder {
     }
 };
 
-
 } // namespace Vaev::Layout

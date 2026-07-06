@@ -93,7 +93,7 @@ export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& bo
     auto w = tentative.width;
     auto h = tentative.height;
 
-    bool widthIsAuto  = not specifiedSize.width.has();
+    bool widthIsAuto = not specifiedSize.width.has();
     bool heightIsAuto = not specifiedSize.height.has();
 
     if (not widthIsAuto and not heightIsAuto)
@@ -121,9 +121,9 @@ export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& bo
 
     if (w < minWidth and h < minHeight) {
         if (minWidth / w > minHeight / h) {
-            return {minWidth, min(maxHeight, minWidth * (h/w))};
+            return {minWidth, min(maxHeight, minWidth * (h / w))};
         } else {
-            return {min(maxWidth, minHeight * (w/h)), minHeight};
+            return {min(maxWidth, minHeight * (w / h)), minHeight};
         }
     }
 

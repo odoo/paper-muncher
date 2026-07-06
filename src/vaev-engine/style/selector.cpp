@@ -75,8 +75,7 @@ export struct QualifiedNameSelector {
     QualifiedNameSelector(Opt<Symbol> ns, Opt<Symbol> name)
         : ns(ns ? NamespacePattern{*ns}
                 : NamespacePattern{NULL_NAMESPACE}),
-          name(name ? NamePattern{*name}
-                    : NamePattern{UNIVERSAL}) {}
+          name(name ? NamePattern{*name} : NamePattern{UNIVERSAL}) {}
 
     QualifiedNameSelector(Dom::QualifiedName const& qualifiedName)
         : ns(qualifiedName.ns ? NamespacePattern{*qualifiedName.ns}
@@ -697,14 +696,9 @@ export struct Selector : _Selector {
             firstName = try$(ns.lookup(*firstName));
 
         return Ok(QualifiedNameSelector{
-            namespacePrefix == NamespacePrefix::STAR
-                ? QualifiedNameSelector::NamespacePattern{UNIVERSAL}
-                : namespacePrefix == NamespacePrefix::IDENT
-                    ? QualifiedNameSelector::NamespacePattern{firstName.unwrap()}
-                    : QualifiedNameSelector::NamespacePattern{NULL_NAMESPACE},
-            secondName
-                ? QualifiedNameSelector::NamePattern{secondName.unwrap()}
-                : QualifiedNameSelector::NamePattern{UNIVERSAL},
+            namespacePrefix == NamespacePrefix::STAR ? QualifiedNameSelector::NamespacePattern{UNIVERSAL} : namespacePrefix == NamespacePrefix::IDENT ? QualifiedNameSelector::NamespacePattern{firstName.unwrap()}
+                                                                                                                                                      : QualifiedNameSelector::NamespacePattern{NULL_NAMESPACE},
+            secondName ? QualifiedNameSelector::NamePattern{secondName.unwrap()} : QualifiedNameSelector::NamePattern{UNIVERSAL},
         });
     }
 

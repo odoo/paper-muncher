@@ -2,6 +2,7 @@
 
 ## Changes
 
+- Added support for ::marker and list-type CSS properties.
 - Added --header, --footer, --header-size, and --footer-size flags to the CLI.
 - --margins "<left> <top> <right> <bottom>" is now supported in the CLI.
 - Fixed a crash related to missing table cells.

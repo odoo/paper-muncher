@@ -40,6 +40,7 @@ export struct Document : Node {
     Style::RegisteredPropertySet registeredPropertySet = Style::defaultRegistry();
 
     Rc<Font::Database> fontDatabase;
+    Style::CounterStyleSet counters = {};
 
     static Gc::Ref<Document> create(Gc::Heap& heap, Ref::Url url, Ref::Uti contentType) {
         auto styleSheets = heap.alloc<Style::StyleSheetList>();

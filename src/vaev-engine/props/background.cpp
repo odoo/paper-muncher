@@ -166,7 +166,6 @@ export struct BackgroundPositionProperty : Property {
         // TODO
     }
 
-
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
