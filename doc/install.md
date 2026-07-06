@@ -1,6 +1,15 @@
-# Install
+# For end-users
 
-Installing paper-muncher is currently only supported on Linux and macOS. We plan to add support for Windows in the future.
+1. **Download** the prebuilt package for your distribution from the [nightly releases](https://github.com/odoo/paper-muncher/releases/tag/nightly).
+2. **Install** the package using your system's package manager.
+3. **Add** `/opt/paper-muncher/bin` to your `PATH` environment variable.
+4. **Verify** the installation by running `paper-muncher --help` to see available options.
+5. **Learn more** by visiting the [official documentation](https://odoo.github.io/paper-muncher/usage.html).
+
+---
+
+# For development
+
 
 ```sh
 # Clone the repository
