@@ -9,12 +9,7 @@ import :dom.node;
 import :dom.element;
 import :props.base;
 import :props.registry;
-
-namespace Vaev::Style {
-
-export struct StyleSheetList;
-
-} // namespace Vaev::Style
+import :style.stylesheet;
 
 namespace Vaev::Dom {
 
@@ -39,15 +34,24 @@ export struct Document : Node {
     String xmlStandalone = "no"s; // https://www.w3.org/TR/xml/#NT-SDDecl
 
     // https://drafts.csswg.org/cssom/#dom-documentorshadowroot-stylesheets
-    Gc::Ptr<Style::StyleSheetList> styleSheets;
+    Gc::Ref<Style::StyleSheetList> styleSheets;
 
     // https://drafts.css-houdini.org/css-properties-values-api/#dom-window-registeredpropertyset-slot
     Style::RegisteredPropertySet registeredPropertySet = Style::defaultRegistry();
 
-    Opt<Rc<Font::Database>> fontDatabase;
+    Rc<Font::Database> fontDatabase;
 
-    Document(Ref::Url url, Ref::Uti uti)
-        : _url(url), _uti(uti) {
+    static Gc::Ref<Document> create(Gc::Heap& heap, Ref::Url url, Ref::Uti contentType) {
+        auto styleSheets = heap.alloc<Style::StyleSheetList>();
+        auto doc = heap.alloc<Dom::Document>(url, contentType, styleSheets);
+        return doc;
+    }
+
+    Document(Ref::Url url, Ref::Uti uti, Gc::Ref<Style::StyleSheetList> styleSheets)
+        : _url(url),
+          _uti(uti),
+          styleSheets(styleSheets),
+          fontDatabase(makeRc<Font::Database>(Font::globalDatabase())) {
     }
 
     NodeType nodeType() const override {

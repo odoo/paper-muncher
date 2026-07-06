@@ -159,7 +159,7 @@ export struct Computer {
             } else if (align == "right") {
                 values.text.cow().align = TextAlign::RIGHT;
             } else if (align == "center") {
-                values.text.cow().align = TextAlign::CENTER;
+                values.text.cow().align = TextAlign::BLOCK_CENTER;
             } else if (align == "justify") {
                 values.text.cow().align = TextAlign::JUSTIFY;
             }
@@ -287,7 +287,7 @@ export struct Computer {
     Rc<PageComputedValues> computeFor(ComputedValues const& parent, Page const& page) {
         auto computed = makeRc<PageComputedValues>(_heap, parent);
 
-        for (auto const& sheet : _stylesheets.styleSheets)
+        for (auto const& sheet : _stylesheets.items)
             for (auto const& rule : sheet.rules)
                 _evalRule(rule, page, *computed);
 
@@ -375,7 +375,7 @@ export struct Computer {
     }
 
     void build() {
-        for (auto const& sheet : _stylesheets.styleSheets) {
+        for (auto const& sheet : _stylesheets.items) {
             for (auto const& rule : sheet.rules) {
                 _addRuleToLookup(&rule);
             }

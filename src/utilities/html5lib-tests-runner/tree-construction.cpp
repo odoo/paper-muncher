@@ -167,7 +167,7 @@ export Res<Result> run(Str input) {
     }
 
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector{};

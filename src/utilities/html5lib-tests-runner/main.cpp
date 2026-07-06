@@ -12,7 +12,6 @@ using namespace Karm::Ref::Literals;
 enum struct Suite {
     TOKENIZER,
     TREE_CONSTRUCTION,
-
     _LEN,
 };
 
@@ -20,16 +19,14 @@ Async::Task<> entryPointAsync(Sys::Env& env, [[maybe_unused]] Async::Cancellatio
     auto suiteArg = Cli::option<Opt<Suite>>('s', "suite"s, "The type of test to run"s);
     auto inputArg = Cli::operand<Str>("input"s, "Input file (default: stdin)"s, {"-"s});
 
-    auto mainSection = Cli::Section{
-        "Runner Options"s,
-        {suiteArg, inputArg},
-    };
-
     Cli::Command cmd{
         "html5lib-tests-runner"s,
         "Runner for the html5lib test suite format."s,
         {
-            mainSection,
+            Cli::Section{
+                "Runner Options"s,
+                {suiteArg, inputArg},
+            },
         }
     };
 
@@ -40,8 +37,11 @@ Async::Task<> entryPointAsync(Sys::Env& env, [[maybe_unused]] Async::Cancellatio
     if (not suiteArg.value())
         co_return Error::invalidInput("test suite required");
 
-    auto input = inputArg.value() == "-" ? "fd:stdin"_url : Ref::parseUrlOrPath(inputArg.value(), env.cwd());
-    auto inputString = co_try$(Sys::readAllUtf8(input));
+    auto input =
+        inputArg.value() == "-"
+            ? "fd:stdin"_url
+            : Ref::parseUrlOrPath(inputArg.value(), env.cwd());
+    auto inputString = co_try$(Sys::readAllText<Utf8>(input));
 
     Html5LibTest::Result result;
     if (suiteArg.value() == Suite::TOKENIZER) {
@@ -49,12 +49,13 @@ Async::Task<> entryPointAsync(Sys::Env& env, [[maybe_unused]] Async::Cancellatio
     } else if (suiteArg.value() == Suite::TREE_CONSTRUCTION) {
         result = co_try$(Html5LibTest::TreeConstruction::run(inputString));
     } else {
-        unreachable();
+        co_return Error::invalidInput("no suite provided expected tokenizer or tree-construction");
     }
 
     Serde::Object json = {
         {"reference"s, std::move(result.reference)},
         {"actual"s, std::move(result.actual)},
     };
+
     co_return Json::unparse(Sys::out(), json);
 }

@@ -218,7 +218,7 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
         media,
         dom->registeredPropertySet,
         *dom->styleSheets,
-        *dom->fontDatabase,
+        dom->fontDatabase,
     };
     computer.build();
     computer.styleDocument(*dom);

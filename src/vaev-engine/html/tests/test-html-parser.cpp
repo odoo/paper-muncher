@@ -12,7 +12,7 @@ namespace Vaev::Dom::Tests {
 
 test$("parse-empty-document") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -22,7 +22,7 @@ test$("parse-empty-document") {
 
 test$("parse-open-close-tag-with-structure") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -49,7 +49,7 @@ test$("parse-open-close-tag-with-structure") {
 
 test$("parse-empty-tag") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -66,7 +66,7 @@ test$("parse-empty-tag") {
 
 test$("parse-attr") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -85,7 +85,7 @@ test$("parse-attr") {
 
 test$("parse-text") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -113,7 +113,7 @@ test$("parse-text") {
 
 test$("parse-title") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -146,7 +146,7 @@ test$("parse-title") {
 
 test$("parse-comment-with-gt-symb") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -180,7 +180,7 @@ test$("parse-comment-with-gt-symb") {
 
 test$("parse-p-after-comment") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -218,7 +218,7 @@ test$("parse-p-after-comment") {
 
 test$("parse-not-nested-p-and-els-inbody") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -242,7 +242,7 @@ test$("parse-not-nested-p-and-els-inbody") {
 
 test$("parse-char-referece-as-text") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -269,7 +269,7 @@ test$("parse-char-referece-as-text") {
 
 test$("parse-char-referece-as-attribute-value") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -298,7 +298,7 @@ test$("parse-char-referece-as-attribute-value") {
 
 test$("parse-char-referece-spec-example") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -353,7 +353,7 @@ test$("parse-char-referece-spec-example") {
 
 test$("parse-input-element") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -384,7 +384,7 @@ test$("parse-input-element") {
 
 test$("parse-empty-table-element") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -412,7 +412,7 @@ test$("parse-empty-table-element") {
 
 test$("parse-table-element") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -456,7 +456,7 @@ test$("parse-table-element") {
 
 test$("parse-table-element-create-body-tr-scope") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -500,7 +500,7 @@ test$("parse-table-element-create-body-tr-scope") {
 
 test$("parse-svg-case-fix") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
@@ -540,7 +540,7 @@ test$("parse-svg-case-fix") {
 
 test$("parse-misnested-content-in-table") {
     Gc::Heap gc;
-    auto dom = gc.alloc<Dom::Document>(Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
     Html::HtmlParser parser{gc, dom};
 
     auto diags = Diag::Collector::ignore();
