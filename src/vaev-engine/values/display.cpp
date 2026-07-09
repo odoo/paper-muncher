@@ -268,15 +268,16 @@ export struct Display {
     }
 
     // https://www.w3.org/TR/css-display-3/#blockify
-    Display blockify() {
+    Display blockify() const {
         if (_type == BOX)
             return *this;
 
         if (_type == INTERNAL) {
-            // If a layout-internal box is blockified, its inner display type converts to flow so that it becomes
-            // a block container.
-            // FIXME: in our representation, layout-internal does not have an inner display property
-            panic("cannot blockify layout-internal display");
+            return {
+                FLOW,
+                BLOCK,
+                _item
+            };
         }
 
         if (_outside == BLOCK)
@@ -298,7 +299,7 @@ export struct Display {
     }
 
     // https://www.w3.org/TR/css-display-3/#inlinify
-    Display inlinify() {
+    Display inlinify() const {
         if (_type != DEFAULT)
             return *this;
 
@@ -309,15 +310,15 @@ export struct Display {
             return {
                 FLOW,
                 BLOCK,
-                _item,
-            };
-        } else {
-            return {
-                _inside,
-                BLOCK,
-                _item,
+                Item::NO,
             };
         }
+        
+        return {
+            _inside,
+            BLOCK,
+            _item,
+        };
     }
 };
 
