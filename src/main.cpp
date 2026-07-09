@@ -46,9 +46,9 @@ struct Cli::ValueParser<Print::PaperStock> {
 };
 
 Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
-    auto sandboxedArg = Cli::flag(NONE, "sandboxed"s, "Disallow local file and http access"s);
+    auto sandboxedArg = Cli::flag(NONE, "sandboxed"s, "Disallow access to local files and the network"s);
     auto verboseArg = Cli::flag(NONE, "verbose"s, "Enable verbose logging"s);
-    auto quietArg = Cli::flag(NONE, "quiet"s, "Suppress non-fatal logging"s);
+    auto quietArg = Cli::flag(NONE, "quiet"s, "Suppress all logging except fatal errors"s);
     Cli::Section runtimeSection{
         "Runtime Options"s,
         {sandboxedArg, verboseArg, quietArg},
@@ -56,15 +56,14 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     auto inputsArg = Cli::operand<Vec<Str>>("inputs"s, "Input files (default: stdin)"s, {"-"s});
     auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
-    auto batchArg = Cli::option<PaperMuncher::Batch>(NONE, "batch"s, "What to do when multiple document are passed as input (default: concat)"s, PaperMuncher::Batch::CONCAT);
-    auto formatArg = Cli::option<Opt<Ref::Uti>>('f', "format"s, "Override the output file format"s, NONE);
-    auto densityArg = Cli::option<Vaev::Resolution>(NONE, "density"s, "Density of the output document in css units (e.g. 96dpi)"s, Vaev::Resolution::fromDppx(1));
-    auto backgroundArg = Cli::option<Opt<Vaev::Color>>(NONE, "background"s, "Background color of the output document (default: white for html, transparent for svg)"s, NONE);
+    auto batchArg = Cli::option<PaperMuncher::Batch>(NONE, "batch"s, "How to handle multiple input documents (default: concat)"s, PaperMuncher::Batch::CONCAT);
+    auto formatArg = Cli::option<Opt<Ref::Uti>>('f', "format"s, "Override the output format (default: inferred from the output file extension)"s, NONE);
+    auto densityArg = Cli::option<Vaev::Resolution>(NONE, "density"s, "Pixel density of the output document, in CSS resolution units (e.g. 96dpi)"s, Vaev::Resolution::fromDppx(1));
 
     Cli::Section inOutSection{
         .title = "Input/Output Options"s,
-        .options = {inputsArg, outputArg, batchArg, formatArg, densityArg, backgroundArg},
-        .epilog = "When handling multiple inputs, separate batch mode generates individually named files matching the source stems."s
+        .options = {inputsArg, outputArg, batchArg, formatArg, densityArg},
+        .epilog = "With multiple inputs, batch mode 'separate' writes one output file per input, named after the source file."s
     };
 
     enum struct PaperList {
@@ -72,29 +71,30 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
         _LEN
     };
 
-    auto paperArg = Cli::option<Union<Print::PaperStock, PaperList>>(NONE, "paper"s, "Paper size for printing (default: A4)"s, Print::A4);
+    auto paperArg = Cli::option<Union<Print::PaperStock, PaperList>>(NONE, "paper"s, "Paper size of the output pages (default: A4)"s, Print::A4);
     auto orientationArg = Cli::option<Print::Orientation>(NONE, "orientation"s, "Page orientation (default: portrait)"s, Print::Orientation::PORTRAIT);
-    auto marginArg = Cli::option<Union<Print::MarginOption, Math::Insets<Vaev::AbsoluteLength>>>(NONE, "margins"s, "Page margins (default: default)"s, Print::MarginOption::DEFAULT);
+    auto marginArg = Cli::option<Union<Print::MarginOption, Math::Insets<Vaev::AbsoluteLength>>>(NONE, "margins"s, "Page margins, in CSS units or as a named preset (default: default)"s, Print::MarginOption::DEFAULT);
+    auto backgroundArg = Cli::option<Opt<Vaev::Color>>(NONE, "background"s, "Background color of the output document (default: white for HTML, transparent for SVG)"s, NONE);
     Cli::Section paperSection{
         .title = "Paper Options"s,
-        .options = {paperArg, orientationArg, marginArg},
+        .options = {paperArg, orientationArg, marginArg, backgroundArg},
         .epilog = "Use '--paper list' to display all supported standard paper sizes."s
     };
 
-    auto widthArg = Cli::option<Opt<Vaev::AbsoluteLength>>(NONE, "width"s, "Width of the output document in css units (e.g. 800px)"s, NONE);
-    auto heightArg = Cli::option<Opt<Vaev::AbsoluteLength>>(NONE, "height"s, "Height of the output document in css units (e.g. 600px)"s, NONE);
-    auto scaleArg = Cli::option<Vaev::Resolution>(NONE, "scale"s, "Scale of the input document in css units (e.g. 1x)"s, Vaev::Resolution::fromDppx(1));
+    auto widthArg = Cli::option<Opt<Vaev::AbsoluteLength>>(NONE, "width"s, "Viewport width, in CSS units (e.g. 800px)"s, NONE);
+    auto heightArg = Cli::option<Opt<Vaev::AbsoluteLength>>(NONE, "height"s, "Viewport height, in CSS units (e.g. 600px)"s, NONE);
+    auto scaleArg = Cli::option<Vaev::Resolution>(NONE, "scale"s, "Scale factor applied to the input document (e.g. 1x)"s, Vaev::Resolution::fromDppx(1));
 
     Cli::Section viewportSection{
         .title = "Viewport Options"s,
         .options = {widthArg, heightArg, scaleArg},
-        .epilog = "Explicit --width and --height dimensions take precedence over --paper dimensions."s
+        .epilog = "Explicit --width and --height values take precedence over the --paper dimensions."s
     };
 
-    auto headerArg = Cli::option<Opt<Ref::Url>>(NONE, "header"s, "Add a header to the document"s, NONE);
-    auto headerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength>>(NONE, "header-size"s, "Add a header to the document"s, Vaev::Keywords::AUTO);
-    auto footerArg = Cli::option<Opt<Ref::Url>>(NONE, "footer"s, "Add a footer to the document"s, NONE);
-    auto footerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength>>(NONE, "footer-size"s, "Add a header to the document"s, Vaev::Keywords::AUTO);
+    auto headerArg = Cli::option<Opt<Ref::Url>>(NONE, "header"s, "Document to render as the page header"s, NONE);
+    auto headerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength>>(NONE, "header-size"s, "Height of the page header (default: auto)"s, Vaev::Keywords::AUTO);
+    auto footerArg = Cli::option<Opt<Ref::Url>>(NONE, "footer"s, "Document to render as the page footer"s, NONE);
+    auto footerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength>>(NONE, "footer-size"s, "Height of the page footer (default: auto)"s, Vaev::Keywords::AUTO);
 
     Cli::Section decorationSection{
         .title = "Document decoration"s,
@@ -104,24 +104,24 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
             footerArg,
             footerSizeArg,
         },
-        .epilog = "Headers and footers repeat on every page, appearing respectively above and below the main content within the page margins."s
+        .epilog = "Headers and footers repeat on every page, above and below the main content, within the page margins."s
     };
 
-    auto flowArg = Cli::option<PaperMuncher::Flow>(NONE, "flow"s, "Flow of the document (default: auto)"s, PaperMuncher::Flow::AUTO);
+    auto flowArg = Cli::option<PaperMuncher::Flow>(NONE, "flow"s, "How content flows across pages (default: auto)"s, PaperMuncher::Flow::AUTO);
     Cli::Section flowSection{
         .title = "Document flow"s,
         .options = {flowArg},
-        .epilog = "auto: Paginate for PDF, otherwise continuous\n"
-                  "paginated: If the content exceeds the viewport, create new pages\n"
-                  "continuous: If the content exceeds the viewport, extend the viewport"s
+        .epilog = "auto: Paginate when producing a PDF, continuous otherwise\n"
+                  "paginated: Content exceeding the viewport is split across additional pages\n"
+                  "continuous: The viewport grows to fit all content on a single page"s
     };
 
-    auto extendArg = Cli::option<PaperMuncher::Extend>(NONE, "extend"s, "How content extending past the initial viewport is handled (default: crop)"s, PaperMuncher::Extend::CROP);
+    auto extendArg = Cli::option<PaperMuncher::Extend>(NONE, "extend"s, "How content overflowing the initial viewport is handled (default: crop)"s, PaperMuncher::Extend::CROP);
     Cli::Section extendSection{
         .title = "Document extend"s,
         .options = {extendArg},
-        .epilog = "crop: The document is cropped to the container\n"
-                  "fit: Container is resized to fit the document"s
+        .epilog = "crop: Overflowing content is clipped to the container\n"
+                  "fit: The container is resized to fit the content"s
     };
 
     Cli::Section formatSection{
@@ -134,7 +134,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     Cli::Command cmd{
         "paper-muncher"s,
-        "Convert web pages (HTML, XHTML, or SVG) into printable or viewable documents like PDFs or images."s,
+        "Convert web pages (HTML, XHTML, SVG, or Markdown) into printable or viewable documents such as PDFs or images."s,
         {
             runtimeSection,
             inOutSection,
