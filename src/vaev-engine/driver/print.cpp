@@ -44,7 +44,7 @@ export struct PageDecorator {
 void _paintCornerMargin(PageLayoutInfos& infos, Scene::Stack& stack, RectAu const& rect, Style::PageArea area, Layout::RunningPositionMap& runningPosition) {
     Layout::Tree tree{
         .root = Layout::buildElement(infos.pageStyle->area(area), infos.pageNumber, runningPosition),
-        .viewport = Layout::Viewport{.small = rect.size()}
+        .viewport = Style::Viewport{.small = rect.size()}
     };
     auto output = Layout::layoutRoot(
         tree,
@@ -66,7 +66,7 @@ void _paintMainMargin(PageLayoutInfos& infos, Scene::Stack& stack, RectAu const&
     }
     Layout::Tree tree{
         .root = std::move(box),
-        .viewport = Layout::Viewport{.small = rect.size()}
+        .viewport = Style::Viewport{.small = rect.size()}
     };
     auto output = Layout::layoutRoot(
         tree,
@@ -159,7 +159,7 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
             .blank = false,
         };
 
-        auto pageStyle = context.computer.computeFor(*context.initialStyle, page);
+        auto pageStyle = context.computer.computeValues(*context.initialStyle, page);
         auto pageRect = RectAu{context.media.scaledViewport()};
         auto pageDecoration = pageRect.shrink(
             _resolvePageMargin(context.settings.margins, *pageStyle->style->margin, pageRect)

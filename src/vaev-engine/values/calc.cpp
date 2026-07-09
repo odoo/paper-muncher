@@ -112,6 +112,82 @@ struct CalcValue {
 };
 
 export template <typename T>
+struct _Resolved<CalcValue<T>> {
+    using Type = _Resolved<T>;
+};
+
+template <typename T>
+Resolved<T> _resolveUnary(CalcOp, Resolved<T>) {
+    notImplemented();
+}
+
+template <typename T>
+Resolved<T> _resolveInfix(CalcOp op, Resolved<T> lhs, Resolved<T> rhs) {
+    switch (op) {
+    case CalcOp::ADD:
+        return lhs + rhs;
+    case CalcOp::SUBTRACT:
+        return lhs - rhs;
+    case CalcOp::MULTIPLY:
+        // NOTE: Normally, direct multiplication on Au is not allowed.
+        //       However, CSS calc() treats pixel units as floating-point numbers,
+        //       permitting all standard math operations between them.
+        if constexpr (Meta::Same<Resolved<T>, Au>) {
+            return Au(f64{lhs} * f64{rhs});
+        } else {
+            return lhs * rhs;
+        }
+    case CalcOp::DIVIDE:
+        // NOTE: Normally, direct multiplication on Au is not allowed.
+        //       However, CSS calc() treats pixel units as floating-point numbers,
+        //       permitting all standard math operations between them.
+        if constexpr (Meta::Same<Resolved<T>, Au>) {
+            return Au(f64{lhs} / f64{rhs});
+        } else {
+            return lhs / rhs;
+        }
+    default:
+        panic("unexpected operator");
+    }
+}
+
+export template <typename T, typename... Args>
+Resolved<T> resolve(CalcValue<T> const& calc, Args... args) {
+    auto resolveUnion = Visitor{
+        [&](T const& v) {
+            return resolve(v, args...);
+        },
+        [&](CalcValue<T>::Leaf const& v) {
+            return resolve<T>(*v, args...);
+        },
+        [&](Number const& v)
+            requires(not Meta::Same<T, Number>)
+        {
+            return Resolved<T>{v};
+        }
+        };
+
+    return calc.visit(
+        [&](typename CalcValue<T>::Value const& v) {
+            return v.visit(resolveUnion);
+        },
+        [&](typename CalcValue<T>::Unary const& u) {
+            return _resolveUnary<T>(
+                u.op,
+                u.val.visit(resolveUnion)
+            );
+        },
+        [&](typename CalcValue<T>::Binary const& b) {
+            return _resolveInfix<T>(
+                b.op,
+                b.lhs.visit(resolveUnion),
+                b.rhs.visit(resolveUnion)
+            );
+        }
+    );
+}
+
+export template <typename T>
 struct ValueParser<CalcValue<T>> {
     static Res<CalcValue<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())

@@ -66,15 +66,12 @@ static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues const& style) 
 }
 
 static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
-    // FIXME: We should resolve font during the cascade
-    Resolver resolver{
-        .rootFont = Gfx::Font{style.fontFace, 16},
-        .boxFont = Gfx::Font{style.fontFace, 16},
-    };
+    Resolver resolver{};
+
     return {
         .font = {
             style.fontFace,
-            resolver.resolve(style.font->size).cast<f64>(),
+            style.font->size.cast<f64>(),
         },
         .color = style.color,
         // FIXME: Should be done during prose layout

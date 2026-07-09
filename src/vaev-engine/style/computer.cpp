@@ -27,6 +27,8 @@ export struct Computer {
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
     RuleIndex _ruleIndex = {};
+    Viewport _viewport{.small = _media.viewportSize()};
+    Opt<Rc<ComputedValues>> _rootComputedValues = NONE;
 
     // MARK: Counters ----------------------------------------------------------
 
@@ -187,6 +189,20 @@ export struct Computer {
         return Gfx::Fontface::fallback();
     }
 
+    void _updateFontface(ComputedValues const& parent, Rc<ComputedValues> values) {
+        // FIXME: Use a font-dirty flag instead.
+        if (not parent.font.sameInstance(values->font) and
+            (parent.font->families != values->font->families or
+             parent.font->weight != values->font->weight or
+             parent.font->style != values->font->style or
+             parent.font->width != values->font->width)) {
+            auto font = _lookupFontface(*values);
+            values->fontFace = font;
+        } else {
+            values->fontFace = parent.fontFace;
+        }
+    }
+
     // https://www.w3.org/TR/css-cascade-4/#author-presentational-hint-origin
     void _considerHtmlPresentationalHint(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
         if (el->namespaceUri() != Html::NAMESPACE)
@@ -335,80 +351,53 @@ export struct Computer {
     }
 
     // https://drafts.csswg.org/css-cascade/#cascade-origin
-    Rc<ComputedValues> computeFor(ComputedValues const& parent, Gc::Ref<Dom::Element> el) {
+    Rc<ComputedValues> computeValues(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement = NONE) {
         auto values = _registeredPropertySet.inheritsComputedValues(parent);
+        bool isRootElement = pseudoElement == NONE and el->parentNode()->is<Dom::Document>();
 
-        MatchingRules const matchingRules = _ruleIndex.match(el, NONE);
+        if (isRootElement)
+            _rootComputedValues = values;
+
+        MatchingRules const matchingRules = _ruleIndex.match(el, pseudoElement);
         CascadedValues cascadedValues;
         for (auto const& [styleRule, specificity] : matchingRules)
             for (auto& prop : styleRule->props)
                 cascadedValues.put(prop, styleRule->origin, specificity);
 
-        _considerHtmlPresentationalHint(el, cascadedValues);
-        _considerInlineStyleAttribute(el, cascadedValues);
-        _considerSvgPresentationAttributes(el, cascadedValues);
-
-        cascadedValues.apply(Property::ComputationPhase::CUSTOM_PROPERTY, parent, *values);
-        cascadedValues.expandShorthands(parent, *values, _registeredPropertySet);
-
-        cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, *values);
-        cascadedValues.apply(Property::ComputationPhase::FONT, parent, *values);
-
-        // FIXME: Use a font-dirty flag instead.
-        if (not parent.font.sameInstance(values->font) and
-            (parent.font->families != values->font->families or
-             parent.font->weight != values->font->weight or
-             parent.font->style != values->font->style or
-             parent.font->width != values->font->width)) {
-            auto font = _lookupFontface(*values);
-            values->fontFace = font;
-        } else {
-            values->fontFace = parent.fontFace;
+        if (not pseudoElement) {
+            _considerHtmlPresentationalHint(el, cascadedValues);
+            _considerInlineStyleAttribute(el, cascadedValues);
+            _considerSvgPresentationAttributes(el, cascadedValues);
         }
 
-        cascadedValues.apply(Property::ComputationPhase::NORMAL, parent, *values);
-        cascadedValues.apply(Property::ComputationPhase::LATE, parent, *values);
+        ComputationContext cx;
+        cx.populateUsingViewport(_viewport);
+        if (_rootComputedValues)
+            cx.populateUsingRootComputedValues(**_rootComputedValues);
+        cx.populateUsingParentComputedValues(parent);
+        cx.populateUsingOwnComputedValues(parent);
 
-        _considerElementAttributes(*values, el);
+        cascadedValues.apply(Property::ComputationPhase::CUSTOM_PROPERTY, parent, *values, cx);
+        cascadedValues.expandShorthands(parent, *values, _registeredPropertySet);
+
+        cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, *values, cx);
+        cascadedValues.apply(Property::ComputationPhase::FONT, parent, *values, cx);
+
+        _updateFontface(parent, values);
+        if (isRootElement)
+            cx.populateUsingRootComputedValues(**_rootComputedValues);
+        cx.populateUsingOwnComputedValues(*values);
+
+        cascadedValues.apply(Property::ComputationPhase::NORMAL, parent, *values, cx);
+        cascadedValues.apply(Property::ComputationPhase::LATE, parent, *values, cx);
+
+        if (not pseudoElement)
+            _considerElementAttributes(*values, el);
 
         return values;
     }
 
-    Rc<ComputedValues> computeFor(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Symbol pseudoElement) {
-        auto values = _registeredPropertySet.inheritsComputedValues(parent);
-
-        MatchingRules matchingRules = _ruleIndex.match(el, pseudoElement);
-
-        CascadedValues cascadedValues;
-        for (auto const& [styleRule, specificity] : matchingRules)
-            for (auto& prop : styleRule->props)
-                cascadedValues.put(prop, styleRule->origin, specificity);
-
-        cascadedValues.apply(Property::ComputationPhase::CUSTOM_PROPERTY, parent, *values);
-        cascadedValues.expandShorthands(parent, *values, _registeredPropertySet);
-
-        cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, *values);
-        cascadedValues.apply(Property::ComputationPhase::FONT, parent, *values);
-
-        // FIXME: Use a font-dirty flag instead.
-        if (not parent.font.sameInstance(values->font) and
-            (parent.font->families != values->font->families or
-             parent.font->weight != values->font->weight or
-             parent.font->style != values->font->style or
-             parent.font->width != values->font->width)) {
-            auto font = _lookupFontface(*values);
-            values->fontFace = font;
-        } else {
-            values->fontFace = parent.fontFace;
-        }
-
-        cascadedValues.apply(Property::ComputationPhase::NORMAL, parent, *values);
-        cascadedValues.apply(Property::ComputationPhase::LATE, parent, *values);
-
-        return values;
-    }
-
-    Rc<PageComputedValues> computeFor(ComputedValues const& parent, Page const& page) {
+    Rc<PageComputedValues> computeValues(ComputedValues const& parent, Page const& page) {
         auto computed = makeRc<PageComputedValues>(_heap, parent);
 
         for (auto const& sheet : _stylesheets.items)
@@ -426,7 +415,7 @@ export struct Computer {
     // MARK: Styling -----------------------------------------------------------
 
     void generatePseudoElement(ComputedValues const& parentComputedValues, Dom::Element& el, Symbol type) {
-        auto computedValues = computeFor(parentComputedValues, el, type);
+        auto computedValues = computeValues(parentComputedValues, el, type);
 
         // https://drafts.csswg.org/css-content/#valdef-content-none
         // On pseudo-elements it inhibits the creation of the pseudo-element as if it had display: none.
@@ -443,12 +432,11 @@ export struct Computer {
     }
 
     void styleElement(ComputedValues const& parentComputedValues, Dom::Element& el) {
-        auto computedValues = computeFor(parentComputedValues, el);
+        auto computedValues = computeValues(parentComputedValues, el);
         el._computedValues = computedValues;
 
-        if (computedValues->display == Display::Item::YES) {
+        if (computedValues->display == Display::Item::YES)
             generatePseudoElement(*computedValues, el, Dom::PseudoElement::MARKER);
-        }
 
         generatePseudoElement(*computedValues, el, Dom::PseudoElement::AFTER);
         generatePseudoElement(*computedValues, el, Dom::PseudoElement::BEFORE);
@@ -485,7 +473,7 @@ export struct Computer {
             // The used values of that BODY element’s background properties are
             // their initial values, and the propagated values are treated
             // as if they were specified on the root element.
-            body->computedValues()->backgrounds = makeCow<BackgroundProps>();
+            body->computedValues()->backgrounds = {};
         }
     }
 
@@ -505,13 +493,15 @@ export struct Computer {
     }
 
     void styleDocument(Dom::Document& doc) {
+        _rootComputedValues = NONE;
+
         doc.counters = _resolveCounterStyle(*doc.styleSheets);
         logDebugIf(debugCounters, "counters: {}", doc.counters);
 
         if (auto el = doc.documentElement()) {
-            auto rootComputedValues = doc.initialComputedValues();
-            rootComputedValues->fontFace = _lookupFontface(*rootComputedValues);
-            styleElement(*rootComputedValues, *el);
+            auto initialComputedValues = doc.initialComputedValues();
+            initialComputedValues->fontFace = _lookupFontface(*initialComputedValues);
+            styleElement(*initialComputedValues, *el);
             CounterSet rootParentCounters = {};
             CounterSet rootSiblingCounters = {};
             _resolveCounters(

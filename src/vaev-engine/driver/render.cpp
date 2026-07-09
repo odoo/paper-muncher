@@ -23,7 +23,7 @@ export struct RenderResult {
     Rc<Layout::Fragment> frag;
 };
 
-export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Media const& media, Layout::Viewport viewport) {
+export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Media const& media, Style::Viewport viewport) {
     Style::Computer computer{
         heap,
         media,

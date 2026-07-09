@@ -29,6 +29,23 @@ export using LineWidth = Union<
     Keywords::Thick,
     CalcValue<Length>>;
 
+export Au resolve(LineWidth const& value, auto const& ctx) {
+    return value.visit(
+        [](Keywords::Thin const&) {
+            return THIN_VALUE;
+        },
+        [](Keywords::Medium const&) {
+            return MEDIUM_VALUE;
+        },
+        [](Keywords::Thick const&) {
+            return THICK_VALUE;
+        },
+        [&](auto const& length) {
+            return resolve(length, ctx);
+        }
+    );
+}
+
 export template <>
 struct ValueParser<LineWidth> {
     static Res<LineWidth> parse(Cursor<Css::Sst>& c) {

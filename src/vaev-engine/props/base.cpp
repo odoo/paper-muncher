@@ -9,6 +9,7 @@ import Karm.Logger;
 import Karm.Debug;
 import :css.parser;
 import :style.computed;
+import :style.viewport;
 
 using namespace Karm;
 
@@ -25,6 +26,50 @@ namespace Properties {
 } // namespace Properties
 
 export struct RegisteredPropertySet;
+
+export struct ComputationContext :
+    RelativeLengthContextData,
+    FontSizeContextData {
+
+    void populateUsingViewport(Viewport const& vp) {
+        viewportSmallWidth = vp.small.width.cast<f64>();
+        viewportSmallHeight = vp.small.height.cast<f64>();
+
+        viewportLargeWidth = vp.large.width.cast<f64>();
+        viewportLargeHeight = vp.large.height.cast<f64>();
+
+        viewportDynamicWidth = vp.dynamic.width.cast<f64>();
+        viewportDynamicHeight = vp.dynamic.height.cast<f64>();
+    }
+
+    void populateUsingRootComputedValues(ComputedValues const& values) {
+        Gfx::Font font = Gfx::Font{
+            values.fontFace,
+            values.font->size.cast<f64>(),
+        };
+        rootFontSize = font.fontSize();
+        rootXHeight = font.xHeight();
+        rootCapHeight = font.capHeight();
+        rootZeroAdvance = font.zeroAdvance();
+        rootLineHeight = font.lineHeight();
+    }
+
+    void populateUsingParentComputedValues(ComputedValues const& values) {
+        parentFontSize = values.font->size.cast<f64>();
+    }
+
+    void populateUsingOwnComputedValues(ComputedValues const& values) {
+        Gfx::Font font = Gfx::Font{
+            values.fontFace,
+            values.font->size.cast<f64>(),
+        };
+        fontSize = font.fontSize();
+        xHeight = font.xHeight();
+        capHeight = font.capHeight();
+        zeroAdvance = font.zeroAdvance();
+        lineHeight = font.lineHeight();
+    }
+};
 
 export struct Property : Meta::NoCopy {
     enum struct Options : u8 {
@@ -127,7 +172,10 @@ export struct Property : Meta::NoCopy {
             //       flag should override this method with a faster implementation.
             if (flags().has(INHERITED))
                 logFatal("property {#} marked as INHERITED is using the slow fallback path. override inherit()!", name());
-            load(parent)->apply(parent, child);
+
+            // NOTE: Since we are copying computed values, we don't expect much new computation to happen
+            ComputationContext dummy{};
+            load(parent)->apply(parent, child, dummy);
         }
 
         virtual Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const = 0;
@@ -161,7 +209,7 @@ export struct Property : Meta::NoCopy {
         return {};
     }
 
-    virtual void apply([[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child) const {
+    virtual void apply([[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child, [[maybe_unused]] ComputationContext const& cx) const {
         logFatal("longhand property {#} is missing apply() implementation", registration->name());
     }
 
@@ -170,10 +218,11 @@ export struct Property : Meta::NoCopy {
     /// Evaluates and returns the computed value of this property without permanently
     /// altering the target element's computed values.
     Rc<Property> computedValue(ComputedValues const& parent, ComputedValues& child) const {
+        ComputationContext cx{};
         auto save = registration->load(child);
-        apply(parent, child);
+        apply(parent, child, cx);
         auto result = registration->load(child);
-        save->apply(parent, child);
+        save->apply(parent, child, cx);
         return result;
     }
 
@@ -256,7 +305,7 @@ struct CustomProperty : Property {
     CustomProperty(Rc<Property::Registration> registration, Css::Content value)
         : Property(registration), _value(value) {}
 
-    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.setCustomProp(registration->name(), _value);
     }
 
@@ -292,7 +341,7 @@ struct ToggleProperty : Property {
                Collect<Vec<Rc<Property>>>();
     }
 
-    void apply(ComputedValues const& parent, ComputedValues& child) const override {
+    void apply(ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
         if (isEmpty(_value))
             return;
 
@@ -300,10 +349,10 @@ struct ToggleProperty : Property {
         usize index = 0;
         for (auto& p : _value) {
             index++;
-            if (parentProperty == p->computedValue(parent, child))
+            if (parentProperty == p->computedValue(parent, c))
                 break;
         }
-        _value[index % _value.len()]->apply(parent, child);
+        _value[index % _value.len()]->apply(parent, c, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -417,11 +466,11 @@ struct DeferredProperty : Property {
         return prop.unwrap()->expandShorthand(registry, parent, child);
     }
 
-    void apply(ComputedValues const& parent, ComputedValues& child) const override {
-        auto prop = _expandProperty(child);
+    void apply(ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
+        auto prop = _expandProperty(c);
         if (not prop)
             return;
-        prop.unwrap()->apply(parent, child);
+        prop.unwrap()->apply(parent, c, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -470,25 +519,25 @@ struct DefaultedProperty : Property {
         }
     }
 
-    void apply(ComputedValues const& parent, ComputedValues& child) const override {
+    void apply(ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
         if (_value == Default::INITIAL) {
             // The initial CSS-wide keyword represents the value
             // defined as the property’s initial value.
             // https://drafts.csswg.org/css-cascade/#initial
-            registration->initial()->apply(parent, child);
+            registration->initial()->apply(parent, c, cx);
         } else if (_value == Default::INHERIT) {
             // The inherit CSS-wide keyword represents the property’s
             // computed value on the parent element.
             // https://drafts.csswg.org/css-cascade/#inherit
-            registration->load(parent)->apply(parent, child);
+            registration->load(parent)->apply(parent, c, cx);
         } else if (_value == Default::UNSET) {
             // The unset CSS-wide keyword acts as either inherit or initial,
             // depending on whether the property is inherited or not.
             // https://drafts.csswg.org/css-cascade/#inherit-initial
             if (registration->flags().has(INHERITED))
-                registration->load(parent)->apply(parent, child);
+                registration->load(parent)->apply(parent, c, cx);
             else
-                registration->initial()->apply(parent, child);
+                registration->initial()->apply(parent, c, cx);
 
         } else {
             unreachable();
@@ -630,11 +679,12 @@ export struct RegisteredPropertySet {
     mutable Opt<Rc<ComputedValues>> _memoInitialComputedValues = NONE;
 
     Rc<ComputedValues> initialComputedValues() const {
+        ComputationContext cx{};
         if (not _memoInitialComputedValues) {
             auto initial = makeRc<ComputedValues>();
             for (auto& [_, registration] : registrations().iterItems())
                 if (not registration->flags().has(Property::SHORTHAND_PROPERTY))
-                    registration->initial()->apply(*initial, *initial);
+                    registration->initial()->apply(*initial, *initial, cx);
             _memoInitialComputedValues = initial;
         }
         return makeRc<ComputedValues>(**_memoInitialComputedValues);

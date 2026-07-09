@@ -13,6 +13,9 @@ import :values.angle;
 import :values.length;
 import :values.percent;
 import :values.primitives;
+import :values.keywords;
+
+using namespace Vaev::Literals;
 
 namespace Vaev {
 
@@ -253,87 +256,72 @@ struct ValueParser<FontWeight> {
 // MARK: FontSize --------------------------------------------------------------
 // https://www.w3.org/TR/css-fonts-4/#font-size-prop
 
-export struct FontSize {
-    enum struct _Named {
-        // absolute
-        XX_SMALL,
-        X_SMALL,
-        SMALL,
-        MEDIUM,
-        LARGE,
-        X_LARGE,
-        XX_LARGE,
-
-        // relative
-        LARGER,
-        SMALLER,
-
-        // length/percent
-        LENGTH,
-
-        _LEN,
-    };
-
-    using enum _Named;
-
-    _Named _named;
-    PercentOr<Length> _value;
-
-    constexpr FontSize(_Named named = MEDIUM)
-        : _named(named), _value(Length{}) {
-    }
-
-    constexpr FontSize(PercentOr<Length> size)
-        : _named(LENGTH), _value(size) {
-    }
-
-    _Named named() const {
-        return _named;
-    }
-
-    PercentOr<Length> value() const {
-        if (_named != LENGTH)
-            panic("not a length");
-        return _value;
-    }
-
-    void repr(Io::Emit& e) const {
-        if (_named == LENGTH) {
-            e("{}", _value);
-        } else {
-            e("{}", _named);
-        }
-    }
-};
+using FontSize = Union<
+    Length,
+    Percent,
+    Keywords::XxSmall,
+    Keywords::XSmall,
+    Keywords::Small,
+    Keywords::Medium,
+    Keywords::Large,
+    Keywords::XLarge,
+    Keywords::XxLarge,
+    Keywords::Smaller,
+    Keywords::Larger>;
 
 export template <>
-struct ValueParser<FontSize> {
-    static Res<FontSize> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Css::Token::ident("xx-small")))
-            return Ok(FontSize::XX_SMALL);
-        else if (c.skip(Css::Token::ident("x-small")))
-            return Ok(FontSize::X_SMALL);
-        else if (c.skip(Css::Token::ident("small")))
-            return Ok(FontSize::SMALL);
-        else if (c.skip(Css::Token::ident("medium")))
-            return Ok(FontSize::MEDIUM);
-        else if (c.skip(Css::Token::ident("large")))
-            return Ok(FontSize::LARGE);
-        else if (c.skip(Css::Token::ident("x-large")))
-            return Ok(FontSize::X_LARGE);
-        else if (c.skip(Css::Token::ident("xx-large")))
-            return Ok(FontSize::XX_LARGE);
-        else if (c.skip(Css::Token::ident("smaller")))
-            return Ok(FontSize::SMALLER);
-        else if (c.skip(Css::Token::ident("larger")))
-            return Ok(FontSize::LARGER);
-        else
-            return Ok(try$(parseValue<PercentOr<Length>>(c)));
-    }
+struct _Resolved<FontSize> {
+    using Type = Au;
 };
+
+export struct FontSizeContextData {
+    f64 userFontSize = 16;   /// Font size of the user agent
+    f64 parentFontSize = 16; /// Font size of the parent box
+};
+
+export template <typename T>
+concept FontSizeContext = LengthContext<T> and requires(T t) {
+    { t.userFontSize } -> Meta::Convertible<f64>;
+    { t.parentFontSize } -> Meta::Convertible<f64>;
+};
+
+Au resolve(FontSize const& value, FontSizeContext auto const& ctx) {
+    return value.visit(
+        [&](Length const& v) {
+            return resolve(v, ctx);
+        },
+        [&](Percent const& v) {
+            return Au::fromFloatNearest(ctx.parentFontSize * (v.value() / 100.0));
+        },
+        [&](Keywords::XxSmall) {
+            return Au::fromFloatNearest(ctx.userFontSize * 0.5);
+        },
+        [&](Keywords::XSmall) {
+            return Au::fromFloatNearest(ctx.userFontSize * 0.75);
+        },
+        [&](Keywords::Small) {
+            return Au::fromFloatNearest(ctx.userFontSize * 0.875);
+        },
+        [&](Keywords::Medium) {
+            return Au::fromFloatNearest(ctx.userFontSize);
+        },
+        [&](Keywords::Large) {
+            return Au::fromFloatNearest(ctx.userFontSize * 1.125);
+        },
+        [&](Keywords::XLarge) {
+            return Au::fromFloatNearest(ctx.userFontSize * 1.25);
+        },
+        [&](Keywords::XxLarge) {
+            return Au::fromFloatNearest(ctx.userFontSize * 1.5);
+        },
+        [&](Keywords::Larger) {
+            return Au::fromFloatNearest(ctx.parentFontSize * 1.25);
+        },
+        [&](Keywords::Smaller) {
+            return Au::fromFloatNearest(ctx.parentFontSize * 0.875);
+        }
+    );
+}
 
 // MARK: FontFeature -----------------------------------------------------------
 
@@ -453,24 +441,6 @@ struct ValueParser<FontFamily> {
         }
 
         return Ok<FontFamily>(Symbol::from(familyStrBuilder.take()));
-    }
-};
-
-export struct FontProps {
-    Vec<FontFamily> families = {"sans-serif"_sym};
-    Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;
-    FontWidth width = FontWidth::NORMAL;
-    FontStyle style = FontStyle::NORMAL;
-    FontSize size = FontSize::MEDIUM;
-
-    void repr(Io::Emit& e) const {
-        e("(font");
-        e(" families={}", families);
-        e(" weight={}", weight);
-        e(" width={}", width);
-        e(" style={}", style);
-        e(" size={}", size);
-        e(")");
     }
 };
 

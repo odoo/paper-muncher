@@ -38,7 +38,7 @@ export struct TableLayoutProperty : Property {
     TableLayoutProperty(Rc<Property::Registration> registration, TableLayout value)
         : Property(registration), _value(value) {}
 
-    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.table.cow().tableLayout = _value;
     }
 
@@ -80,7 +80,7 @@ export struct CaptionSideProperty : Property {
     CaptionSideProperty(Rc<Property::Registration> registration, CaptionSide value)
         : Property(registration), _value(value) {}
 
-    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.table.cow().captionSide = _value;
     }
 
