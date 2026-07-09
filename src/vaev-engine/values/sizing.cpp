@@ -15,6 +15,7 @@ import :values.percent;
 import :values.writing;
 
 using namespace Karm;
+using namespace Karm::Math::Literals;
 
 namespace Vaev {
 
@@ -29,7 +30,7 @@ export enum struct BoxSizing : u8 {
 // https://drafts.csswg.org/css-sizing-3/#preferred-size-properties
 
 export struct FitContent {
-    CalcValue<PercentOr<Length>> value = {Length{}};
+    CalcValue<PercentOr<Length>> value = {Length{0_au}};
 
     void repr(Io::Emit& e) const {
         e("(fit-content {})", value);

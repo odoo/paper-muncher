@@ -115,6 +115,15 @@ export struct Angle {
 };
 
 export template <>
+struct _Resolved<Angle> {
+    using Type = Rad;
+};
+
+Rad resolve(Angle const& value, [[maybe_unused]] auto const& ctx = NONE) {
+    return Rad{value.toRadian()};
+}
+
+export template <>
 struct ValueParser<Angle> {
     static Res<Angle::Unit> _parseAngleUnit(Str unit) {
         if (eqCi(unit, "deg"s))
@@ -144,11 +153,6 @@ struct ValueParser<Angle> {
 
         return Error::invalidData("expected angle");
     }
-};
-
-export template <>
-struct _Resolved<Angle> {
-    using Type = Rad;
 };
 
 } // namespace Vaev

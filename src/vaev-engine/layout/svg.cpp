@@ -39,7 +39,7 @@ PercentOr<Length> fromSize(Size const& size) {
 // by the computer refactoring
 Au resolve(PercentOr<Length> const& value, Au relative) {
     if (auto valueLength = value.is<Length>())
-        return Au{valueLength->val()};
+        return Au{valueLength->unwrapOr<AbsoluteLength>(0_au).pixels().value()};
     return Au{relative.cast<f64>() * (value.unwrap<Percent>().value() / 100.)};
 }
 
@@ -77,7 +77,8 @@ struct SvgFormatingContext : FormatingContext {
 
         // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
         if (absWidth and absHeight)
-            return absWidth->val() / absHeight->val();
+            return absWidth->unwrapOr<AbsoluteLength>(0_au).pixels().value() /
+                   absHeight->unwrapOr<AbsoluteLength>(0_au).pixels().value();
 
         // 2. If an SVG View is active:
         // TODO

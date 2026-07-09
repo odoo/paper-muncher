@@ -43,7 +43,7 @@ export struct BackgroundColorProperty : Property {
     BackgroundColorProperty(Rc<Property::Registration> registration, Color value)
         : Property(registration), _value(value) {}
 
-    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.backgrounds.cow().color = _value;
     }
 
@@ -89,7 +89,7 @@ export struct BackgroundAttachmentProperty : Property {
     BackgroundAttachmentProperty(Rc<Property::Registration> registration, Vec<BackgroundAttachment> value)
         : Property(registration), _value(std::move(value)) {}
 
-    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         auto& layers = c.backgrounds.cow().layers;
         layers.resize(max(layers.len(), _value.len()));
         for (usize i = 0; i < _value.len(); ++i)
@@ -127,7 +127,7 @@ export struct BackgroundImageProperty : Property {
     BackgroundImageProperty(Rc<Property::Registration> registration, Vec<Image> value)
         : Property(registration), _value(std::move(value)) {}
 
-    void apply(ComputedValues const&, ComputedValues&) const override {
+    void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
         // TODO
     }
 
@@ -162,7 +162,7 @@ export struct BackgroundPositionProperty : Property {
     BackgroundPositionProperty(Rc<Property::Registration> registration, Vec<BackgroundPosition> value)
         : Property(registration), _value(std::move(value)) {}
 
-    void apply(ComputedValues const&, ComputedValues&) const override {
+    void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
         // TODO
     }
 
@@ -198,7 +198,7 @@ export struct BackgroundRepeatProperty : Property {
         : Property(registration),
           _value(std::move(value)) {}
 
-    void apply(ComputedValues const&, ComputedValues&) const override {
+    void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
         // TODO
     }
 
@@ -285,9 +285,9 @@ export struct ColorProperty : Property {
     ColorProperty(Rc<Property::Registration> registration, Color value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues const& parent, ComputedValues& child) const override {
+    void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         // In the color property, the used value of currentcolor is the resolved inherited value.
-        child.color = resolve(_value, parent.color);
+        c.color = resolve(_value, parent.color);
     }
 
     void repr(Io::Emit& e) const override {

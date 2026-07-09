@@ -42,7 +42,7 @@ struct ListStyleImageProperty : Property {
     ListStyleImageProperty(Rc<Property::Registration> registration, ListImage value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues const&, ComputedValues& c) const override {
+    void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().image = _value;
     }
 
@@ -85,7 +85,7 @@ struct ListStyleTypeProperty : Property {
     ListStyleTypeProperty(Rc<Property::Registration> registration, ListType value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues const&, ComputedValues& c) const override {
+    void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().type = _value;
     }
 
@@ -128,7 +128,7 @@ struct ListStylePositionProperty : Property {
     ListStylePositionProperty(Rc<Property::Registration> registration, ListPosition value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues const&, ComputedValues& c) const override {
+    void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().position = _value;
     }
 
@@ -258,7 +258,7 @@ struct MarkerSideProperty : Property {
     MarkerSideProperty(Rc<Property::Registration> registration, MarkerSide value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues const&, ComputedValues& c) const override {
+    void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().markerSide = _value;
     }
 

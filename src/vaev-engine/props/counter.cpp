@@ -39,7 +39,7 @@ export struct CounterResetProperty : Property {
     CounterResetProperty(Rc<Property::Registration> registration, Vec<CounterProps::Reset> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues const&, ComputedValues& c) const override {
+    void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.counters.cow().reset = _value;
     }
 
@@ -76,7 +76,7 @@ export struct CounterIncrementProperty : Property {
     CounterIncrementProperty(Rc<Property::Registration> registration, Vec<CounterProps::Increment> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues const&, ComputedValues& c) const override {
+    void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.counters.cow().increment = _value;
     }
 
@@ -113,7 +113,7 @@ export struct CounterSetProperty : Property {
     CounterSetProperty(Rc<Property::Registration> registration, Vec<CounterProps::Set> value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues const&, ComputedValues& c) const override {
+    void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.counters.cow().set = _value;
     }
 

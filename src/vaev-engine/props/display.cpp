@@ -38,7 +38,7 @@ export struct DisplayProperty : Property {
     DisplayProperty(Rc<Property::Registration> registration, Display value)
         : Property(registration), _value(value) {}
 
-    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.display = _value;
     }
 
@@ -73,7 +73,7 @@ export struct ContentProperty : Property {
     ContentProperty(Rc<Property::Registration> registration, Content value)
         : Property(registration), _value(value) {}
 
-    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.content = _value;
     }
 
@@ -107,7 +107,7 @@ export struct OrderProperty : Property {
     OrderProperty(Rc<Property::Registration> registration, Integer value)
         : Property(registration), _value(value) {}
 
-    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c) const override {
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.order = _value;
     }
 

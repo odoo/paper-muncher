@@ -211,17 +211,18 @@ export struct PageAreaRule {
     }
 
     void apply(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const {
+        ComputationContext cx;
         for (auto const& prop : props) {
             if (prop->isBogusProperty())
                 continue;
 
             if (prop->isShorthandProperty()) {
                 for (auto& longhand : prop->expandShorthand(registry, parent, child)) {
-                    longhand->apply(parent, child);
+                    longhand->apply(parent, child, cx);
                 }
                 continue;
             }
-            prop->apply(parent, child);
+            prop->apply(parent, child, cx);
         }
     }
 

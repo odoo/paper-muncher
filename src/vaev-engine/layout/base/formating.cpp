@@ -11,19 +11,9 @@ using namespace Karm;
 
 namespace Vaev::Layout {
 
-export struct Viewport {
-    Resolution dpi = Resolution::fromDpi(96);
-    // https://drafts.csswg.org/css-values/#small-viewport-size
-    RectAu small;
-    // https://drafts.csswg.org/css-values/#large-viewport-size
-    RectAu large = small;
-    // https://drafts.csswg.org/css-values/#dynamic-viewport-size
-    RectAu dynamic = small;
-};
-
 export struct Tree {
     Box root;
-    Viewport viewport = {};
+    Style::Viewport viewport = {};
     Fragmentainer fc = {};
 };
 

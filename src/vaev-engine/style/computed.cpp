@@ -11,6 +11,14 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
+struct FontProps {
+    Vec<FontFamily> families = {"sans-serif"_sym};
+    Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;
+    FontWidth width = FontWidth::NORMAL;
+    FontStyle style = FontStyle::NORMAL;
+    Au size;
+};
+
 struct TransformProps {
     Transform transform = Keywords::NONE;
     TransformOrigin origin = {
@@ -33,12 +41,12 @@ export struct ComputedValues {
     Cow<Gaps> gaps;
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
-    Cow<Margin> margin = makeCow<Margin>(Width(CalcValue<PercentOr<Length>>(Length(0_au)))); // FIXME
+    Cow<Margin> margin = Margin(Width(CalcValue<PercentOr<Length>>(Length()))); // FIXME
     Cow<OutlineProps> outline;
-    Cow<Padding> padding = makeCow<Padding>(Length(0_au)); // FIXME
+    Cow<Padding> padding = Padding(Length{}); // FIXME
     Cow<SizingProps> sizing;
     Cow<Baseline> baseline;
-    Cow<Offsets> offsets = makeCow<Offsets>(Width(Keywords::AUTO)); // FIXME
+    Cow<Offsets> offsets = Offsets(Width(Keywords::AUTO)); // FIXME
     Cow<ClipProps> clip;
     Cow<TransformProps> transform;
     Cow<TableProps> table;
@@ -88,40 +96,6 @@ export struct ComputedValues {
 
     bool hasCustomProp(Symbol name) const {
         return customProps->contains(name);
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(computed");
-        e(" color: {}", color);
-        e(" opacity: {}", opacity);
-        e(" aligns: {}", aligns);
-        e(" gaps: {}", gaps);
-        e(" backgrounds: {}", backgrounds);
-        e(" baseline: {}", baseline);
-        e(" borders: {}", borders);
-        e(" margin: {}", margin);
-        e(" padding: {}", padding);
-        e(" boxSizing: {}", boxSizing);
-        e(" sizing: {}", sizing);
-        e(" overflows: {}", overflows);
-        e(" position: {}", position);
-        e(" offsets: {}", offsets);
-        e(" writingMode: {}", writingMode);
-        e(" direction: {}", direction);
-        e(" display: {}", display);
-        e(" order: {}", order);
-        e(" visibility: {}", visibility);
-        e(" table: {}", table);
-        e(" font: {}", font);
-        e(" text: {}", text);
-        e(" flex: {}", flex);
-        e(" break: {}", break_);
-        e(" float: {}", float_);
-        e(" clear: {}", clear);
-        e(" svg: {}", svg);
-        e(" zIndex: {}", zIndex);
-        e(" variables: {}", customProps);
-        e(")");
     }
 };
 } // namespace Vaev::Style

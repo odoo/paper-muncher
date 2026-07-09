@@ -243,18 +243,19 @@ export struct PageRule {
     }
 
     void apply(RegisteredPropertySet& registry, PageComputedValues& c) const {
+        ComputationContext cx;
         for (auto const& prop : props) {
             if (prop->isBogusProperty())
                 continue;
 
             if (prop->isShorthandProperty()) {
                 for (auto& longhand : prop->expandShorthand(registry, *c.style, *c.style)) {
-                    longhand->apply(*c.style, *c.style);
+                    longhand->apply(*c.style, *c.style, cx);
                 }
                 continue;
             }
 
-            prop->apply(*c.style, *c.style);
+            prop->apply(*c.style, *c.style, cx);
         }
 
         for (auto const& area : areas) {

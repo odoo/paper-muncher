@@ -98,7 +98,7 @@ Ui::Child addressMenu() {
 Ui::Child reloadButton(State const& s) {
     return (
                s.status == Status::LOADING
-                   ? Kr::progress()
+                   ? Kr::indeterminedProgress()
                    : Ui::icon(Mdi::REFRESH)
            ) |
            Ui::insets(6) |

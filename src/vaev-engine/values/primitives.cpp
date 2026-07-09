@@ -10,6 +10,7 @@ import Karm.Math;
 
 import :css;
 import :values.base;
+import :values.resolved;
 
 using namespace Karm;
 
@@ -42,6 +43,15 @@ struct ValueParser<Integer> {
 // https://drafts.csswg.org/css-values/#numbers
 
 export using Number = f64;
+
+export template <>
+struct _Resolved<Number> {
+    using Type = Number;
+};
+
+export Number resolve(Number const& value, [[maybe_unused]] auto const& ctx = NONE) {
+    return value;
+}
 
 export template <>
 struct ValueParser<Number> {
