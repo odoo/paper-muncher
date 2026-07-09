@@ -291,7 +291,7 @@ struct BlockFormatingContext : FormatingContext {
 
                     auto placeholder = makeRc<PlaceholderFragment>(c, staticPosRect);
 
-                    fragBuilder.addChild(placeholder);
+                    fragBuilder.addChildIfAny(placeholder);
                     outOfFlowChildren.pushBack(placeholder);
                 }
 
@@ -373,8 +373,7 @@ struct BlockFormatingContext : FormatingContext {
             }
 
             auto output = layoutBorderBox(tree, c, childInput);
-            if (auto [frag] = output.fragment)
-                fragBuilder.addChild(frag);
+            fragBuilder.addChildIfAny(output.fragment);
 
             outOfFlowChildren.pushBack(output.outOfFlowStash);
 

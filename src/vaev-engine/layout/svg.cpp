@@ -131,7 +131,7 @@ struct SvgFormatingContext : FormatingContext {
 
         switch (shape) {
         case SvgShapeElement::RECT:
-            fragBuilder.addChild(
+            fragBuilder.addChildIfAny(
                 makeRc<SvgShapeFragment>(
                     box,
                     _resolveRectangle(*box.style, relativeTo),
@@ -141,7 +141,7 @@ struct SvgFormatingContext : FormatingContext {
             break;
 
         case SvgShapeElement::CIRCLE:
-            fragBuilder.addChild(
+            fragBuilder.addChildIfAny(
                 makeRc<SvgShapeFragment>(
                     box,
                     _resolveCircle(*box.style, relativeTo),
@@ -151,7 +151,7 @@ struct SvgFormatingContext : FormatingContext {
             break;
 
         case SvgShapeElement::PATH:
-            fragBuilder.addChild(
+            fragBuilder.addChildIfAny(
                 makeRc<SvgShapeFragment>(
                     box,
                     _resolveShape(*box.style),
@@ -176,7 +176,7 @@ struct SvgFormatingContext : FormatingContext {
                 {resolvedRect.x, resolvedRect.y},
                 {resolvedRect.width, resolvedRect.height}
             );
-            fragBuilder.addChild(root);
+            fragBuilder.addChildIfAny(root);
         } else if (box.isSvgForeignObjectBox()) {
             auto resolvedRect = _resolveRectangle(*box.style, resolveTo);
 
@@ -190,14 +190,14 @@ struct SvgFormatingContext : FormatingContext {
             auto output = layoutBorderBox(tree, box, childInput);
 
             if (auto [frag] = output.fragment)
-                fragBuilder.addChild(frag);
+                fragBuilder.addChildIfAny(frag);
 
         } else if (box.isSvg()) {
             auto nestedGroupFragBuilder = FragmentBuilder{tree, box};
 
             _commitChildren(tree, box, nestedGroupFragBuilder, resolveTo);
 
-            fragBuilder.addChild(nestedGroupFragBuilder.buildSvgGroup());
+            fragBuilder.addChildIfAny(nestedGroupFragBuilder.buildSvgGroup());
         } else {
             unreachable();
         }

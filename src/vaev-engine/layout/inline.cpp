@@ -126,7 +126,7 @@ struct InlineFormatingContext : FormatingContext {
 
                     auto placeholder = makeRc<PlaceholderFragment>(atomicBox, staticPosRect);
 
-                    fragBuilder.addChild(placeholder);
+                    fragBuilder.addChildIfAny(placeholder);
                     outOfFlowChildren.pushBack(placeholder);
                 }
 
@@ -176,9 +176,7 @@ struct InlineFormatingContext : FormatingContext {
             auto output = layoutBorderBox(tree, atomicBox, childInput);
 
             outOfFlowChildren.pushBack(output.outOfFlowStash);
-
-            if (auto [frag] = output.fragment)
-                fragBuilder.addChild(frag);
+            fragBuilder.addChildIfAny(output.fragment);
         }
 
         if (tree.fc.allowBreak() and
