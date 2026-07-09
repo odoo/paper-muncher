@@ -2,18 +2,29 @@
 
 ## Changes
 
-- Extended support for absolute and fixed positioning.
-- Improved value resolution for font-size.
-- Added support for ::marker and list-type CSS properties.
-- Added --header, --footer, --header-size, and --footer-size flags to the CLI.
-- --margins "<left> <top> <right> <bottom>" is now supported in the CLI.
-- Fixed a crash related to missing table cells.
-- Improved the handling of guaranteed invalid CSS properties.
-- Dumped the backtrace to stderr when panicking.
-- Greatly improved support for markdown.
 - Removed Herobrine.
 
 [GitHub Link](https://github.com/odoo/paper-muncher/)
+
+---
+
+# 🖌️ Paper-Muncher v0.6.0
+
+## Changes
+
+- Extended support for absolute and fixed positioning. [#256](https://github.com/odoo/paper-muncher/pull/256)
+- Improved value resolution for `font-size`. [#257](https://github.com/odoo/paper-muncher/pull/257)
+- Added support for `::marker` and `list-type` CSS properties. [#257](https://github.com/odoo/paper-muncher/pull/257)
+- Added `--header`, `--footer`, `--header-size`, and `--footer-size` flags to the
+  CLI. [#257](https://github.com/odoo/paper-muncher/pull/250)
+- `--margins "<left> <top> <right> <bottom>"` is now supported in the
+  CLI. [#257](https://github.com/odoo/paper-muncher/pull/250)
+- Fixed a crash related to missing table cells. [#251](https://github.com/odoo/paper-muncher/pull/251)
+- Improved the handling of guaranteed invalid CSS properties. [#251](https://github.com/odoo/paper-muncher/pull/248)
+- Dumped the backtrace to stderr when panicking.
+- Greatly improved support for markdown.
+
+[GitHub Link](https://github.com/odoo/paper-muncher/releases/tag/v0.6.0)
 
 ---
 
@@ -24,7 +35,8 @@
 - Added smarter font fetching (PR [#244](https://github.com/odoo/paper-muncher/pull/244))
 - Improved rich text support (PR [#247](https://github.com/odoo/paper-muncher/pull/247))
 - Added support for `whitespace: no-wrap`  (PR [#238](https://github.com/odoo/paper-muncher/pull/238))
-- Added support for `<center>` and `text-align: -vaev-block-center;` (PR [#233](https://github.com/odoo/paper-muncher/pull/233))
+- Added support for `<center>` and `text-align: -vaev-block-center;` (
+  PR [#233](https://github.com/odoo/paper-muncher/pull/233))
 - Added support for the `align=` HTML attribute (PR [#233](https://github.com/odoo/paper-muncher/pull/233))
 - Added support for `break: avoid-page;` (PR [#232](https://github.com/odoo/paper-muncher/pull/232))
 - Fixed build on Linux Mint (PR [#235](https://github.com/odoo/paper-muncher/pull/235))
