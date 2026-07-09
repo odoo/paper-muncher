@@ -30,22 +30,6 @@ struct Cli::ValueParser<T> {
 };
 
 template <>
-struct Cli::ValueParser<Vaev::Color> {
-    static Res<> usage(Io::TextWriter& w) {
-        return w.writeStr("value"s);
-    }
-
-    static Res<Vaev::Color> parse(Cursor<Token>& c) {
-        if (c.ended() or c->kind != Token::OPERAND)
-            return Error::invalidData("expected css color");
-
-        auto res = try$(Vaev::parseValue<Vaev::Color>(c->value));
-        c.next();
-        return Ok(std::move(res));
-    }
-};
-
-template <>
 struct Cli::ValueParser<Print::PaperStock> {
     static Res<> usage(Io::TextWriter& w) {
         return w.writeStr("value"s);
@@ -176,6 +160,9 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
         co_return Ok();
     }
 
+    if (verboseArg.value() and quietArg.value())
+        co_return Error::invalidInput("conflicting arguments --verbose and --quiet provided");
+
     auto level = INFO;
     if (verboseArg.value())
         level = PRINT;
@@ -196,6 +183,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     options.stock = paperArg.value().unwrap<Print::PaperStock>();
     options.orientation = orientationArg.value();
     options.margins = marginArg.value();
+    options.batch = batchArg.value();
 
     Vec<Ref::Url> inputs;
     for (auto& i : inputsArg.value())

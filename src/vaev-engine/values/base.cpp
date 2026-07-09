@@ -24,6 +24,11 @@ export template <typename T>
 struct ValueParser;
 
 export template <typename T>
+concept ValueParseable = requires() {
+    ValueParser<T>::parse;
+};
+
+export template <typename T>
 Res<T> parseValue(Cursor<Css::Sst>& c) {
     return ValueParser<T>::parse(c);
 }
@@ -36,10 +41,5 @@ Res<T> parseValue(Str str) {
     Cursor<Css::Sst> content{sst};
     return ValueParser<T>::parse(content);
 }
-
-export template <typename T>
-concept ValueParseable = requires(T a, Cursor<Css::Sst> c) {
-    parseValue<T>(c);
-};
 
 } // namespace Vaev
