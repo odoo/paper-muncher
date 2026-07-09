@@ -452,28 +452,28 @@ export struct Computer {
     // https://www.w3.org/TR/css-backgrounds-3/#body-background
     static void _propagateBodyBackgroundToHtml(Dom::Document& doc) {
         // For documents whose root element is an HTML HTML element or an XHTML html element
-        auto html = doc.documentElement();
-        if (html->namespaceUri() != Html::NAMESPACE)
+        auto htmlElement = doc.documentElement();
+        if (htmlElement->namespaceUri() != Html::NAMESPACE)
             return;
-        auto htmlBg = html->computedValues()->backgrounds;
+        auto rootBackground = htmlElement->computedValues()->backgrounds;
 
-        auto body = doc.body();
-        if (body == nullptr)
+        auto bodyElement = doc.body();
+        if (bodyElement == nullptr)
             return;
-        auto bodyBg = body->computedValues()->backgrounds;
+        auto bodyBackground = bodyElement->computedValues()->backgrounds;
 
         // If the computed value of background-image on the
         // root element is none and its background-color is transparent
-        if (htmlBg->color == TRANSPARENT and not htmlBg->layers) {
+        if (rootBackground->color == TRANSPARENT and rootBackground->imageIsNone()) {
             // User agents must instead propagate the computed values of the
             // background properties from that element’s first HTML BODY
             // or XHTML body child element.
-            html->computedValues()->backgrounds = bodyBg;
+            htmlElement->computedValues()->backgrounds = bodyBackground;
 
             // The used values of that BODY element’s background properties are
             // their initial values, and the propagated values are treated
             // as if they were specified on the root element.
-            body->computedValues()->backgrounds = {};
+            bodyElement->computedValues()->backgrounds = {};
         }
     }
 

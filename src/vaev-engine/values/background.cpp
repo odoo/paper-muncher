@@ -301,6 +301,13 @@ export struct BackgroundProps {
     Color color = TRANSPARENT;
     Vec<BackgroundLayer> layers = {};
 
+    bool imageIsNone() const {
+        return iter(layers) |
+               All([](auto const& l) {
+                   return l.image == NONE;
+               });
+    }
+
     operator SpecifiedBackground() const {
         return {
             color,
