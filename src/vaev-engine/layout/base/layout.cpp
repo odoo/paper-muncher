@@ -45,8 +45,9 @@ export struct FragmentBuilder {
         : _tree(tree),
           _box(box) {}
 
-    void addChild(Rc<Fragment> child) {
-        _children.pushBack(child);
+    void addChildIfAny(Opt<Rc<Fragment>> child) {
+        if (child)
+            _children.pushBack(child.take());
     }
 
     Rc<Fragment> buildSvgShape(SvgShape shape, Au strokeWidth) {

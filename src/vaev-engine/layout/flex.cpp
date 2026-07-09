@@ -1503,11 +1503,8 @@ struct FlexFormatingContext : FormatingContext {
                 };
 
                 auto output = layoutBorderBox(tree, *flexItem.box, childInput);
-
                 oofChildren.pushBack(output.outOfFlowStash);
-
-                if (auto [frag] = output.fragment)
-                    fragBuilder.addChild(frag);
+                fragBuilder.addChildIfAny(output.fragment);
             }
         }
 
@@ -1523,7 +1520,7 @@ struct FlexFormatingContext : FormatingContext {
 
                 auto placeholder = makeRc<PlaceholderFragment>(c, staticPosRect);
 
-                fragBuilder.addChild(placeholder);
+                fragBuilder.addChildIfAny(placeholder);
                 outOfFlowChildren.pushBack(placeholder);
             }
         }

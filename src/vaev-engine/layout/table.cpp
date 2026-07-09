@@ -1524,8 +1524,7 @@ export struct TableFormatingContext : FormatingContext {
                 outputRow.sizeY = max(outputRow.sizeY, cellHeight);
             }
 
-            if (auto [frag] = outputCell.fragment)
-                fragBuilder.addChild(frag);
+            fragBuilder.addChildIfAny(outputCell.fragment);
 
             outputRow.someBottomsUncompleteLaidOut |= isBottomCell and not outputCell.completelyLaidOut;
         };

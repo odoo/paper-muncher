@@ -113,9 +113,15 @@ struct Box : Meta::NoCopy {
     }
 
     bool isRemovedFromFlow() const {
-        return style->position == Keywords::ABSOLUTE or
+        return isFloating() or
+               style->position == Keywords::ABSOLUTE or
                style->position == Keywords::FIXED or
                style->position.is<RunningPosition>();
+    }
+
+    // https://drafts.csswg.org/css2/#floats
+    bool isFloating() const {
+        return style->float_ != Float::NONE;
     }
 
     // https://www.w3.org/TR/CSS22/zindex.html
