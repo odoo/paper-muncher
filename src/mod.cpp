@@ -76,29 +76,28 @@ export Rc<Http::Client> defaultHttpClient(bool sandboxed) {
 export struct Option {
     Vaev::Resolution scale = Vaev::Resolution::fromDppx(1);
     Vaev::Resolution density = Vaev::Resolution::fromDppx(1);
-    Opt<Vaev::Length> width = NONE;
-    Opt<Vaev::Length> height = NONE;
+    Opt<Vaev::AbsoluteLength> width = NONE;
+    Opt<Vaev::AbsoluteLength> height = NONE;
     Opt<Vaev::Color> background = NONE;
     Print::PaperStock stock = Print::A4;
     Print::Orientation orientation = Print::Orientation::PORTRAIT;
-    Union<Print::MarginOption, Math::Insets<Vaev::Length>> margins = Print::MarginOption::DEFAULT;
+    Union<Print::MarginOption, Math::Insets<Vaev::AbsoluteLength>> margins = Print::MarginOption::DEFAULT;
     Ref::Uti outputFormat = Ref::Uti::PUBLIC_DATA;
     Batch batch = Batch::CONCAT;
     Flow flow = Flow::AUTO;
     Extend extend = Extend::CROP;
     Opt<Ref::Url> header = NONE;
     Opt<Ref::Url> footer = NONE;
-    Union<Vaev::Keywords::Auto, Vaev::Length> headerSize = Vaev::Keywords::AUTO;
-    Union<Vaev::Keywords::Auto, Vaev::Length> footerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength> headerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength> footerSize = Vaev::Keywords::AUTO;
 
     auto derivePrintSettings() const -> Print::Settings {
-        Vaev::Layout::Resolver resolver;
 
         auto stock = this->stock;
         if (this->width or this->height)
             stock = Print::PaperStock::custom(
-                this->width ? resolver.resolve(*this->width) : stock.minorAxis,
-                this->height ? resolver.resolve(*this->height) : stock.majorAxis
+                this->width ? Vaev::resolve(*this->width) : stock.minorAxis,
+                this->height ? Vaev::resolve(*this->height) : stock.majorAxis
             );
 
         Print::Margins margins = Print::MarginOption::DEFAULT;
@@ -106,9 +105,9 @@ export struct Option {
             [&](Print::MarginOption n) {
                 margins = n;
             },
-            [&](Math::Insets<Vaev::Length> const& insets) {
-                margins = insets.map([&](Vaev::Length l) {
-                    return resolver.resolve(l);
+            [&](Math::Insets<Vaev::AbsoluteLength> const& insets) {
+                margins = insets.map([&](Vaev::AbsoluteLength l) {
+                    return Vaev::resolve(l);
                 });
             }
         );
@@ -135,13 +134,12 @@ export struct Option {
 struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
     Opt<Rc<Vaev::Dom::Window>> headerWindow;
     Opt<Rc<Vaev::Dom::Window>> footerWindow;
-    Union<Vaev::Keywords::Auto, Vaev::Length> headerSize = Vaev::Keywords::AUTO;
-    Union<Vaev::Keywords::Auto, Vaev::Length> footerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength> headerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength> footerSize = Vaev::Keywords::AUTO;
     Map<Math::Vec2Au, Pair<Vaev::Au>> _memo;
 
     Vaev::RectAu layout(Vaev::Style::Media const& media, Vaev::Driver::PageLayoutInfos const& infos) override {
         auto [headerHeight, footerHeight] = _memo.lookupOrPut(infos.pageDecoration.size(), [&] {
-            Vaev::Layout::Resolver resolver;
             Vaev::Au headerHeight = 0_au;
             Vaev::Au footerHeight = 0_au;
 
@@ -152,7 +150,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                     headerHeight = w->ensureRender().frag->borderBox().height;
                 }
             } else {
-                headerHeight = resolver.resolve(headerSize.unwrap<Vaev::Length>());
+                headerHeight = Vaev::resolve(headerSize.unwrap<Vaev::AbsoluteLength>());
             }
 
             if (footerSize == Vaev::Keywords::AUTO) {
@@ -162,7 +160,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                     footerHeight = w->ensureRender().frag->borderBox().height;
                 }
             } else {
-                footerHeight = resolver.resolve(footerSize.unwrap<Vaev::Length>());
+                footerHeight = Vaev::resolve(footerSize.unwrap<Vaev::AbsoluteLength>());
             }
 
             return Pair{headerHeight, footerHeight};

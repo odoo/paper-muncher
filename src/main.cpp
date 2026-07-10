@@ -90,15 +90,15 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     auto paperArg = Cli::option<Union<Print::PaperStock, PaperList>>(NONE, "paper"s, "Paper size for printing (default: A4)"s, Print::A4);
     auto orientationArg = Cli::option<Print::Orientation>(NONE, "orientation"s, "Page orientation (default: portrait)"s, Print::Orientation::PORTRAIT);
-    auto marginArg = Cli::option<Union<Print::MarginOption, Math::Insets<Vaev::Length>>>(NONE, "margins"s, "Page margins (default: default)"s, Print::MarginOption::DEFAULT);
+    auto marginArg = Cli::option<Union<Print::MarginOption, Math::Insets<Vaev::AbsoluteLength>>>(NONE, "margins"s, "Page margins (default: default)"s, Print::MarginOption::DEFAULT);
     Cli::Section paperSection{
         .title = "Paper Options"s,
         .options = {paperArg, orientationArg, marginArg},
         .epilog = "Use '--paper list' to display all supported standard paper sizes."s
     };
 
-    auto widthArg = Cli::option<Opt<Vaev::Length>>(NONE, "width"s, "Width of the output document in css units (e.g. 800px)"s, NONE);
-    auto heightArg = Cli::option<Opt<Vaev::Length>>(NONE, "height"s, "Height of the output document in css units (e.g. 600px)"s, NONE);
+    auto widthArg = Cli::option<Opt<Vaev::AbsoluteLength>>(NONE, "width"s, "Width of the output document in css units (e.g. 800px)"s, NONE);
+    auto heightArg = Cli::option<Opt<Vaev::AbsoluteLength>>(NONE, "height"s, "Height of the output document in css units (e.g. 600px)"s, NONE);
     auto scaleArg = Cli::option<Vaev::Resolution>(NONE, "scale"s, "Scale of the input document in css units (e.g. 1x)"s, Vaev::Resolution::fromDppx(1));
 
     Cli::Section viewportSection{
@@ -108,9 +108,9 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     };
 
     auto headerArg = Cli::option<Opt<Ref::Url>>(NONE, "header"s, "Add a header to the document"s, NONE);
-    auto headerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::Length>>(NONE, "header-size"s, "Add a header to the document"s, Vaev::Keywords::AUTO);
+    auto headerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength>>(NONE, "header-size"s, "Add a header to the document"s, Vaev::Keywords::AUTO);
     auto footerArg = Cli::option<Opt<Ref::Url>>(NONE, "footer"s, "Add a footer to the document"s, NONE);
-    auto footerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::Length>>(NONE, "footer-size"s, "Add a header to the document"s, Vaev::Keywords::AUTO);
+    auto footerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength>>(NONE, "footer-size"s, "Add a header to the document"s, Vaev::Keywords::AUTO);
 
     Cli::Section decorationSection{
         .title = "Document decoration"s,
