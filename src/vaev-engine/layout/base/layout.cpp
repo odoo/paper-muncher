@@ -72,6 +72,18 @@ export struct FragmentBuilder {
 
         return buildBox(input.position, size, input.usedSpacings);
     }
+
+    Rc<Fragment> buildTableBox(Vec2Au position, Vec2Au size, UsedSpacings usedSpacings, Opt<Map<usize, UsedBorders>> borderMapping) {
+        auto metrics = computeBoxMetrics(_tree, _box, position, size, usedSpacings);
+        return makeRc<TableBoxFragment>(_box, metrics, std::move(borderMapping), std::move(_children));
+    }
+
+    Opt<Rc<Fragment>> buildTableBoxFromInput(Input const& input, Vec2Au size, Opt<Map<usize, UsedBorders>> borderMapping) {
+        if (not input.generateFragment)
+            return NONE;
+
+        return buildTableBox(input.position, size, input.usedSpacings, std::move(borderMapping));
+    }
 };
 
 } // namespace Vaev::Layout

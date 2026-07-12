@@ -380,7 +380,18 @@ export struct BoxFragment : Fragment {
     }
 
     void repr(Io::Emit& e) const override {
-        e("(box-frag matrics: {} children: {})", metrics, _children);
+        e("(box-frag metrics: {} children: {})", metrics, _children);
+    }
+};
+
+export struct TableBoxFragment : BoxFragment {
+    Opt<Map<usize, UsedBorders>> borderMapping;
+
+    TableBoxFragment(Box& box, BoxMetrics metrics, Opt<Map<usize, UsedBorders>> borderMapping, Vec<Rc<Fragment>> children = {})
+        : BoxFragment(box, metrics, std::move(children)), borderMapping(std::move(borderMapping)) {}
+
+    void repr(Io::Emit& e) const override {
+        e("(table-box-frag metrics: {} children: {})", metrics, _children);
     }
 };
 

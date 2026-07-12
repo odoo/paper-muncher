@@ -776,7 +776,6 @@ export struct TableFormatingContext : FormatingContext {
         if (useBordersCollapse) {
             bordersStyleGrid.init(grid.size, box.style->color);
             computeBordersStructsCollapse(tree, box);
-            boxBorderMapping = Map<usize, UsedBorders>{};
         } else
             computeBordersStructsSeparate(tree);
     }
@@ -1460,7 +1459,7 @@ export struct TableFormatingContext : FormatingContext {
 
         auto outputCell = layoutBorderBox(tree, *cell.box, childInput);
 
-        if (input.generateFragment and useBordersCollapse) {
+        if (boxBorderMapping) {
             boxBorderMapping->put((usize)cellBox.buf(), *collapsedBorders);
         }
 
@@ -1712,6 +1711,12 @@ export struct TableFormatingContext : FormatingContext {
     Output run(Tree& tree, Box& box, Input input, usize startAtTable, Opt<usize> stopAtTable) override {
         auto fragBuilder = FragmentBuilder{tree, box};
 
+        if (input.generateFragment and useBordersCollapse) {
+            boxBorderMapping = Map<usize, UsedBorders>{};
+        } else {
+            boxBorderMapping = NONE;
+        }
+
         // TODO: - vertical and horizontal alignment
         //       - borders collapse
         // TODO: in every row, at least one cell must be an anchor, or else this row is 'skipable'
@@ -1770,7 +1775,7 @@ export struct TableFormatingContext : FormatingContext {
         };
 
         return Output{
-            .fragment = fragBuilder.buildBoxFromInput(input, size),
+            .fragment = fragBuilder.buildTableBoxFromInput(input, size, std::move(boxBorderMapping)),
             .size = size,
             .completelyLaidOut = completelyLaidOut,
             .breakpoint = tree.fc.isDiscoveryMode() ? Opt{breakpoint} : NONE,
