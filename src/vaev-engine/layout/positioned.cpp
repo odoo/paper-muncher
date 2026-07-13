@@ -192,15 +192,28 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
         .margin = computeMargins(tree, box, containingBlock.size())
     };
 
-    auto width = computeSpecifiedBorderBoxWidth(
-                     tree, box, style.sizing->width, containingBlock.size(),
-                     usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
-    );
+    // https://www.w3.org/TR/css-position-3/#abspos-auto-size
+    // TODO: Handle `margin: auto` case once they are implemented.
 
-    auto height = computeSpecifiedBorderBoxHeight(
-                      tree, box, style.sizing->height, containingBlock.size(),
-                      usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
-    );
+    Opt<Au> width = NONE;
+    if (not style.insets->start.is<Keywords::Auto>() and not style.insets->end.is<Keywords::Auto>()) {
+        width = availableSpace.width;
+    } else {
+        width = computeSpecifiedBorderBoxWidth(
+            tree, box, style.sizing->width, containingBlock.size(),
+            usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
+        );
+    }
+
+    Opt<Au> height = NONE;
+    if (not style.insets->top.is<Keywords::Auto>() and not style.insets->bottom.is<Keywords::Auto>()) {
+        height = availableSpace.height;
+    } else {
+        height = computeSpecifiedBorderBoxHeight(
+            tree, box, style.sizing->height, containingBlock.size(),
+            usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
+        );
+    }
 
     // TODO
     // 3. Then, the value of any auto margins are calculated.
@@ -250,7 +263,7 @@ Au _negotiateInsetsForRelativePositioning(Tree& tree, Box const& box, Size const
 export Vec2Au relativePositionOffset(Tree& tree, Box const& box, RectAu containingBlock) {
     auto const& s = *box.style;
 
-    return Vec2Au {
+    return Vec2Au{
         _negotiateInsetsForRelativePositioning(tree, box, s.insets->start, s.insets->end, containingBlock.width),
         _negotiateInsetsForRelativePositioning(tree, box, s.insets->top, s.insets->bottom, containingBlock.height),
     };

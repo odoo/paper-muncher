@@ -470,4 +470,223 @@
 
 </test>
 
+<test name="position-absolute-inset-stretching">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                section {
+                    width: 200px;
+                    height: 200px;
+                    padding: 0;
+                    background: #ddd;
+                    position: relative;
+                }
+
+                .red {
+                    background-color: red;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+            </style>
+        </head>
+
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="green" style="position: absolute; top: 20px; left: 20px; width: 160px; height: 160px;"></div>
+    </rendering>
+
+    <rendering help="With all four insets set and an auto size, the box fills the inset-modified containing block.">
+        <div class="green" style="position: absolute; top: 20px; right: 20px; bottom: 20px; left: 20px;"></div>
+    </rendering>
+
+    <rendering help="Percentage insets resolve against the containing block (10% of 200px = 20px).">
+        <div class="green" style="position: absolute; top: 10%; right: 10%; bottom: 10%; left: 10%;"></div>
+    </rendering>
+
+    <rendering help="Stretch in the horizontal axis only; the vertical size is specified.">
+        <div class="green" style="position: absolute; top: 20px; left: 20px; right: 20px; height: 160px;"></div>
+    </rendering>
+
+    <rendering help="Stretch in the vertical axis only; the horizontal size is specified.">
+        <div class="green" style="position: absolute; top: 20px; bottom: 20px; left: 20px; width: 160px;"></div>
+    </rendering>
+
+    <error help="A different end inset must produce a different stretched size.">
+        <div class="green" style="position: absolute; top: 20px; right: 30px; bottom: 20px; left: 20px;"></div>
+    </error>
+
+    <error help="A different percentage start inset must shift and shrink the box.">
+        <div class="green" style="position: absolute; top: 25%; right: 10%; bottom: 10%; left: 10%;"></div>
+    </error>
+
+</test>
+
+<test name="position-absolute-insets-nested-containing-block">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                section {
+                    width: 200px;
+                    height: 200px;
+                    padding: 0;
+                    background: #ddd;
+                    position: relative;
+                }
+
+                .red {
+                    background-color: red;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+            </style>
+        </head>
+
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="green" style="position: absolute; top: 30px; left: 30px; width: 80px; height: 80px;"></div>
+        <div class="red" style="position: absolute; top: 100px; left: 100px; width: 100px; height: 100px;"></div>
+    </rendering>
+
+    <rendering help="Insets resolve against the padding box of the nearest positioned ancestor, not the initial containing block.">
+        <div style="position: absolute; top: 20px; left: 20px; width: 100px; height: 100px;">
+            <div class="green" style="position: absolute; top: 10px; right: 10px; bottom: 10px; left: 10px;"></div>
+        </div>
+        <div style="position: absolute; top: 100px; left: 100px; width: 100px; height: 100px;">
+            <div class="red" style="position: absolute; top: 0px; right: 0px; bottom: 0px; left: 0px;"></div>
+        </div>
+    </rendering>
+
+    <rendering help="Percentage insets resolve against the ancestor containing block size (10% of 100px = 10px).">
+        <div style="position: absolute; top: 20px; left: 20px; width: 100px; height: 100px;">
+            <div class="green" style="position: absolute; top: 10%; right: 10%; bottom: 10%; left: 10%;"></div>
+        </div>
+        <div style="position: absolute; top: 100px; left: 100px; width: 100px; height: 100px;">
+            <div class="red" style="position: absolute; top: 0%; right: 0%; bottom: 0%; left: 0%;"></div>
+        </div>
+    </rendering>
+
+    <error help="Changing one inset on the nested box must change its stretched size.">
+        <div style="position: absolute; top: 20px; left: 20px; width: 100px; height: 100px;">
+            <div class="green" style="position: absolute; top: 10px; right: 10px; bottom: 10px; left: 15px;"></div>
+        </div>
+        <div style="position: absolute; top: 100px; left: 100px; width: 100px; height: 100px;">
+            <div class="red" style="position: absolute; top: 0px; right: 0px; bottom: 0px; left: 0px;"></div>
+        </div>
+    </error>
+
+</test>
+
+<test name="position-absolute-percentage-insets">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                section {
+                    width: 200px;
+                    height: 200px;
+                    padding: 0;
+                    background: #ddd;
+                    position: relative;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                }
+
+                .red {
+                    background-color: red;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+            </style>
+        </head>
+
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="green" style="position: absolute; top: 40px; left: 40px;"></div>
+        <div class="blue" style="position: absolute; top: 20px; left: 20px;"></div>
+    </rendering>
+
+    <rendering help="Percentage start insets resolve against the containing block (20% of 200px = 40px).">
+        <div class="green" style="position: absolute; top: 20%; left: 20%;"></div>
+        <div class="blue" style="position: absolute; top: 10%; left: 10%;"></div>
+    </rendering>
+
+    <rendering help="Percentages and lengths can be mixed across axes.">
+        <div class="green" style="position: absolute; top: 20%; left: 40px;"></div>
+        <div class="blue" style="position: absolute; top: 20px; left: 10%;"></div>
+    </rendering>
+
+    <error>
+        <div class="green" style="position: absolute; top: 20%; left: 20%;"></div>
+        <div class="blue" style="position: absolute; top: 5%; left: 10%;"></div>
+    </error>
+
+    <error>
+        <div class="green" style="position: absolute; top: 30%; left: 20%;"></div>
+        <div class="blue" style="position: absolute; top: 10%; left: 10%;"></div>
+    </error>
+
+</test>
+
 </tests>
