@@ -55,6 +55,8 @@ struct InlineFormatingContext : FormatingContext {
         // NOTE: We are not supposed to get there if the content is not a prose
         auto& prose = box.content.unwrap<Rc<Gfx::Prose>>();
 
+        Vec<Rc<PlaceholderFragment>> outOfFlowChildren = {};
+
         for (auto strutCell : prose->cellsWithStruts()) {
             auto& boxStrutCell = *strutCell->strut();
             auto& atomicBox = box.children()[boxStrutCell.id];
@@ -112,6 +114,25 @@ struct InlineFormatingContext : FormatingContext {
             auto& boxStrutCell = *strutCell->strut();
             auto& atomicBox = box.children()[boxStrutCell.id];
 
+            if (oneOf(atomicBox.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
+                if (input.generateFragment) {
+                    // https://www.w3.org/TR/css-position-3/#staticpos-rect
+
+                    // TODO:
+                    RectAu staticPosRect = {
+                        Vec2Au{},
+                        Vec2Au{}
+                    };
+
+                    auto placeholder = makeRc<PlaceholderFragment>(atomicBox, staticPosRect);
+
+                    fragBuilder.addChild(placeholder);
+                    outOfFlowChildren.pushBack(placeholder);
+                }
+
+                continue;
+            }
+
             // FIXME:
             // Look for running position should be called at linebox generation.
             // Here it could register multiple time the same box.
@@ -154,6 +175,8 @@ struct InlineFormatingContext : FormatingContext {
 
             auto output = layoutBorderBox(tree, atomicBox, childInput);
 
+            outOfFlowChildren.pushBack(output.outOfFlowStash);
+
             if (auto [frag] = output.fragment)
                 fragBuilder.addChild(frag);
         }
@@ -184,6 +207,7 @@ struct InlineFormatingContext : FormatingContext {
             .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,
+            .outOfFlowStash = std::move(outOfFlowChildren),
         };
     }
 };

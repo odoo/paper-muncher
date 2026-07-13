@@ -11,13 +11,24 @@ using namespace Karm;
 namespace Vaev::Layout {
 
 export struct Fragment {
-    Box const& _box;
-    Vec<Rc<Fragment>> _children;
+    enum struct Options {
+        OOF = 1 << 0,
+    };
 
-    Fragment(Box const& box, Vec<Rc<Fragment>> children)
+    using enum Options;
+
+    Box& _box;
+    Vec<Rc<Fragment>> _children;
+    Flags<Options> _flags = {};
+
+    Fragment(Box& box, Vec<Rc<Fragment>> children)
         : _box(box), _children(std::move(children)) {}
 
     virtual ~Fragment() = default;
+
+    Flags<Options>& flags() {
+        return _flags;
+    }
 
     // https://www.w3.org/TR/SVG2/coords.html#TermObjectBoundingBox
     virtual RectAu objectBoundingBox() const {
@@ -53,7 +64,7 @@ export struct Fragment {
         return *_box.style;
     }
 
-    Box const& originatingBox() const {
+    Box& originatingBox() const {
         return _box;
     }
 
@@ -137,6 +148,40 @@ export struct Fragment {
         for (auto& c : children())
             c->paintOverlay(g, of, viewport);
     }
+};
+
+export struct PlaceholderFragment : Fragment {
+    Opt<Rc<Fragment>> fragment = NONE;
+
+    // https://www.w3.org/TR/css-position-3/#staticpos-rect
+    RectAu staticPosRect;
+
+    PlaceholderFragment(Box& box, RectAu staticPositionRectangle)
+        : Fragment(box, {}), staticPosRect(staticPositionRectangle) {}
+
+    RectAu borderBox() const override {
+        return {};
+    }
+
+    RectAu paddingBox() const override {
+        return {};
+    }
+
+    RectAu contentBox() const override {
+        return {};
+    }
+
+    RectAu marginBox() const override {
+        return {};
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("(placeholder-frag)");
+    }
+
+    void paintOwnWireframe(Gfx::Canvas&) const override {}
+
+    void paintOwnOverlay(Gfx::Canvas&) const override {}
 };
 
 export using SvgShape = Union<RectAu, EllipseAu, Math::Path>;

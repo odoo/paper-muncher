@@ -263,9 +263,46 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
     auto startAt = tree.fc.allowBreak() ? input.breakpointTraverser.getStart().unwrapOr(0uz) : 0uz;
     auto stopAt = tree.fc.allowBreak() and not tree.fc.isDiscoveryMode() ? input.breakpointTraverser.getEnd() : NONE;
     try$(_shouldAbortFragmentingBeforeLayout(tree.fc, input));
-    return _dispatchFormatingContext(
+    auto out = _dispatchFormatingContext(
         tree, box, input, startAt, stopAt
     );
+
+    Vec<Rc<PlaceholderFragment>> outOfFlowStash;
+
+    if (input.generateFragment) {
+        auto pending = std::move(out.outOfFlowStash);
+
+        for (usize i = 0; i < pending.len(); ++i) {
+            auto oofChild = pending[i];
+
+            bool handleAsAbsoluteCb = oofChild->style().position == Keywords::ABSOLUTE and isAbsolutePositioningContainingBlock(*box.style);
+            bool handleAsFixedCb = oofChild->style().position == Keywords::FIXED and isFixedPositioningContainingBlock(*box.style);
+
+            if (handleAsAbsoluteCb or handleAsFixedCb) {
+                auto containingBlock = RectAu{
+                    {input.position.x, input.position.y},
+                    out.size,
+                }.grow(input.usedSpacings.padding);
+
+                auto childOutput = layoutAbsolutePositioned(tree, oofChild->originatingBox(), containingBlock, oofChild->staticPosRect, input.pageNumber);
+                auto childFragment = childOutput.fragment.unwrap();
+
+                pending.pushBack(childOutput.outOfFlowStash);
+
+                childFragment->flags().set(Fragment::OOF);
+
+                oofChild->fragment = childFragment;
+
+                out.fragment.unwrap()->_children.pushBack(childFragment);
+            } else {
+                outOfFlowStash.pushBack(oofChild);
+            }
+        }
+    }
+
+    out.outOfFlowStash = std::move(outOfFlowStash);
+
+    return out;
 }
 
 Input _adaptToContentBox(Input input, UsedSpacings const& usedSpacings) {
@@ -318,11 +355,24 @@ Output layoutRoot(Tree& tree, Input input) {
 
     auto out = layoutBorderBox(tree, tree.root, input);
 
-    // FIXME: Totally breaks the immutable fragment model, needs to go elsewhere.
-    //        My day is ruined and my disappointment is immeasurable.
-    //        - lufio
-    if (input.generateFragment)
-        layoutPositioned(tree, *out.fragment, input.containingBlock, input);
+    if (input.generateFragment) {
+        auto pending = std::move(out.outOfFlowStash);
+
+        for (usize i = 0; i < pending.len(); ++i) {
+            auto oofChild = pending[i];
+
+            auto childOutput = layoutAbsolutePositioned(tree, oofChild->originatingBox(), input.containingBlock, oofChild->staticPosRect, input.pageNumber);
+            auto childFragment = childOutput.fragment.unwrap();
+
+            pending.pushBack(childOutput.outOfFlowStash);
+
+            childFragment->flags().set(Fragment::OOF);
+
+            oofChild->fragment = childFragment;
+
+            out.fragment.unwrap()->_children.pushBack(childFragment);
+        }
+    }
 
     return out;
 }

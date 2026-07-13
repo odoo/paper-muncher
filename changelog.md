@@ -2,6 +2,7 @@
 
 ## Changes
 
+- Extended support for absolute and fixed positioning.
 - Improved value resolution for font-size.
 - Added support for ::marker and list-type CSS properties.
 - Added --header, --footer, --header-size, and --footer-size flags to the CLI.

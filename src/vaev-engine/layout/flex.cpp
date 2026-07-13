@@ -1473,7 +1473,7 @@ struct FlexFormatingContext : FormatingContext {
 
     // XX. MARK: Commit --------------------------------------------------------
 
-    Opt<Rc<Fragment>> _commit(Tree& tree, FragmentBuilder& fragBuilder, Input input) {
+    Opt<Rc<Fragment>> _commit(Tree& tree, FragmentBuilder& fragBuilder, Vec<Rc<PlaceholderFragment>>& oofChildren, Input input) {
         if (not input.generateFragment)
             return NONE;
 
@@ -1504,12 +1504,29 @@ struct FlexFormatingContext : FormatingContext {
 
                 auto output = layoutBorderBox(tree, *flexItem.box, childInput);
 
+                oofChildren.pushBack(output.outOfFlowStash);
+
                 if (auto [frag] = output.fragment)
                     fragBuilder.addChild(frag);
             }
         }
 
         return fragBuilder.buildBox(input.position, fa.buildPair(_usedMainSize, _usedCrossSize), input.usedSpacings);
+    }
+
+    void _appendOofChildren(Box& box, Vec<Rc<PlaceholderFragment>>& outOfFlowChildren, FragmentBuilder& fragBuilder) {
+        for (auto& c : box.children()) {
+            if (oneOf(c.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
+                // FIXME: Follow spec.
+                // https://www.w3.org/TR/css-flexbox-1/#abspos-items
+                RectAu staticPosRect = {};
+
+                auto placeholder = makeRc<PlaceholderFragment>(c, staticPosRect);
+
+                fragBuilder.addChild(placeholder);
+                outOfFlowChildren.pushBack(placeholder);
+            }
+        }
     }
 
     // MARK: Public API --------------------------------------------------------
@@ -1584,13 +1601,16 @@ struct FlexFormatingContext : FormatingContext {
         _alignAllFlexLines(box);
 
         // XX. Commit
-        auto fragment = _commit(tree, fragBuilder, input);
+        Vec<Rc<PlaceholderFragment>> oofChildren = {};
+        auto fragment = _commit(tree, fragBuilder, oofChildren, input);
+        _appendOofChildren(box, oofChildren, fragBuilder);
 
         return {
             .fragment = fragment,
             .size = fa.buildPair(_usedMainSize, _usedCrossSize),
             .completelyLaidOut = true,
             .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
+            .outOfFlowStash = std::move(oofChildren),
         };
     }
 };

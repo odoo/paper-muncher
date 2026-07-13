@@ -72,6 +72,8 @@ export struct Output {
     BaselinePositionsSet const firstBaselineSet = {};
     BaselinePositionsSet const lastBaselineSet = {};
 
+    Vec<Rc<PlaceholderFragment>> outOfFlowStash = {};
+
     Au width() const {
         return size.x;
     }
