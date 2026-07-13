@@ -391,7 +391,7 @@ struct DeferredProperty : Property {
 
         Symbol varName = Symbol::from(content->token.data);
 
-        if (Opt<Css::Content> ref = env.lookup(varName)) {
+        if (Opt<Css::Content const&> ref = env.lookup(varName)) {
             Cursor<Css::Sst> varContent = *ref;
 
             if (varContent and varContent.peek() != Css::Token::GUARANTEED_INVALID) {
@@ -450,9 +450,9 @@ struct DeferredProperty : Property {
         eatWhitespace(cursor);
 
         auto prop = registration->parse(cursor);
-        if (not prop and debugProperties) {
-            logWarn("failed to parse declaration: {}: {}", registration->name(), prop);
-        }
+        if (not prop and debugProperties)
+            logWarn("failed to parse declaration: {}: {}: {}", registration->name(), prop, out);
+
         return prop;
     }
 
@@ -663,6 +663,7 @@ export struct RegisteredPropertySet {
         }
 
         if (options.has(GENERATE_BOGUS)) {
+            logErrorIf(debugProperties, "unknown property {:#}, generating bogus registration", propertyName);
             return makeRc<BogusProperty::Registration>(propertyName);
         }
 
@@ -770,14 +771,15 @@ export struct RegisteredPropertySet {
                 return toggle;
 
         auto maybeProp = registration->parse(cursor);
+        eatWhitespace(cursor);
+        if (not cursor.ended())
+            maybeProp = Error::invalidData("unexpected token after property value");
 
         if (options.has(DEFER_UNPARSABLE) and not maybeProp) {
             return Ok(_deferProperty(registration, content));
         }
 
-        eatWhitespace(cursor);
-
-        if (options.has(GENERATE_BOGUS) and not cursor.ended()) {
+        if (options.has(GENERATE_BOGUS) and not maybeProp) {
             auto registration = makeRc<BogusProperty::Registration>(propertyName);
             return Ok(makeRc<BogusProperty>(registration, content, Error::invalidData("un-consumed token in property value")));
         }
