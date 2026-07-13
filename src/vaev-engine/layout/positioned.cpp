@@ -36,7 +36,6 @@ static RectAu _computeInsetModifiedContainingBlock(Tree const& tree, Box& box, R
         else if (style.aligns.justifySelf == Align::SELF_END) {
             // Set its end-edge inset property to the static position, and its start-edge inset property to zero.
             resolvedInsets.end = containingBlock.end() - staticPositionRect.end();
-
         }
 
         // -> for center alignment
@@ -221,11 +220,23 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
     // TODO
     // 4. Lastly, its margin box is aligned within the inset-modified containing block.
 
+    auto position = availableSpace.topStart() + usedSpacings.margin.topStart();
+
+    if (style.insets->start.is<Keywords::Auto>() and
+        not style.insets->end.is<Keywords::Auto>() and width) {
+        position.x = availableSpace.end() - usedSpacings.margin.end - *width;
+    }
+
+    if (style.insets->top.is<Keywords::Auto>() and
+        not style.insets->bottom.is<Keywords::Auto>() and height) {
+        position.y = availableSpace.bottom() - usedSpacings.margin.bottom - *height;
+    }
+
     Input childInput = {
         .generateFragment = true,
         .usedSpacings = usedSpacings,
         .knownSize = {width, height},
-        .position = availableSpace.topStart() + usedSpacings.margin.topStart(),
+        .position = position,
         .availableSpace = availableSpace.size(),
         .containingBlock = containingBlock.size(),
         .pageNumber = pageNumber,
