@@ -160,76 +160,78 @@ struct ValueParser<Math::Radii<T>> {
 
         auto value1 = parseValue<PercentOr<Length>>(c);
         if (not value1)
-            return Ok(parsePostSlash(c, Math::Radii<T>{Length{0_au}}));
+            return parsePostSlash(c, NONE);
 
         auto value2 = parseValue<PercentOr<Length>>(c);
         if (not value2)
-            return Ok(parsePostSlash(c, Math::Radii<T>{value1.take()}));
+            return parsePostSlash(c, Math::Radii<T>{value1.take()});
 
         auto value3 = parseValue<PercentOr<Length>>(c);
         if (not value3)
-            return Ok(parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take()}));
+            return parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take()});
 
         auto value4 = parseValue<PercentOr<Length>>(c);
         if (not value4)
-            return Ok(parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take(), value3.take(), value2.take()}));
+            return parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take(), value3.take(), value2.take()});
 
-        return Ok(parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take(), value3.take(), value4.take()}));
+        return parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take(), value3.take(), value4.take()});
     }
 
-    static Math::Radii<T> parsePostSlash(Cursor<Css::Sst>& c, Math::Radii<T> radii) {
+    static Res<Math::Radii<T>> parsePostSlash(Cursor<Css::Sst>& c, Opt<Math::Radii<T>> maybeRadii) {
         // if parse a /
         // 1 value-- > border all(a, d, e, h)
         // 2 values-- > 1 = top - start + bottom - end 2 = the others
         // 3 values-- > 1 = top - start, 2 = top - end + bottom - start, 3 = bottom - end
         // 4 values-- > 1 = top - start, 2 = top - end 3 = bottom - end, 4 = bottom - start
         eatWhitespace(c);
-        if (not c.ended() and c.peek().token.data == "/"s) {
-            c.next();
-            eatWhitespace(c);
-            auto value1 = parseValue<PercentOr<Length>>(c);
-            if (not value1) {
-                return radii;
-            }
 
-            auto value2 = parseValue<PercentOr<Length>>(c);
-            if (not value2) {
-                radii.a = value1.take();
-                radii.d = value1.take();
-                radii.e = value1.take();
-                radii.h = value1.take();
-                return radii;
-            }
+        if (c.ended() or c.peek().token.data != "/"s)
+            return maybeRadii.okOr(Error::invalidData("expected border radius"));
 
-            eatWhitespace(c);
-            auto value3 = parseValue<PercentOr<Length>>(c);
-            if (not value3) {
-                radii.a = value1.take();
-                radii.d = value2.take();
-                radii.e = value1.take();
-                radii.h = value2.take();
-                return radii;
-            }
-
-            eatWhitespace(c);
-            auto value4 = parseValue<PercentOr<Length>>(c);
-            if (not value4) {
-                radii.a = value1.take();
-                radii.d = value2.take();
-                radii.e = value3.take();
-                radii.h = value2.take();
-
-                return radii;
-            }
-
-            radii.a = value1.take();
-            radii.d = value2.take();
-            radii.e = value3.take();
-            radii.h = value4.take();
-            return radii;
+        auto radii = maybeRadii.unwrapOr(Math::Radii<T>{Length{0_au}});
+        c.next();
+        eatWhitespace(c);
+        auto value1 = parseValue<PercentOr<Length>>(c);
+        if (not value1) {
+            return Ok(std::move(radii));
         }
 
-        return radii;
+        auto value2 = parseValue<PercentOr<Length>>(c);
+        if (not value2) {
+            radii.a = value1.unwrap();
+            radii.d = value1.unwrap();
+            radii.e = value1.unwrap();
+            radii.h = value1.unwrap();
+            return Ok(std::move(radii));
+        }
+
+        eatWhitespace(c);
+        auto value3 = parseValue<PercentOr<Length>>(c);
+        if (not value3) {
+            radii.a = value1.unwrap();
+            radii.d = value2.unwrap();
+            radii.e = value1.unwrap();
+            radii.h = value2.unwrap();
+            return Ok(std::move(radii));
+        }
+
+        eatWhitespace(c);
+        auto value4 = parseValue<PercentOr<Length>>(c);
+        if (not value4) {
+            radii.a = value1.unwrap();
+            radii.d = value2.unwrap();
+            radii.e = value3.unwrap();
+            radii.h = value2.unwrap();
+
+            return Ok(std::move(radii));
+        }
+
+        radii.a = value1.unwrap();
+        radii.d = value2.unwrap();
+        radii.e = value3.unwrap();
+        radii.h = value4.unwrap();
+
+        return Ok(std::move(radii));
     }
 };
 

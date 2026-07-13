@@ -716,7 +716,8 @@ export struct BorderRadiusProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderRadiusProperty>(self(), try$(parseValue<Math::Radii<CalcValue<PercentOr<Length>>>>(c))));
+            auto radii = try$(parseValue<Math::Radii<CalcValue<PercentOr<Length>>>>(c));
+            return Ok(makeRc<BorderRadiusProperty>(self(), radii));
         }
     };
 
