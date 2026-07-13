@@ -348,11 +348,21 @@ static void _paintChildren(Fragment& frag, Scene::Stack& stack, auto predicate) 
     }
 
     for (auto& c : frag.children()) {
-        auto& s = c->style();
+        if (c->flags().has(Fragment::OOF))
+            continue;
 
-        if (c->originatingBox().impliesNewStackingContext()) {
+        Rc<Fragment> node = c;
+        if (auto ph = c.is<PlaceholderFragment>()) {
+            if (not ph->fragment)
+                continue;
+            node = ph->fragment.unwrap();
+        }
+
+        auto& s = node->style();
+
+        if (node->originatingBox().impliesNewStackingContext()) {
             if (predicate(s))
-                _establishStackingContext(c, stack);
+                _establishStackingContext(node, stack);
             continue;
         }
 
@@ -360,20 +370,20 @@ static void _paintChildren(Fragment& frag, Scene::Stack& stack, auto predicate) 
         auto position = s.position;
         if (position != Keywords::STATIC) {
             if (predicate(s))
-                _paintStackingContext(c, stack);
+                _paintStackingContext(node, stack);
             continue;
         }
 
         if (predicate(s)) {
             _paintFrag(
-                c,
+                node,
                 stack,
-                tableBoxBorderMapping ? (Opt<UsedBorders>)tableBoxBorderMapping->lookup((usize)&c->originatingBox()) : Opt<UsedBorders>{NONE}
+                tableBoxBorderMapping ? (Opt<UsedBorders>)tableBoxBorderMapping->lookup((usize)&node->originatingBox()) : Opt<UsedBorders>{NONE}
             );
         }
 
         if (not c.is<SvgRootFragment>())
-            _paintChildren(*c, stack, predicate);
+            _paintChildren(*node, stack, predicate);
     }
 }
 

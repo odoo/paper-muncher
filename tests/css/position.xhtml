@@ -38,7 +38,7 @@
         </head>
 
         <body>
-        <section>
+        <section style="padding: 0">
             <slot/>
         </section>
         </body>
@@ -170,10 +170,10 @@
         </div>
     </rendering>
 
-    <rendering skip="true">
+    <rendering>
         <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
         <div></div>
-        <div style="position: relative; top: -95px; left: 5px;">
+        <div style="position: relative; top: -90px; left: 10px;">
             <div></div>
             <div>
                 <div class="red" style="position: absolute; top: 50px; left: 50px;"></div>
@@ -202,8 +202,7 @@
         <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
     </rendering>
 
-    <rendering help="The absolutely positioned box remained in the document flow for the undefined top position."
-               skip="true">
+    <rendering help="The absolutely positioned box remained in the document flow for the undefined top position.">
         <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
         <div style="position: absolute; top: -40px; left: 55px; padding-left: 25px;">
             <div></div>
@@ -243,7 +242,7 @@
         </div>
     </error>
 
-    <error skip="true">
+    <error>
         <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
         <div style="position: absolute; top: -40px; left: 35px; padding-left: 25px;">
             <div></div>
@@ -270,8 +269,7 @@
         <div class="blue" style="position: absolute; top: 10px; left: 10px;"></div>
     </error>
 
-    <rendering help="The absolutely positioned box remained in the document flow for the undefined top position."
-               skip="true">
+    <rendering help="The absolutely positioned box remained in the document flow for the undefined top position.">
         <div class="green" style="position: absolute; top: 30px; left: 30px;"></div>
         <div style="position: absolute; top: -40px; left: 60px;">
             <div></div>

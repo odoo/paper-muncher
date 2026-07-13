@@ -88,11 +88,11 @@ export struct JustifyContentProperty : Property {
 export struct JustifySelfProperty : Property {
     struct Registration : Property::Registration {
         Symbol name() const override {
-            return Properties::JUSTIFY_ITEMS;
+            return Properties::JUSTIFY_SELF;
         }
 
         Rc<Property> initial() const override {
-            return makeRc<JustifySelfProperty>(self(), Align{});
+            return makeRc<JustifySelfProperty>(self(), Align::Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -160,7 +160,7 @@ export struct JustifyItemsProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<JustifyItemsProperty>(self(), Align{});
+            return makeRc<JustifyItemsProperty>(self(), Align::LEGACY);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

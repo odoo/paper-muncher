@@ -786,7 +786,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
     wrapperStyle->margin = tableStyle->margin;
     wrapperStyle->position = tableStyle->position;
     wrapperStyle->float_ = tableStyle->float_;
-    wrapperStyle->offsets = tableStyle->offsets;
+    wrapperStyle->insets = tableStyle->insets;
 
     Box wrapper = {wrapperStyle, tableBoxEl};
 
@@ -798,7 +798,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
     innerStyle->margin = initial->margin;
     innerStyle->position = initial->position;
     innerStyle->float_ = initial->float_;
-    innerStyle->offsets = initial->offsets;
+    innerStyle->insets = initial->insets;
 
     _buildTableBox(bc.toBlockContextWithoutRootInline(wrapper), tableBoxEl, innerStyle);
 

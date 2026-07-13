@@ -273,11 +273,34 @@ struct BlockFormatingContext : FormatingContext {
 
         Au lastMarginBottom = 0_au;
 
+        Vec<Rc<PlaceholderFragment>> outOfFlowChildren;
+
         for (usize i = startAt; i < endChildren; ++i) {
             auto& c = box.children()[i];
             lookForRunningPosition(input, c);
             if (c.isRunningPositionedBox())
                 continue;
+
+            if (oneOf(c.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
+                if (input.generateFragment) {
+                    // https://www.w3.org/TR/css-position-3/#staticpos-rect
+                    RectAu staticPosRect = {
+                        Vec2Au{input.position.x, input.position.y + blockSize},
+                        Vec2Au{input.knownSize.width.unwrapOr(0_au), 0_au}
+                    };
+
+                    auto placeholder = makeRc<PlaceholderFragment>(c, staticPosRect);
+
+                    fragBuilder.addChild(placeholder);
+                    outOfFlowChildren.pushBack(placeholder);
+                }
+
+                if (i + 1 == box.children().len()) {
+                    blockWasCompletelyLaidOut = true;
+                }
+
+                continue;
+            }
 
             try$(
                 processBreakpointsBeforeChild(
@@ -345,9 +368,15 @@ struct BlockFormatingContext : FormatingContext {
                 childInput.knownSize.x = width;
             }
 
+            if (c.style->position == Keywords::RELATIVE) {
+                childInput.position = childInput.position + relativePositionOffset(tree, c, input.containingBlock);
+            }
+
             auto output = layoutBorderBox(tree, c, childInput);
             if (auto [frag] = output.fragment)
                 fragBuilder.addChild(frag);
+
+            outOfFlowChildren.pushBack(output.outOfFlowStash);
 
             if (not(c.isRemovedFromFlow() or c.isPseudoElement(Dom::PseudoElement::MARKER))) {
                 blockSize += output.size.y + usedSpacings.margin.bottom;
@@ -396,6 +425,7 @@ struct BlockFormatingContext : FormatingContext {
             .breakpoint = currentBreakpoint,
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,
+            .outOfFlowStash = std::move(outOfFlowChildren),
         };
     }
 };
