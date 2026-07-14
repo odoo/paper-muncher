@@ -23,7 +23,7 @@ Paper-Muncher is now in early alpha. We're currently focused on improving stabil
 
 # Installation
 
-1. **Download** the prebuilt package for your distribution from the [nightly releases](https://github.com/odoo/paper-muncher/releases/tag/nightly).
+1. **Download** the prebuilt package for your distribution from the [nightly releases](https://github.com/odoo/paper-muncher/releases/latest).
 2. **Install** the package using your system's package manager.
 3. **Add** `/opt/paper-muncher/bin` to your `PATH` environment variable.
 4. **Verify** the installation by running `paper-muncher --help` to see available options.
