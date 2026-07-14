@@ -369,7 +369,7 @@ struct BlockFormatingContext : FormatingContext {
             }
 
             if (c.style->position == Keywords::RELATIVE) {
-                childInput.position = childInput.position + relativePositionOffset(tree, c, input.containingBlock);
+                childInput.position += relativePositionOffset(tree, c, input.containingBlock);
             }
 
             auto output = layoutBorderBox(tree, c, childInput);

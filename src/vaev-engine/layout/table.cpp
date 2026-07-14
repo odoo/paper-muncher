@@ -5,6 +5,7 @@ import Karm.Logger;
 
 import :values;
 import :layout.layout;
+import :layout.positioned;
 import :layout.values;
 
 namespace Vaev::Layout {
@@ -1457,6 +1458,10 @@ export struct TableFormatingContext : FormatingContext {
             .breakpointTraverser = breakpointsForCell,
             .pendingVerticalSizes = input.pendingVerticalSizes,
         };
+
+        if (cell.box->style->position == Keywords::RELATIVE) {
+            childInput.position += relativePositionOffset(tree, *cell.box, input.containingBlock);
+        }
 
         auto outputCell = layoutBorderBox(tree, *cell.box, childInput);
 
