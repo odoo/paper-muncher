@@ -148,7 +148,7 @@ export struct HtmlLexer {
     }
 
     void consume(Rune rune, Io::Loc loc, Diag::Collector& diags, bool isEof = false) {
-        logDebugIf(debugLexer, "Lexing '{#c}' {#x} in {}", rune, rune, _state);
+        logDebugIf(debugLexer, "Lexing '{:#c}' {:#x} in {}", rune, rune, _state);
 
         switch (_state) {
 

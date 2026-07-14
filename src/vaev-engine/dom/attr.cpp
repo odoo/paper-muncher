@@ -23,7 +23,7 @@ export struct Attr : Node {
     }
 
     void _repr(Io::Emit& e) const override {
-        e(" qualifiedName={} value={#}", qualifiedName, value);
+        e(" qualifiedName={} value={:#}", qualifiedName, value);
     }
 };
 

@@ -171,7 +171,7 @@ export struct Property : Meta::NoCopy {
             //       commonly inherited. Any property marked with the INHERITED
             //       flag should override this method with a faster implementation.
             if (flags().has(INHERITED))
-                logFatal("property {#} marked as INHERITED is using the slow fallback path. override inherit()!", name());
+                logFatal("property {:#} marked as INHERITED is using the slow fallback path. override inherit()!", name());
 
             // NOTE: Since we are copying computed values, we don't expect much new computation to happen
             ComputationContext dummy{};
@@ -200,17 +200,17 @@ export struct Property : Meta::NoCopy {
 
     virtual Vec<Rc<Property>> expandShorthand(RegisteredPropertySet&, [[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child) const {
         if (isBogusProperty())
-            logFatal("trying to expand {#} which is a bogus property");
+            logFatal("trying to expand {:#} which is a bogus property", registration->name());
 
         if (isShorthandProperty())
-            logFatal("shorthand property {#} is missing expandShorthand() implementation", registration->name());
+            logFatal("shorthand property {:#} is missing expandShorthand() implementation", registration->name());
 
-        logFatal("expandShorthand() called on non shorthand property {#}", registration->name());
+        logFatal("expandShorthand() called on non shorthand property {:#}", registration->name());
         return {};
     }
 
     virtual void apply([[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child, [[maybe_unused]] ComputationContext const& cx) const {
-        logFatal("longhand property {#} is missing apply() implementation", registration->name());
+        logFatal("longhand property {:#} is missing apply() implementation", registration->name());
     }
 
     virtual void repr(Io::Emit& e) const = 0;
@@ -458,7 +458,7 @@ struct DeferredProperty : Property {
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
         if (not isShorthandProperty())
-            logFatal("expandShorthand called on non shorthand property {#}", registration->name());
+            logFatal("expandShorthand called on non shorthand property {:#}", registration->name());
 
         auto prop = _expandProperty(child);
         if (not prop)

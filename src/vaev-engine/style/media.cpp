@@ -801,7 +801,7 @@ Feature _parseMediaFeature(Cursor<Css::Sst>& c) {
 
         auto maybeValue = parseValue<typename F::Inner>(c);
         if (not maybeValue) {
-            logWarn("failed to parse value for feature {#}: {}", F::name(), maybeValue.none());
+            logWarn("failed to parse value for feature {:#}: {}", F::name(), maybeValue.none());
             return true;
         }
 

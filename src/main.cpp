@@ -155,7 +155,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
         for (auto& serie : Print::SERIES) {
             Sys::println("{}:", serie.name);
             for (auto& stock : serie.stocks)
-                Sys::println("  {}   {:.02} x {.02}", stock.name, stock.minorAxis.cast<f64>(), stock.majorAxis.cast<f64>());
+                Sys::println("  {}   {:.02} x {:.02}", stock.name, stock.minorAxis.cast<f64>(), stock.majorAxis.cast<f64>());
         }
         co_return Ok();
     }

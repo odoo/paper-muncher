@@ -34,7 +34,7 @@ export struct CharacterData : Node {
     }
 
     void _repr(Io::Emit& e) const override {
-        e(" data={#}", data());
+        e(" data={:#}", data());
     }
 };
 

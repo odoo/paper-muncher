@@ -248,7 +248,7 @@ export struct WebDriver {
         }
 
         else {
-            logWarn("Could not evaluate javascript {#}", body);
+            logWarn("Could not evaluate javascript {:#}", body);
             return Error::unsupported("unsupported operation");
         }
     }
