@@ -173,6 +173,10 @@ struct InlineFormatingContext : FormatingContext {
                 );
             }
 
+            if (atomicBox.style->position == Keywords::RELATIVE) {
+                childInput.position += relativePositionOffset(tree, atomicBox, input.containingBlock);
+            }
+
             auto output = layoutBorderBox(tree, atomicBox, childInput);
 
             outOfFlowChildren.pushBack(output.outOfFlowStash);

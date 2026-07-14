@@ -1502,6 +1502,10 @@ struct FlexFormatingContext : FormatingContext {
                     .pageNumber = input.pageNumber,
                 };
 
+                if (flexItem.box->style->position == Keywords::RELATIVE) {
+                    childInput.position += relativePositionOffset(tree, *flexItem.box, input.containingBlock);
+                }
+
                 auto output = layoutBorderBox(tree, *flexItem.box, childInput);
                 oofChildren.pushBack(output.outOfFlowStash);
                 fragBuilder.addChildIfAny(output.fragment);

@@ -689,4 +689,91 @@
 
 </test>
 
+<test name="position-relative">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+                .sq {
+                    width: 50px;
+                    height: 50px;
+                }
+                .red { background: red; }
+                .green { background: green; }
+                .blue { background: blue; }
+
+                .table {
+                    display: table;
+                    border-spacing: 0;
+                }
+                .row {
+                    display: table-row;
+                }
+                .cell {
+                    display: table-cell;
+                }
+
+                .line {
+                    width: 50px;
+                    font-size: 0;
+                }
+                .ib {
+                    display: inline-block;
+                    vertical-align: top;
+                }
+
+                .flex {
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .down { position: relative; top: 50px; }
+                .up { position: relative; bottom: 50px; }
+            </style>
+        </head>
+
+        <body>
+        <slot/>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="sq red"></div>
+        <div class="sq green"></div>
+        <div class="sq blue"></div>
+    </rendering>
+
+    <rendering help="display: block">
+        <div class="sq red"></div>
+        <div class="sq blue down"></div>
+        <div class="sq green up"></div>
+    </rendering>
+
+    <rendering help="display: table">
+        <div class="table">
+            <div class="row"><div class="cell sq red"></div></div>
+            <div class="row"><div class="cell sq blue down"></div></div>
+            <div class="row"><div class="cell sq green up"></div></div>
+        </div>
+    </rendering>
+
+    <rendering help="display: inline-block">
+        <div class="line">
+            <span class="ib sq red"></span><span class="ib sq blue down"></span><span class="ib sq green up"></span>
+        </div>
+    </rendering>
+
+    <rendering help="display: flex">
+        <div class="flex">
+            <div class="sq red"></div>
+            <div class="sq blue down"></div>
+            <div class="sq green up"></div>
+        </div>
+    </rendering>
+</test>
 </tests>
