@@ -48,17 +48,17 @@ export struct HtmlToken {
         if (name)
             e(" name={}", name);
         if (rune)
-            e(" rune='{#c}'", rune);
+            e(" rune='{:#c}'", rune);
         if (data)
-            e(" data={#}", data);
+            e(" data={:#}", data);
         if (publicIdent)
-            e(" publicIdent={#}", publicIdent);
+            e(" publicIdent={:#}", publicIdent);
         if (systemIdent)
-            e(" systemIdent={#}", systemIdent);
+            e(" systemIdent={:#}", systemIdent);
         if (attrs.len() > 0) {
             e.indentNewline();
             for (auto& attr : attrs)
-                e("({} {#})", attr.name, attr.value);
+                e("({} {:#})", attr.name, attr.value);
             e.deindent();
         }
         if (forceQuirks)

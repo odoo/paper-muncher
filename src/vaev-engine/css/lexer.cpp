@@ -74,7 +74,7 @@ export struct Token {
             return;
         }
 
-        e("({} {#})", type, data);
+        e("({} {:#})", type, data);
     }
 
     bool operator==(Type type) const {

@@ -28,7 +28,7 @@ export struct DocumentType : Node {
     }
 
     void _repr(Io::Emit& e) const override {
-        e(" name={#} publicId={#} systemId={#}", this->name, this->publicId, this->systemId);
+        e(" name={:#} publicId={:#} systemId={:#}", this->name, this->publicId, this->systemId);
     }
 };
 
