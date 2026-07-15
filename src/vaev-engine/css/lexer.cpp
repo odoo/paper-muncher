@@ -82,7 +82,7 @@ export struct Token {
     }
 
     bool operator==(Token const& other) const {
-        return type == other.type and data == other.data;
+        return type == other.type and eqCi(data.str(), other.data.str());
     }
 };
 
