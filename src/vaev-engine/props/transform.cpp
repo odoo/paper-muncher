@@ -113,6 +113,54 @@ export struct TransformProperty : Property {
             return makeRc<TransformProperty>(self(), c.transform->transform);
         }
 
+        static void _expandSvgRotate(Vec<Css::Sst>& sst) {
+            for (auto& c : sst) {
+                if (c.prefix == Css::Token::function("rotate(")) {
+                    Cursor<Css::Sst> content = c.content;
+
+                    eatWhitespace(content);
+
+                    auto maybeAngle = parseValue<Number>(content);
+                    if (not maybeAngle)
+                        return;
+
+                    skipOmmitableComma(content);
+
+                    auto maybeCx = parseValue<Number>(content);
+                    if (not maybeCx)
+                        return;
+
+                    skipOmmitableComma(content);
+
+                    auto maybeCy = parseValue<Number>(content);
+                    if (not maybeCy)
+                        return;
+
+                    eatWhitespace(content);
+
+                    if (not content.ended())
+                        return;
+
+                    auto transform = Math::Trans2f::identity()
+                                         .translated({maybeCx.unwrap(), maybeCy.unwrap()})
+                                         .rotated(maybeAngle.unwrap() * Math::PI / 180.0)
+                                         .translated({-maybeCx.unwrap(), -maybeCy.unwrap()});
+
+                    auto generatedMatrix = Io::format(
+                        "matrix({}, {}, {}, {}, {}, {})",
+                        transform.xx, transform.xy,
+                        transform.yx, transform.yy,
+                        transform.ox, transform.oy
+                    );
+
+                    auto lexer = Css::Lexer{generatedMatrix};
+
+                    auto diags = Diag::Collector::ignore();
+                    c = Css::consumeFunc(lexer, diags);
+                }
+            }
+        }
+
         static void _fixTransformNumberToDimensions(Vec<Css::Sst>& sst) {
             auto appendSuffix = [](String const& a, Str const& b) {
                 StringBuilder sb;
@@ -148,6 +196,7 @@ export struct TransformProperty : Property {
             Css::Lexer lex{style};
             auto diags = Diag::Collector::ignore();
             auto [sst, _] = Css::consumeDeclarationValue(lex, diags);
+            _expandSvgRotate(sst);
             _fixTransformNumberToDimensions(sst);
             Cursor<Css::Sst> content{sst};
             return parse(content);

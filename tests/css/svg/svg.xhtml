@@ -719,6 +719,35 @@
     </svg>
 </rendering>
 
+</test>
+
+<test name="svg-3-args-rotate" width="300px" height="300px">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+    <body>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <slot/>
+        </svg>
+    </body>
+    </html>
+</container>
+
+<rendering>
+    <rect x="50" y="50" width="50" height="50" fill="green" transform="translate(50, 100) rotate(45) translate(-50, -100)"></rect>
+</rendering>
+
+<rendering>
+    <rect x="50" y="50" width="50" height="50" fill="green" transform="rotate(45, 50, 100)"></rect>
+</rendering>
+
+<rendering>
+    <rect x="50" y="50" width="50" height="50" fill="green" transform="rotate(45 50 100)"></rect>
+</rendering>
 
 </test>
 
