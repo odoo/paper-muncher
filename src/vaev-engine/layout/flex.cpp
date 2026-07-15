@@ -1498,6 +1498,7 @@ struct FlexFormatingContext : FormatingContext {
                     .knownSize = {flexItem.usedSize.x, flexItem.usedSize.y},
                     .position = flexItem.position,
                     .availableSpace = availableSpace,
+                    .containingBlock = fa.buildPair(_usedMainSize, _usedCrossSize),
                     .runningPosition = input.runningPosition,
                     .pageNumber = input.pageNumber,
                 };
