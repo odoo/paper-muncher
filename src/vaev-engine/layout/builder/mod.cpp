@@ -713,6 +713,7 @@ static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<
         _buildTableChildrenWhileWrappingIntoAnonymousBox(bc.toTableContent(tableInternalBox), el, style, false, [](Display const& display) {
             return display == Display::Internal::TABLE_CELL;
         });
+        break;
     }
     case Display::Internal::TABLE_COLUMN: {
         // "Children of a table-column." should be discarded
