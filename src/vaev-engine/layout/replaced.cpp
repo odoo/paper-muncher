@@ -26,15 +26,18 @@ struct ReplacedFormatingContext : FormatingContext {
 
         if (auto image = box.content.is<Rc<Scene::Node>>()) {
             auto naturalSize = (*image)->bound().size().cast<Au>();
+            if (input.intrinsic == IntrinsicSize::AUTO) {
+                auto naturalDimensions = ObjectNaturalDimensions{
+                    .size = {naturalSize.width, naturalSize.height},
+                    .aspectRatio = naturalSize.width / naturalSize.height,
+                };
 
-            auto naturalDimensions = ObjectNaturalDimensions{
-                .size = {naturalSize.width, naturalSize.height},
-                .aspectRatio = naturalSize.width / naturalSize.height,
-            };
-
-            auto specifiedSize = resolvePreferredSize(tree, box, input.containingBlock);
-            auto tentativeSize = resolveObjectDefaultSizing(naturalDimensions, specifiedSize);
-            size = applyReplacedMinMaxSizeConstraints(tree, box, tentativeSize, input.containingBlock, specifiedSize);
+                auto specifiedSize = resolvePreferredSize(tree, box, input.containingBlock);
+                auto tentativeSize = resolveObjectDefaultSizing(naturalDimensions, specifiedSize);
+                size = applyReplacedMinMaxSizeConstraints(tree, box, tentativeSize, input.containingBlock, specifiedSize);
+            } else {
+                size = naturalSize;
+            }
         } else {
             panic("unsupported replaced content");
         }
