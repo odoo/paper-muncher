@@ -920,23 +920,13 @@ export struct TableFormatingContext : FormatingContext {
 
     // MARK: Auto Table Layout -------------------------------------------------
     Pair<Au> getCellMinMaxAutoWidth(Tree& tree, Box& box, TableCell& cell, Au tableComputedWidth, UsedSpacings usedSpacings) {
-        auto cellMinOutput = computeIntrinsicContentSize(
-            tree,
-            box,
-            IntrinsicSize::MIN_CONTENT
-        );
+        auto [cellMinContent, cellMaxContent] = intrinsicInlineSizeContributions(tree, box);
 
-        auto cellMaxOutput = computeIntrinsicContentSize(
-            tree,
-            box,
-            IntrinsicSize::MAX_CONTENT
-        );
-
-        auto cellMinWidth = cellMinOutput.x + usedSpacings.padding.horizontal() +
+        auto cellMinWidth = cellMinContent + usedSpacings.padding.horizontal() +
                             usedSpacings.borders.horizontal() +
                             usedSpacings.margin.horizontal();
 
-        auto cellMaxWidth = cellMaxOutput.x + usedSpacings.padding.horizontal() +
+        auto cellMaxWidth = cellMaxContent + usedSpacings.padding.horizontal() +
                             usedSpacings.borders.horizontal() +
                             usedSpacings.margin.horizontal();
 
@@ -1280,7 +1270,7 @@ export struct TableFormatingContext : FormatingContext {
 
         CacheParametersFromInput(Input const& i)
             : containingBlockX(i.containingBlock.x),
-              capmin(i.capmin.unwrap()),
+              capmin(i.capmin.unwrapOr(0_au)),
               knownSizeX(i.knownSize.x) {
         }
 
@@ -1324,24 +1314,11 @@ export struct TableFormatingContext : FormatingContext {
             not input.knownSize.x;
 
         if (shouldRunAutoAlgorithm) {
-            if (input.intrinsic == IntrinsicSize::AUTO) {
-                CacheParametersFromInput inputCacheParameters{input};
-                if (lastInput != inputCacheParameters) {
-                    lastInput = inputCacheParameters;
-                    // bad code
-                    computeAutoColWidths(tree, input.knownSize.x, input.capmin.unwrapOr(0_au), input.containingBlock.x);
-                }
-            } else {
-                auto [minContent, maxContent] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
-                if (input.intrinsic == IntrinsicSize::MIN_CONTENT)
-                    colWidth = minContent;
-                else if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
-                    colWidth = maxContent;
-                } else {
-                    unreachable();
-                }
-
-                tableUsedWidth = iter(colWidth) | Sum();
+            CacheParametersFromInput inputCacheParameters{input};
+            if (lastInput != inputCacheParameters) {
+                lastInput = inputCacheParameters;
+                // bad code
+                computeAutoColWidths(tree, input.knownSize.x, input.capmin.unwrapOr(0_au), input.containingBlock.x);
             }
         } else {
             computeFixedColWidths(tree, box, *input.knownSize.x);
@@ -1711,6 +1688,18 @@ export struct TableFormatingContext : FormatingContext {
         }
 
         return {startAt, stopAt};
+    }
+
+    IntrinsicSizes intrinsicInlineContentSizes(Tree& tree, Box&) override {
+        auto [minCols, maxCols] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
+
+        Au chrome = spacing.x * (grid.size.x + 1);
+
+        return {
+            .minContent = (iter(minCols) | Sum()) + chrome,
+            .maxContent = (iter(maxCols) | Sum()) + chrome,
+        };
+
     }
 
     Output run(Tree& tree, Box& box, Input input, usize startAtTable, Opt<usize> stopAtTable) override {

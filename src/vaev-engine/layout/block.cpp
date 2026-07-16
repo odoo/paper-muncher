@@ -159,7 +159,7 @@ Opt<Au> _tableWrapperFitContentWidth(Tree& tree, Box& wrapper, Au availableWidth
 }
 
 void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, UsedSpacings const& usedSpacings, Opt<Au> blockInlineSize) {
-    if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Display::INLINE) {
+    if (child.style->display != Display::INLINE) {
         if (child.style->sizing->width.is<Keywords::Auto>()) {
             // https://www.w3.org/TR/css-tables-3/#layout-principles
             // Unlike other block-level boxes, tables do not fill their containing block by default.
@@ -232,9 +232,7 @@ struct BlockFormatingContext : FormatingContext {
         Au capmin{};
         for (auto& c : box.children()) {
             if (c.style->display != Display::TABLE_BOX) {
-                auto minContentContrib = computeIntrinsicContentSize(
-                    tree, c, IntrinsicSize::MIN_CONTENT
-                );
+                auto minContentContrib = intrinsicInlineSizeContributions(tree, c).minContent;
 
                 Vec2Au containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_au)};
                 UsedSpacings usedSpacings{
@@ -245,13 +243,39 @@ struct BlockFormatingContext : FormatingContext {
 
                 capmin = max(
                     capmin,
-                    minContentContrib.width + usedSpacings.margin.horizontal() +
+                    minContentContrib + usedSpacings.margin.horizontal() +
                         usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
                 );
             }
         }
 
         return capmin;
+    }
+
+    Au intrinsicHorizontalSpacing(Tree& tree, Box& box) {
+        auto padding = computePaddings(tree, box, {0_au, 0_au});
+        auto borders = computeBorders(tree, box);
+        auto margin  = computeMargins(tree, box, {0_au, 0_au});
+        return padding.horizontal() + borders.horizontal() + margin.horizontal();
+    }
+
+    IntrinsicSizes intrinsicInlineContentSizes(Tree& tree, Box& box) override {
+        Au minContent = 0_au;
+        Au maxContent = 0_au;
+
+        for (auto& c : box.children()) {
+            if (c.isRunningPositionedBox() or c.isRemovedFromFlow())
+                continue;
+
+            auto childSizes = intrinsicInlineSizeContributions(tree, c);
+
+            Au chrome = intrinsicHorizontalSpacing(tree, c);
+
+            minContent = max(minContent, childSizes.minContent + chrome);
+            maxContent = max(maxContent, childSizes.maxContent + chrome);
+        }
+
+        return IntrinsicSizes{minContent, maxContent};
     }
 
     Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
@@ -328,7 +352,6 @@ struct BlockFormatingContext : FormatingContext {
             Input childInput = {
                 .generateFragment = input.generateFragment,
                 .usedSpacings = usedSpacings,
-                .intrinsic = input.intrinsic,
                 .availableSpace = {input.availableSpace.x, 0_au},
                 .containingBlock = childContainingBlock,
                 .runningPosition = input.runningPosition,
@@ -363,7 +386,7 @@ struct BlockFormatingContext : FormatingContext {
 
             if (c.isPseudoElement(Dom::PseudoElement::MARKER)) {
                 // NOSPEC: The spec doesn't define where the marker should be placed.
-                auto width = computeIntrinsicContentSize(tree, c, IntrinsicSize::MAX_CONTENT).x;
+                auto width = intrinsicInlineContentSizes(tree, c).maxContent;
                 childInput.position.x -= width * 2.5;
                 childInput.knownSize.x = width;
             }

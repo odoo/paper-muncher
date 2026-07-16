@@ -14,6 +14,17 @@ import :layout.layout;
 namespace Vaev::Layout {
 
 struct ReplacedFormatingContext : FormatingContext {
+    IntrinsicSizes intrinsicInlineContentSizes(Tree&, Box& box) override {
+        if (auto image = box.content.is<Rc<Scene::Node>>()) {
+            auto naturalSize = (*image)->bound().size().cast<Au>();
+            // FIXME: Writing mode shenanigans.
+            Au inlineSize = naturalSize.width;
+            return {inlineSize, inlineSize};
+        } else {
+            panic("unsupported replaced content");
+        }
+    }
+
     Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
         auto fragBuilder = FragmentBuilder{tree, box};
 

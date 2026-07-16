@@ -23,6 +23,10 @@ struct FormatingContext {
     virtual void build(Tree&, Box&) {};
 
     virtual Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) = 0;
+
+    virtual IntrinsicSizes intrinsicInlineContentSizes(Tree&, Box&) {
+        panic("intrinsicInlineContentSizes not implemented for formating context");
+    }
 };
 
 } // namespace Vaev::Layout

@@ -21,7 +21,14 @@ export Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, V
 
 export Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au verticalBorderBox);
 
-export Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin = NONE);
+// https://www.w3.org/TR/css-sizing-3/#contributions
+export IntrinsicSizes intrinsicInlineSizeContributions(Tree& tree, Box& box);
+
+// https://www.w3.org/TR/css-sizing-3/#auto-box-sizes
+export IntrinsicSizes intrinsicInlineContentSizes(Tree& tree, Box& box);
+
+// https://www.w3.org/TR/css-sizing-3/#auto-box-sizes
+export Au intrinsicBlockContentSize(Tree& tree, Box& box, Au inlineSize);
 
 export BoxMetrics computeBoxMetrics(Tree& tree, Box& box, Vec2Au position, Vec2Au size, UsedSpacings const& usedSpacings);
 

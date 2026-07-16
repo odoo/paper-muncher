@@ -12,8 +12,8 @@ namespace Vaev::Layout {
 // NOTE: This is called the “shrink-to-fit” width in CSS2
 
 export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availableSpace) {
-    auto minSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT);
-    auto maxSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT);
+    auto [minInlineSize, maxInlineSize] = intrinsicInlineContentSizes(tree, box);
+
     Vec2Au size = {INDEFINITE, INDEFINITE};
 
     // If the available space in a given axis is definite,
@@ -22,19 +22,22 @@ export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availab
     // When sizing under a min-content constraint, equal to the min-content size.
     // Otherwise, equal to the max-content size in that axis.
     if (availableSpace.x == Keywords::MIN_CONTENT) {
-        size.x = minSize.width;
+        size.x = minInlineSize;
     } else if (availableSpace.x == Keywords::MAX_CONTENT) {
-        size.x = maxSize.width;
+        size.x = maxInlineSize;
     } else if (availableSpace.x != INDEFINITE) {
-        size.x = clamp(availableSpace.x.unwrap<Au>(), minSize.width, maxSize.width);
+        size.x = clamp(availableSpace.x.unwrap<Au>(), minInlineSize, maxInlineSize);
     }
 
+    Au minBlockSize = intrinsicBlockContentSize(tree, box, minInlineSize);
+    Au maxBlockSize = intrinsicBlockContentSize(tree, box, maxInlineSize);
+
     if (availableSpace.y == Keywords::MIN_CONTENT) {
-        size.y = minSize.height;
+        size.y = minBlockSize;
     } else if (availableSpace.y == Keywords::MAX_CONTENT) {
-        size.y = maxSize.height;
+        size.y = maxBlockSize;
     } else if (availableSpace.y != INDEFINITE) {
-        size.y = clamp(availableSpace.y.unwrap<Au>(), minSize.height, maxSize.height);
+        size.y = clamp(availableSpace.y.unwrap<Au>(), minBlockSize, maxBlockSize);
     }
 
     return size;
