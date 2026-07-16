@@ -678,16 +678,9 @@ struct FlexFormatingContext : FormatingContext {
         }
     }
 
-    // XX. MARK: Layout aboslute positioned children ----------------------------------
-    // https://www.w3.org/TR/css-flexbox-1/#abspos-items
-
-    void _layoutAbsolutePositionedChildren() {
-        // TODO
-    }
-
     // 0. MARK: Empty flex items list ------------------------------------------------------
 
-    Res<None, Output> returnIfNoFlexItems(Box& box, FragmentBuilder& fragBuilder, Input input) {
+    Res<None, Output> returnIfNoFlexItems(Box& box, FragmentBuilder& fragBuilder, Vec<Rc<PlaceholderFragment>>& outOfFlowChildren, Input input) {
         if (_items.len())
             return Ok(NONE);
 
@@ -695,6 +688,8 @@ struct FlexFormatingContext : FormatingContext {
             input.knownSize.x.unwrapOr(0_au),
             input.knownSize.y.unwrapOr(0_au),
         };
+
+        _appendOutOfFlowChildren(box, outOfFlowChildren, fragBuilder);
 
         return Output{
             .fragment = fragBuilder.buildBoxFromInput(input, size),
@@ -1473,7 +1468,7 @@ struct FlexFormatingContext : FormatingContext {
 
     // XX. MARK: Commit --------------------------------------------------------
 
-    Opt<Rc<Fragment>> _commit(Tree& tree, FragmentBuilder& fragBuilder, Vec<Rc<PlaceholderFragment>>& oofChildren, Input input) {
+    Opt<Rc<Fragment>> _commit(Tree& tree, FragmentBuilder& fragBuilder, Vec<Rc<PlaceholderFragment>>& outOfFlowChildren, Input input) {
         if (not input.generateFragment)
             return NONE;
 
@@ -1508,7 +1503,7 @@ struct FlexFormatingContext : FormatingContext {
                 }
 
                 auto output = layoutBorderBox(tree, *flexItem.box, childInput);
-                oofChildren.pushBack(output.outOfFlowStash);
+                outOfFlowChildren.pushBack(output.outOfFlowStash);
                 fragBuilder.addChildIfAny(output.fragment);
             }
         }
@@ -1516,7 +1511,7 @@ struct FlexFormatingContext : FormatingContext {
         return fragBuilder.buildBox(input.position, fa.buildPair(_usedMainSize, _usedCrossSize), input.usedSpacings);
     }
 
-    void _appendOofChildren(Box& box, Vec<Rc<PlaceholderFragment>>& outOfFlowChildren, FragmentBuilder& fragBuilder) {
+    void _appendOutOfFlowChildren(Box& box, Vec<Rc<PlaceholderFragment>>& outOfFlowChildren, FragmentBuilder& fragBuilder) {
         for (auto& c : box.children()) {
             if (oneOf(c.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
                 // FIXME: Follow spec.
@@ -1536,6 +1531,7 @@ struct FlexFormatingContext : FormatingContext {
     // FIXME: auto, min and max content values for flex container dimensions are not working as in Chrome; add tests
     Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
         auto fragBuilder = FragmentBuilder{tree, box};
+        Vec<Rc<PlaceholderFragment>> outOfFlowChildren = {};
 
         // HACK: Quick reset for formating context reuse.
         //       Proper reset logic to be implemented in a future commit.
@@ -1552,10 +1548,7 @@ struct FlexFormatingContext : FormatingContext {
         // XX. Populate flex items list
         _generateFlexItems(input, tree, box, input.containingBlock);
 
-        // XX. Handle absolute positioned children
-        _layoutAbsolutePositionedChildren();
-
-        try$(returnIfNoFlexItems(box, fragBuilder, input));
+        try$(returnIfNoFlexItems(box, fragBuilder, outOfFlowChildren, input));
 
         // 2. Determine the available main and cross space for the flex items.
         _determineAvailableMainAndCrossSpace(tree, input);
@@ -1603,16 +1596,15 @@ struct FlexFormatingContext : FormatingContext {
         _alignAllFlexLines(box);
 
         // XX. Commit
-        Vec<Rc<PlaceholderFragment>> oofChildren = {};
-        auto fragment = _commit(tree, fragBuilder, oofChildren, input);
-        _appendOofChildren(box, oofChildren, fragBuilder);
+        auto fragment = _commit(tree, fragBuilder, outOfFlowChildren, input);
+        _appendOutOfFlowChildren(box, outOfFlowChildren, fragBuilder);
 
         return {
             .fragment = fragment,
             .size = fa.buildPair(_usedMainSize, _usedCrossSize),
             .completelyLaidOut = true,
             .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
-            .outOfFlowStash = std::move(oofChildren),
+            .outOfFlowStash = std::move(outOfFlowChildren),
         };
     }
 };
