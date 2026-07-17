@@ -51,6 +51,18 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     }
 }
 
+Opt<FormatingContext&> _getOrConstructFormatingContext(Tree& tree, Box& box) {
+    if (box.formatingContext == NONE) {
+        box.formatingContext = _constructFormatingContext(box);
+        if (box.formatingContext)
+            box.formatingContext.unwrap()->build(tree, box);
+    }
+    if (auto& [formatingContext] = box.formatingContext)
+        return *formatingContext;
+
+    return NONE;
+}
+
 Output _dispatchFormatingContext(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) {
     if (box.formatingContext == NONE) {
         box.formatingContext = _constructFormatingContext(box);
@@ -141,27 +153,98 @@ Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size) {
     return res;
 }
 
-Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin) {
-    if (intrinsic == IntrinsicSize::AUTO) {
-        panic("bad argument");
-    }
-
-    auto output = _dispatchFormatingContext(
-        tree,
-        box,
-        {
-            .intrinsic = intrinsic,
-            .knownSize = {NONE, NONE},
-            .capmin = capmin,
+static bool _containsPercents(CalcValue<PercentOr<Length>> const& calc) {
+    auto resolveUnion = Visitor{
+        [&](PercentOr<Length> const& v) {
+            return v.is<Percent>();
         },
-        0,
-        NONE
-    );
+        [&](CalcValue<PercentOr<Length>>::Leaf const& v) {
+            return _containsPercents(*v);
+        },
+        [](Number const&) {
+            return false;
+        }
+    };
 
-    return output.size;
+    return calc.visit(
+        [&](CalcValue<PercentOr<Length>>::Value const& v) {
+            return v.visit(resolveUnion);
+        },
+        [&](CalcValue<PercentOr<Length>>::Unary const& u) {
+            return u.val.visit(resolveUnion);
+        },
+        [&](CalcValue<PercentOr<Length>>::Binary const& b) {
+            return b.lhs.visit(resolveUnion) or b.rhs.visit(resolveUnion);
+        }
+    );
 }
 
-Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
+IntrinsicSizes intrinsicInlineSizeContributions(Tree& tree, Box& box) {
+    // FIXME: Might not always be the right axis depending on writing mode.
+    auto size = box.style->sizing->width;
+
+    if (auto calc = size.is<CalcValue<PercentOr<Length>>>()) {
+        if (_containsPercents(*calc)) {
+            size = Keywords::AUTO;
+        } else {
+            Au contentWidth = resolve(tree, box, *calc, 0_au);
+
+            if (box.style->boxSizing == BoxSizing::BORDER_BOX) {
+                auto paddings = computePaddings(tree, box, {});
+                auto borders = computeBorders(tree, box);
+                contentWidth = max(0_au, contentWidth - paddings.horizontal() - borders.horizontal());
+            }
+
+            return IntrinsicSizes{contentWidth, contentWidth};
+        }
+    }
+
+    auto contentSizes = intrinsicInlineContentSizes(tree, box);
+
+    if (size.is<Keywords::Auto>()) {
+        return contentSizes;
+    }
+
+    if (size.is<Keywords::MinContent>()) {
+        return IntrinsicSizes{contentSizes.minContent, contentSizes.minContent};
+    }
+
+    if (size.is<Keywords::MaxContent>()) {
+        return IntrinsicSizes{contentSizes.maxContent, contentSizes.maxContent};
+    }
+
+    // TODO: Fit content
+    unreachable();
+}
+
+IntrinsicSizes intrinsicInlineContentSizes(Tree& tree, Box& box) {
+    auto fc = _getOrConstructFormatingContext(tree, box);
+    if (!fc)
+        return {};
+
+    auto inlineSizes = fc->intrinsicInlineContentSizes(tree, box);
+
+    return inlineSizes;
+}
+
+Au intrinsicBlockContentSize(Tree& tree, Box& box, Au inlineSize) {
+    auto fc = _getOrConstructFormatingContext(tree, box);
+    if (!fc)
+        return 0_au;
+
+    auto input = Input{
+        .generateFragment = false,
+        .knownSize = {inlineSize, NONE},
+        .availableSpace = {inlineSize, Limits<Au>::MAX},
+        .containingBlock = {inlineSize, 0_au},
+    };
+
+    auto blockSize = fc->run(tree, box, input, 0, NONE).size.height;
+
+    return blockSize;
+}
+
+Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au>) {
     if (auto calc = size.is<CalcValue<PercentOr<Length>>>()) {
         auto specifiedWidth = resolve(tree, box, *calc, containingBlock.x);
         if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
@@ -171,17 +254,13 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au c
     }
 
     if (size.is<Keywords::MinContent>()) {
-        auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
-        return intrinsicSize.x + horizontalBorderBox;
+        auto intrinsicSize = intrinsicInlineContentSizes(tree, box).minContent;
+        return intrinsicSize + horizontalBorderBox;
     } else if (size.is<Keywords::MaxContent>()) {
-        auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
-        return intrinsicSize.x + horizontalBorderBox;
-    } else if (size.is<FitContent>()) {
-        auto minIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
-        auto maxIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
-        auto stretchIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, capmin);
-
-        return clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x) + horizontalBorderBox;
+        auto intrinsicSize = intrinsicInlineContentSizes(tree, box).maxContent;
+        return intrinsicSize + horizontalBorderBox;
+    } else if (auto it = size.is<FitContent>()) {
+        return computeFitContentInlineSize(tree, box, resolve(tree, box, it->value, containingBlock.x));
     } else if (size.is<Keywords::Auto>()) {
         return NONE;
     } else {

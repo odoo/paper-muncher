@@ -9,6 +9,11 @@ using namespace Karm;
 
 namespace Vaev::Layout {
 
+export struct IntrinsicSizes {
+    Au minContent;
+    Au maxContent;
+};
+
 export struct FormatingContext;
 export struct Box;
 
