@@ -21,7 +21,8 @@ export Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, V
 
 export Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au verticalBorderBox);
 
-export Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin = NONE);
+export Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin = NONE, Math::Vec2<Opt<Au>> knownSize = {NONE});
+export Vec2Au computeIntrinsicSizeContributions(Tree& tree, Box& box, IntrinsicSize intrinsic);
 
 export BoxMetrics computeBoxMetrics(Tree& tree, Box& box, Vec2Au position, Vec2Au size, UsedSpacings const& usedSpacings);
 

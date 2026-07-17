@@ -22,7 +22,6 @@ export enum struct IntrinsicSize {
     AUTO,
     MIN_CONTENT,
     MAX_CONTENT,
-    STRETCH_TO_FIT,
 };
 
 export bool isMinMaxIntrinsicSize(IntrinsicSize intrinsic) {

@@ -175,18 +175,20 @@ struct FlexItem {
     }
 
     void computeContentSizes(Tree& tree) {
-        minContentSize = computeIntrinsicContentSize(
+        minContentSize = computeIntrinsicSizeContributions(
                              tree,
                              *box,
                              IntrinsicSize::MIN_CONTENT
                          ) +
                          padding.all() + borders.all();
-        maxContentSize = computeIntrinsicContentSize(
+        maxContentSize = computeIntrinsicSizeContributions(
                              tree,
                              *box,
                              IntrinsicSize::MAX_CONTENT
                          ) +
                          padding.all() + borders.all();
+
+        logInfo("Flex item: minContentSize={} maxContentSize={}", minContentSize, maxContentSize);
     }
 
     enum OuterPosition {
@@ -1075,13 +1077,9 @@ struct FlexFormatingContext : FormatingContext {
     // 7. MARK: Determine the hypothetical cross size of each item -------------
     // https://www.w3.org/TR/css-flexbox-1/#algo-cross-item
 
-    void _determineHypotheticalCrossSize(Tree& tree, Input input) {
+    void _determineHypotheticalCrossSize(Tree& tree) {
         for (auto& i : _items) {
             Au availableCrossSpace = fa.crossAxis(availableSpace) - i.getMargin(FlexItem::BOTH_CROSS);
-
-            if (fa.mainAxis(i.box->style->sizing).is<Keywords::Auto>() and
-                fa.crossAxis(i.box->style->sizing).is<Keywords::Auto>())
-                input.intrinsic = IntrinsicSize::STRETCH_TO_FIT;
 
             i.speculateValues(
                 tree,
@@ -1566,7 +1564,7 @@ struct FlexFormatingContext : FormatingContext {
         _resolveFlexibleLengths(tree);
 
         // 7. Determine the hypothetical cross size of each item
-        _determineHypotheticalCrossSize(tree, input);
+        _determineHypotheticalCrossSize(tree);
 
         // 8. Calculate the cross size of each flex line
         _calculateCrossSizeOfEachFlexLine(tree, input);

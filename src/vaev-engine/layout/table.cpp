@@ -920,15 +920,15 @@ export struct TableFormatingContext : FormatingContext {
 
     // MARK: Auto Table Layout -------------------------------------------------
     Pair<Au> getCellMinMaxAutoWidth(Tree& tree, Box& box, TableCell& cell, Au tableComputedWidth, UsedSpacings usedSpacings) {
-        auto cellMinOutput = computeIntrinsicContentSize(
+        auto cellMinOutput = computeIntrinsicSizeContributions(
             tree,
-            box,
+            box.children()[0],
             IntrinsicSize::MIN_CONTENT
         );
 
-        auto cellMaxOutput = computeIntrinsicContentSize(
+        auto cellMaxOutput = computeIntrinsicSizeContributions(
             tree,
-            box,
+            box.children()[0],
             IntrinsicSize::MAX_CONTENT
         );
 
@@ -1102,8 +1102,12 @@ export struct TableFormatingContext : FormatingContext {
     Opt<Pair<Vec<Au>>> intrinsicSizes;
 
     Pair<Vec<Au>> computeIntrinsicMinMaxAutoWidths(Tree& tree, usize size) {
+
         if (not intrinsicSizes)
             intrinsicSizes = computeMinMaxAutoWidths(tree, size, 0_au);
+
+        logInfo("Table intrinsic sizes: {}", *intrinsicSizes);
+
         return *intrinsicSizes;
     }
 

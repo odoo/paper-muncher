@@ -15,6 +15,7 @@ import :layout.flex;
 import :layout.grid;
 import :layout.inline_;
 import :layout.replaced;
+import :layout.sizing;
 import :layout.positioned;
 import :layout.table;
 import :layout.values;
@@ -141,7 +142,7 @@ Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size) {
     return res;
 }
 
-Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin) {
+Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin, Math::Vec2<Opt<Au>> knownSize) {
     if (intrinsic == IntrinsicSize::AUTO) {
         panic("bad argument");
     }
@@ -151,7 +152,7 @@ Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic
         box,
         {
             .intrinsic = intrinsic,
-            .knownSize = {NONE, NONE},
+            .knownSize = knownSize,
             .capmin = capmin,
         },
         0,
@@ -159,6 +160,55 @@ Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic
     );
 
     return output.size;
+}
+
+Vec2Au computeIntrinsicSizeContributions(Tree& tree, Box& box, IntrinsicSize intrinsic) {
+    auto width = box.style->sizing->width;
+    auto height = box.style->sizing->height;
+
+    logInfo("Intrinsic contribs: width={} height={}", width, height);
+
+    Math::Vec2<Opt<Au>> knownSize = {NONE};
+
+    if (auto calc = width.is<CalcValue<PercentOr<Length>>>()) {
+        if (intrinsic == IntrinsicSize::MAX_CONTENT and containsPercents(*calc)) {
+            width = Keywords::AUTO;
+        } else {
+            Au contentWidth = resolve(tree, box, *calc, 0_au);
+
+            if (box.style->boxSizing == BoxSizing::BORDER_BOX) {
+                auto paddings = computePaddings(tree, box, {});
+                auto borders = computeBorders(tree, box);
+                contentWidth = max(0_au, contentWidth - paddings.horizontal() - borders.horizontal());
+            }
+
+            knownSize.width = contentWidth;
+        }
+    }
+
+    if (auto calc = height.is<CalcValue<PercentOr<Length>>>()) {
+        if (intrinsic == IntrinsicSize::MAX_CONTENT and containsPercents(*calc)) {
+            height = Keywords::AUTO;
+        } else {
+            Au contentHeight = resolve(tree, box, *calc, 0_au);
+
+            if (box.style->boxSizing == BoxSizing::BORDER_BOX) {
+                auto paddings = computePaddings(tree, box, {});
+                auto borders = computeBorders(tree, box);
+                contentHeight = max(0_au, contentHeight - paddings.vertical() - borders.vertical());
+            }
+
+            knownSize.height = contentHeight;
+        }
+    }
+
+    if (knownSize.width and knownSize.height)
+        return {*knownSize.width, *knownSize.height};
+
+    auto contentSizes = computeIntrinsicContentSize(tree, box, intrinsic, NONE, knownSize);
+
+    // FIXME: Handle min-content/max-content...
+    return contentSizes;
 }
 
 Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
@@ -179,7 +229,7 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au c
     } else if (size.is<FitContent>()) {
         auto minIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
         auto maxIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
-        auto stretchIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, capmin);
+        auto stretchIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::AUTO, capmin);
 
         return clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x) + horizontalBorderBox;
     } else if (size.is<Keywords::Auto>()) {
@@ -282,7 +332,8 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
                 auto containingBlock = RectAu{
                     {input.position.x, input.position.y},
                     out.size,
-                }.grow(input.usedSpacings.padding);
+                }
+                                           .grow(input.usedSpacings.padding);
 
                 auto childOutput = layoutAbsolutePositioned(tree, oofChild->originatingBox(), containingBlock, oofChild->staticPosRect, input.pageNumber);
                 auto childFragment = childOutput.fragment.unwrap();

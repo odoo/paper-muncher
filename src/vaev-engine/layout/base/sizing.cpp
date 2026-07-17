@@ -1,3 +1,7 @@
+module;
+
+#import <karm/macros>
+
 export module Vaev.Engine:layout.sizing;
 
 import :layout.input;
@@ -48,20 +52,54 @@ export Au computeFitContentBlockSize(Tree& tree, Box& box, AvailableSpaceAxis av
     return computeFitContentSize(tree, box, {INDEFINITE, availableSpace}).y;
 }
 
+export bool containsPercents(CalcValue<PercentOr<Length>> const& calc) {
+    auto resolveUnion = Visitor{
+        [&](PercentOr<Length> const& v) {
+            return v.is<Percent>();
+        },
+        [&](CalcValue<PercentOr<Length>>::Leaf const& v) {
+            return containsPercents(*v);
+        },
+        [](Number const&) {
+            return false;
+        }
+    };
+
+    return calc.visit(
+        [&](CalcValue<PercentOr<Length>>::Value const& v) {
+            return v.visit(resolveUnion);
+        },
+        [&](CalcValue<PercentOr<Length>>::Unary const& u) {
+            return u.val.visit(resolveUnion);
+        },
+        [&](CalcValue<PercentOr<Length>>::Binary const& b) {
+            return b.lhs.visit(resolveUnion) or b.rhs.visit(resolveUnion);
+        }
+    );
+}
+
 // https://www.w3.org/TR/css-sizing-3/#preferred-size-properties
 // FIXME: Move this to a more generic width/height computation function.
-export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box, Vec2Au containingBlock) {
+export Math::Vec2<Opt<Au>> resolvePreferredSizesForReplaced(Tree const& tree, Box const& box, Vec2Au containingBlock, IntrinsicSize intrinsic) {
+    if (intrinsic != IntrinsicSize::AUTO) assert$(containingBlock == Vec2Au{});
+
     auto const& style = *box.style;
 
     Opt<Au> width = NONE;
     Opt<Au> height = NONE;
 
+    // https://www.w3.org/TR/css-sizing-3/#cyclic-percentage-contribution
+
     if (auto calc = style.sizing->width.is<CalcValue<PercentOr<Length>>>()) {
-        width = resolve(tree, box, *calc, containingBlock.width);
+        if (intrinsic != IntrinsicSize::MAX_CONTENT or not containsPercents(*calc)) {
+            width = resolve(tree, box, *calc, containingBlock.width);
+        }
     }
 
     if (auto calc = style.sizing->height.is<CalcValue<PercentOr<Length>>>()) {
-        height = resolve(tree, box, *calc, containingBlock.height);
+        if (intrinsic != IntrinsicSize::MAX_CONTENT or not containsPercents(*calc)) {
+            height = resolve(tree, box, *calc, containingBlock.height);
+        }
     }
 
     return {width, height};
@@ -69,7 +107,9 @@ export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box
 
 // https://www.w3.org/TR/CSS22/visudet.html#min-max-widths
 // FIXME: Values other than <length-percentage> are currently treated as 'auto'.
-export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2Au tentative, Vec2Au containingBlock, Math::Vec2<Opt<Au>> specifiedSize) {
+export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2Au tentative, Vec2Au containingBlock, IntrinsicSize intrinsic, Math::Vec2<Opt<Au>> specifiedSize) {
+    if (intrinsic != IntrinsicSize::AUTO) assert$(containingBlock == Vec2Au{});
+
     auto const& style = *box.style;
 
     Au minWidth = 0_au;
@@ -78,14 +118,27 @@ export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& bo
     Au maxWidth = Limits<Au>::MAX;
     Au maxHeight = Limits<Au>::MAX;
 
-    if (auto calc = style.sizing->minWidth.is<CalcValue<PercentOr<Length>>>())
+    // https://www.w3.org/TR/css-sizing-3/#cyclic-percentage-contribution
+
+    if (auto calc = style.sizing->minWidth.is<CalcValue<PercentOr<Length>>>()) {
         minWidth = resolve(tree, box, *calc, containingBlock.width);
-    if (auto calc = style.sizing->maxWidth.is<CalcValue<PercentOr<Length>>>())
-        maxWidth = resolve(tree, box, *calc, containingBlock.width);
-    if (auto calc = style.sizing->minHeight.is<CalcValue<PercentOr<Length>>>())
+    }
+
+    if (auto calc = style.sizing->minHeight.is<CalcValue<PercentOr<Length>>>()) {
         minHeight = resolve(tree, box, *calc, containingBlock.height);
-    if (auto calc = style.sizing->maxHeight.is<CalcValue<PercentOr<Length>>>())
-        maxHeight = resolve(tree, box, *calc, containingBlock.height);
+    }
+
+    if (auto calc = style.sizing->maxWidth.is<CalcValue<PercentOr<Length>>>()) {
+        if (intrinsic != IntrinsicSize::MAX_CONTENT or not containsPercents(*calc)) {
+            maxWidth = resolve(tree, box, *calc, containingBlock.width);
+        }
+    }
+
+    if (auto calc = style.sizing->maxHeight.is<CalcValue<PercentOr<Length>>>()) {
+        if (intrinsic != IntrinsicSize::MAX_CONTENT or not containsPercents(*calc)) {
+            maxHeight = resolve(tree, box, *calc, containingBlock.height);
+        }
+    }
 
     maxWidth = max(maxWidth, minWidth);
     maxHeight = max(maxHeight, minHeight);
