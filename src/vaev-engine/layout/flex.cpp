@@ -150,7 +150,7 @@ struct FlexItem {
     Vec2Au speculativeSize;
     InsetsAu speculativeMargin;
 
-    Vec2Au minContentContribution, maxContentContribution;
+    Au minContentContribution, maxContentContribution;
     Au minInlineContentSize;
 
     // TODO: only implementing borders after border-box is finished
@@ -178,14 +178,29 @@ struct FlexItem {
     void computeContentSizes(Tree& tree) {
         auto [minInlineSize, maxInlineSize] = intrinsicInlineSizeContributions(tree, *box);
 
-        minContentContribution.x = minInlineSize + padding.horizontal() + borders.horizontal();
-        minContentContribution.y = intrinsicBlockContentSize(tree, *box, minInlineSize) + padding.vertical() + borders.vertical();
-
-        maxContentContribution.x = maxInlineSize + padding.horizontal() + borders.horizontal();
-        maxContentContribution.y = intrinsicBlockContentSize(tree, *box, maxInlineSize) + padding.vertical() + borders.vertical();
+        minContentContribution = minInlineSize + padding.horizontal() + borders.horizontal();
+        maxContentContribution = maxInlineSize + padding.horizontal() + borders.horizontal();
 
         minInlineContentSize = intrinsicInlineContentSizes(tree, *box).minContent + padding.horizontal() + borders.horizontal();
     }
+
+    Opt<Pair<Au, Au>> _blockSizeMemo;
+
+    Au blockSizeAt(Tree& tree, Au inlineSize) {
+        if (_blockSizeMemo and _blockSizeMemo->v0 == inlineSize)
+            return _blockSizeMemo->v1;
+        auto r = intrinsicBlockContentSize(tree, *box, inlineSize - padding.horizontal() - borders.horizontal())
+               + padding.vertical() + borders.vertical();
+        _blockSizeMemo = {inlineSize, r};
+        return r;
+    }
+
+    Au mainContentSize(Tree& tree, bool isMin, Vec2Au availableSpace) {
+        if (fa.isRowOriented)
+            return isMin ? minContentContribution : maxContentContribution;
+        return blockSizeAt(tree, crossInlineSize(tree, availableSpace)); // isMin irrelevant
+    }
+
 
     enum OuterPosition {
         START_CROSS,
@@ -299,12 +314,15 @@ struct FlexItem {
             }
         }
 
+        if (not fa.isRowOriented) {
+            flexBaseSize = blockSizeAt(tree, crossInlineSize)
+        }
+
         if (isMinMaxIntrinsicSize(containerSizing)) {
-            flexBaseSize = fa.mainAxis(
+            flexBaseSize =
                 containerSizing == IntrinsicSize::MIN_CONTENT
                     ? minContentContribution
-                    : maxContentContribution
-            );
+                    : maxContentContribution;
             return;
         }
 

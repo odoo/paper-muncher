@@ -252,7 +252,7 @@ struct BlockFormatingContext : FormatingContext {
         return capmin;
     }
 
-    Au intrinsicHorizontalSpacing(Tree& tree, Box& box) {
+    static Au _intrinsicHorizontalSpacing(Tree& tree, Box& box) {
         auto padding = computePaddings(tree, box, {0_au, 0_au});
         auto borders = computeBorders(tree, box);
         auto margin  = computeMargins(tree, box, {0_au, 0_au});
@@ -264,12 +264,12 @@ struct BlockFormatingContext : FormatingContext {
         Au maxContent = 0_au;
 
         for (auto& c : box.children()) {
-            if (c.isRunningPositionedBox() or c.isRemovedFromFlow())
+            if (c.isRemovedFromFlow())
                 continue;
 
             auto childSizes = intrinsicInlineSizeContributions(tree, c);
 
-            Au chrome = intrinsicHorizontalSpacing(tree, c);
+            Au chrome = _intrinsicHorizontalSpacing(tree, c);
 
             minContent = max(minContent, childSizes.minContent + chrome);
             maxContent = max(maxContent, childSizes.maxContent + chrome);

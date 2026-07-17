@@ -70,7 +70,6 @@ struct InlineFormatingContext : FormatingContext {
                 .containingBlock = containingBlock,
             };
 
-            // Author-specified width/height still override the intrinsic constraint.
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
                 tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
                 usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
@@ -83,7 +82,7 @@ struct InlineFormatingContext : FormatingContext {
             auto atomicBoxOutput = layoutBorderBox(tree, atomicBox, childInput);
 
             boxStrutCell.size = atomicBoxOutput.size;
-            // FIXME: hard-coding alphabetic; missing alignment-baseline / dominant-baseline
+            // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
             boxStrutCell.baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
         }
     }

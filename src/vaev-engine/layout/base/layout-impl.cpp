@@ -224,6 +224,8 @@ IntrinsicSizes intrinsicInlineContentSizes(Tree& tree, Box& box) {
 
     auto inlineSizes = fc->intrinsicInlineContentSizes(tree, box);
 
+    assert$(inlineSizes.minContent <= inlineSizes.maxContent);
+
     return inlineSizes;
 }
 
