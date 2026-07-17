@@ -116,6 +116,11 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues> parentStyl
         auto prose = rootInlineBox.content.unwrap<Rc<Gfx::Prose>>();
 
         if (not isAsciiSpace(rune)) {
+            // A glyph follows the deferred space, so materialize it (e.g. "5.00 Units").
+            if (rootInlineBox.pendingCollapsibleSpace) {
+                prose->append(' ');
+                rootInlineBox.pendingCollapsibleSpace = false;
+            }
             _transformAndAppendRuneToProse(
                 prose,
                 rune,
@@ -147,10 +152,13 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues> parentStyl
             // https://www.w3.org/TR/css-text-3/#valdef-white-space-pre-line
             // Collapsible segment breaks are transformed for rendering according to the segment
             // break transformation rules.
-            if (whitespace == WhiteSpace::PRE_LINE and visitedSegmentBreak)
+            if (whitespace == WhiteSpace::PRE_LINE and visitedSegmentBreak) {
+                // Forced break ends the line: drop the deferred space instead of leaking it.
+                rootInlineBox.pendingCollapsibleSpace = false;
                 prose->append('\n');
-            else
-                prose->append(' ');
+            } else
+                // Defer the space; emitted only if a glyph follows, else dropped at line end.
+                rootInlineBox.pendingCollapsibleSpace = true;
         } else if (whitespace == WhiteSpace::PRE) {
             prose->append(rune);
         } else {
@@ -328,10 +336,12 @@ static void _buildText(BuilderContext bc, Str text, Rc<Style::ComputedValues> pa
     // (i.e. characters that can be affected by the white-space property) it is instead not rendered
     // (just as if its text nodes were display:none).
 
+    // In a block context, keep whitespace only between inline-level boxes (active line),
+    // not between blocks or at line start, so "5.00 Units" survives but block gaps don't.
     bool shouldSkipWhitespace =
         bc.from == BuilderContext::From::TABLE or
         bc.from == BuilderContext::From::FLEX or
-        bc.from == BuilderContext::From::BLOCK;
+        (bc.from == BuilderContext::From::BLOCK and not bc.rootInlineBox().isActive());
 
     bool addedNonWhitespace = _buildText(text, parentStyle, bc.rootInlineBox(), shouldSkipWhitespace);
 
