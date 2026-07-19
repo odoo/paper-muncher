@@ -68,6 +68,29 @@ paper-muncher index.html -o output.pdf
 paper-muncher --help
 ```
 
+## FreeBSD 15.1+
+
+Paper Muncher builds and runs natively on FreeBSD 15.1 (amd64) with Clang 19. Use this fork which provides the required karm patches:
+
+```sh
+# Install build dependencies
+pkg install python3 py311-pip git pkgconf libunwind
+
+# Install cutekit
+pip install cutekit
+
+# Clone the FreeBSD fork
+git clone https://github.com/satriani-vai/paper-muncher.git
+cd paper-muncher
+git checkout freebsd-support
+
+# Build
+CUTEKIT_ALLOW_ROOT=1 ./ck build
+CUTEKIT_ALLOW_ROOT=1 ./ck run paper-muncher -- input.md -o output.pdf
+```
+
+The fork pulls `karm` from `satriani-vai/karm:freebsd-support` which includes the necessary FreeBSD portability patches (kevent/async emulation, POSIX headers, sandbox stub).
+
 ## Contributing
 
 We welcome contributions to the Paper Muncher project! If you have ideas, suggestions, or bug reports, please open an issue on our GitHub repository. If you're interested in contributing code, please fork the repository and submit a pull request.

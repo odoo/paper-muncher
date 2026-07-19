@@ -6,8 +6,8 @@
     "description": "An experimental document-generation tool",
     "externs": {
         "skift/karm": {
-            "git": "https://codeberg.org/skift/karm.git",
-            "tag": "main"
+            "git": "https://github.com/satriani-vai/karm.git",
+            "tag": "freebsd-support"
         },
         "cute-engineering/cat": {
             "git": "https://codeberg.org/cute-engineering/cat.git",
