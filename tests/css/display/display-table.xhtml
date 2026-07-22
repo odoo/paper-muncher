@@ -2698,4 +2698,130 @@
     </rendering>
 </test>
 
+<test name="table: height distribution no auto cell" width="320px" height="320px">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                table {
+                    border-spacing: 0;
+                    height: 200px;
+                    width: 100%;
+                    padding: 0;
+                }
+
+                tr {
+                    vertical-align: top;
+                    padding: 0;
+                    width: 100%;
+                    height: 50px;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100%; height: 50px; margin-bottom: 50px; background: red;"></div>
+        <div style="width: 100%; height: 50px; margin-bottom: 50px; background: red;"></div>
+    </rendering>
+
+    <rendering>
+        <table>
+            <tbody>
+            <tr>
+                <td style="height: 50px">
+                    <div style="background-color: red; height: 50px"></div>
+                </td>
+            </tr>
+            <tr>
+                <td style="height: 50px;">
+                    <div style="background-color: red; height: 50px"></div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
+
+<test name="table: height distribution with auto cell" width="320px" height="320px">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                table {
+                    border-spacing: 0;
+                    height: 300px;
+                    width: 100%;
+                    padding: 0
+                }
+
+                tr {
+                    vertical-align: top;
+                    padding: 0;
+                    width: 100%;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100%; height: 50px; margin-bottom: 75px; background: blue;"></div>
+        <div style="width: 100%; height: 50px; margin-bottom: 0; background: red;"></div>
+        <div style="width: 100%; height: 50px; margin-bottom: 75px; background: blue;"></div>
+    </rendering>
+
+    <rendering>
+        <table>
+            <tbody>
+            <tr>
+                <td>
+                    <div style="background-color: blue; height: 50px"></div>
+                </td>
+            </tr>
+            <tr style="height: 50px">
+                <td>
+                    <div style="background-color: red; height: 100%"></div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div style="background-color: blue; height: 50px"></div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
 </tests>

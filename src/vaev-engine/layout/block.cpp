@@ -158,7 +158,12 @@ Opt<Au> _tableWrapperFitContentWidth(Tree& tree, Box& wrapper, Au availableWidth
     return NONE;
 }
 
-void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, UsedSpacings const& usedSpacings, Opt<Au> blockInlineSize) {
+void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, Input& childInput, UsedSpacings const& usedSpacings, Opt<Au> blockInlineSize) {
+    // https://drafts.csswg.org/css-tables-3/#fixup-algorithm
+    // Percentages which would depend on the width and height on the table-wrapper box’s size are relative to the table-wrapper
+    // box’s containing block instead, not the table-wrapper box itself.
+    auto containingBlock = child.style->display == Display::TABLE_BOX ? parentInput.containingBlock : childInput.containingBlock;
+
     if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Display::INLINE) {
         if (child.style->sizing->width.is<Keywords::Auto>()) {
             // https://www.w3.org/TR/css-tables-3/#layout-principles
@@ -179,14 +184,14 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& childInput, Use
             }
         } else {
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                tree, child, child.style->sizing->width, childInput.containingBlock,
+                tree, child, child.style->sizing->width, containingBlock,
                 usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal(),
                 childInput.capmin
             );
         }
 
         childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
-            tree, child, child.style->sizing->height, childInput.containingBlock,
+            tree, child, child.style->sizing->height, containingBlock,
             usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
         );
     }
@@ -352,7 +357,7 @@ struct BlockFormatingContext : FormatingContext {
             if (c.style->display == Display::Internal::TABLE_BOX)
                 childInput.capmin = _computeCapmin(tree, box, input, inlineSize);
 
-            _populateChildSpecifiedSizes(tree, c, childInput, usedSpacings, input.knownSize.x);
+            _populateChildSpecifiedSizes(tree, c, input, childInput, usedSpacings, input.knownSize.x);
 
             if (not c.isRemovedFromFlow())
                 _resolveAutoHorizontalMargins(c, childInput, usedSpacings, input.knownSize.x);

@@ -1182,6 +1182,7 @@ export struct TableFormatingContext : FormatingContext {
 
     // https://www.w3.org/TR/CSS22/tables.html#height-layout
     Vec<Au> rowHeight;
+    usize autoHeightRows = 0;
 
     void computeRowHeights(Tree& tree) {
         // NOTE: CSS 2.2 does not define how the height of table cells and
@@ -1198,7 +1199,7 @@ export struct TableFormatingContext : FormatingContext {
         for (auto& h : rowHeight)
             h = 0_au;
 
-        for (auto& row : rows) {
+        for (auto& [row, index] : iter(rows) | Index()) {
             auto& height = row.el.style->sizing->height;
             auto heightCalc = height.is<CalcValue<PercentOr<Length>>>();
 
@@ -1206,8 +1207,10 @@ export struct TableFormatingContext : FormatingContext {
                 logWarn("height can't be anything other than 'auto' or a length in a table context");
 
             // AUTO case
-            if (not heightCalc)
+            if (not heightCalc) {
+                autoHeightRows++;
                 continue;
+            }
 
             for (usize y = row.start; y <= row.end; ++y) {
                 rowHeight[y] = resolve(tree, row.el, *heightCalc, 0_au);
@@ -1260,7 +1263,7 @@ export struct TableFormatingContext : FormatingContext {
                 );
 
                 for (usize k = 0; k < rowSpan; k++) {
-                    rowHeight[i + k] = max(rowHeight[i + k], Au{cellOutput.size.y / Au{rowSpan}});
+                    rowHeight[i + k] = max(rowHeight[i + k], cellOutput.size.y / rowSpan);
                 }
             }
         }
@@ -1349,12 +1352,43 @@ export struct TableFormatingContext : FormatingContext {
 
         computeRowHeights(tree);
 
+        auto usedVerticalSpace = (iter(rowHeight) | Sum()) + spacing.y * (grid.size.y + 1);
+
+        // https://www.w3.org/TR/css-tables-3/#row-layout
+        if (input.knownSize.height and input.knownSize.height.unwrap() > usedVerticalSpace) {
+            Au knownHeight = input.knownSize.height.unwrap();
+            Au surplus = knownHeight - usedVerticalSpace;
+
+            // Else, if the table owns any “auto-height” row (a row whose size is only determined by its content size
+            // and none of the specified heights), each non-auto-height row receives its reference height and auto-height
+            // rows receive their reference size plus some increment which is equal to the height missing to amount to
+            // the specified table height divided by the amount of such rows.
+            if (autoHeightRows > 0) {
+                Au inc = surplus / autoHeightRows;
+
+                for (usize i = 0; i < rows.len(); i++) {
+                    if (rows[i].el.style->sizing->height.is<Keywords::Auto>())
+                        rowHeight[i] += inc;
+                }
+            }
+
+            // Else, all rows receive their reference size plus some increment which is equal to the height missing to
+            // amount to the specified table height divided by the amount of rows.
+            else {
+                Au inc = surplus / rows.len();
+                for (auto& h : rowHeight)
+                    h += inc;
+            }
+
+            usedVerticalSpace = knownHeight;
+        }
+
         colWidthPref = PrefixSum<Au>{colWidth};
         rowHeightPref = PrefixSum<Au>{rowHeight};
 
         tableBoxSize = Vec2Au{
             (iter(colWidth) | Sum()) + spacing.x * (grid.size.x + 1),
-            (iter(rowHeight) | Sum()) + spacing.y * (grid.size.y + 1),
+            usedVerticalSpace,
         };
 
         if (numOfHeaderRows) {
