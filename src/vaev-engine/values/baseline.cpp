@@ -1,7 +1,9 @@
 export module Vaev.Engine:values.baseline;
 
 import Karm.Core;
+import :values.calc;
 import :values.keywords;
+import :values.percent;
 
 using namespace Karm;
 
@@ -33,10 +35,20 @@ export using DominantBaseline = Union<
     Keywords::Mathematical,
     Keywords::TextTop>;
 
+// https://drafts.csswg.org/css-inline/#propdef-baseline-shift
+export using BaselineShift = Union<
+    CalcValue<PercentOr<Length>>,
+    Keywords::Sub,
+    Keywords::Super,
+    Keywords::Top,
+    Keywords::Center,
+    Keywords::Bottom>;
+
 export struct Baseline {
     BaselineSource source = Keywords::AUTO;
     AlignmentBaseline alignment = Keywords::BASELINE;
     DominantBaseline dominant = Keywords::AUTO;
+    BaselineShift shift = CalcValue<PercentOr<Length>>(Length{});
 
     void repr(Io::Emit& e) const {
         e("(baselines");

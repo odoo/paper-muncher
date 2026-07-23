@@ -49,6 +49,8 @@ export RegisteredPropertySet const& defaultRegistry() {
         registry.registerProperty<DominantBaselineProperty>();
         registry.registerProperty<BaselineSourceProperty>();
         registry.registerProperty<AlignmentBaselineProperty>();
+        registry.registerProperty<BaselineShiftProperty>();
+        registry.registerProperty<VerticalAlignProperty>();
 
         // Background
         registry.registerProperty<BackgroundAttachmentProperty>();

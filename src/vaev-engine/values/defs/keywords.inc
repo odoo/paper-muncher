@@ -51,6 +51,8 @@ KEYWORD(SpellOut, "spell-out", SPELL_OUT);
 KEYWORD(Static, "static", STATIC)
 KEYWORD(Sticky, "sticky", STICKY)
 KEYWORD(StrokeBox, "stroke-box", STROKE_BOX)
+KEYWORD(Sub, "sub", SUB)
+KEYWORD(Super, "super", SUPER)
 KEYWORD(Symbolic, "symbolic", SYMBOLIC)
 KEYWORD(TextBottom, "text-bottom", TEXT_BOTTOM)
 KEYWORD(TextTop, "text-top", TEXT_TOP)
