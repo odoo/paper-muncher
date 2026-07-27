@@ -25,17 +25,15 @@ export struct LineHeightProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<LineHeightProperty>(self(), LineHeight::NORMAL);
+            return makeRc<LineHeightProperty>(self(), Keywords::NORMAL);
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            // TODO
-            (void)parent;
-            (void)child;
+            child.inline_.cow().lineHeight = parent.inline_->lineHeight;
         }
 
-        Rc<Property> load(ComputedValues const&) const override {
-            return makeRc<LineHeightProperty>(self(), LineHeight::NORMAL); // TODO
+        Rc<Property> load(ComputedValues const& c) const override {
+            return makeRc<LineHeightProperty>(self(), c.inline_->lineHeight);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -48,8 +46,8 @@ export struct LineHeightProperty : Property {
     LineHeightProperty(Rc<Property::Registration> registration, LineHeight value)
         : Property(registration), _value(value) {}
 
-    void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
-        // TODO
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
+        c.inline_.cow().lineHeight = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -69,7 +67,7 @@ export struct DominantBaselineProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<DominantBaselineProperty>(self(), c.baseline->dominant);
+            return makeRc<DominantBaselineProperty>(self(), c.inline_->baseline.dominant);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -83,7 +81,7 @@ export struct DominantBaselineProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.baseline.cow().dominant = _value;
+        c.inline_.cow().baseline.dominant = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -103,7 +101,7 @@ export struct BaselineSourceProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BaselineSourceProperty>(self(), c.baseline->source);
+            return makeRc<BaselineSourceProperty>(self(), c.inline_->baseline.source);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -117,7 +115,7 @@ export struct BaselineSourceProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.baseline.cow().source = _value;
+        c.inline_.cow().baseline.source = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -137,7 +135,7 @@ export struct AlignmentBaselineProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<AlignmentBaselineProperty>(self(), c.baseline->alignment);
+            return makeRc<AlignmentBaselineProperty>(self(), c.inline_->baseline.alignment);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -151,7 +149,7 @@ export struct AlignmentBaselineProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.baseline.cow().alignment = _value;
+        c.inline_.cow().baseline.alignment = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -171,7 +169,7 @@ export struct BaselineShiftProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BaselineShiftProperty>(self(), c.baseline->shift);
+            return makeRc<BaselineShiftProperty>(self(), c.inline_->baseline.shift);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -185,7 +183,7 @@ export struct BaselineShiftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.baseline.cow().shift = _value;
+        c.inline_.cow().baseline.shift = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -218,9 +216,9 @@ export struct VerticalAlignProperty : Property {
             return makeRc<VerticalAlignProperty>(
                 self(),
                 Value{
-                    c.baseline->source,
-                    c.baseline->alignment,
-                    c.baseline->shift,
+                    c.inline_->baseline.source,
+                    c.inline_->baseline.alignment,
+                    c.inline_->baseline.shift,
                 }
             );
         }

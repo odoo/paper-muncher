@@ -68,6 +68,28 @@ static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues const& style) 
 static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
     Resolver resolver{};
 
+    // FIXME: Assert bounds at parse time to respect inherits.
+    auto usedLineHeight = style.inline_->lineHeight.visit(
+        [](Keywords::Normal) -> Opt<Au> {
+            return NONE;
+        },
+        [&](Number number) -> Opt<Au> {
+            if (number < 0)
+                return NONE;
+
+            return style.font->size * number;
+        },
+        [&](CalcValue<PercentOr<Length>> const& length) -> Opt<Au> {
+            auto oneEm = resolver.resolve(Length{RelativeLength{1, RelativeLength::EM}});
+            auto result = resolver.resolve(length, oneEm);
+
+            if (result < 0_au)
+                return NONE;
+
+            return result;
+        }
+    );
+
     return {
         .font = {
             style.fontFace,
@@ -77,6 +99,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
         // FIXME: Should be done during prose layout
         .marginLeft = resolver.resolve(style.margin->start, 0_au),
         .marginRight = resolver.resolve(style.margin->end, 0_au),
+        .lineHeight = usedLineHeight,
         .wordwrap = _allowsWrap(style.text->whiteSpace),
     };
 }

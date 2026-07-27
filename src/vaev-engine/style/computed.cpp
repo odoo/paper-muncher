@@ -45,7 +45,7 @@ export struct ComputedValues {
     Cow<OutlineProps> outline;
     Cow<Padding> padding = Padding(Length{}); // FIXME
     Cow<SizingProps> sizing;
-    Cow<Baseline> baseline;
+    Cow<InlineProps> inline_;
     Cow<BoxInsets> insets = BoxInsets(Width(Keywords::AUTO)); // FIXME
     Cow<ClipProps> clip;
     Cow<TransformProps> transform;

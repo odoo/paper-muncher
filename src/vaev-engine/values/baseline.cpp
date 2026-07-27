@@ -3,6 +3,7 @@ export module Vaev.Engine:values.baseline;
 import Karm.Core;
 import :values.calc;
 import :values.keywords;
+import :values.lineHeight;
 import :values.percent;
 
 using namespace Karm;
@@ -57,6 +58,11 @@ export struct Baseline {
         e(" dominant={}", dominant);
         e(")");
     }
+};
+
+export struct InlineProps {
+    Baseline baseline;
+    LineHeight lineHeight = Keywords::NORMAL;
 };
 
 } // namespace Vaev::Style

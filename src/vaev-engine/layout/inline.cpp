@@ -15,9 +15,9 @@ struct InlineFormatingContext : FormatingContext {
 
     // https://www.w3.org/TR/css-inline-3/#baseline-source
     BaselinePositionsSet getUsedBaselineFromBox(Box const& childBox, Output const& output) {
-        if (childBox.style->baseline->source == Keywords::FIRST)
+        if (childBox.style->inline_->baseline.source == Keywords::FIRST)
             return output.firstBaselineSet;
-        if (childBox.style->baseline->source == Keywords::LAST)
+        if (childBox.style->inline_->baseline.source == Keywords::LAST)
             return output.lastBaselineSet;
 
         if (childBox.style->display == Display::INLINE and childBox.style->display == Display::FLOW_ROOT)
