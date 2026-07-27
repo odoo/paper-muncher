@@ -1182,7 +1182,8 @@ export struct TableFormatingContext : FormatingContext {
 
     // https://www.w3.org/TR/CSS22/tables.html#height-layout
     Vec<Au> rowHeight;
-    usize autoHeightRows = 0;
+    usize numAutoHeightRows = 0;
+    Au totalNonAutoHeight = 0_au;
 
     void computeRowHeights(Tree& tree) {
         // NOTE: CSS 2.2 does not define how the height of table cells and
@@ -1208,12 +1209,14 @@ export struct TableFormatingContext : FormatingContext {
 
             // AUTO case
             if (not heightCalc) {
-                autoHeightRows++;
+                numAutoHeightRows++;
                 continue;
             }
 
             for (usize y = row.start; y <= row.end; ++y) {
-                rowHeight[y] = resolve(tree, row.el, *heightCalc, 0_au);
+                Au resolved = resolve(tree, row.el, *heightCalc, 0_au);
+                totalNonAutoHeight += resolved;
+                rowHeight[y] = resolved;
             }
         }
 
@@ -1354,33 +1357,24 @@ export struct TableFormatingContext : FormatingContext {
 
         auto usedVerticalSpace = (iter(rowHeight) | Sum()) + spacing.y * (grid.size.y + 1);
 
-        // https://www.w3.org/TR/css-tables-3/#row-layout
+        // NOSPEC: The exact row height distribution is undefined in CSS2.2 but browsers seem to agree on the algorithm below.
         if (input.knownSize.height and input.knownSize.height.unwrap() > usedVerticalSpace) {
             Au knownHeight = input.knownSize.height.unwrap();
             Au surplus = knownHeight - usedVerticalSpace;
 
-            // Else, if the table owns any “auto-height” row (a row whose size is only determined by its content size
-            // and none of the specified heights), each non-auto-height row receives its reference height and auto-height
-            // rows receive their reference size plus some increment which is equal to the height missing to amount to
-            // the specified table height divided by the amount of such rows.
-            if (autoHeightRows > 0) {
-                Au inc = surplus / autoHeightRows;
-
+            if (numAutoHeightRows > 0) {
                 for (usize i = 0; i < rows.len(); i++) {
                     if (rows[i].el.style->sizing->height.is<Keywords::Auto>())
-                        rowHeight[i] += inc;
+                        rowHeight[i] += surplus * (rowHeight[i] / (usedVerticalSpace - totalNonAutoHeight));
                 }
-            }
-
-            // Else, all rows receive their reference size plus some increment which is equal to the height missing to
-            // amount to the specified table height divided by the amount of rows.
-            else {
-                Au inc = surplus / rows.len();
+            } else {
                 for (auto& h : rowHeight)
-                    h += inc;
+                    h += surplus * (h / usedVerticalSpace);
             }
 
             usedVerticalSpace = knownHeight;
+        } else if (input.knownSize.height and input.knownSize.height.unwrap() < usedVerticalSpace) {
+            // FIXME: Investigate what should happen.
         }
 
         colWidthPref = PrefixSum<Au>{colWidth};
