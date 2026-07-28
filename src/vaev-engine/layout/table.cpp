@@ -29,6 +29,7 @@ UsedBorder resolve(Tree const& tree, Box const& box, BorderEdge const edge) {
 struct TableCell {
     Math::Vec2u anchorIdx = {};
     MutCursor<Box> box = nullptr;
+    Au usedHeight = {};
 
     static TableCell const EMPTY;
 
@@ -510,7 +511,8 @@ export struct TableFormatingContext : FormatingContext {
             while (
                 start < grid.size.x and
                 (grid.at(start, i).anchorIdx == grid.at(start, i + 1).anchorIdx or
-                 (not grid.at(start, i).box and not grid.at(start, i + 1).box)))
+                 (not grid.at(start, i).box and not grid.at(start, i + 1).box))
+            )
                 start++;
 
             if (start == grid.size.x)
@@ -561,7 +563,8 @@ export struct TableFormatingContext : FormatingContext {
             while (
                 start < grid.size.y and
                 (grid.at(j, start).anchorIdx == grid.at(j + 1, start).anchorIdx or
-                 (not grid.at(j, start).box and not grid.at(j + 1, start).box)))
+                 (not grid.at(j, start).box and not grid.at(j + 1, start).box))
+            )
                 start++;
 
             if (start == grid.size.y)
@@ -1265,6 +1268,8 @@ export struct TableFormatingContext : FormatingContext {
                     }
                 );
 
+                grid.at(j, i).usedHeight = cellOutput.height();
+
                 for (usize k = 0; k < rowSpan; k++) {
                     rowHeight[i + k] = max(rowHeight[i + k], cellOutput.size.y / rowSpan);
                 }
@@ -1474,6 +1479,29 @@ export struct TableFormatingContext : FormatingContext {
                            : computeBorders(tree, *cell.box),
         };
 
+        Vec2Au position = {};
+        if (cellBox->style->inline_->baselineShift.is<Keywords::Top>()) {
+            position = Vec2Au{currPositionX, startPositionY};
+        } else if (cellBox->style->inline_->baselineShift.is<Keywords::Bottom>()) {
+            if (auto [size] = verticalSize) {
+                position = Vec2Au{currPositionX, startPositionY + size - cell.usedHeight};
+            } else {
+                // FIXME: What to do in this case?
+                position = Vec2Au{currPositionX, startPositionY};
+            }
+        } else if (cellBox->style->inline_->alignmentBaseline.is<Keywords::Middle>()) {
+            if (auto [size] = verticalSize) {
+                position = Vec2Au{currPositionX, startPositionY + (size - cell.usedHeight) / 2};
+            } else {
+                // FIXME: What to do in this case?
+                position = Vec2Au{currPositionX, startPositionY};
+            }
+        } else {
+            // FIXME: Implement rest of relevant keywords,
+            //        fallback to 'top' for now.
+            position = Vec2Au{currPositionX, startPositionY};
+        }
+
         Input childInput{
             .generateFragment = input.generateFragment,
             .usedSpacings = usedSpacings,
@@ -1481,7 +1509,7 @@ export struct TableFormatingContext : FormatingContext {
                 colWidthPref.query(j, j + colSpan - 1) + spacing.x * (colSpan - 1),
                 verticalSize,
             },
-            .position = {currPositionX, startPositionY},
+            .position = position,
             .containingBlock = tableBoxSize,
             .breakpointTraverser = breakpointsForCell,
             .pendingVerticalSizes = input.pendingVerticalSizes,

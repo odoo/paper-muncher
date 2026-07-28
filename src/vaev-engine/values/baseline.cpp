@@ -45,23 +45,11 @@ export using BaselineShift = Union<
     Keywords::Center,
     Keywords::Bottom>;
 
-export struct Baseline {
-    BaselineSource source = Keywords::AUTO;
-    AlignmentBaseline alignment = Keywords::BASELINE;
-    DominantBaseline dominant = Keywords::AUTO;
-    BaselineShift shift = CalcValue<PercentOr<Length>>(Length{});
-
-    void repr(Io::Emit& e) const {
-        e("(baselines");
-        e(" source={}", source);
-        e(" alignment={}", alignment);
-        e(" dominant={}", dominant);
-        e(")");
-    }
-};
-
 export struct InlineProps {
-    Baseline baseline;
+    BaselineSource baselineSource = Keywords::AUTO;
+    AlignmentBaseline alignmentBaseline = Keywords::BASELINE;
+    DominantBaseline dominantBaseline = Keywords::AUTO;
+    BaselineShift baselineShift = CalcValue<PercentOr<Length>>(Length{});
     LineHeight lineHeight = Keywords::NORMAL;
 };
 
