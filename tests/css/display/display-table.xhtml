@@ -2882,4 +2882,163 @@
     </rendering>
 </test>
 
+<test name="table: vertical-align top" width="300px" height="300px">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                table {
+                    border-spacing: 0;
+                    height: 300px;
+                    width: 100%;
+                    padding: 0
+                }
+
+                tr {
+                    vertical-align: top;
+                    padding: 0;
+                    width: 100%;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100%; height: 50px; background: blue;"></div>
+    </rendering>
+
+    <rendering>
+        <table>
+            <tbody>
+            <tr>
+                <td style="vertical-align: top">
+                    <div style="background-color: blue; height: 50px"></div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
+<test name="table: vertical-align middle" width="300px" height="300px">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                table {
+                    border-spacing: 0;
+                    height: 300px;
+                    width: 100%;
+                    padding: 0
+                }
+
+                tr {
+                    vertical-align: top;
+                    padding: 0;
+                    width: 100%;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100%; height: 50px; margin-top: 125px; background: blue;"></div>
+    </rendering>
+
+    <rendering>
+        <table>
+            <tbody>
+            <tr>
+                <td style="vertical-align: middle">
+                    <div style="background-color: blue; vertical-align: middle; height: 50px"></div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
+<test name="table: vertical-align bottom" width="300px" height="300px">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                table {
+                    border-spacing: 0;
+                    height: 300px;
+                    width: 100%;
+                    padding: 0
+                }
+
+                tr {
+                    vertical-align: top;
+                    padding: 0;
+                    width: 100%;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100%; height: 50px; margin-top: 250px; background: blue;"></div>
+    </rendering>
+
+    <rendering>
+        <table>
+            <tbody>
+            <tr>
+                <td style="vertical-align: bottom">
+                    <div style="background-color: blue; height: 50px"></div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </rendering>
+</test>
+
 </tests>
