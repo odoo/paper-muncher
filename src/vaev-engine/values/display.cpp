@@ -313,7 +313,7 @@ export struct Display {
                 Item::NO,
             };
         }
-        
+
         return {
             _inside,
             BLOCK,

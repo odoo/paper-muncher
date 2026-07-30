@@ -58,8 +58,8 @@ struct InlineFormatingContext : FormatingContext {
         Vec<Rc<PlaceholderFragment>> outOfFlowChildren = {};
 
         for (auto strutCell : prose->cellsWithStruts()) {
-            auto& boxStrutCell = *strutCell->strut();
-            auto& atomicBox = box.children()[boxStrutCell.id];
+            auto boxStrutCell = strutCell->strut(*prose);
+            auto& atomicBox = box.children()[boxStrutCell->id];
 
             if (atomicBox.isRemovedFromFlow())
                 continue;
@@ -95,9 +95,9 @@ struct InlineFormatingContext : FormatingContext {
             // worst case, they will take up the whole availableSpace, and a line break will be done right before them
             auto atomicBoxOutput = layoutBorderBox(tree, atomicBox, childInput);
 
-            boxStrutCell.size = atomicBoxOutput.size;
+            boxStrutCell->size = atomicBoxOutput.size;
             // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
-            boxStrutCell.baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
+            boxStrutCell->baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
         }
 
         // FIXME: prose has a ongoing state that is not reset between layout calls, but it should be
@@ -111,8 +111,8 @@ struct InlineFormatingContext : FormatingContext {
             auto runeIdx = strutCell->runeRange.start;
             auto positionInProse = prose->queryPosition(runeIdx);
 
-            auto& boxStrutCell = *strutCell->strut();
-            auto& atomicBox = box.children()[boxStrutCell.id];
+            auto boxStrutCell = strutCell->strut(*prose);
+            auto& atomicBox = box.children()[boxStrutCell->id];
 
             if (oneOf(atomicBox.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
                 if (input.generateFragment) {
@@ -152,8 +152,8 @@ struct InlineFormatingContext : FormatingContext {
                 .generateFragment = input.generateFragment,
                 .usedSpacings = usedSpacings,
                 .knownSize = {
-                    boxStrutCell.size.x,
-                    boxStrutCell.size.y
+                    boxStrutCell->size.x,
+                    boxStrutCell->size.y
                 },
                 .position = input.position + positionInProse,
                 .containingBlock = childContainingBlock,

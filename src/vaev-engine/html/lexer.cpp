@@ -32,18 +32,18 @@ struct HtmlEntity {
 
 export struct HtmlLexer {
     enum struct State {
-#define STATE(NAME) NAME,
+#define STATE(NAME) \
+    NAME,
 #include "defs/states.inc"
 
 #undef STATE
-
         _LEN,
     };
 
     using enum State;
 
-    State _state = State::DATA;
-    State _returnState = State::DATA;
+    State _state = DATA;
+    State _returnState = DATA;
 
     Opt<HtmlToken> _token;
     Opt<HtmlToken> _lastStartTag;

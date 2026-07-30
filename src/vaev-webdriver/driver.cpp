@@ -8,6 +8,7 @@ import Karm.Core;
 import Karm.Http;
 import Karm.Ref;
 import Karm.Image;
+import Karm.Scene.Save;
 import Karm.Logger;
 import Karm.Crypto;
 import Karm.Sys;
@@ -262,7 +263,7 @@ export struct WebDriver {
         auto window = try$(session->currentBrowsingContext());
         auto scene = window->render();
         auto data = try$(
-            Karm::Image::save(
+            Karm::Scene::save(
                 scene,
                 window->_media.viewportSize().cast<isize>(),
                 {
@@ -271,7 +272,6 @@ export struct WebDriver {
                 }
             )
         );
-
         return Ok(Crypto::base64Encode(data));
     }
 
