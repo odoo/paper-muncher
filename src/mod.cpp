@@ -201,7 +201,6 @@ Async::Task<> runSingleAsync(
 
     logInfo("rendering {}...", input);
     if (options.flow == Flow::PAGINATE) {
-        Vaev::Layout::Resolver resolver;
         HeaderFooterDecorator decorator;
         if (auto& [header] = options.header) {
             logInfo("loading header {}...", header);

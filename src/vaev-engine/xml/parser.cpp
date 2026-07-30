@@ -747,7 +747,7 @@ export struct XmlParser {
         }
     }
 
-    // XX MARK: 6.2 Namespace Defaulting
+    // MARK: 6.2 Namespace Defaulting
     // https://www.w3.org/TR/xml-names/#dt-defaultNS
     // https://www.w3.org/TR/xml-names/#scoping-defaulting
     // NOTE: Basically same code as attribute parsing, but we need to check for the namespace before parsing the attributes
@@ -757,7 +757,6 @@ export struct XmlParser {
         auto context = originalContext;
 
         while (not s.ahead(">"_re) and not s.ahead("/>"_re) and not s.ended()) {
-
             auto parsedName = try$(_parseQualifiedName(s));
 
             if (not s.skip('='))

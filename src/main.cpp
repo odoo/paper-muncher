@@ -54,10 +54,15 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
         {sandboxedArg, verboseArg, quietArg},
     };
 
+    enum struct FormatInfer {
+        INFER,
+        _LEN,
+    };
+
     auto inputsArg = Cli::operand<Vec<Str>>("inputs"s, "Input files (default: stdin)"s, {"-"s});
     auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
     auto batchArg = Cli::option<PaperMuncher::Batch>(NONE, "batch"s, "How to handle multiple input documents (default: concat)"s, PaperMuncher::Batch::CONCAT);
-    auto formatArg = Cli::option<Opt<Ref::Uti>>('f', "format"s, "Override the output format (default: inferred from the output file extension)"s, NONE);
+    auto formatArg = Cli::option<Union<FormatInfer, Ref::Uti>>('f', "format"s, "Override the output format (default: inferred from the output file extension)"s, FormatInfer::INFER);
     auto densityArg = Cli::option<Vaev::Resolution>(NONE, "density"s, "Pixel density of the output document, in CSS resolution units (e.g. 96dpi)"s, Vaev::Resolution::fromDppx(1));
 
     Cli::Section inOutSection{
@@ -165,7 +170,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     auto level = INFO;
     if (verboseArg.value())
-        level = PRINT;
+        level = DEBUG;
     if (quietArg.value())
         level = FATAL;
     setLogLevel(level);
@@ -187,10 +192,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     Vec<Ref::Url> inputs;
     for (auto& i : inputsArg.value())
-        if (i == "-"s)
-            inputs.pushBack("fd:stdin"_url);
-        else
-            inputs.pushBack(Ref::parseUrlOrPath(i, env.cwd()));
+        inputs.pushBack(i == "-"s ? "fd:stdin"_url : Ref::parseUrlOrPath(i, env.cwd()));
 
     Ref::Url output = "fd:stdout"_url;
     if (outputArg.value() != "-"s)
@@ -201,11 +203,16 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     options.headerSize = headerSizeArg.value();
     options.footerSize = footerSizeArg.value();
 
-    options.outputFormat = formatArg.value().unwrapOrElse([&] -> Ref::Uti {
-        if (output.path.suffix())
-            return Ref::Uti::fromSuffix(output.path.suffix());
-        return Ref::Uti::PUBLIC_PDF;
-    });
+    options.outputFormat = formatArg.value().visit(
+        [&](FormatInfer) -> Ref::Uti {
+            if (output.path.suffix())
+                return Ref::Uti::fromSuffix(output.path.suffix());
+            return Ref::Uti::PUBLIC_PDF;
+        },
+        [](Ref::Uti uti) {
+            return uti;
+        }
+    );
     options.flow = flowArg.value();
     options.extend = extendArg.value();
 

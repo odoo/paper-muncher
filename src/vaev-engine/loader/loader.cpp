@@ -109,7 +109,8 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url 
     // NOSPEC: Handle markdown as HTML MIME type
     else if (contentType.conformsTo(Ref::Uti::PUBLIC_MARKDOWN)) {
         auto doc = Md::parse(body);
-        auto rendered = Md::renderHtml(doc);
+        auto props = co_try$(Md::RenderProps::from(doc.frontmatter));
+        auto rendered = Md::render(doc, props);
         co_return _loadHtmlDocument(heap, url, contentType, rendered);
     }
     // a JavaScript MIME type
