@@ -27,7 +27,7 @@ export using LineWidth = Union<
     Keywords::Thin,
     Keywords::Medium,
     Keywords::Thick,
-    CalcValue<Length>>;
+    Calc<Length>>;
 
 export Au resolve(LineWidth const& value, auto const& ctx) {
     return value.visit(
@@ -65,7 +65,7 @@ struct ValueParser<LineWidth> {
             return Ok(Keywords::THICK);
         }
 
-        return Ok(try$(parseValue<CalcValue<Length>>(c)));
+        return Ok(try$(parseValue<Calc<Length>>(c)));
     }
 };
 

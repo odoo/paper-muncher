@@ -18,7 +18,7 @@ static RectAu _computeInsetModifiedContainingBlock(Tree const& tree, Box& box, R
 
     InsetsAu resolvedInsets = {};
 
-    using InsetLength = CalcValue<PercentOr<Length>>;
+    using InsetLength = Calc<PercentOr<Length>>;
 
     bool startIsAuto = style.insets->start.is<Keywords::Auto>();
     bool endIsAuto = style.insets->end.is<Keywords::Auto>();
@@ -258,16 +258,16 @@ Au _negotiateInsetsForRelativePositioning(Tree& tree, Box const& box, Size const
 
     // - If only one is auto, its used value becomes the negation of the other, and the box is shifted by the specified amount.
     if (not startIsAuto and endIsAuto) {
-        return resolve(tree, box, *start.is<CalcValue<PercentOr<Length>>>(), relativeTo);
+        return resolve(tree, box, *start.is<Calc<PercentOr<Length>>>(), relativeTo);
     }
     if (startIsAuto and not endIsAuto) {
-        return -resolve(tree, box, *end.is<CalcValue<PercentOr<Length>>>(), relativeTo);
+        return -resolve(tree, box, *end.is<Calc<PercentOr<Length>>>(), relativeTo);
     }
 
     // - If neither is auto, the position is over-constrained; (with respect to the writing mode of its containing block)
     //   the computed end side value is ignored, and its used value becomes the negation of the start side.
     // FIXME: Honor writing mode.
-    return resolve(tree, box, *start.is<CalcValue<PercentOr<Length>>>(), relativeTo);
+    return resolve(tree, box, *start.is<Calc<PercentOr<Length>>>(), relativeTo);
 }
 
 // https://www.w3.org/TR/css-position-3/#relpos-insets

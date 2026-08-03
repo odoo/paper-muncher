@@ -55,10 +55,10 @@ export struct Resolver :
         return Vaev::resolve(value, *this, relative);
     }
 
-    Au resolve(Width const& value, Au relative) {
+    Au resolve(Union<Keywords::Auto, Calc<PercentOr<Length>>> const& value, Au relative) {
         if (value.is<Keywords::Auto>())
             return 0_au;
-        return Vaev::resolve(value.unwrap<CalcValue<PercentOr<Length>>>(), *this, relative);
+        return Vaev::resolve(value.unwrap<Calc<PercentOr<Length>>>(), *this, relative);
     }
 
     Rad resolve(Angle const& value) {
@@ -74,7 +74,7 @@ export struct Resolver :
     }
 
     template <typename T, typename... Args>
-    Resolved<T> resolve(CalcValue<T> const& calc, Args... args) {
+    Resolved<T> resolve(Calc<T> const& calc, Args... args) {
         return Vaev::resolve(calc, *this, args...);
     }
 };
@@ -82,11 +82,11 @@ export struct Resolver :
 // MARK: Resolve during layout -------------------------------------------------
 
 // HACK: Temporary workaround while we don't properly evaluate computed values
-export bool isPurePercentage(CalcValue<PercentOr<Length>> calcValue) {
-    if (not calcValue._inner.is<CalcValue<PercentOr<Length>>::Value>())
+export bool isPurePercentage(Calc<PercentOr<Length>> calcValue) {
+    if (not calcValue._inner.is<Calc<PercentOr<Length>>::Value>())
         return false;
 
-    auto const& value = calcValue._inner.unwrap<CalcValue<PercentOr<Length>>::Value>();
+    auto const& value = calcValue._inner.unwrap<Calc<PercentOr<Length>>::Value>();
     if (not value.is<PercentOr<Length>>())
         return false;
 
@@ -101,7 +101,7 @@ export Au resolve(Tree const& tree, Box const& box, PercentOr<Length> const& val
     return Resolver::from(tree, box).resolve(value, relative);
 }
 
-export Au resolve(Tree const& tree, Box const& box, Width const& value, Au relative) {
+export Au resolve(Tree const& tree, Box const& box, Union<Keywords::Auto, Calc<PercentOr<Length>>> const& value, Au relative) {
     return Resolver::from(tree, box).resolve(value, relative);
 }
 
@@ -114,7 +114,7 @@ export Au resolve(Tree const& tree, Box const& box, FontSize const& value) {
 }
 
 export template <typename T, typename... Args>
-auto resolve(Tree const& tree, Box const& box, CalcValue<T> const& value, Args... args) -> Resolved<T> {
+auto resolve(Tree const& tree, Box const& box, Calc<T> const& value, Args... args) -> Resolved<T> {
     return Resolver::from(tree, box).resolve(value, args...);
 }
 

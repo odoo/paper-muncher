@@ -146,7 +146,7 @@ export struct OutlineOffsetProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<OutlineOffsetProperty>(self(), CalcValue<Length>{0_au});
+            return makeRc<OutlineOffsetProperty>(self(), Calc<Length>{0_au});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -154,13 +154,13 @@ export struct OutlineOffsetProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OutlineOffsetProperty>(self(), try$(parseValue<CalcValue<Length>>(c))));
+            return Ok(makeRc<OutlineOffsetProperty>(self(), try$(parseValue<Calc<Length>>(c))));
         }
     };
 
-    CalcValue<Length> _value;
+    Calc<Length> _value;
 
-    OutlineOffsetProperty(Rc<Property::Registration> registration, CalcValue<Length> value)
+    OutlineOffsetProperty(Rc<Property::Registration> registration, Calc<Length> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -195,7 +195,7 @@ export struct OutlineProperty : Property {
             SpecifiedOutline value;
             bool styleSet = false;
             while (not c.ended()) {
-                auto width = parseValue<CalcValue<Length>>(c);
+                auto width = parseValue<Calc<Length>>(c);
                 if (width) {
                     value.width = width.unwrap();
                     continue;

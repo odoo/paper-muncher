@@ -7,7 +7,6 @@ import :css;
 import :values.base;
 import :values.length;
 import :values.percent;
-import :values.width;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;

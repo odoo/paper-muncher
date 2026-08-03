@@ -51,13 +51,14 @@ export struct PositionProperty : Property {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-top
 export struct TopProperty : Property {
+    using Value = Union<Keywords::Auto, Calc<PercentOr<Length>>>;
     struct Registration : Property::Registration {
         Symbol name() const override {
             return Properties::TOP;
         }
 
         Rc<Property> initial() const override {
-            return makeRc<TopProperty>(self(), Width{Keywords::AUTO});
+            return makeRc<TopProperty>(self(), Value{Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -65,13 +66,13 @@ export struct TopProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TopProperty>(self(), try$(parseValue<Width>(c))));
+            return Ok(makeRc<TopProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Width _value;
+    Value _value;
 
-    TopProperty(Rc<Property::Registration> registration, Width value)
+    TopProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -85,13 +86,15 @@ export struct TopProperty : Property {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-right
 export struct RightProperty : Property {
+    using Value = TopProperty::Value;
+
     struct Registration : Property::Registration {
         Symbol name() const override {
             return Properties::RIGHT;
         }
 
         Rc<Property> initial() const override {
-            return makeRc<RightProperty>(self(), Width{Keywords::AUTO});
+            return makeRc<RightProperty>(self(), Value{Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -99,13 +102,13 @@ export struct RightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<RightProperty>(self(), try$(parseValue<Width>(c))));
+            return Ok(makeRc<RightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Width _value;
+    Value _value;
 
-    RightProperty(Rc<Property::Registration> registration, Width value)
+    RightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -119,13 +122,15 @@ export struct RightProperty : Property {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-bottom
 export struct BottomProperty : Property {
+    using Value = TopProperty::Value;
+
     struct Registration : Property::Registration {
         Symbol name() const override {
             return Properties::BOTTOM;
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BottomProperty>(self(), Width{Keywords::AUTO});
+            return makeRc<BottomProperty>(self(), Value{Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -133,13 +138,13 @@ export struct BottomProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BottomProperty>(self(), try$(parseValue<Width>(c))));
+            return Ok(makeRc<BottomProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Width _value;
+    Union<Keywords::Auto, Calc<PercentOr<Length>>>_value;
 
-    BottomProperty(Rc<Property::Registration> registration, Width value)
+    BottomProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -153,13 +158,15 @@ export struct BottomProperty : Property {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-left
 export struct LeftProperty : Property {
+    using Value = TopProperty::Value;
+
     struct Registration : Property::Registration {
         Symbol name() const override {
             return Properties::LEFT;
         }
 
         Rc<Property> initial() const override {
-            return makeRc<LeftProperty>(self(), Width{Keywords::AUTO});
+            return makeRc<LeftProperty>(self(), Value{Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -167,13 +174,13 @@ export struct LeftProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<LeftProperty>(self(), try$(parseValue<Width>(c))));
+            return Ok(makeRc<LeftProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Width _value;
+    Value _value;
 
-    LeftProperty(Rc<Property::Registration> registration, Width value)
+    LeftProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

@@ -387,7 +387,7 @@ static void _paintChildren(Fragment& frag, Scene::Stack& stack, auto predicate) 
     }
 }
 
-static Math::Radiif _resolveRadii(Resolver& resolver, Math::Radii<CalcValue<PercentOr<Length>>> const& baseRadii, RectAu const& referenceBox) {
+static Math::Radiif _resolveRadii(Resolver& resolver, Math::Radii<Calc<PercentOr<Length>>> const& baseRadii, RectAu const& referenceBox) {
     Math::Radiif radii;
     radii.a = resolver.resolve(baseRadii.a, referenceBox.height).cast<f64>();
     radii.b = resolver.resolve(baseRadii.b, referenceBox.width).cast<f64>();
@@ -507,7 +507,7 @@ static Rc<Scene::Clip> _applyClip(Rc<Fragment> frag, Rc<Scene::Node> content) {
                 auto hSquared = Math::pow2(referenceBox.height.cast<f64>());
                 auto wSquared = Math::pow2(referenceBox.width.cast<f64>());
                 radius = resolver.resolve(
-                                     circle.radius.unwrap<CalcValue<PercentOr<Length>>>(),
+                                     circle.radius.unwrap<Calc<PercentOr<Length>>>(),
                                      Au(Math::sqrt(hSquared + wSquared) / Math::sqrt(2.0))
                 )
                              .cast<f64>();
@@ -571,7 +571,7 @@ static Rc<Scene::Clip> _applyClip(Rc<Fragment> frag, Rc<Scene::Node> content) {
                 rx = max(Math::abs(referenceBox.width.cast<f64>() - center.x), center.x);
             } else {
                 rx = resolver.resolve(
-                                 ellipse.rx.unwrap<CalcValue<PercentOr<Length>>>(),
+                                 ellipse.rx.unwrap<Calc<PercentOr<Length>>>(),
                                  referenceBox.width
                 )
                          .cast<f64>();
@@ -584,7 +584,7 @@ static Rc<Scene::Clip> _applyClip(Rc<Fragment> frag, Rc<Scene::Node> content) {
                 ry = max(Math::abs(referenceBox.height.cast<f64>() - center.y), center.y);
             } else {
                 ry = resolver.resolve(
-                                 ellipse.ry.unwrap<CalcValue<PercentOr<Length>>>(),
+                                 ellipse.ry.unwrap<Calc<PercentOr<Length>>>(),
                                  referenceBox.height
                 )
                          .cast<f64>();
@@ -662,7 +662,7 @@ static Vec2Au _resolveTransformOrigin(RectAu referenceBox, TransformOrigin origi
         [&](Keywords::Center) {
             return referenceBox.center().x;
         },
-        [&](CalcValue<PercentOr<Length>> value) {
+        [&](Calc<PercentOr<Length>> value) {
             return referenceBox.start() + resolver.resolve(value, referenceBox.width);
         }
     );
@@ -677,7 +677,7 @@ static Vec2Au _resolveTransformOrigin(RectAu referenceBox, TransformOrigin origi
         [&](Keywords::Center) {
             return referenceBox.center().y;
         },
-        [&](CalcValue<PercentOr<Length>> value) {
+        [&](Calc<PercentOr<Length>> value) {
             return referenceBox.top() + resolver.resolve(value, referenceBox.height);
         }
     );

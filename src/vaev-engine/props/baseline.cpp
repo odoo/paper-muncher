@@ -165,7 +165,7 @@ export struct BaselineShiftProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BaselineShiftProperty>(self(), CalcValue<PercentOr<Length>>(Length{}));
+            return makeRc<BaselineShiftProperty>(self(), Calc<PercentOr<Length>>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

@@ -72,7 +72,7 @@ test$("vaev-css-build-display") {
 }
 
 test$("vaev-css-build-margin") {
-    auto testCase = [&](Str input, Math::Insets<Width> expected) -> Res<> {
+    auto testCase = [&](Str input, Margin expected) -> Res<> {
         auto registry = defaultRegistry();
         auto res = registry.parseValue(Properties::MARGIN, input, {});
         expect$(res);
@@ -86,33 +86,33 @@ test$("vaev-css-build-margin") {
 
     try$(testCase(
         "30px;",
-        Margin{Width{CalcValue<PercentOr<Length>>{Length{30_au}}}}
+        Margin{Calc<PercentOr<Length>>{Length{30_au}}}
     ));
 
     try$(testCase(
         "1px 2px;",
         Margin{
-            Width{CalcValue<PercentOr<Length>>{Length{1_au}}},
-            Width{CalcValue<PercentOr<Length>>{Length{2_au}}},
+            Calc<PercentOr<Length>>{Length{1_au}},
+            Calc<PercentOr<Length>>{Length{2_au}},
         }
     ));
 
     try$(testCase(
         "1px 2px 3px;",
         Margin{
-            Width{CalcValue<PercentOr<Length>>{Length{1_au}}},
-            Width{CalcValue<PercentOr<Length>>{Length{2_au}}},
-            Width{CalcValue<PercentOr<Length>>{Length{3_au}}},
+            Calc<PercentOr<Length>>{Length{1_au}},
+            Calc<PercentOr<Length>>{Length{2_au}},
+            Calc<PercentOr<Length>>{Length{3_au}},
         }
     ));
 
     try$(testCase(
         "1px 2px 3px 4px;",
         Margin{
-            Width{CalcValue<PercentOr<Length>>{Length{1_au}}},
-            Width{CalcValue<PercentOr<Length>>{Length{2_au}}},
-            Width{CalcValue<PercentOr<Length>>{Length{3_au}}},
-            Width{CalcValue<PercentOr<Length>>{Length{4_au}}},
+            Calc<PercentOr<Length>>{Length{1_au}},
+            Calc<PercentOr<Length>>{Length{2_au}},
+            Calc<PercentOr<Length>>{Length{3_au}},
+            Calc<PercentOr<Length>>{Length{4_au}},
         }
     ));
 

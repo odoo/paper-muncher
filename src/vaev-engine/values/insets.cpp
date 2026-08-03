@@ -5,7 +5,9 @@ import Karm.Math;
 
 import :css;
 import :values.base;
-import :values.width;
+import :values.calc;
+import :values.keywords;
+import :values.percent;
 
 using namespace Karm;
 
@@ -55,12 +57,12 @@ struct ValueParser<Position> {
     }
 };
 
-export using Margin = Math::Insets<Width>;
+export using Margin = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Length>>>>;
 
-export using Padding = Math::Insets<CalcValue<PercentOr<Length>>>;
+export using Padding = Math::Insets<Calc<PercentOr<Length>>>;
 
 // https://www.w3.org/TR/css-position-3/#propdef-inset
-export using BoxInsets = Math::Insets<Width>;
+export using BoxInsets = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Length>>>>;
 
 export template <typename T>
 struct ValueParser<Math::Insets<T>> {
@@ -90,7 +92,7 @@ struct ValueParser<Math::Insets<T>> {
 
 export using Gap = Union<
     Keywords::Normal,
-    CalcValue<PercentOr<Length>>>;
+    Calc<PercentOr<Length>>>;
 
 export struct Gaps {
     Gap row = Keywords::NORMAL;

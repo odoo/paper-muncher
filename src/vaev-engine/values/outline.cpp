@@ -10,7 +10,7 @@ namespace Vaev {
 
 export struct SpecifiedOutline {
     LineWidth width = Keywords::MEDIUM;
-    CalcValue<Length> offset = 0_au;
+    Calc<Length> offset = 0_au;
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
     Union<Keywords::Auto, Color> color = Keywords::AUTO;
 
@@ -22,7 +22,7 @@ export struct SpecifiedOutline {
 // https://drafts.csswg.org/css-ui/#outline
 export struct OutlineProps {
     LineWidth width = Keywords::MEDIUM;
-    CalcValue<Length> offset = 0_au;
+    Calc<Length> offset = 0_au;
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
     Color color = Gfx::BLUE500;
 

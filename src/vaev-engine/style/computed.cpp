@@ -22,8 +22,8 @@ struct FontProps {
 struct TransformProps {
     Transform transform = Keywords::NONE;
     TransformOrigin origin = {
-        .xOffset = CalcValue<PercentOr<Length>>{Percent{0}},
-        .yOffset = CalcValue<PercentOr<Length>>{Percent{0}},
+        .xOffset = Calc<PercentOr<Length>>{Percent{0}},
+        .yOffset = Calc<PercentOr<Length>>{Percent{0}},
     };
     TransformBox box = Keywords::BORDER_BOX;
 
@@ -41,12 +41,12 @@ export struct ComputedValues {
     Cow<Gaps> gaps;
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
-    Cow<Margin> margin = Margin(Width(CalcValue<PercentOr<Length>>(Length()))); // FIXME
+    Cow<Margin> margin = Margin(Calc<PercentOr<Length>>(Length())); // FIXME
     Cow<OutlineProps> outline;
     Cow<Padding> padding = Padding(Length{}); // FIXME
     Cow<SizingProps> sizing;
     Cow<InlineProps> inline_;
-    Cow<BoxInsets> insets = BoxInsets(Width(Keywords::AUTO)); // FIXME
+    Cow<BoxInsets> insets = BoxInsets(Keywords::AUTO); // FIXME
     Cow<ClipProps> clip;
     Cow<TransformProps> transform;
     Cow<TableProps> table;

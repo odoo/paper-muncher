@@ -40,6 +40,5 @@ export import :values.text;
 export import :values.time;
 export import :values.transform;
 export import :values.visibility;
-export import :values.width;
 export import :values.writing;
 export import :values.zIndex;

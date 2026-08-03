@@ -9,8 +9,6 @@ using namespace Karm;
 
 namespace Vaev {
 
-export using ZIndex = FlatUnion<
-    Keywords::Auto,
-    Integer>;
+export using ZIndex = Union<Keywords::Auto, Integer>;
 
 } // namespace Vaev

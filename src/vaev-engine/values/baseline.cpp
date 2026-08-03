@@ -38,7 +38,7 @@ export using DominantBaseline = Union<
 
 // https://drafts.csswg.org/css-inline/#propdef-baseline-shift
 export using BaselineShift = Union<
-    CalcValue<PercentOr<Length>>,
+    Calc<PercentOr<Length>>,
     Keywords::Sub,
     Keywords::Super,
     Keywords::Top,
@@ -49,7 +49,7 @@ export struct InlineProps {
     BaselineSource baselineSource = Keywords::AUTO;
     AlignmentBaseline alignmentBaseline = Keywords::BASELINE;
     DominantBaseline dominantBaseline = Keywords::AUTO;
-    BaselineShift baselineShift = CalcValue<PercentOr<Length>>(Length{});
+    BaselineShift baselineShift = Calc<PercentOr<Length>>(Length{});
     LineHeight lineHeight = Keywords::NORMAL;
 };
 

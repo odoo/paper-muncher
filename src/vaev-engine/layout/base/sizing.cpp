@@ -56,11 +56,11 @@ export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box
     Opt<Au> width = NONE;
     Opt<Au> height = NONE;
 
-    if (auto calc = style.sizing->width.is<CalcValue<PercentOr<Length>>>()) {
+    if (auto calc = style.sizing->width.is<Calc<PercentOr<Length>>>()) {
         width = resolve(tree, box, *calc, containingBlock.width);
     }
 
-    if (auto calc = style.sizing->height.is<CalcValue<PercentOr<Length>>>()) {
+    if (auto calc = style.sizing->height.is<Calc<PercentOr<Length>>>()) {
         height = resolve(tree, box, *calc, containingBlock.height);
     }
 
@@ -78,13 +78,13 @@ export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& bo
     Au maxWidth = Limits<Au>::MAX;
     Au maxHeight = Limits<Au>::MAX;
 
-    if (auto calc = style.sizing->minWidth.is<CalcValue<PercentOr<Length>>>())
+    if (auto calc = style.sizing->minWidth.is<Calc<PercentOr<Length>>>())
         minWidth = resolve(tree, box, *calc, containingBlock.width);
-    if (auto calc = style.sizing->maxWidth.is<CalcValue<PercentOr<Length>>>())
+    if (auto calc = style.sizing->maxWidth.is<Calc<PercentOr<Length>>>())
         maxWidth = resolve(tree, box, *calc, containingBlock.width);
-    if (auto calc = style.sizing->minHeight.is<CalcValue<PercentOr<Length>>>())
+    if (auto calc = style.sizing->minHeight.is<Calc<PercentOr<Length>>>())
         minHeight = resolve(tree, box, *calc, containingBlock.height);
-    if (auto calc = style.sizing->maxHeight.is<CalcValue<PercentOr<Length>>>())
+    if (auto calc = style.sizing->maxHeight.is<Calc<PercentOr<Length>>>())
         maxHeight = resolve(tree, box, *calc, containingBlock.height);
 
     maxWidth = max(maxWidth, minWidth);

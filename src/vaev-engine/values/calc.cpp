@@ -32,8 +32,8 @@ export enum struct CalcOp {
 // 10. Mathematical Expressions
 // https://drafts.csswg.org/css-values/#math
 export template <typename T>
-struct CalcValue {
-    using Leaf = Box<CalcValue<T>>;
+struct Calc {
+    using Leaf = Box<Calc<T>>;
 
     using Value = Union<
         T,
@@ -58,23 +58,23 @@ struct CalcValue {
 
     Inner _inner;
 
-    constexpr CalcValue()
-        : CalcValue(T{}) {
+    constexpr Calc()
+        : Calc(T{}) {
     }
 
-    constexpr CalcValue(Meta::Convertible<T> auto val)
+    constexpr Calc(Meta::Convertible<T> auto val)
         : _inner(Value{T{val}}) {
     }
 
-    constexpr CalcValue(Value val)
+    constexpr Calc(Value val)
         : _inner(val) {
     }
 
-    constexpr CalcValue(CalcOp op, Value val)
+    constexpr Calc(CalcOp op, Value val)
         : _inner(makeBox<Unary>(op, val)) {
     }
 
-    constexpr CalcValue(CalcOp op, Value lhs, Value rhs)
+    constexpr Calc(CalcOp op, Value lhs, Value rhs)
         : _inner(makeBox<Binary>(op, lhs, rhs)) {
     }
 
@@ -112,7 +112,7 @@ struct CalcValue {
 };
 
 export template <typename T>
-struct _Resolved<CalcValue<T>> {
+struct _Resolved<Calc<T>> {
     using Type = _Resolved<T>;
 };
 
@@ -152,12 +152,12 @@ Resolved<T> _resolveInfix(CalcOp op, Resolved<T> lhs, Resolved<T> rhs) {
 }
 
 export template <typename T, typename... Args>
-Resolved<T> resolve(CalcValue<T> const& calc, Args... args) {
+Resolved<T> resolve(Calc<T> const& calc, Args... args) {
     auto resolveUnion = Visitor{
         [&](T const& v) {
             return resolve(v, args...);
         },
-        [&](CalcValue<T>::Leaf const& v) {
+        [&](Calc<T>::Leaf const& v) {
             return resolve<T>(*v, args...);
         },
         [&](Number const& v)
@@ -168,16 +168,16 @@ Resolved<T> resolve(CalcValue<T> const& calc, Args... args) {
         };
 
     return calc.visit(
-        [&](typename CalcValue<T>::Value const& v) {
+        [&](typename Calc<T>::Value const& v) {
             return v.visit(resolveUnion);
         },
-        [&](typename CalcValue<T>::Unary const& u) {
+        [&](typename Calc<T>::Unary const& u) {
             return _resolveUnary<T>(
                 u.op,
                 u.val.visit(resolveUnion)
             );
         },
-        [&](typename CalcValue<T>::Binary const& b) {
+        [&](typename Calc<T>::Binary const& b) {
             return _resolveInfix<T>(
                 b.op,
                 b.lhs.visit(resolveUnion),
@@ -188,8 +188,8 @@ Resolved<T> resolve(CalcValue<T> const& calc, Args... args) {
 }
 
 export template <typename T>
-struct ValueParser<CalcValue<T>> {
-    static Res<CalcValue<T>> parse(Cursor<Css::Sst>& c) {
+struct ValueParser<Calc<T>> {
+    static Res<Calc<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -203,14 +203,14 @@ struct ValueParser<CalcValue<T>> {
                 auto op = parseOp(content);
                 if (not op) {
                     c.next();
-                    return Ok(CalcValue<T>{lhs});
+                    return Ok(Calc<T>{lhs});
                 }
 
                 eatWhitespace(content);
                 auto rhs = try$(parseVal(content));
 
                 c.next();
-                return Ok(CalcValue<T>{op.unwrap(), lhs, rhs});
+                return Ok(Calc<T>{op.unwrap(), lhs, rhs});
             }
         }
 
@@ -242,7 +242,7 @@ struct ValueParser<CalcValue<T>> {
         return Error::invalidData("unexpected operator");
     }
 
-    static Res<typename CalcValue<T>::Value> parseVal(Cursor<Css::Sst>& c) {
+    static Res<typename Calc<T>::Value> parseVal(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 

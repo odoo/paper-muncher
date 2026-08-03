@@ -126,7 +126,7 @@ export enum struct BorderEdge {
 
 export struct BorderProps {
     ComputedBorder top, start, bottom, end;
-    Math::Radii<CalcValue<PercentOr<Length>>> radii = {Length{0_au}};
+    Math::Radii<Calc<PercentOr<Length>>> radii = {Length{0_au}};
 
     ComputedBorder const& get(BorderEdge edge) const {
         switch (edge) {

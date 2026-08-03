@@ -23,14 +23,17 @@ using namespace Karm;
 namespace Vaev {
 
 // https://drafts.csswg.org/css-masking/#typedef-geometry-box
-export using ShapeBox = FlatUnion<
+export using ShapeBox = Union<
     Keywords::BorderBox,
     Keywords::PaddingBox,
     Keywords::ContentBox,
     Keywords::MarginBox>;
 
-export using GeometryBox = FlatUnion<
-    ShapeBox,
+export using GeometryBox = Union<
+    Keywords::BorderBox,
+    Keywords::PaddingBox,
+    Keywords::ContentBox,
+    Keywords::MarginBox,
     Keywords::FillBox,
     Keywords::StrokeBox,
     Keywords::ViewBox>;
@@ -51,7 +54,7 @@ export Gfx::FillRule fillRuleToGfx(FillRule rule) {
 }
 
 export using ShapeRadius = Union<
-    CalcValue<PercentOr<Length>>,
+    Calc<PercentOr<Length>>,
     Keywords::ClosestSide,
     Keywords::FarthestSide>;
 
@@ -152,8 +155,8 @@ struct ValueParser<Ellipse> {
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-inset
 
 export struct Inset {
-    Math::Insets<CalcValue<PercentOr<Length>>> insets = {Percent(0)};
-    Math::Radii<CalcValue<PercentOr<Length>>> borderRadius = {Percent(0)};
+    Math::Insets<Calc<PercentOr<Length>>> insets = {Percent(0)};
+    Math::Radii<Calc<PercentOr<Length>>> borderRadius = {Percent(0)};
 
     void repr(Io::Emit& e) const {
         e("(inset {} {})", insets, borderRadius);
@@ -170,7 +173,7 @@ struct ValueParser<Inset> {
             Inset result;
             Cursor<Css::Sst> scan = c->content;
 
-            if (auto insets = parseValue<Math::Insets<CalcValue<PercentOr<Length>>>>(scan)) {
+            if (auto insets = parseValue<Math::Insets<Calc<PercentOr<Length>>>>(scan)) {
                 result.insets = insets.unwrap();
             } else {
                 return Error::invalidData("expected insets");
@@ -179,7 +182,7 @@ struct ValueParser<Inset> {
             eatWhitespace(scan);
             if (scan.skip(Css::Token::ident("round"))) {
                 eatWhitespace(scan);
-                if (auto radii = parseValue<Math::Radii<CalcValue<PercentOr<Length>>>>(scan)) {
+                if (auto radii = parseValue<Math::Radii<Calc<PercentOr<Length>>>>(scan)) {
                     result.borderRadius = radii.unwrap();
                 }
                 eatWhitespace(scan);
@@ -249,7 +252,7 @@ struct ValueParser<Path> {
 
 export struct Polygon {
     Gfx::FillRule fillRule = Gfx::FillRule::NONZERO;
-    Vec<Pair<CalcValue<PercentOr<Length>>>> points;
+    Vec<Pair<Calc<PercentOr<Length>>>> points;
 
     void repr(Io::Emit& e) const {
         e("(polygon {} {})", fillRule, points);
@@ -276,9 +279,9 @@ struct ValueParser<Polygon> {
                 begin = false;
 
                 eatWhitespace(scan);
-                auto x = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
+                auto x = try$(parseValue<Calc<PercentOr<Length>>>(scan));
                 eatWhitespace(scan);
-                auto y = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
+                auto y = try$(parseValue<Calc<PercentOr<Length>>>(scan));
                 eatWhitespace(scan);
                 result.points.emplaceBack(x, y);
             }
@@ -297,8 +300,8 @@ struct ValueParser<Polygon> {
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-rect
 
 export struct Rect {
-    Math::Insets<CalcValue<PercentOr<Length>>> insets = {Percent(0), Percent(100), Percent(100), Percent(0)};
-    Math::Radii<CalcValue<PercentOr<Length>>> borderRadius = {Percent(0)};
+    Math::Insets<Calc<PercentOr<Length>>> insets = {Percent(0), Percent(100), Percent(100), Percent(0)};
+    Math::Radii<Calc<PercentOr<Length>>> borderRadius = {Percent(0)};
 
     void repr(Io::Emit& e) const {
         e("(rect {} {})", insets, borderRadius);
@@ -317,24 +320,24 @@ struct ValueParser<Rect> {
 
             eatWhitespace(scan);
             if (not parseValue<Keywords::Auto>(scan))
-                result.insets.top = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
+                result.insets.top = try$(parseValue<Calc<PercentOr<Length>>>(scan));
 
             eatWhitespace(scan);
             if (not parseValue<Keywords::Auto>(scan))
-                result.insets.end = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
+                result.insets.end = try$(parseValue<Calc<PercentOr<Length>>>(scan));
 
             eatWhitespace(scan);
             if (not parseValue<Keywords::Auto>(scan))
-                result.insets.bottom = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
+                result.insets.bottom = try$(parseValue<Calc<PercentOr<Length>>>(scan));
 
             eatWhitespace(scan);
             if (not parseValue<Keywords::Auto>(scan))
-                result.insets.start = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
+                result.insets.start = try$(parseValue<Calc<PercentOr<Length>>>(scan));
 
             eatWhitespace(scan);
             if (scan.skip(Css::Token::ident("round"))) {
                 eatWhitespace(scan);
-                if (auto radii = parseValue<Math::Radii<CalcValue<PercentOr<Length>>>>(scan)) {
+                if (auto radii = parseValue<Math::Radii<Calc<PercentOr<Length>>>>(scan)) {
                     result.borderRadius = radii.unwrap();
                 }
                 eatWhitespace(scan);
@@ -353,8 +356,8 @@ struct ValueParser<Rect> {
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-xywh
 
 export struct Xywh {
-    Math::Rect<CalcValue<PercentOr<Length>>> rect = {Percent(0), Percent(0), Percent(0), Percent(0)};
-    Math::Radii<CalcValue<PercentOr<Length>>> borderRadius = {Percent(0)};
+    Math::Rect<Calc<PercentOr<Length>>> rect = {Percent(0), Percent(0), Percent(0), Percent(0)};
+    Math::Radii<Calc<PercentOr<Length>>> borderRadius = {Percent(0)};
 
     void repr(Io::Emit& e) const {
         e("(xywh {} {})", rect, borderRadius);
@@ -372,21 +375,21 @@ struct ValueParser<Xywh> {
             Cursor<Css::Sst> scan = c->content;
 
             eatWhitespace(scan);
-            result.rect.x = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
+            result.rect.x = try$(parseValue<Calc<PercentOr<Length>>>(scan));
 
             eatWhitespace(scan);
-            result.rect.y = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
+            result.rect.y = try$(parseValue<Calc<PercentOr<Length>>>(scan));
 
             eatWhitespace(scan);
-            result.rect.width = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
+            result.rect.width = try$(parseValue<Calc<PercentOr<Length>>>(scan));
 
             eatWhitespace(scan);
-            result.rect.height = try$(parseValue<CalcValue<PercentOr<Length>>>(scan));
+            result.rect.height = try$(parseValue<Calc<PercentOr<Length>>>(scan));
 
             eatWhitespace(scan);
             if (scan.skip(Css::Token::ident("round"))) {
                 eatWhitespace(scan);
-                if (auto radii = parseValue<Math::Radii<CalcValue<PercentOr<Length>>>>(scan)) {
+                if (auto radii = parseValue<Math::Radii<Calc<PercentOr<Length>>>>(scan)) {
                     result.borderRadius = radii.unwrap();
                 }
                 eatWhitespace(scan);

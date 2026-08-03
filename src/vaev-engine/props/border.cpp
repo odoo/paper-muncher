@@ -474,7 +474,7 @@ export struct BorderBottomWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderBottomWidthProperty>(self(), try$(parseValue<CalcValue<Length>>(c))));
+            return Ok(makeRc<BorderBottomWidthProperty>(self(), try$(parseValue<Calc<Length>>(c))));
         }
     };
 
@@ -534,7 +534,7 @@ export struct BorderRadiusTopRightProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusTopRightProperty>(self(), makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderRadiusTopRightProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -545,17 +545,17 @@ export struct BorderRadiusTopRightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto first = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            auto first = try$(parseValue<Calc<PercentOr<Length>>>(c));
             Array value{first, first};
             if (not c.ended())
-                value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+                value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
             return Ok(makeRc<BorderRadiusTopRightProperty>(self(), value));
         }
     };
 
-    Array<CalcValue<PercentOr<Length>>, 2> _value;
+    Array<Calc<PercentOr<Length>>, 2> _value;
 
-    BorderRadiusTopRightProperty(Rc<Property::Registration> registration, Array<CalcValue<PercentOr<Length>>, 2> value)
+    BorderRadiusTopRightProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -576,7 +576,7 @@ export struct BorderRadiusTopLeftProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusTopLeftProperty>(self(), makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderRadiusTopLeftProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -590,17 +590,17 @@ export struct BorderRadiusTopLeftProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto first = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            auto first = try$(parseValue<Calc<PercentOr<Length>>>(c));
             Array value{first, first};
             if (not c.ended())
-                value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+                value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
             return Ok(makeRc<BorderRadiusTopLeftProperty>(self(), value));
         }
     };
 
-    Array<CalcValue<PercentOr<Length>>, 2> _value;
+    Array<Calc<PercentOr<Length>>, 2> _value;
 
-    BorderRadiusTopLeftProperty(Rc<Property::Registration> registration, Array<CalcValue<PercentOr<Length>>, 2> value)
+    BorderRadiusTopLeftProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -621,7 +621,7 @@ export struct BorderRadiusBottomRightProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusBottomRightProperty>(self(), makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderRadiusBottomRightProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -632,17 +632,17 @@ export struct BorderRadiusBottomRightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto first = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            auto first = try$(parseValue<Calc<PercentOr<Length>>>(c));
             Array value{first, first};
             if (not c.ended())
-                value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+                value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
             return Ok(makeRc<BorderRadiusBottomRightProperty>(self(), value));
         }
     };
 
-    Array<CalcValue<PercentOr<Length>>, 2> _value;
+    Array<Calc<PercentOr<Length>>, 2> _value;
 
-    BorderRadiusBottomRightProperty(Rc<Property::Registration> registration, Array<CalcValue<PercentOr<Length>>, 2> value)
+    BorderRadiusBottomRightProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -663,7 +663,7 @@ export struct BorderRadiusBottomLeftProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusBottomLeftProperty>(self(), makeArray<CalcValue<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderRadiusBottomLeftProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -677,17 +677,17 @@ export struct BorderRadiusBottomLeftProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto first = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+            auto first = try$(parseValue<Calc<PercentOr<Length>>>(c));
             Array value{first, first};
             if (not c.ended())
-                value[1] = try$(parseValue<CalcValue<PercentOr<Length>>>(c));
+                value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
             return Ok(makeRc<BorderRadiusBottomLeftProperty>(self(), value));
         }
     };
 
-    Array<CalcValue<PercentOr<Length>>, 2> _value;
+    Array<Calc<PercentOr<Length>>, 2> _value;
 
-    BorderRadiusBottomLeftProperty(Rc<Property::Registration> registration, Array<CalcValue<PercentOr<Length>>, 2> value)
+    BorderRadiusBottomLeftProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -708,7 +708,7 @@ export struct BorderRadiusProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusProperty>(self(), Math::Radii{CalcValue<PercentOr<Length>>(Length{})});
+            return makeRc<BorderRadiusProperty>(self(), Math::Radii{Calc<PercentOr<Length>>(Length{})});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -716,14 +716,14 @@ export struct BorderRadiusProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto radii = try$(parseValue<Math::Radii<CalcValue<PercentOr<Length>>>>(c));
+            auto radii = try$(parseValue<Math::Radii<Calc<PercentOr<Length>>>>(c));
             return Ok(makeRc<BorderRadiusProperty>(self(), radii));
         }
     };
 
-    Math::Radii<CalcValue<PercentOr<Length>>> _value;
+    Math::Radii<Calc<PercentOr<Length>>> _value;
 
-    BorderRadiusProperty(Rc<Property::Registration> registration, Math::Radii<CalcValue<PercentOr<Length>>> value)
+    BorderRadiusProperty(Rc<Property::Registration> registration, Math::Radii<Calc<PercentOr<Length>>> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -757,7 +757,7 @@ export struct BorderTopProperty : Property {
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             SpecifiedBorder value;
             while (not c.ended()) {
-                auto width = parseValue<CalcValue<Length>>(c);
+                auto width = parseValue<Calc<Length>>(c);
                 if (width) {
                     value.width = width.unwrap();
                     continue;

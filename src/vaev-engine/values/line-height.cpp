@@ -13,6 +13,6 @@ using namespace Karm;
 namespace Vaev {
 
 // https://www.w3.org/TR/css-inline-3/#line-height-property
-export using LineHeight = Union<Keywords::Normal, Number, CalcValue<PercentOr<Length>>>;
+export using LineHeight = Union<Keywords::Normal, Number, Calc<PercentOr<Length>>>;
 
 } // namespace Vaev

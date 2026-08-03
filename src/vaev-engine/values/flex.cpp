@@ -75,10 +75,13 @@ struct ValueParser<FlexWrap> {
     }
 };
 
-export using FlexBasis = FlatUnion<
+export using FlexBasis = Union<
     Keywords::Auto,
     Keywords::Content,
-    Size>;
+    Keywords::MinContent,
+    Keywords::MaxContent,
+    FitContent,
+    Calc<PercentOr<Length>>>;
 
 export struct FlexItemProps {
     FlexBasis flexBasis = Keywords::AUTO;
