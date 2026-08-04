@@ -188,7 +188,7 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
         .padding = computePaddings(tree, box, containingBlock.size()),
         .borders = computeBorders(tree, box),
         // FIXME: Auto margins should not always resolve to zero (see step 3).
-        .margin = computeMargins(tree, box, containingBlock.size())
+        .margin = computeMargins(box, containingBlock.size())
     };
 
     // https://www.w3.org/TR/css-position-3/#abspos-auto-size

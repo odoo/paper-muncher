@@ -114,11 +114,6 @@ export struct Angle {
     }
 };
 
-export template <>
-struct _Resolved<Angle> {
-    using Type = Rad;
-};
-
 Rad resolve(Angle const& value, [[maybe_unused]] auto const& ctx = NONE) {
     return Rad{value.toRadian()};
 }

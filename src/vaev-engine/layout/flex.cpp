@@ -235,7 +235,6 @@ struct FlexItem {
 
     void speculateValues(Tree& t, Input input) {
         speculativeMargin = computeMargins(
-            t,
             *box,
             input.containingBlock
         );

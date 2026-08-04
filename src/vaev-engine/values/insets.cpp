@@ -57,12 +57,12 @@ struct ValueParser<Position> {
     }
 };
 
-export using Margin = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Length>>>>;
+export using Margin = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Au>>>>;
 
-export using Padding = Math::Insets<Calc<PercentOr<Length>>>;
+export using Padding = Math::Insets<Calc<PercentOr<Au>>>;
 
 // https://www.w3.org/TR/css-position-3/#propdef-inset
-export using BoxInsets = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Length>>>>;
+export using BoxInsets = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Au>>>>;
 
 export template <typename T>
 struct ValueParser<Math::Insets<T>> {

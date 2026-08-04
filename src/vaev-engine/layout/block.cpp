@@ -245,7 +245,7 @@ struct BlockFormatingContext : FormatingContext {
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, c, containingBlock),
                     .borders = computeBorders(tree, c),
-                    .margin = computeMargins(tree, c, containingBlock)
+                    .margin = computeMargins(c, containingBlock)
                 };
 
                 capmin = max(
@@ -327,7 +327,7 @@ struct BlockFormatingContext : FormatingContext {
             auto usedSpacings = UsedSpacings{
                 .padding = computePaddings(tree, c, childContainingBlock),
                 .borders = computeBorders(tree, c),
-                .margin = computeMargins(tree, c, childContainingBlock)
+                .margin = computeMargins(c, childContainingBlock)
             };
 
             Input childInput = {

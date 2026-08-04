@@ -41,7 +41,7 @@ export struct MarginTopProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().top = _value;
+        c.margin.cow().top = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -77,7 +77,7 @@ export struct MarginRightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().end = _value;
+        c.margin.cow().end = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -113,7 +113,7 @@ export struct MarginBottomProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().bottom = _value;
+        c.margin.cow().bottom = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -149,7 +149,7 @@ export struct MarginLeftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().start = _value;
+        c.margin.cow().start = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -373,7 +373,7 @@ export struct MarginBlockEndProperty : Property {
         }
     };
 
-    Union<Keywords::Auto, Calc<PercentOr<Length>>>_value;
+    Union<Keywords::Auto, Calc<PercentOr<Length>>> _value;
 
     MarginBlockEndProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}

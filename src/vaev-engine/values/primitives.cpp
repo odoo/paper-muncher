@@ -44,11 +44,6 @@ struct ValueParser<Integer> {
 
 export using Number = f64;
 
-export template <>
-struct _Resolved<Number> {
-    using Type = Number;
-};
-
 export Number resolve(Number const& value, [[maybe_unused]] auto const& ctx = NONE) {
     return value;
 }
@@ -183,6 +178,13 @@ struct ValueParser<Union<Ts...>> {
         });
     }
 };
+
+export template <typename... Ts, typename Cx, typename R = Meta::ListDecay<Meta::ListUniq<Union<Resolved<Ts, Cx>...>>>>
+R resolve(Union<Ts...> const& value, auto const&... cx) {
+    return value.visit([&]<typename T>(T const& v) -> R {
+        return resolve<T, Cx>(v, cx...);
+    });
+}
 
 // MARK: Component Value Multipliers -------------------------------------------
 // https://drafts.csswg.org/css-values-4/#component-multipliers

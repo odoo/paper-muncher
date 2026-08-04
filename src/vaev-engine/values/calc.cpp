@@ -111,12 +111,6 @@ struct Calc {
     }
 };
 
-export template <typename T>
-struct _Resolved<Calc<T>> {
-    using Type = _Resolved<T>;
-};
-
-template <typename T>
 Resolved<T> _resolveUnary(CalcOp, Resolved<T>) {
     notImplemented();
 }

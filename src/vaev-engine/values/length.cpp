@@ -71,11 +71,6 @@ export struct RelativeLength {
     }
 };
 
-export template <>
-struct _Resolved<RelativeLength> {
-    using Type = Au;
-};
-
 export struct RelativeLengthContextData {
     // current font metrics
     f64 fontSize;
@@ -386,10 +381,6 @@ export struct AbsoluteLength {
     }
 };
 
-export template <>
-struct _Resolved<AbsoluteLength> {
-    using Type = Au;
-};
 
 export Au resolve(AbsoluteLength value) {
     return Au::fromFloatNearest(value.pixels().value());
@@ -433,11 +424,6 @@ export struct Length : Union<AbsoluteLength, RelativeLength> {
             e("{}", v);
         });
     }
-};
-
-export template <>
-struct _Resolved<Length> {
-    using Type = Au;
 };
 
 export template <typename T>

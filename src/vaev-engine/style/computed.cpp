@@ -41,9 +41,9 @@ export struct ComputedValues {
     Cow<Gaps> gaps;
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
-    Cow<Margin> margin = Margin(Calc<PercentOr<Length>>(Length())); // FIXME
+    Cow<Margin> margin = Margin(Calc<PercentOr<Au>>(0_au)); // FIXME
     Cow<OutlineProps> outline;
-    Cow<Padding> padding = Padding(Length{}); // FIXME
+    Cow<Padding> padding = Padding(0_au); // FIXME
     Cow<SizingProps> sizing;
     Cow<InlineProps> inline_;
     Cow<BoxInsets> insets = BoxInsets(Keywords::AUTO); // FIXME

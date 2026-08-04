@@ -55,12 +55,6 @@ export struct Resolver :
         return Vaev::resolve(value, *this, relative);
     }
 
-    Au resolve(Union<Keywords::Auto, Calc<PercentOr<Length>>> const& value, Au relative) {
-        if (value.is<Keywords::Auto>())
-            return 0_au;
-        return Vaev::resolve(value.unwrap<Calc<PercentOr<Length>>>(), *this, relative);
-    }
-
     Rad resolve(Angle const& value) {
         return Rad{value.toRadian()};
     }
@@ -73,9 +67,9 @@ export struct Resolver :
         return Vaev::resolve(value, *this);
     }
 
-    template <typename T, typename... Args>
-    Resolved<T> resolve(Calc<T> const& calc, Args... args) {
-        return Vaev::resolve(calc, *this, args...);
+    template <typename T>
+    auto resolve(Calc<T> const& calc) {
+        return Vaev::resolve(calc, *this);
     }
 };
 
@@ -101,8 +95,10 @@ export Au resolve(Tree const& tree, Box const& box, PercentOr<Length> const& val
     return Resolver::from(tree, box).resolve(value, relative);
 }
 
-export Au resolve(Tree const& tree, Box const& box, Union<Keywords::Auto, Calc<PercentOr<Length>>> const& value, Au relative) {
-    return Resolver::from(tree, box).resolve(value, relative);
+export Au resolve(Union<Keywords::Auto, Calc<PercentOr<Au>>> const& value, Au relative) {
+    if (value.is<Keywords::Auto>())
+        return 0_au;
+    return Vaev::resolve(value.unwrap<Calc<PercentOr<Au>>>(), NONE, relative);
 }
 
 export Au resolve(Tree const& tree, Box const& box, LineWidth const& value) {
@@ -114,7 +110,7 @@ export Au resolve(Tree const& tree, Box const& box, FontSize const& value) {
 }
 
 export template <typename T, typename... Args>
-auto resolve(Tree const& tree, Box const& box, Calc<T> const& value, Args... args) -> Resolved<T> {
+auto resolve(Tree const& tree, Box const& box, Calc<T> const& value, Args... args) auto {
     return Resolver::from(tree, box).resolve(value, args...);
 }
 

@@ -35,16 +35,31 @@ struct ValueParser<Percent> {
 export template <typename T>
 using PercentOr = Union<Percent, T>;
 
-export template <typename T>
-struct _Resolved<PercentOr<T>> {
-    using Type = Resolved<T>;
+template <typename T>
+struct PercentRelative {
+    T percentRelative;
 };
 
+template <typename T>
+PercentRelative(T) -> PercentRelative<T>;
+
 export template <typename T>
-Resolved<T> resolve(PercentOr<T> const& value, auto const& ctx, Resolved<T> relative) {
+concept PercentContext = requires(T t) {
+    { t.percentRelative }
+};
+
+export template <typename T, PercentContext Cx, typename R = Resolved<T, Cx>>
+R resolve(PercentOr<T> const& value, Cx auto& cx) {
     if (auto v = value.template is<Percent>())
-        return Resolved<T>{relative.template cast<f64>() * ((*v).value() / 100.)};
-    return resolve(value.template unwrap<T>(), ctx);
+        return R{cx.percentRelative.template cast<f64>() * ((*v).value() / 100.)};
+    return resolve(value.template unwrap<T>(), cx);
+}
+
+export template <typename T, typename Cx, typename R = PercentOr<Resolved<T, Cx>>>
+R resolve(PercentOr<T> const& value, Cx auto& cx) {
+    if (auto v = value.template is<Percent>())
+        return R{*v};
+    return R{resolve(value.template unwrap<T>(), cx)};
 }
 
 } // namespace Vaev

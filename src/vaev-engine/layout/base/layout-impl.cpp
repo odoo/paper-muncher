@@ -62,7 +62,7 @@ Output _dispatchFormatingContext(Tree& tree, Box& box, Input input, usize startA
     return Output{};
 }
 
-InsetsAu computeMargins(Tree& tree, Box& box, Vec2Au containingBlock) {
+InsetsAu computeMargins(Box& box, Vec2Au containingBlock) {
     // Boxes that make up a table do not have margins.
     if (box.style->display.isTableInternal())
         return {};
@@ -70,10 +70,10 @@ InsetsAu computeMargins(Tree& tree, Box& box, Vec2Au containingBlock) {
     InsetsAu res;
     auto margin = box.style->margin;
 
-    res.top = resolve(tree, box, margin->top, containingBlock.height);
-    res.end = resolve(tree, box, margin->end, containingBlock.width);
-    res.bottom = resolve(tree, box, margin->bottom, containingBlock.height);
-    res.start = resolve(tree, box, margin->start, containingBlock.width);
+    res.top = resolve(margin->top, containingBlock.height);
+    res.end = resolve(margin->end, containingBlock.width);
+    res.bottom = resolve(margin->bottom, containingBlock.height);
+    res.start = resolve(margin->start, containingBlock.width);
 
     return res;
 }
@@ -85,7 +85,7 @@ Au _snapLengthAsBorderWidth(Au v) {
     return floor(v);
 }
 
-InsetsAu computeBorders(Tree& tree, Box& box) {
+InsetsAu computeBorders(Box& box) {
     // NOTE: In borders collapse mode, we assume that the table box borders are 'transfered' to the cells
     if (box.style->display == Display::TABLE_BOX and box.style->table->collapse == BorderCollapse::COLLAPSE) {
         return InsetsAu{};
@@ -95,16 +95,16 @@ InsetsAu computeBorders(Tree& tree, Box& box) {
     auto borders = box.style->borders;
 
     if (borders->top.style != Gfx::BorderStyle::NONE)
-        res.top = _snapLengthAsBorderWidth(resolve(tree, box, borders->top.width));
+        res.top = _snapLengthAsBorderWidth(resolve(borders->top.width));
 
     if (borders->end.style != Gfx::BorderStyle::NONE)
-        res.end = _snapLengthAsBorderWidth(resolve(tree, box, borders->end.width));
+        res.end = _snapLengthAsBorderWidth(resolve(borders->end.width));
 
     if (borders->bottom.style != Gfx::BorderStyle::NONE)
-        res.bottom = _snapLengthAsBorderWidth(resolve(tree, box, borders->bottom.width));
+        res.bottom = _snapLengthAsBorderWidth(resolve(borders->bottom.width));
 
     if (borders->start.style != Gfx::BorderStyle::NONE)
-        res.start = _snapLengthAsBorderWidth(resolve(tree, box, borders->start.width));
+        res.start = _snapLengthAsBorderWidth(resolve(borders->start.width));
 
     return res;
 }
@@ -282,7 +282,8 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
                 auto containingBlock = RectAu{
                     {input.position.x, input.position.y},
                     out.size,
-                }.grow(input.usedSpacings.padding);
+                }
+                                           .grow(input.usedSpacings.padding);
 
                 auto childOutput = layoutAbsolutePositioned(tree, oofChild->originatingBox(), containingBlock, oofChild->staticPosRect, input.pageNumber);
                 auto childFragment = childOutput.fragment.unwrap();

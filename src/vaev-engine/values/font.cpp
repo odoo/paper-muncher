@@ -269,10 +269,6 @@ using FontSize = Union<
     Keywords::Smaller,
     Keywords::Larger>;
 
-export template <>
-struct _Resolved<FontSize> {
-    using Type = Au;
-};
 
 export struct FontSizeContextData {
     f64 userFontSize = 16;   /// Font size of the user agent
