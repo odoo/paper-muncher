@@ -4,17 +4,15 @@ set -xe
 rm -rf .cutekit/venv
 rm -rf .cutekit/tools-ready
 rm -rf sysroot/
-mkdir -p $HOME/.cutekit/toolchain
 
 podman run \
     --rm \
     -v "$PWD:/src" \
-    -v "$HOME/.cutekit/toolchain:/root/.cutekit/toolchain" \
     -w "/src" \
     -e CUTEKIT_ALLOW_ROOT=1 \
     ubuntu:plucky \
     bash -c " \
-        ./ck tools setup && \
+        NO_URING=1 ./ck tools setup && \
         ./ck package --props:async=epoll --release --prefix=/opt/${COMPONENT} --sysroot=/src/sysroot ${COMPONENT} && \
         mkdir /deb && \
         mkdir /deb/DEBIAN && \

@@ -1,7 +1,7 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
     "id": "paper-muncher",
-    "description": "Vaev development tools",
+    "description": "Convert web pages into documents",
     "type": "exe",
     "requires": [
         "karm-cli",

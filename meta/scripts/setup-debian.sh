@@ -14,5 +14,8 @@ apt-get install -y --no-install-recommends \
     ninja-build \
     jq \
     libseccomp-dev \
-    liburing-dev \
     libunwind-dev
+
+if [ -z "$NO_URING" ]; then
+    apt-get install -y --no-install-recommends liburing-dev
+fi

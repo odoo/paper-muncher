@@ -2,8 +2,8 @@
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.project.v2",
     "id": "odoo/paper-muncher",
     "type": "project",
-    "version": "v0.6.0",
-    "description": "An experimental document-generation tool",
+    "version": "v0.7.0",
+    "description": "Convert web pages into documents",
     "externs": {
         "skift/karm": {
             "git": "https://codeberg.org/skift/karm.git",

@@ -8,6 +8,29 @@
 
 ---
 
+# 🎩 Paper-Muncher v0.7.0
+
+## Changes
+
+- Added support for `line-height`. [#269](https://github.com/odoo/paper-muncher/pull/269)
+- Added support for the `vertical-align` and `baseline-shift`
+  properties. [#267](https://github.com/odoo/paper-muncher/pull/267)
+- Added height distribution for tables. [#266](https://github.com/odoo/paper-muncher/pull/266)
+- Improved tables: row height distribution now agrees with other browsers, and table cells support
+  `vertical-align`. [#268](https://github.com/odoo/paper-muncher/pull/268)
+- Added support for `position: relative` in all formatting
+  contexts. [#261](https://github.com/odoo/paper-muncher/pull/261)
+- Improved absolute positioning in flex containers. [#264](https://github.com/odoo/paper-muncher/pull/264)
+- Expanded the three argument `rotate()` of SVG into a
+  `matrix()`. [#262](https://github.com/odoo/paper-muncher/pull/262)
+- Made CSS token comparison case insensitive. [#264](https://github.com/odoo/paper-muncher/pull/264)
+- Added Ubuntu Resolute as a packaging
+  target. [`92b5567`](https://github.com/odoo/paper-muncher/commit/92b55677ef7a6090e4b2ec40f703977b89e337a2)
+
+[GitHub Link](https://github.com/odoo/paper-muncher/releases/tag/v0.7.0)
+
+---
+
 # 🖌️ Paper-Muncher v0.6.0
 
 ## Changes
