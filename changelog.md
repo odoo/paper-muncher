@@ -8,7 +8,7 @@
 
 ---
 
-# 🎩 Paper-Muncher v0.7.0
+# 🎩 Paper-Muncher v0.7.1
 
 ## Changes
 
@@ -27,7 +27,7 @@
 - Added Ubuntu Resolute as a packaging
   target. [`92b5567`](https://github.com/odoo/paper-muncher/commit/92b55677ef7a6090e4b2ec40f703977b89e337a2)
 
-[GitHub Link](https://github.com/odoo/paper-muncher/releases/tag/v0.7.0)
+[GitHub Link](https://github.com/odoo/paper-muncher/releases/tag/v0.7.1)
 
 ---
 

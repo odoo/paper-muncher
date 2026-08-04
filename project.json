@@ -2,7 +2,7 @@
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.project.v2",
     "id": "odoo/paper-muncher",
     "type": "project",
-    "version": "v0.7.0",
+    "version": "v0.7.1",
     "description": "Convert web pages into documents",
     "externs": {
         "skift/karm": {

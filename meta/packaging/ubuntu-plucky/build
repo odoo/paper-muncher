@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -xe
+set -euo pipefail
 
 rm -rf .cutekit/venv
 rm -rf .cutekit/tools-ready
@@ -28,4 +28,6 @@ podman run --rm -v "$PWD:/src" \
     bash -c " \
         apt update && \
         apt install -y /src/dist/${COMPONENT}_${VERSION}_plucky_amd64.deb && \
-        /opt/${COMPONENT}/bin/${COMPONENT} --version"
+        /opt/${COMPONENT}/bin/${COMPONENT} --version && \
+        /opt/${COMPONENT}/bin/${COMPONENT} /src/readme.md -o /tmp/output.pdf && \
+        test -f /tmp/output.pdf"

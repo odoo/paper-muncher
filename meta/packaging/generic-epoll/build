@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -xe
+set -euo pipefail
 
 rm -rf .cutekit/venv
 rm -rf .cutekit/tools-ready

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-
-set -xe
+set -euo pipefail
 
 log_step() {
     local prefix="$1"
