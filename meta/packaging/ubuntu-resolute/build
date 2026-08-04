@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -xe
+
+rm -rf .cutekit/venv
+rm -rf .cutekit/tools-ready
+rm -rf sysroot/
+mkdir -p $HOME/.cutekit/toolchain
+
+podman run \
+    --rm \
+    -v "$PWD:/src" \
+    -v "$HOME/.cutekit/toolchain:/root/.cutekit/toolchain" \
+    -w "/src" \
+    -e CUTEKIT_ALLOW_ROOT=1 \
+    ubuntu:resolute \
+    bash -c " \
+        ./ck tools setup && \
+        ./ck package --props:async=epoll --release --prefix=/opt/${COMPONENT} --sysroot=/src/sysroot ${COMPONENT} && \
+        mkdir /deb && \
+        mkdir /deb/DEBIAN && \
+        cp -r /src/sysroot/* /deb && \
+        cp -r meta/packaging/ubuntu-resolute/debian/* /deb/DEBIAN && \
+        mkdir -p /src/dist && \
+        dpkg-deb --build /deb /src/dist/${COMPONENT}_${VERSION}_resolute_amd64.deb"
+
+# Check if installing the package works
+podman run --rm -v "$PWD:/src" \
+    -w "/src" \
+    ubuntu:resolute \
+    bash -c " \
+        apt update && \
+        apt install -y /src/dist/${COMPONENT}_${VERSION}_resolute_amd64.deb && \
+        /opt/${COMPONENT}/bin/${COMPONENT} --version"
