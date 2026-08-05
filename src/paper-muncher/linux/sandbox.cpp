@@ -16,41 +16,44 @@ using namespace Karm;
 
 namespace PaperMuncher {
 
-#define FOREACH_SYSCALLS(SYSCALL) \
-    SYSCALL(access)               \
-    SYSCALL(brk)                  \
-    SYSCALL(close)                \
-    SYSCALL(exit_group)           \
-    SYSCALL(fstat)                \
-    SYSCALL(futex)                \
-    SYSCALL(getcwd)               \
-    SYSCALL(getdents64)           \
-    SYSCALL(lseek)                \
-    SYSCALL(mmap)                 \
-    SYSCALL(mprotect)             \
-    SYSCALL(munmap)               \
-    SYSCALL(newfstatat)           \
-    SYSCALL(fstat)                \
-    SYSCALL(openat)               \
-    SYSCALL(read)                 \
-    SYSCALL(write)                \
-    /* for uti */                 \
-    SYSCALL(getrandom)            \
-    /* for async runtime */       \
-    SYSCALL(io_uring_enter)       \
-    SYSCALL(io_uring_setup)       \
-    SYSCALL(epoll_ctl)            \
-    SYSCALL(epoll_pwait)          \
-    /* for libunwind */           \
-    SYSCALL(rt_sigprocmask)       \
-    SYSCALL(pipe2)                \
-    SYSCALL(getpid)               \
-    SYSCALL(gettid)               \
+#define FOREACH_SYSCALLS(SYSCALL)                        \
+    SYSCALL(exit_group)                                  \
+    SYSCALL(exit)                                        \
+    SYSCALL(futex)                                       \
+    SYSCALL(getcwd)                                      \
+    SYSCALL(clock_gettime)                               \
+    /* for pipe/streams */                               \
+    SYSCALL(read)                                        \
+    SYSCALL(write)                                       \
+    SYSCALL(close)                                       \
+    /* for accessing the bundle, hardened by landlock */ \
+    SYSCALL(access)                                      \
+    SYSCALL(getdents64)                                  \
+    SYSCALL(fstat)                                       \
+    SYSCALL(lseek)                                       \
+    SYSCALL(newfstatat)                                  \
+    SYSCALL(openat)                                      \
+    /* for glibc malloc */                               \
+    SYSCALL(mmap)                                        \
+    SYSCALL(mprotect)                                    \
+    SYSCALL(munmap)                                      \
+    SYSCALL(brk)                                         \
+    /* for uti */                                        \
+    SYSCALL(getrandom)                                   \
+    /* for async runtime */                              \
+    SYSCALL(epoll_ctl)                                   \
+    SYSCALL(epoll_wait)                                  \
+    SYSCALL(epoll_pwait)                                 \
+    /* for libunwind */                                  \
+    SYSCALL(rt_sigprocmask)                              \
+    SYSCALL(pipe2)                                       \
+    SYSCALL(getpid)                                      \
+    SYSCALL(gettid)                                      \
     SYSCALL(tgkill)
 
-static Res<> _landlockInDirectory(Vec<Str> dirs) {
+static Res<> _landlockAllowReadingDirectory(Vec<Str> dirs) {
     landlock_ruleset_attr attr = {};
-    attr.handled_access_fs = LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_WRITE_FILE;
+    attr.handled_access_fs = LANDLOCK_ACCESS_FS_READ_FILE;
 
     int rulesetFd = syscall(__NR_landlock_create_ruleset, &attr, sizeof(attr), 0);
     if (rulesetFd < 0)
@@ -85,19 +88,46 @@ static Res<> _landlockInDirectory(Vec<Str> dirs) {
 }
 
 Res<> hardenSandbox() {
+    #ifndef __ck_async_epoll__
+        // SECURITY: io_uring is not compatible with seccomp, so we can't harden the sandbox when using it.
+        logWarn("sandbox hardening is supported only when using epoll as the async runtime.");
+        return Ok();
+    #endif
+
     // MARK: RLimit
+
+    // limit the process to 4GiB of memory
     constexpr rlimit rl{.rlim_cur = 4_GiB, .rlim_max = 4_GiB};
     if (setrlimit(RLIMIT_AS, &rl) < 0)
         return Posix::fromLastErrno();
+
+    // no core dump with document content
+    constexpr rlimit noCore{.rlim_cur = 0, .rlim_max = 0};
+    setrlimit(RLIMIT_CORE, &noCore);
+
+    // no fork bomb
+    constexpr rlimit noProc{.rlim_cur = 1, .rlim_max = 1};
+    setrlimit(RLIMIT_NPROC, &noProc);
 
     // https://www.kernel.org/doc/Documentation/prctl/no_new_privs.txt
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0)
         return Posix::fromLastErrno();
 
     // MARK: Landlock
-    auto myProc = "/proc/{}"_f(getpid()); // for libunwind
-    auto [repo, _] = try$(Posix::repoRoot()); // for bundle:// urls
-    try$(_landlockInDirectory({repo, myProc}));
+    // https://docs.kernel.org/userspace-api/landlock.html
+    // SECURITY: Landlock only apply to the current thread and it's children.
+    //           So, if we ever add support for threading, we will have to move
+    //           the landlock setup before the setup of the eventloop.
+
+    // for libunwind
+    auto myProc = "/proc/{}"_f(getpid());
+
+    // for bundle:// urls
+    auto [repo, _] = try$(Posix::repoRoot());
+    try$(_landlockAllowReadingDirectory({
+        repo,
+        myProc,
+    }));
 
     // MARK: Seccomp
     scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL_PROCESS);
@@ -107,14 +137,19 @@ Res<> hardenSandbox() {
         seccomp_release(ctx);
     }};
 
+    // synchronize the filters across all threads
+    // https://man7.org/linux/man-pages/man3/seccomp_attr_set.3.html#:~:text=SCMP_FLTATR_CTL_TSYNC
+    if (auto it = seccomp_attr_set(ctx, SCMP_FLTATR_CTL_TSYNC, 1); it < 0)
+        return Posix::fromErrno(-it);
+
 #define ITER(SYSCALL)                                                                  \
     if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(SYSCALL), 0); it < 0) \
         return Posix::fromErrno(-it);
     FOREACH_SYSCALLS(ITER)
 #undef ITER
 
-    if (seccomp_load(ctx) < 0)
-        return Posix::fromLastErrno();
+    if (auto it = seccomp_load(ctx); it < 0)
+        return Posix::fromErrno(-it);
 
     return Ok();
 }
