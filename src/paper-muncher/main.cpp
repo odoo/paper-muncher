@@ -176,7 +176,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     setLogLevel(level);
 
     if (sandboxedArg.value())
-        co_try$(Sys::enterSandbox());
+        co_try$(PaperMuncher::hardenSandbox());
 
     PaperMuncher::Option options{};
 

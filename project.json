@@ -5,6 +5,12 @@
     "version": "v0.7.1",
     "description": "Convert web pages into documents",
     "externs": {
+        "seccomp": {
+            "description": "Linux seccomp library",
+            "names": [
+                "libseccomp"
+            ]
+        },
         "skift/karm": {
             "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"

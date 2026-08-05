@@ -1,0 +1,16 @@
+{
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+    "id": "paper-muncher.linux",
+    "type": "lib",
+    "enableIf": {
+        "sys": [
+            "linux"
+        ]
+    },
+    "requires": [
+        "seccomp"
+    ],
+    "provides": [
+        "paper-muncher.sandbox"
+    ]
+}

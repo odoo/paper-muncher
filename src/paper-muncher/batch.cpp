@@ -2,7 +2,7 @@ module;
 
 #include <karm/macros>
 
-export module PaperMuncher;
+export module PaperMuncher:batch;
 
 import Karm.Gc;
 import Karm.Http;

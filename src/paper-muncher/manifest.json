@@ -4,6 +4,7 @@
     "description": "Convert web pages into documents",
     "type": "exe",
     "requires": [
+        "paper-muncher.sandbox",
         "karm-cli",
         "karm-sys",
         "karm-image",
