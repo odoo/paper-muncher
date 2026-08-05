@@ -30,7 +30,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, [[maybe_unused]] Async::Cancellatio
         }
     };
 
-    co_trya$(cmd.execAsync(env));
+    co_try$(cmd.exec(env));
     if (not cmd)
         co_return Ok();
 
