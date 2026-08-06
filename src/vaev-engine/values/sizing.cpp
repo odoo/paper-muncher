@@ -55,7 +55,7 @@ struct ValueParser<FitContent> {
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 // https://www.w3.org/TR/css-sizing-3/#propdef-height
-export using Size    = Union<Keywords::Auto, Calc<PercentOr<Length>>, Keywords::MinContent, Keywords::MaxContent, FitContent>;
+export using Size = Union<Keywords::Auto, Calc<PercentOr<Length>>, Keywords::MinContent, Keywords::MaxContent, FitContent>;
 export using MaxSize = Union<Keywords::None, Calc<PercentOr<Length>>, Keywords::MinContent, Keywords::MaxContent, FitContent>;
 
 export struct SizingProps {

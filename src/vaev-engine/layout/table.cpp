@@ -18,9 +18,9 @@ void advanceUntil(MutCursor<Box>& cursor, auto pred) {
 UsedBorder resolve(Tree const& tree, Box const& box, BorderEdge const edge) {
     auto& border = box.style->borders->get(edge);
     return UsedBorder{
-        border.style == Karm::Gfx::BorderStyle::NONE
+        border.style == Gfx::BorderStyle::NONE
             ? 0_au
-            : Vaev::Layout::resolve(tree, box, border.width),
+            : Layout::resolve(tree, box, border.width),
         border.style,
         resolve(border.color, box.style->color),
     };
@@ -290,7 +290,7 @@ export struct TableFormatingContext : FormatingContext {
             MutCursor<Box> columnGroupCursor = {columnGroupChildren};
 
             advanceUntil(columnGroupCursor, [](Display d) {
-                return d == Vaev::Display::TABLE_COLUMN;
+                return d == Display::TABLE_COLUMN;
             });
 
             if (not columnGroupCursor.ended()) {
@@ -305,7 +305,7 @@ export struct TableFormatingContext : FormatingContext {
 
                     columnGroupCursor.next();
                     advanceUntil(columnGroupCursor, [](Display d) {
-                        return d == Vaev::Display::TABLE_COLUMN;
+                        return d == Display::TABLE_COLUMN;
                     });
                 }
 
@@ -399,7 +399,7 @@ export struct TableFormatingContext : FormatingContext {
 
     // MARK: Border Collapse ----------------------------------------------------------------------------
 
-    constexpr static Array<Gfx::BorderStyle, 9> const ORDERED_STYLES = {
+    constexpr static Array<Gfx::BorderStyle, 9> ORDERED_STYLES = {
         Gfx::BorderStyle::DOUBLE,
         Gfx::BorderStyle::SOLID,
         Gfx::BorderStyle::DASHED,
@@ -415,15 +415,15 @@ export struct TableFormatingContext : FormatingContext {
     UsedBorder harmonizeConflictingBorders(Vec<UsedBorder> const& borders) {
         UsedBorder currentlyWinningBorderProperties{
             0_au,
-            Karm::Gfx::BorderStyle::NONE,
+            Gfx::BorderStyle::NONE,
             BLACK,
         };
 
         // https://www.w3.org/TR/css-tables-3/#border-specificity
         for (auto const& candidate : borders) {
             // 1… has the value "hidden" as border-style, if only one does
-            auto const bestIsHidden = currentlyWinningBorderProperties.style == Karm::Gfx::BorderStyle::HIDDEN;
-            auto const candidateIsHidden = candidate.style == Karm::Gfx::BorderStyle::HIDDEN;
+            auto const bestIsHidden = currentlyWinningBorderProperties.style == Gfx::BorderStyle::HIDDEN;
+            auto const candidateIsHidden = candidate.style == Gfx::BorderStyle::HIDDEN;
 
             if (bestIsHidden ^ candidateIsHidden) {
                 if (candidateIsHidden)
@@ -457,7 +457,14 @@ export struct TableFormatingContext : FormatingContext {
         return currentlyWinningBorderProperties;
     }
 
-    void addAxisAndGroupBorder(Tree& tree, Vec<UsedBorder>& borders, AxisAndGroupsIdxs const& axisAndGroupsIdxs, BorderEdge edge, Vec<TableAxis> const& axis, Vec<TableGroup> const& groups) {
+    void addAxisAndGroupBorder(
+        Tree& tree,
+        Vec<UsedBorder>& borders,
+        AxisAndGroupsIdxs const& axisAndGroupsIdxs,
+        BorderEdge edge,
+        Vec<TableAxis> const& axis,
+        Vec<TableGroup> const& groups
+    ) {
         if (axisAndGroupsIdxs.axisIdx) {
             borders.pushBack(
                 resolve(tree, axis[axisAndGroupsIdxs.axisIdx.unwrap()].el, edge)
@@ -508,11 +515,7 @@ export struct TableFormatingContext : FormatingContext {
     void resolveConflictForBordersAtHorizontalAxis(Tree& tree, usize i) {
         usize start = 0;
         while (start < grid.size.x) {
-            while (
-                start < grid.size.x and
-                (grid.at(start, i).anchorIdx == grid.at(start, i + 1).anchorIdx or
-                 (not grid.at(start, i).box and not grid.at(start, i + 1).box))
-            )
+            while (start < grid.size.x and (grid.at(start, i).anchorIdx == grid.at(start, i + 1).anchorIdx or (not grid.at(start, i).box and not grid.at(start, i + 1).box)))
                 start++;
 
             if (start == grid.size.x)
@@ -561,11 +564,7 @@ export struct TableFormatingContext : FormatingContext {
     void resolveConflictForBordersAtVerticalAxis(Tree& tree, usize j) {
         usize start = 0;
         while (start < grid.size.y) {
-            while (
-                start < grid.size.y and
-                (grid.at(j, start).anchorIdx == grid.at(j + 1, start).anchorIdx or
-                 (not grid.at(j, start).box and not grid.at(j + 1, start).box))
-            )
+            while (start < grid.size.y and (grid.at(j, start).anchorIdx == grid.at(j + 1, start).anchorIdx or (not grid.at(j, start).box and not grid.at(j + 1, start).box)))
                 start++;
 
             if (start == grid.size.y)

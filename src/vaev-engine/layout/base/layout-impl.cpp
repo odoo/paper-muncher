@@ -282,7 +282,8 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
                 auto containingBlock = RectAu{
                     {input.position.x, input.position.y},
                     out.size,
-                }.grow(input.usedSpacings.padding);
+                };
+                containingBlock = containingBlock.grow(input.usedSpacings.padding);
 
                 auto childOutput = layoutAbsolutePositioned(tree, oofChild->originatingBox(), containingBlock, oofChild->staticPosRect, input.pageNumber);
                 auto childFragment = childOutput.fragment.unwrap();

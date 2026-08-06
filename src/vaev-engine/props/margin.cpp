@@ -373,7 +373,7 @@ export struct MarginBlockEndProperty : Property {
         }
     };
 
-    Union<Keywords::Auto, Calc<PercentOr<Length>>>_value;
+    Union<Keywords::Auto, Calc<PercentOr<Length>>> _value;
 
     MarginBlockEndProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
