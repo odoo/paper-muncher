@@ -17,35 +17,38 @@ using namespace Karm;
 namespace PaperMuncher {
 
 #define FOREACH_SYSCALLS(SYSCALL)                        \
+    /* Signals & Process Lifecycle */                    \
     SYSCALL(exit_group)                                  \
     SYSCALL(exit)                                        \
-    SYSCALL(futex)                                       \
-    SYSCALL(getcwd)                                      \
-    SYSCALL(clock_gettime)                               \
-    /* for pipe/streams */                               \
+    SYSCALL(rt_sigreturn)                                \
+    SYSCALL(restart_syscall)                             \
+    SYSCALL(rt_sigprocmask)                              \
+    /* Memory & Allocators */                            \
+    SYSCALL(mmap)                                        \
+    SYSCALL(mprotect)                                    \
+    SYSCALL(munmap)                                      \
+    SYSCALL(brk)                                         \
+    SYSCALL(madvise)                                     \
+    /* File I/O & Stat */                                \
+    /* for accessing the bundle, hardened by landlock */ \
     SYSCALL(read)                                        \
     SYSCALL(write)                                       \
     SYSCALL(close)                                       \
-    /* for accessing the bundle, hardened by landlock */ \
     SYSCALL(access)                                      \
     SYSCALL(getdents64)                                  \
     SYSCALL(fstat)                                       \
     SYSCALL(lseek)                                       \
     SYSCALL(newfstatat)                                  \
+    SYSCALL(statx) /* Modern libc fallback */            \
     SYSCALL(openat)                                      \
-    /* for glibc malloc */                               \
-    SYSCALL(mmap)                                        \
-    SYSCALL(mprotect)                                    \
-    SYSCALL(munmap)                                      \
-    SYSCALL(brk)                                         \
-    /* for uti */                                        \
+    /* Sync & Epoll */                                   \
+    SYSCALL(futex)                                       \
+    SYSCALL(getcwd)                                      \
+    SYSCALL(clock_gettime)                               \
     SYSCALL(getrandom)                                   \
-    /* for async runtime */                              \
     SYSCALL(epoll_ctl)                                   \
     SYSCALL(epoll_wait)                                  \
     SYSCALL(epoll_pwait)                                 \
-    /* for libunwind */                                  \
-    SYSCALL(rt_sigprocmask)                              \
     SYSCALL(pipe2)                                       \
     SYSCALL(getpid)                                      \
     SYSCALL(gettid)                                      \
@@ -53,7 +56,8 @@ namespace PaperMuncher {
 
 static Res<> _landlockAllowReadingDirectory(Vec<Str> dirs) {
     landlock_ruleset_attr attr = {};
-    attr.handled_access_fs = LANDLOCK_ACCESS_FS_READ_FILE;
+    // Allow reading file and listing directories
+    attr.handled_access_fs = LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR;
 
     int rulesetFd = syscall(__NR_landlock_create_ruleset, &attr, sizeof(attr), 0);
     if (rulesetFd < 0)
@@ -88,11 +92,11 @@ static Res<> _landlockAllowReadingDirectory(Vec<Str> dirs) {
 }
 
 Res<> hardenSandbox() {
-    #ifndef __ck_async_epoll__
-        // SECURITY: io_uring is not compatible with seccomp, so we can't harden the sandbox when using it.
-        logWarn("sandbox hardening is supported only when using epoll as the async runtime.");
-        return Ok();
-    #endif
+#ifndef __ck_async_epoll__
+    // SECURITY: io_uring is not compatible with seccomp, so we can't harden the sandbox when using it.
+    logWarn("sandbox hardening is supported only when using epoll as the async runtime.");
+    return Ok();
+#endif
 
     // MARK: RLimit
 
