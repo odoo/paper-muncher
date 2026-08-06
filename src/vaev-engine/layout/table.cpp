@@ -526,7 +526,8 @@ export struct TableFormatingContext : FormatingContext {
                 if (endOfI == endOfNextI)
                     break;
 
-                end = max(endOfI, endOfNextI);
+                usize next = max(endOfI, endOfNextI);
+                end = (next > end) ? next : end + 1;
             }
 
             Vec<UsedBorder> borders;
