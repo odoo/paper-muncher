@@ -6,6 +6,10 @@ using namespace Karm;
 
 namespace PaperMuncher {
 
-export Res<> hardenSandbox();
+struct Sandbox {
+    DataSize memory;
+};
+
+export Res<> hardenSandbox(Sandbox sandbox);
 
 } // namespace PaperMuncher

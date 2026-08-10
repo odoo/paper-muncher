@@ -2,8 +2,8 @@ module;
 
 #include <fcntl.h>
 #include <karm/macros>
-#include <linux/landlock.h>
 #include <seccomp.h>
+#include <sys/mman.h>
 #include <sys/prctl.h>
 #include <sys/resource.h>
 #include <unistd.h>
@@ -11,6 +11,7 @@ module;
 module PaperMuncher;
 
 import Karm.Sys.Posix;
+import PaperMuncher.Linux;
 
 using namespace Karm;
 
@@ -24,8 +25,6 @@ namespace PaperMuncher {
     SYSCALL(restart_syscall)                             \
     SYSCALL(rt_sigprocmask)                              \
     /* Memory & Allocators */                            \
-    SYSCALL(mmap)                                        \
-    SYSCALL(mprotect)                                    \
     SYSCALL(munmap)                                      \
     SYSCALL(brk)                                         \
     SYSCALL(madvise)                                     \
@@ -54,63 +53,33 @@ namespace PaperMuncher {
     SYSCALL(gettid)                                      \
     SYSCALL(tgkill)
 
-static Res<> _landlockAllowReadingDirectory(Vec<Str> dirs) {
-    landlock_ruleset_attr attr = {};
-    // Allow reading file and listing directories
-    attr.handled_access_fs = LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR;
-
-    int rulesetFd = syscall(__NR_landlock_create_ruleset, &attr, sizeof(attr), 0);
-    if (rulesetFd < 0)
-        return Posix::fromLastErrno();
-
-    Defer closeRuleset{[&] {
-        close(rulesetFd);
-    }};
-
-    for (auto dir : dirs) {
-        int dirFd = open(dir.buf(), O_PATH | O_DIRECTORY | O_CLOEXEC);
-        if (dirFd < 0)
-            return Posix::fromLastErrno();
-
-        Defer closeDir{[&] {
-            close(dirFd);
-        }};
-
-        landlock_path_beneath_attr pathAttr = {
-            .allowed_access = attr.handled_access_fs,
-            .parent_fd = dirFd
-        };
-
-        if (syscall(__NR_landlock_add_rule, rulesetFd, LANDLOCK_RULE_PATH_BENEATH, &pathAttr, 0) < 0)
-            return Posix::fromLastErrno();
-    }
-
-    if (syscall(__NR_landlock_restrict_self, rulesetFd, 0) < 0)
-        return Posix::fromLastErrno();
-
-    return Ok();
-}
-
-Res<> hardenSandbox() {
+Res<> hardenSandbox(Sandbox sandbox) {
 #ifndef __ck_async_epoll__
     // SECURITY: io_uring is not compatible with seccomp, so we can't harden the sandbox when using it.
-    logWarn("sandbox hardening is supported only when using epoll as the async runtime.");
-    return Ok();
+    return Error::notImplemented("sandbox hardening is supported only when using epoll as the async runtime");
 #endif
 
     // MARK: RLimit
-
     // limit the process to 4GiB of memory
-    constexpr rlimit rl{.rlim_cur = 4_GiB, .rlim_max = 4_GiB};
+    rlimit rl{
+        .rlim_cur = sandbox.memory,
+        .rlim_max = sandbox.memory,
+    };
     if (setrlimit(RLIMIT_AS, &rl) < 0)
         return Posix::fromLastErrno();
 
     // no core dump with document content
-    constexpr rlimit noCore{.rlim_cur = 0, .rlim_max = 0};
+    constexpr rlimit noCore{
+        .rlim_cur = 0,
+        .rlim_max = 0,
+    };
     setrlimit(RLIMIT_CORE, &noCore);
 
     // no fork bomb
-    constexpr rlimit noProc{.rlim_cur = 1, .rlim_max = 1};
+    constexpr rlimit noProc{
+        .rlim_cur = 1,
+        .rlim_max = 1,
+    };
     setrlimit(RLIMIT_NPROC, &noProc);
 
     // https://www.kernel.org/doc/Documentation/prctl/no_new_privs.txt
@@ -124,13 +93,13 @@ Res<> hardenSandbox() {
     //           the landlock setup before the setup of the eventloop.
 
     // for libunwind
-    auto myProc = "/proc/{}"_f(getpid());
+    auto proc = "/proc/{}"_f(getpid());
 
     // for bundle:// urls
     auto [repo, _] = try$(Posix::repoRoot());
-    try$(_landlockAllowReadingDirectory({
+    try$(landlockAllowReadingDirectory({
         repo,
-        myProc,
+        proc,
     }));
 
     // MARK: Seccomp
@@ -144,6 +113,12 @@ Res<> hardenSandbox() {
     // synchronize the filters across all threads
     // https://man7.org/linux/man-pages/man3/seccomp_attr_set.3.html#:~:text=SCMP_FLTATR_CTL_TSYNC
     if (auto it = seccomp_attr_set(ctx, SCMP_FLTATR_CTL_TSYNC, 1); it < 0)
+        return Posix::fromErrno(-it);
+
+    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(mprotect), 1, SCMP_A2(SCMP_CMP_MASKED_EQ, PROT_EXEC, 0)); it < 0)
+        return Posix::fromErrno(-it);
+
+    if (auto it = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(mmap), 1, SCMP_A2(SCMP_CMP_MASKED_EQ, PROT_EXEC, 0)); it < 0)
         return Posix::fromErrno(-it);
 
 #define ITER(SYSCALL)                                                                  \

@@ -46,12 +46,14 @@ struct Cli::ValueParser<Print::PaperStock> {
 };
 
 Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
+    auto memoryArg = Cli::option<DataSize>(NONE, "memory"s, "Memory limit enforced by the sandbox; ignored without --sandboxed (default: 4GiB)"s, 4_GiB);
     auto sandboxedArg = Cli::flag(NONE, "sandboxed"s, "Disallow access to local files and the network"s);
     auto verboseArg = Cli::flag(NONE, "verbose"s, "Enable verbose logging"s);
     auto quietArg = Cli::flag(NONE, "quiet"s, "Suppress all logging except fatal errors"s);
     Cli::Section runtimeSection{
-        "Runtime Options"s,
-        {sandboxedArg, verboseArg, quietArg},
+        .title = "Runtime Options"s,
+        .options = {memoryArg, sandboxedArg, verboseArg, quietArg},
+        .epilog = "The memory limit only applies when --sandboxed is used."s
     };
 
     enum struct FormatInfer {
@@ -176,7 +178,9 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     setLogLevel(level);
 
     if (sandboxedArg.value())
-        co_try$(PaperMuncher::hardenSandbox());
+        co_try$(PaperMuncher::hardenSandbox({
+            .memory = memoryArg.value(),
+        }));
 
     PaperMuncher::Option options{};
 
