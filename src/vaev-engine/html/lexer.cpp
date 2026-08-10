@@ -59,10 +59,10 @@ export struct HtmlLexer {
     Opt<usize> _matchedCharReferenceNoSemiColon;
 
     HtmlToken& _begin(HtmlToken::Type type, Io::Loc loc) {
-        _token = HtmlToken{
+        _token = Some(HtmlToken{
             .type = type,
             .span = Io::LocSpan::single(loc),
-        };
+        });
         return *_token;
     }
 
@@ -97,7 +97,7 @@ export struct HtmlLexer {
     Opt<HtmlToken::Attr&> _currAttr = NONE;
 
     void _beginAttribute() {
-        _currAttr = _ensure().attrs.emplaceBack();
+        _currAttr = Some(_ensure().attrs.emplaceBack());
     }
 
     void _reconsumeIn(State state, Rune rune, Io::Loc loc, Diag::Collector& diags, bool isEof) {
@@ -443,21 +443,21 @@ export struct HtmlLexer {
             // U+0020 SPACE
             // Switch to the before attribute name state.
             if (rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
             // U+002F SOLIDUS (/)
             // Switch to the self-closing start tag state.
             else if (rune == '/') {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
             // U+003E GREATER-THAN SIGN (>)
             // Switch to the data state. Emit the current tag token.
             else if (rune == '>') {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::DATA);
                 _emit(diags);
             }
@@ -557,7 +557,7 @@ export struct HtmlLexer {
             // treat it as per the "anything else" entry below.
             if ((rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') and
                 _isAppropriateEndTagToken()) {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
@@ -566,7 +566,7 @@ export struct HtmlLexer {
             // then switch to the self-closing start tag state. Otherwise,
             // treat it as per the "anything else" entry below.
             else if (rune == '/' and _isAppropriateEndTagToken()) {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
@@ -575,7 +575,7 @@ export struct HtmlLexer {
             // then switch to the data state and emit the current tag token.
             // Otherwise, treat it as per the "anything else" entry below.
             else if (rune == '>' and _isAppropriateEndTagToken()) {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::DATA);
                 _emit(diags);
             }
@@ -677,7 +677,7 @@ export struct HtmlLexer {
             // treat it as per the "anything else" entry below.
             if ((rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') and
                 _isAppropriateEndTagToken()) {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
@@ -686,7 +686,7 @@ export struct HtmlLexer {
             // then switch to the self-closing start tag state. Otherwise,
             // treat it as per the "anything else" entry below.
             else if (rune == '/' and _isAppropriateEndTagToken()) {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
@@ -695,7 +695,7 @@ export struct HtmlLexer {
             // then switch to the data state and emit the current tag token.
             // Otherwise, treat it as per the "anything else" entry below.
             else if (rune == '>' and _isAppropriateEndTagToken()) {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::DATA);
                 _emit(diags);
             }
@@ -807,7 +807,7 @@ export struct HtmlLexer {
 
             if ((rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') and
                 _isAppropriateEndTagToken()) {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
@@ -816,7 +816,7 @@ export struct HtmlLexer {
             // then switch to the self-closing start tag state. Otherwise,
             // treat it as per the "anything else" entry below.
             else if (rune == '/' and _isAppropriateEndTagToken()) {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
@@ -826,7 +826,7 @@ export struct HtmlLexer {
             // Otherwise, treat it as per the "anything else" entry below.
             else if (rune == '>' and _isAppropriateEndTagToken()) {
                 _switchTo(State::DATA);
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _emit(diags);
             }
 
@@ -1137,7 +1137,7 @@ export struct HtmlLexer {
             // it as per the "anything else" entry below.
             if ((rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') and
                 _isAppropriateEndTagToken()) {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::BEFORE_ATTRIBUTE_NAME);
             }
 
@@ -1146,7 +1146,7 @@ export struct HtmlLexer {
             // then switch to the self-closing start tag state. Otherwise, treat
             // it as per the "anything else" entry below.
             else if (rune == '/' and _isAppropriateEndTagToken()) {
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _switchTo(State::SELF_CLOSING_START_TAG);
             }
 
@@ -1156,7 +1156,7 @@ export struct HtmlLexer {
             // Otherwise, treat it as per the "anything else" entry below.
             else if (rune == '>' and _isAppropriateEndTagToken()) {
                 _switchTo(State::DATA);
-                _ensure().name = _commitSymbol();
+                _ensure().name = Some(_commitSymbol());
                 _emit(diags);
             }
 
@@ -2513,14 +2513,14 @@ export struct HtmlLexer {
             // U+0020 SPACE
             // Switch to the after DOCTYPE name state.
             if (rune == '\t' or rune == '\n' or rune == '\f' or rune == ' ') {
-                _ensure(HtmlToken::DOCTYPE).name = _commitSymbol();
+                _ensure(HtmlToken::DOCTYPE).name = Some(_commitSymbol());
                 _switchTo(State::AFTER_DOCTYPE_NAME);
             }
 
             // U+003E GREATER-THAN SIGN (>)
             // Switch to the data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
-                _ensure(HtmlToken::DOCTYPE).name = _commitSymbol();
+                _ensure(HtmlToken::DOCTYPE).name = Some(_commitSymbol());
                 _switchTo(State::DATA);
                 _emit(diags);
             }
@@ -2548,7 +2548,7 @@ export struct HtmlLexer {
             // Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-doctype");
-                _ensure(HtmlToken::DOCTYPE).name = _commitSymbol();
+                _ensure(HtmlToken::DOCTYPE).name = Some(_commitSymbol());
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
@@ -2778,7 +2778,7 @@ export struct HtmlLexer {
             // U+0022 QUOTATION MARK (")
             // Switch to the after DOCTYPE public identifier state.
             if (rune == '"') {
-                _ensure(HtmlToken::DOCTYPE).publicIdent = _builder.take();
+                _ensure(HtmlToken::DOCTYPE).publicIdent = Some(_builder.take());
                 _switchTo(State::AFTER_DOCTYPE_PUBLIC_IDENTIFIER);
             }
 
@@ -2797,7 +2797,7 @@ export struct HtmlLexer {
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
                 _raise(diags, loc, "abrupt-doctype-public-identifier");
-                _ensure(HtmlToken::DOCTYPE).publicIdent = _builder.take();
+                _ensure(HtmlToken::DOCTYPE).publicIdent = Some(_builder.take());
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
                 _emit(diags);
@@ -2809,7 +2809,7 @@ export struct HtmlLexer {
             // Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-doctype");
-                _ensure(HtmlToken::DOCTYPE).publicIdent = _builder.take();
+                _ensure(HtmlToken::DOCTYPE).publicIdent = Some(_builder.take());
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
@@ -2833,7 +2833,7 @@ export struct HtmlLexer {
             // U+0027 APOSTROPHE (')
             // Switch to the after DOCTYPE public identifier state.
             if (rune == '\'') {
-                _ensure(HtmlToken::DOCTYPE).publicIdent = _builder.take();
+                _ensure(HtmlToken::DOCTYPE).publicIdent = Some(_builder.take());
                 _switchTo(State::AFTER_DOCTYPE_PUBLIC_IDENTIFIER);
             }
 
@@ -2852,7 +2852,7 @@ export struct HtmlLexer {
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
                 _raise(diags, loc, "abrupt-doctype-public-identifier");
-                _ensure(HtmlToken::DOCTYPE).publicIdent = _builder.take();
+                _ensure(HtmlToken::DOCTYPE).publicIdent = Some(_builder.take());
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
                 _emit(diags);
@@ -2864,7 +2864,7 @@ export struct HtmlLexer {
             // Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-doctype");
-                _ensure(HtmlToken::DOCTYPE).publicIdent = _builder.take();
+                _ensure(HtmlToken::DOCTYPE).publicIdent = Some(_builder.take());
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
@@ -3150,7 +3150,7 @@ export struct HtmlLexer {
             // U+0022 QUOTATION MARK (")
             // Switch to the after DOCTYPE system identifier state.
             if (rune == '"') {
-                _ensure(HtmlToken::DOCTYPE).systemIdent = _builder.take();
+                _ensure(HtmlToken::DOCTYPE).systemIdent = Some(_builder.take());
                 _switchTo(State::AFTER_DOCTYPE_SYSTEM_IDENTIFIER);
             }
 
@@ -3169,7 +3169,7 @@ export struct HtmlLexer {
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
                 _raise(diags, loc, "abrupt-doctype-system-identifier");
-                _ensure(HtmlToken::DOCTYPE).systemIdent = _builder.take();
+                _ensure(HtmlToken::DOCTYPE).systemIdent = Some(_builder.take());
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
                 _emit(diags);
@@ -3181,7 +3181,7 @@ export struct HtmlLexer {
             // Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-doctype");
-                _ensure(HtmlToken::DOCTYPE).systemIdent = _builder.take();
+                _ensure(HtmlToken::DOCTYPE).systemIdent = Some(_builder.take());
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
@@ -3205,7 +3205,7 @@ export struct HtmlLexer {
             // U+0027 APOSTROPHE (')
             // Switch to the after DOCTYPE system identifier state.
             if (rune == '\'') {
-                _ensure(HtmlToken::DOCTYPE).systemIdent = _builder.take();
+                _ensure(HtmlToken::DOCTYPE).systemIdent = Some(_builder.take());
                 _switchTo(State::AFTER_DOCTYPE_SYSTEM_IDENTIFIER);
             }
 
@@ -3224,7 +3224,7 @@ export struct HtmlLexer {
             // data state. Emit the current DOCTYPE token.
             else if (rune == '>') {
                 _raise(diags, loc, "abrupt-doctype-system-identifier");
-                _ensure(HtmlToken::DOCTYPE).systemIdent = _builder.take();
+                _ensure(HtmlToken::DOCTYPE).systemIdent = Some(_builder.take());
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _switchTo(State::DATA);
                 _emit(diags);
@@ -3236,7 +3236,7 @@ export struct HtmlLexer {
             // Emit an end-of-file token.
             else if (isEof) {
                 _raise(diags, loc, "eof-in-doctype");
-                _ensure(HtmlToken::DOCTYPE).systemIdent = _builder.take();
+                _ensure(HtmlToken::DOCTYPE).systemIdent = Some(_builder.take());
                 _ensure(HtmlToken::DOCTYPE).forceQuirks = true;
                 _emit(diags);
                 _begin(HtmlToken::END_OF_FILE, loc);
@@ -3508,7 +3508,7 @@ export struct HtmlLexer {
                 _temp.append(rune);
 
                 if (matchStateWithNextInputChar == Match::YES)
-                    _matchedCharReferenceNoSemiColon = _temp.len();
+                    _matchedCharReferenceNoSemiColon = Some(_temp.len());
 
                 break;
             }

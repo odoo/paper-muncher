@@ -108,7 +108,7 @@ export struct Breakpoint {
         Breakpoint b{
             .endIdx = endIdx,
             .appeal = childBreakpoint.appeal,
-            .children = {std::move(childBreakpoint)},
+            .children = {Some(std::move(childBreakpoint))},
             .advance = Advance::DONT,
         };
 
@@ -235,13 +235,13 @@ export struct BreakpointTraverser {
     Opt<usize> getStart() {
         if (prevIteration == nullptr)
             return NONE;
-        return prevIteration->endIdx - (prevIteration->advance == Breakpoint::Advance::DONT);
+        return Some(prevIteration->endIdx - (prevIteration->advance == Breakpoint::Advance::DONT));
     }
 
     Opt<usize> getEnd() {
         if (currIteration == nullptr)
             return NONE;
-        return currIteration->endIdx;
+        return Some(currIteration->endIdx);
     }
 };
 

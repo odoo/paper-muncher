@@ -80,7 +80,7 @@ struct CounterSet {
             // the element instantiates a new counter of the given name with a starting
             // value of 0 before setting or incrementing its value.
             CounterProps::Reset counterReset{increment.name, false};
-            counter = instantiateCounter(el, counterReset, 0);
+            counter = Some(instantiateCounter(el, counterReset, 0));
         }
 
         counter->value += (counter->reversed ? -1 : 1) * increment.value.unwrapOr(1);
@@ -94,7 +94,7 @@ struct CounterSet {
             // the element instantiates a new counter of the given name with a starting
             // value of 0 before setting or incrementing its value.
             CounterProps::Reset counterReset{set.name, false};
-            counter = instantiateCounter(el, counterReset, 0);
+            counter = Some(instantiateCounter(el, counterReset, 0));
         }
 
         counter->value = set.value.unwrapOr(0);
@@ -117,7 +117,7 @@ struct CounterSet {
         for (auto i : urange::zeroTo(_counters.len())) {
             auto& c = _counters[i];
             if (c.name == name) {
-                counter = c;
+                counter = Some(c);
                 index = i;
             }
         }
@@ -299,7 +299,7 @@ struct CounterStyleSet {
         Integer i = (value - 1) % (Integer)style.symbols.len();
         if (i < 0)
             i += (Integer)style.symbols.len();
-        return Vec<CounterSymbol>{style.symbols[i]};
+        return Some(Vec<CounterSymbol>{style.symbols[i]});
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#fixed-system
@@ -310,7 +310,7 @@ struct CounterStyleSet {
         value -= 1;
         if (value >= static_cast<isize>(style.symbols.len()))
             return NONE;
-        return Vec<CounterSymbol>{style.symbols[value]};
+        return Some(Vec<CounterSymbol>{style.symbols[value]});
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#symbolic-system
@@ -329,7 +329,7 @@ struct CounterStyleSet {
         s.resize(representationLength, chosen);
 
         // Finally, return S.
-        return s;
+        return Some(s);
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#alphabetic-system
@@ -354,7 +354,7 @@ struct CounterStyleSet {
         }
 
         // Finally, return S.
-        return s;
+        return Some(s);
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#numeric-system
@@ -369,7 +369,7 @@ struct CounterStyleSet {
         // If value is 0, append symbol(0) to S and return S.
         if (value == 0) {
             s.pushBack(style.symbols[value]);
-            return s;
+            return Some(s);
         }
 
         // While value is not equal to 0:
@@ -381,7 +381,7 @@ struct CounterStyleSet {
         }
 
         // Return S.
-        return s;
+        return Some(s);
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#additive-system
@@ -405,7 +405,7 @@ struct CounterStyleSet {
 
             if (zeroSym) {
                 s.pushBack(zeroSym->symbol);
-                return s;
+                return Some(s);
             }
 
             // 2. Otherwise, the given counter value cannot be represented by
@@ -433,14 +433,14 @@ struct CounterStyleSet {
 
             // 6. If value is zero, return S.
             if (value == 0)
-                return s;
+                return Some(s);
         }
 
         // 4. Assertion: value is still non-zero.
         if (value != 0)
             return NONE;
 
-        return s;
+        return Some(s);
     }
 
     Opt<Vec<CounterSymbol>> _dispatchCounterSystem(CounterStyle const& style, Integer value) {
@@ -495,9 +495,9 @@ struct CounterStyleSet {
                 );
 
                 if (value >= lower and value <= upper)
-                    return true;
+                    return Some(true);
             }
-            return false;
+            return Some(false);
         }
 
         return NONE;
@@ -655,7 +655,7 @@ struct SystemCounterDescriptor {
     }
 
     void apply(CounterDescriptors& s) const {
-        s.system = value;
+        s.system = Some(value);
     }
 };
 
@@ -668,11 +668,11 @@ struct NegativeCounterDescriptor {
     }
 
     static auto load(CounterDescriptors& s) {
-        return s.system;
+        return s.negative;
     }
 
     void apply(CounterDescriptors& s) const {
-        s.negative = value;
+        s.negative = Some(value);
     }
 };
 
@@ -689,7 +689,7 @@ struct PrefixCounterDescriptor {
     }
 
     void apply(CounterDescriptors& s) const {
-        s.prefix = value;
+        s.prefix = Some(value);
     }
 };
 
@@ -706,7 +706,7 @@ struct SuffixCounterDescriptor {
     }
 
     void apply(CounterDescriptors& s) const {
-        s.suffix = value;
+        s.suffix = Some(value);
     }
 };
 
@@ -723,7 +723,7 @@ struct RangeCounterDescriptor {
     }
 
     void apply(CounterDescriptors& s) const {
-        s.range = value;
+        s.range = Some(value);
     }
 };
 
@@ -740,7 +740,7 @@ struct PadCounterDescriptor {
     }
 
     void apply(CounterDescriptors& s) const {
-        s.pad = value;
+        s.pad = Some(value);
     }
 };
 
@@ -757,7 +757,7 @@ struct FallbackCounterDescriptor {
     }
 
     void apply(CounterDescriptors& s) const {
-        s.fallback = value;
+        s.fallback = Some(value);
     }
 };
 
@@ -774,7 +774,7 @@ struct SymbolsCounterDescriptor {
     }
 
     void apply(CounterDescriptors& s) const {
-        s.symbols = value;
+        s.symbols = Some(value);
     }
 };
 
@@ -791,7 +791,7 @@ struct AdditiveSymbolsCounterDescriptor {
     }
 
     void apply(CounterDescriptors& s) const {
-        s.additiveSymbols = value;
+        s.additiveSymbols = Some(value);
     }
 };
 
@@ -808,7 +808,7 @@ struct SpeakAsCounterDescriptor {
     }
 
     void apply(CounterDescriptors& s) const {
-        s.speakAs = value;
+        s.speakAs = Some(value);
     }
 };
 

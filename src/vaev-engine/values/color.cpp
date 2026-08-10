@@ -233,7 +233,7 @@ export Opt<Color> parseNamedColor(Str name) {
 
 #define COLOR(ID, NAME, ...)   \
     if (eqCi(name, #NAME ""s)) \
-        return ID;
+        return Some(ID);
 #include "defs/colors.inc"
 
 #undef COLOR
@@ -244,7 +244,7 @@ export Opt<Color> parseNamedColor(Str name) {
 export Opt<SystemColor> parseSystemColor(Str name) {
 #define COLOR(ID, NAME, ...) \
     if (name == #NAME)       \
-        return SystemColor::ID;
+        return Some(SystemColor::ID);
 #include "defs/system-colors.inc"
 
 #undef COLOR
@@ -317,7 +317,7 @@ struct ValueParser<Color> {
         if (scan.skip(Css::Token::ident("none")))
             return Ok(NONE);
 
-        return Ok(try$(_parseAlphaValue(scan)));
+        return Ok(Some(try$(_parseAlphaValue(scan))));
     }
 
     static Res<Number> _parseNumPercNone(Cursor<Css::Sst>& scan, Number percOf, Number noneValue = 0) {
@@ -585,7 +585,7 @@ struct ValueParser<Color> {
             return Error::invalidData("unexpected end of input");
 
         if (s.peek() == Css::Token::Type::PERCENTAGE) {
-            percent = try$(parseValue<Percent>(s));
+            percent = Some(try$(parseValue<Percent>(s)));
             eatWhitespace(s);
             return Ok(ColorMix::Side{
                 try$(parseValue<Color>(s)),
@@ -596,7 +596,7 @@ struct ValueParser<Color> {
         Color color = try$(parseValue<Color>(s));
         eatWhitespace(s);
         if (not s.ended() and s.peek() == Css::Token::Type::PERCENTAGE)
-            percent = try$(parseValue<Percent>(s)).value();
+            percent = Some(try$(parseValue<Percent>(s)).value());
 
         return Ok(ColorMix::Side{
             std::move(color),

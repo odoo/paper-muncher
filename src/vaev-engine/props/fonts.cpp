@@ -294,7 +294,16 @@ export struct FontProperty : Property {
 
         Rc<Property> load(ComputedValues const& c) const override {
             auto const& font = *c.font;
-            return makeRc<FontProperty>(self(), Value{font.families, font.weight, font.width, font.style, Length{font.size}});
+            return makeRc<FontProperty>(
+                self(),
+                Value{
+                    font.families,
+                    Some(font.weight),
+                    font.width,
+                    font.style,
+                    Length{font.size},
+                }
+            );
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -310,7 +319,7 @@ export struct FontProperty : Property {
 
                 auto fontWeight = parseValue<FontWeight>(c);
                 if (fontWeight) {
-                    value.weight = fontWeight.unwrap();
+                    value.weight = Some(fontWeight.unwrap());
                     continue;
                 }
 

@@ -165,7 +165,7 @@ export struct NamespaceRule {
         eatWhitespace(prefixContent);
         Opt<Symbol> maybePrefix;
         if (*prefixContent == Css::Token::IDENT) {
-            maybePrefix = Symbol::from(prefixContent->token.data);
+            maybePrefix = Some(Symbol::from(prefixContent->token.data));
             prefixContent.next();
         }
 

@@ -288,7 +288,7 @@ export struct Lexer {
         // Initially create a <string-token> with its value set to the empty string.
         StringBuilder sb;
         if (not endingCodepoint)
-            endingCodepoint = s.next();
+            endingCodepoint = Some(s.next());
 
         // Repeatedly consume the next input code point from the stream:
         while (not s.ended()) {

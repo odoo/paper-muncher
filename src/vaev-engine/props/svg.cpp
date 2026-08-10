@@ -237,7 +237,7 @@ export struct SvgFillProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<SvgFillProperty>(self(), SvgPaint{Color{Gfx::BLACK}});
+            return makeRc<SvgFillProperty>(self(), SvgPaint{Some(Color{Gfx::BLACK})});
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -371,7 +371,7 @@ export struct SvgViewBoxProperty : Property {
             c.skip(Css::Token::COMMA);
             viewBox.height = try$(parseValue<Number>(c));
 
-            return Ok(makeRc<SvgViewBoxProperty>(self(), Opt{std::move(viewBox)}));
+            return Ok(makeRc<SvgViewBoxProperty>(self(), Some(std::move(viewBox))));
         }
     };
 

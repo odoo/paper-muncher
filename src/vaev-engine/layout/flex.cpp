@@ -108,9 +108,9 @@ struct FlexAxis {
 
     Math::Vec2<Opt<Au>> extractMainAxisAndFillOptOther(Vec2Au base, Opt<Au> other = NONE) const {
         if (isRowOriented) {
-            return {base.x, other};
+            return {Some(base.x), other};
         } else {
-            return {other, base.y};
+            return {other, Some(base.y)};
         }
     }
 
@@ -125,9 +125,9 @@ struct FlexAxis {
 
     Math::Vec2<Opt<Au>> buildOptPairWithMainAndOther(Au mainValue, Opt<Au> other = NONE) const {
         if (isRowOriented) {
-            return {mainValue, other};
+            return {Some(mainValue), other};
         } else {
-            return {other, mainValue};
+            return {other, Some(mainValue)};
         }
     }
 };
@@ -270,14 +270,14 @@ struct FlexItem {
             // from now on flex basis is width
 
             if (auto basisCalc = flexItemProps.basis.is<Calc<PercentOr<Length>>>())
-                return *basisCalc;
+                return Some(*basisCalc);
 
             if (not fa.mainAxis(box->style->sizing).is<Calc<PercentOr<Length>>>())
                 return NONE;
 
             // TODO: solve definite values also min and max content
 
-            return fa.mainAxis(box->style->sizing).unwrap<Calc<PercentOr<Length>>>();
+            return Some(fa.mainAxis(box->style->sizing).unwrap<Calc<PercentOr<Length>>>());
         };
 
         if (auto const& [flexBasisDefiniteSize] = getDefiniteFlexBasisSize(flexItemProps, fa, box)) {
@@ -331,12 +331,12 @@ struct FlexItem {
         Opt<Au> definiteMaxMainSize;
         auto maxMainSize = box->style->sizing->maxSize(fa.isRowOriented ? Axis::HORIZONTAL : Axis::VERTICAL);
         if (auto maxMainSizeCalc = maxMainSize.is<Calc<PercentOr<Length>>>()) {
-            definiteMaxMainSize = resolve(
+            definiteMaxMainSize = Some(resolve(
                 tree,
                 *box,
                 *maxMainSizeCalc,
                 fa.mainAxis(containerSize)
-            );
+            ));
         }
 
         Au contentSizeSuggestion = fa.mainAxis(minContentSize);
@@ -695,7 +695,7 @@ struct FlexFormatingContext : FormatingContext {
             .fragment = fragBuilder.buildBoxFromInput(input, size),
             .size = size,
             .completelyLaidOut = true,
-            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
+            .breakpoint = Some(Breakpoint::bottomOfMonolithicBox(box)),
         };
     }
 
@@ -741,12 +741,12 @@ struct FlexFormatingContext : FormatingContext {
     void _determineFlexBaseSizeAndHypotheticalMainSize(Tree& tree, Box& box, Input input) {
         Opt<Au> containerDefiniteMainSize = fa.mainAxis(input.knownSize);
         if (fa.mainAxis(box.style->sizing).is<Calc<PercentOr<Length>>>()) {
-            containerDefiniteMainSize = resolve(
+            containerDefiniteMainSize = Some(resolve(
                 tree,
                 box,
                 fa.mainAxis(box.style->sizing).unwrap<Calc<PercentOr<Length>>>(),
                 fa.mainAxis(input.containingBlock)
-            );
+            ));
         }
 
         for (auto& i : _items) {
@@ -1276,9 +1276,9 @@ struct FlexFormatingContext : FormatingContext {
                     Au marginsSize = (_usedMainSize - occupiedMainSize) / countOfAutos;
                     for (auto& flexItem : flexLine.items) {
                         if (fa.startMainAxis(*flexItem.box->style->margin).is<Keywords::Auto>())
-                            fa.startMainAxis(flexItem.margin) = marginsSize;
+                            fa.startMainAxis(flexItem.margin) = Some(marginsSize);
                         if (fa.endMainAxis(*flexItem.box->style->margin).is<Keywords::Auto>())
-                            fa.endMainAxis(flexItem.margin) = marginsSize;
+                            fa.endMainAxis(flexItem.margin) = Some(marginsSize);
                     }
 
                     usedAutoMargins = true;
@@ -1289,9 +1289,9 @@ struct FlexFormatingContext : FormatingContext {
             if (not usedAutoMargins) {
                 for (auto& flexItem : flexLine.items) {
                     if (fa.startMainAxis(*flexItem.box->style->margin).is<Keywords::Auto>())
-                        fa.startMainAxis(flexItem.margin) = 0_au;
+                        fa.startMainAxis(flexItem.margin) = Some(0_au);
                     if (fa.endMainAxis(*flexItem.box->style->margin).is<Keywords::Auto>())
-                        fa.endMainAxis(flexItem.margin) = 0_au;
+                        fa.endMainAxis(flexItem.margin) = Some(0_au);
                 }
             }
 
@@ -1331,25 +1331,25 @@ struct FlexFormatingContext : FormatingContext {
                         if (not startCrossMarginIsAuto and endCrossMarginIsAuto) {
                             auto startMargin = i.getMargin(FlexItem::START_CROSS);
                             Au freeCrossSpace = l.crossSize - fa.crossAxis(i.usedSize) - startMargin;
-                            fa.endCrossAxis(i.margin) = freeCrossSpace;
+                            fa.endCrossAxis(i.margin) = Some(freeCrossSpace);
 
                         } else if (startCrossMarginIsAuto and not endCrossMarginIsAuto) {
                             auto endMargin = i.getMargin(FlexItem::END_CROSS);
                             Au freeCrossSpace = l.crossSize - fa.crossAxis(i.usedSize) - endMargin;
-                            fa.startCrossAxis(i.margin) = freeCrossSpace;
+                            fa.startCrossAxis(i.margin) = Some(freeCrossSpace);
                         } else {
                             Au freeCrossSpace = l.crossSize - fa.crossAxis(i.usedSize);
                             fa.endCrossAxis(i.margin) =
-                                fa.startCrossAxis(i.margin) = freeCrossSpace / 2_au;
+                                fa.startCrossAxis(i.margin) = Some(freeCrossSpace / 2_au);
                         }
                         fa.crossAxis(i.position) = i.getMargin(FlexItem::START_CROSS);
                     } else {
                         if (i.box->style->margin->top.is<Keywords::Auto>())
-                            fa.startCrossAxis(i.margin) = 0_au;
+                            fa.startCrossAxis(i.margin) = Some(0_au);
 
                         // FIXME: not sure if the following is what the specs want
                         if (l.crossSize > fa.crossAxis(i.usedSize))
-                            fa.endCrossAxis(i.margin) = l.crossSize - fa.crossAxis(i.usedSize);
+                            fa.endCrossAxis(i.margin) = Some(l.crossSize - fa.crossAxis(i.usedSize));
                     }
                 }
             }
@@ -1490,7 +1490,10 @@ struct FlexFormatingContext : FormatingContext {
                 Input childInput{
                     .generateFragment = true,
                     .usedSpacings = usedSpacings,
-                    .knownSize = {flexItem.usedSize.x, flexItem.usedSize.y},
+                    .knownSize = {
+                        Some(flexItem.usedSize.x),
+                        Some(flexItem.usedSize.y),
+                    },
                     .position = flexItem.position,
                     .availableSpace = availableSpace,
                     .containingBlock = fa.buildPair(_usedMainSize, _usedCrossSize),
@@ -1508,7 +1511,7 @@ struct FlexFormatingContext : FormatingContext {
             }
         }
 
-        return fragBuilder.buildBox(input.position, fa.buildPair(_usedMainSize, _usedCrossSize), input.usedSpacings);
+        return Some(fragBuilder.buildBox(input.position, fa.buildPair(_usedMainSize, _usedCrossSize), input.usedSpacings));
     }
 
     void _appendOutOfFlowChildren(Box& box, Vec<Rc<PlaceholderFragment>>& outOfFlowChildren, FragmentBuilder& fragBuilder) {
@@ -1520,7 +1523,7 @@ struct FlexFormatingContext : FormatingContext {
 
                 auto placeholder = makeRc<PlaceholderFragment>(c, staticPosRect);
 
-                fragBuilder.addChildIfAny(placeholder);
+                fragBuilder.addChildIfAny(Some(placeholder));
                 outOfFlowChildren.pushBack(placeholder);
             }
         }
@@ -1603,7 +1606,7 @@ struct FlexFormatingContext : FormatingContext {
             .fragment = fragment,
             .size = fa.buildPair(_usedMainSize, _usedCrossSize),
             .completelyLaidOut = true,
-            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
+            .breakpoint = Some(Breakpoint::bottomOfMonolithicBox(box)),
             .outOfFlowStash = std::move(outOfFlowChildren),
         };
     }

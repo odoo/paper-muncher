@@ -164,17 +164,17 @@ struct ValueParser<Math::Radii<T>> {
 
         auto value2 = parseValue<PercentOr<Length>>(c);
         if (not value2)
-            return parsePostSlash(c, Math::Radii<T>{value1.take()});
+            return parsePostSlash(c, Some(Math::Radii<T>{value1.take()}));
 
         auto value3 = parseValue<PercentOr<Length>>(c);
         if (not value3)
-            return parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take()});
+            return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take()}));
 
         auto value4 = parseValue<PercentOr<Length>>(c);
         if (not value4)
-            return parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take(), value3.take(), value2.take()});
+            return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take(), value3.take(), value2.take()}));
 
-        return parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take(), value3.take(), value4.take()});
+        return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take(), value3.take(), value4.take()}));
     }
 
     static Res<Math::Radii<T>> parsePostSlash(Cursor<Css::Sst>& c, Opt<Math::Radii<T>> maybeRadii) {

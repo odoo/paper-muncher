@@ -57,11 +57,11 @@ export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box
     Opt<Au> height = NONE;
 
     if (auto calc = style.sizing->width.is<Calc<PercentOr<Length>>>()) {
-        width = resolve(tree, box, *calc, containingBlock.width);
+        width = Some(resolve(tree, box, *calc, containingBlock.width));
     }
 
     if (auto calc = style.sizing->height.is<Calc<PercentOr<Length>>>()) {
-        height = resolve(tree, box, *calc, containingBlock.height);
+        height = Some(resolve(tree, box, *calc, containingBlock.height));
     }
 
     return {width, height};
@@ -165,7 +165,7 @@ export Vec2Au resolveObjectDefaultSizing(ObjectNaturalDimensions naturalDimensio
     auto resolvePartialSpecifiedSize = [](ObjectNaturalDimensions naturalDimensions, Math::Vec2<Opt<Au>> specifiedSize) -> Opt<Vec2Au> {
         // - If the specified size is a definite width and height, the concrete object size is given that width and height.
         if (specifiedSize.width and specifiedSize.height) {
-            return Vec2Au{*specifiedSize.width, *specifiedSize.height};
+            return Some(Vec2Au{*specifiedSize.width, *specifiedSize.height});
         }
 
         // - If the specified size is only a width or height (but not both)
@@ -178,17 +178,17 @@ export Vec2Au resolveObjectDefaultSizing(ObjectNaturalDimensions naturalDimensio
             // 1. If the object has a natural aspect ratio,
             if (naturalDimensions.aspectRatio) {
                 // the missing dimension of the concrete object size is calculated using that aspect ratio and the present dimension.
-                return Vec2Au{width, width / *naturalDimensions.aspectRatio};
+                return Some(Vec2Au{width, width / *naturalDimensions.aspectRatio});
             }
 
             // 2. Otherwise, if the missing dimension is present in the object’s natural dimensions,
             if (naturalDimensions.size.height) {
                 // the missing dimension is taken from the object’s natural dimensions.
-                return Vec2Au{width, *naturalDimensions.size.height};
+                return Some(Vec2Au{width, *naturalDimensions.size.height});
             }
 
             // 3. Otherwise, the missing dimension of the concrete object size is taken from the default object size.
-            return Vec2Au{width, 150_au};
+            return Some(Vec2Au{width, 150_au});
         }
 
         if (specifiedSize.height and not specifiedSize.width) {
@@ -197,17 +197,17 @@ export Vec2Au resolveObjectDefaultSizing(ObjectNaturalDimensions naturalDimensio
             // 1. If the object has a natural aspect ratio,
             if (naturalDimensions.aspectRatio) {
                 // the missing dimension of the concrete object size is calculated using that aspect ratio and the present dimension.
-                return Vec2Au{height * *naturalDimensions.aspectRatio, height};
+                return Some(Vec2Au{height * *naturalDimensions.aspectRatio, height});
             }
 
             // 2. Otherwise, if the missing dimension is present in the object’s natural dimensions,
             if (naturalDimensions.size.width) {
                 // the missing dimension is taken from the object’s natural dimensions.
-                return Vec2Au{*naturalDimensions.size.width, height};
+                return Some(Vec2Au{*naturalDimensions.size.width, height});
             }
 
             // 3. Otherwise, the missing dimension of the concrete object size is taken from the default object size.
-            return Vec2Au{300_au, height};
+            return Some(Vec2Au{300_au, height});
         }
 
         return NONE;

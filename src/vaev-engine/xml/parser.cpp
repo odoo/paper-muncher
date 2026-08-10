@@ -45,7 +45,7 @@ struct NamespaceContext {
         if (not ns)
             return Error::invalidData("unknown namespace prefix");
 
-        return Ok(Dom::QualifiedName{*ns, parsedName.localName});
+        return Ok(Dom::QualifiedName{Some(*ns), parsedName.localName});
     }
 
     Res<Dom::QualifiedName> resolveAttributeName(UnresolvedQualifiedName const& parsedName) const {
@@ -56,7 +56,7 @@ struct NamespaceContext {
         if (not ns)
             return Error::invalidData("unknown namespace prefix");
 
-        return Ok(Dom::QualifiedName{*ns, parsedName.localName});
+        return Ok(Dom::QualifiedName{Some(*ns), parsedName.localName});
     }
 
     void declarePrefix(Symbol prefix, Opt<Symbol> ns) {
@@ -163,7 +163,7 @@ export struct XmlParser {
             if (separator)
                 return Error::invalidData("expected a single namespace separator");
 
-            separator = i;
+            separator = Some(i);
         }
 
         if (not separator)
@@ -174,7 +174,7 @@ export struct XmlParser {
             return Error::invalidData("expected namespace prefix and local name");
 
         return Ok(UnresolvedQualifiedName{
-            Symbol::from(sub(name, 0, separatorIndex)),
+            Some(Symbol::from(sub(name, 0, separatorIndex))),
             Symbol::from(sub(name, separatorIndex + 1, name.len())),
         });
     }
@@ -765,9 +765,9 @@ export struct XmlParser {
             auto value = try$(_parseAttValue(s));
 
             if (not parsedName.prefix and parsedName.localName == "xmlns"_sym)
-                context.default_ = Symbol::from(value);
+                context.default_ = Some(Symbol::from(value));
             else if (parsedName.prefix == "xmlns"_sym)
-                context.declarePrefix(parsedName.localName, Symbol::from(value));
+                context.declarePrefix(parsedName.localName, Some(Symbol::from(value)));
 
             try$(_parseS(s));
         }

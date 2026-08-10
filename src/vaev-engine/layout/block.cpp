@@ -43,7 +43,7 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
             .fragment = fragBuilder.buildBoxFromInput(input, currentBoxSize),
             .size = currentBoxSize,
             .completelyLaidOut = false,
-            .breakpoint = currentBreakpoint
+            .breakpoint = Some(currentBreakpoint)
         };
     }
 
@@ -73,9 +73,7 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
             .fragment = fragBuilder.buildBoxFromInput(input, currentBoxSize),
             .size = currentBoxSize,
             .completelyLaidOut = false,
-            .breakpoint = Breakpoint::forced(
-                childIndex + 1
-            )
+            .breakpoint = Some(Breakpoint::forced(childIndex + 1))
         };
     }
 
@@ -89,7 +87,7 @@ Res<None, Output> processBreakpointsBeforeChild(FragmentBuilder& fragBuilder, us
             .fragment = fragBuilder.buildBoxFromInput(input, currentSize),
             .size = currentSize,
             .completelyLaidOut = false,
-            .breakpoint = Breakpoint::forced(endAt)
+            .breakpoint = Some(Breakpoint::forced(endAt))
         };
     }
 
@@ -116,7 +114,7 @@ Output fragmentEmptyBox(Fragmentainer const& fc, FragmentBuilder& fragBuilder, I
                 .fragment = fragBuilder.buildBoxFromInput(input, {}),
                 .size = {},
                 .completelyLaidOut = false,
-                .breakpoint = Breakpoint::overflow()
+                .breakpoint = Some(Breakpoint::overflow())
             };
         }
     } else {
@@ -152,7 +150,7 @@ Opt<Au> _tableWrapperFitContentWidth(Tree& tree, Box& wrapper, Au availableWidth
         if (not gridBox.style->sizing->width.is<Keywords::Auto>())
             return NONE;
 
-        return computeFitContentInlineSize(tree, wrapper, availableWidth);
+        return Some(computeFitContentInlineSize(tree, wrapper, availableWidth));
     }
 
     return NONE;
@@ -176,10 +174,10 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, In
                 // When the inline size is not known, we cannot enforce it to the child. (?)
                 Au availableWidth = blockInlineSize.unwrap() - usedSpacings.margin.horizontal();
                 if (child.style->display == Display::TABLE) {
-                    childInput.knownSize.width = _tableWrapperFitContentWidth(tree, child, availableWidth)
-                                                     .unwrapOr(availableWidth);
+                    childInput.knownSize.width = Some(_tableWrapperFitContentWidth(tree, child, availableWidth)
+                                                          .unwrapOr(availableWidth));
                 } else {
-                    childInput.knownSize.width = availableWidth;
+                    childInput.knownSize.width = Some(availableWidth);
                 }
             }
         } else {
@@ -296,7 +294,7 @@ struct BlockFormatingContext : FormatingContext {
 
                     auto placeholder = makeRc<PlaceholderFragment>(c, staticPosRect);
 
-                    fragBuilder.addChildIfAny(placeholder);
+                    fragBuilder.addChildIfAny(Some(placeholder));
                     outOfFlowChildren.pushBack(placeholder);
                 }
 
@@ -355,7 +353,7 @@ struct BlockFormatingContext : FormatingContext {
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
             //       and avoid duplicating the layout code
             if (c.style->display == Display::Internal::TABLE_BOX)
-                childInput.capmin = _computeCapmin(tree, box, input, inlineSize);
+                childInput.capmin = Some(_computeCapmin(tree, box, input, inlineSize));
 
             _populateChildSpecifiedSizes(tree, c, input, childInput, usedSpacings, input.knownSize.x);
 
@@ -370,7 +368,7 @@ struct BlockFormatingContext : FormatingContext {
                 // NOSPEC: The spec doesn't define where the marker should be placed.
                 auto width = computeIntrinsicContentSize(tree, c, IntrinsicSize::MAX_CONTENT).x;
                 childInput.position.x -= width * 2.5;
-                childInput.knownSize.x = width;
+                childInput.knownSize.x = Some(width);
             }
 
             if (c.style->position == Keywords::RELATIVE) {
@@ -426,7 +424,7 @@ struct BlockFormatingContext : FormatingContext {
             .fragment = fragBuilder.buildBoxFromInput(input, size),
             .size = size,
             .completelyLaidOut = blockWasCompletelyLaidOut,
-            .breakpoint = currentBreakpoint,
+            .breakpoint = Some(currentBreakpoint),
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,
             .outOfFlowStash = std::move(outOfFlowChildren),

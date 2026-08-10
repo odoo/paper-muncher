@@ -21,7 +21,7 @@ export struct TokenList {
     Opt<String> item(usize index) const {
         if (index >= _tokens.len())
             return NONE;
-        return _tokens[index];
+        return Some(_tokens[index]);
     }
 
     bool contains(Str token) const {

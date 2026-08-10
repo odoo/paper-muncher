@@ -127,7 +127,7 @@ export struct ClipPathProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         if (auto clipShape = _value.is<BasicShape>())
-            c.clip.cow() = *clipShape;
+            c.clip.cow() = Some(*clipShape);
         else
             c.clip.cow() = NONE;
     }

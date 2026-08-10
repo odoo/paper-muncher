@@ -18,7 +18,7 @@ namespace Vaev::Layout {
 Opt<PercentOr<Length>> extractValueFromCalc(Calc<PercentOr<Length>> const& size) {
     return size.visit(
         [](Calc<PercentOr<Length>>::Value const& v) {
-            return Opt{v.unwrap<PercentOr<Length>>()};
+            return Opt{Some(v.unwrap<PercentOr<Length>>())};
         },
         [](auto const) {
             return Opt<PercentOr<Length>>{NONE};
@@ -69,7 +69,7 @@ struct SvgFormatingContext : FormatingContext {
             if (percOrLength->is<Percent>())
                 return NONE;
 
-            return percOrLength->unwrap<Length>();
+            return Some(percOrLength->unwrap<Length>());
         };
 
         auto absWidth = absoluteValue(width);
@@ -77,15 +77,14 @@ struct SvgFormatingContext : FormatingContext {
 
         // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
         if (absWidth and absHeight)
-            return absWidth->unwrapOr<AbsoluteLength>(0_au).pixels().value() /
-                   absHeight->unwrapOr<AbsoluteLength>(0_au).pixels().value();
+            return Some(absWidth->unwrapOr<AbsoluteLength>(0_au).pixels().value() / absHeight->unwrapOr<AbsoluteLength>(0_au).pixels().value());
 
         // 2. If an SVG View is active:
         // TODO
 
         // 3. If the ‘viewBox’ on the ‘svg’ element is correctly specified:
         if (vb)
-            return (f64)vb->width / vb->height;
+            return Some((f64)vb->width / vb->height);
 
         return NONE;
     }
@@ -132,31 +131,19 @@ struct SvgFormatingContext : FormatingContext {
         switch (shape) {
         case SvgShapeElement::RECT:
             fragBuilder.addChildIfAny(
-                makeRc<SvgShapeFragment>(
-                    box,
-                    _resolveRectangle(*box.style, relativeTo),
-                    resolvedStrokeWidth
-                )
+                Some(makeRc<SvgShapeFragment>(box, _resolveRectangle(*box.style, relativeTo), resolvedStrokeWidth))
             );
             break;
 
         case SvgShapeElement::CIRCLE:
             fragBuilder.addChildIfAny(
-                makeRc<SvgShapeFragment>(
-                    box,
-                    _resolveCircle(*box.style, relativeTo),
-                    resolvedStrokeWidth
-                )
+                Some(makeRc<SvgShapeFragment>(box, _resolveCircle(*box.style, relativeTo), resolvedStrokeWidth))
             );
             break;
 
         case SvgShapeElement::PATH:
             fragBuilder.addChildIfAny(
-                makeRc<SvgShapeFragment>(
-                    box,
-                    _resolveShape(*box.style),
-                    resolvedStrokeWidth
-                )
+                Some(makeRc<SvgShapeFragment>(box, _resolveShape(*box.style), resolvedStrokeWidth))
             );
             break;
 
@@ -176,28 +163,29 @@ struct SvgFormatingContext : FormatingContext {
                 {resolvedRect.x, resolvedRect.y},
                 {resolvedRect.width, resolvedRect.height}
             );
-            fragBuilder.addChildIfAny(root);
+            fragBuilder.addChildIfAny(Some(root));
         } else if (box.isSvgForeignObjectBox()) {
             auto resolvedRect = _resolveRectangle(*box.style, resolveTo);
 
             Input childInput{
                 .generateFragment = true,
                 .usedSpacings = {},
-                .knownSize = {resolvedRect.width, resolvedRect.height},
+                .knownSize = {
+                    Some(resolvedRect.width),
+                    Some(resolvedRect.height),
+                },
                 .position = {resolvedRect.x, resolvedRect.y},
             };
 
             auto output = layoutBorderBox(tree, box, childInput);
-
-            if (auto [frag] = output.fragment)
-                fragBuilder.addChildIfAny(frag);
+            fragBuilder.addChildIfAny(output.fragment);
 
         } else if (box.isSvg()) {
             auto nestedGroupFragBuilder = FragmentBuilder{tree, box};
 
             _commitChildren(tree, box, nestedGroupFragBuilder, resolveTo);
 
-            fragBuilder.addChildIfAny(nestedGroupFragBuilder.buildSvgGroup());
+            fragBuilder.addChildIfAny(Some(nestedGroupFragBuilder.buildSvgGroup()));
         } else {
             unreachable();
         }
@@ -216,7 +204,7 @@ struct SvgFormatingContext : FormatingContext {
 
         // 3. Let align be the align value of preserveAspectRatio, or 'xMidYMid' if preserveAspectRatio is not defined.
         // FIXME: preserveAspectRatio still not implemented
-        Opt<SvgAlignAxis> align{SvgAlignAxis{SvgAlignAxis::MID, SvgAlignAxis::MID}};
+        Opt<SvgAlignAxis> align = Some(SvgAlignAxis{SvgAlignAxis::MID, SvgAlignAxis::MID});
 
         // 4. Let meetOrSlice be the meetOrSlice value of preserveAspectRatio, or 'meet' if preserveAspectRatio is not
         // defined or if meetOrSlice is missing from this value.
@@ -329,20 +317,20 @@ struct SvgFormatingContext : FormatingContext {
                 input.pendingVerticalSizes
             )) {
             return {
-                .fragment = fragment,
+                .fragment = Some(fragment),
                 .size = {},
                 .completelyLaidOut = false,
-                .breakpoint = Breakpoint::overflow(),
+                .breakpoint = Some(Breakpoint::overflow()),
                 .firstBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
                 .lastBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
             };
         }
 
         return {
-            .fragment = fragment,
+            .fragment = Some(fragment),
             .size = size,
             .completelyLaidOut = true,
-            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
+            .breakpoint = Some(Breakpoint::bottomOfMonolithicBox(box)),
             .firstBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
             .lastBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
         };

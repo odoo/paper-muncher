@@ -22,8 +22,8 @@ export struct FontFace {
 
     Union<None, FontStyle, Range<Angle>> style = FontStyle{FontStyle::NORMAL};
 
-    Opt<Range<Gfx::FontWeight>> weight = Range<Gfx::FontWeight>::emptyAt(Gfx::FontWeight::REGULAR);
-    Opt<Range<FontWidth>> width = Range<FontWidth>::emptyAt(FontWidth::NORMAL);
+    Opt<Range<Gfx::FontWeight>> weight = Some(Range<Gfx::FontWeight>::emptyAt(Gfx::FontWeight::REGULAR));
+    Opt<Range<FontWidth>> width = Some(Range<FontWidth>::emptyAt(FontWidth::NORMAL));
 
     Vec<Range<Rune>> unicodeRange;
 
@@ -144,7 +144,7 @@ export struct SrcFontDescriptor {
                     return Error::invalidData("unexpected end of input");
 
                 if (formatScan.peek() == Css::Token::STRING) {
-                    fontSrc.format = formatScan.next().token.data;
+                    fontSrc.format = Some(formatScan.next().token.data);
                 } else if (
                     formatScan.peek() == Css::Token::ident("collection") or
                     formatScan.peek() == Css::Token::ident("opentype") or
@@ -154,7 +154,7 @@ export struct SrcFontDescriptor {
                     formatScan.peek() == Css::Token::ident("woff") or
                     formatScan.peek() == Css::Token::ident("woff2")
                 ) {
-                    fontSrc.format = formatScan.next().token.data;
+                    fontSrc.format = Some(formatScan.next().token.data);
                 }
             }
 
@@ -241,14 +241,11 @@ export struct FontWeightFontDescriptor {
 
         auto val = parseValue<Gfx::FontWeight>(c);
         if (not val) {
-            value = Range<Gfx::FontWeight>::emptyAt(weight);
+            value = Some(Range<Gfx::FontWeight>::emptyAt(weight));
             return Ok();
         }
 
-        value = Range<Gfx::FontWeight>::fromStartEnd(
-            weight,
-            val.unwrap()
-        );
+        value = Some(Range<Gfx::FontWeight>::fromStartEnd(weight, val.unwrap()));
 
         return Ok();
     }
@@ -277,11 +274,11 @@ export struct FontWidthFontDescriptor {
 
         auto val = parseValue<FontWidth>(c);
         if (not val) {
-            value = Range<FontWidth>::emptyAt(width);
+            value = Some(Range<FontWidth>::emptyAt(width));
             return Ok();
         }
 
-        value = Range<FontWidth>::fromStartEnd(width, val.unwrap());
+        value = Some(Range<FontWidth>::fromStartEnd(width, val.unwrap()));
 
         return Ok();
     }
@@ -348,7 +345,7 @@ export struct FontNamedInstanceFontDescriptor {
         if (c.skip(Css::Token::ident("auto"))) {
             value = NONE;
         } else {
-            value = try$(parseValue<String>(c));
+            value = Some(try$(parseValue<String>(c)));
         }
 
         return Ok();
@@ -405,7 +402,7 @@ export struct AscentOverrideFontDescriptor {
         if (c.skip(Css::Token::ident("normal"))) {
             value = NONE;
         } else {
-            value = try$(parseValue<Percent>(c));
+            value = Some(try$(parseValue<Percent>(c)));
         }
 
         return Ok();
@@ -430,7 +427,7 @@ export struct DescentOverrideStyleProp {
         if (c.skip(Css::Token::ident("normal"))) {
             value = NONE;
         } else {
-            value = try$(parseValue<Percent>(c));
+            value = Some(try$(parseValue<Percent>(c)));
         }
 
         return Ok();
@@ -454,7 +451,7 @@ export struct LineGapOverrideFontDescriptor {
         if (c.skip(Css::Token::ident("normal"))) {
             value = NONE;
         } else {
-            value = try$(parseValue<Percent>(c));
+            value = Some(try$(parseValue<Percent>(c)));
         }
 
         return Ok();
@@ -471,7 +468,7 @@ export struct SizeAdjustFontDescriptor {
     static Percent initial() { return Percent{100}; }
 
     void apply(FontFace& f) const {
-        f.sizeAdjust = value;
+        f.sizeAdjust = Some(value);
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {

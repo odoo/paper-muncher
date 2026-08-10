@@ -209,16 +209,16 @@ export struct VerticalAlignProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<VerticalAlignProperty>(self(), Value{.alignmentBaseline = Keywords::BASELINE});
+            return makeRc<VerticalAlignProperty>(self(), Value{.alignmentBaseline = Some(Keywords::BASELINE)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<VerticalAlignProperty>(
                 self(),
                 Value{
-                    c.inline_->baselineSource,
-                    c.inline_->alignmentBaseline,
-                    c.inline_->baselineShift,
+                    Some(c.inline_->baselineSource),
+                    Some(c.inline_->alignmentBaseline),
+                    Some(c.inline_->baselineShift),
                 }
             );
         }
@@ -233,11 +233,11 @@ export struct VerticalAlignProperty : Property {
                 auto maybeFirstOrLast = parseValue<Union<Keywords::First, Keywords::Last>>(c);
                 if (maybeFirstOrLast) {
                     if (not value.baselineSource) {
-                        value.baselineSource = maybeFirstOrLast.unwrap().visit(
+                        value.baselineSource = Some(maybeFirstOrLast.unwrap().visit(
                             [](auto& v) -> BaselineSource {
                                 return v;
                             }
-                        );
+                        ));
                         continue;
                     }
 
@@ -247,7 +247,7 @@ export struct VerticalAlignProperty : Property {
                 auto maybeAlignmentBaseline = parseValue<AlignmentBaseline>(c);
                 if (maybeAlignmentBaseline) {
                     if (not value.alignmentBaseline) {
-                        value.alignmentBaseline = maybeAlignmentBaseline.unwrap();
+                        value.alignmentBaseline = Some(maybeAlignmentBaseline.unwrap());
                         continue;
                     }
 
@@ -257,7 +257,7 @@ export struct VerticalAlignProperty : Property {
                 auto maybeBaselineShift = parseValue<BaselineShift>(c);
                 if (maybeBaselineShift) {
                     if (not value.baselineShift) {
-                        value.baselineShift = maybeBaselineShift.unwrap();
+                        value.baselineShift = Some(maybeBaselineShift.unwrap());
                         continue;
                     }
 

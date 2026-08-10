@@ -264,7 +264,7 @@ export struct TableFormatingContext : FormatingContext {
         if (tableBoxCursor.ended())
             return NONE;
 
-        return tableBoxCursor - tableBoxChildren.begin();
+        return Some(tableBoxCursor - tableBoxChildren.begin());
     }
 
     // https://html.spec.whatwg.org/multipage/tables.html#forming-a-table
@@ -387,11 +387,11 @@ export struct TableFormatingContext : FormatingContext {
             Vec<AxisAndGroupsIdxs> helper{Buf<AxisAndGroupsIdxs>::init(len)};
             for (usize groupIdx = 0; groupIdx < groups.len(); groupIdx++) {
                 for (usize i = groups[groupIdx].start; i <= groups[groupIdx].end; ++i)
-                    helper[i].groupIdx = groupIdx;
+                    helper[i].groupIdx = Some(groupIdx);
             }
             for (usize axisIdx = 0; axisIdx < axes.len(); axisIdx++) {
                 for (usize i = axes[axisIdx].start; i <= axes[axisIdx].end; ++i)
-                    helper[i].axisIdx = axisIdx;
+                    helper[i].axisIdx = Some(axisIdx);
             }
             return helper;
         }
@@ -780,7 +780,7 @@ export struct TableFormatingContext : FormatingContext {
         if (useBordersCollapse) {
             bordersStyleGrid.init(grid.size, box.style->color);
             computeBordersStructsCollapse(tree, box);
-            boxBorderMapping = Map<usize, UsedBorders>{};
+            boxBorderMapping = Some(Map<usize, UsedBorders>{});
         } else
             computeBordersStructsSeparate(tree);
     }
@@ -846,7 +846,7 @@ export struct TableFormatingContext : FormatingContext {
 
             if (auto widthCalc = width.is<Calc<PercentOr<Length>>>()) {
                 for (usize x = col.start; x <= col.end; ++x) {
-                    colWidthOrNone[x] = resolve(tree, col.el, *widthCalc, tableUsedWidth);
+                    colWidthOrNone[x] = Some(resolve(tree, col.el, *widthCalc, tableUsedWidth));
                 }
             }
             // AUTO case: do nothing
@@ -887,7 +887,7 @@ export struct TableFormatingContext : FormatingContext {
                 //        but should we subtract the already computed from
                 //        cellWidth before division?
                 if (colWidthOrNone[x] == NONE)
-                    colWidthOrNone[x] = cellWidth / Au{colSpan};
+                    colWidthOrNone[x] = Some(cellWidth / Au{colSpan});
             }
         }
 
@@ -905,12 +905,12 @@ export struct TableFormatingContext : FormatingContext {
                 Au toDistribute = (tableUsedWidth - fixedWidthToAccount - sumColsWidths) / emptyCols;
                 for (auto& w : colWidthOrNone)
                     if (w == NONE)
-                        w = toDistribute;
+                        w = Some(toDistribute);
             }
         } else if (sumColsWidths < tableUsedWidth - fixedWidthToAccount) {
             Au toDistribute = (tableUsedWidth - fixedWidthToAccount - sumColsWidths);
             for (auto& w : colWidthOrNone) {
-                w = w.unwrap() + toDistribute * (w.unwrap() / sumColsWidths);
+                w = Some(w.unwrap() + toDistribute * (w.unwrap() / sumColsWidths));
             }
         }
 
@@ -1106,7 +1106,7 @@ export struct TableFormatingContext : FormatingContext {
 
     Pair<Vec<Au>> computeIntrinsicMinMaxAutoWidths(Tree& tree, usize size) {
         if (not intrinsicSizes)
-            intrinsicSizes = computeMinMaxAutoWidths(tree, size, 0_au);
+            intrinsicSizes = Some(computeMinMaxAutoWidths(tree, size, 0_au));
         return *intrinsicSizes;
     }
 
@@ -1263,7 +1263,7 @@ export struct TableFormatingContext : FormatingContext {
                     *cell.box,
                     {
                         .usedSpacings = usedSpacings,
-                        .knownSize = {colWidth[j], NONE},
+                        .knownSize = {Some(colWidth[j]), NONE},
                         .containingBlock = {tableUsedWidth, 0_au},
                     }
                 );
@@ -1338,7 +1338,7 @@ export struct TableFormatingContext : FormatingContext {
             if (input.intrinsic == IntrinsicSize::AUTO) {
                 CacheParametersFromInput inputCacheParameters{input};
                 if (lastInput != inputCacheParameters) {
-                    lastInput = inputCacheParameters;
+                    lastInput = Some(inputCacheParameters);
                     // bad code
                     computeAutoColWidths(tree, input.knownSize.x, input.capmin.unwrapOr(0_au), input.containingBlock.x);
                 }
@@ -1452,8 +1452,7 @@ export struct TableFormatingContext : FormatingContext {
         Opt<Au> verticalSize;
         if (not boxStartedInPrevFragment) {
             verticalSize =
-                rowHeightPref.query(cell.anchorIdx.y, cell.anchorIdx.y + rowSpan - 1) +
-                spacing.y * (rowSpan - 1);
+                Some(rowHeightPref.query(cell.anchorIdx.y, cell.anchorIdx.y + rowSpan - 1) + spacing.y * (rowSpan - 1));
         }
 
         // TODO: In CSS 2.2, the height of a cell box is the minimum
@@ -1467,7 +1466,7 @@ export struct TableFormatingContext : FormatingContext {
 
         auto collapsedBorders =
             useBordersCollapse
-                ? buildUsedCollapsedBordersForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, colSpan)
+                ? Some(buildUsedCollapsedBordersForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, colSpan))
                 : Opt<UsedBorders>{NONE};
 
         UsedSpacings usedSpacings{
@@ -1506,7 +1505,7 @@ export struct TableFormatingContext : FormatingContext {
             .generateFragment = input.generateFragment,
             .usedSpacings = usedSpacings,
             .knownSize = {
-                colWidthPref.query(j, j + colSpan - 1) + spacing.x * (colSpan - 1),
+                Some(colWidthPref.query(j, j + colSpan - 1) + spacing.x * (colSpan - 1)),
                 verticalSize,
             },
             .position = position,
@@ -1707,7 +1706,7 @@ export struct TableFormatingContext : FormatingContext {
 
         if (tree.fc.isDiscoveryMode()) {
             completelyLaidOut = true;
-            rowBreakpoint = Breakpoint();
+            rowBreakpoint = Some(Breakpoint());
 
             if (shouldRepeatHeaderAndFooter)
                 input = input.addPendingVerticalSize(footerSize.y);

@@ -126,7 +126,7 @@ struct InlineFormatingContext : FormatingContext {
 
                     auto placeholder = makeRc<PlaceholderFragment>(atomicBox, staticPosRect);
 
-                    fragBuilder.addChildIfAny(placeholder);
+                    fragBuilder.addChildIfAny(Some(placeholder));
                     outOfFlowChildren.pushBack(placeholder);
                 }
 
@@ -152,8 +152,8 @@ struct InlineFormatingContext : FormatingContext {
                 .generateFragment = input.generateFragment,
                 .usedSpacings = usedSpacings,
                 .knownSize = {
-                    boxStrutCell->size.x,
-                    boxStrutCell->size.y
+                    Some(boxStrutCell->size.x),
+                    Some(boxStrutCell->size.y)
                 },
                 .position = input.position + positionInProse,
                 .containingBlock = childContainingBlock,
@@ -193,7 +193,7 @@ struct InlineFormatingContext : FormatingContext {
                 .fragment = fragBuilder.buildBoxFromInput(input, {}),
                 .size = {},
                 .completelyLaidOut = false,
-                .breakpoint = Breakpoint::overflow()
+                .breakpoint = Some(Breakpoint::overflow())
             };
         }
 
@@ -206,7 +206,7 @@ struct InlineFormatingContext : FormatingContext {
             .fragment = fragBuilder.buildBoxFromInput(input, outputSize),
             .size = outputSize,
             .completelyLaidOut = true,
-            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
+            .breakpoint = Some(Breakpoint::bottomOfMonolithicBox(box)),
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,
             .outOfFlowStash = std::move(outOfFlowChildren),

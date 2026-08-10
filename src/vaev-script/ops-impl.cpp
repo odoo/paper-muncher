@@ -206,9 +206,9 @@ Except<Boolean> createDataProperty(Object& obj, PropertyKey propertyKey, Value v
     // 1. Let newDesc be the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
     auto newDesc = PropertyDescriptor{
         .value = value,
-        .writable = true,
-        .enumerable = true,
-        .configurable = true,
+        .writable = Some(true),
+        .enumerable = Some(true),
+        .configurable = Some(true),
     };
 
     // 2. Return ? obj.[[DefineOwnProperty]](propertyKey, newDesc).

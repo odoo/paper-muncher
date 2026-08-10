@@ -71,7 +71,7 @@ export struct FragmentBuilder {
         if (not input.generateFragment)
             return NONE;
 
-        return buildBox(input.position, size, input.usedSpacings);
+        return Some(buildBox(input.position, size, input.usedSpacings));
     }
 };
 

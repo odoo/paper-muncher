@@ -49,7 +49,7 @@ export using SvgPaint = Opt<Color>;
 Opt<Gfx::Color> resolve(SvgPaint color, Gfx::Color currentColor) {
     if (color == NONE)
         return NONE;
-    return Vaev::resolve(color.unwrap(), currentColor);
+    return Some(Vaev::resolve(color.unwrap(), currentColor));
 }
 
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
@@ -84,7 +84,7 @@ export struct SvgProps {
     PercentOr<Length> strokeWidth = Length{1_au};
     Number strokeOpacity = 1;
     Union<String, None> d = NONE;
-    SvgPaint fill = Gfx::BLACK;
+    SvgPaint fill = Some(Gfx::BLACK);
     SvgPaint stroke = NONE;
     Opt<SvgViewBox> viewBox = NONE;
 
@@ -116,7 +116,7 @@ struct ValueParser<SvgPaint> {
         if (c.skip(Css::Token::ident("none")))
             return Ok(NONE);
 
-        return Ok(try$(parseValue<Color>(c)));
+        return Ok(Some(try$(parseValue<Color>(c))));
     }
 };
 

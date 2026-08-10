@@ -35,7 +35,7 @@ export struct PseudoElement : Tree<PseudoElement> {
     Style::CounterSet counters = {};
 
     PseudoElement(Symbol type, Rc<Style::ComputedValues> computedValues)
-        : type(type), _computedValues(computedValues) {}
+        : type(type), _computedValues(Some(computedValues)) {}
 
     Rc<Style::ComputedValues> computedValues() const {
         return _computedValues.unwrap("unstyled pseudo-element");
@@ -143,13 +143,13 @@ export struct Element : Node {
         auto attr = this->attributes.lookup(name);
         if (attr == NONE)
             return NONE;
-        return (*attr)->value;
+        return Some((*attr)->value);
     }
 
     Opt<Str> getAttributeUnqualified(Symbol name) const {
         for (auto const& [qualifiedName, attr] : this->attributes.iterItems())
             if (qualifiedName.name == name)
-                return attr->value;
+                return Some(attr->value);
         return NONE;
     }
 
