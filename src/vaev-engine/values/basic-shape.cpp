@@ -440,7 +440,7 @@ struct ValueParser<BasicShape> {
         resultShape.referenceBox = box.unwrapOr(Keywords::BORDER_BOX);
 
         if (shape)
-            resultShape.shape = shape.unwrap();
+            resultShape.shape = Some(shape.unwrap());
 
         return Ok(resultShape);
     }

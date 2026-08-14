@@ -10,7 +10,7 @@ using namespace Karm;
 using namespace Karm::Literals;
 
 Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
-    auto portOption = Cli::option<isize>('p', "port"s, "TCP port to listen to (default: 4444)."s, 4444);
+    auto portOption = Cli::option<isize>(Some('p'), "port"s, "TCP port to listen to (default: 4444)."s, 4444);
     Cli::Section serverSection = {"Server Options"s, {portOption}};
 
     Cli::Command cmd{

@@ -43,7 +43,7 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
             .fragment = fragBuilder.buildBoxFromInput(input, currentBoxSize),
             .size = currentBoxSize,
             .completelyLaidOut = false,
-            .breakpoint = currentBreakpoint
+            .breakpoint = Some(currentBreakpoint)
         };
     }
 
@@ -73,9 +73,7 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
             .fragment = fragBuilder.buildBoxFromInput(input, currentBoxSize),
             .size = currentBoxSize,
             .completelyLaidOut = false,
-            .breakpoint = Breakpoint::forced(
-                childIndex + 1
-            )
+            .breakpoint = Some(Breakpoint::forced(childIndex + 1))
         };
     }
 
@@ -89,7 +87,7 @@ Res<None, Output> processBreakpointsBeforeChild(FragmentBuilder& fragBuilder, us
             .fragment = fragBuilder.buildBoxFromInput(input, currentSize),
             .size = currentSize,
             .completelyLaidOut = false,
-            .breakpoint = Breakpoint::forced(endAt)
+            .breakpoint = Some(Breakpoint::forced(endAt))
         };
     }
 
@@ -98,7 +96,10 @@ Res<None, Output> processBreakpointsBeforeChild(FragmentBuilder& fragBuilder, us
 
 Output fragmentEmptyBox(Fragmentainer const& fc, FragmentBuilder& fragBuilder, Input input) {
     // put this here instead of in layout.py since we want to know if its the empty box case
-    Vec2Au knownSize{input.knownSize.x.unwrapOr(0_au), input.knownSize.y.unwrapOr(0_au)};
+    Vec2Au knownSize{
+        input.knownSize.width.unwrapOr(0_au),
+        input.knownSize.height.unwrapOr(0_au),
+    };
     if (fc.isDiscoveryMode()) {
         if (fc.acceptsFit(
                 input.position.y,
@@ -116,7 +117,7 @@ Output fragmentEmptyBox(Fragmentainer const& fc, FragmentBuilder& fragBuilder, I
                 .fragment = fragBuilder.buildBoxFromInput(input, {}),
                 .size = {},
                 .completelyLaidOut = false,
-                .breakpoint = Breakpoint::overflow()
+                .breakpoint = Some(Breakpoint::overflow())
             };
         }
     } else {
@@ -152,7 +153,7 @@ Opt<Au> _tableWrapperFitContentWidth(Tree& tree, Box& wrapper, Au availableWidth
         if (not gridBox.style->sizing->width.is<Keywords::Auto>())
             return NONE;
 
-        return computeFitContentInlineSize(tree, wrapper, availableWidth);
+        return Some(computeFitContentInlineSize(tree, wrapper, availableWidth));
     }
 
     return NONE;
@@ -176,10 +177,10 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, In
                 // When the inline size is not known, we cannot enforce it to the child. (?)
                 Au availableWidth = blockInlineSize.unwrap() - usedSpacings.margin.horizontal();
                 if (child.style->display == Display::TABLE) {
-                    childInput.knownSize.width = _tableWrapperFitContentWidth(tree, child, availableWidth)
-                                                     .unwrapOr(availableWidth);
+                    childInput.knownSize.width = Some(_tableWrapperFitContentWidth(tree, child, availableWidth)
+                                                          .unwrapOr(availableWidth));
                 } else {
-                    childInput.knownSize.width = availableWidth;
+                    childInput.knownSize.width = Some(availableWidth);
                 }
             }
         } else {
@@ -241,7 +242,7 @@ struct BlockFormatingContext : FormatingContext {
                     tree, c, IntrinsicSize::MIN_CONTENT
                 );
 
-                Vec2Au containingBlock = {inlineSize, input.knownSize.y.unwrapOr(0_au)};
+                Vec2Au containingBlock = {inlineSize, input.knownSize.height.unwrapOr(0_au)};
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, c, containingBlock),
                     .borders = computeBorders(tree, c),
@@ -296,7 +297,7 @@ struct BlockFormatingContext : FormatingContext {
 
                     auto placeholder = makeRc<PlaceholderFragment>(c, staticPosRect);
 
-                    fragBuilder.addChildIfAny(placeholder);
+                    fragBuilder.addChildIfAny(Some(placeholder));
                     outOfFlowChildren.pushBack(placeholder);
                 }
 
@@ -322,7 +323,7 @@ struct BlockFormatingContext : FormatingContext {
             // if (c.style->float_ != Float::NONE)
             //     continue;
 
-            auto childContainingBlock = Vec2Au{inlineSize, input.knownSize.y.unwrapOr(0_au)};
+            auto childContainingBlock = Vec2Au{inlineSize, input.knownSize.height.unwrapOr(0_au)};
 
             auto usedSpacings = UsedSpacings{
                 .padding = computePaddings(tree, c, childContainingBlock),
@@ -355,12 +356,12 @@ struct BlockFormatingContext : FormatingContext {
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
             //       and avoid duplicating the layout code
             if (c.style->display == Display::Internal::TABLE_BOX)
-                childInput.capmin = _computeCapmin(tree, box, input, inlineSize);
+                childInput.capmin = Some(_computeCapmin(tree, box, input, inlineSize));
 
-            _populateChildSpecifiedSizes(tree, c, input, childInput, usedSpacings, input.knownSize.x);
+            _populateChildSpecifiedSizes(tree, c, input, childInput, usedSpacings, input.knownSize.width);
 
             if (not c.isRemovedFromFlow())
-                _resolveAutoHorizontalMargins(c, childInput, usedSpacings, input.knownSize.x);
+                _resolveAutoHorizontalMargins(c, childInput, usedSpacings, input.knownSize.width);
 
             childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
             if (box.style->text->align == TextAlign::BLOCK_CENTER)
@@ -370,7 +371,7 @@ struct BlockFormatingContext : FormatingContext {
                 // NOSPEC: The spec doesn't define where the marker should be placed.
                 auto width = computeIntrinsicContentSize(tree, c, IntrinsicSize::MAX_CONTENT).x;
                 childInput.position.x -= width * 2.5;
-                childInput.knownSize.x = width;
+                childInput.knownSize.width = Some(width);
             }
 
             if (c.style->position == Keywords::RELATIVE) {
@@ -418,15 +419,15 @@ struct BlockFormatingContext : FormatingContext {
         }
 
         auto size = Vec2Au{
-            input.knownSize.x.unwrapOr(inlineSize),
-            input.knownSize.y.unwrapOr(blockSize)
+            input.knownSize.width.unwrapOr(inlineSize),
+            input.knownSize.height.unwrapOr(blockSize)
         };
 
         return {
             .fragment = fragBuilder.buildBoxFromInput(input, size),
             .size = size,
             .completelyLaidOut = blockWasCompletelyLaidOut,
-            .breakpoint = currentBreakpoint,
+            .breakpoint = Some(currentBreakpoint),
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,
             .outOfFlowStash = std::move(outOfFlowChildren),

@@ -132,9 +132,9 @@ Opt<Sst> consumeRule(Lexer& lex, Diag::Collector& diags) {
             return NONE;
 
         case Token::LEFT_CURLY_BRACKET: {
-            rule.prefix = std::move(prefix);
+            rule.prefix = Some(std::move(prefix));
             rule.content = consumeDeclarationBlock(lex, diags);
-            return rule;
+            return Some(rule);
         }
 
         default:
@@ -195,7 +195,7 @@ Sst consumeAtRule(Lexer& lex, Diag::Collector& diags) {
         switch (t.type) {
         case Token::SEMICOLON:
             lex.next();
-            atRule.prefix = prefix;
+            atRule.prefix = Some(std::move(prefix));
             return atRule;
 
         case Token::END_OF_FILE:
@@ -205,11 +205,11 @@ Sst consumeAtRule(Lexer& lex, Diag::Collector& diags) {
             );
 
             lex.next();
-            atRule.prefix = prefix;
+            atRule.prefix = Some(std::move(prefix));
             return atRule;
 
         case Token::LEFT_CURLY_BRACKET:
-            atRule.prefix = std::move(prefix);
+            atRule.prefix = Some(std::move(prefix));
             atRule.content = consumeDeclarationBlock(lex, diags);
             return atRule;
 
@@ -371,13 +371,13 @@ export Opt<Sst> consumeDeclaration(Lexer& lex, Diag::Collector& diags) {
     decl.content = std::move(content);
     decl.important = important;
 
-    return decl;
+    return Some(decl);
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-function
 export Sst consumeFunc(Lexer& lex, Diag::Collector& diags) {
     Sst fn = Sst::FUNC;
-    fn.prefix = lex.next();
+    fn.prefix = Some(lex.next());
 
     while (true) {
         auto t = lex.peek();

@@ -81,10 +81,10 @@ Opt<Str> directInnerText(Dom::Element const& el) {
     if (auto text = el.firstChild()->is<Dom::Text>()) {
         auto data = text->data();
         if (Re::match(Re::zeroOrMore(Re::space()), data) == Match::YES)
-            return ""s;
+            return Some(""s);
         if (data.len() > 64 or contains(data, "\n"s))
-            return "…";
-        return data;
+            return Some("…");
+        return Some(data);
     }
     return NONE;
 }
@@ -151,34 +151,36 @@ Str displayToBadge(Display d) {
 
 Opt<Ui::Child> itemHeader(Gc::Ref<Dom::Node> n, Ui::Action<InspectorAction> a, bool expanded) {
     if (n->is<Dom::Document>()) {
-        return Ui::codeMedium("#document");
+        return Some(Ui::codeMedium("#document"));
     } else if (n->is<Dom::DocumentType>()) {
-        return Ui::codeMedium("#document-type");
+        return Some(Ui::codeMedium("#document-type"));
     } else if (auto tx = n->is<Dom::Text>()) {
         auto data = tx->data();
         if (Re::match(Re::zeroOrMore(Re::space()), data) == Match::YES)
             return NONE;
-        return Ui::codeMedium(Ui::GRAY300, "{}", data);
+        return Some(Ui::codeMedium(Ui::GRAY300, "{}", data));
     } else if (auto el = n->is<Dom::Element>()) {
         if (not el->hasChildren())
-            return elementStartTag(*el, false);
+            return Some(elementStartTag(*el, false));
 
         auto displayBagde = displayToBadge(el->computedValues()->display);
-        return Ui::hflow(
-            Ui::icon(
-                expanded ? Mdi::CHEVRON_DOWN : Mdi::CHEVRON_RIGHT
-            ) |
-                Ui::button(
-                    [n, a](auto& btn) {
-                        a(btn, ExpandNode{n});
-                    },
-                    Ui::ButtonStyle::subtle()
-                ),
-            elementStartTag(*el, expanded),
-            Kr::badge(Ui::GRAY500, displayBagde) | Ui::cond(displayBagde != "")
+        return Some(
+            Ui::hflow(
+                Ui::icon(
+                    expanded ? Mdi::CHEVRON_DOWN : Mdi::CHEVRON_RIGHT
+                ) |
+                    Ui::button(
+                        Some([n, a](auto& btn) {
+                            a(btn, ExpandNode{n});
+                        }),
+                        Ui::ButtonStyle::subtle()
+                    ),
+                elementStartTag(*el, expanded),
+                Kr::badge(Ui::GRAY500, displayBagde) | Ui::cond(displayBagde != "")
+            )
         );
     } else if (auto c = n->is<Dom::Comment>()) {
-        return Ui::codeMedium(Gfx::GREEN, "<!-- {} -->", c->data());
+        return Some(Ui::codeMedium(Gfx::GREEN, "<!-- {} -->", c->data()));
     } else {
         unreachable();
     }
@@ -193,16 +195,16 @@ Ui::Child itemFooter(Gc::Ref<Dom::Node> n, isize ident) {
 Ui::ButtonStyle selected() {
     return {
         .idleStyle = {
-            .backgroundFill = Ui::GRAY800,
+            .backgroundFill = Some(Ui::GRAY800),
             .foregroundFill = Ui::GRAY300,
         },
         .hoverStyle = {
             .borderWidth = 1,
-            .backgroundFill = Ui::GRAY600,
+            .backgroundFill = Some(Ui::GRAY600),
         },
         .pressStyle = {
             .borderWidth = 1,
-            .backgroundFill = Ui::GRAY700,
+            .backgroundFill = Some(Ui::GRAY700),
         },
     };
 }
@@ -212,12 +214,14 @@ Opt<Ui::Child> item(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<Insp
     auto header = itemHeader(n, a, expanded);
     if (not header)
         return NONE;
-    return Ui::button(
-        [n, a](auto& btn) {
-            a(btn, SelectNode{n});
-        },
-        style,
-        header.unwrap() | idented(ident)
+    return Some(
+        Ui::button(
+            Some([n, a](auto& btn) {
+                a(btn, SelectNode{n});
+            }),
+            style,
+            header.unwrap() | idented(ident)
+        )
     );
 }
 
@@ -235,7 +239,7 @@ Opt<Ui::Child> node(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<Insp
         }
         children.pushBack(itemFooter(n, ident));
     }
-    return Ui::vflow(children);
+    return Some(Ui::vflow(children));
 }
 
 Ui::Child computedStyles(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::Action<InspectorAction> send) {

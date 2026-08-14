@@ -28,8 +28,8 @@ struct ReplacedFormatingContext : FormatingContext {
             auto naturalSize = (*image)->bound().size().cast<Au>();
 
             auto naturalDimensions = ObjectNaturalDimensions{
-                .size = {naturalSize.width, naturalSize.height},
-                .aspectRatio = naturalSize.width / naturalSize.height,
+                .size = {Some(naturalSize.width), Some(naturalSize.height)},
+                .aspectRatio = Some(naturalSize.width / naturalSize.height),
             };
 
             auto specifiedSize = resolvePreferredSize(tree, box, input.containingBlock);
@@ -50,7 +50,7 @@ struct ReplacedFormatingContext : FormatingContext {
                 .fragment = fragBuilder.buildBoxFromInput(input, {}),
                 .size = {},
                 .completelyLaidOut = false,
-                .breakpoint = Breakpoint::overflow(),
+                .breakpoint = Some(Breakpoint::overflow()),
                 .firstBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
                 .lastBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
             };
@@ -60,7 +60,7 @@ struct ReplacedFormatingContext : FormatingContext {
             .fragment = fragBuilder.buildBoxFromInput(input, size),
             .size = size,
             .completelyLaidOut = true,
-            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
+            .breakpoint = Some(Breakpoint::bottomOfMonolithicBox(box)),
             .firstBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
             .lastBaselineSet = BaselinePositionsSet::fromSinglePosition(size.y),
         };

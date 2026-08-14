@@ -44,7 +44,7 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
         tree,
         {
             .generateFragment = true,
-            .knownSize = {viewport.small.width, NONE},
+            .knownSize = {Some(viewport.small.width), NONE},
             .availableSpace = {viewport.small.width, 0_au},
             .containingBlock = {viewport.small.width, viewport.small.height},
         }

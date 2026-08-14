@@ -365,13 +365,13 @@ export Opt<Specificity> matchSelector(Selector const& selector, Gc::Ref<Dom::Ele
         Opt<Specificity> specificity;
         for (auto& inner : n->inners) {
             if (_matchSelector(inner, element, pseudoElement))
-                specificity = max(specificity, spec(inner));
+                specificity = Some(max(specificity.unwrapOr(Specificity::ZERO), spec(inner)));
         }
         return specificity;
     }
 
     if (_matchSelector(selector, element, pseudoElement))
-        return spec(selector);
+        return Some(spec(selector));
 
     return NONE;
 }

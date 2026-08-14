@@ -77,7 +77,7 @@ struct _ElementStack {
     Opt<Tuple<Gc::Ref<Dom::Element>, isize>> findLast(Dom::QualifiedName const& name) const {
         for (isize i = len() - 1; i >= 0; --i) {
             if (_vec[i]->qualifiedName == name) {
-                return Tuple{_vec[i], i};
+                return Some(Tuple{_vec[i], i});
             }
         }
 
@@ -197,7 +197,7 @@ struct _ActiveFormattingElementList {
     Opt<Entry> findElement(Gc::Ref<Dom::Element> const& element) {
         for (usize i = 0; i < entries.len(); i++) {
             if (entries[i] != MARKER and entries[i].element() == element) {
-                return entries[i];
+                return Some(entries[i]);
             }
         }
 
@@ -237,7 +237,7 @@ struct _ActiveFormattingElementList {
 
             if (sameQualifiedName and sameAttributes) {
                 if (not firstSimilarElement) {
-                    firstSimilarElement = entries[i].element();
+                    firstSimilarElement = Some(entries[i].element());
                 }
 
                 similarElements++;
@@ -306,7 +306,7 @@ struct _ActiveFormattingElementList {
         for (usize i = 0; i < entries.len(); i++) {
             if (auto const& f = entries[i].is<FormattingElement>()) {
                 if (f->element == el) {
-                    return i;
+                    return Some(i);
                 }
             }
         }
@@ -733,7 +733,7 @@ export struct HtmlParser : HtmlSink {
         //    localName, given namespace, null, and is. If will execute script
         //    is true, set the synchronous custom elements flag; otherwise,
         //    leave it unset.
-        auto el = _heap.alloc<Dom::Element>(Dom::QualifiedName{ns, *t.name});
+        auto el = _heap.alloc<Dom::Element>(Dom::QualifiedName{Some(ns), *t.name});
 
         // 10. Append each attribute in the given token to element.
         for (auto& [name, value] : t.attrs) {
@@ -1182,7 +1182,7 @@ export struct HtmlParser : HtmlSink {
         else {
             HtmlToken headToken;
             headToken.type = HtmlToken::START_TAG;
-            headToken.name = "head"_sym;
+            headToken.name = Some("head"_sym);
             _headElement = _insertHtmlElement(headToken);
             _switchTo(Mode::IN_HEAD);
             accept(t, diags);
@@ -1396,7 +1396,7 @@ export struct HtmlParser : HtmlSink {
         auto anythingElse = [&] {
             HtmlToken bodyToken;
             bodyToken.type = HtmlToken::START_TAG;
-            bodyToken.name = "body"_sym;
+            bodyToken.name = Some("body"_sym);
             _insertHtmlElement(bodyToken);
             _switchTo(Mode::IN_BODY);
             accept(t, diags);
@@ -1424,19 +1424,19 @@ export struct HtmlParser : HtmlSink {
         }
 
         // A start tag whose tag name is "html"
-        else if (t.type == HtmlToken::START_TAG and (t.name == "html")) {
+        else if (t.type == HtmlToken::START_TAG and (t.name == "html"_sym)) {
             _acceptIn(Mode::IN_BODY, t, diags);
         }
 
         // A start tag whose tag name is "body"
-        else if (t.type == HtmlToken::START_TAG and (t.name == "body")) {
+        else if (t.type == HtmlToken::START_TAG and (t.name == "body"_sym)) {
             _insertHtmlElement(t);
             _framesetOk = false;
             _switchTo(Mode::IN_BODY);
         }
 
         // A start tag whose tag name is "frameset"
-        else if (t.type == HtmlToken::START_TAG and (t.name == "frameset")) {
+        else if (t.type == HtmlToken::START_TAG and (t.name == "frameset"_sym)) {
             _insertHtmlElement(t);
             _switchTo(Mode::IN_FRAMESET);
         }
@@ -1494,7 +1494,7 @@ export struct HtmlParser : HtmlSink {
         // https://html.spec.whatwg.org/#close-a-p-element
         auto closePElement = [&]() {
             // Generate implied end tags, except for p elements.
-            _generateImpliedEndTags(Html::P_TAG);
+            _generateImpliedEndTags(Some(Html::P_TAG));
 
             // If the current node is not a p element, then this is a parse error.
             if (_currentElement()->qualifiedName != Html::P_TAG)
@@ -1512,7 +1512,7 @@ export struct HtmlParser : HtmlSink {
             // 2. If the current node is an HTML element whose tag name is subject,
             //    and the current node is not in the list of active formatting elements,
             if (
-                _currentElement()->qualifiedName == Dom::QualifiedName{Html::NAMESPACE, subject} and
+                _currentElement()->qualifiedName == Dom::QualifiedName{Some(Html::NAMESPACE), subject} and
                 not _activeFormattingElements.contains(_currentElement())
             ) {
                 // then pop the current node off the stack of open elements and return.
@@ -1574,7 +1574,7 @@ export struct HtmlParser : HtmlSink {
 
                 for (usize i = formattingElementIndex + 1; i < _openElements.len(); i++) {
                     if (_isSpecial(_openElements[i]->qualifiedName)) {
-                        furthestBlock = _openElements[i];
+                        furthestBlock = Some(_openElements[i]);
                         break;
                     }
                 }
@@ -1748,7 +1748,7 @@ export struct HtmlParser : HtmlSink {
             // Otherwise, for each attribute on the token, check to see if the attribute is already present on the top element of the
             // stack of open elements. If it is not, add the attribute and its corresponding value to that element.
             for (auto const& attr : t.attrs) {
-                auto name = Dom::QualifiedName{""_sym, attr.name};
+                auto name = Dom::QualifiedName{Some(""_sym), attr.name};
 
                 if (!_currentElement()->hasAttribute(name)) {
                     _currentElement()->setAttribute(name, attr.value);
@@ -1783,7 +1783,7 @@ export struct HtmlParser : HtmlSink {
             _framesetOk = false;
 
             for (auto const& attr : t.attrs) {
-                auto name = Dom::QualifiedName{""_sym, attr.name};
+                auto name = Dom::QualifiedName{Some(""_sym), attr.name};
 
                 if (!_openElements[1]->hasAttribute(name)) {
                     _openElements[1]->setAttribute(name, attr.value);
@@ -1998,7 +1998,7 @@ export struct HtmlParser : HtmlSink {
                 // If node is a li element, then run these substeps:
                 if (tag == Html::LI_TAG) {
                     // 1. Generate implied end tags, except for li elements.
-                    _generateImpliedEndTags(Html::LI_TAG);
+                    _generateImpliedEndTags(Some(Html::LI_TAG));
 
                     // 2. If the current node is not a li element, then this is a parse error.
                     if (_currentElement()->qualifiedName != Html::LI_TAG) {
@@ -2050,7 +2050,7 @@ export struct HtmlParser : HtmlSink {
                 // If node is a dd element, then run these substeps:
                 if (tag == Html::DD_TAG) {
                     // 1. Generate implied end tags, except for dd elements.
-                    _generateImpliedEndTags(Html::DD_TAG);
+                    _generateImpliedEndTags(Some(Html::DD_TAG));
 
                     // 2. If the current node is not a dd element, then this is a parse error.
                     if (_currentElement()->qualifiedName != Html::DD_TAG) {
@@ -2067,7 +2067,7 @@ export struct HtmlParser : HtmlSink {
 
                 if (tag == Html::DT_TAG) {
                     // 1. Generate implied end tags, except for dt elements.
-                    _generateImpliedEndTags(Html::DT_TAG);
+                    _generateImpliedEndTags(Some(Html::DT_TAG));
 
                     // 2. If the current node is not a dt element, then this is a parse error.
                     if (_currentElement()->qualifiedName != Html::DT_TAG) {
@@ -2148,7 +2148,7 @@ export struct HtmlParser : HtmlSink {
         ) {
             // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name
             // as that of the token,
-            if (not _hasElementInScope(Dom::QualifiedName{Html::NAMESPACE, *t.name})) {
+            if (not _hasElementInScope(Dom::QualifiedName{Some(Html::NAMESPACE), *t.name})) {
                 // then this is a parse error; ignore the token.
                 _raise(diags, t.span, "unexpected end tag");
                 return;
@@ -2167,7 +2167,7 @@ export struct HtmlParser : HtmlSink {
 
             // 3. Pop elements from the stack of open elements until an HTML element with the same tag name as the
             // token has been popped from the stack.
-            _openElements.popUntilOneOf(Dom::QualifiedName{Html::NAMESPACE, *t.name});
+            _openElements.popUntilOneOf(Dom::QualifiedName{Some(Html::NAMESPACE), *t.name});
         }
 
         // An end tag whose tag name is "form"
@@ -2232,7 +2232,7 @@ export struct HtmlParser : HtmlSink {
                 // insert an HTML element for a "p" start tag token with no attributes.
                 _insertHtmlElement(HtmlToken{
                     .type = HtmlToken::START_TAG,
-                    .name = "p"_sym,
+                    .name = Some("p"_sym),
                 });
             }
 
@@ -2252,7 +2252,7 @@ export struct HtmlParser : HtmlSink {
             // Otherwise, run these steps:
 
             // 1. Generate implied end tags, except for li elements.
-            _generateImpliedEndTags(Html::LI_TAG);
+            _generateImpliedEndTags(Some(Html::LI_TAG));
 
             // 2. If the current node is not an li element, then this is a parse error.
             if (_currentElement()->qualifiedName != Html::LI_TAG) {
@@ -2265,7 +2265,7 @@ export struct HtmlParser : HtmlSink {
 
         // An end tag whose tag name is one of: "dd", "dt"
         else if (t.type == HtmlToken::END_TAG and oneOf(t.name, "dd", "dt")) {
-            auto qualifiedName = Dom::QualifiedName{Html::NAMESPACE, *t.name};
+            auto qualifiedName = Dom::QualifiedName{Some(Html::NAMESPACE), *t.name};
 
             // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name
             // as that of the token,
@@ -2278,7 +2278,7 @@ export struct HtmlParser : HtmlSink {
             // Otherwise, run these steps:
 
             // 1. Generate implied end tags, except for HTML elements with the same tag name as the token.
-            _generateImpliedEndTags(qualifiedName);
+            _generateImpliedEndTags(Some(qualifiedName));
 
             // 2. If the current node is not an HTML element with the same tag name as that of the token, then this is a parse error.
             if (_currentElement()->qualifiedName != qualifiedName) {
@@ -2313,7 +2313,7 @@ export struct HtmlParser : HtmlSink {
             _generateImpliedEndTags();
 
             // 2. If the current node is not an HTML element with the same tag name as that of the token, then this is a parse error.
-            if (_currentElement()->qualifiedName != Dom::QualifiedName{Html::NAMESPACE, *t.name}) {
+            if (_currentElement()->qualifiedName != Dom::QualifiedName{Some(Html::NAMESPACE), *t.name}) {
                 // then this is a parse error.
                 _raise(diags, t.span, "unexpected end tag for h1-h6");
             }
@@ -2391,7 +2391,7 @@ export struct HtmlParser : HtmlSink {
         // A start tag whose tag name is one of: "applet", "marquee", "object"
         else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "applet", "marquee", "object")) {
             // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name as that of the token,
-            if (not _hasElementInScope(Dom::QualifiedName{Html::NAMESPACE, *t.name})) {
+            if (not _hasElementInScope(Dom::QualifiedName{Some(Html::NAMESPACE), *t.name})) {
                 // Reconstruct the active formatting elements, if any.
                 _reconstructActiveFormattingElements();
 
@@ -2409,7 +2409,7 @@ export struct HtmlParser : HtmlSink {
         // An end tag token whose tag name is one of: "applet", "marquee", "object"
         else if (t.type == HtmlToken::END_TAG and oneOf(t.name, "applet", "marquee", "object")) {
             // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name as that of the token,
-            if (not _hasElementInScope(Dom::QualifiedName{Html::NAMESPACE, *t.name})) {
+            if (not _hasElementInScope(Dom::QualifiedName{Some(Html::NAMESPACE), *t.name})) {
                 // then this is a parse error;
                 _raise(diags, t.span, "unexpected end tag");
 
@@ -2430,7 +2430,7 @@ export struct HtmlParser : HtmlSink {
 
             // 3. Pop elements from the stack of open elements until an HTML element with the
             // same tag name as the token has been popped from the stack.
-            _openElements.popUntilOneOf(Dom::QualifiedName{Html::NAMESPACE, *t.name});
+            _openElements.popUntilOneOf(Dom::QualifiedName{Some(Html::NAMESPACE), *t.name});
 
             // 4. Clear the list of active formatting elements up to the last marker.
             _activeFormattingElements.clearUpToLastMarker();
@@ -2562,7 +2562,7 @@ export struct HtmlParser : HtmlSink {
             _raise(diags, t.span, "image tag used instead of img tag");
 
             // Change the token's tag name to "img" and reprocess it. (Don't ask.)
-            t.name = "img"_sym;
+            t.name = Some("img"_sym);
             accept(t, diags);
         }
 
@@ -2660,7 +2660,7 @@ export struct HtmlParser : HtmlSink {
             // If the stack of open elements has a select element in scope:
             if (_hasElementInScope(Html::SELECT_TAG)) {
                 // 1. Generate implied end tags except for optgroup elements.
-                _generateImpliedEndTags(Html::OPTGROUP_TAG);
+                _generateImpliedEndTags(Some(Html::OPTGROUP_TAG));
 
                 // 2. If the stack of open elements has an option element in scope,
                 if (_hasElementInScope(Html::OPTION_TAG)) {
@@ -2689,7 +2689,7 @@ export struct HtmlParser : HtmlSink {
             // If the stack of open elements has a select element in scope:
             if (_hasElementInScope(Html::SELECT_TAG)) {
                 // 1. Generate implied end tags except for optgroup elements.
-                _generateImpliedEndTags(Html::OPTGROUP_TAG);
+                _generateImpliedEndTags(Some(Html::OPTGROUP_TAG));
 
                 // 2. If the stack of open elements has an option element in scope or has an optgroup element in scope,
                 if (_hasElementInScope(Html::OPTION_TAG) or _hasElementInScope(Html::OPTGROUP_TAG)) {
@@ -2736,7 +2736,7 @@ export struct HtmlParser : HtmlSink {
             // If the stack of open elements has a ruby element in scope,
             if (_hasElementInScope(Html::RUBY_TAG)) {
                 // then generate implied end tags, except for rtc elements.
-                _generateImpliedEndTags(Html::RTC_TAG);
+                _generateImpliedEndTags(Some(Html::RTC_TAG));
 
                 // If the current node is not now a rtc element or a ruby element,
                 if (not oneOf(_currentElement()->qualifiedName, Html::RTC_TAG, Html::RUBY_TAG)) {
@@ -2819,7 +2819,7 @@ export struct HtmlParser : HtmlSink {
                 // 2. Loop: If node is an HTML element with the same tag name as the token, then:
                 if (node->qualifiedName.name == t.name) {
                     // 1. Generate implied end tags, except for HTML elements with the same tag name as the token.
-                    _generateImpliedEndTags(node->qualifiedName);
+                    _generateImpliedEndTags(Some(node->qualifiedName));
 
                     // 2. If node is not the current node, then this is a parse error.
                     if (node != _currentElement())
@@ -2966,7 +2966,7 @@ export struct HtmlParser : HtmlSink {
             // Insert an HTML element for a "colgroup" start tag token with no attributes, then switch the insertion mode to "in column group".
             HtmlToken colGroupToken;
             colGroupToken.type = HtmlToken::START_TAG;
-            colGroupToken.name = "colgroup"_sym;
+            colGroupToken.name = Some("colgroup"_sym);
             _insertAForeignElement(colGroupToken, Html::NAMESPACE, false);
             _switchTo(Mode::IN_COLUMN_GROUP);
 
@@ -2992,7 +2992,7 @@ export struct HtmlParser : HtmlSink {
             // Insert an HTML element for a "tbody" start tag token with no attributes, then switch the insertion mode to "in table body".
             HtmlToken tableBodyToken;
             tableBodyToken.type = HtmlToken::START_TAG;
-            tableBodyToken.name = "tbody"_sym;
+            tableBodyToken.name = Some("tbody"_sym);
             _insertAForeignElement(tableBodyToken, Html::NAMESPACE, false);
             _switchTo(Mode::IN_TABLE_BODY);
 
@@ -3100,7 +3100,7 @@ export struct HtmlParser : HtmlSink {
             // Insert an HTML element for the token, and set the form element pointer to point to the element created.
             HtmlToken formToken;
             formToken.type = HtmlToken::START_TAG;
-            formToken.name = "form"_sym;
+            formToken.name = Some("form"_sym);
 
             _formElement = _insertAForeignElement(formToken, Html::NAMESPACE, false);
 
@@ -3367,7 +3367,7 @@ export struct HtmlParser : HtmlSink {
             // Insert an HTML element for a "tr" start tag token with no attributes, then switch the insertion mode to "in row".
             HtmlToken tableRowToken;
             tableRowToken.type = HtmlToken::START_TAG;
-            tableRowToken.name = "tr"_sym;
+            tableRowToken.name = Some("tr"_sym);
             _insertAForeignElement(tableRowToken, Html::NAMESPACE, false);
 
             _switchTo(Mode::IN_ROW);
@@ -3378,7 +3378,7 @@ export struct HtmlParser : HtmlSink {
         else if (t.type == HtmlToken::END_TAG and (t.name == "tbody" or t.name == "tfoot" or t.name == "thead")) {
             // If the stack of open elements does not have an element in table scope that is an HTML element with the same
             // tag name as the token, this is a parse error; ignore the token.
-            if (not _hasElementInTableScope(Dom::QualifiedName{Html::NAMESPACE, *t.name})) {
+            if (not _hasElementInTableScope(Dom::QualifiedName{Some(Html::NAMESPACE), *t.name})) {
                 _raise(diags, t.span, "unexpected end tag");
                 return;
             }
@@ -3514,7 +3514,7 @@ export struct HtmlParser : HtmlSink {
             // If the stack of open elements does not have an element in table scope that is an HTML element with the same
             // tag name as the token,
 
-            if (not _hasElementInTableScope(Dom::QualifiedName{Html::NAMESPACE, *t.name})) {
+            if (not _hasElementInTableScope(Dom::QualifiedName{Some(Html::NAMESPACE), *t.name})) {
                 // this is a parse error; ignore the token.
                 _raise(diags, t.span, "unexpected end tag");
                 return;
@@ -3571,7 +3571,7 @@ export struct HtmlParser : HtmlSink {
         if (t.type == HtmlToken::END_TAG and (t.name == "td" or t.name == "th")) {
             // If the stack of open elements does not have an element in table scope that is an HTML element with the same
             // tag name as that of the token,
-            Dom::QualifiedName tokenQualifiedName{Html::NAMESPACE, *t.name};
+            Dom::QualifiedName tokenQualifiedName{Some(Html::NAMESPACE), *t.name};
 
             if (not _hasElementInTableScope(tokenQualifiedName)) {
                 // this is a parse error; ignore the token.
@@ -3626,7 +3626,7 @@ export struct HtmlParser : HtmlSink {
 
             // If the stack of open elements does not have an element in table scope that is an HTML element with the same
             // tag name as the token,
-            if (not _hasElementInTableScope(Dom::QualifiedName{Html::NAMESPACE, *t.name})) {
+            if (not _hasElementInTableScope(Dom::QualifiedName{Some(Html::NAMESPACE), *t.name})) {
                 // this is a parse error; ignore the token.
                 _raise(diags, t.span, "unexpected end tag");
                 return;
@@ -3758,7 +3758,7 @@ export struct HtmlParser : HtmlSink {
         // A comment token
         else if (t.type == HtmlToken::COMMENT) {
             // Insert a comment as the last child of the first element in the stack of open elements (the html element).
-            _insertAComment(t, InsertionLocation{_openElements.bottom(), nullptr});
+            _insertAComment(t, Some(InsertionLocation{_openElements.bottom(), nullptr}));
         }
 
         // A DOCTYPE token
@@ -4107,7 +4107,7 @@ export struct HtmlParser : HtmlSink {
             // If the adjusted current node is an element in the SVG namespace
             if (_adjustedCurrentElement()->qualifiedName.ns == Svg::NAMESPACE) {
                 // and the token's tag name is one of the ones in the first column of the following table, change the tag name to the name given in the corresponding cell in the second column. (This fixes the case of SVG elements that are not all lowercase.)
-                t.name = Svg::qualifiedTagNameCased(t.name->str());
+                t.name = Some(Svg::qualifiedTagNameCased(t.name->str()));
             }
 
             // If the adjusted current node is an element in the SVG namespace, ...

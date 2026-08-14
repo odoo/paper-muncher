@@ -62,9 +62,9 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     };
 
     auto inputsArg = Cli::operand<Vec<Str>>("inputs"s, "Input files (default: stdin)"s, {"-"s});
-    auto outputArg = Cli::option<Str>('o', "output"s, "Output file (default: stdout)"s, "-"s);
+    auto outputArg = Cli::option<Str>(Some('o'), "output"s, "Output file (default: stdout)"s, "-"s);
     auto batchArg = Cli::option<PaperMuncher::Batch>(NONE, "batch"s, "How to handle multiple input documents (default: concat)"s, PaperMuncher::Batch::CONCAT);
-    auto formatArg = Cli::option<Union<FormatInfer, Ref::Uti>>('f', "format"s, "Override the output format (default: inferred from the output file extension)"s, FormatInfer::INFER);
+    auto formatArg = Cli::option<Union<FormatInfer, Ref::Uti>>(Some('f'), "format"s, "Override the output format (default: inferred from the output file extension)"s, FormatInfer::INFER);
     auto densityArg = Cli::option<Vaev::Resolution>(NONE, "density"s, "Pixel density of the output document, in CSS resolution units (e.g. 96dpi)"s, Vaev::Resolution::fromDppx(1));
 
     Cli::Section inOutSection{

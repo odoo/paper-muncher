@@ -179,7 +179,7 @@ export struct CounterProps {
     struct Reset {
         CustomIdent name;
         bool reversed;
-        Opt<Integer> value = 0;
+        Opt<Integer> value = Some(0);
 
         void repr(Io::Emit& e) const {
             e("(counter-reset {}{} {})", reversed ? "reversed " : "", name, value);
@@ -221,7 +221,7 @@ struct ValueParser<CounterProps::Reset> {
         }
 
         auto value = try$(parseValue<Integer>(c));
-        return Ok(CounterProps::Reset{name, reversed, value});
+        return Ok(CounterProps::Reset{name, reversed, Some(value)});
     }
 };
 
@@ -232,7 +232,7 @@ struct ValueParser<CounterProps::Increment> {
             return Error::invalidData("unexpected end of input");
         CustomIdent name = try$(parseValue<CustomIdent>(c));
         auto value = try$(parseValue<Integer>(c));
-        return Ok(CounterProps::Increment{name, value});
+        return Ok(CounterProps::Increment{name, Some(value)});
     }
 };
 

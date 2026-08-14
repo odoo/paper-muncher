@@ -79,7 +79,14 @@ export struct Window {
     Driver::RenderResult& ensureRender() {
         if (_render)
             return *_render;
-        _render = Driver::render(_heap, _document.upgrade(), _media, {.small = _media.viewportSize()});
+        _render = Some(
+            Driver::render(
+                _heap,
+                _document.upgrade(),
+                _media,
+                {.small = _media.viewportSize()}
+            )
+        );
         return *_render;
     }
 

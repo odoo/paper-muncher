@@ -39,7 +39,7 @@ test$("vaev-style-parse-simple-selectors") {
 
     expectEq$(
         try$(Selector::parse("*")),
-        (TypeSelector{Html::NAMESPACE, NONE})
+        (TypeSelector{Some(Html::NAMESPACE), NONE})
     );
 
     return Ok();
@@ -69,7 +69,7 @@ test$("vaev-style-parse-nfix-selectors") {
             TypeSelector{Html::HTML_TAG},
             ClassSelector{"className"s},
             IdSelector{"idName"_sym},
-            TypeSelector{Html::NAMESPACE, NONE},
+            TypeSelector{Some(Html::NAMESPACE), NONE},
         })
     );
 
@@ -370,7 +370,7 @@ test$("vaev-style-parse-pseudo-selectors") {
 
     expectEq$(
         try$(Selector::parse(":nth-child(odd of .class)")),
-        PseudoClassSelector(PseudoClassSelector::Type::NTH_CHILD, PseudoClassSelector::AnBofS{AnB(2, 1), ClassSelector{"class"s}})
+        PseudoClassSelector(PseudoClassSelector::Type::NTH_CHILD, PseudoClassSelector::AnBofS{AnB(2, 1), Some(ClassSelector{"class"s})})
     );
 
     expectEq$(
@@ -380,7 +380,7 @@ test$("vaev-style-parse-pseudo-selectors") {
 
     expectEq$(
         try$(Selector::parse(":nth-last-child(even of #id)")),
-        PseudoClassSelector(PseudoClassSelector::Type::NTH_LAST_CHILD, PseudoClassSelector::AnBofS{AnB(2, 0), IdSelector{"id"_sym}})
+        PseudoClassSelector(PseudoClassSelector::Type::NTH_LAST_CHILD, PseudoClassSelector::AnBofS{AnB(2, 0), Some(IdSelector{"id"_sym})})
     );
 
     expectEq$(
@@ -463,7 +463,7 @@ test$("vaev-style-parse-attribute-selectors") {
         Selector::and_({
             ClassSelector{"className"s},
             AttributeSelector{
-                QualifiedNameSelector{NONE, "type"_sym},
+                QualifiedNameSelector{NONE, Some("type"_sym)},
                 AttributeSelector::SENSITIVE,
                 AttributeSelector::PRESENT,
                 ""s,
@@ -476,7 +476,7 @@ test$("vaev-style-parse-attribute-selectors") {
         Selector::and_({
             ClassSelector{"className"s},
             AttributeSelector{
-                QualifiedNameSelector{NONE, "type"_sym},
+                QualifiedNameSelector{NONE, Some("type"_sym)},
                 AttributeSelector::SENSITIVE,
                 AttributeSelector::EXACT,
                 "text"s,
@@ -489,7 +489,7 @@ test$("vaev-style-parse-attribute-selectors") {
         Selector::and_({
             ClassSelector{"className"s},
             AttributeSelector{
-                QualifiedNameSelector{NONE, "type"_sym},
+                QualifiedNameSelector{NONE, Some("type"_sym)},
                 AttributeSelector::SENSITIVE,
                 AttributeSelector::EXACT,
                 "text"s,
@@ -502,7 +502,7 @@ test$("vaev-style-parse-attribute-selectors") {
         Selector::and_({
             ClassSelector{"className"s},
             AttributeSelector{
-                QualifiedNameSelector{NONE, "type"_sym},
+                QualifiedNameSelector{NONE, Some("type"_sym)},
                 AttributeSelector::SENSITIVE,
                 AttributeSelector::STR_CONTAIN,
                 "text"s,
@@ -515,7 +515,7 @@ test$("vaev-style-parse-attribute-selectors") {
         Selector::and_({
             ClassSelector{"className"s},
             AttributeSelector{
-                QualifiedNameSelector{NONE, "type"_sym},
+                QualifiedNameSelector{NONE, Some("type"_sym)},
                 AttributeSelector::SENSITIVE,
                 AttributeSelector::EXACT,
                 "text"s,

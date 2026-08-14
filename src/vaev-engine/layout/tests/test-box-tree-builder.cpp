@@ -33,7 +33,7 @@ struct FakeInlineBox {
             Vec<Opt<Rc<Gfx::Prose::Span>>> stackSpans = {};
             for (auto& span : inlineBox.content.unwrap<Rc<Gfx::Prose>>()->_spanHistory) {
                 if (span->parent == NONE) {
-                    stackSpans.pushBack(span);
+                    stackSpans.pushBack(Some(span));
                     continue;
                 }
 
@@ -42,7 +42,7 @@ struct FakeInlineBox {
                     stackInlineBoxes.popBack();
                 }
 
-                stackSpans.pushBack(span);
+                stackSpans.pushBack(Some(span));
                 stackInlineBoxes.pushBack(&last(stackInlineBoxes)->add(ComparableInlineBox{}));
             }
 

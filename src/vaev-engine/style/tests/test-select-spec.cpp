@@ -90,11 +90,11 @@ test$("select-attr-spec-namespace") {
     Gc::Heap gc;
     auto el = gc.alloc<Dom::Element>(Html::DIV_TAG);
 
-    el->setAttribute(Dom::QualifiedName{Svg::NAMESPACE, "title"_sym}, "svg-title"s);
+    el->setAttribute(Dom::QualifiedName{Some(Svg::NAMESPACE), "title"_sym}, "svg-title"s);
 
     {
         Selector sel = AttributeSelector{
-            .qualifiedName = QualifiedNameSelector{NONE, "title"_sym},
+            .qualifiedName = QualifiedNameSelector{NONE, Some("title"_sym)},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::PRESENT,
             .value = ""s,
@@ -125,7 +125,7 @@ test$("select-attr-spec-namespace") {
     {
         el->setAttribute(Html::CLASS_ATTR, "t bar u"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = QualifiedNameSelector{NONE, "class"_sym},
+            .qualifiedName = QualifiedNameSelector{NONE, Some("class"_sym)},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::CONTAINS,
             .value = "bar"s,

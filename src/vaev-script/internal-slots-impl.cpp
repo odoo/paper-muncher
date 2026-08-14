@@ -36,24 +36,24 @@ Except<Opt<PropertyDescriptor>> ordinaryGetOwnProperty(Object& self, PropertyKey
         //    a. Set desc.[[Value]] to the value of ownProperty's [[Value]] attribute.
         desc.value = ownProperty.value.unwrap<Value>();
         //    b. Set desc.[[Writable]] to the value of ownProperty's [[Writable]] attribute.
-        desc.writable = ownProperty.attributes.writable;
+        desc.writable = Some(ownProperty.attributes.writable);
     }
     // 5. Else,
     else {
         //    a. Assert: ownProperty is an accessor property.
         auto accessor = ownProperty.value.unwrap<PropertyStorage::Accessor>();
         //    b. Set desc.[[Get]] to the value of ownProperty's [[Get]] attribute.
-        desc.get = accessor.get;
+        desc.get = Some(accessor.get);
         //    c. Set desc.[[Set]] to the value of ownProperty's [[Set]] attribute.
-        desc.set = accessor.set;
+        desc.set = Some(accessor.set);
     }
     // 6. Set desc.[[Enumerable]] to the value of ownProperty's [[Enumerable]] attribute.
-    desc.enumerable = ownProperty.attributes.enumerable;
+    desc.enumerable = Some(ownProperty.attributes.enumerable);
     // 7. Set desc.[[Configurable]] to the value of ownProperty's [[Configurable]] attribute.
-    desc.configurable = ownProperty.attributes.configurable;
+    desc.configurable = Some(ownProperty.attributes.configurable);
 
     // 8. Return desc.
-    return Ok(desc);
+    return Ok(Some(desc));
 }
 
 // https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor
@@ -238,12 +238,12 @@ Except<Boolean> ordinarySetWithOwnDescriptor(Object& self, PropertyKey key, Valu
         if (parent != nullptr)
             return parent->set(key, value, receiver);
         //    c. Set ownDesc to the PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
-        ownDesc = PropertyDescriptor{
+        ownDesc = Some(PropertyDescriptor{
             .value = undefined,
-            .writable = true,
-            .enumerable = true,
-            .configurable = true,
-        };
+            .writable = Some(true),
+            .enumerable = Some(true),
+            .configurable = Some(true),
+        });
     }
 
     // 2. If IsDataDescriptor(ownDesc) is true, then

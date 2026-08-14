@@ -206,7 +206,10 @@ export Res<Result> run(Str inputStr) {
     }
     auto initialStates = testObject.lookup("initialStates"s).unwrapOr(Serde::Array{"Data state"s}).asArray();
     Opt<HtmlToken> lastStartTag = testObject.lookup("lastStartTag"s).map([](Serde::Value const& val) {
-        return HtmlToken{HtmlToken::START_TAG, Symbol::from(val.asStr())};
+        return HtmlToken{
+            HtmlToken::START_TAG,
+            Some(Symbol::from(val.asStr())),
+        };
     });
 
     Serde::Array actual;

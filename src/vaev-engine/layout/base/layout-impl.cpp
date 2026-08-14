@@ -25,11 +25,11 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     auto display = box.style->display;
 
     if (box.isSvg() and not box.isSvgForeignObjectBox()) {
-        return constructSvgFormatingContext(box);
+        return Some(constructSvgFormatingContext(box));
     } else if (box.isReplaced()) {
-        return constructReplacedFormatingContext(box);
+        return Some(constructReplacedFormatingContext(box));
     } else if (box.content.is<Rc<Gfx::Prose>>()) {
-        return constructInlineFormatingContext(box);
+        return Some(constructInlineFormatingContext(box));
     } else if (
         display == Display::FLOW or
         display == Display::FLOW_ROOT or
@@ -37,17 +37,17 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
         display == Display::TABLE_CAPTION or
         display == Display::TABLE
     ) {
-        return constructBlockFormatingContext(box);
+        return Some(constructBlockFormatingContext(box));
     } else if (display == Display::FLEX) {
-        return constructFlexFormatingContext(box);
+        return Some(constructFlexFormatingContext(box));
     } else if (display == Display::GRID) {
-        return constructGridFormatingContext(box);
+        return Some(constructGridFormatingContext(box));
     } else if (display == Display::TABLE_BOX) {
-        return constructTableFormatingContext(box);
+        return Some(constructTableFormatingContext(box));
     } else if (display == Display::INTERNAL) {
         return NONE;
     } else {
-        return constructBlockFormatingContext(box);
+        return Some(constructBlockFormatingContext(box));
     }
 }
 
@@ -167,26 +167,26 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au c
         if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
             specifiedWidth += horizontalBorderBox;
         }
-        return specifiedWidth;
+        return Some(specifiedWidth);
     }
 
     if (size.is<Keywords::MinContent>()) {
         auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
-        return intrinsicSize.x + horizontalBorderBox;
+        return Some(intrinsicSize.x + horizontalBorderBox);
     } else if (size.is<Keywords::MaxContent>()) {
         auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
-        return intrinsicSize.x + horizontalBorderBox;
+        return Some(intrinsicSize.x + horizontalBorderBox);
     } else if (size.is<FitContent>()) {
         auto minIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
         auto maxIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
         auto stretchIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, capmin);
 
-        return clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x) + horizontalBorderBox;
+        return Some(clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x) + horizontalBorderBox);
     } else if (size.is<Keywords::Auto>()) {
         return NONE;
     } else {
         logWarn("unknown specified size: {}", size);
-        return 0_au;
+        return Some(0_au);
     }
 }
 
@@ -196,7 +196,7 @@ Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au 
         if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
             specifiedHeight += verticalBorderBox;
         }
-        return specifiedHeight;
+        return Some(specifiedHeight);
     }
 
     if (size.is<Keywords::MinContent>()) {
@@ -214,7 +214,7 @@ Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au 
         return NONE;
     } else {
         logWarn("unknown specified size: {}", size);
-        return 0_au;
+        return Some(0_au);
     }
 }
 
@@ -234,7 +234,7 @@ BoxMetrics computeBoxMetrics(Tree& tree, Box& box, Vec2Au position, Vec2Au size,
 Opt<Rc<Fragment>> createBoxFragmentIfRequested(Tree& tree, Box& box, Input input, Vec2Au size, Vec<Rc<Fragment>> children) {
     if (input.generateFragment) {
         auto boxMetrics = computeBoxMetrics(tree, box, input.position, size, input.usedSpacings);
-        return makeRc<BoxFragment>(box, boxMetrics, std::move(children));
+        return Some(makeRc<BoxFragment>(box, boxMetrics, std::move(children)));
     }
 
     return NONE;
@@ -253,7 +253,7 @@ static Res<None, Output> _shouldAbortFragmentingBeforeLayout(Fragmentainer& fc, 
             .fragment = NONE,
             .size = Vec2Au{0_au, 0_au},
             .completelyLaidOut = false,
-            .breakpoint = Breakpoint::overflow()
+            .breakpoint = Some(Breakpoint::overflow())
         };
 
     return Ok(NONE);
@@ -292,7 +292,7 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
 
                 childFragment->flags().set(Fragment::OOF);
 
-                oofChild->fragment = childFragment;
+                oofChild->fragment = Some(childFragment);
 
                 out.fragment.unwrap()->_children.pushBack(childFragment);
             } else {
@@ -369,7 +369,7 @@ Output layoutRoot(Tree& tree, Input input) {
 
             childFragment->flags().set(Fragment::OOF);
 
-            oofChild->fragment = childFragment;
+            oofChild->fragment = Some(childFragment);
 
             out.fragment.unwrap()->_children.pushBack(childFragment);
         }

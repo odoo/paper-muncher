@@ -42,7 +42,7 @@ struct InlineFormatingContext : FormatingContext {
             tree.fc.leaveMonolithicBox();
         };
 
-        auto inlineSize = input.knownSize.x.unwrapOrElse([&] {
+        auto inlineSize = input.knownSize.width.unwrapOrElse([&] {
             if (input.intrinsic == IntrinsicSize::MIN_CONTENT) {
                 return 0_au;
             } else if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
@@ -65,8 +65,8 @@ struct InlineFormatingContext : FormatingContext {
                 continue;
 
             auto childContainingBlock = Vec2Au{
-                input.knownSize.x.unwrapOr(0_au),
-                input.knownSize.y.unwrapOr(0_au),
+                input.knownSize.width.unwrapOr(0_au),
+                input.knownSize.height.unwrapOr(0_au),
             };
 
             UsedSpacings usedSpacings{
@@ -126,7 +126,7 @@ struct InlineFormatingContext : FormatingContext {
 
                     auto placeholder = makeRc<PlaceholderFragment>(atomicBox, staticPosRect);
 
-                    fragBuilder.addChildIfAny(placeholder);
+                    fragBuilder.addChildIfAny(Some(placeholder));
                     outOfFlowChildren.pushBack(placeholder);
                 }
 
@@ -139,8 +139,8 @@ struct InlineFormatingContext : FormatingContext {
             lookForRunningPosition(input, atomicBox);
 
             auto childContainingBlock = Vec2Au{
-                input.knownSize.x.unwrapOr(0_au),
-                input.knownSize.y.unwrapOr(0_au),
+                input.knownSize.width.unwrapOr(0_au),
+                input.knownSize.height.unwrapOr(0_au),
             };
 
             UsedSpacings usedSpacings{
@@ -152,8 +152,8 @@ struct InlineFormatingContext : FormatingContext {
                 .generateFragment = input.generateFragment,
                 .usedSpacings = usedSpacings,
                 .knownSize = {
-                    boxStrutCell->size.x,
-                    boxStrutCell->size.y
+                    Some(boxStrutCell->size.x),
+                    Some(boxStrutCell->size.y)
                 },
                 .position = input.position + positionInProse,
                 .containingBlock = childContainingBlock,
@@ -193,20 +193,20 @@ struct InlineFormatingContext : FormatingContext {
                 .fragment = fragBuilder.buildBoxFromInput(input, {}),
                 .size = {},
                 .completelyLaidOut = false,
-                .breakpoint = Breakpoint::overflow()
+                .breakpoint = Some(Breakpoint::overflow())
             };
         }
 
         auto outputSize = Vec2Au{
-            input.knownSize.x.unwrapOr(size.x),
-            input.knownSize.y.unwrapOr(size.y),
+            input.knownSize.width.unwrapOr(size.x),
+            input.knownSize.height.unwrapOr(size.y),
         };
 
         return {
             .fragment = fragBuilder.buildBoxFromInput(input, outputSize),
             .size = outputSize,
             .completelyLaidOut = true,
-            .breakpoint = Breakpoint::bottomOfMonolithicBox(box),
+            .breakpoint = Some(Breakpoint::bottomOfMonolithicBox(box)),
             .firstBaselineSet = firstBaselineSet,
             .lastBaselineSet = lastBaselineSet,
             .outOfFlowStash = std::move(outOfFlowChildren),

@@ -88,7 +88,7 @@ export struct QualifiedNameSelector {
 
     Opt<Symbol> exactName() const {
         if (auto exact = name.is<Symbol>())
-            return *exact;
+            return Some(*exact);
         return NONE;
     }
 
@@ -132,7 +132,7 @@ export struct QualifiedNameSelector {
         if (ns.is<NullNamespace>())
             return {NONE, exactName.unwrap()};
 
-        return {*ns.is<Symbol>(), exactName.unwrap()};
+        return {Some(*ns.is<Symbol>()), exactName.unwrap()};
     }
 
     bool operator==(QualifiedNameSelector const&) const = default;
@@ -482,7 +482,7 @@ export struct PseudoClassSelector {
     static Opt<Type> _Type(Str name) {
 #define PSEUDO(IDENT, NAME) \
     if (name == NAME)       \
-        return Type::IDENT;
+        return Some(Type::IDENT);
 #include "defs/pseudo-class.inc"
 
 #undef PSEUDO
@@ -669,7 +669,7 @@ export struct Selector : _Selector {
         Opt<Symbol> firstName = NONE;
         if (cur->token == Css::Token::IDENT) {
             namespacePrefix = NamespacePrefix::IDENT;
-            firstName = Symbol::from(cur->token.data);
+            firstName = Some(Symbol::from(cur->token.data));
             cur.next();
         } else if (cur.skip(Css::Token::delim("*"))) {
             namespacePrefix = NamespacePrefix::STAR;
@@ -686,14 +686,14 @@ export struct Selector : _Selector {
         Opt<Symbol> secondName = NONE;
 
         if (cur->token == Css::Token::IDENT) {
-            secondName = Symbol::from(cur->token.data);
+            secondName = Some(Symbol::from(cur->token.data));
             cur.next();
         } else if (cur.skip(Css::Token::delim("*"))) {
             secondName = NONE;
         }
 
         if (namespacePrefix == NamespacePrefix::IDENT)
-            firstName = try$(ns.lookup(*firstName));
+            firstName = Some(try$(ns.lookup(*firstName)));
 
         return Ok(QualifiedNameSelector{
             namespacePrefix == NamespacePrefix::STAR ? QualifiedNameSelector::NamespacePattern{UNIVERSAL} : namespacePrefix == NamespacePrefix::IDENT ? QualifiedNameSelector::NamespacePattern{firstName.unwrap()}
@@ -881,7 +881,7 @@ export struct Selector : _Selector {
         if (not c.skip(Css::Token::ident("of")))
             return Error::invalidData("expected 'of' in pseudo-class function");
 
-        return Ok(PseudoClassSelector::make(funcName, PseudoClassSelector::AnBofS{anb, makeBox<Selector>(try$(Selector::parse(c, ns)))}));
+        return Ok(PseudoClassSelector::make(funcName, PseudoClassSelector::AnBofS{anb, Some(makeBox<Selector>(try$(Selector::parse(c, ns))))}));
     }
 
     // consume a selector element (everything  that has a lesser priority than the current OP)
@@ -904,7 +904,7 @@ export struct Selector : _Selector {
                 break;
             case Css::Token::IDENT: {
                 Cursor qualifiedNameCur = cur;
-                val = TypeSelector{try$(_parseQualifiedNameSelector(qualifiedNameCur, ns, ns.default_))};
+                val = TypeSelector{try$(_parseQualifiedNameSelector(qualifiedNameCur, ns, Some(ns.default_)))};
                 cur = qualifiedNameCur;
                 consumed = true;
             } break;
@@ -914,7 +914,7 @@ export struct Selector : _Selector {
                     val = ClassSelector{cur->token.data};
                 } else if (cur->token.data == "*") {
                     Cursor qualifiedNameCur = cur;
-                    val = TypeSelector{try$(_parseQualifiedNameSelector(qualifiedNameCur, ns, ns.default_))};
+                    val = TypeSelector{try$(_parseQualifiedNameSelector(qualifiedNameCur, ns, Some(ns.default_)))};
                     cur = qualifiedNameCur;
                     consumed = true;
                 }
@@ -1151,7 +1151,6 @@ export struct Specificity {
     // c: The number of type selectors and pseudo-elements in the selector.
     isize a, b, c;
 
-    static Specificity const NOMATCH;
     static Specificity const ZERO, A, B, C;
 
     Specificity(isize a, isize b, isize c)

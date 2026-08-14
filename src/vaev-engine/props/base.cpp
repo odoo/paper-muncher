@@ -637,13 +637,13 @@ export struct RegisteredPropertySet {
     template <typename Property>
     void registerProperty() {
         auto registration = makeRc<typename Property::Registration>();
-        registration->_self = registration;
+        registration->_self = Some(registration);
         registerProperty(registration->name(), registration);
     }
 
     Rc<Property::Registration> registerCustomProperty(Symbol const& propertyName) {
         auto registration = makeRc<CustomProperty::Registration>(propertyName);
-        registration->_self = registration;
+        registration->_self = Some(registration);
         registerProperty(propertyName, registration);
         return registration;
     }
@@ -655,16 +655,16 @@ export struct RegisteredPropertySet {
                 .unwrapOr(unresolvedPropertyName);
 
         if (auto maybeRegistration = _registrations.lookup(propertyName))
-            return maybeRegistration.take();
+            return Some(maybeRegistration.take());
 
         if (options.has(GENERATE_CUSTOM_PROPERTY)) {
             if (startWith(propertyName.str(), "--"s) != Match::NO)
-                return registerCustomProperty(propertyName);
+                return Some(registerCustomProperty(propertyName));
         }
 
         if (options.has(GENERATE_BOGUS)) {
             logErrorIf(debugProperties, "unknown property {:#}, generating bogus registration", propertyName);
-            return makeRc<BogusProperty::Registration>(propertyName);
+            return Some(makeRc<BogusProperty::Registration>(propertyName));
         }
 
         return NONE;
@@ -686,7 +686,7 @@ export struct RegisteredPropertySet {
             for (auto& [_, registration] : registrations().iterItems())
                 if (not registration->flags().has(Property::SHORTHAND_PROPERTY))
                     registration->initial()->apply(*initial, *initial, cx);
-            _memoInitialComputedValues = initial;
+            _memoInitialComputedValues = Some(initial);
         }
         return makeRc<ComputedValues>(**_memoInitialComputedValues);
     }

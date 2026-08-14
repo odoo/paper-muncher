@@ -77,7 +77,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
             if (number < 0)
                 return NONE;
 
-            return style.font->size * number;
+            return Some(style.font->size * number);
         },
         [&](Calc<PercentOr<Length>> const& length) -> Opt<Au> {
             auto oneEm = resolver.resolve(Length{RelativeLength{1, RelativeLength::EM}});
@@ -86,7 +86,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
             if (result < 0_au)
                 return NONE;
 
-            return result;
+            return Some(result);
         }
     );
 
@@ -95,7 +95,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
             style.fontFace,
             style.font->size.cast<f64>(),
         },
-        .color = style.color,
+        .color = Some(style.color),
         // FIXME: Should be done during prose layout
         .marginLeft = resolver.resolve(style.margin->start, 0_au),
         .marginRight = resolver.resolve(style.margin->end, 0_au),
@@ -281,7 +281,7 @@ struct BuilderContext {
             From::BLOCK,
             parent.style,
             parent,
-            rootInlineBox,
+            Some(rootInlineBox),
         };
     }
 
@@ -292,7 +292,7 @@ struct BuilderContext {
             From::FLEX,
             parent.style,
             parent,
-            rootInlineBox,
+            Some(rootInlineBox),
         };
     }
 
@@ -331,7 +331,7 @@ struct BuilderContext {
             From::TABLE,
             parent.style,
             parent,
-            rootInlineBox,
+            Some(rootInlineBox),
         };
     }
 };
@@ -395,21 +395,21 @@ void buildSVGAggregate(Gc::Ref<Dom::Element> el, Box& group);
 
 void buildSVGElement(Gc::Ref<Dom::Element> el, Box& group) {
     if (el->qualifiedName == Svg::CIRCLE_TAG) {
-        group.add({el->computedValues(), SvgShapeElement::CIRCLE, el});
+        group.add(Box{el->computedValues(), SvgShapeElement::CIRCLE, Some(el)});
     } else if (el->qualifiedName == Svg::RECT_TAG) {
-        group.add({el->computedValues(), SvgShapeElement::RECT, el});
+        group.add({el->computedValues(), SvgShapeElement::RECT, Some(el)});
     } else if (el->qualifiedName == Svg::PATH_TAG) {
-        group.add({el->computedValues(), SvgShapeElement::PATH, el});
+        group.add({el->computedValues(), SvgShapeElement::PATH, Some(el)});
     } else if (el->qualifiedName == Svg::G_TAG) {
-        Box nestedGroup{el->computedValues(), el};
+        Box nestedGroup{el->computedValues(), Some(el)};
         buildSVGAggregate(el, nestedGroup);
         group.add(std::move(nestedGroup));
     } else if (el->qualifiedName == Svg::SVG_TAG) {
-        Box newSvgRoot{el->computedValues(), el};
+        Box newSvgRoot{el->computedValues(), Some(el)};
         buildSVGAggregate(el, newSvgRoot);
         group.add(std::move(newSvgRoot));
     } else if (el->qualifiedName == Svg::FOREIGN_OBJECT_TAG) {
-        Box box{el->computedValues(), el};
+        Box box{el->computedValues(), Some(el)};
         Box rootInlineBox{
             el->computedValues(),
             makeRc<Gfx::Prose>(_proseStyleFromStyle(*el->computedValues()), _spanStyleFromStyle(*el->computedValues())),
@@ -420,7 +420,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, Box& group) {
             BuilderContext::From::BLOCK,
             el->computedValues(),
             box,
-            rootInlineBox,
+            Some(rootInlineBox),
         };
 
         buildBlockFlowFromElement(bc, *el);
@@ -550,7 +550,7 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
 }
 
 static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::ComputedValues> style, Gc::Ref<Dom::Element> el, Display display) {
-    Box box = {style, el};
+    Box box = {style, Some(el)};
     Box rootInlineBox = {
         style,
         makeRc<Gfx::Prose>(
@@ -587,7 +587,7 @@ struct AnonymousTableBoxWrapper {
 
         auto rowStyle = registeredPropertySet.inheritsComputedValues(*style);
         rowStyle->display = Display::Internal::TABLE_ROW;
-        rowBox = Box{rowStyle, NONE};
+        rowBox = Some(Box{rowStyle, NONE});
     }
 
     void createCellIfNone(Style::RegisteredPropertySet& registeredPropertySet, Rc<Style::ComputedValues> style) {
@@ -597,15 +597,12 @@ struct AnonymousTableBoxWrapper {
         auto cellStyle = registeredPropertySet.inheritsComputedValues(*style);
         cellStyle->display = Display::Internal::TABLE_CELL;
 
-        cellBox = Box{cellStyle, NONE};
-        rootInlineBoxForCell = Box{
+        cellBox = Some(Box{cellStyle, NONE});
+        rootInlineBoxForCell = Some(Box{
             style,
-            makeRc<Gfx::Prose>(
-                _proseStyleFromStyle(*style),
-                _spanStyleFromStyle(*style)
-            ),
+            makeRc<Gfx::Prose>(_proseStyleFromStyle(*style), _spanStyleFromStyle(*style)),
             NONE,
-        };
+        });
     }
 
     void finalizeAndResetCell() {
@@ -705,7 +702,7 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
 
 // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
 static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues> style, Display display) {
-    Box tableInternalBox = {style, el};
+    Box tableInternalBox = {style, Some(el)};
 
     switch (display.internal()) {
     case Display::Internal::TABLE_HEADER_GROUP:
@@ -769,7 +766,7 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
         }
     };
 
-    Box tableBox = {tableBoxStyle, el};
+    Box tableBox = {tableBoxStyle, Some(el)};
 
     bool captionsOnTop = tableBoxStyle->table->captionSide == CaptionSide::TOP;
     if (captionsOnTop) {
@@ -812,7 +809,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
     wrapperStyle->float_ = tableStyle->float_;
     wrapperStyle->insets = tableStyle->insets;
 
-    Box wrapper = {wrapperStyle, tableBoxEl};
+    Box wrapper = {wrapperStyle, Some(tableBoxEl)};
 
     // SPEC: The table wrapper box establishes a block formatting context.
     auto innerStyle = makeRc<Style::ComputedValues>(*tableStyle);
@@ -940,10 +937,10 @@ export Box _buildBlockPseudoElement(Gc::Ref<Dom::PseudoElement> el) {
     if (style->content.is<String>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
         prose->append(style->content.unwrap<String>().str());
-        return {style, prose, el};
+        return {style, prose, Some(el)};
     }
 
-    return {style, el};
+    return {style, Some(el)};
 }
 
 static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> pseudoElement) {
@@ -995,7 +992,7 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
         bc.endInlineBox();
     } else {
         bc.flushRootInlineBoxIntoAnonymousBox();
-        Box pseudoBox = {style, pseudoElement};
+        Box pseudoBox = {style, Some(pseudoElement)};
 
         auto proseStyle = _proseStyleFromStyle(*style);
         auto spanStyle = _spanStyleFromStyle(*style);
@@ -1026,7 +1023,7 @@ static auto dumpBoxes = Debug::Flag::debug("web-boxes"s, "Dump the constructed b
 export Box buildElement(Gc::Ref<Dom::Element> elt) {
     Box box = {
         elt->computedValues(),
-        elt,
+        Some(elt),
     };
     Box rootInlineBox = {
         elt->computedValues(),
@@ -1041,14 +1038,14 @@ export Box buildElement(Gc::Ref<Dom::Element> elt) {
         BuilderContext::From::BLOCK,
         elt->computedValues(),
         box,
-        rootInlineBox,
+        Some(rootInlineBox),
     };
     buildBlockFlowFromElement(
         {
             BuilderContext::From::BLOCK,
             elt->computedValues(),
             box,
-            rootInlineBox,
+            Some(rootInlineBox),
         },
         *elt
     );
@@ -1071,7 +1068,7 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, Runnin
     if (style->content.is<String>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
         prose->append(style->content.unwrap<String>().str());
-        return Box{style, prose, el};
+        return Box{style, prose, Some(el)};
     } else if (style->content.is<ElementFunc>()) {
         auto elt = style->content.unwrap<ElementFunc>();
         if (auto infos = runningPos.match(elt, pageNumber)) {
@@ -1088,10 +1085,10 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, Runnin
             auto maybeCounter = el->counters.innerMost(it->name).v0;
             prose->append("{}"_f(maybeCounter ? maybeCounter->value : 0).str());
         }
-        return {style, prose, el};
+        return {style, prose, Some(el)};
     }
 
-    return {style, el};
+    return {style, Some(el)};
 }
 
 export Box buildDocument(Gc::Ref<Dom::Document> doc) {

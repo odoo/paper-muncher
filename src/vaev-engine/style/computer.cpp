@@ -63,7 +63,7 @@ export struct Computer {
             // 1. Let incrementNegated be el’s counter-increment integer value for this counter, multiplied by -1.
             Integer incrementNegated =
                 maybeCounterIncrement
-                    .unwrapOr({counter, 1})
+                    .unwrapOr({counter, Some(1)})
                     .value.unwrapOr(1) *
                 -1;
 
@@ -117,7 +117,7 @@ export struct Computer {
             }
         } else if (style.display == Display::Item::YES) {
             // https://www.w3.org/TR/css-lists-3/#list-item-counter
-            counters.increment(elementHandle, {.name = CustomIdent{"list-item"_sym}, .value = 1});
+            counters.increment(elementHandle, {.name = CustomIdent{"list-item"_sym}, .value = Some(1)});
         }
 
         // 4. Counter values are explicitly set (counter-set).
@@ -356,7 +356,7 @@ export struct Computer {
         bool isRootElement = pseudoElement == NONE and el->parentNode()->is<Dom::Document>();
 
         if (isRootElement)
-            _rootComputedValues = values;
+            _rootComputedValues = Some(values);
 
         MatchingRules const matchingRules = _ruleIndex.match(el, pseudoElement);
         CascadedValues cascadedValues;
@@ -415,7 +415,7 @@ export struct Computer {
     // MARK: Styling -----------------------------------------------------------
 
     void generatePseudoElement(ComputedValues const& parentComputedValues, Dom::Element& el, Symbol type) {
-        auto computedValues = computeValues(parentComputedValues, el, type);
+        auto computedValues = computeValues(parentComputedValues, el, Some(type));
 
         // https://drafts.csswg.org/css-content/#valdef-content-none
         // On pseudo-elements it inhibits the creation of the pseudo-element as if it had display: none.
@@ -433,7 +433,7 @@ export struct Computer {
 
     void styleElement(ComputedValues const& parentComputedValues, Dom::Element& el) {
         auto computedValues = computeValues(parentComputedValues, el);
-        el._computedValues = computedValues;
+        el._computedValues = Some(computedValues);
 
         if (computedValues->display == Display::Item::YES)
             generatePseudoElement(*computedValues, el, Dom::PseudoElement::MARKER);

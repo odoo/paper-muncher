@@ -184,7 +184,7 @@ export struct PageAreaRule {
 
 #define ITER(ID, NAME) \
     if (name == NAME)  \
-        return PageArea::ID;
+        return Some(PageArea::ID);
         FOREACH_PAGE_AREA(ITER)
 #undef ITER
 
@@ -207,7 +207,7 @@ export struct PageAreaRule {
             }
         }
 
-        return res;
+        return Some(res);
     }
 
     void apply(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const {

@@ -42,7 +42,7 @@ Opt<Gfx::Borders> buildBorders(BoxMetrics const& metrics, Style::ComputedValues 
     borders.fills[2] = resolve(bordersStyle.bottom.color, style.color);
     borders.fills[3] = resolve(bordersStyle.start.color, style.color);
 
-    return borders;
+    return Some(borders);
 }
 
 Opt<Gfx::Borders> buildBorders(UsedBorders const& border) {
@@ -71,7 +71,7 @@ Opt<Gfx::Borders> buildBorders(UsedBorders const& border) {
     borders.fills[2] = border.bottom.color;
     borders.fills[3] = border.start.color;
 
-    return borders;
+    return Some(borders);
 }
 
 Opt<Gfx::Outline> buildOutline(BoxMetrics const& metrics, Style::ComputedValues const& style) {
@@ -92,7 +92,7 @@ Opt<Gfx::Outline> buildOutline(BoxMetrics const& metrics, Style::ComputedValues 
 
     outline.fill = resolve(outlineStyle.color, style.color);
 
-    return outline;
+    return Some(outline);
 }
 
 static void _paintFragBordersAndBackgrounds(BoxFragment& frag, Scene::Stack& stack, Opt<UsedBorders> usedBorders = NONE) {
@@ -144,7 +144,7 @@ Opt<Rc<Scene::Node>> _applyTransformIfNeeded(Fragment& svgFrag, RectAu viewBox, 
     if (not transform.has())
         return content;
     auto referenceBox = _resolveTransformReferenceSVG(svgFrag, viewBox, transform.box);
-    return _applyTransform(transform, referenceBox, content.unwrap());
+    return Some(_applyTransform(transform, referenceBox, content.unwrap()));
 }
 
 Opt<Gfx::Stroke> _resolveStroke(SvgShapeFragment& frag, SvgProps const& style) {
@@ -162,7 +162,10 @@ Opt<Gfx::Stroke> _resolveStroke(SvgShapeFragment& frag, SvgProps const& style) {
         if (color.transparent())
             return NONE;
 
-        return Gfx::Stroke{color, static_cast<f64>(frag.strokeWidth)};
+        return Some(Gfx::Stroke{
+            color,
+            static_cast<f64>(frag.strokeWidth),
+        });
     }
 
     return NONE;
@@ -179,7 +182,7 @@ Opt<Gfx::Fill> _resolveFill(Fragment& frag, SvgProps const& style) {
         color = color.withOpacity(style.fillOpacity);
         if (color.transparent())
             return NONE;
-        return Gfx::Fill{color};
+        return Some(Gfx::Fill{color});
     }
 
     return NONE;
@@ -231,11 +234,11 @@ Opt<Rc<Scene::Node>> _paintSvgShapeElement(SvgShapeFragment& frag) {
         return NONE;
 
     if (auto rect = frag.shape.is<RectAu>()) {
-        return _paintSvgRectangle(rect->cast<f64>(), resolvedFill, resolvedStroke);
+        return Some(_paintSvgRectangle(rect->cast<f64>(), resolvedFill, resolvedStroke));
     } else if (auto circle = frag.shape.is<EllipseAu>()) {
-        return _paintSvgCircle(circle->cast<f64>(), resolvedFill, resolvedStroke);
+        return Some(_paintSvgCircle(circle->cast<f64>(), resolvedFill, resolvedStroke));
     } else if (auto path = frag.shape.is<Math::Path>()) {
-        return makeRc<Scene::Shape>(*path, resolvedStroke, resolvedFill);
+        return Some(makeRc<Scene::Shape>(*path, resolvedStroke, resolvedFill));
     };
     unreachable();
 }
@@ -249,23 +252,27 @@ Opt<Rc<Scene::Node>> _paintSVGElement(Rc<Fragment> element, RectAu viewBox) {
     } else if (auto nestedGroup = element.is<SvgGroupFragment>()) {
         return _applyTransformIfNeeded(
             *nestedGroup, viewBox,
-            _paintSVGAggregate(*nestedGroup, viewBox)
+            Some(_paintSVGAggregate(*nestedGroup, viewBox))
         );
     } else if (auto nestedRoot = element.is<SvgRootFragment>()) {
         return _applyTransformIfNeeded(
             *nestedRoot, viewBox,
-            makeRc<Scene::Clip>(
-                _paintSVGRoot(*nestedRoot),
-                nestedRoot->boundingBox.cast<f64>()
+            Some(
+                makeRc<Scene::Clip>(
+                    _paintSVGRoot(*nestedRoot),
+                    nestedRoot->boundingBox.cast<f64>()
+                )
             )
         );
     } else if (auto const& [foreignObject] = element.cast<BoxFragment>()) {
         Scene::Stack stackForeignObj;
         _establishStackingContext(foreignObject, stackForeignObj);
 
-        return makeRc<Scene::Clip>(
-            makeRc<Scene::Stack>(std::move(stackForeignObj)),
-            foreignObject->metrics.borderBox().cast<f64>()
+        return Some(
+            makeRc<Scene::Clip>(
+                makeRc<Scene::Stack>(std::move(stackForeignObj)),
+                foreignObject->metrics.borderBox().cast<f64>()
+            )
         );
     }
     unreachable();

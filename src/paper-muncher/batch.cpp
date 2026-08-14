@@ -206,7 +206,7 @@ Async::Task<> runSingleAsync(
             logInfo("loading header {}...", header);
             auto window = Vaev::Dom::Window::create(client);
             co_trya$(window->loadLocationAsync(header, Ref::Uti::PUBLIC_OPEN, ct));
-            decorator.headerWindow = window;
+            decorator.headerWindow = Some(window);
         }
 
         decorator.headerSize = options.headerSize;
@@ -215,13 +215,13 @@ Async::Task<> runSingleAsync(
             logInfo("loading footer {}...", footer);
             auto window = Vaev::Dom::Window::create(client);
             co_trya$(window->loadLocationAsync(footer, Ref::Uti::PUBLIC_OPEN, ct));
-            decorator.footerWindow = window;
+            decorator.footerWindow = Some(window);
         }
 
         decorator.footerSize = options.footerSize;
 
         auto settings = options.derivePrintSettings();
-        window->print(settings, decorator) | ForEach([&](Print::Page& page) {
+        window->print(settings, Some(decorator)) | ForEach([&](Print::Page& page) {
             page.print(
                 output,
                 {.showBackgroundGraphics = true}
@@ -302,7 +302,7 @@ export Async::Task<> runBatchAsync(
         auto request = Http::Request::from(
             Http::Method::PUT,
             output,
-            Http::Body::from(bw.take())
+            Some(Http::Body::from(bw.take()))
         );
         request->header.put(Http::Header::CONNECTION, "close"s);
         co_trya$(client->doAsync(request, ct));
@@ -326,7 +326,7 @@ export Async::Task<> runBatchAsync(
             auto request = Http::Request::from(
                 Http::Method::PUT,
                 fileUrl,
-                Http::Body::from(bw.take())
+                Some(Http::Body::from(bw.take()))
             );
             if (index + 1 == inputs.len())
                 request->header.put(Http::Header::CONNECTION, "close"s);

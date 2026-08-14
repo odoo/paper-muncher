@@ -196,7 +196,7 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
 
     Opt<Au> width = NONE;
     if (not style.insets->start.is<Keywords::Auto>() and not style.insets->end.is<Keywords::Auto>()) {
-        width = availableSpace.width;
+        width = Some(availableSpace.width);
     } else {
         width = computeSpecifiedBorderBoxWidth(
             tree, box, style.sizing->width, containingBlock.size(),
@@ -206,7 +206,7 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
 
     Opt<Au> height = NONE;
     if (not style.insets->top.is<Keywords::Auto>() and not style.insets->bottom.is<Keywords::Auto>()) {
-        height = availableSpace.height;
+        height = Some(availableSpace.height);
     } else {
         height = computeSpecifiedBorderBoxHeight(
             tree, box, style.sizing->height, containingBlock.size(),

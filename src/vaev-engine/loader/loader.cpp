@@ -182,20 +182,20 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Dom::Document& document
     if (el and el->qualifiedName == Html::IMG_TAG) {
         auto src = el->getAttribute(Html::SRC_ATTR);
         if (not src) {
-            el->imageContent = _missingImagePlaceholder();
+            el->imageContent = Some(_missingImagePlaceholder());
             logWarn("image element missing src attribute");
             co_return Error::invalidInput("link element missing src");
         }
 
-        auto url = Ref::Url::parse(*src, node->baseURI());
+        auto url = Ref::Url::parse(*src, Some(node->baseURI()));
         auto image = co_await _fetchImageContentAsync(client, url, ct);
         if (not image) {
-            el->imageContent = _missingImagePlaceholder();
+            el->imageContent = Some(_missingImagePlaceholder());
             logWarn("failed to fetch image from {}: {}", url, image);
             co_return Error::invalidInput("failed to fetch image");
         }
 
-        el->imageContent = image.take();
+        el->imageContent = Some(image.take());
     } else if (el and el->qualifiedName == Html::STYLE_TAG) {
         auto text = el->textContent();
         Io::SScan textScan{text};
@@ -215,7 +215,7 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Dom::Document& document
                 co_return Error::invalidInput("link element missing href");
             }
 
-            auto url = Ref::Url::parse(*href, node->baseURI());
+            auto url = Ref::Url::parse(*href, Some(node->baseURI()));
             auto sheet = co_await _fetchStylesheetAsync(client, document, url, Style::Origin::AUTHOR, ct);
 
             if (not sheet) {

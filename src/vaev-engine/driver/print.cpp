@@ -50,7 +50,7 @@ void _paintCornerMargin(PageLayoutInfos& infos, Scene::Stack& stack, RectAu cons
         tree,
         {
             .generateFragment = true,
-            .knownSize = rect.size().cast<Opt<Au>>(),
+            .knownSize = rect.size().cast<Some<Au>>(),
             .position = rect.topStart(),
             .availableSpace = rect.size(),
             .containingBlock = rect.size(),
@@ -72,7 +72,7 @@ void _paintMainMargin(PageLayoutInfos& infos, Scene::Stack& stack, RectAu const&
         tree,
         {
             .generateFragment = true,
-            .knownSize = rect.size().cast<Opt<Au>>(),
+            .knownSize = rect.size().cast<Some<Au>>(),
             .position = rect.topStart(),
             .availableSpace = rect.size(),
             .containingBlock = rect.size(),
@@ -185,7 +185,7 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
         auto outDiscovery = Layout::layoutRoot(
             context.contentTree,
             {
-                .knownSize = {infos.pageContent.width, NONE},
+                .knownSize = {Some(infos.pageContent.width), NONE},
                 .position = infos.pageContent.topStart(),
                 .availableSpace = infos.pageContent.size(),
                 .containingBlock = infos.pageContent.size(),
@@ -251,7 +251,7 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
             contentTree,
             {
                 .generateFragment = true,
-                .knownSize = {infos.pageContent.width, NONE},
+                .knownSize = {Some(infos.pageContent.width), NONE},
                 .position = infos.pageContent.topStart(),
                 .availableSpace = infos.pageContent.size(),
                 .containingBlock = infos.pageContent.size(),
