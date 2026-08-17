@@ -9,6 +9,7 @@ import Karm.Math;
 
 import :css;
 import :values.base;
+import :values.calc;
 import :values.color;
 import :values.length;
 import :values.percent;
@@ -74,14 +75,14 @@ enum struct SvgShapeElement {
 };
 
 export struct SvgProps {
-    PercentOr<Length> x = Length{0_au};
-    PercentOr<Length> y = Length{0_au};
-    PercentOr<Length> cx = Length{0_au};
-    PercentOr<Length> cy = Length{0_au};
-    PercentOr<Length> r = Length{0_au};
+    Calc<Au, Percent> x = 0_au;
+    Calc<Au, Percent> y = 0_au;
+    Calc<Au, Percent> cx = 0_au;
+    Calc<Au, Percent> cy = 0_au;
+    Calc<Au, Percent> r = 0_au;
 
     Number fillOpacity = 1;
-    PercentOr<Length> strokeWidth = Length{1_au};
+    Calc<Length, Percent> strokeWidth = 1_au;
     Number strokeOpacity = 1;
     Union<String, None> d = NONE;
     SvgPaint fill = Gfx::BLACK;
@@ -108,7 +109,7 @@ export struct SvgProps {
 // MARK: Paint
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export template <>
-struct ValueParser<SvgPaint> {
+struct ValueTraits<SvgPaint> {
     static Res<SvgPaint> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

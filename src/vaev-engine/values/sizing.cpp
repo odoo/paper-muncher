@@ -28,8 +28,9 @@ export enum struct BoxSizing : u8 {
 
 // MARK: FitContent
 // https://drafts.csswg.org/css-sizing-3/#funcdef-width-fit-content
-export struct FitContent {
-    Calc<PercentOr<Length>> value = Length{0_au};
+export template <typename Dim>
+struct FitContent {
+    Calc<Length, Percent> value = Length{0_au};
 
     void repr(Io::Emit& e) const {
         e("(fit-content {})", value);
@@ -37,15 +38,15 @@ export struct FitContent {
 };
 
 export template <>
-struct ValueParser<FitContent> {
-    static Res<FitContent> parse(Cursor<Css::Sst>& c) {
+struct ValueTraits<FitContent<Length>> {
+    static Res<FitContent<Length>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
         if (c->prefix == Css::Token::function("fit-content(")) {
-            FitContent result;
+            FitContent<Length> result;
             Cursor<Css::Sst> scan = c->content;
-            result.value = try$(parseValue<PercentOr<Length>>(scan));
+            result.value = try$(parseValue<Calc<Length, Percent>>(scan));
             c.next();
             return Ok(result);
         }
@@ -55,35 +56,37 @@ struct ValueParser<FitContent> {
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 // https://www.w3.org/TR/css-sizing-3/#propdef-height
-export using Size = Union<Keywords::Auto, Calc<PercentOr<Length>>, Keywords::MinContent, Keywords::MaxContent, FitContent>;
-export using MaxSize = Union<Keywords::None, Calc<PercentOr<Length>>, Keywords::MinContent, Keywords::MaxContent, FitContent>;
+export template <typename Dim>
+using Size = Union<Keywords::Auto, Calc<Dim, Percent>, Keywords::MinContent, Keywords::MaxContent, FitContent<Dim>>;
+export template <typename Dim>
+using MaxSize = Union<Keywords::None, Calc<Length, Percent>, Keywords::MinContent, Keywords::MaxContent, FitContent<Dim>>;
 
 export struct SizingProps {
-    Size width = Keywords::AUTO, height = Keywords::AUTO;
-    Size minWidth = Keywords::AUTO, minHeight = Keywords::AUTO;
-    MaxSize maxWidth = Keywords::NONE, maxHeight = Keywords::NONE;
+    Size<Au> width = Keywords::AUTO, height = Keywords::AUTO;
+    Size<Au> minWidth = Keywords::AUTO, minHeight = Keywords::AUTO;
+    MaxSize<Au> maxWidth = Keywords::NONE, maxHeight = Keywords::NONE;
 
-    Size& size(Axis axis) {
+    Size<Au>& size(Axis axis) {
         return axis == Axis::HORIZONTAL ? width : height;
     }
 
-    Size const size(Axis axis) const {
+    Size<Au> const size(Axis axis) const {
         return axis == Axis::HORIZONTAL ? width : height;
     }
 
-    Size& minSize(Axis axis) {
+    Size<Au>& minSize(Axis axis) {
         return axis == Axis::HORIZONTAL ? minWidth : minHeight;
     }
 
-    Size const minSize(Axis axis) const {
+    Size<Au> const minSize(Axis axis) const {
         return axis == Axis::HORIZONTAL ? minWidth : minHeight;
     }
 
-    MaxSize& maxSize(Axis axis) {
+    MaxSize<Au>& maxSize(Axis axis) {
         return axis == Axis::HORIZONTAL ? maxWidth : maxHeight;
     }
 
-    MaxSize const maxSize(Axis axis) const {
+    MaxSize<Au> const maxSize(Axis axis) const {
         return axis == Axis::HORIZONTAL ? maxWidth : maxHeight;
     }
 

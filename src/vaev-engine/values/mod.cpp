@@ -32,7 +32,6 @@ export import :values.percent;
 export import :values.primitives;
 export import :values.ratio;
 export import :values.resolution;
-export import :values.resolved;
 export import :values.sizing;
 export import :values.svg;
 export import :values.table;

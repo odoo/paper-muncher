@@ -29,7 +29,7 @@ export enum struct FlexDirection {
 };
 
 export template <>
-struct ValueParser<FlexDirection> {
+struct ValueTraits<FlexDirection> {
     static Res<FlexDirection> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -59,7 +59,7 @@ export enum struct FlexWrap {
 };
 
 export template <>
-struct ValueParser<FlexWrap> {
+struct ValueTraits<FlexWrap> {
     static Res<FlexWrap> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -75,22 +75,14 @@ struct ValueParser<FlexWrap> {
     }
 };
 
-export using FlexBasis = Union<
+export template <typename Dim>
+using FlexBasis = Union<
     Keywords::Auto,
     Keywords::Content,
     Keywords::MinContent,
     Keywords::MaxContent,
-    FitContent,
-    Calc<PercentOr<Length>>>;
-
-export struct FlexItemProps {
-    FlexBasis flexBasis = Keywords::AUTO;
-    Number flexGrow, flexShrink;
-
-    void repr(Io::Emit& e) const {
-        e("({} {} {})", flexBasis, flexGrow, flexShrink);
-    }
-};
+    FitContent<Dim>,
+    Calc<Dim, Percent>>;
 
 export struct FlexProps {
     // FlexContainer
@@ -98,7 +90,7 @@ export struct FlexProps {
     FlexWrap wrap = FlexWrap::NOWRAP;
 
     // FlexItem
-    FlexBasis basis = Keywords::AUTO;
+    FlexBasis<Au> basis = Keywords::AUTO;
     Number grow = 0;
     Number shrink = 1;
 

@@ -51,7 +51,7 @@ export struct PositionProperty : Property {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-top
 export struct TopProperty : Property {
-    using Value = Union<Keywords::Auto, Calc<PercentOr<Length>>>;
+    using Value = Union<Keywords::Auto, Calc<Length, Percent>>;
 
     struct Registration : Property::Registration {
         Symbol name() const override {
@@ -143,7 +143,7 @@ export struct BottomProperty : Property {
         }
     };
 
-    Union<Keywords::Auto, Calc<PercentOr<Length>>> _value;
+    Union<Keywords::Auto, Calc<Length, Percent>> _value;
 
     BottomProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}

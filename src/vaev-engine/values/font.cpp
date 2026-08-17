@@ -8,12 +8,13 @@ import Karm.Ref;
 import Karm.Gfx;
 
 import :css;
-import :values.base;
 import :values.angle;
+import :values.base;
+import :values.calc;
+import :values.keywords;
 import :values.length;
 import :values.percent;
 import :values.primitives;
-import :values.keywords;
 
 using namespace Vaev::Literals;
 
@@ -93,7 +94,7 @@ export struct FontWidth {
 };
 
 export template <>
-struct ValueParser<FontWidth> {
+struct ValueTraits<FontWidth> {
     static Res<FontWidth> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -152,7 +153,7 @@ export struct FontStyle {
 };
 
 export template <>
-struct ValueParser<FontStyle> {
+struct ValueTraits<FontStyle> {
     static Res<FontStyle> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -219,7 +220,7 @@ export struct FontWeight : _FontWeight {
 // https://www.w3.org/TR/css-fonts-4/#font-weight-absolute-values
 
 export template <>
-struct ValueParser<Gfx::FontWeight> {
+struct ValueTraits<Gfx::FontWeight> {
     static Res<Gfx::FontWeight> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -238,7 +239,7 @@ struct ValueParser<Gfx::FontWeight> {
 };
 
 export template <>
-struct ValueParser<FontWeight> {
+struct ValueTraits<FontWeight> {
     static Res<FontWeight> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -257,8 +258,7 @@ struct ValueParser<FontWeight> {
 // https://www.w3.org/TR/css-fonts-4/#font-size-prop
 
 using FontSize = Union<
-    Length,
-    Percent,
+    Calc<Length, Percent>,
     Keywords::XxSmall,
     Keywords::XSmall,
     Keywords::Small,
@@ -268,11 +268,6 @@ using FontSize = Union<
     Keywords::XxLarge,
     Keywords::Smaller,
     Keywords::Larger>;
-
-export template <>
-struct _Resolved<FontSize> {
-    using Type = Au;
-};
 
 export struct FontSizeContextData {
     f64 userFontSize = 16;   /// Font size of the user agent
@@ -287,11 +282,8 @@ concept FontSizeContext = LengthContext<T> and requires(T t) {
 
 Au resolve(FontSize const& value, FontSizeContext auto const& ctx) {
     return value.visit(
-        [&](Length const& v) {
-            return resolve(v, ctx);
-        },
-        [&](Percent const& v) {
-            return Au::fromFloatNearest(ctx.parentFontSize * (v.value() / 100.0));
+        [&](Calc<Length, Percent> const& v) {
+            return resolve(v, ctx, Au{ctx.parentFontSize});
         },
         [&](Keywords::XxSmall) {
             return Au::fromFloatNearest(ctx.userFontSize * 0.5);
@@ -418,7 +410,7 @@ export struct FontSource {
 // MARK: FontFamily ------------------------------------------------------------
 
 export template <>
-struct ValueParser<FontFamily> {
+struct ValueTraits<FontFamily> {
     static Res<FontFamily> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

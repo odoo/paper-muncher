@@ -8,7 +8,6 @@ import Karm.Core;
 
 import :css;
 import :values.base;
-import :values.resolved;
 
 using namespace Karm;
 
@@ -114,17 +113,14 @@ export struct Angle {
     }
 };
 
-export template <>
-struct _Resolved<Angle> {
-    using Type = Rad;
-};
-
 Rad resolve(Angle const& value, [[maybe_unused]] auto const& ctx = NONE) {
     return Rad{value.toRadian()};
 }
 
 export template <>
-struct ValueParser<Angle> {
+struct ValueTraits<Angle> {
+    using CanonicalUnit = Rad;
+
     static Res<Angle::Unit> _parseAngleUnit(Str unit) {
         if (eqCi(unit, "deg"s))
             return Ok(Angle::Unit::DEGREE);

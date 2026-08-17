@@ -9,12 +9,36 @@ import Karm.Core;
 import :css;
 import :values.base;
 import :values.length;
+import :values.percent;
 import :values.primitives;
 
 using namespace Karm;
 
 namespace Vaev {
 
+// https://drafts.csswg.org/css-values/#typedef-rounding-strategy
+export enum struct RoundingStrategy {
+    NEAREST, // default
+    UP,
+    DOWN,
+    TO_ZERO,
+    LINE_WIDTH,
+
+    _LEN,
+};
+
+// https://drafts.csswg.org/css-values/#typedef-calc-keyword
+export enum struct CalcKeyword {
+    E,
+    PI,
+    INFINITY,
+    MINUS_INFINITY,
+    NAN,
+
+    _LEN,
+};
+
+// https://drafts.csswg.org/css-values/#typedef-calc-sum
 export enum struct CalcOp {
     NOP,
 
@@ -31,65 +55,86 @@ export enum struct CalcOp {
 
 // 10. Mathematical Expressions
 // https://drafts.csswg.org/css-values/#math
-export template <typename T>
+export template <typename... Ts>
 struct Calc {
-    using Leaf = Box<Calc<T>>;
-
-    using Value = Union<
-        T,
-        Leaf,
-        Number>;
+    using Primary = Meta::First<Ts...>;
+    using Scalar = Meta::ListUniq<Union<Number, Ts...>>;
 
     struct Unary {
         CalcOp op = CalcOp::NOP;
-        Value val;
+        Box<Calc> val;
     };
 
     struct Binary {
         CalcOp op = CalcOp::NOP;
-        Value lhs;
-        Value rhs;
+        Box<Calc> lhs;
+        Box<Calc> rhs;
     };
 
-    using Inner = Union<
-        Value,
-        Box<Unary>,
-        Box<Binary>>;
+    // NOTE: Order matters here, as we want to match Number first, then Ts..., then Unary, then Binary.
+    using Inner = Meta::ListUniq<Union<
+        Number,
+        Ts...,
+        Unary,
+        Binary>>;
 
     Inner _inner;
 
-    constexpr Calc()
-        : Calc(T{}) {
+    always_inline constexpr Calc()
+        : Calc(Primary{}) {
     }
 
-    constexpr Calc(Meta::Convertible<T> auto val)
-        : _inner(Value{T{val}}) {
+    always_inline constexpr Calc(CanonicalUnit<Primary> val)
+        : _inner(Primary{val}) {
     }
 
-    constexpr Calc(Value val)
+    template <Meta::Contains<Ts...> U>
+    always_inline constexpr Calc(U val)
         : _inner(val) {
     }
 
-    constexpr Calc(CalcOp op, Value val)
-        : _inner(makeBox<Unary>(op, val)) {
+    template <Meta::Convertible<Primary> U>
+    always_inline constexpr Calc(U val)
+        requires(not Meta::Same<Primary, U>)
+        : _inner(Primary{val}) {
     }
 
-    constexpr Calc(CalcOp op, Value lhs, Value rhs)
-        : _inner(makeBox<Binary>(op, lhs, rhs)) {
+    always_inline constexpr Calc(Scalar val)
+        : _inner(val) {
     }
 
-    auto visit(this auto& self, auto visitor) {
-        return self._inner.visit(
-            [&](Value const& v) {
-                return visitor(v);
+    always_inline constexpr Calc(CalcOp op, Calc val)
+        : _inner(Unary(op, val)) {
+    }
+
+    always_inline constexpr Calc(CalcOp op, Calc lhs, Calc rhs)
+        : _inner(Binary(op, lhs, rhs)) {
+    }
+
+    always_inline constexpr Opt<Union<Ts...>> value() const {
+        return _inner.visit(
+            [&](Meta::Contains<Ts...> auto const& v) -> Opt<Union<Ts...>> {
+                return v;
             },
-            [&](Box<Unary> const& u) {
-                return visitor(*u);
-            },
-            [&](Box<Binary> const& b) {
-                return visitor(*b);
+            [&](auto const&) {
+                return NONE;
             }
         );
+    }
+
+    always_inline constexpr Opt<Percent> percent() const {
+        return _inner.visit(
+            [&](Percent const& v) -> Opt<Percent> {
+                return v;
+            },
+            [&](auto const&) {
+                return NONE;
+            }
+        );
+    }
+
+    always_inline auto visit(this auto& self, auto visitor) {
+        return self._inner.visit(visitor);
     }
 
     always_inline auto visit(this auto& self, auto&&... visitors) {
@@ -98,7 +143,7 @@ struct Calc {
 
     void repr(Io::Emit& e) const {
         visit(
-            [&](Value const& v) {
+            [&](Meta::Contains<Ts..., Number> auto const& v) {
                 e("{}", v);
             },
             [&](Unary const& u) {
@@ -111,18 +156,13 @@ struct Calc {
     }
 };
 
-export template <typename T>
-struct _Resolved<Calc<T>> {
-    using Type = _Resolved<T>;
-};
-
 template <typename T>
-Resolved<T> _resolveUnary(CalcOp, Resolved<T>) {
+T _resolveUnary(CalcOp, T) {
     notImplemented();
 }
 
 template <typename T>
-Resolved<T> _resolveInfix(CalcOp op, Resolved<T> lhs, Resolved<T> rhs) {
+T _resolveInfix(CalcOp op, T lhs, T rhs) {
     switch (op) {
     case CalcOp::ADD:
         return lhs + rhs;
@@ -132,7 +172,7 @@ Resolved<T> _resolveInfix(CalcOp op, Resolved<T> lhs, Resolved<T> rhs) {
         // NOTE: Normally, direct multiplication on Au is not allowed.
         //       However, CSS calc() treats pixel units as floating-point numbers,
         //       permitting all standard math operations between them.
-        if constexpr (Meta::Same<Resolved<T>, Au>) {
+        if constexpr (Meta::Same<T, Au>) {
             return Au(f64{lhs} * f64{rhs});
         } else {
             return lhs * rhs;
@@ -141,7 +181,7 @@ Resolved<T> _resolveInfix(CalcOp op, Resolved<T> lhs, Resolved<T> rhs) {
         // NOTE: Normally, direct multiplication on Au is not allowed.
         //       However, CSS calc() treats pixel units as floating-point numbers,
         //       permitting all standard math operations between them.
-        if constexpr (Meta::Same<Resolved<T>, Au>) {
+        if constexpr (Meta::Same<T, Au>) {
             return Au(f64{lhs} / f64{rhs});
         } else {
             return lhs / rhs;
@@ -151,45 +191,31 @@ Resolved<T> _resolveInfix(CalcOp op, Resolved<T> lhs, Resolved<T> rhs) {
     }
 }
 
-export template <typename T, typename... Args>
-Resolved<T> resolve(Calc<T> const& calc, Args... args) {
-    auto resolveUnion = Visitor{
-        [&](T const& v) {
-            return resolve(v, args...);
-        },
-        [&](Calc<T>::Leaf const& v) {
-            return resolve<T>(*v, args...);
-        },
-        [&](Number const& v)
-            requires(not Meta::Same<T, Number>)
-        {
-            return Resolved<T>{v};
-        }
-        };
-
+export template <typename Primary, typename... Ts, typename... Args>
+CanonicalUnit<Primary> resolve(Calc<Primary, Ts...> const& calc, Args const&... args) {
     return calc.visit(
-        [&](typename Calc<T>::Value const& v) {
-            return v.visit(resolveUnion);
+        [&](Meta::Contains<Primary, Ts..., Number> auto const& v) -> CanonicalUnit<Primary> {
+            return CanonicalUnit<Primary>{resolve(v, args...)};
         },
-        [&](typename Calc<T>::Unary const& u) {
-            return _resolveUnary<T>(
+        [&](typename Calc<Primary, Ts...>::Unary const& u) -> CanonicalUnit<Primary> {
+            return _resolveUnary<CanonicalUnit<Primary>>(
                 u.op,
-                u.val.visit(resolveUnion)
+                resolve(*u.val, args...)
             );
         },
-        [&](typename Calc<T>::Binary const& b) {
-            return _resolveInfix<T>(
+        [&](typename Calc<Primary, Ts...>::Binary const& b) -> CanonicalUnit<Primary> {
+            return _resolveInfix<CanonicalUnit<Primary>>(
                 b.op,
-                b.lhs.visit(resolveUnion),
-                b.rhs.visit(resolveUnion)
+                resolve(*b.lhs, args...),
+                resolve(*b.rhs, args...)
             );
         }
     );
 }
 
-export template <typename T>
-struct ValueParser<Calc<T>> {
-    static Res<Calc<T>> parse(Cursor<Css::Sst>& c) {
+export template <typename... Ts>
+struct ValueTraits<Calc<Ts...>> {
+    static Res<Calc<Ts...>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -198,23 +224,23 @@ struct ValueParser<Calc<T>> {
             auto prefixToken = prefix.unwrap()->token;
             if (prefixToken.data == "calc(") {
                 Cursor<Css::Sst> content = c.peek().content;
-                auto lhs = try$(parseVal(content));
+                auto lhs = try$(parseScalar(content));
 
                 auto op = parseOp(content);
                 if (not op) {
                     c.next();
-                    return Ok(Calc<T>{lhs});
+                    return Ok(Calc<Ts...>{lhs});
                 }
 
                 eatWhitespace(content);
-                auto rhs = try$(parseVal(content));
+                auto rhs = try$(parseScalar(content));
 
                 c.next();
-                return Ok(Calc<T>{op.unwrap(), lhs, rhs});
+                return Ok(Calc<Ts...>{op.unwrap(), lhs, rhs});
             }
         }
 
-        return Ok(try$(parseValue<T>(c)));
+        return Ok(try$(parseValue<Union<Ts...>>(c)));
     }
 
     static Res<CalcOp> parseOp(Cursor<Css::Sst>& c) {
@@ -242,15 +268,8 @@ struct ValueParser<Calc<T>> {
         return Error::invalidData("unexpected operator");
     }
 
-    static Res<typename Calc<T>::Value> parseVal(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.peek().token == Css::Token::NUMBER) {
-            return Ok(try$(parseValue<Number>(c)));
-        }
-
-        return Ok(try$(parseValue<T>(c)));
+    static Res<typename Calc<Ts...>::Scalar> parseScalar(Cursor<Css::Sst>& c) {
+        return parseValue<typename Calc<Ts...>::Scalar>(c);
     }
 };
 

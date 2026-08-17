@@ -9,13 +9,14 @@ import Karm.Math;
 
 import :css;
 import :values.base;
-import :values.resolved;
 import :values.writing;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
 
 namespace Vaev {
+
+// MARK: Au --------------------------------------------------------------------
 
 export using Math::Au;
 export constexpr Au INDEFINITE = Limits<Au>::MAX;
@@ -26,9 +27,21 @@ export using Math::Vec2Au;
 export using Math::RadiiAu;
 export using Math::EllipseAu;
 
+template <>
+struct ValueTraits<Au> {
+    using CanonicalUnit = Au;
+};
+
+// MARK: Pixels ----------------------------------------------------------------
+
 export using Pixel = Distinct<f64, struct _PixelTag>;
 
-// 6.1. MARK: Relative Lengths
+template <>
+struct ValueTraits<Pixel> {
+    using CanonicalUnit = Pixel;
+};
+
+// MARK: Relative Lengths ------------------------------------------------------
 // https://drafts.csswg.org/css-values/#relative-lengths
 
 export struct RelativeLength {
@@ -69,11 +82,6 @@ export struct RelativeLength {
     void repr(Io::Emit& e) const {
         e("{}{}", _value, _unit);
     }
-};
-
-export template <>
-struct _Resolved<RelativeLength> {
-    using Type = Au;
 };
 
 export struct RelativeLengthContextData {
@@ -131,7 +139,7 @@ concept RelativeLengthContext = requires(T t) {
     { t.boxAxis } -> Meta::Convertible<Axis>;
 };
 
-export Au resolve(RelativeLength value, RelativeLengthContext auto const& ctx) {
+export Au resolve(RelativeLength value, RelativeLengthContext auto const& ctx, ...) {
     switch (value.unit()) {
     case RelativeLength::EM:
         return Au::fromFloatNearest(value.value() * ctx.fontSize);
@@ -290,7 +298,9 @@ export Au resolve(RelativeLength value, RelativeLengthContext auto const& ctx) {
 }
 
 export template <>
-struct ValueParser<RelativeLength> {
+struct ValueTraits<RelativeLength> {
+    using CanonicalUnit = Au;
+
     static Res<RelativeLength::Unit> _parseLengthUnit(Str unit) {
         return valueOfCi<RelativeLength::Unit>(unit)
             .okOr(Error::invalidData("expected <relative-length> unit"));
@@ -312,7 +322,7 @@ struct ValueParser<RelativeLength> {
     }
 };
 
-// 6.2. MARK: Absolute Lengths: the cm, mm, Q, in, pt, pc, px units
+// MARK: Absolute Lengths ------------------------------------------------------
 // https://drafts.csswg.org/css-values/#absolute-lengths
 
 export struct AbsoluteLength {
@@ -386,17 +396,14 @@ export struct AbsoluteLength {
     }
 };
 
-export template <>
-struct _Resolved<AbsoluteLength> {
-    using Type = Au;
-};
-
 export Au resolve(AbsoluteLength value) {
     return Au::fromFloatNearest(value.pixels().value());
 }
 
 export template <>
-struct ValueParser<AbsoluteLength> {
+struct ValueTraits<AbsoluteLength> {
+    using CanonicalUnit = Au;
+
     static Res<AbsoluteLength::Unit> _parseLengthUnit(Str unit) {
         return valueOfCi<AbsoluteLength::Unit>(unit)
             .okOr(Error::invalidData("expected <absolute-length> unit"));
@@ -418,7 +425,7 @@ struct ValueParser<AbsoluteLength> {
     }
 };
 
-// 6. MARK: Distance Units: the <length> type
+// MARK: Length ----------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#lengths
 
 export struct Length : Union<AbsoluteLength, RelativeLength> {
@@ -435,15 +442,10 @@ export struct Length : Union<AbsoluteLength, RelativeLength> {
     }
 };
 
-export template <>
-struct _Resolved<Length> {
-    using Type = Au;
-};
-
 export template <typename T>
 concept LengthContext = RelativeLengthContext<T>;
 
-export Au resolve(Length const& l, LengthContext auto const& ctx) {
+export Au resolve(Length const& l, LengthContext auto const& ctx, ...) {
     return l.visit(
         [&](RelativeLength l) {
             return resolve(l, ctx);
@@ -455,7 +457,9 @@ export Au resolve(Length const& l, LengthContext auto const& ctx) {
 }
 
 export template <>
-struct ValueParser<Length> {
+struct ValueTraits<Length> {
+    using CanonicalUnit = Au;
+
     static Res<Length> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

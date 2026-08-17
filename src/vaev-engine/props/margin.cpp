@@ -15,7 +15,7 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-box-4/#propdef-margin-top
 export struct MarginTopProperty : Property {
-    using Value = Union<Keywords::Auto, Calc<PercentOr<Length>>>;
+    using Value = Union<Keywords::Auto, Calc<Length, Percent>>;
 
     struct Registration : Property::Registration {
         Symbol name() const override {
@@ -23,7 +23,7 @@ export struct MarginTopProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginTopProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginTopProperty>(self(), Calc<Length, Percent>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -59,7 +59,7 @@ export struct MarginRightProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginRightProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginRightProperty>(self(), Calc<Length, Percent>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -95,7 +95,7 @@ export struct MarginBottomProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginBottomProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginBottomProperty>(self(), Calc<Length, Percent>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -131,7 +131,7 @@ export struct MarginLeftProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginLeftProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginLeftProperty>(self(), Calc<Length, Percent>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -171,7 +171,7 @@ export struct MarginProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginProperty>(self(), Value{Calc<PercentOr<Length>>(Length{})});
+            return makeRc<MarginProperty>(self(), Value{Calc<Length, Percent>(Length{})});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -212,7 +212,7 @@ export struct MarginInlineStartProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginInlineStartProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginInlineStartProperty>(self(), Calc<Length, Percent>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -249,7 +249,7 @@ export struct MarginInlineEndProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginInlineEndProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginInlineEndProperty>(self(), Calc<Length, Percent>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -286,7 +286,7 @@ export struct MarginInlineProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginInlineProperty>(self(), Value{Calc<PercentOr<Length>>(Length{})});
+            return makeRc<MarginInlineProperty>(self(), Value{Calc<Length, Percent>(Length{})});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -324,7 +324,7 @@ export struct MarginBlockStartProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginBlockStartProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginBlockStartProperty>(self(), Calc<Length, Percent>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -361,7 +361,7 @@ export struct MarginBlockEndProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginBlockEndProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginBlockEndProperty>(self(), Calc<Length, Percent>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -373,7 +373,7 @@ export struct MarginBlockEndProperty : Property {
         }
     };
 
-    Union<Keywords::Auto, Calc<PercentOr<Length>>> _value;
+    Union<Keywords::Auto, Calc<Length, Percent>> _value;
 
     MarginBlockEndProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
@@ -398,7 +398,7 @@ export struct MarginBlockProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MarginBlockProperty>(self(), Value{Calc<PercentOr<Length>>(Length{})});
+            return makeRc<MarginBlockProperty>(self(), Value{Calc<Length, Percent>(Length{})});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

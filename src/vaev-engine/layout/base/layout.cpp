@@ -29,6 +29,7 @@ export BoxMetrics computeBoxMetrics(Tree& tree, Box& box, Vec2Au position, Vec2A
 
 // Main function for laying out a box and its children.
 export Output layoutContentBox(Tree& tree, Box& box, Input input);
+
 export Output layoutBorderBox(Tree& tree, Box& box, Input input);
 
 // Layout wrappers for root elements

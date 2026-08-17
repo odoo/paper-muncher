@@ -21,16 +21,29 @@ export bool skipOmmitableComma(Cursor<Css::Sst>& c) {
 }
 
 export template <typename T>
-struct ValueParser;
+struct ValueTraits;
+
+template <typename... Ts>
+using Resolved = decltype(resolve(Meta::declref<Ts>()...));
+
+template <typename T>
+using CanonicalUnit = typename ValueTraits<T>::CanonicalUnit;
+
+template <typename T>
+concept Canonical = Meta::Same<T, CanonicalUnit<T>>;
 
 export template <typename T>
-concept ValueParseable = requires() {
-    ValueParser<T>::parse;
+concept Parseable = requires() {
+    ValueTraits<T>::parse;
 };
+
+export auto resolve(Canonical auto value, ...) {
+    return value;
+}
 
 export template <typename T>
 Res<T> parseValue(Cursor<Css::Sst>& c) {
-    return ValueParser<T>::parse(c);
+    return ValueTraits<T>::parse(c);
 }
 
 export template <typename T>
@@ -39,7 +52,7 @@ Res<T> parseValue(Str str) {
     auto diags = Diag::Collector::ignore();
     auto [sst, _] = Css::consumeDeclarationValue(lex, diags);
     Cursor<Css::Sst> content{sst};
-    return ValueParser<T>::parse(content);
+    return ValueTraits<T>::parse(content);
 }
 
 } // namespace Vaev

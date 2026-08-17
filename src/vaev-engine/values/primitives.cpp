@@ -10,7 +10,6 @@ import Karm.Math;
 
 import :css;
 import :values.base;
-import :values.resolved;
 
 using namespace Karm;
 
@@ -22,7 +21,7 @@ namespace Vaev {
 export using Integer = isize;
 
 export template <>
-struct ValueParser<Integer> {
+struct ValueTraits<Integer> {
     static Res<Integer> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -44,17 +43,14 @@ struct ValueParser<Integer> {
 
 export using Number = f64;
 
-export template <>
-struct _Resolved<Number> {
-    using Type = Number;
-};
-
-export Number resolve(Number const& value, [[maybe_unused]] auto const& ctx = NONE) {
+export Number resolve(Number const& value, [[maybe_unused]] auto const... ctx) {
     return value;
 }
 
 export template <>
-struct ValueParser<Number> {
+struct ValueTraits<Number> {
+    using CanonicalUnit = Number;
+
     static Res<Number> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -70,7 +66,7 @@ struct ValueParser<Number> {
 };
 
 export template <>
-struct ValueParser<bool> {
+struct ValueTraits<bool> {
     static Res<bool> parse(Cursor<Css::Sst>& c) {
         return Ok(try$(parseValue<Integer>(c)) > 0);
     }
@@ -80,7 +76,7 @@ struct ValueParser<bool> {
 // https://drafts.csswg.org/css-values/#strings
 
 export template <>
-struct ValueParser<String> {
+struct ValueTraits<String> {
     static Res<String> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -118,7 +114,7 @@ struct CustomIdent {
 };
 
 export template <>
-struct ValueParser<CustomIdent> {
+struct ValueTraits<CustomIdent> {
     static Res<CustomIdent> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -162,7 +158,7 @@ export Res<String> parseUrlIntoString(Cursor<Css::Sst>& c) {
 }
 
 export template <>
-struct ValueParser<Ref::Url> {
+struct ValueTraits<Ref::Url> {
     static Res<Ref::Url> parse(Cursor<Css::Sst>& c) {
         return Ok(Ref::Url::parse(try$(parseUrlIntoString(c))));
     }
@@ -172,8 +168,8 @@ struct ValueParser<Ref::Url> {
 // https://drafts.csswg.org/css-values-4/#component-combinators
 
 // https://drafts.csswg.org/css-values-4/#comb-one
-export template <ValueParseable... Ts>
-struct ValueParser<Union<Ts...>> {
+export template <Parseable... Ts>
+struct ValueTraits<Union<Ts...>> {
     static Res<Union<Ts...>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -188,8 +184,8 @@ struct ValueParser<Union<Ts...>> {
 // https://drafts.csswg.org/css-values-4/#component-multipliers
 
 // https://drafts.csswg.org/css-values-4/#mult-zero-plus
-export template <ValueParseable T>
-struct ValueParser<Vec<T>> {
+export template <Parseable T>
+struct ValueTraits<Vec<T>> {
     static Res<Vec<T>> parse(Cursor<Css::Sst>& c) {
         Vec<T> result = {};
 

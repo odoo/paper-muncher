@@ -145,7 +145,7 @@ export struct Image : _Image {
 };
 
 export template <>
-struct ValueParser<Image> {
+struct ValueTraits<Image> {
     static Res<Image> parse(Cursor<Css::Sst>& c) {
         return parseValue<Ref::Url>(c);
     }

@@ -253,7 +253,7 @@ export Opt<SystemColor> parseSystemColor(Str name) {
 }
 
 export template <>
-struct ValueParser<Color> {
+struct ValueTraits<Color> {
 
     static Res<Gfx::Color> _parseHexColor(Io::SScan& s) {
         if (s.next() != '#')

@@ -12,7 +12,7 @@ using namespace Karm;
 using namespace Karm::Literals;
 using namespace Karm::Ref::Literals;
 
-template <Vaev::ValueParseable T>
+template <Vaev::Parseable T>
     requires(not Meta::Enum<T>)
 struct Cli::ValueParser<T> {
     static Res<> usage(Io::TextWriter& w) {

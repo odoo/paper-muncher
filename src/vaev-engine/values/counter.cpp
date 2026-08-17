@@ -40,7 +40,7 @@ export struct CounterSymbolsFunc {
 };
 
 export template <>
-struct ValueParser<CounterSymbolsFunc> {
+struct ValueTraits<CounterSymbolsFunc> {
     static Res<CounterSymbolsFunc> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -123,7 +123,7 @@ export struct CounterFunc {
 };
 
 export template <>
-struct ValueParser<CounterFunc> {
+struct ValueTraits<CounterFunc> {
     static Res<CounterFunc> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -153,7 +153,7 @@ export struct CountersFunc {
 };
 
 export template <>
-struct ValueParser<CountersFunc> {
+struct ValueTraits<CountersFunc> {
     static Res<CountersFunc> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -203,7 +203,7 @@ export struct CounterProps {
 };
 
 export template <>
-struct ValueParser<CounterProps::Reset> {
+struct ValueTraits<CounterProps::Reset> {
     static Res<CounterProps::Reset> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -226,7 +226,7 @@ struct ValueParser<CounterProps::Reset> {
 };
 
 export template <>
-struct ValueParser<CounterProps::Increment> {
+struct ValueTraits<CounterProps::Increment> {
     static Res<CounterProps::Increment> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

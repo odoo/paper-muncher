@@ -5,7 +5,6 @@ import Karm.Core;
 import :css;
 import :values.base;
 import :values.primitives;
-import :values.resolved;
 
 using namespace Karm;
 
@@ -17,7 +16,7 @@ namespace Vaev {
 export using Percent = Distinct<f64, struct _PercentTag>;
 
 export template <>
-struct ValueParser<Percent> {
+struct ValueTraits<Percent> {
     static Res<Percent> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -32,19 +31,9 @@ struct ValueParser<Percent> {
     }
 };
 
-export template <typename T>
-using PercentOr = Union<Percent, T>;
-
-export template <typename T>
-struct _Resolved<PercentOr<T>> {
-    using Type = Resolved<T>;
-};
-
-export template <typename T>
-Resolved<T> resolve(PercentOr<T> const& value, auto const& ctx, Resolved<T> relative) {
-    if (auto v = value.template is<Percent>())
-        return Resolved<T>{relative.template cast<f64>() * ((*v).value() / 100.)};
-    return resolve(value.template unwrap<T>(), ctx);
+template <typename T>
+auto resolve(Percent const& value, auto const&, T relative) {
+    return T{relative.template cast<f64>() * (value.value() / 100.)};
 }
 
 } // namespace Vaev

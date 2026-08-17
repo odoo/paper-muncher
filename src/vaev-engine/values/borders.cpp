@@ -17,7 +17,7 @@ namespace Vaev {
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 
 export template <>
-struct ValueParser<Gfx::BorderStyle> {
+struct ValueTraits<Gfx::BorderStyle> {
     static Res<Gfx::BorderStyle> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of property");
@@ -85,7 +85,7 @@ export struct UsedBorder {
 export using UsedBorders = Math::Insets<UsedBorder>;
 
 export template <>
-struct ValueParser<SpecifiedBorder> {
+struct ValueTraits<SpecifiedBorder> {
     static Res<SpecifiedBorder> parse(Cursor<Css::Sst>& c) {
         SpecifiedBorder border;
         while (not c.ended()) {
@@ -126,7 +126,7 @@ export enum struct BorderEdge {
 
 export struct BorderProps {
     ComputedBorder top, start, bottom, end;
-    Math::Radii<Calc<PercentOr<Length>>> radii = {Length{0_au}};
+    Math::Radii<Calc<Length, Percent>> radii = {Length{0_au}};
 
     ComputedBorder const& get(BorderEdge edge) const {
         switch (edge) {
@@ -153,24 +153,24 @@ export struct BorderProps {
 };
 
 export template <typename T>
-struct ValueParser<Math::Radii<T>> {
+struct ValueTraits<Math::Radii<T>> {
     static Res<Math::Radii<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        auto value1 = parseValue<PercentOr<Length>>(c);
+        auto value1 = parseValue<Calc<Length, Percent>>(c);
         if (not value1)
             return parsePostSlash(c, NONE);
 
-        auto value2 = parseValue<PercentOr<Length>>(c);
+        auto value2 = parseValue<Calc<Length, Percent>>(c);
         if (not value2)
             return parsePostSlash(c, Math::Radii<T>{value1.take()});
 
-        auto value3 = parseValue<PercentOr<Length>>(c);
+        auto value3 = parseValue<Calc<Length, Percent>>(c);
         if (not value3)
             return parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take()});
 
-        auto value4 = parseValue<PercentOr<Length>>(c);
+        auto value4 = parseValue<Calc<Length, Percent>>(c);
         if (not value4)
             return parsePostSlash(c, Math::Radii<T>{value1.take(), value2.take(), value3.take(), value2.take()});
 
@@ -191,12 +191,12 @@ struct ValueParser<Math::Radii<T>> {
         auto radii = maybeRadii.unwrapOr(Math::Radii<T>{Length{0_au}});
         c.next();
         eatWhitespace(c);
-        auto value1 = parseValue<PercentOr<Length>>(c);
+        auto value1 = parseValue<Calc<Length, Percent>>(c);
         if (not value1) {
             return Ok(std::move(radii));
         }
 
-        auto value2 = parseValue<PercentOr<Length>>(c);
+        auto value2 = parseValue<Calc<Length, Percent>>(c);
         if (not value2) {
             radii.a = value1.unwrap();
             radii.d = value1.unwrap();
@@ -206,7 +206,7 @@ struct ValueParser<Math::Radii<T>> {
         }
 
         eatWhitespace(c);
-        auto value3 = parseValue<PercentOr<Length>>(c);
+        auto value3 = parseValue<Calc<Length, Percent>>(c);
         if (not value3) {
             radii.a = value1.unwrap();
             radii.d = value2.unwrap();
@@ -216,7 +216,7 @@ struct ValueParser<Math::Radii<T>> {
         }
 
         eatWhitespace(c);
-        auto value4 = parseValue<PercentOr<Length>>(c);
+        auto value4 = parseValue<Calc<Length, Percent>>(c);
         if (not value4) {
             radii.a = value1.unwrap();
             radii.d = value2.unwrap();

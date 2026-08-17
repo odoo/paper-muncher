@@ -14,33 +14,13 @@ using namespace Karm;
 
 namespace Vaev::Layout {
 
-// SVG sizes shouldn't be defined using calc values
-Opt<PercentOr<Length>> extractValueFromCalc(Calc<PercentOr<Length>> const& size) {
-    return size.visit(
-        [](Calc<PercentOr<Length>>::Value const& v) {
-            return Opt{v.unwrap<PercentOr<Length>>()};
-        },
-        [](auto const) {
-            return Opt<PercentOr<Length>>{NONE};
-        }
-    );
-}
-
 // FIXME: this should be targeted by the computer refactoring, so we have only resolved percentage or length values
-PercentOr<Length> fromSize(Size const& size) {
+Union<Length, Percent> fromSize(Size const& size) {
     if (size.is<Keywords::Auto>())
-        return PercentOr<Length>{Percent{100}};
-
-    return extractValueFromCalc(size.unwrap<Calc<PercentOr<Length>>>())
-        .unwrapOr(PercentOr<Length>{Percent{100}});
-}
-
-// FIXME: already present in Resolver obj, but it doesnt make sense to instantiate one here; should also be targeted
-// by the computer refactoring
-Au resolve(PercentOr<Length> const& value, Au relative) {
-    if (auto valueLength = value.is<Length>())
-        return Au{valueLength->unwrapOr<AbsoluteLength>(0_au).pixels().value()};
-    return Au{relative.cast<f64>() * (value.unwrap<Percent>().value() / 100.)};
+        return Percent{100};
+    return size.unwrap<Calc<Length, Percent>>()
+        .value()
+        .unwrapOr(Percent{100});
 }
 
 Au normalizedDiagonal(Vec2Au relativeTo) {
@@ -57,12 +37,12 @@ struct SvgFormatingContext : FormatingContext {
         // FIXME: again this should be targetted by the styling computation refactoring,
         // where Size will be resolved to a mix between Percent and Lengths
         auto absoluteValue = [](Size size) -> Opt<Length> {
-            if (not size.is<Calc<PercentOr<Length>>>())
+            if (not size.is<Calc<Length, Percent>>())
                 return NONE;
 
-            auto calc = size.unwrap<Calc<PercentOr<Length>>>();
+            auto calc = size.unwrap<Calc<Length, Percent>>();
 
-            auto percOrLength = extractValueFromCalc(calc);
+            auto percOrLength = calc.value();
             if (not percOrLength)
                 return NONE;
 
@@ -110,8 +90,8 @@ struct SvgFormatingContext : FormatingContext {
 
     static RectAu _resolveRectangle(Style::ComputedValues const& style, Vec2Au const& relativeTo) {
         return {
-            Layout::resolve(style.svg->x, relativeTo.x),
-            Layout::resolve(style.svg->y, relativeTo.y),
+            Vaev::resolve(style.svg->x, NONE, relativeTo.x),
+            Vaev::resolve(style.svg->y, NONE, relativeTo.y),
             Layout::resolve(fromSize(style.sizing->width), relativeTo.x),
             Layout::resolve(fromSize(style.sizing->height), relativeTo.y)
         };
@@ -119,14 +99,14 @@ struct SvgFormatingContext : FormatingContext {
 
     static EllipseAu _resolveCircle(Style::ComputedValues const& style, Vec2Au const& relativeTo) {
         return {
-            Vaev::Layout::resolve(style.svg->cx, relativeTo.x),
-            Vaev::Layout::resolve(style.svg->cy, relativeTo.y),
-            Vaev::Layout::resolve(style.svg->r, relativeTo.x),
+            Vaev::resolve(style.svg->cx, NONE, relativeTo.x),
+            Vaev::resolve(style.svg->cy, NONE, relativeTo.y),
+            Vaev::resolve(style.svg->r, NONE, relativeTo.x),
         };
     }
 
     static void _commitShape(Box& box, FragmentBuilder& fragBuilder, Vec2Au relativeTo) {
-        Au resolvedStrokeWidth = Vaev::Layout::resolve(box.style->svg->strokeWidth, normalizedDiagonal(relativeTo));
+        Au resolvedStrokeWidth = Vaev::resolve(box.style->svg->strokeWidth, NONE, normalizedDiagonal(relativeTo));
         auto shape = box.content.unwrap<SvgShapeElement>();
 
         switch (shape) {

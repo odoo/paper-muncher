@@ -27,7 +27,7 @@ export struct RunningPosition {
 export using Position = Union<Keywords::Static, Keywords::Relative, Keywords::Absolute, Keywords::Fixed, Keywords::Sticky, RunningPosition>;
 
 export template <>
-struct ValueParser<Position> {
+struct ValueTraits<Position> {
     // https://drafts.csswg.org/css-position-3/#propdef-position
     static Res<Position> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
@@ -57,15 +57,27 @@ struct ValueParser<Position> {
     }
 };
 
-export using Margin = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Length>>>>;
+export struct Margin : Math::Insets<Union<Keywords::Auto, Calc<Length, Percent>>> {
+    using Insets::Insets;
 
-export using Padding = Math::Insets<Calc<PercentOr<Length>>>;
+    Margin() : Margin(Calc<Length, Percent>{Length{0_au}}) {}
+};
+
+export struct Padding : Math::Insets<Calc<Length, Percent>> {
+    using Insets::Insets;
+
+    Padding() : Padding(Length{0_au}) {}
+};
 
 // https://www.w3.org/TR/css-position-3/#propdef-inset
-export using BoxInsets = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Length>>>>;
+export struct BoxInsets : Math::Insets<Union<Keywords::Auto, Calc<Length, Percent>>> {
+    using Insets::Insets;
+
+    BoxInsets() : BoxInsets(Calc<Length, Percent>{Length{0_au}}) {}
+};
 
 export template <typename T>
-struct ValueParser<Math::Insets<T>> {
+struct ValueTraits<Math::Insets<T>> {
     static Res<Math::Insets<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -92,7 +104,7 @@ struct ValueParser<Math::Insets<T>> {
 
 export using Gap = Union<
     Keywords::Normal,
-    Calc<PercentOr<Length>>>;
+    Calc<Length, Percent>>;
 
 export struct Gaps {
     Gap row = Keywords::NORMAL;

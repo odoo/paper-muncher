@@ -70,7 +70,7 @@ export struct WidthProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<WidthProperty>(self(), Size{Keywords::AUTO});
+            return makeRc<WidthProperty>(self(), Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -84,17 +84,17 @@ export struct WidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<WidthProperty>(self(), try$(parseValue<Size>(c))));
+            return Ok(makeRc<WidthProperty>(self(), try$(parseValue<Size<Length>>(c))));
         }
     };
 
-    Size _value;
+    Size<Length> _value;
 
-    WidthProperty(Rc<Property::Registration> registration, Size value)
+    WidthProperty(Rc<Property::Registration> registration, Size<Length> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().width = _value;
+        c.sizing.cow().width = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -115,7 +115,7 @@ export struct HeightProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<HeightProperty>(self(), Size{Keywords::AUTO});
+            return makeRc<HeightProperty>(self(), Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -129,17 +129,17 @@ export struct HeightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<HeightProperty>(self(), try$(parseValue<Size>(c))));
+            return Ok(makeRc<HeightProperty>(self(), try$(parseValue<Size<Length>>(c))));
         }
     };
 
-    Size _value;
+    Size<Length> _value;
 
-    HeightProperty(Rc<Property::Registration> registration, Size value)
+    HeightProperty(Rc<Property::Registration> registration, Size<Length> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().height = _value;
+        c.sizing.cow().height = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -155,7 +155,7 @@ export struct MinWidthProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<MinWidthProperty>(self(), Size{Keywords::AUTO});
+            return makeRc<MinWidthProperty>(self(), Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -163,17 +163,17 @@ export struct MinWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MinWidthProperty>(self(), try$(parseValue<Size>(c))));
+            return Ok(makeRc<MinWidthProperty>(self(), try$(parseValue<Size<Length>>(c))));
         }
     };
 
-    Size _value;
+    Size<Length> _value;
 
-    MinWidthProperty(Rc<Property::Registration> registration, Size value)
+    MinWidthProperty(Rc<Property::Registration> registration, Size<Length> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().minWidth = _value;
+        c.sizing.cow().minWidth = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -197,17 +197,17 @@ export struct MinHeightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MinHeightProperty>(self(), try$(parseValue<Size>(c))));
+            return Ok(makeRc<MinHeightProperty>(self(), try$(parseValue<Size<Length>>(c))));
         }
     };
 
-    Size _value;
+    Size<Length> _value;
 
-    MinHeightProperty(Rc<Property::Registration> registration, Size value)
+    MinHeightProperty(Rc<Property::Registration> registration, Size<Length> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().minHeight = _value;
+        c.sizing.cow().minHeight = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -232,17 +232,17 @@ export struct MaxWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MaxWidthProperty>(self(), try$(parseValue<MaxSize>(c))));
+            return Ok(makeRc<MaxWidthProperty>(self(), try$(parseValue<MaxSize<Length>>(c))));
         }
     };
 
-    MaxSize _value;
+    MaxSize<Length> _value;
 
-    MaxWidthProperty(Rc<Property::Registration> registration, MaxSize value)
+    MaxWidthProperty(Rc<Property::Registration> registration, MaxSize<Length> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().maxWidth = _value;
+        c.sizing.cow().maxWidth = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -266,17 +266,17 @@ export struct MaxHeightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MaxHeightProperty>(self(), try$(parseValue<MaxSize>(c))));
+            return Ok(makeRc<MaxHeightProperty>(self(), try$(parseValue<MaxSize<Length>>(c))));
         }
     };
 
-    MaxSize _value;
+    MaxSize<Length> _value;
 
-    MaxHeightProperty(Rc<Property::Registration> registration, MaxSize value)
+    MaxHeightProperty(Rc<Property::Registration> registration, MaxSize<Length> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().maxHeight = _value;
+        c.sizing.cow().maxHeight = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {

@@ -47,7 +47,7 @@ export Au resolve(LineWidth const& value, auto const& ctx) {
 }
 
 export template <>
-struct ValueParser<LineWidth> {
+struct ValueTraits<LineWidth> {
     static Res<LineWidth> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

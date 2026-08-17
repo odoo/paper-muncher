@@ -27,7 +27,7 @@ export struct SvgXProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<SvgXProperty>(self(), PercentOr<Length>{Length{0_au}});
+            return makeRc<SvgXProperty>(self(), Calc<Length, Percent>{Length{0_au}});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -39,13 +39,13 @@ export struct SvgXProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgXProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return Ok(makeRc<SvgXProperty>(self(), try$(parseValue<Calc<Length, Percent>>(c))));
         }
     };
 
-    PercentOr<Length> _value;
+    Calc<Length, Percent> _value;
 
-    SvgXProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
+    SvgXProperty(Rc<Property::Registration> registration, Calc<Length, Percent> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -69,7 +69,7 @@ export struct SvgYProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<SvgYProperty>(self(), PercentOr<Length>{Length{0_au}});
+            return makeRc<SvgYProperty>(self(), Calc<Length, Percent>{Length{0_au}});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -81,17 +81,17 @@ export struct SvgYProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgYProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return Ok(makeRc<SvgYProperty>(self(), try$(parseValue<Calc<Length, Percent>>(c))));
         }
     };
 
-    PercentOr<Length> _value;
+    Calc<Length, Percent> _value;
 
-    SvgYProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
+    SvgYProperty(Rc<Property::Registration> registration, Calc<Length, Percent> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().y = _value;
+        c.svg.cow().y = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -111,7 +111,7 @@ export struct SvgCXProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<SvgCXProperty>(self(), PercentOr<Length>{Length{0_au}});
+            return makeRc<SvgCXProperty>(self(), Calc<Length, Percent>{Length{0_au}});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -123,17 +123,17 @@ export struct SvgCXProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgCXProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return Ok(makeRc<SvgCXProperty>(self(), try$(parseValue<Calc<Length, Percent>>(c))));
         }
     };
 
-    PercentOr<Length> _value;
+    Calc<Length, Percent> _value;
 
-    SvgCXProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
+    SvgCXProperty(Rc<Property::Registration> registration, Calc<Length, Percent> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().cx = _value;
+        c.svg.cow().cx = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -153,7 +153,7 @@ export struct SvgCYProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<SvgCYProperty>(self(), PercentOr<Length>{Length{0_au}});
+            return makeRc<SvgCYProperty>(self(), Calc<Length, Percent>{Length{0_au}});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -165,17 +165,17 @@ export struct SvgCYProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgCYProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return Ok(makeRc<SvgCYProperty>(self(), try$(parseValue<Calc<Length, Percent>>(c))));
         }
     };
 
-    PercentOr<Length> _value;
+    Calc<Length, Percent> _value;
 
-    SvgCYProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
+    SvgCYProperty(Rc<Property::Registration> registration, Calc<Length, Percent> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().cy = _value;
+        c.svg.cow().cy = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -195,7 +195,7 @@ export struct SvgRProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<SvgRProperty>(self(), PercentOr<Length>{Length{0_au}});
+            return makeRc<SvgRProperty>(self(), Calc<Length, Percent>{Length{0_au}});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -207,17 +207,17 @@ export struct SvgRProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgRProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return Ok(makeRc<SvgRProperty>(self(), try$(parseValue<Calc<Length, Percent>>(c))));
         }
     };
 
-    PercentOr<Length> _value;
+    Calc<Length, Percent> _value;
 
-    SvgRProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
+    SvgRProperty(Rc<Property::Registration> registration, Calc<Length, Percent> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().r = _value;
+        c.svg.cow().r = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -552,7 +552,7 @@ export struct StrokeWidthProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<StrokeWidthProperty>(self(), PercentOr<Length>{Length{1_au}});
+            return makeRc<StrokeWidthProperty>(self(), Calc<Length, Percent>{Length{1_au}});
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -573,13 +573,13 @@ export struct StrokeWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<StrokeWidthProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return Ok(makeRc<StrokeWidthProperty>(self(), try$(parseValue<Calc<Length, Percent>>(c))));
         }
     };
 
-    PercentOr<Length> _value;
+    Calc<Length, Percent> _value;
 
-    StrokeWidthProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
+    StrokeWidthProperty(Rc<Property::Registration> registration, Calc<Length, Percent> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
