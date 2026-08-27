@@ -19,7 +19,7 @@ static auto dumpScene = Debug::Flag::debug("web-scene"s, "Dump the constructed s
 
 export struct RenderResult {
     Rc<Layout::Box> layout;
-    Rc<Scene::Node> scenes;
+    Gfx::Snapshot scene;
     Rc<Layout::Fragment> frag;
 };
 
@@ -40,7 +40,7 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
         viewport
     };
 
-    auto outDiscovery = Layout::layoutRoot(
+    auto layout = Layout::layoutRoot(
         tree,
         {
             .generateFragment = true,
@@ -51,19 +51,22 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
     );
 
     auto sceneRoot = makeRc<Scene::Stack>();
-    Layout::paint(*outDiscovery.fragment, *sceneRoot);
+    Layout::paint(*layout.fragment, *sceneRoot);
     sceneRoot->prepare();
 
     if (dumpFragments)
-        logDebugIf(dumpFragments, "fragments: {}", *outDiscovery.fragment);
+        logDebugIf(dumpFragments, "fragments: {}", *layout.fragment);
 
     if (dumpScene)
         logDebugIf(dumpScene, "scene: {}", sceneRoot);
 
+    auto bound = sceneRoot->bound();
+    Gfx::Snapshot::Recorder recorder{bound.bottomEnd().ceil().cast<isize>()};
+    sceneRoot->paint(recorder, bound, {});
     return {
         makeRc<Layout::Box>(std::move(tree.root)),
-        sceneRoot,
-        *outDiscovery.fragment,
+        recorder.finalize(),
+        *layout.fragment,
     };
 }
 

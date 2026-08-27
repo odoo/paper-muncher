@@ -313,15 +313,12 @@ static void _paintFrag(Rc<Fragment> frag, Scene::Stack& stack, Opt<UsedBorders> 
 
     if (auto boxFragment = frag.is<BoxFragment>()) {
         _paintFragBordersAndBackgrounds(*boxFragment, stack, usedBorders);
-
         if (auto prose = boxFragment->originatingBox().content.is<Rc<Gfx::Prose>>()) {
             stack.add(makeRc<Scene::Text>(boxFragment->contentBox().topStart().cast<f64>(), *prose));
-        } else if (auto image = boxFragment->originatingBox().content.is<Rc<Scene::Node>>()) {
-            auto bound = (*image)->bound();
-
+        } else if (auto image = boxFragment->originatingBox().content.is<Gfx::Snapshot>()) {
             auto contentBox = boxFragment->contentBox().cast<f64>();
-            auto trans = Math::Trans2f::map(bound, contentBox);
-            Rc<Scene::Node> node = makeRc<Scene::Transform>(*image, trans);
+            auto trans = Math::Trans2f::map(image->size().cast<f64>(), contentBox);
+            Rc<Scene::Node> node = makeRc<Scene::Transform>(makeRc<Scene::Snapshot>(*image), trans);
 
             RadiiAu metricsRadii = boxFragment->metrics.radii;
             if (metricsRadii.zero()) {

@@ -170,11 +170,10 @@ Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Http::Client& client, Dom::
     co_return Ok(stylesheet);
 }
 
-Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct);
+Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct);
 
-Rc<Scene::Node> _missingImagePlaceholder() {
-    auto placeholder = Karm::Image::loadOrFallback("bundle://vaev-engine/missing.qoi"_url).unwrap();
-    return makeRc<Scene::Image>(placeholder->bound().cast<f64>(), placeholder);
+Gfx::Snapshot _missingImagePlaceholder() {
+    return Gfx::Snapshot::from(Karm::Image::loadOrFallback("bundle://vaev-engine/missing.qoi"_url).unwrap());
 }
 
 Async::Task<> _fetchResourcesAsync(Http::Client& client, Dom::Document& document, Gc::Ref<Dom::Node> node, Async::CancellationToken ct) {

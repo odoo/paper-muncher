@@ -514,6 +514,9 @@ struct DefaultedProperty : Property {
                 return registration->load(parent)->expandShorthand(registry, parent, child);
 
             return registration->initial()->expandShorthand(registry, parent, child);
+        } else if (_value == Default::REVERT) {
+            // TODO: Implement revert()
+            return {};
         } else {
             unreachable();
         }
@@ -539,6 +542,8 @@ struct DefaultedProperty : Property {
             else
                 registration->initial()->apply(parent, c, cx);
 
+        } else if (_value == Default::REVERT) {
+            // TODO: Implement revert()
         } else {
             unreachable();
         }
@@ -724,8 +729,6 @@ export struct RegisteredPropertySet {
             value = Default::INHERIT;
         } else if (content.skip(Css::Token::ident("unset"))) {
             value = Default::UNSET;
-        } else if (content.skip(Css::Token::ident("revert"))) {
-            value = Default::REVERT;
         } else {
             return Error::invalidData("unknown declaration");
         }

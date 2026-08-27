@@ -210,7 +210,7 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
     }
 }
 
-export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Print::Settings const& settings, Opt<PageDecorator&> decorator) {
+export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Print::Settings const& settings, Opt<PageDecorator&> decorator) {
     auto media = Style::Media::forPrint(settings);
 
     Style::Computer computer{
@@ -264,6 +264,9 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
             }
         );
 
+        Gfx::Snapshot::Recorder snapshot{settings.pageSize().cast<isize>()};
+        snapshot.push();
+        snapshot.transform(Math::Trans2f::scale(media.scale()));
         auto pageStack = makeRc<Scene::Stack>();
         if (settings.headerFooter and settings.margins != Print::MarginOption::NONE)
             _paintMargins(
@@ -277,14 +280,14 @@ export Yield<Print::Page> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Prin
 
         Layout::paint(*output.fragment, *pageStack);
         pageStack->prepare();
-
-        co_yield Print::Page(
+        pageStack->paint(
+            snapshot,
             settings.pageSize().cast<f64>(),
-            makeRc<Scene::Transform>(
-                pageStack,
-                Math::Trans2f::scale(media.scale())
-            )
+            {.showBackgroundGraphics = settings.backgroundGraphics}
         );
+        snapshot.pop();
+
+        co_yield snapshot.finalize();
     }
 }
 

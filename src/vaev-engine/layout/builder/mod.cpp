@@ -450,7 +450,8 @@ static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
         if (type == "hidden") {
             // Don't generate a box
         } else if (type == "radio" or type == "checkbox") {
-            // NOTE: The UA may however give them a different look and feel as long as it remains possible to operate the widget.
+            // NOTE: The UA may however give them a different look and feel
+            //       as long as it remains possible to operate the widget.
             // https://www.w3.org/TR/css-ui-4/#appearance-semantics
             Math::Rectf rect = {14, 14};
 
@@ -491,12 +492,15 @@ static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
                             .fills = {},
                             .styles = {},
                         },
-                        Gfx::Outline{}, Vec<Gfx::Fill>{Gfx::BLUE500}
+                        Gfx::Outline{},
+                        Vec<Gfx::Fill>{Gfx::BLUE500}
                     )
                 );
             }
 
-            bc.content() = Rc<Scene::Node>{box};
+            Gfx::Snapshot::Recorder snapshot{rect.size().cast<isize>()};
+            box->paint(snapshot, rect, {});
+            bc.content() = snapshot.finalize();
         } else {
             _buildInputProse(bc, el);
         }

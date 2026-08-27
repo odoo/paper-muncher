@@ -24,8 +24,8 @@ struct ReplacedFormatingContext : FormatingContext {
 
         Vec2Au size = {};
 
-        if (auto image = box.content.is<Rc<Scene::Node>>()) {
-            auto naturalSize = (*image)->bound().size().cast<Au>();
+        if (auto image = box.content.is<Gfx::Snapshot>()) {
+            auto naturalSize = image->size().cast<Au>();
 
             auto naturalDimensions = ObjectNaturalDimensions{
                 .size = {Some(naturalSize.width), Some(naturalSize.height)},

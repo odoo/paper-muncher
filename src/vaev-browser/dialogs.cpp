@@ -2,6 +2,7 @@ export module Vaev.Browser:dialogs;
 
 import Karm.Core;
 import Karm.Gc;
+import Karm.Gfx;
 import Karm.Kira;
 import Karm.Print;
 import Karm.Print.Dialog;
@@ -14,8 +15,8 @@ namespace Vaev::View {
 
 export Ui::Child printDialog(Rc<Dom::Window> window) {
     return Print::printDialog(
-        [window](Print::Settings const& settings) -> Vec<Print::Page> {
-            return window->print(settings) | Collect<Vec<Print::Page>>();
+        [window](Print::Settings const& settings) -> Vec<Gfx::Snapshot> {
+            return window->print(settings) | Collect<Vec<Gfx::Snapshot>>();
         }
     );
 }

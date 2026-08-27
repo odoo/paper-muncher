@@ -176,14 +176,14 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
             w->changeMedia(media);
             w->changeViewport({decorationWidth, headerHeight});
             auto tranform = Math::Trans2f::translate(infos.pageDecoration.topStart().cast<f64>());
-            pageStack.add(makeRc<Scene::Transform>(w->render(), tranform));
+            pageStack.add(makeRc<Scene::Transform>(makeRc<Scene::Snapshot>(w->render()), tranform));
         }
 
         if (auto& [w] = footerWindow) {
             w->changeMedia(media);
             w->changeViewport({decorationWidth, footerHeight});
             auto transform = Math::Trans2f::translate((infos.pageDecoration.bottomStart() - Math::Vec2Au{0_au, footerHeight}).cast<f64>());
-            pageStack.add(makeRc<Scene::Transform>(w->render(), transform));
+            pageStack.add(makeRc<Scene::Transform>(makeRc<Scene::Snapshot>(w->render()), transform));
         }
     }
 };
@@ -221,17 +221,14 @@ Async::Task<> runSingleAsync(
         decorator.footerSize = options.footerSize;
 
         auto settings = options.derivePrintSettings();
-        window->print(settings, Some(decorator)) | ForEach([&](Print::Page& page) {
-            page.print(
-                output,
-                {.showBackgroundGraphics = true}
-            );
+        window->print(settings, Some(decorator)) | ForEach([&](Gfx::Snapshot& page) {
+            page.replay(output.beginPage(page.size().cast<f64>())).unwrap();
         });
     } else {
         auto media = options.deriveMedia();
         window->changeMedia(media);
 
-        auto scene = window->render();
+        Rc<Scene::Node> scene = makeRc<Scene::Snapshot>(window->render());
 
         if (options.background.has())
             scene = makeRc<Scene::Clear>(scene, Vaev::resolve(*options.background, Gfx::ALPHA));
@@ -253,14 +250,7 @@ Async::Task<> runSingleAsync(
             size.height = overflow.height;
         }
 
-        Print::Page page = {
-            size.cast<f64>(),
-            scene,
-        };
-        page.print(
-            output,
-            {.showBackgroundGraphics = true}
-        );
+        scene->paint(output.beginPage(size.cast<f64>()), size.cast<f64>(), {.showBackgroundGraphics = true});
     }
 
     co_return Ok();

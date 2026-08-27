@@ -106,8 +106,8 @@ export struct Window {
         _render = NONE;
     }
 
-    Rc<Scene::Node> render() {
-        return ensureRender().scenes;
+    Gfx::Snapshot render() {
+        return ensureRender().scene;
     }
 
     RectAu scrollableOverflow() {
@@ -115,7 +115,7 @@ export struct Window {
     }
 
     [[clang::coro_wrapper]]
-    Yield<Print::Page> print(Print::Settings const& settings, Opt<Driver::PageDecorator&> decorator = NONE) const {
+    Yield<Gfx::Snapshot> print(Print::Settings const& settings, Opt<Driver::PageDecorator&> decorator = NONE) const {
         return Driver::print(_heap, _document.upgrade(), settings, decorator);
     }
 };

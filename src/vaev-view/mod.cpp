@@ -32,15 +32,14 @@ struct Viewport : Ui::View<Viewport> {
         _props = o._props;
     }
 
-    void paint(Gfx::Canvas& g, Math::Recti rect) override {
+    void paint(Gfx::Canvas& g, Math::Recti) override {
         g.push();
         g.clip(_listener.containerBound());
         g.origin(_listener.scroll() + _listener.containerBound().xy);
 
-        auto paintRect = rect.offset(-_listener.containerBound().xy - _listener.scroll().cast<isize>());
         auto& render = _window->ensureRender();
 
-        render.scenes->paint(g, paintRect.cast<f64>());
+        render.scene.replay(g).unwrap();
         if (_props.wireframe)
             render.frag->paintWireframe(g);
         if (_props.selected)

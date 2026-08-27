@@ -15,7 +15,7 @@ export struct Box;
 export using Content = Union<
     None,
     Rc<Gfx::Prose>,
-    Rc<Scene::Node>,
+    Gfx::Snapshot,
     SvgShapeElement,
     SvgViewBox>;
 
@@ -92,7 +92,7 @@ struct Box : Meta::NoCopy {
     }
 
     bool isReplaced() const {
-        return content.is<Rc<Scene::Node>>();
+        return content.is<Gfx::Snapshot>();
     }
 
     bool isRunningPositionedBox() const {

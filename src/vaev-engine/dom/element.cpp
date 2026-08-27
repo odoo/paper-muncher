@@ -69,7 +69,7 @@ export struct Element : Node {
     Map<QualifiedName, Rc<Attr>> attributes;
     Opt<Rc<Style::ComputedValues>> _computedValues;
     TokenList classList;
-    Opt<Rc<Scene::Node>> imageContent;
+    Opt<Gfx::Snapshot> imageContent;
     Map<Symbol, Gc::Ref<PseudoElement>> _pseudoElements;
     Style::CounterSet counters;
 

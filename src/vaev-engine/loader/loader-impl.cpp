@@ -20,7 +20,7 @@ import :layout.values;
 
 namespace Vaev::Loader {
 
-Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct) {
+Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct) {
     auto resp = co_trya$(client.getAsync(url, ct));
     if (not resp->body)
         co_return Error::notFound("could not load image");
@@ -53,7 +53,7 @@ Async::Task<Rc<Scene::Node>> _fetchImageContentAsync(Http::Client& client, Ref::
         auto image = Karm::Image::load(data);
         if (not image)
             co_return image.none();
-        co_return Ok(makeRc<Scene::Image>(image.unwrap()->bound().cast<f64>(), image.unwrap()));
+        co_return Ok(Gfx::Snapshot::from(image.unwrap()));
     }
 }
 

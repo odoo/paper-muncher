@@ -5,12 +5,13 @@ module;
 export module Vaev.Webdriver:driver;
 
 import Karm.Core;
-import Karm.Http;
-import Karm.Ref;
-import Karm.Image;
-import Karm.Scene.Save;
-import Karm.Logger;
 import Karm.Crypto;
+import Karm.Gfx;
+import Karm.Http;
+import Karm.Image;
+import Karm.Logger;
+import Karm.Ref;
+import Karm.Scene.Save;
 import Karm.Sys;
 import Vaev.Engine;
 
@@ -261,11 +262,10 @@ export struct WebDriver {
     Res<String> takeScreenshot(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
         auto window = try$(session->currentBrowsingContext());
-        auto scene = window->render();
+        auto image = try$(window->render().rasterize());
         auto data = try$(
-            Karm::Scene::save(
-                scene,
-                window->_media.viewportSize().cast<isize>(),
+            Karm::Image::save(
+                image->pixels(),
                 {
                     // NOSPEC: Should be PUBLIC_PNG but we don't support PNG encoding yet
                     .format = Ref::Uti::PUBLIC_BMP,
@@ -289,11 +289,8 @@ export struct WebDriver {
             )
         );
 
-        window->print(settings.derivePrintSettings()) | ForEach([&](Print::Page& page) {
-            page.print(
-                *printer,
-                {.showBackgroundGraphics = true}
-            );
+        window->print(settings.derivePrintSettings()) | ForEach([&](Gfx::Snapshot& page) {
+            page.replay(printer->beginPage(page.size().cast<f64>())).unwrap();
         });
 
         Io::BufferWriter bw;
