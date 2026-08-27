@@ -1,11 +1,7 @@
 export module Vaev.Engine:layout.paint;
 
 import Karm.Core;
-import Karm.Debug;
-import Karm.Gc;
 import Karm.Gfx;
-import Karm.Image;
-import Karm.Logger;
 import Karm.Math;
 import Karm.Scene;
 
@@ -15,7 +11,6 @@ import :layout.base;
 import :layout.values;
 import :dom.node;
 import :dom.element;
-import :layout.table;
 
 namespace Vaev::Layout {
 
@@ -45,21 +40,16 @@ Opt<Gfx::Borders> buildBorders(BoxMetrics const& metrics, Style::ComputedValues 
     return Some(borders);
 }
 
-Opt<Gfx::Borders> buildBorders(UsedBorders const& border) {
-    if (border.map(
-                  [](auto b) {
-                      return b.width;
-                  }
-        )
-            .zero())
+Opt<Gfx::Borders> buildBorders(BoxMetrics const& metrics, UsedBorders const& border) {
+    if (metrics.borders.zero())
         return NONE;
 
     Gfx::Borders borders;
 
-    borders.widths.top = border.top.width.cast<f64>();
-    borders.widths.bottom = border.bottom.width.cast<f64>();
-    borders.widths.start = border.start.width.cast<f64>();
-    borders.widths.end = border.end.width.cast<f64>();
+    borders.widths.top = metrics.borders.top.cast<f64>();
+    borders.widths.bottom = metrics.borders.bottom.cast<f64>();
+    borders.widths.start = metrics.borders.start.cast<f64>();
+    borders.widths.end = metrics.borders.end.cast<f64>();
 
     borders.styles[0] = border.top.style;
     borders.styles[1] = border.end.style;
@@ -95,7 +85,7 @@ Opt<Gfx::Outline> buildOutline(BoxMetrics const& metrics, Style::ComputedValues 
     return Some(outline);
 }
 
-static void _paintFragBordersAndBackgrounds(BoxFragment& frag, Scene::Stack& stack, Opt<UsedBorders> usedBorders = NONE) {
+static void _paintFragBordersAndBackgrounds(BoxFragment& frag, Scene::Stack& stack) {
     auto const& cssBackground = frag.style().backgrounds;
 
     Vec<Gfx::Fill> backgrounds;
@@ -106,8 +96,8 @@ static void _paintFragBordersAndBackgrounds(BoxFragment& frag, Scene::Stack& sta
             backgrounds.pushBack(color);
     }
 
-    auto bordersWithoutRadii = usedBorders
-                                   ? buildBorders(*usedBorders)
+    auto bordersWithoutRadii = frag.usedBorders
+                                   ? buildBorders(frag.metrics, *frag.usedBorders)
                                    : buildBorders(frag.metrics, frag.style());
     auto outline = buildOutline(frag.metrics, frag.style());
     Math::Rectf bound = frag.borderBox().round().cast<f64>();
@@ -305,14 +295,14 @@ Rc<Scene::Node> _paintSVGRoot(SvgRootFragment& svgRoot) {
     return makeRc<Scene::Transform>(content, svgRoot.transform);
 }
 
-static void _paintFrag(Rc<Fragment> frag, Scene::Stack& stack, Opt<UsedBorders> usedBorders = NONE) {
+static void _paintFrag(Rc<Fragment> frag, Scene::Stack& stack) {
     auto& s = frag->style();
 
     if (s.visibility == Visibility::HIDDEN)
         return;
 
     if (auto boxFragment = frag.is<BoxFragment>()) {
-        _paintFragBordersAndBackgrounds(*boxFragment, stack, usedBorders);
+        _paintFragBordersAndBackgrounds(*boxFragment, stack);
         if (auto prose = boxFragment->originatingBox().content.is<Rc<Gfx::Prose>>()) {
             stack.add(makeRc<Scene::Text>(boxFragment->contentBox().topStart().cast<f64>(), *prose));
         } else if (auto image = boxFragment->originatingBox().content.is<Gfx::Snapshot>()) {
@@ -344,13 +334,6 @@ static void _paintFrag(Rc<Fragment> frag, Scene::Stack& stack, Opt<UsedBorders> 
 }
 
 static void _paintChildren(Fragment& frag, Scene::Stack& stack, auto predicate) {
-    Opt<Map<usize, UsedBorders> const&> tableBoxBorderMapping;
-    if (frag.style().display == Display::TABLE_BOX) {
-        // FIXME: downcasting like this?
-        TableFormatingContext const* tableFormattingContext = static_cast<TableFormatingContext const*>(&*frag.originatingBox().formatingContext.unwrap());
-        tableBoxBorderMapping = tableFormattingContext->boxBorderMapping;
-    }
-
     for (auto& c : frag.children()) {
         if (c->flags().has(Fragment::OOF))
             continue;
@@ -381,8 +364,7 @@ static void _paintChildren(Fragment& frag, Scene::Stack& stack, auto predicate) 
         if (predicate(s)) {
             _paintFrag(
                 node,
-                stack,
-                tableBoxBorderMapping ? (Opt<UsedBorders>)tableBoxBorderMapping->lookup((usize)&node->originatingBox()) : Opt<UsedBorders>{NONE}
+                stack
             );
         }
 

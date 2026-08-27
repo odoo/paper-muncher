@@ -11,7 +11,7 @@ using namespace Karm;
 namespace Vaev::Layout {
 
 export struct Fragment {
-    enum struct Options {
+    enum struct Options : u8 {
         OOF = 1 << 0,
     };
 
@@ -373,6 +373,7 @@ export struct BoxMetrics {
 
 export struct BoxFragment : Fragment {
     BoxMetrics metrics;
+    Opt<UsedBorders> usedBorders;
 
     BoxFragment(Box& box, BoxMetrics metrics = {}, Vec<Rc<Fragment>> children = {})
         : Fragment(box, std::move(children)), metrics(metrics) {}

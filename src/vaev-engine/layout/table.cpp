@@ -780,7 +780,6 @@ export struct TableFormatingContext : FormatingContext {
         if (useBordersCollapse) {
             bordersStyleGrid.init(grid.size, box.style->color);
             computeBordersStructsCollapse(tree, box);
-            boxBorderMapping = Some(Map<usize, UsedBorders>{});
         } else
             computeBordersStructsSeparate(tree);
     }
@@ -1400,30 +1399,29 @@ export struct TableFormatingContext : FormatingContext {
         if (numOfFooterRows) {
             footerSize = Vec2Au{
                 tableBoxSize.x,
-                rowHeightPref.query(grid.size.y - numOfFooterRows, grid.size.y - 1) +
-                    spacing.y * (numOfHeaderRows + 1),
+                rowHeightPref.query(grid.size.y - numOfFooterRows, grid.size.y - 1) + 
+                spacing.y * (numOfFooterRows + 1),
             };
         }
     }
 
     UsedBorders buildUsedCollapsedBordersForCell(usize i, usize j, usize rowSpan, usize colSpan) {
-        auto width = buildBordersWidthsForCell(i, j, rowSpan, colSpan);
         auto topStartStyle = bordersStyleGrid.styleAt(i, j);
         auto topStartColor = bordersStyleGrid.colorAt(i, j);
         auto bottomEndStyle = bordersStyleGrid.styleAt(i + rowSpan - 1, j + colSpan - 1);
         auto bottomEndColor = bordersStyleGrid.colorAt(i + rowSpan - 1, j + colSpan - 1);
 
+        // FIXME: Probably have a dedicated type for storing collapsed border 
+        //        style in box because width is not used and BoxMetrics is used instead
         return UsedBorders{
-            UsedBorder{width.top, topStartStyle.top, topStartColor.top},
-            UsedBorder{width.end, bottomEndStyle.end, bottomEndColor.end},
-            UsedBorder{width.bottom, bottomEndStyle.bottom, bottomEndColor.bottom},
-            UsedBorder{width.start, topStartStyle.start, topStartColor.start},
+            UsedBorder{0_au, topStartStyle.top, topStartColor.top},
+            UsedBorder{0_au, bottomEndStyle.end, bottomEndColor.end},
+            UsedBorder{0_au, bottomEndStyle.bottom, bottomEndColor.bottom},
+            UsedBorder{0_au, topStartStyle.start, topStartColor.start},
         };
     }
 
-    Opt<Map<usize, UsedBorders>> boxBorderMapping;
-
-    Tuple<Output, Au> layoutCell(Tree& tree, Input& input, TableCell& cell, MutCursor<Box> cellBox, usize startFrag, usize i, usize j, Au currPositionX, usize breakpointIndexOffset) {
+    Tuple<Output, Au> layoutCell(Tree& tree, Input& input, TableCell& cell, usize startFrag, usize i, usize j, Au currPositionX, usize breakpointIndexOffset) {
         // breakpoint traversing for a cell that started in the previous fragmentainer is not trivial
         // since it started in the previous fragmentainer, its breakpoint must be of type ADVANCE_WITH_CHILDREN and thus
         // children info will be available at startFrag
@@ -1464,30 +1462,24 @@ export struct TableFormatingContext : FormatingContext {
         //       (See https://www.w3.org/TR/CSS22/tables.html#height-layout)
         auto colSpan = cell.box->style->table->colSpan;
 
-        Opt<UsedBorders> collapsedBorders;
-        if (useBordersCollapse)
-            collapsedBorders = Some(buildUsedCollapsedBordersForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, colSpan));
-
         UsedSpacings usedSpacings{
             .padding = computePaddings(tree, *cell.box, tableBoxSize),
-            .borders = collapsedBorders
-                           ? collapsedBorders->map([](auto b) {
-                                 return b.width;
-                             })
+            .borders = useBordersCollapse
+                           ? buildBordersWidthsForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, colSpan)
                            : computeBorders(tree, *cell.box),
         };
 
         Vec2Au position = {};
-        if (cellBox->style->inline_->baselineShift.is<Keywords::Top>()) {
+        if (cell.box->style->inline_->baselineShift.is<Keywords::Top>()) {
             position = Vec2Au{currPositionX, startPositionY};
-        } else if (cellBox->style->inline_->baselineShift.is<Keywords::Bottom>()) {
+        } else if (cell.box->style->inline_->baselineShift.is<Keywords::Bottom>()) {
             if (auto [size] = verticalSize) {
                 position = Vec2Au{currPositionX, startPositionY + size - cell.usedHeight};
             } else {
                 // FIXME: What to do in this case?
                 position = Vec2Au{currPositionX, startPositionY};
             }
-        } else if (cellBox->style->inline_->alignmentBaseline.is<Keywords::Middle>()) {
+        } else if (cell.box->style->inline_->alignmentBaseline.is<Keywords::Middle>()) {
             if (auto [size] = verticalSize) {
                 position = Vec2Au{currPositionX, startPositionY + (size - cell.usedHeight) / 2};
             } else {
@@ -1518,13 +1510,14 @@ export struct TableFormatingContext : FormatingContext {
         }
 
         auto outputCell = layoutBorderBox(tree, *cell.box, childInput);
-
-        if (input.generateFragment and useBordersCollapse) {
-            boxBorderMapping->put((usize)cellBox.buf(), *collapsedBorders);
+        if (outputCell.fragment and useBordersCollapse) {
+            if (auto frag = outputCell.fragment->is<BoxFragment>()) {
+                frag->usedBorders = Some(buildUsedCollapsedBordersForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, colSpan));
+            }
         }
 
         if (tree.fc.isDiscoveryMode()) {
-            if (oneOf(cellBox->style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE)) {
+            if (oneOf(cell.box->style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE)) {
                 outputCell.breakpoint.unwrap().withAppeal(Breakpoint::Appeal::AVOID);
             }
         }
@@ -1570,7 +1563,7 @@ export struct TableFormatingContext : FormatingContext {
                 continue;
             }
 
-            auto [outputCell, cellHeight] = layoutCell(tree, input, cell, cell.box, startFrag, i, j, currPosition.x, breakpointIndexOffset);
+            auto [outputCell, cellHeight] = layoutCell(tree, input, cell, startFrag, i, j, currPosition.x, breakpointIndexOffset);
 
             if (tree.fc.isDiscoveryMode()) {
                 if (isBottomCell)

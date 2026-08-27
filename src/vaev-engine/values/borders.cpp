@@ -73,12 +73,12 @@ export struct ComputedBorder {
 };
 
 export struct UsedBorder {
-    Au width;
+    Au width = 0_au;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
     Gfx::Color color = Gfx::BLACK;
 
     void repr(Io::Emit& e) const {
-        e("(used-border {} {} {})", width, style, color);
+        e("(used-border {} {})", style, color);
     }
 };
 
