@@ -1399,8 +1399,8 @@ export struct TableFormatingContext : FormatingContext {
         if (numOfFooterRows) {
             footerSize = Vec2Au{
                 tableBoxSize.x,
-                rowHeightPref.query(grid.size.y - numOfFooterRows, grid.size.y - 1) + 
-                spacing.y * (numOfFooterRows + 1),
+                rowHeightPref.query(grid.size.y - numOfFooterRows, grid.size.y - 1) +
+                    spacing.y * (numOfFooterRows + 1),
             };
         }
     }
@@ -1411,7 +1411,7 @@ export struct TableFormatingContext : FormatingContext {
         auto bottomEndStyle = bordersStyleGrid.styleAt(i + rowSpan - 1, j + colSpan - 1);
         auto bottomEndColor = bordersStyleGrid.colorAt(i + rowSpan - 1, j + colSpan - 1);
 
-        // FIXME: Probably have a dedicated type for storing collapsed border 
+        // FIXME: Probably have a dedicated type for storing collapsed border
         //        style in box because width is not used and BoxMetrics is used instead
         return UsedBorders{
             UsedBorder{0_au, topStartStyle.top, topStartColor.top},

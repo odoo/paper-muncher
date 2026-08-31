@@ -11,7 +11,6 @@ import Karm.Http;
 import Karm.Image;
 import Karm.Logger;
 import Karm.Ref;
-import Karm.Scene.Save;
 import Karm.Sys;
 import Vaev.Engine;
 
@@ -262,7 +261,7 @@ export struct WebDriver {
     Res<String> takeScreenshot(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
         auto window = try$(session->currentBrowsingContext());
-        auto image = try$(window->render().rasterize());
+        auto image = window->rasterize();
         auto data = try$(
             Karm::Image::save(
                 image->pixels(),

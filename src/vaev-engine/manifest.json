@@ -12,6 +12,7 @@
         "layout/base",
         "layout/builder",
         "loader",
+        "paint",
         "props",
         "style",
         "values",
@@ -30,7 +31,6 @@
         "karm-md",
         "karm-ref",
         "karm-print",
-        "karm-scene",
         "karm-font",
         "karm-diag"
     ]

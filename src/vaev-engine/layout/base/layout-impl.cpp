@@ -290,7 +290,7 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
 
                 pending.pushBack(childOutput.outOfFlowStash);
 
-                childFragment->flags().set(Fragment::OOF);
+                childFragment->flags().set(Fragment::OUT_OF_FLOW);
 
                 oofChild->fragment = Some(childFragment);
 
@@ -367,7 +367,7 @@ Output layoutRoot(Tree& tree, Input input) {
 
             pending.pushBack(childOutput.outOfFlowStash);
 
-            childFragment->flags().set(Fragment::OOF);
+            childFragment->flags().set(Fragment::OUT_OF_FLOW);
 
             oofChild->fragment = Some(childFragment);
 

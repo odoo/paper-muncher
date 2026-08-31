@@ -106,12 +106,31 @@ export struct Window {
         _render = NONE;
     }
 
-    Gfx::Snapshot render() {
-        return ensureRender().scene;
+    RectAu scrollableOverflow() {
+        return ensureRender().stacking->scrollableOverflow();
     }
 
-    RectAu scrollableOverflow() {
-        return ensureRender().frag->scrollableOverflow();
+    RectAu borderBox() {
+        return ensureRender().fragments->borderBox();
+    }
+
+    Gfx::Snapshot snapshot() {
+        Gfx::Snapshot::Recorder snapshot{_media.viewportSize().ceili()};
+        ensureRender().stacking->paintRoot(snapshot);
+        return snapshot.finalize();
+    }
+
+    Rc<Gfx::Image> rasterize() {
+        auto image = Gfx::Image::alloc(_media.viewportSize().ceili());
+        Gfx::CpuCanvas canvas;
+        canvas.begin(image->mutPixels());
+        ensureRender().stacking->paintRoot(canvas);
+        canvas.end();
+        return image;
+    }
+
+    void paint(Gfx::Canvas& canvas) {
+        ensureRender().stacking->paintRoot(canvas);
     }
 
     [[clang::coro_wrapper]]

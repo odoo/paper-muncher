@@ -7,7 +7,6 @@ module Vaev.Engine;
 import Karm.Http;
 import Karm.Core;
 import Karm.Image;
-import Karm.Scene;
 import Karm.Math;
 import Karm.Ref;
 import Karm.Logger;
@@ -48,7 +47,7 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
         auto height = resolver.resolve(root->computedValues()->sizing->height.unwrapOr<Calc<PercentOr<Length>>>(Length{300_au}), 300_au);
 
         window->changeMedia(Style::Media::forRender({width, height}, Resolution::fromDppx(1)));
-        co_return Ok(window->render());
+        co_return Ok(window->snapshot());
     } else {
         auto image = Karm::Image::load(data);
         if (not image)

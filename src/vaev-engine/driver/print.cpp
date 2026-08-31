@@ -3,7 +3,6 @@ export module Vaev.Engine:driver.print;
 import Karm.Core;
 import Karm.Gc;
 import Karm.Print;
-import Karm.Scene;
 import Karm.Font;
 import Karm.Sys;
 import Karm.Gfx;
@@ -14,6 +13,7 @@ import :style;
 import :layout;
 import :values;
 import :dom.document;
+import :paint;
 import :css;
 
 using namespace Karm;
@@ -27,7 +27,6 @@ export struct PageLayoutInfos {
     RectAu pageContent;
     Rc<Style::PageComputedValues> pageStyle;
     Layout::Breakpoint breakpoint;
-    Rc<Scene::Stack> pageStack = makeRc<Scene::Stack>();
 };
 
 export struct PageDecorator {
@@ -37,11 +36,11 @@ export struct PageDecorator {
         return infos.pageDecoration;
     }
 
-    virtual void decorate([[maybe_unused]] Style::Media const& media, [[maybe_unused]] PageLayoutInfos const& infos, [[maybe_unused]] usize pageCount, [[maybe_unused]] Scene::Stack& pageStack) {
+    virtual void decorate([[maybe_unused]] Style::Media const& media, [[maybe_unused]] PageLayoutInfos const& infos, [[maybe_unused]] usize pageCount, [[maybe_unused]] Gfx::Canvas& g) {
     }
 };
 
-void _paintCornerMargin(PageLayoutInfos& infos, Scene::Stack& stack, RectAu const& rect, Style::PageArea area, Layout::RunningPositionMap& runningPosition) {
+void _paintCornerMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& rect, Style::PageArea area, Layout::RunningPositionMap& runningPosition) {
     Layout::Tree tree{
         .root = Layout::buildElement(infos.pageStyle->area(area), infos.pageNumber, runningPosition),
         .viewport = Style::Viewport{.small = rect.size()}
@@ -56,10 +55,11 @@ void _paintCornerMargin(PageLayoutInfos& infos, Scene::Stack& stack, RectAu cons
             .containingBlock = rect.size(),
         }
     );
-    Layout::paint(*output.fragment, stack);
+
+    Paint::StackingContext::establishStackingContext(output.fragment.unwrap())->paintRoot(g);
 }
 
-void _paintMainMargin(PageLayoutInfos& infos, Scene::Stack& stack, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas, Layout::RunningPositionMap& runningPosition) {
+void _paintMainMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas, Layout::RunningPositionMap& runningPosition) {
     auto box = Layout::buildElement(infos.pageStyle->area(mainArea), infos.pageNumber, runningPosition);
     for (auto subArea : subAreas) {
         box.add(Layout::buildElement(infos.pageStyle->area(subArea), infos.pageNumber, runningPosition));
@@ -78,10 +78,10 @@ void _paintMainMargin(PageLayoutInfos& infos, Scene::Stack& stack, RectAu const&
             .containingBlock = rect.size(),
         }
     );
-    Layout::paint(*output.fragment, stack);
+    Paint::StackingContext::establishStackingContext(output.fragment.unwrap())->paintRoot(g);
 }
 
-void _paintMargins(PageLayoutInfos& infos, Scene::Stack& stack, Layout::RunningPositionMap& runningPosition) {
+void _paintMargins(PageLayoutInfos& infos, Gfx::Canvas& g, Layout::RunningPositionMap& runningPosition) {
     // Compute all corner rects
     auto topLeftMarginCornerRect = RectAu::fromTwoPoint(infos.pageRect.topStart(), infos.pageContent.topStart());
     auto topRightMarginCornerRect = RectAu::fromTwoPoint(infos.pageRect.topEnd(), infos.pageContent.topEnd());
@@ -89,10 +89,10 @@ void _paintMargins(PageLayoutInfos& infos, Scene::Stack& stack, Layout::RunningP
     auto bottomRightMarginCornerRect = RectAu::fromTwoPoint(infos.pageRect.bottomEnd(), infos.pageContent.bottomEnd());
 
     // Paint corners
-    _paintCornerMargin(infos, stack, topLeftMarginCornerRect, Style::PageArea::TOP_LEFT_CORNER, runningPosition);
-    _paintCornerMargin(infos, stack, topRightMarginCornerRect, Style::PageArea::TOP_RIGHT_CORNER, runningPosition);
-    _paintCornerMargin(infos, stack, bottomLeftMarginCornerRect, Style::PageArea::BOTTOM_LEFT_CORNER, runningPosition);
-    _paintCornerMargin(infos, stack, bottomRightMarginCornerRect, Style::PageArea::BOTTOM_RIGHT_CORNER, runningPosition);
+    _paintCornerMargin(infos, g, topLeftMarginCornerRect, Style::PageArea::TOP_LEFT_CORNER, runningPosition);
+    _paintCornerMargin(infos, g, topRightMarginCornerRect, Style::PageArea::TOP_RIGHT_CORNER, runningPosition);
+    _paintCornerMargin(infos, g, bottomLeftMarginCornerRect, Style::PageArea::BOTTOM_LEFT_CORNER, runningPosition);
+    _paintCornerMargin(infos, g, bottomRightMarginCornerRect, Style::PageArea::BOTTOM_RIGHT_CORNER, runningPosition);
 
     // Compute main area rects
     auto topRect = RectAu::fromTwoPoint(topLeftMarginCornerRect.topEnd(), topRightMarginCornerRect.bottomStart());
@@ -101,10 +101,10 @@ void _paintMargins(PageLayoutInfos& infos, Scene::Stack& stack, Layout::RunningP
     auto rightRect = RectAu::fromTwoPoint(topRightMarginCornerRect.bottomEnd(), bottomRightMarginCornerRect.topStart());
 
     // Paint main areas
-    _paintMainMargin(infos, stack, topRect, Style::PageArea::TOP, {Style::PageArea::TOP_LEFT, Style::PageArea::TOP_CENTER, Style::PageArea::TOP_RIGHT}, runningPosition);
-    _paintMainMargin(infos, stack, bottomRect, Style::PageArea::BOTTOM, {Style::PageArea::BOTTOM_LEFT, Style::PageArea::BOTTOM_CENTER, Style::PageArea::BOTTOM_RIGHT}, runningPosition);
-    _paintMainMargin(infos, stack, leftRect, Style::PageArea::LEFT, {Style::PageArea::LEFT_TOP, Style::PageArea::LEFT_MIDDLE, Style::PageArea::LEFT_BOTTOM}, runningPosition);
-    _paintMainMargin(infos, stack, rightRect, Style::PageArea::RIGHT, {Style::PageArea::RIGHT_TOP, Style::PageArea::RIGHT_MIDDLE, Style::PageArea::RIGHT_BOTTOM}, runningPosition);
+    _paintMainMargin(infos, g, topRect, Style::PageArea::TOP, {Style::PageArea::TOP_LEFT, Style::PageArea::TOP_CENTER, Style::PageArea::TOP_RIGHT}, runningPosition);
+    _paintMainMargin(infos, g, bottomRect, Style::PageArea::BOTTOM, {Style::PageArea::BOTTOM_LEFT, Style::PageArea::BOTTOM_CENTER, Style::PageArea::BOTTOM_RIGHT}, runningPosition);
+    _paintMainMargin(infos, g, leftRect, Style::PageArea::LEFT, {Style::PageArea::LEFT_TOP, Style::PageArea::LEFT_MIDDLE, Style::PageArea::LEFT_BOTTOM}, runningPosition);
+    _paintMainMargin(infos, g, rightRect, Style::PageArea::RIGHT, {Style::PageArea::RIGHT_TOP, Style::PageArea::RIGHT_MIDDLE, Style::PageArea::RIGHT_BOTTOM}, runningPosition);
 }
 
 struct PaginationContext {
@@ -267,24 +267,19 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
         Gfx::Snapshot::Recorder snapshot{settings.pageSize().cast<isize>()};
         snapshot.push();
         snapshot.transform(Math::Trans2f::scale(media.scale()));
-        auto pageStack = makeRc<Scene::Stack>();
+
         if (settings.headerFooter and settings.margins != Print::MarginOption::NONE)
             _paintMargins(
                 infos,
-                *pageStack,
+                snapshot,
                 paginationContext.runningPosition
             );
 
         if (auto& [decorator] = paginationContext.decorator)
-            decorator.decorate(paginationContext.media, infos, pageInfos.len(), *pageStack);
+            decorator.decorate(paginationContext.media, infos, pageInfos.len(), snapshot);
 
-        Layout::paint(*output.fragment, *pageStack);
-        pageStack->prepare();
-        pageStack->paint(
-            snapshot,
-            settings.pageSize().cast<f64>(),
-            {.showBackgroundGraphics = settings.backgroundGraphics}
-        );
+        Paint::StackingContext::establishStackingContext(output.fragment.unwrap())->paintRoot(snapshot);
+
         snapshot.pop();
 
         co_yield snapshot.finalize();

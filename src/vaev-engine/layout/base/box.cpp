@@ -125,11 +125,24 @@ struct Box : Meta::NoCopy {
     }
 
     // https://www.w3.org/TR/CSS22/zindex.html
+    // https://svgwg.org/svg2-draft/single-page.html#render-EstablishingStackingContex
     bool impliesNewStackingContext() const {
-        return style->zIndex != Keywords::AUTO or
-               style->clip->has() or
+        return style->clip->has() or
                style->transform->has() or
-               style->opacity != 1.0;
+               style->opacity != 1.0 or
+               style->overflows.block != Overflow::VISIBLE or
+               style->overflows.inline_ != Overflow::VISIBLE or
+               isSvgRootBox() or
+               isSvgForeignObjectBox();
+    }
+
+    bool isPositioned() const {
+        return style->position != Keywords::STATIC;
+    }
+
+    // https://drafts.csswg.org/css-tables-3/#table-wrapper-box
+    bool isTableWrapperBox() const {
+        return style->display == Display::Inside::TABLE;
     }
 
     bool isPseudoElement(Symbol type) const {

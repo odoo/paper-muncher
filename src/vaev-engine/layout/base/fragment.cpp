@@ -10,9 +10,20 @@ using namespace Karm;
 
 namespace Vaev::Layout {
 
+// https://drafts.csswg.org/css-position-4/#out-of-band-outline
+export struct OutOfBandOutline {
+    Gfx::Outline outline;
+    Math::Rectf rect;
+    Math::Radiif radii;
+
+    void paint(Gfx::Canvas& g) {
+        outline.paint(g, rect, radii);
+    }
+};
+
 export struct Fragment {
     enum struct Options : u8 {
-        OOF = 1 << 0,
+        OUT_OF_FLOW = 1 << 0,
     };
 
     using enum Options;
@@ -52,14 +63,6 @@ export struct Fragment {
     // https://www.w3.org/TR/css-box-3/#margin-box
     virtual RectAu marginBox() const = 0;
 
-    // https://drafts.csswg.org/css-overflow-3/#scrollable
-    RectAu scrollableOverflow() const {
-        auto bound = borderBox();
-        for (auto const& c : _children)
-            bound = bound.mergeWith(c->scrollableOverflow());
-        return bound;
-    }
-
     Style::ComputedValues const& style() const {
         return *_box.style;
     }
@@ -86,6 +89,35 @@ export struct Fragment {
     }
 
     virtual void repr(Io::Emit& e) const = 0;
+
+    virtual Opt<Math::Rectf> intrinsicViewBox() const {
+        return NONE;
+    }
+
+    virtual Math::Trans2f intrinsicTransform() const {
+        return Math::Trans2f::identity();
+    }
+
+    // https://www.w3.org/TR/SVG11/intro.html#TermSVGViewport
+    virtual Opt<RectAu> intrinsicClip() const {
+        return NONE;
+    }
+
+    // https://www.w3.org/TR/css-transforms-1/#transform-box
+    // NOTE: Elements with an associated CSS layout box resolve fill-box,
+    //       stroke-box and view-box against their own boxes, while SVG
+    //       elements without one resolve them against their bounding boxes
+    //       and the nearest SVG viewport.
+    virtual bool hasCssLayoutBox() const {
+        return true;
+    }
+
+    // https://drafts.csswg.org/css-position-4/#paint-a-blocks-decorations
+    virtual void paintDecoration([[maybe_unused]] Gfx::Canvas& g) {}
+
+    // 8. Otherwise
+    // https://drafts.csswg.org/css-position-4/#paint-a-stacking-context
+    virtual void paintContent([[maybe_unused]] Gfx::Canvas& g, [[maybe_unused]] Vec<OutOfBandOutline>& outOfBandOutlines) {}
 
     virtual void paintOwnWireframe(Gfx::Canvas& g) const {
         g.strokeStyle({
@@ -160,31 +192,40 @@ export struct PlaceholderFragment : Fragment {
         : Fragment(box, {}), staticPosRect(staticPositionRectangle) {}
 
     RectAu borderBox() const override {
-        return {};
+        unreachable();
     }
 
     RectAu paddingBox() const override {
-        return {};
+        unreachable();
     }
 
     RectAu contentBox() const override {
-        return {};
+        unreachable();
     }
 
     RectAu marginBox() const override {
-        return {};
+        unreachable();
     }
 
     void repr(Io::Emit& e) const override {
         e("(placeholder-frag)");
     }
 
-    void paintOwnWireframe(Gfx::Canvas&) const override {}
+    void paintOwnWireframe(Gfx::Canvas&) const override {
+        unreachable();
+    }
 
-    void paintOwnOverlay(Gfx::Canvas&) const override {}
+    void paintOwnOverlay(Gfx::Canvas&) const override {
+        unreachable();
+    }
 };
 
-export using SvgShape = Union<RectAu, EllipseAu, Math::Path>;
+// MARK: Svg -------------------------------------------------------------------
+
+export using SvgShape = Union<
+    RectAu,
+    EllipseAu,
+    Math::Path>;
 
 export struct SvgShapeFragment : Fragment {
     SvgShape shape;
@@ -231,6 +272,85 @@ export struct SvgShapeFragment : Fragment {
         //       cases the objectBoundingBox behave like
         //       the content box of the shape.
         return objectBoundingBox();
+    }
+
+    Opt<Gfx::Fill> resolveFill(SvgProps const& svg) {
+        if (Math::epsilonEq(svg.fillOpacity, 0.))
+            return NONE;
+
+        if (not svg.fill)
+            return NONE;
+
+        if (auto [color] = resolve(svg.fill, style().color)) {
+            color = color.withOpacity(svg.fillOpacity);
+            if (color.transparent())
+                return NONE;
+            return Some(Gfx::Fill{color});
+        }
+
+        return NONE;
+    }
+
+    Opt<Gfx::Stroke> resolveStroke(SvgProps const& svg) {
+        if (Math::epsilonEq(svg.strokeOpacity, 0.))
+            return NONE;
+
+        if (strokeWidth == 0_au)
+            return NONE;
+
+        if (not svg.stroke)
+            return NONE;
+
+        if (auto [color] = resolve(svg.stroke, style().color)) {
+            color = color.withOpacity(svg.strokeOpacity);
+            if (color.transparent())
+                return NONE;
+
+            return Some(Gfx::Stroke{
+                .fill = color,
+                .width = static_cast<f64>(strokeWidth),
+                // FIXME: 'stroke-linejoin' is not implemented yet, so we
+                //        always use its initial value.
+                .join = Gfx::MITER_JOIN,
+            });
+        }
+
+        return NONE;
+    }
+
+    void paintContent(Gfx::Canvas& g, Vec<OutOfBandOutline>& outOfBandOutlines) override {
+        (void)outOfBandOutlines;
+
+        auto const& style = *originatingBox().style->svg;
+
+        Opt<Gfx::Fill> resolvedFill = resolveFill(style);
+        Opt<Gfx::Stroke> resolvedStroke = resolveStroke(style);
+
+        if (not(resolvedFill or resolvedStroke))
+            return;
+
+        g.beginPath();
+        shape.visit(
+            [&](RectAu const& rect) {
+                g.rect(rect.cast<f64>());
+            },
+            [&](EllipseAu const& ellipse) {
+                g.ellipse(ellipse.cast<f64>());
+            },
+            [&](Math::Path const& path) {
+                g.path(path);
+            }
+        );
+
+        if (auto& [fill] = resolvedFill)
+            g.fill(fill);
+
+        if (auto& [stroke] = resolvedStroke)
+            g.stroke(stroke);
+    }
+
+    bool hasCssLayoutBox() const override {
+        return false;
     }
 
     void repr(Io::Emit& e) const override {
@@ -288,8 +408,12 @@ export struct SvgGroupFragment : Fragment {
         return objectBoundingBox();
     }
 
+    bool hasCssLayoutBox() const override {
+        return false;
+    }
+
     void repr(Io::Emit& e) const override {
-        e("(svg-group-frag  children:{})", _children);
+        e("(svg-group-frag children:{})", _children);
     }
 };
 
@@ -333,10 +457,32 @@ export struct SvgRootFragment : Fragment {
         Fragment::offset(d);
     }
 
+    // NOTE: Maps the viewBox onto the viewport, this applies to the
+    //       content of the viewport, inside of any CSS transform.
+    Math::Trans2f intrinsicTransform() const override {
+        return transform;
+    }
+
+    Opt<RectAu> intrinsicClip() const override {
+        return Some(boundingBox);
+    }
+
+    // https://www.w3.org/TR/SVG11/intro.html#TermSVGViewport
+    Opt<Math::Rectf> intrinsicViewBox() const override {
+        if (auto& [viewBox] = style().svg->viewBox)
+            return Some(Math::Rectf{
+                viewBox.width,
+                viewBox.height,
+            });
+        return Some(objectBoundingBox().cast<f64>());
+    }
+
     void repr(Io::Emit& e) const override {
         e("(svg-root-frag transform:{} boundingBox:{} children:{})", transform, boundingBox, _children);
     }
 };
+
+// MARK: Regular Box -----------------------------------------------------------
 
 // https://www.w3.org/TR/css-box-3/#box-model
 export struct BoxMetrics {
@@ -399,6 +545,157 @@ export struct BoxFragment : Fragment {
         Fragment::offset(d);
     }
 
+    // https://www.w3.org/TR/SVG2/embedded.html#ForeignObjectElement
+    // NOTE: A foreign object establishes a new viewport, its content is
+    //       clipped to it.
+    Opt<RectAu> intrinsicClip() const override {
+        if (originatingBox().isSvgForeignObjectBox())
+            return Some(borderBox());
+        return NONE;
+    }
+
+    static Opt<Gfx::Borders> buildBorders(BoxMetrics const& metrics, Style::ComputedValues const& style) {
+        if (metrics.borders.zero())
+            return NONE;
+
+        Gfx::Borders borders;
+
+        auto const& bordersLayout = metrics.borders;
+        borders.widths.top = bordersLayout.top.cast<f64>();
+        borders.widths.bottom = bordersLayout.bottom.cast<f64>();
+        borders.widths.start = bordersLayout.start.cast<f64>();
+        borders.widths.end = bordersLayout.end.cast<f64>();
+
+        auto const& bordersStyle = *style.borders;
+        borders.styles[0] = bordersStyle.top.style;
+        borders.styles[1] = bordersStyle.end.style;
+        borders.styles[2] = bordersStyle.bottom.style;
+        borders.styles[3] = bordersStyle.start.style;
+
+        borders.fills[0] = resolve(bordersStyle.top.color, style.color);
+        borders.fills[1] = resolve(bordersStyle.end.color, style.color);
+        borders.fills[2] = resolve(bordersStyle.bottom.color, style.color);
+        borders.fills[3] = resolve(bordersStyle.start.color, style.color);
+
+        return Some(borders);
+    }
+
+    static Opt<Gfx::Borders> buildBorders(BoxMetrics const& metrics, UsedBorders const& border) {
+        if (metrics.borders.zero())
+            return NONE;
+
+        Gfx::Borders borders;
+
+        borders.widths.top = metrics.borders.top.cast<f64>();
+        borders.widths.bottom = metrics.borders.bottom.cast<f64>();
+        borders.widths.start = metrics.borders.start.cast<f64>();
+        borders.widths.end = metrics.borders.end.cast<f64>();
+
+        borders.styles[0] = border.top.style;
+        borders.styles[1] = border.end.style;
+        borders.styles[2] = border.bottom.style;
+        borders.styles[3] = border.start.style;
+
+        borders.fills[0] = border.top.color;
+        borders.fills[1] = border.end.color;
+        borders.fills[2] = border.bottom.color;
+        borders.fills[3] = border.start.color;
+
+        return Some(borders);
+    }
+
+    // https://drafts.csswg.org/css-position-4/#paint-a-blocks-decorations
+    void paintDecoration(Gfx::Canvas& g) override {
+        auto const& background = style().backgrounds;
+
+        auto color = resolve(background->color, style().color);
+
+        Math::Rectf bound = borderBox().round().cast<f64>();
+        auto radii = metrics.radii.cast<f64>();
+
+        if (not color.transparent()) {
+            // NOTE: Clearing the canvas is only sound for an opaque background,
+            //       a translucent one must be blended with what is underneath.
+            if (originatingBox().isRootElementPrincipalBox() and color.alpha == 255) {
+                g.clear(color);
+            } else {
+                g.fillStyle(color);
+                g.fill(bound, radii);
+            }
+        }
+
+        auto bordersWithoutRadii =
+            usedBorders
+                ? buildBorders(metrics, *usedBorders)
+                : buildBorders(metrics, style());
+
+        if (bordersWithoutRadii) {
+            auto borders = bordersWithoutRadii
+                               ? bordersWithoutRadii.take()
+                               : Gfx::Borders{};
+
+            borders.radii = metrics.radii.cast<f64>();
+            borders.paint(g, bound);
+        }
+    }
+
+    void paintContent(Gfx::Canvas& g, Vec<OutOfBandOutline>& outOfBandOutlines) override {
+        // https://drafts.csswg.org/css-position-4/#paint-a-blocks-decorations:~:text=and%20canvas.-,Otherwise,-First%20for%20root
+        // If the box is a replaced element, paint the replaced content into canvas, atomically.
+        if (originatingBox().isReplaced()) {
+            auto& image = originatingBox().content.unwrap<Gfx::Snapshot>();
+            auto trans = Math::Trans2f::map(
+                image.size().cast<f64>(),
+                contentBox().cast<f64>()
+            );
+
+            g.push();
+            g.transform(trans);
+            if (not metrics.radii.zero()) {
+                g.beginPath();
+                g.rect(
+                    contentBox().size().cast<f64>(),
+                    metrics.radii.cast<f64>()
+                );
+                g.clip();
+            }
+            (void)image.replay(g);
+            g.pop();
+        }
+
+        // Otherwise, for each line box of the box, paint a box in a line box given the box, the line box, and canvas.
+        else if (originatingBox().content.is<Rc<Gfx::Prose>>()) {
+            auto& prose = originatingBox().content.unwrap<Rc<Gfx::Prose>>();
+
+            g.push();
+            g.origin(contentBox().topStart().cast<f64>());
+            g.fill(prose);
+            g.pop();
+        }
+
+        // If the UA uses in-band outlines, paint the outlines of the box into canvas.
+        if (metrics.outlineWidth != 0_au) {
+            Gfx::Outline outline;
+            outline.width = metrics.outlineWidth.cast<f64>();
+            outline.offset = metrics.outlineOffset.cast<f64>();
+            auto const& outlineStyle = *style().outline;
+
+            if (outlineStyle.style.is<Keywords::Auto>()) {
+                outline.style = Gfx::BorderStyle::SOLID;
+            } else {
+                outline.style = outlineStyle.style.unwrap<Gfx::BorderStyle>();
+            }
+
+            outline.fill = resolve(outlineStyle.color, style().color);
+
+            outOfBandOutlines.pushBack(OutOfBandOutline{
+                .outline = outline,
+                .rect = borderBox().round().cast<f64>(),
+                .radii = metrics.radii.cast<f64>(),
+            });
+        }
+    }
+
     void paintOwnOverlay(Gfx::Canvas& g) const override {
         Gfx::Borders border;
 
@@ -426,7 +723,7 @@ export struct BoxFragment : Fragment {
     }
 
     void repr(Io::Emit& e) const override {
-        e("(box-frag matrics: {} children: {})", metrics, _children);
+        e("(box-frag matrics:{} children:{})", metrics, _children);
     }
 };
 

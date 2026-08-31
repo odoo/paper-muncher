@@ -776,4 +776,154 @@
         </div>
     </rendering>
 </test>
+
+<!-- https://drafts.csswg.org/css2/#z-index -->
+<test name="z-index-does-not-apply-to-non-positioned">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                .sq {
+                    width: 80px;
+                    height: 80px;
+                }
+
+                .red {
+                    background: red;
+                }
+
+                .blue {
+                    background: blue;
+                    margin-top: -40px;
+                    margin-left: 40px;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot/>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="sq red"></div>
+        <div class="sq blue"></div>
+    </rendering>
+
+    <rendering help="positive z-index on a static box is ignored">
+        <div class="sq red" style="z-index: 5"></div>
+        <div class="sq blue"></div>
+    </rendering>
+
+    <rendering help="negative z-index on a static box is ignored">
+        <div class="sq red"></div>
+        <div class="sq blue" style="z-index: -1"></div>
+    </rendering>
+</test>
+
+<test name="z-index-does-not-apply-to-floats">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                .sq {
+                    float: left;
+                    width: 80px;
+                    height: 80px;
+                }
+
+                .red {
+                    background: red;
+                }
+
+                .blue {
+                    background: blue;
+                    margin-left: -40px;
+                    margin-top: 40px;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot/>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="sq red"></div>
+        <div class="sq blue"></div>
+    </rendering>
+
+    <rendering help="z-index on a non-positioned float is ignored">
+        <div class="sq red" style="z-index: 5"></div>
+        <div class="sq blue"></div>
+    </rendering>
+</test>
+
+<test name="z-index-applies-to-positioned">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                .sq {
+                    position: absolute;
+                    width: 80px;
+                    height: 80px;
+                }
+
+                .red {
+                    background: red;
+                    top: 0px;
+                    left: 0px;
+                }
+
+                .blue {
+                    background: blue;
+                    top: 40px;
+                    left: 40px;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot/>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="sq blue"></div>
+        <div class="sq red"></div>
+    </rendering>
+
+    <rendering help="positive z-index raises a positioned box">
+        <div class="sq red" style="z-index: 1"></div>
+        <div class="sq blue"></div>
+    </rendering>
+
+    <rendering help="negative z-index lowers a positioned box">
+        <div class="sq red"></div>
+        <div class="sq blue" style="z-index: -1"></div>
+    </rendering>
+</test>
 </tests>
