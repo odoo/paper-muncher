@@ -1,7 +1,6 @@
 export module Vaev.Engine:dom.element;
 
 import Karm.Core;
-import Karm.Scene;
 import :dom.attr;
 import :dom.node;
 import :dom.names;

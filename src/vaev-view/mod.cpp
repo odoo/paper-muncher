@@ -36,14 +36,14 @@ struct Viewport : Ui::View<Viewport> {
         g.push();
         g.clip(_listener.containerBound());
         g.origin(_listener.scroll() + _listener.containerBound().xy);
+        _window->paint(g);
 
         auto& render = _window->ensureRender();
 
-        render.scene.replay(g).unwrap();
         if (_props.wireframe)
-            render.frag->paintWireframe(g);
+            render.fragments->paintWireframe(g);
         if (_props.selected)
-            render.frag->paintOverlay(g, _props.selected.unwrap(), _window->scrollableOverflow().cast<f64>());
+            render.fragments->paintOverlay(g, _props.selected.unwrap(), _window->scrollableOverflow().cast<f64>());
 
         g.pop();
 

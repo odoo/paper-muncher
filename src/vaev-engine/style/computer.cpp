@@ -447,7 +447,7 @@ export struct Computer {
         }
     }
 
-    // MARK: Body Brackground --------------------------------------------------------
+    // MARK: Body Background ---------------------------------------------------
 
     // https://www.w3.org/TR/css-backgrounds-3/#body-background
     static void _propagateBodyBackgroundToHtml(Dom::Document& doc) {

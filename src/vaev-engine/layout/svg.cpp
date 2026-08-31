@@ -1,7 +1,6 @@
 export module Vaev.Engine:layout.svg;
 
 import Karm.Core;
-import Karm.Scene;
 import Karm.Gfx;
 import Karm.Math;
 

@@ -13,7 +13,6 @@ import Karm.Sys;
 import Karm.Gfx;
 import Karm.Math;
 import Karm.Logger;
-import Karm.Scene;
 import Karm.Core;
 import Karm.Ref;
 
@@ -92,7 +91,6 @@ export struct Option {
     Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength> footerSize = Vaev::Keywords::AUTO;
 
     auto derivePrintSettings() const -> Print::Settings {
-
         auto stock = this->stock;
         if (this->width or this->height)
             stock = Print::PaperStock::custom(
@@ -147,7 +145,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                 if (auto& [w] = headerWindow) {
                     w->changeMedia(media);
                     w->changeViewport(infos.pageDecoration.size());
-                    headerHeight = w->ensureRender().frag->borderBox().height;
+                    headerHeight = w->borderBox().height;
                 }
             } else {
                 headerHeight = Vaev::resolve(headerSize.unwrap<Vaev::AbsoluteLength>());
@@ -157,7 +155,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                 if (auto& [w] = footerWindow) {
                     w->changeMedia(media);
                     w->changeViewport(infos.pageDecoration.size());
-                    footerHeight = w->ensureRender().frag->borderBox().height;
+                    footerHeight = w->borderBox().height;
                 }
             } else {
                 footerHeight = Vaev::resolve(footerSize.unwrap<Vaev::AbsoluteLength>());
@@ -168,22 +166,26 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
         return infos.pageDecoration.shrink({headerHeight, 0_au, footerHeight});
     }
 
-    void decorate(Vaev::Style::Media const& media, Vaev::Driver::PageLayoutInfos const& infos, [[maybe_unused]] usize pageCount, Scene::Stack& pageStack) override {
+    void decorate(Vaev::Style::Media const& media, Vaev::Driver::PageLayoutInfos const& infos, [[maybe_unused]] usize pageCount, Gfx::Canvas& g) override {
         auto decorationWidth = infos.pageDecoration.width;
         auto [headerHeight, footerHeight] = _memo.lookup(infos.pageDecoration.size()).unwrap();
 
         if (auto& [w] = headerWindow) {
             w->changeMedia(media);
             w->changeViewport({decorationWidth, headerHeight});
-            auto tranform = Math::Trans2f::translate(infos.pageDecoration.topStart().cast<f64>());
-            pageStack.add(makeRc<Scene::Transform>(makeRc<Scene::Snapshot>(w->render()), tranform));
+            g.push();
+            g.transform(Math::Trans2f::translate(infos.pageDecoration.topStart().cast<f64>()));
+            w->paint(g);
+            g.pop();
         }
 
         if (auto& [w] = footerWindow) {
             w->changeMedia(media);
             w->changeViewport({decorationWidth, footerHeight});
-            auto transform = Math::Trans2f::translate((infos.pageDecoration.bottomStart() - Math::Vec2Au{0_au, footerHeight}).cast<f64>());
-            pageStack.add(makeRc<Scene::Transform>(makeRc<Scene::Snapshot>(w->render()), transform));
+            g.push();
+            g.transform(Math::Trans2f::translate((infos.pageDecoration.bottomStart() - Math::Vec2Au{0_au, footerHeight}).cast<f64>()));
+            w->paint(g);
+            g.pop();
         }
     }
 };
@@ -228,29 +230,28 @@ Async::Task<> runSingleAsync(
         auto media = options.deriveMedia();
         window->changeMedia(media);
 
-        Rc<Scene::Node> scene = makeRc<Scene::Snapshot>(window->render());
-
-        if (options.background.has())
-            scene = makeRc<Scene::Clear>(scene, Vaev::resolve(*options.background, Gfx::ALPHA));
-
-        // NOTE: Override the background of HTML document, since no
-        //       one really expect a html document to be transparent
-        else if (window->document()->documentElement()->namespaceUri() == Vaev::Html::NAMESPACE) {
-            scene = makeRc<Scene::Clear>(scene, Gfx::WHITE);
-        }
-
         Math::Vec2Au size{
             media.width,
             media.height,
         };
 
         if (options.extend == Extend::FIT) {
-            auto overflow = window->ensureRender().frag->scrollableOverflow();
+            auto overflow = window->scrollableOverflow();
             size.width = overflow.width;
             size.height = overflow.height;
         }
+        auto& page = output.beginPage(size.cast<f64>());
 
-        scene->paint(output.beginPage(size.cast<f64>()), size.cast<f64>(), {.showBackgroundGraphics = true});
+        if (options.background.has())
+            page.clear(Vaev::resolve(*options.background, Gfx::ALPHA));
+
+        // NOTE: Override the background of HTML document, since no
+        //       one really expect a html document to be transparent
+        else if (window->document()->documentElement()->namespaceUri() == Vaev::Html::NAMESPACE) {
+            page.clear(Gfx::WHITE);
+        }
+
+        window->paint(page);
     }
 
     co_return Ok();

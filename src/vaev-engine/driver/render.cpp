@@ -1,7 +1,6 @@
 export module Vaev.Engine:driver.render;
 
 import Karm.Gc;
-import Karm.Scene;
 import Karm.Font;
 import Karm.Gfx;
 import Karm.Math;
@@ -10,17 +9,18 @@ import Karm.Logger;
 import :layout;
 import :style;
 import :dom.document;
+import :paint;
 import :values;
 
 namespace Vaev::Driver {
 
 static auto dumpFragments = Debug::Flag::debug("web-fragments"s, "Dump the constructed fragments"s);
-static auto dumpScene = Debug::Flag::debug("web-scene"s, "Dump the constructed scene"s);
+static auto dumpStacking = Debug::Flag::debug("web-stacking"s, "Dump the stacking context tree"s);
 
 export struct RenderResult {
-    Rc<Layout::Box> layout;
-    Gfx::Snapshot scene;
-    Rc<Layout::Fragment> frag;
+    Rc<Layout::Tree> tree;
+    Rc<Layout::Fragment> fragments;
+    Rc<Paint::StackingContext> stacking;
 };
 
 export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Media const& media, Style::Viewport viewport) {
@@ -35,13 +35,13 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
     computer.build();
     computer.styleDocument(*dom);
 
-    Layout::Tree tree = {
+    auto tree = makeRc<Layout::Tree>(
         Layout::buildDocument(dom),
         viewport
-    };
+    );
 
     auto layout = Layout::layoutRoot(
-        tree,
+        *tree,
         {
             .generateFragment = true,
             .knownSize = {Some(viewport.small.width), NONE},
@@ -50,23 +50,18 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
         }
     );
 
-    auto sceneRoot = makeRc<Scene::Stack>();
-    Layout::paint(*layout.fragment, *sceneRoot);
-    sceneRoot->prepare();
+    auto stacking = Paint::StackingContext::establishStackingContext(layout.fragment.unwrap());
 
     if (dumpFragments)
         logDebugIf(dumpFragments, "fragments: {}", *layout.fragment);
 
-    if (dumpScene)
-        logDebugIf(dumpScene, "scene: {}", sceneRoot);
+    if (dumpStacking)
+        logDebugIf(dumpStacking, "stacking: {}", stacking);
 
-    auto bound = sceneRoot->bound();
-    Gfx::Snapshot::Recorder recorder{bound.bottomEnd().ceil().cast<isize>()};
-    sceneRoot->paint(recorder, bound, {});
     return {
-        makeRc<Layout::Box>(std::move(tree.root)),
-        recorder.finalize(),
+        tree,
         *layout.fragment,
+        stacking
     };
 }
 

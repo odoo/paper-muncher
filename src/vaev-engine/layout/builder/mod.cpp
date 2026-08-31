@@ -453,53 +453,38 @@ static void _buildVoidElement(BuilderContext bc, Gc::Ref<Dom::Element> el) {
             // NOTE: The UA may however give them a different look and feel
             //       as long as it remains possible to operate the widget.
             // https://www.w3.org/TR/css-ui-4/#appearance-semantics
+
             Math::Rectf rect = {14, 14};
+            Math::Radiif radii = type == "checkbox" ? 2 : 99;
+            Gfx::Snapshot::Recorder snapshot{rect.size().cast<isize>()};
 
-            Rc<Scene::Stack> box = makeRc<Scene::Stack>();
-
-            box->add(
-                makeRc<Scene::Box>(
-                    rect,
-                    Gfx::Borders{
-                        .radii = type == "checkbox" ? 2 : 99,
-                        .widths = 1,
-                        .fills = {
-                            Gfx::BLACK,
-                            Gfx::BLACK,
-                            Gfx::BLACK,
-                            Gfx::BLACK,
-                        },
-                        .styles = {
-                            Gfx::BorderStyle::SOLID,
-                            Gfx::BorderStyle::SOLID,
-                            Gfx::BorderStyle::SOLID,
-                            Gfx::BorderStyle::SOLID,
-                        },
-                    },
-                    Gfx::Outline{}, Vec<Gfx::Fill>{Gfx::WHITE}
-                )
-            );
+            snapshot.fillStyle(Gfx::WHITE);
+            snapshot.fill(rect, radii);
+            Gfx::Borders{
+                .radii = radii,
+                .widths = 1,
+                .fills = {
+                    Gfx::BLACK,
+                    Gfx::BLACK,
+                    Gfx::BLACK,
+                    Gfx::BLACK,
+                },
+                .styles = {
+                    Gfx::BorderStyle::SOLID,
+                    Gfx::BorderStyle::SOLID,
+                    Gfx::BorderStyle::SOLID,
+                    Gfx::BorderStyle::SOLID,
+                },
+            }
+                .paint(snapshot, rect);
 
             bool checked = el->hasAttribute(Html::CHECKED_ATTR) or el->getAttribute(Html::VALUE_ATTR).unwrapOr(""s) == "on";
 
             if (checked) {
-                box->add(
-                    makeRc<Scene::Box>(
-                        rect.shrink(2),
-                        Gfx::Borders{
-                            .radii = type == "checkbox" ? 2 : 99,
-                            .widths = 0,
-                            .fills = {},
-                            .styles = {},
-                        },
-                        Gfx::Outline{},
-                        Vec<Gfx::Fill>{Gfx::BLUE500}
-                    )
-                );
+                snapshot.fillStyle(Gfx::BLUE500);
+                snapshot.fill(rect.shrink(2), radii);
             }
 
-            Gfx::Snapshot::Recorder snapshot{rect.size().cast<isize>()};
-            box->paint(snapshot, rect, {});
             bc.content() = snapshot.finalize();
         } else {
             _buildInputProse(bc, el);

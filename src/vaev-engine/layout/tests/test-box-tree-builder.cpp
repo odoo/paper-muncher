@@ -121,7 +121,7 @@ bool FakeInlineBox::operator==(Box const& inlineBox) {
 Async::Task<Box> _buildBoxesAsync(Str html, Async::CancellationToken ct) {
     auto window = Dom::Window::create();
     co_trya$(window->loadLocationAsync(Ref::Url::data("text/html"_mime, bytes(html)), Ref::Uti::PUBLIC_OPEN, ct));
-    co_return Ok(std::move(window->ensureRender().layout->children()[0]));
+    co_return Ok(std::move(window->ensureRender().tree->root.children()[0]));
 }
 
 testAsync$("empty-body") {
@@ -468,7 +468,7 @@ testAsync$("table-fixup") {
 
     auto window = Dom::Window::create();
     co_trya$(window->loadLocationAsync(Ref::Url::data("application/xhtml+xml"_mime, bytes(xhtml)), Ref::Uti::PUBLIC_OPEN, ct));
-    Box body = std::move(window->ensureRender().layout->children()[0]);
+    Box body = std::move(window->ensureRender().tree->root.children()[0]);
 
     auto expectedBodySubtree =
         FakeBox{
