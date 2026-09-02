@@ -72,6 +72,9 @@ export struct Element : Node {
     Map<Symbol, Gc::Ref<PseudoElement>> _pseudoElements;
     Style::CounterSet counters;
 
+    Opt<usize> nthChild = NONE;
+    Opt<usize> nthOfType = NONE;
+
     // MARK: Node --------------------------------------------------------------
 
     Element(QualifiedName const& qualifiedName)
