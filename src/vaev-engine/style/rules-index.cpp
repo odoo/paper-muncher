@@ -170,7 +170,7 @@ struct RuleIndex {
 
         considerCursorIfPresent(_typeNameRules, element->qualifiedName.name);
 
-        for (auto const& [name, value] : element->attributes.iterItems()) {
+        for (auto const& [name, value] : element->attributes) {
             auto const& attrName = name.name;
             auto key = Tuple{attrName, value->value.str()};
 

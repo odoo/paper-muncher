@@ -342,7 +342,7 @@ export struct Computer {
         if (el->qualifiedName.ns != Svg::NAMESPACE)
             return;
 
-        for (auto [attr, attrValue] : el->attributes.iterItems())
+        for (auto [attr, attrValue] : el->attributes)
             if (auto const& [property] = _registeredPropertySet.parsePresentationAttribute(attr.name, attrValue->value))
                 cascadedValues.put(property, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
 

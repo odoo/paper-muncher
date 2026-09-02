@@ -103,7 +103,7 @@ Ui::Child elementStartTag(Dom::Element const& el, bool expanded) {
 
     prose->pushSpan(prose->currentSpanStyle().withColor(Ui::ACCENT400));
 
-    for (auto [k, attr] : el.attributes.iterItems()) {
+    for (auto [k, attr] : el.attributes) {
         prose->append(" "s);
         prose->append(Io::toStr(k));
         prose->append("=\""s);

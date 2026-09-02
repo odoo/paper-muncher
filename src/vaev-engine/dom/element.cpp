@@ -65,7 +65,7 @@ export struct Element : Node {
 
     QualifiedName qualifiedName;
     // NOSPEC: Should be a NamedNodeMap
-    Map<QualifiedName, Rc<Attr>> attributes;
+    Vec<Pair<QualifiedName, Rc<Attr>>> attributes;
     Opt<Rc<Style::ComputedValues>> _computedValues;
     TokenList classList;
     Opt<Gfx::Snapshot> imageContent;
@@ -86,7 +86,7 @@ export struct Element : Node {
         e(" qualifiedName={}", qualifiedName);
         if (this->attributes.len()) {
             e.indentNewline();
-            for (auto const& [name, attr] : this->attributes.iterItems()) {
+            for (auto const& [name, attr] : this->attributes) {
                 attr->repr(e);
             }
             e.deindent();
@@ -122,15 +122,20 @@ export struct Element : Node {
                 this->classList.add(class_);
             }
         }
-        this->attributes.put(name, makeRc<Attr>(name, value));
+        this->attributes.emplaceBack(name, makeRc<Attr>(name, value));
     }
 
     bool hasAttribute(QualifiedName name) const {
-        return this->attributes.contains(name);
+        for (auto const& [qualifiedName, _] : this->attributes) {
+            if (qualifiedName == name) {
+                return true;
+            }
+        }
+        return false;
     }
 
     bool hasAttributeUnqualified(Str name) const {
-        for (auto const& [qualifiedName, _] : this->attributes.iterItems()) {
+        for (auto const& [qualifiedName, _] : this->attributes) {
             if (qualifiedName.name.str() == name) {
                 return true;
             }
@@ -139,14 +144,14 @@ export struct Element : Node {
     }
 
     Opt<Str> getAttribute(QualifiedName name) const {
-        auto attr = this->attributes.lookup(name);
-        if (attr == NONE)
-            return NONE;
-        return Some((*attr)->value);
+        for (auto const& [qualifiedName, attr] : this->attributes)
+            if (qualifiedName == name)
+                return Some(attr->value);
+        return NONE;
     }
 
     Opt<Str> getAttributeUnqualified(Symbol name) const {
-        for (auto const& [qualifiedName, attr] : this->attributes.iterItems())
+        for (auto const& [qualifiedName, attr] : this->attributes)
             if (qualifiedName.name == name)
                 return Some(attr->value);
         return NONE;
