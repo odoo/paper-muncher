@@ -15,6 +15,29 @@ struct Tree : Meta::Pinned {
     Gc::Ptr<Node> _nextSibling = nullptr;
     Gc::Ptr<Node> _prevSibling = nullptr;
 
+    // Sibling-position cache, filled in by the selector matcher.
+    //
+    // :nth-child() and friends ask a node where it sits among its siblings.
+    // Answering that by walking the sibling list costs O(siblings) per element,
+    // which is quadratic over a long list — a table body, a report's worth of
+    // rows. The matcher instead indexes a whole child list in one pass and
+    // stamps each child; these fields hold that result.
+    //
+    // _childrenRevision is bumped by every mutation of this node's child list,
+    // so a cached position is recognised as stale instead of trusted. All
+    // mutation goes through the five methods below, which is what makes a
+    // single counter here sufficient.
+    u64 _childrenRevision = 1;
+    u64 _positionsComputedAt = 0; // _childrenRevision when this node's children were indexed
+    u32 _elementIndex = 0;        // this node's index among its element siblings
+    u32 _elementRIndex = 0;       // ...counting from the end
+    u32 _typeIndex = 0;           // ...among element siblings sharing its name
+    u32 _typeRIndex = 0;
+
+    void _bumpChildrenRevision() {
+        _childrenRevision++;
+    }
+
     // Accessor ----------------------------------------------------------------
 
     usize index(auto filter) const {
@@ -77,6 +100,7 @@ struct Tree : Meta::Pinned {
         _lastChild = node;
         if (!_firstChild)
             _firstChild = _lastChild;
+        _bumpChildrenRevision();
     }
 
     void prependChild(Gc::Ptr<Node> node) {
@@ -90,6 +114,7 @@ struct Tree : Meta::Pinned {
         _firstChild = node;
         if (!_lastChild)
             _lastChild = _firstChild;
+        _bumpChildrenRevision();
     }
 
     void insertBefore(Gc::Ptr<Node> node, Gc::Ptr<Node> child) {
@@ -111,6 +136,7 @@ struct Tree : Meta::Pinned {
         child->_prevSibling = node;
 
         node->_parent = {MOVE, static_cast<Node*>(this)};
+        _bumpChildrenRevision();
     }
 
     void insertAfter(Gc::Ptr<Node> node, Gc::Ptr<Node> child) {
@@ -132,11 +158,14 @@ struct Tree : Meta::Pinned {
         child->_nextSibling = node;
 
         node->_parent = {MOVE, static_cast<Node*>(this)};
+        _bumpChildrenRevision();
     }
 
     void remove(this auto& self) {
         if (not self._parent)
             return;
+
+        self._parent->_bumpChildrenRevision();
 
         if (self._parent->_firstChild == &self)
             self._parent->_firstChild = self._nextSibling;

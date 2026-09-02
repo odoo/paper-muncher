@@ -41,7 +41,7 @@ struct RuleIndex {
             [&](TypeSelector const& s) {
                 auto const& qualifiedNameSelector = s.qualifiedName;
 
-                if (not isLookupEquivalentToMatch(qualifiedNameSelector)) {
+                if (not isLookupable(TypeSelector{qualifiedNameSelector})) {
                     _nonLookupRules.pushBack({ruleId, rule});
                     return;
                 }
@@ -72,7 +72,7 @@ struct RuleIndex {
                 }
             },
             [&](Infix const& s) {
-                if (isLookupEquivalentToMatch(*s.rhs) or s.rhs->is<Nfix>()) {
+                if (isLookupable(*s.rhs) or s.rhs->is<Nfix>()) {
                     _add(rule, ruleId, *s.rhs);
                 } else {
                     _nonLookupRules.pushBack({ruleId, rule});
@@ -85,7 +85,7 @@ struct RuleIndex {
                     // before removing said selectors.
                     usize conditionsCount = 0;
                     for (auto const& inner : s.inners) {
-                        if (isLookupEquivalentToMatch(inner)) {
+                        if (isLookupable(inner)) {
                             conditionsCount++;
                             _add(rule, ruleId, inner);
                         }
@@ -99,8 +99,15 @@ struct RuleIndex {
                 } else if (s.type == Nfix::OR) {
                     bool hasNonLookupable = false;
                     for (auto const& inner : s.inners) {
-                        if (isLookupEquivalentToMatch(inner)) {
+                        if (isLookupable(inner)) {
                             _add(rule, ruleId, inner);
+                        } else if (auto key = _lookupKeyFor(inner)) {
+                            // A compound branch such as `a.text-danger:hover`. Index it
+                            // under one necessary key rather than sending the whole rule
+                            // to the every-element bucket because one branch happens not
+                            // to be a bare class or type. Comma-separated groups like
+                            // this are most of a framework stylesheet.
+                            _add(rule, ruleId, *key);
                         } else {
                             hasNonLookupable = true;
                         }
@@ -146,6 +153,69 @@ struct RuleIndex {
         return selector.is<PseudoElementSelector>() or
                selector.is<IdSelector>() or
                selector.is<ClassSelector>();
+    }
+
+    // Whether a selector can be *found* through a lookup table, which is a weaker
+    // property than the one above: a table hit narrows the candidates down, it does
+    // not necessarily prove the selector matches.
+    //
+    // Type selectors are keyed by name alone, so a namespaced one — every type
+    // selector in a sheet that declares `@namespace`, which is all of the user agent
+    // sheets — is perfectly indexable but still has to be verified afterwards.
+    // Treating those two properties as one left `_typeNameRules` completely empty
+    // and pushed every type rule into `_nonLookupRules`, where it was tested against
+    // every element in the document.
+    static bool isLookupable(TypeSelector const& selector) {
+        return selector.qualifiedName.exactName() != NONE;
+    }
+
+    static bool isLookupable(Selector const& selector) {
+        if (auto s = selector.is<TypeSelector>())
+            return isLookupable(*s);
+
+        return isLookupEquivalentToMatch(selector);
+    }
+
+    // How selective a simple selector is as a lookup key; higher is better.
+    static usize _lookupKeyRank(Selector const& selector) {
+        if (selector.is<IdSelector>())
+            return 3;
+        if (selector.is<ClassSelector>())
+            return 2;
+        return 1;
+    }
+
+    // Find one lookup key for a selector that is not itself a simple lookupable
+    // selector — a compound like `a.text-danger:hover`, or a complex one like
+    // `.input-group .form-control`.
+    //
+    // The key only has to be a *necessary* condition: the selector requires all of
+    // its parts, so anything matching it necessarily carries the key. Indexing on
+    // the key can therefore never lose a match, and the full evaluation still
+    // decides. That is what makes it safe to index a branch we cannot prove from
+    // the table alone.
+    static Selector const* _lookupKeyFor(Selector const& selector) {
+        // In a complex selector the subject is the right-hand side.
+        if (auto infix = selector.is<Infix>())
+            return _lookupKeyFor(*infix->rhs);
+
+        if (auto nfix = selector.is<Nfix>()) {
+            // Only AND requires all of its parts. A nested OR/:not()/:where()
+            // gives us no single necessary key.
+            if (nfix->type != Nfix::AND)
+                return nullptr;
+
+            Selector const* best = nullptr;
+            for (auto const& inner : nfix->inners) {
+                if (not isLookupable(inner))
+                    continue;
+                if (not best or _lookupKeyRank(inner) > _lookupKeyRank(*best))
+                    best = &inner;
+            }
+            return best;
+        }
+
+        return isLookupable(selector) ? &selector : nullptr;
     }
 
     Vec<Cursor<Entry>> _cursors;
@@ -225,6 +295,13 @@ struct RuleIndex {
             return false;
         }
 
+        // Every inner was reached through a lookup table, but a table hit only
+        // proves a match for keys that carry the entire selector. A namespaced type
+        // selector is keyed by name alone, so the namespace is still unverified.
+        for (auto const& inner : nfix->inners)
+            if (not isLookupEquivalentToMatch(inner))
+                return false;
+
         _matchingRules.pushBack({styleRule, spec(styleRule->selector)});
         return true;
     }
@@ -248,6 +325,18 @@ struct RuleIndex {
                     // NOTE: If an element has 2 or more occourence of this rule in its list, we can assume
                     // the rule as matched, since at least one of the occourences is due to a lookupable selector,
                     // which is guaranteed to match.
+                    //
+                    // That only holds while every branch that could have produced those
+                    // occurrences proves a match on its own. Two namespaced type selectors
+                    // sharing a name land in the same bucket and can both be hit by an
+                    // element in neither namespace, so those go back to a full evaluation.
+                    for (auto const& inner : nfix->inners) {
+                        if (not isLookupEquivalentToMatch(inner)) {
+                            _evalStyleRule(*lastStyleRule, el, pseudoElement);
+                            return;
+                        }
+                    }
+
                     _matchingRules.pushBack({lastStyleRule, spec(lastStyleRule->selector)});
                 }
             }

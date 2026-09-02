@@ -249,6 +249,49 @@ static bool _matchLink(Gc::Ref<Dom::Element> element) {
 // https://www.w3.org/TR/selectors-4/#the-nth-last-child-pseudo
 // https://www.w3.org/TR/selectors-4/#the-first-child-pseudo
 // https://www.w3.org/TR/selectors-4/#the-last-child-pseudo
+// Index a parent's whole child list in one pass and stamp each child with its
+// position, so an :nth-*() test becomes a field read instead of a sibling walk.
+//
+// Walking per element is what made this quadratic: a rule like
+// `.table-striped > tbody > tr:nth-of-type(odd) > *` is matched right-to-left, so
+// every cell in the table evaluated the `tr:nth-of-type(odd)` ancestor test — each
+// one scanning all preceding rows — long before the cheap `.table-striped` check
+// could reject it.
+//
+// The result is keyed on the parent's child-list revision, so any DOM mutation
+// invalidates it rather than leaving a stale position behind.
+static void _ensureSiblingPositions(Dom::Node& parent) {
+    if (parent._positionsComputedAt == parent._childrenRevision)
+        return;
+
+    // :nth-of-type() matches on the full qualified name, namespace included.
+    Map<Dom::QualifiedName, u32> typeCounts;
+    u32 elementCount = 0;
+    for (auto child = parent.firstChild(); child; child = child->nextSibling()) {
+        auto el = child->is<Dom::Element>();
+        if (not el)
+            continue;
+
+        child->_elementIndex = elementCount++;
+        auto& seen = typeCounts.lookupOrPutDefault(el->qualifiedName);
+        child->_typeIndex = seen++;
+    }
+
+    Map<Dom::QualifiedName, u32> rTypeCounts;
+    u32 rElementCount = 0;
+    for (auto child = parent.lastChild(); child; child = child->previousSibling()) {
+        auto el = child->is<Dom::Element>();
+        if (not el)
+            continue;
+
+        child->_elementRIndex = rElementCount++;
+        auto& seen = rTypeCounts.lookupOrPutDefault(el->qualifiedName);
+        child->_typeRIndex = seen++;
+    }
+
+    parent._positionsComputedAt = parent._childrenRevision;
+}
+
 static bool _matchNthChild(PseudoClassSelector::AnBofS const& anbOfS, Gc::Ref<Dom::Element> element, bool reverseLookup) {
     if (not featureNthChild.enabled)
         return false;
@@ -258,6 +301,8 @@ static bool _matchNthChild(PseudoClassSelector::AnBofS const& anbOfS, Gc::Ref<Do
         if (not matchSelector(*(selector.unwrap()), *element, NONE))
             return false;
 
+        // `of S` takes an arbitrary selector, so its positions can't be cached
+        // alongside the plain ones; this stays a walk.
         auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
             auto el = node->is<Dom::Element>();
             return el ? matchSelector(*(selector.unwrap()), *el, NONE) != NONE : false;
@@ -266,10 +311,12 @@ static bool _matchNthChild(PseudoClassSelector::AnBofS const& anbOfS, Gc::Ref<Do
         return anb.match(index + 1);
     }
 
-    auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
-        return node->is<Dom::Element>() != NONE;
-    };
-    auto index = reverseLookup ? element->reverseIndex(filterFunc) : element->index(filterFunc);
+    auto parent = element->parentNode();
+    if (not parent)
+        return anb.match(1);
+
+    _ensureSiblingPositions(*parent);
+    usize index = reverseLookup ? element->_elementRIndex : element->_elementIndex;
     return anb.match(index + 1);
 }
 
@@ -285,16 +332,12 @@ static bool _matchNthOfType(AnB const& anb, Gc::Ref<Dom::Element> element, bool 
     if (not featureNthChild.enabled)
         return false;
 
-    auto name = element->qualifiedName;
+    auto parent = element->parentNode();
+    if (not parent)
+        return anb.match(1);
 
-    auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
-        auto el = node->is<Dom::Element>();
-        return el ? el->qualifiedName == name : false;
-    };
-
-    auto index = reverseLookup
-                     ? element->reverseIndex(filterFunc)
-                     : element->index(filterFunc);
+    _ensureSiblingPositions(*parent);
+    usize index = reverseLookup ? element->_typeRIndex : element->_typeIndex;
     return anb.match(index + 1);
 }
 

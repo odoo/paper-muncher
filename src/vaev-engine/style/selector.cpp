@@ -1057,6 +1057,67 @@ export struct Selector : _Selector {
         }
     }
 
+    // A compound selector that contains no type selector has a universal selector
+    // implied, and a declared default namespace applies to it. So in a sheet with
+    // `@namespace url(...MathML)`, `semantics > :not(:first-child)` really means
+    // `mathml|semantics > mathml|*:not(:first-child)` and must never match an HTML
+    // element.
+    //
+    // Beyond correctness this keeps such rules cheap: the implied type selector is
+    // prepended, and since AND short-circuits in order a foreign element is rejected
+    // on a namespace compare instead of walking its siblings for `:nth-child()`.
+    //
+    // `sel` is in compound position, i.e. it denotes an element.
+    // https://drafts.csswg.org/css-namespaces/#scope
+    static void _qualifyImpliedUniversal(Selector& sel, Symbol defaultNs) {
+        auto implied = [&] {
+            return Selector{TypeSelector{
+                QualifiedNameSelector::NamespacePattern{defaultNs},
+                QualifiedNameSelector::NamePattern{UNIVERSAL},
+            }};
+        };
+
+        // Both sides of a combinator denote an element of their own.
+        if (auto infix = sel.is<Infix>()) {
+            _qualifyImpliedUniversal(*infix->lhs, defaultNs);
+            _qualifyImpliedUniversal(*infix->rhs, defaultNs);
+            return;
+        }
+
+        if (auto nfix = sel.is<Nfix>()) {
+            if (nfix->type == Nfix::AND) {
+                bool hasTypeSelector = false;
+                for (auto& inner : nfix->inners) {
+                    if (inner.is<TypeSelector>())
+                        hasTypeSelector = true;
+                    // `:is()` / `:not()` / `:where()` sitting inside the compound hold
+                    // selectors of their own; those get qualified independently.
+                    else if (auto innerNfix = inner.is<Nfix>(); innerNfix and innerNfix->type != Nfix::AND)
+                        for (auto& s : innerNfix->inners)
+                            _qualifyImpliedUniversal(s, defaultNs);
+                }
+
+                if (not hasTypeSelector)
+                    nfix->inners.insert(0, implied());
+                return;
+            }
+
+            // A bare `:is()` / `:not()` / `:where()` is itself a whole compound.
+            for (auto& inner : nfix->inners)
+                _qualifyImpliedUniversal(inner, defaultNs);
+
+            sel = and_({implied(), std::move(sel)});
+            return;
+        }
+
+        // Already carries an explicit namespace, or matches nothing at all.
+        if (sel.is<TypeSelector>() or sel.is<EmptySelector>())
+            return;
+
+        // A lone class, id, attribute or pseudo selector.
+        sel = and_({implied(), std::move(sel)});
+    }
+
     static Res<Selector> parse(Cursor<Css::Sst>& c, Namespace const& ns = {}) {
         if (not c)
             return Error::invalidData("expected selector");
@@ -1070,6 +1131,10 @@ export struct Selector : _Selector {
             if (not c.ended() and oldC == c)
                 return Error::invalidData("unexpected token after selector");
         }
+
+        // NOTE: Idempotent, so nested `:not()` parses re-entering here are harmless.
+        if (ns.explicitDefault)
+            _qualifyImpliedUniversal(currentSelector, ns.default_);
 
         return Ok(currentSelector);
     }
