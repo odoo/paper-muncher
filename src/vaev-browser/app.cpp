@@ -136,7 +136,7 @@ Ui::Child addressBar(State const& s) {
            Ui::keyboardShortcut(App::Key::L, App::KeyMod::CTRL);
 }
 
-Ui::Child contextMenu(State const& s) {
+Ui::Child contextMenu(State const& s, Opt<Dom::EventTarget> target) {
     return Kr::contextMenuContent({
         Kr::contextMenuDock({
             Kr::contextMenuIcon(Model::bindIf<GoBack>(s.canGoBack()), Mdi::ARROW_LEFT),
@@ -155,7 +155,7 @@ Ui::Child contextMenu(State const& s) {
             "View Source..."
         ),
         Kr::contextMenuItem(
-            Some(Model::bind<ToggleDeveloperMode>()),
+            Some(Model::bind<InspectElement>(target)),
             Some(Mdi::BUTTON_CURSOR),
             "Inspect"
         ),
@@ -165,7 +165,8 @@ Ui::Child contextMenu(State const& s) {
 Ui::Child inspectorContent(State const& s) {
     if (not s.loadingResult) {
         return Ui::labelMedium(Ui::GRAY500, "No document") |
-               Ui::center() | Kr::scaffoldContent();
+               Ui::center() |
+               Kr::scaffoldContent();
     }
 
     return inspect(
@@ -200,6 +201,16 @@ Ui::Child webview(State const& s) {
 
     return View::viewport(
                s.window,
+               [&](Ui::Node& n, Dom::Event& domEvent) {
+                   if (auto const& [e] = domEvent.as<Dom::MouseEvent>()) {
+                       if (e.type == Dom::EventType::CONTEXTMENU)
+                           Kr::showContextMenu(
+                               n,
+                               n.bound().topStart() + e.screen,
+                               contextMenu(s, domEvent.target)
+                           );
+                   }
+               },
                {
                    .wireframe = s.wireframe,
                    .selected = selected,
@@ -207,9 +218,6 @@ Ui::Child webview(State const& s) {
            ) |
            Ui::box({
                .backgroundFill = Some(Gfx::WHITE),
-           }) |
-           Kr::contextMenu([&] {
-               return contextMenu(s);
            });
 }
 

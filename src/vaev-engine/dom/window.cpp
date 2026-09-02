@@ -129,6 +129,11 @@ export struct Window {
         return image;
     }
 
+    Rc<Layout::Fragment> hittest(Math::Vec2f at) {
+        auto stacking = ensureRender().stacking;
+        return stacking->hitest(at, {}).unwrapOr(stacking->fragment);
+    }
+
     void paint(Gfx::Canvas& canvas) {
         ensureRender().stacking->paintRoot(canvas);
     }

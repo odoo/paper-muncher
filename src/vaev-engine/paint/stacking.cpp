@@ -44,6 +44,42 @@ export struct StackingContext {
                     (*fragment)->paintContent(g, outOfBandOutlines);
         }
 
+        void paintWireframe(Gfx::Canvas& g, Math::Rectf viewBox) {
+            return content.visit(
+                [&](Rc<Layout::Fragment>& f) {
+                    return f->paintWireframe(g);
+                },
+                [&](Rc<StackingContext>& sc) {
+                    return sc->paintWireframe(g, viewBox);
+                }
+            );
+        }
+
+        void paintOverlay(Gfx::Canvas& g, Dom::OriginatingElement of, Math::Rectf viewport) {
+            return content.visit(
+                [&](Rc<Layout::Fragment>& f) {
+                    return f->paintOverlay(g, of, viewport);
+                },
+                [&](Rc<StackingContext>& sc) {
+                    return sc->paintOverlay(g, of, viewport);
+                }
+            );
+        }
+
+        Opt<Rc<Layout::Fragment>> hitest(Math::Vec2f pos, Math::Rectf viewBox) {
+            return content.visit(
+                [&](Rc<Layout::Fragment>& f) -> Opt<Rc<Layout::Fragment>> {
+                    if (f->borderBox().contains(pos.cast<Au>())) {
+                        return Some(f);
+                    }
+                    return NONE;
+                },
+                [&](Rc<StackingContext>& sc) {
+                    return sc->hitest(pos, viewBox);
+                }
+            );
+        }
+
         RectAu scrollableOverflow() {
             return content.visit(
                 [](Rc<Layout::Fragment>& f) {
@@ -230,20 +266,19 @@ export struct StackingContext {
         if (fragment->style().visibility != Visibility::HIDDEN)
             fragment->paintDecoration(g);
 
-        // 5. positioned descendants with negative (non-zero) z-index values
-        for (auto& e : layers)
+        for (auto& e : layers) {
+            // 5. positioned descendants with negative (non-zero) z-index values
             if (e.paintingOrder == PaintingOrder::POSITIONED_NEGATIVE_Z)
                 e.paintStackingContext(g, viewBox);
 
-        // 6. non-positioned, block-level descendants, paint a block’s decorations
-        for (auto& e : layers)
+            // 6. non-positioned, block-level descendants, paint a block’s decorations
             if (e.paintingOrder == PaintingOrder::IN_FLOW)
                 e.paintBoxDecoration(g);
 
-        // 7. non-positioned floating descendants, in tree order
-        for (auto& e : layers)
+            // 7. non-positioned floating descendants, in tree order
             if (e.paintingOrder == PaintingOrder::FLOAT)
                 e.paintStackingContext(g, viewBox);
+        }
 
         // 8. Otherwise, paint root’s own content, then the in-flow,
         //    non-positioned, block-level descendants. Descendants that
@@ -252,21 +287,20 @@ export struct StackingContext {
         if (fragment->style().visibility != Visibility::HIDDEN)
             fragment->paintContent(g, outOfBandOutlines);
 
-        for (auto& e : layers)
+        for (auto& e : layers) {
             if (e.paintingOrder == PaintingOrder::IN_FLOW) {
                 e.paintBoxContent(g, outOfBandOutlines);
                 e.paintStackingContext(g, viewBox);
             }
 
-        // 9. positioned descendants with 'z-index: auto' or 'z-index: 0'
-        for (auto& e : layers)
+            // 9. positioned descendants with 'z-index: auto' or 'z-index: 0'
             if (e.paintingOrder == PaintingOrder::POSITIONED_ZERO_Z)
                 e.paintStackingContext(g, viewBox);
 
-        // 10. positioned descendants with z-indices greater than or equal to 1
-        for (auto& e : layers)
+            // 10. positioned descendants with z-indices greater than or equal to 1
             if (e.paintingOrder == PaintingOrder::POSITIONED_POSITIVE_Z)
                 e.paintStackingContext(g, viewBox);
+        }
 
         // 11. draw all of root’s outlines into canvas
         for (auto& outline : outOfBandOutlines)
@@ -277,6 +311,57 @@ export struct StackingContext {
 
     void paintRoot(Gfx::Canvas& g) {
         paintNested(g, {});
+    }
+
+    void paintWireframe(Gfx::Canvas& g, Math::Rectf viewBox) {
+        ensureSorted();
+
+        g.push();
+
+        if (fragment->style().transform->has()) {
+            applyTransform(fragment, g, viewBox);
+        }
+
+        // NOTE: From here on, descendants live in this fragment's viewport
+        g.transform(fragment->intrinsicTransform());
+
+        viewBox = fragment->intrinsicViewBox().unwrapOr(viewBox);
+
+        fragment->paintWireframe(g);
+        for (auto& l : layers)
+            l.paintWireframe(g, viewBox);
+
+        g.pop();
+    }
+
+    void paintOverlay(Gfx::Canvas& g, Dom::OriginatingElement of, Math::Rectf viewport) {
+        ensureSorted();
+        g.push();
+        fragment->paintOverlay(g, of, viewport);
+        for (auto& l : layers)
+            l.paintOverlay(g, of, viewport);
+
+        g.pop();
+    }
+
+    Opt<Rc<Layout::Fragment>> hitest(Math::Vec2f pos, Math::Rectf viewBox) {
+        ensureSorted();
+
+        pos = fragment->intrinsicTransform().inverse().apply(pos);
+
+        if (fragment->style().transform->has())
+            pos = resolveTransform(fragment, viewBox).inverse().apply(pos);
+
+        for (auto& l : mutIterRev(layers))
+            if (auto hit = l.hitest(pos, viewBox)) {
+                return hit;
+            }
+
+        if (fragment->borderBox().contains(pos.cast<Au>())) {
+            return Some(fragment);
+        }
+
+        return NONE;
     }
 
     // https://drafts.csswg.org/css-overflow-3/#scrollable

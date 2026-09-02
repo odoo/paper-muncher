@@ -1,4 +1,4 @@
-export module Vaev.Engine:dom.character_data;
+export module Vaev.Engine:dom.characterData;
 
 import Karm.Core;
 import :dom.node;
