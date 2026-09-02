@@ -8,6 +8,68 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
+// Identifiers live in one hash space, so a class and a tag of the same name would
+// otherwise collide. A collision only costs a false positive, but they are cheap to
+// avoid.
+enum struct IdentKind : u8 {
+    ID,
+    CLASS,
+    TYPE,
+};
+
+static u64 _hashIdent(Str name, IdentKind kind) {
+    // FNV-1a, with the kind mixed in first. Zero is reserved as the terminator of a
+    // rule's hash list, so it is never returned.
+    u64 hash = 0xcbf29ce484222325uLL;
+    hash = (hash ^ static_cast<u64>(kind)) * 0x100000001b3uLL;
+    for (usize i = 0; i < name.len(); ++i)
+        hash = (hash ^ static_cast<u64>(static_cast<u8>(name[i]))) * 0x100000001b3uLL;
+    return hash ? hash : 1;
+}
+
+// Tracks the identifiers — ids, tag names, classes — of the ancestors of the element
+// currently being styled.
+//
+// A selector like `.table-striped > tbody > tr > td` can only match inside a
+// `.table-striped`. Matching runs right-to-left, so without this the whole ancestor
+// walk runs before that is discovered. Asking the filter first rejects the rule on
+// two array reads.
+//
+// The filter answers "definitely not an ancestor" exactly and "possibly an ancestor"
+// approximately, which is the safe direction: a false positive costs a full match
+// that would have happened anyway, and false negatives cannot occur.
+struct SelectorFilter {
+    CountingBloom<4096> _bloom;
+    Vec<Vec<u64>> _stack;
+
+    void push(Gc::Ref<Dom::Element> element) {
+        Vec<u64> hashes;
+
+        if (auto id = element->id())
+            hashes.pushBack(_hashIdent(*id, IdentKind::ID));
+
+        hashes.pushBack(_hashIdent(element->qualifiedName.name.str(), IdentKind::TYPE));
+
+        for (auto const& class_ : element->classList._tokens)
+            hashes.pushBack(_hashIdent(class_.str(), IdentKind::CLASS));
+
+        for (auto hash : hashes)
+            _bloom.add(hash);
+
+        _stack.pushBack(std::move(hashes));
+    }
+
+    void pop() {
+        for (auto hash : last(_stack))
+            _bloom.remove(hash);
+        _stack.popBack();
+    }
+
+    bool maybeHasAncestor(u64 hash) const {
+        return _bloom.maybeContains(hash);
+    }
+};
+
 // Used to speed up the lookup of style rules by using lookup tables.
 // This is useful for rules described by:
 // - Simple selectors other than class selectors
@@ -124,8 +186,78 @@ struct RuleIndex {
         );
     }
 
+    // Identifiers a rule requires of the subject's ancestors, indexed by rule id and
+    // terminated by a zero. Empty for rules that require nothing, which are then
+    // never filtered.
+    static constexpr usize MAX_ANCESTOR_HASHES = 4;
+    Vec<Array<u64, MAX_ANCESTOR_HASHES>> _ruleAncestorHashes;
+
+    static void _harvestSimple(Selector const& selector, Array<u64, MAX_ANCESTOR_HASHES>& out, usize& n) {
+        if (n == MAX_ANCESTOR_HASHES)
+            return;
+
+        if (auto s = selector.is<IdSelector>())
+            out[n++] = _hashIdent(s->id.str(), IdentKind::ID);
+        else if (auto s = selector.is<ClassSelector>())
+            out[n++] = _hashIdent(s->class_, IdentKind::CLASS);
+        else if (auto s = selector.is<TypeSelector>()) {
+            if (auto name = s->qualifiedName.exactName())
+                out[n++] = _hashIdent(name->str(), IdentKind::TYPE);
+        }
+    }
+
+    // A compound selector: everything in it is required of the same element.
+    static void _harvestCompound(Selector const& selector, Array<u64, MAX_ANCESTOR_HASHES>& out, usize& n) {
+        if (auto nfix = selector.is<Nfix>()) {
+            // Only AND requires all of its parts; nothing inside :not()/:is()/:where()
+            // has to be present.
+            if (nfix->type != Nfix::AND)
+                return;
+
+            for (auto const& inner : nfix->inners)
+                _harvestSimple(inner, out, n);
+            return;
+        }
+
+        _harvestSimple(selector, out, n);
+    }
+
+    // Climb the chain of elements above the subject, harvesting what each must be.
+    //
+    // Only descendant and child combinators put an element on the ancestor chain. At a
+    // sibling combinator we stop: its left side is a sibling of an ancestor, not an
+    // ancestor, and anything further up would be reached through it.
+    static void _harvestAncestors(Selector const& selector, Array<u64, MAX_ANCESTOR_HASHES>& out, usize& n) {
+        if (auto infix = selector.is<Infix>()) {
+            if (infix->type != Infix::DESCENDANT and infix->type != Infix::CHILD)
+                return;
+
+            _harvestCompound(*infix->rhs, out, n);
+            _harvestAncestors(*infix->lhs, out, n);
+            return;
+        }
+
+        _harvestCompound(selector, out, n);
+    }
+
+    static Array<u64, MAX_ANCESTOR_HASHES> _ancestorHashesFor(Selector const& selector) {
+        Array<u64, MAX_ANCESTOR_HASHES> out = {};
+        usize n = 0;
+
+        // A comma group matches if any branch does, so an identifier is only required
+        // when every branch requires it. Not worth the bookkeeping — take no hashes.
+        if (auto infix = selector.is<Infix>())
+            if (infix->type == Infix::DESCENDANT or infix->type == Infix::CHILD)
+                _harvestAncestors(*infix->lhs, out, n);
+
+        return out;
+    }
+
     void add(StyleRule const& rule) {
         _ruleCount++;
+        // Rule ids start at 1; slot 0 is unused.
+        _ruleAncestorHashes.resize(_ruleCount + 1);
+        _ruleAncestorHashes[_ruleCount] = _ancestorHashesFor(rule.selector);
         _add(&rule, _ruleCount, rule.selector);
     }
 
@@ -254,7 +386,30 @@ struct RuleIndex {
 
     MatchingRules _matchingRules;
 
-    void _evalStyleRule(StyleRule const& rule, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement) {
+    // Reject a rule whose ancestor requirements the current element cannot meet,
+    // before paying for the match itself.
+    //
+    // Only rules that get this far need checking: the shortcuts that accept a rule
+    // straight from a lookup hit apply to selectors made purely of simple selectors,
+    // which have no combinators and so require nothing of any ancestor.
+    bool _filterRejects(usize ruleId) const {
+        if (not _filter)
+            return false;
+
+        for (auto hash : _ruleAncestorHashes[ruleId]) {
+            if (hash == 0)
+                break;
+            if (not _filter->maybeHasAncestor(hash))
+                return true;
+        }
+
+        return false;
+    }
+
+    void _evalStyleRule(StyleRule const& rule, usize ruleId, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement) {
+        if (_filterRejects(ruleId))
+            return;
+
         if (auto specificity = rule.match(el, pseudoElement))
             _matchingRules.pushBack({&rule, specificity.unwrap()});
     }
@@ -320,7 +475,7 @@ struct RuleIndex {
                     return;
 
                 if (countMatchesWithCurrentRule == 1) {
-                    _evalStyleRule(*lastStyleRule, el, pseudoElement);
+                    _evalStyleRule(*lastStyleRule, lastRuleId, el, pseudoElement);
                 } else {
                     // NOTE: If an element has 2 or more occourence of this rule in its list, we can assume
                     // the rule as matched, since at least one of the occourences is due to a lookupable selector,
@@ -332,7 +487,7 @@ struct RuleIndex {
                     // element in neither namespace, so those go back to a full evaluation.
                     for (auto const& inner : nfix->inners) {
                         if (not isLookupEquivalentToMatch(inner)) {
-                            _evalStyleRule(*lastStyleRule, el, pseudoElement);
+                            _evalStyleRule(*lastStyleRule, lastRuleId, el, pseudoElement);
                             return;
                         }
                     }
@@ -361,7 +516,7 @@ struct RuleIndex {
             }
 
             if (not _maybeDeferRuleEvaluation(*_cursors[bestCursorIdx], countMatchesWithCurrentRule))
-                _evalStyleRule(*_cursors[bestCursorIdx]->rule, el, pseudoElement);
+                _evalStyleRule(*_cursors[bestCursorIdx]->rule, _cursors[bestCursorIdx]->order, el, pseudoElement);
 
             lastStyleRule = _cursors[bestCursorIdx]->rule;
             lastRuleId = _cursors[bestCursorIdx]->order;
@@ -376,7 +531,10 @@ struct RuleIndex {
         maybeFinalizeNfixOrRule();
     }
 
-    MatchingRules match(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement) {
+    SelectorFilter const* _filter = nullptr;
+
+    MatchingRules match(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement, SelectorFilter const* filter = nullptr) {
+        _filter = filter;
         _cursors.clear();
         _matchingRules.clear();
 

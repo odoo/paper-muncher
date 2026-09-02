@@ -27,6 +27,11 @@ export struct Computer {
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
     RuleIndex _ruleIndex = {};
+
+    // Identifiers of the ancestors of the element currently being styled, maintained
+    // by styleElement as it descends. Lets the rule index reject a rule whose ancestor
+    // requirements cannot be met without walking the tree to find out.
+    SelectorFilter _selectorFilter = {};
     Viewport _viewport{.small = _media.viewportSize()};
     Opt<Rc<ComputedValues>> _rootComputedValues = NONE;
 
@@ -358,7 +363,7 @@ export struct Computer {
         if (isRootElement)
             _rootComputedValues = Some(values);
 
-        MatchingRules const matchingRules = _ruleIndex.match(el, pseudoElement);
+        MatchingRules const matchingRules = _ruleIndex.match(el, pseudoElement, &_selectorFilter);
         CascadedValues cascadedValues;
         for (auto const& [styleRule, specificity] : matchingRules)
             for (auto& prop : styleRule->props)
@@ -441,10 +446,14 @@ export struct Computer {
         generatePseudoElement(*computedValues, el, Dom::PseudoElement::AFTER);
         generatePseudoElement(*computedValues, el, Dom::PseudoElement::BEFORE);
 
+        // Everything above is matched against el, whose ancestors are already in the
+        // filter; el only joins it for the descent into its children.
+        _selectorFilter.push(el);
         for (auto child = el.firstChild(); child; child = child->nextSibling()) {
             if (auto childEl = child->is<Dom::Element>())
                 styleElement(*computedValues, *childEl);
         }
+        _selectorFilter.pop();
     }
 
     // MARK: Body Background ---------------------------------------------------
@@ -499,6 +508,7 @@ export struct Computer {
         logDebugIf(debugCounters, "counters: {}", doc.counters);
 
         if (auto el = doc.documentElement()) {
+            _selectorFilter = {};
             auto initialComputedValues = doc.initialComputedValues();
             initialComputedValues->fontFace = _lookupFontface(*initialComputedValues);
             styleElement(*initialComputedValues, *el);
