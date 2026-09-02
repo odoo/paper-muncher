@@ -701,7 +701,18 @@ export struct RegisteredPropertySet {
     // https://www.w3.org/TR/css-cascade-4/#inheriting
     void inheritsComputedValues(ComputedValues const& parent, ComputedValues& child) const {
         // Apply defaulted inheritance fast path for property that supports it.
+        //
+        // Every property in these groups is inherited, and each covers exactly one
+        // field, so handing the child the parent's group is equivalent to copying
+        // each field across — but shares the allocation instead of copying it. The
+        // cascade runs after this, and the first write to a group copies it back
+        // apart, so the sharing only lasts as long as the child agrees with its
+        // parent. Properties taking this path are flagged BULK_INHERITED and skipped
+        // by the per-property loop below.
         child.customProps = parent.customProps;
+        child.font = parent.font;
+        child.list = parent.list;
+        child.text = parent.text;
 
         // Handle the rest of the properties
         for (auto& v : _registrations.iterValue()) {
