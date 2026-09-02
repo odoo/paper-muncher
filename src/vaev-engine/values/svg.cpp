@@ -73,6 +73,7 @@ enum struct SvgShapeElement {
     _LEN
 };
 
+// The geometry of an SVG element. None of it is inherited.
 export struct SvgProps {
     PercentOr<Length> x = Length{0_au};
     PercentOr<Length> y = Length{0_au};
@@ -80,12 +81,7 @@ export struct SvgProps {
     PercentOr<Length> cy = Length{0_au};
     PercentOr<Length> r = Length{0_au};
 
-    Number fillOpacity = 1;
-    PercentOr<Length> strokeWidth = Length{1_au};
-    Number strokeOpacity = 1;
     Union<String, None> d = NONE;
-    SvgPaint fill = Some(Gfx::BLACK);
-    SvgPaint stroke = NONE;
     Opt<SvgViewBox> viewBox = NONE;
 
     void repr(Io::Emit& e) const {
@@ -95,12 +91,30 @@ export struct SvgProps {
         e(" cx={}", cx);
         e(" cy={}", cy);
         e(" r={}", r);
+        e(" d={}", d);
+        e(" viewBox={}", viewBox);
+        e(")");
+    }
+};
+
+// How an SVG element is painted. All of it is inherited, which is what keeps it
+// apart from the geometry above: a group holding both would be copied for every
+// element that merely inherits a fill, since the copy-on-write is per group.
+// https://svgwg.org/svg2-draft/painting.html
+export struct SvgPaintProps {
+    Number fillOpacity = 1;
+    PercentOr<Length> strokeWidth = Length{1_au};
+    Number strokeOpacity = 1;
+    SvgPaint fill = Some(Gfx::BLACK);
+    SvgPaint stroke = NONE;
+
+    void repr(Io::Emit& e) const {
+        e("(svg-paint");
         e(" fillOpacity={}", fillOpacity);
         e(" strokeWidth={}", strokeWidth);
-        e(" d={}", d);
+        e(" strokeOpacity={}", strokeOpacity);
         e(" fill={}", fill);
         e(" stroke={}", stroke);
-        e(" viewBox={}", viewBox);
         e(")");
     }
 };

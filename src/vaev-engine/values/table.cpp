@@ -123,11 +123,10 @@ struct ValueParser<BorderSpacing> {
     }
 };
 
+// Per-element table data: the layout algorithm, plus the spans, which come from
+// the colspan/rowspan attributes rather than from CSS. None of it is inherited.
 export struct TableProps {
     TableLayout tableLayout = TableLayout::AUTO;
-    CaptionSide captionSide = CaptionSide::TOP;
-    BorderSpacing spacing = {0_au, 0_au};
-    BorderCollapse collapse = BorderCollapse::SEPARATE;
     usize span = 1;
     usize rowSpan = 1;
     usize colSpan = 1;
@@ -135,12 +134,26 @@ export struct TableProps {
     void repr(Io::Emit& e) const {
         e("(table");
         e(" tableLayout={}", tableLayout);
-        e(" captionSide={}", captionSide);
-        e(" spacing={}", spacing);
-        e(" collapse={}", collapse);
         e(" span={}", span);
         e(" rowSpan={}", rowSpan);
         e(" colSpan={}", colSpan);
+        e(")");
+    }
+};
+
+// Table properties that inherit, so that a table and its rows and cells agree on
+// them. Kept apart from the per-element data above: sharing this group with the
+// parent is only sound because nothing element-specific rides along with it.
+export struct TableInheritedProps {
+    CaptionSide captionSide = CaptionSide::TOP;
+    BorderSpacing spacing = {0_au, 0_au};
+    BorderCollapse collapse = BorderCollapse::SEPARATE;
+
+    void repr(Io::Emit& e) const {
+        e("(table-inherited");
+        e(" captionSide={}", captionSide);
+        e(" spacing={}", spacing);
+        e(" collapse={}", collapse);
         e(")");
     }
 };

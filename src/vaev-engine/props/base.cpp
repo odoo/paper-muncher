@@ -713,6 +713,8 @@ export struct RegisteredPropertySet {
         child.font = parent.font;
         child.list = parent.list;
         child.text = parent.text;
+        child.svgPaint = parent.svgPaint;
+        child.tableInherited = parent.tableInherited;
 
         // Handle the rest of the properties
         for (auto& v : _registrations.iterValue()) {
