@@ -59,13 +59,67 @@ Symbol const PseudoElement::BEFORE = "::before"_sym;
 Symbol const PseudoElement::AFTER = "::after"_sym;
 Symbol const PseudoElement::MARKER = "::marker"_sym;
 
+// Attribute storage for an element.
+//
+// An element carries a handful of attributes — very often just one — and a hash table
+// is the wrong shape at that size. Its smallest table is 16 slots, so a lone `class`
+// costs several hundred bytes of mostly empty buckets, once per element in the
+// document. A flat vector scanned linearly is far smaller and, at this many entries,
+// faster too: a few pointer comparisons beat hashing a qualified name.
+struct AttrMap {
+    using Item = KvPair<QualifiedName, Rc<Attr>>;
+
+    Vec<Item> _items;
+
+    usize len() const {
+        return _items.len();
+    }
+
+    auto iterItems() const {
+        return Karm::iter(_items);
+    }
+
+    Item* _find(QualifiedName const& name) {
+        for (auto& item : _items)
+            if (item.key == name)
+                return &item;
+        return nullptr;
+    }
+
+    Item const* _find(QualifiedName const& name) const {
+        for (auto const& item : _items)
+            if (item.key == name)
+                return &item;
+        return nullptr;
+    }
+
+    void put(QualifiedName const& name, Rc<Attr> attr) {
+        if (auto item = _find(name)) {
+            item->value = std::move(attr);
+            return;
+        }
+
+        _items.pushBack({name, std::move(attr)});
+    }
+
+    bool contains(QualifiedName const& name) const {
+        return _find(name) != nullptr;
+    }
+
+    Opt<Rc<Attr> const&> lookup(QualifiedName const& name) const {
+        if (auto item = _find(name))
+            return Some(item->value);
+        return NONE;
+    }
+};
+
 // https://dom.spec.whatwg.org/#interface-element
 export struct Element : Node {
     static constexpr auto TYPE = NodeType::ELEMENT;
 
     QualifiedName qualifiedName;
     // NOSPEC: Should be a NamedNodeMap
-    Map<QualifiedName, Rc<Attr>> attributes;
+    AttrMap attributes;
     Opt<Rc<Style::ComputedValues>> _computedValues;
     TokenList classList;
     Opt<Gfx::Snapshot> imageContent;
