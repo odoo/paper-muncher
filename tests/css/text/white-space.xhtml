@@ -42,4 +42,106 @@
     </error>
 </test>
 
+<test name="preserve-inter-inline-whitespace">
+    <rendering>
+        <div>
+            5.00 Units
+        </div>
+    </rendering>
+
+    <rendering>
+        <div>
+            <span>5.00</span>
+            <span>Units</span>
+        </div>
+    </rendering>
+
+    <rendering>
+        <div>
+            <span>5.00 </span>
+            <span>Units</span>
+        </div>
+    </rendering>
+
+    <error>
+        <div>5.00Units</div>
+    </error>
+</test>
+
+<test name="collapsible-whitespace-at-line-edge">
+    <rendering>
+        <div style="width: 200px; text-align: center">ab</div>
+    </rendering>
+
+    <rendering>
+        <div style="width: 200px; text-align: center">ab </div>
+    </rendering>
+
+    <error>
+        <div style="width: 200px; text-align: center; white-space: pre">ab </div>
+    </error>
+</test>
+
+<test name="collapsible-whitespace-across-inline-boundaries">
+    <rendering>
+        <div>a b</div>
+    </rendering>
+
+    <rendering>
+        <div><span>a </span><span> b</span></div>
+    </rendering>
+
+    <rendering>
+        <div><span>a</span> <span> b</span></div>
+    </rendering>
+
+    <error>
+        <div style="white-space: pre"><span>a </span><span> b</span></div>
+    </error>
+</test>
+
+<test name="collapsible-space-before-preserved-newline">
+    <rendering>
+        <div style="width: 100px; text-align: center"><span style="white-space: pre-line">a</span><span style="white-space: pre">
+</span>b</div>
+    </rendering>
+
+    <rendering>
+        <div style="width: 100px; text-align: center"><span style="white-space: pre-line">a </span><span style="white-space: pre">
+</span>b</div>
+    </rendering>
+</test>
+
+<test name="collapsible-whitespace-max-content-sizing">
+    <rendering>
+        <div style="display: inline-block; background: green">5.00 Units</div>
+        <div style="display: inline-block; background: green">Untaxed Amount</div>
+        <table style="border-spacing: 0">
+            <tr><td style="padding: 0; background: green">5.00 Units</td></tr>
+        </table>
+    </rendering>
+
+    <rendering>
+        <div style="display: inline-block; background: green">  5.00   Units  </div>
+        <div style="display: inline-block; background: green">  Untaxed   Amount  </div>
+        <table style="border-spacing: 0">
+            <tr><td style="padding: 0; background: green">  5.00   Units  </td></tr>
+        </table>
+    </rendering>
+</test>
+
+<test name="collapsible-whitespace-min-content-sizing">
+    <rendering>
+        <div style="display: inline-block; width: min-content; background: green">5.00 Units</div>
+    </rendering>
+
+    <rendering>
+        <div style="display: inline-block; width: min-content; background: green">  5.00   Units  </div>
+    </rendering>
+
+    <error>
+        <div style="display: inline-block; background: green">5.00 Units</div>
+    </error>
+</test>
+
 </tests>
