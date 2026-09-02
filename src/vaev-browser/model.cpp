@@ -61,6 +61,10 @@ struct GoForward {};
 
 struct ToggleWireframe {};
 
+struct InspectElement {
+    Opt<Dom::EventTarget> target;
+};
+
 struct ToggleDeveloperMode {};
 
 struct UpdateLocation {
@@ -75,6 +79,7 @@ using Action = Union<
     GoBack,
     GoForward,
     ToggleWireframe,
+    InspectElement,
     ToggleDeveloperMode,
     InspectorAction,
     Navigate,
@@ -109,6 +114,13 @@ Ui::Task<Action> reduce(State& s, Action a) {
         },
         [&](ToggleWireframe) -> Ui::Task<Action> {
             s.wireframe = not s.wireframe;
+            return NONE;
+        },
+        [&](InspectElement inspectElement) -> Ui::Task<Action> {
+            s.developerMode = true;
+            if (auto& [target] = inspectElement.target)
+                if (auto node = target.is<Gc::Ref<Dom::Node>>())
+                    s.inspect.apply(SelectNode{*node});
             return NONE;
         },
         [&](ToggleDeveloperMode) -> Ui::Task<Action> {

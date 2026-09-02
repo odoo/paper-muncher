@@ -28,14 +28,17 @@ export struct ChangeFilter {
     String filter;
 };
 
-export using InspectorAction = Union<ExpandNode, SelectNode, ChangeFilter>;
+export using InspectorAction = Union<
+    ExpandNode,
+    SelectNode,
+    ChangeFilter>;
 
 export struct InspectState {
     String filter = ""s;
     Set<Gc::Ref<Dom::Node>> expandedNodes = {};
     Gc::Ptr<Dom::Node> selectedNode = nullptr;
 
-    void apply(InspectorAction& a) {
+    void apply(InspectorAction a) {
         a.visit(
             [&](ExpandNode const& e) {
                 if (not expandedNodes.remove(e.node))
@@ -45,6 +48,9 @@ export struct InspectState {
                 if (e.node->hasChildren())
                     expandedNodes.add(e.node);
                 selectedNode = e.node;
+                for (auto current = selectedNode->parentNode(); current; current = current->parentNode()) {
+                    expandedNodes.add(Gc::Ref{*current});
+                }
             },
             [&](ChangeFilter const& f) {
                 filter = f.filter;

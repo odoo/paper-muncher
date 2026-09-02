@@ -119,19 +119,13 @@ export struct Fragment {
     // https://drafts.csswg.org/css-position-4/#paint-a-stacking-context
     virtual void paintContent([[maybe_unused]] Gfx::Canvas& g, [[maybe_unused]] Vec<OutOfBandOutline>& outOfBandOutlines) {}
 
-    virtual void paintOwnWireframe(Gfx::Canvas& g) const {
+    virtual void paintWireframe(Gfx::Canvas& g) const {
         g.strokeStyle({
             .fill = Gfx::GREEN,
             .width = 1,
             .align = Gfx::INSIDE_ALIGN,
         });
         g.stroke(borderBox().cast<f64>());
-    }
-
-    void paintWireframe(Gfx::Canvas& g) {
-        for (auto& c : children())
-            c->paintWireframe(g);
-        paintOwnWireframe(g);
     }
 
     virtual void paintOwnOverlay(Gfx::Canvas& g) const {
@@ -176,9 +170,6 @@ export struct Fragment {
             _paintContentBoxGuides(g, viewport);
             paintOwnOverlay(g);
         }
-
-        for (auto& c : children())
-            c->paintOverlay(g, of, viewport);
     }
 };
 
@@ -211,7 +202,7 @@ export struct PlaceholderFragment : Fragment {
         e("(placeholder-frag)");
     }
 
-    void paintOwnWireframe(Gfx::Canvas&) const override {
+    void paintWireframe(Gfx::Canvas&) const override {
         unreachable();
     }
 

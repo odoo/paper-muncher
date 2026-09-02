@@ -139,12 +139,15 @@ Math::Trans2f resolveTransform(Slice<TransformFunction> transforms, RectAu refer
     return Math::Trans2f::translate(-origin.cast<f64>()).multiply(result);
 }
 
-void applyTransform(Rc<Layout::Fragment>& fragment, Gfx::Canvas& g, Math::Rectf viewBox) {
+Math::Trans2f resolveTransform(Rc<Layout::Fragment>& fragment, Math::Rectf viewBox) {
     auto const& transform = *fragment->style().transform;
     auto referenceBox = resolveTransformReference(fragment, transform.box, viewBox.cast<Au>());
     auto origin = resolveTransformOrigin(transform.origin, referenceBox);
-    auto t = resolveTransform(transform.transform.unwrap<Vec<TransformFunction>>(), referenceBox, origin);
-    g.transform(t);
+    return resolveTransform(transform.transform.unwrap<Vec<TransformFunction>>(), referenceBox, origin);
+}
+
+void applyTransform(Rc<Layout::Fragment>& fragment, Gfx::Canvas& g, Math::Rectf viewBox) {
+    g.transform(resolveTransform(fragment, viewBox));
 }
 
 } // namespace Vaev::Paint

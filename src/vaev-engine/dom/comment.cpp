@@ -1,6 +1,6 @@
 export module Vaev.Engine:dom.comment;
 
-import :dom.character_data;
+import :dom.characterData;
 
 namespace Vaev::Dom {
 
