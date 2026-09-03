@@ -117,14 +117,13 @@ struct AttrMap {
 export struct Element : Node {
     static constexpr auto TYPE = NodeType::ELEMENT;
 
-    QualifiedName qualifiedName;
-    // NOSPEC: Should be a NamedNodeMap
-    AttrMap attributes;
-    Opt<Rc<Style::ComputedValues>> _computedValues;
-    TokenList classList;
     Opt<Gfx::Snapshot> imageContent;
     Map<Symbol, Gc::Ref<PseudoElement>> _pseudoElements;
+    AttrMap attributes;
+    TokenList classList;
     Style::CounterSet counters;
+    QualifiedName qualifiedName;
+    Opt<Rc<Style::ComputedValues>> _computedValues;
 
     // MARK: Node --------------------------------------------------------------
 
