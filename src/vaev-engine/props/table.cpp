@@ -50,12 +50,11 @@ export struct TableLayoutProperty : Property {
 // https://www.w3.org/TR/CSS21/tables.html#caption-position
 export struct CaptionSideProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::CAPTION_SIDE;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         Rc<Property> initial() const override {

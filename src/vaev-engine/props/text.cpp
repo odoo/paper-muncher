@@ -20,12 +20,11 @@ namespace Vaev::Style {
 
 export struct TextAlignProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::TEXT_ALIGN;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -85,12 +84,11 @@ export struct TextAlignProperty : Property {
 
 export struct TextTransformProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::TEXT_TRANSFORM;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -142,12 +140,11 @@ export struct TextTransformProperty : Property {
 
 export struct WhiteSpaceProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::WHITE_SPACE;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         Rc<Property> initial() const override {

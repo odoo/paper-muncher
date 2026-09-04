@@ -153,12 +153,11 @@ export struct BorderLeftColorProperty : Property {
 
 export struct BorderColorProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::BORDER_COLOR;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {
@@ -342,12 +341,11 @@ export struct BorderBottomStyleProperty : Property {
 
 export struct BorderStyleProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::BORDER_STYLE;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {
@@ -738,12 +736,11 @@ export struct BorderRadiusProperty : Property {
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 export struct BorderTopProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::BORDER_TOP;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {
@@ -802,12 +799,11 @@ export struct BorderTopProperty : Property {
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 export struct BorderRightProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::BORDER_RIGHT;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {
@@ -844,12 +840,11 @@ export struct BorderRightProperty : Property {
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 export struct BorderBottomProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::BORDER_BOTTOM;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {
@@ -886,12 +881,11 @@ export struct BorderBottomProperty : Property {
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 export struct BorderLeftProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::BORDER_LEFT;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {
@@ -928,12 +922,11 @@ export struct BorderLeftProperty : Property {
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 export struct BorderProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::BORDER;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {
@@ -982,12 +975,11 @@ export struct BorderProperty : Property {
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 export struct BorderWidthProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::BORDER_WIDTH;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {
@@ -1035,12 +1027,11 @@ export struct BorderWidthProperty : Property {
 // https://www.w3.org/TR/CSS22/tables.html#propdef-border-collapse
 export struct BorderCollapseProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::BORDER_COLLAPSE;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -1077,12 +1068,11 @@ export struct BorderCollapseProperty : Property {
 // https://www.w3.org/TR/CSS22/tables.html#propdef-border-spacing
 export struct BorderSpacingProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::BORDER_SPACING;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         Rc<Property> initial() const override {

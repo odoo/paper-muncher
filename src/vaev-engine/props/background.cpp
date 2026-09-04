@@ -210,12 +210,11 @@ export struct BackgroundRepeatProperty : Property {
 // https://www.w3.org/TR/CSS22/colors.html#x10
 export struct BackgroundProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::BACKGROUND;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {
@@ -255,12 +254,11 @@ export struct BackgroundProperty : Property {
 // https://www.w3.org/TR/CSS22/colors.html#propdef-color
 export struct ColorProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::COLOR;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         Rc<Property> initial() const override {

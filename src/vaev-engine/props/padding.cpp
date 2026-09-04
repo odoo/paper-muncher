@@ -217,12 +217,11 @@ export struct PaddingInlineEndProperty : Property {
 
 export struct PaddingProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::PADDING;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {

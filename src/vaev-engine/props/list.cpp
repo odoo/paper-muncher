@@ -11,12 +11,11 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-lists-3/#propdef-list-style-image
 struct ListStyleImageProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::LIST_STYLE_IMAGE;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -54,12 +53,11 @@ struct ListStyleImageProperty : Property {
 // https://www.w3.org/TR/css-lists-3/#propdef-list-style-type
 struct ListStyleTypeProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::LIST_STYLE_TYPE;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -97,12 +95,11 @@ struct ListStyleTypeProperty : Property {
 // https://www.w3.org/TR/css-lists-3/#list-style-position-property
 struct ListStylePositionProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::LIST_STYLE_POSITION;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -150,12 +147,11 @@ struct ListStyleProperty : Property {
     };
 
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::LIST_STYLE;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {
@@ -227,12 +223,11 @@ struct ListStyleProperty : Property {
 // https://www.w3.org/TR/css-lists-3/#propdef-marker-side
 struct MarkerSideProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::MARKER_SIDE;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
