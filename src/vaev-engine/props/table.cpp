@@ -16,9 +16,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/CSS21/tables.html#propdef-table-layout
 export struct TableLayoutProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::TABLE_LAYOUT;
-        }
+        Registration() : Property::Registration(Properties::TABLE_LAYOUT) {}
 
         Rc<Property> initial() const override {
             return makeRc<TableLayoutProperty>(self(), TableLayout::AUTO);
@@ -51,11 +49,7 @@ export struct TableLayoutProperty : Property {
 export struct CaptionSideProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(INHERITED) {}
-
-        Symbol name() const override {
-            return Properties::CAPTION_SIDE;
-        }
+            : Property::Registration(Properties::CAPTION_SIDE, INHERITED) {}
 
         Rc<Property> initial() const override {
             return makeRc<CaptionSideProperty>(self(), CaptionSide::TOP);

@@ -37,7 +37,7 @@ export struct CascadedValues {
     usize _declarationOrder = 0;
 
     void _putLonghand(Rc<Property> property, Origin origin, Specificity specificity, Css::Important important, usize declarationOrder) {
-        auto name = property->registration->name();
+        auto name = property->registration->name;
         Entry entry{property, important, origin, specificity, declarationOrder};
         auto& existing = _entries.lookupOrPutDefault(name, entry);
         if (entry >= existing)
@@ -65,7 +65,7 @@ export struct CascadedValues {
 
         for (auto& entry : shorthandEntries) {
             auto& prop = entry.property;
-            _entries.remove(prop->registration->name()).unwrap();
+            _entries.remove(prop->registration->name).unwrap();
             for (auto& longhandProperty : prop->expandShorthand(registeredPropertySet, parent, child)) {
                 _putLonghand(longhandProperty, entry.origin, entry.specificity, prop->important, entry.declarationOrder);
             }

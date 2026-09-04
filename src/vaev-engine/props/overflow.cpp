@@ -18,9 +18,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-overflow/#overflow-control
 export struct OverflowXProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::OVERFLOW_X;
-        }
+        Registration() : Property::Registration(Properties::OVERFLOW_X) {}
 
         Rc<Property> initial() const override {
             return makeRc<OverflowXProperty>(self(), Overflow::VISIBLE);
@@ -52,9 +50,7 @@ export struct OverflowXProperty : Property {
 // https://www.w3.org/TR/css-overflow/#overflow-control
 export struct OverflowYProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::OVERFLOW_Y;
-        }
+        Registration() : Property::Registration(Properties::OVERFLOW_Y) {}
 
         Rc<Property> initial() const override {
             return makeRc<OverflowYProperty>(self(), Overflow::VISIBLE);
@@ -86,9 +82,7 @@ export struct OverflowYProperty : Property {
 // https://www.w3.org/TR/css-overflow/#overflow-block
 export struct OverflowBlockProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::OVERFLOW_BLOCK;
-        }
+        Registration() : Property::Registration(Properties::OVERFLOW_BLOCK) {}
 
         Rc<Property> initial() const override {
             return makeRc<OverflowBlockProperty>(self(), Overflow::VISIBLE);
@@ -120,9 +114,7 @@ export struct OverflowBlockProperty : Property {
 // https://www.w3.org/TR/css-overflow/#overflow-inline
 export struct OverflowInlineProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::OVERFLOW_INLINE;
-        }
+        Registration() : Property::Registration(Properties::OVERFLOW_INLINE) {}
 
         Rc<Property> initial() const override {
             return makeRc<OverflowInlineProperty>(self(), Overflow::VISIBLE);
@@ -155,11 +147,7 @@ export struct OverflowInlineProperty : Property {
 export struct OverflowProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::OVERFLOW;
-        }
+            : Property::Registration(Properties::OVERFLOW, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<OverflowProperty>(self(), Pair{Overflow::VISIBLE, Overflow::VISIBLE});

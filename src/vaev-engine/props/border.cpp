@@ -18,9 +18,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/CSS22/box.html#propdef-border-color
 export struct BorderTopColorProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_TOP_COLOR;
-        }
+        Registration() : Property::Registration(Properties::BORDER_TOP_COLOR) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderTopColorProperty>(self(), BLACK);
@@ -52,9 +50,7 @@ export struct BorderTopColorProperty : Property {
 // https://www.w3.org/TR/CSS22/box.html#propdef-border-color
 export struct BorderRightColorProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_RIGHT_COLOR;
-        }
+        Registration() : Property::Registration(Properties::BORDER_RIGHT_COLOR) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderRightColorProperty>(self(), BLACK);
@@ -86,9 +82,7 @@ export struct BorderRightColorProperty : Property {
 // https://www.w3.org/TR/CSS22/box.html#propdef-border-color
 export struct BorderBottomColorProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_BOTTOM_COLOR;
-        }
+        Registration() : Property::Registration(Properties::BORDER_BOTTOM_COLOR) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderBottomColorProperty>(self(), BLACK);
@@ -120,9 +114,7 @@ export struct BorderBottomColorProperty : Property {
 // https://www.w3.org/TR/CSS22/box.html#propdef-border-color
 export struct BorderLeftColorProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_LEFT_COLOR;
-        }
+        Registration() : Property::Registration(Properties::BORDER_LEFT_COLOR) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderLeftColorProperty>(self(), BLACK);
@@ -154,11 +146,7 @@ export struct BorderLeftColorProperty : Property {
 export struct BorderColorProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::BORDER_COLOR;
-        }
+            : Property::Registration(Properties::BORDER_COLOR, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderColorProperty>(self(), Math::Insets<Color>{BLACK});
@@ -204,9 +192,7 @@ export struct BorderColorProperty : Property {
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 export struct BorderLeftStyleProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_LEFT_STYLE;
-        }
+        Registration() : Property::Registration(Properties::BORDER_LEFT_STYLE) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderLeftStyleProperty>(self(), Gfx::BorderStyle::NONE);
@@ -238,9 +224,7 @@ export struct BorderLeftStyleProperty : Property {
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 export struct BorderTopStyleProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_TOP_STYLE;
-        }
+        Registration() : Property::Registration(Properties::BORDER_TOP_STYLE) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderTopStyleProperty>(self(), Gfx::BorderStyle::NONE);
@@ -272,9 +256,7 @@ export struct BorderTopStyleProperty : Property {
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 export struct BorderRightStyleProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_RIGHT_STYLE;
-        }
+        Registration() : Property::Registration(Properties::BORDER_RIGHT_STYLE) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderRightStyleProperty>(self(), Gfx::BorderStyle::NONE);
@@ -306,9 +288,7 @@ export struct BorderRightStyleProperty : Property {
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 export struct BorderBottomStyleProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_BOTTOM_STYLE;
-        }
+        Registration() : Property::Registration(Properties::BORDER_BOTTOM_STYLE) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderBottomStyleProperty>(self(), Gfx::BorderStyle::NONE);
@@ -342,11 +322,7 @@ export struct BorderBottomStyleProperty : Property {
 export struct BorderStyleProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::BORDER_STYLE;
-        }
+            : Property::Registration(Properties::BORDER_STYLE, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderStyleProperty>(self(), Math::Insets{Gfx::BorderStyle::NONE});
@@ -391,9 +367,7 @@ export struct BorderStyleProperty : Property {
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 export struct BorderTopWidthProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_TOP_WIDTH;
-        }
+        Registration() : Property::Registration(Properties::BORDER_TOP_WIDTH) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderTopWidthProperty>(self(), Keywords::MEDIUM);
@@ -425,9 +399,7 @@ export struct BorderTopWidthProperty : Property {
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 export struct BorderRightWidthProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_RIGHT_WIDTH;
-        }
+        Registration() : Property::Registration(Properties::BORDER_RIGHT_WIDTH) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderRightWidthProperty>(self(), Keywords::MEDIUM);
@@ -459,9 +431,7 @@ export struct BorderRightWidthProperty : Property {
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 export struct BorderBottomWidthProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_BOTTOM_WIDTH;
-        }
+        Registration() : Property::Registration(Properties::BORDER_BOTTOM_WIDTH) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderBottomWidthProperty>(self(), Keywords::MEDIUM);
@@ -493,9 +463,7 @@ export struct BorderBottomWidthProperty : Property {
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 export struct BorderLeftWidthProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_LEFT_WIDTH;
-        }
+        Registration() : Property::Registration(Properties::BORDER_LEFT_WIDTH) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderLeftWidthProperty>(self(), Keywords::MEDIUM);
@@ -527,9 +495,7 @@ export struct BorderLeftWidthProperty : Property {
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderRadiusTopRightProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_TOP_RIGHT_RADIUS;
-        }
+        Registration() : Property::Registration(Properties::BORDER_TOP_RIGHT_RADIUS) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderRadiusTopRightProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
@@ -569,9 +535,7 @@ export struct BorderRadiusTopRightProperty : Property {
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderRadiusTopLeftProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_TOP_LEFT_RADIUS;
-        }
+        Registration() : Property::Registration(Properties::BORDER_TOP_LEFT_RADIUS) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderRadiusTopLeftProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
@@ -614,9 +578,7 @@ export struct BorderRadiusTopLeftProperty : Property {
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderRadiusBottomRightProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_BOTTOM_RIGHT_RADIUS;
-        }
+        Registration() : Property::Registration(Properties::BORDER_BOTTOM_RIGHT_RADIUS) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderRadiusBottomRightProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
@@ -656,9 +618,7 @@ export struct BorderRadiusBottomRightProperty : Property {
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderRadiusBottomLeftProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_BOTTOM_LEFT_RADIUS;
-        }
+        Registration() : Property::Registration(Properties::BORDER_BOTTOM_LEFT_RADIUS) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderRadiusBottomLeftProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
@@ -701,9 +661,7 @@ export struct BorderRadiusBottomLeftProperty : Property {
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderRadiusProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BORDER_RADIUS;
-        }
+        Registration() : Property::Registration(Properties::BORDER_RADIUS) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderRadiusProperty>(self(), Math::Radii{Calc<PercentOr<Length>>(Length{})});
@@ -737,11 +695,7 @@ export struct BorderRadiusProperty : Property {
 export struct BorderTopProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::BORDER_TOP;
-        }
+            : Property::Registration(Properties::BORDER_TOP, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderTopProperty>(self(), SpecifiedBorder{});
@@ -800,11 +754,7 @@ export struct BorderTopProperty : Property {
 export struct BorderRightProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::BORDER_RIGHT;
-        }
+            : Property::Registration(Properties::BORDER_RIGHT, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderRightProperty>(self(), SpecifiedBorder{});
@@ -841,11 +791,7 @@ export struct BorderRightProperty : Property {
 export struct BorderBottomProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::BORDER_BOTTOM;
-        }
+            : Property::Registration(Properties::BORDER_BOTTOM, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderBottomProperty>(self(), SpecifiedBorder{});
@@ -882,11 +828,7 @@ export struct BorderBottomProperty : Property {
 export struct BorderLeftProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::BORDER_LEFT;
-        }
+            : Property::Registration(Properties::BORDER_LEFT, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderLeftProperty>(self(), SpecifiedBorder{});
@@ -923,11 +865,7 @@ export struct BorderLeftProperty : Property {
 export struct BorderProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::BORDER;
-        }
+            : Property::Registration(Properties::BORDER, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderProperty>(self(), SpecifiedBorder{});
@@ -976,11 +914,7 @@ export struct BorderProperty : Property {
 export struct BorderWidthProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::BORDER_WIDTH;
-        }
+            : Property::Registration(Properties::BORDER_WIDTH, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderWidthProperty>(self(), Math::Insets{LineWidth{Keywords::MEDIUM}});
@@ -1028,11 +962,7 @@ export struct BorderWidthProperty : Property {
 export struct BorderCollapseProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(INHERITED) {}
-
-        Symbol name() const override {
-            return Properties::BORDER_COLLAPSE;
-        }
+            : Property::Registration(Properties::BORDER_COLLAPSE, INHERITED) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderCollapseProperty>(self(), BorderCollapse::SEPARATE);
@@ -1069,11 +999,7 @@ export struct BorderCollapseProperty : Property {
 export struct BorderSpacingProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(INHERITED) {}
-
-        Symbol name() const override {
-            return Properties::BORDER_SPACING;
-        }
+            : Property::Registration(Properties::BORDER_SPACING, INHERITED) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderSpacingProperty>(self(), BorderSpacing{0_au, 0_au});

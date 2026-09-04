@@ -18,9 +18,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/CSS22/visuren.html#positioning-scheme
 export struct PositionProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::POSITION;
-        }
+        Registration() : Property::Registration(Properties::POSITION) {}
 
         Rc<Property> initial() const override {
             return makeRc<PositionProperty>(self(), Position{Keywords::STATIC});
@@ -54,9 +52,7 @@ export struct TopProperty : Property {
     using Value = Union<Keywords::Auto, Calc<PercentOr<Length>>>;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::TOP;
-        }
+        Registration() : Property::Registration(Properties::TOP) {}
 
         Rc<Property> initial() const override {
             return makeRc<TopProperty>(self(), Value{Keywords::AUTO});
@@ -90,9 +86,7 @@ export struct RightProperty : Property {
     using Value = TopProperty::Value;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::RIGHT;
-        }
+        Registration() : Property::Registration(Properties::RIGHT) {}
 
         Rc<Property> initial() const override {
             return makeRc<RightProperty>(self(), Value{Keywords::AUTO});
@@ -126,9 +120,7 @@ export struct BottomProperty : Property {
     using Value = TopProperty::Value;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BOTTOM;
-        }
+        Registration() : Property::Registration(Properties::BOTTOM) {}
 
         Rc<Property> initial() const override {
             return makeRc<BottomProperty>(self(), Value{Keywords::AUTO});
@@ -162,9 +154,7 @@ export struct LeftProperty : Property {
     using Value = TopProperty::Value;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::LEFT;
-        }
+        Registration() : Property::Registration(Properties::LEFT) {}
 
         Rc<Property> initial() const override {
             return makeRc<LeftProperty>(self(), Value{Keywords::AUTO});
@@ -196,9 +186,7 @@ export struct LeftProperty : Property {
 // https://drafts.csswg.org/css2/#z-index
 export struct ZIndexProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::Z_INDEX;
-        }
+        Registration() : Property::Registration(Properties::Z_INDEX) {}
 
         Rc<Property> initial() const override {
             return makeRc<ZIndexProperty>(self(), ZIndex{Keywords::AUTO});

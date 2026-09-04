@@ -21,9 +21,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-color
 export struct BackgroundColorProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BACKGROUND_COLOR;
-        }
+        Registration() : Property::Registration(Properties::BACKGROUND_COLOR) {}
 
         Rc<Property> initial() const override {
             return makeRc<BackgroundColorProperty>(self(), TRANSPARENT);
@@ -57,9 +55,7 @@ export struct BackgroundColorProperty : Property {
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-attachment
 export struct BackgroundAttachmentProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BACKGROUND_ATTACHMENT;
-        }
+        Registration() : Property::Registration(Properties::BACKGROUND_ATTACHMENT) {}
 
         Rc<Property> initial() const override {
             return makeRc<BackgroundAttachmentProperty>(self(), Vec<BackgroundAttachment>{Keywords::SCROLL});
@@ -104,9 +100,7 @@ export struct BackgroundAttachmentProperty : Property {
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-image
 export struct BackgroundImageProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BACKGROUND_IMAGE;
-        }
+        Registration() : Property::Registration(Properties::BACKGROUND_IMAGE) {}
 
         Rc<Property> initial() const override {
             return makeRc<BackgroundImageProperty>(self(), Vec<Image>{});
@@ -139,9 +133,7 @@ export struct BackgroundImageProperty : Property {
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-position
 export struct BackgroundPositionProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BACKGROUND_POSITION;
-        }
+        Registration() : Property::Registration(Properties::BACKGROUND_POSITION) {}
 
         Rc<Property> initial() const override {
             return makeRc<BackgroundPositionProperty>(self(), Vec<BackgroundPosition>{});
@@ -174,9 +166,7 @@ export struct BackgroundPositionProperty : Property {
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-repeat
 export struct BackgroundRepeatProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BACKGROUND_REPEAT;
-        }
+        Registration() : Property::Registration(Properties::BACKGROUND_REPEAT) {}
 
         Rc<Property> initial() const override {
             return makeRc<BackgroundRepeatProperty>(self(), Vec<BackgroundRepeat>{BackgroundRepeat::REPEAT});
@@ -211,11 +201,7 @@ export struct BackgroundRepeatProperty : Property {
 export struct BackgroundProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::BACKGROUND;
-        }
+            : Property::Registration(Properties::BACKGROUND, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<BackgroundProperty>(self(), SpecifiedBackground{TRANSPARENT});
@@ -255,11 +241,7 @@ export struct BackgroundProperty : Property {
 export struct ColorProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(INHERITED) {}
-
-        Symbol name() const override {
-            return Properties::COLOR;
-        }
+            : Property::Registration(Properties::COLOR, INHERITED) {}
 
         Rc<Property> initial() const override {
             return makeRc<ColorProperty>(self(), BLACK);

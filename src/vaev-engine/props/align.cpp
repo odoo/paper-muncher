@@ -19,9 +19,7 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-align-3/#propdef-align-content
 export struct AlignContentProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::ALIGN_CONTENT;
-        }
+        Registration() : Property::Registration(Properties::ALIGN_CONTENT) {}
 
         Rc<Property> initial() const override {
             return makeRc<AlignContentProperty>(self(), Align::Keywords::STRETCH);
@@ -53,9 +51,7 @@ export struct AlignContentProperty : Property {
 // https://drafts.csswg.org/css-align-3/#propdef-justify-content
 export struct JustifyContentProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::JUSTIFY_CONTENT;
-        }
+        Registration() : Property::Registration(Properties::JUSTIFY_CONTENT) {}
 
         Rc<Property> initial() const override {
             return makeRc<JustifyContentProperty>(self(), Align::Keywords::FLEX_START);
@@ -87,9 +83,7 @@ export struct JustifyContentProperty : Property {
 // https://drafts.csswg.org/css-align-3/#propdef-justify-self
 export struct JustifySelfProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::JUSTIFY_SELF;
-        }
+        Registration() : Property::Registration(Properties::JUSTIFY_SELF) {}
 
         Rc<Property> initial() const override {
             return makeRc<JustifySelfProperty>(self(), Align::Keywords::AUTO);
@@ -121,9 +115,7 @@ export struct JustifySelfProperty : Property {
 // https://drafts.csswg.org/css-align-3/#propdef-align-self
 export struct AlignSelfProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::ALIGN_SELF;
-        }
+        Registration() : Property::Registration(Properties::ALIGN_SELF) {}
 
         Rc<Property> initial() const override {
             return makeRc<AlignSelfProperty>(self(), Align::Keywords::AUTO);
@@ -155,9 +147,7 @@ export struct AlignSelfProperty : Property {
 // https://drafts.csswg.org/css-align-3/#propdef-justify-items
 export struct JustifyItemsProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::JUSTIFY_ITEMS;
-        }
+        Registration() : Property::Registration(Properties::JUSTIFY_ITEMS) {}
 
         Rc<Property> initial() const override {
             return makeRc<JustifyItemsProperty>(self(), Align::LEGACY);
@@ -189,9 +179,7 @@ export struct JustifyItemsProperty : Property {
 // https://drafts.csswg.org/css-align-3/#propdef-align-items
 export struct AlignItemsProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::ALIGN_ITEMS;
-        }
+        Registration() : Property::Registration(Properties::ALIGN_ITEMS) {}
 
         Rc<Property> initial() const override {
             return makeRc<AlignItemsProperty>(self(), Align::Keywords::STRETCH);
@@ -223,9 +211,7 @@ export struct AlignItemsProperty : Property {
 // https://drafts.csswg.org/css-align-3/#column-row-gap
 export struct RowGapProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::ROW_GAP;
-        }
+        Registration() : Property::Registration(Properties::ROW_GAP) {}
 
         // https://drafts.csswg.org/css-align-3/#gap-legacy
         Vec<Symbol> legacyAlias() const override {
@@ -262,9 +248,7 @@ export struct RowGapProperty : Property {
 // https://drafts.csswg.org/css-align-3/#column-row-gap
 export struct ColumnGapProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::COLUMN_GAP;
-        }
+        Registration() : Property::Registration(Properties::COLUMN_GAP) {}
 
         // https://drafts.csswg.org/css-align-3/#gap-legacy
         Vec<Symbol> legacyAlias() const override {
@@ -300,9 +284,7 @@ export struct ColumnGapProperty : Property {
 
 export struct GapProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::GAP;
-        }
+        Registration() : Property::Registration(Properties::GAP) {}
 
         // https://drafts.csswg.org/css-align-3/#gap-legacy
         Vec<Symbol> legacyAlias() const override {

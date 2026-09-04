@@ -19,9 +19,7 @@ namespace Vaev::Style {
 
 export struct PaddingTopProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::PADDING_TOP;
-        }
+        Registration() : Property::Registration(Properties::PADDING_TOP) {}
 
         Rc<Property> initial() const override {
             return makeRc<PaddingTopProperty>(self(), Calc<PercentOr<Length>>{Length{}});
@@ -52,9 +50,7 @@ export struct PaddingTopProperty : Property {
 
 export struct PaddingRightProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::PADDING_RIGHT;
-        }
+        Registration() : Property::Registration(Properties::PADDING_RIGHT) {}
 
         Rc<Property> initial() const override {
             return makeRc<PaddingRightProperty>(self(), Calc<PercentOr<Length>>{Length{}});
@@ -85,9 +81,7 @@ export struct PaddingRightProperty : Property {
 
 export struct PaddingBottomProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::PADDING_BOTTOM;
-        }
+        Registration() : Property::Registration(Properties::PADDING_BOTTOM) {}
 
         Rc<Property> initial() const override {
             return makeRc<PaddingBottomProperty>(self(), Calc<PercentOr<Length>>{Length{}});
@@ -118,9 +112,7 @@ export struct PaddingBottomProperty : Property {
 
 export struct PaddingLeftProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::PADDING_LEFT;
-        }
+        Registration() : Property::Registration(Properties::PADDING_LEFT) {}
 
         Rc<Property> initial() const override {
             return makeRc<PaddingLeftProperty>(self(), Calc<PercentOr<Length>>{Length{}});
@@ -151,9 +143,7 @@ export struct PaddingLeftProperty : Property {
 
 export struct PaddingInlineStartProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::PADDING_INLINE_START;
-        }
+        Registration() : Property::Registration(Properties::PADDING_INLINE_START) {}
 
         Rc<Property> initial() const override {
             return makeRc<PaddingInlineStartProperty>(self(), Calc<PercentOr<Length>>{Length{}});
@@ -184,9 +174,7 @@ export struct PaddingInlineStartProperty : Property {
 
 export struct PaddingInlineEndProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::PADDING_INLINE_END;
-        }
+        Registration() : Property::Registration(Properties::PADDING_INLINE_END) {}
 
         Rc<Property> initial() const override {
             return makeRc<PaddingInlineEndProperty>(self(), Calc<PercentOr<Length>>{Length{}});
@@ -218,11 +206,7 @@ export struct PaddingInlineEndProperty : Property {
 export struct PaddingProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::PADDING;
-        }
+            : Property::Registration(Properties::PADDING, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<PaddingProperty>(self(), Math::Insets<Calc<PercentOr<Length>>>{Length{}});

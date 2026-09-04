@@ -20,11 +20,7 @@ namespace Vaev::Style {
 export struct TransformOriginProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
-
-        Symbol name() const override {
-            return Properties::TRANSFORM_ORIGIN;
-        }
+            : Property::Registration(Properties::TRANSFORM_ORIGIN, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
             return makeRc<TransformOriginProperty>(
@@ -62,9 +58,7 @@ export struct TransformOriginProperty : Property {
 // https://drafts.csswg.org/css-transforms/#transform-box
 export struct TransformBoxProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::TRANSFORM_BOX;
-        }
+        Registration() : Property::Registration(Properties::TRANSFORM_BOX) {}
 
         Rc<Property> initial() const override {
             return makeRc<TransformBoxProperty>(self(), TransformBox{Keywords::VIEW_BOX});
@@ -97,11 +91,7 @@ export struct TransformBoxProperty : Property {
 export struct TransformProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
-
-        Symbol name() const override {
-            return Properties::TRANSFORM;
-        }
+            : Property::Registration(Properties::TRANSFORM, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
             return makeRc<TransformProperty>(self(), Transform{Keywords::NONE});
