@@ -18,9 +18,7 @@ export struct MarginTopProperty : Property {
     using Value = Union<Keywords::Auto, Calc<PercentOr<Length>>>;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MARGIN_TOP;
-        }
+        Registration() : Property::Registration(Properties::MARGIN_TOP) {}
 
         Rc<Property> initial() const override {
             return makeRc<MarginTopProperty>(self(), Calc<PercentOr<Length>>(Length{}));
@@ -54,9 +52,7 @@ export struct MarginRightProperty : Property {
     using Value = MarginTopProperty::Value;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MARGIN_RIGHT;
-        }
+        Registration() : Property::Registration(Properties::MARGIN_RIGHT) {}
 
         Rc<Property> initial() const override {
             return makeRc<MarginRightProperty>(self(), Calc<PercentOr<Length>>(Length{}));
@@ -90,9 +86,7 @@ export struct MarginBottomProperty : Property {
     using Value = MarginTopProperty::Value;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MARGIN_BOTTOM;
-        }
+        Registration() : Property::Registration(Properties::MARGIN_BOTTOM) {}
 
         Rc<Property> initial() const override {
             return makeRc<MarginBottomProperty>(self(), Calc<PercentOr<Length>>(Length{}));
@@ -126,9 +120,7 @@ export struct MarginLeftProperty : Property {
     using Value = MarginTopProperty::Value;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MARGIN_LEFT;
-        }
+        Registration() : Property::Registration(Properties::MARGIN_LEFT) {}
 
         Rc<Property> initial() const override {
             return makeRc<MarginLeftProperty>(self(), Calc<PercentOr<Length>>(Length{}));
@@ -163,11 +155,7 @@ export struct MarginProperty : Property {
 
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::MARGIN;
-        }
+            : Property::Registration(Properties::MARGIN, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<MarginProperty>(self(), Value{Calc<PercentOr<Length>>(Length{})});
@@ -206,9 +194,7 @@ export struct MarginInlineStartProperty : Property {
     using Value = MarginTopProperty::Value;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MARGIN_INLINE_START;
-        }
+        Registration() : Property::Registration(Properties::MARGIN_INLINE_START) {}
 
         Rc<Property> initial() const override {
             return makeRc<MarginInlineStartProperty>(self(), Calc<PercentOr<Length>>(Length{}));
@@ -243,9 +229,7 @@ export struct MarginInlineEndProperty : Property {
     using Value = MarginTopProperty::Value;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MARGIN_INLINE_END;
-        }
+        Registration() : Property::Registration(Properties::MARGIN_INLINE_END) {}
 
         Rc<Property> initial() const override {
             return makeRc<MarginInlineEndProperty>(self(), Calc<PercentOr<Length>>(Length{}));
@@ -280,9 +264,7 @@ export struct MarginInlineProperty : Property {
     using Value = Math::Insets<MarginTopProperty::Value>;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MARGIN_INLINE;
-        }
+        Registration() : Property::Registration(Properties::MARGIN_INLINE) {}
 
         Rc<Property> initial() const override {
             return makeRc<MarginInlineProperty>(self(), Value{Calc<PercentOr<Length>>(Length{})});
@@ -318,9 +300,7 @@ export struct MarginBlockStartProperty : Property {
     using Value = MarginTopProperty::Value;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MARGIN_BLOCK_START;
-        }
+        Registration() : Property::Registration(Properties::MARGIN_BLOCK_START) {}
 
         Rc<Property> initial() const override {
             return makeRc<MarginBlockStartProperty>(self(), Calc<PercentOr<Length>>(Length{}));
@@ -355,9 +335,7 @@ export struct MarginBlockEndProperty : Property {
     using Value = MarginTopProperty::Value;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MARGIN_BLOCK_END;
-        }
+        Registration() : Property::Registration(Properties::MARGIN_BLOCK_END) {}
 
         Rc<Property> initial() const override {
             return makeRc<MarginBlockEndProperty>(self(), Calc<PercentOr<Length>>(Length{}));
@@ -392,9 +370,7 @@ export struct MarginBlockProperty : Property {
     using Value = Math::Insets<MarginTopProperty::Value>;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MARGIN_BLOCK;
-        }
+        Registration() : Property::Registration(Properties::MARGIN_BLOCK) {}
 
         Rc<Property> initial() const override {
             return makeRc<MarginBlockProperty>(self(), Value{Calc<PercentOr<Length>>(Length{})});

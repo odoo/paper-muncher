@@ -17,11 +17,7 @@ namespace Vaev::Style {
 export struct LineHeightProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(INHERITED) {}
-
-        Symbol name() const override {
-            return Properties::LINE_HEIGHT;
-        }
+            : Property::Registration(Properties::LINE_HEIGHT, INHERITED) {}
 
         Rc<Property> initial() const override {
             return makeRc<LineHeightProperty>(self(), Keywords::NORMAL);
@@ -57,9 +53,7 @@ export struct LineHeightProperty : Property {
 // https://www.w3.org/TR/css-inline-3/#dominant-baseline-property
 export struct DominantBaselineProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::DOMINANT_BASELINE;
-        }
+        Registration() : Property::Registration(Properties::DOMINANT_BASELINE) {}
 
         Rc<Property> initial() const override {
             return makeRc<DominantBaselineProperty>(self(), Keywords::AUTO);
@@ -91,9 +85,7 @@ export struct DominantBaselineProperty : Property {
 // https://www.w3.org/TR/css-inline-3/#baseline-source
 export struct BaselineSourceProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BASELINE_SOURCE;
-        }
+        Registration() : Property::Registration(Properties::BASELINE_SOURCE) {}
 
         Rc<Property> initial() const override {
             return makeRc<BaselineSourceProperty>(self(), Keywords::AUTO);
@@ -125,9 +117,7 @@ export struct BaselineSourceProperty : Property {
 // https://www.w3.org/TR/css-inline-3/#alignment-baseline-property
 export struct AlignmentBaselineProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::ALIGNMENT_BASELINE;
-        }
+        Registration() : Property::Registration(Properties::ALIGNMENT_BASELINE) {}
 
         Rc<Property> initial() const override {
             return makeRc<AlignmentBaselineProperty>(self(), Keywords::BASELINE);
@@ -159,9 +149,7 @@ export struct AlignmentBaselineProperty : Property {
 // https://drafts.csswg.org/css-inline/#propdef-baseline-shift
 export struct BaselineShiftProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BASELINE_SHIFT;
-        }
+        Registration() : Property::Registration(Properties::BASELINE_SHIFT) {}
 
         Rc<Property> initial() const override {
             return makeRc<BaselineShiftProperty>(self(), Calc<PercentOr<Length>>(Length{}));
@@ -200,11 +188,7 @@ export struct VerticalAlignProperty : Property {
 
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::VERTICAL_ALIGN;
-        }
+            : Property::Registration(Properties::VERTICAL_ALIGN, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<VerticalAlignProperty>(self(), Value{.alignmentBaseline = Some(Keywords::BASELINE)});

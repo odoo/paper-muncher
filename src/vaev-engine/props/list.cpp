@@ -12,11 +12,7 @@ namespace Vaev::Style {
 struct ListStyleImageProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(INHERITED) {}
-
-        Symbol name() const override {
-            return Properties::LIST_STYLE_IMAGE;
-        }
+            : Property::Registration(Properties::LIST_STYLE_IMAGE, INHERITED) {}
 
         Rc<Property> initial() const override {
             return makeRc<ListStyleImageProperty>(self(), Keywords::NONE);
@@ -54,11 +50,7 @@ struct ListStyleImageProperty : Property {
 struct ListStyleTypeProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(INHERITED) {}
-
-        Symbol name() const override {
-            return Properties::LIST_STYLE_TYPE;
-        }
+            : Property::Registration(Properties::LIST_STYLE_TYPE, INHERITED) {}
 
         Rc<Property> initial() const override {
             return makeRc<ListStyleTypeProperty>(self(), CustomIdent{"disc"_sym});
@@ -96,11 +88,7 @@ struct ListStyleTypeProperty : Property {
 struct ListStylePositionProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(INHERITED) {}
-
-        Symbol name() const override {
-            return Properties::LIST_STYLE_POSITION;
-        }
+            : Property::Registration(Properties::LIST_STYLE_POSITION, INHERITED) {}
 
         Rc<Property> initial() const override {
             return makeRc<ListStylePositionProperty>(self(), Keywords::OUTSIDE);
@@ -148,11 +136,7 @@ struct ListStyleProperty : Property {
 
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(SHORTHAND_PROPERTY) {}
-
-        Symbol name() const override {
-            return Properties::LIST_STYLE;
-        }
+            : Property::Registration(Properties::LIST_STYLE, SHORTHAND_PROPERTY) {}
 
         Rc<Property> initial() const override {
             return makeRc<ListStyleProperty>(self(), Value{});
@@ -224,11 +208,7 @@ struct ListStyleProperty : Property {
 struct MarkerSideProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(INHERITED) {}
-
-        Symbol name() const override {
-            return Properties::MARKER_SIDE;
-        }
+            : Property::Registration(Properties::MARKER_SIDE, INHERITED) {}
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.list.cow().markerSide = parent.list->markerSide;

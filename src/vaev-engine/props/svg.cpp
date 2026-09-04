@@ -19,11 +19,7 @@ namespace Vaev::Style {
 export struct SvgXProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
-
-        Symbol name() const override {
-            return Properties::X;
-        }
+            : Property::Registration(Properties::X, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgXProperty>(self(), PercentOr<Length>{Length{0_au}});
@@ -60,11 +56,7 @@ export struct SvgXProperty : Property {
 export struct SvgYProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
-
-        Symbol name() const override {
-            return Properties::Y;
-        }
+            : Property::Registration(Properties::Y, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgYProperty>(self(), PercentOr<Length>{Length{0_au}});
@@ -101,11 +93,7 @@ export struct SvgYProperty : Property {
 export struct SvgCXProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
-
-        Symbol name() const override {
-            return Properties::CX;
-        }
+            : Property::Registration(Properties::CX, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgCXProperty>(self(), PercentOr<Length>{Length{0_au}});
@@ -142,11 +130,7 @@ export struct SvgCXProperty : Property {
 export struct SvgCYProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
-
-        Symbol name() const override {
-            return Properties::CY;
-        }
+            : Property::Registration(Properties::CY, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgCYProperty>(self(), PercentOr<Length>{Length{0_au}});
@@ -183,11 +167,7 @@ export struct SvgCYProperty : Property {
 export struct SvgRProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
-
-        Symbol name() const override {
-            return Properties::R;
-        }
+            : Property::Registration(Properties::R, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgRProperty>(self(), PercentOr<Length>{Length{0_au}});
@@ -224,11 +204,7 @@ export struct SvgRProperty : Property {
 export struct SvgFillProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration({PRESENTATION_ATTRIBUTE, INHERITED}) {}
-
-        Symbol name() const override {
-            return Properties::FILL;
-        }
+            : Property::Registration(Properties::FILL, {PRESENTATION_ATTRIBUTE, INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgFillProperty>(self(), SvgPaint{Some(Color{Gfx::BLACK})});
@@ -270,11 +246,7 @@ export struct SvgFillProperty : Property {
 export struct SvgDProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
-
-        Symbol name() const override {
-            return Properties::D;
-        }
+            : Property::Registration(Properties::D, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgDProperty>(self(), Union<String, None>{NONE});
@@ -335,11 +307,7 @@ export struct SvgDProperty : Property {
 export struct SvgViewBoxProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
-
-        Symbol name() const override {
-            return Properties::VIEWBOX;
-        }
+            : Property::Registration(Properties::VIEWBOX, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgViewBoxProperty>(self(), Opt<SvgViewBox>{NONE});
@@ -385,11 +353,7 @@ export struct SvgViewBoxProperty : Property {
 export struct SvgStrokeProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration({PRESENTATION_ATTRIBUTE, INHERITED}) {}
-
-        Symbol name() const override {
-            return Properties::STROKE;
-        }
+            : Property::Registration(Properties::STROKE, {PRESENTATION_ATTRIBUTE, INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgStrokeProperty>(self(), SvgPaint{NONE});
@@ -431,11 +395,7 @@ export struct SvgStrokeProperty : Property {
 export struct SvgStrokeOpacityProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(INHERITED) {}
-
-        Symbol name() const override {
-            return Properties::STROKE_OPACITY;
-        }
+            : Property::Registration(Properties::STROKE_OPACITY, INHERITED) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgStrokeOpacityProperty>(self(), Number{1});
@@ -482,11 +442,7 @@ export struct SvgStrokeOpacityProperty : Property {
 export struct FillOpacityProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration({PRESENTATION_ATTRIBUTE, INHERITED}) {}
-
-        Symbol name() const override {
-            return Properties::FILL_OPACITY;
-        }
+            : Property::Registration(Properties::FILL_OPACITY, {PRESENTATION_ATTRIBUTE, INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<FillOpacityProperty>(self(), Number{1});
@@ -533,11 +489,7 @@ export struct FillOpacityProperty : Property {
 export struct StrokeWidthProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration({PRESENTATION_ATTRIBUTE, INHERITED}) {}
-
-        Symbol name() const override {
-            return Properties::STROKE_WIDTH;
-        }
+            : Property::Registration(Properties::STROKE_WIDTH, {PRESENTATION_ATTRIBUTE, INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<StrokeWidthProperty>(self(), PercentOr<Length>{Length{1_au}});

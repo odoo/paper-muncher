@@ -17,9 +17,7 @@ namespace Vaev::Style {
 
 export struct FloatProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FLOAT;
-        }
+        Registration() : Property::Registration(Properties::FLOAT) {}
 
         Rc<Property> initial() const override {
             return makeRc<FloatProperty>(self(), Float::NONE);
@@ -50,9 +48,7 @@ export struct FloatProperty : Property {
 
 export struct ClearProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::CLEAR;
-        }
+        Registration() : Property::Registration(Properties::CLEAR) {}
 
         Rc<Property> initial() const override {
             return makeRc<ClearProperty>(self(), Clear::NONE);
