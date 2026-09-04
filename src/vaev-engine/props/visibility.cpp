@@ -16,9 +16,7 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-display/#visibility
 export struct VisibilityProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::VISIBILITY;
-        }
+        Registration() : Property::Registration(Properties::VISIBILITY) {}
 
         Rc<Property> initial() const override {
             return makeRc<VisibilityProperty>(self(), Visibility::VISIBLE);
@@ -61,9 +59,7 @@ export struct VisibilityProperty : Property {
 // https://www.w3.org/TR/css-color-4/#propdef-opacity
 export struct OpacityProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::OPACITY;
-        }
+        Registration() : Property::Registration(Properties::OPACITY) {}
 
         Rc<Property> initial() const override {
             return makeRc<OpacityProperty>(self(), Number{1});
@@ -101,9 +97,7 @@ export struct ClipPathProperty : Property {
     using Value = Union</* Url, */ BasicShape, Keywords::None>;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::CLIP_PATH;
-        }
+        Registration() : Property::Registration(Properties::CLIP_PATH) {}
 
         Rc<Property> initial() const override {
             return makeRc<ClipPathProperty>(self(), Keywords::NONE);

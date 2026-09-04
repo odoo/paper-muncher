@@ -18,9 +18,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-fonts-4/#font-family-prop
 export struct FontFamilyProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FONT_FAMILY;
-        }
+        Registration() : Property::Registration(Properties::FONT_FAMILY) {}
 
         Flags<Options> flags() const override {
             return {INHERITED};
@@ -73,9 +71,7 @@ export struct FontFamilyProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-weight-prop
 export struct FontWeightProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FONT_WEIGHT;
-        }
+        Registration() : Property::Registration(Properties::FONT_WEIGHT) {}
 
         Flags<Options> flags() const override {
             return {INHERITED};
@@ -119,9 +115,7 @@ export struct FontWeightProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-width-prop
 export struct FontWidthProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FONT_WIDTH;
-        }
+        Registration() : Property::Registration(Properties::FONT_WIDTH) {}
 
         // https://drafts.csswg.org/css-fonts/#font-stretch-prop
         Vec<Symbol> legacyAlias() const override {
@@ -170,9 +164,7 @@ export struct FontWidthProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-style-prop
 export struct FontStyleProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FONT_STYLE;
-        }
+        Registration() : Property::Registration(Properties::FONT_STYLE) {}
 
         Flags<Options> flags() const override {
             return {INHERITED};
@@ -216,9 +208,7 @@ export struct FontStyleProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-size-prop
 export struct FontSizeProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FONT_SIZE;
-        }
+        Registration() : Property::Registration(Properties::FONT_SIZE) {}
 
         Flags<Options> flags() const override {
             return {INHERITED};
@@ -280,9 +270,7 @@ export struct FontProperty : Property {
     };
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FONT;
-        }
+        Registration() : Property::Registration(Properties::FONT) {}
 
         Flags<Options> flags() const override {
             return {SHORTHAND_PROPERTY};

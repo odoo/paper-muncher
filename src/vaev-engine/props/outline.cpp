@@ -18,9 +18,7 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-ui/#outline-width
 export struct OutlineWidthProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::OUTLINE_WIDTH;
-        }
+        Registration() : Property::Registration(Properties::OUTLINE_WIDTH) {}
 
         Rc<Property> initial() const override {
             return makeRc<OutlineWidthProperty>(self(), LineWidth{Keywords::MEDIUM});
@@ -54,9 +52,7 @@ export struct OutlineStyleProperty : Property {
     using Value = Union<Keywords::Auto, Gfx::BorderStyle>;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::OUTLINE_STYLE;
-        }
+        Registration() : Property::Registration(Properties::OUTLINE_STYLE) {}
 
         Rc<Property> initial() const override {
             return makeRc<OutlineStyleProperty>(self(), Value{Gfx::BorderStyle::NONE});
@@ -90,9 +86,7 @@ export struct OutlineColorProperty : Property {
     using Value = Union<Keywords::Auto, Color>;
 
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::OUTLINE_COLOR;
-        }
+        Registration() : Property::Registration(Properties::OUTLINE_COLOR) {}
 
         ComputationPhase computationPhase() const override {
             // Must be applied after 'outline-style'.
@@ -141,9 +135,7 @@ export struct OutlineColorProperty : Property {
 // https://drafts.csswg.org/css-ui/#outline-offset
 export struct OutlineOffsetProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::OUTLINE_OFFSET;
-        }
+        Registration() : Property::Registration(Properties::OUTLINE_OFFSET) {}
 
         Rc<Property> initial() const override {
             return makeRc<OutlineOffsetProperty>(self(), Calc<Length>{0_au});
@@ -175,9 +167,7 @@ export struct OutlineOffsetProperty : Property {
 // https://drafts.csswg.org/css-ui/#outline
 export struct OutlineProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::OUTLINE;
-        }
+        Registration() : Property::Registration(Properties::OUTLINE) {}
 
         Flags<Options> flags() const override {
             return {SHORTHAND_PROPERTY};

@@ -18,9 +18,7 @@ namespace Vaev::Style {
 // https://svgwg.org/svg2-draft/geometry.html#XProperty
 export struct SvgXProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::X;
-        }
+        Registration() : Property::Registration(Properties::X) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE};
@@ -60,9 +58,7 @@ export struct SvgXProperty : Property {
 // https://svgwg.org/svg2-draft/geometry.html#YProperty
 export struct SvgYProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::Y;
-        }
+        Registration() : Property::Registration(Properties::Y) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE};
@@ -102,9 +98,7 @@ export struct SvgYProperty : Property {
 // https://svgwg.org/svg2-draft/geometry.html#CXProperty
 export struct SvgCXProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::CX;
-        }
+        Registration() : Property::Registration(Properties::CX) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE};
@@ -144,9 +138,7 @@ export struct SvgCXProperty : Property {
 // https://svgwg.org/svg2-draft/geometry.html#CYProperty
 export struct SvgCYProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::CY;
-        }
+        Registration() : Property::Registration(Properties::CY) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE};
@@ -186,9 +178,7 @@ export struct SvgCYProperty : Property {
 // https://svgwg.org/svg2-draft/geometry.html#RProperty
 export struct SvgRProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::R;
-        }
+        Registration() : Property::Registration(Properties::R) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE};
@@ -228,9 +218,7 @@ export struct SvgRProperty : Property {
 // https://svgwg.org/svg2-draft/painting.html#FillProperty
 export struct SvgFillProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FILL;
-        }
+        Registration() : Property::Registration(Properties::FILL) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE, INHERITED};
@@ -275,9 +263,7 @@ export struct SvgFillProperty : Property {
 // https://svgwg.org/svg2-draft/paths.html#TheDProperty
 export struct SvgDProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::D;
-        }
+        Registration() : Property::Registration(Properties::D) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE};
@@ -341,9 +327,7 @@ export struct SvgDProperty : Property {
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
 export struct SvgViewBoxProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::VIEWBOX;
-        }
+        Registration() : Property::Registration(Properties::VIEWBOX) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE};
@@ -392,9 +376,7 @@ export struct SvgViewBoxProperty : Property {
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingStrokePaint
 export struct SvgStrokeProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::STROKE;
-        }
+        Registration() : Property::Registration(Properties::STROKE) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE, INHERITED};
@@ -439,9 +421,7 @@ export struct SvgStrokeProperty : Property {
 // https://svgwg.org/svg2-draft/painting.html#StrokeOpacity
 export struct SvgStrokeOpacityProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::STROKE_OPACITY;
-        }
+        Registration() : Property::Registration(Properties::STROKE_OPACITY) {}
 
         Flags<Options> flags() const override {
             return {INHERITED};
@@ -491,9 +471,7 @@ export struct SvgStrokeOpacityProperty : Property {
 // https://svgwg.org/svg2-draft/painting.html#FillOpacity
 export struct FillOpacityProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FILL_OPACITY;
-        }
+        Registration() : Property::Registration(Properties::FILL_OPACITY) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE, INHERITED};
@@ -543,9 +521,7 @@ export struct FillOpacityProperty : Property {
 // https://svgwg.org/svg2-draft/painting.html#StrokeWidth
 export struct StrokeWidthProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::STROKE_WIDTH;
-        }
+        Registration() : Property::Registration(Properties::STROKE_WIDTH) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE, INHERITED};

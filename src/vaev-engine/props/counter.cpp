@@ -14,9 +14,7 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-lists/#counter-reset
 export struct CounterResetProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::COUNTER_RESET;
-        }
+        Registration() : Property::Registration(Properties::COUNTER_RESET) {}
 
         Rc<Property> initial() const override {
             return makeRc<CounterResetProperty>(self(), Vec<CounterProps::Reset>{});
@@ -51,9 +49,7 @@ export struct CounterResetProperty : Property {
 // https://drafts.csswg.org/css-lists/#propdef-counter-increment
 export struct CounterIncrementProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::COUNTER_INCREMENT;
-        }
+        Registration() : Property::Registration(Properties::COUNTER_INCREMENT) {}
 
         Rc<Property> initial() const override {
             return makeRc<CounterIncrementProperty>(self(), Vec<CounterProps::Increment>{});
@@ -88,9 +84,7 @@ export struct CounterIncrementProperty : Property {
 // https://drafts.csswg.org/css-lists/#propdef-counter-set
 export struct CounterSetProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::COUNTER_SET;
-        }
+        Registration() : Property::Registration(Properties::COUNTER_SET) {}
 
         Rc<Property> initial() const override {
             return makeRc<CounterSetProperty>(self(), Vec<CounterProps::Set>{});

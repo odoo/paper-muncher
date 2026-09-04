@@ -18,9 +18,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-break-3/#propdef-break-after
 export struct BreakAfterProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BREAK_AFTER;
-        }
+        Registration() : Property::Registration(Properties::BREAK_AFTER) {}
 
         Rc<Property> initial() const override {
             return makeRc<BreakAfterProperty>(self(), BreakBetween::AUTO);
@@ -52,9 +50,7 @@ export struct BreakAfterProperty : Property {
 // https://www.w3.org/TR/css-break-3/#propdef-break-before
 export struct BreakBeforeProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BREAK_BEFORE;
-        }
+        Registration() : Property::Registration(Properties::BREAK_BEFORE) {}
 
         Rc<Property> initial() const override {
             return makeRc<BreakBeforeProperty>(self(), BreakBetween::AUTO);
@@ -86,9 +82,7 @@ export struct BreakBeforeProperty : Property {
 // https://www.w3.org/TR/css-break-3/#break-within
 export struct BreakInsideProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BREAK_INSIDE;
-        }
+        Registration() : Property::Registration(Properties::BREAK_INSIDE) {}
 
         Rc<Property> initial() const override {
             return makeRc<BreakInsideProperty>(self(), BreakInside::AUTO);

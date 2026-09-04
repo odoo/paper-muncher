@@ -19,9 +19,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-sizing-3/#box-sizing
 export struct BoxSizingProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::BOX_SIZING;
-        }
+        Registration() : Property::Registration(Properties::BOX_SIZING) {}
 
         Rc<Property> initial() const override {
             return makeRc<BoxSizingProperty>(self(), BoxSizing::CONTENT_BOX);
@@ -61,9 +59,7 @@ export struct BoxSizingProperty : Property {
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 export struct WidthProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::WIDTH;
-        }
+        Registration() : Property::Registration(Properties::WIDTH) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE};
@@ -106,9 +102,7 @@ export struct WidthProperty : Property {
 
 export struct HeightProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::HEIGHT;
-        }
+        Registration() : Property::Registration(Properties::HEIGHT) {}
 
         Flags<Options> flags() const override {
             return {PRESENTATION_ATTRIBUTE};
@@ -150,9 +144,7 @@ export struct HeightProperty : Property {
 // https://www.w3.org/TR/css-sizing-3/#propdef-min-width
 export struct MinWidthProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MIN_WIDTH;
-        }
+        Registration() : Property::Registration(Properties::MIN_WIDTH) {}
 
         Rc<Property> initial() const override {
             return makeRc<MinWidthProperty>(self(), Size{Keywords::AUTO});
@@ -184,9 +176,7 @@ export struct MinWidthProperty : Property {
 // https://www.w3.org/TR/css-sizing-3/#propdef-min-height
 export struct MinHeightProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MIN_HEIGHT;
-        }
+        Registration() : Property::Registration(Properties::MIN_HEIGHT) {}
 
         Rc<Property> initial() const override {
             return makeRc<MinHeightProperty>(self(), Size{Keywords::AUTO});
@@ -219,9 +209,7 @@ export struct MinHeightProperty : Property {
 
 export struct MaxWidthProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MAX_WIDTH;
-        }
+        Registration() : Property::Registration(Properties::MAX_WIDTH) {}
 
         Rc<Property> initial() const override {
             return makeRc<MaxWidthProperty>(self(), MaxSize{Keywords::NONE});
@@ -253,9 +241,7 @@ export struct MaxWidthProperty : Property {
 // https://www.w3.org/TR/css-sizing-3/#propdef-max-height
 export struct MaxHeightProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::MAX_HEIGHT;
-        }
+        Registration() : Property::Registration(Properties::MAX_HEIGHT) {}
 
         Rc<Property> initial() const override {
             return makeRc<MaxHeightProperty>(self(), MaxSize{Keywords::NONE});

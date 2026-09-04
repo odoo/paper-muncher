@@ -18,9 +18,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-flexbox-1/#flex-basis-property
 export struct FlexBasisProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FLEX_BASIS;
-        }
+        Registration() : Property::Registration(Properties::FLEX_BASIS) {}
 
         Rc<Property> initial() const override {
             return makeRc<FlexBasisProperty>(self(), Keywords::AUTO);
@@ -52,9 +50,7 @@ export struct FlexBasisProperty : Property {
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-direction
 export struct FlexDirectionProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FLEX_DIRECTION;
-        }
+        Registration() : Property::Registration(Properties::FLEX_DIRECTION) {}
 
         Rc<Property> initial() const override {
             return makeRc<FlexDirectionProperty>(self(), FlexDirection::ROW);
@@ -86,9 +82,7 @@ export struct FlexDirectionProperty : Property {
 // https://www.w3.org/TR/css-flexbox-1/#flex-grow-property
 export struct FlexGrowProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FLEX_GROW;
-        }
+        Registration() : Property::Registration(Properties::FLEX_GROW) {}
 
         Rc<Property> initial() const override {
             return makeRc<FlexGrowProperty>(self(), Number{0});
@@ -120,9 +114,7 @@ export struct FlexGrowProperty : Property {
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-shrink
 export struct FlexShrinkProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FLEX_SHRINK;
-        }
+        Registration() : Property::Registration(Properties::FLEX_SHRINK) {}
 
         Rc<Property> initial() const override {
             return makeRc<FlexShrinkProperty>(self(), Number{1});
@@ -154,9 +146,7 @@ export struct FlexShrinkProperty : Property {
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-wrap
 export struct FlexWrapProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FLEX_WRAP;
-        }
+        Registration() : Property::Registration(Properties::FLEX_WRAP) {}
 
         Rc<Property> initial() const override {
             return makeRc<FlexWrapProperty>(self(), FlexWrap::NOWRAP);
@@ -188,9 +178,7 @@ export struct FlexWrapProperty : Property {
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-flow
 export struct FlexFlowProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FLEX_FLOW;
-        }
+        Registration() : Property::Registration(Properties::FLEX_FLOW) {}
 
         Flags<Options> flags() const override {
             return {SHORTHAND_PROPERTY};
@@ -252,9 +240,7 @@ export struct FlexFlowProperty : Property {
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex
 export struct FlexProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::FLEX;
-        }
+        Registration() : Property::Registration(Properties::FLEX) {}
 
         Flags<Options> flags() const override {
             return {SHORTHAND_PROPERTY};
