@@ -1,0 +1,95 @@
+<tests>
+    <!--
+    A compound selector with no type selector has a universal selector implied,
+    and a declared `@namespace` applies to it. So the MathML user agent sheet's
+    `semantics > :not(:first-child)` means `mathml|semantics > mathml|*:not(...)`
+    and must stay confined to MathML content.
+    https://drafts.csswg.org/css-namespaces/#scope
+    -->
+
+    <test name="mathml-ua-sheet-hides-trailing-semantics-children">
+        <container>
+            <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+            <head />
+
+            <body>
+                <slot />
+            </body>
+
+            </html>
+        </container>
+
+        <rendering help="Everything after the first child of semantics is display: none.">
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <semantics>
+                    <mn>1</mn>
+                    <annotation encoding="text/plain">not rendered</annotation>
+                </semantics>
+            </math>
+        </rendering>
+
+        <rendering>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <semantics>
+                    <mn>1</mn>
+                </semantics>
+            </math>
+        </rendering>
+
+        <!-- Guards that the two renderings above are not trivially equal. -->
+        <error>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <semantics>
+                    <mn>2</mn>
+                </semantics>
+            </math>
+        </error>
+    </test>
+
+    <test name="mathml-ua-sheet-does-not-leak-into-html">
+        <container>
+            <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+            <head>
+                <style>
+                    span {
+                        font-size: 16px;
+                    }
+                </style>
+            </head>
+
+            <body>
+                <slot />
+            </body>
+
+            </html>
+        </container>
+
+        <!--
+        These HTML elements are not in the MathML namespace, so none of the
+        type-less MathML rules (`:not(:first-child)`, `:nth-child(2)`) may apply
+        to them; the second span renders exactly like the first.
+         -->
+        <rendering>
+            <div>
+                <span>x</span>
+            </div>
+        </rendering>
+
+        <rendering>
+            <div>
+                <span>x</span>
+                <span style="display: none;">y</span>
+            </div>
+        </rendering>
+
+        <error>
+            <div>
+                <span>x</span>
+                <span>y</span>
+            </div>
+        </error>
+    </test>
+
+</tests>

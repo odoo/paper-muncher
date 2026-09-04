@@ -1748,7 +1748,7 @@ export struct HtmlParser : HtmlSink {
             // Otherwise, for each attribute on the token, check to see if the attribute is already present on the top element of the
             // stack of open elements. If it is not, add the attribute and its corresponding value to that element.
             for (auto const& attr : t.attrs) {
-                auto name = Dom::QualifiedName{Some(""_sym), attr.name};
+                auto name = Dom::QualifiedName{NONE, attr.name};
 
                 if (!_currentElement()->hasAttribute(name)) {
                     _currentElement()->setAttribute(name, attr.value);
@@ -1783,7 +1783,7 @@ export struct HtmlParser : HtmlSink {
             _framesetOk = false;
 
             for (auto const& attr : t.attrs) {
-                auto name = Dom::QualifiedName{Some(""_sym), attr.name};
+                auto name = Dom::QualifiedName{NONE, attr.name};
 
                 if (!_openElements[1]->hasAttribute(name)) {
                     _openElements[1]->setAttribute(name, attr.value);

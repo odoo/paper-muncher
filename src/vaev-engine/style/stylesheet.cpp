@@ -20,7 +20,7 @@ export struct StyleSheet {
     Origin origin = Origin::AUTHOR;
 
     static StyleSheet parse(RegisteredPropertySet& registry, Css::Sst const& sst, Ref::Url href, Origin origin) {
-        Namespace ns;
+        NamespaceScope ns;
 
         if (sst != Css::Sst::LIST)
             panic("expected list");

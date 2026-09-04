@@ -9,40 +9,15 @@ import Karm.Logger;
 
 import :css;
 import :values;
-import :style.namespace_;
 import :dom.element;
 
 using namespace Karm;
 
 namespace Vaev::Style {
 
-static constexpr bool DEBUG_SELECTORS = false;
-
-// enum order is the operator priority (the lesser the most important)
-enum struct OpCode {
-    NOP,
-    OR,         // ,
-    DESCENDANT, // ' '
-    CHILD,      // >
-    ADJACENT,   // +
-    SUBSEQUENT, // ~
-    NOT,        // :not()
-    WHERE,      // :where()
-    AND,        // a.b
-    COLUMN,     // ||
-};
-
 export struct Selector;
 
-export void unparse(Selector const& sel, Io::Emit& e);
-
-export struct SelectorUnparser {
-    Selector& s;
-
-    void repr(Io::Emit& e) const {
-        unparse(s, e);
-    }
-};
+static constexpr bool DEBUG_SELECTORS = false;
 
 export struct NullNamespace {
     bool operator==(NullNamespace const&) const = default;
@@ -57,7 +32,11 @@ export struct Universal {
 export constexpr Universal UNIVERSAL = {};
 
 export struct QualifiedNameSelector {
-    using NamespacePattern = Union<NullNamespace, Universal, Symbol>;
+    using NamespacePattern = Union<
+        NullNamespace, // represents the name B that belongs to no namespace.
+        Universal,     // represents the name C in any namespace, including no namespace.
+        Symbol>;
+
     using NamePattern = Union<Universal, Symbol>;
 
     NamespacePattern ns; // Null namespace, universal namespace, or an exact namespace.
@@ -71,16 +50,6 @@ export struct QualifiedNameSelector {
 
     QualifiedNameSelector(Symbol ns, Symbol name)
         : QualifiedNameSelector(NamespacePattern{ns}, NamePattern{name}) {}
-
-    QualifiedNameSelector(Opt<Symbol> ns, Opt<Symbol> name)
-        : ns(ns ? NamespacePattern{*ns}
-                : NamespacePattern{NULL_NAMESPACE}),
-          name(name ? NamePattern{*name} : NamePattern{UNIVERSAL}) {}
-
-    QualifiedNameSelector(Dom::QualifiedName const& qualifiedName)
-        : ns(qualifiedName.ns ? NamespacePattern{*qualifiedName.ns}
-                              : NamespacePattern{NULL_NAMESPACE}),
-          name(qualifiedName.name) {}
 
     static QualifiedNameSelector wildcard() {
         return {UNIVERSAL, UNIVERSAL};
@@ -155,6 +124,25 @@ export struct QualifiedNameSelector {
     }
 };
 
+// https://drafts.csswg.org/css-namespaces/#scope
+export struct NamespaceScope {
+    Opt<Symbol> default_ = NONE;
+    Map<Symbol, Symbol> prefixes = {};
+
+    QualifiedNameSelector::NamespacePattern defaultNamespacePattern() const {
+        return default_
+                   ? QualifiedNameSelector::NamespacePattern{default_.unwrap()}
+                   : QualifiedNameSelector::NamespacePattern{UNIVERSAL};
+    }
+
+    Res<Symbol> lookup(Symbol sym) const {
+        auto maybeRes = prefixes.lookup(sym);
+        if (maybeRes == NONE)
+            return Error::invalidInput("unknown namespace prefix");
+        return Ok(*maybeRes);
+    }
+};
+
 struct EmptySelector {
     void repr(Io::Emit& e) const {
         e("EMPTY");
@@ -216,16 +204,7 @@ export struct TypeSelector {
     TypeSelector(QualifiedNameSelector::NamespacePattern ns, QualifiedNameSelector::NamePattern name)
         : qualifiedName(ns, name) {}
 
-    TypeSelector(Symbol ns, Symbol name)
-        : qualifiedName(ns, name) {}
-
-    TypeSelector(Opt<Symbol> ns, Opt<Symbol> name)
-        : qualifiedName(ns, name) {}
-
     TypeSelector(QualifiedNameSelector qualifiedName)
-        : qualifiedName(qualifiedName) {}
-
-    TypeSelector(Dom::QualifiedName const& qualifiedName)
         : qualifiedName(qualifiedName) {}
 
     static TypeSelector universal() {
@@ -650,7 +629,7 @@ export struct Selector : _Selector {
 
     bool operator==(Selector const&) const;
 
-    static Res<QualifiedNameSelector> _parseQualifiedNameSelector(Cursor<Css::Sst>& cur, Namespace const& ns, Opt<Symbol> default_) {
+    static Res<QualifiedNameSelector> _parseQualifiedNameSelector(Cursor<Css::Sst>& cur, NamespaceScope const& ns, QualifiedNameSelector::NamespacePattern defaultNamespace) {
         // ns|name
         // ns|*
         // *|name
@@ -678,8 +657,8 @@ export struct Selector : _Selector {
 
         if (not cur.skip(Css::Token::delim("|"))) {
             return Ok(QualifiedNameSelector{
-                default_,
-                firstName,
+                defaultNamespace,
+                firstName ? QualifiedNameSelector::NamePattern{firstName.unwrap()} : QualifiedNameSelector::NamePattern{UNIVERSAL},
             });
         }
 
@@ -695,14 +674,19 @@ export struct Selector : _Selector {
         if (namespacePrefix == NamespacePrefix::IDENT)
             firstName = Some(try$(ns.lookup(*firstName)));
 
+        if (namespacePrefix == NamespacePrefix::STAR)
+            return Ok(QualifiedNameSelector{
+                QualifiedNameSelector::NamespacePattern{UNIVERSAL},
+                secondName ? QualifiedNameSelector::NamePattern{secondName.unwrap()} : QualifiedNameSelector::NamePattern{UNIVERSAL},
+            });
+
         return Ok(QualifiedNameSelector{
-            namespacePrefix == NamespacePrefix::STAR ? QualifiedNameSelector::NamespacePattern{UNIVERSAL} : namespacePrefix == NamespacePrefix::IDENT ? QualifiedNameSelector::NamespacePattern{firstName.unwrap()}
-                                                                                                                                                      : QualifiedNameSelector::NamespacePattern{NULL_NAMESPACE},
+            (namespacePrefix == NamespacePrefix::IDENT ? QualifiedNameSelector::NamespacePattern{firstName.unwrap()} : QualifiedNameSelector::NamespacePattern{NULL_NAMESPACE}),
             secondName ? QualifiedNameSelector::NamePattern{secondName.unwrap()} : QualifiedNameSelector::NamePattern{UNIVERSAL},
         });
     }
 
-    static Res<Selector> _parseAttributeSelector(Slice<Css::Sst> content, Namespace const& ns) {
+    static Res<Selector> _parseAttributeSelector(Slice<Css::Sst> content, NamespaceScope const& ns) {
         auto case_ = AttributeSelector::SENSITIVE;
         auto match = AttributeSelector::PRESENT;
         String value = ""s;
@@ -712,7 +696,7 @@ export struct Selector : _Selector {
         if (cur.ended())
             return Error::invalidData("expected attribute name");
 
-        auto qualifiedName = try$(_parseQualifiedNameSelector(cur, ns, NONE));
+        auto qualifiedName = try$(_parseQualifiedNameSelector(cur, ns, NULL_NAMESPACE));
 
         eatWhitespace(cur);
         if (cur.ended()) {
@@ -789,6 +773,20 @@ export struct Selector : _Selector {
         });
     }
 
+    // enum order is the operator priority (the lesser the most important)
+    enum struct OpCode {
+        NOP,
+        OR,         // ,
+        DESCENDANT, // ' '
+        CHILD,      // >
+        ADJACENT,   // +
+        SUBSEQUENT, // ~
+        NOT,        // :not()
+        WHERE,      // :where()
+        AND,        // a.b
+        COLUMN,     // ||
+    };
+
     // consume an Op Code
     static OpCode _peekOpCode(Cursor<Css::Sst>& cur) {
         if (cur.ended()) {
@@ -863,7 +861,7 @@ export struct Selector : _Selector {
         }
     }
 
-    static Res<PseudoClassSelector> _parsePseudoClassFunction(Cursor<Css::Sst>& cur, Namespace const& ns) {
+    static Res<PseudoClassSelector> _parsePseudoClassFunction(Cursor<Css::Sst>& cur, NamespaceScope const& ns) {
         auto funcName = cur->prefix.unwrap()->token.data.str();
         funcName = Str{funcName.begin(), funcName.len() - 1};
 
@@ -885,7 +883,7 @@ export struct Selector : _Selector {
     }
 
     // consume a selector element (everything  that has a lesser priority than the current OP)
-    static Res<Selector> _parseSelectorElement(Cursor<Css::Sst>& cur, OpCode currentOp, Namespace const& ns) {
+    static Res<Selector> _parseSelectorElement(Cursor<Css::Sst>& cur, OpCode currentOp, NamespaceScope const& ns) {
         if (cur.ended()) {
             logErrorIf(DEBUG_SELECTORS, "unterminated selector");
             return Error::invalidData("unterminated selector");
@@ -904,7 +902,7 @@ export struct Selector : _Selector {
                 break;
             case Css::Token::IDENT: {
                 Cursor qualifiedNameCur = cur;
-                val = TypeSelector{try$(_parseQualifiedNameSelector(qualifiedNameCur, ns, Some(ns.default_)))};
+                val = TypeSelector{try$(_parseQualifiedNameSelector(qualifiedNameCur, ns, ns.defaultNamespacePattern()))};
                 cur = qualifiedNameCur;
                 consumed = true;
             } break;
@@ -914,7 +912,7 @@ export struct Selector : _Selector {
                     val = ClassSelector{cur->token.data};
                 } else if (cur->token.data == "*") {
                     Cursor qualifiedNameCur = cur;
-                    val = TypeSelector{try$(_parseQualifiedNameSelector(qualifiedNameCur, ns, Some(ns.default_)))};
+                    val = TypeSelector{try$(_parseQualifiedNameSelector(qualifiedNameCur, ns, ns.defaultNamespacePattern()))};
                     cur = qualifiedNameCur;
                     consumed = true;
                 }
@@ -973,7 +971,14 @@ export struct Selector : _Selector {
         return Ok(val);
     }
 
-    static Res<Selector> _parseNfixExpr(Selector lhs, OpCode op, Cursor<Css::Sst>& cur, Namespace const& ns) {
+    static Selector _impliedDefaultNamespace(NamespaceScope const& ns) {
+        return Selector{TypeSelector{
+            ns.defaultNamespacePattern(),
+            QualifiedNameSelector::NamePattern{UNIVERSAL},
+        }};
+    }
+
+    static Res<Selector> _parseNfixExpr(Selector lhs, OpCode op, Cursor<Css::Sst>& cur, NamespaceScope const& ns) {
         Vec<Selector> selectors = {
             lhs,
             try$(_parseSelectorElement(cur, op, ns)),
@@ -1014,6 +1019,16 @@ export struct Selector : _Selector {
 
         switch (op) {
         case OpCode::AND:
+            if (ns.default_) {
+                auto hasTypeSelector =
+                    iter(selectors) | Any([](Selector const& s) {
+                        return s.is<TypeSelector>();
+                    });
+
+                if (not hasTypeSelector)
+                    selectors.pushFront(_impliedDefaultNamespace(ns));
+            }
+
             return Ok(Selector::and_(selectors));
 
         case OpCode::OR:
@@ -1024,7 +1039,7 @@ export struct Selector : _Selector {
         }
     }
 
-    static Res<Selector> _parseInfixExpr(Selector lhs, Cursor<Css::Sst>& cur, OpCode opCode, Namespace const& ns) {
+    static Res<Selector> _parseInfixExpr(Selector lhs, Cursor<Css::Sst>& cur, OpCode opCode, NamespaceScope const& ns) {
         if (opCode == OpCode::NOP)
             opCode = _peekOpCode(cur);
 
@@ -1057,24 +1072,33 @@ export struct Selector : _Selector {
         }
     }
 
-    static Res<Selector> parse(Cursor<Css::Sst>& c, Namespace const& ns = {}) {
+    static Res<Selector> parse(Cursor<Css::Sst>& c, NamespaceScope const& ns = {}) {
         if (not c)
             return Error::invalidData("expected selector");
 
         logDebugIf(DEBUG_SELECTORS, "PARSING SELECTOR : {}", c);
-        Selector currentSelector = try$(_parseSelectorElement(c, OpCode::NOP, ns));
+        Selector selector = try$(_parseSelectorElement(c, OpCode::NOP, ns));
 
         while (not c.ended()) {
             auto oldC = c;
-            currentSelector = try$(_parseInfixExpr(currentSelector, c, OpCode::NOP, ns));
+            selector = try$(_parseInfixExpr(selector, c, OpCode::NOP, ns));
             if (not c.ended() and oldC == c)
                 return Error::invalidData("unexpected token after selector");
         }
 
-        return Ok(currentSelector);
+        // a lone class, id, attribute or pseudo selector. Needs to be namespace qualified
+        if (ns.default_ and
+            not selector.is<Infix>() and
+            not selector.is<Nfix>() and
+            not selector.is<TypeSelector>() and
+            not selector.is<EmptySelector>()) {
+            return Ok(and_({_impliedDefaultNamespace(ns), selector}));
+        }
+
+        return Ok(selector);
     }
 
-    static Res<Selector> parse(Io::SScan& s, Namespace const& ns = {}) {
+    static Res<Selector> parse(Io::SScan& s, NamespaceScope const& ns = {}) {
         Css::Lexer lex = s;
         Diag::Collector diags;
         auto val = consumeSelector(lex, diags);
@@ -1082,12 +1106,20 @@ export struct Selector : _Selector {
         return parse(c, ns);
     };
 
-    static Res<Selector> parse(Str input, Namespace const& ns = {}) {
+    static Res<Selector> parse(Str input, NamespaceScope const& ns = {}) {
         Io::SScan s{input};
         return parse(s, ns);
     };
 
     auto unparsed() lifetimebound {
+        struct SelectorUnparser {
+            Selector& s;
+
+            void repr(Io::Emit& e) const {
+                unparse(s, e);
+            }
+        };
+
         return SelectorUnparser{*this};
     }
 };
@@ -1106,9 +1138,8 @@ export void unparse(Selector const& sel, Io::Emit& e) {
                     }
                 }
             } else if (s.type == Nfix::AND) {
-                for (usize i = 0; i < s.inners.len(); i++) {
+                for (usize i = 0; i < s.inners.len(); i++)
                     e("{}", s.inners[i]);
-                }
             } else {
                 e("{}", s);
             }

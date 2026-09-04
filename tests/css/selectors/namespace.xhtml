@@ -1,0 +1,490 @@
+<tests xmlns:ex="http://www.example.org/">
+    <test name="type-selector-without-default-namespace">
+        <container>
+            <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+            <head>
+                <style>
+                    /* No @namespace here, so this applies to every namespace. */
+                    body {
+                        margin: 0px;
+                    }
+
+                    *|div {
+                        display: block;
+                        width: 100px;
+                        height: 50px;
+                        background: #ddd;
+                    }
+                </style>
+            </head>
+
+            <body>
+                <slot />
+            </body>
+
+            </html>
+        </container>
+
+        <rendering help="Without a default namespace a type selector matches in any namespace.">
+            <style>
+                @namespace html url(http://www.w3.org/1999/xhtml);
+                @namespace ex url(http://www.example.org/);
+
+                html|div,
+                ex|div {
+                    background: green;
+                }
+            </style>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </rendering>
+
+        <rendering>
+            <style>
+                div {
+                    background: green;
+                }
+            </style>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </rendering>
+
+        <rendering>
+            <style>
+                *|div {
+                    background: green;
+                }
+            </style>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </rendering>
+
+        <error>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </error>
+    </test>
+
+    <test name="type-selector-with-default-namespace">
+        <container>
+            <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+            <head>
+                <style>
+                    body {
+                        margin: 0px;
+                    }
+
+                    *|div {
+                        display: block;
+                        width: 100px;
+                        height: 50px;
+                        background: #ddd;
+                    }
+                </style>
+            </head>
+
+            <body>
+                <slot />
+            </body>
+
+            </html>
+        </container>
+
+        <rendering help="A default namespace confines a type selector to that namespace.">
+            <style>
+                @namespace html url(http://www.w3.org/1999/xhtml);
+
+                html|div {
+                    background: green;
+                }
+            </style>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </rendering>
+
+        <rendering>
+            <style>
+                @namespace url(http://www.w3.org/1999/xhtml);
+
+                div {
+                    background: green;
+                }
+            </style>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </rendering>
+
+        <rendering help="An explicit prefix overrides the default namespace.">
+            <style>
+                @namespace url(http://www.example.org/);
+                @namespace html url(http://www.w3.org/1999/xhtml);
+
+                html|div {
+                    background: green;
+                }
+            </style>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </rendering>
+
+        <error help="`*|` opts out of the default namespace, so both boxes match.">
+            <style>
+                @namespace url(http://www.w3.org/1999/xhtml);
+
+                *|div {
+                    background: green;
+                }
+            </style>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </error>
+
+        <error help="With another default namespace only the second box matches.">
+            <style>
+                @namespace url(http://www.example.org/);
+
+                div {
+                    background: green;
+                }
+            </style>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </error>
+    </test>
+
+    <test name="universal-type-selector-with-default-namespace">
+        <container>
+            <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+            <head>
+                <style>
+                    body {
+                        margin: 0px;
+                    }
+
+                    *|div {
+                        display: block;
+                        width: 100px;
+                        height: 50px;
+                        background: #ddd;
+                    }
+                </style>
+            </head>
+
+            <body>
+                <slot />
+            </body>
+
+            </html>
+        </container>
+
+        <rendering help="`*|name` ignores the default namespace whatever it is.">
+            <style>
+                @namespace html url(http://www.w3.org/1999/xhtml);
+                @namespace ex url(http://www.example.org/);
+
+                html|div,
+                ex|div {
+                    background: green;
+                }
+            </style>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </rendering>
+
+        <rendering>
+            <style>
+                @namespace url(http://www.w3.org/1999/xhtml);
+
+                *|div {
+                    background: green;
+                }
+            </style>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </rendering>
+
+        <rendering>
+            <style>
+                @namespace url(http://www.example.org/);
+
+                *|div {
+                    background: green;
+                }
+            </style>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </rendering>
+
+        <error>
+            <style>
+                @namespace url(http://www.w3.org/1999/xhtml);
+
+                div {
+                    background: green;
+                }
+            </style>
+            <div />
+            <div xmlns="http://www.example.org/" />
+        </error>
+    </test>
+
+    <test name="attribute-selector-without-default-namespace">
+        <container>
+            <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+            <head>
+                <style>
+                    body {
+                        margin: 0px;
+                    }
+
+                    *|div {
+                        display: block;
+                        width: 100px;
+                        height: 50px;
+                        background: #ddd;
+                    }
+                </style>
+            </head>
+
+            <body>
+                <slot />
+            </body>
+
+            </html>
+        </container>
+
+        <rendering help="Without a default namespace the implied `*|*` matches in any namespace.">
+            <style>
+                @namespace html url(http://www.w3.org/1999/xhtml);
+                @namespace ex url(http://www.example.org/);
+
+                html|div,
+                ex|div {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </rendering>
+
+        <rendering help="`[data-x]` matches the namespace-less attribute of both boxes.">
+            <style>
+                [data-x] {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </rendering>
+
+        <rendering help="`[*|data-x]` matches a namespace-less attribute too.">
+            <style>
+                [*|data-x] {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </rendering>
+
+        <rendering help="`[*|data-y]` matches the namespaced attribute of both boxes.">
+            <style>
+                [*|data-y] {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </rendering>
+
+        <rendering help="An explicit prefix matches the namespaced attribute of both boxes.">
+            <style>
+                @namespace ex url(http://www.example.org/);
+
+                [ex|data-y] {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </rendering>
+
+        <error>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </error>
+    </test>
+
+    <!--
+    An attribute selector with no namespace component only matches attributes
+    that have no namespace; it is equivalent to `[|attr]`, never to `[*|attr]`.
+    https://drafts.csswg.org/selectors/#attribute-selectors
+    -->
+    <test name="attribute-selector-namespace-is-never-defaulted">
+        <container>
+            <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+            <head>
+                <style>
+                    body {
+                        margin: 0px;
+                    }
+
+                    *|div {
+                        display: block;
+                        width: 100px;
+                        height: 50px;
+                        background: #ddd;
+                    }
+                </style>
+            </head>
+
+            <body>
+                <slot />
+            </body>
+
+            </html>
+        </container>
+
+        <rendering help="`[data-y]` only matches a namespace-less `data-y`; both boxes carry a namespaced one.">
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </rendering>
+
+        <rendering help="`[data-y]` does not match the namespaced `ex:data-y` of either box.">
+            <style>
+                [data-y] {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </rendering>
+
+        <rendering help="A default namespace never applies to the attribute name either.">
+            <style>
+                @namespace url(http://www.example.org/);
+
+                [data-y] {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </rendering>
+
+        <error help="`[*|data-y]` does match, so the boxes above are not grey for lack of the attribute.">
+            <style>
+                [*|data-y] {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </error>
+    </test>
+
+    <test name="attribute-selector-with-default-namespace">
+        <container>
+            <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+            <head>
+                <style>
+                    body {
+                        margin: 0px;
+                    }
+
+                    *|div {
+                        display: block;
+                        width: 100px;
+                        height: 50px;
+                        background: #ddd;
+                    }
+                </style>
+            </head>
+
+            <body>
+                <slot />
+            </body>
+
+            </html>
+        </container>
+
+        <rendering help="The default namespace applies to the universal selector implied by `[attr]`.">
+            <style>
+                @namespace html url(http://www.w3.org/1999/xhtml);
+
+                html|div {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </rendering>
+
+        <rendering>
+            <style>
+                @namespace url(http://www.w3.org/1999/xhtml);
+
+                [data-x] {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </rendering>
+
+        <rendering help="`*|` on the attribute says nothing about the element's namespace.">
+            <style>
+                @namespace url(http://www.w3.org/1999/xhtml);
+
+                [*|data-x] {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </rendering>
+
+        <rendering>
+            <style>
+                @namespace url(http://www.w3.org/1999/xhtml);
+
+                [*|data-y] {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </rendering>
+
+        <error help="An explicit `*|*` replaces the implied universal selector, so both boxes match.">
+            <style>
+                @namespace url(http://www.w3.org/1999/xhtml);
+
+                *|*[data-x] {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </error>
+
+        <error help="With the foreign default namespace only the second box matches.">
+            <style>
+                @namespace url(http://www.example.org/);
+
+                [data-x] {
+                    background: green;
+                }
+            </style>
+            <div data-x="x" ex:data-y="y" />
+            <div xmlns="http://www.example.org/" data-x="x" ex:data-y="y" />
+        </error>
+    </test>
+
+</tests>
