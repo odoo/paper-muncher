@@ -61,12 +61,11 @@ export struct BoxSizingProperty : Property {
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 export struct WidthProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
+
         Symbol name() const override {
             return Properties::WIDTH;
-        }
-
-        Flags<Options> flags() const override {
-            return {PRESENTATION_ATTRIBUTE};
         }
 
         Rc<Property> initial() const override {
@@ -106,12 +105,11 @@ export struct WidthProperty : Property {
 
 export struct HeightProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
+
         Symbol name() const override {
             return Properties::HEIGHT;
-        }
-
-        Flags<Options> flags() const override {
-            return {PRESENTATION_ATTRIBUTE};
         }
 
         Rc<Property> initial() const override {

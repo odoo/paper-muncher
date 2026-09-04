@@ -19,12 +19,11 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-transforms/#transform-origin-property
 export struct TransformOriginProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
+
         Symbol name() const override {
             return Properties::TRANSFORM_ORIGIN;
-        }
-
-        Flags<Options> flags() const override {
-            return {PRESENTATION_ATTRIBUTE};
         }
 
         Rc<Property> initial() const override {
@@ -97,12 +96,11 @@ export struct TransformBoxProperty : Property {
 // https://drafts.csswg.org/css-transforms/#propdef-transform
 export struct TransformProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(PRESENTATION_ATTRIBUTE) {}
+
         Symbol name() const override {
             return Properties::TRANSFORM;
-        }
-
-        Flags<Options> flags() const override {
-            return {PRESENTATION_ATTRIBUTE};
         }
 
         Rc<Property> initial() const override {

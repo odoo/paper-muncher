@@ -16,12 +16,11 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-inline/#line-height-property
 export struct LineHeightProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::LINE_HEIGHT;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -200,12 +199,11 @@ export struct VerticalAlignProperty : Property {
     };
 
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::VERTICAL_ALIGN;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {
