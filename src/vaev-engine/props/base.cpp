@@ -133,6 +133,10 @@ export struct Property : Meta::NoCopy {
     // https://drafts.css-houdini.org/css-properties-values-api/#custom-property-registration
     struct Registration : Meta::NoCopy {
         Opt<Weak<Registration>> _self;
+        Flags<Options> flags = {};
+
+        Registration(Flags<Options> flags = {})
+            : flags(flags) {}
 
         Rc<Registration> self() const {
             return _self
@@ -157,10 +161,6 @@ export struct Property : Meta::NoCopy {
             return {};
         }
 
-        virtual Flags<Options> flags() const {
-            return {};
-        }
-
         // https://drafts.csswg.org/css-cascade/#initial-value
         virtual Rc<Property> initial() const = 0;
 
@@ -170,7 +170,7 @@ export struct Property : Meta::NoCopy {
             // NOTE: This is the slow fallback path for properties that are not
             //       commonly inherited. Any property marked with the INHERITED
             //       flag should override this method with a faster implementation.
-            if (flags().has(INHERITED))
+            if (flags.has(INHERITED))
                 logFatal("property {:#} marked as INHERITED is using the slow fallback path. override inherit()!", name());
 
             // NOTE: Since we are copying computed values, we don't expect much new computation to happen
@@ -227,11 +227,11 @@ export struct Property : Meta::NoCopy {
     }
 
     bool isCustomProperty() const {
-        return registration->flags().has(CUSTOM_PROPERTY);
+        return registration->flags.has(CUSTOM_PROPERTY);
     }
 
     bool isShorthandProperty() const {
-        return registration->flags().has(SHORTHAND_PROPERTY);
+        return registration->flags.has(SHORTHAND_PROPERTY);
     }
 
     virtual bool isDefaulted() const {
@@ -240,7 +240,7 @@ export struct Property : Meta::NoCopy {
 
     /// Determines whether this property instance represents a parsing failure or an unrecognized CSS declaration.
     virtual bool isBogusProperty() const {
-        return registration->flags().has(BOGUS_REGISTRATION);
+        return registration->flags.has(BOGUS_REGISTRATION);
     }
 
     bool operator==(Property const& other) const {
@@ -259,19 +259,12 @@ struct CustomProperty : Property {
     struct Registration : Property::Registration {
         Symbol _name;
 
-        Registration(Symbol name) : _name(name) {}
+        Registration(Symbol name)
+            : Property::Registration({INHERITED, CUSTOM_PROPERTY, ALL_EXCLUDED, BULK_INHERITED}),
+              _name(name) {}
 
         Symbol name() const override {
             return _name;
-        }
-
-        Flags<Options> flags() const override {
-            return {
-                INHERITED,
-                CUSTOM_PROPERTY,
-                ALL_EXCLUDED,
-                BULK_INHERITED,
-            };
         }
 
         ComputationPhase computationPhase() const override {
@@ -510,7 +503,7 @@ struct DefaultedProperty : Property {
             // The unset CSS-wide keyword acts as either inherit or initial,
             // depending on whether the property is inherited or not.
             // https://drafts.csswg.org/css-cascade/#inherit-initial
-            if (registration->flags().has(INHERITED))
+            if (registration->flags.has(INHERITED))
                 return registration->load(parent)->expandShorthand(registry, parent, child);
 
             return registration->initial()->expandShorthand(registry, parent, child);
@@ -537,7 +530,7 @@ struct DefaultedProperty : Property {
             // The unset CSS-wide keyword acts as either inherit or initial,
             // depending on whether the property is inherited or not.
             // https://drafts.csswg.org/css-cascade/#inherit-initial
-            if (registration->flags().has(INHERITED))
+            if (registration->flags.has(INHERITED))
                 registration->load(parent)->apply(parent, c, cx);
             else
                 registration->initial()->apply(parent, c, cx);
@@ -565,12 +558,9 @@ struct BogusProperty : Property {
     struct Registration : Property::Registration {
         Symbol _name;
 
-        Registration(Symbol name)
-            : _name(name) {}
-
-        Flags<Options> flags() const override {
-            return {BOGUS_REGISTRATION};
-        }
+        Registration(Symbol const name)
+            : Property::Registration(BOGUS_REGISTRATION),
+              _name(name) {}
 
         Symbol name() const override {
             return _name;
@@ -638,7 +628,7 @@ export struct RegisteredPropertySet {
         // Registrations are append-only and property names must be unique.
         assert$(not _registrations.lookup(propertyName));
 
-        auto registrationFlags = registration->flags();
+        auto registrationFlags = registration->flags;
 
         if (registrationFlags.has(Property::PRESENTATION_ATTRIBUTE))
             _presentationAttributes.put(propertyName, registration);
@@ -703,7 +693,7 @@ export struct RegisteredPropertySet {
         if (not _memoInitialComputedValues) {
             auto initial = makeRc<ComputedValues>();
             for (auto& [_, registration] : registrations().iterItems())
-                if (not registration->flags().has(Property::SHORTHAND_PROPERTY))
+                if (not registration->flags.has(Property::SHORTHAND_PROPERTY))
                     registration->initial()->apply(*initial, *initial, cx);
             _memoInitialComputedValues = Some(initial);
         }
@@ -770,7 +760,7 @@ export struct RegisteredPropertySet {
         Cursor cursor = content;
 
         auto registration = try$(resolveRegistration(propertyName, options));
-        if (registration->flags().has(Property::BOGUS_REGISTRATION))
+        if (registration->flags.has(Property::BOGUS_REGISTRATION))
             return Ok(makeRc<BogusProperty>(registration, content, Error::invalidData("unknow property")));
 
         eatWhitespace(cursor);

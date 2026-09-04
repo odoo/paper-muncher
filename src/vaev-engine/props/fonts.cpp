@@ -18,12 +18,11 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-fonts-4/#font-family-prop
 export struct FontFamilyProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::FONT_FAMILY;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         ComputationPhase computationPhase() const override {
@@ -73,12 +72,11 @@ export struct FontFamilyProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-weight-prop
 export struct FontWeightProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::FONT_WEIGHT;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         ComputationPhase computationPhase() const override {
@@ -119,6 +117,9 @@ export struct FontWeightProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-width-prop
 export struct FontWidthProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::FONT_WIDTH;
         }
@@ -126,10 +127,6 @@ export struct FontWidthProperty : Property {
         // https://drafts.csswg.org/css-fonts/#font-stretch-prop
         Vec<Symbol> legacyAlias() const override {
             return {"font-stretch"_sym};
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         ComputationPhase computationPhase() const override {
@@ -170,12 +167,11 @@ export struct FontWidthProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-style-prop
 export struct FontStyleProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::FONT_STYLE;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         ComputationPhase computationPhase() const override {
@@ -216,12 +212,11 @@ export struct FontStyleProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-size-prop
 export struct FontSizeProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(INHERITED) {}
+
         Symbol name() const override {
             return Properties::FONT_SIZE;
-        }
-
-        Flags<Options> flags() const override {
-            return {INHERITED};
         }
 
         ComputationPhase computationPhase() const override {
@@ -280,12 +275,11 @@ export struct FontProperty : Property {
     };
 
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::FONT;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {

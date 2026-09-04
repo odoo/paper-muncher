@@ -175,12 +175,11 @@ export struct OutlineOffsetProperty : Property {
 // https://drafts.csswg.org/css-ui/#outline
 export struct OutlineProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::OUTLINE;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {

@@ -154,12 +154,11 @@ export struct OverflowInlineProperty : Property {
 // https://www.w3.org/TR/css-overflow-3/#propdef-overflow
 export struct OverflowProperty : Property {
     struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(SHORTHAND_PROPERTY) {}
+
         Symbol name() const override {
             return Properties::OVERFLOW;
-        }
-
-        Flags<Options> flags() const override {
-            return {SHORTHAND_PROPERTY};
         }
 
         Rc<Property> initial() const override {
