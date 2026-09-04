@@ -266,10 +266,22 @@ static bool _matchNthChild(PseudoClassSelector::AnBofS const& anbOfS, Gc::Ref<Do
         return anb.match(index + 1);
     }
 
-    auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
-        return node->is<Dom::Element>() != NONE;
-    };
-    auto index = reverseLookup ? element->reverseIndex(filterFunc) : element->index(filterFunc);
+    usize index = 0;
+    if (not reverseLookup) {
+        for (auto node = element->previousSibling(); node; node = node->previousSibling()) {
+            if (auto el = node->is<Dom::Element>()) {
+                index = el->nthChild.unwrap();
+                break;
+            }
+        }
+
+        element->nthChild = Some(index + 1);
+    } else {
+        auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
+            return node->is<Dom::Element>() != NONE;
+        };
+        index = element->reverseIndex(filterFunc);
+    }
     return anb.match(index + 1);
 }
 
@@ -287,14 +299,25 @@ static bool _matchNthOfType(AnB const& anb, Gc::Ref<Dom::Element> element, bool 
 
     auto name = element->qualifiedName;
 
-    auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
-        auto el = node->is<Dom::Element>();
-        return el ? el->qualifiedName == name : false;
-    };
+    usize index = 0;
+    if (not reverseLookup) {
+        for (auto node = element->previousSibling(); node; node = node->previousSibling()) {
+            if (auto el = node->is<Dom::Element>(); el and el->qualifiedName == name) {
+                index = el->nthOfType.unwrap();
+                break;
+            }
+        }
 
-    auto index = reverseLookup
-                     ? element->reverseIndex(filterFunc)
-                     : element->index(filterFunc);
+        element->nthOfType = Some(index + 1);
+    } else {
+        auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
+            auto el = node->is<Dom::Element>();
+            return el ? el->qualifiedName == name : false;
+        };
+
+        index = element->reverseIndex(filterFunc);
+    }
+
     return anb.match(index + 1);
 }
 
