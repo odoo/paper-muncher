@@ -133,6 +133,10 @@ export struct Property : Meta::NoCopy {
     // https://drafts.css-houdini.org/css-properties-values-api/#custom-property-registration
     struct Registration : Meta::NoCopy {
         Opt<Weak<Registration>> _self;
+        Symbol name;
+
+        Registration(Symbol name)
+            : name(name) {}
 
         Rc<Registration> self() const {
             return _self
@@ -142,9 +146,6 @@ export struct Property : Meta::NoCopy {
         }
 
         virtual ~Registration() = default;
-
-        /// Returns the canonical CSS identifier for this property (e.g., `color`, `margin-top`).
-        virtual Symbol name() const = 0;
 
         /// The pass in which the property belongs, non-trivial
         /// overrides of this method should be justified with a comment.
@@ -171,7 +172,7 @@ export struct Property : Meta::NoCopy {
             //       commonly inherited. Any property marked with the INHERITED
             //       flag should override this method with a faster implementation.
             if (flags().has(INHERITED))
-                logFatal("property {:#} marked as INHERITED is using the slow fallback path. override inherit()!", name());
+                logFatal("property {:#} marked as INHERITED is using the slow fallback path. override inherit()!", name);
 
             // NOTE: Since we are copying computed values, we don't expect much new computation to happen
             ComputationContext dummy{};
@@ -200,17 +201,17 @@ export struct Property : Meta::NoCopy {
 
     virtual Vec<Rc<Property>> expandShorthand(RegisteredPropertySet&, [[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child) const {
         if (isBogusProperty())
-            logFatal("trying to expand {:#} which is a bogus property", registration->name());
+            logFatal("trying to expand {:#} which is a bogus property", registration->name);
 
         if (isShorthandProperty())
-            logFatal("shorthand property {:#} is missing expandShorthand() implementation", registration->name());
+            logFatal("shorthand property {:#} is missing expandShorthand() implementation", registration->name);
 
-        logFatal("expandShorthand() called on non shorthand property {:#}", registration->name());
+        logFatal("expandShorthand() called on non shorthand property {:#}", registration->name);
         return {};
     }
 
     virtual void apply([[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child, [[maybe_unused]] ComputationContext const& cx) const {
-        logFatal("longhand property {:#} is missing apply() implementation", registration->name());
+        logFatal("longhand property {:#} is missing apply() implementation", registration->name);
     }
 
     virtual void repr(Io::Emit& e) const = 0;
@@ -257,13 +258,8 @@ export struct Property : Meta::NoCopy {
 // this symbolizes a custom property, it starts with `--` and can be used to store a value that can be reused in the stylesheet
 struct CustomProperty : Property {
     struct Registration : Property::Registration {
-        Symbol _name;
-
-        Registration(Symbol name) : _name(name) {}
-
-        Symbol name() const override {
-            return _name;
-        }
+        Registration(Symbol name)
+            : Property::Registration(name) {}
 
         Flags<Options> flags() const override {
             return {
@@ -285,12 +281,12 @@ struct CustomProperty : Property {
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            if (auto maybeProp = parent.getCustomProp(_name))
-                child.setCustomProp(_name, maybeProp.unwrap());
+            if (auto maybeProp = parent.getCustomProp(name))
+                child.setCustomProp(name, maybeProp.unwrap());
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<CustomProperty>(self(), c.getCustomProp(_name).unwrapOr({}));
+            return makeRc<CustomProperty>(self(), c.getCustomProp(name).unwrapOr({}));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -306,7 +302,7 @@ struct CustomProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.setCustomProp(registration->name(), _value);
+        c.setCustomProp(registration->name, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -332,7 +328,7 @@ struct ToggleProperty : Property {
         Map<Symbol, Vec<Rc<Property>>> props;
         for (auto& shorthand : _value)
             for (auto& longhand : shorthand->expandShorthand(registry, parent, child))
-                props.lookupOrPutDefault(longhand->registration->name()).pushBack(longhand);
+                props.lookupOrPutDefault(longhand->registration->name).pushBack(longhand);
 
         return props.mutIterValue() |
                Select([](Vec<Rc<Property>>& v) {
@@ -451,14 +447,14 @@ struct DeferredProperty : Property {
 
         auto prop = registration->parse(cursor);
         if (not prop and debugProperties)
-            logWarn("failed to parse declaration: {}: {}: {}", registration->name(), prop, out);
+            logWarn("failed to parse declaration: {}: {}: {}", registration->name, prop, out);
 
         return prop;
     }
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
         if (not isShorthandProperty())
-            logFatal("expandShorthand called on non shorthand property {:#}", registration->name());
+            logFatal("expandShorthand called on non shorthand property {:#}", registration->name);
 
         auto prop = _expandProperty(child);
         if (not prop)
@@ -563,17 +559,11 @@ struct DefaultedProperty : Property {
 // Represent a property that could not be parsed
 struct BogusProperty : Property {
     struct Registration : Property::Registration {
-        Symbol _name;
-
         Registration(Symbol name)
-            : _name(name) {}
+            : Property::Registration(name) {}
 
         Flags<Options> flags() const override {
             return {BOGUS_REGISTRATION};
-        }
-
-        Symbol name() const override {
-            return _name;
         }
 
         Rc<Property> initial() const override {
@@ -634,7 +624,7 @@ export struct RegisteredPropertySet {
             _presentationAttributes.put(propertyName, registration);
 
         for (auto legacyAlias : registration->legacyAlias())
-            _legacyAlias.put(legacyAlias, registration->name());
+            _legacyAlias.put(legacyAlias, registration->name);
 
         _registrations.put(propertyName, registration);
     }
@@ -643,7 +633,7 @@ export struct RegisteredPropertySet {
     void registerProperty() {
         auto registration = makeRc<typename Property::Registration>();
         registration->_self = Some(registration);
-        registerProperty(registration->name(), registration);
+        registerProperty(registration->name, registration);
     }
 
     Rc<Property::Registration> registerCustomProperty(Symbol const& propertyName) {

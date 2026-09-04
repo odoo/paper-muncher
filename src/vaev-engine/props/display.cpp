@@ -16,9 +16,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-display
 export struct DisplayProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::DISPLAY;
-        }
+        Registration() : Property::Registration(Properties::DISPLAY) {}
 
         Rc<Property> initial() const override {
             return makeRc<DisplayProperty>(self(), Display{Display::FLOW, Display::INLINE});
@@ -51,9 +49,7 @@ export struct DisplayProperty : Property {
 // https://drafts.csswg.org/css-content/#content-property
 export struct ContentProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::CONTENT;
-        }
+        Registration() : Property::Registration(Properties::CONTENT) {}
 
         Rc<Property> initial() const override {
             return makeRc<ContentProperty>(self(), Keywords::NORMAL);
@@ -85,9 +81,7 @@ export struct ContentProperty : Property {
 // https://www.w3.org/TR/css-display-3/#order-property
 export struct OrderProperty : Property {
     struct Registration : Property::Registration {
-        Symbol name() const override {
-            return Properties::ORDER;
-        }
+        Registration() : Property::Registration(Properties::ORDER) {}
 
         Rc<Property> initial() const override {
             return makeRc<OrderProperty>(self(), Integer{0});
