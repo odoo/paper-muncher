@@ -613,6 +613,8 @@ export struct RegisteredPropertySet {
     Map<Symbol, Rc<Property::Registration>> _registrations;
     Map<Symbol, Rc<Property::Registration>> _presentationAttributes;
 
+    Vec<Rc<Property::Registration>> _individuallyInherited;
+
     enum struct Options : u8 {
         GENERATE_BOGUS = 1 << 0,
         GENERATE_CUSTOM_PROPERTY = 1 << 1,
@@ -629,12 +631,24 @@ export struct RegisteredPropertySet {
         return _registrations;
     }
 
-    void registerProperty(Symbol const& propertyName, Rc<Property::Registration> registration) {
-        if (registration->flags().has(Property::PRESENTATION_ATTRIBUTE))
+    void registerProperty(
+        Symbol const& propertyName,
+        Rc<Property::Registration> registration
+    ) {
+        // Registrations are append-only and property names must be unique.
+        assert$(not _registrations.lookup(propertyName));
+
+        auto registrationFlags = registration->flags();
+
+        if (registrationFlags.has(Property::PRESENTATION_ATTRIBUTE))
             _presentationAttributes.put(propertyName, registration);
 
         for (auto legacyAlias : registration->legacyAlias())
             _legacyAlias.put(legacyAlias, registration->name());
+
+        if (registrationFlags.has(Property::INHERITED) and
+            not registrationFlags.has(Property::BULK_INHERITED))
+            _individuallyInherited.pushBack(registration);
 
         _registrations.put(propertyName, registration);
     }
@@ -704,13 +718,8 @@ export struct RegisteredPropertySet {
         child.customProps = parent.customProps;
 
         // Handle the rest of the properties
-        for (auto& v : _registrations.iterValue()) {
-            auto registrationFlags = v->flags();
-            if (registrationFlags.has({Property::INHERITED}) and
-                not registrationFlags.has({Property::BULK_INHERITED})) {
-                v->inherit(parent, child);
-            }
-        }
+        for (auto& registration : _individuallyInherited)
+            registration->inherit(parent, child);
     }
 
     Rc<ComputedValues> inheritsComputedValues(ComputedValues const& parent) const {
