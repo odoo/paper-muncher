@@ -9,6 +9,12 @@ namespace Vaev::Style {
 
 export struct Namespace {
     Symbol default_ = Html::NAMESPACE;
+
+    // Whether `default_` came from an actual `@namespace` declaration rather than
+    // from the fallback above. Only an explicitly declared default namespace gets
+    // applied to the universal selector implied by type-less compound selectors.
+    bool explicitDefault = false;
+
     Map<Symbol, Symbol> prefixes = {};
 
     Res<Symbol> lookup(Symbol sym) const {

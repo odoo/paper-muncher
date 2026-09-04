@@ -25,7 +25,7 @@ export struct TextAlignProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -90,7 +90,7 @@ export struct TextTransformProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -147,7 +147,7 @@ export struct WhiteSpaceProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         Rc<Property> initial() const override {

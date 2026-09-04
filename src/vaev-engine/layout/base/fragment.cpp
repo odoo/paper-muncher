@@ -265,7 +265,7 @@ export struct SvgShapeFragment : Fragment {
         return objectBoundingBox();
     }
 
-    Opt<Gfx::Fill> resolveFill(SvgProps const& svg) {
+    Opt<Gfx::Fill> resolveFill(SvgPaintProps const& svg) {
         if (Math::epsilonEq(svg.fillOpacity, 0.))
             return NONE;
 
@@ -282,7 +282,7 @@ export struct SvgShapeFragment : Fragment {
         return NONE;
     }
 
-    Opt<Gfx::Stroke> resolveStroke(SvgProps const& svg) {
+    Opt<Gfx::Stroke> resolveStroke(SvgPaintProps const& svg) {
         if (Math::epsilonEq(svg.strokeOpacity, 0.))
             return NONE;
 
@@ -312,7 +312,7 @@ export struct SvgShapeFragment : Fragment {
     void paintContent(Gfx::Canvas& g, Vec<OutOfBandOutline>& outOfBandOutlines) override {
         (void)outOfBandOutlines;
 
-        auto const& style = *originatingBox().style->svg;
+        auto const& style = *originatingBox().style->svgPaint;
 
         Opt<Gfx::Fill> resolvedFill = resolveFill(style);
         Opt<Gfx::Stroke> resolvedStroke = resolveStroke(style);

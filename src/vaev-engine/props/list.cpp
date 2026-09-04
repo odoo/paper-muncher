@@ -16,7 +16,7 @@ struct ListStyleImageProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -59,7 +59,7 @@ struct ListStyleTypeProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -102,7 +102,7 @@ struct ListStylePositionProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         Rc<Property> initial() const override {
@@ -232,7 +232,7 @@ struct MarkerSideProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {

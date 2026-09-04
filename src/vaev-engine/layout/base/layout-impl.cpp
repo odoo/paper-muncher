@@ -87,7 +87,7 @@ Au _snapLengthAsBorderWidth(Au v) {
 
 InsetsAu computeBorders(Tree& tree, Box& box) {
     // NOTE: In borders collapse mode, we assume that the table box borders are 'transfered' to the cells
-    if (box.style->display == Display::TABLE_BOX and box.style->table->collapse == BorderCollapse::COLLAPSE) {
+    if (box.style->display == Display::TABLE_BOX and box.style->tableInherited->collapse == BorderCollapse::COLLAPSE) {
         return InsetsAu{};
     }
 

@@ -55,19 +55,15 @@ export struct CaptionSideProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         Rc<Property> initial() const override {
             return makeRc<CaptionSideProperty>(self(), CaptionSide::TOP);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.table.cow().captionSide = parent.table->captionSide;
-        }
-
         Rc<Property> load(ComputedValues const& s) const override {
-            return makeRc<CaptionSideProperty>(self(), s.table->captionSide);
+            return makeRc<CaptionSideProperty>(self(), s.tableInherited->captionSide);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -81,7 +77,7 @@ export struct CaptionSideProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.table.cow().captionSide = _value;
+        c.tableInherited.cow().captionSide = _value;
     }
 
     void repr(Io::Emit& e) const override {

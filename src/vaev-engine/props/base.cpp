@@ -613,6 +613,11 @@ export struct RegisteredPropertySet {
     Map<Symbol, Rc<Property::Registration>> _registrations;
     Map<Symbol, Rc<Property::Registration>> _presentationAttributes;
 
+    // The registrations `inheritsComputedValues` has to visit one by one, kept apart
+    // from `_registrations` so inheritance does not walk the whole map — and a hash
+    // map at that — once per element only to discard almost every entry.
+    Vec<Rc<Property::Registration>> _inheritedRegistrations;
+
     enum struct Options : u8 {
         GENERATE_BOGUS = 1 << 0,
         GENERATE_CUSTOM_PROPERTY = 1 << 1,
@@ -630,8 +635,13 @@ export struct RegisteredPropertySet {
     }
 
     void registerProperty(Symbol const& propertyName, Rc<Property::Registration> registration) {
-        if (registration->flags().has(Property::PRESENTATION_ATTRIBUTE))
+        auto flags = registration->flags();
+
+        if (flags.has(Property::PRESENTATION_ATTRIBUTE))
             _presentationAttributes.put(propertyName, registration);
+
+        if (flags.has(Property::INHERITED) and not flags.has(Property::BULK_INHERITED))
+            _inheritedRegistrations.pushBack(registration);
 
         for (auto legacyAlias : registration->legacyAlias())
             _legacyAlias.put(legacyAlias, registration->name());
@@ -701,16 +711,26 @@ export struct RegisteredPropertySet {
     // https://www.w3.org/TR/css-cascade-4/#inheriting
     void inheritsComputedValues(ComputedValues const& parent, ComputedValues& child) const {
         // Apply defaulted inheritance fast path for property that supports it.
+        //
+        // Every property in these groups is inherited, and each covers exactly one
+        // field, so handing the child the parent's group is equivalent to copying
+        // each field across — but shares the allocation instead of copying it. The
+        // cascade runs after this, and the first write to a group copies it back
+        // apart, so the sharing only lasts as long as the child agrees with its
+        // parent. Properties taking this path are flagged BULK_INHERITED and skipped
+        // by the per-property loop below.
         child.customProps = parent.customProps;
+        child.font = parent.font;
+        child.list = parent.list;
+        child.text = parent.text;
+        child.svgPaint = parent.svgPaint;
+        child.tableInherited = parent.tableInherited;
 
-        // Handle the rest of the properties
-        for (auto& v : _registrations.iterValue()) {
-            auto registrationFlags = v->flags();
-            if (registrationFlags.has({Property::INHERITED}) and
-                not registrationFlags.has({Property::BULK_INHERITED})) {
-                v->inherit(parent, child);
-            }
-        }
+        // Handle the rest of the properties. The filtering this used to do per element
+        // is a property of the registration, not of the element, so it happens once in
+        // `registerProperty` instead.
+        for (auto const& registration : _inheritedRegistrations)
+            registration->inherit(parent, child);
     }
 
     Rc<ComputedValues> inheritsComputedValues(ComputedValues const& parent) const {

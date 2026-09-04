@@ -180,10 +180,12 @@ export struct NamespaceRule {
         }
 
         // Store the namespace.
-        if (maybePrefix)
+        if (maybePrefix) {
             ns.prefixes.put(maybePrefix.unwrap(), Symbol::from(maybeUrl.unwrap()));
-        else
+        } else {
             ns.default_ = Symbol::from(maybeUrl.unwrap());
+            ns.explicitDefault = true;
+        }
 
         return {maybePrefix, Symbol::from(maybeUrl.take())};
     }

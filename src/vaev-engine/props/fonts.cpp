@@ -23,7 +23,7 @@ export struct FontFamilyProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         ComputationPhase computationPhase() const override {
@@ -78,7 +78,7 @@ export struct FontWeightProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         ComputationPhase computationPhase() const override {
@@ -129,7 +129,7 @@ export struct FontWidthProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         ComputationPhase computationPhase() const override {
@@ -175,7 +175,7 @@ export struct FontStyleProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         ComputationPhase computationPhase() const override {
@@ -221,7 +221,7 @@ export struct FontSizeProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED};
+            return {INHERITED, BULK_INHERITED};
         }
 
         ComputationPhase computationPhase() const override {

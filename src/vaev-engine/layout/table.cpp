@@ -913,11 +913,17 @@ export struct TableFormatingContext : FormatingContext {
             }
         }
 
-        colWidth.ensure(colWidthOrNone.len());
+        // Assigning rather than appending: this runs once per fragment, and `ensure`
+        // only reserves. Appending grew `colWidth` by one full row of columns per
+        // page, which made the row height cache miss every time — and left every
+        // consumer of `colWidth` walking a vector that got longer with each page.
+        Vec<Au> newColWidth;
+        newColWidth.ensure(colWidthOrNone.len());
         for (usize i = 0; i < grid.size.x; ++i) {
             auto finalColWidth = colWidthOrNone[i].unwrapOr(0_au);
-            colWidth.pushBack(finalColWidth);
+            newColWidth.pushBack(finalColWidth);
         }
+        colWidth = std::move(newColWidth);
     }
 
     // MARK: Auto Table Layout -------------------------------------------------
@@ -1276,6 +1282,55 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
+    // Row heights are a pure function of the grid content and the resolved column
+    // widths; nothing in computeRowHeights depends on the fragmentainer. Since it
+    // lays out every cell in the table to measure it, running it once per fragment
+    // makes a table broken across p pages cost O(rows * p) — quadratic, because p
+    // itself grows with the row count. Recompute only when the widths it depends on
+    // actually moved, and hand back the pristine heights otherwise.
+    //
+    // The heights must be cached *before* the surplus distribution in
+    // computeWidthAndHeight mutates rowHeight in place, or replaying that
+    // distribution on each fragment would compound it.
+    Opt<Vec<Au>> rowHeightCache;
+    Vec<Au> rowHeightCacheColWidth;
+    Au rowHeightCacheTableUsedWidth = 0_au;
+    usize rowHeightCacheNumAutoRows = 0;
+    Au rowHeightCacheTotalNonAutoHeight = 0_au;
+
+    static bool _sameWidths(Vec<Au> const& a, Vec<Au> const& b) {
+        if (a.len() != b.len())
+            return false;
+        for (usize i = 0; i < a.len(); ++i)
+            if (a[i] != b[i])
+                return false;
+        return true;
+    }
+
+    void computeRowHeightsCached(Tree& tree) {
+        if (rowHeightCache and
+            rowHeightCacheTableUsedWidth == tableUsedWidth and
+            _sameWidths(rowHeightCacheColWidth, colWidth)) {
+            rowHeight = rowHeightCache.unwrap();
+            numAutoHeightRows = rowHeightCacheNumAutoRows;
+            totalNonAutoHeight = rowHeightCacheTotalNonAutoHeight;
+            return;
+        }
+
+        // These accumulate over the whole grid, so they have to start from zero on
+        // every recompute rather than carrying the previous fragment's totals.
+        numAutoHeightRows = 0;
+        totalNonAutoHeight = 0_au;
+
+        computeRowHeights(tree);
+
+        rowHeightCache.emplace(rowHeight);
+        rowHeightCacheColWidth = colWidth;
+        rowHeightCacheTableUsedWidth = tableUsedWidth;
+        rowHeightCacheNumAutoRows = numAutoHeightRows;
+        rowHeightCacheTotalNonAutoHeight = totalNonAutoHeight;
+    }
+
     Vec2Au spacing;
     Vec2Au tableBoxSize = {}, headerSize = {}, footerSize = {};
     Vec<AxisAndGroupsIdxs> rowGroupIdxs, colGroupIdxs;
@@ -1300,12 +1355,12 @@ export struct TableFormatingContext : FormatingContext {
     bool useBordersCollapse = false;
 
     void build(Tree& tree, Box& box) override {
-        useBordersCollapse = box.style->table->collapse == BorderCollapse::COLLAPSE;
+        useBordersCollapse = box.style->tableInherited->collapse == BorderCollapse::COLLAPSE;
 
         if (not useBordersCollapse)
             spacing = {
-                resolve(tree, box, box.style->table->spacing.horizontal),
-                resolve(tree, box, box.style->table->spacing.vertical),
+                resolve(tree, box, box.style->tableInherited->spacing.horizontal),
+                resolve(tree, box, box.style->tableInherited->spacing.vertical),
             };
 
         buildHTMLTable(box);
@@ -1357,7 +1412,7 @@ export struct TableFormatingContext : FormatingContext {
             computeFixedColWidths(tree, box, *input.knownSize.width);
         }
 
-        computeRowHeights(tree);
+        computeRowHeightsCached(tree);
 
         auto usedVerticalSpace = (iter(rowHeight) | Sum()) + spacing.y * (grid.size.y + 1);
 

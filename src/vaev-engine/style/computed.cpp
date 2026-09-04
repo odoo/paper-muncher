@@ -50,11 +50,13 @@ export struct ComputedValues {
     Cow<ClipProps> clip;
     Cow<TransformProps> transform;
     Cow<TableProps> table;
+    Cow<TableInheritedProps> tableInherited;
     Cow<FontProps> font;
     Cow<TextProps> text;
     Cow<FlexProps> flex;
     Cow<BreakProps> break_;
     Cow<SvgProps> svg;
+    Cow<SvgPaintProps> svgPaint;
     Cow<CounterProps> counters;
     Cow<ListProps> list;
 
