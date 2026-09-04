@@ -560,4 +560,27 @@ test$("parse-misnested-content-in-table") {
     return Ok();
 }
 
+test$("parse-duplicate-body-merges-attributes") {
+    Gc::Heap gc;
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
+    Html::HtmlParser parser{gc, dom};
+
+    auto diags = Diag::Collector::ignore();
+    parser.write("<html><body class=\"first\"><body class=\"second\" dir=\"rtl\"></body></html>"s, diags);
+
+    auto html = dom->firstChild()->is<Element>();
+    expectNe$(html, nullptr);
+    auto body = html->firstChild()->nextSibling()->is<Element>();
+    expectNe$(body, nullptr);
+
+    expectEq$(body->attributes.len(), 2uz);
+    expectEq$(body->getAttribute(Dom::QualifiedName{NONE, "class"_sym}), "first"s);
+    expect$(body->classList.contains("first"s));
+    expect$(not body->classList.contains("second"s));
+
+    expectEq$(body->getAttribute(Dom::QualifiedName{NONE, "dir"_sym}), "rtl"s);
+
+    return Ok();
+}
+
 } // namespace Vaev::Dom::Tests

@@ -11,7 +11,6 @@ import :style.media;
 import :style.origin;
 import :style.page;
 import :style.selector;
-import :style.namespace_;
 import :style.matcher;
 
 using namespace Karm;
@@ -28,7 +27,7 @@ export struct StyleRule {
     Vec<Rc<Property>> props;
     Origin origin = Origin::AUTHOR;
 
-    static StyleRule parse(RegisteredPropertySet& propertyRegistry, Css::Sst const& sst, Origin origin, Namespace& ns) {
+    static StyleRule parse(RegisteredPropertySet& propertyRegistry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
@@ -102,7 +101,7 @@ export struct MediaRule {
     MediaQuery media;
     Vec<Rule> rules;
 
-    static MediaRule parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, Namespace& ns);
+    static MediaRule parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns);
 
     bool match(Media const& m) const {
         return media.match(m);
@@ -152,7 +151,7 @@ export struct NamespaceRule {
     Opt<Symbol> prefix;
     Symbol url;
 
-    static NamespaceRule parse(Css::Sst const& sst, Namespace& ns) {
+    static NamespaceRule parse(Css::Sst const& sst, NamespaceScope& ns) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
@@ -183,7 +182,7 @@ export struct NamespaceRule {
         if (maybePrefix)
             ns.prefixes.put(maybePrefix.unwrap(), Symbol::from(maybeUrl.unwrap()));
         else
-            ns.default_ = Symbol::from(maybeUrl.unwrap());
+            ns.default_ = Some(Symbol::from(maybeUrl.unwrap()));
 
         return {maybePrefix, Symbol::from(maybeUrl.take())};
     }
@@ -282,7 +281,7 @@ using _Rule = Union<
 export struct Rule : _Rule {
     using _Rule::_Rule;
 
-    static Rule parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, Namespace& ns) {
+    static Rule parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
@@ -313,7 +312,7 @@ export struct Rule : _Rule {
     }
 };
 
-MediaRule MediaRule::parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, Namespace& ns) {
+MediaRule MediaRule::parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
     if (sst != Css::Sst::RULE)
         panic("expected rule");
 

@@ -24,7 +24,7 @@ test$("select-attr-spec-exact") {
     {
         el->setAttribute(Html::ID_ATTR, "test"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::EXACT,
             .value = "test"s,
@@ -35,7 +35,7 @@ test$("select-attr-spec-exact") {
     {
         el->setAttribute(Html::ID_ATTR, "tesi"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::EXACT,
             .value = "test"s,
@@ -53,7 +53,7 @@ test$("select-attr-spec-contains") {
     {
         el->setAttribute(Html::ID_ATTR, "some test value"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::CONTAINS,
             .value = "test"s,
@@ -64,7 +64,7 @@ test$("select-attr-spec-contains") {
     {
         el->setAttribute(Html::ID_ATTR, "some testi value"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::CONTAINS,
             .value = "test"s,
@@ -75,7 +75,7 @@ test$("select-attr-spec-contains") {
     {
         el->setAttribute(Html::ID_ATTR, "some\ttest\nvalue"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::CONTAINS,
             .value = "test"s,
@@ -91,16 +91,6 @@ test$("select-attr-spec-namespace") {
     auto el = gc.alloc<Dom::Element>(Html::DIV_TAG);
 
     el->setAttribute(Dom::QualifiedName{Some(Svg::NAMESPACE), "title"_sym}, "svg-title"s);
-
-    {
-        Selector sel = AttributeSelector{
-            .qualifiedName = QualifiedNameSelector{NONE, Some("title"_sym)},
-            .case_ = AttributeSelector::SENSITIVE,
-            .match = AttributeSelector::PRESENT,
-            .value = ""s,
-        };
-        expectEq$(matchSelector(sel, el), NONE);
-    }
 
     {
         Selector sel = AttributeSelector{
@@ -125,7 +115,7 @@ test$("select-attr-spec-namespace") {
     {
         el->setAttribute(Html::CLASS_ATTR, "t bar u"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = QualifiedNameSelector{NONE, Some("class"_sym)},
+            .qualifiedName = QualifiedNameSelector{UNIVERSAL, "class"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::CONTAINS,
             .value = "bar"s,
@@ -153,7 +143,7 @@ test$("select-attr-spec-hyphenated") {
     {
         el->setAttribute(Html::ID_ATTR, "test-value"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::HYPHENATED,
             .value = "test"s,
@@ -164,7 +154,7 @@ test$("select-attr-spec-hyphenated") {
     {
         el->setAttribute(Html::ID_ATTR, "test"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::HYPHENATED,
             .value = "test"s,
@@ -175,7 +165,7 @@ test$("select-attr-spec-hyphenated") {
     {
         el->setAttribute(Html::ID_ATTR, "tesi-value"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::HYPHENATED,
             .value = "test"s,
@@ -186,7 +176,7 @@ test$("select-attr-spec-hyphenated") {
     {
         el->setAttribute(Html::ID_ATTR, "value-test"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::HYPHENATED,
             .value = "test"s,
@@ -204,7 +194,7 @@ test$("select-attr-spec-str-start-with") {
     {
         el->setAttribute(Html::ID_ATTR, "teste"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::STR_START_WITH,
             .value = "test"s,
@@ -215,7 +205,7 @@ test$("select-attr-spec-str-start-with") {
     {
         el->setAttribute(Html::ID_ATTR, "tesitest"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::STR_START_WITH,
             .value = "test"s,
@@ -226,7 +216,7 @@ test$("select-attr-spec-str-start-with") {
     {
         el->setAttribute(Html::ID_ATTR, ""s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::STR_START_WITH,
             .value = "test"s,
@@ -244,7 +234,7 @@ test$("select-attr-spec-str-end-with") {
     {
         el->setAttribute(Html::ID_ATTR, "itest"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::STR_END_WITH,
             .value = "test"s,
@@ -255,7 +245,7 @@ test$("select-attr-spec-str-end-with") {
     {
         el->setAttribute(Html::ID_ATTR, "testtesi"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::STR_END_WITH,
             .value = "test"s,
@@ -266,7 +256,7 @@ test$("select-attr-spec-str-end-with") {
     {
         el->setAttribute(Html::ID_ATTR, ""s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::STR_END_WITH,
             .value = "test"s,
@@ -284,7 +274,7 @@ test$("select-attr-spec-str-contain") {
     {
         el->setAttribute(Html::ID_ATTR, "value-test-value"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::STR_CONTAIN,
             .value = "test"s,
@@ -295,7 +285,7 @@ test$("select-attr-spec-str-contain") {
     {
         el->setAttribute(Html::ID_ATTR, "est-tesi-tes"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::STR_CONTAIN,
             .value = "test"s,
@@ -306,7 +296,7 @@ test$("select-attr-spec-str-contain") {
     {
         el->setAttribute(Html::ID_ATTR, ""s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::STR_CONTAIN,
             .value = "test"s,
@@ -324,7 +314,7 @@ test$("select-attr-spec-case") {
     {
         el->setAttribute(Html::ID_ATTR, "teST"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::INSENSITIVE,
             .match = AttributeSelector::EXACT,
             .value = "test"s,
@@ -335,7 +325,7 @@ test$("select-attr-spec-case") {
     {
         el->setAttribute(Html::ID_ATTR, "tesT"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::EXACT,
             .value = "test"s,
@@ -346,7 +336,7 @@ test$("select-attr-spec-case") {
     {
         el->setAttribute(Html::ID_ATTR, "teST"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::INSENSITIVE,
             .match = AttributeSelector::CONTAINS,
             .value = "test"s,
@@ -357,7 +347,7 @@ test$("select-attr-spec-case") {
     {
         el->setAttribute(Html::ID_ATTR, "tesT"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::CONTAINS,
             .value = "test"s,
@@ -368,7 +358,7 @@ test$("select-attr-spec-case") {
     {
         el->setAttribute(Html::ID_ATTR, "teST"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::INSENSITIVE,
             .match = AttributeSelector::STR_START_WITH,
             .value = "test"s,
@@ -379,7 +369,7 @@ test$("select-attr-spec-case") {
     {
         el->setAttribute(Html::ID_ATTR, "tesT"s);
         Selector sel = AttributeSelector{
-            .qualifiedName = Html::ID_ATTR,
+            .qualifiedName = {UNIVERSAL, "id"_sym},
             .case_ = AttributeSelector::SENSITIVE,
             .match = AttributeSelector::STR_START_WITH,
             .value = "test"s,
