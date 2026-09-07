@@ -12,7 +12,7 @@ namespace Vaev::Style {
 struct ListStyleImageProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::LIST_STYLE_IMAGE, INHERITED) {}
+            : Property::Registration(Properties::LIST_STYLE_IMAGE, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<ListStyleImageProperty>(self(), Keywords::NONE);
@@ -50,7 +50,7 @@ struct ListStyleImageProperty : Property {
 struct ListStyleTypeProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::LIST_STYLE_TYPE, INHERITED) {}
+            : Property::Registration(Properties::LIST_STYLE_TYPE, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<ListStyleTypeProperty>(self(), CustomIdent{"disc"_sym});
@@ -88,7 +88,7 @@ struct ListStyleTypeProperty : Property {
 struct ListStylePositionProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::LIST_STYLE_POSITION, INHERITED) {}
+            : Property::Registration(Properties::LIST_STYLE_POSITION, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<ListStylePositionProperty>(self(), Keywords::OUTSIDE);
@@ -208,7 +208,7 @@ struct ListStyleProperty : Property {
 struct MarkerSideProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::MARKER_SIDE, INHERITED) {}
+            : Property::Registration(Properties::MARKER_SIDE, {INHERITED, BULK_INHERITED}) {}
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             child.list.cow().markerSide = parent.list->markerSide;

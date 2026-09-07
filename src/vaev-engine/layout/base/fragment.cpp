@@ -265,15 +265,15 @@ export struct SvgShapeFragment : Fragment {
         return objectBoundingBox();
     }
 
-    Opt<Gfx::Fill> resolveFill(SvgProps const& svg) {
-        if (Math::epsilonEq(svg.fillOpacity, 0.))
+    Opt<Gfx::Fill> resolveFill(Style::SvgPaintProps const& svgPaint) {
+        if (Math::epsilonEq(svgPaint.fillOpacity, 0.))
             return NONE;
 
-        if (not svg.fill)
+        if (not svgPaint.fill)
             return NONE;
 
-        if (auto [color] = resolve(svg.fill, style().color)) {
-            color = color.withOpacity(svg.fillOpacity);
+        if (auto [color] = resolve(svgPaint.fill, style().color)) {
+            color = color.withOpacity(svgPaint.fillOpacity);
             if (color.transparent())
                 return NONE;
             return Some(Gfx::Fill{color});
@@ -282,18 +282,18 @@ export struct SvgShapeFragment : Fragment {
         return NONE;
     }
 
-    Opt<Gfx::Stroke> resolveStroke(SvgProps const& svg) {
-        if (Math::epsilonEq(svg.strokeOpacity, 0.))
+    Opt<Gfx::Stroke> resolveStroke(Style::SvgPaintProps const& svgPaint) {
+        if (Math::epsilonEq(svgPaint.strokeOpacity, 0.))
             return NONE;
 
         if (strokeWidth == 0_au)
             return NONE;
 
-        if (not svg.stroke)
+        if (not svgPaint.stroke)
             return NONE;
 
-        if (auto [color] = resolve(svg.stroke, style().color)) {
-            color = color.withOpacity(svg.strokeOpacity);
+        if (auto [color] = resolve(svgPaint.stroke, style().color)) {
+            color = color.withOpacity(svgPaint.strokeOpacity);
             if (color.transparent())
                 return NONE;
 
@@ -312,7 +312,7 @@ export struct SvgShapeFragment : Fragment {
     void paintContent(Gfx::Canvas& g, Vec<OutOfBandOutline>& outOfBandOutlines) override {
         (void)outOfBandOutlines;
 
-        auto const& style = *originatingBox().style->svg;
+        auto const& style = *originatingBox().style->svgPaint;
 
         Opt<Gfx::Fill> resolvedFill = resolveFill(style);
         Opt<Gfx::Stroke> resolvedStroke = resolveStroke(style);

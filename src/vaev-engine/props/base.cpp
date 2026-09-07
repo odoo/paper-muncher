@@ -690,6 +690,11 @@ export struct RegisteredPropertySet {
     void inheritsComputedValues(ComputedValues const& parent, ComputedValues& child) const {
         // Apply defaulted inheritance fast path for property that supports it.
         child.customProps = parent.customProps;
+        child.font = parent.font;
+        child.list = parent.list;
+        child.text = parent.text;
+        child.svgPaint = parent.svgPaint;
+        child.tableInherited = parent.tableInherited;
 
         // Handle the rest of the properties
         for (auto& registration : _individuallyInherited)

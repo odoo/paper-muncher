@@ -124,7 +124,7 @@ struct SvgFormatingContext : FormatingContext {
     }
 
     static void _commitShape(Box& box, FragmentBuilder& fragBuilder, Vec2Au relativeTo) {
-        Au resolvedStrokeWidth = Vaev::Layout::resolve(box.style->svg->strokeWidth, normalizedDiagonal(relativeTo));
+        Au resolvedStrokeWidth = Vaev::Layout::resolve(box.style->svgPaint->strokeWidth, normalizedDiagonal(relativeTo));
         auto shape = box.content.unwrap<SvgShapeElement>();
 
         switch (shape) {

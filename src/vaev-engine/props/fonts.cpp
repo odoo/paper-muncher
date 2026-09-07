@@ -19,7 +19,7 @@ namespace Vaev::Style {
 export struct FontFamilyProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::FONT_FAMILY, INHERITED) {}
+            : Property::Registration(Properties::FONT_FAMILY, {INHERITED, BULK_INHERITED}) {}
 
         ComputationPhase computationPhase() const override {
             return ComputationPhase::FONT;
@@ -69,7 +69,7 @@ export struct FontFamilyProperty : Property {
 export struct FontWeightProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::FONT_WEIGHT, INHERITED) {}
+            : Property::Registration(Properties::FONT_WEIGHT, {INHERITED, BULK_INHERITED}) {}
 
         ComputationPhase computationPhase() const override {
             return ComputationPhase::FONT;
@@ -110,7 +110,7 @@ export struct FontWeightProperty : Property {
 export struct FontWidthProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::FONT_WIDTH, INHERITED) {}
+            : Property::Registration(Properties::FONT_WIDTH, {INHERITED, BULK_INHERITED}) {}
 
         // https://drafts.csswg.org/css-fonts/#font-stretch-prop
         Vec<Symbol> legacyAlias() const override {
@@ -156,7 +156,7 @@ export struct FontWidthProperty : Property {
 export struct FontStyleProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::FONT_STYLE, INHERITED) {}
+            : Property::Registration(Properties::FONT_STYLE, {INHERITED, BULK_INHERITED}) {}
 
         ComputationPhase computationPhase() const override {
             return ComputationPhase::FONT;
@@ -197,7 +197,7 @@ export struct FontStyleProperty : Property {
 export struct FontSizeProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::FONT_SIZE, INHERITED) {}
+            : Property::Registration(Properties::FONT_SIZE, {INHERITED, BULK_INHERITED}) {}
 
         ComputationPhase computationPhase() const override {
             return ComputationPhase::FONT;
