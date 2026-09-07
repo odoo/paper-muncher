@@ -143,7 +143,7 @@ static Opt<Str> _getAttributeValue(AttributeSelector const& selector, Gc::Ref<Do
         return NONE;
 
     if (selector.qualifiedName.ns.is<Universal>())
-        return element->getAttributeUnqualified(name.unwrap());
+        return element->getAttributeUnqualified(name.unwrap().str());
 
     return element->getAttribute(selector.qualifiedName.fullyQualified());
 }

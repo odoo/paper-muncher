@@ -72,11 +72,10 @@ struct DocumentEmit {
 
             _indent();
 
-            auto attributes = element->attributes.iterItems() |
-                              Collect<Vec<Tuple<Dom::QualifiedName, Rc<Dom::Attr>>>>();
+            auto attributes = element->attributes;
 
             sort(attributes, [](auto const& a, auto const& b) {
-                return a.v0.name <=> b.v0.name;
+                return a.qualifiedName.name <=> b.qualifiedName.name;
             });
 
             for (usize i = 0; i < attributes.len(); i++) {
@@ -84,7 +83,7 @@ struct DocumentEmit {
 
                 try$(_emit("| "));
                 try$(_insertIndent());
-                try$(_emit("{}=\"{}\"\n", attribute.v0.name, attribute.v1->value));
+                try$(_emit("{}=\"{}\"\n", attribute.qualifiedName.name, attribute.value));
             }
 
             for (auto child = element->firstChild(); child; child = child->nextSibling()) {

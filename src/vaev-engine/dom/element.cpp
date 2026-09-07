@@ -65,7 +65,7 @@ export struct Element : Node {
 
     QualifiedName qualifiedName;
     // NOSPEC: Should be a NamedNodeMap
-    Map<QualifiedName, Rc<Attr>> attributes;
+    Vec<Attr> attributes;
     Opt<Rc<Style::ComputedValues>> _computedValues;
     TokenList classList;
     Opt<Gfx::Snapshot> imageContent;
@@ -86,8 +86,8 @@ export struct Element : Node {
         e(" qualifiedName={}", qualifiedName);
         if (this->attributes.len()) {
             e.indentNewline();
-            for (auto const& [name, attr] : this->attributes.iterItems()) {
-                attr->repr(e);
+            for (auto const& attr : this->attributes) {
+                attr.repr(e);
             }
             e.deindent();
         }
@@ -106,11 +106,11 @@ export struct Element : Node {
     // MARK: Attributes --------------------------------------------------------
 
     Opt<Str> id() const {
-        return getAttributeUnqualified("id"_sym);
+        return getAttributeUnqualified("id");
     }
 
     Opt<Str> style() const {
-        return getAttributeUnqualified("style"_sym);
+        return getAttributeUnqualified("style");
     }
 
     void setAttribute(QualifiedName name, String value) {
@@ -122,16 +122,29 @@ export struct Element : Node {
                 this->classList.add(class_);
             }
         }
-        this->attributes.put(name, makeRc<Attr>(name, value));
+
+        for (auto& attr : this->attributes) {
+            if (attr.qualifiedName == name) {
+                attr = Attr{name, value};
+                return;
+            }
+        }
+
+        this->attributes.emplaceBack(name, value);
     }
 
     bool hasAttribute(QualifiedName name) const {
-        return this->attributes.contains(name);
+        for (auto const& attr : this->attributes) {
+            if (attr.qualifiedName == name) {
+                return true;
+            }
+        }
+        return false;
     }
 
     bool hasAttributeUnqualified(Str name) const {
-        for (auto const& [qualifiedName, _] : this->attributes.iterItems()) {
-            if (qualifiedName.name.str() == name) {
+        for (auto const& attr : this->attributes) {
+            if (attr.qualifiedName.name == name) {
                 return true;
             }
         }
@@ -139,16 +152,16 @@ export struct Element : Node {
     }
 
     Opt<Str> getAttribute(QualifiedName name) const {
-        auto attr = this->attributes.lookup(name);
-        if (attr == NONE)
-            return NONE;
-        return Some((*attr)->value);
+        for (auto const& attr : this->attributes)
+            if (attr.qualifiedName == name)
+                return Some(attr.value);
+        return NONE;
     }
 
-    Opt<Str> getAttributeUnqualified(Symbol name) const {
-        for (auto const& [qualifiedName, attr] : this->attributes.iterItems())
-            if (qualifiedName.name == name)
-                return Some(attr->value);
+    Opt<Str> getAttributeUnqualified(Str name) const {
+        for (auto const& attr : this->attributes)
+            if (attr.qualifiedName.name == name)
+                return Some(attr.value);
         return NONE;
     }
 
