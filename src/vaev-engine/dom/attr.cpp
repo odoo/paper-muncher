@@ -10,7 +10,7 @@ using namespace Karm;
 namespace Vaev::Dom {
 
 // https://dom.spec.whatwg.org/#interface-attr
-export struct Attr : Node {
+export struct Attr {
     QualifiedName qualifiedName;
     String value;
 
@@ -18,11 +18,7 @@ export struct Attr : Node {
         : qualifiedName(qualifiedName), value(value) {
     }
 
-    NodeType nodeType() const override {
-        return NodeType::ATTRIBUTE;
-    }
-
-    void _repr(Io::Emit& e) const override {
+    void repr(Io::Emit& e) const {
         e(" qualifiedName={} value={:#}", qualifiedName, value);
     }
 };
