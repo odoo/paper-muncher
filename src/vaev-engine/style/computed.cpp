@@ -32,6 +32,39 @@ struct TransformProps {
     }
 };
 
+
+export struct TableProps {
+    TableLayout tableLayout = TableLayout::AUTO;
+    usize span = 1;
+    usize rowSpan = 1;
+    usize colSpan = 1;
+};
+
+export struct TableInheritedProps {
+    CaptionSide captionSide = CaptionSide::TOP;
+    BorderSpacing spacing = {0_au, 0_au};
+    BorderCollapse collapse = BorderCollapse::SEPARATE;
+};
+
+export struct SvgProps {
+    PercentOr<Length> x = Length{0_au};
+    PercentOr<Length> y = Length{0_au};
+    PercentOr<Length> cx = Length{0_au};
+    PercentOr<Length> cy = Length{0_au};
+    PercentOr<Length> r = Length{0_au};
+
+    Union<String, None> d = NONE;
+    Opt<SvgViewBox> viewBox = NONE;
+};
+
+export struct SvgPaintProps {
+    Number fillOpacity = 1;
+    PercentOr<Length> strokeWidth = Length{1_au};
+    Number strokeOpacity = 1;
+    SvgPaint fill = Some(Gfx::BLACK);
+    SvgPaint stroke = NONE;
+};
+
 using ClipProps = Opt<BasicShape>;
 
 export struct Inherited {};
@@ -50,11 +83,13 @@ export struct ComputedValues {
     Cow<ClipProps> clip;
     Cow<TransformProps> transform;
     Cow<TableProps> table;
+    Cow<TableInheritedProps> tableInherited;
     Cow<FontProps> font;
     Cow<TextProps> text;
     Cow<FlexProps> flex;
     Cow<BreakProps> break_;
     Cow<SvgProps> svg;
+    Cow<SvgPaintProps> svgPaint;
     Cow<CounterProps> counters;
     Cow<ListProps> list;
 

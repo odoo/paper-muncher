@@ -73,38 +73,6 @@ enum struct SvgShapeElement {
     _LEN
 };
 
-export struct SvgProps {
-    PercentOr<Length> x = Length{0_au};
-    PercentOr<Length> y = Length{0_au};
-    PercentOr<Length> cx = Length{0_au};
-    PercentOr<Length> cy = Length{0_au};
-    PercentOr<Length> r = Length{0_au};
-
-    Number fillOpacity = 1;
-    PercentOr<Length> strokeWidth = Length{1_au};
-    Number strokeOpacity = 1;
-    Union<String, None> d = NONE;
-    SvgPaint fill = Some(Gfx::BLACK);
-    SvgPaint stroke = NONE;
-    Opt<SvgViewBox> viewBox = NONE;
-
-    void repr(Io::Emit& e) const {
-        e("(svg");
-        e(" x={}", x);
-        e(" y={}", y);
-        e(" cx={}", cx);
-        e(" cy={}", cy);
-        e(" r={}", r);
-        e(" fillOpacity={}", fillOpacity);
-        e(" strokeWidth={}", strokeWidth);
-        e(" d={}", d);
-        e(" fill={}", fill);
-        e(" stroke={}", stroke);
-        e(" viewBox={}", viewBox);
-        e(")");
-    }
-};
-
 // MARK: Paint
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export template <>

@@ -204,23 +204,14 @@ export struct SvgRProperty : Property {
 export struct SvgFillProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::FILL, {PRESENTATION_ATTRIBUTE, INHERITED}) {}
+            : Property::Registration(Properties::FILL, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgFillProperty>(self(), SvgPaint{Some(Color{Gfx::BLACK})});
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            // NOTE: We bail out early if the parent has the default SVG values.
-            //       This avoids needlessly writing into the child's style, which would
-            //       trigger a copy-on-write of the whole property group for nothing.
-            if (parent.svg.defaulted())
-                return;
-            child.svg.cow().fill = parent.svg->fill;
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgFillProperty>(self(), SvgPaint{c.svg->fill});
+            return makeRc<SvgFillProperty>(self(), SvgPaint{c.svgPaint->fill});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -234,7 +225,7 @@ export struct SvgFillProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().fill = _value;
+        c.svgPaint.cow().fill = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -353,23 +344,14 @@ export struct SvgViewBoxProperty : Property {
 export struct SvgStrokeProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::STROKE, {PRESENTATION_ATTRIBUTE, INHERITED}) {}
+            : Property::Registration(Properties::STROKE, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgStrokeProperty>(self(), SvgPaint{NONE});
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            // NOTE: We bail out early if the parent has the default SVG values.
-            //       This avoids needlessly writing into the child's style, which would
-            //       trigger a copy-on-write of the whole property group for nothing.
-            if (parent.svg.defaulted())
-                return;
-            child.svg.cow().stroke = parent.svg->stroke;
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgStrokeProperty>(self(), SvgPaint{c.svg->stroke});
+            return makeRc<SvgStrokeProperty>(self(), SvgPaint{c.svgPaint->stroke});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -383,7 +365,7 @@ export struct SvgStrokeProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().stroke = _value;
+        c.svgPaint.cow().stroke = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -395,23 +377,14 @@ export struct SvgStrokeProperty : Property {
 export struct SvgStrokeOpacityProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::STROKE_OPACITY, INHERITED) {}
+            : Property::Registration(Properties::STROKE_OPACITY, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<SvgStrokeOpacityProperty>(self(), Number{1});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgStrokeOpacityProperty>(self(), c.svg->strokeOpacity);
-        }
-
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            // NOTE: We bail out early if the parent has the default SVG values.
-            //       This avoids needlessly writing into the child's style, which would
-            //       trigger a copy-on-write of the whole property group for nothing.
-            if (parent.svg.defaulted())
-                return;
-            child.svg.cow().strokeOpacity = parent.svg->strokeOpacity;
+            return makeRc<SvgStrokeOpacityProperty>(self(), c.svgPaint->strokeOpacity);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -430,7 +403,7 @@ export struct SvgStrokeOpacityProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().strokeOpacity = _value;
+        c.svgPaint.cow().strokeOpacity = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -442,23 +415,14 @@ export struct SvgStrokeOpacityProperty : Property {
 export struct FillOpacityProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::FILL_OPACITY, {PRESENTATION_ATTRIBUTE, INHERITED}) {}
+            : Property::Registration(Properties::FILL_OPACITY, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<FillOpacityProperty>(self(), Number{1});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FillOpacityProperty>(self(), c.svg->fillOpacity);
-        }
-
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            // NOTE: We bail out early if the parent has the default SVG values.
-            //       This avoids needlessly writing into the child's style, which would
-            //       trigger a copy-on-write of the whole property group for nothing.
-            if (parent.svg.defaulted())
-                return;
-            child.svg.cow().fillOpacity = parent.svg->fillOpacity;
+            return makeRc<FillOpacityProperty>(self(), c.svgPaint->fillOpacity);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -477,7 +441,7 @@ export struct FillOpacityProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().fillOpacity = _value;
+        c.svgPaint.cow().fillOpacity = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -489,19 +453,10 @@ export struct FillOpacityProperty : Property {
 export struct StrokeWidthProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::STROKE_WIDTH, {PRESENTATION_ATTRIBUTE, INHERITED}) {}
+            : Property::Registration(Properties::STROKE_WIDTH, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<StrokeWidthProperty>(self(), PercentOr<Length>{Length{1_au}});
-        }
-
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            // NOTE: We bail out early if the parent has the default SVG values.
-            //       This avoids needlessly writing into the child's style, which would
-            //       trigger a copy-on-write of the whole property group for nothing.
-            if (parent.svg.defaulted())
-                return;
-            child.svg.cow().strokeWidth = parent.svg->strokeWidth;
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
@@ -509,7 +464,7 @@ export struct StrokeWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<StrokeWidthProperty>(self(), c.svg->strokeWidth);
+            return makeRc<StrokeWidthProperty>(self(), c.svgPaint->strokeWidth);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -523,7 +478,7 @@ export struct StrokeWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().strokeWidth = _value;
+        c.svgPaint.cow().strokeWidth = _value;
     }
 
     void repr(Io::Emit& e) const override {

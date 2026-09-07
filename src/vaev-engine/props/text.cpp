@@ -21,7 +21,7 @@ namespace Vaev::Style {
 export struct TextAlignProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::TEXT_ALIGN, INHERITED) {}
+            : Property::Registration(Properties::TEXT_ALIGN, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<TextAlignProperty>(self(), TextAlign::LEFT);
@@ -81,7 +81,7 @@ export struct TextAlignProperty : Property {
 export struct TextTransformProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::TEXT_TRANSFORM, INHERITED) {}
+            : Property::Registration(Properties::TEXT_TRANSFORM, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<TextTransformProperty>(self(), TextTransform::NONE);
@@ -133,7 +133,7 @@ export struct TextTransformProperty : Property {
 export struct WhiteSpaceProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::WHITE_SPACE, INHERITED) {}
+            : Property::Registration(Properties::WHITE_SPACE, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
             return makeRc<WhiteSpaceProperty>(self(), WhiteSpace::NORMAL);
