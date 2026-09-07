@@ -237,11 +237,11 @@ export struct FlexFlowProperty : Property {
     FlexFlowProperty(Rc<Property::Registration> registration, Tuple<FlexDirection, FlexWrap> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-        return {
-            makeRc<FlexDirectionProperty>(registry.resolveRegistration(Properties::FLEX_DIRECTION, {}).unwrap(), _value.v0),
-            makeRc<FlexWrapProperty>(registry.resolveRegistration(Properties::FLEX_WRAP, {}).unwrap(), _value.v1),
-        };
+    Yield<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+        co_yield makeRc<FlexDirectionProperty>(registry.resolveRegistration(Properties::FLEX_DIRECTION, {}).unwrap(), _value.v0);
+        co_yield makeRc<FlexWrapProperty>(registry.resolveRegistration(Properties::FLEX_WRAP, {}).unwrap(), _value.v1);
+
+        co_return;
     }
 
     void repr(Io::Emit& e) const override {
@@ -323,12 +323,12 @@ export struct FlexProperty : Property {
     FlexProperty(Rc<Property::Registration> registration, FlexItemProps value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-        return {
-            makeRc<FlexBasisProperty>(registry.resolveRegistration(Properties::FLEX_BASIS, {}).unwrap(), _value.flexBasis),
-            makeRc<FlexGrowProperty>(registry.resolveRegistration(Properties::FLEX_GROW, {}).unwrap(), _value.flexGrow),
-            makeRc<FlexShrinkProperty>(registry.resolveRegistration(Properties::FLEX_SHRINK, {}).unwrap(), _value.flexShrink),
-        };
+    Yield<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+        co_yield makeRc<FlexBasisProperty>(registry.resolveRegistration(Properties::FLEX_BASIS, {}).unwrap(), _value.flexBasis);
+        co_yield makeRc<FlexGrowProperty>(registry.resolveRegistration(Properties::FLEX_GROW, {}).unwrap(), _value.flexGrow);
+        co_yield makeRc<FlexShrinkProperty>(registry.resolveRegistration(Properties::FLEX_SHRINK, {}).unwrap(), _value.flexShrink);
+
+        co_return;
     }
 
     void repr(Io::Emit& e) const override {

@@ -339,11 +339,11 @@ export struct GapProperty : Property {
     GapProperty(Rc<Property::Registration> registration, Gaps value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-        return {
-            makeRc<RowGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.row),
-            makeRc<ColumnGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.col),
-        };
+    Yield<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+        co_yield makeRc<RowGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.row);
+        co_yield makeRc<ColumnGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.col);
+
+        co_return;
     }
 
     void repr(Io::Emit& e) const override {

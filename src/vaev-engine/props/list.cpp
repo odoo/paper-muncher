@@ -211,12 +211,12 @@ struct ListStyleProperty : Property {
     ListStyleProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-        return {
-            makeRc<ListStyleImageProperty>(registry.resolveRegistration(Properties::LIST_STYLE_IMAGE, {}).unwrap(), _value.image),
-            makeRc<ListStyleTypeProperty>(registry.resolveRegistration(Properties::LIST_STYLE_TYPE, {}).unwrap(), _value.type),
-            makeRc<ListStylePositionProperty>(registry.resolveRegistration(Properties::LIST_STYLE_POSITION, {}).unwrap(), _value.position),
-        };
+    Yield<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+        co_yield makeRc<ListStyleImageProperty>(registry.resolveRegistration(Properties::LIST_STYLE_IMAGE, {}).unwrap(), _value.image);
+        co_yield makeRc<ListStyleTypeProperty>(registry.resolveRegistration(Properties::LIST_STYLE_TYPE, {}).unwrap(), _value.type);
+        co_yield makeRc<ListStylePositionProperty>(registry.resolveRegistration(Properties::LIST_STYLE_POSITION, {}).unwrap(), _value.position);
+
+        co_return;
     }
 
     void repr(Io::Emit& e) const override {

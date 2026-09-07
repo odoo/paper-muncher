@@ -188,13 +188,13 @@ export struct MarginProperty : Property {
     MarginProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-        return {
-            makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.top),
-            makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).unwrap(), _value.bottom),
-            makeRc<MarginLeftProperty>(registry.resolveRegistration(Properties::MARGIN_LEFT, {}).unwrap(), _value.start),
-            makeRc<MarginRightProperty>(registry.resolveRegistration(Properties::MARGIN_RIGHT, {}).unwrap(), _value.end),
-        };
+    Yield<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+        co_yield makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.top);
+        co_yield makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).unwrap(), _value.bottom);
+        co_yield makeRc<MarginLeftProperty>(registry.resolveRegistration(Properties::MARGIN_LEFT, {}).unwrap(), _value.start);
+        co_yield makeRc<MarginRightProperty>(registry.resolveRegistration(Properties::MARGIN_RIGHT, {}).unwrap(), _value.end);
+
+        co_return;
     }
 
     void repr(Io::Emit& e) const override {

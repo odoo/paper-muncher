@@ -194,11 +194,11 @@ export struct OverflowProperty : Property {
     OverflowProperty(Rc<Property::Registration> registration, Pair<Overflow> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-        return {
-            makeRc<OverflowXProperty>(registry.resolveRegistration(Properties::OVERFLOW_X, {}).unwrap(), _value.v0),
-            makeRc<OverflowYProperty>(registry.resolveRegistration(Properties::OVERFLOW_Y, {}).unwrap(), _value.v1),
-        };
+    Yield<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+        co_yield makeRc<OverflowXProperty>(registry.resolveRegistration(Properties::OVERFLOW_X, {}).unwrap(), _value.v0);
+        co_yield makeRc<OverflowYProperty>(registry.resolveRegistration(Properties::OVERFLOW_Y, {}).unwrap(), _value.v1);
+
+        co_return;
     }
 
     void repr(Io::Emit& e) const override {

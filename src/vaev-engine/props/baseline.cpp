@@ -280,37 +280,31 @@ export struct VerticalAlignProperty : Property {
     VerticalAlignProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Yield<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         Vec<Rc<Property>> shorthands = {};
 
         if (auto [baselineSource] = _value.baselineSource) {
-            shorthands.pushBack(
-                makeRc<BaselineSourceProperty>(
-                    registry.resolveRegistration(Properties::BASELINE_SOURCE, {}).take(),
-                    baselineSource
-                )
+            co_yield makeRc<BaselineSourceProperty>(
+                registry.resolveRegistration(Properties::BASELINE_SOURCE, {}).take(),
+                baselineSource
             );
         }
 
         if (auto [alignmentBaseline] = _value.alignmentBaseline) {
-            shorthands.pushBack(
-                makeRc<AlignmentBaselineProperty>(
-                    registry.resolveRegistration(Properties::ALIGNMENT_BASELINE, {}).take(),
-                    alignmentBaseline
-                )
+            co_yield makeRc<AlignmentBaselineProperty>(
+                registry.resolveRegistration(Properties::ALIGNMENT_BASELINE, {}).take(),
+                alignmentBaseline
             );
         }
 
         if (auto [baselineShift] = _value.baselineShift) {
-            shorthands.pushBack(
-                makeRc<BaselineShiftProperty>(
-                    registry.resolveRegistration(Properties::BASELINE_SHIFT, {}).take(),
-                    baselineShift
-                )
+            co_yield makeRc<BaselineShiftProperty>(
+                registry.resolveRegistration(Properties::BASELINE_SHIFT, {}).take(),
+                baselineShift
             );
         }
 
-        return shorthands;
+        co_return;
     }
 
     void repr(Io::Emit& e) const override {

@@ -238,13 +238,13 @@ export struct BackgroundProperty : Property {
     BackgroundProperty(Rc<Property::Registration> registration, SpecifiedBackground value)
         : Property(registration), _value(std::move(value)) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-        return {
-            makeRc<BackgroundColorProperty>(
-                registry.resolveRegistration(Properties::BACKGROUND_COLOR, {}).take(),
-                _value.color
-            ),
-        };
+    Yield<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+        co_yield makeRc<BackgroundColorProperty>(
+            registry.resolveRegistration(Properties::BACKGROUND_COLOR, {}).take(),
+            _value.color
+        );
+
+        co_return;
     }
 
     void repr(Io::Emit& e) const override {
