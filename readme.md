@@ -74,6 +74,10 @@ We welcome contributions to the Paper Muncher project! If you have ideas, sugges
 
 ## License
 
+<a href="https://www.gnu.org/licenses/lgpl-3.0.en.html">
+  <img align="right" height="72" alt="LGPL3 License" src="doc/assets/lgpl.svg" />
+</a>
+
 The paper muncher document generation tool and its core components are licensed under the **GNU Lesser General Public License v3.0 or later**.
 
 The full text of the license can be accessed via [this link](https://www.gnu.org/licenses/lgpl-3.0-standalone.html) and is also included in the [license.txt](license.txt) file of this software package.
