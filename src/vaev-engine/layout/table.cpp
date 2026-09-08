@@ -913,10 +913,10 @@ export struct TableFormatingContext : FormatingContext {
             }
         }
 
-        colWidth.ensure(colWidthOrNone.len());
+        // Resize the column-width vector and update it in place with the resolved widths.
+        colWidth.resize(colWidthOrNone.len());
         for (usize i = 0; i < grid.size.x; ++i) {
-            auto finalColWidth = colWidthOrNone[i].unwrapOr(0_au);
-            colWidth.pushBack(finalColWidth);
+            colWidth[i] = colWidthOrNone[i].unwrapOr(0_au);
         }
     }
 
