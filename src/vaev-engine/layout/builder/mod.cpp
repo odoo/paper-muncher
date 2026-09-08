@@ -371,7 +371,7 @@ static void _buildText(BuilderContext bc, Str text, Rc<Style::ComputedValues> pa
 }
 
 static void _buildImage(BuilderContext bc, Gc::Ref<Dom::Element> el) {
-    bc.content() = el->imageContent.unwrap();
+    bc.content() = el->imageContent().unwrap();
 }
 
 static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
