@@ -178,12 +178,12 @@ export struct Computer {
 
     Rc<Gfx::Fontface> _lookupFontface(ComputedValues& style) {
         Font::Query fq{
-            .weight = style.font->weight,
-            .stretch = Gfx::FontStretch{static_cast<u16>(Math::roundi(style.font->width.val().value() * 10.0))},
-            .style = style.font->style.val,
+            .weight = style.inherited->fontWeight,
+            .stretch = Gfx::FontStretch{static_cast<u16>(Math::roundi(style.inherited->fontWidth.val().value() * 10.0))},
+            .style = style.inherited->fontStyle.val,
         };
 
-        for (auto family : style.font->families) {
+        for (auto family : style.inherited->fontFamilies) {
             if (auto const& [font] = _fontDatabase->queryClosest(family.name, fq))
                 return font;
         }
@@ -196,11 +196,11 @@ export struct Computer {
 
     void _updateFontface(ComputedValues const& parent, Rc<ComputedValues> values) {
         // FIXME: Use a font-dirty flag instead.
-        if (not parent.font.sameInstance(values->font) and
-            (parent.font->families != values->font->families or
-             parent.font->weight != values->font->weight or
-             parent.font->style != values->font->style or
-             parent.font->width != values->font->width)) {
+        if (not parent.inherited.sameInstance(values->inherited) and
+            (parent.inherited->fontFamilies != values->inherited->fontFamilies or
+             parent.inherited->fontWeight != values->inherited->fontWeight or
+             parent.inherited->fontStyle != values->inherited->fontStyle or
+             parent.inherited->fontWidth != values->inherited->fontWidth)) {
             auto font = _lookupFontface(*values);
             values->fontFace = font;
         } else {
@@ -300,13 +300,13 @@ export struct Computer {
         // https://html.spec.whatwg.org/multipage/obsolete.html#attr-table-align
         if (auto const& [align] = el->getAttribute(Html::ALIGN_ATTR)) {
             if (align == "left") {
-                values.text.cow().align = TextAlign::LEFT;
+                values.inherited.cow().textAlign = TextAlign::LEFT;
             } else if (align == "right") {
-                values.text.cow().align = TextAlign::RIGHT;
+                values.inherited.cow().textAlign = TextAlign::RIGHT;
             } else if (align == "center") {
-                values.text.cow().align = TextAlign::BLOCK_CENTER;
+                values.inherited.cow().textAlign = TextAlign::BLOCK_CENTER;
             } else if (align == "justify") {
-                values.text.cow().align = TextAlign::JUSTIFY;
+                values.inherited.cow().textAlign = TextAlign::JUSTIFY;
             }
         }
     }

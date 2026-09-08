@@ -14,7 +14,7 @@ export struct Resolver :
     FontSizeContextData {
 
     static Resolver from(Tree const& tree, Box const& box) {
-        Gfx::Font font = Gfx::Font{box.style->fontFace, box.style->font->size.cast<f64>()};
+        Gfx::Font font = Gfx::Font{box.style->fontFace, box.style->fontSize.cast<f64>()};
         Gfx::Font rootFont = Gfx::Font{tree.root.style->fontFace, 16};
 
         Resolver ctx;

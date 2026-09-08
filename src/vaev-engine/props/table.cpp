@@ -63,7 +63,7 @@ export struct CaptionSideProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& s) const override {
-            return makeRc<CaptionSideProperty>(self(), s.tableInherited->captionSide);
+            return makeRc<CaptionSideProperty>(self(), s.inherited->captionSide);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -77,7 +77,7 @@ export struct CaptionSideProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.tableInherited.cow().captionSide = _value;
+        c.inherited.cow().captionSide = _value;
     }
 
     void repr(Io::Emit& e) const override {

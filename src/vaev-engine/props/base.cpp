@@ -45,7 +45,7 @@ export struct ComputationContext :
     void populateUsingRootComputedValues(ComputedValues const& values) {
         Gfx::Font font = Gfx::Font{
             values.fontFace,
-            values.font->size.cast<f64>(),
+            values.fontSize.cast<f64>(),
         };
         rootFontSize = font.fontSize();
         rootXHeight = font.xHeight();
@@ -55,13 +55,13 @@ export struct ComputationContext :
     }
 
     void populateUsingParentComputedValues(ComputedValues const& values) {
-        parentFontSize = values.font->size.cast<f64>();
+        parentFontSize = values.fontSize.cast<f64>();
     }
 
     void populateUsingOwnComputedValues(ComputedValues const& values) {
         Gfx::Font font = Gfx::Font{
             values.fontFace,
-            values.font->size.cast<f64>(),
+            values.fontSize.cast<f64>(),
         };
         fontSize = font.fontSize();
         xHeight = font.xHeight();
@@ -710,11 +710,8 @@ export struct RegisteredPropertySet {
         // parent. Properties taking this path are flagged BULK_INHERITED and skipped
         // by the per-property loop below.
         child.customProps = parent.customProps;
-        child.font = parent.font;
-        child.list = parent.list;
-        child.text = parent.text;
+        child.inherited = parent.inherited;
         child.svgPaint = parent.svgPaint;
-        child.tableInherited = parent.tableInherited;
 
         // Handle the rest of the properties
         for (auto& v : _registrations.iterValue()) {

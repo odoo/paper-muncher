@@ -35,11 +35,7 @@ export struct FontFamilyProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontFamilyProperty>(self(), c.font->families);
-        }
-
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.font.cow().families = parent.font->families;
+            return makeRc<FontFamilyProperty>(self(), c.inherited->fontFamilies);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -62,7 +58,7 @@ export struct FontFamilyProperty : Property {
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().families = _value;
+        c.inherited.cow().fontFamilies = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -89,12 +85,8 @@ export struct FontWeightProperty : Property {
             return makeRc<FontWeightProperty>(self(), FontWeight{Gfx::FontWeight::REGULAR});
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.font.cow().weight = parent.font->weight;
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontWeightProperty>(self(), c.font->weight);
+            return makeRc<FontWeightProperty>(self(), c.inherited->fontWeight);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -108,7 +100,7 @@ export struct FontWeightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().weight = _value.resolve(parent.font->weight);
+        c.inherited.cow().fontWeight = _value.resolve(parent.inherited->fontWeight);
     }
 
     void repr(Io::Emit& e) const override {
@@ -140,12 +132,8 @@ export struct FontWidthProperty : Property {
             return makeRc<FontWidthProperty>(self(), FontWidth::NORMAL);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.font.cow().width = parent.font->width;
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontWidthProperty>(self(), c.font->width);
+            return makeRc<FontWidthProperty>(self(), c.inherited->fontWidth);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -159,7 +147,7 @@ export struct FontWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().width = _value;
+        c.inherited.cow().fontWidth = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -186,12 +174,8 @@ export struct FontStyleProperty : Property {
             return makeRc<FontStyleProperty>(self(), FontStyle::NORMAL);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.font.cow().style = parent.font->style;
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontStyleProperty>(self(), c.font->style);
+            return makeRc<FontStyleProperty>(self(), c.inherited->fontStyle);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -205,7 +189,7 @@ export struct FontStyleProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().style = _value;
+        c.inherited.cow().fontStyle = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -221,7 +205,7 @@ export struct FontSizeProperty : Property {
         }
 
         Flags<Options> flags() const override {
-            return {INHERITED, BULK_INHERITED};
+            return {INHERITED};
         }
 
         ComputationPhase computationPhase() const override {
@@ -233,11 +217,11 @@ export struct FontSizeProperty : Property {
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.font.cow().size = parent.font->size;
+            child.fontSize = parent.fontSize;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontSizeProperty>(self(), Length{c.font->size});
+            return makeRc<FontSizeProperty>(self(), Length{c.fontSize});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -251,7 +235,7 @@ export struct FontSizeProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().size = resolve(_value, cx);
+        c.fontSize = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -293,15 +277,15 @@ export struct FontProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            auto const& font = *c.font;
+            auto const& font = *c.inherited;
             return makeRc<FontProperty>(
                 self(),
                 Value{
-                    font.families,
-                    Some(font.weight),
-                    font.width,
-                    font.style,
-                    Length{font.size},
+                    font.fontFamilies,
+                    Some(font.fontWeight),
+                    font.fontWidth,
+                    font.fontStyle,
+                    Length{c.fontSize},
                 }
             );
         }

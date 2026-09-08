@@ -364,7 +364,7 @@ struct BlockFormatingContext : FormatingContext {
                 _resolveAutoHorizontalMargins(c, childInput, usedSpacings, input.knownSize.width);
 
             childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
-            if (box.style->text->align == TextAlign::BLOCK_CENTER)
+            if (box.style->inherited->textAlign == TextAlign::BLOCK_CENTER)
                 childInput.position.x += inlineSize / 2 - layoutBorderBox(tree, c, childInput.withGenerateFragment(false)).width() / 2;
 
             if (c.isPseudoElement(Dom::PseudoElement::MARKER)) {

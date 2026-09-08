@@ -55,18 +55,4 @@ export enum struct WhiteSpace {
     _LEN,
 };
 
-export struct TextProps {
-    TextAlign align = TextAlign::START;
-    TextTransform transform = TextTransform::NONE;
-    WhiteSpace whiteSpace = WhiteSpace::NORMAL;
-
-    void repr(Io::Emit& e) const {
-        e("(text");
-        e(" align: {}", align);
-        e(" transform: {}", transform);
-        e(" whiteSpace: {}", whiteSpace);
-        e(")");
-    }
-};
-
 } // namespace Vaev

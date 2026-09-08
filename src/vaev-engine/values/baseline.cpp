@@ -45,12 +45,4 @@ export using BaselineShift = Union<
     Keywords::Center,
     Keywords::Bottom>;
 
-export struct InlineProps {
-    BaselineSource baselineSource = Keywords::AUTO;
-    AlignmentBaseline alignmentBaseline = Keywords::BASELINE;
-    DominantBaseline dominantBaseline = Keywords::AUTO;
-    BaselineShift baselineShift = Calc<PercentOr<Length>>(Length{});
-    LineHeight lineHeight = Keywords::NORMAL;
-};
-
 } // namespace Vaev::Style

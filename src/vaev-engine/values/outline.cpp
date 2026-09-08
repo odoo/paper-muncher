@@ -19,21 +19,4 @@ export struct SpecifiedOutline {
     }
 };
 
-// https://drafts.csswg.org/css-ui/#outline
-export struct OutlineProps {
-    LineWidth width = Keywords::MEDIUM;
-    Calc<Length> offset = 0_au;
-    Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
-    Color color = Gfx::BLUE500;
-
-    operator SpecifiedOutline() const {
-        return {
-            width,
-            offset,
-            style,
-            Color{color}
-        };
-    }
-};
-
 } // namespace Vaev

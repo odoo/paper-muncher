@@ -41,7 +41,7 @@ static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues const& style) 
         .multiline = true,
     };
 
-    switch (style.text->align) {
+    switch (style.inherited->textAlign) {
     case TextAlign::START:
     case TextAlign::LEFT:
         proseStyle.align = Gfx::TextAlign::LEFT;
@@ -69,7 +69,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
     Resolver resolver{};
 
     // FIXME: Assert bounds at parse time to respect inherits.
-    auto usedLineHeight = style.inline_->lineHeight.visit(
+    auto usedLineHeight = style.lineHeight.visit(
         [](Keywords::Normal) -> Opt<Au> {
             return NONE;
         },
@@ -77,30 +77,27 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
             if (number < 0)
                 return NONE;
 
-            return Some(style.font->size * number);
+            return Some(style.fontSize * number);
         },
-        [&](Calc<PercentOr<Length>> const& length) -> Opt<Au> {
-            auto oneEm = resolver.resolve(Length{RelativeLength{1, RelativeLength::EM}});
-            auto result = resolver.resolve(length, oneEm);
-
-            if (result < 0_au)
+        [](Au length) -> Opt<Au> {
+            if (length < 0_au)
                 return NONE;
 
-            return Some(result);
+            return Some(length);
         }
     );
 
     return {
         .font = {
             style.fontFace,
-            style.font->size.cast<f64>(),
+            style.fontSize.cast<f64>(),
         },
         .color = Some(style.color),
         // FIXME: Should be done during prose layout
         .marginLeft = resolver.resolve(style.margin->start, 0_au),
         .marginRight = resolver.resolve(style.margin->end, 0_au),
         .lineHeight = usedLineHeight,
-        .wordwrap = _allowsWrap(style.text->whiteSpace),
+        .wordwrap = _allowsWrap(style.inherited->whiteSpace),
     };
 }
 
@@ -124,7 +121,7 @@ void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, TextTransfo
 // https://www.w3.org/TR/css-text-3/#white-space-phase-1
 // https://www.w3.org/TR/css-text-3/#white-space-phase-2
 void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues> parentStyle, Box& rootInlineBox) {
-    auto whitespace = parentStyle->text->whiteSpace;
+    auto whitespace = parentStyle->inherited->whiteSpace;
     bool whiteSpacesAreCollapsible =
         whitespace == WhiteSpace::NORMAL or
         whitespace == WhiteSpace::NOWRAP or
@@ -142,7 +139,7 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues> parentStyl
             _transformAndAppendRuneToProse(
                 prose,
                 rune,
-                parentStyle->text->transform
+                parentStyle->inherited->textTransform
             );
             continue;
         }
@@ -757,7 +754,7 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
 
     Box tableBox = {tableBoxStyle, Some(el)};
 
-    bool captionsOnTop = tableBoxStyle->tableInherited->captionSide == CaptionSide::TOP;
+    bool captionsOnTop = tableBoxStyle->inherited->captionSide == CaptionSide::TOP;
     if (captionsOnTop) {
         searchAndBuildCaption();
     }
@@ -935,7 +932,7 @@ export Box _buildBlockPseudoElement(Gc::Ref<Dom::PseudoElement> el) {
 static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> pseudoElement) {
     auto style = pseudoElement->computedValues();
     auto display = style->display;
-    auto listStyleType = pseudoElement->element()->computedValues()->list->type;
+    auto listStyleType = pseudoElement->element()->computedValues()->inherited->listType;
 
     if (display == Display::NONE)
         return;

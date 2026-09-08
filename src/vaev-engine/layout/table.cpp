@@ -1349,12 +1349,12 @@ export struct TableFormatingContext : FormatingContext {
     bool useBordersCollapse = false;
 
     void build(Tree& tree, Box& box) override {
-        useBordersCollapse = box.style->tableInherited->collapse == BorderCollapse::COLLAPSE;
+        useBordersCollapse = box.style->inherited->borderCollapse == BorderCollapse::COLLAPSE;
 
         if (not useBordersCollapse)
             spacing = {
-                resolve(tree, box, box.style->tableInherited->spacing.horizontal),
-                resolve(tree, box, box.style->tableInherited->spacing.vertical),
+                resolve(tree, box, box.style->inherited->borderSpacing.horizontal),
+                resolve(tree, box, box.style->inherited->borderSpacing.vertical),
             };
 
         buildHTMLTable(box);

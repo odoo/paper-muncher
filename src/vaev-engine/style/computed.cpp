@@ -11,14 +11,6 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
-struct FontProps {
-    Vec<FontFamily> families = {"sans-serif"_sym};
-    Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;
-    FontWidth width = FontWidth::NORMAL;
-    FontStyle style = FontStyle::NORMAL;
-    Au size;
-};
-
 struct TransformProps {
     Transform transform = Keywords::NONE;
     TransformOrigin origin = {
@@ -34,10 +26,58 @@ struct TransformProps {
 
 using ClipProps = Opt<BasicShape>;
 
-export struct Inherited {};
+export struct InlineProps {
+    BaselineSource baselineSource = Keywords::AUTO;
+    AlignmentBaseline alignmentBaseline = Keywords::BASELINE;
+    BaselineShift baselineShift = Calc<PercentOr<Length>>(Length{});
+};
+
+export struct OutlineProps {
+    LineWidth width = Keywords::MEDIUM;
+    Calc<Length> offset = 0_au;
+    Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
+    Color color = Gfx::BLUE500;
+
+    operator SpecifiedOutline() const {
+        return {
+            width,
+            offset,
+            style,
+            Color{color}
+        };
+    }
+};
+
+export struct InheritedProps {
+    // TABLE
+    CaptionSide captionSide = CaptionSide::TOP;
+    BorderSpacing borderSpacing = {0_au, 0_au};
+    BorderCollapse borderCollapse = BorderCollapse::SEPARATE;
+
+    // INLINE
+    DominantBaseline dominantBaseline = Keywords::AUTO;
+
+    // TEXT
+    TextAlign textAlign = TextAlign::START;
+    TextTransform textTransform = TextTransform::NONE;
+    WhiteSpace whiteSpace = WhiteSpace::NORMAL;
+
+    // LIST
+    ListImage listImage = Keywords::NONE;
+    ListType listType = CustomIdent{"disc"_sym};
+    ListPosition listPosition = Keywords::OUTSIDE;
+    MarkerSide markerSide = Keywords::MATCH_SELF;
+
+    // FONT
+    Vec<FontFamily> fontFamilies = {"sans-serif"_sym};
+    Gfx::FontWeight fontWeight = Gfx::FontWeight::REGULAR;
+    FontWidth fontWidth = FontWidth::NORMAL;
+    FontStyle fontStyle = FontStyle::NORMAL;
+};
 
 // https://www.w3.org/TR/css-cascade/#computed
 export struct ComputedValues {
+    Cow<InheritedProps> inherited;
     Cow<Gaps> gaps;
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
@@ -50,15 +90,11 @@ export struct ComputedValues {
     Cow<ClipProps> clip;
     Cow<TransformProps> transform;
     Cow<TableProps> table;
-    Cow<TableInheritedProps> tableInherited;
-    Cow<FontProps> font;
-    Cow<TextProps> text;
     Cow<FlexProps> flex;
     Cow<BreakProps> break_;
     Cow<SvgProps> svg;
     Cow<SvgPaintProps> svgPaint;
     Cow<CounterProps> counters;
-    Cow<ListProps> list;
 
     Cow<Map<Symbol, Css::Content>> customProps;
     Rc<Gfx::Fontface> fontFace;
@@ -72,6 +108,11 @@ export struct ComputedValues {
     AlignProps aligns;
     Display display;
     f32 opacity;
+    Au fontSize;
+
+    // Inline inherit fields
+    // FIXME: Reduce
+    ComputedLineHeight lineHeight = Keywords::NORMAL;
 
     // Small Field
     Float float_ = Float::NONE;

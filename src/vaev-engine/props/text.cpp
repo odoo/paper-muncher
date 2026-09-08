@@ -32,12 +32,8 @@ export struct TextAlignProperty : Property {
             return makeRc<TextAlignProperty>(self(), TextAlign::LEFT);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.text.cow().align = parent.text->align;
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TextAlignProperty>(self(), c.text->align);
+            return makeRc<TextAlignProperty>(self(), c.inherited->textAlign);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -73,7 +69,7 @@ export struct TextAlignProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.text.cow().align = _value;
+        c.inherited.cow().textAlign = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -97,12 +93,8 @@ export struct TextTransformProperty : Property {
             return makeRc<TextTransformProperty>(self(), TextTransform::NONE);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.text.cow().transform = parent.text->transform;
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TextTransformProperty>(self(), c.text->transform);
+            return makeRc<TextTransformProperty>(self(), c.inherited->textTransform);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -130,7 +122,7 @@ export struct TextTransformProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.text.cow().transform = _value;
+        c.inherited.cow().textTransform = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -154,12 +146,8 @@ export struct WhiteSpaceProperty : Property {
             return makeRc<WhiteSpaceProperty>(self(), WhiteSpace::NORMAL);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.text.cow().whiteSpace = parent.text->whiteSpace;
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<WhiteSpaceProperty>(self(), c.text->whiteSpace);
+            return makeRc<WhiteSpaceProperty>(self(), c.inherited->whiteSpace);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -190,7 +178,7 @@ export struct WhiteSpaceProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.text.cow().whiteSpace = _value;
+        c.inherited.cow().whiteSpace = _value;
     }
 
     void repr(Io::Emit& e) const override {

@@ -23,12 +23,8 @@ struct ListStyleImageProperty : Property {
             return makeRc<ListStyleImageProperty>(self(), Keywords::NONE);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.list.cow().image = parent.list->image;
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ListStyleImageProperty>(self(), c.list->image);
+            return makeRc<ListStyleImageProperty>(self(), c.inherited->listImage);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -43,7 +39,7 @@ struct ListStyleImageProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.list.cow().image = _value;
+        c.inherited.cow().listImage = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -66,12 +62,8 @@ struct ListStyleTypeProperty : Property {
             return makeRc<ListStyleTypeProperty>(self(), CustomIdent{"disc"_sym});
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.list.cow().type = parent.list->type;
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ListStyleTypeProperty>(self(), c.list->type);
+            return makeRc<ListStyleTypeProperty>(self(), c.inherited->listType);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -86,7 +78,7 @@ struct ListStyleTypeProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.list.cow().type = _value;
+        c.inherited.cow().listType = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -109,12 +101,8 @@ struct ListStylePositionProperty : Property {
             return makeRc<ListStylePositionProperty>(self(), Keywords::OUTSIDE);
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.list.cow().position = parent.list->position;
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ListStylePositionProperty>(self(), c.list->position);
+            return makeRc<ListStylePositionProperty>(self(), c.inherited->listPosition);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -129,7 +117,7 @@ struct ListStylePositionProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.list.cow().position = _value;
+        c.inherited.cow().listPosition = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -166,9 +154,9 @@ struct ListStyleProperty : Property {
             return makeRc<ListStyleProperty>(
                 self(),
                 Value{
-                    c.list->image,
-                    c.list->type,
-                    c.list->position,
+                    c.inherited->listImage,
+                    c.inherited->listType,
+                    c.inherited->listPosition,
                 }
             );
         }
@@ -235,16 +223,12 @@ struct MarkerSideProperty : Property {
             return {INHERITED, BULK_INHERITED};
         }
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.list.cow().markerSide = parent.list->markerSide;
-        }
-
         Rc<Property> initial() const override {
             return makeRc<MarkerSideProperty>(self(), Keywords::MATCH_SELF);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarkerSideProperty>(self(), c.list->markerSide);
+            return makeRc<MarkerSideProperty>(self(), c.inherited->markerSide);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -259,7 +243,7 @@ struct MarkerSideProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.list.cow().markerSide = _value;
+        c.inherited.cow().markerSide = _value;
     }
 
     void repr(Io::Emit& e) const override {

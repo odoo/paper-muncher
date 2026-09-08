@@ -23,10 +23,6 @@ export using ListPosition = Union<Keywords::Inside, Keywords::Outside>;
 export using MarkerSide = Union<Keywords::MatchSelf, Keywords::MatchParent>;
 
 struct ListProps {
-    ListImage image = Keywords::NONE;
-    ListType type = CustomIdent{"disc"_sym};
-    ListPosition position = Keywords::OUTSIDE;
-    MarkerSide markerSide = Keywords::MATCH_SELF;
 };
 
 } // namespace Vaev
