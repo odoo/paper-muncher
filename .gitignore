@@ -16,3 +16,4 @@ dist
 compile_commands.json
 .claude/
 CLAUDE.md
+.bench
