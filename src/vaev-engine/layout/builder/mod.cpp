@@ -131,6 +131,13 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues> parentStyl
     if (not rootInlineBox.isActive())
         scan.eat(Re::space());
 
+    // Case transforms and whitespace collapsing only ever remove or
+    // substitute runes one-for-one — never add — so what's left in the scan
+    // is a safe upper bound on how many more cells this pass will push.
+    // Reserving it once here avoids paying for several redundant
+    // grow-from-empty reallocations per call to this function.
+    rootInlineBox.content.unwrap<Rc<Gfx::Prose>>()->reserve(scan.rem());
+
     while (not scan.ended()) {
         auto rune = scan.next();
         auto prose = rootInlineBox.content.unwrap<Rc<Gfx::Prose>>();

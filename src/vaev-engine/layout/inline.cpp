@@ -108,7 +108,7 @@ struct InlineFormatingContext : FormatingContext {
         auto lastBaselineSet = _computeBaselinePositions(prose->_rootSpan->style.font.metrics(), last(prose->_lines).baseline);
 
         for (auto strutCell : prose->cellsWithStruts()) {
-            auto runeIdx = strutCell->runeRange.start;
+            auto runeIdx = strutCell->runeStart;
             auto positionInProse = prose->queryPosition(runeIdx);
 
             auto boxStrutCell = strutCell->strut(*prose);
