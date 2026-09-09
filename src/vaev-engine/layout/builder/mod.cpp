@@ -920,9 +920,9 @@ export Box _buildBlockPseudoElement(Gc::Ref<Dom::PseudoElement> el) {
     auto proseStyle = _proseStyleFromStyle(*style);
     auto spanStyle = _spanStyleFromStyle(*style);
 
-    if (style->content.is<String>()) {
+    if (style->content->is<String>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
-        prose->append(style->content.unwrap<String>().str());
+        prose->append(style->content->unwrap<String>().str());
         return {style, prose, Some(el)};
     }
 
@@ -938,14 +938,14 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
         return;
 
     bool isBeforeOrAfter = (pseudoElement->type == Dom::PseudoElement::BEFORE or pseudoElement->type == Dom::PseudoElement::AFTER);
-    if (isBeforeOrAfter and (style->content.is<Keywords::Normal>() or style->content.is<Keywords::None>()))
+    if (isBeforeOrAfter and (style->content->is<Keywords::Normal>() or style->content->is<Keywords::None>()))
         return;
 
     if (pseudoElement->type == Dom::PseudoElement::MARKER and listStyleType == Keywords::NONE)
         return;
 
     auto generateInnerContent = [&](BuilderContext& innerBc) {
-        if (pseudoElement->type == Dom::PseudoElement::MARKER and style->content.is<Keywords::Normal>()) {
+        if (pseudoElement->type == Dom::PseudoElement::MARKER and style->content->is<Keywords::Normal>()) {
             String marker = ""s;
             if (listStyleType == CustomIdent{"disc"_sym}) {
                 // NOSPEC: By default chrome and other browser seems to make this a bit larger
@@ -965,9 +965,9 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
                 marker = Io::format("{}.", value);
             }
             _buildText(innerBc, marker.str(), style);
-        } else if (style->content.is<String>()) {
+        } else if (style->content->is<String>()) {
             // TODO: Expand this to iterate over a Vector of content items (Strings, URLs, Counters)
-            _buildText(innerBc, style->content.unwrap<String>().str(), style);
+            _buildText(innerBc, style->content->unwrap<String>().str(), style);
         }
     };
 
@@ -1051,18 +1051,18 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, Runnin
     auto proseStyle = _proseStyleFromStyle(*style);
     auto spanStyle = _spanStyleFromStyle(*style);
 
-    if (style->content.is<String>()) {
+    if (style->content->is<String>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
-        prose->append(style->content.unwrap<String>().str());
+        prose->append(style->content->unwrap<String>().str());
         return Box{style, prose, Some(el)};
-    } else if (style->content.is<ElementFunc>()) {
-        auto elt = style->content.unwrap<ElementFunc>();
+    } else if (style->content->is<ElementFunc>()) {
+        auto elt = style->content->unwrap<ElementFunc>();
         if (auto infos = runningPos.match(elt, pageNumber)) {
             Box box = buildElement(infos.unwrap().element);
             box.style->position = Keywords::STATIC;
             return box;
         }
-    } else if (auto it = style->content.is<CounterFunc>()) {
+    } else if (auto it = style->content->is<CounterFunc>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
         if (it->name == CustomIdent{"page"_sym}) {
             // FIXME: Special case for the page counter for now, remove this once we figure out the pseudo element tree for page margins

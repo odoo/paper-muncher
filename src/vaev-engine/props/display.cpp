@@ -60,7 +60,7 @@ export struct ContentProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ContentProperty>(self(), c.content);
+            return makeRc<ContentProperty>(self(), *c.content);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -74,7 +74,7 @@ export struct ContentProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.content = _value;
+        c.content.cow() = _value;
     }
 
     void repr(Io::Emit& e) const override {

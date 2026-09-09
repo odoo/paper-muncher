@@ -110,28 +110,38 @@ export struct ComputedValues {
     Cow<Map<Symbol, Css::Content>> customProps;
     Rc<Gfx::Fontface> fontFace;
 
-    // Inlined fields
+    // Split out: at 72 bytes (Union of Normal/None/String/ElementFunc/
+    // CounterFunc/CountersFunc) this is by far the largest "inline" field —
+    // bigger than most of the Cow<>-wrapped groups above put together — yet
+    // `content` stays at its default (normal) on the overwhelming majority
+    // of elements, since only pseudo-elements meaningfully use it. Inline,
+    // every one of the ~738K ComputedValues copies in a large document paid
+    // for those 72 bytes regardless of whether content was ever touched.
+    Cow<Content> content = Content{Keywords::NORMAL};
+
+    // Inlined fields — ordered by descending size/alignment (16, 16, 16, 8,
+    // 6, then the run of 4-byte and 1-byte fields) so nothing needs padding
+    // inserted before a wider neighbor; this is otherwise just the same
+    // field list, unchanged in meaning.
     ZIndex zIndex = Keywords::AUTO;
-    Overflows overflows;
-    Gfx::Color color;
-    Content content = Keywords::NORMAL;
+    // Inline inherit field
+    // FIXME: Reduce
+    ComputedLineHeight lineHeight = Keywords::NORMAL;
+    Position position = Keywords::STATIC;
     Integer order;
     AlignProps aligns;
+    Overflows overflows;
+    Gfx::Color color;
     Display display;
     f32 opacity;
     Au fontSize;
 
-    // Inline inherit fields
-    // FIXME: Reduce
-    ComputedLineHeight lineHeight = Keywords::NORMAL;
-
-    // Small Field
+    // Small fields
     Float float_ = Float::NONE;
     Clear clear = Clear::NONE;
     Visibility visibility;
     WritingMode writingMode;
     Direction direction;
-    Position position = Keywords::STATIC;
     BoxSizing boxSizing;
 
     ComputedValues() : fontFace(Gfx::Fontface::fallback()) {}

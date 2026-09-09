@@ -67,9 +67,7 @@ Symbol const PseudoElement::MARKER = "::marker"_sym;
 // document. A flat vector scanned linearly is far smaller and, at this many entries,
 // faster too: a few pointer comparisons beat hashing a qualified name.
 struct AttrMap {
-    using Item = KvPair<QualifiedName, Rc<Attr>>;
-
-    Vec<Item> _items;
+    Vec<Attr> _items;
 
     usize len() const {
         return _items.len();
@@ -79,36 +77,36 @@ struct AttrMap {
         return Karm::iter(_items);
     }
 
-    Item* _find(QualifiedName const& name) {
+    Attr* _find(QualifiedName const& name) {
         for (auto& item : _items)
-            if (item.key == name)
+            if (item.qualifiedName == name)
                 return &item;
         return nullptr;
     }
 
-    Item const* _find(QualifiedName const& name) const {
+    Attr const* _find(QualifiedName const& name) const {
         for (auto const& item : _items)
-            if (item.key == name)
+            if (item.qualifiedName == name)
                 return &item;
         return nullptr;
     }
 
-    void put(QualifiedName const& name, Rc<Attr> attr) {
+    void put(QualifiedName const& name, Str value) {
         if (auto item = _find(name)) {
-            item->value = std::move(attr);
+            item->value = Attr::intern(value);
             return;
         }
 
-        _items.pushBack({name, std::move(attr)});
+        _items.pushBack(Attr{name, value});
     }
 
     bool contains(QualifiedName const& name) const {
         return _find(name) != nullptr;
     }
 
-    Opt<Rc<Attr> const&> lookup(QualifiedName const& name) const {
+    Opt<Attr const&> lookup(QualifiedName const& name) const {
         if (auto item = _find(name))
-            return Some(item->value);
+            return Some(*item);
         return NONE;
     }
 };
@@ -139,8 +137,8 @@ export struct Element : Node {
         e(" qualifiedName={}", qualifiedName);
         if (this->attributes.len()) {
             e.indentNewline();
-            for (auto const& [name, attr] : this->attributes.iterItems()) {
-                attr->repr(e);
+            for (auto const& attr : this->attributes.iterItems()) {
+                attr.repr(e);
             }
             e.deindent();
         }
@@ -175,7 +173,7 @@ export struct Element : Node {
                 this->classList.add(class_);
             }
         }
-        this->attributes.put(name, makeRc<Attr>(name, value));
+        this->attributes.put(name, value);
     }
 
     bool hasAttribute(QualifiedName name) const {
@@ -183,8 +181,8 @@ export struct Element : Node {
     }
 
     bool hasAttributeUnqualified(Str name) const {
-        for (auto const& [qualifiedName, _] : this->attributes.iterItems()) {
-            if (qualifiedName.name.str() == name) {
+        for (auto const& attr : this->attributes.iterItems()) {
+            if (attr.qualifiedName.name.str() == name) {
                 return true;
             }
         }
@@ -195,13 +193,13 @@ export struct Element : Node {
         auto attr = this->attributes.lookup(name);
         if (attr == NONE)
             return NONE;
-        return Some((*attr)->value);
+        return Some((*attr).str());
     }
 
     Opt<Str> getAttributeUnqualified(Symbol name) const {
-        for (auto const& [qualifiedName, attr] : this->attributes.iterItems())
-            if (qualifiedName.name == name)
-                return Some(attr->value);
+        for (auto const& attr : this->attributes.iterItems())
+            if (attr.qualifiedName.name == name)
+                return Some(attr.str());
         return NONE;
     }
 
