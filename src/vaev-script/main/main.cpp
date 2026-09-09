@@ -10,10 +10,9 @@ using namespace Karm::Literals;
 using namespace Vaev;
 
 Async::Task<> entryPointAsync(Sys::Env&, Async::CancellationToken) {
-    Gc::Heap heap;
-
-    auto agent = heap.alloc<Script::Agent>(heap);
-    auto realm = heap.alloc<Script::Realm>(agent);
+    Script::AgentCluster agentCluster;
+    auto agent = agentCluster.heap.alloc<Script::Agent>(agentCluster);
+    auto realm = agentCluster.heap.alloc<Script::Realm>(agent);
 
     (void)realm->initializeHostDefinedRealm(agent);
 

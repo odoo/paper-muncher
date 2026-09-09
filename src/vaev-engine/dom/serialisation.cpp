@@ -53,7 +53,7 @@ export void escapeString(Io::Emit& e, Str str, bool attributeMode = false) {
 
 // https://html.spec.whatwg.org/multipage/parsing.html#serializes-as-void
 bool _serializeAsVoid(Gc::Ref<Node> node) {
-    auto el = node->is<Element>();
+    auto el = node->as<Element>();
     if (not el)
         return false;
 
@@ -96,7 +96,7 @@ export void serializeHtmlFragment(Gc::Ref<Node> node, Io::Emit& e) {
     for (auto currentNode : node->iterChildren()) {
         //    2. Append the appropriate string:
         //       If current node is an Element:
-        if (auto el = currentNode->is<Element>()) {
+        if (auto el = currentNode->as<Element>()) {
             // - Determine tagname: if in HTML, MathML, or SVG namespace, tagname is local name; otherwise qualified name.
             // - Append "<" followed by tagname.
 
@@ -140,10 +140,10 @@ export void serializeHtmlFragment(Gc::Ref<Node> node, Io::Emit& e) {
         }
 
         // If current node is a Text node:
-        else if (auto text = currentNode->is<Text>()) {
+        else if (auto text = currentNode->as<Text>()) {
             auto parent = text->parentNode();
             // - If its parent is style, script, xmp, iframe, noembed, noframes, plaintext, or (if scripting enabled) noscript,
-            if (auto parentElement = parent->is<Element>();
+            if (auto parentElement = parent->as<Element>();
                 parentElement and
                 (parentElement->qualifiedName == Html::STYLE_TAG or
                  parentElement->qualifiedName == Html::SCRIPT_TAG or
@@ -163,7 +163,7 @@ export void serializeHtmlFragment(Gc::Ref<Node> node, Io::Emit& e) {
         }
 
         // If current node is a Comment:
-        else if (auto comment = currentNode->is<Comment>()) {
+        else if (auto comment = currentNode->as<Comment>()) {
             // - Append "<!--" + data + "-->".
             e("<!--{}-->", comment->data());
         }
@@ -173,7 +173,7 @@ export void serializeHtmlFragment(Gc::Ref<Node> node, Io::Emit& e) {
         // TODO: We don't support ProcessingInstruction
 
         // If current node is a DocumentType:
-        else if (auto doctype = currentNode->is<DocumentType>()) {
+        else if (auto doctype = currentNode->as<DocumentType>()) {
             // - Append "<!DOCTYPE " + name + ">".
             e("<!DOCTYPE {}>", doctype->name);
         }

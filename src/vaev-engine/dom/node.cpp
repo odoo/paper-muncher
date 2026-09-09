@@ -1,5 +1,6 @@
 export module Vaev.Engine:dom.node;
 
+import Vaev.Idl;
 import Karm.Ref;
 import Karm.Gc;
 import :dom.tree;
@@ -27,22 +28,16 @@ export enum struct NodeType {
 };
 
 // https://dom.spec.whatwg.org/#interface-node
-export struct Node : Tree<Node> {
+export struct Node : Idl::PlatformObject, Tree<Node> {
+    using PlatformObject::is;
+
     virtual ~Node() = default;
+
+    // https://dom.spec.whatwg.org/#dom-node-nodetype
     virtual NodeType nodeType() const = 0;
 
-    template <typename T>
-    Gc::Ptr<T> is() {
-        if (nodeType() != T::TYPE)
-            return nullptr;
-        return {MOVE, static_cast<T*>(this)};
-    }
-
-    template <typename T>
-    Gc::Ptr<T const> is() const {
-        if (nodeType() != T::TYPE)
-            return nullptr;
-        return {MOVE, static_cast<T const*>(this)};
+    bool is(Meta::Id id) const override {
+        return id == Meta::idOf<Node>() or PlatformObject::is(id);
     }
 
     Ref::Url baseURI();

@@ -1,6 +1,7 @@
 export module Vaev.Engine:dom.event;
 
 import Karm.Core;
+import Vaev.Idl;
 import :dom.window;
 
 using namespace Karm;
@@ -57,29 +58,13 @@ export enum struct EventFlags {
 };
 
 // https://dom.spec.whatwg.org/#interface-event
-export struct Event {
+export struct Event : Idl::PlatformObject {
     EventType type;
     Flags<EventFlags> flags;
     Opt<EventTarget> target;
 
-    virtual ~Event() = default;
-
-    virtual bool is(Meta::Id id) const {
-        return id == Meta::idOf<Event>();
-    }
-
-    template <Meta::Derive<Event> T>
-    Opt<T&> as() {
-        if (is(Meta::idOf<T>()))
-            return Some(static_cast<T&>(*this));
-        return NONE;
-    }
-
-    template <Meta::Derive<Event> T>
-    Opt<T const&> as() const {
-        if (is(Meta::idOf<T>()))
-            return Some(static_cast<T const&>(*this));
-        return NONE;
+    bool is(Meta::Id id) const override {
+        return id == Meta::idOf<Event>() or PlatformObject::is(id);
     }
 
     void stopPropagation() {

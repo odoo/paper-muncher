@@ -13,6 +13,10 @@ export struct Comment : CharacterData {
     NodeType nodeType() const override {
         return TYPE;
     }
+
+    bool is(Meta::Id id) const override {
+        return id == Meta::idOf<Comment>() or PlatformObject::is(id);
+    }
 };
 
 } // namespace Vaev::Dom

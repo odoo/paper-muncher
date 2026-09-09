@@ -1,5 +1,7 @@
 export module Vaev.Script:realm;
 
+import Vaev.Idl;
+
 import :agent;
 import :completion;
 import :value;
@@ -7,9 +9,16 @@ import :value;
 namespace Vaev::Script {
 
 // https://tc39.es/ecma262/#realm
-export struct Realm {
+export struct Realm : Idl::PlatformObject {
     Gc::Ref<Agent> agentSignifier;
     Value globalThis = undefined;
+
+    Realm(Gc::Ref<Agent> agent)
+        : agentSignifier(agent) {}
+
+    bool is(Meta::Id id) const override {
+        return id == Meta::idOf<Realm>() or PlatformObject::is(id);
+    }
 
     // https://tc39.es/ecma262/#sec-createintrinsics
     Completion createIntrinsics() {

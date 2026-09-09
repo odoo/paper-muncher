@@ -59,9 +59,13 @@ export struct Document : Node {
         return TYPE;
     }
 
+    bool is(Meta::Id id) const override {
+        return id == Meta::idOf<Document>() or PlatformObject::is(id);
+    }
+
     String title() const {
         for (auto node : iterDepthFirst()) {
-            if (auto element = node->is<Element>())
+            if (auto element = node->as<Element>())
                 if (element->qualifiedName == Html::TITLE_TAG) {
                     return element->textContent();
                 }
@@ -81,8 +85,8 @@ export struct Document : Node {
     // https://dom.spec.whatwg.org/#document-element
     Gc::Ptr<Element> documentElement() const {
         for (auto child = firstChild(); child; child = child->nextSibling())
-            if (auto el = child->is<Element>())
-                return el;
+            if (auto el = child->as<Element>())
+                return *el;
         return nullptr;
     }
 
@@ -97,9 +101,9 @@ export struct Document : Node {
             return nullptr;
 
         for (auto child : document->iterChildren()) {
-            if (auto el = child->is<Element>();
+            if (auto el = child->as<Element>();
                 el and el->qualifiedName == Html::BODY_TAG)
-                return el;
+                return *el;
         }
 
         return nullptr;

@@ -815,7 +815,7 @@ export struct HtmlParser : HtmlSink {
         //    location, then append data to that Text node's data.
         auto previousSibling = location.previousSibling();
         if (previousSibling and previousSibling->nodeType() == Dom::NodeType::TEXT) {
-            auto text = previousSibling->is<Dom::Text>();
+            auto text = previousSibling->as<Dom::Text>();
             text->appendData(c);
         }
 
@@ -3342,7 +3342,8 @@ export struct HtmlParser : HtmlSink {
                 _currentElement()->qualifiedName != Html::TFOOT_TAG and
                 _currentElement()->qualifiedName != Html::THEAD_TAG and
                 _currentElement()->qualifiedName != Html::TEMPLATE_TAG and
-                _currentElement()->qualifiedName != Html::HTML_TAG) {
+                _currentElement()->qualifiedName != Html::HTML_TAG
+            ) {
                 _openElements.pop();
             }
         };
