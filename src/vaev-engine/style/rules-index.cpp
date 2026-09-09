@@ -254,11 +254,45 @@ struct RuleIndex {
         return out;
     }
 
+    // Which pseudo-element (if any) a rule's selector requires, precomputed once
+    // per rule at registration time rather than re-walked by selectorPseudoElement()
+    // on every match attempt against every element — the answer depends only on the
+    // rule's (fixed) selector tree, never on the element or query being tested, so
+    // recomputing it per match was pure waste (and, empirically, the single hottest
+    // function in the engine).
+    //
+    // `ambiguous` is set only for a top-level Nfix::OR (grouped) selector: its
+    // branches can each require a different pseudo-element (`a, b::before`), so a
+    // single cached answer can't gate the whole rule — those still fall through to
+    // matchSelector()'s own per-branch walk, unchanged.
+    struct RulePseudoElement {
+        Opt<Symbol> value = NONE;
+        bool ambiguous = false;
+    };
+    Vec<RulePseudoElement> _rulePseudoElement;
+
+    static RulePseudoElement _pseudoElementFor(Selector const& selector) {
+        if (auto n = selector.is<Nfix>(); n and n->type == Nfix::OR)
+            return {NONE, true};
+        return {selectorPseudoElement(selector), false};
+    }
+
+    // Whether `ruleId` could possibly match under `pseudoElement`, without walking
+    // its selector tree. Only ever says "definitely not" — an ambiguous (OR) rule,
+    // or one whose cached requirement agrees with `pseudoElement`, always defers to
+    // the real matcher.
+    bool _mayMatchPseudoElement(usize ruleId, Opt<Symbol> const& pseudoElement) const {
+        auto const& rp = _rulePseudoElement[ruleId];
+        return rp.ambiguous or rp.value == pseudoElement;
+    }
+
     void add(StyleRule const& rule) {
         _ruleCount++;
         // Rule ids start at 1; slot 0 is unused.
         _ruleAncestorHashes.resize(_ruleCount + 1);
         _ruleAncestorHashes[_ruleCount] = _ancestorHashesFor(rule.selector);
+        _rulePseudoElement.resize(_ruleCount + 1);
+        _rulePseudoElement[_ruleCount] = _pseudoElementFor(rule.selector);
         _add(&rule, _ruleCount, rule.selector);
     }
 
@@ -421,6 +455,9 @@ struct RuleIndex {
     }
 
     void _evalStyleRule(StyleRule const& rule, usize ruleId, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement) {
+        if (not _mayMatchPseudoElement(ruleId, pseudoElement))
+            return;
+
         if (_filterRejects(ruleId))
             return;
 
@@ -431,7 +468,11 @@ struct RuleIndex {
     bool _maybeDeferRuleEvaluation(Entry const& entry, usize countMatchesWithCurrentRule, Opt<Symbol> const& pseudoElement) {
         auto const [ruleId, styleRule] = entry;
 
-        if (_isLookupEquivalentToMatchForQuery(styleRule->selector, pseudoElement)) {
+        // Same check as _isLookupEquivalentToMatchForQuery(styleRule->selector, ...),
+        // but via the cache computed once in add() rather than re-walking the
+        // selector tree on every call — styleRule->selector is a fixed, whole rule
+        // here (never an inner/leaf selector), so the cache always applies.
+        if (_rulePseudoElement[ruleId].value == pseudoElement and isLookupEquivalentToMatch(styleRule->selector)) {
             _matchingRules.pushBack({styleRule, spec(styleRule->selector)});
             return true;
         }
