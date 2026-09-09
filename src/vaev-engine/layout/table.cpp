@@ -913,7 +913,6 @@ export struct TableFormatingContext : FormatingContext {
             }
         }
 
-        // Resize the column-width vector and update it in place with the resolved widths.
         colWidth.resize(colWidthOrNone.len());
         for (usize i = 0; i < grid.size.x; ++i) {
             colWidth[i] = colWidthOrNone[i].unwrapOr(0_au);
@@ -1283,18 +1282,24 @@ export struct TableFormatingContext : FormatingContext {
     Math::Vec2u dataRowsInterval;
     Vec<Au> startPositionOfRow;
 
-    struct CacheParametersFromInput {
+    struct AutoLayoutCacheKey {
         Au containingBlockX;
-        Au capmin;
-        Opt<Au> knownSizeX;
+        Opt<Au> capmin;
+        Opt<Au> knownWidth;
+        Opt<Au> knownHeight;
+        IntrinsicSize intrinsic;
+        bool discovery;
 
-        CacheParametersFromInput(Input const& i)
-            : containingBlockX(i.containingBlock.x),
-              capmin(i.capmin.unwrap()),
-              knownSizeX(i.knownSize.width) {
+        AutoLayoutCacheKey(Input const& input, bool discovery)
+            : containingBlockX(input.containingBlock.x),
+              capmin(input.capmin),
+              knownWidth(input.knownSize.width),
+              knownHeight(input.knownSize.height),
+              intrinsic(input.intrinsic),
+              discovery(discovery) {
         }
 
-        bool operator==(CacheParametersFromInput const& c) const = default;
+        bool operator==(AutoLayoutCacheKey const&) const = default;
     };
 
     bool useBordersCollapse = false;
@@ -1321,7 +1326,7 @@ export struct TableFormatingContext : FormatingContext {
         dataRowsInterval = {numOfHeaderRows, grid.size.y - numOfFooterRows - 1};
     }
 
-    Opt<CacheParametersFromInput> lastInput;
+    Opt<AutoLayoutCacheKey> lastAutoLayoutInput;
 
     void computeWidthAndHeight(Tree& tree, Box& box, Input const& input) {
         // NOTE: When "table-layout: fixed" is set but "width: auto", the specs suggest
@@ -1332,15 +1337,24 @@ export struct TableFormatingContext : FormatingContext {
         bool shouldRunAutoAlgorithm =
             box.style->table->tableLayout == TableLayout::AUTO or
             not input.knownSize.width;
+        Opt<AutoLayoutCacheKey> cacheKey;
 
         if (shouldRunAutoAlgorithm) {
+            cacheKey = Some(AutoLayoutCacheKey{
+                input,
+                tree.fc.isDiscoveryMode(),
+            });
+
+            if (lastAutoLayoutInput == cacheKey)
+                return;
+
             if (input.intrinsic == IntrinsicSize::AUTO) {
-                CacheParametersFromInput inputCacheParameters{input};
-                if (lastInput != inputCacheParameters) {
-                    lastInput = Some(inputCacheParameters);
-                    // bad code
-                    computeAutoColWidths(tree, input.knownSize.width, input.capmin.unwrapOr(0_au), input.containingBlock.x);
-                }
+                computeAutoColWidths(
+                    tree,
+                    input.knownSize.width,
+                    input.capmin.unwrapOr(0_au),
+                    input.containingBlock.x
+                );
             } else {
                 auto [minContent, maxContent] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
                 if (input.intrinsic == IntrinsicSize::MIN_CONTENT)
@@ -1357,6 +1371,8 @@ export struct TableFormatingContext : FormatingContext {
             computeFixedColWidths(tree, box, *input.knownSize.width);
         }
 
+        numAutoHeightRows = 0;
+        totalNonAutoHeight = 0_au;
         computeRowHeights(tree);
 
         auto usedVerticalSpace = (iter(rowHeight) | Sum()) + spacing.y * (grid.size.y + 1);
@@ -1403,6 +1419,8 @@ export struct TableFormatingContext : FormatingContext {
                     spacing.y * (numOfFooterRows + 1),
             };
         }
+
+        lastAutoLayoutInput = cacheKey;
     }
 
     UsedBorders buildUsedCollapsedBordersForCell(usize i, usize j, usize rowSpan, usize colSpan) {
