@@ -36,6 +36,86 @@ export struct Computer {
     Viewport _viewport{.small = _media.viewportSize()};
     Opt<Rc<ComputedValues>> _rootComputedValues = NONE;
 
+    // MARK: Style sharing -------------------------------------------------------
+    //
+    // Cascade application is a pure function of (matched rules, parent's computed
+    // values, the fixed per-document viewport/root). Two elements that agree on
+    // both inputs are guaranteed — not guessed — to compute to the identical
+    // ComputedValues, so the second one can just share the first one's Rc instead
+    // of redoing the allocation and the five cascade phases.
+    //
+    // Deliberately narrow: this never bypasses selector matching (matchingRules
+    // still comes from the real _ruleIndex.match() call), so there's no
+    // similarity heuristic to get wrong. What it does skip is a short, fixed
+    // list of per-element side channels that also feed into ComputedValues
+    // outside the normal cascade — inline `style=`, the handful of HTML
+    // presentational-hint attributes, and the table/align attributes read by
+    // _considerElementAttributes() — by folding the ones cheap to compare into
+    // the key and refusing to share past the ones that aren't (SVG presentation
+    // attributes, which read arbitrarily many attribute names generically).
+    struct StyleShareKey {
+        // (rule, specificity) rather than just the rule pointer: a grouped/OR
+        // selector's matched specificity depends on which branch matched
+        // (`*, *::before, *::after { ... }` is one StyleRule, and Bootstrap-
+        // style resets like it are matched by nearly every element), and two
+        // elements agreeing on the rule but not the branch could disagree on
+        // cascade priority against some other conflicting declaration. This
+        // still shares the near-universal case (same rule, same branch, same
+        // specificity — e.g. everything hitting that reset via the bare `*`
+        // branch) without having to prove branches can't diverge.
+        Vec<StyleRule const*> rules;
+        Vec<isize> specificities; // 3 per rule: a, b, c
+        ComputedValues const* parent = nullptr;
+        Str span, colSpan, rowSpan, align;
+
+        bool operator==(StyleShareKey const& other) const {
+            return parent == other.parent and
+                   span == other.span and
+                   colSpan == other.colSpan and
+                   rowSpan == other.rowSpan and
+                   align == other.align and
+                   rules == other.rules and
+                   specificities == other.specificities;
+        }
+    };
+    Vec<Tuple<StyleShareKey, Rc<ComputedValues>>> _styleShareCache = {};
+
+    // NONE means "don't attempt sharing for this element" — an opt-out attribute
+    // is present, or it's in the SVG namespace (presentation attributes there
+    // are read generically by attribute name, not a fixed list this can check).
+    Opt<StyleShareKey> _styleShareKeyFor(ComputedValues const& parent, Gc::Ref<Dom::Element> el, MatchingRules const& matchingRules) {
+        if (el->namespaceUri() != Html::NAMESPACE)
+            return NONE;
+
+        if (el->style() or
+            el->hasAttribute(Html::FGCOLOR_ATTR) or
+            el->hasAttribute(Html::BGCOLOR_ATTR) or
+            el->hasAttribute(Html::WIDTH_ATTR) or
+            el->hasAttribute(Html::HEIGHT_ATTR) or
+            el->hasAttribute(Html::SIZE_ATTR) or
+            el->hasAttribute(Html::SPAN_ATTR))
+            return NONE;
+
+        StyleShareKey key{
+            .rules = {},
+            .specificities = {},
+            .parent = &parent,
+            .span = ""s,
+            .colSpan = el->getAttribute(Html::COLSPAN_ATTR).unwrapOr(""s),
+            .rowSpan = el->getAttribute(Html::ROWSPAN_ATTR).unwrapOr(""s),
+            .align = el->getAttribute(Html::ALIGN_ATTR).unwrapOr(""s),
+        };
+        key.rules.ensure(matchingRules.len());
+        key.specificities.ensure(matchingRules.len() * 3);
+        for (auto const& [styleRule, specificity] : matchingRules) {
+            key.rules.pushBack(&*styleRule);
+            key.specificities.pushBack(specificity.a);
+            key.specificities.pushBack(specificity.b);
+            key.specificities.pushBack(specificity.c);
+        }
+        return Some(key);
+    }
+
     // MARK: Counters ----------------------------------------------------------
 
     // https://drafts.csswg.org/css-lists/#counter-scope
@@ -397,8 +477,23 @@ export struct Computer {
                 return _registeredPropertySet.initialComputedValues();
         }
 
-        auto values = _registeredPropertySet.inheritsComputedValues(parent);
         bool isRootElement = pseudoElement == NONE and el->parentNode()->is<Dom::Document>();
+
+        // See "Style sharing" above _styleShareKeyFor(): a hit here is
+        // provably, not heuristically, the same ComputedValues this element
+        // would otherwise compute — so just hand back the shared Rc.
+        Opt<StyleShareKey> shareKey;
+        if (not pseudoElement and not isRootElement) {
+            shareKey = _styleShareKeyFor(parent, el, matchingRules);
+            if (shareKey) {
+                for (auto const& [key, cached] : _styleShareCache) {
+                    if (key == *shareKey)
+                        return cached;
+                }
+            }
+        }
+
+        auto values = _registeredPropertySet.inheritsComputedValues(parent);
 
         if (isRootElement)
             _rootComputedValues = Some(values);
@@ -437,6 +532,9 @@ export struct Computer {
 
         if (not pseudoElement)
             _considerElementAttributes(*values, el);
+
+        if (shareKey)
+            _styleShareCache.pushBack({*shareKey, values});
 
         return values;
     }
