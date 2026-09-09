@@ -15,7 +15,7 @@ export struct PlatformObject {
     }
 
     template <Meta::Derive<PlatformObject> T>
-    bool is() {
+    bool is() const {
         return is(Meta::idOf<T>());
     }
 
