@@ -84,7 +84,7 @@ Opt<Str> directInnerText(Dom::Element const& el) {
         return NONE;
     if (el.countChildren() != 1)
         return NONE;
-    if (auto text = el.firstChild()->is<Dom::Text>()) {
+    if (auto text = el.firstChild()->as<Dom::Text>()) {
         auto data = text->data();
         if (Re::match(Re::zeroOrMore(Re::space()), data) == Match::YES)
             return Some(""s);
@@ -160,12 +160,12 @@ Opt<Ui::Child> itemHeader(Gc::Ref<Dom::Node> n, Ui::Action<InspectorAction> a, b
         return Some(Ui::codeMedium("#document"));
     } else if (n->is<Dom::DocumentType>()) {
         return Some(Ui::codeMedium("#document-type"));
-    } else if (auto tx = n->is<Dom::Text>()) {
+    } else if (auto tx = n->as<Dom::Text>()) {
         auto data = tx->data();
         if (Re::match(Re::zeroOrMore(Re::space()), data) == Match::YES)
             return NONE;
         return Some(Ui::codeMedium(Ui::GRAY300, "{}", data));
-    } else if (auto el = n->is<Dom::Element>()) {
+    } else if (auto el = n->as<Dom::Element>()) {
         if (not el->hasChildren())
             return Some(elementStartTag(*el, false));
 
@@ -185,15 +185,15 @@ Opt<Ui::Child> itemHeader(Gc::Ref<Dom::Node> n, Ui::Action<InspectorAction> a, b
                 Kr::badge(Ui::GRAY500, displayBagde) | Ui::cond(displayBagde != "")
             )
         );
-    } else if (auto c = n->is<Dom::Comment>()) {
-        return Some(Ui::codeMedium(Gfx::GREEN, "<!-- {} -->", c->data()));
+    } else if (auto comment = n->as<Dom::Comment>()) {
+        return Some(Ui::codeMedium(Gfx::GREEN, "<!-- {} -->", comment->data()));
     } else {
         unreachable();
     }
 }
 
 Ui::Child itemFooter(Gc::Ref<Dom::Node> n, isize ident) {
-    if (auto el = n->is<Dom::Element>())
+    if (auto el = n->as<Dom::Element>())
         return Ui::hflow(n->countChildren() ? guide() : Ui::empty(), elementEndTag(*el)) | idented(ident);
     return Ui::empty();
 }
@@ -254,7 +254,7 @@ Ui::Child computedStyles(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::
                    Ui::center();
 
     if (s.selectedNode)
-        if (auto const el = s.selectedNode->is<Dom::Element>()) {
+        if (auto const el = s.selectedNode->as<Dom::Element>()) {
             Ui::Children children;
 
             for (auto const& [name, registration] : dom->registeredPropertySet.registrations().iterItems()) {

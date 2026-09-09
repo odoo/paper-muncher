@@ -35,10 +35,10 @@ export struct Computer {
     // https://drafts.csswg.org/css-lists/#counter-scope
     Yield<Dom::OriginatingElement> _iterElementInScope(Dom::Element& el) {
         for (Gc::Ptr<Dom::Node> sibling = el; sibling; sibling = sibling->nextSibling()) {
-            if (auto element = sibling->is<Dom::Element>()) {
+            if (auto element = sibling->as<Dom::Element>()) {
                 co_yield element.upgrade();
                 for (Gc::Ref<Dom::Node> child : element->iterDepthFirst())
-                    if (auto childElement = child->is<Dom::Element>())
+                    if (auto childElement = child->as<Dom::Element>())
                         co_yield Dom::OriginatingElement{childElement.upgrade()};
             }
         }
@@ -137,7 +137,7 @@ export struct Computer {
         CounterSet childSiblingCounters = {};
 
         for (auto child = el.firstChild(); child; child = child->nextSibling()) {
-            if (auto childEl = child->is<Dom::Element>()) {
+            if (auto childEl = child->as<Dom::Element>()) {
                 childSiblingCounters = _resolveCounters(
                     currentCounters,
                     childSiblingCounters,
@@ -308,7 +308,7 @@ export struct Computer {
 
     // https://svgwg.org/specs/integration/#svg-css-sizing
     void _applySvgElementSizingRules(Gc::Ref<Dom::Element> svgEl, CascadedValues& cascadedValues) {
-        if (auto parentEl = svgEl->parentNode()->is<Dom::Element>()) {
+        if (auto parentEl = svgEl->parentNode()->as<Dom::Element>()) {
             // **If we have an <svg> element inside a CSS context**
             if (parentEl->qualifiedName.ns == Svg::NAMESPACE)
                 return;
@@ -442,7 +442,7 @@ export struct Computer {
         generatePseudoElement(*computedValues, el, Dom::PseudoElement::BEFORE);
 
         for (auto child = el.firstChild(); child; child = child->nextSibling()) {
-            if (auto childEl = child->is<Dom::Element>())
+            if (auto childEl = child->as<Dom::Element>())
                 styleElement(*computedValues, *childEl);
         }
     }

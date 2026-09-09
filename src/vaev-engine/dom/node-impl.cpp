@@ -19,7 +19,7 @@ Ref::Url Node::baseURI() {
 // https://dom.spec.whatwg.org/#ref-for-dom-node-ownerdocument%E2%91%A0
 Gc::Ptr<Document> Node::ownerDocument() {
     for (auto curr = parentNode(); curr; curr = curr->parentNode())
-        if (auto doc = curr->is<Document>())
+        if (auto doc = curr->as<Document>())
             return *doc;
     return nullptr;
 }
@@ -27,7 +27,7 @@ Gc::Ptr<Document> Node::ownerDocument() {
 // https://dom.spec.whatwg.org/#ref-for-dom-node-ownerdocument%E2%91%A0
 Gc::Ptr<Document const> Node::ownerDocument() const {
     for (auto curr = parentNode(); curr; curr = curr->parentNode())
-        if (auto doc = curr->is<Document>())
+        if (auto doc = curr->as<Document>())
             return *doc;
     return nullptr;
 }

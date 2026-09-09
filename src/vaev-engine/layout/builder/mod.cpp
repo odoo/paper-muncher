@@ -434,7 +434,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, Box& group) {
 
 void buildSVGAggregate(Gc::Ref<Dom::Element> el, Box& group) {
     for (auto child = el->firstChild(); child; child = child->nextSibling()) {
-        if (auto el = child->is<Dom::Element>()) {
+        if (auto el = child->as<Dom::Element>()) {
             buildSVGElement(*el, group);
         }
         // TODO: process text into svg tree
@@ -641,7 +641,7 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
     auto& registeredPropertySet = parentEl->ownerDocument()->registeredPropertySet;
 
     for (auto child = parentEl->firstChild(); child; child = child->nextSibling()) {
-        if (auto childEL = child->is<Dom::Element>()) {
+        if (auto childEL = child->as<Dom::Element>()) {
             auto childStyle = childEL->computedValues();
             auto display = childStyle->display;
 
@@ -677,7 +677,7 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
                     }
                 }
             }
-        } else if (auto text = child->is<Dom::Text>()) {
+        } else if (auto text = child->as<Dom::Text>()) {
             if (bc.parentComputedValues->display != Display::Internal::TABLE_ROW)
                 anonTableWrapper.createRowIfNone(registeredPropertySet, style);
             anonTableWrapper.createCellIfNone(registeredPropertySet, style);
@@ -707,7 +707,7 @@ static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<
     case Display::Internal::TABLE_COLUMN_GROUP: {
         // "Children of a table-column-group which are not a table-column." should be discarded
         for (auto child = el->firstChild(); child; child = child->nextSibling()) {
-            if (auto el = child->is<Dom::Element>()) {
+            if (auto el = child->as<Dom::Element>()) {
                 auto childStyle = el->computedValues();
                 if (childStyle->display != Display::Internal::TABLE_COLUMN)
                     continue;
@@ -746,7 +746,7 @@ static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<
 static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues> tableBoxStyle) {
     auto searchAndBuildCaption = [&]() {
         for (auto child = el->firstChild(); child; child = child->nextSibling()) {
-            if (auto childEl = child->is<Dom::Element>()) {
+            if (auto childEl = child->as<Dom::Element>()) {
                 auto childStyle = childEl->computedValues();
                 if (childStyle->display != Display::Internal::TABLE_CAPTION)
                     continue;
@@ -844,7 +844,7 @@ static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc:
 // MARK: Dispatching from Node to builder based on outside role ------------------------------------------------------
 
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent) {
-    auto el = parent->is<Dom::Element>();
+    auto el = parent->as<Dom::Element>();
     if (el->computedValues()->display == Display::Item::YES) {
         if (auto marker = el ? el->getPseudoElement(Dom::PseudoElement::MARKER) : NONE) {
             _buildPseudoElement(bc, marker.unwrap());
@@ -902,7 +902,7 @@ static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> c
 // https://www.w3.org/TR/css-display-3/#box-generation
 static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
     logDebugIf(DEBUG_BUILDER, "building node {} at context {}", node, bc.from);
-    if (auto el = node->is<Dom::Element>()) {
+    if (auto el = node->as<Dom::Element>()) {
         auto childStyle = el->computedValues();
         auto display = childStyle->display;
 
@@ -913,7 +913,7 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
         } else {
             _buildChildDefaultDisplay(bc, *el, childStyle, display);
         }
-    } else if (auto text = node->is<Dom::Text>()) {
+    } else if (auto text = node->as<Dom::Text>()) {
         _buildText(bc, text->data(), bc.parentComputedValues);
     }
 }
