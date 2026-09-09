@@ -403,15 +403,52 @@ static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> eleme
     );
 }
 
+// https://www.w3.org/TR/selectors-4/#pseudo-element
+//
+// A pseudo-element can only appear once, in the subject (rightmost) compound
+// of a selector. Which one `selector` requests — if any — is a property of
+// that compound alone: ancestor/sibling compounds to its left, reached
+// through a combinator, never carry a pseudo-element of their own.
+//
+// A selector whose subject compound carries no pseudo-element only ever
+// denotes the originating element, never one of its pseudo-elements: none of
+// TypeSelector, IdSelector, ClassSelector, AttributeSelector, or
+// PseudoClassSelector say anything about pseudo-elements (their matchers take
+// no `pseudoElement` argument at all, see above), so without checking this
+// separately they match a pseudo-element probe exactly as they would the
+// real element.
+export Opt<Symbol> selectorPseudoElement(Selector const& selector) {
+    if (auto pe = selector.is<PseudoElementSelector>())
+        return Some(pe->type);
+
+    if (auto infix = selector.is<Infix>())
+        return selectorPseudoElement(*infix->rhs);
+
+    if (auto nfix = selector.is<Nfix>(); nfix and nfix->type == Nfix::AND)
+        for (auto& inner : nfix->inners)
+            if (auto pe = inner.is<PseudoElementSelector>())
+                return Some(pe->type);
+
+    return NONE;
+}
+
 export Opt<Specificity> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement = NONE) {
     if (auto n = selector.is<Nfix>(); n and n->type == Nfix::OR) {
         Opt<Specificity> specificity;
         for (auto& inner : n->inners) {
+            // Each branch of a selector list is its own selector with its own
+            // subject, e.g. `a::before, b::after` — gate every branch on its
+            // own subject rather than the group as a whole.
+            if (selectorPseudoElement(inner) != pseudoElement)
+                continue;
             if (_matchSelector(inner, element, pseudoElement))
                 specificity = Some(max(specificity.unwrapOr(Specificity::ZERO), spec(inner)));
         }
         return specificity;
     }
+
+    if (selectorPseudoElement(selector) != pseudoElement)
+        return NONE;
 
     if (_matchSelector(selector, element, pseudoElement))
         return Some(spec(selector));

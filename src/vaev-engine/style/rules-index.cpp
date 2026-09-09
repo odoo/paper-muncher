@@ -2,6 +2,7 @@ export module Vaev.Engine:style.ruleIndex;
 
 import Karm.Core;
 
+import :style.matcher;
 import :style.rules;
 
 using namespace Karm;
@@ -287,6 +288,19 @@ struct RuleIndex {
                selector.is<ClassSelector>();
     }
 
+    // Query-time strengthening of isLookupEquivalentToMatch(): a lookup hit only
+    // proves a match when the selector's pseudo-element requirement agrees with
+    // the one being probed. Type/id/class/attribute buckets are collected
+    // unconditionally regardless of pseudoElement (see _collectMatchedRulesCursors),
+    // so e.g. `td { ... }` — no pseudo-element at all — would otherwise be trusted
+    // as a match for `td::before`/`td::after` too. isLookupEquivalentToMatch()
+    // itself is also used at index-construction time, before any query exists, so
+    // it cannot carry this check — every runtime "trust the lookup" shortcut must
+    // layer it on top instead.
+    static bool _isLookupEquivalentToMatchForQuery(Selector const& selector, Opt<Symbol> const& pseudoElement) {
+        return selectorPseudoElement(selector) == pseudoElement and isLookupEquivalentToMatch(selector);
+    }
+
     // Whether a selector can be *found* through a lookup table, which is a weaker
     // property than the one above: a table hit narrows the candidates down, it does
     // not necessarily prove the selector matches.
@@ -414,10 +428,10 @@ struct RuleIndex {
             _matchingRules.pushBack({&rule, specificity.unwrap()});
     }
 
-    bool _maybeDeferRuleEvaluation(Entry const& entry, usize countMatchesWithCurrentRule) {
+    bool _maybeDeferRuleEvaluation(Entry const& entry, usize countMatchesWithCurrentRule, Opt<Symbol> const& pseudoElement) {
         auto const [ruleId, styleRule] = entry;
 
-        if (isLookupEquivalentToMatch(styleRule->selector)) {
+        if (_isLookupEquivalentToMatchForQuery(styleRule->selector, pseudoElement)) {
             _matchingRules.pushBack({styleRule, spec(styleRule->selector)});
             return true;
         }
@@ -454,7 +468,7 @@ struct RuleIndex {
         // proves a match for keys that carry the entire selector. A namespaced type
         // selector is keyed by name alone, so the namespace is still unverified.
         for (auto const& inner : nfix->inners)
-            if (not isLookupEquivalentToMatch(inner))
+            if (not _isLookupEquivalentToMatchForQuery(inner, pseudoElement))
                 return false;
 
         _matchingRules.pushBack({styleRule, spec(styleRule->selector)});
@@ -486,7 +500,7 @@ struct RuleIndex {
                     // sharing a name land in the same bucket and can both be hit by an
                     // element in neither namespace, so those go back to a full evaluation.
                     for (auto const& inner : nfix->inners) {
-                        if (not isLookupEquivalentToMatch(inner)) {
+                        if (not _isLookupEquivalentToMatchForQuery(inner, pseudoElement)) {
                             _evalStyleRule(*lastStyleRule, lastRuleId, el, pseudoElement);
                             return;
                         }
@@ -515,7 +529,7 @@ struct RuleIndex {
                 countMatchesWithCurrentRule++;
             }
 
-            if (not _maybeDeferRuleEvaluation(*_cursors[bestCursorIdx], countMatchesWithCurrentRule))
+            if (not _maybeDeferRuleEvaluation(*_cursors[bestCursorIdx], countMatchesWithCurrentRule, pseudoElement))
                 _evalStyleRule(*_cursors[bestCursorIdx]->rule, _cursors[bestCursorIdx]->order, el, pseudoElement);
 
             lastStyleRule = _cursors[bestCursorIdx]->rule;

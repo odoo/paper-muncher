@@ -20,6 +20,23 @@ namespace Vaev::Style {
 
 static auto debugCounters = Debug::Flag::debug("web-css-counters", "Log all the registered CSS counters");
 
+struct _SizeDump {
+    _SizeDump() {
+        logInfo("=== struct sizes ===");
+        logInfo("sizeof(ComputedValues) = {}", sizeof(ComputedValues));
+        logInfo("sizeof(InheritedProps) = {}", sizeof(InheritedProps));
+        logInfo("sizeof(BorderProps) = {}", sizeof(BorderProps));
+        logInfo("sizeof(ComputedBorder) = {}", sizeof(ComputedBorder));
+        logInfo("sizeof(Radii<Calc<PercentOr<Length>>>) = {}", sizeof(Math::Radii<Calc<PercentOr<Length>>>));
+        logInfo("sizeof(Calc<PercentOr<Length>>) = {}", sizeof(Calc<PercentOr<Length>>));
+        logInfo("sizeof(Padding) = {}", sizeof(Padding));
+        logInfo("sizeof(Margin) = {}", sizeof(Margin));
+        logInfo("sizeof(SizingProps) = {}", sizeof(SizingProps));
+        logInfo("====================");
+    }
+};
+static _SizeDump _sizeDump;
+
 export struct Computer {
     Gc::Heap& _heap;
     Media _media;
@@ -357,13 +374,47 @@ export struct Computer {
 
     // https://drafts.csswg.org/css-cascade/#cascade-origin
     Rc<ComputedValues> computeValues(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement = NONE) {
+        MatchingRules const matchingRules = _ruleIndex.match(el, pseudoElement, &_selectorFilter);
+
+        // https://drafts.csswg.org/css-content/#valdef-content-normal
+        // https://drafts.csswg.org/css-content/#valdef-content-none
+        //
+        // A pseudo-element only materializes if some declaration sets `content`
+        // (directly, or via the `all` shorthand) to something other than its
+        // initial value, `normal`. If nothing in the cascade even mentions
+        // `content`/`all`, there is no cascade to resolve: the computed value is
+        // definitionally the initial value, so generatePseudoElement() would
+        // immediately discard the result anyway. Skip the (comparatively
+        // expensive) allocation, inheritance, and multi-phase cascade below and
+        // hand back the shared initial ComputedValues instead — its `content`
+        // is already NORMAL.
+        //
+        // This never tries to guess whether a matched `content`/`all`
+        // declaration would resolve to `none`: whenever one matches, we fall
+        // through to the real cascade unchanged, exactly as before.
+        if (pseudoElement) {
+            bool mayAffectContent = false;
+            for (auto const& [styleRule, _] : matchingRules) {
+                for (auto& prop : styleRule->props) {
+                    auto name = prop->registration->name();
+                    if (name == "content"_sym or name == "all"_sym) {
+                        mayAffectContent = true;
+                        break;
+                    }
+                }
+                if (mayAffectContent)
+                    break;
+            }
+            if (not mayAffectContent)
+                return _registeredPropertySet.initialComputedValues();
+        }
+
         auto values = _registeredPropertySet.inheritsComputedValues(parent);
         bool isRootElement = pseudoElement == NONE and el->parentNode()->is<Dom::Document>();
 
         if (isRootElement)
             _rootComputedValues = Some(values);
 
-        MatchingRules const matchingRules = _ruleIndex.match(el, pseudoElement, &_selectorFilter);
         CascadedValues cascadedValues;
         for (auto const& [styleRule, specificity] : matchingRules)
             for (auto& prop : styleRule->props)
