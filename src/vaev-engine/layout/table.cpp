@@ -1184,10 +1184,8 @@ export struct TableFormatingContext : FormatingContext {
 
     // https://www.w3.org/TR/CSS22/tables.html#height-layout
     Vec<Au> rowHeight;
-    usize numAutoHeightRows = 0;
-    Au totalNonAutoHeight = 0_au;
 
-    void computeRowHeights(Tree& tree) {
+    Pair<bool, Au> computeRowHeights(Tree& tree) {
         // NOTE: CSS 2.2 does not define how the height of table cells and
         //       table rows is calculated when their height is
         //       specified using percentage values.
@@ -1195,6 +1193,8 @@ export struct TableFormatingContext : FormatingContext {
         //
         //       If definite, percentages being considered 0px
         //       (See https://www.w3.org/TR/css-tables-3/#computing-the-table-height)
+        bool hasAutoHeightRows = false;
+        Au totalNonAutoHeight = 0_au;
 
         rowHeight.resize(grid.size.y);
 
@@ -1211,7 +1211,7 @@ export struct TableFormatingContext : FormatingContext {
 
             // AUTO case
             if (not heightCalc) {
-                numAutoHeightRows++;
+                hasAutoHeightRows = true;
                 continue;
             }
 
@@ -1274,6 +1274,8 @@ export struct TableFormatingContext : FormatingContext {
                 }
             }
         }
+
+        return {hasAutoHeightRows, totalNonAutoHeight};
     }
 
     Vec2Au spacing;
@@ -1372,10 +1374,7 @@ export struct TableFormatingContext : FormatingContext {
             computeFixedColWidths(tree, box, *input.knownSize.width);
         }
 
-        numAutoHeightRows = 0;
-        totalNonAutoHeight = 0_au;
-        computeRowHeights(tree);
-
+        auto [hasAutoHeightRows, totalNonAutoHeight] = computeRowHeights(tree);
         auto usedVerticalSpace = (iter(rowHeight) | Sum()) + spacing.y * (grid.size.y + 1);
 
         // NOSPEC: The exact row height distribution is undefined in CSS2.2 but browsers seem to agree on the algorithm below.
@@ -1383,7 +1382,7 @@ export struct TableFormatingContext : FormatingContext {
             Au knownHeight = input.knownSize.height.unwrap();
             Au surplus = knownHeight - usedVerticalSpace;
 
-            if (numAutoHeightRows > 0) {
+            if (hasAutoHeightRows) {
                 for (usize i = 0; i < rows.len(); i++) {
                     if (rows[i].el.style->sizing->height.is<Keywords::Auto>())
                         rowHeight[i] += surplus * (rowHeight[i] / (usedVerticalSpace - totalNonAutoHeight));
