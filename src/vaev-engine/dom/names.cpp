@@ -31,7 +31,7 @@ namespace Html {
 
 export Symbol NAMESPACE = "http://www.w3.org/1999/xhtml"_sym;
 
-#define TAG(IDENT, VALUE) export Dom::QualifiedName IDENT## _TAG = {Some(NAMESPACE), Symbol::from(#VALUE)};
+#define TAG(IDENT, VALUE) export Dom::QualifiedName IDENT##_TAG = {Some(NAMESPACE), Symbol::from(#VALUE)};
 #include "defs/ns-html-tag-names.inc"
 #undef TAG
 
@@ -61,7 +61,7 @@ export Array const IMPLIED_END_TAGS = {
     RT_TAG
 };
 
-#define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT## _ATTR = {NONE, Symbol::from(#VALUE)};
+#define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT##_ATTR = {NONE, Symbol::from(#VALUE)};
 #include "defs/ns-html-attr-names.inc"
 #undef ATTR
 
@@ -71,11 +71,11 @@ namespace Svg {
 
 export Symbol NAMESPACE = "http://www.w3.org/2000/svg"_sym;
 
-#define TAG(IDENT, VALUE) export Dom::QualifiedName IDENT## _TAG = {Some(NAMESPACE), Symbol::from(#VALUE)};
+#define TAG(IDENT, VALUE) export Dom::QualifiedName IDENT##_TAG = {Some(NAMESPACE), Symbol::from(#VALUE)};
 #include "defs/ns-svg-tag-names.inc"
 #undef TAG
 
-#define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT## _ATTR = {NONE, Symbol::from(#VALUE)};
+#define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT##_ATTR = {NONE, Symbol::from(#VALUE)};
 #include "defs/ns-svg-attr-names.inc"
 #undef ATTR
 
@@ -107,11 +107,11 @@ namespace MathMl {
 
 export Symbol NAMESPACE = "http://www.w3.org/1998/Math/MathML"_sym;
 
-#define TAG(IDENT, VALUE) export Dom::QualifiedName IDENT## _TAG = {Some(NAMESPACE), Symbol::from(#VALUE)};
+#define TAG(IDENT, VALUE) export Dom::QualifiedName IDENT##_TAG = {Some(NAMESPACE), Symbol::from(#VALUE)};
 #include "defs/ns-mathml-tag-names.inc"
 #undef TAG
 
-#define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT## _ATTR = {NONE, Symbol::from(#VALUE)};
+#define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT##_ATTR = {NONE, Symbol::from(#VALUE)};
 #include "defs/ns-mathml-attr-names.inc"
 #undef ATTR
 

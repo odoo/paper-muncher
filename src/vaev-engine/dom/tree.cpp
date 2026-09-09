@@ -195,14 +195,14 @@ struct Tree : Meta::Pinned {
     template <typename T, typename Self>
     auto iterChildrenOfType(this Self& self) -> Yield<Gc::Ref<Meta::CopyConst<Self, T>>> {
         for (auto child = self.firstChild(); child; child = child->nextSibling())
-            if (auto it = child->template is<T>())
+            if (auto it = child->template as<T>())
                 co_yield it.upgrade();
     }
 
     template <typename T, typename Self>
     auto iterChildrenOfTypeReverse(this Self& self) -> Yield<Gc::Ref<Meta::CopyConst<Self, T>>> {
         for (auto child = self.lastChild(); child; child = child->previousSibling())
-            if (auto it = child->template is<T>())
+            if (auto it = child->template as<T>())
                 co_yield it.upgrade();
     }
 };
