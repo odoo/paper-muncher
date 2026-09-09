@@ -711,6 +711,7 @@ export struct RegisteredPropertySet {
         // by the per-property loop below.
         child.customProps = parent.customProps;
         child.inherited = parent.inherited;
+        child.fontFamilies = parent.fontFamilies;
         child.svgPaint = parent.svgPaint;
 
         // Handle the rest of the properties

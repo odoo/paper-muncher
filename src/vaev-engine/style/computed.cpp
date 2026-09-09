@@ -69,7 +69,6 @@ export struct InheritedProps {
     MarkerSide markerSide = Keywords::MATCH_SELF;
 
     // FONT
-    Vec<FontFamily> fontFamilies = {"sans-serif"_sym};
     Gfx::FontWeight fontWeight = Gfx::FontWeight::REGULAR;
     FontWidth fontWidth = FontWidth::NORMAL;
     FontStyle fontStyle = FontStyle::NORMAL;
@@ -78,9 +77,21 @@ export struct InheritedProps {
 // https://www.w3.org/TR/css-cascade/#computed
 export struct ComputedValues {
     Cow<InheritedProps> inherited;
+    // Split from `inherited`: unlike every other field in that group, this
+    // one owns a heap buffer (Vec<T>, no small-buffer optimization), so it's
+    // the only field that makes a copy of `inherited` allocate. Splitting it
+    // out means the other 14 inherited properties (text-align, white-space,
+    // list-style, table caption-side, ...) copy for free again.
+    Cow<Vec<FontFamily>> fontFamilies = Vec<FontFamily>{"sans-serif"_sym};
     Cow<Gaps> gaps;
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
+    // Split from `borders`: rarely set (square corners is the overwhelming
+    // common case) but, at 8 Calc<PercentOr<Length>> corners, larger than the
+    // border color/style/width data it used to live alongside — bundling it
+    // meant every border-color/style/width edit paid to copy unused radius
+    // data, and vice versa.
+    Cow<Math::Radii<Calc<PercentOr<Length>>>> borderRadii = Math::Radii<Calc<PercentOr<Length>>>{Length{0_au}};
     Cow<Margin> margin = Margin(Calc<PercentOr<Length>>(Length())); // FIXME
     Cow<OutlineProps> outline;
     Cow<Padding> padding = Padding(Length{}); // FIXME

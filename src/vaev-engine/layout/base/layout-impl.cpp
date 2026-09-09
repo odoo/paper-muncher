@@ -126,7 +126,7 @@ InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
 }
 
 Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size) {
-    auto radii = box.style->borders->radii;
+    auto radii = *box.style->borderRadii;
     Math::Radii<Au> res;
 
     res.a = resolve(tree, box, radii.a, size.height);

@@ -35,7 +35,7 @@ export struct FontFamilyProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontFamilyProperty>(self(), c.inherited->fontFamilies);
+            return makeRc<FontFamilyProperty>(self(), *c.fontFamilies);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -58,7 +58,7 @@ export struct FontFamilyProperty : Property {
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.inherited.cow().fontFamilies = _value;
+        c.fontFamilies.cow() = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -281,7 +281,7 @@ export struct FontProperty : Property {
             return makeRc<FontProperty>(
                 self(),
                 Value{
-                    font.fontFamilies,
+                    *c.fontFamilies,
                     Some(font.fontWeight),
                     font.fontWidth,
                     font.fontStyle,

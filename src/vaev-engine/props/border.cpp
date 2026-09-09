@@ -539,8 +539,8 @@ export struct BorderRadiusTopRightProperty : Property {
 
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderRadiusTopRightProperty>(self(), Array{
-                                                                    c.borders->radii.c,
-                                                                    c.borders->radii.d,
+                                                                    (*c.borderRadii).c,
+                                                                    (*c.borderRadii).d,
                                                                 });
         }
 
@@ -559,8 +559,8 @@ export struct BorderRadiusTopRightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii.c = _value[0];
-        c.borders.cow().radii.d = _value[1];
+        c.borderRadii.cow().c = _value[0];
+        c.borderRadii.cow().d = _value[1];
     }
 
     void repr(Io::Emit& e) const override {
@@ -583,8 +583,8 @@ export struct BorderRadiusTopLeftProperty : Property {
             return makeRc<BorderRadiusTopLeftProperty>(
                 self(),
                 Array{
-                    c.borders->radii.a,
-                    c.borders->radii.b,
+                    (*c.borderRadii).a,
+                    (*c.borderRadii).b,
                 }
             );
         }
@@ -604,8 +604,8 @@ export struct BorderRadiusTopLeftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii.a = _value[1];
-        c.borders.cow().radii.b = _value[0];
+        c.borderRadii.cow().a = _value[1];
+        c.borderRadii.cow().b = _value[0];
     }
 
     void repr(Io::Emit& e) const override {
@@ -626,8 +626,8 @@ export struct BorderRadiusBottomRightProperty : Property {
 
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderRadiusBottomRightProperty>(self(), Array{
-                                                                       c.borders->radii.e,
-                                                                       c.borders->radii.f,
+                                                                       (*c.borderRadii).e,
+                                                                       (*c.borderRadii).f,
                                                                    });
         }
 
@@ -646,8 +646,8 @@ export struct BorderRadiusBottomRightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii.e = _value[1];
-        c.borders.cow().radii.f = _value[0];
+        c.borderRadii.cow().e = _value[1];
+        c.borderRadii.cow().f = _value[0];
     }
 
     void repr(Io::Emit& e) const override {
@@ -670,8 +670,8 @@ export struct BorderRadiusBottomLeftProperty : Property {
             return makeRc<BorderRadiusBottomLeftProperty>(
                 self(),
                 Array{
-                    c.borders->radii.g,
-                    c.borders->radii.h,
+                    (*c.borderRadii).g,
+                    (*c.borderRadii).h,
                 }
             );
         }
@@ -691,8 +691,8 @@ export struct BorderRadiusBottomLeftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii.g = _value[0];
-        c.borders.cow().radii.h = _value[1];
+        c.borderRadii.cow().g = _value[0];
+        c.borderRadii.cow().h = _value[1];
     }
 
     void repr(Io::Emit& e) const override {
@@ -712,7 +712,7 @@ export struct BorderRadiusProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRadiusProperty>(self(), c.borders->radii);
+            return makeRc<BorderRadiusProperty>(self(), (*c.borderRadii));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -727,7 +727,7 @@ export struct BorderRadiusProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii = _value;
+        c.borderRadii.cow() = _value;
     }
 
     void repr(Io::Emit& e) const override {

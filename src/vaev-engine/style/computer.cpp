@@ -20,22 +20,6 @@ namespace Vaev::Style {
 
 static auto debugCounters = Debug::Flag::debug("web-css-counters", "Log all the registered CSS counters");
 
-struct _SizeDump {
-    _SizeDump() {
-        logInfo("=== struct sizes ===");
-        logInfo("sizeof(ComputedValues) = {}", sizeof(ComputedValues));
-        logInfo("sizeof(InheritedProps) = {}", sizeof(InheritedProps));
-        logInfo("sizeof(BorderProps) = {}", sizeof(BorderProps));
-        logInfo("sizeof(ComputedBorder) = {}", sizeof(ComputedBorder));
-        logInfo("sizeof(Radii<Calc<PercentOr<Length>>>) = {}", sizeof(Math::Radii<Calc<PercentOr<Length>>>));
-        logInfo("sizeof(Calc<PercentOr<Length>>) = {}", sizeof(Calc<PercentOr<Length>>));
-        logInfo("sizeof(Padding) = {}", sizeof(Padding));
-        logInfo("sizeof(Margin) = {}", sizeof(Margin));
-        logInfo("sizeof(SizingProps) = {}", sizeof(SizingProps));
-        logInfo("====================");
-    }
-};
-static _SizeDump _sizeDump;
 
 export struct Computer {
     Gc::Heap& _heap;
@@ -200,7 +184,7 @@ export struct Computer {
             .style = style.inherited->fontStyle.val,
         };
 
-        for (auto family : style.inherited->fontFamilies) {
+        for (auto const& family : *style.fontFamilies) {
             if (auto const& [font] = _fontDatabase->queryClosest(family.name, fq))
                 return font;
         }
@@ -213,8 +197,12 @@ export struct Computer {
 
     void _updateFontface(ComputedValues const& parent, Rc<ComputedValues> values) {
         // FIXME: Use a font-dirty flag instead.
-        if (not parent.inherited.sameInstance(values->inherited) and
-            (parent.inherited->fontFamilies != values->inherited->fontFamilies or
+        // `inherited` and `fontFamilies` are split into separate Cow<>s (see
+        // computed.cpp), so either one changing instance is enough to warrant
+        // the (more precise, value-based) check below.
+        if ((not parent.inherited.sameInstance(values->inherited) or
+             not parent.fontFamilies.sameInstance(values->fontFamilies)) and
+            (*parent.fontFamilies != *values->fontFamilies or
              parent.inherited->fontWeight != values->inherited->fontWeight or
              parent.inherited->fontStyle != values->inherited->fontStyle or
              parent.inherited->fontWidth != values->inherited->fontWidth)) {
