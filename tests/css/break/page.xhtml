@@ -306,4 +306,30 @@
 
 </test>
 
+<test name="table row-height cache pagination" flow="paginate" margins="minimum">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                @page { size: 100px 100px; margin: 0; }
+                html, body { margin: 0; }
+                table { width: 100px; border-spacing: 0; background: red; }
+                td { padding: 0; }
+                .part { height: 120px; }
+            </style>
+        </head>
+        <body><slot /></body>
+        </html>
+    </container>
+
+    <rendering help="fragmented table cell">
+        <table><tr><td><div class="part"></div><div class="part"></div></td></tr></table>
+    </rendering>
+
+    <rendering help="reference">
+        <div style="width:100px;height:200px;background:red"></div>
+        <div style="width:100px;height:120px;background:red"></div>
+    </rendering>
+</test>
+
 </tests>
