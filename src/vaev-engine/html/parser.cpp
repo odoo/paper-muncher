@@ -802,6 +802,25 @@ export struct HtmlParser : HtmlSink {
         return _insertAForeignElement(t, Html::NAMESPACE, false);
     }
 
+    // Runs of consecutive character tokens (the overwhelming common case for
+    // text content) all resolve to the same insertion location and the same
+    // target Text node, since nothing but character tokens intervenes. Rather
+    // than pay a StringBuilder::append call per token, buffer the run here and
+    // only touch the Text node's data once it's known to end — either because
+    // the next character targets a different node, or because parsing is
+    // done (see the flush in write()). Nothing outside _insertACharacter
+    // reads Text node data mid-parse, so deferring the write is safe.
+    Gc::Ptr<Dom::Text> _pendingTextNode;
+    StringBuilder _pendingText;
+
+    void _flushPendingText() {
+        if (not _pendingTextNode)
+            return;
+        _pendingTextNode->appendData(_pendingText.str());
+        _pendingText.clear();
+        _pendingTextNode = nullptr;
+    }
+
     // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-character
     void _insertACharacter(Rune c) {
         // 2. Let the adjusted insertion location be the appropriate place for inserting a node.
@@ -816,7 +835,11 @@ export struct HtmlParser : HtmlSink {
         auto previousSibling = location.previousSibling();
         if (previousSibling and previousSibling->nodeType() == Dom::NodeType::TEXT) {
             auto text = previousSibling->is<Dom::Text>();
-            text->appendData(c);
+            if (text != _pendingTextNode) {
+                _flushPendingText();
+                _pendingTextNode = text;
+            }
+            _pendingText.append(c);
         }
 
         // Otherwise, create a new Text node whose data is data and whose node
@@ -824,9 +847,11 @@ export struct HtmlParser : HtmlSink {
         //            adjusted insertion location finds itself, and insert the
         //            newly created node at the adjusted insertion location.
         else {
+            _flushPendingText();
             auto text = _heap.alloc<Dom::Text>(""s);
-            text->appendData(c);
             location.insert(text);
+            _pendingTextNode = text;
+            _pendingText.append(c);
         }
     }
 
@@ -4347,6 +4372,8 @@ export struct HtmlParser : HtmlSink {
         }
         // NOTE: '\3' (End of Text) is used here as a placeholder so we are directed to the EOF case
         _lexer.consume('\3', s.loc(), diags, true);
+
+        _flushPendingText();
     }
 };
 
