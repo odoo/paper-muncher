@@ -27,6 +27,10 @@ export struct DocumentType : Node {
         return TYPE;
     }
 
+    bool is(Meta::Id id) const override {
+        return id == Meta::idOf<DocumentType>() or PlatformObject::is(id);
+    }
+
     void _repr(Io::Emit& e) const override {
         e(" name={:#} publicId={:#} systemId={:#}", this->name, this->publicId, this->systemId);
     }

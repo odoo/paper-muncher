@@ -23,7 +23,7 @@ static bool _matchDescendant(Selector const& selector, Gc::Ref<Dom::Element> ele
     Gc::Ptr<Dom::Node> curr = element;
     while (curr->hasParentNode()) {
         auto parent = curr->parentNode();
-        if (auto el = parent->is<Dom::Element>())
+        if (auto el = parent->as<Dom::Element>())
             if (_matchSelector(selector, *el, NONE))
                 return true;
         curr = parent;
@@ -37,7 +37,7 @@ static bool _matchChild(Selector const& selector, Gc::Ref<Dom::Element> element)
         return false;
 
     auto parent = element->parentNode();
-    if (auto el = parent->is<Dom::Element>())
+    if (auto el = parent->as<Dom::Element>())
         return _matchSelector(selector, *el, NONE);
     return false;
 }
@@ -48,7 +48,7 @@ static bool _matchAdjacent(Selector const& selector, Gc::Ref<Dom::Element> eleme
         return false;
 
     auto prev = element->previousSibling();
-    if (auto el = prev->is<Dom::Element>())
+    if (auto el = prev->as<Dom::Element>())
         return _matchSelector(selector, *el, NONE);
     return false;
 }
@@ -58,7 +58,7 @@ static bool _matchSubsequent(Selector const& selector, Gc::Ref<Dom::Element> ele
     Gc::Ptr<Dom::Node> current = element;
     while (current->hasPreviousSibling()) {
         auto prev = current->previousSibling();
-        if (auto el = prev->is<Dom::Element>())
+        if (auto el = prev->as<Dom::Element>())
             if (_matchSelector(selector, *el, NONE))
                 return true;
         current = prev;
@@ -259,7 +259,7 @@ static bool _matchNthChild(PseudoClassSelector::AnBofS const& anbOfS, Gc::Ref<Do
             return false;
 
         auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
-            auto el = node->is<Dom::Element>();
+            auto el = node->as<Dom::Element>();
             return el ? matchSelector(*(selector.unwrap()), *el, NONE) != NONE : false;
         };
         auto index = reverseLookup ? element->reverseIndex(filterFunc) : element->index(filterFunc);
@@ -267,7 +267,7 @@ static bool _matchNthChild(PseudoClassSelector::AnBofS const& anbOfS, Gc::Ref<Do
     }
 
     auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
-        return node->is<Dom::Element>() != NONE;
+        return node->is<Dom::Element>();
     };
     auto index = reverseLookup ? element->reverseIndex(filterFunc) : element->index(filterFunc);
     return anb.match(index + 1);
@@ -288,7 +288,7 @@ static bool _matchNthOfType(AnB const& anb, Gc::Ref<Dom::Element> element, bool 
     auto name = element->qualifiedName;
 
     auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
-        auto el = node->is<Dom::Element>();
+        auto el = node->as<Dom::Element>();
         return el ? el->qualifiedName == name : false;
     };
 

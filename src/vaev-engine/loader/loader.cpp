@@ -177,7 +177,7 @@ Gfx::Snapshot _missingImagePlaceholder() {
 }
 
 Async::Task<> _fetchResourcesAsync(Http::Client& client, Dom::Document& document, Gc::Ref<Dom::Node> node, Async::CancellationToken ct) {
-    auto el = node->is<Dom::Element>();
+    auto el = node->as<Dom::Element>();
     if (el and el->qualifiedName == Html::IMG_TAG) {
         auto src = el->getAttribute(Html::SRC_ATTR);
         if (not src) {

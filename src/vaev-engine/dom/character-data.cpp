@@ -17,6 +17,10 @@ export struct CharacterData : Node {
         : _data(std::move(data)) {
     }
 
+    bool is(Meta::Id id) const override {
+        return id == Meta::idOf<CharacterData>() or PlatformObject::is(id);
+    }
+
     void appendData(Str s) {
         _data.append(s);
     }

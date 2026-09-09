@@ -56,17 +56,17 @@ struct DocumentEmit {
         try$(_insertIndent());
 
         if (node->nodeType() == Dom::NodeType::TEXT) {
-            auto text = node->is<Dom::Text>();
+            auto text = node->as<Dom::Text>();
 
             try$(_emit("\"{}\"\n", text->data()));
         } else if (node->nodeType() == Dom::NodeType::COMMENT) {
-            auto comment = node->is<Dom::Comment>();
+            auto comment = node->as<Dom::Comment>();
             try$(_emit("<!-- {} -->\n", comment->data()));
         } else if (node->nodeType() == Dom::NodeType::DOCUMENT_TYPE) {
-            auto doctype = node->is<Dom::DocumentType>();
+            auto doctype = node->as<Dom::DocumentType>();
             try$(_emit("<!DOCTYPE {}>\n", doctype->name));
         } else if (node->nodeType() == Dom::NodeType::ELEMENT) {
-            auto element = node->is<Dom::Element>();
+            auto element = node->as<Dom::Element>();
 
             try$(_emit("<{}>\n", element->qualifiedName.name));
 

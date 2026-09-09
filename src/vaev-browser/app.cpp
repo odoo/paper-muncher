@@ -195,18 +195,18 @@ Ui::Child webview(State const& s) {
 
     Opt<Dom::OriginatingElement> selected = NONE;
     if (s.inspect.selectedNode) {
-        if (auto it = s.inspect.selectedNode->is<Dom::Element>())
+        if (auto it = s.inspect.selectedNode->as<Dom::Element>())
             selected = Some(Dom::OriginatingElement{Gc::Ref(*const_cast<Dom::Element*>(it.upgrade()._ptr))});
     }
 
     return View::viewport(
                s.window,
                [&](Ui::Node& n, Dom::Event& domEvent) {
-                   if (auto const& [e] = domEvent.as<Dom::MouseEvent>()) {
-                       if (e.type == Dom::EventType::CONTEXTMENU)
+                   if (auto e = domEvent.as<Dom::MouseEvent>()) {
+                       if (e->type == Dom::EventType::CONTEXTMENU)
                            Kr::showContextMenu(
                                n,
-                               n.bound().topStart() + e.screen,
+                               n.bound().topStart() + e->screen,
                                contextMenu(s, domEvent.target)
                            );
                    }
