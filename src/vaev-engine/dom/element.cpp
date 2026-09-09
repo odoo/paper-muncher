@@ -61,8 +61,6 @@ Symbol const PseudoElement::MARKER = "::marker"_sym;
 
 // https://dom.spec.whatwg.org/#interface-element
 export struct Element : Node {
-    static constexpr auto TYPE = NodeType::ELEMENT;
-
     QualifiedName qualifiedName;
     // NOSPEC: Should be a NamedNodeMap
     Vec<Attr> attributes;
@@ -79,7 +77,11 @@ export struct Element : Node {
     }
 
     NodeType nodeType() const override {
-        return TYPE;
+        return NodeType::ELEMENT;
+    }
+
+    bool is(Meta::Id id) const override {
+        return id == Meta::idOf<Element>() or PlatformObject::is(id);
     }
 
     void _repr(Io::Emit& e) const override {

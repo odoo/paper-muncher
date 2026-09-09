@@ -10,6 +10,10 @@ export struct Text : CharacterData {
 
     using CharacterData::CharacterData;
 
+    bool is(Meta::Id id) const override {
+        return id == Meta::idOf<Text>() or PlatformObject::is(id);
+    }
+
     NodeType nodeType() const override {
         return TYPE;
     }

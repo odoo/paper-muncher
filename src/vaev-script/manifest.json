@@ -7,6 +7,7 @@
         "lang"
     ],
     "requires": [
+        "vaev-idl",
         "karm-core",
         "karm-math",
         "karm-gc"

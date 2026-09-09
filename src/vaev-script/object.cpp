@@ -1,6 +1,7 @@
 export module Vaev.Script:object;
 
 import Karm.Core;
+import Vaev.Idl;
 
 import :agent;
 import :completion;
@@ -22,7 +23,7 @@ export struct _ObjectCreateArgs {
     Gc::Ptr<Object> prototype = nullptr;
 };
 
-export struct Object {
+export struct Object : Idl::PlatformObject {
     Agent& agent;
     InternalMethods internalMethods = {};
     PropertyStorage propertyStorage = {};
@@ -30,6 +31,12 @@ export struct Object {
     bool extensible = true;
 
     static Gc::Ref<Object> create(Agent& agent, _ObjectCreateArgs args = {});
+
+    Object(Agent& agent) : agent(agent) {}
+
+    bool is(Meta::Id id) const override {
+        return id == Meta::idOf<Object>() or PlatformObject::is(id);
+    }
 
     Except<Gc::Ptr<Object>> getPrototypeOf();
 

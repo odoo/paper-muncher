@@ -13,7 +13,7 @@ namespace Vaev::Script {
 // https://tc39.es/ecma262/#sec-object-type
 
 Gc::Ref<Object> Object::create(Agent& agent, _ObjectCreateArgs args) {
-    auto obj = agent.heap.alloc<Object>(agent);
+    auto obj = agent.heap().alloc<Object>(agent);
     obj->prototype = args.prototype;
     return obj;
 }
