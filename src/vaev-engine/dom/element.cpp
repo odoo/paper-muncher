@@ -63,14 +63,18 @@ Symbol const PseudoElement::MARKER = "::marker"_sym;
 export struct Element : Node {
     static constexpr auto TYPE = NodeType::ELEMENT;
 
-    QualifiedName qualifiedName;
-    // NOSPEC: Should be a NamedNodeMap
+    struct RareFields {
+        Opt<Gfx::Snapshot> imageContent = NONE;
+    };
+
     Vec<Attr> attributes;
-    Opt<Rc<Style::ComputedValues>> _computedValues;
+    Vec<Gc::Ref<PseudoElement>> _pseudoElements;
     TokenList classList;
-    Opt<Gfx::Snapshot> imageContent;
-    Map<Symbol, Gc::Ref<PseudoElement>> _pseudoElements;
     Style::CounterSet counters;
+    QualifiedName qualifiedName;
+    Opt<Rc<Style::ComputedValues>> _computedValues;
+    Opt<Rc<RareFields>> _rareFields;
+
 
     // MARK: Node --------------------------------------------------------------
 
@@ -204,16 +208,49 @@ export struct Element : Node {
     }
 
     bool hasPseudoElement(Symbol type) const {
-        return _pseudoElements.contains(type);
+        for (auto const& p : _pseudoElements) {
+            if (p->type == type)
+                return true;
+        }
+        return false;
     }
 
     void addPseudoElement(Gc::Ref<PseudoElement> pseudoElement) {
         pseudoElement->parent = *this;
-        _pseudoElements.put(pseudoElement->type, pseudoElement);
+
+        // FIXME: Should we support overwrite ?
+        for (usize i = 0; i < _pseudoElements.len(); i++) {
+            if (_pseudoElements[i]->type == pseudoElement->type) {
+                _pseudoElements.replace(i, pseudoElement);
+                return;
+            }
+        }
+
+        _pseudoElements.emplaceBack(pseudoElement);
     }
 
     Opt<Gc::Ref<PseudoElement>> getPseudoElement(Symbol type) const {
-        return _pseudoElements.lookup(type);
+        for (auto const& p : _pseudoElements) {
+            if (p->type == type)
+                return Some(p);
+        }
+        return NONE;
+    }
+
+    Opt<Gfx::Snapshot> imageContent() {
+        if (not _rareFields) {
+            return NONE;
+        }
+
+        return (*_rareFields)->imageContent;
+    }
+
+    void setImageContent(Gfx::Snapshot snapshot) {
+        if (not _rareFields) {
+            _rareFields = Some(makeRc<RareFields>());
+        }
+
+        (*_rareFields)->imageContent = Some(snapshot);
     }
 };
 

@@ -181,7 +181,7 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Dom::Document& document
     if (el and el->qualifiedName == Html::IMG_TAG) {
         auto src = el->getAttribute(Html::SRC_ATTR);
         if (not src) {
-            el->imageContent = Some(_missingImagePlaceholder());
+            el->setImageContent(_missingImagePlaceholder());
             logWarn("image element missing src attribute");
             co_return Error::invalidInput("link element missing src");
         }
@@ -189,12 +189,12 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Dom::Document& document
         auto url = Ref::Url::parse(*src, Some(node->baseURI()));
         auto image = co_await _fetchImageContentAsync(client, url, ct);
         if (not image) {
-            el->imageContent = Some(_missingImagePlaceholder());
+            el->setImageContent(_missingImagePlaceholder());
             logWarn("failed to fetch image from {}: {}", url, image);
             co_return Error::invalidInput("failed to fetch image");
         }
 
-        el->imageContent = Some(image.take());
+        el->setImageContent(image.take());
     } else if (el and el->qualifiedName == Html::STYLE_TAG) {
         auto text = el->textContent();
         Io::SScan textScan{text};
