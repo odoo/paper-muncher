@@ -14,6 +14,8 @@ import Karm.Sys;
 import Karm.Logger;
 import Karm.Image;
 
+import Vaev.Fetch;
+
 import :dom.document;
 import :html;
 import :xml;
@@ -288,6 +290,24 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
         logDebugIf(dumpStylesheets, "document stylesheets: {}", document->styleSheets);
 
     co_return Ok(document);
+}
+
+template <typename T>
+struct StyleResourceLoader {};
+
+template <typename T>
+struct StyleRessourceState : Fetch::Fetch {
+    Opt<Res<T>> ressource;
+};
+
+template <typename T>
+struct StyleResource {
+    Opt<Res<T>> ressource;
+};
+
+// https://www.w3.org/TR/css-values-4/#fetch-a-style-resource
+template <typename T>
+StyleResource<T> fetchStyleResource(Ref::Url url, Style::StyleSheet stylesheet, Fetch::RequestDestination destination) {
 }
 
 } // namespace Vaev::Loader
