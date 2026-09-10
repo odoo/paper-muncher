@@ -13,7 +13,8 @@ import :values.percent;
 
 namespace Vaev {
 
-export struct Image;
+export template <typename T>
+struct Image;
 
 // MARK: Linear Gradient -------------------------------------------------------
 // https://www.w3.org/TR/css-images-4/#linear-gradients
@@ -81,26 +82,6 @@ export struct ConicGradient {
     }
 };
 
-// MARK: Cross Fade ------------------------------------------------------------
-// https://www.w3.org/TR/css-images-4/#cross-fade-function
-
-export struct CrossFade {
-    struct Layer {
-        Box<Image> image;
-        Percent opacity;
-
-        void repr(Io::Emit& e) const {
-            e("({} {})", image, opacity);
-        }
-    };
-
-    Vec<Layer> layers;
-
-    void repr(Io::Emit& e) const {
-        e("(cross-fade {}", layers);
-    }
-};
-
 // MARK: Stripes ---------------------------------------------------------------
 
 // https://www.w3.org/TR/css-images-4/#typedef-color-stripe
@@ -122,20 +103,43 @@ export struct Stripes {
     }
 };
 
+// MARK: Cross Fade ------------------------------------------------------------
+// https://www.w3.org/TR/css-images-4/#cross-fade-function
+
+export template <typename T>
+struct CrossFade {
+    struct Layer {
+        Box<Image<T>> image;
+        Percent opacity;
+
+        void repr(Io::Emit& e) const {
+            e("({} {})", image, opacity);
+        }
+    };
+
+    Vec<Layer> layers;
+
+    void repr(Io::Emit& e) const {
+        e("(cross-fade {}", layers);
+    }
+};
+
 // MARK: Image -----------------------------------------------------------------
 // https://www.w3.org/TR/css-images-4/#typedef-image
 
+template <typename T>
 using _Image = Union<
     Color,
     LinearGradient,
     RadialGradient,
     ConicGradient,
-    CrossFade,
+    CrossFade<T>,
     Stripes,
-    Ref::Url>;
+    T>;
 
-export struct Image : _Image {
-    using _Image::_Image;
+export template <typename T>
+struct Image : _Image<T> {
+    using _Image<T>::_Image;
 
     void repr(Io::Emit& e) const {
         visit([&](auto const& i) {
