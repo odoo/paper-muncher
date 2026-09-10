@@ -32,7 +32,6 @@ struct TransformProps {
     }
 };
 
-
 export struct TableProps {
     TableLayout tableLayout = TableLayout::AUTO;
     usize span = 1;
