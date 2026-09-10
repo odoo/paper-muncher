@@ -293,7 +293,17 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
 }
 
 template <typename T>
-struct StyleResource;
+struct StyleResourceLoader {};
+
+template <typename T>
+struct StyleRessourceState : Fetch::Fetch {
+    Opt<Res<T>> ressource;
+};
+
+template <typename T>
+struct StyleResource {
+    Opt<Res<T>> ressource;
+};
 
 // https://www.w3.org/TR/css-values-4/#fetch-a-style-resource
 template <typename T>
