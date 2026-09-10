@@ -72,6 +72,11 @@ export struct Element : Node {
     Map<Symbol, Gc::Ref<PseudoElement>> _pseudoElements;
     Style::CounterSet counters;
 
+    u32 _elementIndex = 0;
+    u32 _elementIndexRev = 0;
+    u32 _typeIndex = 0;
+    u32 _typeIndexRev = 0;
+
     // MARK: Node --------------------------------------------------------------
 
     Element(QualifiedName const& qualifiedName)
@@ -214,6 +219,60 @@ export struct Element : Node {
 
     Opt<Gc::Ref<PseudoElement>> getPseudoElement(Symbol type) const {
         return _pseudoElements.lookup(type);
+    }
+
+    // MARK: Sibling counters --------------------------------------------------
+
+    void _ensureSiblingPositions() {
+        if (auto parent = parentNode()) {
+            if (parent->_childElementPositionsComputedAt == parent->_childrenMutationCounter) {
+                return;
+            }
+
+            Map<QualifiedName, u32> typeCounts;
+            u32 elementCount = 0;
+
+            for (auto el : parent->iterChildrenOfType<Element>()) {
+                el->_elementIndex = elementCount++;
+                auto& seen = typeCounts.lookupOrPutDefault(el->qualifiedName);
+                el->_typeIndex = seen++;
+            }
+
+            elementCount = 0;
+            typeCounts.clear();
+
+            for (auto el : parent->iterChildrenOfTypeReverse<Element>()) {
+                el->_elementIndexRev = elementCount++;
+                auto& seen = typeCounts.lookupOrPutDefault(el->qualifiedName);
+                el->_typeIndexRev = seen++;
+            }
+
+            parent->_childElementPositionsComputedAt = parent->_childrenMutationCounter;
+        }
+    }
+
+    // https://drafts.csswg.org/selectors/#nth-child-pseudo
+    u32 nthChildNumber() {
+        _ensureSiblingPositions();
+        return _elementIndex + 1;
+    }
+
+    // https://drafts.csswg.org/selectors/#nth-last-child-pseudo
+    u32 nthLastChildNumber() {
+        _ensureSiblingPositions();
+        return _elementIndexRev + 1;
+    }
+
+    // https://drafts.csswg.org/selectors/#the-nth-of-type-pseudo
+    u32 nthOfTypeNumber() {
+        _ensureSiblingPositions();
+        return _typeIndex + 1;
+    }
+
+    // https://drafts.csswg.org/selectors/#the-nth-last-of-type-pseudo
+    u32 nthLastOfTypeNumber() {
+        _ensureSiblingPositions();
+        return _typeIndexRev + 1;
     }
 };
 
