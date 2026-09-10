@@ -266,11 +266,7 @@ static bool _matchNthChild(PseudoClassSelector::AnBofS const& anbOfS, Gc::Ref<Do
         return anb.match(index + 1);
     }
 
-    auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
-        return node->is<Dom::Element>() != NONE;
-    };
-    auto index = reverseLookup ? element->reverseIndex(filterFunc) : element->index(filterFunc);
-    return anb.match(index + 1);
+    return anb.match(reverseLookup ? element->nthLastChildNumber() : element->nthChildNumber());
 }
 
 // 14.4.1. :nth-of-type pseudo-class
@@ -285,17 +281,7 @@ static bool _matchNthOfType(AnB const& anb, Gc::Ref<Dom::Element> element, bool 
     if (not featureNthChild.enabled)
         return false;
 
-    auto name = element->qualifiedName;
-
-    auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
-        auto el = node->is<Dom::Element>();
-        return el ? el->qualifiedName == name : false;
-    };
-
-    auto index = reverseLookup
-                     ? element->reverseIndex(filterFunc)
-                     : element->index(filterFunc);
-    return anb.match(index + 1);
+    return anb.match(reverseLookup ? element->nthLastOfTypeNumber() : element->nthOfTypeNumber());
 }
 
 static bool _match(PseudoElementSelector const& selector, Gc::Ref<Dom::Element>, Opt<Symbol> const& pseudoElement) {
