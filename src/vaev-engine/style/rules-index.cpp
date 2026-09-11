@@ -1,12 +1,51 @@
+module;
+
+#include <stdlib.h>
+
 export module Vaev.Engine:style.ruleIndex;
 
 import Karm.Core;
+import Karm.Sys;
 
+import :style.ancestorFilter;
 import :style.rules;
 
 using namespace Karm;
 
 namespace Vaev::Style {
+
+namespace _FilterStats {
+struct State {
+    usize evalCalls = 0;
+    usize rejected = 0;
+    usize nonEmptyRanges = 0;
+    bool dumpRegistered = false;
+};
+inline State& _state() {
+    static State s;
+    return s;
+}
+inline void _dump() {
+    auto& s = _state();
+    Sys::errln("=== AncestorFilter stats ===");
+    Sys::errln("_evalStyleRule calls:  {}", s.evalCalls);
+    Sys::errln("rejected by filter:    {}", s.rejected);
+    Sys::errln("non-empty ranges seen: {}", s.nonEmptyRanges);
+    Sys::errln("============================");
+}
+inline void _record(bool hasRange, bool wasRejected) {
+    auto& s = _state();
+    if (not s.dumpRegistered) {
+        s.dumpRegistered = true;
+        atexit(_dump);
+    }
+    s.evalCalls++;
+    if (hasRange)
+        s.nonEmptyRanges++;
+    if (wasRejected)
+        s.rejected++;
+}
+} // namespace _FilterStats
 
 // Used to speed up the lookup of style rules by using lookup tables.
 // This is useful for rules described by:
@@ -35,6 +74,9 @@ struct RuleIndex {
     Vec<Entry> _nonLookupRules;
 
     Map<usize, usize> _ruleIdToNeededCount;
+
+    Vec<u16> _allAncestorHashes;
+    Vec<urange> _ruleAncestorHashes;
 
     void _add(Cursor<StyleRule> rule, usize ruleId, Selector const& selector) {
         selector.visit(
@@ -117,9 +159,65 @@ struct RuleIndex {
         );
     }
 
+    void _collectSimpleHashes(Selector const& selector) {
+        selector.visit(
+            [&](IdSelector const& s) {
+                _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::ID, s.id.str()));
+            },
+            [&](ClassSelector const& s) {
+                _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::CLASS, s.class_));
+            },
+            [&](TypeSelector const& s) {
+                if (auto [name] = s.qualifiedName.exactName())
+                    _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::TYPE, name.str()));
+            },
+            [&](AttributeSelector const& s) {
+                if (auto [name] = s.qualifiedName.exactName())
+                    _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::ATTR, name.str()));
+            },
+            [&](auto const&) {}
+        );
+    }
+
+    void _collectCompoundHashes(Selector const& selector) {
+        if (auto nfix = selector.is<Nfix>()) {
+            if (nfix->type != Nfix::AND)
+                return;
+
+            for (auto const& inner : nfix->inners)
+                _collectSimpleHashes(inner);
+
+            return;
+        }
+        _collectSimpleHashes(selector);
+    }
+
+    void _collectAncestorHashes(Selector const& selector) {
+        if (auto infix = selector.is<Infix>()) {
+            if (infix->type != Infix::DESCENDANT and infix->type != Infix::CHILD)
+                return;
+
+            _collectCompoundHashes(*infix->rhs);
+            _collectAncestorHashes(*infix->lhs);
+
+            return;
+        }
+        _collectCompoundHashes(selector);
+    }
+
+    void _indexAncestorHashes(Selector const& selector) {
+        usize before = _allAncestorHashes.len();
+        if (auto infix = selector.is<Infix>())
+            if (infix->type == Infix::DESCENDANT or infix->type == Infix::CHILD)
+                _collectAncestorHashes(*infix->lhs);
+
+        _ruleAncestorHashes.pushBack({before, _allAncestorHashes.len() - before});
+    }
+
     void add(StyleRule const& rule) {
-        _ruleCount++;
+        _indexAncestorHashes(rule.selector);
         _add(&rule, _ruleCount, rule.selector);
+        _ruleCount++;
     }
 
     static bool isLookupEquivalentToMatch(AttributeSelector const& selector) {
@@ -184,7 +282,13 @@ struct RuleIndex {
 
     MatchingRules _matchingRules;
 
-    void _evalStyleRule(StyleRule const& rule, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement) {
+    void _evalStyleRule(StyleRule const& rule, usize ruleId, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement, AncestorFilter const& ancestorFilter) {
+        auto ancestorHashes = sub(_allAncestorHashes, _ruleAncestorHashes[ruleId]);
+        bool rejected = ancestorFilter.rejects(ancestorHashes);
+        _FilterStats::_record(ancestorHashes.len() > 0, rejected);
+        if (rejected)
+            return;
+
         if (auto specificity = rule.match(el, pseudoElement))
             _matchingRules.pushBack({&rule, specificity.unwrap()});
     }
@@ -229,9 +333,9 @@ struct RuleIndex {
         return true;
     }
 
-    void _mergeMatchedRules(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement) {
+    void _mergeMatchedRules(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement, AncestorFilter const& ancestorFilter) {
         usize countMatchesWithCurrentRule = 0;
-        usize lastRuleId = 0;
+        Opt<usize> lastRuleId = NONE;
         Cursor<StyleRule> lastStyleRule = nullptr;
 
         auto maybeFinalizeNfixOrRule = [&]() {
@@ -243,7 +347,7 @@ struct RuleIndex {
                     return;
 
                 if (countMatchesWithCurrentRule == 1) {
-                    _evalStyleRule(*lastStyleRule, el, pseudoElement);
+                    _evalStyleRule(*lastStyleRule, *lastRuleId, el, pseudoElement, ancestorFilter);
                 } else {
                     // NOTE: If an element has 2 or more occourence of this rule in its list, we can assume
                     // the rule as matched, since at least one of the occourences is due to a lookupable selector,
@@ -264,7 +368,8 @@ struct RuleIndex {
             // NOTE: This is quite hot code and doing this check every time is not ideal,
             // but it was the only way found to allow defering the evaluation of OR infixes until
             // we know how many times this rule was matched.
-            if (lastRuleId != _cursors[bestCursorIdx]->order) {
+            usize order = _cursors[bestCursorIdx]->order;
+            if (not lastRuleId or *lastRuleId != order) {
                 maybeFinalizeNfixOrRule();
                 countMatchesWithCurrentRule = 1;
             } else {
@@ -272,10 +377,10 @@ struct RuleIndex {
             }
 
             if (not _maybeDeferRuleEvaluation(*_cursors[bestCursorIdx], countMatchesWithCurrentRule))
-                _evalStyleRule(*_cursors[bestCursorIdx]->rule, el, pseudoElement);
+                _evalStyleRule(*_cursors[bestCursorIdx]->rule, order, el, pseudoElement, ancestorFilter);
 
             lastStyleRule = _cursors[bestCursorIdx]->rule;
-            lastRuleId = _cursors[bestCursorIdx]->order;
+            lastRuleId = Some(order);
 
             _cursors[bestCursorIdx].next();
             if (_cursors[bestCursorIdx].ended()) {
@@ -287,12 +392,12 @@ struct RuleIndex {
         maybeFinalizeNfixOrRule();
     }
 
-    MatchingRules match(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement) {
+    MatchingRules match(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement, AncestorFilter const& ancestorFilter) {
         _cursors.clear();
         _matchingRules.clear();
 
         _collectMatchedRulesCursors(el, pseudoElement);
-        _mergeMatchedRules(el, pseudoElement);
+        _mergeMatchedRules(el, pseudoElement, ancestorFilter);
 
         return _matchingRules;
     }
