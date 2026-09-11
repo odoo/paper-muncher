@@ -241,6 +241,40 @@ static bool _matchLink(Gc::Ref<Dom::Element> element) {
     return element->qualifiedName == Html::A_TAG and element->hasAttribute(Html::HREF_ATTR);
 }
 
+static void _ensureSiblingPositions(Dom::Node& parent) {
+    if (parent._childElementPositionsComputedAt == parent._childrenMutationCounter) {
+        return;
+    }
+
+    Map<Dom::QualifiedName, u32> typeCounts;
+    u32 elementCount = 0;
+
+    for (auto child = parent.firstChild(); child; child = child->nextSibling()) {
+        auto el = child->is<Dom::Element>();
+        if (not el)
+            continue;
+
+        el->_elementIndex = elementCount++;
+        auto& seen = typeCounts.lookupOrPutDefault(el->qualifiedName);
+        el->_typeIndex = seen++;
+    }
+
+    elementCount = 0;
+    typeCounts.clear();
+
+    for (auto child = parent.lastChild(); child; child = child->previousSibling()) {
+        auto el = child->is<Dom::Element>();
+        if (not el)
+            continue;
+
+        el->_elementIndexRev = elementCount++;
+        auto& seen = typeCounts.lookupOrPutDefault(el->qualifiedName);
+        el->_typeIndexRev = seen++;
+    }
+
+    parent._childElementPositionsComputedAt = parent._childrenMutationCounter;
+}
+
 // 14.3.1. :nth-child() pseudo-class
 // 14.3.2. :nth-last-child() pseudo-class
 // 14.3.3. :first-child pseudo-class
@@ -266,10 +300,12 @@ static bool _matchNthChild(PseudoClassSelector::AnBofS const& anbOfS, Gc::Ref<Do
         return anb.match(index + 1);
     }
 
-    auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
-        return node->is<Dom::Element>() != NONE;
-    };
-    auto index = reverseLookup ? element->reverseIndex(filterFunc) : element->index(filterFunc);
+    auto parent = element->parentNode();
+    if (not parent)
+        return anb.match(1);
+
+    _ensureSiblingPositions(*parent);
+    usize index = reverseLookup ? element->_elementIndexRev : element->_elementIndex;
     return anb.match(index + 1);
 }
 
@@ -285,16 +321,12 @@ static bool _matchNthOfType(AnB const& anb, Gc::Ref<Dom::Element> element, bool 
     if (not featureNthChild.enabled)
         return false;
 
-    auto name = element->qualifiedName;
+    auto parent = element->parentNode();
+    if (not parent)
+        return anb.match(1);
 
-    auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
-        auto el = node->is<Dom::Element>();
-        return el ? el->qualifiedName == name : false;
-    };
-
-    auto index = reverseLookup
-                     ? element->reverseIndex(filterFunc)
-                     : element->index(filterFunc);
+    _ensureSiblingPositions(*parent);
+    usize index = reverseLookup ? element->_typeIndexRev : element->_typeIndex;
     return anb.match(index + 1);
 }
 

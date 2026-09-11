@@ -15,6 +15,10 @@ struct Tree : Meta::Pinned {
     Gc::Ptr<Node> _nextSibling = nullptr;
     Gc::Ptr<Node> _prevSibling = nullptr;
 
+    // NOTE: This is required for nth-child selector caching invalidation.
+    u32 _childrenMutationCounter = 1;
+    u32 _childElementPositionsComputedAt = 0;
+
     // Accessor ----------------------------------------------------------------
 
     usize index(auto filter) const {
@@ -77,6 +81,8 @@ struct Tree : Meta::Pinned {
         _lastChild = node;
         if (!_firstChild)
             _firstChild = _lastChild;
+
+        _childrenMutationCounter++;
     }
 
     void prependChild(Gc::Ptr<Node> node) {
@@ -90,6 +96,8 @@ struct Tree : Meta::Pinned {
         _firstChild = node;
         if (!_lastChild)
             _lastChild = _firstChild;
+
+        _childrenMutationCounter++;
     }
 
     void insertBefore(Gc::Ptr<Node> node, Gc::Ptr<Node> child) {
@@ -111,6 +119,8 @@ struct Tree : Meta::Pinned {
         child->_prevSibling = node;
 
         node->_parent = {MOVE, static_cast<Node*>(this)};
+
+        _childrenMutationCounter++;
     }
 
     void insertAfter(Gc::Ptr<Node> node, Gc::Ptr<Node> child) {
@@ -132,11 +142,15 @@ struct Tree : Meta::Pinned {
         child->_nextSibling = node;
 
         node->_parent = {MOVE, static_cast<Node*>(this)};
+
+        _childrenMutationCounter++;
     }
 
     void remove(this auto& self) {
         if (not self._parent)
             return;
+
+        self._parent->_childrenMutationCounter++;
 
         if (self._parent->_firstChild == &self)
             self._parent->_firstChild = self._nextSibling;

@@ -10,6 +10,7 @@ import Karm.Ref;
 
 import :dom.document;
 import :dom.element;
+import :style.ancestorFilter;
 import :style.cascaded;
 import :style.computed;
 import :style.counter;
@@ -27,6 +28,7 @@ export struct Computer {
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
     RuleIndex _ruleIndex = {};
+    AncestorFilter _ancestorFilter = {};
     Viewport _viewport{.small = _media.viewportSize()};
     Opt<Rc<ComputedValues>> _rootComputedValues = NONE;
 
@@ -358,7 +360,7 @@ export struct Computer {
         if (isRootElement)
             _rootComputedValues = Some(values);
 
-        MatchingRules const matchingRules = _ruleIndex.match(el, pseudoElement);
+        MatchingRules const matchingRules = _ruleIndex.match(el, pseudoElement, _ancestorFilter);
         CascadedValues cascadedValues;
         for (auto const& [styleRule, specificity] : matchingRules)
             for (auto& prop : styleRule->props)
@@ -441,10 +443,12 @@ export struct Computer {
         generatePseudoElement(*computedValues, el, Dom::PseudoElement::AFTER);
         generatePseudoElement(*computedValues, el, Dom::PseudoElement::BEFORE);
 
+        _ancestorFilter.push(el);
         for (auto child = el.firstChild(); child; child = child->nextSibling()) {
             if (auto childEl = child->is<Dom::Element>())
                 styleElement(*computedValues, *childEl);
         }
+        _ancestorFilter.pop();
     }
 
     // MARK: Body Background ---------------------------------------------------
