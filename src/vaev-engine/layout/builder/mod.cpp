@@ -36,6 +36,14 @@ static bool _allowsWrap(WhiteSpace whiteSpace) {
     return oneOf(whiteSpace, WhiteSpace::NORMAL, WhiteSpace::PRE_WRAP, WhiteSpace::BREAK_SPACES, WhiteSpace::PRE_LINE);
 }
 
+static bool _collapsesWhitespace(WhiteSpace whiteSpace) {
+    return oneOf(whiteSpace, WhiteSpace::NORMAL, WhiteSpace::NOWRAP, WhiteSpace::PRE_LINE);
+}
+
+static bool _discardsWhitespaceOnlyTextAtContentStart(WhiteSpace whiteSpace) {
+    return oneOf(whiteSpace, WhiteSpace::NORMAL, WhiteSpace::NOWRAP);
+}
+
 static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues const& style) {
     Gfx::ProseStyle proseStyle{
         .multiline = true,
@@ -101,6 +109,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
         .marginRight = resolver.resolve(style.margin->end, 0_au),
         .lineHeight = usedLineHeight,
         .wordwrap = _allowsWrap(style.text->whiteSpace),
+        .collapsibleWhitespace = _collapsesWhitespace(style.text->whiteSpace),
     };
 }
 
@@ -125,14 +134,15 @@ void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, TextTransfo
 // https://www.w3.org/TR/css-text-3/#white-space-phase-2
 void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues> parentStyle, Box& rootInlineBox) {
     auto whitespace = parentStyle->text->whiteSpace;
-    bool whiteSpacesAreCollapsible =
-        whitespace == WhiteSpace::NORMAL or
-        whitespace == WhiteSpace::NOWRAP or
-        whitespace == WhiteSpace::PRE_LINE;
+    bool whiteSpacesAreCollapsible = _collapsesWhitespace(whitespace);
 
     // A sequence of collapsible spaces at the beginning of a line is removed.
-    if (not rootInlineBox.isActive())
-        scan.eat(Re::space());
+    if (not rootInlineBox.isActive()) {
+        if (whitespace == WhiteSpace::PRE_LINE)
+            scan.eat(Re::blank());
+        else if (whiteSpacesAreCollapsible)
+            scan.eat(Re::space());
+    }
 
     while (not scan.ended()) {
         auto rune = scan.next();
@@ -148,36 +158,18 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues> parentStyl
         }
 
         // https://www.w3.org/TR/css-text-3/#collapse
+        // Preserve pre-line segment breaks. Prose collapses other whitespace
+        // across text and inline boundaries.
         if (whiteSpacesAreCollapsible) {
-            // Any sequence of collapsible spaces and tabs immediately preceding or following a segment break is removed.
-            bool visitedSegmentBreak = false;
-            while (true) {
-                if (isSegmentBreak(rune))
-                    visitedSegmentBreak = true;
-
-                if (scan.ended() or not isAsciiSpace(scan.peek()))
-                    break;
-
-                rune = scan.next();
-            }
-
-            // Any collapsible space immediately following another collapsible space—​even one outside the boundary
-            // of the inline containing that space, provided both spaces are within the same inline formatting
-            // context—​is collapsed to have zero advance width. (It is invisible, but retains its soft wrap
-            // opportunity, if any.)
-            // TODO: not compliant regarding wrap opportunity
-
-            // https://www.w3.org/TR/css-text-3/#valdef-white-space-pre-line
-            // Collapsible segment breaks are transformed for rendering according to the segment
-            // break transformation rules.
-            if (whitespace == WhiteSpace::PRE_LINE and visitedSegmentBreak)
+            if (whitespace == WhiteSpace::PRE_LINE and isSegmentBreak(rune)) {
+                // A CRLF sequence represents one segment break.
+                if (rune == '\r' and not scan.ended() and scan.peek() == '\n')
+                    scan.next();
                 prose->append('\n');
-            else
+            } else {
                 prose->append(' ');
-        } else if (whitespace == WhiteSpace::PRE) {
-            prose->append(rune);
+            }
         } else {
-            // FIXME: Handle other Whitespace cases
             prose->append(rune);
         }
     }
@@ -354,7 +346,9 @@ static void _buildText(BuilderContext bc, Str text, Rc<Style::ComputedValues> pa
     bool shouldSkipWhitespace =
         bc.from == BuilderContext::From::TABLE or
         bc.from == BuilderContext::From::FLEX or
-        bc.from == BuilderContext::From::BLOCK;
+        (bc.from == BuilderContext::From::BLOCK and
+         _discardsWhitespaceOnlyTextAtContentStart(parentStyle->text->whiteSpace) and
+         not bc.rootInlineBox().isActive());
 
     bool addedNonWhitespace = _buildText(text, parentStyle, bc.rootInlineBox(), shouldSkipWhitespace);
 
