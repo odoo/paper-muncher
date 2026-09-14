@@ -361,8 +361,8 @@ export struct Computer {
         MatchingRules const matchingRules = _ruleIndex.match(el, pseudoElement);
         CascadedValues cascadedValues;
         for (auto const& [styleRule, specificity] : matchingRules)
-            for (auto& prop : styleRule->props)
-                cascadedValues.put(prop, styleRule->origin, specificity);
+            for (auto& prop : styleRule.props)
+                cascadedValues.put(prop, styleRule.origin, specificity);
 
         if (not pseudoElement) {
             _considerHtmlPresentationalHint(el, cascadedValues);
