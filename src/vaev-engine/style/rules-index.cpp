@@ -2,6 +2,7 @@ export module Vaev.Engine:style.ruleIndex;
 
 import Karm.Core;
 
+import :style.ancestorFilter;
 import :style.rules;
 
 using namespace Karm;
@@ -12,6 +13,7 @@ struct RuleIndex {
     struct Entry {
         StyleRule const& originatingRule;
         Selector const& selector;
+        urange ancestorHashes;
     };
 
     Map<String, Vec<Entry>> _idRules;
@@ -20,6 +22,8 @@ struct RuleIndex {
     Map<Symbol, Vec<Entry>> _attrRules;
 
     Vec<Entry> _complexRules;
+
+    Vec<u16> _allAncestorHashes;
 
     enum class DestinationBucket {
         ATTR,
@@ -34,20 +38,78 @@ struct RuleIndex {
     };
 
     void _insert(Opt<Candidate> candidate, StyleRule const& rule, Selector const& selector) {
+        auto ancestorHashes = _indexAncestorHashes(selector);
 
         if (not candidate) {
-            _complexRules.emplaceBack(rule, selector);
+            _complexRules.emplaceBack(rule, selector, ancestorHashes);
         } else if (candidate->destination == DestinationBucket::ID) {
-            _idRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector);
+            _idRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes);
         } else if (candidate->destination == DestinationBucket::CLASS) {
-            _classRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector);
+            _classRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes);
         } else if (candidate->destination == DestinationBucket::TYPE) {
-            _typeRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector);
+            _typeRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes);
         } else if (candidate->destination == DestinationBucket::ATTR) {
-            _attrRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector);
+            _attrRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes);
         } else {
             unreachable();
         }
+    }
+
+    void _collectSimpleHashes(Selector const& selector) {
+        selector.visit(
+            [&](IdSelector const& s) {
+                _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::ID, s.id.str()));
+            },
+            [&](ClassSelector const& s) {
+                _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::CLASS, s.class_));
+            },
+            [&](TypeSelector const& s) {
+                if (auto [name] = s.qualifiedName.exactName())
+                    _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::TYPE, name.str()));
+            },
+            [&](AttributeSelector const& s) {
+                if (auto [name] = s.qualifiedName.exactName()) {
+                    if (not oneOf(name, Html::ID_ATTR.name, Html::CLASS_ATTR.name, Html::STYLE_ATTR.name))
+                        _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::ATTR, name.str()));
+                }
+            },
+            [&](auto const&) {}
+        );
+    }
+
+    void _collectCompoundHashes(Selector const& selector) {
+        if (auto nfix = selector.is<Nfix>()) {
+            if (nfix->type != Nfix::AND)
+                return;
+
+            for (auto const& inner : nfix->inners)
+                _collectSimpleHashes(inner);
+
+            return;
+        }
+        _collectSimpleHashes(selector);
+    }
+
+    void _collectAncestorHashes(Selector const& selector) {
+        if (auto infix = selector.is<Infix>()) {
+            if (infix->type != Infix::DESCENDANT and infix->type != Infix::CHILD)
+                return;
+
+            _collectCompoundHashes(*infix->rhs);
+            _collectAncestorHashes(*infix->lhs);
+
+            return;
+        }
+        _collectCompoundHashes(selector);
+    }
+
+    urange _indexAncestorHashes(Selector const& selector) {
+        usize before = _allAncestorHashes.len();
+        if (auto infix = selector.is<Infix>())
+            if (infix->type == Infix::DESCENDANT or infix->type == Infix::CHILD)
+                _collectAncestorHashes(*infix->lhs);
+
+        return {before, _allAncestorHashes.len() - before};
     }
 
     void add(StyleRule const& rule) {
@@ -112,12 +174,15 @@ struct RuleIndex {
         );
     }
 
-    MatchingRules match(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement) {
+    MatchingRules match(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement, AncestorFilter const& ancestorFilter) {
         MatchingRules matching;
 
         auto _insertIfBucketHit = [&](auto const& bucket, auto const& key) {
             if (auto [entries] = bucket.lookup(key)) {
                 for (auto const& entry : entries) {
+                    if (ancestorFilter.rejects(sub(_allAncestorHashes, entry.ancestorHashes)))
+                        continue;
+
                     if (auto [specificity] = matchSelector(entry.selector, el, pseudoElement)) {
                         matching.pushBack({entry.originatingRule, specificity});
                     }
@@ -140,6 +205,9 @@ struct RuleIndex {
         }
 
         for (auto const& entry : _complexRules) {
+            if (ancestorFilter.rejects(sub(_allAncestorHashes, entry.ancestorHashes)))
+                continue;
+
             if (auto [specificity] = matchSelector(entry.selector, el, pseudoElement)) {
                 matching.pushBack({entry.originatingRule, specificity});
             }
