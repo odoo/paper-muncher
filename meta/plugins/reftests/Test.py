@@ -2,6 +2,7 @@ from pathlib import Path
 from cutekit import const
 
 TEST_REPORT = (Path(const.PROJECT_CK_DIR) / "tests" / "report").absolute()
+TESTS_DIR = (Path(__file__).parent.parent.parent.parent / "tests").resolve()
 
 SUPPORTED_PROPS = {
     "name": None,
@@ -13,6 +14,8 @@ SUPPORTED_PROPS = {
 }
 
 SUPPORTED_CASE_PROPS = {
+    "footer": None,
+    "footer-size": None,
     "help": None,
     "skip": None,
 }
@@ -64,6 +67,8 @@ class TestCase:
         self.height = props.get("height", SUPPORTED_PROPS["height"])
         self.flow = props.get("flow", SUPPORTED_PROPS["flow"])
         self.margins = props.get("margins", SUPPORTED_PROPS["margins"])
+        self.footer = caseProps.get("footer", SUPPORTED_CASE_PROPS["footer"])
+        self.footerSize = caseProps.get("footer-size", SUPPORTED_CASE_PROPS["footer-size"])
         self.help = caseProps.get("help", SUPPORTED_CASE_PROPS["help"])
         self.skipped = caseProps.get("skip", SUPPORTED_CASE_PROPS["skip"]) == "true"
 
@@ -107,6 +112,12 @@ def runPaperMuncher(executable, test: TestCase):
 
     if test.margins:
         command.extend(["--margins", test.margins])
+
+    if test.footer:
+        command.extend(["--footer", TESTS_DIR / test.footer])
+
+    if test.footerSize:
+        command.extend(["--footer-size", test.footerSize])
 
     command += [
         "-o",

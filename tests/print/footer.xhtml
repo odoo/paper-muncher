@@ -1,0 +1,55 @@
+<tests>
+
+<test name="footer-page-numbers" width="200px" height="100px" flow="paginate" margins="none">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body {
+                    margin: 0;
+                }
+
+                .page-content {
+                    background: black;
+                    height: 80px;
+                }
+
+                .fake-footer {
+                    background: black;
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 20px;
+                }
+            </style>
+            <slot/>
+        </head>
+        <body>
+            <div class="page-content"></div>
+            <div class="fake-footer">
+                <div>Page <span>1</span> / <span>2</span></div>
+            </div>
+            <div class="page-content"></div>
+            <div class="fake-footer">
+                <div>Page <span>2</span> / <span>2</span></div>
+            </div>
+        </body>
+        </html>
+    </container>
+
+    <rendering/>
+
+    <rendering
+        help="Odoo footer page and total-page placeholders"
+        footer="print/footer-page-numbers.html"
+        footer-size="20px">
+        <style>
+            .fake-footer {
+                display: none;
+            }
+        </style>
+    </rendering>
+</test>
+
+</tests>

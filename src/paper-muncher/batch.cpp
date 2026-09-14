@@ -166,7 +166,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
         return infos.pageDecoration.shrink({headerHeight, 0_au, footerHeight});
     }
 
-    void decorate(Vaev::Style::Media const& media, Vaev::Driver::PageLayoutInfos const& infos, [[maybe_unused]] usize pageCount, Gfx::Canvas& g) override {
+    void decorate(Vaev::Style::Media const& media, Vaev::Driver::PageLayoutInfos const& infos, usize pageCount, Gfx::Canvas& g) override {
         auto decorationWidth = infos.pageDecoration.width;
         auto [headerHeight, footerHeight] = _memo.lookup(infos.pageDecoration.size()).unwrap();
 
@@ -180,6 +180,26 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
         }
 
         if (auto& [w] = footerWindow) {
+            // Populate Odoo's page-number placeholders before painting.
+            for (auto node : w->document()->iterDepthFirst()) {
+                if (auto element = node->as<Vaev::Dom::Element>()) {
+                    if (element->classList.contains("page") and not element->hasChildren()) {
+                        element->appendChild(
+                            w->_heap.alloc<Vaev::Dom::Text>(Io::toStr(infos.pageNumber))
+                        );
+                    } else if (element->classList.contains("page")) {
+                        if (auto text = element->firstChild()->as<Vaev::Dom::Text>()) {
+                            text->_data.clear();
+                            text->appendData(Io::toStr(infos.pageNumber));
+                        }
+                    } else if (element->classList.contains("topage") and not element->hasChildren()) {
+                        element->appendChild(
+                            w->_heap.alloc<Vaev::Dom::Text>(Io::toStr(pageCount))
+                        );
+                    }
+                }
+            }
+
             w->changeMedia(media);
             w->changeViewport({decorationWidth, footerHeight});
             g.push();
