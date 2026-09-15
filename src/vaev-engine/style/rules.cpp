@@ -354,6 +354,10 @@ void MediaRule::repr(Io::Emit& e) const {
     }
 }
 
-using MatchingRules = Vec<Tuple<Cursor<StyleRule>, Specificity>>;
+struct MatchingRule {
+    StyleRule const& rule;
+    Specificity specificity;
+    usize order;
+};
 
 } // namespace Vaev::Style

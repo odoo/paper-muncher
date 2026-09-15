@@ -1,0 +1,46 @@
+<tests>
+
+<test name="cascade: follows source order">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                .a {
+                    background-color: red;
+                }
+
+                .b {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 100px;
+                    height: 100px;
+                }
+            </style>
+        </head>
+
+        <body>
+        <section>
+            <slot />
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background-color: blue"></div>
+    </rendering>
+
+    <rendering>
+        <div style="width: 100px; height: 100px;" class="b a"></div>
+    </rendering>
+</test>
+
+</tests>
