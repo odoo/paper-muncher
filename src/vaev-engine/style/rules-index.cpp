@@ -14,6 +14,7 @@ struct RuleIndex {
         StyleRule const& originatingRule;
         Selector const& selector;
         urange ancestorHashes;
+        usize order;
     };
 
     Map<String, Vec<Entry>> _idRules;
@@ -24,6 +25,8 @@ struct RuleIndex {
     Vec<Entry> _complexRules;
 
     Vec<u16> _allAncestorHashes;
+
+    usize _ruleCounter = 0;
 
     enum class DestinationBucket {
         ATTR,
@@ -37,19 +40,19 @@ struct RuleIndex {
         Str key;
     };
 
-    void _insert(Opt<Candidate> candidate, StyleRule const& rule, Selector const& selector) {
+    void _insert(Opt<Candidate> candidate, StyleRule const& rule, Selector const& selector, usize order) {
         auto ancestorHashes = _indexAncestorHashes(selector);
 
         if (not candidate) {
-            _complexRules.emplaceBack(rule, selector, ancestorHashes);
+            _complexRules.emplaceBack(rule, selector, ancestorHashes, order);
         } else if (candidate->destination == DestinationBucket::ID) {
-            _idRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes);
+            _idRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes, order);
         } else if (candidate->destination == DestinationBucket::CLASS) {
-            _classRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes);
+            _classRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes, order);
         } else if (candidate->destination == DestinationBucket::TYPE) {
-            _typeRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes);
+            _typeRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes, order);
         } else if (candidate->destination == DestinationBucket::ATTR) {
-            _attrRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes);
+            _attrRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes, order);
         } else {
             unreachable();
         }
@@ -73,7 +76,8 @@ struct RuleIndex {
                         _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::ATTR, name.str()));
                 }
             },
-            [&](auto const&) {}
+            [&](auto const&) {
+            }
         );
     }
 
@@ -113,16 +117,18 @@ struct RuleIndex {
     }
 
     void add(StyleRule const& rule) {
+        auto order = _ruleCounter++;
+
         if (auto s = rule.selector.is<Nfix>(); s and s->type == Nfix::OR) {
             for (auto const& inner : s->inners) {
-                _insert(_addInner(inner), rule, inner);
+                _insert(_addInner(inner), rule, inner, order);
             }
         } else {
-            _insert(_addInner(rule.selector), rule, rule.selector);
+            _insert(_addInner(rule.selector), rule, rule.selector, order);
         }
     }
 
-     Opt<Candidate> _addInner(Selector const& selector) {
+    Opt<Candidate> _addInner(Selector const& selector) {
         return selector.visit(
             [&](TypeSelector const& s) -> Opt<Candidate> {
                 auto const& qualifiedNameSelector = s.qualifiedName;
@@ -174,8 +180,8 @@ struct RuleIndex {
         );
     }
 
-    MatchingRules match(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement, AncestorFilter const& ancestorFilter) {
-        MatchingRules matching;
+    Vec<MatchingRule> match(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement, AncestorFilter const& ancestorFilter) {
+        Vec<MatchingRule> matching;
 
         auto _insertIfBucketHit = [&](auto const& bucket, auto const& key) {
             if (auto [entries] = bucket.lookup(key)) {
@@ -184,7 +190,7 @@ struct RuleIndex {
                         continue;
 
                     if (auto [specificity] = matchSelector(entry.selector, el, pseudoElement)) {
-                        matching.pushBack({entry.originatingRule, specificity});
+                        matching.pushBack({entry.originatingRule, specificity, entry.order});
                     }
                 }
             }
@@ -209,7 +215,7 @@ struct RuleIndex {
                 continue;
 
             if (auto [specificity] = matchSelector(entry.selector, el, pseudoElement)) {
-                matching.pushBack({entry.originatingRule, specificity});
+                matching.pushBack({entry.originatingRule, specificity, entry.order});
             }
         }
 

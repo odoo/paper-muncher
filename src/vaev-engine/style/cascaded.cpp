@@ -16,11 +16,12 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-cascade-4/#cascaded
 export struct CascadedValues {
     struct Entry {
+        Specificity specificity;
         Rc<Property> property;
+        usize ruleOrder;
+        usize declarationOrder;
         Css::Important important;
         Origin origin;
-        Specificity specificity;
-        usize declarationOrder;
 
         auto operator<=>(Entry const& other) const {
             if (important != other.important)
@@ -29,30 +30,42 @@ export struct CascadedValues {
                 return origin <=> other.origin;
             if (specificity != other.specificity)
                 return specificity <=> other.specificity;
+            if (ruleOrder != other.ruleOrder)
+                return ruleOrder <=> other.ruleOrder;
             return declarationOrder <=> other.declarationOrder;
         }
     };
 
     Map<Symbol, Entry> _entries;
-    usize _declarationOrder = 0;
+    usize _nextAttributeOrder = 0;
 
-    void _putLonghand(Rc<Property> property, Origin origin, Specificity specificity, Css::Important important, usize declarationOrder) {
+    void _putLonghand(Rc<Property> property, Origin origin, Specificity specificity, Css::Important important, usize ruleOrder, usize declarationOrder) {
         auto name = property->registration->name;
-        Entry entry{property, important, origin, specificity, declarationOrder};
+        Entry entry{specificity, property, ruleOrder, declarationOrder, important, origin};
         auto& existing = _entries.lookupOrPutDefault(name, entry);
         if (entry >= existing)
             existing = entry;
     }
 
-    void put(Rc<Property> property, Origin origin, Specificity specificity) {
+    void putStyleRule(StyleRule const& rule, Specificity specificity, usize ruleOrder) {
+        usize declarationOrder = 0;
+        for (auto& prop : rule.props) {
+            if (prop->isBogusProperty())
+                continue;
+
+            _putLonghand(prop, rule.origin, specificity, prop->important, ruleOrder, declarationOrder++);
+        }
+    }
+
+    void putStyleAttribute(Rc<Property> property, Origin origin, Specificity specificity) {
         if (property->isBogusProperty())
             return;
 
-        _putLonghand(property, origin, specificity, property->important, _declarationOrder++);
+        _putLonghand(property, origin, specificity, property->important, 0, _nextAttributeOrder++);
     }
 
     void clear() {
-        _declarationOrder = 0;
+        _nextAttributeOrder = 0;
         _entries.clear();
     }
 
@@ -67,7 +80,7 @@ export struct CascadedValues {
             auto& prop = entry.property;
             _entries.remove(prop->registration->name).unwrap();
             for (auto& longhandProperty : prop->expandShorthand(registeredPropertySet, parent, child)) {
-                _putLonghand(longhandProperty, entry.origin, entry.specificity, prop->important, entry.declarationOrder);
+                _putLonghand(longhandProperty, entry.origin, entry.specificity, prop->important, entry.ruleOrder, entry.declarationOrder);
             }
         }
     }
