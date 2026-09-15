@@ -215,7 +215,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::COLOR, fgcolor, {}
                 ))
-                cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-bgcolor
@@ -223,7 +223,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::BACKGROUND_COLOR, bgcolor, {}
                 ))
-                cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
@@ -231,7 +231,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::WIDTH, width, {}
                 ))
-                cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
@@ -239,7 +239,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::HEIGHT, height, {}
                 ))
-                cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
@@ -247,7 +247,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::WIDTH, Io::format("{}ch", size), {}
                 ))
-                cascadedValues.put(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
     }
 
@@ -259,7 +259,7 @@ export struct Computer {
             RegisteredPropertySet::TOP_LEVEL
         );
         for (auto& decl : declarations)
-            cascadedValues.put(decl, Origin::INLINE, INLINE_SPEC);
+            cascadedValues.putStyleAttribute(decl, Origin::INLINE, INLINE_SPEC);
     }
 
     static void _considerElementAttributes(ComputedValues& values, Gc::Ref<Dom::Element> el) {
@@ -323,13 +323,13 @@ export struct Computer {
                 return;
 
             if (not svgEl->hasAttribute(Svg::WIDTH_ATTR))
-                cascadedValues.put(
+                cascadedValues.putStyleAttribute(
                     _registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).unwrap(),
                     Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
                 );
 
             if (not svgEl->hasAttribute(Svg::HEIGHT_ATTR))
-                cascadedValues.put(
+                cascadedValues.putStyleAttribute(
                     _registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).unwrap(),
                     Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
                 );
@@ -346,7 +346,7 @@ export struct Computer {
 
         for (auto const& attr : el->attributes)
             if (auto const& [property] = _registeredPropertySet.parsePresentationAttribute(attr.qualifiedName.name, attr.value))
-                cascadedValues.put(property, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                cascadedValues.putStyleAttribute(property, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
 
         if (el->qualifiedName == Svg::SVG_TAG)
             _applySvgElementSizingRules(el, cascadedValues);
@@ -360,11 +360,11 @@ export struct Computer {
         if (isRootElement)
             _rootComputedValues = Some(values);
 
-        MatchingRules const matchingRules = _ruleIndex.match(el, pseudoElement, _ancestorFilter);
+        Vec<MatchingRule> const matchingRules = _ruleIndex.match(el, pseudoElement, _ancestorFilter);
         CascadedValues cascadedValues;
-        for (auto const& [styleRule, specificity] : matchingRules)
-            for (auto& prop : styleRule.props)
-                cascadedValues.put(prop, styleRule.origin, specificity);
+        for (auto const& [styleRule, specificity, order] : matchingRules) {
+            cascadedValues.putStyleRule(styleRule, specificity, order);
+        }
 
         if (not pseudoElement) {
             _considerHtmlPresentationalHint(el, cascadedValues);
