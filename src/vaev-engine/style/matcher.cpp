@@ -346,20 +346,56 @@ static bool _matchSelector(Selector const& selector, Gc::Ref<Dom::Element> eleme
     );
 }
 
-export Opt<Specificity> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement = NONE) {
-    if (auto n = selector.is<Nfix>(); n and n->type == Nfix::OR) {
-        Opt<Specificity> specificity;
-        for (auto& inner : n->inners) {
-            if (_matchSelector(inner, element, pseudoElement))
-                specificity = Some(max(specificity.unwrapOr(Specificity::ZERO), spec(inner)));
+// https://www.w3.org/TR/selectors-4/#pseudo-element
+export Opt<Symbol> selectorPseudoElement(Selector const& selector) {
+    if (auto pe = selector.is<PseudoElementSelector>())
+        return Some(pe->type);
+
+    if (auto infix = selector.is<Infix>())
+        return selectorPseudoElement(*infix->rhs);
+
+    // Pseudo-elements cannot be represented by the negation pseudo-class; they are not valid within :not().
+    // Pseudo-elements cannot be represented by the matches-any pseudo-class; they are not valid within :is().
+    if (auto nfix = selector.is<Nfix>()) {
+        logWarnIf(nfix->type == Nfix::OR, "selectorPseudoElement called on OR selector");
+
+        // FIXME: Add support for sub-pseudo-elements where those will be supported in other places.
+        if (nfix->type == Nfix::AND) {
+            for (auto& inner : nfix->inners)
+                if (auto pe = inner.is<PseudoElementSelector>())
+                    return Some(pe->type);
         }
-        return specificity;
     }
 
+    return NONE;
+}
+
+// A selector is preprocessed if it is not a top level OR and its eventual
+// pseudo-element match the element, if it is not the case use `matchSelector`.
+export Opt<Specificity> matchPreprocessedSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement) {
     if (_matchSelector(selector, element, pseudoElement))
         return Some(spec(selector));
 
     return NONE;
+}
+
+export Opt<Specificity> matchSelector(Selector const& selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement = NONE) {
+    if (auto n = selector.is<Nfix>(); n and n->type == Nfix::OR) {
+        Opt<Specificity> specificity;
+        for (auto& inner : n->inners) {
+            if (selectorPseudoElement(inner) != pseudoElement)
+                continue;
+
+            if (auto s = matchPreprocessedSelector(inner, element, pseudoElement))
+                specificity = Some(max(specificity.unwrapOr(Specificity::ZERO), *s));
+        }
+        return specificity;
+    }
+
+    if (selectorPseudoElement(selector) != pseudoElement)
+        return NONE;
+
+    return matchPreprocessedSelector(selector, element, pseudoElement);
 }
 
 } // namespace Vaev::Style
