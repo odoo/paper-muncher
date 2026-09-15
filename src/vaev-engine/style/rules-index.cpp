@@ -3,6 +3,7 @@ export module Vaev.Engine:style.ruleIndex;
 import Karm.Core;
 
 import :style.ancestorFilter;
+import :style.matcher;
 import :style.rules;
 
 using namespace Karm;
@@ -15,6 +16,7 @@ struct RuleIndex {
         Selector const& selector;
         urange ancestorHashes;
         usize order;
+        Opt<Symbol> pseudoElement;
     };
 
     Map<String, Vec<Entry>> _idRules;
@@ -42,17 +44,18 @@ struct RuleIndex {
 
     void _insert(Opt<Candidate> candidate, StyleRule const& rule, Selector const& selector, usize order) {
         auto ancestorHashes = _indexAncestorHashes(selector);
+        auto pseudoElement = selectorPseudoElement(selector);
 
         if (not candidate) {
-            _complexRules.emplaceBack(rule, selector, ancestorHashes, order);
+            _complexRules.emplaceBack(rule, selector, ancestorHashes, order, pseudoElement);
         } else if (candidate->destination == DestinationBucket::ID) {
-            _idRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes, order);
+            _idRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes, order, pseudoElement);
         } else if (candidate->destination == DestinationBucket::CLASS) {
-            _classRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes, order);
+            _classRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes, order, pseudoElement);
         } else if (candidate->destination == DestinationBucket::TYPE) {
-            _typeRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes, order);
+            _typeRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes, order, pseudoElement);
         } else if (candidate->destination == DestinationBucket::ATTR) {
-            _attrRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes, order);
+            _attrRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes, order, pseudoElement);
         } else {
             unreachable();
         }
@@ -186,10 +189,13 @@ struct RuleIndex {
         auto _insertIfBucketHit = [&](auto const& bucket, auto const& key) {
             if (auto [entries] = bucket.lookup(key)) {
                 for (auto const& entry : entries) {
+                    if (entry.pseudoElement != pseudoElement)
+                        continue;
+
                     if (ancestorFilter.rejects(sub(_allAncestorHashes, entry.ancestorHashes)))
                         continue;
 
-                    if (auto [specificity] = matchSelector(entry.selector, el, pseudoElement)) {
+                    if (auto [specificity] = matchPreprocessedSelector(entry.selector, el, pseudoElement)) {
                         matching.pushBack({entry.originatingRule, specificity, entry.order});
                     }
                 }
@@ -211,10 +217,13 @@ struct RuleIndex {
         }
 
         for (auto const& entry : _complexRules) {
+            if (entry.pseudoElement != pseudoElement)
+                continue;
+
             if (ancestorFilter.rejects(sub(_allAncestorHashes, entry.ancestorHashes)))
                 continue;
 
-            if (auto [specificity] = matchSelector(entry.selector, el, pseudoElement)) {
+            if (auto [specificity] = matchPreprocessedSelector(entry.selector, el, pseudoElement)) {
                 matching.pushBack({entry.originatingRule, specificity, entry.order});
             }
         }
