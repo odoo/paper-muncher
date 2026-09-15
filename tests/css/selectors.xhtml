@@ -316,4 +316,47 @@
 
 </test>
 
+<test name="selectors: don't match selector with no pseudo-selector on pseudo-element">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                li::marker {
+                    color: blue;
+                }
+
+                .text-red {
+                    color: red !important;
+                }
+            </style>
+        </head>
+
+        <body>
+        <section>
+            <slot />
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <ul>
+            <li></li>
+        </ul>
+    </rendering>
+
+    <rendering>
+        <ul>
+            <li class="text-red"></li>
+        </ul>
+    </rendering>
+</test>
+
 </tests>
