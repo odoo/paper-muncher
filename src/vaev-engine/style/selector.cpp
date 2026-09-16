@@ -1174,46 +1174,26 @@ export void unparse(Selector const& sel, Io::Emit& e) {
 }
 
 // MARK: Selector Specificity --------------------------------------------------
-// https://www.w3.org/TR/selectors-3/#specificity
+// https://www.w3.org/TR/selectors-4/#specificity
 
 export struct Specificity {
     // a: The number of ID selectors in the selector.
     // b: The number of class selectors, attributes selectors, and pseudo-classes in the selector.
     // c: The number of type selectors and pseudo-elements in the selector.
-    isize a, b, c;
+    u16 a, b, c;
 
     static Specificity const ZERO, A, B, C;
 
-    Specificity(isize a, isize b, isize c)
+    Specificity(u16 a, u16 b, u16 c)
         : a(a), b(b), c(c) {}
 
+    // Due to storage limitations, implementations may have limitations on the size of A, B, or C. If so,
+    // values higher than the limit must be clamped to that limit, and not overflow.
     Specificity operator+(Specificity const& other) const {
         return {
-            a + other.a,
-            b + other.b,
-            c + other.c,
-        };
-    }
-
-    Specificity operator and(Specificity const& other) const {
-        return {
-            a + other.a,
-            b + other.b,
-            c + other.c,
-        };
-    }
-
-    Specificity operator or(Specificity const& other) const {
-        if (*this > other)
-            return *this;
-        return other;
-    }
-
-    Specificity operator not() const {
-        return {
-            a,
-            b,
-            c
+            saturatingAdd(a, other.a),
+            saturatingAdd(b, other.b),
+            saturatingAdd(c, other.c),
         };
     }
 
