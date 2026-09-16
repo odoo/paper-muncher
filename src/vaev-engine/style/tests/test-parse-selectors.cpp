@@ -374,6 +374,11 @@ test$("vaev-style-parse-pseudo-selectors") {
     );
 
     expectEq$(
+        try$(Selector::parse(":nth-child(n of .class)")),
+        PseudoClassSelector(PseudoClassSelector::Type::NTH_CHILD, PseudoClassSelector::AnBofS{AnB(1, 0), Some(ClassSelector{"class"s})})
+    );
+
+    expectEq$(
         try$(Selector::parse(":nth-last-child(even)")),
         PseudoClassSelector(PseudoClassSelector::Type::NTH_LAST_CHILD, PseudoClassSelector::AnBofS{AnB(2, 0), NONE})
     );
@@ -381,6 +386,11 @@ test$("vaev-style-parse-pseudo-selectors") {
     expectEq$(
         try$(Selector::parse(":nth-last-child(even of #id)")),
         PseudoClassSelector(PseudoClassSelector::Type::NTH_LAST_CHILD, PseudoClassSelector::AnBofS{AnB(2, 0), Some(IdSelector{"id"_sym})})
+    );
+
+    expectEq$(
+        try$(Selector::parse(":nth-last-child(n of #id)")),
+        PseudoClassSelector(PseudoClassSelector::Type::NTH_LAST_CHILD, PseudoClassSelector::AnBofS{AnB(1, 0), Some(IdSelector{"id"_sym})})
     );
 
     expectEq$(

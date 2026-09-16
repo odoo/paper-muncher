@@ -286,7 +286,7 @@ export struct AnB {
             return Ok(isNegative ? -unsigedB : unsigedB);
         }
 
-        return Error::invalidData("bad b");
+        return Ok(0);
     }
 
     static Res<Integer> _parseAfterNDash(Cursor<Css::Sst>& cur) {
