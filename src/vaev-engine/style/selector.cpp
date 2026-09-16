@@ -1218,14 +1218,30 @@ Specificity const PRESENTATION_HINT_SPEC = Specificity::ZERO;
 export Specificity spec(Selector const& s) {
     return s.visit(
         [](Nfix const& n) {
-            // FIXME: missing other pseudo class selectors implemented as nfix
-            if (n.type == Nfix::WHERE)
-                return Specificity::ZERO;
+            if (n.type == Nfix::AND) {
+                auto sum = Specificity::ZERO;
 
-            Specificity sum = Specificity::ZERO;
-            for (auto& inner : n.inners)
-                sum = sum + spec(inner);
-            return sum;
+                for (auto& inner : n.inners)
+                    sum = sum + spec(inner);
+
+                return sum;
+            }
+
+            if (oneOf(n.type, Nfix::OR, Nfix::NOT)) {
+                auto mostSpecific = Specificity::ZERO;
+
+                for (auto& inner : n.inners)
+                    mostSpecific = max(mostSpecific, spec(inner));
+
+                return mostSpecific;
+            }
+
+            if (n.type == Nfix::WHERE) {
+                return Specificity::ZERO;
+            }
+
+            logWarnIf(DEBUG_SELECTORS, "unimplemented nfix selector: {}", n.type);
+            return Specificity::ZERO;
         },
         [](Infix const& i) {
             return spec(*i.lhs) + spec(*i.rhs);
@@ -1245,7 +1261,15 @@ export Specificity spec(Selector const& s) {
         [](ClassSelector const&) {
             return Specificity::B;
         },
-        [](PseudoClassSelector const&) {
+        [](PseudoClassSelector const& s) {
+            if (oneOf(s.type, PseudoClassSelector::NTH_CHILD, PseudoClassSelector::NTH_LAST_CHILD)) {
+                auto anb = s.extra.unwrap<PseudoClassSelector::AnBofS>();
+
+                if (auto inner = anb.v1) {
+                    return spec(**inner) + Specificity::B;
+                }
+            }
+
             return Specificity::B;
         },
         [](AttributeSelector const&) {

@@ -2,6 +2,7 @@
 
 import Vaev.Engine;
 import Karm.Font;
+import Karm.Logger;
 
 using namespace Karm;
 using namespace Karm::Literals;
@@ -205,6 +206,33 @@ test$("test-specificity-mixed-combinators") {
     Specificity specificity{spec(selector)};
 
     expect$(specificity == Specificity(2, 1, 2));
+
+    return Ok();
+}
+
+test$("test-specificity-not-with-child-list") {
+    Selector selector{try$(Selector::parse(":not(.a, #b)"))};
+    Specificity specificity{spec(selector)};
+
+    expect$(specificity == Specificity(1, 0, 0));
+
+    return Ok();
+}
+
+test$("test-specificity-nth-child-with-sub-selector") {
+    Selector selector{try$(Selector::parse(":nth-child(n of .a, #b)"))};
+    Specificity specificity{spec(selector)};
+
+    expect$(specificity == Specificity(1, 1, 0));
+
+    return Ok();
+}
+
+test$("test-specificity-nth-last-child-with-sub-selector") {
+    Selector selector{try$(Selector::parse(":nth-last-child(n of .a, #b)"))};
+    Specificity specificity{spec(selector)};
+
+    expect$(specificity == Specificity(1, 1, 0));
 
     return Ok();
 }
