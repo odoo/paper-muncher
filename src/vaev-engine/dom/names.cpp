@@ -84,8 +84,6 @@ export Symbol qualifiedAttrNameCased(Str name) {
     if (eqCi(Str(#VALUE), name)) \
         return Symbol::from(Str(#VALUE));
 #include "defs/ns-svg-attr-names.inc"
-
-
 #undef ATTR
     return Symbol::from(name);
 }
@@ -95,8 +93,6 @@ export Symbol qualifiedTagNameCased(Str name) {
     if (eqCi(Str(#VALUE), name)) \
         return Symbol::from(Str(#VALUE));
 #include "defs/ns-svg-tag-names.inc"
-
-
 #undef TAG
     return Symbol::from(name);
 }
