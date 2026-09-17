@@ -32,6 +32,69 @@ export struct Computer {
     Viewport _viewport{.small = _media.viewportSize()};
     Opt<Rc<ComputedValues>> _rootComputedValues = NONE;
 
+    struct MpcKey {
+        struct NonOwned {
+            ComputedValues const& parent;
+            Slice<MatchingRule> matchingRules;
+
+            void hash(Meta::Derive<Hasher> auto& h) const {
+                Karm::hash(h, reinterpret_cast<usize>(&parent));
+
+                for (auto const& m : matchingRules) {
+                    Karm::hash(h, reinterpret_cast<usize>(&m.rule));
+                    Karm::hash(h, m.specificity.a);
+                    Karm::hash(h, m.specificity.b);
+                    Karm::hash(h, m.specificity.c);
+                }
+            }
+        };
+
+        ComputedValues const* parent;
+        Vec<Pair<StyleRule const*, Specificity>> matchingRules = {};
+
+        static MpcKey fromNonOwned(NonOwned key) {
+            Vec<Pair<StyleRule const*, Specificity>> tempMatching(key.matchingRules.len());
+            for (auto const& m : key.matchingRules)
+                tempMatching.pushBack({&m.rule, m.specificity});
+
+            return MpcKey {
+                .parent = &key.parent,
+                .matchingRules = std::move(tempMatching),
+            };
+        }
+
+        bool operator==(MpcKey const& other) const = default;
+
+        bool operator==(NonOwned other) const {
+            if (parent != &other.parent or matchingRules.len() != other.matchingRules.len())
+                return false;
+
+            for (usize i = 0; i < matchingRules.len(); i++) {
+                auto const [rule, specificity] = matchingRules[i];
+                auto const& otherMatch = other.matchingRules[i];
+                if (rule != &otherMatch.rule or specificity != otherMatch.specificity)
+                    return false;
+            }
+
+            return true;
+        }
+
+        void hash(Meta::Derive<Hasher> auto& h) const {
+            Karm::hash(h, reinterpret_cast<usize>(parent));
+
+            for (auto const& [rule, spec] : matchingRules) {
+                Karm::hash(h, reinterpret_cast<usize>(rule));
+                Karm::hash(h, spec.a);
+                Karm::hash(h, spec.b);
+                Karm::hash(h, spec.c);
+            }
+        }
+    };
+
+    // Matched property cache to avoid ComputedValues dedup when not necessary.
+    // FIXME: Investigate if an LRU would be better.
+    Map<MpcKey, Cow<ComputedValues>> _mpc = {};
+
     // MARK: Counters ----------------------------------------------------------
 
     // https://drafts.csswg.org/css-lists/#counter-scope
@@ -173,7 +236,7 @@ export struct Computer {
 
     // MARK: Computing ---------------------------------------------------------
 
-    Rc<Gfx::Fontface> _lookupFontface(ComputedValues& style) {
+    Rc<Gfx::Fontface> _lookupFontface(ComputedValues const& style) {
         Font::Query fq{
             .weight = style.font->weight,
             .stretch = Gfx::FontStretch{static_cast<u16>(Math::roundi(style.font->width.val().value() * 10.0))},
@@ -191,7 +254,7 @@ export struct Computer {
         return Gfx::Fontface::fallback();
     }
 
-    void _updateFontface(ComputedValues const& parent, Rc<ComputedValues> values) {
+    void _updateFontface(ComputedValues const& parent, Cow<ComputedValues>& values) {
         // FIXME: Use a font-dirty flag instead.
         if (not parent.font.sameInstance(values->font) and
             (parent.font->families != values->font->families or
@@ -199,9 +262,9 @@ export struct Computer {
              parent.font->style != values->font->style or
              parent.font->width != values->font->width)) {
             auto font = _lookupFontface(*values);
-            values->fontFace = font;
+            values.cow().fontFace = font;
         } else {
-            values->fontFace = parent.fontFace;
+            values.cow().fontFace = parent.fontFace;
         }
     }
 
@@ -262,48 +325,17 @@ export struct Computer {
             cascadedValues.putStyleAttribute(decl, Origin::INLINE, INLINE_SPEC);
     }
 
-    static void _considerElementAttributes(ComputedValues& values, Gc::Ref<Dom::Element> el) {
-        // https://html.spec.whatwg.org/multipage/tables.html#the-col-element
-        // The element may have a span content attribute specified, whose value must
-        // be a valid non-negative integer greater than zero and less than or equal to 1000.
-        if (auto const& [span] = el->getAttribute(Html::SPAN_ATTR)) {
-            auto value = parseValue<Integer>(span).unwrapOr(0);
-            if (value <= 0 or value > 1000)
-                value = 1;
-            values.table.cow().span = value;
-        }
-
-        // https://html.spec.whatwg.org/multipage/tables.html#attributes-common-to-td-and-th-elements
-        // The td and th elements may have a colspan content attribute specified,
-        // whose value must be a valid non-negative integer greater than zero and less than or equal to 1000.
-        if (auto const& [colSpan] = el->getAttribute(Html::COLSPAN_ATTR)) {
-            auto value = parseValue<Integer>(colSpan).unwrapOr(0);
-            if (value <= 0 or value > 1000)
-                value = 1;
-            values.table.cow().colSpan = value;
-        }
-
-        // The td and th elements may also have a rowspan content attribute specified,
-        // whose value must be a valid non-negative integer less than or equal to 65534.
-        if (auto const& [rowSpan] = el->getAttribute(Html::ROWSPAN_ATTR)) {
-            auto value = parseValue<Integer>(rowSpan).unwrapOr(0);
-            if (value < 0)
-                value = 0;
-            if (value > 65534)
-                value = 65534;
-            values.table.cow().rowSpan = value;
-        }
-
+    static void _considerElementAttributes(Cow<ComputedValues>& values, Gc::Ref<Dom::Element> el) {
         // https://html.spec.whatwg.org/multipage/obsolete.html#attr-table-align
         if (auto const& [align] = el->getAttribute(Html::ALIGN_ATTR)) {
             if (align == "left") {
-                values.text.cow().align = TextAlign::LEFT;
+                values.cow().text.cow().align = TextAlign::LEFT;
             } else if (align == "right") {
-                values.text.cow().align = TextAlign::RIGHT;
+                values.cow().text.cow().align = TextAlign::RIGHT;
             } else if (align == "center") {
-                values.text.cow().align = TextAlign::BLOCK_CENTER;
+                values.cow().text.cow().align = TextAlign::BLOCK_CENTER;
             } else if (align == "justify") {
-                values.text.cow().align = TextAlign::JUSTIFY;
+                values.cow().text.cow().align = TextAlign::JUSTIFY;
             }
         }
     }
@@ -352,51 +384,90 @@ export struct Computer {
             _applySvgElementSizingRules(el, cascadedValues);
     }
 
+    bool _isMpcEligible(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement) {
+        return not pseudoElement and el->namespaceUri() == Html::NAMESPACE and not el->containsStylingAttribute();
+    }
+
     // https://drafts.csswg.org/css-cascade/#cascade-origin
-    Rc<ComputedValues> computeValues(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement = NONE) {
-        auto values = _registeredPropertySet.inheritsComputedValues(parent);
+    Rc<ComputedValues const> computeValues(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement = NONE) {
+        auto matchingRules = _ruleIndex.match(el, pseudoElement, _ancestorFilter);
+
         bool isRootElement = pseudoElement == NONE and el->parentNode()->is<Dom::Document>();
+        bool cacheEligible = _isMpcEligible(el, pseudoElement);
 
-        if (isRootElement)
-            _rootComputedValues = Some(values);
-
-        Vec<MatchingRule> const matchingRules = _ruleIndex.match(el, pseudoElement, _ancestorFilter);
         CascadedValues cascadedValues;
-        for (auto const& [styleRule, specificity, order] : matchingRules) {
-            cascadedValues.putStyleRule(styleRule, specificity, order);
+
+        Opt<Cow<ComputedValues>> cached = NONE;
+        if (cacheEligible)
+            cached = _mpc.lookup(MpcKey::NonOwned{parent, matchingRules});
+
+        Cow<ComputedValues> values = cached.unwrapOrElse([&] {
+            auto v = _registeredPropertySet.inheritsComputedValues(parent);
+
+            for (auto const& [styleRule, specificity, order] : matchingRules)
+                cascadedValues.putStyleRule(styleRule, specificity, order);
+
+            return Cow{v};
+        });
+
+        if (not cached) {
+            if (not pseudoElement) {
+                _considerHtmlPresentationalHint(el, cascadedValues);
+                _considerInlineStyleAttribute(el, cascadedValues);
+                _considerSvgPresentationAttributes(el, cascadedValues);
+            }
+
+            ComputationContext cx;
+            cx.populateUsingViewport(_viewport);
+
+            if (isRootElement)
+                cx.populateUsingRootComputedValues(*values);
+            else if (_rootComputedValues)
+                cx.populateUsingRootComputedValues(**_rootComputedValues);
+
+            cx.populateUsingParentComputedValues(parent);
+            cx.populateUsingOwnComputedValues(parent);
+
+            cascadedValues.apply(Property::ComputationPhase::CUSTOM_PROPERTY, parent, values, cx);
+            cascadedValues.expandShorthands(parent, values.cow(), _registeredPropertySet);
+
+            cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, values, cx);
+            cascadedValues.apply(Property::ComputationPhase::FONT, parent, values, cx);
+
+            _updateFontface(parent, values);
+
+            // NOTE: Correct as long as the computation context doesn't need any NORMAL or LATE property.
+            if (isRootElement) {
+                _rootComputedValues = Some(makeRc<ComputedValues>(*values));
+                cx.populateUsingRootComputedValues(*values);
+            }
+            cx.populateUsingOwnComputedValues(*values);
+
+            cascadedValues.apply(Property::ComputationPhase::NORMAL, parent, values, cx);
+            cascadedValues.apply(Property::ComputationPhase::LATE, parent, values, cx);
+
+            if (cacheEligible)
+                _mpc.put(MpcKey::fromNonOwned({
+                    .parent = parent,
+                    .matchingRules = matchingRules,
+                }), values);
         }
-
-        if (not pseudoElement) {
-            _considerHtmlPresentationalHint(el, cascadedValues);
-            _considerInlineStyleAttribute(el, cascadedValues);
-            _considerSvgPresentationAttributes(el, cascadedValues);
-        }
-
-        ComputationContext cx;
-        cx.populateUsingViewport(_viewport);
-        if (_rootComputedValues)
-            cx.populateUsingRootComputedValues(**_rootComputedValues);
-        cx.populateUsingParentComputedValues(parent);
-        cx.populateUsingOwnComputedValues(parent);
-
-        cascadedValues.apply(Property::ComputationPhase::CUSTOM_PROPERTY, parent, *values, cx);
-        cascadedValues.expandShorthands(parent, *values, _registeredPropertySet);
-
-        cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, *values, cx);
-        cascadedValues.apply(Property::ComputationPhase::FONT, parent, *values, cx);
-
-        _updateFontface(parent, values);
-        if (isRootElement)
-            cx.populateUsingRootComputedValues(**_rootComputedValues);
-        cx.populateUsingOwnComputedValues(*values);
-
-        cascadedValues.apply(Property::ComputationPhase::NORMAL, parent, *values, cx);
-        cascadedValues.apply(Property::ComputationPhase::LATE, parent, *values, cx);
 
         if (not pseudoElement)
-            _considerElementAttributes(*values, el);
+            _considerElementAttributes(values, el);
 
-        return values;
+        // NOSPEC: By default Chrome and other browsers render disc/circle/square
+        // list markers a bit larger than their font size would otherwise imply.
+        if (pseudoElement == Dom::PseudoElement::MARKER and values->content.is<Keywords::Normal>()) {
+            auto listStyleType = parent.list->type;
+            if (listStyleType == CustomIdent{"disc"_sym} or
+                listStyleType == CustomIdent{"circle"_sym} or
+                listStyleType == CustomIdent{"square"_sym}) {
+                values.cow().transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
+            }
+        }
+
+        return values._inner;
     }
 
     Rc<PageComputedValues> computeValues(ComputedValues const& parent, Page const& page) {
@@ -408,7 +479,7 @@ export struct Computer {
 
         for (auto& area : computed->_areas) {
             auto font = _lookupFontface(*area->computedValues());
-            area->computedValues()->fontFace = font;
+            area->_computedValues.unwrap()->fontFace = font;
         }
 
         return computed;
@@ -472,12 +543,13 @@ export struct Computer {
             // User agents must instead propagate the computed values of the
             // background properties from that element’s first HTML BODY
             // or XHTML body child element.
-            htmlElement->computedValues()->backgrounds = bodyBackground;
+            auto newRootValues = makeRc<ComputedValues>(*htmlElement->computedValues());
+            newRootValues->backgrounds = bodyBackground;
+            htmlElement->_computedValues = Some(newRootValues);
 
-            // The used values of that BODY element’s background properties are
-            // their initial values, and the propagated values are treated
-            // as if they were specified on the root element.
-            bodyElement->computedValues()->backgrounds = {};
+            auto newBodyValues = makeRc<ComputedValues>(*bodyElement->computedValues());
+            newBodyValues->backgrounds = {};
+            bodyElement->_computedValues = Some(newBodyValues);
         }
     }
 

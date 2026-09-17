@@ -20,11 +20,14 @@ export using Content = Union<
     SvgViewBox>;
 
 struct Box : Meta::NoCopy {
-    Rc<Style::ComputedValues> style;
+    Rc<Style::ComputedValues const> style;
     Content content = NONE;
     Vec<Box> _children;
     Opt<Rc<FormatingContext>> formatingContext = NONE;
     Opt<Dom::OriginatingElement> origin;
+
+    // For element()'s content
+    bool forceStaticPosition = false;
 
     static Box fromInterruptedInlineBox(Box const& inlineBox) {
         auto oldProse = inlineBox.content.unwrap<Rc<Gfx::Prose>>();
@@ -32,10 +35,10 @@ struct Box : Meta::NoCopy {
         return Box(inlineBox.style, prose, inlineBox.origin);
     }
 
-    Box(Rc<Style::ComputedValues> style, Opt<Dom::OriginatingElement> og)
+    Box(Rc<Style::ComputedValues const> style, Opt<Dom::OriginatingElement> og)
         : style{std::move(style)}, origin{og} {}
 
-    Box(Rc<Style::ComputedValues> style, Content content, Opt<Dom::OriginatingElement> og)
+    Box(Rc<Style::ComputedValues const> style, Content content, Opt<Dom::OriginatingElement> og)
         : style{std::move(style)}, content{std::move(content)}, origin{og} {}
 
     Slice<Box> children() const {
@@ -113,6 +116,9 @@ struct Box : Meta::NoCopy {
     }
 
     bool isRemovedFromFlow() const {
+        if (forceStaticPosition)
+            return isFloating();
+
         return isFloating() or
                style->position == Keywords::ABSOLUTE or
                style->position == Keywords::FIXED or

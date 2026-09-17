@@ -34,9 +34,6 @@ struct TransformProps {
 
 export struct TableProps {
     TableLayout tableLayout = TableLayout::AUTO;
-    usize span = 1;
-    usize rowSpan = 1;
-    usize colSpan = 1;
 };
 
 export struct TableInheritedProps {

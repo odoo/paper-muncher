@@ -85,14 +85,14 @@ export struct CascadedValues {
         }
     }
 
-    void apply(Property::ComputationPhase computationPhase, ComputedValues const& parent, ComputedValues& child, ComputationContext const& cx) {
+    void apply(Property::ComputationPhase computationPhase, ComputedValues const& parent, Cow<ComputedValues>& child, ComputationContext const& cx) {
         for (auto& entry : _entries.iterValue()) {
             auto& prop = entry.property;
 
             if (prop->registration->computationPhase() != computationPhase)
                 continue;
 
-            prop->apply(parent, child, cx);
+            prop->apply(parent, child.cow(), cx);
         }
     }
 };
