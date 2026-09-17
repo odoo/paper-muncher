@@ -182,7 +182,7 @@ export struct Computer {
 
     // MARK: Computing ---------------------------------------------------------
 
-    Rc<Gfx::Fontface> _lookupFontface(ComputedValues& style) {
+    Rc<Gfx::Fontface> _lookupFontface(ComputedValues const& style) {
         Font::Query fq{
             .weight = style.font->weight,
             .stretch = Gfx::FontStretch{static_cast<u16>(Math::roundi(style.font->width.val().value() * 10.0))},
@@ -200,7 +200,7 @@ export struct Computer {
         return Gfx::Fontface::fallback();
     }
 
-    void _updateFontface(ComputedValues const& parent, Rc<ComputedValues> values) {
+    void _updateFontface(ComputedValues const& parent, Cow<ComputedValues>& values) {
         // FIXME: Use a font-dirty flag instead.
         if (not parent.font.sameInstance(values->font) and
             (parent.font->families != values->font->families or
@@ -208,9 +208,9 @@ export struct Computer {
              parent.font->style != values->font->style or
              parent.font->width != values->font->width)) {
             auto font = _lookupFontface(*values);
-            values->fontFace = font;
+            values.cow().fontFace = font;
         } else {
-            values->fontFace = parent.fontFace;
+            values.cow().fontFace = parent.fontFace;
         }
     }
 
@@ -271,17 +271,17 @@ export struct Computer {
             cascadedValues.putStyleAttribute(decl, Origin::INLINE, INLINE_SPEC);
     }
 
-    static void _considerElementAttributes(ComputedValues& values, Gc::Ref<Dom::Element> el) {
+    static void _considerElementAttributes(Cow<ComputedValues>& values, Gc::Ref<Dom::Element> el) {
         // https://html.spec.whatwg.org/multipage/obsolete.html#attr-table-align
         if (auto const& [align] = el->getAttribute(Html::ALIGN_ATTR)) {
             if (align == "left") {
-                values.text.cow().align = TextAlign::LEFT;
+                values.cow().text.cow().align = TextAlign::LEFT;
             } else if (align == "right") {
-                values.text.cow().align = TextAlign::RIGHT;
+                values.cow().text.cow().align = TextAlign::RIGHT;
             } else if (align == "center") {
-                values.text.cow().align = TextAlign::BLOCK_CENTER;
+                values.cow().text.cow().align = TextAlign::BLOCK_CENTER;
             } else if (align == "justify") {
-                values.text.cow().align = TextAlign::JUSTIFY;
+                values.cow().text.cow().align = TextAlign::JUSTIFY;
             }
         }
     }
@@ -331,18 +331,16 @@ export struct Computer {
     }
 
     // https://drafts.csswg.org/css-cascade/#cascade-origin
-    Rc<ComputedValues> computeValues(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement = NONE) {
-        auto values = _registeredPropertySet.inheritsComputedValues(parent);
+    Rc<ComputedValues const> computeValues(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement = NONE) {
+        auto matchingRules = _ruleIndex.match(el, pseudoElement, _ancestorFilter);
+
         bool isRootElement = pseudoElement == NONE and el->parentNode()->is<Dom::Document>();
 
-        if (isRootElement)
-            _rootComputedValues = Some(values);
-
-        Vec<MatchingRule> const matchingRules = _ruleIndex.match(el, pseudoElement, _ancestorFilter);
         CascadedValues cascadedValues;
-        for (auto const& [styleRule, specificity, order, layer] : matchingRules) {
+        for (auto const& [styleRule, specificity, order, layer] : matchingRules)
             cascadedValues.putStyleRule(styleRule, _layers.rank(layer), specificity, order);
-        }
+
+        Cow<ComputedValues> values = Cow{_registeredPropertySet.inheritsComputedValues(parent)};
 
         if (not pseudoElement) {
             _considerHtmlPresentationalHint(el, cascadedValues);
@@ -352,29 +350,49 @@ export struct Computer {
 
         ComputationContext cx;
         cx.populateUsingViewport(_viewport);
-        if (_rootComputedValues)
+
+        if (isRootElement)
+            cx.populateUsingRootComputedValues(*values);
+        else if (_rootComputedValues)
             cx.populateUsingRootComputedValues(**_rootComputedValues);
+
         cx.populateUsingParentComputedValues(parent);
         cx.populateUsingOwnComputedValues(parent);
 
-        cascadedValues.apply(Property::ComputationPhase::CUSTOM_PROPERTY, parent, *values, cx);
-        cascadedValues.expands(parent, *values, _registeredPropertySet);
+        cascadedValues.apply(Property::ComputationPhase::CUSTOM_PROPERTY, parent, values, cx);
+        cascadedValues.expands(parent, values.cow(), _registeredPropertySet);
 
-        cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, *values, cx);
-        cascadedValues.apply(Property::ComputationPhase::FONT, parent, *values, cx);
+        cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, values, cx);
+        cascadedValues.apply(Property::ComputationPhase::FONT, parent, values, cx);
 
         _updateFontface(parent, values);
-        if (isRootElement)
-            cx.populateUsingRootComputedValues(**_rootComputedValues);
+
+        // NOTE: Correct as long as the computation context doesn't need any NORMAL or LATE property.
+        if (isRootElement) {
+            _rootComputedValues = Some(makeRc<ComputedValues>(*values));
+            cx.populateUsingRootComputedValues(*values);
+        }
         cx.populateUsingOwnComputedValues(*values);
 
-        cascadedValues.apply(Property::ComputationPhase::NORMAL, parent, *values, cx);
-        cascadedValues.apply(Property::ComputationPhase::LATE, parent, *values, cx);
+        cascadedValues.apply(Property::ComputationPhase::NORMAL, parent, values, cx);
+        cascadedValues.apply(Property::ComputationPhase::LATE, parent, values, cx);
 
         if (not pseudoElement)
-            _considerElementAttributes(*values, el);
+            _considerElementAttributes(values, el);
 
-        return values;
+        // NOSPEC: By default Chrome and other browsers render disc/circle/square
+        // list markers a bit larger than their font size would otherwise imply.
+        if (pseudoElement == Dom::PseudoElement::MARKER and
+            values->content.is<Keywords::Normal>()) {
+            auto listStyleType = parent.list->type;
+            if (listStyleType == CustomIdent{"disc"_sym} or
+                listStyleType == CustomIdent{"circle"_sym} or
+                listStyleType == CustomIdent{"square"_sym}) {
+                values.cow().transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
+            }
+        }
+
+        return values._inner;
     }
 
     Rc<PageComputedValues> computeValues(ComputedValues const& parent, Page const& page) {
@@ -386,7 +404,7 @@ export struct Computer {
 
         for (auto& area : computed->_areas) {
             auto font = _lookupFontface(*area->computedValues());
-            area->computedValues()->fontFace = font;
+            area->_computedValues.expect("unstyled page area")->fontFace = font;
         }
 
         return computed;
@@ -450,12 +468,13 @@ export struct Computer {
             // User agents must instead propagate the computed values of the
             // background properties from that element’s first HTML BODY
             // or XHTML body child element.
-            htmlElement->computedValues()->backgrounds = bodyBackground;
+            auto newRootValues = makeRc<ComputedValues>(*htmlElement->computedValues());
+            newRootValues->backgrounds = bodyBackground;
+            htmlElement->_computedValues = Some(newRootValues);
 
-            // The used values of that BODY element’s background properties are
-            // their initial values, and the propagated values are treated
-            // as if they were specified on the root element.
-            bodyElement->computedValues()->backgrounds = {};
+            auto newBodyValues = makeRc<ComputedValues>(*bodyElement->computedValues());
+            newBodyValues->backgrounds = {};
+            bodyElement->_computedValues = Some(newBodyValues);
         }
     }
 
@@ -494,7 +513,9 @@ export struct Computer {
             // https://drafts.csswg.org/css-display/#root
             // The root element’s display type is always blockified, and its principal
             // box always establishes an independent formatting context.
-            el->computedValues()->display = el->computedValues()->display.blockify();
+            auto rootValues = makeRc<ComputedValues>(*el->computedValues());
+            rootValues->display = rootValues->display.blockify();
+            el->_computedValues = Some(rootValues);
 
             CounterSet rootSiblingCounters = {};
             _resolveCounters(

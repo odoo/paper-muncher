@@ -36,7 +36,7 @@ export struct PseudoElement : Tree<PseudoElement> {
     PseudoElement(Symbol type, Rc<Style::ComputedValues> computedValues)
         : type(type), _computedValues(Some(computedValues)) {}
 
-    Rc<Style::ComputedValues> computedValues() const {
+    Rc<Style::ComputedValues const> computedValues() const {
         return _computedValues.expect("unstyled pseudo-element");
     }
 
@@ -64,7 +64,7 @@ export struct Element : Node {
     QualifiedName qualifiedName;
     // NOSPEC: Should be a NamedNodeMap
     Vec<Attr> attributes;
-    Opt<Rc<Style::ComputedValues>> _computedValues;
+    Opt<Rc<Style::ComputedValues const>> _computedValues;
     TokenList classList;
     Opt<Gfx::Snapshot> imageContent;
     Map<Symbol, Gc::Ref<PseudoElement>> _pseudoElements;
@@ -174,7 +174,7 @@ export struct Element : Node {
 
     // MARK: Style -------------------------------------------------------------
 
-    Rc<Style::ComputedValues> computedValues() const {
+    Rc<Style::ComputedValues const> computedValues() const {
         return _computedValues.expect("unstyled element");
     }
 
@@ -281,7 +281,7 @@ export struct Element : Node {
 export struct OriginatingElement : Union<Gc::Ref<Element>, Gc::Ref<PseudoElement>> {
     using Union::Union;
 
-    Rc<Style::ComputedValues> computedValues() {
+    Rc<Style::ComputedValues const> computedValues() {
         return visit([](auto& el) {
             return el->computedValues();
         });

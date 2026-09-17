@@ -132,7 +132,7 @@ void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, TextTransfo
 
 // https://www.w3.org/TR/css-text-3/#white-space-phase-1
 // https://www.w3.org/TR/css-text-3/#white-space-phase-2
-void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues> parentStyle, Box& rootInlineBox) {
+void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues const> parentStyle, Box& rootInlineBox) {
     auto whitespace = parentStyle->text->whiteSpace;
     bool whiteSpacesAreCollapsible = _collapsesWhitespace(whitespace);
 
@@ -175,7 +175,7 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues> parentStyl
     }
 }
 
-bool _buildText(Str text, Rc<Style::ComputedValues> parentStyle, Box& rootInlineBox, bool skipIfWhitespace) {
+bool _buildText(Str text, Rc<Style::ComputedValues const> parentStyle, Box& rootInlineBox, bool skipIfWhitespace) {
     if (skipIfWhitespace) {
         Io::SScan scan{text};
         scan.eat(Re::space());
@@ -198,7 +198,7 @@ struct BuilderContext {
     };
 
     From const from;
-    Rc<Style::ComputedValues> const parentComputedValues;
+    Rc<Style::ComputedValues const> const parentComputedValues;
     Box& _parent;
     Opt<Box&> _rootInlineBox;
 
@@ -237,7 +237,7 @@ struct BuilderContext {
         *_rootInlineBox = std::move(newRootInlineBox);
     }
 
-    Rc<Style::ComputedValues> style() {
+    Rc<Style::ComputedValues const> style() {
         return parentComputedValues;
     }
 
@@ -301,7 +301,7 @@ struct BuilderContext {
         };
     }
 
-    BuilderContext toInlineContext(Rc<Style::ComputedValues> parentStyle) {
+    BuilderContext toInlineContext(Rc<Style::ComputedValues const> parentStyle) {
         return {
             From::INLINE,
             parentStyle,
@@ -338,7 +338,7 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
 // MARK: Build void/leaves ---------------------------------------------------------
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace#how_does_css_process_whitespace/
-static void _buildText(BuilderContext bc, Str text, Rc<Style::ComputedValues> parentStyle) {
+static void _buildText(BuilderContext bc, Str text, Rc<Style::ComputedValues const> parentStyle) {
     // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
     // TODO: For tables, the default case is to skip whitespace text, but there are some extra checks to be done
 
@@ -506,7 +506,7 @@ bool _alwaysInlineBlock(Gc::Ref<Dom::Element> el) {
 
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent);
 
-static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::ComputedValues> style, Gc::Ref<Dom::Element> el) {
+static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::ComputedValues const> style, Gc::Ref<Dom::Element> el) {
     if (el->qualifiedName == Html::BR_TAG) {
         bc.flushRootInlineBoxIntoAnonymousBox();
         return;
@@ -537,7 +537,7 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
     bc.finalizeParentBoxAndFlushInline();
 }
 
-static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::ComputedValues> style, Gc::Ref<Dom::Element> el, Display display) {
+static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::ComputedValues const> style, Gc::Ref<Dom::Element> el, Display display) {
     Box box = {style, Some(el)};
     Box rootInlineBox = {
         style,
@@ -559,7 +559,7 @@ static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::ComputedVal
 
 // MARK: Build Table -----------------------------------------------------------
 
-static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues> style, Display display);
+static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> style, Display display);
 
 struct AnonymousTableBoxWrapper {
     Opt<Box> rowBox, cellBox;
@@ -569,7 +569,7 @@ struct AnonymousTableBoxWrapper {
 
     AnonymousTableBoxWrapper(BuilderContext& bc) : bc(bc) {}
 
-    void createRowIfNone(Style::RegisteredPropertySet& registeredPropertySet, Rc<Style::ComputedValues> style) {
+    void createRowIfNone(Style::RegisteredPropertySet& registeredPropertySet, Rc<Style::ComputedValues const> style) {
         if (rowBox)
             return;
 
@@ -578,7 +578,7 @@ struct AnonymousTableBoxWrapper {
         rowBox = Some(Box{rowStyle, NONE});
     }
 
-    void createCellIfNone(Style::RegisteredPropertySet& registeredPropertySet, Rc<Style::ComputedValues> style) {
+    void createCellIfNone(Style::RegisteredPropertySet& registeredPropertySet, Rc<Style::ComputedValues const> style) {
         if (cellBox)
             return;
 
@@ -635,7 +635,7 @@ static void _buildCell(BuilderContext rowBuilderContext, Gc::Ref<Dom::Element> c
     _buildNode(rowBuilderContext, *cellEl);
 }
 
-static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, Gc::Ref<Dom::Element> parentEl, Rc<Style::ComputedValues> style, bool skipCaption, auto predForAccepted) {
+static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, Gc::Ref<Dom::Element> parentEl, Rc<Style::ComputedValues const> style, bool skipCaption, auto predForAccepted) {
     AnonymousTableBoxWrapper anonTableWrapper{bc};
     auto& registeredPropertySet = parentEl->ownerDocument()->registeredPropertySet;
 
@@ -689,7 +689,7 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
 }
 
 // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
-static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues> style, Display display) {
+static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> style, Display display) {
     Box tableInternalBox = {style, Some(el)};
 
     switch (display.internal()) {
@@ -742,7 +742,7 @@ static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<
     bc.addToParentBox(std::move(tableInternalBox));
 }
 
-static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues> tableBoxStyle) {
+static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> tableBoxStyle) {
     auto searchAndBuildCaption = [&]() {
         for (auto child = el->firstChild(); child; child = child->nextSibling()) {
             if (auto childEl = child->as<Dom::Element>()) {
@@ -781,7 +781,7 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
     }
 }
 
-static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::ComputedValues> tableStyle, Gc::Ref<Dom::Element> tableBoxEl) {
+static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::ComputedValues const> tableStyle, Gc::Ref<Dom::Element> tableBoxEl) {
     // The computed values of properties 'position', 'float', 'margin-*', 'top',
     // 'right', 'bottom', and 'left' on the table element are used on the table
     // wrapper box and not the table box; all other values of non-inheritable
@@ -817,7 +817,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
 // MARK: Dispatch based on outside role -------------------------------------------------------------------------------
 
 // https://www.w3.org/TR/css-display-3/#outer-role
-static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues> style, Display display) {
+static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> style, Display display) {
     if (display == Display::Inside::TABLE) {
         auto wrapper = _createTableWrapperAndBuildTable(bc, style, el);
         bc.addToParentBox(std::move(wrapper));
@@ -829,7 +829,7 @@ static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::
 }
 
 // https://www.w3.org/TR/css-display-3/#outer-role
-static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues> style, Display display) {
+static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> style, Display display) {
     if (display == Display::Inside::TABLE) {
         auto wrapper = _createTableWrapperAndBuildTable(bc, style, el);
         bc.addToInlineRoot(std::move(wrapper));
@@ -872,15 +872,15 @@ static void _buildChildBoxDisplay(BuilderContext bc, Gc::Ref<Dom::Node> node, Di
 }
 
 // https://www.w3.org/TR/css-display-3/#layout-specific-display
-static void _buildChildInternalDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::ComputedValues> childStyle) {
+static void _buildChildInternalDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::ComputedValues const> childStyle) {
     // FIXME: We should create wrapping boxes related to table or ruby, following the FC specification. However, for now,
     // we just wrap it in a single box.
     _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, childStyle->display);
 }
 
-static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::ComputedValues> childStyle, Display display) {
+static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::ComputedValues const> childStyle, Display display) {
     if (bc.from == BuilderContext::From::FLEX) {
-        display = childStyle->display = childStyle->display.blockify();
+        display = childStyle->display.blockify();
         _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
         return;
     }
@@ -950,16 +950,10 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
         if (pseudoElement->type == Dom::PseudoElement::MARKER and style->content.is<Keywords::Normal>()) {
             String marker = ""s;
             if (listStyleType == CustomIdent{"disc"_sym}) {
-                // NOSPEC: By default chrome and other browser seems to make this a bit larger
-                style->transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
                 marker = "\u2022"s;
             } else if (listStyleType == CustomIdent{"circle"_sym}) {
-                // NOSPEC: By default chrome and other browser seems to make this a bit larger
-                style->transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
                 marker = "\u25E6"s;
             } else if (listStyleType == CustomIdent{"square"_sym}) {
-                // NOSPEC: By default chrome and other browser seems to make this a bit larger
-                style->transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
                 marker = "\u25AA"s;
             } else if (listStyleType == CustomIdent{"decimal"_sym}) {
                 auto value =
@@ -1060,7 +1054,7 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, Runnin
         auto elt = style->content.expect<ElementFunc>();
         if (auto infos = runningPos.match(elt, pageNumber)) {
             Box box = buildElement(infos.expect().element);
-            box.style->position = Keywords::STATIC;
+            box.forceStaticPosition = true;
             return box;
         }
     } else if (auto it = style->content.is<CounterFunc>()) {
