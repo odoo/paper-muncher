@@ -1,14 +1,49 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:layout.table;
 
 import Karm.Math;
 import Karm.Logger;
 
+import :dom.element;
+import :dom.names;
 import :values;
 import :layout.layout;
 import :layout.positioned;
 import :layout.values;
 
 namespace Vaev::Layout {
+
+Opt<Str> _retrieveDomAttr(Box const& box, Dom::QualifiedName const& attr) {
+    auto origin = try$(box.origin);
+    if (auto el = origin.is<Gc::Ref<Dom::Element>>()) {
+        return (*el)->getAttribute(attr);
+    }
+    return NONE;
+}
+
+// https://html.spec.whatwg.org/multipage/tables.html#the-col-element
+Opt<u16> retrieveSpanFromDom(Box const& box) {
+    auto attr = try$(_retrieveDomAttr(box, Html::SPAN_ATTR));
+    auto value = try$(parseValue<Integer>(attr).ok());
+    return Some(clamp(value, 1, 1000));
+}
+
+// https://html.spec.whatwg.org/multipage/tables.html#attributes-common-to-td-and-th-elements
+Opt<u16> retrieveColSpanFromDom(Box const& box) {
+    auto attr = try$(_retrieveDomAttr(box, Html::COLSPAN_ATTR));
+    auto value = try$(parseValue<Integer>(attr).ok());
+    return Some(clamp(value, 1, 1000));
+}
+
+// https://html.spec.whatwg.org/multipage/tables.html#attributes-common-to-td-and-th-elements
+Opt<u16> retrieveRowSpanFromDom(Box const& box) {
+    auto attr = try$(_retrieveDomAttr(box, Html::ROWSPAN_ATTR));
+    auto value = try$(parseValue<Integer>(attr).ok());
+    return Some(clamp(value, 0, 65534));
+}
 
 void advanceUntil(MutCursor<Box>& cursor, auto pred) {
     while (not cursor.ended() and not pred(cursor->style->display))
@@ -30,6 +65,8 @@ struct TableCell {
     Math::Vec2u anchorIdx = {};
     MutCursor<Box> box = nullptr;
     Au usedHeight = {};
+    u16 rowSpan = 1;
+    u16 colSpan = 1;
 
     static TableCell const EMPTY;
 
@@ -166,8 +203,8 @@ export struct TableFormatingContext : FormatingContext {
             if (current.x == grid.size.x)
                 grid.increaseWidth();
 
-            usize rowSpan = tableRowCursor->style->table->rowSpan;
-            usize colSpan = tableRowCursor->style->table->colSpan;
+            u16 rowSpan = retrieveRowSpanFromDom(*tableRowCursor).unwrapOr(1);
+            u16 colSpan = retrieveColSpanFromDom(*tableRowCursor).unwrapOr(1);
 
             bool cellGrowsDownward;
             if (rowSpan == 0 and true /* TODO: and the table element's node document is not set to quirks mode, */) {
@@ -185,9 +222,11 @@ export struct TableFormatingContext : FormatingContext {
             }
 
             {
-                TableCell cell = {
+                auto cell = TableCell{
                     .anchorIdx = current,
                     .box = tableRowCursor,
+                    .rowSpan = rowSpan,
+                    .colSpan = colSpan,
                 };
 
                 for (usize x = current.x; x < current.x + colSpan; ++x) {
@@ -298,7 +337,7 @@ export struct TableFormatingContext : FormatingContext {
 
                 // MARK: Columns
                 while (not columnGroupCursor.ended()) {
-                    auto span = columnGroupCursor->style->table->span;
+                    auto span = retrieveSpanFromDom(*columnGroupCursor).unwrapOr(1);
                     grid.increaseWidth(span);
 
                     cols.pushBack({.start = grid.size.x - span, .end = grid.size.x - 1, .el = *columnGroupCursor});
@@ -311,7 +350,7 @@ export struct TableFormatingContext : FormatingContext {
 
                 colGroups.pushBack({.start = startColRange, .end = grid.size.x - 1, .el = *tableBoxCursor});
             } else {
-                auto span = tableBoxCursor->style->table->span;
+                auto span = retrieveSpanFromDom(*tableBoxCursor).unwrapOr(1);
                 grid.increaseWidth(span);
 
                 colGroups.pushBack({.start = grid.size.x - span + 1, .end = grid.size.x - 1, .el = *tableBoxCursor});
@@ -502,13 +541,11 @@ export struct TableFormatingContext : FormatingContext {
     }
 
     usize colSpanAt(usize x, usize y) const {
-        auto const& c = grid.at(x, y);
-        return c.box ? c.box->style->table->colSpan : 1;
+        return grid.at(x, y).colSpan;
     }
 
     usize rowSpanAt(usize x, usize y) const {
-        auto const& c = grid.at(x, y);
-        return c.box ? c.box->style->table->rowSpan : 1;
+        return grid.at(x, y).rowSpan;
     }
 
     // https://www.w3.org/TR/css-tables-3/#border-conflict-resolution-algorithm
@@ -756,19 +793,16 @@ export struct TableFormatingContext : FormatingContext {
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
-                usize rowSpan = cell.box->style->table->rowSpan;
-                usize colSpan = cell.box->style->table->colSpan;
-
                 auto cellBorder = computeBorders(tree, *cell.box);
 
-                for (usize k = 0; k < colSpan; ++k) {
+                for (usize k = 0; k < cell.colSpan; ++k) {
                     bordersGrid.widthAt(i, j + k).top = cellBorder.top;
-                    bordersGrid.widthAt(i + rowSpan - 1, j + k).bottom = cellBorder.bottom;
+                    bordersGrid.widthAt(i + cell.rowSpan - 1, j + k).bottom = cellBorder.bottom;
                 }
 
-                for (usize k = 0; k < rowSpan; ++k) {
+                for (usize k = 0; k < cell.rowSpan; ++k) {
                     bordersGrid.widthAt(i + k, j).start = cellBorder.start;
-                    bordersGrid.widthAt(i + k, j + colSpan - 1).end = cellBorder.end;
+                    bordersGrid.widthAt(i + k, j + cell.colSpan - 1).end = cellBorder.end;
                 }
             }
         }
@@ -879,14 +913,13 @@ export struct TableFormatingContext : FormatingContext {
             }
 
             auto cellWidth = resolve(tree, *cell.box, *cellBoxWidthCalc, tableUsedWidth);
-            auto colSpan = cell.box->style->table->colSpan;
 
-            for (usize j = 0; j < colSpan; ++j, x++) {
+            for (usize j = 0; j < cell.colSpan; ++j, x++) {
                 // FIXME: Not overriding values already computed,
                 //        but should we subtract the already computed from
                 //        cellWidth before division?
                 if (colWidthOrNone[x] == NONE)
-                    colWidthOrNone[x] = Some(cellWidth / Au{colSpan});
+                    colWidthOrNone[x] = Some(cellWidth / Au{cell.colSpan});
             }
         }
 
@@ -973,13 +1006,13 @@ export struct TableFormatingContext : FormatingContext {
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
-                auto colSpan = cell.box->style->table->colSpan;
+                auto colSpan = cell.colSpan;
                 if (colSpan > 1)
                     continue;
 
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
-                    .borders = buildBordersWidthsForCell(i, j, cell.box->style->table->rowSpan, colSpan)
+                    .borders = buildBordersWidthsForCell(i, j, cell.rowSpan, colSpan)
                 };
 
                 auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth, usedSpacings);
@@ -1001,13 +1034,13 @@ export struct TableFormatingContext : FormatingContext {
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
-                auto colSpan = cell.box->style->table->colSpan;
+                auto colSpan = cell.colSpan;
                 if (colSpan <= 1)
                     continue;
 
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
-                    .borders = buildBordersWidthsForCell(i, j, cell.box->style->table->rowSpan, colSpan)
+                    .borders = buildBordersWidthsForCell(i, j, cell.rowSpan, colSpan)
                 };
 
                 auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth, usedSpacings);
@@ -1238,7 +1271,7 @@ export struct TableFormatingContext : FormatingContext {
                 if (not(cell.box->style->sizing->height.is<Keywords::Auto>() or cell.box->style->sizing->height.is<Calc<PercentOr<Length>>>()))
                     logWarn("height can't be anything other than 'auto' or a length in a table context");
 
-                auto rowSpan = cell.box->style->table->rowSpan;
+                auto rowSpan = cell.rowSpan;
                 if (auto cellBoxHeightCalc = cell.box->style->sizing->height.is<Calc<PercentOr<Length>>>()) {
                     auto computedHeight = resolve(
                         tree,
@@ -1254,7 +1287,7 @@ export struct TableFormatingContext : FormatingContext {
 
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
-                    .borders = buildBordersWidthsForCell(i, j, rowSpan, cell.box->style->table->colSpan)
+                    .borders = buildBordersWidthsForCell(i, j, rowSpan, cell.colSpan)
                 };
 
                 auto cellOutput = layoutBorderBox(
@@ -1461,7 +1494,7 @@ export struct TableFormatingContext : FormatingContext {
         // if the box started being rendered in the previous fragment,
         // - its started position must be row starting the fragment
         // - its size cant be the one computed in the build phase, thus is NONE
-        auto rowSpan = cell.box->style->table->rowSpan;
+        auto rowSpan = cell.rowSpan;
         bool boxStartedInPrevFragment = tree.fc.allowBreak() and breakpointsForCell.prevIteration;
         Au startPositionY = startPositionOfRow[boxStartedInPrevFragment ? startFrag : cell.anchorIdx.y];
 
@@ -1478,12 +1511,10 @@ export struct TableFormatingContext : FormatingContext {
         //       increase the height of the cell box.
         //
         //       (See https://www.w3.org/TR/CSS22/tables.html#height-layout)
-        auto colSpan = cell.box->style->table->colSpan;
-
         UsedSpacings usedSpacings{
             .padding = computePaddings(tree, *cell.box, tableBoxSize),
             .borders = useBordersCollapse
-                           ? buildBordersWidthsForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, colSpan)
+                           ? buildBordersWidthsForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, cell.colSpan)
                            : computeBorders(tree, *cell.box),
         };
 
@@ -1514,7 +1545,7 @@ export struct TableFormatingContext : FormatingContext {
             .generateFragment = input.generateFragment,
             .usedSpacings = usedSpacings,
             .knownSize = {
-                Some(colWidthPref.query(j, j + colSpan - 1) + spacing.x * (colSpan - 1)),
+                Some(colWidthPref.query(j, j + cell.colSpan - 1) + spacing.x * (cell.colSpan - 1)),
                 verticalSize,
             },
             .position = position,
@@ -1530,7 +1561,7 @@ export struct TableFormatingContext : FormatingContext {
         auto outputCell = layoutBorderBox(tree, *cell.box, childInput);
         if (outputCell.fragment and useBordersCollapse) {
             if (auto frag = outputCell.fragment->is<BoxFragment>()) {
-                frag->usedBorders = Some(buildUsedCollapsedBordersForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, colSpan));
+                frag->usedBorders = Some(buildUsedCollapsedBordersForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, cell.colSpan));
             }
         }
 
@@ -1575,7 +1606,7 @@ export struct TableFormatingContext : FormatingContext {
             if (cell.anchorIdx.x != j)
                 continue;
 
-            bool isBottomCell = cell.anchorIdx.y + cell.box->style->table->rowSpan - 1 == i;
+            bool isBottomCell = cell.anchorIdx.y + cell.rowSpan - 1 == i;
 
             if (not tree.fc.isDiscoveryMode() and not(isBottomCell or isBreakpointedRow)) {
                 continue;
@@ -1621,7 +1652,7 @@ export struct TableFormatingContext : FormatingContext {
             if (not cell.box)
                 continue;
 
-            if (cell.anchorIdx != Math::Vec2u{j, i} or cell.box->style->table->rowSpan != 1) {
+            if (cell.anchorIdx != Math::Vec2u{j, i} or cell.rowSpan != 1) {
                 isSelfContainedRow = false;
                 break;
             }
