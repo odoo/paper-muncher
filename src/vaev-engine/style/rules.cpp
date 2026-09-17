@@ -329,7 +329,7 @@ export struct PageRule {
 
         for (auto const& area : areas) {
             auto areaPseudoElement = c.area(area.area);
-            area.apply(registry, *c.style, *areaPseudoElement->computedValues());
+            area.apply(registry, *c.style, *areaPseudoElement->_computedValues.expect("unstyled page area"));
         }
     }
 
