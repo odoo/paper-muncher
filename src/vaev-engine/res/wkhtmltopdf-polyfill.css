@@ -1,0 +1,2 @@
+.page::before { content: counter(page); }
+.topage::before { content: counter(pages); }
