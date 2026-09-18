@@ -73,7 +73,7 @@ export struct StyleRule {
             e("props: [");
             e.indentNewline();
             for (auto const& prop : props) {
-                e("{}\n", prop);
+                e("({} {})\n", prop->registration->name, prop);
             }
             e.deindent();
             e("]\n");
