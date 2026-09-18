@@ -23,7 +23,7 @@ export struct TableLayoutProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& s) const override {
-            return makeRc<TableLayoutProperty>(self(), s.table->tableLayout);
+            return makeRc<TableLayoutProperty>(self(), s.tableLayout);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -37,7 +37,7 @@ export struct TableLayoutProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.table.cow().tableLayout = _value;
+        c.tableLayout = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -56,7 +56,7 @@ export struct CaptionSideProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& s) const override {
-            return makeRc<CaptionSideProperty>(self(), s.tableInherited->captionSide);
+            return makeRc<CaptionSideProperty>(self(), s.table->captionSide);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -70,7 +70,7 @@ export struct CaptionSideProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.tableInherited.cow().captionSide = _value;
+        c.table.cow().captionSide = _value;
     }
 
     void repr(Io::Emit& e) const override {

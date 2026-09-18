@@ -263,37 +263,6 @@ export struct Computer {
     }
 
     static void _considerElementAttributes(ComputedValues& values, Gc::Ref<Dom::Element> el) {
-        // https://html.spec.whatwg.org/multipage/tables.html#the-col-element
-        // The element may have a span content attribute specified, whose value must
-        // be a valid non-negative integer greater than zero and less than or equal to 1000.
-        if (auto const& [span] = el->getAttribute(Html::SPAN_ATTR)) {
-            auto value = parseValue<Integer>(span).unwrapOr(0);
-            if (value <= 0 or value > 1000)
-                value = 1;
-            values.table.cow().span = value;
-        }
-
-        // https://html.spec.whatwg.org/multipage/tables.html#attributes-common-to-td-and-th-elements
-        // The td and th elements may have a colspan content attribute specified,
-        // whose value must be a valid non-negative integer greater than zero and less than or equal to 1000.
-        if (auto const& [colSpan] = el->getAttribute(Html::COLSPAN_ATTR)) {
-            auto value = parseValue<Integer>(colSpan).unwrapOr(0);
-            if (value <= 0 or value > 1000)
-                value = 1;
-            values.table.cow().colSpan = value;
-        }
-
-        // The td and th elements may also have a rowspan content attribute specified,
-        // whose value must be a valid non-negative integer less than or equal to 65534.
-        if (auto const& [rowSpan] = el->getAttribute(Html::ROWSPAN_ATTR)) {
-            auto value = parseValue<Integer>(rowSpan).unwrapOr(0);
-            if (value < 0)
-                value = 0;
-            if (value > 65534)
-                value = 65534;
-            values.table.cow().rowSpan = value;
-        }
-
         // https://html.spec.whatwg.org/multipage/obsolete.html#attr-table-align
         if (auto const& [align] = el->getAttribute(Html::ALIGN_ATTR)) {
             if (align == "left") {

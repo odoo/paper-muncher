@@ -33,13 +33,6 @@ struct TransformProps {
 };
 
 export struct TableProps {
-    TableLayout tableLayout = TableLayout::AUTO;
-    usize span = 1;
-    usize rowSpan = 1;
-    usize colSpan = 1;
-};
-
-export struct TableInheritedProps {
     CaptionSide captionSide = CaptionSide::TOP;
     BorderSpacing spacing = {0_au, 0_au};
     BorderCollapse collapse = BorderCollapse::SEPARATE;
@@ -82,7 +75,6 @@ export struct ComputedValues {
     Cow<ClipProps> clip;
     Cow<TransformProps> transform;
     Cow<TableProps> table;
-    Cow<TableInheritedProps> tableInherited;
     Cow<FontProps> font;
     Cow<TextProps> text;
     Cow<FlexProps> flex;
@@ -113,6 +105,7 @@ export struct ComputedValues {
     Direction direction;
     Position position = Keywords::STATIC;
     BoxSizing boxSizing;
+    TableLayout tableLayout = TableLayout::AUTO;
 
     ComputedValues() : fontFace(Gfx::Fontface::fallback()) {}
 
