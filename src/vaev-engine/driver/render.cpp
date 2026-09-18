@@ -23,7 +23,7 @@ export struct RenderResult {
     Rc<Paint::StackingContext> stacking;
 };
 
-export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Media const& media, Style::Viewport viewport) {
+export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Media const& media, Style::Viewport viewport, Style::CounterSet const& initialCounterSet = {}) {
     Style::Computer computer{
         heap,
         media,
@@ -33,7 +33,7 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
     };
 
     computer.build();
-    computer.styleDocument(*dom);
+    computer.styleDocument(*dom, initialCounterSet);
 
     auto tree = makeRc<Layout::Tree>(
         Layout::buildDocument(dom),
