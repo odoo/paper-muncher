@@ -245,6 +245,10 @@ struct BuilderContext {
         _parent.add(std::move(box));
     }
 
+    bool hasRootInlineBox() const {
+        return _rootInlineBox.has();
+    }
+
     Box& rootInlineBox() {
         if (not _rootInlineBox)
             panic("no root inline box set for the current builder context");
@@ -968,8 +972,7 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
         }
     };
 
-    if (display == Display::INLINE or
-        display == Display::CONTENTS) {
+    if (bc.hasRootInlineBox() and oneOf(display, Display::INLINE, Display::CONTENTS)) {
         bc.startInlineBox(_spanStyleFromStyle(*style));
         generateInnerContent(bc);
         bc.endInlineBox();
