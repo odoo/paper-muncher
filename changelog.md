@@ -8,6 +8,24 @@
 
 ---
 
+# 🏎️ Paper Muncher v0.8.0
+
+## Changes
+
+ - Completely reworked stacking context [#275](https://github.com/odoo/paper-muncher/pull/275)
+ - Greatly improved sandbox hardening [2c2a840](https://github.com/odoo/paper-muncher/commit/2c2a8401e5e99422bba06888042c6b7bad4557e4) [2e9581e](https://github.com/odoo/paper-muncher/commit/2e9581e0d33e69b650f2729248bf24df1c2e936f)
+ - Basic hit testing and working "inspect element" action in the inspector [#275](https://github.com/odoo/paper-muncher/pull/275)
+ - New faster and simpler selector engine [#297](https://github.com/odoo/paper-muncher/pull/297) [#295](https://github.com/odoo/paper-muncher/pull/295) [#294](https://github.com/odoo/paper-muncher/pull/294) [#291](https://github.com/odoo/paper-muncher/pull/291)
+ - Improved caching in the table layout algorithm [#293](https://github.com/odoo/paper-muncher/pull/293)
+ - Sped up property cascading [#283](https://github.com/odoo/paper-muncher/pull/283) [#294](https://github.com/odoo/paper-muncher/pull/294) [#280](https://github.com/odoo/paper-muncher/pull/280) [#281](https://github.com/odoo/paper-muncher/pull/281)
+ - Reduced memory usage for DOM attributes [#282](https://github.com/odoo/paper-muncher/pull/282)
+ - Polyfilled wkhtmltopdf-style page numbering [#302](https://github.com/odoo/paper-muncher/pull/302)
+ - And many more random bug fixes all around the engine!
+
+[GitHub Link](https://github.com/odoo/paper-muncher/releases/tag/v0.8.0)
+
+---
+
 # 🎩 Paper-Muncher v0.7.1
 
 ## Changes
