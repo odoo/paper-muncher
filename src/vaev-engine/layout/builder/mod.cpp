@@ -1026,15 +1026,7 @@ export Box buildElement(Gc::Ref<Dom::Element> elt) {
         box,
         Some(rootInlineBox),
     };
-    buildBlockFlowFromElement(
-        {
-            BuilderContext::From::BLOCK,
-            elt->computedValues(),
-            box,
-            Some(rootInlineBox),
-        },
-        *elt
-    );
+    buildBlockFlowFromElement(bc, *elt);
     return box;
 }
 
