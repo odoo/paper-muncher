@@ -694,7 +694,7 @@ export struct RegisteredPropertySet {
         child.list = parent.list;
         child.text = parent.text;
         child.svgPaint = parent.svgPaint;
-        child.tableInherited = parent.tableInherited;
+        child.table = parent.table;
 
         // Handle the rest of the properties
         for (auto& registration : _individuallyInherited)

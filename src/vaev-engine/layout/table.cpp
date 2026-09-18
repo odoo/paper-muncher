@@ -1341,12 +1341,12 @@ export struct TableFormatingContext : FormatingContext {
     bool useBordersCollapse = false;
 
     void build(Tree& tree, Box& box) override {
-        useBordersCollapse = box.style->tableInherited->collapse == BorderCollapse::COLLAPSE;
+        useBordersCollapse = box.style->table->collapse == BorderCollapse::COLLAPSE;
 
         if (not useBordersCollapse)
             spacing = {
-                resolve(tree, box, box.style->tableInherited->spacing.horizontal),
-                resolve(tree, box, box.style->tableInherited->spacing.vertical),
+                resolve(tree, box, box.style->table->spacing.horizontal),
+                resolve(tree, box, box.style->table->spacing.vertical),
             };
 
         buildHTMLTable(box);
@@ -1371,7 +1371,7 @@ export struct TableFormatingContext : FormatingContext {
         //
         //      However, Chrome does not implement this exception, and we are not implementing it either.
         bool shouldRunAutoAlgorithm =
-            box.style->table->tableLayout == TableLayout::AUTO or
+            box.style->tableLayout == TableLayout::AUTO or
             not input.knownSize.width;
         Opt<AutoLayoutCacheKey> cacheKey;
 

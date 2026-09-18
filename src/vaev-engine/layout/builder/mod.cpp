@@ -751,7 +751,7 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
 
     Box tableBox = {tableBoxStyle, Some(el)};
 
-    bool captionsOnTop = tableBoxStyle->tableInherited->captionSide == CaptionSide::TOP;
+    bool captionsOnTop = tableBoxStyle->table->captionSide == CaptionSide::TOP;
     if (captionsOnTop) {
         searchAndBuildCaption();
     }

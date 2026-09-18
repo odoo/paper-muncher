@@ -969,7 +969,7 @@ export struct BorderCollapseProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderCollapseProperty>(self(), c.tableInherited->collapse);
+            return makeRc<BorderCollapseProperty>(self(), c.table->collapse);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -983,7 +983,7 @@ export struct BorderCollapseProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.tableInherited.cow().collapse = _value;
+        c.table.cow().collapse = _value;
     }
 
     void repr(Io::Emit& e) const override {
@@ -1002,7 +1002,7 @@ export struct BorderSpacingProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderSpacingProperty>(self(), c.tableInherited->spacing);
+            return makeRc<BorderSpacingProperty>(self(), c.table->spacing);
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -1016,7 +1016,7 @@ export struct BorderSpacingProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.tableInherited.cow().spacing = _value;
+        c.table.cow().spacing = _value;
     }
 
     void repr(Io::Emit& e) const override {
