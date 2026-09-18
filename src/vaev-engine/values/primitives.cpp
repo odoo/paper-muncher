@@ -93,7 +93,7 @@ struct ValueParser<String> {
 // MARK: Custom Ident ----------------------------------------------------------
 // https://www.w3.org/TR/css-values-4/#identifier-value
 
-struct CustomIdent {
+export struct CustomIdent {
     Symbol _symbol = ""_sym;
 
     bool operator==(CustomIdent const& other) const = default;

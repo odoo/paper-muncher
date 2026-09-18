@@ -22,6 +22,7 @@ using namespace Karm;
 using namespace Karm::Literals;
 using namespace Karm::Math::Literals;
 using namespace Karm::Fmt::Literals;
+using namespace Karm::Ref::Literals;
 
 namespace PaperMuncher {
 
@@ -166,13 +167,18 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
         return infos.pageDecoration.shrink({headerHeight, 0_au, footerHeight});
     }
 
-    void decorate(Vaev::Style::Media const& media, Vaev::Driver::PageLayoutInfos const& infos, [[maybe_unused]] usize pageCount, Gfx::Canvas& g) override {
+    void decorate(Vaev::Style::Media const& media, Vaev::Driver::PageLayoutInfos const& infos, usize pageCount, Gfx::Canvas& g) override {
         auto decorationWidth = infos.pageDecoration.width;
         auto [headerHeight, footerHeight] = _memo.lookup(infos.pageDecoration.size()).unwrap();
+
+        Vaev::Style::CounterSet pageCounters;
+        pageCounters.instantiateCounter(nullptr, {Vaev::CustomIdent{"page"_sym}, false}, static_cast<Vaev::Integer>(infos.pageNumber));
+        pageCounters.instantiateCounter(nullptr, {Vaev::CustomIdent{"pages"_sym}, false}, static_cast<Vaev::Integer>(pageCount));
 
         if (auto& [w] = headerWindow) {
             w->changeMedia(media);
             w->changeViewport({decorationWidth, headerHeight});
+            w->changeInitialCounterSet(pageCounters);
             g.push();
             g.transform(Math::Trans2f::translate(infos.pageDecoration.topStart().cast<f64>()));
             w->paint(g);
@@ -182,6 +188,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
         if (auto& [w] = footerWindow) {
             w->changeMedia(media);
             w->changeViewport({decorationWidth, footerHeight});
+            w->changeInitialCounterSet(pageCounters);
             g.push();
             g.transform(Math::Trans2f::translate((infos.pageDecoration.bottomStart() - Math::Vec2Au{0_au, footerHeight}).cast<f64>()));
             w->paint(g);
@@ -189,6 +196,16 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
         }
     }
 };
+
+Async::Task<Rc<Vaev::Dom::Window>> _loadHeaderFooterWindowAsync(Rc<Http::Client> client, Ref::Url const& url, Async::CancellationToken ct) {
+    auto window = Vaev::Dom::Window::create(client);
+    co_trya$(window->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
+
+    auto sheet = co_trya$(Vaev::Loader::fetchStylesheetAsync(*client, *window->document(), "bundle://vaev-engine/wkhtmltopdf-polyfill.css"_url, Vaev::Style::Origin::USER_AGENT, ct));
+    window->document()->styleSheets->add(std::move(sheet));
+
+    co_return Ok(window);
+}
 
 Async::Task<> runSingleAsync(
     Rc<Http::Client> client,
@@ -206,18 +223,14 @@ Async::Task<> runSingleAsync(
         HeaderFooterDecorator decorator;
         if (auto& [header] = options.header) {
             logInfo("loading header {}...", header);
-            auto window = Vaev::Dom::Window::create(client);
-            co_trya$(window->loadLocationAsync(header, Ref::Uti::PUBLIC_OPEN, ct));
-            decorator.headerWindow = Some(window);
+            decorator.headerWindow = Some(co_trya$(_loadHeaderFooterWindowAsync(client, header, ct)));
         }
 
         decorator.headerSize = options.headerSize;
 
         if (auto& [footer] = options.footer) {
             logInfo("loading footer {}...", footer);
-            auto window = Vaev::Dom::Window::create(client);
-            co_trya$(window->loadLocationAsync(footer, Ref::Uti::PUBLIC_OPEN, ct));
-            decorator.footerWindow = Some(window);
+            decorator.footerWindow = Some(co_trya$(_loadHeaderFooterWindowAsync(client, footer, ct)));
         }
 
         decorator.footerSize = options.footerSize;

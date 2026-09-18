@@ -150,7 +150,7 @@ export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http:
     co_return Ok(dom);
 }
 
-Async::Task<Style::StyleSheet> _fetchStylesheetAsync(Http::Client& client, Dom::Document& document, Ref::Url url, Style::Origin origin, Async::CancellationToken ct) {
+export Async::Task<Style::StyleSheet> fetchStylesheetAsync(Http::Client& client, Dom::Document& document, Ref::Url url, Style::Origin origin, Async::CancellationToken ct) {
     auto resp = co_trya$(client.getAsync(url, ct));
     if (not resp->body)
         co_return Error::notFound("could not load stylesheet");
@@ -215,7 +215,7 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Dom::Document& document
             }
 
             auto url = Ref::Url::parse(*href, Some(node->baseURI()));
-            auto sheet = co_await _fetchStylesheetAsync(client, document, url, Style::Origin::AUTHOR, ct);
+            auto sheet = co_await fetchStylesheetAsync(client, document, url, Style::Origin::AUTHOR, ct);
 
             if (not sheet) {
                 logWarn("failed to fetch stylesheet from {}: {}", url, sheet);
@@ -252,30 +252,30 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
     auto response = co_trya$(client.getAsync(resolvedUrl, ct));
     auto document = co_trya$(_loadDocumentAsync(heap, url, response, ct));
 
-    document->styleSheets->add((co_await _fetchStylesheetAsync(client, *document, "bundle://vaev-engine/html.css"_url, Style::Origin::USER_AGENT, ct))
+    document->styleSheets->add((co_await fetchStylesheetAsync(client, *document, "bundle://vaev-engine/html.css"_url, Style::Origin::USER_AGENT, ct))
                                    .take("user agent stylesheet not available"));
 
-    document->styleSheets->add((co_await _fetchStylesheetAsync(client, *document, "bundle://vaev-engine/counters.css"_url, Style::Origin::USER_AGENT, ct))
+    document->styleSheets->add((co_await fetchStylesheetAsync(client, *document, "bundle://vaev-engine/counters.css"_url, Style::Origin::USER_AGENT, ct))
                                    .take("user agent stylesheet not available"));
 
     if (document->quirkMode == Dom::QuirkMode::YES) {
         logWarn("quirky document, using quirky stylesheet");
-        document->styleSheets->add((co_await _fetchStylesheetAsync(client, *document, "bundle://vaev-engine/html-quirk.css"_url, Style::Origin::USER_AGENT, ct))
+        document->styleSheets->add((co_await fetchStylesheetAsync(client, *document, "bundle://vaev-engine/html-quirk.css"_url, Style::Origin::USER_AGENT, ct))
                                        .take("user agent stylesheet not available"));
     }
 
     if (document->contentType() == Ref::Uti::PUBLIC_MARKDOWN) {
-        document->styleSheets->add((co_await _fetchStylesheetAsync(client, *document, "bundle://vaev-engine/markdown.css"_url, Style::Origin::USER_AGENT, ct))
+        document->styleSheets->add((co_await fetchStylesheetAsync(client, *document, "bundle://vaev-engine/markdown.css"_url, Style::Origin::USER_AGENT, ct))
                                        .take("user agent stylesheet not available"));
     }
 
-    document->styleSheets->add((co_await _fetchStylesheetAsync(client, *document, "bundle://vaev-engine/print.css"_url, Style::Origin::USER_AGENT, ct))
+    document->styleSheets->add((co_await fetchStylesheetAsync(client, *document, "bundle://vaev-engine/print.css"_url, Style::Origin::USER_AGENT, ct))
                                    .take("user agent stylesheet not available"));
 
-    document->styleSheets->add((co_await _fetchStylesheetAsync(client, *document, "bundle://vaev-engine/svg.css"_url, Style::Origin::USER_AGENT, ct))
+    document->styleSheets->add((co_await fetchStylesheetAsync(client, *document, "bundle://vaev-engine/svg.css"_url, Style::Origin::USER_AGENT, ct))
                                    .take("user agent stylesheet not available"));
 
-    document->styleSheets->add((co_await _fetchStylesheetAsync(client, *document, "bundle://vaev-engine/math.css"_url, Style::Origin::USER_AGENT, ct))
+    document->styleSheets->add((co_await fetchStylesheetAsync(client, *document, "bundle://vaev-engine/math.css"_url, Style::Origin::USER_AGENT, ct))
                                    .take("user agent stylesheet not available"));
 
     (void)co_await _fetchResourcesAsync(client, *document, document, ct);
