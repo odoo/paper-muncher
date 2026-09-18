@@ -10,6 +10,7 @@ import Karm.Gfx;
 import Karm.Math;
 
 import :style.media;
+import :style.counter;
 import :dom.document;
 import :loader.loader;
 import :layout.base;
@@ -28,6 +29,7 @@ export struct Window {
 
     Gc::Ptr<Document> _document = nullptr;
     Opt<Driver::RenderResult> _render = NONE;
+    Style::CounterSet _initialCounterSet = {};
 
     Window(Rc<Http::Client> client)
         : _client(client) {}
@@ -38,6 +40,11 @@ export struct Window {
 
     void changeMedia(Style::Media media) {
         _media = media;
+        invalidateRender();
+    }
+
+    void changeInitialCounterSet(Style::CounterSet counterSet) {
+        _initialCounterSet = std::move(counterSet);
         invalidateRender();
     }
 
@@ -84,7 +91,8 @@ export struct Window {
                 _heap,
                 _document.upgrade(),
                 _media,
-                {.small = _media.viewportSize()}
+                {.small = _media.viewportSize()},
+                _initialCounterSet
             )
         );
         return *_render;

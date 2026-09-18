@@ -27,7 +27,7 @@ struct Counter {
     }
 };
 
-struct CounterSet {
+export struct CounterSet {
     Vec<Counter> _counters;
 
     static CounterSet inherits(CounterSet& parent, CounterSet& sibling) {
@@ -41,7 +41,7 @@ struct CounterSet {
         auto& counterSource = sibling.any() ? sibling : parent;
 
         // 4. Let value source be the CSS counters set of the element immediately preceding element in tree order.
-        auto& valueSource = sibling;
+        auto& valueSource = sibling.any() ? sibling : parent;
 
         // 5. For each (|=CSS counter/name=|, originating element, |=value=|) of value source:
         for (auto& sourceCounter : valueSource._counters) {

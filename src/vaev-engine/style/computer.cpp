@@ -465,7 +465,7 @@ export struct Computer {
         return resolveExtends(counters);
     }
 
-    void styleDocument(Dom::Document& doc) {
+    void styleDocument(Dom::Document& doc, CounterSet rootParentCounters = {}) {
         _rootComputedValues = NONE;
 
         doc.counters = _resolveCounterStyle(*doc.styleSheets);
@@ -475,7 +475,6 @@ export struct Computer {
             auto initialComputedValues = doc.initialComputedValues();
             initialComputedValues->fontFace = _lookupFontface(*initialComputedValues);
             styleElement(*initialComputedValues, *el);
-            CounterSet rootParentCounters = {};
             CounterSet rootSiblingCounters = {};
             _resolveCounters(
                 rootParentCounters,

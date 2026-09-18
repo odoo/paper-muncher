@@ -969,6 +969,9 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
         } else if (style->content.is<String>()) {
             // TODO: Expand this to iterate over a Vector of content items (Strings, URLs, Counters)
             _buildText(innerBc, style->content.unwrap<String>().str(), style);
+        } else if (auto counter = style->content.is<CounterFunc>()) {
+            auto value = pseudoElement->element()->counters.innerMostValue(counter->name);
+            _buildText(innerBc, Io::toStr(value).str(), style);
         }
     };
 
