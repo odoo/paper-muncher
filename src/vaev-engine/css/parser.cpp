@@ -161,7 +161,9 @@ export Content consumeRuleList(Lexer& lex, bool topLevel, Diag::Collector& diags
 
         case Token::CDC:
         case Token::CDO: {
-            if (not topLevel) {
+            if (topLevel) {
+                lex.next();
+            } else {
                 auto rule = consumeRule(lex, diags);
                 if (rule)
                     list.pushBack(*rule);
