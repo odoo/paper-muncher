@@ -390,6 +390,9 @@ export struct AnB {
     static Res<AnB> parse(Cursor<Css::Sst>& cur) {
         eatWhitespace(cur);
 
+        if (cur.ended())
+            return Error::invalidData("expected AnB expression");
+
         if (cur.peek() == Css::Token::IDENT) {
             auto const& ident = cur->token.data;
             if (ident == "odd" or ident == "even") {
