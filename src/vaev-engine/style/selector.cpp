@@ -736,6 +736,10 @@ export struct Selector : _Selector {
         }
 
         eatWhitespace(cur);
+
+        if (cur.ended())
+            return Error::invalidData("expected attribute selector value");
+
         if (auto maybeValue = parseValue<String>(cur)) {
             value = maybeValue.take();
         } else if (*cur == Css::Token::IDENT) {
