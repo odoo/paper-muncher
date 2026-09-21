@@ -820,6 +820,11 @@ Feature _parseMediaFeature(Cursor<Css::Sst>& c) {
 MediaQuery _parseMediaQueryInfix(Cursor<Css::Sst>& c);
 
 MediaQuery _parseMediaQueryLeaf(Cursor<Css::Sst>& c) {
+    if (c.ended()) {
+        logWarn("unexpected end of input");
+        return TypeFeature{MediaType::OTHER};
+    }
+
     if (c.skip(Css::Token::ident("not"))) {
         return MediaQuery::negate(_parseMediaQueryInfix(c));
     } else if (c.skip(Css::Token::ident("only"))) {
