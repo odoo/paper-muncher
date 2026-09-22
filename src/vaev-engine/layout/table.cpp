@@ -1518,28 +1518,7 @@ export struct TableFormatingContext : FormatingContext {
                            : computeBorders(tree, *cell.box),
         };
 
-        Vec2Au position = {};
-        if (cell.box->style->inline_->baselineShift.is<Keywords::Top>()) {
-            position = Vec2Au{currPositionX, startPositionY};
-        } else if (cell.box->style->inline_->baselineShift.is<Keywords::Bottom>()) {
-            if (auto [size] = verticalSize) {
-                position = Vec2Au{currPositionX, startPositionY + size - cell.usedHeight};
-            } else {
-                // FIXME: What to do in this case?
-                position = Vec2Au{currPositionX, startPositionY};
-            }
-        } else if (cell.box->style->inline_->alignmentBaseline.is<Keywords::Middle>()) {
-            if (auto [size] = verticalSize) {
-                position = Vec2Au{currPositionX, startPositionY + (size - cell.usedHeight) / 2};
-            } else {
-                // FIXME: What to do in this case?
-                position = Vec2Au{currPositionX, startPositionY};
-            }
-        } else {
-            // FIXME: Implement rest of relevant keywords,
-            //        fallback to 'top' for now.
-            position = Vec2Au{currPositionX, startPositionY};
-        }
+        Vec2Au position = {currPositionX, startPositionY};
 
         Input childInput{
             .generateFragment = input.generateFragment,
