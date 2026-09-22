@@ -117,6 +117,7 @@ export struct PageSelector {
     static PageSelector parse(Cursor<Css::Sst>& c) {
         PageSelector res;
 
+        eatWhitespace(c);
         if (c.peek() == Css::Token::IDENT) {
             res.name = c.next().token.data;
         }
@@ -135,6 +136,11 @@ export struct PageSelector {
 
         eatWhitespace(c);
         while (not c.ended()) {
+            if (c.peek() == Css::Token::COMMA) {
+                c.next();
+            } else {
+                return {};
+            }
             res.pushBack(parse(c));
             eatWhitespace(c);
         }
