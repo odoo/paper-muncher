@@ -14,6 +14,9 @@ SUPPORTED_PROPS = {
 }
 
 SUPPORTED_CASE_PROPS = {
+    "inputs": None,
+    "header": None,
+    "header-size": None,
     "footer": None,
     "footer-size": None,
     "help": None,
@@ -67,6 +70,9 @@ class TestCase:
         self.height = props.get("height", SUPPORTED_PROPS["height"])
         self.flow = props.get("flow", SUPPORTED_PROPS["flow"])
         self.margins = props.get("margins", SUPPORTED_PROPS["margins"])
+        self.inputs = caseProps.get("inputs", SUPPORTED_CASE_PROPS["inputs"])
+        self.header = caseProps.get("header", SUPPORTED_CASE_PROPS["header"])
+        self.headerSize = caseProps.get("header-size", SUPPORTED_CASE_PROPS["header-size"])
         self.footer = caseProps.get("footer", SUPPORTED_CASE_PROPS["footer"])
         self.footerSize = caseProps.get("footer-size", SUPPORTED_CASE_PROPS["footer-size"])
         self.help = caseProps.get("help", SUPPORTED_CASE_PROPS["help"])
@@ -79,7 +85,11 @@ class TestCase:
 
     def render(self, paperMuncher):  #
         with self.inputPath.open("w") as f:
-            f.write(f"<!DOCTYPE html>\n{self.testDocument}")
+            if self.inputs:
+                links = "".join(f'<li><a href="{TESTS_DIR / i}">{i}</a></li>' for i in self.inputs.split(","))
+                f.write(f'<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml"><body><ul>{links}</ul></body></html>')
+            else:
+                f.write(f"<!DOCTYPE html>\n{self.testDocument}")
 
         runPaperMuncher(paperMuncher, self)
 
@@ -113,17 +123,28 @@ def runPaperMuncher(executable, test: TestCase):
     if test.margins:
         command.extend(["--margins", test.margins])
 
+    if test.header:
+        command.append("--header")
+        for header in test.header.split(","):
+            command.append(TESTS_DIR / header)
+
+    if test.headerSize:
+        command.extend(["--header-size", test.headerSize])
+
     if test.footer:
-        command.extend(["--footer", TESTS_DIR / test.footer])
+        command.append("--footer")
+        for footer in test.footer.split(","):
+            command.append(TESTS_DIR / footer)
 
     if test.footerSize:
         command.extend(["--footer-size", test.footerSize])
 
-    command += [
-        "-o",
-        test.outputPath,
-        test.inputPath,
-    ]
+    command += ["-o", test.outputPath]
+
+    if test.inputs:
+        command.extend(TESTS_DIR / input for input in test.inputs.split(","))
+    else:
+        command.append(test.inputPath)
 
     try:
         executable.popen(*command)

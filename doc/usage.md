@@ -48,12 +48,12 @@ Renders one or more web documents to a print-ready file (typically PDF).
 
 **Document Decoration:**
 
-- `--header <document>`: Document to render as the page header
+- `--header <document>...`: Documents to render as page headers; pass one for all inputs or one per input
 - `--header-size <size>`: Height of the page header (default: `auto`)
-- `--footer <document>`: Document to render as the page footer
+- `--footer <document>...`: Documents to render as page footers; pass one for all inputs or one per input
 - `--footer-size <size>`: Height of the page footer (default: `auto`)
 
-*Headers and footers repeat on every page, above and below the main content, within the page margins.*
+*Headers and footers repeat on every page within the page margins. `--header` and `--footer` can be omitted, given once to reuse the same document for all inputs, or given once per input in the same order as the inputs. When given once per input, use `none` for any input that does not need a header or footer. Any other number is rejected. Input documents must come before `--header` and `--footer`.*
 
 **Document Flow:**
 

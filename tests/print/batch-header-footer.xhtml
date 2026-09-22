@@ -1,0 +1,134 @@
+<tests>
+
+<test name="per-document-header-footer" width="200px" height="100px" flow="paginate" margins="none">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; }
+                .header, .footer { height: 20px; }
+                .body { height: 40px; }
+                .body-space { height: 20px; }
+                .first .header { background: #f00; }
+                .first .footer { background: #fa0; }
+                .first .body { background: #0f0; }
+                .second .header { background: #00f; }
+                .second .footer { background: #a0f; }
+                .second .body { background: #ff0; }
+            </style>
+            <slot/>
+        </head>
+        <body>
+            <div class="first"><div class="header"/><div class="body"/><div class="body-space"/><div class="footer"/></div>
+            <div class="second"><div class="header"/><div class="body"/><div class="body-space"/><div class="footer"/></div>
+        </body>
+        </html>
+    </container>
+
+    <rendering/>
+
+    <rendering
+        help="Each input uses its matching header and footer, mapped in input order"
+        inputs="print/batch-body-1.html,print/batch-body-2.html"
+        header="print/batch-header-1.html,print/batch-header-2.html"
+        header-size="20px"
+        footer="print/batch-footer-1.html,print/batch-footer-2.html"
+        footer-size="20px"/>
+</test>
+
+<test name="shared-header-footer" width="200px" height="100px" flow="paginate" margins="none">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; }
+                .header, .footer { height: 20px; }
+                .body { height: 40px; }
+                .body-space { height: 20px; }
+                .header { background: #f00; }
+                .footer { background: #fa0; }
+                .first .body { background: #0f0; }
+                .second .body { background: #ff0; }
+            </style>
+            <slot/>
+        </head>
+        <body>
+            <div class="first"><div class="header"/><div class="body"/><div class="body-space"/><div class="footer"/></div>
+            <div class="second"><div class="header"/><div class="body"/><div class="body-space"/><div class="footer"/></div>
+        </body>
+        </html>
+    </container>
+
+    <rendering/>
+
+    <rendering
+        help="One header/footer document is reused for every input when only one is given"
+        inputs="print/batch-body-1.html,print/batch-body-2.html"
+        header="print/batch-header-1.html"
+        header-size="20px"
+        footer="print/batch-footer-1.html"
+        footer-size="20px"/>
+</test>
+
+<test name="no-header-footer" width="200px" height="100px" flow="paginate" margins="none">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; }
+                .body { height: 40px; }
+                .body-space { height: 60px; }
+                .first .body { background: #0f0; }
+                .second .body { background: #ff0; }
+            </style>
+            <slot/>
+        </head>
+        <body>
+            <div class="first"><div class="body"/><div class="body-space"/></div>
+            <div class="second"><div class="body"/><div class="body-space"/></div>
+        </body>
+        </html>
+    </container>
+
+    <rendering/>
+
+    <rendering
+        help="No header/footer is applied when neither is given, even with multiple inputs"
+        inputs="print/batch-body-1.html,print/batch-body-2.html"/>
+</test>
+
+<test name="per-document-header-footer-none" width="200px" height="100px" flow="paginate" margins="none">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; }
+                .header, .footer { height: 20px; }
+                .body { height: 40px; }
+                .body-space { height: 40px; }
+                .first .header { background: #f00; }
+                .first .body { background: #0f0; }
+                .second .body { background: #ff0; }
+                .second .footer { background: #a0f; }
+            </style>
+            <slot/>
+        </head>
+        <body>
+            <div class="first"><div class="header"/><div class="body"/><div class="body-space"/></div>
+            <div class="second"><div class="body"/><div class="body-space"/><div class="footer"/></div>
+        </body>
+        </html>
+    </container>
+
+    <rendering/>
+
+    <rendering
+        help="'none' skips the header/footer for that specific input"
+        inputs="print/batch-body-1.html,print/batch-body-2.html"
+        header="print/batch-header-1.html,none"
+        footer="none,print/batch-footer-2.html"
+        header-size="20px"
+        footer-size="20px"/>
+</test>
+
+</tests>
