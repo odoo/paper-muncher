@@ -661,6 +661,9 @@ export struct TableFormatingContext : FormatingContext {
     }
 
     void resolveConflictForTableBordersAtHorizontalAxis(Tree& tree, Box& box, BorderEdge edge) {
+        if (grid.size.x == 0 or grid.size.y == 0)
+            return;
+
         UsedBorder tableBorder = resolve(tree, box, edge);
         usize const i = edge == BorderEdge::TOP ? 0 : grid.size.y - 1;
 
@@ -694,6 +697,9 @@ export struct TableFormatingContext : FormatingContext {
     }
 
     void resolveConflictForTableBordersAtVerticalAxis(Tree& tree, Box& box, BorderEdge edge) {
+        if (grid.size.x == 0 or grid.size.y == 0)
+            return;
+
         UsedBorder tableBorder = resolve(tree, box, edge);
         usize const j = edge == BorderEdge::START ? 0 : grid.size.x - 1;
 
