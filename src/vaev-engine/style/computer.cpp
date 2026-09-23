@@ -474,7 +474,14 @@ export struct Computer {
         if (auto el = doc.documentElement()) {
             auto initialComputedValues = doc.initialComputedValues();
             initialComputedValues->fontFace = _lookupFontface(*initialComputedValues);
+
             styleElement(*initialComputedValues, *el);
+
+            // https://drafts.csswg.org/css-display/#root
+            // The root element’s display type is always blockified, and its principal
+            // box always establishes an independent formatting context.
+            el->computedValues()->display = el->computedValues()->display.blockify();
+
             CounterSet rootSiblingCounters = {};
             _resolveCounters(
                 rootParentCounters,
