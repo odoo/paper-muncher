@@ -107,6 +107,11 @@ export struct FlexProps {
                direction == FlexDirection::ROW_REVERSE;
     }
 
+    bool isReverse() const {
+        return direction == FlexDirection::ROW_REVERSE or
+               direction == FlexDirection::COLUMN_REVERSE;
+    }
+
     void repr(Io::Emit& e) const {
         e("(flex");
         e(" direction={}", direction);
