@@ -896,7 +896,7 @@ struct FlexFormatingContext : FormatingContext {
             _collectFlexItemsInfoFlexLinesWrap();
         }
 
-        if (_flex.direction == FlexDirection::ROW_REVERSE)
+        if (_flex.isReverse())
             for (auto& flexLine : _lines)
                 reverse(flexLine.items);
     }
@@ -1299,7 +1299,7 @@ struct FlexFormatingContext : FormatingContext {
                 // This is done after any flexible lengths and any auto margins have been resolved.
                 // NOTE: justifying doesnt change sizes/margins, thus will only run when committing and setting positions
                 auto justifyContent = box.style->aligns.justifyContent.keyword;
-                if (_flex.direction == FlexDirection::ROW_REVERSE) {
+                if (_flex.isReverse()) {
                     if (justifyContent == Align::FLEX_START)
                         justifyContent = Align::FLEX_END;
                     else if (justifyContent == Align::FLEX_END)
