@@ -740,12 +740,15 @@ export struct TableFormatingContext : FormatingContext {
         Vec<Math::Insets<Gfx::BorderStyle>> style;
 
         void init(Math::Vec2u size, Gfx::Color currentColor) {
+            logInfo("borderStyleGrid with size {}", size);
+
             gridWidth = size.x;
             color.resize(size.x * size.y, currentColor);
             style.resize(size.x * size.y, Gfx::BorderStyle::NONE);
         }
 
         Math::Insets<Gfx::Color>& colorAt(usize i, usize j) {
+            logInfo("Index ({i}, {j})", i, j);
             return color[i * gridWidth + j];
         }
 
