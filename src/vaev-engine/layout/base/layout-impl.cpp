@@ -44,6 +44,9 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
         return Some(constructGridFormatingContext(box));
     } else if (display == Display::TABLE_BOX) {
         return Some(constructTableFormatingContext(box));
+    } else if (oneOf(display, Display::RUBY_BASE, Display::RUBY_TEXT, Display::RUBY_BASE_CONTAINER, Display::RUBY_TEXT_CONTAINER)) {
+        // NOTE: no ruby FC yet, block it instead of skipping layout
+        return Some(constructBlockFormatingContext(box));
     } else if (display == Display::INTERNAL) {
         return NONE;
     } else {
