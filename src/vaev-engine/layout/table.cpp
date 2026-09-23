@@ -552,33 +552,40 @@ export struct TableFormatingContext : FormatingContext {
     void resolveConflictForBordersAtHorizontalAxis(Tree& tree, usize i) {
         usize start = 0;
         while (start < grid.size.x) {
-            while (start < grid.size.x and (grid.at(start, i).anchorIdx == grid.at(start, i + 1).anchorIdx or (not grid.at(start, i).box and not grid.at(start, i + 1).box)))
-                start++;
+            auto const& top = grid.at(start, i);
+            auto const& bottom = grid.at(start, i + 1);
 
-            if (start == grid.size.x)
-                break;
+            bool spansAcross = top.anchorIdx == bottom.anchorIdx;
+            bool bothEmpty = not top.box and not bottom.box;
+
+            // Skip if the column has no border.
+            if (spansAcross or bothEmpty) {
+                start++;
+                continue;
+            }
 
             usize end = start;
-            while (grid.at(end, i).anchorIdx != grid.at(end, i + 1).anchorIdx) {
-                auto endOfI = grid.at(end, i).anchorIdx.x + colSpanAt(end, i) - 1;
-                auto endOfNextI = grid.at(end, i + 1).anchorIdx.x + colSpanAt(end, i + 1) - 1;
+            for (;;) {
+                auto endOfTop = grid.at(end, i).anchorIdx.x + colSpanAt(end, i) - 1;
+                auto endOfBottom = grid.at(end, i + 1).anchorIdx.x + colSpanAt(end, i + 1) - 1;
 
-                if (endOfI == endOfNextI)
+                if (endOfTop == endOfBottom) {
+                    end = endOfTop;
                     break;
+                }
 
-                usize next = max(endOfI, endOfNextI);
-                end = (next > end) ? next : end + 1;
+                end = max(endOfTop, endOfBottom);
             }
 
             Vec<UsedBorder> borders;
-            for (usize j = start; j <= end; j += colSpanAt(j, i)) {
+
+            for (usize j = start; j <= end; j += colSpanAt(j, i))
                 if (grid.at(j, i).box)
                     borders.pushBack(resolve(tree, *grid.at(j, i).box, BorderEdge::BOTTOM));
-            }
-            for (usize j = start; j <= end; j += colSpanAt(j, i + 1)) {
+
+            for (usize j = start; j <= end; j += colSpanAt(j, i + 1))
                 if (grid.at(j, i + 1).box)
                     borders.pushBack(resolve(tree, *grid.at(j, i + 1).box, BorderEdge::TOP));
-            }
 
             addAxisAndGroupBorder(tree, borders, rowGroupIdxs[i], BorderEdge::BOTTOM, rows, rowGroups);
             addAxisAndGroupBorder(tree, borders, rowGroupIdxs[i + 1], BorderEdge::TOP, rows, rowGroups);
@@ -601,22 +608,29 @@ export struct TableFormatingContext : FormatingContext {
     void resolveConflictForBordersAtVerticalAxis(Tree& tree, usize j) {
         usize start = 0;
         while (start < grid.size.y) {
-            while (start < grid.size.y and (grid.at(j, start).anchorIdx == grid.at(j + 1, start).anchorIdx or (not grid.at(j, start).box and not grid.at(j + 1, start).box)))
-                start++;
+            auto const& left = grid.at(j, start);
+            auto const& right = grid.at(j + 1, start);
 
-            if (start == grid.size.y)
-                break;
+            bool spansAcross = left.anchorIdx == right.anchorIdx;
+            bool bothEmpty = not left.box and not right.box;
+
+            // Skip if the row has no border.
+            if (spansAcross or bothEmpty) {
+                start++;
+                continue;
+            }
 
             usize end = start;
-            while (grid.at(j, end).anchorIdx != grid.at(j + 1, end).anchorIdx) {
-                auto endOfJ = grid.at(j, end).anchorIdx.y + rowSpanAt(j, end) - 1;
-                auto endOfNextJ = grid.at(j + 1, end).anchorIdx.y + rowSpanAt(j + 1, end) - 1;
+            for (;;) {
+                auto endOfLeft = grid.at(j, end).anchorIdx.y + rowSpanAt(j, end) - 1;
+                auto endOfRight = grid.at(j + 1, end).anchorIdx.y + rowSpanAt(j + 1, end) - 1;
 
-                if (endOfJ == endOfNextJ)
+                if (endOfLeft == endOfRight) {
+                    end = endOfLeft;
                     break;
+                }
 
-                usize next = max(endOfJ, endOfNextJ);
-                end = (next > end) ? next : end + 1;
+                end = max(endOfLeft, endOfRight);
             }
 
             Vec<UsedBorder> borders;
@@ -716,16 +730,19 @@ export struct TableFormatingContext : FormatingContext {
 
     struct {
         usize gridWidth = 0;
-        Buf<Math::Insets<Gfx::Color>> color;
-        Buf<Math::Insets<Gfx::BorderStyle>> style;
+        Vec<Math::Insets<Gfx::Color>> color;
+        Vec<Math::Insets<Gfx::BorderStyle>> style;
 
         void init(Math::Vec2u size, Gfx::Color currentColor) {
+            logInfo("borderStyleGrid with size {}", size);
+
             gridWidth = size.x;
             color.resize(size.x * size.y, currentColor);
             style.resize(size.x * size.y, Gfx::BorderStyle::NONE);
         }
 
         Math::Insets<Gfx::Color>& colorAt(usize i, usize j) {
+            logInfo("Index ({i}, {j})", i, j);
             return color[i * gridWidth + j];
         }
 
@@ -737,7 +754,7 @@ export struct TableFormatingContext : FormatingContext {
 
     struct {
         usize gridWidth = 0;
-        Buf<InsetsAu> width;
+        Vec<InsetsAu> width;
 
         void init(Math::Vec2u size) {
             gridWidth = size.x;
