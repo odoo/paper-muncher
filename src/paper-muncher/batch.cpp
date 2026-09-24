@@ -49,6 +49,63 @@ export enum struct Extend {
     _LEN,
 };
 
+export struct BatchItem {
+    Ref::Url input;
+    Opt<Ref::Url> header = NONE;
+    Opt<Ref::Url> footer = NONE;
+};
+
+static Res<> _validateDecorationCount(Str name, usize count, usize inputCount) {
+    if (count == 0 or count == 1 or count == inputCount)
+        return Ok();
+
+    return Error::invalidInput(
+        "expected --{} to receive zero documents, one document, or one document per input (got {} documents for {} inputs)"_f(
+            name, count, inputCount
+        )
+    );
+}
+
+static bool _isUrlNone(Ref::Url const& url) {
+    return Io::toLowerCase(url.path.basename()).unwrap() == "none"s;
+}
+
+static Opt<Ref::Url> _resolveDecoration(Vec<Ref::Url> const& docs, usize inputCount, usize index) {
+    if (docs.len() == 1) {
+        if (_isUrlNone(docs[0]))
+            return NONE;
+        return Some(docs[0]);
+    }
+
+    if (docs.len() == inputCount) {
+        if (_isUrlNone(docs[index]))
+            return NONE;
+        return Some(docs[index]);
+    }
+
+    return NONE;
+}
+
+export Res<Vec<BatchItem>> makeBatchItems(
+    Vec<Ref::Url> const& inputs,
+    Vec<Ref::Url> const& headers,
+    Vec<Ref::Url> const& footers
+) {
+    try$(_validateDecorationCount("header"s, headers.len(), inputs.len()));
+    try$(_validateDecorationCount("footer"s, footers.len(), inputs.len()));
+
+    Vec<BatchItem> items;
+    for (auto [input, index] : iter(inputs) | Index()) {
+        items.pushBack(BatchItem{
+            .input = input,
+            .header = _resolveDecoration(headers, inputs.len(), index),
+            .footer = _resolveDecoration(footers, inputs.len(), index),
+        });
+    }
+
+    return Ok(std::move(items));
+}
+
 Rc<Http::Transport> _createHttpTransport(bool sandboxed) {
     if (sandboxed) {
         return Http::multiplexTransport({
@@ -86,8 +143,6 @@ export struct Option {
     Batch batch = Batch::CONCAT;
     Flow flow = Flow::AUTO;
     Extend extend = Extend::CROP;
-    Opt<Ref::Url> header = NONE;
-    Opt<Ref::Url> footer = NONE;
     Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength> headerSize = Vaev::Keywords::AUTO;
     Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength> footerSize = Vaev::Keywords::AUTO;
 
@@ -119,7 +174,7 @@ export struct Option {
         };
     }
 
-    Vaev::Style::Media deriveMedia() {
+    Vaev::Style::Media deriveMedia() const {
         Vaev::Layout::Resolver resolver;
         auto width = this->width ? resolver.resolve(*this->width) : 800_au;
         auto height = this->height ? resolver.resolve(*this->height) : 600_au;
@@ -209,31 +264,29 @@ Async::Task<Rc<Vaev::Dom::Window>> _loadHeaderFooterWindowAsync(Rc<Http::Client>
 
 Async::Task<> runSingleAsync(
     Rc<Http::Client> client,
-    Ref::Url const& input,
+    BatchItem const& item,
     Print::Printer& output,
-    Option options,
+    Option const& options,
     Async::CancellationToken ct
 ) {
-    logInfo("loading {}...", input);
+    logInfo("loading {}...", item.input);
     auto window = Vaev::Dom::Window::create(client);
-    co_trya$(window->loadLocationAsync(input, Ref::Uti::PUBLIC_OPEN, ct));
+    co_trya$(window->loadLocationAsync(item.input, Ref::Uti::PUBLIC_OPEN, ct));
 
-    logInfo("rendering {}...", input);
+    logInfo("rendering {}...", item.input);
     if (options.flow == Flow::PAGINATE) {
         HeaderFooterDecorator decorator;
-        if (auto& [header] = options.header) {
+        if (auto const& [header] = item.header) {
             logInfo("loading header {}...", header);
             decorator.headerWindow = Some(co_trya$(_loadHeaderFooterWindowAsync(client, header, ct)));
+            decorator.headerSize = options.headerSize;
         }
 
-        decorator.headerSize = options.headerSize;
-
-        if (auto& [footer] = options.footer) {
+        if (auto const& [footer] = item.footer) {
             logInfo("loading footer {}...", footer);
             decorator.footerWindow = Some(co_trya$(_loadHeaderFooterWindowAsync(client, footer, ct)));
+            decorator.footerSize = options.footerSize;
         }
-
-        decorator.footerSize = options.footerSize;
 
         auto settings = options.derivePrintSettings();
         window->print(settings, Some(decorator)) | ForEach([&](Gfx::Snapshot& page) {
@@ -272,7 +325,7 @@ Async::Task<> runSingleAsync(
 
 export Async::Task<> runBatchAsync(
     Rc<Http::Client> client,
-    Vec<Ref::Url> const& inputs,
+    Vec<BatchItem> const& items,
     Ref::Url const& output,
     Option options,
     Async::CancellationToken ct
@@ -292,10 +345,10 @@ export Async::Task<> runBatchAsync(
                 }
             )
         );
-        for (auto& input : inputs)
+        for (auto& item : items)
             co_trya$(runSingleAsync(
                 client,
-                input,
+                item,
                 *printer,
                 options,
                 ct
@@ -311,8 +364,8 @@ export Async::Task<> runBatchAsync(
         request->header.put(Http::Header::CONNECTION, "close"s);
         co_trya$(client->doAsync(request, ct));
     } else {
-        for (auto [input, index] : iter(inputs) | Index()) {
-            auto fileUrl = output / "{}.{}"_f(input.path.stem(), options.outputFormat.primarySuffix());
+        for (auto [item, index] : iter(items) | Index()) {
+            auto fileUrl = output / "{}.{}"_f(item.input.path.stem(), options.outputFormat.primarySuffix());
             auto printer = co_try$(
                 Print::FilePrinter::create(
                     options.outputFormat,
@@ -321,7 +374,7 @@ export Async::Task<> runBatchAsync(
                     }
                 )
             );
-            co_trya$(runSingleAsync(client, input, *printer, options, ct));
+            co_trya$(runSingleAsync(client, item, *printer, options, ct));
 
             logInfo("saving {}...", fileUrl);
             Io::BufferWriter bw;
@@ -332,7 +385,7 @@ export Async::Task<> runBatchAsync(
                 fileUrl,
                 Some(Http::Body::from(bw.take()))
             );
-            if (index + 1 == inputs.len())
+            if (index + 1 == items.len())
                 request->header.put(Http::Header::CONNECTION, "close"s);
 
             co_trya$(client->doAsync(request, ct));
