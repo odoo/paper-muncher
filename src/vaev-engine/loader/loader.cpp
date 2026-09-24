@@ -55,7 +55,15 @@ static Res<Gc::Ref<Dom::Document>> _loadXmlDocument(Gc::Heap& heap, Ref::Url url
     auto dom = Dom::Document::create(heap, url, contentType);
     Io::SScan scan{body};
     Xml::XmlParser parser{heap};
-    try$(parser.parse(scan, NONE, *dom));
+    Diag::Collector diags;
+    auto result = parser.parse(scan, NONE, *dom, diags));
+    if (diags.any()) {
+        Diag::SimpleRenderer render{url};
+        render.render(Sys::err(), diags);
+    }
+    if (auto [err] = result.error()) {
+        return Error::invalidData("invalid xhtml");
+    }
     return Ok(dom);
 }
 

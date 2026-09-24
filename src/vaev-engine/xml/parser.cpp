@@ -70,6 +70,13 @@ struct NamespaceContext {
     }
 };
 
+export template <typename... Ts>
+Error _raise(Diag::Collector& diags, Io::LocSpan span, Str format, Ts&&... ts) {
+    Io::Args<Ts...> args{std::forward<Ts>(ts)...};
+    diags.emit(Diag::Diagnostic::error(Io::format(format, args)).withPrimaryLabel(span));
+    return Error::invalidData("invalid xml");
+}
+
 export struct XmlParser {
     Gc::Heap& _heap;
 
@@ -79,12 +86,12 @@ export struct XmlParser {
 
     // 2 MARK: Documents
     // https://www.w3.org/TR/xml/#sec-documents
-    Res<> parse(Io::SScan& s, Opt<Symbol> const& ns, Dom::Document& doc) {
+    Res<> parse(Io::SScan& s, Opt<Symbol> const& ns, Dom::Document& doc, Diag::Collector& diags) {
         // document :: = prolog element Misc *
 
-        try$(_parseProlog(s, doc));
-        doc.appendChild(try$(_parseElement(s, NamespaceContext::make(ns))));
-        while (_parseMisc(s, doc))
+        try$(_parseProlog(s, doc, diags));
+        doc.appendChild(try$(_parseElement(s, NamespaceContext::make(ns), diags)));
+        while (_parseMisc(s, doc, diags))
             ;
 
         return Ok();
@@ -153,7 +160,7 @@ export struct XmlParser {
 
     static constexpr auto RE_NAME = RE_NAME_START_CHAR & Re::zeroOrMore(RE_NAME_CHAR);
 
-    static Res<UnresolvedQualifiedName> _parseQualifiedName(Str name) {
+    static Res<UnresolvedQualifiedName> _parseQualifiedName(Str name, Diag::Collector& diags) {
         Opt<usize> separator = NONE;
 
         for (usize i = 0; i < name.len(); i++) {
@@ -179,24 +186,21 @@ export struct XmlParser {
         });
     }
 
-    Res<UnresolvedQualifiedName> _parseQualifiedName(Io::SScan& s) {
-        return _parseQualifiedName(try$(_parseName(s)));
+    Res<UnresolvedQualifiedName> _parseQualifiedName(Io::SScan& s, Diag::Collector& diags) {
+        return _parseQualifiedName(try$(_parseName(s, diags)), diags);
     }
 
-    Res<> _parseS(Io::SScan& s) {
+    void _eatS(Io::SScan& s) {
         // S ::= (#x20 | #x9 | #xD | #xA)+
-
         s.eat(Re::oneOrMore(RE_S));
-
-        return Ok();
     }
 
-    Res<Str> _parseName(Io::SScan& s) {
+    Res<Str> _parseName(Io::SScan& s, Diag::Collector& diags) {
         // Name ::= NameStartChar (NameChar)*
 
         auto name = s.token(RE_NAME);
         if (isEmpty(name))
-            return Error::invalidData("expected name");
+            return _raise(diags, Io::LocSpan::single(s.loc()), "expected name");
         return Ok(name);
     }
 
@@ -205,7 +209,7 @@ export struct XmlParser {
 
     static constexpr auto RE_CHARDATA = Re::negate(Re::single('<', '&'));
 
-    Res<> _parseCharData(Io::SScan& s, StringBuilder& sb) {
+    Res<> _parseCharData(Io::SScan& s, StringBuilder& sb, Diag::Collector& diags) {
         // CharData ::= [^<&]* - ([^<&]* ']]>' [^<&]*)
 
         bool any = false;
@@ -213,13 +217,14 @@ export struct XmlParser {
         while (
             s.ahead(RE_CHARDATA) and
             not s.ahead("]]>"_re) and
-            not s.ended()) {
+            not s.ended()
+        ) {
             sb.append(s.next());
             any = true;
         }
 
         if (not any)
-            return Error::invalidData("expected character data");
+            return _raise(diags, Io::LocSpan::single(s.loc()), "expected character data");
 
         return Ok();
     }
@@ -229,26 +234,23 @@ export struct XmlParser {
     static constexpr auto RE_COMMENT_START = "<!--"_re;
     static constexpr auto RE_COMMENT_END = "-->"_re;
 
-    Res<Gc::Ref<Dom::Comment>> _parseComment(Io::SScan& s) {
+    Res<Gc::Ref<Dom::Comment>> _parseComment(Io::SScan& s, Diag::Collector& diags) {
         // 	Comment ::= '<!--' ((Char - '-') | ('-' (Char - '-')))* '-->'
 
-        auto rollback = s.rollbackPoint();
-
         if (not s.skip(RE_COMMENT_START))
-            return Error::invalidData("expected '<!--'");
+            unreachable();
 
         StringBuilder sb;
         while (not s.ahead(RE_COMMENT_END) and not s.ended()) {
             auto chrs = s.token(RE_CHAR);
             if (isEmpty(chrs))
-                return Error::invalidData("expected character data");
+                return _raise(diags, Io::LocSpan::single(s.loc()), "expected character data");
             sb.append(chrs);
         }
 
         if (not s.skip(RE_COMMENT_END))
-            return Error::invalidData("expected '-->'");
+            return _raise(diags, Io::LocSpan::single(s.loc()), "expected '-->'");
 
-        rollback.disarm();
         return Ok(_heap.alloc<Dom::Comment>(sb.take()));
     }
 
@@ -258,57 +260,56 @@ export struct XmlParser {
     static constexpr auto RE_PI_START = "<?"_re;
     static constexpr auto RE_PI_END = "?>"_re;
 
-    Res<> _parsePi(Io::SScan& s) {
+    Res<> _parsePi(Io::SScan& s, Diag::Collector& diags) {
         // PI ::= '<?' PITarget (S (Char* - (Char* '?>' Char*)))? '?>
 
-        auto rollback = s.rollbackPoint();
-
         if (not s.skip(RE_PI_START))
-            return Error::invalidData("expected '<?'");
-        try$(_parsePiTarget(s));
+            unreachable();
+
+        try$(_parsePiTarget(s, diags));
 
         while (not s.ahead(RE_PI_END) and not s.ended()) {
             auto chrs = s.token(RE_CHAR);
             if (isEmpty(chrs))
-                return Error::invalidData("expected character data");
+                return _raise(diags, Io::LocSpan::single(s.loc()), "expected character data");
         }
 
         if (not s.skip(RE_PI_END))
-            return Error::invalidData("expected '?>'");
+            return _raise(diags, Io::LocSpan::single(s.loc()), "expected '?>'");
 
-        rollback.disarm();
         return Ok();
     }
 
-    Res<> _parsePiTarget(Io::SScan& s) {
+    Res<> _parsePiTarget(Io::SScan& s, Diag::Collector& diags) {
         // PITarget ::= Name - (('X' | 'x') ('M' | 'm') ('L' | 'l'))
 
-        auto name = try$(_parseName(s));
+        auto startLoc = s.loc();
+        auto name = try$(_parseName(s, diags));
         if (eqCi(name, "xml"s))
-            return Error::invalidData("expected name to not be 'xml'");
+            return _raise(diags, {.start = startLoc, .end = s.loc()}, "expected name to not be 'xml'") ;
         return Ok();
     }
 
     // 2.7 MARK: CDATA Sections
     // https://www.w3.org/TR/xml/#sec-cdata-sect
 
-    Res<> _parseCDSect(Io::SScan& s, StringBuilder& sb) {
+    static constexpr auto RE_CDATA_START = "<![CDATA["_re;
+    static constexpr auto RE_CDATA_END = "]]>"_re;
+
+    Res<> _parseCDSect(Io::SScan& s, StringBuilder& sb, Diag::Collector& diags) {
         // CDStart ::= '<![CDATA['
         // CData ::= (Char* - (Char* ']]>' Char*))
         // CDEnd ::= ']]>'
 
-        auto rollback = s.rollbackPoint();
+        if (not s.skip(RE_CDATA_START))
+            unreachable();
 
-        if (not s.skip("<![CDATA["_re))
-            return Error::invalidData("expected '<![CDATA['");
-
-        while (s.match("]]>"_re) == Match::NO and not s.ended())
+        while (s.match(RE_CDATA_END) == Match::NO and not s.ended())
             sb.append(s.next());
 
-        if (not s.skip("]]>"_re))
-            return Error::invalidData("expected ']]>'");
+        if (not s.skip(RE_CDATA_END))
+            return _raise(diags, Io::LocSpan::single(s.loc()), "expected ']]>") ;
 
-        rollback.disarm();
         return Ok();
     }
 
@@ -323,17 +324,17 @@ export struct XmlParser {
     Res<Str> _parseXmlDeclAttr(Io::SScan& s, Re::Expr auto name, Re::Expr auto value) {
         auto rollback = s.rollbackPoint();
 
-        try$(_parseS(s));
+        _eatS(s);
 
         if (not s.skip(name))
             return Error::invalidData("expected attribute");
 
-        try$(_parseS(s));
+        _eatS(s);
 
         if (not s.skip('='))
             return Error::invalidData("expected '='");
 
-        try$(_parseS(s));
+        _eatS(s);
 
         auto quote = s.next();
         if (quote != '"' and quote != '\'')
@@ -372,7 +373,7 @@ export struct XmlParser {
         if (standalone.has())
             doc.xmlStandalone = standalone.unwrap();
 
-        try$(_parseS(s));
+        _eatS(s);
 
         if (not s.skip(RE_PI_END))
             return Error::invalidData("expected '?>'");
@@ -380,64 +381,66 @@ export struct XmlParser {
         return Ok();
     }
 
-    Res<> _parseMisc(Io::SScan& s, Dom::Node& parent) {
+    bool _miscAhead(Io::SScan& s) {
+        return s.ahead(RE_COMMENT_START) or s.ahead(RE_PI_START) or s.ahead(RE_S);
+    }
+
+    Res<> _parseMisc(Io::SScan& s, Dom::Node& parent, Diag::Collector& diags) {
         // Misc ::= Comment | PI | S
 
-        auto rollback = s.rollbackPoint();
-
-        if (s.match(RE_COMMENT_START) != Match::NO) {
-            auto c = try$(_parseComment(s));
+        if (s.ahead(RE_COMMENT_START)) {
+            auto c = try$(_parseComment(s, diags));
             parent.appendChild(c);
-        } else if (s.match(RE_PI_START) != Match::NO)
-            try$(_parsePi(s));
-        else if (s.match(RE_S) != Match::NO)
-            try$(_parseS(s));
+        } else if (s.ahead(RE_PI_START))
+            try$(_parsePi(s, diags));
+        else if (s.ahead(RE_S))
+            _eatS(s);
         else
-            return Error::invalidData("unexpected character");
+            unreachable();
 
-        rollback.disarm();
         return Ok();
     }
 
-    Res<> _parseProlog(Io::SScan& s, Dom::Document& doc) {
+    Res<> _parseProlog(Io::SScan& s, Dom::Document& doc, Diag::Collector& diags) {
         // prolog ::= XMLDecl? Misc* (doctypedecl Misc*)?
-        auto rollback = s.rollbackPoint();
-
-        if (s.match(RE_XML_DECL_START) != Match::NO)
+        if (s.ahead(RE_XML_DECL_START))
             try$(_parseXmlDecl(s, doc));
 
-        while (_parseMisc(s, doc) and not s.ended())
-            ;
+        while (_miscAhead(s))
+            try$(_parseMisc(s, doc, diags));
 
-        if (auto doctype = _parseDoctype(s)) {
-            doc.appendChild(doctype.unwrap());
-            while (_parseMisc(s, doc) and not s.ended())
-                ;
+        if (s.ahead(RE_DOCTYPE_START)) {
+            auto doctype = try$(_parseDoctype(s, diags));
+            doc.appendChild(doctype);
+
+            while (_miscAhead(s))
+                try$(_parseMisc(s, doc, diags));
         }
 
-        rollback.disarm();
         return Ok();
     }
 
     static constexpr auto RE_DOCTYPE_START = "<!DOCTYPE"_re;
 
-    Res<Gc::Ref<Dom::DocumentType>> _parseDoctype(Io::SScan& s) {
+    Res<Gc::Ref<Dom::DocumentType>> _parseDoctype(Io::SScan& s, Diag::Collector& diags) {
         // doctypedecl ::= '<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'
         auto rollback = s.rollbackPoint();
 
         if (not s.skip(RE_DOCTYPE_START))
-            return Error::invalidData("expected '<!DOCTYPE'");
+            unreachable();
 
         auto docType = _heap.alloc<Dom::DocumentType>();
 
-        try$(_parseS(s));
+        _eatS(s);
 
-        docType->name = Symbol::from(try$(_parseName(s)));
+        docType->name = Symbol::from(try$(_parseName(s, diags)));
 
-        try$(_parseS(s));
-        (void)_parseExternalId(s, *docType);
+        _eatS(s);
 
-        try$(_parseS(s));
+        // FIXME: Investigate
+        (void)_parseExternalId(s, *docType, diags);
+
+        _eatS(s);
         if (not s.skip('>'))
             return Error::invalidData("expected '>'");
 
@@ -451,107 +454,87 @@ export struct XmlParser {
     // 3 MARK: Logical Structures
     // https://www.w3.org/TR/xml/#sec-logical-struct
 
-    Res<Gc::Ref<Dom::Element>> _parseElement(Io::SScan& s, Opt<Symbol> const& ns) {
-        return _parseElement(s, NamespaceContext::make(ns));
+    Res<Gc::Ref<Dom::Element>> _parseElement(Io::SScan& s, Opt<Symbol> const& ns, Diag::Collector& diags) {
+        return _parseElement(s, NamespaceContext::make(ns), diags);
     }
 
-    Res<Gc::Ref<Dom::Element>> _parseElement(Io::SScan& s, NamespaceContext const& context) {
+    Res<Gc::Ref<Dom::Element>> _parseElement(Io::SScan& s, NamespaceContext const& context, Diag::Collector& diags) {
         // element ::= EmptyElemTag | STag content ETag
+        // EmptyElemTag ::= '<' Name (S Attribute)* S? '/>'
+        // STag ::= '<' Name (S Attribute)* S? '>'
 
-        auto rollback = s.rollbackPoint();
+        if (not s.skip('<'))
+            unreachable();
 
-        if (auto r = _parseEmptyElementTag(s, context)) {
-            rollback.disarm();
-            return r;
+        auto parsedName = try$(_parseQualifiedName(s, diags));
+        _eatS(s);
+
+        auto childContext = try$(_parseNamespaceContext(s, context, diags));
+        auto el = _heap.alloc<Dom::Element>(try$(childContext.resolveElementName(parsedName)));
+
+        while (not (s.ahead('>'_re | "/>"_re) and not s.ended())) {
+            try$(_parseAttribute(s, *el, childContext, diags));
+            _eatS(s);
         }
 
-        if (auto r = _parseStartTag(s, context)) {
-            auto [el, childContext] = r.unwrap();
-            try$(_parseContent(s, childContext, *el));
-            try$(_parseEndTag(s, childContext, *el));
-
-            rollback.disarm();
+        if (s.ahead('>'_re)) {
+            try$(_parseContent(s, childContext, *el, diags));
+            try$(_parseEndTag(s, childContext, *el, diags));
             return Ok(el);
         }
 
-        return Error::invalidData("expected element");
+        if (s.ahead("/>"_re))
+            return Ok(el);
+
+        return _raise(diags, Io::LocSpan::single(s.loc()), "unexpected EOF");
     }
 
     // 3.1 MARK: Start-Tags, End-Tags, and Empty-Element Tags
     // https://www.w3.org/TR/xml/#sec-starttags
 
-    Res<Tuple<Gc::Ref<Dom::Element>, NamespaceContext>> _parseStartTag(Io::SScan& s, NamespaceContext const& context) {
-        // STag ::= '<' Name (S Attribute)* S? '>'
-
-        auto rollback = s.rollbackPoint();
-        if (not s.skip('<'))
-            return Error::invalidData("expected '<'");
-
-        auto parsedName = try$(_parseQualifiedName(s));
-        try$(_parseS(s));
-
-        auto childContext = try$(_parseNamespaceContext(s, context));
-        auto el = _heap.alloc<Dom::Element>(try$(childContext.resolveElementName(parsedName)));
-
-        while (not s.skip('>') and not s.ended()) {
-            try$(_parseAttribute(s, *el, childContext));
-            try$(_parseS(s));
-        }
-
-        rollback.disarm();
-        return Ok(Tuple{el, childContext});
-    }
-
-    Res<> _parseAttribute(Io::SScan& s, Dom::Element& el, NamespaceContext const& context) {
+    Res<> _parseAttribute(Io::SScan& s, Dom::Element& el, NamespaceContext const& context, Diag::Collector& diags) {
         // Attribute ::= Name Eq AttValue
 
-        auto rollback = s.rollbackPoint();
-
-        auto parsedName = try$(_parseQualifiedName(s));
+        auto parsedName = try$(_parseQualifiedName(s, diags));
 
         if (not s.skip('='))
             return Error::invalidData("expected '='");
 
-        auto value = try$(_parseAttValue(s));
+        auto value = try$(_parseAttValue(s, diags));
 
         // FIXME: The parsing allows rollback so it can be that a warning is emitted when setting an attribute of an element
         // that won't compose the final dom (due to a rollback after a failed parsing)
         el.setAttribute(try$(context.resolveAttributeName(parsedName)), value);
 
-        rollback.disarm();
         return Ok();
     }
 
-    Res<String> _parseAttValue(Io::SScan& s) {
+    Res<String> _parseAttValue(Io::SScan& s, Diag::Collector& diags) {
         // AttValue ::= '"' ([^<&"] | Reference)* '"'
         //              |  "'" ([^<&'] | Reference)* "'"
 
         StringBuilder sb;
 
-        auto rollback = s.rollbackPoint();
-
         auto quote = s.next();
         if (quote != '"' and quote != '\'')
-            return Error::invalidData("expected '\"' or '''");
+            return _raise(diags, Io::LocSpan::single(s.loc()), "expected '\"' or '''");
 
         while (s.peek() != quote and not s.ended()) {
-            if (auto r = _parseReference(s))
+            if (auto r = _parseReference(s, diags))
                 sb.append(r.unwrap());
             else
                 sb.append(s.next());
         }
 
         if (s.peek() != quote)
-            return Error::invalidData("expected closing quote");
+            return _raise(diags, Io::LocSpan::single(s.loc()), "expected closing quote");
 
         s.next();
-
-        rollback.disarm();
 
         return Ok(sb.take());
     }
 
-    Res<> _parseEndTag(Io::SScan& s, NamespaceContext const& context, Dom::Element& el) {
+    Res<> _parseEndTag(Io::SScan& s, NamespaceContext const& context, Dom::Element& el, Diag::Collector& diags) {
         // '</' Name S? '>'
 
         auto rollback = s.rollbackPoint();
@@ -559,10 +542,10 @@ export struct XmlParser {
         if (not s.skip("</"_re))
             return Error::invalidData("expected '</'");
 
-        if (try$(context.resolveElementName(try$(_parseQualifiedName(s)))) != el.qualifiedName)
+        if (try$(context.resolveElementName(try$(_parseQualifiedName(s, diags)))) != el.qualifiedName)
             return Error::invalidData("expected end tag name to match start tag name");
 
-        try$(_parseS(s));
+        _eatS(s);
 
         if (not s.skip('>'))
             return Error::invalidData("expected '>'");
@@ -571,49 +554,61 @@ export struct XmlParser {
         return Ok();
     }
 
-    Res<> _parseContentItem(Io::SScan& s, NamespaceContext const& context, Dom::Element& el) {
+    Res<> _parseContentItem(Io::SScan& s, NamespaceContext const& context, Dom::Element& el, Diag::Collector& diags) {
         // (element | Reference | CDSect | PI | Comment)
 
-        if (auto r = _parseElement(s, context)) {
-            el.appendChild(r.unwrap());
-            return Ok();
-        } else if (auto r = _parsePi(s)) {
+        if (s.ahead(RE_PI_START)) {
+            (void)try$(_parsePi(s, diags));
+            // FIXME: Use diags
             logWarn("ignoring processing instruction");
             return Ok();
-        } else if (auto r = _parseComment(s)) {
-            el.appendChild(r.unwrap());
-            return Ok();
-        } else {
-            return Error::invalidData("expected content item");
         }
+
+        if (s.ahead(RE_COMMENT_START)) {
+            auto r = try$(_parseComment(s, diags));
+            el.appendChild(r);
+            return Ok();
+        }
+
+        if (s.ahead('<')) {
+            auto r = try$(_parseElement(s, context, diags));
+            el.appendChild(r);
+            return Ok();
+        }
+
+        // FIXME: Diags
+        return Error::invalidData("expected content item");
     }
 
-    Res<> _parseContent(Io::SScan& s, NamespaceContext const& context, Dom::Element& el) {
+    Res<> _parseContent(Io::SScan& s, NamespaceContext const& context, Dom::Element& el, Diag::Collector& diags) {
         // content ::= CharData? ((element | Reference | CDSect | PI | Comment) CharData?)*
 
-        try$(_parseText(s, el));
-        while (_parseContentItem(s, context, el))
-            try$(_parseText(s, el));
+        try$(_parseText(s, el, diags));
+        while (_parseContentItem(s, context, el, diags))
+            try$(_parseText(s, el, diags));
 
         return Ok();
     }
 
-    Res<> _parseTextItem(Io::SScan& s, StringBuilder& sb) {
-        if (_parseCharData(s, sb)) {
+    Res<> _parseTextItem(Io::SScan& s, StringBuilder& sb, Diag::Collector& diags) {
+        if (s.ahead('&')) {
+            auto r = try$(_parseReference(s, diags));
+            sb.append(r);
             return Ok();
-        } else if (_parseCDSect(s, sb)) {
-            return Ok();
-        } else if (auto r = _parseReference(s)) {
-            sb.append(r.unwrap());
-            return Ok();
-        } else {
-            return Error::invalidData("expected text item");
         }
+
+        if (s.ahead(RE_CDATA_START)) {
+            return _parseCDSect(s, sb, diags);
+        }
+
+        return _parseCharData(s, sb, diags);
     }
 
-    [[gnu::flatten]] Res<> _parseText(Io::SScan& s, Dom::Element& el) {
+    [[gnu::flatten]] Res<> _parseText(Io::SScan& s, Dom::Element& el, Diag::Collector& diags) {
         StringBuilder sb;
-        while (_parseTextItem(s, sb))
+
+        // Sprinkles of speculative parsing
+        while (_parseTextItem(s, sb, diags))
             ;
 
         auto te = sb.take();
@@ -623,46 +618,25 @@ export struct XmlParser {
         return Ok();
     }
 
-    Res<Gc::Ref<Dom::Element>> _parseEmptyElementTag(Io::SScan& s, NamespaceContext const& context) {
-        // EmptyElemTag ::= '<' Name (S Attribute)* S? '/>'
-
-        auto rollback = s.rollbackPoint();
-        if (not s.skip('<'))
-            return Error::invalidData("expected '<'");
-
-        auto parsedName = try$(_parseQualifiedName(s));
-
-        try$(_parseS(s));
-        auto childContext = try$(_parseNamespaceContext(s, context));
-        auto el = _heap.alloc<Dom::Element>(try$(childContext.resolveElementName(parsedName)));
-        while (not s.skip("/>"_re) and not s.ended()) {
-            try$(_parseAttribute(s, *el, childContext));
-            try$(_parseS(s));
-        }
-
-        rollback.disarm();
-        return Ok(el);
-    }
-
     // 4.1 MARK: Character and Entity References
     // https://www.w3.org/TR/xml/#NT-CharRef
 
-    Res<Rune> _parseCharRef(Io::SScan& s) {
+    Res<Rune> _parseCharRef(Io::SScan& s, Diag::Collector& diags) {
         // CharRef ::= '&#' [0-9]+ ';' | '&#x' [0-9a-fA-F]+ ';'
 
-        auto rollback = s.rollbackPoint();
-
         if (not s.skip("&#"_re))
-            return Error::invalidData("expected '&#'");
+            unreachable();
 
         Rune r = REPLACEMENT;
 
         if (s.skip('x')) {
+            auto startLoc = s.loc();
             auto val = Io::atoi(s, {.base = 16});
             if (not val)
-                return Error::invalidData("expected hexadecimal number");
+                _raise(diags, Io::LocSpan::single(s.loc()), "expected hexadecima number");
             r = val.unwrap();
         } else {
+            auto startLoc = s.loc();
             auto val = Io::atoi(s, {.base = 10});
             if (not val)
                 return Error::invalidData("expected decimal number");
@@ -672,22 +646,22 @@ export struct XmlParser {
         if (not s.skip(';'))
             return Error::invalidData("expected ';'");
 
-        rollback.disarm();
         return Ok(r);
     }
 
-    Res<Rune> _parseEntityRef(Io::SScan& s) {
+    Res<Rune> _parseEntityRef(Io::SScan& s, Diag::Collector& diags) {
         // EntityRef ::= '&' Name ';'
 
         auto rollback = s.rollbackPoint();
+        auto startLoc = s.loc();
 
         if (not s.skip('&'))
-            return Error::invalidData("expected '&'");
+            return _raise(diags, Io::LocSpan::single(s.loc()), "expected '&'");
 
-        auto name = try$(_parseName(s));
+        auto name = try$(_parseName(s, diags));
 
         if (not s.skip(';'))
-            return Error::invalidData("expected ';'");
+            return _raise(diags, Io::LocSpan::single(s.loc()), "expected ';'");
 
         rollback.disarm();
         if (name == "lt")
@@ -706,44 +680,42 @@ export struct XmlParser {
             return Ok(160);
 
         rollback.arm();
-        return Error::invalidData("unknown entity reference");
+        return _raise(diags, {.start = startLoc, .end = s.loc()}, "unknown entity reference");
     }
 
-    Res<Rune> _parseReference(Io::SScan& s) {
+    Res<Rune> _parseReference(Io::SScan& s, Diag::Collector& diags) {
         // Reference ::= EntityRef | CharRef
 
-        if (auto r = _parseCharRef(s))
-            return r;
-        else if (auto r = _parseEntityRef(s))
-            return r;
-        else
-            return Error::invalidData("expected reference");
+        if (not s.ahead('&'))
+            unreachable();
+
+        if (s.ahead("&#"_re)) {
+            return _parseCharRef(s, diags);
+        } else {
+            return _parseEntityRef(s, diags);
+        }
     }
 
     // 4.2 MARK: Entity Declarations
     // https://www.w3.org/TR/xml/#sec-entity-decl
 
-    Res<> _parseExternalId(Io::SScan& s, Dom::DocumentType& docType) {
+    Res<> _parseExternalId(Io::SScan& s, Dom::DocumentType& docType, Diag::Collector& diags) {
         // ExternalID ::= 'SYSTEM' S SystemLiteral | 'PUBLIC' S PubidLiteral S SystemLiteral
 
-        auto rollback = s.rollbackPoint();
-
         if (s.skip("SYSTEM"_re)) {
-            try$(_parseS(s));
+            _eatS(s);
             // NOSPEC: We are parsing the system literal as att value
-            docType.systemId = try$(_parseAttValue(s));
-            rollback.disarm();
+            docType.systemId = try$(_parseAttValue(s, diags));
             return Ok();
         } else if (s.skip("PUBLIC"_re)) {
             // NOSPEC: We are parsing the public and system literals as att values
-            try$(_parseS(s));
-            docType.publicId = try$(_parseAttValue(s));
-            try$(_parseS(s));
-            docType.systemId = try$(_parseAttValue(s));
-            rollback.disarm();
+            _eatS(s);
+            docType.publicId = try$(_parseAttValue(s, diags));
+            _eatS(s);
+            docType.systemId = try$(_parseAttValue(s, diags));
             return Ok();
         } else {
-            return Error::invalidData("expected 'SYSTEM' or 'PUBLIC'");
+            return _raise(diags, Io::LocSpan::single(s.loc()), "expected 'SYSTEM' or 'PUBLIC'");
         }
     }
 
@@ -752,24 +724,24 @@ export struct XmlParser {
     // https://www.w3.org/TR/xml-names/#scoping-defaulting
     // NOTE: Basically same code as attribute parsing, but we need to check for the namespace before parsing the attributes
 
-    Res<NamespaceContext> _parseNamespaceContext(Io::SScan& s, NamespaceContext const& originalContext) {
-        auto rollback = s.rollbackPoint();
+    Res<NamespaceContext> _parseNamespaceContext(Io::SScan& s, NamespaceContext const& originalContext, Diag::Collector& diags) {
         auto context = originalContext;
 
         while (not s.ahead(">"_re) and not s.ahead("/>"_re) and not s.ended()) {
-            auto parsedName = try$(_parseQualifiedName(s));
+            auto parsedName = try$(_parseQualifiedName(s, diags));
 
-            if (not s.skip('='))
-                return Error::invalidData("expected '='");
+            if (not s.skip('=')) {
+                return _raise(diags, Io::LocSpan::single(s.loc()), "expected '='");
+            }
 
-            auto value = try$(_parseAttValue(s));
+            auto value = try$(_parseAttValue(s, diags));
 
             if (not parsedName.prefix and parsedName.localName == "xmlns"_sym)
                 context.default_ = Some(Symbol::from(value));
             else if (parsedName.prefix == "xmlns"_sym)
                 context.declarePrefix(parsedName.localName, Some(Symbol::from(value)));
 
-            try$(_parseS(s));
+            _eatS(s);
         }
 
         return Ok(context);
