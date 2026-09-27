@@ -37,7 +37,7 @@ export struct StyleRule {
         StyleRule res;
 
         // Parse the selector.
-        auto& prefix = sst.prefix.unwrap();
+        auto& prefix = sst.prefix.expect();
         Cursor<Css::Sst> prefixContent = prefix->content;
         if (auto s = Selector::parse(prefixContent, ns)) {
             res.selector = s.take();
@@ -129,10 +129,10 @@ struct CounterRule {
     Vec<CounterDescriptor> descriptors;
 
     static CounterRule parse(Css::Sst const& sst) {
-        auto& prefix = sst.prefix.unwrap();
+        auto& prefix = sst.prefix.expect();
         Cursor<Css::Sst> prefixContent = prefix->content;
         eatWhitespace(prefixContent);
-        auto name = parseValue<CustomIdent>(prefixContent).unwrap();
+        auto name = parseValue<CustomIdent>(prefixContent).expect();
         auto descriptors = parseDeclarations<CounterDescriptor>(sst);
 
         return {
@@ -158,7 +158,7 @@ export struct NamespaceRule {
         if (sst.prefix != Css::Sst::LIST)
             panic("expected list");
 
-        auto& prefix = sst.prefix.unwrap();
+        auto& prefix = sst.prefix.expect();
         Cursor<Css::Sst> prefixContent = prefix->content;
 
         eatWhitespace(prefixContent);
@@ -180,9 +180,9 @@ export struct NamespaceRule {
 
         // Store the namespace.
         if (maybePrefix)
-            ns.prefixes.put(maybePrefix.unwrap(), Symbol::from(maybeUrl.unwrap()));
+            ns.prefixes.put(maybePrefix.expect(), Symbol::from(maybeUrl.expect()));
         else
-            ns.default_ = Some(Symbol::from(maybeUrl.unwrap()));
+            ns.default_ = Some(Symbol::from(maybeUrl.expect()));
 
         return {maybePrefix, Symbol::from(maybeUrl.take())};
     }
@@ -207,7 +207,7 @@ export struct PageRule {
         PageRule res;
 
         // Parse the selector
-        auto& prefix = sst.prefix.unwrap();
+        auto& prefix = sst.prefix.expect();
         Cursor<Css::Sst> prefixContent = prefix->content;
         res.selectors = PageSelector::parseList(prefixContent);
 
@@ -322,7 +322,7 @@ MediaRule MediaRule::parse(RegisteredPropertySet& registry, Css::Sst const& sst,
     MediaRule res;
 
     // Parse the media query.
-    auto& prefix = sst.prefix.unwrap();
+    auto& prefix = sst.prefix.expect();
     Cursor<Css::Sst> prefixContent = prefix->content;
     res.media = parseMediaQuery(prefixContent);
 

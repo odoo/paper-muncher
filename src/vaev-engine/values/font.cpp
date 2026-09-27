@@ -164,7 +164,7 @@ struct ValueParser<FontStyle> {
         } else if (c.skip(Css::Token::ident("oblique"))) {
             auto angle = parseValue<Angle>(c);
             if (angle)
-                return Ok(angle.unwrap());
+                return Ok(angle.expect());
 
             return Ok(FontStyle::OBLIQUE);
         }
@@ -201,17 +201,17 @@ export struct FontWeight : _FontWeight {
         if (is<RelativeFontWeight>())
             return Gfx::FontWeight::REGULAR;
 
-        return unwrap<Gfx::FontWeight>();
+        return expect<Gfx::FontWeight>();
     }
 
     Gfx::FontWeight resolve(Gfx::FontWeight const& parent) const {
         if (is<RelativeFontWeight>()) {
-            if (unwrap<RelativeFontWeight>() == RelativeFontWeight::LIGHTER)
+            if (expect<RelativeFontWeight>() == RelativeFontWeight::LIGHTER)
                 return parent.lighter();
             return parent.bolder();
         }
 
-        return unwrap<Gfx::FontWeight>();
+        return expect<Gfx::FontWeight>();
     }
 };
 

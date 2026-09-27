@@ -189,7 +189,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     options.width = widthArg.value();
     options.height = heightArg.value();
     options.background = backgroundArg.value();
-    options.stock = paperArg.value().unwrap<Print::PaperStock>();
+    options.stock = paperArg.value().expect<Print::PaperStock>();
     options.orientation = orientationArg.value();
     options.margins = marginArg.value();
     options.batch = batchArg.value();

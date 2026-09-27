@@ -323,8 +323,8 @@ export struct GapProperty : Property {
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<RowGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.row),
-            makeRc<ColumnGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.col),
+            makeRc<RowGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.row),
+            makeRc<ColumnGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.col),
         };
     }
 

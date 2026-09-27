@@ -143,7 +143,7 @@ Math::Trans2f resolveTransform(Rc<Layout::Fragment>& fragment, Math::Rectf viewB
     auto const& transform = *fragment->style().transform;
     auto referenceBox = resolveTransformReference(fragment, transform.box, viewBox.cast<Au>());
     auto origin = resolveTransformOrigin(transform.origin, referenceBox);
-    return resolveTransform(transform.transform.unwrap<Vec<TransformFunction>>(), referenceBox, origin);
+    return resolveTransform(transform.transform.expect<Vec<TransformFunction>>(), referenceBox, origin);
 }
 
 void applyTransform(Rc<Layout::Fragment>& fragment, Gfx::Canvas& g, Math::Rectf viewBox) {

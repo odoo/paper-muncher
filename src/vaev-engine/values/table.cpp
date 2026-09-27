@@ -114,9 +114,9 @@ struct ValueParser<BorderSpacing> {
         auto secondLength = parseValue<Length>(c);
 
         if (secondLength) {
-            return Ok(BorderSpacing{firstLength.unwrap(), secondLength.unwrap()});
+            return Ok(BorderSpacing{firstLength.expect(), secondLength.expect()});
         } else {
-            return Ok(BorderSpacing{firstLength.unwrap(), firstLength.unwrap()});
+            return Ok(BorderSpacing{firstLength.expect(), firstLength.expect()});
         }
 
         return Error::invalidData("expected border spacing value");

@@ -93,7 +93,7 @@ struct ValueParser<BackgroundPosition> {
             auto item = parseValue<Item>(c);
             eatWhitespace(c);
             if (item)
-                items.pushBack(item.unwrap());
+                items.pushBack(item.expect());
             else
                 break;
         }

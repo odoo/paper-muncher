@@ -17,8 +17,8 @@ test$("vaev-css-build-display") {
         auto [val, _] = consumeDeclarationValue(lex, diags);
         Cursor<Css::Sst> sst{val};
         auto res = parseValue<Display>(sst);
-        expect$(res);
-        expectEq$(res.unwrap(), expected);
+        assert$(res);
+        assertEq$(res.expect(), expected);
         return Ok();
     };
 
@@ -75,11 +75,11 @@ test$("vaev-css-build-margin") {
     auto testCase = [&](Str input, Margin expected) -> Res<> {
         auto registry = defaultRegistry();
         auto res = registry.parseValue(Properties::MARGIN, input, {});
-        expect$(res);
+        assert$(res);
 
         auto prop = try$(res.take().cast<MarginProperty>());
 
-        expectEq$(Io::format("{}", prop->_value), Io::format("{}", expected));
+        assertEq$(Io::format("{}", prop->_value), Io::format("{}", expected));
 
         return Ok();
     };

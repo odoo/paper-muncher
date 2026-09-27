@@ -10,43 +10,43 @@ namespace Vaev::Style::Tests {
 test$("selector-formatting") {
 
     auto sel = try$(Selector::parse(".a"));
-    expectEq$(
+    assertEq$(
         ".a"s,
         Io::toStr(sel.unparsed())
     );
 
     sel = try$(Selector::parse(".a .b"));
-    expectEq$(
+    assertEq$(
         ".a .b"s,
         Io::toStr(sel.unparsed())
     );
 
     sel = try$(Selector::parse(".a.b"));
-    expectEq$(
+    assertEq$(
         ".a.b"s,
         Io::toStr(sel.unparsed())
     );
 
     sel = try$(Selector::parse(".a,.b"));
-    expectEq$(
+    assertEq$(
         ".a,.b"s,
         Io::toStr(sel.unparsed())
     );
 
     sel = try$(Selector::parse(".a>.b"));
-    expectEq$(
+    assertEq$(
         ".a>.b"s,
         Io::toStr(sel.unparsed())
     );
 
     sel = try$(Selector::parse(".a~.b"));
-    expectEq$(
+    assertEq$(
         ".a~.b"s,
         Io::toStr(sel.unparsed())
     );
 
     sel = try$(Selector::parse(".a+.b"));
-    expectEq$(
+    assertEq$(
         ".a+.b"s,
         Io::toStr(sel.unparsed())
     );

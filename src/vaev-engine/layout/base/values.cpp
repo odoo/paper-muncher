@@ -58,7 +58,7 @@ export struct Resolver :
     Au resolve(Union<Keywords::Auto, Calc<PercentOr<Length>>> const& value, Au relative) {
         if (value.is<Keywords::Auto>())
             return 0_au;
-        return Vaev::resolve(value.unwrap<Calc<PercentOr<Length>>>(), *this, relative);
+        return Vaev::resolve(value.expect<Calc<PercentOr<Length>>>(), *this, relative);
     }
 
     Rad resolve(Angle const& value) {
@@ -86,11 +86,11 @@ export bool isPurePercentage(Calc<PercentOr<Length>> calcValue) {
     if (not calcValue._inner.is<Calc<PercentOr<Length>>::Value>())
         return false;
 
-    auto const& value = calcValue._inner.unwrap<Calc<PercentOr<Length>>::Value>();
+    auto const& value = calcValue._inner.expect<Calc<PercentOr<Length>>::Value>();
     if (not value.is<PercentOr<Length>>())
         return false;
 
-    return value.unwrap<PercentOr<Length>>().is<Percent>().has();
+    return value.expect<PercentOr<Length>>().is<Percent>().has();
 }
 
 export Au resolve(Tree const& tree, Box const& box, Length const& value) {

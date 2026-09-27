@@ -390,7 +390,7 @@ export struct SvgStrokeOpacityProperty : Property {
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             auto maybePercent = parseValue<Percent>(c);
             if (maybePercent) {
-                return Ok(makeRc<SvgStrokeOpacityProperty>(self(), maybePercent.unwrap().value() / 100));
+                return Ok(makeRc<SvgStrokeOpacityProperty>(self(), maybePercent.expect().value() / 100));
             } else {
                 return Ok(makeRc<SvgStrokeOpacityProperty>(self(), try$(parseValue<Number>(c))));
             }
@@ -428,7 +428,7 @@ export struct FillOpacityProperty : Property {
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             auto maybePercent = parseValue<Percent>(c);
             if (maybePercent) {
-                return Ok(makeRc<FillOpacityProperty>(self(), maybePercent.unwrap().value() / 100));
+                return Ok(makeRc<FillOpacityProperty>(self(), maybePercent.expect().value() / 100));
             } else {
                 return Ok(makeRc<FillOpacityProperty>(self(), try$(parseValue<Number>(c))));
             }

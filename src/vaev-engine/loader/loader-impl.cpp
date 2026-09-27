@@ -24,7 +24,7 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
     if (not resp->body)
         co_return Error::notFound("could not load image");
 
-    auto body = resp->body.unwrap();
+    auto body = resp->body.expect();
 
     auto data = co_trya$(Aio::readAllAsync(*body, ct));
     if (resp->header.contentType().unwrapOr(Ref::sniffBytes(data)).conformsTo(Ref::Uti::PUBLIC_SVG)) {
@@ -52,7 +52,7 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
         auto image = Karm::Image::load(data);
         if (not image)
             co_return image.none();
-        co_return Ok(Gfx::Snapshot::from(image.unwrap()));
+        co_return Ok(Gfx::Snapshot::from(image.expect()));
     }
 }
 
@@ -73,7 +73,7 @@ Async::Task<Rc<Gfx::Fontface>> _loadFontfaceAsync(Http::Client& client, Ref::Url
     auto resp = co_trya$(client.getAsync(url, ct));
     if (not resp->body)
         co_return Error::notFound("could not load image");
-    auto body = resp->body.unwrap();
+    auto body = resp->body.expect();
     auto data = co_trya$(Aio::readAllAsync(*body, ct));
 
     // FIXME: Make this more streamline and avoid the extra copy once we reworked karm-font.
@@ -110,9 +110,9 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Dom::
 
             for (auto const& src : ff.sources) {
                 if (not src.identifier.is<Ref::Url>()) {
-                    auto result = fontDatabase->queryExact(src.identifier.unwrap<FontFamily>().name);
+                    auto result = fontDatabase->queryExact(src.identifier.expect<FontFamily>().name);
                     if (not result) {
-                        logWarn("Failed to assets font {}", src.identifier.unwrap<FontFamily>().name);
+                        logWarn("Failed to assets font {}", src.identifier.expect<FontFamily>().name);
                         continue;
                     }
                     break;
@@ -120,10 +120,10 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Dom::
 
                 // Skip sources whose declared format() we cannot decode,
                 // avoiding a fetch + guaranteed parse failure.
-                if (src.format and not _isDecodableFontFormat(src.format.unwrap()))
+                if (src.format and not _isDecodableFontFormat(src.format.expect()))
                     continue;
 
-                auto fontUrl = src.identifier.unwrap<Ref::Url>();
+                auto fontUrl = src.identifier.expect<Ref::Url>();
 
                 auto resolvedUrl = Ref::Url::resolveReference(sheet.href, fontUrl);
                 if (not resolvedUrl) {
@@ -131,16 +131,16 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Dom::
                     continue;
                 }
 
-                auto fontface = co_await _loadFontfaceAsync(client, resolvedUrl.unwrap(), ct);
+                auto fontface = co_await _loadFontfaceAsync(client, resolvedUrl.expect(), ct);
                 if (not fontface) {
                     logWarn("Failed to load font {}", ff.family);
                     continue;
                 }
 
                 fontDatabase->add({
-                    .url = resolvedUrl.unwrap(),
+                    .url = resolvedUrl.expect(),
                     .attrs = ff.attributes(),
-                    .face = fontface.unwrap(),
+                    .face = fontface.expect(),
                     .adjust = ff.adjustments(),
                 });
 

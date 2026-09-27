@@ -537,7 +537,7 @@ struct ValueParser<Color> {
                         Math::round(r * 255),
                         Math::round(g * 255),
                         Math::round(b * 255),
-                        alphaComponent.unwrap()
+                        alphaComponent.expect()
                     )
                 );
             } else {
@@ -652,13 +652,13 @@ struct ValueParser<Color> {
             auto maybeColor = parseNamedColor(data);
             if (maybeColor) {
                 c.next();
-                return Ok(maybeColor.unwrap());
+                return Ok(maybeColor.expect());
             }
 
             auto maybeSystemColor = parseSystemColor(data);
             if (maybeSystemColor) {
                 c.next();
-                return Ok(maybeSystemColor.unwrap());
+                return Ok(maybeSystemColor.expect());
             }
 
         } else if (c.peek() == Css::Sst::FUNC) {

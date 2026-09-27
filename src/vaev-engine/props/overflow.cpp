@@ -183,8 +183,8 @@ export struct OverflowProperty : Property {
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<OverflowXProperty>(registry.resolveRegistration(Properties::OVERFLOW_X, {}).unwrap(), _value.v0),
-            makeRc<OverflowYProperty>(registry.resolveRegistration(Properties::OVERFLOW_Y, {}).unwrap(), _value.v1),
+            makeRc<OverflowXProperty>(registry.resolveRegistration(Properties::OVERFLOW_X, {}).expect(), _value.v0),
+            makeRc<OverflowYProperty>(registry.resolveRegistration(Properties::OVERFLOW_Y, {}).expect(), _value.v1),
         };
     }
 

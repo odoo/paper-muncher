@@ -136,7 +136,7 @@ export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Http:
     auto resp = co_trya$(client.getAsync(url, ct));
     if (not resp->body)
         co_return Error::invalidInput("response body is missing");
-    auto respBody = resp->body.unwrap();
+    auto respBody = resp->body.expect();
     auto buf = co_trya$(Aio::readAllTextAsync<Utf8>(*respBody, ct));
 
     auto dom = Dom::Document::create(heap, url, Ref::Uti::PUBLIC_TEXT);
@@ -155,7 +155,7 @@ export Async::Task<Style::StyleSheet> fetchStylesheetAsync(Http::Client& client,
     if (not resp->body)
         co_return Error::notFound("could not load stylesheet");
 
-    auto respBody = resp->body.unwrap();
+    auto respBody = resp->body.expect();
     auto buf = co_trya$(Aio::readAllTextAsync<Utf8>(*respBody, ct));
 
     Io::SScan s{buf};
@@ -173,7 +173,7 @@ export Async::Task<Style::StyleSheet> fetchStylesheetAsync(Http::Client& client,
 Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct);
 
 Gfx::Snapshot _missingImagePlaceholder() {
-    return Gfx::Snapshot::from(Karm::Image::loadOrFallback("bundle://vaev-engine/missing.qoi"_url).unwrap());
+    return Gfx::Snapshot::from(Karm::Image::loadOrFallback("bundle://vaev-engine/missing.qoi"_url).expect());
 }
 
 Async::Task<> _fetchResourcesAsync(Http::Client& client, Dom::Document& document, Gc::Ref<Dom::Node> node, Async::CancellationToken ct) {

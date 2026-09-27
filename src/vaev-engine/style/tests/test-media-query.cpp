@@ -50,7 +50,7 @@ test$("logical-and") {
         WidthFeature::min(1920_au)
     );
 
-    expect$(query.match(TEST_MEDIA));
+    assert$(query.match(TEST_MEDIA));
 
     return Ok();
 }
@@ -61,7 +61,7 @@ test$("logical-or") {
         WidthFeature::min(1920_au)
     );
 
-    expect$(query.match(TEST_MEDIA));
+    assert$(query.match(TEST_MEDIA));
 
     return Ok();
 }
@@ -69,7 +69,7 @@ test$("logical-or") {
 test$("logical-not") {
     auto query = MediaQuery::negate(TypeFeature{MediaType::PRINT});
 
-    expect$(query.match(TEST_MEDIA));
+    assert$(query.match(TEST_MEDIA));
 
     return Ok();
 }
@@ -77,7 +77,7 @@ test$("logical-not") {
 test$("logical-only") {
     auto query = MediaQuery::only(TypeFeature{MediaType::SCREEN});
 
-    expect$(query.match(TEST_MEDIA));
+    assert$(query.match(TEST_MEDIA));
 
     return Ok();
 }

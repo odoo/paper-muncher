@@ -13,7 +13,7 @@ test$("parse-empty-document") {
     Gc::Heap gc;
     auto s = Io::SScan(""s);
     Xml::XmlParser p{gc};
-    expect$(not p._parseElement(s, Some(Html::NAMESPACE))); // An empty document is invalid
+    assert$(not p._parseElement(s, Some(Html::NAMESPACE))); // An empty document is invalid
     return Ok();
 }
 
@@ -24,8 +24,8 @@ test$("parse-open-close-tag") {
     auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
 
     auto el = root->as<Dom::Element>();
-    expectNe$(el, nullptr);
-    expect$(el->qualifiedName == Html::HTML_TAG);
+    assertNe$(el, nullptr);
+    assert$(el->qualifiedName == Html::HTML_TAG);
 
     return Ok();
 }
@@ -45,9 +45,9 @@ test$("parse-attr") {
     auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
 
     auto el = root->as<Dom::Element>();
-    expectNe$(el, nullptr);
-    expect$(el->hasAttribute(Html::LANG_ATTR));
-    expect$(el->getAttribute(Html::LANG_ATTR) == "en");
+    assertNe$(el, nullptr);
+    assert$(el->hasAttribute(Html::LANG_ATTR));
+    assert$(el->getAttribute(Html::LANG_ATTR) == "en");
 
     return Ok();
 }
@@ -60,12 +60,12 @@ test$("parse-text") {
     auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
 
     auto el = root->as<Dom::Element>();
-    expectNe$(el, nullptr);
-    expect$(el->hasChildren());
+    assertNe$(el, nullptr);
+    assert$(el->hasChildren());
 
     auto text = el->firstChild()->as<Dom::Text>();
-    expectNe$(text, nullptr);
-    expect$(text->data() == "text");
+    assertNe$(text, nullptr);
+    assert$(text->data() == "text");
 
     return Ok();
 }
@@ -78,16 +78,16 @@ test$("parse-text-before-tag") {
     auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
 
     auto el = root->as<Dom::Element>();
-    expectNe$(el, nullptr);
-    expect$(el->hasChildren());
+    assertNe$(el, nullptr);
+    assert$(el->hasChildren());
 
     auto text = el->firstChild()->as<Dom::Text>();
-    expectNe$(text, nullptr);
-    expect$(text->data() == "text");
+    assertNe$(text, nullptr);
+    assert$(text->data() == "text");
 
     auto div = text->nextSibling()->as<Dom::Element>();
-    expect$(div->nodeType() == Dom::NodeType::ELEMENT);
-    expect$(div->qualifiedName == Html::DIV_TAG);
+    assert$(div->nodeType() == Dom::NodeType::ELEMENT);
+    assert$(div->qualifiedName == Html::DIV_TAG);
 
     return Ok();
 }
@@ -100,16 +100,16 @@ test$("parse-text-after-tag") {
     auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
 
     auto el = root->as<Dom::Element>();
-    expectNe$(el, nullptr);
-    expect$(el->hasChildren());
+    assertNe$(el, nullptr);
+    assert$(el->hasChildren());
 
     auto div = el->firstChild()->as<Dom::Element>();
-    expectNe$(div, nullptr);
-    expect$(div->qualifiedName == Html::DIV_TAG);
+    assertNe$(div, nullptr);
+    assert$(div->qualifiedName == Html::DIV_TAG);
 
     auto text = div->nextSibling()->as<Dom::Text>();
-    expectNe$(text, nullptr);
-    expect$(text->data() == "text");
+    assertNe$(text, nullptr);
+    assert$(text->data() == "text");
 
     return Ok();
 }
@@ -122,23 +122,23 @@ test$("parse-text-between-tags") {
     auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
 
     auto el = root->as<Dom::Element>();
-    expectNe$(el, nullptr);
-    expect$(el->hasChildren());
+    assertNe$(el, nullptr);
+    assert$(el->hasChildren());
 
     auto div1 = el->firstChild()->as<Dom::Element>();
-    expectNe$(div1, nullptr);
-    expect$(div1->nodeType() == Dom::NodeType::ELEMENT);
-    expect$(div1->qualifiedName == Html::DIV_TAG);
+    assertNe$(div1, nullptr);
+    assert$(div1->nodeType() == Dom::NodeType::ELEMENT);
+    assert$(div1->qualifiedName == Html::DIV_TAG);
 
     auto text = div1->nextSibling()->as<Dom::Text>();
-    expectNe$(text, nullptr);
-    expect$(text->nodeType() == Dom::NodeType::TEXT);
-    expect$(text->data() == "text");
+    assertNe$(text, nullptr);
+    assert$(text->nodeType() == Dom::NodeType::TEXT);
+    assert$(text->data() == "text");
 
     auto div2 = text->nextSibling()->as<Dom::Element>();
-    expectNe$(div2, nullptr);
-    expect$(div2->nodeType() == Dom::NodeType::ELEMENT);
-    expect$(div2->qualifiedName == Html::DIV_TAG);
+    assertNe$(div2, nullptr);
+    assert$(div2->nodeType() == Dom::NodeType::ELEMENT);
+    assert$(div2->qualifiedName == Html::DIV_TAG);
 
     return Ok();
 }
@@ -150,23 +150,23 @@ test$("parse-text-between-tags-and-before") {
     auto s = Io::SScan("<html>test2<div>text</div></html>");
     auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
     auto el = root->as<Dom::Element>();
-    expectNe$(el, nullptr);
-    expect$(el->hasChildren());
+    assertNe$(el, nullptr);
+    assert$(el->hasChildren());
 
     auto text1 = el->firstChild()->as<Dom::Text>();
-    expectNe$(text1, nullptr);
-    expect$(text1->nodeType() == Dom::NodeType::TEXT);
-    expectEq$(text1->data(), "test2"s);
+    assertNe$(text1, nullptr);
+    assert$(text1->nodeType() == Dom::NodeType::TEXT);
+    assertEq$(text1->data(), "test2"s);
 
     auto div = text1->nextSibling()->as<Dom::Element>();
-    expectNe$(div, nullptr);
-    expect$(div->nodeType() == Dom::NodeType::ELEMENT);
-    expect$(div->qualifiedName == Html::DIV_TAG);
+    assertNe$(div, nullptr);
+    assert$(div->nodeType() == Dom::NodeType::ELEMENT);
+    assert$(div->qualifiedName == Html::DIV_TAG);
 
     auto text2 = div->firstChild()->as<Dom::Text>();
-    expectNe$(text2, nullptr);
-    expect$(text2->nodeType() == Dom::NodeType::TEXT);
-    expectEq$(text2->data(), "text"s);
+    assertNe$(text2, nullptr);
+    assert$(text2->nodeType() == Dom::NodeType::TEXT);
+    assertEq$(text2->data(), "text"s);
 
     return Ok();
 }
@@ -179,18 +179,18 @@ test$("parse-nested-tags") {
     auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
 
     auto el = root->as<Dom::Element>();
-    expectNe$(el, nullptr);
-    expect$(el->hasChildren());
+    assertNe$(el, nullptr);
+    assert$(el->hasChildren());
 
     auto head = el->firstChild()->as<Dom::Element>();
-    expectNe$(head, nullptr);
-    expect$(head->nodeType() == Dom::NodeType::ELEMENT);
-    expect$(head->qualifiedName == Html::HEAD_TAG);
+    assertNe$(head, nullptr);
+    assert$(head->nodeType() == Dom::NodeType::ELEMENT);
+    assert$(head->qualifiedName == Html::HEAD_TAG);
 
     auto body = head->nextSibling()->as<Dom::Element>();
-    expectNe$(body, nullptr);
-    expect$(body->nodeType() == Dom::NodeType::ELEMENT);
-    expect$(body->qualifiedName == Html::BODY_TAG);
+    assertNe$(body, nullptr);
+    assert$(body->nodeType() == Dom::NodeType::ELEMENT);
+    assert$(body->qualifiedName == Html::BODY_TAG);
 
     return Ok();
 }
@@ -203,13 +203,13 @@ test$("parse-comment") {
     auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
 
     auto el = root->as<Dom::Element>();
-    expectNe$(el, nullptr);
-    expect$(el->hasChildren());
+    assertNe$(el, nullptr);
+    assert$(el->hasChildren());
 
     auto comment = el->firstChild()->as<Dom::Comment>();
-    expectNe$(comment, nullptr);
-    expect$(comment->nodeType() == Dom::NodeType::COMMENT);
-    expect$(comment->data() == " comment "s);
+    assertNe$(comment, nullptr);
+    assert$(comment->nodeType() == Dom::NodeType::COMMENT);
+    assert$(comment->data() == " comment "s);
 
     return Ok();
 }
@@ -222,11 +222,11 @@ test$("parse-doctype") {
 
     auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
-    expect$(dom->hasChildren());
+    assert$(dom->hasChildren());
 
     auto doctype = dom->firstChild()->as<Dom::DocumentType>();
-    expectNe$(doctype, nullptr);
-    expect$(doctype->name == "html"s);
+    assertNe$(doctype, nullptr);
+    assert$(doctype->name == "html"s);
 
     return Ok();
 }
@@ -238,7 +238,7 @@ test$("parse-title") {
     auto s = Io::SScan("<title>the title</title>");
     auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
-    expect$(dom->title() == "the title"s);
+    assert$(dom->title() == "the title"s);
     return Ok();
 }
 
@@ -253,17 +253,17 @@ test$("parse-comment-with-gt-symb") {
     auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
-    expect$(dom->hasChildren());
+    assert$(dom->hasChildren());
     auto title = dom->firstChild()->as<Dom::Element>();
-    expectNe$(title, nullptr);
-    expect$(title->nodeType() == Dom::NodeType::ELEMENT);
-    expect$(title->qualifiedName == Html::TITLE_TAG);
-    expect$(title->hasNextSibling());
+    assertNe$(title, nullptr);
+    assert$(title->nodeType() == Dom::NodeType::ELEMENT);
+    assert$(title->qualifiedName == Html::TITLE_TAG);
+    assert$(title->hasNextSibling());
 
     auto comment = title->nextSibling()->as<Dom::Comment>();
-    expectNe$(comment, nullptr);
-    expect$(comment->nodeType() == Dom::NodeType::COMMENT);
-    expect$(comment->data() == " a b <meta> c d "s);
+    assertNe$(comment, nullptr);
+    assert$(comment->nodeType() == Dom::NodeType::COMMENT);
+    assert$(comment->data() == " a b <meta> c d "s);
 
     return Ok();
 }
@@ -275,9 +275,9 @@ test$("parse-xml-decl") {
     auto s = Io::SScan("<?xml version='1.0' encoding='UTF-8'?><html></html>");
     auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
-    expect$(dom->xmlVersion == "1.0");
-    expect$(dom->xmlEncoding == "UTF-8");
-    expect$(dom->xmlStandalone == "no");
+    assert$(dom->xmlVersion == "1.0");
+    assert$(dom->xmlEncoding == "UTF-8");
+    assert$(dom->xmlStandalone == "no");
     return Ok();
 }
 
@@ -294,14 +294,14 @@ test$("parse-xml-different-namespace") {
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto svg = dom->firstChild()->as<Dom::Element>();
-    expectNe$(svg, nullptr);
-    expect$(svg->qualifiedName == Svg::SVG_TAG);
-    expect$(svg->countChildren() == 1);
-    expect$(svg->hasAttribute(Svg::VIEW_BOX_ATTR));
+    assertNe$(svg, nullptr);
+    assert$(svg->qualifiedName == Svg::SVG_TAG);
+    assert$(svg->countChildren() == 1);
+    assert$(svg->hasAttribute(Svg::VIEW_BOX_ATTR));
 
     auto rect = svg->firstChild()->as<Dom::Element>();
-    expectNe$(rect, nullptr);
-    expect$(rect->qualifiedName == Svg::RECT_TAG);
+    assertNe$(rect, nullptr);
+    assert$(rect->qualifiedName == Svg::RECT_TAG);
 
     return Ok();
 }
@@ -320,18 +320,18 @@ test$("parse-xml-prefixed-names") {
     try$(p.parse(s, NONE, *dom));
 
     auto root = dom->firstChild()->as<Dom::Element>();
-    expectNe$(root, nullptr);
-    expect$((root->qualifiedName == Dom::QualifiedName{NONE, "root"_sym}));
+    assertNe$(root, nullptr);
+    assert$((root->qualifiedName == Dom::QualifiedName{NONE, "root"_sym}));
 
     auto child = root->firstChild()->as<Dom::Element>();
-    expectNe$(child, nullptr);
-    expect$((child->qualifiedName == Dom::QualifiedName{NONE, "child"_sym}));
-    expect$(child->hasAttribute(Dom::QualifiedName{Some("http://www.example.org/a"_sym), "foo"_sym}));
-    expect$(child->getAttribute(Dom::QualifiedName{Some("http://www.example.org/a"_sym), "foo"_sym}) == "bar");
+    assertNe$(child, nullptr);
+    assert$((child->qualifiedName == Dom::QualifiedName{NONE, "child"_sym}));
+    assert$(child->hasAttribute(Dom::QualifiedName{Some("http://www.example.org/a"_sym), "foo"_sym}));
+    assert$(child->getAttribute(Dom::QualifiedName{Some("http://www.example.org/a"_sym), "foo"_sym}) == "bar");
 
     auto item = child->nextSibling()->as<Dom::Element>();
-    expectNe$(item, nullptr);
-    expect$((item->qualifiedName == Dom::QualifiedName{Some("http://www.example.org/a"_sym), "item"_sym}));
+    assertNe$(item, nullptr);
+    assert$((item->qualifiedName == Dom::QualifiedName{Some("http://www.example.org/a"_sym), "item"_sym}));
 
     return Ok();
 }

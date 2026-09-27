@@ -258,7 +258,7 @@ export struct Lexer {
             s.skip(RE_WHITESPACE);
 
             // Interpret the hex digits as a hexadecimal number.
-            auto num = Io::atou(hex, {.base = 16}).unwrap();
+            auto num = Io::atou(hex, {.base = 16}).expect();
 
             // If this number is zero, or is for a surrogate, or is greater than the maximum allowed code point
             if (0xD800 <= num and num <= 0xDFFF)

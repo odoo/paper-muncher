@@ -27,7 +27,7 @@ struct Box : Meta::NoCopy {
     Opt<Dom::OriginatingElement> origin;
 
     static Box fromInterruptedInlineBox(Box const& inlineBox) {
-        auto oldProse = inlineBox.content.unwrap<Rc<Gfx::Prose>>();
+        auto oldProse = inlineBox.content.expect<Rc<Gfx::Prose>>();
         Rc<Gfx::Prose> prose = makeRc<Gfx::Prose>(oldProse->_style, oldProse->_currentSpan);
         return Box(inlineBox.style, prose, inlineBox.origin);
     }
@@ -53,12 +53,12 @@ struct Box : Meta::NoCopy {
     }
 
     void startInlineBox(Gfx::SpanStyle const& spanStyle) {
-        auto prose = content.unwrap<Rc<Gfx::Prose>>();
+        auto prose = content.expect<Rc<Gfx::Prose>>();
         prose->pushSpan(spanStyle);
     }
 
     void endInlineBox() {
-        auto& prose = content.unwrap<Rc<Gfx::Prose>>();
+        auto& prose = content.expect<Rc<Gfx::Prose>>();
         prose->popSpan();
     }
 
@@ -105,7 +105,7 @@ struct Box : Meta::NoCopy {
         if (origin->is<Gc::Ref<Dom::PseudoElement>>())
             return false;
 
-        auto el = origin->unwrap<Gc::Ref<Dom::Element>>();
+        auto el = origin->expect<Gc::Ref<Dom::Element>>();
         auto doc = el->ownerDocument();
         if (not doc)
             return false;

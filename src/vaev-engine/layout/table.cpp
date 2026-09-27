@@ -367,7 +367,7 @@ export struct TableFormatingContext : FormatingContext {
         // MARK: Rows
 
         if (indexOfHeaderGroup) {
-            processRowGroup(box.children()[indexOfHeaderGroup.unwrap()]);
+            processRowGroup(box.children()[indexOfHeaderGroup.expect()]);
             numOfHeaderRows = grid.size.y;
         }
 
@@ -506,12 +506,12 @@ export struct TableFormatingContext : FormatingContext {
     ) {
         if (axisAndGroupsIdxs.axisIdx) {
             borders.pushBack(
-                resolve(tree, axis[axisAndGroupsIdxs.axisIdx.unwrap()].el, edge)
+                resolve(tree, axis[axisAndGroupsIdxs.axisIdx.expect()].el, edge)
             );
         }
         if (axisAndGroupsIdxs.groupIdx) {
             borders.pushBack(
-                resolve(tree, groups[axisAndGroupsIdxs.groupIdx.unwrap()].el, edge)
+                resolve(tree, groups[axisAndGroupsIdxs.groupIdx.expect()].el, edge)
             );
         }
     }
@@ -947,7 +947,7 @@ export struct TableFormatingContext : FormatingContext {
         usize emptyCols{0};
         for (usize i = 0; i < grid.size.x; ++i) {
             if (colWidthOrNone[i])
-                sumColsWidths += colWidthOrNone[i].unwrap() + columnBorders[i];
+                sumColsWidths += colWidthOrNone[i].expect() + columnBorders[i];
             else
                 emptyCols++;
         }
@@ -962,7 +962,7 @@ export struct TableFormatingContext : FormatingContext {
         } else if (sumColsWidths < tableUsedWidth - fixedWidthToAccount) {
             Au toDistribute = (tableUsedWidth - fixedWidthToAccount - sumColsWidths);
             for (auto& w : colWidthOrNone) {
-                w = Some(w.unwrap() + toDistribute * (w.unwrap() / sumColsWidths));
+                w = Some(w.expect() + toDistribute * (w.expect() / sumColsWidths));
             }
         }
 
@@ -1431,8 +1431,8 @@ export struct TableFormatingContext : FormatingContext {
         auto usedVerticalSpace = (iter(rowHeight) | Sum()) + spacing.y * (grid.size.y + 1);
 
         // NOSPEC: The exact row height distribution is undefined in CSS2.2 but browsers seem to agree on the algorithm below.
-        if (input.knownSize.height and input.knownSize.height.unwrap() > usedVerticalSpace) {
-            Au knownHeight = input.knownSize.height.unwrap();
+        if (input.knownSize.height and input.knownSize.height.expect() > usedVerticalSpace) {
+            Au knownHeight = input.knownSize.height.expect();
             Au surplus = knownHeight - usedVerticalSpace;
 
             if (hasAutoHeightRows) {
@@ -1446,7 +1446,7 @@ export struct TableFormatingContext : FormatingContext {
             }
 
             usedVerticalSpace = knownHeight;
-        } else if (input.knownSize.height and input.knownSize.height.unwrap() < usedVerticalSpace) {
+        } else if (input.knownSize.height and input.knownSize.height.expect() < usedVerticalSpace) {
             // FIXME: Investigate what should happen.
         }
 
@@ -1566,7 +1566,7 @@ export struct TableFormatingContext : FormatingContext {
 
         if (tree.fc.isDiscoveryMode()) {
             if (oneOf(cell.box->style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE)) {
-                outputCell.breakpoint.unwrap().withAppeal(Breakpoint::Appeal::AVOID);
+                outputCell.breakpoint.expect().withAppeal(Breakpoint::Appeal::AVOID);
             }
         }
 
@@ -1667,25 +1667,25 @@ export struct TableFormatingContext : FormatingContext {
         // if row is self-contained, the <tr> it belongs to has size 1
         bool forcedBreakAfterCurrRow =
             rowGroupIdxs[i].axisIdx and
-            rows[rowGroupIdxs[i].axisIdx.unwrap()].el.style->break_->after == BreakBetween::PAGE;
+            rows[rowGroupIdxs[i].axisIdx.expect()].el.style->break_->after == BreakBetween::PAGE;
 
         bool forcedBreakBeforeNextRow =
             i + 1 <= dataRowsInterval.y and
             rowGroupIdxs[i + 1].axisIdx and
-            rows[rowGroupIdxs[i + 1].axisIdx.unwrap()].el.style->break_->before == BreakBetween::PAGE;
+            rows[rowGroupIdxs[i + 1].axisIdx.expect()].el.style->break_->before == BreakBetween::PAGE;
 
         bool limitOfCurrRowGroup = i + 1 <= dataRowsInterval.y and rowGroupIdxs[i].groupIdx != rowGroupIdxs[i + 1].groupIdx;
 
         bool forcedBreakAfterCurrRowGroup =
             limitOfCurrRowGroup and
             rowGroupIdxs[i].groupIdx and
-            rowGroups[rowGroupIdxs[i].groupIdx.unwrap()].el.style->break_->after == BreakBetween::PAGE;
+            rowGroups[rowGroupIdxs[i].groupIdx.expect()].el.style->break_->after == BreakBetween::PAGE;
 
         bool forcedBreakBeforeNextRowGroup =
             limitOfCurrRowGroup and
             i + 1 <= dataRowsInterval.y and
             rowGroupIdxs[i + 1].groupIdx and
-            rowGroups[rowGroupIdxs[i + 1].groupIdx.unwrap()].el.style->break_->before == BreakBetween::PAGE;
+            rowGroups[rowGroupIdxs[i + 1].groupIdx.expect()].el.style->break_->before == BreakBetween::PAGE;
 
         if (forcedBreakAfterCurrRow or forcedBreakBeforeNextRow or
             forcedBreakAfterCurrRowGroup or forcedBreakBeforeNextRowGroup) {
@@ -1703,11 +1703,11 @@ export struct TableFormatingContext : FormatingContext {
 
         bool avoidBreakInsideRow =
             rowGroupIdxs[i].axisIdx and
-            oneOf(rows[rowGroupIdxs[i].axisIdx.unwrap()].el.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE);
+            oneOf(rows[rowGroupIdxs[i].axisIdx.expect()].el.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE);
 
         bool avoidBreakInsideRowGroup =
             rowGroupIdxs[i].groupIdx and
-            oneOf(rowGroups[rowGroupIdxs[i].groupIdx.unwrap()].el.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE);
+            oneOf(rowGroups[rowGroupIdxs[i].groupIdx.expect()].el.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE);
 
         if (rowIsFreelyFragmentable) {
             // breakpoint inside of row, take in consideration ALL breakpoints
@@ -1764,8 +1764,8 @@ export struct TableFormatingContext : FormatingContext {
 
             if (tree.fc.isDiscoveryMode()) {
                 if (
-                    not handleUnforcedBreakpointsInsideAndAfterRow(box, rowBreakpoint.unwrap(), rowOutput, i, tree.fc.size()) or
-                    not handlePossibleForcedBreakpointAfterRow(rowBreakpoint.unwrap(), rowOutput.allBottomsAndCompletelyLaidOut, (i + 1 == stopAt), i)
+                    not handleUnforcedBreakpointsInsideAndAfterRow(box, rowBreakpoint.expect(), rowOutput, i, tree.fc.size()) or
+                    not handlePossibleForcedBreakpointAfterRow(rowBreakpoint.expect(), rowOutput.allBottomsAndCompletelyLaidOut, (i + 1 == stopAt), i)
                 ) {
                     completelyLaidOut = false;
                     break;
@@ -1851,7 +1851,7 @@ export struct TableFormatingContext : FormatingContext {
         );
 
         if (tree.fc.isDiscoveryMode() and shouldRepeatHeaderAndFooter) {
-            breakpoint.unwrap().endIdx -= dataRowsInterval.x;
+            breakpoint.expect().endIdx -= dataRowsInterval.x;
         }
 
         if (shouldRepeatHeaderAndFooter)

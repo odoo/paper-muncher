@@ -195,7 +195,7 @@ struct ValueParser<Calc<T>> {
 
         if (c.peek() == Css::Sst::FUNC) {
             auto const& prefix = c.peek().prefix;
-            auto prefixToken = prefix.unwrap()->token;
+            auto prefixToken = prefix.expect()->token;
             if (prefixToken.data == "calc(") {
                 Cursor<Css::Sst> content = c.peek().content;
                 auto lhs = try$(parseVal(content));
@@ -210,7 +210,7 @@ struct ValueParser<Calc<T>> {
                 auto rhs = try$(parseVal(content));
 
                 c.next();
-                return Ok(Calc<T>{op.unwrap(), lhs, rhs});
+                return Ok(Calc<T>{op.expect(), lhs, rhs});
             }
         }
 

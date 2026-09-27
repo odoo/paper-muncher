@@ -8,36 +8,36 @@ using namespace Karm::Literals;
 namespace Vaev::Style::Tests {
 
 test$("vaev-style-parse-simple-selectors") {
-    expect$(
+    assert$(
         not Selector::parse("").has()
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html")),
         (TypeSelector{UNIVERSAL, "html"_sym})
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html ")),
         (TypeSelector{UNIVERSAL, "html"_sym})
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(" html")),
         (TypeSelector{UNIVERSAL, "html"_sym})
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(".className")),
         ClassSelector{"className"s}
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("#idName")),
         IdSelector{"idName"_sym}
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("*")),
         (TypeSelector{UNIVERSAL, UNIVERSAL})
     );
@@ -46,7 +46,7 @@ test$("vaev-style-parse-simple-selectors") {
 }
 
 test$("vaev-style-parse-nfix-selectors") {
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html,.className")),
         Selector::or_({
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -54,7 +54,7 @@ test$("vaev-style-parse-nfix-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html,.className , \n #idName")),
         Selector::or_({
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -63,7 +63,7 @@ test$("vaev-style-parse-nfix-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html,.className , \n #idName,*")),
         Selector::or_({
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -73,7 +73,7 @@ test$("vaev-style-parse-nfix-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html.className")),
         Selector::and_({
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -85,7 +85,7 @@ test$("vaev-style-parse-nfix-selectors") {
 }
 
 test$("vaev-style-parse-infix-selectors") {
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html .className")),
         Selector::descendant(
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -93,7 +93,7 @@ test$("vaev-style-parse-infix-selectors") {
         )
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html>.className")),
         Selector::child(
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -101,7 +101,7 @@ test$("vaev-style-parse-infix-selectors") {
         )
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html > .className")),
         Selector::child(
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -109,7 +109,7 @@ test$("vaev-style-parse-infix-selectors") {
         )
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html > .className #idName")),
         Selector::descendant(
             Selector::child(
@@ -120,7 +120,7 @@ test$("vaev-style-parse-infix-selectors") {
         )
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":not(.className)")),
         Selector::not_(ClassSelector{"className"s})
     );
@@ -129,7 +129,7 @@ test$("vaev-style-parse-infix-selectors") {
 }
 
 test$("vaev-style-parse-adjacent-selectors") {
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html +.className")),
         Selector::adjacent(
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -141,7 +141,7 @@ test$("vaev-style-parse-adjacent-selectors") {
 }
 
 test$("vaev-style-parse-subsequent-selectors") {
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html~.className")),
         Selector::subsequent(
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -153,15 +153,15 @@ test$("vaev-style-parse-subsequent-selectors") {
 }
 
 test$("vaev-style-reject-trailing-combinators") {
-    expect$(
+    assert$(
         not Selector::parse("html~").has()
     );
 
-    expect$(
+    assert$(
         not Selector::parse("html+").has()
     );
 
-    expect$(
+    assert$(
         not Selector::parse("html>").has()
     );
 
@@ -169,7 +169,7 @@ test$("vaev-style-reject-trailing-combinators") {
 }
 
 test$("vaev-style-parse-mixed-selectors") {
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html > .className#idName")),
         Selector::child(
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -180,7 +180,7 @@ test$("vaev-style-parse-mixed-selectors") {
         )
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html#idName .className")),
         Selector::descendant(
             Selector::and_({
@@ -191,12 +191,12 @@ test$("vaev-style-parse-mixed-selectors") {
         )
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":not(:first-child)")),
         Selector::not_(PseudoClassSelector{PseudoClassSelector::FIRST_CHILD})
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("tr:not(:last-child) th:not(:first-child)")),
         Selector::descendant(
             Selector::and_({TypeSelector{UNIVERSAL, "tr"_sym}, Selector::not_(PseudoClassSelector{PseudoClassSelector::LAST_CHILD})}),
@@ -204,7 +204,7 @@ test$("vaev-style-parse-mixed-selectors") {
         )
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("td, .o_content .o .o_table th ")),
         Selector::or_(
             {TypeSelector{UNIVERSAL, "td"_sym},
@@ -221,7 +221,7 @@ test$("vaev-style-parse-mixed-selectors") {
         )
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("td, .o_content .o_table th ")),
         Selector::or_(
             {
@@ -237,7 +237,7 @@ test$("vaev-style-parse-mixed-selectors") {
         )
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(".o_content .o_table > thead > tr:not(:last-child) th:not(:first-child)")),
         Selector::descendant(
             Selector::child(
@@ -261,157 +261,157 @@ test$("vaev-style-parse-mixed-selectors") {
 }
 
 test$("vaev-style-parse-anb") {
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("odd")),
         AnB(2, 1)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("even")),
         AnB(2, 0)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("4")),
         AnB(0, 4)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("-n")),
         AnB(-1, 0)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("n")),
         AnB(1, 0)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("3n")),
         AnB(3, 0)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("2n+5")),
         AnB(2, 5)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("2n + 5")),
         AnB(2, 5)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("2n +5")),
         AnB(2, 5)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("2n -5")),
         AnB(2, -5)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("2n-5")),
         AnB(2, -5)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("n-5")),
         AnB(1, -5)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("n- 5")),
         AnB(1, -5)
     );
 
-    expectEq$(
+    assertEq$(
         try$(AnB::parse("n+ 5")),
         AnB(1, 5)
     );
 
-    expectNot$(AnB::parse("n+"));
-    expectNot$(AnB::parse("n+-5"));
-    expectNot$(AnB::parse("n- +5"));
-    expectNot$(AnB::parse("n-+ 5"));
-    expectNot$(AnB::parse("n -+5"));
-    expectNot$(AnB::parse("+ n"));
-    expectNot$(AnB::parse("+ n -3"));
+    assertNot$(AnB::parse("n+"));
+    assertNot$(AnB::parse("n+-5"));
+    assertNot$(AnB::parse("n- +5"));
+    assertNot$(AnB::parse("n-+ 5"));
+    assertNot$(AnB::parse("n -+5"));
+    assertNot$(AnB::parse("+ n"));
+    assertNot$(AnB::parse("+ n -3"));
 
     return Ok();
 }
 
 test$("vaev-style-parse-pseudo-selectors") {
-    expectEq$(
+    assertEq$(
         PseudoClassSelector{PseudoClassSelector::ROOT},
         PseudoClassSelector{PseudoClassSelector::ROOT}
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":root")),
         PseudoClassSelector{PseudoClassSelector::ROOT}
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":root")),
         PseudoClassSelector{PseudoClassSelector::make("root")}
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":first-child")),
         PseudoClassSelector{PseudoClassSelector::FIRST_CHILD}
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":nth-child(odd)")),
         PseudoClassSelector(PseudoClassSelector::Type::NTH_CHILD, PseudoClassSelector::AnBofS{AnB(2, 1), NONE})
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":nth-child(odd of .class)")),
         PseudoClassSelector(PseudoClassSelector::Type::NTH_CHILD, PseudoClassSelector::AnBofS{AnB(2, 1), Some(ClassSelector{"class"s})})
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":nth-child(n of .class)")),
         PseudoClassSelector(PseudoClassSelector::Type::NTH_CHILD, PseudoClassSelector::AnBofS{AnB(1, 0), Some(ClassSelector{"class"s})})
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":nth-last-child(even)")),
         PseudoClassSelector(PseudoClassSelector::Type::NTH_LAST_CHILD, PseudoClassSelector::AnBofS{AnB(2, 0), NONE})
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":nth-last-child(even of #id)")),
         PseudoClassSelector(PseudoClassSelector::Type::NTH_LAST_CHILD, PseudoClassSelector::AnBofS{AnB(2, 0), Some(IdSelector{"id"_sym})})
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":nth-last-child(n of #id)")),
         PseudoClassSelector(PseudoClassSelector::Type::NTH_LAST_CHILD, PseudoClassSelector::AnBofS{AnB(1, 0), Some(IdSelector{"id"_sym})})
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":nth-of-type(3n+1)")),
         PseudoClassSelector(PseudoClassSelector::Type::NTH_OF_TYPE, PseudoClassSelector::AnBofS{AnB(3, 1), NONE})
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":nth-last-of-type(3n+1)")),
         PseudoClassSelector(PseudoClassSelector::Type::NTH_LAST_OF_TYPE, PseudoClassSelector::AnBofS{AnB(3, 1), NONE})
     );
 
-    expectNot$(Selector::parse(":nth-of-type(3n+1 of .class)"));
-    expectNot$(Selector::parse(":nth-last-of-type(3n+1 of .class)"));
+    assertNot$(Selector::parse(":nth-of-type(3n+1 of .class)"));
+    assertNot$(Selector::parse(":nth-last-of-type(3n+1 of .class)"));
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(":last-child")),
         PseudoClassSelector{PseudoClassSelector::LAST_CHILD}
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(".class :last-child")),
         Selector::descendant(
             ClassSelector{"class"s},
@@ -419,7 +419,7 @@ test$("vaev-style-parse-pseudo-selectors") {
         )
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html:hover")),
         Selector::and_({
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -429,7 +429,7 @@ test$("vaev-style-parse-pseudo-selectors") {
 
     // this should pass for legacy resons
     // https://www.w3.org/TR/selectors-3/#pseudo-elements
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html:after")),
         Selector::and_({
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -437,7 +437,7 @@ test$("vaev-style-parse-pseudo-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("html::after")),
         Selector::and_({
             TypeSelector{UNIVERSAL, "html"_sym},
@@ -445,7 +445,7 @@ test$("vaev-style-parse-pseudo-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("div::not(.foo)")),
         Selector::and_({
             TypeSelector{UNIVERSAL, "div"_sym},
@@ -453,7 +453,7 @@ test$("vaev-style-parse-pseudo-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("div::not(.foo, .bar)")),
         Selector::and_({
             TypeSelector{UNIVERSAL, "div"_sym},
@@ -468,7 +468,7 @@ test$("vaev-style-parse-pseudo-selectors") {
 }
 
 test$("vaev-style-parse-attribute-selectors") {
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(".className[type]")),
         Selector::and_({
             ClassSelector{"className"s},
@@ -481,7 +481,7 @@ test$("vaev-style-parse-attribute-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(".className[type='text']")),
         Selector::and_({
             ClassSelector{"className"s},
@@ -494,7 +494,7 @@ test$("vaev-style-parse-attribute-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(".className[ type = 'text' ]")),
         Selector::and_({
             ClassSelector{"className"s},
@@ -507,7 +507,7 @@ test$("vaev-style-parse-attribute-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(".className[type*='text']")),
         Selector::and_({
             ClassSelector{"className"s},
@@ -520,7 +520,7 @@ test$("vaev-style-parse-attribute-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse(".className[type='text' s]")),
         Selector::and_({
             ClassSelector{"className"s},
@@ -533,12 +533,12 @@ test$("vaev-style-parse-attribute-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("*|p")),
         (TypeSelector{UNIVERSAL, "p"_sym})
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("*|*[*|title^='si on']")),
         Selector::and_({
             TypeSelector{UNIVERSAL, UNIVERSAL},
@@ -551,7 +551,7 @@ test$("vaev-style-parse-attribute-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("*|*[title^='si on']")),
         Selector::and_({
             TypeSelector{UNIVERSAL, UNIVERSAL},
@@ -564,7 +564,7 @@ test$("vaev-style-parse-attribute-selectors") {
         })
     );
 
-    expectEq$(
+    assertEq$(
         try$(Selector::parse("*|*[|title^='si on']")),
         Selector::and_({
             TypeSelector{UNIVERSAL, UNIVERSAL},

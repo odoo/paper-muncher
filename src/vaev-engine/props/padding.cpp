@@ -228,10 +228,10 @@ export struct PaddingProperty : Property {
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<PaddingTopProperty>(registry.resolveRegistration(Properties::PADDING_TOP, {}).unwrap(), _value.top),
-            makeRc<PaddingRightProperty>(registry.resolveRegistration(Properties::PADDING_RIGHT, {}).unwrap(), _value.end),
-            makeRc<PaddingBottomProperty>(registry.resolveRegistration(Properties::PADDING_BOTTOM, {}).unwrap(), _value.bottom),
-            makeRc<PaddingLeftProperty>(registry.resolveRegistration(Properties::PADDING_LEFT, {}).unwrap(), _value.start),
+            makeRc<PaddingTopProperty>(registry.resolveRegistration(Properties::PADDING_TOP, {}).expect(), _value.top),
+            makeRc<PaddingRightProperty>(registry.resolveRegistration(Properties::PADDING_RIGHT, {}).expect(), _value.end),
+            makeRc<PaddingBottomProperty>(registry.resolveRegistration(Properties::PADDING_BOTTOM, {}).expect(), _value.bottom),
+            makeRc<PaddingLeftProperty>(registry.resolveRegistration(Properties::PADDING_LEFT, {}).expect(), _value.start),
         };
     }
 

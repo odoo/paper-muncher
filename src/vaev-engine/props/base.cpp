@@ -141,9 +141,9 @@ export struct Property : Meta::NoCopy {
 
         Rc<Registration> self() const {
             return _self
-                .unwrap("node not self bound")
+                .expect("node not self bound")
                 .upgrade()
-                .unwrap();
+                .expect();
         }
 
         virtual ~Registration() = default;
@@ -270,7 +270,7 @@ struct CustomProperty : Property {
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
             if (auto maybeProp = parent.getCustomProp(name))
-                child.setCustomProp(name, maybeProp.unwrap());
+                child.setCustomProp(name, maybeProp.expect());
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -447,14 +447,14 @@ struct DeferredProperty : Property {
         auto prop = _expandProperty(child);
         if (not prop)
             return {};
-        return prop.unwrap()->expandShorthand(registry, parent, child);
+        return prop.expect()->expandShorthand(registry, parent, child);
     }
 
     void apply(ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
         auto prop = _expandProperty(c);
         if (not prop)
             return;
-        prop.unwrap()->apply(parent, c, cx);
+        prop.expect()->apply(parent, c, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -610,7 +610,7 @@ export struct RegisteredPropertySet {
         Rc<Property::Registration> registration
     ) {
         // Registrations are append-only and property names must be unique.
-        assert$(not _registrations.lookup(propertyName));
+        expect$(not _registrations.lookup(propertyName));
 
         auto registrationFlags = registration->flags;
 

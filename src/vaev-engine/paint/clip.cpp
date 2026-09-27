@@ -109,7 +109,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(BasicShapeFunction const& sha
                 auto wSquared = Math::pow2(referenceBox.width.cast<f64>());
                 radius = resolver
                              .resolve(
-                                 circle.radius.unwrap<Calc<PercentOr<Length>>>(),
+                                 circle.radius.expect<Calc<PercentOr<Length>>>(),
                                  Au(Math::sqrt(hSquared + wSquared) / Math::sqrt(2.0))
                              )
                              .cast<f64>();
@@ -168,7 +168,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(BasicShapeFunction const& sha
                 rx = max(Math::abs(referenceBox.width.cast<f64>() - center.x), center.x);
             } else {
                 rx = resolver.resolve(
-                                 ellipse.rx.unwrap<Calc<PercentOr<Length>>>(),
+                                 ellipse.rx.expect<Calc<PercentOr<Length>>>(),
                                  referenceBox.width
                 )
                          .cast<f64>();
@@ -182,7 +182,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(BasicShapeFunction const& sha
             } else {
                 ry =
                     resolver.resolve(
-                                ellipse.ry.unwrap<Calc<PercentOr<Length>>>(),
+                                ellipse.ry.expect<Calc<PercentOr<Length>>>(),
                                 referenceBox.height
                     )
                         .cast<f64>();
@@ -202,7 +202,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(BasicShapeFunction const& sha
 }
 
 void applyClip(Rc<Layout::Fragment>& fragment, Gfx::Canvas& g, Math::Rectf viewBox) {
-    auto& clip = fragment->style().clip->unwrap();
+    auto& clip = fragment->style().clip->expect();
     auto [referenceBox, radii] = resolveClipGeometryBox(fragment, clip.referenceBox, viewBox.cast<Au>());
 
     if (auto& [c] = clip.shape) {

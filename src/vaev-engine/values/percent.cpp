@@ -44,7 +44,7 @@ export template <typename T>
 Resolved<T> resolve(PercentOr<T> const& value, auto const& ctx, Resolved<T> relative) {
     if (auto v = value.template is<Percent>())
         return Resolved<T>{relative.template cast<f64>() * ((*v).value() / 100.)};
-    return resolve(value.template unwrap<T>(), ctx);
+    return resolve(value.template expect<T>(), ctx);
 }
 
 } // namespace Vaev

@@ -99,9 +99,9 @@ export struct QualifiedNameSelector {
             panic("cannot fully qualify a wildcard selector");
 
         if (ns.is<NullNamespace>())
-            return {NONE, exactName.unwrap()};
+            return {NONE, exactName.expect()};
 
-        return {Some(*ns.is<Symbol>()), exactName.unwrap()};
+        return {Some(*ns.is<Symbol>()), exactName.expect()};
     }
 
     bool operator==(QualifiedNameSelector const&) const = default;
@@ -110,11 +110,11 @@ export struct QualifiedNameSelector {
         auto exactName = this->exactName();
 
         if (ns.is<Universal>() and exactName)
-            e("*|{}", exactName.unwrap());
+            e("*|{}", exactName.expect());
         else if (auto exactNs = ns.is<Symbol>(); exactNs and exactName)
-            e("{}|{}", *exactNs, exactName.unwrap());
+            e("{}|{}", *exactNs, exactName.expect());
         else if (exactName)
-            e("{}", exactName.unwrap());
+            e("{}", exactName.expect());
         else if (ns.is<Universal>())
             e("*");
         else if (auto exactNs = ns.is<Symbol>())
@@ -131,7 +131,7 @@ export struct NamespaceScope {
 
     QualifiedNameSelector::NamespacePattern defaultNamespacePattern() const {
         return default_
-                   ? QualifiedNameSelector::NamespacePattern{default_.unwrap()}
+                   ? QualifiedNameSelector::NamespacePattern{default_.expect()}
                    : QualifiedNameSelector::NamespacePattern{UNIVERSAL};
     }
 
@@ -661,7 +661,7 @@ export struct Selector : _Selector {
         if (not cur.skip(Css::Token::delim("|"))) {
             return Ok(QualifiedNameSelector{
                 defaultNamespace,
-                firstName ? QualifiedNameSelector::NamePattern{firstName.unwrap()} : QualifiedNameSelector::NamePattern{UNIVERSAL},
+                firstName ? QualifiedNameSelector::NamePattern{firstName.expect()} : QualifiedNameSelector::NamePattern{UNIVERSAL},
             });
         }
 
@@ -680,12 +680,12 @@ export struct Selector : _Selector {
         if (namespacePrefix == NamespacePrefix::STAR)
             return Ok(QualifiedNameSelector{
                 QualifiedNameSelector::NamespacePattern{UNIVERSAL},
-                secondName ? QualifiedNameSelector::NamePattern{secondName.unwrap()} : QualifiedNameSelector::NamePattern{UNIVERSAL},
+                secondName ? QualifiedNameSelector::NamePattern{secondName.expect()} : QualifiedNameSelector::NamePattern{UNIVERSAL},
             });
 
         return Ok(QualifiedNameSelector{
-            (namespacePrefix == NamespacePrefix::IDENT ? QualifiedNameSelector::NamespacePattern{firstName.unwrap()} : QualifiedNameSelector::NamespacePattern{NULL_NAMESPACE}),
-            secondName ? QualifiedNameSelector::NamePattern{secondName.unwrap()} : QualifiedNameSelector::NamePattern{UNIVERSAL},
+            (namespacePrefix == NamespacePrefix::IDENT ? QualifiedNameSelector::NamespacePattern{firstName.expect()} : QualifiedNameSelector::NamespacePattern{NULL_NAMESPACE}),
+            secondName ? QualifiedNameSelector::NamePattern{secondName.expect()} : QualifiedNameSelector::NamePattern{UNIVERSAL},
         });
     }
 
@@ -869,7 +869,7 @@ export struct Selector : _Selector {
     }
 
     static Res<PseudoClassSelector> _parsePseudoClassFunction(Cursor<Css::Sst>& cur, NamespaceScope const& ns) {
-        auto funcName = cur->prefix.unwrap()->token.data.str();
+        auto funcName = cur->prefix.expect()->token.data.str();
         funcName = Str{funcName.begin(), funcName.len() - 1};
 
         Cursor<Css::Sst> c = cur->content;
@@ -1270,7 +1270,7 @@ export Specificity spec(Selector const& s) {
         },
         [](PseudoClassSelector const& s) {
             if (oneOf(s.type, PseudoClassSelector::NTH_CHILD, PseudoClassSelector::NTH_LAST_CHILD)) {
-                auto anb = s.extra.unwrap<PseudoClassSelector::AnBofS>();
+                auto anb = s.extra.expect<PseudoClassSelector::AnBofS>();
 
                 if (auto inner = anb.v1) {
                     return spec(**inner) + Specificity::B;

@@ -55,7 +55,7 @@ Output _dispatchFormatingContext(Tree& tree, Box& box, Input input, usize startA
     if (box.formatingContext == NONE) {
         box.formatingContext = _constructFormatingContext(box);
         if (box.formatingContext)
-            box.formatingContext.unwrap()->build(tree, box);
+            box.formatingContext.expect()->build(tree, box);
     }
     if (auto& [formatingContext] = box.formatingContext)
         return formatingContext->run(tree, box, input, startAt, stopAt);
@@ -286,7 +286,7 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
                 containingBlock = containingBlock.grow(input.usedSpacings.padding);
 
                 auto childOutput = layoutAbsolutePositioned(tree, oofChild->originatingBox(), containingBlock, oofChild->staticPosRect, input.pageNumber);
-                auto childFragment = childOutput.fragment.unwrap();
+                auto childFragment = childOutput.fragment.expect();
 
                 pending.pushBack(childOutput.outOfFlowStash);
 
@@ -294,7 +294,7 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
 
                 oofChild->fragment = Some(childFragment);
 
-                out.fragment.unwrap()->_children.pushBack(childFragment);
+                out.fragment.expect()->_children.pushBack(childFragment);
             } else {
                 outOfFlowStash.pushBack(oofChild);
             }
@@ -363,7 +363,7 @@ Output layoutRoot(Tree& tree, Input input) {
             auto oofChild = pending[i];
 
             auto childOutput = layoutAbsolutePositioned(tree, oofChild->originatingBox(), input.containingBlock, oofChild->staticPosRect, input.pageNumber);
-            auto childFragment = childOutput.fragment.unwrap();
+            auto childFragment = childOutput.fragment.expect();
 
             pending.pushBack(childOutput.outOfFlowStash);
 
@@ -371,7 +371,7 @@ Output layoutRoot(Tree& tree, Input input) {
 
             oofChild->fragment = Some(childFragment);
 
-            out.fragment.unwrap()->_children.pushBack(childFragment);
+            out.fragment.expect()->_children.pushBack(childFragment);
         }
     }
 

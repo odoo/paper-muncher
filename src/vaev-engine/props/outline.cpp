@@ -184,19 +184,19 @@ export struct OutlineProperty : Property {
             while (not c.ended()) {
                 auto width = parseValue<Calc<Length>>(c);
                 if (width) {
-                    value.width = width.unwrap();
+                    value.width = width.expect();
                     continue;
                 }
 
                 auto color = parseValue<Color>(c);
                 if (color) {
-                    value.color = color.unwrap();
+                    value.color = color.expect();
                     continue;
                 }
 
                 auto style = parseValue<Gfx::BorderStyle>(c);
                 if (style) {
-                    value.style = style.unwrap();
+                    value.style = style.expect();
                     styleSet = true;
                     continue;
                 }
@@ -222,9 +222,9 @@ export struct OutlineProperty : Property {
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<OutlineWidthProperty>(registry.resolveRegistration(Properties::OUTLINE_WIDTH, {}).unwrap(), _value.width),
-            makeRc<OutlineStyleProperty>(registry.resolveRegistration(Properties::OUTLINE_STYLE, {}).unwrap(), _value.style),
-            makeRc<OutlineColorProperty>(registry.resolveRegistration(Properties::OUTLINE_COLOR, {}).unwrap(), _value.color),
+            makeRc<OutlineWidthProperty>(registry.resolveRegistration(Properties::OUTLINE_WIDTH, {}).expect(), _value.width),
+            makeRc<OutlineStyleProperty>(registry.resolveRegistration(Properties::OUTLINE_STYLE, {}).expect(), _value.style),
+            makeRc<OutlineColorProperty>(registry.resolveRegistration(Properties::OUTLINE_COLOR, {}).expect(), _value.color),
         };
     }
 

@@ -143,7 +143,7 @@ static Opt<Str> _getAttributeValue(AttributeSelector const& selector, Gc::Ref<Do
         return NONE;
 
     if (selector.qualifiedName.ns.is<Universal>())
-        return element->getAttributeUnqualified(name.unwrap().str());
+        return element->getAttributeUnqualified(name.expect().str());
 
     return element->getAttribute(selector.qualifiedName.fullyQualified());
 }
@@ -178,7 +178,7 @@ static bool _match(AttributeSelector const& selector, Gc::Ref<Dom::Element> elem
     if (not maybeAttrValue)
         return false;
 
-    auto attrValue = maybeAttrValue.unwrap();
+    auto attrValue = maybeAttrValue.expect();
 
     auto cmp = [&selector](Rune const& a, Rune const& b) {
         if (selector.case_ == AttributeSelector::INSENSITIVE)
@@ -255,12 +255,12 @@ static bool _matchNthChild(PseudoClassSelector::AnBofS const& anbOfS, Gc::Ref<Do
 
     auto [anb, selector] = anbOfS;
     if (selector) {
-        if (not matchSelector(*(selector.unwrap()), *element, NONE))
+        if (not matchSelector(*(selector.expect()), *element, NONE))
             return false;
 
         auto filterFunc = [&](Gc::Ptr<Dom::Node> node) {
             auto el = node->as<Dom::Element>();
-            return el ? matchSelector(*(selector.unwrap()), *el, NONE) != NONE : false;
+            return el ? matchSelector(*(selector.expect()), *el, NONE) != NONE : false;
         };
         auto index = reverseLookup ? element->reverseIndex(filterFunc) : element->index(filterFunc);
         return anb.match(index + 1);
@@ -312,16 +312,16 @@ static bool _match(PseudoClassSelector const& selector, Gc::Ref<Dom::Element> el
         return _matchNthChild(PseudoClassSelector::AnBofS{AnB{0, 1}, NONE}, element, true);
 
     case PseudoClassSelector::NTH_CHILD:
-        return _matchNthChild(selector.extra.unwrap<PseudoClassSelector::AnBofS>("unexpected missing AnB"), element, false);
+        return _matchNthChild(selector.extra.expect<PseudoClassSelector::AnBofS>("unexpected missing AnB"), element, false);
 
     case PseudoClassSelector::NTH_LAST_CHILD:
-        return _matchNthChild(selector.extra.unwrap<PseudoClassSelector::AnBofS>("unexpected missing AnB"), element, true);
+        return _matchNthChild(selector.extra.expect<PseudoClassSelector::AnBofS>("unexpected missing AnB"), element, true);
 
     case PseudoClassSelector::NTH_OF_TYPE:
-        return _matchNthOfType(selector.extra.unwrap<PseudoClassSelector::AnBofS>("unexpected missing AnB").v0, element, false);
+        return _matchNthOfType(selector.extra.expect<PseudoClassSelector::AnBofS>("unexpected missing AnB").v0, element, false);
 
     case PseudoClassSelector::NTH_LAST_OF_TYPE:
-        return _matchNthOfType(selector.extra.unwrap<PseudoClassSelector::AnBofS>("unexpected missing AnB").v0, element, true);
+        return _matchNthOfType(selector.extra.expect<PseudoClassSelector::AnBofS>("unexpected missing AnB").v0, element, true);
 
     default:
         logDebugIf(debugMatching, "unimplemented pseudo class: {}", selector);

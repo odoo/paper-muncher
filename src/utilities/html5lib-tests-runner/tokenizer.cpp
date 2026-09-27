@@ -60,7 +60,7 @@ String unescape(Str str) {
                 return Ok(*unit);
             };
 
-            auto high = parseCodeUnit().unwrap();
+            auto high = parseCodeUnit().expect();
 
             Utf16::One units;
             units.put(high);
@@ -68,7 +68,7 @@ String unescape(Str str) {
             if (Utf16::unitLen(high) == 2) {
                 if (s.skip('\\')) {
                     if (s.skip('u')) {
-                        auto low = parseCodeUnit().unwrap();
+                        auto low = parseCodeUnit().expect();
                         units.put(low);
                     } else {
                         panic("malformed unicode escape");

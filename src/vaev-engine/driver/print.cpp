@@ -56,7 +56,7 @@ void _paintCornerMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& re
         }
     );
 
-    Paint::StackingContext::establishStackingContext(output.fragment.unwrap())->paintRoot(g);
+    Paint::StackingContext::establishStackingContext(output.fragment.expect())->paintRoot(g);
 }
 
 void _paintMainMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas, Layout::RunningPositionMap& runningPosition) {
@@ -78,7 +78,7 @@ void _paintMainMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& rect
             .containingBlock = rect.size(),
         }
     );
-    Paint::StackingContext::establishStackingContext(output.fragment.unwrap())->paintRoot(g);
+    Paint::StackingContext::establishStackingContext(output.fragment.expect())->paintRoot(g);
 }
 
 void _paintMargins(PageLayoutInfos& infos, Gfx::Canvas& g, Layout::RunningPositionMap& runningPosition) {
@@ -201,7 +201,7 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
         infos.breakpoint =
             outDiscovery.completelyLaidOut
                 ? Layout::Breakpoint::classB(1, false)
-                : outDiscovery.breakpoint.unwrap();
+                : outDiscovery.breakpoint.expect();
 
         pageInfos.pushBack(std::move(infos));
 
@@ -278,7 +278,7 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
         if (auto& [decorator] = paginationContext.decorator)
             decorator.decorate(paginationContext.media, infos, pageInfos.len(), snapshot);
 
-        Paint::StackingContext::establishStackingContext(output.fragment.unwrap())->paintRoot(snapshot);
+        Paint::StackingContext::establishStackingContext(output.fragment.expect())->paintRoot(snapshot);
 
         snapshot.pop();
 

@@ -42,7 +42,7 @@ struct RunningPositionMap {
             auto const origin = box.origin;
             if (not box.origin)
                 return;
-            RunningPositionInfo info = {pageNumber, *position, origin.unwrap()};
+            RunningPositionInfo info = {pageNumber, *position, origin.expect()};
             content.lookupOrPutDefault(position->customIdent)
                 .pushBack(std::move(info));
         }

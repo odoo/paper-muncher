@@ -50,7 +50,7 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
         }
     );
 
-    auto stacking = Paint::StackingContext::establishStackingContext(layout.fragment.unwrap());
+    auto stacking = Paint::StackingContext::establishStackingContext(layout.fragment.expect());
 
     if (dumpFragments)
         logDebugIf(dumpFragments, "fragments: {}", *layout.fragment);

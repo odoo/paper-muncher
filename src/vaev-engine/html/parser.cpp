@@ -111,7 +111,7 @@ struct _ElementStack {
     }
 
     void insertBelow(Gc::Ref<Dom::Element> const& below, Gc::Ref<Dom::Element> const& el) {
-        usize index = indexOf(_vec, below).unwrap() + 1;
+        usize index = indexOf(_vec, below).expect() + 1;
         _vec.insert(index, el);
     }
 
@@ -151,11 +151,11 @@ struct _ActiveFormattingElementList {
         using Union::Union;
 
         Gc::Ref<Dom::Element> element() const {
-            return unwrap<FormattingElement>().element;
+            return expect<FormattingElement>().element;
         }
 
         HtmlToken const& token() const {
-            return unwrap<FormattingElement>().token;
+            return expect<FormattingElement>().token;
         }
     };
 
@@ -837,7 +837,7 @@ export struct HtmlParser : HtmlSink {
         // 2. If position was specified, then let the adjusted insertion
         //    location be position. Otherwise, let adjusted insertion location
         //    be the appropriate place for inserting a node.
-        auto location = position ? position.unwrap() : _apropriatePlaceForInsertingANode();
+        auto location = position ? position.expect() : _apropriatePlaceForInsertingANode();
 
         // 3. Create a Comment node whose data attribute is set to data and
         //    whose node document is the same as that of the node in which
@@ -1569,7 +1569,7 @@ export struct HtmlParser : HtmlSink {
 
                 // 7. Let furthestBlock be the topmost node in the stack of open elements that is lower in the stack than formattingElement,
                 //    and is an element in the special category. There might not be one.
-                isize formattingElementIndex = indexOf(_openElements._vec, formattingElement).unwrap();
+                isize formattingElementIndex = indexOf(_openElements._vec, formattingElement).expect();
                 Opt<Gc::Ref<Dom::Element>> furthestBlock = NONE;
 
                 for (usize i = formattingElementIndex + 1; i < _openElements.len(); i++) {
@@ -1597,10 +1597,10 @@ export struct HtmlParser : HtmlSink {
 
                 // 10. Let a bookmark note the position of formattingElement in the list of active formatting elements relative
                 //     to the elements on either side of it in the list.
-                usize bookmark = _activeFormattingElements.indexOf(formattingElement).unwrap();
+                usize bookmark = _activeFormattingElements.indexOf(formattingElement).expect();
 
                 // 11. Let node and lastNode be furthestBlock.
-                auto node = furthestBlock.unwrap();
+                auto node = furthestBlock.expect();
                 auto lastNode = node;
 
                 Gc::Ref elementAfterNode = *_openElements.elementImmediatelyAbove(*furthestBlock);
@@ -1656,7 +1656,7 @@ export struct HtmlParser : HtmlSink {
                     // 7. If lastNode is furthestBlock, then move the aforementioned bookmark
                     //    to be immediately after the new node in the list of active formatting elements.
                     if (lastNode == *furthestBlock) {
-                        bookmark = _activeFormattingElements.indexOf(node).unwrap() + 1;
+                        bookmark = _activeFormattingElements.indexOf(node).expect() + 1;
                     }
 
                     // 8. Append lastNode to node.
@@ -1673,15 +1673,15 @@ export struct HtmlParser : HtmlSink {
                 // 15. Create an element for the token for which formattingElement was created,
                 //     in the HTML namespace,with furthestBlock as the intended parent.
                 auto formattingElementToken = _activeFormattingElements.findElement(formattingElement)->token();
-                auto newEl = _createElementFor(formattingElementToken, Html::NAMESPACE, furthestBlock.unwrap());
+                auto newEl = _createElementFor(formattingElementToken, Html::NAMESPACE, furthestBlock.expect());
 
                 // 16. Take all of the child nodes of furthestBlock and append them to the element created in the last step.
-                while (auto child = furthestBlock.unwrap()->firstChild()) {
+                while (auto child = furthestBlock.expect()->firstChild()) {
                     newEl->appendChild(child);
                 }
 
                 // 17. Append that new element to furthestBlock.
-                furthestBlock.unwrap()->appendChild(newEl);
+                furthestBlock.expect()->appendChild(newEl);
 
                 // 18. Remove formattingElement from the list of active formatting elements,
                 //     and insert the new element into the list of active formatting elements
@@ -4118,7 +4118,7 @@ export struct HtmlParser : HtmlSink {
             }
 
             // Insert a foreign element for the token, with adjusted current node's namespace and false.
-            _insertAForeignElement(t, _currentElement()->qualifiedName.ns.unwrap(), false);
+            _insertAForeignElement(t, _currentElement()->qualifiedName.ns.expect(), false);
 
             // If the token has its self-closing flag set, then run the appropriate steps from the following list:
             if (t.selfClosing) {

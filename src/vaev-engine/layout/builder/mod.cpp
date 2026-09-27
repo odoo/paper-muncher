@@ -146,7 +146,7 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues> parentStyl
 
     while (not scan.ended()) {
         auto rune = scan.next();
-        auto prose = rootInlineBox.content.unwrap<Rc<Gfx::Prose>>();
+        auto prose = rootInlineBox.content.expect<Rc<Gfx::Prose>>();
 
         if (not isAsciiSpace(rune)) {
             _transformAndAppendRuneToProse(
@@ -369,7 +369,7 @@ static void _buildText(BuilderContext bc, Str text, Rc<Style::ComputedValues> pa
 }
 
 static void _buildImage(BuilderContext bc, Gc::Ref<Dom::Element> el) {
-    bc.content() = el->imageContent.unwrap();
+    bc.content() = el->imageContent.expect();
 }
 
 static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
@@ -378,9 +378,9 @@ static void _buildInputProse(BuilderContext bc, Gc::Ref<Dom::Element> el) {
 
     auto value = ""s;
     if (el->hasAttribute(Html::VALUE_ATTR))
-        value = el->getAttribute(Html::VALUE_ATTR).unwrap();
+        value = el->getAttribute(Html::VALUE_ATTR).expect();
     else if (el->hasAttribute(Html::PLACEHOLDER_ATTR))
-        value = el->getAttribute(Html::PLACEHOLDER_ATTR).unwrap();
+        value = el->getAttribute(Html::PLACEHOLDER_ATTR).expect();
 
     auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle, value);
 
@@ -761,7 +761,7 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
     }
 
     if (auto before = el->getPseudoElement(Dom::PseudoElement::BEFORE)) {
-        _buildPseudoElement(tableWrapperBc, before.unwrap());
+        _buildPseudoElement(tableWrapperBc, before.expect());
     }
 
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-root
@@ -776,7 +776,7 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
     }
 
     if (auto before = el->getPseudoElement(Dom::PseudoElement::AFTER)) {
-        _buildPseudoElement(tableWrapperBc, before.unwrap());
+        _buildPseudoElement(tableWrapperBc, before.expect());
     }
 }
 
@@ -845,12 +845,12 @@ static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent) {
     auto el = parent->as<Dom::Element>();
     if (el->computedValues()->display == Display::Item::YES) {
         if (auto marker = el ? el->getPseudoElement(Dom::PseudoElement::MARKER) : NONE) {
-            _buildPseudoElement(bc, marker.unwrap());
+            _buildPseudoElement(bc, marker.expect());
         }
     }
 
     if (auto before = el ? el->getPseudoElement(Dom::PseudoElement::BEFORE) : NONE) {
-        _buildPseudoElement(bc, before.unwrap());
+        _buildPseudoElement(bc, before.expect());
     }
 
     for (auto child = parent->firstChild(); child; child = child->nextSibling()) {
@@ -858,7 +858,7 @@ static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent) {
     }
 
     if (auto after = el ? el->getPseudoElement(Dom::PseudoElement::AFTER) : NONE) {
-        _buildPseudoElement(bc, after.unwrap());
+        _buildPseudoElement(bc, after.expect());
     }
 }
 
@@ -923,7 +923,7 @@ export Box _buildBlockPseudoElement(Gc::Ref<Dom::PseudoElement> el) {
 
     if (style->content.is<String>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
-        prose->append(style->content.unwrap<String>().str());
+        prose->append(style->content.expect<String>().str());
         return {style, prose, Some(el)};
     }
 
@@ -968,7 +968,7 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
             _buildText(innerBc, marker.str(), style);
         } else if (style->content.is<String>()) {
             // TODO: Expand this to iterate over a Vector of content items (Strings, URLs, Counters)
-            _buildText(innerBc, style->content.unwrap<String>().str(), style);
+            _buildText(innerBc, style->content.expect<String>().str(), style);
         } else if (auto counter = style->content.is<CounterFunc>()) {
             auto value = pseudoElement->element()->counters.innerMostValue(counter->name);
             _buildText(innerBc, Io::toStr(value).str(), style);
@@ -1038,7 +1038,7 @@ export Box buildElement(Dom::OriginatingElement& el) {
         return _buildBlockPseudoElement(*pseudoElement);
     }
 
-    return buildElement(el.unwrap<Gc::Ref<Dom::Element>>());
+    return buildElement(el.expect<Gc::Ref<Dom::Element>>());
 }
 
 export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, RunningPositionMap& runningPos) {
@@ -1048,12 +1048,12 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, Runnin
 
     if (style->content.is<String>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
-        prose->append(style->content.unwrap<String>().str());
+        prose->append(style->content.expect<String>().str());
         return Box{style, prose, Some(el)};
     } else if (style->content.is<ElementFunc>()) {
-        auto elt = style->content.unwrap<ElementFunc>();
+        auto elt = style->content.expect<ElementFunc>();
         if (auto infos = runningPos.match(elt, pageNumber)) {
-            Box box = buildElement(infos.unwrap().element);
+            Box box = buildElement(infos.expect().element);
             box.style->position = Keywords::STATIC;
             return box;
         }

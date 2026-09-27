@@ -193,9 +193,9 @@ struct ListStyleProperty : Property {
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<ListStyleImageProperty>(registry.resolveRegistration(Properties::LIST_STYLE_IMAGE, {}).unwrap(), _value.image),
-            makeRc<ListStyleTypeProperty>(registry.resolveRegistration(Properties::LIST_STYLE_TYPE, {}).unwrap(), _value.type),
-            makeRc<ListStylePositionProperty>(registry.resolveRegistration(Properties::LIST_STYLE_POSITION, {}).unwrap(), _value.position),
+            makeRc<ListStyleImageProperty>(registry.resolveRegistration(Properties::LIST_STYLE_IMAGE, {}).expect(), _value.image),
+            makeRc<ListStyleTypeProperty>(registry.resolveRegistration(Properties::LIST_STYLE_TYPE, {}).expect(), _value.type),
+            makeRc<ListStylePositionProperty>(registry.resolveRegistration(Properties::LIST_STYLE_POSITION, {}).expect(), _value.position),
         };
     }
 

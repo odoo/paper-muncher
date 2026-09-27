@@ -26,7 +26,7 @@ void maybeProcessChildBreakpoint(Fragmentainer& fc, Breakpoint& currentBreakpoin
     // BREAK CLASS X (recursive case)
     currentBreakpoint.overrideIfBetter(
         Breakpoint::fromChild(
-            std::move(maybeChildBreakpoint.unwrap()),
+            std::move(maybeChildBreakpoint.expect()),
             childIndex + 1,
             currBoxIsBreakAvoid
         )
@@ -175,7 +175,7 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, In
                 // Do nothing. 'fit-content' is kinda intrinsic size, when we don't populate knownSize.
             } else if (blockInlineSize) {
                 // When the inline size is not known, we cannot enforce it to the child. (?)
-                Au availableWidth = blockInlineSize.unwrap() - usedSpacings.margin.horizontal();
+                Au availableWidth = blockInlineSize.expect() - usedSpacings.margin.horizontal();
                 if (child.style->display == Display::TABLE) {
                     childInput.knownSize.width = Some(_tableWrapperFitContentWidth(tree, child, availableWidth)
                                                           .unwrapOr(availableWidth));
@@ -218,7 +218,7 @@ void _resolveAutoHorizontalMargins(Box& child, Input& childInput, UsedSpacings& 
         return;
 
     // NOTE: 'auto' margins were resolved to zero when computing usedSpacings.
-    Au freeSpace = blockInlineSize.unwrap() - childInput.knownSize.width.unwrap() - usedSpacings.margin.horizontal();
+    Au freeSpace = blockInlineSize.expect() - childInput.knownSize.width.expect() - usedSpacings.margin.horizontal();
     if (freeSpace <= 0_au)
         return;
 

@@ -17,7 +17,7 @@ namespace Vaev::Layout {
 Opt<PercentOr<Length>> extractValueFromCalc(Calc<PercentOr<Length>> const& size) {
     return size.visit(
         [](Calc<PercentOr<Length>>::Value const& v) -> Opt<PercentOr<Length>> {
-            return Some(v.unwrap<PercentOr<Length>>());
+            return Some(v.expect<PercentOr<Length>>());
         },
         [](auto const) {
             return Opt<PercentOr<Length>>{NONE};
@@ -30,7 +30,7 @@ PercentOr<Length> fromSize(Size const& size) {
     if (size.is<Keywords::Auto>())
         return PercentOr<Length>{Percent{100}};
 
-    return extractValueFromCalc(size.unwrap<Calc<PercentOr<Length>>>())
+    return extractValueFromCalc(size.expect<Calc<PercentOr<Length>>>())
         .unwrapOr(PercentOr<Length>{Percent{100}});
 }
 
@@ -39,7 +39,7 @@ PercentOr<Length> fromSize(Size const& size) {
 Au resolve(PercentOr<Length> const& value, Au relative) {
     if (auto valueLength = value.is<Length>())
         return Au{valueLength->unwrapOr<AbsoluteLength>(0_au).pixels().value()};
-    return Au{relative.cast<f64>() * (value.unwrap<Percent>().value() / 100.)};
+    return Au{relative.cast<f64>() * (value.expect<Percent>().value() / 100.)};
 }
 
 Au normalizedDiagonal(Vec2Au relativeTo) {
@@ -59,7 +59,7 @@ struct SvgFormatingContext : FormatingContext {
             if (not size.is<Calc<PercentOr<Length>>>())
                 return NONE;
 
-            auto calc = size.unwrap<Calc<PercentOr<Length>>>();
+            auto calc = size.expect<Calc<PercentOr<Length>>>();
 
             auto percOrLength = extractValueFromCalc(calc);
             if (not percOrLength)
@@ -68,7 +68,7 @@ struct SvgFormatingContext : FormatingContext {
             if (percOrLength->is<Percent>())
                 return NONE;
 
-            return Some(percOrLength->unwrap<Length>());
+            return Some(percOrLength->expect<Length>());
         };
 
         auto absWidth = absoluteValue(width);
@@ -125,7 +125,7 @@ struct SvgFormatingContext : FormatingContext {
 
     static void _commitShape(Box& box, FragmentBuilder& fragBuilder, Vec2Au relativeTo) {
         Au resolvedStrokeWidth = Vaev::Layout::resolve(box.style->svgPaint->strokeWidth, normalizedDiagonal(relativeTo));
-        auto shape = box.content.unwrap<SvgShapeElement>();
+        auto shape = box.content.expect<SvgShapeElement>();
 
         switch (shape) {
         case SvgShapeElement::RECT:

@@ -93,19 +93,19 @@ struct ValueParser<SpecifiedBorder> {
 
             auto width = parseValue<LineWidth>(c);
             if (width) {
-                border.width = width.unwrap();
+                border.width = width.expect();
                 continue;
             }
 
             auto color = parseValue<Color>(c);
             if (color) {
-                border.color = color.unwrap();
+                border.color = color.expect();
                 continue;
             }
 
             auto style = parseValue<Gfx::BorderStyle>(c);
             if (style) {
-                border.style = style.unwrap();
+                border.style = style.expect();
                 continue;
             }
 
@@ -198,38 +198,38 @@ struct ValueParser<Math::Radii<T>> {
 
         auto value2 = parseValue<PercentOr<Length>>(c);
         if (not value2) {
-            radii.a = value1.unwrap();
-            radii.d = value1.unwrap();
-            radii.e = value1.unwrap();
-            radii.h = value1.unwrap();
+            radii.a = value1.expect();
+            radii.d = value1.expect();
+            radii.e = value1.expect();
+            radii.h = value1.expect();
             return Ok(std::move(radii));
         }
 
         eatWhitespace(c);
         auto value3 = parseValue<PercentOr<Length>>(c);
         if (not value3) {
-            radii.a = value1.unwrap();
-            radii.d = value2.unwrap();
-            radii.e = value1.unwrap();
-            radii.h = value2.unwrap();
+            radii.a = value1.expect();
+            radii.d = value2.expect();
+            radii.e = value1.expect();
+            radii.h = value2.expect();
             return Ok(std::move(radii));
         }
 
         eatWhitespace(c);
         auto value4 = parseValue<PercentOr<Length>>(c);
         if (not value4) {
-            radii.a = value1.unwrap();
-            radii.d = value2.unwrap();
-            radii.e = value3.unwrap();
-            radii.h = value2.unwrap();
+            radii.a = value1.expect();
+            radii.d = value2.expect();
+            radii.e = value3.expect();
+            radii.h = value2.expect();
 
             return Ok(std::move(radii));
         }
 
-        radii.a = value1.unwrap();
-        radii.d = value2.unwrap();
-        radii.e = value3.unwrap();
-        radii.h = value4.unwrap();
+        radii.a = value1.expect();
+        radii.d = value2.expect();
+        radii.e = value3.expect();
+        radii.h = value4.expect();
 
         return Ok(std::move(radii));
     }

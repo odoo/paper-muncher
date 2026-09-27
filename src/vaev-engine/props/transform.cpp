@@ -130,9 +130,9 @@ export struct TransformProperty : Property {
                         return;
 
                     auto transform = Math::Trans2f::identity()
-                                         .translated({maybeCx.unwrap(), maybeCy.unwrap()})
-                                         .rotated(maybeAngle.unwrap() * Math::PI / 180.0)
-                                         .translated({-maybeCx.unwrap(), -maybeCy.unwrap()});
+                                         .translated({maybeCx.expect(), maybeCy.expect()})
+                                         .rotated(maybeAngle.expect() * Math::PI / 180.0)
+                                         .translated({-maybeCx.expect(), -maybeCy.expect()});
 
                     auto generatedMatrix = Io::format(
                         "matrix({}, {}, {}, {}, {}, {})",

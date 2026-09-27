@@ -277,7 +277,7 @@ struct FlexItem {
 
             // TODO: solve definite values also min and max content
 
-            return Some(fa.mainAxis(box->style->sizing).unwrap<Calc<PercentOr<Length>>>());
+            return Some(fa.mainAxis(box->style->sizing).expect<Calc<PercentOr<Length>>>());
         };
 
         if (auto const& [flexBasisDefiniteSize] = getDefiniteFlexBasisSize(flexItemProps, fa, box)) {
@@ -342,7 +342,7 @@ struct FlexItem {
         Au contentSizeSuggestion = fa.mainAxis(minContentSize);
         // TODO: clamped by cross size if there is an aspect ratio
         if (definiteMaxMainSize)
-            contentSizeSuggestion = min(contentSizeSuggestion, definiteMaxMainSize.unwrap());
+            contentSizeSuggestion = min(contentSizeSuggestion, definiteMaxMainSize.expect());
 
         auto mainAxis = fa.mainAxis(box->style->sizing);
         if (auto mainAxisCalc = mainAxis.is<Calc<PercentOr<Length>>>()) {
@@ -354,7 +354,7 @@ struct FlexItem {
             );
 
             if (definiteMaxMainSize)
-                specifiedSizeSuggestion = min(specifiedSizeSuggestion, definiteMaxMainSize.unwrap());
+                specifiedSizeSuggestion = min(specifiedSizeSuggestion, definiteMaxMainSize.expect());
 
             return min(contentSizeSuggestion, specifiedSizeSuggestion);
             // TODO: else if(aspect ratio)
@@ -744,7 +744,7 @@ struct FlexFormatingContext : FormatingContext {
             containerDefiniteMainSize = Some(resolve(
                 tree,
                 box,
-                fa.mainAxis(box.style->sizing).unwrap<Calc<PercentOr<Length>>>(),
+                fa.mainAxis(box.style->sizing).expect<Calc<PercentOr<Length>>>(),
                 fa.mainAxis(input.containingBlock)
             ));
         }
@@ -1128,7 +1128,7 @@ struct FlexFormatingContext : FormatingContext {
     // https://www.w3.org/TR/css-flexbox-1/#algo-cross-line
     void _calculateCrossSizeOfEachFlexLineNonIntrinsicSize(Input input) {
         if (_lines.len() == 1 and fa.crossAxis(input.knownSize)) {
-            first(_lines).crossSize = fa.crossAxis(input.knownSize).unwrap();
+            first(_lines).crossSize = fa.crossAxis(input.knownSize).expect();
             return;
         }
 
@@ -1386,7 +1386,7 @@ struct FlexFormatingContext : FormatingContext {
             fa.crossAxis(box.style->sizing).is<Keywords::Auto>())
             _usedCrossSize = _usedCrossSizeByLines;
         else if (fa.crossAxis(input.knownSize))
-            _usedCrossSize = fa.crossAxis(input.knownSize).unwrap();
+            _usedCrossSize = fa.crossAxis(input.knownSize).expect();
         else
             _usedCrossSize = _usedCrossSizeByLines;
 

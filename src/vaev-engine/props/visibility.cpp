@@ -72,7 +72,7 @@ export struct OpacityProperty : Property {
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             auto maybePercent = parseValue<Percent>(c);
             if (maybePercent) {
-                return Ok(makeRc<OpacityProperty>(self(), maybePercent.unwrap().value() / 100));
+                return Ok(makeRc<OpacityProperty>(self(), maybePercent.expect().value() / 100));
             }
             return Ok(makeRc<OpacityProperty>(self(), try$(parseValue<Number>(c))));
         }

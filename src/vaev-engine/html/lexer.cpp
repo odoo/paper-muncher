@@ -3529,7 +3529,7 @@ export struct HtmlLexer {
 
                 // NOTE: chars past _matchedCharReferenceNoSemiColon in _temp were appended through
                 // hasPartialMatch, which only accepts alphanum, so their presence is sufficient.
-                auto nextCharIsAlphaNum = _matchedCharReferenceNoSemiColon.unwrap() < _temp.str().len() or isAsciiAlphaNum(rune);
+                auto nextCharIsAlphaNum = _matchedCharReferenceNoSemiColon.expect() < _temp.str().len() or isAsciiAlphaNum(rune);
 
                 if (
                     _consumedAsPartOfAnAttribute() and
@@ -3554,14 +3554,14 @@ export struct HtmlLexer {
                     // to the _temp buffer
 
                     auto _tempWithUnexpandedEntity = _temp.str();
-                    auto entityName = _Str<Utf8>(_tempWithUnexpandedEntity.begin(), _matchedCharReferenceNoSemiColon.unwrap());
+                    auto entityName = _Str<Utf8>(_tempWithUnexpandedEntity.begin(), _matchedCharReferenceNoSemiColon.expect());
 
                     for (auto& entity : ENTITIES) {
                         if (entityName == entity.name) {
                             _temp.clear();
                             _temp.append(Slice<Rune>::fromNullterminated(entity.runes));
 
-                            for (usize i = _matchedCharReferenceNoSemiColon.unwrap(); i < _tempWithUnexpandedEntity.len(); ++i) {
+                            for (usize i = _matchedCharReferenceNoSemiColon.expect(); i < _tempWithUnexpandedEntity.len(); ++i) {
                                 _temp.append(_tempWithUnexpandedEntity[i]);
                             }
                             break;

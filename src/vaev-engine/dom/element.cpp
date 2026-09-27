@@ -37,7 +37,7 @@ export struct PseudoElement : Tree<PseudoElement> {
         : type(type), _computedValues(Some(computedValues)) {}
 
     Rc<Style::ComputedValues> computedValues() const {
-        return _computedValues.unwrap("unstyled pseudo-element");
+        return _computedValues.expect("unstyled pseudo-element");
     }
 
     // https://drafts.csswg.org/css-pseudo/#dom-csspseudoelement-element
@@ -175,7 +175,7 @@ export struct Element : Node {
     // MARK: Style -------------------------------------------------------------
 
     Rc<Style::ComputedValues> computedValues() const {
-        return _computedValues.unwrap("unstyled element");
+        return _computedValues.expect("unstyled element");
     }
 
     // MARK: Content -----------------------------------------------------------

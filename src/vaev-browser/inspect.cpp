@@ -226,7 +226,7 @@ Opt<Ui::Child> item(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<Insp
                 a(btn, SelectNode{n});
             }),
             style,
-            header.unwrap() | idented(ident)
+            header.expect() | idented(ident)
         )
     );
 }
@@ -237,7 +237,7 @@ Opt<Ui::Child> node(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<Insp
     if (not i)
         return NONE;
 
-    Ui::Children children{i.unwrap()};
+    Ui::Children children{i.expect()};
     if (expanded) {
         for (auto child = n->firstChild(); child; child = child->nextSibling()) {
             if (auto [item] = node(child.upgrade(), s, a, n->is<Dom::Document>() ? 0 : ident + 1))
@@ -292,7 +292,7 @@ Ui::Child computedStyles(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::
 export Ui::Child inspect(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectorAction> send) {
     auto document = window->document().upgrade();
     return Ui::vflow(
-        node(document, s, send).unwrap() | Ui::vhscroll() | Kr::scaffoldContent() | Ui::grow(),
+        node(document, s, send).expect() | Ui::vhscroll() | Kr::scaffoldContent() | Ui::grow(),
         computedStyles(document, s, send) | Kr::scaffoldContent() | Kr::resizable(Kr::ResizeHandlePosition::TOP, {256}, NONE)
     );
 }

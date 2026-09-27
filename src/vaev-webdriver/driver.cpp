@@ -152,7 +152,7 @@ export struct WebDriver {
             return Ok<Vec<Ref::Uuid>>();
         }
 
-        session->current = session->windows.iter().next().unwrap();
+        session->current = session->windows.iter().next().expect();
 
         // 5. Return the result of running the remote end steps for the
         //    Get Window Handles command, with session, URL variables and parameters.
@@ -289,7 +289,7 @@ export struct WebDriver {
         );
 
         window->print(settings.derivePrintSettings()) | ForEach([&](Gfx::Snapshot& page) {
-            page.replay(printer->beginPage(page.size().cast<f64>())).unwrap();
+            page.replay(printer->beginPage(page.size().cast<f64>())).expect();
         });
 
         Io::BufferWriter bw;

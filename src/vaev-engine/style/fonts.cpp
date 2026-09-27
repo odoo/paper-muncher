@@ -44,15 +44,15 @@ export struct FontFace {
     Gfx::FontAttrs attributes() const {
         Gfx::FontWeight resolvedWeight = Gfx::FontWeight::REGULAR;
         if (weight)
-            resolvedWeight = weight.unwrap().start;
+            resolvedWeight = weight.expect().start;
 
         Gfx::FontStretch resolvedStretch = Gfx::FontStretch::NORMAL;
         if (width)
-            resolvedStretch = Gfx::FontStretch::fromPercent(width.unwrap().start.val().value());
+            resolvedStretch = Gfx::FontStretch::fromPercent(width.expect().start.val().value());
 
         Gfx::FontStyle resolvedStyle = Gfx::FontStyle::NORMAL;
         if (style.is<FontStyle>())
-            resolvedStyle = style.unwrap<FontStyle>().val;
+            resolvedStyle = style.expect<FontStyle>().val;
 
         return {
             .family = family,
@@ -213,7 +213,7 @@ export struct FontStyleFontDescriptor {
             return Ok();
         }
 
-        value = Range<Angle>::fromStartEnd(style.obliqueAngle, val.unwrap());
+        value = Range<Angle>::fromStartEnd(style.obliqueAngle, val.expect());
         return Ok();
     }
 };
@@ -245,7 +245,7 @@ export struct FontWeightFontDescriptor {
             return Ok();
         }
 
-        value = Some(Range<Gfx::FontWeight>::fromStartEnd(weight, val.unwrap()));
+        value = Some(Range<Gfx::FontWeight>::fromStartEnd(weight, val.expect()));
 
         return Ok();
     }
@@ -278,7 +278,7 @@ export struct FontWidthFontDescriptor {
             return Ok();
         }
 
-        value = Some(Range<FontWidth>::fromStartEnd(width, val.unwrap()));
+        value = Some(Range<FontWidth>::fromStartEnd(width, val.expect()));
 
         return Ok();
     }

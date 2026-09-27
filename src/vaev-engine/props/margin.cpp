@@ -177,10 +177,10 @@ export struct MarginProperty : Property {
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).unwrap(), _value.top),
-            makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).unwrap(), _value.bottom),
-            makeRc<MarginLeftProperty>(registry.resolveRegistration(Properties::MARGIN_LEFT, {}).unwrap(), _value.start),
-            makeRc<MarginRightProperty>(registry.resolveRegistration(Properties::MARGIN_RIGHT, {}).unwrap(), _value.end),
+            makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.top),
+            makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).expect(), _value.bottom),
+            makeRc<MarginLeftProperty>(registry.resolveRegistration(Properties::MARGIN_LEFT, {}).expect(), _value.start),
+            makeRc<MarginRightProperty>(registry.resolveRegistration(Properties::MARGIN_RIGHT, {}).expect(), _value.end),
         };
     }
 

@@ -30,18 +30,18 @@ Except<Opt<PropertyDescriptor>> ordinaryGetOwnProperty(Object& self, PropertyKey
     // 2. Let desc be a newly created Property Descriptor with no fields.
     auto desc = PropertyDescriptor{};
     // 3. Let ownProperty be obj's own property whose key is propertyKey.
-    auto ownProperty = self.propertyStorage.get(key).unwrap();
+    auto ownProperty = self.propertyStorage.get(key).expect();
     // 4. If ownProperty is a data property, then
     if (ownProperty.isData()) {
         //    a. Set desc.[[Value]] to the value of ownProperty's [[Value]] attribute.
-        desc.value = ownProperty.value.unwrap<Value>();
+        desc.value = ownProperty.value.expect<Value>();
         //    b. Set desc.[[Writable]] to the value of ownProperty's [[Writable]] attribute.
         desc.writable = Some(ownProperty.attributes.writable);
     }
     // 5. Else,
     else {
         //    a. Assert: ownProperty is an accessor property.
-        auto accessor = ownProperty.value.unwrap<PropertyStorage::Accessor>();
+        auto accessor = ownProperty.value.expect<PropertyStorage::Accessor>();
         //    b. Set desc.[[Get]] to the value of ownProperty's [[Get]] attribute.
         desc.get = Some(accessor.get);
         //    c. Set desc.[[Set]] to the value of ownProperty's [[Set]] attribute.
@@ -207,7 +207,7 @@ Except<Value> ordinaryGet(Object& self, PropertyKey key, Value receiver) {
         return parent->get(key, receiver);
     }
 
-    auto& desc = maybeDesc.unwrap();
+    auto& desc = maybeDesc.expect();
 
     // 3. If IsDataDescriptor(desc) is true, return desc.[[Value]].
     if (desc.isDataDescriptor())

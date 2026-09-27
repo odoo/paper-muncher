@@ -20,13 +20,13 @@ test$("test-specificity-selector-list") {
     {
         Dom::Element elZeroMatches{Html::DIV_TAG};
 
-        expect$(rule.match(elZeroMatches, NONE) == NONE);
+        assert$(rule.match(elZeroMatches, NONE) == NONE);
     }
     {
         Dom::Element elOneMatch{Html::DIV_TAG};
         elOneMatch.classList.add("a");
 
-        expect$(rule.match(elOneMatch, NONE) == Specificity(0, 1, 0));
+        assert$(rule.match(elOneMatch, NONE) == Specificity(0, 1, 0));
     }
     {
         Dom::Element elOneMatch{Html::DIV_TAG};
@@ -35,14 +35,14 @@ test$("test-specificity-selector-list") {
         elOneMatch.classList.add("e");
         elOneMatch.classList.add("f");
 
-        expect$(rule.match(elOneMatch, NONE) == Specificity(0, 4, 0));
+        assert$(rule.match(elOneMatch, NONE) == Specificity(0, 4, 0));
     }
     {
         Dom::Element elAnotherMatch{Html::DIV_TAG};
         elAnotherMatch.classList.add("b");
         elAnotherMatch.setAttribute(Html::ID_ATTR, "x"s);
 
-        expect$(rule.match(elAnotherMatch, NONE) == Specificity(1, 1, 0));
+        assert$(rule.match(elAnotherMatch, NONE) == Specificity(1, 1, 0));
     }
     {
         Dom::Element twoMatches{Html::DIV_TAG};
@@ -51,7 +51,7 @@ test$("test-specificity-selector-list") {
         twoMatches.setAttribute(Html::ID_ATTR, "x"s);
         twoMatches.classList.add("a");
 
-        expect$(rule.match(twoMatches, NONE) == Specificity(1, 1, 0));
+        assert$(rule.match(twoMatches, NONE) == Specificity(1, 1, 0));
     }
 
     return Ok();
@@ -61,7 +61,7 @@ test$("test-specificity-simple-selector-class") {
     Selector selector{try$(Selector::parse(".a"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(0, 1, 0));
+    assert$(specificity == Specificity(0, 1, 0));
 
     return Ok();
 }
@@ -70,7 +70,7 @@ test$("test-specificity-simple-selector-id") {
     Selector selector{try$(Selector::parse("#id"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(1, 0, 0));
+    assert$(specificity == Specificity(1, 0, 0));
 
     return Ok();
 }
@@ -79,7 +79,7 @@ test$("test-specificity-simple-selector-type") {
     Selector selector{try$(Selector::parse("div"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(0, 0, 1));
+    assert$(specificity == Specificity(0, 0, 1));
 
     return Ok();
 }
@@ -88,7 +88,7 @@ test$("test-specificity-simple-selector-universal") {
     Selector selector{try$(Selector::parse("*"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(0, 0, 0));
+    assert$(specificity == Specificity(0, 0, 0));
 
     return Ok();
 }
@@ -97,7 +97,7 @@ test$("test-specificity-simple-selector-attr") {
     Selector selector{try$(Selector::parse("[a=b]"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(0, 1, 0));
+    assert$(specificity == Specificity(0, 1, 0));
 
     return Ok();
 }
@@ -106,7 +106,7 @@ test$("test-specificity-simple-selector-pseudo") {
     Selector selector{try$(Selector::parse(":pseu"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(0, 1, 0));
+    assert$(specificity == Specificity(0, 1, 0));
 
     return Ok();
 }
@@ -115,7 +115,7 @@ test$("test-specificity-compound-selector-1") {
     Selector selector{try$(Selector::parse(".a.b.c.d"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(0, 4, 0));
+    assert$(specificity == Specificity(0, 4, 0));
 
     return Ok();
 }
@@ -124,7 +124,7 @@ test$("test-specificity-compound-selector-2") {
     Selector selector{try$(Selector::parse("#id.a"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(1, 1, 0));
+    assert$(specificity == Specificity(1, 1, 0));
 
     return Ok();
 }
@@ -133,7 +133,7 @@ test$("test-specificity-compound-selector-repeated-simple-selector") {
     Selector selector{try$(Selector::parse(".a.a.a"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(0, 3, 0));
+    assert$(specificity == Specificity(0, 3, 0));
 
     return Ok();
 }
@@ -142,7 +142,7 @@ test$("test-specificity-compound-selector-one-of-each-simple-1") {
     Selector selector{try$(Selector::parse("div#id.a[x=y]:pseu"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(1, 3, 1));
+    assert$(specificity == Specificity(1, 3, 1));
 
     return Ok();
 }
@@ -151,7 +151,7 @@ test$("test-specificity-compound-selector-one-of-each-simple-2") {
     Selector selector{try$(Selector::parse("*#id.a[x=y]:pseu"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(1, 3, 0));
+    assert$(specificity == Specificity(1, 3, 0));
 
     return Ok();
 }
@@ -160,7 +160,7 @@ test$("test-specificity-pseudo-not") {
     Selector selector{try$(Selector::parse("button:not([DISABLED])"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(0, 1, 1));
+    assert$(specificity == Specificity(0, 1, 1));
 
     return Ok();
 }
@@ -169,7 +169,7 @@ test$("test-specificity-descendant-combinator") {
     Selector selector{try$(Selector::parse("div button .a #x"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(1, 1, 2));
+    assert$(specificity == Specificity(1, 1, 2));
 
     return Ok();
 }
@@ -178,7 +178,7 @@ test$("test-specificity-child-combinator") {
     Selector selector{try$(Selector::parse("div > button > .a > #x"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(1, 1, 2));
+    assert$(specificity == Specificity(1, 1, 2));
 
     return Ok();
 }
@@ -187,7 +187,7 @@ test$("test-specificity-next-sibling-combinator") {
     Selector selector{try$(Selector::parse("div + button + .a + #x"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(1, 1, 2));
+    assert$(specificity == Specificity(1, 1, 2));
 
     return Ok();
 }
@@ -196,7 +196,7 @@ test$("test-specificity-subsequent-sibling-combinator") {
     Selector selector{try$(Selector::parse("div ~ button ~ .a ~ #x"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(1, 1, 2));
+    assert$(specificity == Specificity(1, 1, 2));
 
     return Ok();
 }
@@ -205,7 +205,7 @@ test$("test-specificity-mixed-combinators") {
     Selector selector{try$(Selector::parse("div button ~ .a > #x + #y"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(2, 1, 2));
+    assert$(specificity == Specificity(2, 1, 2));
 
     return Ok();
 }
@@ -214,7 +214,7 @@ test$("test-specificity-not-with-child-list") {
     Selector selector{try$(Selector::parse(":not(.a, #b)"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(1, 0, 0));
+    assert$(specificity == Specificity(1, 0, 0));
 
     return Ok();
 }
@@ -223,7 +223,7 @@ test$("test-specificity-nth-child-with-sub-selector") {
     Selector selector{try$(Selector::parse(":nth-child(n of .a, #b)"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(1, 1, 0));
+    assert$(specificity == Specificity(1, 1, 0));
 
     return Ok();
 }
@@ -232,7 +232,7 @@ test$("test-specificity-nth-last-child-with-sub-selector") {
     Selector selector{try$(Selector::parse(":nth-last-child(n of .a, #b)"))};
     Specificity specificity{spec(selector)};
 
-    expect$(specificity == Specificity(1, 1, 0));
+    assert$(specificity == Specificity(1, 1, 0));
 
     return Ok();
 }

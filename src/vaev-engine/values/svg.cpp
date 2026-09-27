@@ -49,7 +49,7 @@ export using SvgPaint = Opt<Color>;
 Opt<Gfx::Color> resolve(SvgPaint color, Gfx::Color currentColor) {
     if (color == NONE)
         return NONE;
-    return Some(Vaev::resolve(color.unwrap(), currentColor));
+    return Some(Vaev::resolve(color.expect(), currentColor));
 }
 
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute

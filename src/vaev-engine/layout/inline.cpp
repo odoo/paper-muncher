@@ -53,7 +53,7 @@ struct InlineFormatingContext : FormatingContext {
         });
 
         // NOTE: We are not supposed to get there if the content is not a prose
-        auto& prose = box.content.unwrap<Rc<Gfx::Prose>>();
+        auto& prose = box.content.expect<Rc<Gfx::Prose>>();
 
         Vec<Rc<PlaceholderFragment>> outOfFlowChildren = {};
 

@@ -197,20 +197,20 @@ export struct FlexFlowProperty : Property {
 
             auto direction = parseValue<FlexDirection>(c);
             if (direction) {
-                value.v0 = direction.unwrap();
+                value.v0 = direction.expect();
 
                 auto wrap = parseValue<FlexWrap>(c);
                 if (wrap)
-                    value.v1 = wrap.unwrap();
+                    value.v1 = wrap.expect();
             } else {
                 auto wrap = parseValue<FlexWrap>(c);
                 if (not wrap)
                     return Error::invalidData("expected flex direction or wrap");
-                value.v1 = wrap.unwrap();
+                value.v1 = wrap.expect();
 
                 direction = parseValue<FlexDirection>(c);
                 if (direction)
-                    value.v0 = direction.unwrap();
+                    value.v0 = direction.expect();
             }
 
             return Ok(makeRc<FlexFlowProperty>(self(), value));
@@ -224,8 +224,8 @@ export struct FlexFlowProperty : Property {
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<FlexDirectionProperty>(registry.resolveRegistration(Properties::FLEX_DIRECTION, {}).unwrap(), _value.v0),
-            makeRc<FlexWrapProperty>(registry.resolveRegistration(Properties::FLEX_WRAP, {}).unwrap(), _value.v1),
+            makeRc<FlexDirectionProperty>(registry.resolveRegistration(Properties::FLEX_DIRECTION, {}).expect(), _value.v0),
+            makeRc<FlexWrapProperty>(registry.resolveRegistration(Properties::FLEX_WRAP, {}).expect(), _value.v1),
         };
     }
 
@@ -271,11 +271,11 @@ export struct FlexProperty : Property {
                 if (not grow)
                     return Error::invalidData("expected flex item grow");
 
-                value.flexGrow = grow.unwrap();
+                value.flexGrow = grow.expect();
 
                 auto shrink = parseValue<Number>(c);
                 if (shrink)
-                    value.flexShrink = shrink.unwrap();
+                    value.flexShrink = shrink.expect();
 
                 return Ok();
             };
@@ -284,11 +284,11 @@ export struct FlexProperty : Property {
             if (parsedGrowAndMaybeShrink) {
                 auto basis = parseValue<FlexBasis>(c);
                 if (basis)
-                    value.flexBasis = basis.unwrap();
+                    value.flexBasis = basis.expect();
             } else {
                 auto basis = parseValue<FlexBasis>(c);
                 if (basis)
-                    value.flexBasis = basis.unwrap();
+                    value.flexBasis = basis.expect();
                 else
                     return Error::invalidData("expected flex item grow or basis");
 
@@ -305,9 +305,9 @@ export struct FlexProperty : Property {
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<FlexBasisProperty>(registry.resolveRegistration(Properties::FLEX_BASIS, {}).unwrap(), _value.flexBasis),
-            makeRc<FlexGrowProperty>(registry.resolveRegistration(Properties::FLEX_GROW, {}).unwrap(), _value.flexGrow),
-            makeRc<FlexShrinkProperty>(registry.resolveRegistration(Properties::FLEX_SHRINK, {}).unwrap(), _value.flexShrink),
+            makeRc<FlexBasisProperty>(registry.resolveRegistration(Properties::FLEX_BASIS, {}).expect(), _value.flexBasis),
+            makeRc<FlexGrowProperty>(registry.resolveRegistration(Properties::FLEX_GROW, {}).expect(), _value.flexGrow),
+            makeRc<FlexShrinkProperty>(registry.resolveRegistration(Properties::FLEX_SHRINK, {}).expect(), _value.flexShrink),
         };
     }
 

@@ -13,7 +13,7 @@ test$("select-class-spec") {
     Selector sel = ClassSelector{"foo"s};
     auto el = gc.alloc<Dom::Element>(Html::DIV_TAG);
     el->classList.add("foo");
-    expectNe$(matchSelector(sel, el), NONE);
+    assertNe$(matchSelector(sel, el), NONE);
     return Ok();
 }
 
@@ -29,7 +29,7 @@ test$("select-attr-spec-exact") {
             .match = AttributeSelector::EXACT,
             .value = "test"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -40,7 +40,7 @@ test$("select-attr-spec-exact") {
             .match = AttributeSelector::EXACT,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     return Ok();
@@ -58,7 +58,7 @@ test$("select-attr-spec-contains") {
             .match = AttributeSelector::CONTAINS,
             .value = "test"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -69,7 +69,7 @@ test$("select-attr-spec-contains") {
             .match = AttributeSelector::CONTAINS,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -80,7 +80,7 @@ test$("select-attr-spec-contains") {
             .match = AttributeSelector::CONTAINS,
             .value = "test"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     return Ok();
@@ -99,7 +99,7 @@ test$("select-attr-spec-namespace") {
             .match = AttributeSelector::PRESENT,
             .value = ""s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -109,7 +109,7 @@ test$("select-attr-spec-namespace") {
             .match = AttributeSelector::EXACT,
             .value = "svg-title"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -120,7 +120,7 @@ test$("select-attr-spec-namespace") {
             .match = AttributeSelector::CONTAINS,
             .value = "bar"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -130,7 +130,7 @@ test$("select-attr-spec-namespace") {
             .match = AttributeSelector::CONTAINS,
             .value = "bar"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     return Ok();
@@ -148,7 +148,7 @@ test$("select-attr-spec-hyphenated") {
             .match = AttributeSelector::HYPHENATED,
             .value = "test"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -159,7 +159,7 @@ test$("select-attr-spec-hyphenated") {
             .match = AttributeSelector::HYPHENATED,
             .value = "test"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -170,7 +170,7 @@ test$("select-attr-spec-hyphenated") {
             .match = AttributeSelector::HYPHENATED,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -181,7 +181,7 @@ test$("select-attr-spec-hyphenated") {
             .match = AttributeSelector::HYPHENATED,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     return Ok();
@@ -199,7 +199,7 @@ test$("select-attr-spec-str-start-with") {
             .match = AttributeSelector::STR_START_WITH,
             .value = "test"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -210,7 +210,7 @@ test$("select-attr-spec-str-start-with") {
             .match = AttributeSelector::STR_START_WITH,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -221,7 +221,7 @@ test$("select-attr-spec-str-start-with") {
             .match = AttributeSelector::STR_START_WITH,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     return Ok();
@@ -239,7 +239,7 @@ test$("select-attr-spec-str-end-with") {
             .match = AttributeSelector::STR_END_WITH,
             .value = "test"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -250,7 +250,7 @@ test$("select-attr-spec-str-end-with") {
             .match = AttributeSelector::STR_END_WITH,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -261,7 +261,7 @@ test$("select-attr-spec-str-end-with") {
             .match = AttributeSelector::STR_END_WITH,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     return Ok();
@@ -279,7 +279,7 @@ test$("select-attr-spec-str-contain") {
             .match = AttributeSelector::STR_CONTAIN,
             .value = "test"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -290,7 +290,7 @@ test$("select-attr-spec-str-contain") {
             .match = AttributeSelector::STR_CONTAIN,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -301,7 +301,7 @@ test$("select-attr-spec-str-contain") {
             .match = AttributeSelector::STR_CONTAIN,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     return Ok();
@@ -319,7 +319,7 @@ test$("select-attr-spec-case") {
             .match = AttributeSelector::EXACT,
             .value = "test"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -330,7 +330,7 @@ test$("select-attr-spec-case") {
             .match = AttributeSelector::EXACT,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -341,7 +341,7 @@ test$("select-attr-spec-case") {
             .match = AttributeSelector::CONTAINS,
             .value = "test"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -352,7 +352,7 @@ test$("select-attr-spec-case") {
             .match = AttributeSelector::CONTAINS,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -363,7 +363,7 @@ test$("select-attr-spec-case") {
             .match = AttributeSelector::STR_START_WITH,
             .value = "test"s,
         };
-        expectNe$(matchSelector(sel, el), NONE);
+        assertNe$(matchSelector(sel, el), NONE);
     }
 
     {
@@ -374,7 +374,7 @@ test$("select-attr-spec-case") {
             .match = AttributeSelector::STR_START_WITH,
             .value = "test"s,
         };
-        expectEq$(matchSelector(sel, el), NONE);
+        assertEq$(matchSelector(sel, el), NONE);
     }
 
     return Ok();
@@ -383,17 +383,17 @@ test$("select-attr-spec-case") {
 test$("anb-index-match") {
     {
         AnB anb{2, 0};
-        expectNot$(anb.match(1));
-        expect$(anb.match(2));
-        expectNot$(anb.match(3));
-        expect$(anb.match(4));
+        assertNot$(anb.match(1));
+        assert$(anb.match(2));
+        assertNot$(anb.match(3));
+        assert$(anb.match(4));
     }
     {
         AnB anb{2, 1};
-        expect$(anb.match(1));
-        expectNot$(anb.match(2));
-        expect$(anb.match(3));
-        expectNot$(anb.match(4));
+        assert$(anb.match(1));
+        assertNot$(anb.match(2));
+        assert$(anb.match(3));
+        assertNot$(anb.match(4));
     }
     {
         AnB anb{3, -1};
@@ -404,9 +404,9 @@ test$("anb-index-match") {
         // n ...:
         for (usize i = 1; i <= 10; i++) {
             if (i == 2 or i == 5 or i == 8) {
-                expect$(anb.match(i));
+                assert$(anb.match(i));
             } else {
-                expectNot$(anb.match(i));
+                assertNot$(anb.match(i));
             }
         }
     }
@@ -419,37 +419,37 @@ test$("anb-index-match") {
         // n ...: won't match
         for (usize i = 1; i <= 20; i++) {
             if (i == 1 or i == 4 or i == 7 or i == 10) {
-                expect$(anb.match(i));
+                assert$(anb.match(i));
             } else {
-                expectNot$(anb.match(i));
+                assertNot$(anb.match(i));
             }
         }
     }
     {
         AnB anb{1, 1};
         for (usize i = 1; i <= 20; i++) {
-            expect$(anb.match(i));
+            assert$(anb.match(i));
         }
     }
     {
         AnB anb{1, 2};
-        expectNot$(anb.match(1));
+        assertNot$(anb.match(1));
         for (usize i = 2; i <= 20; i++) {
-            expect$(anb.match(i));
+            assert$(anb.match(i));
         }
     }
     {
         AnB anb{0, 0};
         for (usize i = 1; i <= 20; i++) {
-            expectNot$(anb.match(i));
+            assertNot$(anb.match(i));
         }
     }
     {
         AnB anb{0, 21};
         for (usize i = 1; i <= 20; i++) {
-            expectNot$(anb.match(i));
+            assertNot$(anb.match(i));
         }
-        expect$(anb.match(21));
+        assert$(anb.match(21));
     }
 
     return Ok();

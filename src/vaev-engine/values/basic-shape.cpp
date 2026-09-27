@@ -81,14 +81,14 @@ struct ValueParser<Circle> {
             Cursor<Css::Sst> scan = c->content;
 
             if (auto radius = parseValue<ShapeRadius>(scan)) {
-                result.radius = radius.unwrap();
+                result.radius = radius.expect();
             }
 
             eatWhitespace(scan);
             if (scan.skip(Css::Token::ident("at"))) {
                 eatWhitespace(scan);
                 if (auto position = parseValue<BackgroundPosition>(scan)) {
-                    result.position = position.unwrap();
+                    result.position = position.expect();
                 }
                 eatWhitespace(scan);
             }
@@ -127,7 +127,7 @@ struct ValueParser<Ellipse> {
             Cursor<Css::Sst> scan = c->content;
 
             if (auto radius = parseValue<ShapeRadius>(scan)) {
-                result.rx = radius.unwrap();
+                result.rx = radius.expect();
                 eatWhitespace(scan);
                 result.ry = try$(parseValue<ShapeRadius>(scan));
             }
@@ -136,7 +136,7 @@ struct ValueParser<Ellipse> {
             if (scan.skip(Css::Token::ident("at"))) {
                 eatWhitespace(scan);
                 if (auto position = parseValue<BackgroundPosition>(scan)) {
-                    result.position = position.unwrap();
+                    result.position = position.expect();
                 }
                 eatWhitespace(scan);
             }
@@ -174,7 +174,7 @@ struct ValueParser<Inset> {
             Cursor<Css::Sst> scan = c->content;
 
             if (auto insets = parseValue<Math::Insets<Calc<PercentOr<Length>>>>(scan)) {
-                result.insets = insets.unwrap();
+                result.insets = insets.expect();
             } else {
                 return Error::invalidData("expected insets");
             }
@@ -183,7 +183,7 @@ struct ValueParser<Inset> {
             if (scan.skip(Css::Token::ident("round"))) {
                 eatWhitespace(scan);
                 if (auto radii = parseValue<Math::Radii<Calc<PercentOr<Length>>>>(scan)) {
-                    result.borderRadius = radii.unwrap();
+                    result.borderRadius = radii.expect();
                 }
                 eatWhitespace(scan);
             }
@@ -222,7 +222,7 @@ struct ValueParser<Path> {
 
             bool begin = true;
             if (auto fill = parseValue<FillRule>(scan)) {
-                result.fillRule = fillRuleToGfx(fill.unwrap());
+                result.fillRule = fillRuleToGfx(fill.expect());
                 begin = false;
             }
 
@@ -271,7 +271,7 @@ struct ValueParser<Polygon> {
 
             bool begin = true;
             if (auto fill = parseValue<FillRule>(scan)) {
-                result.fillRule = fillRuleToGfx(fill.unwrap());
+                result.fillRule = fillRuleToGfx(fill.expect());
                 begin = false;
             }
 
@@ -338,7 +338,7 @@ struct ValueParser<Rect> {
             if (scan.skip(Css::Token::ident("round"))) {
                 eatWhitespace(scan);
                 if (auto radii = parseValue<Math::Radii<Calc<PercentOr<Length>>>>(scan)) {
-                    result.borderRadius = radii.unwrap();
+                    result.borderRadius = radii.expect();
                 }
                 eatWhitespace(scan);
             }
@@ -390,7 +390,7 @@ struct ValueParser<Xywh> {
             if (scan.skip(Css::Token::ident("round"))) {
                 eatWhitespace(scan);
                 if (auto radii = parseValue<Math::Radii<Calc<PercentOr<Length>>>>(scan)) {
-                    result.borderRadius = radii.unwrap();
+                    result.borderRadius = radii.expect();
                 }
                 eatWhitespace(scan);
             }
@@ -440,7 +440,7 @@ struct ValueParser<BasicShape> {
         resultShape.referenceBox = box.unwrapOr(Keywords::BORDER_BOX);
 
         if (shape)
-            resultShape.shape = Some(shape.unwrap());
+            resultShape.shape = Some(shape.expect());
 
         return Ok(resultShape);
     }

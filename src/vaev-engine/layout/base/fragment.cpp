@@ -634,7 +634,7 @@ export struct BoxFragment : Fragment {
         // https://drafts.csswg.org/css-position-4/#paint-a-blocks-decorations:~:text=and%20canvas.-,Otherwise,-First%20for%20root
         // If the box is a replaced element, paint the replaced content into canvas, atomically.
         if (originatingBox().isReplaced()) {
-            auto& image = originatingBox().content.unwrap<Gfx::Snapshot>();
+            auto& image = originatingBox().content.expect<Gfx::Snapshot>();
             auto trans = Math::Trans2f::map(
                 image.size().cast<f64>(),
                 contentBox().cast<f64>()
@@ -656,7 +656,7 @@ export struct BoxFragment : Fragment {
 
         // Otherwise, for each line box of the box, paint a box in a line box given the box, the line box, and canvas.
         else if (originatingBox().content.is<Rc<Gfx::Prose>>()) {
-            auto& prose = originatingBox().content.unwrap<Rc<Gfx::Prose>>();
+            auto& prose = originatingBox().content.expect<Rc<Gfx::Prose>>();
 
             g.push();
             g.origin(contentBox().topStart().cast<f64>());
@@ -674,7 +674,7 @@ export struct BoxFragment : Fragment {
             if (outlineStyle.style.is<Keywords::Auto>()) {
                 outline.style = Gfx::BorderStyle::SOLID;
             } else {
-                outline.style = outlineStyle.style.unwrap<Gfx::BorderStyle>();
+                outline.style = outlineStyle.style.expect<Gfx::BorderStyle>();
             }
 
             outline.fill = resolve(outlineStyle.color, style().color);

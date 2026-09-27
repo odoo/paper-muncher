@@ -28,21 +28,21 @@ test$("parse-open-close-tag-with-structure") {
     auto diags = Diag::Collector::ignore();
     parser.write("<html></html>"s, diags);
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->qualifiedName == Html::HTML_TAG);
-    expect$(html->hasChildren());
+    assertNe$(html, nullptr);
+    assert$(html->qualifiedName == Html::HTML_TAG);
+    assert$(html->hasChildren());
 
     auto head = html->firstChild()->as<Element>();
-    expectNe$(head, nullptr);
-    expect$(head->qualifiedName == Html::HEAD_TAG);
+    assertNe$(head, nullptr);
+    assert$(head->qualifiedName == Html::HEAD_TAG);
 
     auto body = head->nextSibling()->as<Element>();
-    expectNe$(body, nullptr);
-    expect$(body->qualifiedName == Html::BODY_TAG);
+    assertNe$(body, nullptr);
+    assert$(body->qualifiedName == Html::BODY_TAG);
 
     return Ok();
 }
@@ -55,12 +55,12 @@ test$("parse-empty-tag") {
     auto diags = Diag::Collector::ignore();
     parser.write("<html/>"s, diags);
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->qualifiedName == Html::HTML_TAG);
+    assertNe$(html, nullptr);
+    assert$(html->qualifiedName == Html::HTML_TAG);
     return Ok();
 }
 
@@ -72,13 +72,13 @@ test$("parse-attr") {
     auto diags = Diag::Collector::ignore();
     parser.write("<html lang=\"en\"/>"s, diags);
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->hasAttribute(Html::LANG_ATTR));
-    expect$(html->getAttribute(Html::LANG_ATTR) == "en");
+    assertNe$(html, nullptr);
+    assert$(html->hasAttribute(Html::LANG_ATTR));
+    assert$(html->getAttribute(Html::LANG_ATTR) == "en");
 
     return Ok();
 }
@@ -91,22 +91,22 @@ test$("parse-text") {
     auto diags = Diag::Collector::ignore();
     parser.write("<html>text</html>"s, diags);
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->qualifiedName == Html::HTML_TAG);
-    expect$(html->countChildren() == 2);
+    assertNe$(html, nullptr);
+    assert$(html->qualifiedName == Html::HTML_TAG);
+    assert$(html->countChildren() == 2);
 
     auto body = html->firstChild()->nextSibling()->as<Element>();
-    expectNe$(body, nullptr);
-    expect$(body->qualifiedName == Html::BODY_TAG);
-    expect$(body->hasChildren());
+    assertNe$(body, nullptr);
+    assert$(body->qualifiedName == Html::BODY_TAG);
+    assert$(body->hasChildren());
 
     auto text = body->firstChild()->as<Text>();
-    expectNe$(text, nullptr);
-    expect$(text->data() == "text");
+    assertNe$(text, nullptr);
+    assert$(text->data() == "text");
 
     return Ok();
 }
@@ -119,27 +119,27 @@ test$("parse-title") {
     auto diags = Diag::Collector::ignore();
     parser.write("<title>the title</title>", diags);
 
-    expect$(dom->title() == "the title");
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->title() == "the title");
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->countChildren() == 2);
+    assertNe$(html, nullptr);
+    assert$(html->countChildren() == 2);
 
     auto head = html->firstChild()->as<Element>();
-    expectNe$(head, nullptr);
-    expect$(head->qualifiedName == Html::HEAD_TAG);
-    expect$(head->hasChildren());
+    assertNe$(head, nullptr);
+    assert$(head->qualifiedName == Html::HEAD_TAG);
+    assert$(head->hasChildren());
 
     auto title = head->firstChild()->as<Element>();
-    expectNe$(title, nullptr);
-    expect$(title->qualifiedName == Html::TITLE_TAG);
-    expect$(title->hasChildren());
+    assertNe$(title, nullptr);
+    assert$(title->qualifiedName == Html::TITLE_TAG);
+    assert$(title->hasChildren());
 
     auto text = title->firstChild()->as<Text>();
-    expectNe$(text, nullptr);
-    expect$(text->data() == "the title");
+    assertNe$(text, nullptr);
+    assert$(text->data() == "the title");
 
     return Ok();
 }
@@ -156,24 +156,24 @@ test$("parse-comment-with-gt-symb") {
         diags
     );
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
+    assertNe$(html, nullptr);
 
     auto head = html->firstChild()->as<Element>();
-    expectNe$(head, nullptr);
-    expect$(head->qualifiedName == Html::HEAD_TAG);
-    expect$(head->hasChildren());
+    assertNe$(head, nullptr);
+    assert$(head->qualifiedName == Html::HEAD_TAG);
+    assert$(head->hasChildren());
 
     auto title = head->firstChild()->as<Element>();
-    expectNe$(title, nullptr);
-    expect$(title->qualifiedName == Html::TITLE_TAG);
+    assertNe$(title, nullptr);
+    assert$(title->qualifiedName == Html::TITLE_TAG);
 
     auto comment = title->nextSibling()->as<Comment>();
-    expectNe$(comment, nullptr);
-    expect$(comment->data() == " a b <meta> c d ");
+    assertNe$(comment, nullptr);
+    assert$(comment->data() == " a b <meta> c d ");
 
     return Ok();
 }
@@ -190,28 +190,28 @@ test$("parse-p-after-comment") {
         diags
     );
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto comment = dom->firstChild()->as<Comment>();
-    expectNe$(comment, nullptr);
+    assertNe$(comment, nullptr);
 
     auto html = comment->nextSibling()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->countChildren() == 2);
+    assertNe$(html, nullptr);
+    assert$(html->countChildren() == 2);
 
     auto body = html->firstChild()->nextSibling()->as<Element>();
-    expectNe$(body, nullptr);
-    expect$(body->qualifiedName == Html::BODY_TAG);
-    expect$(body->hasChildren());
+    assertNe$(body, nullptr);
+    assert$(body->qualifiedName == Html::BODY_TAG);
+    assert$(body->hasChildren());
 
     auto p = body->firstChild()->as<Element>();
-    expectNe$(p, nullptr);
-    expect$(p->qualifiedName == Html::P_TAG);
+    assertNe$(p, nullptr);
+    assert$(p->qualifiedName == Html::P_TAG);
 
     auto text = p->firstChild()->as<Text>();
-    expectNe$(text, nullptr);
-    expect$(text->data() == "im a p");
+    assertNe$(text, nullptr);
+    assert$(text->data() == "im a p");
 
     return Ok();
 }
@@ -224,18 +224,18 @@ test$("parse-not-nested-p-and-els-inbody") {
     auto diags = Diag::Collector::ignore();
     parser.write("<div>b</div><p>a<div>b</div><p>a<p>a", diags);
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->qualifiedName == Html::HTML_TAG);
-    expect$(html->countChildren() == 2);
+    assertNe$(html, nullptr);
+    assert$(html->qualifiedName == Html::HTML_TAG);
+    assert$(html->countChildren() == 2);
 
     auto body = html->firstChild()->nextSibling()->as<Element>();
-    expectNe$(body, nullptr);
-    expect$(body->qualifiedName == Html::BODY_TAG);
-    expect$(body->countChildren() == 5);
+    assertNe$(body, nullptr);
+    assert$(body->qualifiedName == Html::BODY_TAG);
+    assert$(body->countChildren() == 5);
 
     return Ok();
 }
@@ -248,21 +248,21 @@ test$("parse-char-referece-as-text") {
     auto diags = Diag::Collector::ignore();
     parser.write("<html><body>im there&sect;&Aacute;&sect;&seca;&seca&Aacute;im also there</body></html>", diags);
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->qualifiedName == Html::HTML_TAG);
+    assertNe$(html, nullptr);
+    assert$(html->qualifiedName == Html::HTML_TAG);
 
     auto body = html->firstChild()->nextSibling()->as<Element>();
-    expectNe$(body, nullptr);
-    expect$(body->qualifiedName == Html::BODY_TAG);
-    expect$(body->hasChildren());
+    assertNe$(body, nullptr);
+    assert$(body->qualifiedName == Html::BODY_TAG);
+    assert$(body->hasChildren());
 
     auto text = body->firstChild()->as<Text>();
-    expectNe$(text, nullptr);
-    expect$(text->data() == "im there§Á§&seca;&secaÁim also there");
+    assertNe$(text, nullptr);
+    assert$(text->data() == "im there§Á§&seca;&secaÁim also there");
 
     return Ok();
 }
@@ -275,23 +275,23 @@ test$("parse-char-referece-as-attribute-value") {
     auto diags = Diag::Collector::ignore();
     parser.write("<meta value=\"im there&sect;&Aacute;&sect;&seca;&seca&Aacute;im also there\">", diags);
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->qualifiedName == Html::HTML_TAG);
-    expect$(html->countChildren() == 2);
+    assertNe$(html, nullptr);
+    assert$(html->qualifiedName == Html::HTML_TAG);
+    assert$(html->countChildren() == 2);
 
     auto head = html->firstChild()->as<Element>();
-    expectNe$(head, nullptr);
-    expect$(head->qualifiedName == Html::HEAD_TAG);
-    expect$(head->hasChildren());
+    assertNe$(head, nullptr);
+    assert$(head->qualifiedName == Html::HEAD_TAG);
+    assert$(head->hasChildren());
 
     auto meta = head->firstChild()->as<Element>();
-    expectNe$(meta, nullptr);
-    expect$(meta->qualifiedName == Html::META_TAG);
-    expect$(meta->getAttribute(Html::VALUE_ATTR) == "im there§Á§&seca;&secaÁim also there");
+    assertNe$(meta, nullptr);
+    assert$(meta->qualifiedName == Html::META_TAG);
+    assert$(meta->getAttribute(Html::VALUE_ATTR) == "im there§Á§&seca;&secaÁim also there");
 
     return Ok();
 }
@@ -308,44 +308,44 @@ test$("parse-char-referece-spec-example") {
         diags
     );
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->qualifiedName == Html::HTML_TAG);
+    assertNe$(html, nullptr);
+    assert$(html->qualifiedName == Html::HTML_TAG);
 
     auto body = html->firstChild()->nextSibling()->as<Element>();
-    expectNe$(body, nullptr);
-    expect$(body->qualifiedName == Html::BODY_TAG);
-    expect$(body->hasChildren());
+    assertNe$(body, nullptr);
+    assert$(body->qualifiedName == Html::BODY_TAG);
+    assert$(body->hasChildren());
 
     {
         auto div1 = body->firstChild()->as<Element>();
-        expectNe$(div1, nullptr);
-        expect$(div1->qualifiedName == Html::DIV_TAG);
+        assertNe$(div1, nullptr);
+        assert$(div1->qualifiedName == Html::DIV_TAG);
 
         auto text1 = div1->firstChild()->as<Text>();
-        expectNe$(text1, nullptr);
-        expect$(text1->data() == "I'm ¬it; I tell you");
+        assertNe$(text1, nullptr);
+        assert$(text1->data() == "I'm ¬it; I tell you");
     }
     {
         auto div2 = body->firstChild()->nextSibling()->as<Element>();
-        expectNe$(div2, nullptr);
-        expect$(div2->qualifiedName == Html::DIV_TAG);
+        assertNe$(div2, nullptr);
+        assert$(div2->qualifiedName == Html::DIV_TAG);
 
         auto text2 = div2->firstChild()->as<Text>();
-        expectNe$(text2, nullptr);
-        expect$(text2->data() == "I'm ∉ I tell you");
+        assertNe$(text2, nullptr);
+        assert$(text2->data() == "I'm ∉ I tell you");
     }
     {
         auto head = html->firstChild()->as<Element>();
-        expectNe$(head, nullptr);
-        expect$(head->qualifiedName == Html::HEAD_TAG);
+        assertNe$(head, nullptr);
+        assert$(head->qualifiedName == Html::HEAD_TAG);
 
         auto meta = head->firstChild()->as<Element>();
-        expectNe$(meta, nullptr);
-        expect$(meta->getAttribute(Html::VALUE_ATTR) == "I'm &notit; I tell you");
+        assertNe$(meta, nullptr);
+        assert$(meta->getAttribute(Html::VALUE_ATTR) == "I'm &notit; I tell you");
     }
 
     return Ok();
@@ -359,25 +359,25 @@ test$("parse-input-element") {
     auto diags = Diag::Collector::ignore();
     parser.write("<div><input></div>", diags);
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->qualifiedName == Html::HTML_TAG);
-    expect$(html->countChildren() == 2);
+    assertNe$(html, nullptr);
+    assert$(html->qualifiedName == Html::HTML_TAG);
+    assert$(html->countChildren() == 2);
 
     auto body = html->firstChild()->nextSibling()->as<Element>();
-    expectNe$(body, nullptr);
-    expect$(body->qualifiedName == Html::BODY_TAG);
+    assertNe$(body, nullptr);
+    assert$(body->qualifiedName == Html::BODY_TAG);
 
     auto div = body->firstChild()->as<Element>();
-    expectNe$(div, nullptr);
-    expect$(div->qualifiedName == Html::DIV_TAG);
+    assertNe$(div, nullptr);
+    assert$(div->qualifiedName == Html::DIV_TAG);
 
     auto input = div->firstChild()->as<Element>();
-    expectNe$(input, nullptr);
-    expect$(input->qualifiedName == Html::INPUT_TAG);
+    assertNe$(input, nullptr);
+    assert$(input->qualifiedName == Html::INPUT_TAG);
 
     return Ok();
 }
@@ -390,22 +390,22 @@ test$("parse-empty-table-element") {
     auto diags = Diag::Collector::ignore();
     parser.write("<table></table>", diags);
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->qualifiedName == Html::HTML_TAG);
-    expect$(html->countChildren() == 2);
+    assertNe$(html, nullptr);
+    assert$(html->qualifiedName == Html::HTML_TAG);
+    assert$(html->countChildren() == 2);
 
     auto body = html->firstChild()->nextSibling()->as<Element>();
-    expectNe$(body, nullptr);
-    expect$(body->qualifiedName == Html::BODY_TAG);
+    assertNe$(body, nullptr);
+    assert$(body->qualifiedName == Html::BODY_TAG);
 
     auto table = body->firstChild()->as<Element>();
-    expectNe$(table, nullptr);
-    expect$(table->qualifiedName == Html::TABLE_TAG);
-    expect$(not table->hasChildren());
+    assertNe$(table, nullptr);
+    assert$(table->qualifiedName == Html::TABLE_TAG);
+    assert$(not table->hasChildren());
 
     return Ok();
 }
@@ -418,38 +418,38 @@ test$("parse-table-element") {
     auto diags = Diag::Collector::ignore();
     parser.write("<table><thead><tr><th>hi</th></tr></thead></table>", diags);
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->qualifiedName == Html::HTML_TAG);
-    expect$(html->countChildren() == 2);
+    assertNe$(html, nullptr);
+    assert$(html->qualifiedName == Html::HTML_TAG);
+    assert$(html->countChildren() == 2);
 
     auto body = html->firstChild()->nextSibling()->as<Element>();
-    expectNe$(body, nullptr);
-    expect$(body->qualifiedName == Html::BODY_TAG);
+    assertNe$(body, nullptr);
+    assert$(body->qualifiedName == Html::BODY_TAG);
 
     auto table = body->firstChild()->as<Element>();
-    expectNe$(table, nullptr);
-    expect$(table->qualifiedName == Html::TABLE_TAG);
-    expect$(table->countChildren() == 1);
+    assertNe$(table, nullptr);
+    assert$(table->qualifiedName == Html::TABLE_TAG);
+    assert$(table->countChildren() == 1);
 
     auto thead = table->firstChild()->as<Element>();
-    expectNe$(thead, nullptr);
-    expect$(thead->qualifiedName == Html::THEAD_TAG);
+    assertNe$(thead, nullptr);
+    assert$(thead->qualifiedName == Html::THEAD_TAG);
 
     auto headerRow = thead->firstChild()->as<Element>();
-    expectNe$(headerRow, nullptr);
-    expect$(headerRow->qualifiedName == Html::TR_TAG);
+    assertNe$(headerRow, nullptr);
+    assert$(headerRow->qualifiedName == Html::TR_TAG);
 
     auto headerCell = headerRow->firstChild()->as<Element>();
-    expectNe$(headerCell, nullptr);
-    expect$(headerCell->qualifiedName == Html::TH_TAG);
+    assertNe$(headerCell, nullptr);
+    assert$(headerCell->qualifiedName == Html::TH_TAG);
 
     auto text = headerCell->firstChild()->as<Text>();
-    expectNe$(text, nullptr);
-    expect$(text->data() == "hi");
+    assertNe$(text, nullptr);
+    assert$(text->data() == "hi");
 
     return Ok();
 }
@@ -462,38 +462,38 @@ test$("parse-table-element-create-body-tr-scope") {
     auto diags = Diag::Collector::ignore();
     parser.write("<table><th>hi</th></table>", diags);
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->qualifiedName == Html::HTML_TAG);
-    expect$(html->countChildren() == 2);
+    assertNe$(html, nullptr);
+    assert$(html->qualifiedName == Html::HTML_TAG);
+    assert$(html->countChildren() == 2);
 
     auto body = html->firstChild()->nextSibling()->as<Element>();
-    expectNe$(body, nullptr);
-    expect$(body->qualifiedName == Html::BODY_TAG);
+    assertNe$(body, nullptr);
+    assert$(body->qualifiedName == Html::BODY_TAG);
 
     auto table = body->firstChild()->as<Element>();
-    expectNe$(table, nullptr);
-    expect$(table->qualifiedName == Html::TABLE_TAG);
-    expect$(table->countChildren() == 1);
+    assertNe$(table, nullptr);
+    assert$(table->qualifiedName == Html::TABLE_TAG);
+    assert$(table->countChildren() == 1);
 
     auto tbody = table->firstChild()->as<Element>();
-    expectNe$(tbody, nullptr);
-    expect$(tbody->qualifiedName == Html::TBODY_TAG);
+    assertNe$(tbody, nullptr);
+    assert$(tbody->qualifiedName == Html::TBODY_TAG);
 
     auto row = tbody->firstChild()->as<Element>();
-    expectNe$(row, nullptr);
-    expect$(row->qualifiedName == Html::TR_TAG);
+    assertNe$(row, nullptr);
+    assert$(row->qualifiedName == Html::TR_TAG);
 
     auto header = row->firstChild()->as<Element>();
-    expectNe$(header, nullptr);
-    expect$(header->qualifiedName == Html::TH_TAG);
+    assertNe$(header, nullptr);
+    assert$(header->qualifiedName == Html::TH_TAG);
 
     auto text = header->firstChild()->as<Text>();
-    expectNe$(text, nullptr);
-    expect$(text->data() == "hi");
+    assertNe$(text, nullptr);
+    assert$(text->data() == "hi");
 
     return Ok();
 }
@@ -509,31 +509,31 @@ test$("parse-svg-case-fix") {
         diags
     );
 
-    expect$(dom->nodeType() == NodeType::DOCUMENT);
-    expect$(dom->hasChildren());
+    assert$(dom->nodeType() == NodeType::DOCUMENT);
+    assert$(dom->hasChildren());
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
-    expect$(html->qualifiedName == Html::HTML_TAG);
-    expect$(html->hasChildren());
+    assertNe$(html, nullptr);
+    assert$(html->qualifiedName == Html::HTML_TAG);
+    assert$(html->hasChildren());
 
     auto head = html->firstChild()->as<Element>();
-    expectNe$(head, nullptr);
-    expect$(head->qualifiedName == Html::HEAD_TAG);
+    assertNe$(head, nullptr);
+    assert$(head->qualifiedName == Html::HEAD_TAG);
 
     auto body = head->nextSibling()->as<Element>();
-    expectNe$(body, nullptr);
-    expect$(body->qualifiedName == Html::BODY_TAG);
+    assertNe$(body, nullptr);
+    assert$(body->qualifiedName == Html::BODY_TAG);
 
     auto svg = body->firstChild()->as<Element>();
-    expectNe$(svg, nullptr);
-    expect$(svg->qualifiedName == Svg::SVG_TAG);
-    expect$(svg->countChildren() == 1);
-    expect$(svg->hasAttribute(Svg::VIEW_BOX_ATTR));
+    assertNe$(svg, nullptr);
+    assert$(svg->qualifiedName == Svg::SVG_TAG);
+    assert$(svg->countChildren() == 1);
+    assert$(svg->hasAttribute(Svg::VIEW_BOX_ATTR));
 
     auto foreignObject = svg->firstChild()->as<Element>();
-    expectNe$(foreignObject, nullptr);
-    expect$(foreignObject->qualifiedName == Svg::FOREIGN_OBJECT_TAG);
+    assertNe$(foreignObject, nullptr);
+    assert$(foreignObject->qualifiedName == Svg::FOREIGN_OBJECT_TAG);
 
     return Ok();
 }
@@ -550,12 +550,12 @@ test$("parse-misnested-content-in-table") {
     auto body = html->lastChild()->as<Element>();
 
     auto fostered = body->firstChild()->as<Element>();
-    expectNe$(fostered, nullptr);
-    expect$(fostered->qualifiedName == Html::DIV_TAG);
+    assertNe$(fostered, nullptr);
+    assert$(fostered->qualifiedName == Html::DIV_TAG);
 
     auto table = fostered->nextSibling()->as<Element>();
-    expectNe$(table, nullptr);
-    expect$(table->qualifiedName == Html::TABLE_TAG);
+    assertNe$(table, nullptr);
+    assert$(table->qualifiedName == Html::TABLE_TAG);
 
     return Ok();
 }
@@ -569,16 +569,16 @@ test$("parse-duplicate-body-merges-attributes") {
     parser.write("<html><body class=\"first\"><body class=\"second\" dir=\"rtl\"></body></html>"s, diags);
 
     auto html = dom->firstChild()->as<Element>();
-    expectNe$(html, nullptr);
+    assertNe$(html, nullptr);
     auto body = html->firstChild()->nextSibling()->as<Element>();
-    expectNe$(body, nullptr);
+    assertNe$(body, nullptr);
 
-    expectEq$(body->attributes.len(), 2uz);
-    expectEq$(body->getAttribute(Dom::QualifiedName{NONE, "class"_sym}), "first"s);
-    expect$(body->classList.contains("first"s));
-    expect$(not body->classList.contains("second"s));
+    assertEq$(body->attributes.len(), 2uz);
+    assertEq$(body->getAttribute(Dom::QualifiedName{NONE, "class"_sym}), "first"s);
+    assert$(body->classList.contains("first"s));
+    assert$(not body->classList.contains("second"s));
 
-    expectEq$(body->getAttribute(Dom::QualifiedName{NONE, "dir"_sym}), "rtl"s);
+    assertEq$(body->getAttribute(Dom::QualifiedName{NONE, "dir"_sym}), "rtl"s);
 
     return Ok();
 }

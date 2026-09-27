@@ -20,7 +20,7 @@ Gc::Ref<Object> createException(Agent& agent, ExceptionType type) {
                  String{u"Exception"_s16},
                  exception
     )
-        .unwrap();
+        .expect();
     return exception;
 }
 

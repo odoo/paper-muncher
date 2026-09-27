@@ -149,7 +149,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                     headerHeight = w->borderBox().height;
                 }
             } else {
-                headerHeight = Vaev::resolve(headerSize.unwrap<Vaev::AbsoluteLength>());
+                headerHeight = Vaev::resolve(headerSize.expect<Vaev::AbsoluteLength>());
             }
 
             if (footerSize == Vaev::Keywords::AUTO) {
@@ -159,7 +159,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                     footerHeight = w->borderBox().height;
                 }
             } else {
-                footerHeight = Vaev::resolve(footerSize.unwrap<Vaev::AbsoluteLength>());
+                footerHeight = Vaev::resolve(footerSize.expect<Vaev::AbsoluteLength>());
             }
 
             return Pair{headerHeight, footerHeight};
@@ -169,7 +169,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
 
     void decorate(Vaev::Style::Media const& media, Vaev::Driver::PageLayoutInfos const& infos, usize pageCount, Gfx::Canvas& g) override {
         auto decorationWidth = infos.pageDecoration.width;
-        auto [headerHeight, footerHeight] = _memo.lookup(infos.pageDecoration.size()).unwrap();
+        auto [headerHeight, footerHeight] = _memo.lookup(infos.pageDecoration.size()).expect();
 
         Vaev::Style::CounterSet pageCounters;
         pageCounters.instantiateCounter(nullptr, {Vaev::CustomIdent{"page"_sym}, false}, static_cast<Vaev::Integer>(infos.pageNumber));
@@ -237,7 +237,7 @@ Async::Task<> runSingleAsync(
 
         auto settings = options.derivePrintSettings();
         window->print(settings, Some(decorator)) | ForEach([&](Gfx::Snapshot& page) {
-            page.replay(output.beginPage(page.size().cast<f64>())).unwrap();
+            page.replay(output.beginPage(page.size().cast<f64>())).expect();
         });
     } else {
         auto media = options.deriveMedia();

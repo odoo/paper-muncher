@@ -41,7 +41,7 @@ struct NamespaceContext {
         if (not parsedName.prefix)
             return Ok(Dom::QualifiedName{default_, parsedName.localName});
 
-        auto ns = prefixes->lookup(parsedName.prefix.unwrap());
+        auto ns = prefixes->lookup(parsedName.prefix.expect());
         if (not ns)
             return Error::invalidData("unknown namespace prefix");
 
@@ -52,7 +52,7 @@ struct NamespaceContext {
         if (not parsedName.prefix)
             return Ok(Dom::QualifiedName{NONE, parsedName.localName});
 
-        auto ns = prefixes->lookup(parsedName.prefix.unwrap());
+        auto ns = prefixes->lookup(parsedName.prefix.expect());
         if (not ns)
             return Error::invalidData("unknown namespace prefix");
 
@@ -169,7 +169,7 @@ export struct XmlParser {
         if (not separator)
             return Ok(UnresolvedQualifiedName{NONE, Symbol::from(name)});
 
-        auto separatorIndex = separator.unwrap();
+        auto separatorIndex = separator.expect();
         if (separatorIndex == 0 or separatorIndex + 1 == name.len())
             return Error::invalidData("expected namespace prefix and local name");
 
@@ -365,12 +365,12 @@ export struct XmlParser {
         // EncodingDecl ::= S 'encoding' Eq ('"' EncName '"' | "'" EncName "'" )
         auto encoding = _parseXmlDeclAttr(s, "encoding"_re, RE_XML_DECL_ENCODING);
         if (encoding.has())
-            doc.xmlEncoding = encoding.unwrap();
+            doc.xmlEncoding = encoding.expect();
 
         // SDDecl ::= S 'standalone' Eq (("'" ('yes' | 'no') "'") | ('"' ('yes' | 'no') '"'))
         auto standalone = _parseXmlDeclAttr(s, "standalone"_re, RE_XML_DECL_STANDALONE);
         if (standalone.has())
-            doc.xmlStandalone = standalone.unwrap();
+            doc.xmlStandalone = standalone.expect();
 
         try$(_parseS(s));
 
@@ -410,7 +410,7 @@ export struct XmlParser {
             ;
 
         if (auto doctype = _parseDoctype(s)) {
-            doc.appendChild(doctype.unwrap());
+            doc.appendChild(doctype.expect());
             while (_parseMisc(s, doc) and not s.ended())
                 ;
         }
@@ -466,7 +466,7 @@ export struct XmlParser {
         }
 
         if (auto r = _parseStartTag(s, context)) {
-            auto [el, childContext] = r.unwrap();
+            auto [el, childContext] = r.expect();
             try$(_parseContent(s, childContext, *el));
             try$(_parseEndTag(s, childContext, *el));
 
@@ -536,7 +536,7 @@ export struct XmlParser {
 
         while (s.peek() != quote and not s.ended()) {
             if (auto r = _parseReference(s))
-                sb.append(r.unwrap());
+                sb.append(r.expect());
             else
                 sb.append(s.next());
         }
@@ -575,13 +575,13 @@ export struct XmlParser {
         // (element | Reference | CDSect | PI | Comment)
 
         if (auto r = _parseElement(s, context)) {
-            el.appendChild(r.unwrap());
+            el.appendChild(r.expect());
             return Ok();
         } else if (auto r = _parsePi(s)) {
             logWarn("ignoring processing instruction");
             return Ok();
         } else if (auto r = _parseComment(s)) {
-            el.appendChild(r.unwrap());
+            el.appendChild(r.expect());
             return Ok();
         } else {
             return Error::invalidData("expected content item");
@@ -604,7 +604,7 @@ export struct XmlParser {
         } else if (_parseCDSect(s, sb)) {
             return Ok();
         } else if (auto r = _parseReference(s)) {
-            sb.append(r.unwrap());
+            sb.append(r.expect());
             return Ok();
         } else {
             return Error::invalidData("expected text item");
@@ -661,12 +661,12 @@ export struct XmlParser {
             auto val = Io::atoi(s, {.base = 16});
             if (not val)
                 return Error::invalidData("expected hexadecimal number");
-            r = val.unwrap();
+            r = val.expect();
         } else {
             auto val = Io::atoi(s, {.base = 10});
             if (not val)
                 return Error::invalidData("expected decimal number");
-            r = val.unwrap();
+            r = val.expect();
         }
 
         if (not s.skip(';'))

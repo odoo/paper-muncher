@@ -293,13 +293,13 @@ export struct Computer {
 
             if (not svgEl->hasAttribute(Svg::WIDTH_ATTR))
                 cascadedValues.putStyleAttribute(
-                    _registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).unwrap(),
+                    _registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).expect(),
                     Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
                 );
 
             if (not svgEl->hasAttribute(Svg::HEIGHT_ATTR))
                 cascadedValues.putStyleAttribute(
-                    _registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).unwrap(),
+                    _registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).expect(),
                     Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
                 );
         }

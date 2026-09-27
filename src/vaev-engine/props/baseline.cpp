@@ -215,7 +215,7 @@ export struct VerticalAlignProperty : Property {
                 auto maybeFirstOrLast = parseValue<Union<Keywords::First, Keywords::Last>>(c);
                 if (maybeFirstOrLast) {
                     if (not value.baselineSource) {
-                        value.baselineSource = Some(maybeFirstOrLast.unwrap().visit(
+                        value.baselineSource = Some(maybeFirstOrLast.expect().visit(
                             [](auto& v) -> BaselineSource {
                                 return v;
                             }
@@ -229,7 +229,7 @@ export struct VerticalAlignProperty : Property {
                 auto maybeAlignmentBaseline = parseValue<AlignmentBaseline>(c);
                 if (maybeAlignmentBaseline) {
                     if (not value.alignmentBaseline) {
-                        value.alignmentBaseline = Some(maybeAlignmentBaseline.unwrap());
+                        value.alignmentBaseline = Some(maybeAlignmentBaseline.expect());
                         continue;
                     }
 
@@ -239,7 +239,7 @@ export struct VerticalAlignProperty : Property {
                 auto maybeBaselineShift = parseValue<BaselineShift>(c);
                 if (maybeBaselineShift) {
                     if (not value.baselineShift) {
-                        value.baselineShift = Some(maybeBaselineShift.unwrap());
+                        value.baselineShift = Some(maybeBaselineShift.expect());
                         continue;
                     }
 

@@ -78,7 +78,7 @@ export struct CascadedValues {
 
         for (auto& entry : shorthandEntries) {
             auto& prop = entry.property;
-            _entries.remove(prop->registration->name).unwrap();
+            _entries.remove(prop->registration->name).expect();
             for (auto& longhandProperty : prop->expandShorthand(registeredPropertySet, parent, child)) {
                 _putLonghand(longhandProperty, entry.origin, entry.specificity, prop->important, entry.ruleOrder, entry.declarationOrder);
             }

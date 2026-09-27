@@ -128,7 +128,7 @@ export struct CounterSet {
         auto [counter, _] = innerMost(name);
         if (not counter)
             return 0;
-        return counter.unwrap().value;
+        return counter.expect().value;
     }
 
     void append(Counter counter) {
@@ -504,7 +504,7 @@ struct CounterStyleSet {
     }
 
     CounterStyle _fallbackToDecimal() {
-        return _counters.lookup(CustomIdent{"decimal"_sym}).unwrap();
+        return _counters.lookup(CustomIdent{"decimal"_sym}).expect();
     }
 
     CounterStyle _lookupCounterOrFallbackToDecimal(CustomIdent counterStyleName) {
@@ -605,7 +605,7 @@ export CounterStyleSet resolveExtends(CounterDescriptorSet const& counters) {
     Map<CustomIdent, CounterStyle> resolved = {};
     auto resolveOne = [&](this auto const& recurse, CustomIdent name, Set<CustomIdent>& seen) -> CounterStyle {
         if (auto it = resolved.lookup(name))
-            return it.unwrap();
+            return it.expect();
 
         if (seen.contains(name))
             return CounterStyle::initial();
@@ -615,12 +615,12 @@ export CounterStyleSet resolveExtends(CounterDescriptorSet const& counters) {
             return CounterStyle::initial();
 
         seen.add(name);
-        auto& desc = descOpt.unwrap();
+        auto& desc = descOpt.expect();
 
         CounterStyle base = CounterStyle::initial();
 
         if (desc.system and desc.system->is<ExtendsCounterSystem>()) {
-            auto const& ext = desc.system->unwrap<ExtendsCounterSystem>();
+            auto const& ext = desc.system->expect<ExtendsCounterSystem>();
             base = recurse(ext.name, seen);
         }
 

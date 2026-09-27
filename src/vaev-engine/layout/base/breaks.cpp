@@ -123,7 +123,7 @@ export struct Breakpoint {
         for (auto& breakpoint : childrenBreakpoints) {
             if (not breakpoint)
                 continue;
-            appeal = min(appeal, breakpoint.unwrap().appeal);
+            appeal = min(appeal, breakpoint.expect().appeal);
         }
 
         if (appeal == Appeal::MAX)
@@ -208,7 +208,7 @@ export struct BreakpointTraverser {
             (i + 1 == prevIteration->endIdx or
              (prevIteration->advance == Breakpoint::Advance::WITH_CHILDREN and i == prevIteration->endIdx))) {
             if (prevIteration->children[j])
-                return &prevIteration->children[j].unwrap();
+                return &prevIteration->children[j].expect();
         }
         return nullptr;
     }
@@ -216,7 +216,7 @@ export struct BreakpointTraverser {
     MutCursor<Breakpoint> traverseCurr(usize i, usize j) {
         if (currIteration and currIteration->children.len() > 0 and i + 1 == currIteration->endIdx) {
             if (currIteration->children[j])
-                return &currIteration->children[j].unwrap();
+                return &currIteration->children[j].expect();
         }
         return nullptr;
     }

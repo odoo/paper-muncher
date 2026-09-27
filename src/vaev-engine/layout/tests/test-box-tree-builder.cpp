@@ -31,7 +31,7 @@ struct FakeInlineBox {
 
             Vec<MutCursor<ComparableInlineBox>> stackInlineBoxes = {&comparableInlineBox};
             Vec<Opt<Rc<Gfx::Prose::Span>>> stackSpans = {};
-            for (auto& span : inlineBox.content.unwrap<Rc<Gfx::Prose>>()->_spanHistory) {
+            for (auto& span : inlineBox.content.expect<Rc<Gfx::Prose>>()->_spanHistory) {
                 if (span->parent == NONE) {
                     stackSpans.pushBack(Some(span));
                     continue;
@@ -86,9 +86,9 @@ struct FakeBox {
             return false;
 
         if (boxStablishesInline) {
-            return content.unwrap<FakeInlineBox>() == b;
+            return content.expect<FakeInlineBox>() == b;
         } else {
-            auto& children = content.unwrap<Vec<FakeBox>>();
+            auto& children = content.expect<Vec<FakeBox>>();
             // logDebug("box children: {} expected children: {}", b.children().len(), children.len());
             if (children.len() != b.children().len())
                 return false;
@@ -133,7 +133,7 @@ testAsync$("empty-body") {
             // body
         };
 
-    co_expectEq$(expectedBodySubtree, body);
+    co_assertEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -149,7 +149,7 @@ testAsync$("no span") {
             }
         };
 
-    co_expectEq$(expectedBodySubtree, body);
+    co_assertEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -176,7 +176,7 @@ testAsync$("no span with br") {
             }
         };
 
-    co_expectEq$(expectedBodySubtree, body);
+    co_assertEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -207,7 +207,7 @@ testAsync$("no span, breaking block") {
             }
         };
 
-    co_expectEq$(expectedBodySubtree, body);
+    co_assertEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -275,7 +275,7 @@ testAsync$("span and breaking block 1") {
             },
         };
 
-    co_expectEq$(expectedBodySubtree, body);
+    co_assertEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -362,7 +362,7 @@ testAsync$("span and breaking block 2") {
             }
         };
 
-    co_expectEq$(expectedBodySubtree, body);
+    co_assertEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -409,7 +409,7 @@ testAsync$("inline-block") {
             }
         };
 
-    co_expectEq$(expectedBodySubtree, body);
+    co_assertEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -452,7 +452,7 @@ testAsync$("flex-blockify") {
             }
         };
 
-    co_expectEq$(expectedBodySubtree, body);
+    co_assertEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 
@@ -534,7 +534,7 @@ testAsync$("table-fixup") {
             }
         };
 
-    co_expectEq$(expectedBodySubtree, body);
+    co_assertEq$(expectedBodySubtree, body);
     co_return Ok();
 }
 

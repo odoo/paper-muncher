@@ -283,13 +283,13 @@ export struct FontProperty : Property {
             while (true) {
                 auto fontStyle = parseValue<FontStyle>(c);
                 if (fontStyle) {
-                    value.style = fontStyle.unwrap();
+                    value.style = fontStyle.expect();
                     continue;
                 }
 
                 auto fontWeight = parseValue<FontWeight>(c);
                 if (fontWeight) {
-                    value.weight = Some(fontWeight.unwrap());
+                    value.weight = Some(fontWeight.expect());
                     continue;
                 }
 
@@ -297,13 +297,13 @@ export struct FontProperty : Property {
 
                 auto fontWidth = parseValue<FontWidth>(c);
                 if (fontWidth) {
-                    value.width = fontWidth.unwrap();
+                    value.width = fontWidth.expect();
                     continue;
                 }
 
                 auto fontSize = parseValue<FontSize>(c);
                 if (fontSize) {
-                    value.size = fontSize.unwrap();
+                    value.size = fontSize.expect();
                     break;
                 }
 
@@ -328,12 +328,12 @@ export struct FontProperty : Property {
 
     Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         Vec<Rc<Property>> result;
-        result.pushBack(makeRc<FontStyleProperty>(registry.resolveRegistration(Properties::FONT_STYLE, {}).unwrap(), _value.style));
-        result.pushBack(makeRc<FontWidthProperty>(registry.resolveRegistration(Properties::FONT_WIDTH, {}).unwrap(), _value.width));
-        result.pushBack(makeRc<FontSizeProperty>(registry.resolveRegistration(Properties::FONT_SIZE, {}).unwrap(), _value.size));
-        result.pushBack(makeRc<FontFamilyProperty>(registry.resolveRegistration(Properties::FONT_FAMILY, {}).unwrap(), _value.families));
+        result.pushBack(makeRc<FontStyleProperty>(registry.resolveRegistration(Properties::FONT_STYLE, {}).expect(), _value.style));
+        result.pushBack(makeRc<FontWidthProperty>(registry.resolveRegistration(Properties::FONT_WIDTH, {}).expect(), _value.width));
+        result.pushBack(makeRc<FontSizeProperty>(registry.resolveRegistration(Properties::FONT_SIZE, {}).expect(), _value.size));
+        result.pushBack(makeRc<FontFamilyProperty>(registry.resolveRegistration(Properties::FONT_FAMILY, {}).expect(), _value.families));
         if (_value.weight)
-            result.pushBack(makeRc<FontWeightProperty>(registry.resolveRegistration(Properties::FONT_WEIGHT, {}).unwrap(), *_value.weight));
+            result.pushBack(makeRc<FontWeightProperty>(registry.resolveRegistration(Properties::FONT_WEIGHT, {}).expect(), *_value.weight));
         return result;
     }
 

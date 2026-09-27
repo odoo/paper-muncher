@@ -46,7 +46,7 @@ struct Viewport : Ui::View<Viewport> {
         if (_props.wireframe)
             render.stacking->paintWireframe(g, {});
         if (_props.selected)
-            render.stacking->paintOverlay(g, _props.selected.unwrap(), _window->scrollableOverflow().cast<f64>());
+            render.stacking->paintOverlay(g, _props.selected.expect(), _window->scrollableOverflow().cast<f64>());
 
         g.pop();
 

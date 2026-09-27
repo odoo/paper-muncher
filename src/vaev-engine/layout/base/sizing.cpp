@@ -26,7 +26,7 @@ export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availab
     } else if (availableSpace.x == Keywords::MAX_CONTENT) {
         size.x = maxSize.width;
     } else if (availableSpace.x != INDEFINITE) {
-        size.x = clamp(availableSpace.x.unwrap<Au>(), minSize.width, maxSize.width);
+        size.x = clamp(availableSpace.x.expect<Au>(), minSize.width, maxSize.width);
     }
 
     if (availableSpace.y == Keywords::MIN_CONTENT) {
@@ -34,7 +34,7 @@ export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availab
     } else if (availableSpace.y == Keywords::MAX_CONTENT) {
         size.y = maxSize.height;
     } else if (availableSpace.y != INDEFINITE) {
-        size.y = clamp(availableSpace.y.unwrap<Au>(), minSize.height, maxSize.height);
+        size.y = clamp(availableSpace.y.expect<Au>(), minSize.height, maxSize.height);
     }
 
     return size;

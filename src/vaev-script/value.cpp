@@ -165,7 +165,7 @@ export struct Value {
     }
 
     Boolean asBoolean() const {
-        return store.unwrap<Boolean>();
+        return store.expect<Boolean>();
     }
 
     Boolean isString() const {
@@ -173,7 +173,7 @@ export struct Value {
     }
 
     String asString() const {
-        return store.unwrap<String>();
+        return store.expect<String>();
     }
 
     Boolean isSymbol() const {
@@ -181,7 +181,7 @@ export struct Value {
     }
 
     Symbol asSymbol() const {
-        return store.unwrap<Symbol>();
+        return store.expect<Symbol>();
     }
 
     Boolean isNumber() const {
@@ -189,7 +189,7 @@ export struct Value {
     }
 
     Number asNumber() const {
-        return store.unwrap<Number>();
+        return store.expect<Number>();
     }
 
     Boolean isObject() const {
@@ -197,7 +197,7 @@ export struct Value {
     }
 
     Gc::Ref<Object> asObject() {
-        return store.unwrap<Gc::Ref<Object>>();
+        return store.expect<Gc::Ref<Object>>();
     }
 
     void repr(Io::Emit& e) const;
