@@ -113,8 +113,11 @@ struct Box : Meta::NoCopy {
     }
 
     bool isRemovedFromFlow() const {
-        return isFloating() or
-               style->position == Keywords::ABSOLUTE or
+        return isFloating() or isPositionedOutOfFlow();
+    }
+
+    bool isPositionedOutOfFlow() const {
+        return style->position == Keywords::ABSOLUTE or
                style->position == Keywords::FIXED or
                style->position.is<RunningPosition>();
     }
