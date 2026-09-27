@@ -975,7 +975,12 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
         }
     };
 
-    if (bc.hasRootInlineBox() and oneOf(display, Display::INLINE, Display::CONTENTS)) {
+    // https://www.w3.org/TR/css-lists-3/#list-style-position-outside
+    bool isOutsideMarker =
+        pseudoElement->type == Dom::PseudoElement::MARKER and
+        pseudoElement->element()->computedValues()->list->position == Keywords::OUTSIDE;
+
+    if (bc.hasRootInlineBox() and oneOf(display, Display::INLINE, Display::CONTENTS) and not isOutsideMarker) {
         bc.startInlineBox(_spanStyleFromStyle(*style));
         generateInnerContent(bc);
         bc.endInlineBox();
