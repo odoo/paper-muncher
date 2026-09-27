@@ -2588,4 +2588,53 @@
     </rendering>
 </test>
 
+<test name="display-flex-float-ignored">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                div {
+                    width: 100px;
+                    height: 100px;
+                }
+
+                div div {
+                    width: 50px;
+                }
+
+                .red {
+                    background-color: red;
+                }
+
+                .green {
+                    background-color: green;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="display: flex;">
+            <div class="red"></div>
+            <div class="green"></div>
+        </div>
+    </rendering>
+
+    <!-- https://www.w3.org/TR/css-flexbox-1/#flex-containers -->
+    <!-- float does not take a flex item out-of-flow -->
+    <rendering>
+        <div style="display: flex;">
+            <div style="float: right;" class="red"></div>
+            <div style="float: left;" class="green"></div>
+        </div>
+    </rendering>
+</test>
+
 </tests>

@@ -672,7 +672,10 @@ struct FlexFormatingContext : FormatingContext {
             // Here it could register multiple time the same box.
             lookForRunningPosition(input, c);
 
-            if (c.isRemovedFromFlow())
+            // https://www.w3.org/TR/css-flexbox-1/#flex-containers
+            // float and clear do not create floating or clearance of flex item,
+            // and do not take it out-of-flow.
+            if (c.isPositionedOutOfFlow())
                 continue;
             _items.emplaceBack(tree, c, _flex.isRowOriented(), containingBlock);
         }
