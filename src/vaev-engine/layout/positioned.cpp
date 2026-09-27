@@ -20,8 +20,8 @@ static RectAu _computeInsetModifiedContainingBlock(Tree const& tree, Box& box, R
 
     using InsetLength = Calc<PercentOr<Length>>;
 
-    bool startIsAuto = style.insets->start.is<Keywords::Auto>();
-    bool endIsAuto = style.insets->end.is<Keywords::Auto>();
+    bool startIsAuto = style.insets->start.is<Keywords::Auto>().has();
+    bool endIsAuto = style.insets->end.is<Keywords::Auto>().has();
 
     // If only one inset property in a given axis is auto, it is set to zero. If both inset properties in a given axis are auto, then,
     // depending on the box’s self-alignment property in the relevant axis:
@@ -74,8 +74,8 @@ static RectAu _computeInsetModifiedContainingBlock(Tree const& tree, Box& box, R
         }
     }
 
-    bool topIsAuto = style.insets->top.is<Keywords::Auto>();
-    bool bottomIsAuto = style.insets->bottom.is<Keywords::Auto>();
+    bool topIsAuto = style.insets->top.is<Keywords::Auto>().has();
+    bool bottomIsAuto = style.insets->bottom.is<Keywords::Auto>().has();
 
     // If only one inset property in a given axis is auto, it is set to zero. If both inset properties in a given axis are auto, then,
     // depending on the box’s self-alignment property in the relevant axis:
@@ -247,8 +247,8 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
 
 // https://www.w3.org/TR/css-position-3/#relpos-insets
 Au _negotiateInsetsForRelativePositioning(Tree& tree, Box const& box, Size const& start, Size const& end, Au relativeTo) {
-    bool startIsAuto = start.is<Keywords::Auto>();
-    bool endIsAuto = end.is<Keywords::Auto>();
+    bool startIsAuto = start.is<Keywords::Auto>().has();
+    bool endIsAuto = end.is<Keywords::Auto>().has();
 
     // - If opposing inset properties in an axis both compute to auto (their initial values), their used values are zero
     //   (i.e., the boxes stay in their original position in that axis).

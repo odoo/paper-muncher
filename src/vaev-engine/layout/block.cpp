@@ -205,8 +205,8 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, In
 // containing block inline size and the box inline size are known; otherwise 'auto'
 // margins resolve to zero.
 void _resolveAutoHorizontalMargins(Box& child, Input& childInput, UsedSpacings& usedSpacings, Opt<Au> blockInlineSize) {
-    bool startIsAuto = child.style->margin->start.is<Keywords::Auto>();
-    bool endIsAuto = child.style->margin->end.is<Keywords::Auto>();
+    bool startIsAuto = child.style->margin->start.is<Keywords::Auto>().has();
+    bool endIsAuto = child.style->margin->end.is<Keywords::Auto>().has();
 
     if (not(startIsAuto or endIsAuto))
         return;

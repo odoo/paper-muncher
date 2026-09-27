@@ -151,11 +151,11 @@ struct _ActiveFormattingElementList {
         using Union::Union;
 
         Gc::Ref<Dom::Element> element() const {
-            return is<FormattingElement>()->element;
+            return unwrap<FormattingElement>().element;
         }
 
         HtmlToken const& token() const {
-            return is<FormattingElement>()->token;
+            return unwrap<FormattingElement>().token;
         }
     };
 

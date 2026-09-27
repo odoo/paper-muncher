@@ -90,7 +90,7 @@ export bool isPurePercentage(Calc<PercentOr<Length>> calcValue) {
     if (not value.is<PercentOr<Length>>())
         return false;
 
-    return value.unwrap<PercentOr<Length>>().is<Percent>();
+    return value.unwrap<PercentOr<Length>>().is<Percent>().has();
 }
 
 export Au resolve(Tree const& tree, Box const& box, Length const& value) {

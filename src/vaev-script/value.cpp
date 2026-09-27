@@ -160,32 +160,32 @@ export struct Value {
         return store == t;
     }
 
-    bool isBoolean() const {
-        return store.is<Boolean>();
+    Boolean isBoolean() const {
+        return store.is<Boolean>().has();
     }
 
     Boolean asBoolean() const {
         return store.unwrap<Boolean>();
     }
 
-    bool isString() const {
-        return store.is<String>();
+    Boolean isString() const {
+        return store.is<String>().has();
     }
 
     String asString() const {
         return store.unwrap<String>();
     }
 
-    bool isSymbol() const {
-        return store.is<Symbol>();
+    Boolean isSymbol() const {
+        return store.is<Symbol>().has();
     }
 
     Symbol asSymbol() const {
         return store.unwrap<Symbol>();
     }
 
-    bool isNumber() const {
-        return store.is<Number>();
+    Boolean isNumber() const {
+        return store.is<Number>().has();
     }
 
     Number asNumber() const {
@@ -193,7 +193,7 @@ export struct Value {
     }
 
     Boolean isObject() const {
-        return store.is<Gc::Ref<Object>>();
+        return store.is<Gc::Ref<Object>>().has();
     }
 
     Gc::Ref<Object> asObject() {

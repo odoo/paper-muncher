@@ -92,11 +92,11 @@ struct Box : Meta::NoCopy {
     }
 
     bool isReplaced() const {
-        return content.is<Gfx::Snapshot>();
+        return content.is<Gfx::Snapshot>().has();
     }
 
     bool isRunningPositionedBox() const {
-        return style->position.is<RunningPosition>();
+        return style->position.is<RunningPosition>().has();
     }
 
     bool isRootElementPrincipalBox() const {

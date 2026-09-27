@@ -77,8 +77,8 @@ struct FakeBox {
         if (not(b.style->display.is(Display::Type::DEFAULT) or (isInternal and b.style->display.is(Display::Type::INTERNAL))))
             return false;
 
-        bool fakeBoxStablishesInline = content.is<FakeInlineBox>();
-        bool boxStablishesInline = b.content.is<Rc<Gfx::Prose>>();
+        bool fakeBoxStablishesInline = content.is<FakeInlineBox>().has();
+        bool boxStablishesInline = b.content.is<Rc<Gfx::Prose>>().has();
 
         // logDebug("box: {}, expected: {}", boxStablishesInline, fakeBoxStablishesInline);
 

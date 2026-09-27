@@ -1323,8 +1323,8 @@ struct FlexFormatingContext : FormatingContext {
 
                 auto marginStyle = *i.box->style->margin;
 
-                bool startCrossMarginIsAuto = fa.startCrossAxis(marginStyle).is<Keywords::Auto>();
-                bool endCrossMarginIsAuto = fa.endCrossAxis(marginStyle).is<Keywords::Auto>();
+                bool startCrossMarginIsAuto = fa.startCrossAxis(marginStyle).is<Keywords::Auto>().has();
+                bool endCrossMarginIsAuto = fa.endCrossAxis(marginStyle).is<Keywords::Auto>().has();
 
                 if (startCrossMarginIsAuto or endCrossMarginIsAuto) {
                     if (fa.crossAxis(i.usedSize) + i.getMargin(FlexItem::BOTH_CROSS) < l.crossSize) {

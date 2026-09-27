@@ -186,7 +186,7 @@ export struct FontWeight : _FontWeight {
     using _FontWeight::_FontWeight;
 
     bool isRelative() const {
-        return is<RelativeFontWeight>();
+        return is<RelativeFontWeight>().has();
     }
 
     FontWeight()

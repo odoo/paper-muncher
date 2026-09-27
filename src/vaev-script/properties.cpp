@@ -110,12 +110,12 @@ struct PropertyStorage {
         // https://tc39.es/ecma262/#sec-object-type
         bool isData() {
             // A data property associates a key value with an ECMAScript language value and a set of Boolean attributes.
-            return value.is<Value>();
+            return value.is<Value>().has();
         }
 
         // https://tc39.es/ecma262/#sec-object-type
         bool isAccessor() {
-            return value.is<Accessor>();
+            return value.is<Accessor>().has();
         }
     };
 
