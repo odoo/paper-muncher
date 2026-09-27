@@ -1,0 +1,38 @@
+<tests>
+
+    <test name="display-list-item-outside-marker">
+        <container>
+            <html xmlns="http://www.w3.org/1999/xhtml">
+
+            <body>
+                <slot />
+            </body>
+
+            </html>
+        </container>
+
+        <!-- https://www.w3.org/TR/css-lists-3/#list-style-position-outside -->
+        <rendering>
+            <ul style="list-style-type: none;">
+                <li><span>List item</span></li>
+            </ul>
+        </rendering>
+
+        <rendering>
+            <style>
+                li {
+                    color: transparent;
+                }
+
+                span {
+                    color: black;
+                }
+            </style>
+
+            <ul>
+                <li><span>List item</span></li>
+            </ul>
+        </rendering>
+    </test>
+
+</tests>
