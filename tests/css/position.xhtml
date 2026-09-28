@@ -926,4 +926,42 @@
         <div class="sq blue" style="z-index: -1"></div>
     </rendering>
 </test>
+
+<test name="position-absolute-auto-sizes">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+                div {
+                    padding: 0;
+                    margin: 0;
+                }
+            </style>
+        </head>
+
+        <body>
+        <slot/>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100%; height: 20px; background-color: red; position: absolute; bottom: 0">
+        </div>
+    </rendering>
+
+    <rendering>
+        <div style="width: 100%; background-color: red; position: absolute; bottom: 0">
+            <div style="height: 20px">
+            </div>
+        </div>
+    </rendering>
+
+</test>
+
 </tests>
