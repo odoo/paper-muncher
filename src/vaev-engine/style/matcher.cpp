@@ -44,12 +44,13 @@ static bool _matchChild(Selector const& selector, Gc::Ref<Dom::Element> element)
 
 // https://www.w3.org/TR/selectors-4/#adjacent-sibling-combinators
 static bool _matchAdjacent(Selector const& selector, Gc::Ref<Dom::Element> element) {
-    if (not element->hasPreviousSibling())
-        return false;
-
-    auto prev = element->previousSibling();
-    if (auto el = prev->as<Dom::Element>())
-        return _matchSelector(selector, *el, NONE);
+    Gc::Ptr<Dom::Node> current = element;
+    while (current->hasPreviousSibling()) {
+        auto prev = current->previousSibling();
+        if (auto el = prev->as<Dom::Element>())
+            return _matchSelector(selector, *el, NONE);
+        current = prev;
+    }
     return false;
 }
 

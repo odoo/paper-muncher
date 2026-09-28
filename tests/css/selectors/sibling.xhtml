@@ -1,0 +1,51 @@
+<tests>
+
+<test name="select-adjacent-sibling-ignores-whitespace-and-comments">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div {
+                    width: 100px;
+                    height: 20px;
+                    background-color: red;
+                }
+
+                .first {
+                    background-color: green;
+                }
+
+                div + div {
+                    background-color: green;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="first"></div>
+        <div class="first"></div>
+        <div class="first"></div>
+    </rendering>
+
+    <rendering>
+        <div class="first"></div>
+        <!-- comment between siblings -->
+        <div></div>
+
+        <div></div>
+    </rendering>
+</test>
+
+</tests>
