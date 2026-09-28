@@ -10,3 +10,4 @@ export import :props;
 export import :style;
 export import :values;
 export import :xml;
+export import :tinyscript;

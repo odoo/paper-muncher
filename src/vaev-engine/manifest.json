@@ -16,9 +16,11 @@
         "props",
         "style",
         "values",
-        "xml"
+        "xml",
+        "tinyscript"
     ],
     "requires": [
+        "vaev-engine.tinyscript.impl",
         "vaev-idl",
         "vaev-script",
         "karm-core",

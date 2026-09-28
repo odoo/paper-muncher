@@ -1,0 +1,9 @@
+{
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+  "id": "quickjs",
+  "type": "lib",
+  "props": {
+    "export-headers": "include",
+    "ck-cc-extra": ["-std=gnu11", "-w", "-Wno-error", "-fwrapv", "-D_GNU_SOURCE"]
+  }
+}

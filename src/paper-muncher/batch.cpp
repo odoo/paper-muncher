@@ -198,7 +198,10 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
 };
 
 Async::Task<Rc<Vaev::Dom::Window>> _loadHeaderFooterWindowAsync(Rc<Http::Client> client, Ref::Url const& url, Async::CancellationToken ct) {
-    auto window = Vaev::Dom::Window::create(client);
+    auto agent = Vaev::TinyScript::_Embed::createAgent();
+    auto realm = Vaev::TinyScript::_Embed::createRealm(agent);
+
+    auto window = Vaev::Dom::Window::create(client, Some(realm));
     co_trya$(window->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
 
     auto sheet = co_trya$(Vaev::Loader::fetchStylesheetAsync(*client, *window->document(), "bundle://vaev-engine/wkhtmltopdf-polyfill.css"_url, Vaev::Style::Origin::USER_AGENT, ct));
@@ -215,7 +218,10 @@ Async::Task<> runSingleAsync(
     Async::CancellationToken ct
 ) {
     logInfo("loading {}...", input);
-    auto window = Vaev::Dom::Window::create(client);
+    auto agent = Vaev::TinyScript::_Embed::createAgent();
+    auto realm = Vaev::TinyScript::_Embed::createRealm(agent);
+
+    auto window = Vaev::Dom::Window::create(client, Some(realm));
     co_trya$(window->loadLocationAsync(input, Ref::Uti::PUBLIC_OPEN, ct));
 
     logInfo("rendering {}...", input);

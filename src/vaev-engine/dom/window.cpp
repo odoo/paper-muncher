@@ -25,17 +25,18 @@ namespace Vaev::Dom {
 export struct Window {
     mutable Gc::Heap _heap;
     Rc<Http::Client> _client;
+    Opt<Rc<TinyScript::Realm>> _realm;
     Style::Media _media = Style::Media::defaultMedia();
 
     Gc::Ptr<Document> _document = nullptr;
     Opt<Driver::RenderResult> _render = NONE;
     Style::CounterSet _initialCounterSet = {};
 
-    Window(Rc<Http::Client> client)
-        : _client(client) {}
+    Window(Opt<Rc<TinyScript::Realm>> realm, Rc<Http::Client> client)
+        : _client(client), _realm(realm) {}
 
-    static Rc<Window> create(Rc<Http::Client> client = Http::defaultClient()) {
-        return makeRc<Window>(client);
+    static Rc<Window> create(Rc<Http::Client> client = Http::defaultClient(), Opt<Rc<TinyScript::Realm>> realm = NONE) {
+        return makeRc<Window>(realm, client);
     }
 
     void changeMedia(Style::Media media) {
@@ -57,7 +58,7 @@ export struct Window {
         if (intent == Ref::Uti::PUBLIC_OPEN) {
             _document = co_trya$(
                 Loader::fetchDocumentAsync(
-                    _heap, *_client, url, ct
+                    _heap, *_client, url, _realm, ct
                 )
             );
         } else if (intent == Ref::Uti::PUBLIC_MODIFY) {

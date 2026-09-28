@@ -10,6 +10,7 @@ export import :dom.event;
 export import :dom.names;
 export import :dom.node;
 export import :dom.node;
+export import :dom.script;
 export import :dom.serialisation;
 export import :dom.text;
 export import :dom.tokenList;

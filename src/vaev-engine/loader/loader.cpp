@@ -18,6 +18,7 @@ import :dom.document;
 import :html;
 import :xml;
 import :style;
+import :tinyscript;
 
 namespace Vaev::Loader {
 
@@ -176,7 +177,7 @@ Gfx::Snapshot _missingImagePlaceholder() {
     return Gfx::Snapshot::from(Karm::Image::loadOrFallback("bundle://vaev-engine/missing.qoi"_url).unwrap());
 }
 
-Async::Task<> _fetchResourcesAsync(Http::Client& client, Dom::Document& document, Gc::Ref<Dom::Node> node, Async::CancellationToken ct) {
+Async::Task<> _fetchResourcesAsync(Http::Client& client, Dom::Document& document, Gc::Ref<Dom::Node> node, Opt<Rc<TinyScript::Realm>> realm, Async::CancellationToken ct) {
     auto el = node->as<Dom::Element>();
     if (el and el->qualifiedName == Html::IMG_TAG) {
         auto src = el->getAttribute(Html::SRC_ATTR);
@@ -224,9 +225,27 @@ Async::Task<> _fetchResourcesAsync(Http::Client& client, Dom::Document& document
 
             document.styleSheets->add(sheet.take());
         }
+    } else if (el and el->qualifiedName == Html::SCRIPT_TAG and realm) {
+        if (auto [src] = el->getAttribute(Html::SRC_ATTR)) {
+            auto url = Ref::Url::parse(src, Some(node->baseURI()));
+            // TODO: Extract to function
+            if (auto resp = co_await client.getAsync(url, ct)) {
+                if (not resp.unwrap()->body)
+                    co_return Error::notFound("could not load script");
+
+                auto respBody = resp.unwrap()->body.unwrap();
+                auto buf = co_trya$(Aio::readAllTextAsync<Utf8>(*respBody, ct));
+                (*realm)->eval(buf);
+            } else {
+                logWarn("failed to fetch script: {}", url);
+            }
+        } else {
+            auto text = el->textContent();
+            (*realm)->eval(text);
+        }
     } else {
         for (auto child = node->firstChild(); child; child = child->nextSibling())
-            (void)co_await _fetchResourcesAsync(client, document, *child, ct);
+            (void)co_await _fetchResourcesAsync(client, document, *child, realm, ct);
     }
 
     co_return Ok();
@@ -238,7 +257,7 @@ static auto dumpDom = Debug::Flag::debug("web-dom", "Dump the loaded DOM tree");
 static auto dumpStylesheets = Debug::Flag::debug("web-stylesheets", "Dump the loaded stylesheets");
 
 // https://fetch.spec.whatwg.org/#scheme-fetch
-export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url, Async::CancellationToken ct) {
+export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Http::Client& client, Ref::Url const& url, Opt<Rc<TinyScript::Realm>> realm, Async::CancellationToken ct) {
     Ref::Url resolvedUrl = url;
 
     // If request’s current URL’s path is the string "blank",
@@ -278,7 +297,7 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Ht
     document->styleSheets->add((co_await fetchStylesheetAsync(client, *document, "bundle://vaev-engine/math.css"_url, Style::Origin::USER_AGENT, ct))
                                    .take("user agent stylesheet not available"));
 
-    (void)co_await _fetchResourcesAsync(client, *document, document, ct);
+    (void)co_await _fetchResourcesAsync(client, *document, document, realm, ct);
     (void)co_await _loadFontfacesAsync(client, *document, ct);
 
     if (dumpDom)

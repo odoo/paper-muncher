@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+  "id": "vaev-engine.tinyscript.impl.quickjs",
+  "type": "lib",
+  "description": "Minimalist javascript integration for vaev.",
+  "provides": [
+    "vaev-engine.tinyscript.impl"
+  ],
+  "requires": [
+    "quickjs",
+    "karm-core",
+    "karm-math",
+    "karm-gc"
+  ]
+}
