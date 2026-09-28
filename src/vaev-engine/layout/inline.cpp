@@ -75,7 +75,7 @@ struct InlineFormatingContext : FormatingContext {
             };
 
             Input childInput{
-                .generateFragment = input.generateFragment,
+                .generateFragment = false,
                 .usedSpacings = usedSpacings,
                 .availableSpace = {inlineSize, input.availableSpace.y},
                 .containingBlock = childContainingBlock,
@@ -107,80 +107,82 @@ struct InlineFormatingContext : FormatingContext {
         auto firstBaselineSet = _computeBaselinePositions(prose->_rootSpan->style.font.metrics(), first(prose->_lines).baseline);
         auto lastBaselineSet = _computeBaselinePositions(prose->_rootSpan->style.font.metrics(), last(prose->_lines).baseline);
 
-        for (auto strutCell : prose->cellsWithStruts()) {
-            auto runeIdx = strutCell->runeRange.start;
-            auto positionInProse = prose->queryPosition(runeIdx);
+        if (input.generateFragment) {
+            for (auto strutCell : prose->cellsWithStruts()) {
+                auto runeIdx = strutCell->runeRange.start;
+                auto positionInProse = prose->queryPosition(runeIdx);
 
-            auto boxStrutCell = strutCell->strut(*prose);
-            auto& atomicBox = box.children()[boxStrutCell->id];
+                auto boxStrutCell = strutCell->strut(*prose);
+                auto& atomicBox = box.children()[boxStrutCell->id];
 
-            if (oneOf(atomicBox.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
-                if (input.generateFragment) {
-                    // https://www.w3.org/TR/css-position-3/#staticpos-rect
+                if (oneOf(atomicBox.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
+                    if (input.generateFragment) {
+                        // https://www.w3.org/TR/css-position-3/#staticpos-rect
 
-                    // TODO:
-                    RectAu staticPosRect = {
-                        Vec2Au{},
-                        Vec2Au{}
-                    };
+                        // TODO:
+                        RectAu staticPosRect = {
+                            Vec2Au{},
+                            Vec2Au{}
+                        };
 
-                    auto placeholder = makeRc<PlaceholderFragment>(atomicBox, staticPosRect);
+                        auto placeholder = makeRc<PlaceholderFragment>(atomicBox, staticPosRect);
 
-                    fragBuilder.addChildIfAny(Some(placeholder));
-                    outOfFlowChildren.pushBack(placeholder);
+                        fragBuilder.addChildIfAny(Some(placeholder));
+                        outOfFlowChildren.pushBack(placeholder);
+                    }
+
+                    continue;
                 }
 
-                continue;
+                // FIXME:
+                // Look for running position should be called at linebox generation.
+                // Here it could register multiple time the same box.
+                lookForRunningPosition(input, atomicBox);
+
+                auto childContainingBlock = Vec2Au{
+                    input.knownSize.width.unwrapOr(0_au),
+                    input.knownSize.height.unwrapOr(0_au),
+                };
+
+                UsedSpacings usedSpacings{
+                    .padding = computePaddings(tree, atomicBox, childContainingBlock),
+                    .borders = computeBorders(tree, atomicBox),
+                };
+
+                Input childInput{
+                    .generateFragment = input.generateFragment,
+                    .usedSpacings = usedSpacings,
+                    .knownSize = {
+                        Some(boxStrutCell->size.x),
+                        Some(boxStrutCell->size.y)
+                    },
+                    .position = input.position + positionInProse,
+                    .containingBlock = childContainingBlock,
+                    .runningPosition = input.runningPosition,
+                    .pageNumber = input.pageNumber,
+                };
+
+                if (atomicBox.isRemovedFromFlow()) {
+                    childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
+                        tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
+                        usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
+                    );
+
+                    childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
+                        tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
+                        usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
+                    );
+                }
+
+                if (atomicBox.style->position == Keywords::RELATIVE) {
+                    childInput.position += relativePositionOffset(tree, atomicBox, input.containingBlock);
+                }
+
+                auto output = layoutBorderBox(tree, atomicBox, childInput);
+
+                outOfFlowChildren.pushBack(output.outOfFlowStash);
+                fragBuilder.addChildIfAny(output.fragment);
             }
-
-            // FIXME:
-            // Look for running position should be called at linebox generation.
-            // Here it could register multiple time the same box.
-            lookForRunningPosition(input, atomicBox);
-
-            auto childContainingBlock = Vec2Au{
-                input.knownSize.width.unwrapOr(0_au),
-                input.knownSize.height.unwrapOr(0_au),
-            };
-
-            UsedSpacings usedSpacings{
-                .padding = computePaddings(tree, atomicBox, childContainingBlock),
-                .borders = computeBorders(tree, atomicBox),
-            };
-
-            Input childInput{
-                .generateFragment = input.generateFragment,
-                .usedSpacings = usedSpacings,
-                .knownSize = {
-                    Some(boxStrutCell->size.x),
-                    Some(boxStrutCell->size.y)
-                },
-                .position = input.position + positionInProse,
-                .containingBlock = childContainingBlock,
-                .runningPosition = input.runningPosition,
-                .pageNumber = input.pageNumber,
-            };
-
-            if (atomicBox.isRemovedFromFlow()) {
-                childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                    tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
-                    usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
-                );
-
-                childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
-                    tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
-                    usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
-                );
-            }
-
-            if (atomicBox.style->position == Keywords::RELATIVE) {
-                childInput.position += relativePositionOffset(tree, atomicBox, input.containingBlock);
-            }
-
-            auto output = layoutBorderBox(tree, atomicBox, childInput);
-
-            outOfFlowChildren.pushBack(output.outOfFlowStash);
-            fragBuilder.addChildIfAny(output.fragment);
         }
 
         if (tree.fc.allowBreak() and
