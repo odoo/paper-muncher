@@ -188,7 +188,7 @@ export struct VerticalAlignProperty : Property {
 
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::VERTICAL_ALIGN, SHORTHAND_PROPERTY) {}
+            : Property::Registration(Properties::VERTICAL_ALIGN, SHORTHAND) {}
 
         Rc<Property> initial() const override {
             return makeRc<VerticalAlignProperty>(self(), Value{.alignmentBaseline = Some(Keywords::BASELINE)});
@@ -262,7 +262,7 @@ export struct VerticalAlignProperty : Property {
     VerticalAlignProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         Vec<Rc<Property>> shorthands = {};
 
         if (auto [baselineSource] = _value.baselineSource) {

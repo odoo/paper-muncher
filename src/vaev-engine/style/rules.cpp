@@ -248,7 +248,7 @@ export struct PageRule {
                 continue;
 
             if (prop->isShorthandProperty()) {
-                for (auto& longhand : prop->expandShorthand(registry, *c.style, *c.style)) {
+                for (auto& longhand : prop->expand(registry, *c.style, *c.style)) {
                     longhand->apply(*c.style, *c.style, cx);
                 }
                 continue;

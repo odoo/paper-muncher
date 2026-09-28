@@ -179,7 +179,7 @@ export struct FlexWrapProperty : Property {
 export struct FlexFlowProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::FLEX_FLOW, SHORTHAND_PROPERTY) {}
+            : Property::Registration(Properties::FLEX_FLOW, SHORTHAND) {}
 
         Rc<Property> initial() const override {
             return makeRc<FlexFlowProperty>(self(), Tuple{FlexDirection::ROW, FlexWrap::NOWRAP});
@@ -222,7 +222,7 @@ export struct FlexFlowProperty : Property {
     FlexFlowProperty(Rc<Property::Registration> registration, Tuple<FlexDirection, FlexWrap> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<FlexDirectionProperty>(registry.resolveRegistration(Properties::FLEX_DIRECTION, {}).expect(), _value.v0),
             makeRc<FlexWrapProperty>(registry.resolveRegistration(Properties::FLEX_WRAP, {}).expect(), _value.v1),
@@ -238,7 +238,7 @@ export struct FlexFlowProperty : Property {
 export struct FlexProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::FLEX, SHORTHAND_PROPERTY) {}
+            : Property::Registration(Properties::FLEX, SHORTHAND) {}
 
         Rc<Property> initial() const override {
             return makeRc<FlexProperty>(self(), FlexItemProps{Keywords::AUTO, 0, 1});
@@ -303,7 +303,7 @@ export struct FlexProperty : Property {
     FlexProperty(Rc<Property::Registration> registration, FlexItemProps value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<FlexBasisProperty>(registry.resolveRegistration(Properties::FLEX_BASIS, {}).expect(), _value.flexBasis),
             makeRc<FlexGrowProperty>(registry.resolveRegistration(Properties::FLEX_GROW, {}).expect(), _value.flexGrow),

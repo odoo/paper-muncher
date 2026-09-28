@@ -77,7 +77,11 @@ export struct Property : Meta::NoCopy {
         INHERITED = 1 << 0,
 
         // https://drafts.csswg.org/css-cascade-5/#shorthand
-        SHORTHAND_PROPERTY = 1 << 1,
+        SHORTHAND = 1 << 1,
+
+        // https://drafts.csswg.org/css-logical-1/#logical
+        // Expanded like a shorthand into the physical property it maps to.
+        LOGICAL = SHORTHAND,
 
         // https://drafts.csswg.org/css-variables-2/#custom-property
         CUSTOM_PROPERTY = 1 << 2,
@@ -196,14 +200,14 @@ export struct Property : Meta::NoCopy {
 
     virtual ~Property() = default;
 
-    virtual Vec<Rc<Property>> expandShorthand(RegisteredPropertySet&, [[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child) const {
+    virtual Vec<Rc<Property>> expand(RegisteredPropertySet&, [[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child) const {
         if (isBogusProperty())
             logFatal("trying to expand {:#} which is a bogus property", registration->name);
 
         if (isShorthandProperty())
-            logFatal("shorthand property {:#} is missing expandShorthand() implementation", registration->name);
+            logFatal("shorthand property {:#} is missing expand() implementation", registration->name);
 
-        logFatal("expandShorthand() called on non shorthand property {:#}", registration->name);
+        logFatal("expand() called on non shorthand property {:#}", registration->name);
         return {};
     }
 
@@ -229,7 +233,7 @@ export struct Property : Meta::NoCopy {
     }
 
     bool isShorthandProperty() const {
-        return registration->flags.has(SHORTHAND_PROPERTY);
+        return registration->flags.has(SHORTHAND);
     }
 
     virtual bool isDefaulted() const {
@@ -308,14 +312,14 @@ struct ToggleProperty : Property {
     ToggleProperty(Rc<Property::Registration> registration, Vec<Rc<Property>> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
+    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
         // If toggle() is used on a shorthand property, it sets each of its
         // longhands to a toggle() value with arguments corresponding to what
         // the longhand would have received had each of the original toggle()
         // arguments been the sole value of the shorthand.
         Map<Symbol, Vec<Rc<Property>>> props;
         for (auto& shorthand : _value)
-            for (auto& longhand : shorthand->expandShorthand(registry, parent, child))
+            for (auto& longhand : shorthand->expand(registry, parent, child))
                 props.lookupOrPutDefault(longhand->registration->name).pushBack(longhand);
 
         return props.mutIterValue() |
@@ -440,14 +444,14 @@ struct DeferredProperty : Property {
         return prop;
     }
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
+    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
         if (not isShorthandProperty())
-            logFatal("expandShorthand called on non shorthand property {:#}", registration->name);
+            logFatal("expand called on non shorthand property {:#}", registration->name);
 
         auto prop = _expandProperty(child);
         if (not prop)
             return {};
-        return prop.expect()->expandShorthand(registry, parent, child);
+        return prop.expect()->expand(registry, parent, child);
     }
 
     void apply(ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
@@ -479,25 +483,25 @@ struct DefaultedProperty : Property {
     DefaultedProperty(Rc<Property::Registration> registration, Default value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
+    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
         if (_value == Default::INITIAL) {
             // The initial CSS-wide keyword represents the value
             // defined as the property’s initial value.
             // https://drafts.csswg.org/css-cascade/#initial
-            return registration->initial()->expandShorthand(registry, parent, child);
+            return registration->initial()->expand(registry, parent, child);
         } else if (_value == Default::INHERIT) {
             // The inherit CSS-wide keyword represents the property’s
             // computed value on the parent element.
             // https://drafts.csswg.org/css-cascade/#inherit
-            return registration->load(parent)->expandShorthand(registry, parent, child);
+            return registration->load(parent)->expand(registry, parent, child);
         } else if (_value == Default::UNSET) {
             // The unset CSS-wide keyword acts as either inherit or initial,
             // depending on whether the property is inherited or not.
             // https://drafts.csswg.org/css-cascade/#inherit-initial
             if (registration->flags.has(INHERITED))
-                return registration->load(parent)->expandShorthand(registry, parent, child);
+                return registration->load(parent)->expand(registry, parent, child);
 
-            return registration->initial()->expandShorthand(registry, parent, child);
+            return registration->initial()->expand(registry, parent, child);
         } else if (_value == Default::REVERT) {
             // TODO: Implement revert()
             return {};
@@ -677,7 +681,7 @@ export struct RegisteredPropertySet {
         if (not _memoInitialComputedValues) {
             auto initial = makeRc<ComputedValues>();
             for (auto& [_, registration] : registrations().iterItems())
-                if (not registration->flags.has(Property::SHORTHAND_PROPERTY))
+                if (not registration->flags.has(Property::SHORTHAND))
                     registration->initial()->apply(*initial, *initial, cx);
             _memoInitialComputedValues = Some(initial);
         }

@@ -43,4 +43,44 @@
     </rendering>
 </test>
 
+<test name="cascade: author physical margin overrides user-agent logical margin">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                h5 {
+                    margin: 0;
+                    height: 50px;
+                    font-size: 20px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+
+        <body>
+        <section>
+            <slot />
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background-color: green"></div>
+    </rendering>
+
+    <rendering>
+        <div style="width: 100px;">
+            <h5></h5>
+            <div style="height: 50px; background-color: green"></div>
+        </div>
+    </rendering>
+</test>
+
 </tests>

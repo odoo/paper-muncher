@@ -201,7 +201,7 @@ export struct BackgroundRepeatProperty : Property {
 export struct BackgroundProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::BACKGROUND, SHORTHAND_PROPERTY) {}
+            : Property::Registration(Properties::BACKGROUND, SHORTHAND) {}
 
         Rc<Property> initial() const override {
             return makeRc<BackgroundProperty>(self(), SpecifiedBackground{TRANSPARENT});
@@ -223,7 +223,7 @@ export struct BackgroundProperty : Property {
     BackgroundProperty(Rc<Property::Registration> registration, SpecifiedBackground value)
         : Property(registration), _value(std::move(value)) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BackgroundColorProperty>(
                 registry.resolveRegistration(Properties::BACKGROUND_COLOR, {}).take(),
