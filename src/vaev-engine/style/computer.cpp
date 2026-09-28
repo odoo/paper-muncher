@@ -349,7 +349,7 @@ export struct Computer {
         cx.populateUsingOwnComputedValues(parent);
 
         cascadedValues.apply(Property::ComputationPhase::CUSTOM_PROPERTY, parent, *values, cx);
-        cascadedValues.expandShorthands(parent, *values, _registeredPropertySet);
+        cascadedValues.expands(parent, *values, _registeredPropertySet);
 
         cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, *values, cx);
         cascadedValues.apply(Property::ComputationPhase::FONT, parent, *values, cx);

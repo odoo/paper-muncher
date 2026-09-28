@@ -136,7 +136,7 @@ struct ListStyleProperty : Property {
 
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::LIST_STYLE, SHORTHAND_PROPERTY) {}
+            : Property::Registration(Properties::LIST_STYLE, SHORTHAND) {}
 
         Rc<Property> initial() const override {
             return makeRc<ListStyleProperty>(self(), Value{});
@@ -191,7 +191,7 @@ struct ListStyleProperty : Property {
     ListStyleProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<ListStyleImageProperty>(registry.resolveRegistration(Properties::LIST_STYLE_IMAGE, {}).expect(), _value.image),
             makeRc<ListStyleTypeProperty>(registry.resolveRegistration(Properties::LIST_STYLE_TYPE, {}).expect(), _value.type),

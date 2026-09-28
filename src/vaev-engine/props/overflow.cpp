@@ -147,7 +147,7 @@ export struct OverflowInlineProperty : Property {
 export struct OverflowProperty : Property {
     struct Registration : Property::Registration {
         Registration()
-            : Property::Registration(Properties::OVERFLOW, SHORTHAND_PROPERTY) {}
+            : Property::Registration(Properties::OVERFLOW, SHORTHAND) {}
 
         Rc<Property> initial() const override {
             return makeRc<OverflowProperty>(self(), Pair{Overflow::VISIBLE, Overflow::VISIBLE});
@@ -181,7 +181,7 @@ export struct OverflowProperty : Property {
     OverflowProperty(Rc<Property::Registration> registration, Pair<Overflow> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expandShorthand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<OverflowXProperty>(registry.resolveRegistration(Properties::OVERFLOW_X, {}).expect(), _value.v0),
             makeRc<OverflowYProperty>(registry.resolveRegistration(Properties::OVERFLOW_Y, {}).expect(), _value.v1),

@@ -223,7 +223,7 @@ export struct PageAreaRule {
                 continue;
 
             if (prop->isShorthandProperty()) {
-                for (auto& longhand : prop->expandShorthand(registry, parent, child)) {
+                for (auto& longhand : prop->expand(registry, parent, child)) {
                     longhand->apply(parent, child, cx);
                 }
                 continue;

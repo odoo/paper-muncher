@@ -69,7 +69,7 @@ export struct CascadedValues {
         _entries.clear();
     }
 
-    void expandShorthands(ComputedValues const& parent, ComputedValues& child, RegisteredPropertySet& registeredPropertySet) {
+    void expands(ComputedValues const& parent, ComputedValues& child, RegisteredPropertySet& registeredPropertySet) {
         Vec<Entry> shorthandEntries;
         for (auto const& entry : _entries.iterValue()) {
             if (entry.property->isShorthandProperty())
@@ -79,7 +79,7 @@ export struct CascadedValues {
         for (auto& entry : shorthandEntries) {
             auto& prop = entry.property;
             _entries.remove(prop->registration->name).expect();
-            for (auto& longhandProperty : prop->expandShorthand(registeredPropertySet, parent, child)) {
+            for (auto& longhandProperty : prop->expand(registeredPropertySet, parent, child)) {
                 _putLonghand(longhandProperty, entry.origin, entry.specificity, prop->important, entry.ruleOrder, entry.declarationOrder);
             }
         }
