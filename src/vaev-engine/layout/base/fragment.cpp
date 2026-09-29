@@ -465,7 +465,8 @@ export struct SvgRootFragment : Fragment {
                 viewBox.width,
                 viewBox.height,
             });
-        return Some(objectBoundingBox().cast<f64>());
+
+        return Some(Math::Rectf{objectBoundingBox().size().cast<f64>()});
     }
 
     void repr(Io::Emit& e) const override {
