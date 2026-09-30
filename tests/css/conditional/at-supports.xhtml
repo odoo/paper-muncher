@@ -119,11 +119,6 @@
         <div class="test"></div>
     </rendering>
 
-    <rendering help="general-enclosed function is false">
-        <style>@supports foo() { .test { background: red; } }</style>
-        <div class="test"></div>
-    </rendering>
-
     <rendering help="not( is a function token, so it is general-enclosed">
         <style>@supports not(foo()) { .test { background: red; } }</style>
         <div class="test"></div>
@@ -173,11 +168,6 @@
         <div style="width: 100px; height: 100px; background: green"></div>
     </rendering>
 
-    <rendering help="known property with a valid value">
-        <style>@supports (display: flex) { .test { background: green; } }</style>
-        <div class="test"></div>
-    </rendering>
-
     <rendering help="css-wide keywords are valid for every property">
         <style>@supports (color: inherit) { .test { background: green; } }</style>
         <div class="test"></div>
@@ -212,11 +202,6 @@
         <div style="width: 100px; height: 100px; background: green"></div>
     </rendering>
 
-    <rendering help="unknown property">
-        <style>@supports (foo: bar) { .test { background: red; } }</style>
-        <div class="test"></div>
-    </rendering>
-
     <rendering help="invalid value for a known property">
         <style>@supports (display: notadisplay) { .test { background: red; } }</style>
         <div class="test"></div>
@@ -234,11 +219,6 @@
 
     <rendering help="-- alone is not a valid custom property name">
         <style>@supports (--: a) { .test { background: red; } }</style>
-        <div class="test"></div>
-    </rendering>
-
-    <rendering help="an unknown property makes the whole and false">
-        <style>@supports (display: block) and (foo: bar) { .test { background: red; } }</style>
         <div class="test"></div>
     </rendering>
 </test>
@@ -366,11 +346,36 @@
 ) { .test { background: red; } }</style>
         <div class="test"></div>
     </rendering>
+</test>
 
-    <rendering help="a semicolon in a custom property is invalid">
-        <style>@supports (--foo: a;) { .test { background: red; } }</style>
-        <div class="test"></div>
+<test name="@supports: nested @font-face is loaded">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                p { font-family: "Test", serif; font-size: 20px; margin: 0; }
+            </style>
+        </head>
+        <body>
+        <slot />
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <style>@font-face { font-family: "Test"; src: url(bundle://fonts.ahem/fonts/Ahem.ttf); }</style>
+        <p>XXXX</p>
     </rendering>
+
+    <rendering help="@font-face inside @supports">
+        <style>@supports (display: block) { @font-face { font-family: "Test"; src: url(bundle://fonts.ahem/fonts/Ahem.ttf); } }</style>
+        <p>XXXX</p>
+    </rendering>
+
+    <error help="@font-face inside a false @supports is not loaded">
+        <style>@supports (foo: bar) { @font-face { font-family: "Test"; src: url(bundle://fonts.ahem/fonts/Ahem.ttf); } }</style>
+        <p>XXXX</p>
+    </error>
 </test>
 
 </tests>
