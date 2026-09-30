@@ -59,6 +59,10 @@ export struct Sst {
         return type == DECL or type == RULE;
     }
 
+    bool var() const {
+        return type == FUNC and prefix == Token::function("var(");
+    }
+
     bool curlyBlock() const {
         return type == BLOCK and token == Token::LEFT_CURLY_BRACKET;
     }

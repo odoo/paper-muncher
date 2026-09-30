@@ -114,4 +114,134 @@
     </rendering>
 </test>
 
+<!-- https://drafts.csswg.org/css-values-5/#component-function-commas -->
+<!-- https://drafts.csswg.org/css-variables-2/#typedef-var-args -->
+<!-- https://drafts.csswg.org/css-syntax-3/#consume-declaration -->
+<test name="@supports declaration edge cases: supported">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                div { width: 100px; height: 100px }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <style>
+            div {background: green}
+        </style>
+        <div/>
+    </rendering>
+
+    <rendering>
+        <style>
+            @supports (color: var({--x})) { div { background: green } }
+        </style>
+        <div/>
+    </rendering>
+
+    <rendering>
+        <style>
+            @supports (color: var(--x, {red})) { div { background: green } }
+        </style>
+        <div/>
+    </rendering>
+
+    <rendering>
+        <style>
+            @supports (--x: {red}) { div { background: green } }
+        </style>
+        <div/>
+    </rendering>
+</test>
+
+<test name="@supports declaration edge cases: not supported">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                div { width: 100px; height: 100px; background: red }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <style>
+            div {background: green}
+        </style>
+        <div/>
+    </rendering>
+
+    <!-- https://drafts.csswg.org/css-variables-2/#typedef-var-args -->
+    <!-- https://drafts.csswg.org/css-syntax-3/#typedef-declaration-value -->
+    <error>
+        <style>
+            @supports (color: var()) { div { background: green } }
+        </style>
+        <div/>
+    </error>
+
+    <!-- https://drafts.csswg.org/css-values-5/#component-function-commas -->
+    <error>
+        <style>
+            @supports (color: var({--x}b)) { div { background: green } }
+        </style>
+        <div/>
+    </error>
+
+    <!-- https://drafts.csswg.org/css-values-5/#component-function-commas -->
+    <!-- https://drafts.csswg.org/css-syntax-3/#typedef-declaration-value -->
+    <error>
+        <style>
+            @supports (color: var({})) { div { background: green } }
+        </style>
+        <div/>
+    </error>
+
+    <!-- https://drafts.csswg.org/css-syntax-3/#consume-declaration -->
+    <error>
+        <style>
+            @supports (color: {a} b) { div { background: green } }
+        </style>
+        <div/>
+    </error>
+
+    <!-- https://drafts.csswg.org/css-syntax-3/#typedef-declaration-value -->
+    <error>
+        <style>
+            @supports (--x: ]) { div { background: green } }
+        </style>
+        <div/>
+    </error>
+
+    <!-- https://drafts.csswg.org/css-syntax-3/#consume-string-token -->
+    <!-- https://drafts.csswg.org/css-syntax-3/#typedef-any-value -->
+    <!-- https://drafts.csswg.org/mediaqueries-4/#typedef-general-enclosed -->
+    <error>
+        <style>
+            @supports (--x: "a
+            ) { div { background: green } }
+        </style>
+        <div/>
+    </error>
+
+    <error>
+        <style>
+            @supports (foo "a
+            ) { div { background: green } }
+        </style>
+        <div/>
+    </error>
+
+</test>
+
 </tests>
