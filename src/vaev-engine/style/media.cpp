@@ -438,6 +438,9 @@ struct DiscreteFeature {
     bool match(T actual) const {
         if (type == Type::NONE)
             return actual != T{};
+        if constexpr (Meta::Same<T, MediaType>)
+            if (value == MediaType::ALL)
+                return true;
         return actual == value;
     }
 
@@ -829,8 +832,6 @@ MediaQuery _parseMediaQueryLeaf(Cursor<Css::Sst>& c) {
         return MediaQuery::negate(_parseMediaQueryInfix(c));
     } else if (c.skip(Css::Token::ident("only"))) {
         return _parseMediaQueryInfix(c);
-    } else if (c.skip(Css::Token::ident("all"))) {
-        return {};
     } else if (c.peek() == Css::Sst::BLOCK) {
         Cursor<Css::Sst> content = c.next().content;
         return _parseMediaQueryInfix(content);
