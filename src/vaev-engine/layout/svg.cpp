@@ -167,7 +167,7 @@ struct SvgFormatingContext : FormatingContext {
             auto resolvedRect = _resolveRectangle(*box.style, resolveTo);
 
             Input childInput{
-                .generateFragment = true,
+                .mode = LayoutMode::COMMIT,
                 .usedSpacings = {},
                 .knownSize = {
                     Some(resolvedRect.width),

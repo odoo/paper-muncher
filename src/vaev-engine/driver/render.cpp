@@ -43,7 +43,7 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
     auto layout = Layout::layoutRoot(
         *tree,
         {
-            .generateFragment = true,
+            .mode = Layout::LayoutMode::COMMIT,
             .knownSize = {Some(viewport.small.width), NONE},
             .availableSpace = {viewport.small.width, 0_au},
             .containingBlock = {viewport.small.width, viewport.small.height},

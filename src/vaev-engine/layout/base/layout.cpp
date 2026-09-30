@@ -17,11 +17,21 @@ export InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock);
 
 export Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size);
 
-export Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin = NONE);
+export Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox);
 
 export Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au verticalBorderBox);
 
-export Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin = NONE);
+// TODO: Constify
+export Au measure(
+    Tree& tree,
+    Box& box,
+    Axis requestedAxis,
+    Math::Vec2<Opt<Au>> knownSize,
+    Vec2Au containingBlock,
+    AvailableSpace availableSpace,
+    SizingMode sizing,
+    Opt<UsedSpacings> usedSpacings = NONE
+);
 
 export BoxMetrics computeBoxMetrics(Tree& tree, Box& box, Vec2Au position, Vec2Au size, UsedSpacings const& usedSpacings);
 
@@ -68,7 +78,7 @@ export struct FragmentBuilder {
     }
 
     Opt<Rc<Fragment>> buildBoxFromInput(Input const& input, Vec2Au size) {
-        if (not input.generateFragment)
+        if (input.mode == LayoutMode::MEASURE)
             return NONE;
 
         return Some(buildBox(input.position, size, input.usedSpacings));

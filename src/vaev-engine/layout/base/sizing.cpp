@@ -7,45 +7,134 @@ import :layout.values;
 
 namespace Vaev::Layout {
 
-// MARK: Fit content size ------------------------------------------------------
-// https://www.w3.org/TR/css-sizing-3/#fit-content-size
-// NOTE: This is called the “shrink-to-fit” width in CSS2
-
-export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availableSpace) {
-    auto minSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT);
-    auto maxSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT);
-    Vec2Au size = {INDEFINITE, INDEFINITE};
-
-    // If the available space in a given axis is definite,
-    // equal to clamp(min-content size, stretch-fit size, max-content size)
-    // (i.e. max(min-content size, min(max-content size, stretch-fit size))).
-    // When sizing under a min-content constraint, equal to the min-content size.
-    // Otherwise, equal to the max-content size in that axis.
-    if (availableSpace.x == Keywords::MIN_CONTENT) {
-        size.x = minSize.width;
-    } else if (availableSpace.x == Keywords::MAX_CONTENT) {
-        size.x = maxSize.width;
-    } else if (availableSpace.x != INDEFINITE) {
-        size.x = clamp(availableSpace.x.expect<Au>(), minSize.width, maxSize.width);
-    }
-
-    if (availableSpace.y == Keywords::MIN_CONTENT) {
-        size.y = minSize.height;
-    } else if (availableSpace.y == Keywords::MAX_CONTENT) {
-        size.y = maxSize.height;
-    } else if (availableSpace.y != INDEFINITE) {
-        size.y = clamp(availableSpace.y.expect<Au>(), minSize.height, maxSize.height);
-    }
-
-    return size;
+/// https://www.w3.org/TR/css-sizing-3/#min-content
+/// Returns a border box size.
+export Au minContentInlineSize(Tree& tree, Box& box) {
+    return measure(
+        tree,
+        box,
+        Axis::INLINE,
+        {NONE, NONE},
+        {0_au, 0_au},
+        {MIN_CONTENT, MAX_CONTENT},
+        SizingMode::SIZE
+    );
 }
 
-export Au computeFitContentInlineSize(Tree& tree, Box& box, AvailableSpaceAxis availableSpace) {
-    return computeFitContentSize(tree, box, {availableSpace, INDEFINITE}).x;
+/// https://www.w3.org/TR/css-sizing-3/#min-content
+/// Returns a border box size.
+export Au minContentBlockSize(Tree& tree, Box& box, Au inlineSize) {
+    return measure(
+        tree,
+        box,
+        Axis::BLOCK,
+        {Some(inlineSize), NONE},
+        {0_au, 0_au},
+        {inlineSize, MIN_CONTENT},
+        SizingMode::SIZE
+    );
 }
 
-export Au computeFitContentBlockSize(Tree& tree, Box& box, AvailableSpaceAxis availableSpace) {
-    return computeFitContentSize(tree, box, {INDEFINITE, availableSpace}).y;
+/// https://www.w3.org/TR/css-sizing-3/#max-content
+/// Returns a border box size.
+export Au maxContentInlineSize(Tree& tree, Box& box) {
+    return measure(
+        tree,
+        box,
+        Axis::INLINE,
+        {NONE, NONE},
+        {0_au, 0_au},
+        {MAX_CONTENT, MAX_CONTENT},
+        SizingMode::SIZE
+    );
+}
+
+/// https://www.w3.org/TR/css-sizing-3/#max-content
+/// Returns a border box size.
+export Au maxContentBlockSize(Tree& tree, Box& box, Au inlineSize) {
+    return measure(
+        tree,
+        box,
+        Axis::BLOCK,
+        {Some(inlineSize), NONE},
+        {0_au, 0_au},
+        {inlineSize, MAX_CONTENT},
+        SizingMode::SIZE
+    );
+}
+
+/// https://www.w3.org/TR/css-sizing-3/#min-content-contribution
+/// Should eventually return the margin box that represents the contributions,
+/// right now it returns the same value as min/max-content size which is wrong.
+export Au minContentInlineContribution(Tree& tree, Box& box) {
+    return measure(
+        tree,
+        box,
+        Axis::INLINE,
+        {NONE, NONE},
+        {0_au, 0_au},
+        {MIN_CONTENT, MAX_CONTENT},
+        SizingMode::CONTRIBUTION
+    );
+}
+
+/// https://www.w3.org/TR/css-sizing-3/#min-content-contribution
+/// Should eventually return the margin box that represents the contributions,
+/// right now it returns the same value as min/max-content size which is wrong.
+export Au minContentBlockContribution(Tree& tree, Box& box, Au inlineSize) {
+    return measure(
+        tree,
+        box,
+        Axis::BLOCK,
+        {Some(inlineSize), NONE},
+        {0_au, 0_au},
+        {inlineSize, MIN_CONTENT},
+        SizingMode::CONTRIBUTION
+    );
+}
+
+//// https://www.w3.org/TR/css-sizing-3/#max-content-contribution
+/// Should eventually return the margin box that represents the contributions,
+/// right now it returns the same value as min/max-content size which is wrong.
+export Au maxContentInlineContribution(Tree& tree, Box& box) {
+    return measure(
+        tree,
+        box,
+        Axis::INLINE,
+        {NONE, NONE},
+        {0_au, 0_au},
+        {MAX_CONTENT, MAX_CONTENT},
+        SizingMode::CONTRIBUTION
+    );
+}
+
+/// https://www.w3.org/TR/css-sizing-3/#max-content-contribution
+/// Should eventually return the margin box that represents the contributions,
+/// right now it returns the same value as min/max-content size which is wrong.
+export Au maxContentBlockContribution(Tree& tree, Box& box, Au inlineSize) {
+    return measure(
+        tree,
+        box,
+        Axis::BLOCK,
+        {Some(inlineSize), NONE},
+        {0_au, 0_au},
+        {inlineSize, MAX_CONTENT},
+        SizingMode::CONTRIBUTION
+    );
+}
+
+/// https://www.w3.org/TR/css-sizing-3/#fit-content-size
+export Au fitContentInlineSize(Tree& tree, Box& box, AvailableSpaceAxis availableSpace) {
+    if (availableSpace == MIN_CONTENT)
+        return minContentInlineSize(tree, box);
+
+    auto maxSize = maxContentInlineSize(tree, box);
+    auto stretchFit = availableSpace.is<Au>();
+    if (not stretchFit)
+        return maxSize;
+
+    auto minSize = minContentInlineSize(tree, box);
+    return clamp(*stretchFit, minSize, maxSize);
 }
 
 // https://www.w3.org/TR/css-sizing-3/#preferred-size-properties

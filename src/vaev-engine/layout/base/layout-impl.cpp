@@ -141,27 +141,57 @@ Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size) {
     return res;
 }
 
-Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin) {
-    if (intrinsic == IntrinsicSize::AUTO) {
-        panic("bad argument");
-    }
+// Returns the border-box size of the box's content in the requested axis.
+static Au _measureContent(Tree& tree, Box& box, Axis axis, Math::Vec2<Opt<Au>> knownSize, Vec2Au containingBlock, AvailableSpace availableSpace, Opt<UsedSpacings> overrideSpacings) {
+    auto usedSpacings = overrideSpacings.unwrapOrElse([&] {
+        return UsedSpacings{
+            .padding = computePaddings(tree, box, containingBlock),
+            .borders = computeBorders(tree, box),
+        };
+    });
 
-    auto output = _dispatchFormatingContext(
-        tree,
-        box,
-        {
-            .intrinsic = intrinsic,
-            .knownSize = {NONE, NONE},
-            .capmin = capmin,
+    auto horizontal = usedSpacings.borders.horizontal() + usedSpacings.padding.horizontal();
+    auto vertical = usedSpacings.borders.vertical() + usedSpacings.padding.vertical();
+
+    // NOTE: Measurements are done in content-box terms, like the formatting
+    //       contexts expect. This is not done through _adaptToContentBox()
+    //       since a measurement has no position nor fragmentation context.
+    // FIXME: Definite available space should be adapted too, and inner sizes
+    //        should floor at zero.
+    //        https://www.w3.org/TR/css-sizing-3/#box-sizing
+    auto input = Input{
+        .mode = LayoutMode::MEASURE,
+        .usedSpacings = usedSpacings,
+        .knownSize = {
+            knownSize.x.map([&](Au size) {
+                return size - horizontal;
+            }),
+            knownSize.y.map([&](Au size) {
+                return size - vertical;
+            }),
         },
-        0,
-        NONE
-    );
+        .availableSpace = availableSpace,
+        .containingBlock = containingBlock,
+    };
 
-    return output.size;
+    // FIXME: The formatting context computes both axes even though only one
+    //        is requested.
+    auto output = _dispatchFormatingContext(tree, box, input, 0, NONE);
+
+    if (axis == Axis::INLINE)
+        return output.size.x + horizontal;
+    return output.size.y + vertical;
 }
 
-Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
+Au measure(Tree& tree, Box& box, Axis requestedAxis, Math::Vec2<Opt<Au>> knownSize, Vec2Au containingBlock, AvailableSpace availableSpace, [[maybe_unused]] SizingMode sizing, Opt<UsedSpacings> usedSpacings) {
+    // FIXME: CONTRIBUTION is treated as SIZE. It should apply the box's own
+    //        sizing properties (width, min-width, max-width, box-sizing) and
+    //        add padding, border and margins, following
+    //        https://www.w3.org/TR/css-sizing-3/#cyclic-percentage-contribution
+    return _measureContent(tree, box, requestedAxis, knownSize, containingBlock, availableSpace, usedSpacings);
+}
+
+Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox) {
     if (auto calc = size.is<Calc<PercentOr<Length>>>()) {
         auto specifiedWidth = resolve(tree, box, *calc, containingBlock.x);
         if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
@@ -170,18 +200,26 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au c
         return Some(specifiedWidth);
     }
 
-    if (size.is<Keywords::MinContent>()) {
-        auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
-        return Some(intrinsicSize.x + horizontalBorderBox);
-    } else if (size.is<Keywords::MaxContent>()) {
-        auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
-        return Some(intrinsicSize.x + horizontalBorderBox);
-    } else if (size.is<FitContent>()) {
-        auto minIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
-        auto maxIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
-        auto stretchIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, capmin);
+    // NOTE: The intrinsic sizes are measured on the content box, and the
+    //       caller's edges are added back, matching the known size convention.
+    auto measureContent = [&](AvailableSpace availableSpace) {
+        return measure(tree, box, Axis::INLINE, {NONE, NONE}, {0_au, 0_au}, availableSpace, SizingMode::SIZE, Some(UsedSpacings{})) + horizontalBorderBox;
+    };
 
-        return Some(clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x) + horizontalBorderBox);
+    if (size.is<Keywords::MinContent>()) {
+        return Some(measureContent({MIN_CONTENT, 0_au}));
+    } else if (size.is<Keywords::MaxContent>()) {
+        return Some(measureContent({MAX_CONTENT, 0_au}));
+    } else if (size.is<FitContent>()) {
+        // FIXME: The stretch-fit size is laid out against a zero available
+        //        space, so this is always the min-content size. It should be
+        //        clamp(min-content, stretch-fit, max-content) where stretch-fit
+        //        is the available space minus the box's margins.
+        //        https://www.w3.org/TR/css-sizing-3/#fit-content-size
+        auto minSize = measureContent({MIN_CONTENT, 0_au});
+        auto maxSize = measureContent({MAX_CONTENT, 0_au});
+        auto stretchSize = measureContent({0_au, 0_au});
+        return Some(clamp(stretchSize, minSize, maxSize));
     } else if (size.is<Keywords::Auto>()) {
         return NONE;
     } else {
@@ -232,7 +270,7 @@ BoxMetrics computeBoxMetrics(Tree& tree, Box& box, Vec2Au position, Vec2Au size,
 }
 
 Opt<Rc<Fragment>> createBoxFragmentIfRequested(Tree& tree, Box& box, Input input, Vec2Au size, Vec<Rc<Fragment>> children) {
-    if (input.generateFragment) {
+    if (input.mode == LayoutMode::COMMIT) {
         auto boxMetrics = computeBoxMetrics(tree, box, input.position, size, input.usedSpacings);
         return Some(makeRc<BoxFragment>(box, boxMetrics, std::move(children)));
     }
@@ -269,7 +307,7 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
 
     Vec<Rc<PlaceholderFragment>> outOfFlowStash;
 
-    if (input.generateFragment) {
+    if (input.mode == LayoutMode::COMMIT) {
         auto pending = std::move(out.outOfFlowStash);
 
         for (usize i = 0; i < pending.len(); ++i) {
@@ -306,6 +344,9 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
     return out;
 }
 
+// FIXME: Inner sizes should floor at zero, and definite available space
+//        should be adapted too.
+//        https://www.w3.org/TR/css-sizing-3/#box-sizing
 Input _adaptToContentBox(Input input, UsedSpacings const& usedSpacings) {
     auto borders = usedSpacings.borders;
     auto padding = usedSpacings.padding;
@@ -356,7 +397,7 @@ Output layoutRoot(Tree& tree, Input input) {
 
     auto out = layoutBorderBox(tree, tree.root, input);
 
-    if (input.generateFragment) {
+    if (input.mode == LayoutMode::COMMIT) {
         auto pending = std::move(out.outOfFlowStash);
 
         for (usize i = 0; i < pending.len(); ++i) {
