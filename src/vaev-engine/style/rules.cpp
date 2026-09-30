@@ -11,6 +11,7 @@ import :style.media;
 import :style.origin;
 import :style.page;
 import :style.selector;
+import :style.supports;
 import :style.matcher;
 
 using namespace Karm;
@@ -105,6 +106,20 @@ export struct MediaRule {
 
     bool match(Media const& m) const {
         return media.match(m);
+    }
+
+    void repr(Io::Emit& e) const;
+};
+
+// https://www.w3.org/TR/css-conditional-3/#the-csssupportsrule-interface
+export struct SupportsRule {
+    bool matched = false;
+    Vec<Rule> rules;
+
+    static SupportsRule parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns);
+
+    bool match() const {
+        return matched;
     }
 
     void repr(Io::Emit& e) const;
@@ -274,6 +289,7 @@ using _Rule = Union<
     FontFaceRule,
     CounterRule,
     MediaRule,
+    SupportsRule,
     ImportRule,
     NamespaceRule,
     PageRule>;
@@ -297,8 +313,7 @@ export struct Rule : _Rule {
         else if (tok.data == "@page")
             return PageRule::parse(registry, sst);
         else if (tok.data == "@supports") {
-            logWarnIf(debugRule, "cannot parse '@supports' at-rule");
-            return StyleRule{};
+            return SupportsRule::parse(registry, sst, origin, ns);
         } else if (tok.data == "@namespace") {
             return NamespaceRule::parse(sst, ns);
         } else
@@ -342,6 +357,48 @@ void MediaRule::repr(Io::Emit& e) const {
     e("(media-rule");
     e.indent();
     e("\nmedia: {}", media);
+    if (rules) {
+        e.newline();
+        e("rules: [");
+        e.indentNewline();
+        for (auto const& rule : rules) {
+            e("{}\n", rule);
+        }
+        e.deindent();
+        e("]\n");
+    }
+}
+
+SupportsRule SupportsRule::parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
+    if (sst != Css::Sst::RULE)
+        panic("expected rule");
+
+    if (sst.prefix != Css::Sst::LIST)
+        panic("expected list");
+
+    SupportsRule res;
+
+    auto& prefix = sst.prefix.expect();
+    Cursor<Css::Sst> prefixContent = prefix->content;
+
+    res.matched = parseSupportsCondition(prefixContent);
+
+    // Parse the rules.
+    for (auto const& item : sst.content) {
+        if (item == Css::Sst::RULE) {
+            res.rules.pushBack(Rule::parse(registry, item, origin, ns));
+        } else {
+            logWarnIf(debugRule, "unexpected item in supports rule: {}", item.type);
+        }
+    }
+
+    return res;
+}
+
+void SupportsRule::repr(Io::Emit& e) const {
+    e("(supports-rule");
+    e.indent();
+    e("\nmatched: {}", matched);
     if (rules) {
         e.newline();
         e("rules: [");
