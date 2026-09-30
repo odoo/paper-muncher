@@ -1,0 +1,158 @@
+<tests>
+
+<test name="@supports: rules inside a supported condition apply">
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering>
+        <style>
+            .test { width: 100px; height: 100px; background: red; }
+            @supports (color: green) {
+                .test { background: green; }
+            }
+        </style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports: nested inside @media">
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering>
+        <style>
+            .test { width: 100px; height: 100px; background: red; }
+            @media (min-width: 0px) {
+                @supports (color: green) {
+                    .test { background: green; }
+                }
+            }
+        </style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports: nested inside @supports">
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering>
+        <style>
+            .test { width: 100px; height: 100px; background: red; }
+            @supports (color: green) {
+                @supports (display: block) {
+                    .test { background: green; }
+                }
+            }
+        </style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports condition: true">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                .test { width: 100px; height: 100px; background: red; }
+            </style>
+        </head>
+        <body>
+        <slot />
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering help="not general-enclosed is true">
+        <style>@supports not foo() { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="and of two true conditions">
+        <style>@supports (color: green) and (display: block) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="or with one true condition">
+        <style>@supports foo() or (color: green) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="nested parentheses">
+        <style>@supports ((color: green)) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="keywords are case-insensitive">
+        <style>@supports NOT foo() { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports condition: false or invalid">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                .test { width: 100px; height: 100px; background: green; }
+            </style>
+        </head>
+        <body>
+        <slot />
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering help="not of a true condition">
+        <style>@supports not (color: green) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="general-enclosed function is false">
+        <style>@supports foo() { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="not( is a function token, so it is general-enclosed">
+        <style>@supports not(foo()) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="and with one false condition">
+        <style>@supports (color: green) and foo() { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="mixing and/or without parentheses is invalid">
+        <style>@supports (color: green) and (display: block) or (color: blue) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="square brackets are invalid">
+        <style>@supports [color: green] { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="trailing tokens are invalid">
+        <style>@supports (color: green) junk { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="empty condition is invalid">
+        <style>@supports { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+</tests>

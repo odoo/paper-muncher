@@ -165,6 +165,11 @@ export struct Computer {
                     for (auto const& subRule : r.rules)
                         _evalRule(subRule, page, c);
             },
+            [&](SupportsRule const& r) {
+                if (r.match())
+                    for (auto const& subRule : r.rules)
+                        _evalRule(subRule, page, c);
+            },
             [&](auto const&) {
                 // Ignore other rule types
             }
@@ -508,6 +513,11 @@ export struct Computer {
             },
             [&](MediaRule const& r) {
                 if (r.match(_media))
+                    for (auto const& subRule : r.rules)
+                        _addRuleToLookup(&subRule);
+            },
+            [&](SupportsRule const& r) {
+                if (r.match())
                     for (auto const& subRule : r.rules)
                         _addRuleToLookup(&subRule);
             },
