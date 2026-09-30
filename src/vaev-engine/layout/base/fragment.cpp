@@ -635,22 +635,23 @@ export struct BoxFragment : Fragment {
         // https://drafts.csswg.org/css-position-4/#paint-a-blocks-decorations:~:text=and%20canvas.-,Otherwise,-First%20for%20root
         // If the box is a replaced element, paint the replaced content into canvas, atomically.
         if (originatingBox().isReplaced()) {
-            auto& image = originatingBox().content.expect<Gfx::Snapshot>();
-            auto trans = Math::Trans2f::map(
-                image.size().cast<f64>(),
-                contentBox().cast<f64>()
-            );
-
             g.push();
-            g.transform(trans);
             if (not metrics.radii.zero()) {
                 g.beginPath();
                 g.rect(
-                    contentBox().size().cast<f64>(),
+                    contentBox().cast<f64>(),
                     metrics.radii.cast<f64>()
                 );
                 g.clip();
             }
+
+            auto& image = originatingBox().content.expect<Gfx::Snapshot>();
+            g.transform(
+                Math::Trans2f::map(
+                    image.size().cast<f64>(),
+                    contentBox().cast<f64>()
+                )
+            );
             (void)image.replay(g);
             g.pop();
         }
