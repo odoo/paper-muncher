@@ -1,0 +1,87 @@
+<tests>
+
+<!-- https://drafts.csswg.org/css-values-4/#keywords -->
+<!-- https://drafts.csswg.org/css-conditional-3/#typedef-supports-condition -->
+<test name="@supports condition: true">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                div { width: 100px; height: 100px; background: green }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div/>
+    </rendering>
+
+    <rendering>
+        <style>
+            @supports not (color: green) {
+                div { background: red; }
+            }
+        </style>
+        <div/>
+    </rendering>
+
+    <rendering>
+        <style>
+            @supports NOT (color: green) {
+                div { background: red; }
+            }
+        </style>
+        <div/>
+    </rendering>
+
+    <rendering>
+        <style>
+            @supports nOt (color: green) {
+                div { background: red; }
+            }
+        </style>
+        <div/>
+    </rendering>
+
+    <rendering>
+        <style>
+            @supports (color: green) and (color: red) {
+                div { background: green; }
+            }
+        </style>
+        <div/>
+    </rendering>
+
+    <rendering>
+        <style>
+            @supports (color: green) AnD (color: red) {
+            div { background: green; }
+            }
+        </style>
+        <div/>
+    </rendering>
+
+    <rendering>
+        <style>
+            @supports (color: green) or (color: red) {
+            div { background: green; }
+            }
+        </style>
+        <div/>
+    </rendering>
+
+    <rendering>
+        <style>
+            @supports (color: green) Or (color: red) {
+            div { background: green; }
+            }
+        </style>
+        <div/>
+    </rendering>
+</test>
+
+</tests>
