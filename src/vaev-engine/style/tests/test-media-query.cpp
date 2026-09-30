@@ -2,6 +2,7 @@
 
 import Karm.Print;
 import Karm.Math;
+import Karm.Diag;
 import Vaev.Engine;
 
 using namespace Karm;
@@ -76,6 +77,18 @@ test$("logical-not") {
 
 test$("logical-only") {
     auto query = MediaQuery::only(TypeFeature{MediaType::SCREEN});
+
+    assert$(query.match(TEST_MEDIA));
+
+    return Ok();
+}
+
+test$("media-type-all") {
+    auto lex = Css::Lexer{"all"};
+    auto diags = Diag::Collector::ignore();
+    auto [val, _] = consumeDeclarationValue(lex, diags);
+    Cursor<Css::Sst> sst{val};
+    auto query = parseMediaQuery(sst);
 
     assert$(query.match(TEST_MEDIA));
 
