@@ -42,14 +42,18 @@ struct InlineFormatingContext : FormatingContext {
             tree.fc.leaveMonolithicBox();
         };
 
-        auto inlineSize = input.knownSize.width.unwrapOrElse([&] {
-            if (input.intrinsic == IntrinsicSize::MIN_CONTENT) {
-                return 0_au;
-            } else if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
-                return Limits<Au>::MAX;
-            } else {
-                return input.availableSpace.x;
-            }
+        Au inlineSize = input.knownSize.width.unwrapOrElse([&] {
+            return input.availableSpace.inline_.visit(
+                [](MinContent) -> Au {
+                    return 0_au;
+                },
+                [](MaxContent) -> Au {
+                    return Limits<Au>::MAX;
+                },
+                [](Au definite) -> Au {
+                    return definite;
+                }
+            );
         });
 
         // NOTE: We are not supposed to get there if the content is not a prose
@@ -75,9 +79,9 @@ struct InlineFormatingContext : FormatingContext {
             };
 
             Input childInput{
-                .generateFragment = input.generateFragment,
+                .mode = input.mode,
                 .usedSpacings = usedSpacings,
-                .availableSpace = {inlineSize, input.availableSpace.y},
+                .availableSpace = {inlineSize, definiteOrZero(input.availableSpace.block)},
                 .containingBlock = childContainingBlock,
             };
 
@@ -115,7 +119,7 @@ struct InlineFormatingContext : FormatingContext {
             auto& atomicBox = box.children()[boxStrutCell->id];
 
             if (oneOf(atomicBox.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
-                if (input.generateFragment) {
+                if (input.mode == LayoutMode::COMMIT) {
                     // https://www.w3.org/TR/css-position-3/#staticpos-rect
 
                     // TODO:
@@ -149,7 +153,7 @@ struct InlineFormatingContext : FormatingContext {
             };
 
             Input childInput{
-                .generateFragment = input.generateFragment,
+                .mode = input.mode,
                 .usedSpacings = usedSpacings,
                 .knownSize = {
                     Some(boxStrutCell->size.x),

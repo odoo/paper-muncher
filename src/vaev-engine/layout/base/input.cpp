@@ -3,32 +3,58 @@ export module Vaev.Engine:layout.input;
 import :layout.breaks;
 import :layout.fragment;
 import :layout.runningPosition;
+import :values;
 
 namespace Vaev::Layout {
 
 // MARK: AvailableSpace --------------------------------------------------------
 // https://www.w3.org/TR/css-sizing-3/#available
 
-using AvailableSpaceAxis = Union<Au, Keywords::MinContent, Keywords::MaxContent>;
+export struct MinContent {
+    bool operator==(MinContent const&) const = default;
+};
 
-struct AvailableSpace {
-    AvailableSpaceAxis x;
-    AvailableSpaceAxis y;
+export constexpr MinContent MIN_CONTENT;
+
+export struct MaxContent {
+    bool operator==(MaxContent const&) const = default;
+};
+
+export constexpr MaxContent MAX_CONTENT;
+
+export using AvailableSpaceAxis = Union<Au, MinContent, MaxContent>;
+
+export bool isIntrinsic(AvailableSpaceAxis const& axis) {
+    return axis.is<MinContent>() or axis.is<MaxContent>();
+}
+
+// The definite size in a slot, or zero for a sizing constraint.
+// NOTE: Reproduces the old behavior where intrinsic layouts were given a
+//       zero available space.
+// FIXME: Callers should handle constraints instead of treating them as zero.
+export Au definiteOrZero(AvailableSpaceAxis const& axis) {
+    if (auto space = axis.is<Au>())
+        return *space;
+    return 0_au;
+}
+
+// FIXME: Assumes horizontal-tb, inline is x and block is y.
+export struct AvailableSpace {
+    AvailableSpaceAxis inline_ = 0_au;
+    AvailableSpaceAxis block = 0_au;
+
+    AvailableSpace() = default;
+
+    AvailableSpace(AvailableSpaceAxis inline_, AvailableSpaceAxis block)
+        : inline_(inline_), block(block) {}
+
+    AvailableSpace(Vec2Au v)
+        : inline_(v.x), block(v.y) {}
+
+    bool operator==(AvailableSpace const&) const = default;
 };
 
 // MARK: Input -----------------------------------------------------------------
-
-export enum struct IntrinsicSize {
-    AUTO,
-    MIN_CONTENT,
-    MAX_CONTENT,
-    STRETCH_TO_FIT,
-};
-
-export bool isMinMaxIntrinsicSize(IntrinsicSize intrinsic) {
-    return intrinsic == IntrinsicSize::MIN_CONTENT or
-           intrinsic == IntrinsicSize::MAX_CONTENT;
-}
 
 struct UsedSpacings {
     InsetsAu padding{};
@@ -41,14 +67,25 @@ struct UsedSpacings {
     }
 };
 
+export enum struct LayoutMode {
+    MEASURE, //< Pure measurement.
+    COMMIT,  //< Generate fragments.
+};
+
+export enum struct SizingMode {
+    // https://www.w3.org/TR/css-sizing-3/#auto-box-sizes
+    SIZE,
+    // https://www.w3.org/TR/css-sizing-3/#contributions
+    CONTRIBUTION,
+};
+
 export struct Input {
-    /// Parent fragment where the layout will be attached.
-    bool generateFragment = false;
+    LayoutMode mode = LayoutMode::MEASURE;
     UsedSpacings usedSpacings = {};
-    IntrinsicSize intrinsic = IntrinsicSize::AUTO;
     Math::Vec2<Opt<Au>> knownSize = {};
     Vec2Au position = {};
-    Vec2Au availableSpace = {};
+    // https://www.w3.org/TR/css-sizing-3/#available
+    AvailableSpace availableSpace = {};
     Vec2Au containingBlock = {};
     MutCursor<RunningPositionMap> runningPosition = nullptr;
     usize pageNumber = 0;
@@ -62,12 +99,6 @@ export struct Input {
     // "availableSpaceInFragmentainer" parameter
     Au pendingVerticalSizes = {};
 
-    Input withIntrinsic(IntrinsicSize i) const {
-        auto copy = *this;
-        copy.intrinsic = i;
-        return copy;
-    }
-
     Input withKnownSize(Math::Vec2<Opt<Au>> size) const {
         auto copy = *this;
         copy.knownSize = size;
@@ -80,7 +111,7 @@ export struct Input {
         return copy;
     }
 
-    Input withAvailableSpace(Vec2Au space) const {
+    Input withAvailableSpace(AvailableSpace space) const {
         auto copy = *this;
         copy.availableSpace = space;
         return copy;
@@ -104,9 +135,9 @@ export struct Input {
         return copy;
     }
 
-    Input withGenerateFragment(bool value) const {
+    Input withMode(LayoutMode mode) const {
         auto copy = *this;
-        copy.generateFragment = value;
+        copy.mode = mode;
         return copy;
     }
 };

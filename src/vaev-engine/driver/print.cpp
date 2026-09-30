@@ -48,7 +48,7 @@ void _paintCornerMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& re
     auto output = Layout::layoutRoot(
         tree,
         {
-            .generateFragment = true,
+            .mode = Layout::LayoutMode::COMMIT,
             .knownSize = rect.size().cast<Some<Au>>(),
             .position = rect.topStart(),
             .availableSpace = rect.size(),
@@ -71,7 +71,7 @@ void _paintMainMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& rect
     auto output = Layout::layoutRoot(
         tree,
         {
-            .generateFragment = true,
+            .mode = Layout::LayoutMode::COMMIT,
             .knownSize = rect.size().cast<Some<Au>>(),
             .position = rect.topStart(),
             .availableSpace = rect.size(),
@@ -250,7 +250,7 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
         auto output = Layout::layoutRoot(
             contentTree,
             {
-                .generateFragment = true,
+                .mode = Layout::LayoutMode::COMMIT,
                 .knownSize = {Some(infos.pageContent.width), NONE},
                 .position = infos.pageContent.topStart(),
                 .availableSpace = infos.pageContent.size(),

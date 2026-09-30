@@ -975,25 +975,21 @@ export struct TableFormatingContext : FormatingContext {
 
     // MARK: Auto Table Layout -------------------------------------------------
     Pair<Au> getCellMinMaxAutoWidth(Tree& tree, Box& box, TableCell& cell, Au tableComputedWidth, UsedSpacings usedSpacings) {
-        auto cellMinOutput = computeIntrinsicContentSize(
-            tree,
-            box,
-            IntrinsicSize::MIN_CONTENT
-        );
+        auto measureCell = [&](AvailableSpace availableSpace) {
+            return measure(
+                tree,
+                box,
+                Axis::INLINE,
+                {NONE, NONE},
+                {0_au, 0_au},
+                availableSpace,
+                SizingMode::SIZE,
+                Some(usedSpacings)
+            );
+        };
 
-        auto cellMaxOutput = computeIntrinsicContentSize(
-            tree,
-            box,
-            IntrinsicSize::MAX_CONTENT
-        );
-
-        auto cellMinWidth = cellMinOutput.x + usedSpacings.padding.horizontal() +
-                            usedSpacings.borders.horizontal() +
-                            usedSpacings.margin.horizontal();
-
-        auto cellMaxWidth = cellMaxOutput.x + usedSpacings.padding.horizontal() +
-                            usedSpacings.borders.horizontal() +
-                            usedSpacings.margin.horizontal();
+        auto cellMinWidth = measureCell({MIN_CONTENT, MAX_CONTENT}) + usedSpacings.margin.horizontal();
+        auto cellMaxWidth = measureCell({MAX_CONTENT, MAX_CONTENT}) + usedSpacings.margin.horizontal();
 
         if (not(cell.box->style->sizing->width.is<Keywords::Auto>() or cell.box->style->sizing->width.is<Calc<PercentOr<Length>>>()))
             logWarn("width can't be anything other than 'auto' or a length in a table context");
@@ -1343,7 +1339,9 @@ export struct TableFormatingContext : FormatingContext {
         Opt<Au> capmin;
         Opt<Au> knownWidth;
         Opt<Au> knownHeight;
-        IntrinsicSize intrinsic;
+        // NOTE: Only the sizing constraint matters, the auto layout doesn't
+        //       depend on the definite available space.
+        AvailableSpaceAxis inlineConstraint;
         bool discovery;
 
         AutoLayoutCacheKey(Input const& input, bool discovery)
@@ -1351,7 +1349,7 @@ export struct TableFormatingContext : FormatingContext {
               capmin(input.capmin),
               knownWidth(input.knownSize.width),
               knownHeight(input.knownSize.height),
-              intrinsic(input.intrinsic),
+              inlineConstraint(isIntrinsic(input.availableSpace.inline_) ? input.availableSpace.inline_ : 0_au),
               discovery(discovery) {
         }
 
@@ -1404,7 +1402,7 @@ export struct TableFormatingContext : FormatingContext {
             if (lastAutoLayoutInput == cacheKey)
                 return;
 
-            if (input.intrinsic == IntrinsicSize::AUTO) {
+            if (input.availableSpace.inline_.is<Au>()) {
                 computeAutoColWidths(
                     tree,
                     input.knownSize.width,
@@ -1413,9 +1411,9 @@ export struct TableFormatingContext : FormatingContext {
                 );
             } else {
                 auto [minContent, maxContent] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
-                if (input.intrinsic == IntrinsicSize::MIN_CONTENT)
+                if (input.availableSpace.inline_ == MIN_CONTENT)
                     colWidth = minContent;
-                else if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
+                else if (input.availableSpace.inline_ == MAX_CONTENT) {
                     colWidth = maxContent;
                 } else {
                     unreachable();
@@ -1541,7 +1539,7 @@ export struct TableFormatingContext : FormatingContext {
         Vec2Au position = {currPositionX, startPositionY};
 
         Input childInput{
-            .generateFragment = input.generateFragment,
+            .mode = input.mode,
             .usedSpacings = usedSpacings,
             .knownSize = {
                 Some(colWidthPref.query(j, j + cell.colSpan - 1) + spacing.x * (cell.colSpan - 1)),

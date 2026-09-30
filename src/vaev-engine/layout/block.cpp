@@ -153,7 +153,7 @@ Opt<Au> _tableWrapperFitContentWidth(Tree& tree, Box& wrapper, Au availableWidth
         if (not gridBox.style->sizing->width.is<Keywords::Auto>())
             return NONE;
 
-        return Some(computeFitContentInlineSize(tree, wrapper, availableWidth));
+        return Some(fitContentInlineSize(tree, wrapper, availableWidth));
     }
 
     return NONE;
@@ -165,7 +165,7 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, In
     // box’s containing block instead, not the table-wrapper box itself.
     auto containingBlock = child.style->display == Display::TABLE_BOX ? parentInput.containingBlock : childInput.containingBlock;
 
-    if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Display::INLINE) {
+    if (not isIntrinsic(childInput.availableSpace.inline_) or child.style->display != Display::INLINE) {
         if (child.style->sizing->width.is<Keywords::Auto>()) {
             // https://www.w3.org/TR/css-tables-3/#layout-principles
             // Unlike other block-level boxes, tables do not fill their containing block by default.
@@ -186,8 +186,7 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, In
         } else {
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
                 tree, child, child.style->sizing->width, containingBlock,
-                usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal(),
-                childInput.capmin
+                usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
             );
         }
 
@@ -238,10 +237,6 @@ struct BlockFormatingContext : FormatingContext {
         Au capmin{};
         for (auto& c : box.children()) {
             if (c.style->display != Display::TABLE_BOX) {
-                auto minContentContrib = computeIntrinsicContentSize(
-                    tree, c, IntrinsicSize::MIN_CONTENT
-                );
-
                 Vec2Au containingBlock = {inlineSize, input.knownSize.height.unwrapOr(0_au)};
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, c, containingBlock),
@@ -249,10 +244,19 @@ struct BlockFormatingContext : FormatingContext {
                     .margin = computeMargins(tree, c, containingBlock)
                 };
 
+                // FIXME: This should be minContentInlineContribution(), which
+                //        also applies the box's own sizing properties.
+                auto minContentContrib = measure(
+                    tree, c, Axis::INLINE,
+                    {NONE, NONE}, {0_au, 0_au},
+                    {MIN_CONTENT, MAX_CONTENT},
+                    SizingMode::SIZE,
+                    Some(usedSpacings)
+                );
+
                 capmin = max(
                     capmin,
-                    minContentContrib.width + usedSpacings.margin.horizontal() +
-                        usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
+                    minContentContrib + usedSpacings.margin.horizontal()
                 );
             }
         }
@@ -288,7 +292,7 @@ struct BlockFormatingContext : FormatingContext {
                 continue;
 
             if (oneOf(c.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
-                if (input.generateFragment) {
+                if (input.mode == LayoutMode::COMMIT) {
                     // https://www.w3.org/TR/css-position-3/#staticpos-rect
                     RectAu staticPosRect = {
                         Vec2Au{input.position.x, input.position.y + blockSize},
@@ -332,10 +336,9 @@ struct BlockFormatingContext : FormatingContext {
             };
 
             Input childInput = {
-                .generateFragment = input.generateFragment,
+                .mode = input.mode,
                 .usedSpacings = usedSpacings,
-                .intrinsic = input.intrinsic,
-                .availableSpace = {input.availableSpace.x, 0_au},
+                .availableSpace = {input.availableSpace.inline_, 0_au},
                 .containingBlock = childContainingBlock,
                 .runningPosition = input.runningPosition,
                 .pageNumber = input.pageNumber,
@@ -365,11 +368,19 @@ struct BlockFormatingContext : FormatingContext {
 
             childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
             if (box.style->text->align == TextAlign::BLOCK_CENTER)
-                childInput.position.x += inlineSize / 2 - layoutBorderBox(tree, c, childInput.withGenerateFragment(false)).width() / 2;
+                childInput.position.x += inlineSize / 2 - layoutBorderBox(tree, c, childInput.withMode(LayoutMode::MEASURE)).width() / 2;
 
             if (c.isPseudoElement(Dom::PseudoElement::MARKER)) {
                 // NOSPEC: The spec doesn't define where the marker should be placed.
-                auto width = computeIntrinsicContentSize(tree, c, IntrinsicSize::MAX_CONTENT).x;
+                // FIXME: This is the content-box size, but it is used as a
+                //        border-box known size.
+                auto width = measure(
+                    tree, c, Axis::INLINE,
+                    {NONE, NONE}, {0_au, 0_au},
+                    {MAX_CONTENT, MAX_CONTENT},
+                    SizingMode::SIZE,
+                    Some(UsedSpacings{})
+                );
                 childInput.position.x -= width * 2.5;
                 childInput.knownSize.width = Some(width);
             }

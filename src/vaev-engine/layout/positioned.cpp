@@ -233,7 +233,7 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
     }
 
     Input childInput = {
-        .generateFragment = true,
+        .mode = LayoutMode::COMMIT,
         .usedSpacings = usedSpacings,
         .knownSize = {width, height},
         .position = position,
