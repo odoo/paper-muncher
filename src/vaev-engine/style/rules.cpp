@@ -381,7 +381,7 @@ SupportsRule SupportsRule::parse(RegisteredPropertySet& registry, Css::Sst const
     auto& prefix = sst.prefix.expect();
     Cursor<Css::Sst> prefixContent = prefix->content;
 
-    res.matched = parseSupportsCondition(prefixContent);
+    res.matched = parseSupportsCondition(registry, prefixContent);
 
     // Parse the rules.
     for (auto const& item : sst.content) {

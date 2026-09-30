@@ -8,23 +8,48 @@ import Karm.Core;
 
 import :values;
 import :css;
+import :props;
 
 using namespace Karm;
 
 namespace Vaev::Style {
 
-static Res<bool> _parseSupportsInParens(Cursor<Css::Sst>& c);
+// MARK: Declarations ----------------------------------------------------------
+
+// https://drafts.csswg.org/css-conditional-3/#typedef-supports-decl
+static bool _evalSupportsDeclaration(RegisteredPropertySet& registry, Cursor<Css::Sst> c) {
+    eatWhitespace(c);
+    if (c.ended() or *c != Css::Token::IDENT)
+        return false;
+    auto const& propertyName = c.next().token.data;
+
+    eatWhitespace(c);
+    if (not c.skip(Css::Token::COLON))
+        return false;
+    eatWhitespace(c);
+
+    // "--" alone is not a valid custom property.
+    if (startWith(propertyName, "--"s) == Match::PARTIAL)
+        return true;
+
+    auto prop = registry.parseValue(Symbol::from(propertyName), c, RegisteredPropertySet::ALLOW_DEFAULTING);
+    return prop.has();
+}
+
+// MARK: Conditions ------------------------------------------------------------
+
+static Res<bool> _parseSupportsInParens(RegisteredPropertySet& registry, Cursor<Css::Sst>& c);
 
 // https://drafts.csswg.org/css-conditional-3/#typedef-supports-condition
-static Res<bool> _parseSupportsCondition(Cursor<Css::Sst>& c) {
+static Res<bool> _parseSupportsCondition(RegisteredPropertySet& registry, Cursor<Css::Sst>& c) {
     eatWhitespace(c);
 
     if (c.skip(Css::Token::ident("not"))) {
         eatWhitespace(c);
-        return Ok(not try$(_parseSupportsInParens(c)));
+        return Ok(not try$(_parseSupportsInParens(registry, c)));
     }
 
-    bool value = try$(_parseSupportsInParens(c));
+    bool value = try$(_parseSupportsInParens(registry, c));
     eatWhitespace(c);
 
     if (c.ended() or (c.peek() != Css::Token::ident("and") and c.peek() != Css::Token::ident("or")))
@@ -33,7 +58,7 @@ static Res<bool> _parseSupportsCondition(Cursor<Css::Sst>& c) {
     auto keyword = c->token;
     while (c.skip(keyword)) {
         eatWhitespace(c);
-        bool rhs = try$(_parseSupportsInParens(c));
+        bool rhs = try$(_parseSupportsInParens(registry, c));
         value = keyword == Css::Token::ident("and") ? (value and rhs) : (value or rhs);
         eatWhitespace(c);
     }
@@ -42,7 +67,7 @@ static Res<bool> _parseSupportsCondition(Cursor<Css::Sst>& c) {
 }
 
 // https://drafts.csswg.org/css-conditional-3/#typedef-supports-in-parens
-static Res<bool> _parseSupportsInParens(Cursor<Css::Sst>& c) {
+static Res<bool> _parseSupportsInParens(RegisteredPropertySet& registry, Cursor<Css::Sst>& c) {
     if (c.ended())
         return Error::invalidData("unexpected end of supports condition");
 
@@ -54,30 +79,19 @@ static Res<bool> _parseSupportsInParens(Cursor<Css::Sst>& c) {
 
     Cursor<Css::Sst> content = c.next().content;
 
-    // ( <supports-condition> )
     Cursor<Css::Sst> condition = content;
-    if (auto value = _parseSupportsCondition(condition)) {
+    if (auto value = _parseSupportsCondition(registry, condition)) {
         eatWhitespace(condition);
         if (condition.ended())
             return value;
     }
 
-    // ( <declaration> )
-    Cursor<Css::Sst> declaration = content;
-    eatWhitespace(declaration);
-    if (declaration.skip(Css::Token::IDENT)) {
-        eatWhitespace(declaration);
-        if (declaration.skip(Css::Token::COLON))
-            // TODO: Evaluate the declaration against the property registry
-            return Ok(true);
-    }
-
-    return Ok(false);
+    return Ok(_evalSupportsDeclaration(registry, content));
 }
 
 // https://drafts.csswg.org/css-conditional-3/#at-supports
-export bool parseSupportsCondition(Cursor<Css::Sst>& c) {
-    auto result = _parseSupportsCondition(c);
+export bool parseSupportsCondition(RegisteredPropertySet& registry, Cursor<Css::Sst>& c) {
+    auto result = _parseSupportsCondition(registry, c);
     eatWhitespace(c);
     return c.ended() and result.unwrapOr(false);
 }
