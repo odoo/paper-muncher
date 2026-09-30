@@ -59,6 +59,14 @@ export struct Sst {
         return type == DECL or type == RULE;
     }
 
+    bool var() const {
+        return type == FUNC and prefix == Token::function("var(");
+    }
+
+    bool curlyBlock() const {
+        return type == BLOCK and token == Token::LEFT_CURLY_BRACKET;
+    }
+
     // https://drafts.csswg.org/css-variables-2/#guaranteed-invalid
     static Sst guaranteedInvalid() {
         return Token::guaranteedInvalid("");
@@ -334,6 +342,12 @@ static void _skipBlock(Lexer& lex, Token::Type endingToken) {
             break;
         }
     }
+}
+
+export bool containsCurlyBlock(Slice<Sst> value) {
+    return iter(value) | Any([](Sst const& node) {
+               return node.curlyBlock();
+           });
 }
 
 static bool _declarationAhead(Lexer lex) {
