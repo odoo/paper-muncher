@@ -113,7 +113,7 @@ Sst consumeAtRule(Lexer& lex, Diag::Collector& diags);
 export Content consumeDeclarationList(Lexer& lex, Diag::Collector& diags, bool topLevel = true);
 Content consumeDeclarationBlock(Lexer& lex, Diag::Collector& diags);
 Sst consumeComponentValue(Lexer& lex, Diag::Collector& diags);
-Sst consumeBlock(Lexer& lex, Diag::Collector& diags, Token::Type term);
+Sst consumeBlock(Lexer& lex, Diag::Collector& diags, Token::Type endingToken);
 export Opt<Sst> consumeDeclaration(Lexer& lex, Diag::Collector& diags);
 
 // https://www.w3.org/TR/css-syntax-3/#consume-qualified-rule
@@ -266,28 +266,115 @@ export Tuple<Content, Important> consumeDeclarationValue(Lexer& lex, Diag::Colle
     return {std::move(value), Important::UNSET};
 }
 
-// https://www.w3.org/TR/css-syntax-3/#consume-style-block
-// https://www.w3.org/TR/css-syntax-3/#consume-list-of-declarations
+static void _skipComponentValue(Lexer& lex);
+static void _skipBlock(Lexer& lex, Token::Type endingToken);
 
-bool declarationAhead(Lexer lex) {
-    bool res = lex.peek() == Token::IDENT;
+// https://www.w3.org/TR/css-syntax-3/#consume-function
+static void _skipFunc(Lexer& lex) {
     lex.next();
-    eatWhitespace(lex);
-    return res and lex.peek() == Token::COLON;
+    while (true) {
+        auto t = lex.peek();
+        switch (t.type) {
+        case Token::END_OF_FILE:
+            return;
+
+        case Token::RIGHT_PARENTHESIS:
+            lex.next();
+            return;
+
+        default:
+            _skipComponentValue(lex);
+            break;
+        }
+    }
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-component-value
+static void _skipComponentValue(Lexer& lex) {
+    switch (lex.peek().type) {
+    case Token::LEFT_SQUARE_BRACKET:
+        _skipBlock(lex, Token::RIGHT_SQUARE_BRACKET);
+        return;
+
+    case Token::LEFT_CURLY_BRACKET:
+        _skipBlock(lex, Token::RIGHT_CURLY_BRACKET);
+        return;
+
+    case Token::LEFT_PARENTHESIS:
+        _skipBlock(lex, Token::RIGHT_PARENTHESIS);
+        return;
+
+    case Token::FUNCTION:
+        _skipFunc(lex);
+        return;
+
+    default:
+        lex.next();
+        return;
+    }
+}
+
+// https://www.w3.org/TR/css-syntax-3/#consume-a-simple-block
+static void _skipBlock(Lexer& lex, Token::Type endingToken) {
+    lex.next();
+
+    while (true) {
+        auto t = lex.peek();
+
+        switch (t.type) {
+        case Token::END_OF_FILE:
+            return;
+
+        default:
+            if (t.type == endingToken) {
+                lex.next();
+                return;
+            }
+            _skipComponentValue(lex);
+            break;
+        }
+    }
+}
+
+static bool _declarationAhead(Lexer lex) {
+    auto name = lex.next();
+    if (name != Token::IDENT)
+        return false;
+
+    eatWhitespace(lex);
+    if (lex.peek() != Token::COLON)
+        return false;
+    lex.next();
+
+    if (startWith(name.data.str(), "--"s) != Match::NO)
+        return true;
+
+    // https://drafts.csswg.org/css-syntax-3/#consume-declaration
+    while (not endedDeclarationValue(lex)) {
+        auto t = lex.peek().type;
+        if (t == Token::LEFT_CURLY_BRACKET)
+            return false;
+        _skipComponentValue(lex);
+    }
+
+    return true;
+}
+
+// https://www.w3.org/TR/css-syntax-3/#consume-style-block
+// https://www.w3.org/TR/css-syntax-3/#consume-list-of-declarations
 // NOSPEC: We unified the two functions into one for simplicity
-//         and added a check for the right curly bracket
-//         to avoid aving to parsing the input multiple times
+//         since they mostly do the same thing.
 Content consumeDeclarationList(Lexer& lex, Diag::Collector& diags, bool topLevel) {
     Content block;
 
+    // Repeatedly consume the next input token:
     while (true) {
         auto t = lex.peek();
         switch (t.type) {
         case Token::WHITESPACE:
         case Token::SEMICOLON:
         case Token::COMMENT:
+            // Do nothing.
             lex.next();
             break;
 
@@ -306,18 +393,17 @@ Content consumeDeclarationList(Lexer& lex, Diag::Collector& diags, bool topLevel
             break;
 
         case Token::IDENT:
-            if (lex.peek().data == "&") {
+            // NOSPEC: Normally the spec would requires us to consume component values
+            //         and then parse the content of an rule in a second pass,
+            //         but we are "smarter" than this and try to consume nested rule directly.
+            if (lex.peek().data == "&" or not _declarationAhead(lex)) {
                 auto rule = consumeRule(lex, diags);
                 if (rule)
                     block.pushBack(*rule);
-            } else if (declarationAhead(lex)) {
+            } else {
                 auto decl = consumeDeclaration(lex, diags);
                 if (decl)
                     block.pushBack(*decl);
-            } else {
-                auto rule = consumeRule(lex, diags);
-                if (rule)
-                    block.pushBack(*rule);
             }
             break;
 
@@ -427,7 +513,7 @@ Sst consumeComponentValue(Lexer& lex, Diag::Collector& diags) {
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-a-simple-block
-Sst consumeBlock(Lexer& lex, Diag::Collector& diags, Token::Type term) {
+Sst consumeBlock(Lexer& lex, Diag::Collector& diags, Token::Type endingToken) {
     Sst block = Sst::BLOCK;
     lex.next();
 
@@ -443,7 +529,7 @@ Sst consumeBlock(Lexer& lex, Diag::Collector& diags, Token::Type term) {
             return block;
 
         default:
-            if (t.type == term) {
+            if (t.type == endingToken) {
                 lex.next();
                 return block;
             }

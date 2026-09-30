@@ -32,4 +32,17 @@ test$("vaev-css-parse-func") {
     return Ok();
 }
 
+test$("vaev-css-parse-nested-rule-with-colon") {
+    Lexer lex{"color: red; a:where(.x) { color: blue } .b { display: none }"};
+    auto diags = Diag::Collector::ignore();
+    auto content = consumeDeclarationList(lex, diags);
+
+    assertEq$(content.len(), 3uz);
+    assertEq$(content[0], Sst::DECL);
+    assertEq$(content[1], Sst::RULE);
+    assertEq$(content[2], Sst::RULE);
+
+    return Ok();
+}
+
 } // namespace Vaev::Css::Tests
