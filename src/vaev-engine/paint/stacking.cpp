@@ -155,6 +155,7 @@ export struct StackingContext {
         // NOTE: 'z-index' only applies to positioned boxes, non-positioned ones
         //       always paint in tree order.
         auto zIndexNumber = box.isPositioned() ? zIndex.unwrapOr<Integer>(0) : 0;
+        bool impliesStackingContext = box.impliesNewStackingContext();
 
         // 5. positioned descendants with negative (non-zero) z-index values
         if (box.isPositioned() and zIndexNumber < 0) {
@@ -167,16 +168,24 @@ export struct StackingContext {
 
         // 7. non-positioned floating descendants, in tree order
         else if (not box.isPositioned() and box.isFloating()) {
-            parentStackingContext.addStackingContainer(
-                PaintingOrder::FLOAT,
-                zIndexNumber,
-                fragment
-            );
+            if (not impliesStackingContext) {
+                parentStackingContext.addStackingContainer(
+                    PaintingOrder::FLOAT,
+                    zIndexNumber,
+                    fragment
+                );
+            } else {
+                parentStackingContext.addStackingLayer(
+                    PaintingOrder::FLOAT,
+                    zIndexNumber,
+                    establishStackingContext(fragment)
+                );
+            }
         }
 
         // 8. in-flow, non-positioned, block-level descendant boxes
         else if (not box.isPositioned() and not box.isFloating()) {
-            if (box.impliesNewStackingContext()) {
+            if (impliesStackingContext) {
                 parentStackingContext.addStackingLayer(
                     PaintingOrder::IN_FLOW,
                     zIndexNumber,
@@ -191,7 +200,7 @@ export struct StackingContext {
         // 9. positioned descendants with z-index: auto or z-index: 0
         else if (box.isPositioned() and zIndexNumber == 0) {
             // descendant has z-index: auto
-            if (zIndex == Keywords::AUTO) {
+            if (zIndex == Keywords::AUTO and not impliesStackingContext) {
                 parentStackingContext.addStackingContainer(
                     PaintingOrder::POSITIONED_ZERO_Z,
                     zIndexNumber,
