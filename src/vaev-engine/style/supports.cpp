@@ -17,16 +17,21 @@ namespace Vaev::Style {
 // MARK: Declarations ----------------------------------------------------------
 
 // https://drafts.csswg.org/css-conditional-3/#typedef-supports-decl
-static bool _evalSupportsDeclaration(RegisteredPropertySet& registry, Cursor<Css::Sst> c) {
-    eatWhitespace(c);
-    if (c.ended() or *c != Css::Token::IDENT)
-        return false;
-    auto const& propertyName = c.next().token.data;
+static bool _evalSupportsDeclaration(RegisteredPropertySet& registry, Css::Content const& content) {
+    // NOTE: consumeDeclaration() works on a token stream, so the content is serialized and lexed again.
+    auto text = Css::serialize(Css::Sst{content});
+    Css::Lexer lex{text};
+    eatWhitespace(lex);
 
-    eatWhitespace(c);
-    if (not c.skip(Css::Token::COLON))
+    auto diags = Diag::Collector::ignore();
+    auto decl = Css::consumeDeclaration(lex, diags);
+    if (not decl or lex.peek() != Css::Token::END_OF_FILE)
         return false;
-    eatWhitespace(c);
+
+    auto const& propertyName = decl->token.data;
+    Slice<Css::Sst> value = decl->content;
+    if ((not isEmpty(value) and not validDeclarationValue(value)) or containsInvalidVar(value))
+        return false;
 
     // https://www.w3.org/TR/css-variables-1/#typedef-custom-property-name
     // The <custom-property-name> production corresponds to this: it’s defined as any <dashed-ident> (a valid identifier
@@ -34,8 +39,15 @@ static bool _evalSupportsDeclaration(RegisteredPropertySet& registry, Cursor<Css
     if (startWith(propertyName, "--"s) == Match::PARTIAL)
         return true;
 
-    auto prop = registry.parseValue(Symbol::from(propertyName), c, RegisteredPropertySet::ALLOW_DEFAULTING);
-    return prop.has();
+    // https://drafts.csswg.org/css-conditional-3/#support-definition
+    if (not registry.resolveRegistration(propertyName, {}))
+        return false;
+
+    // https://drafts.csswg.org/css-values-5/#resolve-property
+    if (containsVar(value))
+        return true;
+
+    return registry.parseValue(Symbol::from(propertyName), value, RegisteredPropertySet::ALLOW_DEFAULTING).has();
 }
 
 // MARK: Conditions ------------------------------------------------------------
@@ -73,22 +85,24 @@ static Res<bool> _parseSupportsInParens(RegisteredPropertySet& registry, Cursor<
     if (c.ended())
         return Error::invalidData("unexpected end of supports condition");
 
-    if (c.skip(Css::Sst::FUNC))
-        return Ok(false);
-
-    if (c.peek() != Css::Sst::BLOCK or c->token != Css::Token::LEFT_PARENTHESIS)
+    if (c.peek() != Css::Sst::FUNC and (c.peek() != Css::Sst::BLOCK or c->token != Css::Token::LEFT_PARENTHESIS))
         return Error::invalidData("expected '(' in supports condition");
 
-    Cursor<Css::Sst> content = c.next().content;
+    auto const& node = c.next();
+    if (not isEmpty(node.content) and not validAnyValue(node.content))
+        return Error::invalidData("invalid token in supports condition");
 
-    Cursor<Css::Sst> condition = content;
+    if (node == Css::Sst::FUNC)
+        return Ok(false);
+
+    Cursor<Css::Sst> condition = node.content;
     if (auto value = _parseSupportsCondition(registry, condition)) {
         eatWhitespace(condition);
         if (condition.ended())
             return value;
     }
 
-    return Ok(_evalSupportsDeclaration(registry, content));
+    return Ok(_evalSupportsDeclaration(registry, node.content));
 }
 
 // https://drafts.csswg.org/css-conditional-3/#at-supports
