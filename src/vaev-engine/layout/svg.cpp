@@ -306,7 +306,7 @@ struct SvgFormatingContext : FormatingContext {
             box.style->sizing->width,
             box.style->sizing->height
         );
-        auto size = _defaultSizing(input.knownSize, aspectRatio, input.containingBlock);
+        auto size = _defaultSizing(input.knownSize, aspectRatio, definiteOrZero(input.containingBlock));
 
         auto fragment = _commitRoot(tree, box, input.position, size);
 

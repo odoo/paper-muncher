@@ -62,7 +62,7 @@ Output _dispatchFormatingContext(Tree& tree, Box& box, Input input, usize startA
     return Output{};
 }
 
-InsetsAu computeMargins(Tree& tree, Box& box, Vec2Au containingBlock) {
+InsetsAu computeMargins(Tree& tree, Box& box, Math::Vec2<Opt<Au>> containingBlock) {
     // Boxes that make up a table do not have margins.
     if (box.style->display.isTableInternal())
         return {};
@@ -70,10 +70,10 @@ InsetsAu computeMargins(Tree& tree, Box& box, Vec2Au containingBlock) {
     InsetsAu res;
     auto margin = box.style->margin;
 
-    res.top = resolve(tree, box, margin->top, containingBlock.height);
-    res.end = resolve(tree, box, margin->end, containingBlock.width);
-    res.bottom = resolve(tree, box, margin->bottom, containingBlock.height);
-    res.start = resolve(tree, box, margin->start, containingBlock.width);
+    res.top = resolve(tree, box, margin->top, containingBlock.height.unwrapOr(0_au));
+    res.end = resolve(tree, box, margin->end, containingBlock.width.unwrapOr(0_au));
+    res.bottom = resolve(tree, box, margin->bottom, containingBlock.height.unwrapOr(0_au));
+    res.start = resolve(tree, box, margin->start, containingBlock.width.unwrapOr(0_au));
 
     return res;
 }
@@ -109,7 +109,7 @@ InsetsAu computeBorders(Tree& tree, Box& box) {
     return res;
 }
 
-InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
+InsetsAu computePaddings(Tree& tree, Box& box, Math::Vec2<Opt<Au>> containingBlock) {
     // In a table only table cell have padding
     if (box.style->display.isTableInternal() and box.style->display != Display::TABLE_CELL)
         return {};
@@ -117,10 +117,10 @@ InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
     InsetsAu res;
     auto padding = box.style->padding;
 
-    res.top = resolve(tree, box, padding->top, containingBlock.width);
-    res.end = resolve(tree, box, padding->end, containingBlock.width);
-    res.bottom = resolve(tree, box, padding->bottom, containingBlock.width);
-    res.start = resolve(tree, box, padding->start, containingBlock.width);
+    res.top = resolve(tree, box, padding->top, containingBlock.width.unwrapOr(0_au));
+    res.end = resolve(tree, box, padding->end, containingBlock.width.unwrapOr(0_au));
+    res.bottom = resolve(tree, box, padding->bottom, containingBlock.width.unwrapOr(0_au));
+    res.start = resolve(tree, box, padding->start, containingBlock.width.unwrapOr(0_au));
 
     return res;
 }
@@ -142,7 +142,7 @@ Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size) {
 }
 
 // Returns the border-box size of the box's content in the requested axis.
-static Au _measureContent(Tree& tree, Box& box, Axis axis, Math::Vec2<Opt<Au>> knownSize, Vec2Au containingBlock, AvailableSpace availableSpace, Opt<UsedSpacings> overrideSpacings) {
+static Au _measureContent(Tree& tree, Box& box, Axis axis, Math::Vec2<Opt<Au>> knownSize, Math::Vec2<Opt<Au>> containingBlock, AvailableSpace availableSpace, Opt<UsedSpacings> overrideSpacings) {
     auto usedSpacings = overrideSpacings.unwrapOrElse([&] {
         return UsedSpacings{
             .padding = computePaddings(tree, box, containingBlock),
@@ -183,7 +183,7 @@ static Au _measureContent(Tree& tree, Box& box, Axis axis, Math::Vec2<Opt<Au>> k
     return output.size.y + vertical;
 }
 
-Au measure(Tree& tree, Box& box, Axis requestedAxis, Math::Vec2<Opt<Au>> knownSize, Vec2Au containingBlock, AvailableSpace availableSpace, [[maybe_unused]] SizingMode sizing, Opt<UsedSpacings> usedSpacings) {
+Au measure(Tree& tree, Box& box, Axis requestedAxis, Math::Vec2<Opt<Au>> knownSize, Math::Vec2<Opt<Au>> containingBlock, AvailableSpace availableSpace, [[maybe_unused]] SizingMode sizing, Opt<UsedSpacings> usedSpacings) {
     // FIXME: CONTRIBUTION is treated as SIZE. It should apply the box's own
     //        sizing properties (width, min-width, max-width, box-sizing) and
     //        add padding, border and margins, following
@@ -191,9 +191,9 @@ Au measure(Tree& tree, Box& box, Axis requestedAxis, Math::Vec2<Opt<Au>> knownSi
     return _measureContent(tree, box, requestedAxis, knownSize, containingBlock, availableSpace, usedSpacings);
 }
 
-Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox) {
+Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Math::Vec2<Opt<Au>> containingBlock, Au horizontalBorderBox) {
     if (auto calc = size.is<Calc<PercentOr<Length>>>()) {
-        auto specifiedWidth = resolve(tree, box, *calc, containingBlock.x);
+        auto specifiedWidth = resolve(tree, box, *calc, containingBlock.x.unwrapOr(0_au));
         if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
             specifiedWidth += horizontalBorderBox;
         }
@@ -203,7 +203,7 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au c
     // NOTE: The intrinsic sizes are measured on the content box, and the
     //       caller's edges are added back, matching the known size convention.
     auto measureContent = [&](AvailableSpace availableSpace) {
-        return measure(tree, box, Axis::INLINE, {NONE, NONE}, {0_au, 0_au}, availableSpace, SizingMode::SIZE, Some(UsedSpacings{})) + horizontalBorderBox;
+        return measure(tree, box, Axis::INLINE, {NONE, NONE}, {NONE, NONE}, availableSpace, SizingMode::SIZE, Some(UsedSpacings{})) + horizontalBorderBox;
     };
 
     if (size.is<Keywords::MinContent>()) {
@@ -228,9 +228,9 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au c
     }
 }
 
-Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au verticalBorderBox) {
+Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Math::Vec2<Opt<Au>> containingBlock, Au verticalBorderBox) {
     if (auto calc = size.is<Calc<PercentOr<Length>>>()) {
-        auto specifiedHeight = resolve(tree, box, *calc, containingBlock.y);
+        auto specifiedHeight = resolve(tree, box, *calc, containingBlock.y.unwrapOr(0_au));
         if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
             specifiedHeight += verticalBorderBox;
         }
@@ -403,7 +403,7 @@ Output layoutRoot(Tree& tree, Input input) {
         for (usize i = 0; i < pending.len(); ++i) {
             auto oofChild = pending[i];
 
-            auto childOutput = layoutAbsolutePositioned(tree, oofChild->originatingBox(), input.containingBlock, oofChild->staticPosRect, input.pageNumber);
+            auto childOutput = layoutAbsolutePositioned(tree, oofChild->originatingBox(), definiteOrZero(input.containingBlock), oofChild->staticPosRect, input.pageNumber);
             auto childFragment = childOutput.fragment.expect();
 
             pending.pushBack(childOutput.outOfFlowStash);

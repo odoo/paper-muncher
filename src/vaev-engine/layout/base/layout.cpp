@@ -9,17 +9,17 @@ import :layout.formating;
 
 namespace Vaev::Layout {
 
-export InsetsAu computeMargins(Tree& tree, Box& box, Vec2Au containingBlock);
+export InsetsAu computeMargins(Tree& tree, Box& box, Math::Vec2<Opt<Au>> containingBlock);
 
 export InsetsAu computeBorders(Tree& tree, Box& box);
 
-export InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock);
+export InsetsAu computePaddings(Tree& tree, Box& box, Math::Vec2<Opt<Au>> containingBlock);
 
 export Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size);
 
-export Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox);
+export Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Math::Vec2<Opt<Au>> containingBlock, Au horizontalBorderBox);
 
-export Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au verticalBorderBox);
+export Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Math::Vec2<Opt<Au>> containingBlock, Au verticalBorderBox);
 
 // TODO: Constify
 export Au measure(
@@ -27,7 +27,7 @@ export Au measure(
     Box& box,
     Axis requestedAxis,
     Math::Vec2<Opt<Au>> knownSize,
-    Vec2Au containingBlock,
+    Math::Vec2<Opt<Au>> containingBlock,
     AvailableSpace availableSpace,
     SizingMode sizing,
     Opt<UsedSpacings> usedSpacings = NONE

@@ -981,7 +981,7 @@ export struct TableFormatingContext : FormatingContext {
                 box,
                 Axis::INLINE,
                 {NONE, NONE},
-                {0_au, 0_au},
+                {NONE, NONE},
                 availableSpace,
                 SizingMode::SIZE,
                 Some(usedSpacings)
@@ -1027,7 +1027,7 @@ export struct TableFormatingContext : FormatingContext {
                     continue;
 
                 UsedSpacings usedSpacings{
-                    .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
+                    .padding = computePaddings(tree, *cell.box, {Some(tableUsedWidth), NONE}),
                     .borders = buildBordersWidthsForCell(i, j, cell.rowSpan, colSpan)
                 };
 
@@ -1055,7 +1055,7 @@ export struct TableFormatingContext : FormatingContext {
                     continue;
 
                 UsedSpacings usedSpacings{
-                    .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
+                    .padding = computePaddings(tree, *cell.box, {Some(tableUsedWidth), NONE}),
                     .borders = buildBordersWidthsForCell(i, j, cell.rowSpan, colSpan)
                 };
 
@@ -1302,7 +1302,7 @@ export struct TableFormatingContext : FormatingContext {
                 }
 
                 UsedSpacings usedSpacings{
-                    .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
+                    .padding = computePaddings(tree, *cell.box, {Some(tableUsedWidth), NONE}),
                     .borders = buildBordersWidthsForCell(i, j, rowSpan, cell.colSpan)
                 };
 
@@ -1312,7 +1312,7 @@ export struct TableFormatingContext : FormatingContext {
                     {
                         .usedSpacings = usedSpacings,
                         .knownSize = {Some(colWidth[j]), NONE},
-                        .containingBlock = {tableUsedWidth, 0_au},
+                        .containingBlock = {Some(tableUsedWidth), NONE},
                     }
                 );
 
@@ -1345,7 +1345,7 @@ export struct TableFormatingContext : FormatingContext {
         bool discovery;
 
         AutoLayoutCacheKey(Input const& input, bool discovery)
-            : containingBlockX(input.containingBlock.x),
+            : containingBlockX(input.containingBlock.x.unwrapOr(0_au)),
               capmin(input.capmin),
               knownWidth(input.knownSize.width),
               knownHeight(input.knownSize.height),
@@ -1407,7 +1407,7 @@ export struct TableFormatingContext : FormatingContext {
                     tree,
                     input.knownSize.width,
                     input.capmin.unwrapOr(0_au),
-                    input.containingBlock.x
+                    input.containingBlock.x.unwrapOr(0_au)
                 );
             } else {
                 auto [minContent, maxContent] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
@@ -1530,7 +1530,7 @@ export struct TableFormatingContext : FormatingContext {
         //
         //       (See https://www.w3.org/TR/CSS22/tables.html#height-layout)
         UsedSpacings usedSpacings{
-            .padding = computePaddings(tree, *cell.box, tableBoxSize),
+            .padding = computePaddings(tree, *cell.box, tableBoxSize.cast<Some<Au>>()),
             .borders = useBordersCollapse
                            ? buildBordersWidthsForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, cell.colSpan)
                            : computeBorders(tree, *cell.box),
@@ -1546,13 +1546,13 @@ export struct TableFormatingContext : FormatingContext {
                 verticalSize,
             },
             .position = position,
-            .containingBlock = tableBoxSize,
+            .containingBlock = tableBoxSize.cast<Some<Au>>(),
             .breakpointTraverser = breakpointsForCell,
             .pendingVerticalSizes = input.pendingVerticalSizes,
         };
 
         if (cell.box->style->position == Keywords::RELATIVE) {
-            childInput.position += relativePositionOffset(tree, *cell.box, input.containingBlock);
+            childInput.position += relativePositionOffset(tree, *cell.box, definiteOrZero(input.containingBlock));
         }
 
         auto outputCell = layoutBorderBox(tree, *cell.box, childInput);

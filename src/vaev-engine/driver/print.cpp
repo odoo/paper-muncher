@@ -52,7 +52,7 @@ void _paintCornerMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& re
             .knownSize = rect.size().cast<Some<Au>>(),
             .position = rect.topStart(),
             .availableSpace = rect.size(),
-            .containingBlock = rect.size(),
+            .containingBlock = rect.size().cast<Some<Au>>(),
         }
     );
 
@@ -75,7 +75,7 @@ void _paintMainMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& rect
             .knownSize = rect.size().cast<Some<Au>>(),
             .position = rect.topStart(),
             .availableSpace = rect.size(),
-            .containingBlock = rect.size(),
+            .containingBlock = rect.size().cast<Some<Au>>(),
         }
     );
     Paint::StackingContext::establishStackingContext(output.fragment.expect())->paintRoot(g);
@@ -188,7 +188,7 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
                 .knownSize = {Some(infos.pageContent.width), NONE},
                 .position = infos.pageContent.topStart(),
                 .availableSpace = infos.pageContent.size(),
-                .containingBlock = infos.pageContent.size(),
+                .containingBlock = infos.pageContent.size().cast<Some<Au>>(),
                 .pageNumber = page.number,
                 .breakpointTraverser = Layout::BreakpointTraverser(
                     pageInfos ? &last(pageInfos).breakpoint : &startOfDocument
@@ -254,7 +254,7 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
                 .knownSize = {Some(infos.pageContent.width), NONE},
                 .position = infos.pageContent.topStart(),
                 .availableSpace = infos.pageContent.size(),
-                .containingBlock = infos.pageContent.size(),
+                .containingBlock = infos.pageContent.size().cast<Some<Au>>(),
                 .runningPosition = &paginationContext.runningPosition,
                 .pageNumber = infos.pageNumber,
                 .breakpointTraverser = {

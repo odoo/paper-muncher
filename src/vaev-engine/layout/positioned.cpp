@@ -185,10 +185,10 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
     //    Percentages, however, are resolved against the original containing block size.
 
     UsedSpacings usedSpacings{
-        .padding = computePaddings(tree, box, containingBlock.size()),
+        .padding = computePaddings(tree, box, containingBlock.size().cast<Some<Au>>()),
         .borders = computeBorders(tree, box),
         // FIXME: Auto margins should not always resolve to zero (see step 3).
-        .margin = computeMargins(tree, box, containingBlock.size())
+        .margin = computeMargins(tree, box, containingBlock.size().cast<Some<Au>>())
     };
 
     // https://www.w3.org/TR/css-position-3/#abspos-auto-size
@@ -199,7 +199,7 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
         width = Some(availableSpace.width);
     } else {
         width = computeSpecifiedBorderBoxWidth(
-            tree, box, style.sizing->width, containingBlock.size(),
+            tree, box, style.sizing->width, containingBlock.size().cast<Some<Au>>(),
             usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
         );
     }
@@ -209,7 +209,7 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
         height = Some(availableSpace.height);
     } else {
         height = computeSpecifiedBorderBoxHeight(
-            tree, box, style.sizing->height, containingBlock.size(),
+            tree, box, style.sizing->height, containingBlock.size().cast<Some<Au>>(),
             usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
         );
     }
@@ -238,7 +238,7 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
         .knownSize = {width, height},
         .position = position,
         .availableSpace = availableSpace.size(),
-        .containingBlock = containingBlock.size(),
+        .containingBlock = containingBlock.size().cast<Some<Au>>(),
         .pageNumber = pageNumber,
     };
 

@@ -15,7 +15,7 @@ export Au minContentInlineSize(Tree& tree, Box& box) {
         box,
         Axis::INLINE,
         {NONE, NONE},
-        {0_au, 0_au},
+        {NONE, NONE},
         {MIN_CONTENT, MAX_CONTENT},
         SizingMode::SIZE
     );
@@ -29,7 +29,7 @@ export Au minContentBlockSize(Tree& tree, Box& box, Au inlineSize) {
         box,
         Axis::BLOCK,
         {Some(inlineSize), NONE},
-        {0_au, 0_au},
+        {NONE, NONE},
         {inlineSize, MIN_CONTENT},
         SizingMode::SIZE
     );
@@ -43,7 +43,7 @@ export Au maxContentInlineSize(Tree& tree, Box& box) {
         box,
         Axis::INLINE,
         {NONE, NONE},
-        {0_au, 0_au},
+        {NONE, NONE},
         {MAX_CONTENT, MAX_CONTENT},
         SizingMode::SIZE
     );
@@ -57,7 +57,7 @@ export Au maxContentBlockSize(Tree& tree, Box& box, Au inlineSize) {
         box,
         Axis::BLOCK,
         {Some(inlineSize), NONE},
-        {0_au, 0_au},
+        {NONE, NONE},
         {inlineSize, MAX_CONTENT},
         SizingMode::SIZE
     );
@@ -72,7 +72,7 @@ export Au minContentInlineContribution(Tree& tree, Box& box) {
         box,
         Axis::INLINE,
         {NONE, NONE},
-        {0_au, 0_au},
+        {NONE, NONE},
         {MIN_CONTENT, MAX_CONTENT},
         SizingMode::CONTRIBUTION
     );
@@ -87,7 +87,7 @@ export Au minContentBlockContribution(Tree& tree, Box& box, Au inlineSize) {
         box,
         Axis::BLOCK,
         {Some(inlineSize), NONE},
-        {0_au, 0_au},
+        {NONE, NONE},
         {inlineSize, MIN_CONTENT},
         SizingMode::CONTRIBUTION
     );
@@ -102,7 +102,7 @@ export Au maxContentInlineContribution(Tree& tree, Box& box) {
         box,
         Axis::INLINE,
         {NONE, NONE},
-        {0_au, 0_au},
+        {NONE, NONE},
         {MAX_CONTENT, MAX_CONTENT},
         SizingMode::CONTRIBUTION
     );
@@ -117,7 +117,7 @@ export Au maxContentBlockContribution(Tree& tree, Box& box, Au inlineSize) {
         box,
         Axis::BLOCK,
         {Some(inlineSize), NONE},
-        {0_au, 0_au},
+        {NONE, NONE},
         {inlineSize, MAX_CONTENT},
         SizingMode::CONTRIBUTION
     );
@@ -139,18 +139,18 @@ export Au fitContentInlineSize(Tree& tree, Box& box, AvailableSpaceAxis availabl
 
 // https://www.w3.org/TR/css-sizing-3/#preferred-size-properties
 // FIXME: Move this to a more generic width/height computation function.
-export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box, Vec2Au containingBlock) {
+export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box, Math::Vec2<Opt<Au>> containingBlock) {
     auto const& style = *box.style;
 
     Opt<Au> width = NONE;
     Opt<Au> height = NONE;
 
     if (auto calc = style.sizing->width.is<Calc<PercentOr<Length>>>()) {
-        width = Some(resolve(tree, box, *calc, containingBlock.width));
+        width = Some(resolve(tree, box, *calc, containingBlock.width.unwrapOr(0_au)));
     }
 
     if (auto calc = style.sizing->height.is<Calc<PercentOr<Length>>>()) {
-        height = Some(resolve(tree, box, *calc, containingBlock.height));
+        height = Some(resolve(tree, box, *calc, containingBlock.height.unwrapOr(0_au)));
     }
 
     return {width, height};
@@ -158,7 +158,7 @@ export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box
 
 // https://www.w3.org/TR/CSS22/visudet.html#min-max-widths
 // FIXME: Values other than <length-percentage> are currently treated as 'auto'.
-export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2Au tentative, Vec2Au containingBlock, Math::Vec2<Opt<Au>> specifiedSize) {
+export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2Au tentative, Math::Vec2<Opt<Au>> containingBlock, Math::Vec2<Opt<Au>> specifiedSize) {
     auto const& style = *box.style;
 
     Au minWidth = 0_au;
@@ -168,13 +168,13 @@ export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& bo
     Au maxHeight = Limits<Au>::MAX;
 
     if (auto calc = style.sizing->minWidth.is<Calc<PercentOr<Length>>>())
-        minWidth = resolve(tree, box, *calc, containingBlock.width);
+        minWidth = resolve(tree, box, *calc, containingBlock.width.unwrapOr(0_au));
     if (auto calc = style.sizing->maxWidth.is<Calc<PercentOr<Length>>>())
-        maxWidth = resolve(tree, box, *calc, containingBlock.width);
+        maxWidth = resolve(tree, box, *calc, containingBlock.width.unwrapOr(0_au));
     if (auto calc = style.sizing->minHeight.is<Calc<PercentOr<Length>>>())
-        minHeight = resolve(tree, box, *calc, containingBlock.height);
+        minHeight = resolve(tree, box, *calc, containingBlock.height.unwrapOr(0_au));
     if (auto calc = style.sizing->maxHeight.is<Calc<PercentOr<Length>>>())
-        maxHeight = resolve(tree, box, *calc, containingBlock.height);
+        maxHeight = resolve(tree, box, *calc, containingBlock.height.unwrapOr(0_au));
 
     maxWidth = max(maxWidth, minWidth);
     maxHeight = max(maxHeight, minHeight);

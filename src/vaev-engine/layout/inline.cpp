@@ -68,10 +68,7 @@ struct InlineFormatingContext : FormatingContext {
             if (atomicBox.isRemovedFromFlow())
                 continue;
 
-            auto childContainingBlock = Vec2Au{
-                input.knownSize.width.unwrapOr(0_au),
-                input.knownSize.height.unwrapOr(0_au),
-            };
+            auto childContainingBlock = input.knownSize;
 
             UsedSpacings usedSpacings{
                 .padding = computePaddings(tree, atomicBox, childContainingBlock),
@@ -142,10 +139,7 @@ struct InlineFormatingContext : FormatingContext {
             // Here it could register multiple time the same box.
             lookForRunningPosition(input, atomicBox);
 
-            auto childContainingBlock = Vec2Au{
-                input.knownSize.width.unwrapOr(0_au),
-                input.knownSize.height.unwrapOr(0_au),
-            };
+            auto childContainingBlock = input.knownSize;
 
             UsedSpacings usedSpacings{
                 .padding = computePaddings(tree, atomicBox, childContainingBlock),
@@ -178,7 +172,7 @@ struct InlineFormatingContext : FormatingContext {
             }
 
             if (atomicBox.style->position == Keywords::RELATIVE) {
-                childInput.position += relativePositionOffset(tree, atomicBox, input.containingBlock);
+                childInput.position += relativePositionOffset(tree, atomicBox, definiteOrZero(input.containingBlock));
             }
 
             auto output = layoutBorderBox(tree, atomicBox, childInput);

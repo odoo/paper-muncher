@@ -155,7 +155,7 @@ struct FlexItem {
     // TODO: only implementing borders after border-box is finished
     // InsetsAu borders;
 
-    FlexItem(Tree& tree, Box& box, bool isRowOriented, Vec2Au containingBlock)
+    FlexItem(Tree& tree, Box& box, bool isRowOriented, Math::Vec2<Opt<Au>> containingBlock)
         : box(&box), flexItemProps(*box.style->flex), fa(isRowOriented),
           borders(computeBorders(tree, box)), padding(computePaddings(tree, box, containingBlock)) {
         // FIXME: check if really needed
@@ -178,7 +178,7 @@ struct FlexItem {
         UsedSpacings spacings{.padding = padding, .borders = borders};
 
         auto measureItem = [&](Axis axis, Math::Vec2<Opt<Au>> knownSize, AvailableSpace availableSpace) {
-            return measure(tree, *box, axis, knownSize, {0_au, 0_au}, availableSpace, SizingMode::SIZE, Some(spacings));
+            return measure(tree, *box, axis, knownSize, {NONE, NONE}, availableSpace, SizingMode::SIZE, Some(spacings));
         };
 
         // FIXME(flex): The block sizes are measured under the inline
@@ -674,7 +674,7 @@ struct FlexFormatingContext : FormatingContext {
     // XX. MARK: Generate flex items ----------------------------------
     Vec<FlexItem> _items = {};
 
-    void _generateFlexItems(Input input, Tree& tree, Box& box, Vec2Au containingBlock) {
+    void _generateFlexItems(Input input, Tree& tree, Box& box, Math::Vec2<Opt<Au>> containingBlock) {
         // NOTE: we assume all children are non-absolute positioned for fast mem allocation
         _items.ensure(box.children().len());
         for (auto& c : box.children()) {
@@ -759,7 +759,7 @@ struct FlexFormatingContext : FormatingContext {
                 tree,
                 box,
                 fa.mainAxis(box.style->sizing).expect<Calc<PercentOr<Length>>>(),
-                fa.mainAxis(input.containingBlock)
+                fa.mainAxis(input.containingBlock).unwrapOr(0_au)
             ));
         }
 
@@ -1101,7 +1101,7 @@ struct FlexFormatingContext : FormatingContext {
                 {
                     .knownSize = fa.extractMainAxisAndFillOptOther(i.usedSize),
                     .availableSpace = fa.extractMainAxisAndFillOther(i.usedSize, availableCrossSpace),
-                    .containingBlock = fa.extractMainAxisAndFillOther(i.usedSize, availableCrossSpace),
+                    .containingBlock = fa.extractMainAxisAndFillOptOther(i.usedSize, Some(availableCrossSpace)),
                 }
             );
         }
@@ -1508,13 +1508,13 @@ struct FlexFormatingContext : FormatingContext {
                     },
                     .position = flexItem.position,
                     .availableSpace = availableSpace,
-                    .containingBlock = fa.buildPair(_usedMainSize, _usedCrossSize),
+                    .containingBlock = fa.buildPair<Opt<Au>>(Some(_usedMainSize), Some(_usedCrossSize)),
                     .runningPosition = input.runningPosition,
                     .pageNumber = input.pageNumber,
                 };
 
                 if (flexItem.box->style->position == Keywords::RELATIVE) {
-                    childInput.position += relativePositionOffset(tree, *flexItem.box, input.containingBlock);
+                    childInput.position += relativePositionOffset(tree, *flexItem.box, definiteOrZero(input.containingBlock));
                 }
 
                 auto output = layoutBorderBox(tree, *flexItem.box, childInput);

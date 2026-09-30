@@ -38,6 +38,15 @@ export Au definiteOrZero(AvailableSpaceAxis const& axis) {
     return 0_au;
 }
 
+// The definite size in each axis, or zero where it is indefinite.
+// FIXME: Callers should handle indefinite sizes instead of treating them as
+//        zero, e.g. percentages resolving against an indefinite size should
+//        behave as auto.
+//        https://www.w3.org/TR/css-sizing-3/#percentage-sizing
+export Vec2Au definiteOrZero(Math::Vec2<Opt<Au>> size) {
+    return {size.x.unwrapOr(0_au), size.y.unwrapOr(0_au)};
+}
+
 // FIXME: Assumes horizontal-tb, inline is x and block is y.
 export struct AvailableSpace {
     AvailableSpaceAxis inline_ = 0_au;
@@ -85,8 +94,9 @@ export struct Input {
     Math::Vec2<Opt<Au>> knownSize = {};
     Vec2Au position = {};
     // https://www.w3.org/TR/css-sizing-3/#available
-    AvailableSpace availableSpace = {};
-    Vec2Au containingBlock = {};
+    AvailableSpace availableSpace = {MAX_CONTENT, MAX_CONTENT};
+    // NONE means the containing block size is indefinite in that axis.
+    Math::Vec2<Opt<Au>> containingBlock = {};
     MutCursor<RunningPositionMap> runningPosition = nullptr;
     usize pageNumber = 0;
 
@@ -117,7 +127,7 @@ export struct Input {
         return copy;
     }
 
-    Input withContainingBlock(Vec2Au block) const {
+    Input withContainingBlock(Math::Vec2<Opt<Au>> block) const {
         auto copy = *this;
         copy.containingBlock = block;
         return copy;

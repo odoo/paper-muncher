@@ -237,7 +237,7 @@ struct BlockFormatingContext : FormatingContext {
         Au capmin{};
         for (auto& c : box.children()) {
             if (c.style->display != Display::TABLE_BOX) {
-                Vec2Au containingBlock = {inlineSize, input.knownSize.height.unwrapOr(0_au)};
+                Math::Vec2<Opt<Au>> containingBlock = {Some(inlineSize), input.knownSize.height};
                 UsedSpacings usedSpacings{
                     .padding = computePaddings(tree, c, containingBlock),
                     .borders = computeBorders(tree, c),
@@ -248,7 +248,7 @@ struct BlockFormatingContext : FormatingContext {
                 //        also applies the box's own sizing properties.
                 auto minContentContrib = measure(
                     tree, c, Axis::INLINE,
-                    {NONE, NONE}, {0_au, 0_au},
+                    {NONE, NONE}, {NONE, NONE},
                     {MIN_CONTENT, MAX_CONTENT},
                     SizingMode::SIZE,
                     Some(usedSpacings)
@@ -327,7 +327,7 @@ struct BlockFormatingContext : FormatingContext {
             // if (c.style->float_ != Float::NONE)
             //     continue;
 
-            auto childContainingBlock = Vec2Au{inlineSize, input.knownSize.height.unwrapOr(0_au)};
+            auto childContainingBlock = Math::Vec2<Opt<Au>>{Some(inlineSize), input.knownSize.height};
 
             auto usedSpacings = UsedSpacings{
                 .padding = computePaddings(tree, c, childContainingBlock),
@@ -376,7 +376,7 @@ struct BlockFormatingContext : FormatingContext {
                 //        border-box known size.
                 auto width = measure(
                     tree, c, Axis::INLINE,
-                    {NONE, NONE}, {0_au, 0_au},
+                    {NONE, NONE}, {NONE, NONE},
                     {MAX_CONTENT, MAX_CONTENT},
                     SizingMode::SIZE,
                     Some(UsedSpacings{})
@@ -386,7 +386,7 @@ struct BlockFormatingContext : FormatingContext {
             }
 
             if (c.style->position == Keywords::RELATIVE) {
-                childInput.position += relativePositionOffset(tree, c, input.containingBlock);
+                childInput.position += relativePositionOffset(tree, c, definiteOrZero(input.containingBlock));
             }
 
             auto output = layoutBorderBox(tree, c, childInput);
