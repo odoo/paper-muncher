@@ -79,7 +79,7 @@ export struct Property : Meta::NoCopy {
         // https://drafts.csswg.org/css-cascade-5/#shorthand
         SHORTHAND = 1 << 1,
 
-        // https://drafts.csswg.org/css-logical-1/#logical
+        // https://drafts.csswg.org/css-logical-1
         // Expanded like a shorthand into the physical property it maps to.
         LOGICAL = SHORTHAND,
 
@@ -135,7 +135,7 @@ export struct Property : Meta::NoCopy {
     /// into a concrete `Property` instance and dictates how the property interacts
     /// with the cascade (inheritance, initial values).
     // https://drafts.css-houdini.org/css-properties-values-api/#custom-property-registration
-    struct Registration : Meta::NoCopy {
+    struct Registration : NoCopy {
         Opt<Weak<Registration>> _self;
         Symbol name;
         Flags<Options> flags = {};
