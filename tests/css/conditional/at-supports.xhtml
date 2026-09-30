@@ -84,4 +84,34 @@
     </rendering>
 </test>
 
+<!-- https://drafts.csswg.org/css-conditional-3/#support-definition -->
+<!-- https://drafts.csswg.org/css-values-5/#arbitrary-substitution -->
+<test name="@supports declaration: not supported">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                div { width: 100px; height: 100px; background: green }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div/>
+    </rendering>
+
+    <rendering>
+        <style>
+            @supports (skibidi-property: var(--six-seven)) {
+                div { background: red; }
+            }
+        </style>
+        <div/>
+    </rendering>
+</test>
+
 </tests>
