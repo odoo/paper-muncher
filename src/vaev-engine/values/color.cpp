@@ -242,12 +242,20 @@ export Opt<Color> parseNamedColor(Str name) {
 }
 
 export Opt<SystemColor> parseSystemColor(Str name) {
-#define COLOR(ID, NAME, ...) \
-    if (name == #NAME)       \
+#define COLOR(ID, NAME, ...)   \
+    if (eqCi(name, #NAME ""s)) \
         return Some(SystemColor::ID);
 #include "defs/system-colors.inc"
 
 #undef COLOR
+
+// https://drafts.csswg.org/css-color-4/#deprecated-system-colors
+#define ALIAS(NAME, ID)        \
+    if (eqCi(name, #NAME ""s)) \
+        return Some(SystemColor::ID);
+#include "defs/deprecated-system-colors.inc"
+
+#undef ALIAS
 
     return NONE;
 }
