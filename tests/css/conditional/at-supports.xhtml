@@ -155,4 +155,92 @@
     </rendering>
 </test>
 
+<test name="@supports declaration: supported">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                .test { width: 100px; height: 100px; background: red; }
+            </style>
+        </head>
+        <body>
+        <slot />
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering help="known property with a valid value">
+        <style>@supports (display: flex) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="css-wide keywords are valid for every property">
+        <style>@supports (color: inherit) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="custom properties are supported">
+        <style>@supports (--foo: bar) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="an unknown property inside not is false, so not is true">
+        <style>@supports not (foo: bar) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports declaration: not supported">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                .test { width: 100px; height: 100px; background: green; }
+            </style>
+        </head>
+        <body>
+        <slot />
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering help="unknown property">
+        <style>@supports (foo: bar) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="invalid value for a known property">
+        <style>@supports (display: notadisplay) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="extra tokens after a valid value">
+        <style>@supports (display: block block block) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="empty value for a known property">
+        <style>@supports (display: ) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="-- alone is not a valid custom property name">
+        <style>@supports (--: a) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="an unknown property makes the whole and false">
+        <style>@supports (display: block) and (foo: bar) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
 </tests>
