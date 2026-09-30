@@ -16,6 +16,30 @@ namespace Vaev::Style {
 
 // MARK: Declarations ----------------------------------------------------------
 
+// https://drafts.csswg.org/css-syntax-3/#consume-declaration
+static Slice<Css::Sst> _stripImportant(Slice<Css::Sst> value) {
+    if (isEmpty(value) or last(value) != Css::Token::ident("important"))
+        return value;
+
+    auto rest = trimTrailingWhitespace(sub(value, 0, value.len() - 1));
+    if (isEmpty(rest) or last(rest) != Css::Token::delim("!"))
+        return value;
+
+    return trimTrailingWhitespace(sub(rest, 0, rest.len() - 1));
+}
+
+static bool _containsMixedCurlyBlock(Slice<Css::Sst> value) {
+    usize count = 0;
+    bool curly = false;
+    for (auto const& node : value) {
+        if (node == Css::Token::WHITESPACE)
+            continue;
+        count++;
+        curly = curly or (node == Css::Sst::BLOCK and node.token == Css::Token::LEFT_CURLY_BRACKET);
+    }
+    return curly and count > 1;
+}
+
 // https://drafts.csswg.org/css-conditional-3/#typedef-supports-decl
 static bool _evalSupportsDeclaration(RegisteredPropertySet& registry, Cursor<Css::Sst> c) {
     eatWhitespace(c);
@@ -28,11 +52,22 @@ static bool _evalSupportsDeclaration(RegisteredPropertySet& registry, Cursor<Css
         return false;
     eatWhitespace(c);
 
+    auto value = _stripImportant(trimTrailingWhitespace(c.next(c.rem())));
+    if (not isValidDeclarationValue(value) or containsInvalidVar(value))
+        return false;
+
     // "--" alone is not a valid custom property.
     if (startWith(propertyName, "--"s) == Match::PARTIAL)
         return true;
 
-    auto prop = registry.parseValue(Symbol::from(propertyName), c, RegisteredPropertySet::ALLOW_DEFAULTING);
+    if (_containsMixedCurlyBlock(value))
+        return false;
+
+    // https://drafts.csswg.org/css-values-5/#resolve-property
+    if (containsVar(value))
+        return true;
+
+    auto prop = registry.parseValue(Symbol::from(propertyName), value, RegisteredPropertySet::ALLOW_DEFAULTING);
     return prop.has();
 }
 
@@ -71,22 +106,24 @@ static Res<bool> _parseSupportsInParens(RegisteredPropertySet& registry, Cursor<
     if (c.ended())
         return Error::invalidData("unexpected end of supports condition");
 
-    if (c.skip(Css::Sst::FUNC))
-        return Ok(false);
-
-    if (c.peek() != Css::Sst::BLOCK or c->token != Css::Token::LEFT_PARENTHESIS)
+    if (c.peek() != Css::Sst::FUNC and (c.peek() != Css::Sst::BLOCK or c->token != Css::Token::LEFT_PARENTHESIS))
         return Error::invalidData("expected '(' in supports condition");
 
-    Cursor<Css::Sst> content = c.next().content;
+    auto const& node = c.next();
+    if (not isValidAnyValue(node.content))
+        return Error::invalidData("invalid token in supports condition");
 
-    Cursor<Css::Sst> condition = content;
+    if (node == Css::Sst::FUNC)
+        return Ok(false);
+
+    Cursor<Css::Sst> condition = node.content;
     if (auto value = _parseSupportsCondition(registry, condition)) {
         eatWhitespace(condition);
         if (condition.ended())
             return value;
     }
 
-    return Ok(_evalSupportsDeclaration(registry, content));
+    return Ok(_evalSupportsDeclaration(registry, node.content));
 }
 
 // https://drafts.csswg.org/css-conditional-3/#at-supports
