@@ -829,6 +829,8 @@ MediaQuery _parseMediaQueryLeaf(Cursor<Css::Sst>& c) {
         return MediaQuery::negate(_parseMediaQueryInfix(c));
     } else if (c.skip(Css::Token::ident("only"))) {
         return _parseMediaQueryInfix(c);
+    } else if (c.skip(Css::Token::ident("all"))) {
+        return {};
     } else if (c.peek() == Css::Sst::BLOCK) {
         Cursor<Css::Sst> content = c.next().content;
         return _parseMediaQueryInfix(content);
