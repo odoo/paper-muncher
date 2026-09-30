@@ -244,4 +244,36 @@
 
 </test>
 
+<!-- https://drafts.csswg.org/css-conditional-3/#processing -->
+<!-- https://drafts.csswg.org/css-conditional-3/#contents-of -->
+<test name="@supports: nested @font-face is loaded">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                p { font-family: "Test", serif; font-size: 20px; margin: 0; }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <style>@font-face { font-family: "Test"; src: url(bundle://fonts.anton/public/fonts/Anton-Regular.ttf); } </style>
+        <p>XxXxX</p>
+    </rendering>
+
+    <rendering>
+        <style>@supports (color: green) { @font-face {font-family: "Test"; src: url(bundle://fonts.anton/public/fonts/Anton-Regular.ttf); } } </style>
+        <p>XxXxX</p>
+    </rendering>
+
+    <error>
+        <style>@supports (color: skibidi-blue) { @font-face {font-family: "Test"; src: url(bundle://fonts.anton/public/fonts/Anton-Regular.ttf); } } </style>
+        <p>XxXxX</p>
+    </error>
+</test>
+
 </tests>
