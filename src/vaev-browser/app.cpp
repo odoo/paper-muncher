@@ -179,10 +179,10 @@ Ui::Child inspectorContent(State const& s) {
 }
 
 Ui::Child alert(State const& s, String title, String body) {
-    return Kr::errorPageContent({
-        Kr::errorPageTitle(Mdi::GOOGLE_DOWNASAUR, title),
-        Kr::errorPageBody(body),
-        Kr::errorPageFooter({
+    return Kr::emptyContent({
+        Kr::emptyTitle(Mdi::GOOGLE_DOWNASAUR, title),
+        Kr::emptyBody(body),
+        Kr::emptyFooter({
             Ui::button(Model::bindIf<GoBack>(s.canGoBack()), "Go Back"),
             Ui::button(Some(Model::bind<Reload>()), Ui::ButtonStyle::primary(), "Reload"),
         }),
