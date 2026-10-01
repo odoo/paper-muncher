@@ -4,6 +4,7 @@ import Karm.Math;
 
 import :values;
 import :layout.layout;
+import :layout.sizing;
 import :layout.values;
 
 namespace Vaev::Layout {
@@ -169,6 +170,62 @@ export bool isFixedPositioningContainingBlock(Style::ComputedValues const& style
     return _isAbsoluteAndFixedPositioningContainingBlock(style);
 }
 
+// https://www.w3.org/TR/css-position-3/#abspos-auto-size
+export Au autoInlineSizeForAbsolutePositioned(Tree& tree, Box& box, Au availableSize) {
+    auto const& style = *box.style;
+
+    bool neitherInsetIsAuto = not style.insets->start.is<Keywords::Auto>() and not style.insets->end.is<Keywords::Auto>();
+    bool neitherMarginIsAuto = not style.margin->start.is<Keywords::Auto>() and not style.margin->end.is<Keywords::Auto>();
+
+    // -> If its self-alignment property in the relevant axis is 'stretch' and neither of its
+    //    inset properties nor margins in that axis are 'auto'
+    if (style.aligns.justifySelf == Align::STRETCH and neitherInsetIsAuto and neitherMarginIsAuto) {
+        // Its automatic size is its stretch-fit size.
+        return availableSize;
+    }
+
+    // -> Or if it is normal and the box is non-replaced, not a table wrapper box, and has no
+    //    auto inset in the relevant axis
+    if (oneOf(style.aligns.justifySelf, Align::NORMAL, Align::AUTO) and not box.isReplaced() and style.display != Display::TABLE_BOX and neitherInsetIsAuto) {
+        // Its automatic size is its stretch-fit size.
+        return availableSize;
+    }
+
+    // -> Otherwise
+    // Its automatic size is its fit-content size.
+    return computeFitContentInlineSize(tree, box, availableSize);
+
+    // TODO: Box with an aspect ratio.
+}
+
+// https://www.w3.org/TR/css-position-3/#abspos-auto-size
+export Au autoBlockSizeForAbsolutePositioned(Tree& tree, Box& box, Au availableSize) {
+    auto const& style = *box.style;
+
+    bool neitherInsetIsAuto = not style.insets->top.is<Keywords::Auto>() and not style.insets->bottom.is<Keywords::Auto>();
+    bool neitherMarginIsAuto = not style.margin->top.is<Keywords::Auto>() and not style.margin->bottom.is<Keywords::Auto>();
+
+    // -> If its self-alignment property in the relevant axis is 'stretch' and neither of its
+    //    inset properties nor margins in that axis are 'auto'
+    if (style.aligns.alignSelf == Align::STRETCH and neitherInsetIsAuto and neitherMarginIsAuto) {
+        // Its automatic size is its stretch-fit size.
+        return availableSize;
+    }
+
+    // -> Or if it is normal and the box is non-replaced, not a table wrapper box, and has no
+    //    auto inset in the relevant axis
+    if (oneOf(style.aligns.alignSelf, Align::NORMAL, Align::AUTO) and not box.isReplaced() and style.display != Display::TABLE_BOX and neitherInsetIsAuto) {
+        // Its automatic size is its stretch-fit size.
+        return availableSize;
+    }
+
+    // -> Otherwise
+    // Its automatic size is its fit-content size.
+    return computeFitContentBlockSize(tree, box, availableSize);
+
+    // TODO: Box with an aspect ratio.
+}
+
 // https://www.w3.org/TR/css-position-3/#abspos-layout
 export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBlock, RectAu staticPositionRect, usize pageNumber) {
     auto const& style = *box.style;
@@ -191,28 +248,21 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
         .margin = computeMargins(tree, box, containingBlock.size())
     };
 
-    // https://www.w3.org/TR/css-position-3/#abspos-auto-size
-    // TODO: Handle `margin: auto` case once they are implemented.
+    Opt<Au> width = computeSpecifiedBorderBoxWidth(
+        tree, box, style.sizing->width, containingBlock.size(),
+        usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
+    );
 
-    Opt<Au> width = NONE;
-    if (not style.insets->start.is<Keywords::Auto>() and not style.insets->end.is<Keywords::Auto>()) {
-        width = Some(availableSpace.width);
-    } else {
-        width = computeSpecifiedBorderBoxWidth(
-            tree, box, style.sizing->width, containingBlock.size(),
-            usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
-        );
-    }
+    if (not width)
+        width = Some(autoInlineSizeForAbsolutePositioned(tree, box, availableSpace.width));
 
-    Opt<Au> height = NONE;
-    if (not style.insets->top.is<Keywords::Auto>() and not style.insets->bottom.is<Keywords::Auto>()) {
-        height = Some(availableSpace.height);
-    } else {
-        height = computeSpecifiedBorderBoxHeight(
-            tree, box, style.sizing->height, containingBlock.size(),
-            usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
-        );
-    }
+    Opt<Au> height = computeSpecifiedBorderBoxHeight(
+        tree, box, style.sizing->height, containingBlock.size(),
+        usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
+    );
+
+    if (not height)
+        height = Some(autoBlockSizeForAbsolutePositioned(tree, box, availableSpace.height));
 
     // TODO
     // 3. Then, the value of any auto margins are calculated.

@@ -241,7 +241,7 @@ export bool endedDeclarationValue(Lexer& lex) {
            lex.peek() == Token::RIGHT_CURLY_BRACKET;
 }
 
-export Tuple<Content, Important> consumeDeclarationValue(Lexer& lex, Diag::Collector diags) {
+export Tuple<Content, Important> consumeDeclarationValue(Lexer& lex, Diag::Collector& diags) {
     Content value;
 
     // 3. While the next input token is a <whitespace-token>, consume the next input token.
