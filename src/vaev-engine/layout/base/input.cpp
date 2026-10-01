@@ -22,7 +22,15 @@ export struct MaxContent {
 
 export constexpr MaxContent MAX_CONTENT;
 
-export using AvailableSpaceAxis = Union<Au, MinContent, MaxContent>;
+struct AvailableSpaceAxis : Union<Au, MinContent, MaxContent> {
+    using Union::Union;
+
+    bool isMinMaxContent() {
+        return is<MinContent>() or is<MaxContent>();
+    }
+
+    AvailableSpaceAxis() : Union(0_au) {}
+};
 
 export bool isIntrinsic(AvailableSpaceAxis const& axis) {
     return axis.is<MinContent>() or axis.is<MaxContent>();
@@ -48,20 +56,8 @@ export Vec2Au definiteOrZero(Math::Vec2<Opt<Au>> size) {
 }
 
 // FIXME: Assumes horizontal-tb, inline is x and block is y.
-export struct AvailableSpace {
-    AvailableSpaceAxis inline_ = 0_au;
-    AvailableSpaceAxis block = 0_au;
 
-    AvailableSpace() = default;
-
-    AvailableSpace(AvailableSpaceAxis inline_, AvailableSpaceAxis block)
-        : inline_(inline_), block(block) {}
-
-    AvailableSpace(Vec2Au v)
-        : inline_(v.x), block(v.y) {}
-
-    bool operator==(AvailableSpace const&) const = default;
-};
+using AvailableSpace = Math::Vec2<AvailableSpaceAxis>;
 
 // MARK: Input -----------------------------------------------------------------
 

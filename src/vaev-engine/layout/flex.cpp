@@ -311,12 +311,12 @@ struct FlexItem {
         // FIXME(flex): Checks the inline slot for both orientations, matching
         //              the old IntrinsicSize. A column container's main axis is
         //              the block axis.
-        if (containerSpace.inline_ == MIN_CONTENT) {
+        if (containerSpace.width == MIN_CONTENT) {
             flexBaseSize = fa.mainAxis(minContentSize);
             return;
         }
 
-        if (containerSpace.inline_ == MAX_CONTENT) {
+        if (containerSpace.width == MAX_CONTENT) {
             flexBaseSize = fa.mainAxis(maxContentSize);
             return;
         }
@@ -732,7 +732,7 @@ struct FlexFormatingContext : FormatingContext {
                     newInitiallyAvailableCrossSpace,
                     item.getCrossSizeMinMaxContentContribution(
                         tree,
-                        input.availableSpace.inline_ == MIN_CONTENT,
+                        input.availableSpace.width == MIN_CONTENT,
                         availableSpace
                     )
                 );
@@ -745,11 +745,11 @@ struct FlexFormatingContext : FormatingContext {
         Tree& t, Input input
     ) {
         availableSpace = {
-            input.knownSize.width.unwrapOr(definiteOrZero(input.availableSpace.inline_)),
-            input.knownSize.height.unwrapOr(definiteOrZero(input.availableSpace.block)),
+            input.knownSize.width.unwrapOr(definiteOrZero(input.availableSpace.width)),
+            input.knownSize.height.unwrapOr(definiteOrZero(input.availableSpace.height)),
         };
 
-        if (isIntrinsic(input.availableSpace.inline_))
+        if (isIntrinsic(input.availableSpace.width))
             _determineCrossSpaceForIntrinsicSizes(t, input);
     }
 
@@ -842,8 +842,8 @@ struct FlexFormatingContext : FormatingContext {
     }
 
     void _determineMainSize(Tree& t, Input input, Box& box) {
-        bool isMin = input.availableSpace.inline_ == MIN_CONTENT;
-        bool isIntrinsicSizing = isIntrinsic(input.availableSpace.inline_);
+        bool isMin = input.availableSpace.width == MIN_CONTENT;
+        bool isIntrinsicSizing = isIntrinsic(input.availableSpace.width);
 
         _usedMainSize =
             _flex.isRowOriented()
@@ -1116,7 +1116,7 @@ struct FlexFormatingContext : FormatingContext {
     // https://www.w3.org/TR/css-flexbox-1/#intrinsic-cross-sizes
     void _calculateCrossSizeOfEachFlexLineIntrinsicSize(Tree& tree, Input input) {
         for (auto& flexLine : _lines) {
-            if (input.availableSpace.inline_ == MIN_CONTENT)
+            if (input.availableSpace.width == MIN_CONTENT)
                 for (auto& flexItem : flexLine.items) {
                     flexLine.crossSize = max(
                         flexLine.crossSize,
@@ -1184,7 +1184,7 @@ struct FlexFormatingContext : FormatingContext {
     }
 
     void _calculateCrossSizeOfEachFlexLine(Tree& tree, Input input) {
-        if (isIntrinsic(input.availableSpace.inline_)) {
+        if (isIntrinsic(input.availableSpace.width)) {
             _calculateCrossSizeOfEachFlexLineIntrinsicSize(tree, input);
             // TODO: follow specs
         } else {
@@ -1198,7 +1198,7 @@ struct FlexFormatingContext : FormatingContext {
     void _handleAlignContentStretch(Input input, Box& box) {
         // FIXME: If the flex container has a definite cross size <=?=> f.style->sizing->height.type != Size::Type::AUTO
         if (
-            not(input.availableSpace.inline_ == MIN_CONTENT) and
+            not(input.availableSpace.width == MIN_CONTENT) and
             (fa.crossAxis(box.style->sizing).is<Keywords::Auto>() or fa.crossAxis(input.knownSize)) and
             box.style->aligns.alignContent == Align::STRETCH
         ) {
@@ -1249,13 +1249,13 @@ struct FlexFormatingContext : FormatingContext {
                         minPrefferedSize,
                         maxPrefferedSize
                     );
-                } else if (input.availableSpace.inline_ == MIN_CONTENT) {
+                } else if (input.availableSpace.width == MIN_CONTENT) {
                     fa.crossAxis(flexItem.usedSize) = flexItem.getCrossSizeMinMaxContentContribution(
                         tree,
                         true,
                         availableSpace
                     );
-                } else if (input.availableSpace.inline_ == MAX_CONTENT) {
+                } else if (input.availableSpace.width == MAX_CONTENT) {
                     fa.crossAxis(flexItem.usedSize) = flexItem.getCrossSizeMinMaxContentContribution(
                         tree,
                         false,
@@ -1401,7 +1401,7 @@ struct FlexFormatingContext : FormatingContext {
         // FIXME(flex): A known cross size is ignored when the container's
         //              cross size is auto (e.g. a stretched flex item).
         _usedCrossSize = _usedCrossSizeByLines;
-        if (not isIntrinsic(input.availableSpace.inline_) and not fa.crossAxis(box.style->sizing).is<Keywords::Auto>()) {
+        if (not isIntrinsic(input.availableSpace.width) and not fa.crossAxis(box.style->sizing).is<Keywords::Auto>()) {
             if (auto known = fa.crossAxis(input.knownSize))
                 _usedCrossSize = *known;
         }

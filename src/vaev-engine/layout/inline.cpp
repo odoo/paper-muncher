@@ -43,7 +43,7 @@ struct InlineFormatingContext : FormatingContext {
         };
 
         Au inlineSize = input.knownSize.width.unwrapOrElse([&] {
-            return input.availableSpace.inline_.visit(
+            return input.availableSpace.width.visit(
                 [](MinContent) -> Au {
                     return 0_au;
                 },
@@ -78,7 +78,7 @@ struct InlineFormatingContext : FormatingContext {
             Input childInput{
                 .mode = input.mode,
                 .usedSpacings = usedSpacings,
-                .availableSpace = {inlineSize, definiteOrZero(input.availableSpace.block)},
+                .availableSpace = {inlineSize, definiteOrZero(input.availableSpace.height)},
                 .containingBlock = childContainingBlock,
             };
 

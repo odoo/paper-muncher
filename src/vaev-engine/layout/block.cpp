@@ -165,7 +165,7 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, In
     // box’s containing block instead, not the table-wrapper box itself.
     auto containingBlock = child.style->display == Display::TABLE_BOX ? parentInput.containingBlock : childInput.containingBlock;
 
-    if (not isIntrinsic(childInput.availableSpace.inline_) or child.style->display != Display::INLINE) {
+    if (not isIntrinsic(childInput.availableSpace.width) or child.style->display != Display::INLINE) {
         if (child.style->sizing->width.is<Keywords::Auto>()) {
             // https://www.w3.org/TR/css-tables-3/#layout-principles
             // Unlike other block-level boxes, tables do not fill their containing block by default.
@@ -338,7 +338,7 @@ struct BlockFormatingContext : FormatingContext {
             Input childInput = {
                 .mode = input.mode,
                 .usedSpacings = usedSpacings,
-                .availableSpace = {input.availableSpace.inline_, 0_au},
+                .availableSpace = {input.availableSpace.width, 0_au},
                 .containingBlock = childContainingBlock,
                 .runningPosition = input.runningPosition,
                 .pageNumber = input.pageNumber,

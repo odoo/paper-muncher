@@ -18,7 +18,7 @@ using namespace Karm::Math::Literals;
 namespace Vaev {
 
 export using Math::Au;
-export constexpr Au INDEFINITE = Limits<Au>::MAX;
+export constexpr Au INFINITE = Limits<Au>::MAX;
 
 export using Math::InsetsAu;
 export using Math::RectAu;

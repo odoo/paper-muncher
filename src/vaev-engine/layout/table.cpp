@@ -1349,7 +1349,7 @@ export struct TableFormatingContext : FormatingContext {
               capmin(input.capmin),
               knownWidth(input.knownSize.width),
               knownHeight(input.knownSize.height),
-              inlineConstraint(isIntrinsic(input.availableSpace.inline_) ? input.availableSpace.inline_ : 0_au),
+              inlineConstraint(isIntrinsic(input.availableSpace.width) ? input.availableSpace.width : 0_au),
               discovery(discovery) {
         }
 
@@ -1402,7 +1402,7 @@ export struct TableFormatingContext : FormatingContext {
             if (lastAutoLayoutInput == cacheKey)
                 return;
 
-            if (input.availableSpace.inline_.is<Au>()) {
+            if (input.availableSpace.width.is<Au>()) {
                 computeAutoColWidths(
                     tree,
                     input.knownSize.width,
@@ -1411,9 +1411,9 @@ export struct TableFormatingContext : FormatingContext {
                 );
             } else {
                 auto [minContent, maxContent] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
-                if (input.availableSpace.inline_ == MIN_CONTENT)
+                if (input.availableSpace.width == MIN_CONTENT)
                     colWidth = minContent;
-                else if (input.availableSpace.inline_ == MAX_CONTENT) {
+                else if (input.availableSpace.width == MAX_CONTENT) {
                     colWidth = maxContent;
                 } else {
                     unreachable();
