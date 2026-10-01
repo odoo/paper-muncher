@@ -26,37 +26,24 @@ export enum struct BoxSizing : u8 {
     _LEN,
 };
 
-// MARK: FitContent
-// https://drafts.csswg.org/css-sizing-3/#funcdef-width-fit-content
-export struct FitContent {
-    Calc<PercentOr<Length>> value = Length{0_au};
+// https://drafts.csswg.org/css-sizing-3/#preferred-size-properties
+// https://drafts.csswg.org/css-sizing-3/#min-size-properties
+export using Size = Union<
+    Keywords::Auto,
+    Calc<PercentOr<Length>>,
+    Keywords::Stretch,
+    Keywords::MinContent,
+    Keywords::MaxContent,
+    Keywords::FitContent>;
 
-    void repr(Io::Emit& e) const {
-        e("(fit-content {})", value);
-    }
-};
-
-export template <>
-struct ValueParser<FitContent> {
-    static Res<FitContent> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c->prefix == Css::Token::function("fit-content(")) {
-            FitContent result;
-            Cursor<Css::Sst> scan = c->content;
-            result.value = try$(parseValue<PercentOr<Length>>(scan));
-            c.next();
-            return Ok(result);
-        }
-        return Error::invalidData("invalid fit-content");
-    }
-};
-
-// https://www.w3.org/TR/css-sizing-3/#propdef-width
-// https://www.w3.org/TR/css-sizing-3/#propdef-height
-export using Size = Union<Keywords::Auto, Calc<PercentOr<Length>>, Keywords::MinContent, Keywords::MaxContent, FitContent>;
-export using MaxSize = Union<Keywords::None, Calc<PercentOr<Length>>, Keywords::MinContent, Keywords::MaxContent, FitContent>;
+// https://drafts.csswg.org/css-sizing-3/#max-size-properties
+export using MaxSize = Union<
+    Keywords::None,
+    Calc<PercentOr<Length>>,
+    Keywords::Stretch,
+    Keywords::MinContent,
+    Keywords::MaxContent,
+    Keywords::FitContent>;
 
 export struct SizingProps {
     Size width = Keywords::AUTO, height = Keywords::AUTO;

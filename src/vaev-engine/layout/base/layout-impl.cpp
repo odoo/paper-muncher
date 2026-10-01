@@ -210,7 +210,7 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Math::Ve
         return Some(measureContent({MIN_CONTENT, 0_au}));
     } else if (size.is<Keywords::MaxContent>()) {
         return Some(measureContent({MAX_CONTENT, 0_au}));
-    } else if (size.is<FitContent>()) {
+    } else if (size.is<Keywords::FitContent>()) {
         // FIXME: The stretch-fit size is laid out against a zero available
         //        space, so this is always the min-content size. It should be
         //        clamp(min-content, stretch-fit, max-content) where stretch-fit
@@ -245,7 +245,7 @@ Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Math::V
         // https://drafts.csswg.org/css-sizing-3/#valdef-width-max-content
         // for a box’s block size, unless otherwise specified, this is equivalent to its automatic size.
         return NONE;
-    } else if (size.is<FitContent>()) {
+    } else if (size.is<Keywords::FitContent>()) {
         // Since this depends on min/max content size, this is also unknown.
         return NONE;
     } else if (size.is<Keywords::Auto>()) {
