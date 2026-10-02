@@ -16,52 +16,24 @@ namespace Vaev::Style {
 
 // MARK: Declarations ----------------------------------------------------------
 
-// https://drafts.csswg.org/css-syntax-3/#consume-declaration
-static Slice<Css::Sst> _stripImportant(Slice<Css::Sst> value) {
-    if (isEmpty(value) or last(value) != Css::Token::ident("important"))
-        return value;
-
-    auto rest = trimTrailingWhitespace(sub(value, 0, value.len() - 1));
-    if (isEmpty(rest) or last(rest) != Css::Token::delim("!"))
-        return value;
-
-    return trimTrailingWhitespace(sub(rest, 0, rest.len() - 1));
-}
-
-static bool _containsMixedCurlyBlock(Slice<Css::Sst> value) {
-    usize count = 0;
-    bool curly = false;
-    for (auto const& node : value) {
-        if (node == Css::Token::WHITESPACE)
-            continue;
-        count++;
-        curly = curly or (node == Css::Sst::BLOCK and node.token == Css::Token::LEFT_CURLY_BRACKET);
-    }
-    return curly and count > 1;
-}
-
 // https://drafts.csswg.org/css-conditional-3/#typedef-supports-decl
-static bool _evalSupportsDeclaration(RegisteredPropertySet& registry, Cursor<Css::Sst> c) {
-    eatWhitespace(c);
-    if (c.ended() or *c != Css::Token::IDENT)
-        return false;
-    auto const& propertyName = c.next().token.data;
+static bool _evalSupportsDeclaration(RegisteredPropertySet& registry, Slice<Css::Sst> content) {
+    Css::SstLexer lex{content};
+    eatWhitespace(lex);
 
-    eatWhitespace(c);
-    if (not c.skip(Css::Token::COLON))
+    auto diags = Diag::Collector::ignore();
+    auto decl = Css::consumeDeclaration(lex, diags);
+    if (not decl or not lex.ended())
         return false;
-    eatWhitespace(c);
 
-    auto value = _stripImportant(trimTrailingWhitespace(c.next(c.rem())));
+    auto const& propertyName = decl->token.data;
+    Slice<Css::Sst> value = decl->content;
     if (not isValidDeclarationValue(value) or containsInvalidVar(value))
         return false;
 
     // "--" alone is not a valid custom property.
     if (startWith(propertyName, "--"s) == Match::PARTIAL)
         return true;
-
-    if (_containsMixedCurlyBlock(value))
-        return false;
 
     // https://drafts.csswg.org/css-values-5/#resolve-property
     if (containsVar(value))

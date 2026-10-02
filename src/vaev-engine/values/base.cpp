@@ -20,12 +20,6 @@ export bool skipOmmitableComma(Cursor<Css::Sst>& c) {
     return res;
 }
 
-export Slice<Css::Sst> trimTrailingWhitespace(Slice<Css::Sst> value) {
-    while (not isEmpty(value) and last(value) == Css::Token::WHITESPACE)
-        value = sub(value, 0, value.len() - 1);
-    return value;
-}
-
 static bool _anyNode(Slice<Css::Sst> nodes, auto const& pred) {
     for (auto const& node : nodes)
         if (pred(node) or _anyNode(node.content, pred))
@@ -60,7 +54,7 @@ static bool _isValidVar(Css::Sst const& var) {
     Slice<Css::Sst> args = var.content;
     auto comma = indexOf(args, Css::Token::COMMA);
 
-    auto name = trimTrailingWhitespace(sub(args, 0, comma.unwrapOr(args.len())));
+    auto name = Css::trimTrailingWhitespace(sub(args, 0, comma.unwrapOr(args.len())));
     if (isEmpty(name) or not isValidDeclarationValue(name))
         return false;
 
