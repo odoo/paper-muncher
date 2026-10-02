@@ -222,16 +222,13 @@ Sst consumeAtRule(Lexer& lex, Diag::Collector& diags) {
     }
 }
 
-Important consumeImportant(Lexer& lex) {
-    if (lex.peek() != Css::Token::delim("!"))
+static Important _stripImportant(Content& value) {
+    if (value.len() < 2 or
+        last(value) != Token::ident("important") or
+        value[value.len() - 2] != Token::delim("!"))
         return Important::UNSET;
-    lex.next();
 
-    auto copy = lex;
-    eatWhitespace(copy);
-    if (copy.next() != Css::Token::ident("important"))
-        return Important::UNSET;
-    lex = copy;
+    value.trunc(value.len() - 2);
     return Important::YES;
 }
 
@@ -250,20 +247,17 @@ export Tuple<Content, Important> consumeDeclarationValue(Lexer& lex, Diag::Colle
     // 4. As long as the next input token is anything other than an <EOF-token>,
     //    consume a component value and append it to the declaration’s value.
     while (not endedDeclarationValue(lex)) {
-        // 5. If the last two non-<whitespace-token>s in the declaration’s
-        //    value are a <delim-token> with the value "!" followed by an
-        //    <ident-token> with a value that is an ASCII case-insensitive match
-        //    for "important", remove them from the declaration’s value
-        //    and set the declaration’s important flag to true.
-        if (consumeImportant(lex) == Important::YES) {
-            eatWhitespace(lex);
-            return {std::move(value), Important::YES};
-        } else {
-            value.pushBack(consumeComponentValue(lex, diags));
-            eatWhitespace(lex);
-        }
+        value.pushBack(consumeComponentValue(lex, diags));
+        eatWhitespace(lex);
     }
-    return {std::move(value), Important::UNSET};
+
+    // 5. If the last two non-<whitespace-token>s in the declaration’s
+    //    value are a <delim-token> with the value "!" followed by an
+    //    <ident-token> with a value that is an ASCII case-insensitive match
+    //    for "important", remove them from the declaration’s value
+    //    and set the declaration’s important flag to true.
+    auto important = _stripImportant(value);
+    return {std::move(value), important};
 }
 
 static void _skipComponentValue(Lexer& lex);

@@ -45,4 +45,43 @@ test$("vaev-css-parse-nested-rule-with-colon") {
     return Ok();
 }
 
+test$("vaev-css-parse-important") {
+    Lexer lex{"color: red ! important; display: none"};
+    auto diags = Diag::Collector::ignore();
+    auto content = consumeDeclarationList(lex, diags);
+
+    assertEq$(content.len(), 2uz);
+    assert$(content[0].important == Important::YES);
+    assertEq$(content[0].content.len(), 1uz);
+    assert$(content[1].important == Important::UNSET);
+
+    return Ok();
+}
+
+test$("vaev-css-parse-important-not-last") {
+    Lexer lex{"color: red !important blue; display: none"};
+    auto diags = Diag::Collector::ignore();
+    auto content = consumeDeclarationList(lex, diags);
+
+    assertEq$(content.len(), 2uz);
+    assert$(content[0].important == Important::UNSET);
+    assertEq$(content[0].content.len(), 4uz);
+    assertEq$(content[1].token, Token::ident("display"));
+
+    return Ok();
+}
+
+test$("vaev-css-parse-important-twice") {
+    Lexer lex{"color: red !important !important; display: none"};
+    auto diags = Diag::Collector::ignore();
+    auto content = consumeDeclarationList(lex, diags);
+
+    assertEq$(content.len(), 2uz);
+    assert$(content[0].important == Important::YES);
+    assertEq$(content[0].content.len(), 3uz);
+    assertEq$(content[1].token, Token::ident("display"));
+
+    return Ok();
+}
+
 } // namespace Vaev::Css::Tests
