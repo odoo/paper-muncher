@@ -222,17 +222,22 @@ Sst consumeAtRule(Lexer& lex, Diag::Collector& diags) {
     }
 }
 
-Important consumeImportant(Lexer& lex) {
-    if (lex.peek() != Css::Token::delim("!"))
-        return Important::UNSET;
-    lex.next();
+static Slice<Sst> _trimTrailingWhitespace(Slice<Sst> value) {
+    while (not isEmpty(value) and last(value) == Token::WHITESPACE)
+        value = sub(value, 0, value.len() - 1);
+    return value;
+}
 
-    auto copy = lex;
-    eatWhitespace(copy);
-    if (copy.next() != Css::Token::ident("important"))
-        return Important::UNSET;
-    lex = copy;
-    return Important::YES;
+static Tuple<Slice<Sst>, Important> _stripImportant(Slice<Sst> value) {
+    auto rest = _trimTrailingWhitespace(value);
+    if (isEmpty(rest) or last(rest) != Token::ident("important"))
+        return {value, Important::UNSET};
+
+    rest = _trimTrailingWhitespace(sub(rest, 0, rest.len() - 1));
+    if (isEmpty(rest) or last(rest) != Token::delim("!"))
+        return {value, Important::UNSET};
+
+    return {_trimTrailingWhitespace(sub(rest, 0, rest.len() - 1)), Important::YES};
 }
 
 export bool endedDeclarationValue(Lexer& lex) {
@@ -250,20 +255,18 @@ export Tuple<Content, Important> consumeDeclarationValue(Lexer& lex, Diag::Colle
     // 4. As long as the next input token is anything other than an <EOF-token>,
     //    consume a component value and append it to the declaration’s value.
     while (not endedDeclarationValue(lex)) {
-        // 5. If the last two non-<whitespace-token>s in the declaration’s
-        //    value are a <delim-token> with the value "!" followed by an
-        //    <ident-token> with a value that is an ASCII case-insensitive match
-        //    for "important", remove them from the declaration’s value
-        //    and set the declaration’s important flag to true.
-        if (consumeImportant(lex) == Important::YES) {
-            eatWhitespace(lex);
-            return {std::move(value), Important::YES};
-        } else {
-            value.pushBack(consumeComponentValue(lex, diags));
-            eatWhitespace(lex);
-        }
+        value.pushBack(consumeComponentValue(lex, diags));
+        eatWhitespace(lex);
     }
-    return {std::move(value), Important::UNSET};
+
+    // 5. If the last two non-<whitespace-token>s in the declaration’s
+    //    value are a <delim-token> with the value "!" followed by an
+    //    <ident-token> with a value that is an ASCII case-insensitive match
+    //    for "important", remove them from the declaration’s value
+    //    and set the declaration’s important flag to true.
+    auto [rest, important] = _stripImportant(value);
+    value.trunc(rest.len());
+    return {std::move(value), important};
 }
 
 static void _skipComponentValue(Lexer& lex);
