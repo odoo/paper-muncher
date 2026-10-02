@@ -107,6 +107,42 @@ export struct Sst {
     }
 };
 
+// MARK: Sst Lexer -------------------------------------------------------------
+
+// Reads parsed component values as tokens.
+export struct SstLexer {
+    Cursor<Sst> _curr;
+
+    Token peek() const {
+        if (_curr.ended())
+            return Token::END_OF_FILE;
+        if (*_curr != Sst::TOKEN)
+            return Token::NIL;
+        return _curr->token;
+    }
+
+    Token next() {
+        return _curr.next().token;
+    }
+
+    Sst nextComponentValue() {
+        return _curr.next();
+    }
+
+    bool ended() const {
+        return _curr.ended();
+    }
+};
+
+export void eatWhitespace(SstLexer& lex) {
+    while (lex.peek() == Token::WHITESPACE)
+        lex.next();
+}
+
+Sst consumeComponentValue(SstLexer& lex, Diag::Collector&) {
+    return lex.nextComponentValue();
+}
+
 // MARK: Parser ----------------------------------------------------------------
 
 Sst consumeAtRule(Lexer& lex, Diag::Collector& diags);
@@ -114,7 +150,7 @@ export Content consumeDeclarationList(Lexer& lex, Diag::Collector& diags, bool t
 Content consumeDeclarationBlock(Lexer& lex, Diag::Collector& diags);
 Sst consumeComponentValue(Lexer& lex, Diag::Collector& diags);
 Sst consumeBlock(Lexer& lex, Diag::Collector& diags, Token::Type endingToken);
-export Opt<Sst> consumeDeclaration(Lexer& lex, Diag::Collector& diags);
+export Opt<Sst> consumeDeclaration(auto& lex, Diag::Collector& diags);
 
 // https://www.w3.org/TR/css-syntax-3/#consume-qualified-rule
 Opt<Sst> consumeRule(Lexer& lex, Diag::Collector& diags) {
@@ -222,31 +258,43 @@ Sst consumeAtRule(Lexer& lex, Diag::Collector& diags) {
     }
 }
 
-static Slice<Sst> _trimTrailingWhitespace(Slice<Sst> value) {
+export Slice<Sst> trimTrailingWhitespace(Slice<Sst> value) {
     while (not isEmpty(value) and last(value) == Token::WHITESPACE)
         value = sub(value, 0, value.len() - 1);
     return value;
 }
 
-static Tuple<Slice<Sst>, Important> _stripImportant(Slice<Sst> value) {
-    auto rest = _trimTrailingWhitespace(value);
+Tuple<Slice<Sst>, Important> stripImportant(Slice<Sst> value) {
+    auto rest = trimTrailingWhitespace(value);
     if (isEmpty(rest) or last(rest) != Token::ident("important"))
         return {value, Important::UNSET};
 
-    rest = _trimTrailingWhitespace(sub(rest, 0, rest.len() - 1));
+    rest = trimTrailingWhitespace(sub(rest, 0, rest.len() - 1));
     if (isEmpty(rest) or last(rest) != Token::delim("!"))
         return {value, Important::UNSET};
 
-    return {_trimTrailingWhitespace(sub(rest, 0, rest.len() - 1)), Important::YES};
+    return {trimTrailingWhitespace(sub(rest, 0, rest.len() - 1)), Important::YES};
 }
 
-export bool endedDeclarationValue(Lexer& lex) {
+bool containsMixedCurlyBlock(Slice<Sst> value) {
+    usize count = 0;
+    bool curly = false;
+    for (auto const& node : value) {
+        if (node == Token::WHITESPACE)
+            continue;
+        count++;
+        curly = curly or (node == Sst::BLOCK and node.token == Token::LEFT_CURLY_BRACKET);
+    }
+    return curly and count > 1;
+}
+
+export bool endedDeclarationValue(auto& lex) {
     return lex.peek() == Token::END_OF_FILE or
            lex.peek() == Token::SEMICOLON or
            lex.peek() == Token::RIGHT_CURLY_BRACKET;
 }
 
-export Tuple<Content, Important> consumeDeclarationValue(Lexer& lex, Diag::Collector diags) {
+export Tuple<Content, Important> consumeDeclarationValue(auto& lex, Diag::Collector diags) {
     Content value;
 
     // 3. While the next input token is a <whitespace-token>, consume the next input token.
@@ -264,7 +312,7 @@ export Tuple<Content, Important> consumeDeclarationValue(Lexer& lex, Diag::Colle
     //    <ident-token> with a value that is an ASCII case-insensitive match
     //    for "important", remove them from the declaration’s value
     //    and set the declaration’s important flag to true.
-    auto [rest, important] = _stripImportant(value);
+    auto [rest, important] = stripImportant(value);
     value.trunc(rest.len());
     return {std::move(value), important};
 }
@@ -437,7 +485,10 @@ Content consumeDeclarationBlock(Lexer& lex, Diag::Collector& diags) {
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-declaration
-export Opt<Sst> consumeDeclaration(Lexer& lex, Diag::Collector& diags) {
+export Opt<Sst> consumeDeclaration(auto& lex, Diag::Collector& diags) {
+    if (lex.peek() != Token::IDENT)
+        return NONE;
+
     Sst decl{Sst::DECL};
     decl.token = lex.next();
 
@@ -461,6 +512,10 @@ export Opt<Sst> consumeDeclaration(Lexer& lex, Diag::Collector& diags) {
     auto [content, important] = consumeDeclarationValue(lex, diags);
     decl.content = std::move(content);
     decl.important = important;
+
+    // A top-level {}-block is only allowed as the entire value of a non-custom property.
+    if (startWith(decl.token.data.str(), "--"s) == Match::NO and containsMixedCurlyBlock(decl.content))
+        return NONE;
 
     return Some(decl);
 }
@@ -518,7 +573,7 @@ Sst consumeComponentValue(Lexer& lex, Diag::Collector& diags) {
 // https://www.w3.org/TR/css-syntax-3/#consume-a-simple-block
 Sst consumeBlock(Lexer& lex, Diag::Collector& diags, Token::Type endingToken) {
     Sst block = Sst::BLOCK;
-    lex.next();
+    block.token = lex.next();
 
     while (true) {
         auto t = lex.peek();

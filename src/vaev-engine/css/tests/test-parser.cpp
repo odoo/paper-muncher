@@ -84,4 +84,37 @@ test$("vaev-css-parse-important-twice") {
     return Ok();
 }
 
+test$("vaev-css-parse-declaration-from-component-values") {
+    Lexer lex{"f(color : red ! important)"};
+    auto diags = Diag::Collector::ignore();
+    auto fn = consumeFunc(lex, diags);
+
+    SstLexer sstLex{fn.content};
+    auto decl = consumeDeclaration(sstLex, diags);
+    assert$(decl.has());
+    assert$(sstLex.ended());
+    assertEq$(decl->token, Token::ident("color"));
+    assert$(decl->important == Important::YES);
+    assertEq$(decl->content.len(), 1uz);
+
+    return Ok();
+}
+
+test$("vaev-css-parse-declaration-mixed-curly-block") {
+    auto diags = Diag::Collector::ignore();
+    auto parse = [&](Str input) {
+        Lexer lex{input};
+        auto fn = consumeFunc(lex, diags);
+        SstLexer sstLex{fn.content};
+        return consumeDeclaration(sstLex, diags);
+    };
+
+    assert$(parse("f(color: {a})").has());
+    assert$(not parse("f(color: {a} b)").has());
+    assert$(parse("f(--x: {a} b)").has());
+    assert$(not parse("f(1: a)").has());
+
+    return Ok();
+}
+
 } // namespace Vaev::Css::Tests

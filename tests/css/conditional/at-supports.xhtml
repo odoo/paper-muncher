@@ -1,0 +1,381 @@
+<tests>
+
+<test name="@supports: rules inside a supported condition apply">
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering>
+        <style>
+            .test { width: 100px; height: 100px; background: red; }
+            @supports (color: green) {
+                .test { background: green; }
+            }
+        </style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports: nested inside @media">
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering>
+        <style>
+            .test { width: 100px; height: 100px; background: red; }
+            @media (min-width: 0px) {
+                @supports (color: green) {
+                    .test { background: green; }
+                }
+            }
+        </style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports: nested inside @supports">
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering>
+        <style>
+            .test { width: 100px; height: 100px; background: red; }
+            @supports (color: green) {
+                @supports (display: block) {
+                    .test { background: green; }
+                }
+            }
+        </style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports condition: true">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                .test { width: 100px; height: 100px; background: red; }
+            </style>
+        </head>
+        <body>
+        <slot />
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering help="not general-enclosed is true">
+        <style>@supports not foo() { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="and of two true conditions">
+        <style>@supports (color: green) and (display: block) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="or with one true condition">
+        <style>@supports foo() or (color: green) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="nested parentheses">
+        <style>@supports ((color: green)) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="keywords are case-insensitive">
+        <style>@supports NOT foo() { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports condition: false or invalid">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                .test { width: 100px; height: 100px; background: green; }
+            </style>
+        </head>
+        <body>
+        <slot />
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering help="not of a true condition">
+        <style>@supports not (color: green) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="not( is a function token, so it is general-enclosed">
+        <style>@supports not(foo()) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="and with one false condition">
+        <style>@supports (color: green) and foo() { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="mixing and/or without parentheses is invalid">
+        <style>@supports (color: green) and (display: block) or (color: blue) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="square brackets are invalid">
+        <style>@supports [color: green] { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="trailing tokens are invalid">
+        <style>@supports (color: green) junk { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="empty condition is invalid">
+        <style>@supports { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports declaration: supported">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                .test { width: 100px; height: 100px; background: red; }
+            </style>
+        </head>
+        <body>
+        <slot />
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering help="css-wide keywords are valid for every property">
+        <style>@supports (color: inherit) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="custom properties are supported">
+        <style>@supports (--foo: bar) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="an unknown property inside not is false, so not is true">
+        <style>@supports not (foo: bar) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports declaration: not supported">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                .test { width: 100px; height: 100px; background: green; }
+            </style>
+        </head>
+        <body>
+        <slot />
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering help="invalid value for a known property">
+        <style>@supports (display: notadisplay) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="extra tokens after a valid value">
+        <style>@supports (display: block block block) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="empty value for a known property">
+        <style>@supports (display: ) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="-- alone is not a valid custom property name">
+        <style>@supports (--: a) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports declaration edge cases: supported">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                .test { width: 100px; height: 100px; background: red; }
+            </style>
+        </head>
+        <body>
+        <slot />
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering help="!important is allowed at the end of the value">
+        <style>@supports (display: block !important) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="var() makes the value valid at parse time">
+        <style>@supports (display: var(--x)) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="var() with a fallback">
+        <style>@supports (display: var(--x, block)) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="var() function name is case-insensitive">
+        <style>@supports (display: VAR(--x)) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="custom property with an empty value">
+        <style>@supports (--foo: ) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="custom property referencing another one">
+        <style>@supports (--foo: var(--bar)) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="a {} block is allowed in a custom property">
+        <style>@supports (--foo: a {}) { .test { background: green; } }</style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports declaration edge cases: not supported">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                .test { width: 100px; height: 100px; background: green; }
+            </style>
+        </head>
+        <body>
+        <slot />
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 100px; background: green"></div>
+    </rendering>
+
+    <rendering help="!important twice is invalid">
+        <style>@supports (display: block !important !important) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="anything but important after ! is invalid">
+        <style>@supports (display: block !bogus) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="a semicolon inside the value is invalid">
+        <style>@supports (display: block;) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="a semicolon in a var() fallback is invalid">
+        <style>@supports (display: var(--x, ;)) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="a lone ! in a custom property is invalid">
+        <style>@supports (--foo: !) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="a string broken by a newline is invalid">
+        <style>@supports (--foo: "a
+) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="var() needs a custom property name">
+        <style>@supports (display: var()) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="an unmatched closing bracket is invalid">
+        <style>@supports (--foo: a]) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="a {} block mixed with other values is invalid">
+        <style>@supports (display: var(--x) {}) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+
+    <rendering help="a broken string makes the condition invalid, even under not">
+        <style>@supports not foo("a
+) { .test { background: red; } }</style>
+        <div class="test"></div>
+    </rendering>
+</test>
+
+<test name="@supports: nested @font-face is loaded">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                p { font-family: "Test", serif; font-size: 20px; margin: 0; }
+            </style>
+        </head>
+        <body>
+        <slot />
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <style>@font-face { font-family: "Test"; src: url(bundle://fonts.ahem/fonts/Ahem.ttf); }</style>
+        <p>XXXX</p>
+    </rendering>
+
+    <rendering help="@font-face inside @supports">
+        <style>@supports (display: block) { @font-face { font-family: "Test"; src: url(bundle://fonts.ahem/fonts/Ahem.ttf); } }</style>
+        <p>XXXX</p>
+    </rendering>
+
+    <error help="@font-face inside a false @supports is not loaded">
+        <style>@supports (foo: bar) { @font-face { font-family: "Test"; src: url(bundle://fonts.ahem/fonts/Ahem.ttf); } }</style>
+        <p>XXXX</p>
+    </error>
+</test>
+
+</tests>
