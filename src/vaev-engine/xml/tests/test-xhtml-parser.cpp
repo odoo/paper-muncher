@@ -52,6 +52,20 @@ test$("parse-attr") {
     return Ok();
 }
 
+test$("parse-attr-whitespace-around-eq") {
+    Gc::Heap gc;
+    Xml::XmlParser p{gc};
+    auto s = Io::SScan("<html lang = \"en\" dir =\"ltr\"/>");
+    auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
+
+    auto el = root->as<Dom::Element>();
+    assertNe$(el, nullptr);
+    assert$(el->getAttribute(Html::LANG_ATTR) == "en");
+    assert$(el->getAttribute(Html::DIR_ATTR) == "ltr");
+
+    return Ok();
+}
+
 test$("parse-text") {
     Gc::Heap gc;
     Xml::XmlParser p{gc};
