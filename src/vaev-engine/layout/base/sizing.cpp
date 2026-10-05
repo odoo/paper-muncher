@@ -7,6 +7,16 @@ import :layout.values;
 
 namespace Vaev::Layout {
 
+export bool isDefinite(Opt<Au> const& value) {
+    return value.has();
+}
+
+// export template <typename... Ts>
+//     requires Meta::Contains<Au, Ts...>
+// bool isDefinite(Union<Ts...> const& value) {
+//     return value.template is<Au>();
+// }
+
 /// https://www.w3.org/TR/css-sizing-3/#min-content
 /// Returns a border box size.
 export Au minContentInlineSize(Tree& tree, Box& box) {
@@ -121,6 +131,50 @@ export Au maxContentBlockContribution(Tree& tree, Box& box, Au inlineSize) {
         {inlineSize, MAX_CONTENT},
         SizingMode::CONTRIBUTION
     );
+}
+
+/// FIXME: Remove Tree and Box dependency.
+/// FIXME: Make this into the canonical public api.
+static Opt<Au> _resolveMargin(Tree& tree, Box& box, Union<Keywords::Auto, Calc<PercentOr<Length>>> const& margin, Au relative) {
+    return margin.visit(
+        [](Keywords::Auto) -> Opt<Au> {
+            return NONE;
+        },
+        [&](Calc<PercentOr<Length>> const& calc) -> Opt<Au> {
+            return Some(resolve(tree, box, calc, relative));
+        }
+    );
+}
+
+/// https://www.w3.org/TR/css-sizing-3/#stretch-fit-sizing
+/// FIXME: Remove Tree and Box dependency.
+export Opt<Au> stretchFit(Tree& tree, Box& box, Math::Vec2<Opt<Au>> containingBlock, Axis axis) {
+    // FIXME: No need to resolve the two axis.
+    auto borders = computeBorders(tree, box);
+
+    if (axis == Axis::HORIZONTAL) {
+        if (auto [available] = containingBlock.width) {
+            Au relative = available;
+            Au paddingStart = resolve(tree, box, box.style->padding->start, relative);
+            Au paddingEnd = resolve(tree, box, box.style->padding->end, relative);
+            Au marginStart = _resolveMargin(tree, box, box.style->margin->start, relative).unwrapOr(0_au);
+            Au marginEnd = _resolveMargin(tree, box, box.style->margin->end, relative).unwrapOr(0_au);
+
+            return Some(max(available - marginStart - marginEnd, borders.horizontal() + paddingStart + paddingEnd));
+        }
+    } else {
+        if (auto [available] = containingBlock.height) {
+            Au relative = containingBlock.width.unwrapOr(0_au);
+            Au paddingTop = resolve(tree, box, box.style->padding->top, relative);
+            Au paddingBottom = resolve(tree, box, box.style->padding->bottom, relative);
+            Au marginTop = _resolveMargin(tree, box, box.style->margin->top, relative).unwrapOr(0_au);
+            Au marginBottom = _resolveMargin(tree, box, box.style->margin->bottom, relative).unwrapOr(0_au);
+
+            return Some(max(available - marginTop - marginBottom, borders.horizontal() + paddingTop + paddingBottom));
+        }
+    }
+
+    return NONE;
 }
 
 /// https://www.w3.org/TR/css-sizing-3/#fit-content-size

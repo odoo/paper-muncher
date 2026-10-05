@@ -12,6 +12,7 @@ import Karm.Logger;
 import :values;
 import :layout.block;
 import :layout.flex;
+import :layout.flex2;
 import :layout.grid;
 import :layout.inline_;
 import :layout.replaced;
@@ -39,7 +40,7 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     ) {
         return Some(constructBlockFormatingContext(box));
     } else if (display == Display::FLEX) {
-        return Some(constructFlexFormatingContext(box));
+        return Some(constructFlex2FormatingContext(box));
     } else if (display == Display::GRID) {
         return Some(constructGridFormatingContext(box));
     } else if (display == Display::TABLE_BOX) {
