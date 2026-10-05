@@ -191,6 +191,19 @@ export struct XmlParser {
         return Ok();
     }
 
+    Res<> _parseEq(Io::SScan& s) {
+        // Eq ::= S? '=' S?
+
+        try$(_parseS(s));
+
+        if (not s.skip('='))
+            return Error::invalidData("expected '='");
+
+        try$(_parseS(s));
+
+        return Ok();
+    }
+
     Res<Str> _parseName(Io::SScan& s) {
         // Name ::= NameStartChar (NameChar)*
 
@@ -328,12 +341,7 @@ export struct XmlParser {
         if (not s.skip(name))
             return Error::invalidData("expected attribute");
 
-        try$(_parseS(s));
-
-        if (not s.skip('='))
-            return Error::invalidData("expected '='");
-
-        try$(_parseS(s));
+        try$(_parseEq(s));
 
         auto quote = s.next();
         if (quote != '"' and quote != '\'')
@@ -509,8 +517,7 @@ export struct XmlParser {
 
         auto parsedName = try$(_parseQualifiedName(s));
 
-        if (not s.skip('='))
-            return Error::invalidData("expected '='");
+        try$(_parseEq(s));
 
         auto value = try$(_parseAttValue(s));
 
@@ -759,8 +766,7 @@ export struct XmlParser {
         while (not s.ahead(">"_re) and not s.ahead("/>"_re) and not s.ended()) {
             auto parsedName = try$(_parseQualifiedName(s));
 
-            if (not s.skip('='))
-                return Error::invalidData("expected '='");
+            try$(_parseEq(s));
 
             auto value = try$(_parseAttValue(s));
 
