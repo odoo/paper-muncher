@@ -6,6 +6,22 @@
 
 [GitHub Link](https://github.com/odoo/paper-muncher/)
 
+# 🛠️ Paper Muncher v0.9.0
+
+## Changes
+
+ - Fixed many CSS parser crashes [#304](https://github.com/odoo/paper-muncher/pull/304) [#306](https://github.com/odoo/paper-muncher/pull/306) [#308](https://github.com/odoo/paper-muncher/pull/308)
+ - Added support for `column-reverse` in flex layout [#310](https://github.com/odoo/paper-muncher/pull/310)
+ - Added support for deprecated system colors [#322](https://github.com/odoo/paper-muncher/pull/322)
+ - The `all` media type now matches every media [#315](https://github.com/odoo/paper-muncher/pull/315) [#316](https://github.com/odoo/paper-muncher/pull/316)
+ - Improved logical properties, list markers and floated flex items [#311](https://github.com/odoo/paper-muncher/pull/311)
+ - Improved table border handling [#307](https://github.com/odoo/paper-muncher/pull/307) [3ac944f](https://github.com/odoo/paper-muncher/commit/3ac944f5ee3dd5a599ef5ad5e435f8f7387a27fa)
+ - Fixed implicit SVG `viewBox` anchoring [#313](https://github.com/odoo/paper-muncher/pull/313)
+ - Fixed stacking contexts for boxes that imply one [a798666](https://github.com/odoo/paper-muncher/commit/a7986662a215355ba1a1f277aa74cea297c0e261)
+ - And many more random bug fixes all around the engine!
+
+[GitHub Link](https://github.com/odoo/paper-muncher/releases/tag/v0.9.0)
+
 ---
 
 # 🏎️ Paper Muncher v0.8.0
