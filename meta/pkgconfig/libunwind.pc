@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libunwind
+Description: Darwin built-in libunwind compatibility wrapper
+Version: 1.0.0
+Libs:
+Cflags:
