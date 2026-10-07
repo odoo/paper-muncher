@@ -193,7 +193,7 @@ export struct Property : Meta::NoCopy {
     };
 
     Rc<Registration> registration;
-    Css::Important important = Css::Important::UNSET;
+    bool important = false;
 
     Property(Rc<Registration> registration)
         : registration(registration) {}
@@ -801,7 +801,7 @@ export struct RegisteredPropertySet {
         auto propertyName = Symbol::from(sst.token.data);
         Cursor<Css::Sst> content = sst.content;
         auto prop = try$(parseValue(propertyName, content, options));
-        prop->important = sst.important;
+        prop->important = sst.flags.has(Css::Sst::IMPORTANT);
         return Ok(prop);
     }
 

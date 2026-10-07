@@ -18,11 +18,6 @@ export struct Sst;
 
 export using Content = Vec<Sst>;
 
-export enum struct Important : u8 {
-    UNSET,
-    YES,
-};
-
 #define FOREACH_SST(SST) \
     SST(RULE)            \
     SST(FUNC)            \
@@ -41,12 +36,18 @@ export struct Sst {
     };
     using enum Type;
 
+    enum struct Options : u8 {
+        IMPORTANT = 1 << 0,
+        WITH_BLOCK = 1 << 1,
+    };
+    using enum Options;
+
     Type type;
     // Contains the token if type is TOKEN or the @rule name
     Token token = Token(Token::NIL);
     Opt<Box<Sst>> prefix{};
     Content content{};
-    Important important = Important::UNSET;
+    Flags<Options> flags = {};
 
     Sst(Type type) : type(type) {}
 
@@ -134,6 +135,7 @@ Opt<Sst> consumeRule(Lexer& lex, Diag::Collector& diags) {
         case Token::LEFT_CURLY_BRACKET: {
             rule.prefix = Some(std::move(prefix));
             rule.content = consumeDeclarationBlock(lex, diags);
+            rule.flags.set(Sst::WITH_BLOCK);
             return Some(rule);
         }
 
@@ -212,6 +214,7 @@ Sst consumeAtRule(Lexer& lex, Diag::Collector& diags) {
         case Token::LEFT_CURLY_BRACKET:
             atRule.prefix = Some(std::move(prefix));
             atRule.content = consumeDeclarationBlock(lex, diags);
+            atRule.flags.set(Sst::WITH_BLOCK);
             return atRule;
 
         default:
@@ -221,14 +224,14 @@ Sst consumeAtRule(Lexer& lex, Diag::Collector& diags) {
     }
 }
 
-static Important _stripImportant(Content& value) {
+static bool _stripImportant(Content& value) {
     if (value.len() < 2 or
         last(value) != Token::ident("important") or
         value[value.len() - 2] != Token::delim("!"))
-        return Important::UNSET;
+        return false;
 
     value.trunc(value.len() - 2);
-    return Important::YES;
+    return true;
 }
 
 export bool endedDeclarationValue(Lexer& lex) {
@@ -237,7 +240,7 @@ export bool endedDeclarationValue(Lexer& lex) {
            lex.peek() == Token::RIGHT_CURLY_BRACKET;
 }
 
-export Tuple<Content, Important> consumeDeclarationValue(Lexer& lex, Diag::Collector diags) {
+export Tuple<Content, bool> consumeDeclarationValue(Lexer& lex, Diag::Collector diags) {
     Content value;
 
     // 3. While the next input token is a <whitespace-token>, consume the next input token.
@@ -449,7 +452,7 @@ export Opt<Sst> consumeDeclaration(Lexer& lex, Diag::Collector& diags) {
     // Parse the declaration’s value.
     auto [content, important] = consumeDeclarationValue(lex, diags);
     decl.content = std::move(content);
-    decl.important = important;
+    decl.flags.set(Sst::IMPORTANT, important);
 
     return Some(decl);
 }
