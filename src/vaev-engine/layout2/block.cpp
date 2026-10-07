@@ -10,6 +10,40 @@ import :layout.layout;
 namespace Vaev::Layout2 {
 
 export struct BlockFormattingContext {
+    static LogicalInsets<Au> _computeChildMargins(Layout::Tree& tree, Layout::Box& child, LogicalSize<Opt<Au>> const& containingBlock) {
+        auto childMargins = resolveMargins(tree, child, {Some(0_au), Some(0_au)});
+
+        auto childMarginsResolved = LogicalInsets<Au>{};
+
+        // FIXME: Follow spec
+        childMarginsResolved.blockStart = childMargins.blockStart.unwrapOr(0_au);
+        childMarginsResolved.blockEnd = childMargins.blockEnd.unwrapOr(0_au);
+
+        // FIXME: Writing mode
+        // If 'width' is set to 'auto', any other 'auto' values become '0' and 'width' follows from the resulting equality.
+        if (child.style->sizing->width.is<Keywords::Auto>()) {
+            childMarginsResolved.inlineStart = childMargins.inlineStart.unwrapOr(0_au);
+            childMarginsResolved.inlineEnd = childMargins.inlineEnd.unwrapOr(0_au);
+            return childMarginsResolved;
+        }
+
+        auto childMetrics = computeMetrics(tree, child, {Some(0_au), Some(0_au)});
+
+        // If both 'margin-left' and 'margin-right' are 'auto', their used values are equal.
+        // This horizontally centers the element with respect to the edges of the containing block.
+        if (not childMargins.inlineStart and not childMargins.inlineEnd) {
+            // FIXME: Pass gud cb.
+
+            auto inlineSize = childMetrics.size.inline_.unwrapOr(0_au);
+            auto inlineMargin = containingBlock.inline_.unwrapOr(0_au) / 2 - (inlineSize / 2);
+
+            childMarginsResolved.inlineStart = inlineMargin;
+            childMarginsResolved.inlineEnd = inlineMargin;
+        }
+
+        return childMarginsResolved;
+    }
+
     Output run(Layout::Tree& tree, Layout::Box& box, Input const& input) {
         auto const& [constraints, metrics] = input;
 
@@ -49,12 +83,7 @@ export struct BlockFormattingContext {
                 continue;
             }
 
-            // FIXME: Handle auto margins.
-            auto childMargins = resolveMargins(tree, child, {Some(0_au), Some(0_au)}).map([](Opt<Au> x) {
-                return x.unwrapOr(0_au);
-            });
-
-            // https://www.w3.org/TR/CSS22/box.html#collapsing-margins
+            auto childMargins = _computeChildMargins(tree, child, constraints.containingBlock);
 
             auto childConstraints = Constraints{
                 .containingBlock = {
@@ -91,6 +120,7 @@ export struct BlockFormattingContext {
             input.metrics.size.block.unwrapOr(cursor.height + metrics.paddings.blockEnd + metrics.borders.blockEnd),
         };
 
+        // FIXME: Check for fixed height too.
         if (blockOffset and (box.establishesFc or metrics.paddings.blockEnd != 0_au or metrics.borders.blockEnd != 0_au)) {
             cursor.y += pendingMargin.sum();
             pendingMargin = PendingMargin{};
