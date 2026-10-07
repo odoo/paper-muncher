@@ -20,7 +20,7 @@ export struct CascadedValues {
         Rc<Property> property;
         usize ruleOrder;
         usize declarationOrder;
-        Css::Important important;
+        bool important;
         Origin origin;
 
         auto operator<=>(Entry const& other) const {
@@ -39,7 +39,7 @@ export struct CascadedValues {
     Map<Symbol, Entry> _entries;
     usize _nextAttributeOrder = 0;
 
-    void _putLonghand(Rc<Property> property, Origin origin, Specificity specificity, Css::Important important, usize ruleOrder, usize declarationOrder) {
+    void _putLonghand(Rc<Property> property, Origin origin, Specificity specificity, bool important, usize ruleOrder, usize declarationOrder) {
         auto name = property->registration->name;
         Entry entry{specificity, property, ruleOrder, declarationOrder, important, origin};
         auto& existing = _entries.lookupOrPutDefault(name, entry);
