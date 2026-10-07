@@ -1023,6 +1023,7 @@ export Box buildElement(Gc::Ref<Dom::Element> elt) {
     Box box = {
         elt->computedValues(),
         Some(elt),
+        true,
     };
     Box rootInlineBox = {
         elt->computedValues(),
@@ -1059,7 +1060,7 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, Runnin
     if (style->content.is<String>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
         prose->append(style->content.expect<String>().str());
-        return Box{style, prose, Some(el)};
+        return Box{style, prose, Some(el), true};
     } else if (style->content.is<Style::ElementFunc>()) {
         auto elt = style->content.expect<Style::ElementFunc>();
         if (auto infos = runningPos.match(elt, pageNumber)) {
@@ -1076,7 +1077,7 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, Runnin
             auto maybeCounter = el->counters.innerMost(it->name).v0;
             prose->append("{}"_f(maybeCounter ? maybeCounter->value : 0).str());
         }
-        return {style, prose, Some(el)};
+        return {style, prose, Some(el), true};
     }
 
     return {style, Some(el)};
