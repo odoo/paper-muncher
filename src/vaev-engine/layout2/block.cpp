@@ -11,37 +11,46 @@ namespace Vaev::Layout2 {
 
 export struct BlockFormattingContext {
     static LogicalInsets<Au> _computeChildMargins(Layout::Tree& tree, Layout::Box& child, LogicalSize<Opt<Au>> const& containingBlock) {
-        auto childMargins = resolveMargins(tree, child, {Some(0_au), Some(0_au)});
+        auto maybeMargins = resolveMargins(tree, child, {Some(0_au), Some(0_au)});
 
-        auto childMarginsResolved = LogicalInsets<Au>{};
+        auto margins = LogicalInsets<Au>{};
 
         // FIXME: Follow spec
-        childMarginsResolved.blockStart = childMargins.blockStart.unwrapOr(0_au);
-        childMarginsResolved.blockEnd = childMargins.blockEnd.unwrapOr(0_au);
+        margins.blockStart = maybeMargins.blockStart.unwrapOr(0_au);
+        margins.blockEnd = maybeMargins.blockEnd.unwrapOr(0_au);
 
         // FIXME: Writing mode
         // If 'width' is set to 'auto', any other 'auto' values become '0' and 'width' follows from the resulting equality.
         if (child.style->sizing->width.is<Keywords::Auto>()) {
-            childMarginsResolved.inlineStart = childMargins.inlineStart.unwrapOr(0_au);
-            childMarginsResolved.inlineEnd = childMargins.inlineEnd.unwrapOr(0_au);
-            return childMarginsResolved;
+            margins.inlineStart = maybeMargins.inlineStart.unwrapOr(0_au);
+            margins.inlineEnd = maybeMargins.inlineEnd.unwrapOr(0_au);
+            return margins;
         }
 
+        // FIXME: Pass gud cb.
         auto childMetrics = computeMetrics(tree, child, {Some(0_au), Some(0_au)});
+        auto inlineSize = childMetrics.size.inline_.unwrapOr(0_au);
 
         // If both 'margin-left' and 'margin-right' are 'auto', their used values are equal.
         // This horizontally centers the element with respect to the edges of the containing block.
-        if (not childMargins.inlineStart and not childMargins.inlineEnd) {
-            // FIXME: Pass gud cb.
-
-            auto inlineSize = childMetrics.size.inline_.unwrapOr(0_au);
+        if (not maybeMargins.inlineStart and not maybeMargins.inlineEnd) {
             auto inlineMargin = containingBlock.inline_.unwrapOr(0_au) / 2 - (inlineSize / 2);
-
-            childMarginsResolved.inlineStart = inlineMargin;
-            childMarginsResolved.inlineEnd = inlineMargin;
+            margins.inlineStart = inlineMargin;
+            margins.inlineEnd = inlineMargin;
+        } else if (maybeMargins.inlineStart and not maybeMargins.inlineEnd) {
+            margins.inlineStart = *maybeMargins.inlineStart;
+            // FIXME: Should be clamped.
+            margins.inlineEnd = containingBlock.inline_.unwrapOr(0_au) - inlineSize - *maybeMargins.inlineStart;
+        } else if (not maybeMargins.inlineStart and maybeMargins.inlineEnd) {
+            // FIXME: Should be clamped.
+            margins.inlineStart = containingBlock.inline_.unwrapOr(0_au) - inlineSize - *maybeMargins.inlineEnd;
+            margins.inlineEnd = *maybeMargins.inlineEnd;
+        } else {
+            margins.inlineStart = *maybeMargins.inlineStart;
+            margins.inlineEnd = *maybeMargins.inlineEnd;
         }
 
-        return childMarginsResolved;
+        return margins;
     }
 
     Output run(Layout::Tree& tree, Layout::Box& box, Input const& input) {
