@@ -34,29 +34,29 @@ static bool _calcContainsPercents(Calc<PercentOr<Length>> const& calc) {
     );
 }
 
-Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, Constraints const& constraints) {
+Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, LogicalSize<Opt<Au>> const& containingBlock) {
     auto paddingLeft = Layout::resolve(
         tree, box,
         box.style->padding->start,
-        constraints.containingBlock.inline_.unwrapOr(0_au)
+        containingBlock.inline_.unwrapOr(0_au)
     );
 
     auto paddingRight = Layout::resolve(
         tree, box,
         box.style->padding->end,
-        constraints.containingBlock.inline_.unwrapOr(0_au)
+        containingBlock.inline_.unwrapOr(0_au)
     );
 
     auto paddingTop = Layout::resolve(
         tree, box,
         box.style->padding->top,
-        constraints.containingBlock.inline_.unwrapOr(0_au)
+        containingBlock.inline_.unwrapOr(0_au)
     );
 
     auto paddingBottom = Layout::resolve(
         tree, box,
         box.style->padding->bottom,
-        constraints.containingBlock.inline_.unwrapOr(0_au)
+        containingBlock.inline_.unwrapOr(0_au)
     );
 
     // FIXME: Implement writing-mode translation
@@ -67,16 +67,32 @@ Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, Constraints const& 
         .blockEnd = paddingBottom,
     };
 
+    // FIXME
+    auto borders = LogicalInsets<Au>{};
+
     LogicalSize<Opt<Au>> size = {NONE, NONE};
 
     // FIXME: Intrinsic sizing.
     if (auto [calc] = box.style->sizing->width.is<Calc<PercentOr<Length>>>()) {
         if (not _calcContainsPercents(calc)) {
-            auto width = resolve(tree, box, calc, constraints.containingBlock.inline_.unwrapOr(0_au));
+            auto width = resolve(tree, box, calc, containingBlock.inline_.unwrapOr(0_au));
             if (box.style->writingMode == WritingMode::HORIZONTAL_TB) {
                 size.inline_ = Some(width);
             } else {
                 size.block = Some(width);
+            }
+            if (box.style->writingMode == WritingMode::HORIZONTAL_TB) {
+                if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
+                    size.inline_ = Some(width + paddings.inlineSum() + borders.inlineSum());
+                } else {
+                    size.inline_ = Some(max(width, paddings.inlineSum() + borders.inlineSum()));
+                }
+            } else {
+                if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
+                    size.block = Some(width + paddings.blockSum() + borders.blockSum());
+                } else {
+                    size.block = Some(max(width, paddings.blockSum() + borders.blockSum()));
+                }
             }
         }
     }
@@ -84,11 +100,20 @@ Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, Constraints const& 
     // FIXME: Intrinsic sizing.
     if (auto [calc] = box.style->sizing->height.is<Calc<PercentOr<Length>>>()) {
         if (not _calcContainsPercents(calc)) {
-            auto height = resolve(tree, box, calc, constraints.containingBlock.inline_.unwrapOr(0_au));
+            auto height = resolve(tree, box, calc, containingBlock.inline_.unwrapOr(0_au));
+
             if (box.style->writingMode == WritingMode::HORIZONTAL_TB) {
-                size.block = Some(height);
+                if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
+                    size.block = Some(height + paddings.blockSum() + borders.blockSum());
+                } else {
+                    size.block = Some(max(height, paddings.blockSum() + borders.blockSum()));
+                }
             } else {
-                size.inline_ = Some(height);
+                if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
+                    size.inline_ = Some(height + paddings.inlineSum() + borders.inlineSum());
+                } else {
+                    size.inline_ = Some(max(height, paddings.inlineSum() + borders.inlineSum()));
+                }
             }
         }
     }
@@ -103,7 +128,7 @@ Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, Constraints const& 
 Output layout(Layout::Tree& tree, Layout::Box& box, Constraints const& constraints) {
     auto input = Input{
         .constraints = constraints,
-        .metrics = computeMetrics(tree, box, constraints),
+        .metrics = computeMetrics(tree, box, constraints.containingBlock),
     };
 
     if (box.style->display == Display::BLOCK) {
