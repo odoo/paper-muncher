@@ -66,6 +66,63 @@ export struct Token {
         return type != NIL;
     }
 
+    bool identLike() const {
+        return type == IDENT or
+               type == FUNCTION or
+               type == URL or
+               type == BAD_URL;
+    }
+
+    bool numeric() const {
+        return type == NUMBER or
+               type == PERCENTAGE or
+               type == DIMENSION;
+    }
+
+    Token closing() const {
+        if (type == LEFT_SQUARE_BRACKET)
+            return rightSquareBracket("]");
+        if (type == LEFT_CURLY_BRACKET)
+            return rightCurlyBracket("}");
+        return rightParenthesis(")");
+    }
+
+    // https://www.w3.org/TR/css-syntax-3/#serialization-tables
+    bool serializesWithCommentBetween(Token const& second) const {
+        if (type == IDENT and second == LEFT_PARENTHESIS)
+            return true;
+
+        if (type == IDENT or
+            type == AT_KEYWORD or
+            type == HASH or
+            type == DIMENSION or
+            *this == delim("#") or
+            *this == delim("-"))
+            return second.identLike() or
+                   second == delim("-") or
+                   second.numeric() or
+                   second == CDC;
+
+        if (type == NUMBER)
+            return second.identLike() or
+                   second.numeric() or
+                   second == CDC or
+                   second == delim("%");
+
+        if (*this == delim("@"))
+            return second.identLike() or
+                   second == delim("-") or
+                   second == CDC;
+
+        if (*this == delim(".") or *this == delim("+"))
+            return second.numeric();
+
+        if (*this == delim("/"))
+            return second == delim("*");
+
+        return false;
+    }
+
     void repr(Io::Emit& e) const {
         if (not *this) {
             e("nil");
