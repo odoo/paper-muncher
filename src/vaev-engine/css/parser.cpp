@@ -59,6 +59,10 @@ export struct Sst {
         return type == DECL or type == RULE;
     }
 
+    bool curlyBlock() const {
+        return type == BLOCK and token == Token::LEFT_CURLY_BRACKET;
+    }
+
     // https://drafts.csswg.org/css-variables-2/#guaranteed-invalid
     static Sst guaranteedInvalid() {
         return Token::guaranteedInvalid("");
@@ -244,25 +248,28 @@ export bool endedDeclarationValue(Lexer& lex) {
            lex.peek() == Token::RIGHT_CURLY_BRACKET;
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-declaration
 export Tuple<Content, bool> consumeDeclarationValue(Lexer& lex, Diag::Collector diags) {
     Content value;
 
-    // 3. While the next input token is a <whitespace-token>, consume the next input token.
+    // 4. Discard whitespace from input.
     eatWhitespace(lex);
 
-    // 4. As long as the next input token is anything other than an <EOF-token>,
-    //    consume a component value and append it to the declaration’s value.
+    // 5. Consume a list of component values from input, with nested, and with <semicolon-token> as the stop token, and
+    //    set decl’s value to the result.
+    // NOSPEC: The whitespace between component values is dropped.
     while (not endedDeclarationValue(lex)) {
         value.pushBack(consumeComponentValue(lex, diags));
         eatWhitespace(lex);
     }
 
-    // 5. If the last two non-<whitespace-token>s in the declaration’s
-    //    value are a <delim-token> with the value "!" followed by an
-    //    <ident-token> with a value that is an ASCII case-insensitive match
-    //    for "important", remove them from the declaration’s value
-    //    and set the declaration’s important flag to true.
+    // 6. If the last two non-<whitespace-token>s in decl’s value are a <delim-token> with the value "!" followed by an
+    //    <ident-token> with a value that is an ASCII case-insensitive match for "important", remove them from decl’s
+    //    value and set decl’s important flag.
     auto important = _stripImportant(value);
+
+    // 7. While the last item in decl’s value is a <whitespace-token>, remove that token.
+    // NOTE: The whitespace was already dropped in step 5.
     return {std::move(value), important};
 }
 
@@ -334,6 +341,12 @@ static void _skipBlock(Lexer& lex, Token::Type endingToken) {
             break;
         }
     }
+}
+
+export bool containsCurlyBlock(Slice<Sst> value) {
+    return iter(value) | Any([](Sst const& node) {
+               return node.curlyBlock();
+           });
 }
 
 static bool _declarationAhead(Lexer lex) {
@@ -434,13 +447,27 @@ Content consumeDeclarationBlock(Lexer& lex, Diag::Collector& diags) {
 
 // https://www.w3.org/TR/css-syntax-3/#consume-declaration
 export Opt<Sst> consumeDeclaration(Lexer& lex, Diag::Collector& diags) {
+    // Let decl be a new declaration, with an initially empty name and a value set to an empty list.
     Sst decl{Sst::DECL};
+
+    // 1. If the next token is an <ident-token>, consume a token from input and set decl's name to the token’s value.
+    //    Otherwise, consume the remnants of a bad declaration from input, with nested, and return nothing.
+    // NOSPEC: The remnants of the bad declaration are left to the caller.
+    if (lex.peek() != Token::IDENT) {
+        diags.emit(
+            Diag::Diagnostic::error("expected identifier"s)
+                .withPrimaryLabel(lex.peek().span, "here"s)
+        );
+        return NONE;
+    }
     decl.token = lex.next();
 
-    // 1. While the next input token is a <whitespace-token>, consume the next input token.
+    // 2. Discard whitespace from input.
     eatWhitespace(lex);
 
-    // 2. If the next input token is anything other than a <colon-token>, this is a parse error. Return nothing.
+    // 3. If the next token is a <colon-token>, discard a token from input.
+    //    Otherwise, consume the remnants of a bad declaration from input, with nested, and return nothing.
+    // NOSPEC: The remnants of the bad declaration are left to the caller.
     auto t = lex.peek();
     if (t != Token::COLON) {
         diags.emit(
@@ -449,15 +476,29 @@ export Opt<Sst> consumeDeclaration(Lexer& lex, Diag::Collector& diags) {
         );
         return NONE;
     }
-
-    // Otherwise, consume the next input token.
     lex.next();
 
-    // Parse the declaration’s value.
+    // NOTE: Steps 4 to 7 are done by consumeDeclarationValue().
     auto [content, important] = consumeDeclarationValue(lex, diags);
     decl.content = std::move(content);
     decl.flags.set(Sst::IMPORTANT, important);
 
+    // 8. If decl’s name is a custom property name string, then set decl’s original text to the segment of the original
+    //    source text string corresponding to the tokens of decl’s value.
+    //    Otherwise, if decl’s value contains a top-level simple block with an associated token of <{-token>, and also
+    //    contains any other non-<whitespace-token> value, return nothing.
+    //    (That is, a top-level {}-block is only allowed as the entire value of a non-custom property.)
+    //    Otherwise, if decl’s name is an ASCII case-insensitive match for "unicode-range", consume the value of a
+    //    unicode-range descriptor from the segment of the original source text string corresponding to the tokens
+    //    returned by the consume a list of component values call, and replace decl’s value with the result.
+    // NOSPEC: The original text isn't kept and unicode-range isn't consumed again.
+    if (startWith(decl.token.data.str(), "--"s) == Match::NO and
+        decl.content.len() > 1 and
+        containsCurlyBlock(decl.content))
+        return NONE;
+
+    // 9. If decl is valid in the current context, return it; otherwise return nothing.
+    // NOTE: The validity is checked by the caller.
     return Some(decl);
 }
 
