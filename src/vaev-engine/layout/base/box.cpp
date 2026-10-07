@@ -23,9 +23,9 @@ export struct Box : Meta::NoCopy {
     Rc<Style::ComputedValues> style;
     Content content = NONE;
     Vec<Box> _children;
-    bool establishesFc = false;
     Opt<Rc<FormatingContext>> formatingContext = NONE;
     Opt<Dom::OriginatingElement> origin;
+    bool establishesFc = false;
 
     static Box fromInterruptedInlineBox(Box const& inlineBox) {
         auto oldProse = inlineBox.content.expect<Rc<Gfx::Prose>>();
@@ -33,11 +33,11 @@ export struct Box : Meta::NoCopy {
         return Box(inlineBox.style, prose, inlineBox.origin);
     }
 
-    Box(Rc<Style::ComputedValues> style, Opt<Dom::OriginatingElement> og)
-        : style{std::move(style)}, origin{og} {}
+    Box(Rc<Style::ComputedValues> style, Opt<Dom::OriginatingElement> og, bool establishesFc = false)
+        : style{std::move(style)}, origin{og}, establishesFc{establishesFc} {}
 
-    Box(Rc<Style::ComputedValues> style, Content content, Opt<Dom::OriginatingElement> og)
-        : style{std::move(style)}, content{std::move(content)}, origin{og} {}
+    Box(Rc<Style::ComputedValues> style, Content content, Opt<Dom::OriginatingElement> og, bool establishesFc = false)
+        : style{std::move(style)}, content{std::move(content)}, origin{og}, establishesFc{establishesFc} {}
 
     Slice<Box> children() const {
         return _children;

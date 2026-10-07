@@ -13,16 +13,9 @@ export struct BlockFormattingContext {
     Output run(Layout::Tree& tree, Layout::Box& box, Input const& input) {
         auto const& [constraints, metrics] = input;
 
-        logDebug("--- BEGIN BFC ---");
-
-        logInfo("METRICS: {}", metrics);
-        logInfo("PENDING_MARGINS_IN: {}", constraints.pendingMargin);
-
         auto fragBuilder = FragBuilder{tree, box};
 
         auto inlineSizeBehavior = input.constraints.inlineAutoSizeBehavior;
-
-        logDebug("Inline Auto Behavior: {}", inlineSizeBehavior);
 
         Au autoInlineSize = 0_au;
         if (inlineSizeBehavior == AutoSizeBehavior::STRETCH_FIT and constraints.containingBlock.inline_) {
@@ -38,8 +31,7 @@ export struct BlockFormattingContext {
 
         Opt<Au> blockOffset = NONE;
 
-        // FIXME: Check for fc-root
-        if (metrics.paddings.blockStart != 0_au or metrics.borders.blockStart != 0_au) {
+        if (box.establishesFc or metrics.paddings.blockStart != 0_au or metrics.borders.blockStart != 0_au) {
             blockOffset = Some(pendingMargin.sum());
             pendingMargin = PendingMargin{};
         }
@@ -83,7 +75,7 @@ export struct BlockFormattingContext {
                 }
             }
 
-            fragBuilder.addChildIfAny(childOutput.fragment, cursor + Vec2Au{constraints.margins.inlineStart, 0_au});
+            fragBuilder.addChildIfAny(childOutput.fragment, cursor + Vec2Au{childMargins.inlineStart, 0_au});
 
             cursor.y += childOutput.size.block;
 
@@ -99,7 +91,10 @@ export struct BlockFormattingContext {
             input.metrics.size.block.unwrapOr(cursor.height + metrics.paddings.blockEnd + metrics.borders.blockEnd),
         };
 
-        logDebug("SIZE: {}", size);
+        if (blockOffset and (box.establishesFc or metrics.paddings.blockEnd != 0_au or metrics.borders.blockEnd != 0_au)) {
+            cursor.y += pendingMargin.sum();
+            pendingMargin = PendingMargin{};
+        }
 
         if (not blockOffset and size.block > 0_au) {
             blockOffset = Some(pendingMargin.sum());
@@ -107,12 +102,6 @@ export struct BlockFormattingContext {
         }
 
         pendingMargin.add(constraints.margins.blockEnd);
-
-        logInfo("Final block offset {}", blockOffset);
-
-        logDebug("--- END BFC ---");
-
-        logInfo("PENDING_MARGINS_OUT: {}", pendingMargin);
 
         return Output{
             .pendingMargin = pendingMargin,
