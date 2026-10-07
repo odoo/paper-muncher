@@ -19,10 +19,11 @@ export using Content = Union<
     SvgShapeElement,
     SvgViewBox>;
 
-struct Box : Meta::NoCopy {
+export struct Box : Meta::NoCopy {
     Rc<Style::ComputedValues> style;
     Content content = NONE;
     Vec<Box> _children;
+    bool establishesFc = false;
     Opt<Rc<FormatingContext>> formatingContext = NONE;
     Opt<Dom::OriginatingElement> origin;
 

@@ -716,7 +716,7 @@ export struct BoxFragment : Fragment {
     }
 
     void repr(Io::Emit& e) const override {
-        e("(box-frag matrics:{} children:{})", metrics, _children);
+        e("(box-frag metrics:{} children:{})", metrics, _children);
     }
 };
 

@@ -11,6 +11,7 @@
         "layout",
         "layout/base",
         "layout/builder",
+        "layout2",
         "loader",
         "paint",
         "props",
