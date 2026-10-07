@@ -150,7 +150,6 @@ export Content consumeRuleList(Lexer& lex, bool topLevel, Diag::Collector& diags
 
     while (true) {
         switch (lex.peek().type) {
-        case Token::COMMENT:
         case Token::WHITESPACE:
             lex.next();
             break;
@@ -367,7 +366,6 @@ Content consumeDeclarationList(Lexer& lex, Diag::Collector& diags, bool topLevel
         switch (t.type) {
         case Token::WHITESPACE:
         case Token::SEMICOLON:
-        case Token::COMMENT:
             // Do nothing.
             lex.next();
             break;
@@ -464,10 +462,6 @@ export Sst consumeFunc(Lexer& lex, Diag::Collector& diags) {
     while (true) {
         auto t = lex.peek();
         switch (t.type) {
-        case Token::COMMENT:
-            lex.next();
-            break;
-
         case Token::END_OF_FILE:
             diags.emit(
                 Diag::Diagnostic::error("unexpected end of file"s)

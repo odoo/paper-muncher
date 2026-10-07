@@ -272,13 +272,43 @@ test$("vaev-css-lex-parenthesis") {
 }
 
 test$("vaev-css-lex-comment") {
-    auto t = lex("/* comment */");
-    assertEq$(t.type, Token::COMMENT);
-    assertEq$(t.data, "/* comment */"s);
+    auto t = lex("/* comment */a");
+    assertEq$(t.type, Token::IDENT);
+    assertEq$(t.data, "a"s);
 
-    auto t2 = lex("/* unterminated comment");
-    assertEq$(t2.type, Token::COMMENT);
-    assertEq$(t2.data, "/* unterminated comment"s);
+    t = lex("/* a *//* b */ ");
+    assertEq$(t.type, Token::WHITESPACE);
+
+    t = lex("/* unterminated comment");
+    assertEq$(t.type, Token::END_OF_FILE);
+
+    return Ok();
+}
+
+test$("vaev-css-lex-comment-whitespace") {
+    Lexer noSpace{"a/* x */b"};
+    assertEq$(noSpace.next(), Token::ident("a"));
+    assertEq$(noSpace.next(), Token::ident("b"));
+
+    Lexer spaces{"a /* x */  b"};
+    assertEq$(spaces.next(), Token::ident("a"));
+    assertEq$(spaces.next().data, " "s);
+    assertEq$(spaces.next().data, "  "s);
+    assertEq$(spaces.next(), Token::ident("b"));
+
+    Lexer newlines{"a\n/* x */\nb"};
+    assertEq$(newlines.next(), Token::ident("a"));
+    assertEq$(newlines.next().data, "\n"s);
+    assertEq$(newlines.next().data, "\n"s);
+    assertEq$(newlines.next(), Token::ident("b"));
+
+    Lexer multiline{"a/* x\ny */b"};
+    assertEq$(multiline.next(), Token::ident("a"));
+    assertEq$(multiline.next(), Token::ident("b"));
+
+    Lexer stars{"a/***/b"};
+    assertEq$(stars.next(), Token::ident("a"));
+    assertEq$(stars.next(), Token::ident("b"));
 
     return Ok();
 }
