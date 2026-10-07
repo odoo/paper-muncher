@@ -10,6 +10,7 @@
         "vaev-idl",
         "karm-core",
         "karm-math",
-        "karm-gc"
+        "karm-gc",
+        "karm-icu"
     ]
 }

@@ -1,6 +1,7 @@
 export module Vaev.Script:lang.lexer;
 
 import Karm.Core;
+import Karm.Icu;
 
 using namespace Karm;
 
@@ -177,6 +178,12 @@ struct Token {
         default:
             panic("invalid token type");
         }
+    }
+
+    bool operator==(Token const&) const = default;
+
+    bool operator==(Type const& t) const {
+        return type == t;
     }
 
     void repr(Io::Emit& e) const {
@@ -358,6 +365,14 @@ struct Lexer {
                 s.next();
                 return {token, s.end()};
             }
+        }
+
+        // https://tc39.es/ecma262/#prod-IdentifierName
+        if (Icu::Properties::of(s.peek()).idContinue()) {
+            do {
+                s.next();
+            } while (Icu::Properties::of(s.peek()).idContinue());
+            return {Token::IDENTIFIER, s.end()};
         }
 
         s.next();
