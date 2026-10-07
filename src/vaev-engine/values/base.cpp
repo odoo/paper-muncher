@@ -20,12 +20,6 @@ export bool skipOmmitableComma(Cursor<Css::Sst>& c) {
     return res;
 }
 
-export Slice<Css::Sst> trimTrailingWhitespace(Slice<Css::Sst> value) {
-    while (not isEmpty(value) and last(value) == Css::Token::WHITESPACE)
-        value = sub(value, 0, value.len() - 1);
-    return value;
-}
-
 static Slice<Css::Sst> _trimWhitespace(Slice<Css::Sst> value) {
     while (not isEmpty(value) and first(value) == Css::Token::WHITESPACE)
         value = next(value);
