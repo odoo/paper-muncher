@@ -98,6 +98,14 @@ test$("vaev-css-build-margin") {
     ));
 
     try$(testCase(
+        "1px /* x */ 2px;",
+        Margin{
+            Calc<PercentOr<Length>>{Length{1_au}},
+            Calc<PercentOr<Length>>{Length{2_au}},
+        }
+    ));
+
+    try$(testCase(
         "1px 2px 3px;",
         Margin{
             Calc<PercentOr<Length>>{Length{1_au}},

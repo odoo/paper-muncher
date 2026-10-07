@@ -45,6 +45,19 @@ test$("vaev-css-parse-nested-rule-with-colon") {
     return Ok();
 }
 
+test$("vaev-css-parse-comments") {
+    Lexer lex{"color /* x */ : red; margin: 1px /* x */ 2px; display: none /* x */"};
+    auto diags = Diag::Collector::ignore();
+    auto content = consumeDeclarationList(lex, diags);
+
+    assertEq$(content.len(), 3uz);
+    assertEq$(content[0].token, Token::ident("color"));
+    assertEq$(content[1].content.len(), 2uz);
+    assertEq$(content[2].content.len(), 1uz);
+
+    return Ok();
+}
+
 test$("vaev-css-parse-important") {
     Lexer lex{"color: red ! important; display: none"};
     auto diags = Diag::Collector::ignore();

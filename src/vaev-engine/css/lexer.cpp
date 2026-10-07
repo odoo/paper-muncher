@@ -35,7 +35,6 @@ namespace Vaev::Css {
     TOKEN(RIGHT_SQUARE_BRACKET, rightSquareBracket) /* ] */          \
     TOKEN(LEFT_PARENTHESIS, leftParenthesis)        /* ( */          \
     TOKEN(RIGHT_PARENTHESIS, rightParenthesis)      /* ) */          \
-    TOKEN(COMMENT, comment)                         /* */            \
     TOKEN(END_OF_FILE, endOfFile)                   /* EOF */        \
     TOKEN(GUARANTEED_INVALID, guaranteedInvalid)    /* unset --foo */
 
@@ -360,10 +359,6 @@ export struct Lexer {
             return {Token::CDO, s.end()};
         } else if (s.skip("-->")) {
             return {Token::CDC, s.end()};
-        } else if (s.skip("/*")) {
-            // https://www.w3.org/TR/css-syntax-3/#consume-comment
-            s.skip(Re::untilAndConsume(Re::word("*/")));
-            return {Token::COMMENT, s.end()};
         } else if (s.skip(RE_NUMBER)) {
             // https://www.w3.org/TR/css-syntax-3/#consume-numeric-token
             if (s.skip(RE_IDENTIFIER)) {
@@ -385,7 +380,15 @@ export struct Lexer {
         }
     }
 
+    // https://www.w3.org/TR/css-syntax-3/#consume-comments
+    void _consumeComments(Io::SScan& s) const {
+        while (s.skip("/*"))
+            s.skip(Re::untilAndConsume("*/"_re));
+    }
+
+    // https://www.w3.org/TR/css-syntax-3/#consume-token
     Token next() {
+        _consumeComments(_scan);
         auto start = _scan.loc();
         auto token = _next(_scan);
         token.span = {start, _scan.loc()};

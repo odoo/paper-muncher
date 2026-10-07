@@ -81,12 +81,28 @@ test$("vaev-style-parse-nfix-selectors") {
         })
     );
 
+    assertEq$(
+        try$(Selector::parse("html/* x */.className")),
+        Selector::and_({
+            TypeSelector{UNIVERSAL, "html"_sym},
+            ClassSelector{"className"s},
+        })
+    );
+
     return Ok();
 }
 
 test$("vaev-style-parse-infix-selectors") {
     assertEq$(
         try$(Selector::parse("html .className")),
+        Selector::descendant(
+            TypeSelector{UNIVERSAL, "html"_sym},
+            ClassSelector{"className"s}
+        )
+    );
+
+    assertEq$(
+        try$(Selector::parse("html /* x */ .className")),
         Selector::descendant(
             TypeSelector{UNIVERSAL, "html"_sym},
             ClassSelector{"className"s}
