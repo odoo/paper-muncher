@@ -14,14 +14,12 @@ export struct FragBuilder {
         : _tree(tree),
           _box(box) {}
 
-    void addChildIfAny(Opt<Rc<Layout::Fragment>> child, Vec2Au offset) {
-        if (child) {
-            if (auto [boxFrag] = child->is<Layout::BoxFragment>()) {
-                boxFrag.metrics.position = offset;
-            }
-
-            _children.pushBack(child.take());
+    void addChild(Rc<Layout::Fragment>& child, Vec2Au offset) {
+        if (auto [boxFrag] = child.is<Layout::BoxFragment>()) {
+            boxFrag.metrics.position = offset;
         }
+
+        _children.pushBack(child);
     }
 
     Rc<Layout::Fragment> buildBox(Input const& input, LogicalSize<Au> size) {

@@ -74,7 +74,7 @@ export struct BlockFormattingContext {
 
         Opt<Au> blockOffset = NONE;
 
-        if (box.establishesFc or metrics.paddings.blockStart != 0_au or metrics.borders.blockStart != 0_au) {
+        if (not constraints.collapseMargins or box.establishesFc or metrics.paddings.blockStart != 0_au or metrics.borders.blockStart != 0_au) {
             blockOffset = Some(pendingMargin.sum());
             pendingMargin = PendingMargin{};
         }
@@ -85,6 +85,8 @@ export struct BlockFormattingContext {
             metrics.borders.blockStart + metrics.paddings.blockStart
         };
 
+        Opt<BreakOpportunity> bestBreakOpportunity = NONE;
+
         for (usize i = 0; i < box.children().len(); i++) {
             auto& child = box.children()[i];
 
@@ -94,6 +96,12 @@ export struct BlockFormattingContext {
 
             auto childMargins = _computeChildMargins(tree, child, constraints.containingBlock);
 
+            Opt<Fragmentainer> childFragmentainer = NONE;
+
+            if (auto [fragmentainer] = constraints.fragmentainer) {
+                childFragmentainer = Some(fragmentainer.at(blockOffset.unwrapOr(0_au) + cursor.y));
+            }
+
             auto childConstraints = Constraints{
                 .containingBlock = {
                     Some(input.metrics.size.inline_.unwrapOr(autoInlineSize) - metrics.borders.inlineSum() - metrics.paddings.inlineSum()),
@@ -101,39 +109,79 @@ export struct BlockFormattingContext {
                 },
                 .pendingMargin = pendingMargin,
                 .margins = childMargins,
+                .fragmentainer = childFragmentainer,
             };
 
             auto childOutput = layout(tree, child, childConstraints);
 
-            if (auto [childOffset] = childOutput.blockOffset) {
-                if (not blockOffset) {
-                    blockOffset = Some(childOffset);
-                } else {
-                    cursor.y += childOffset;
+            Opt<BreakNode> breakTree = NONE;
+
+            auto placeChild = [&](Placed& placed) {
+                if (auto [childOffset] = placed.blockOffset) {
+                    // fragmentainerBudget -= childOffset;
+                    if (not blockOffset) {
+                        blockOffset = Some(childOffset);
+                    } else {
+                        cursor.y += childOffset;
+                    }
                 }
+
+                if (auto [completed] = placed.breakState.is<Completed>()) {
+                    pendingMargin = completed.pendingMargin;
+                    fragBuilder.addChild(placed.fragment, cursor + Vec2Au{childMargins.inlineStart, 0_au});
+
+                    // TODO: Extract this to an helper
+                    if (auto [breakOpportunity] = completed.bestBreakOpportunity) {
+                        if (not bestBreakOpportunity or breakOpportunity.appeal >= bestBreakOpportunity->appeal) {
+                            bestBreakOpportunity = std::move(completed.bestBreakOpportunity);
+                        }
+                    }
+                }
+
+                auto childSize = LogicalSize<Au>::fromPhysical(placed.fragment->borderBox().size(), box.style->writingMode);
+
+                cursor.y += childSize.block;
+
+                // FIXME:
+                // fragmentainerBudget -= childSize.block;
+            };
+
+            if (auto [placed] = childOutput.is<Placed>()) {
+                placeChild(placed);
+            } else if (auto [abort] = childOutput.is<Abort>()) {
+                // NOTE: As of now, its the only abort reason.
+                auto it = abort.is<NeedsEarlierBreak>().expect();
+
+                childConstraints.replayedBreak = Some(std::move(it.opportunity));
+                childOutput = layout(tree, child, childConstraints);
+
+                // NOTE: This acts as an assertion that the relayout must produce something.
+                placeChild(childOutput.is<Placed>().take());
+            } else {
+                unreachable();
             }
 
-            fragBuilder.addChildIfAny(childOutput.fragment, cursor + Vec2Au{childMargins.inlineStart, 0_au});
-
-            cursor.y += childOutput.size.block;
-
-            pendingMargin = childOutput.pendingMargin;
-
-            if (inlineSizeBehavior == AutoSizeBehavior::FIT_CONTENT or not constraints.containingBlock.inline_) {
-                autoInlineSize = max(autoInlineSize, childOutput.size.inline_);
-            }
+            // FIXME: Rework and bring back in.
+            // if (inlineSizeBehavior == AutoSizeBehavior::FIT_CONTENT or not constraints.containingBlock.inline_) {
+            //     autoInlineSize = max(autoInlineSize, childOutput.size.inline_);
+            // }
         }
+
+        // FIXME: Check for fixed height too.
+        if (blockOffset and (box.establishesFc or metrics.paddings.blockEnd != 0_au or metrics.borders.blockEnd != 0_au)) {
+            // FIXME
+            // fragmentainerBudget = fragmentainerBudget - pendingMargin.sum();
+            cursor.y += pendingMargin.sum();
+            pendingMargin = PendingMargin{};
+        }
+
+        // FIXME
+        // fragmentainerBudget -= metrics.paddings.blockEnd + metrics.borders.blockEnd;
 
         auto size = LogicalSize{
             input.metrics.size.inline_.unwrapOr(autoInlineSize + metrics.paddings.inlineEnd + metrics.borders.inlineEnd),
             input.metrics.size.block.unwrapOr(cursor.height + metrics.paddings.blockEnd + metrics.borders.blockEnd),
         };
-
-        // FIXME: Check for fixed height too.
-        if (blockOffset and (box.establishesFc or metrics.paddings.blockEnd != 0_au or metrics.borders.blockEnd != 0_au)) {
-            cursor.y += pendingMargin.sum();
-            pendingMargin = PendingMargin{};
-        }
 
         if (not blockOffset and size.block > 0_au) {
             blockOffset = Some(pendingMargin.sum());
@@ -142,11 +190,13 @@ export struct BlockFormattingContext {
 
         pendingMargin.add(constraints.margins.blockEnd);
 
-        return Output{
-            .pendingMargin = pendingMargin,
-            .size = size,
+        return Placed{
+            .fragment = fragBuilder.buildBox(input, size),
             .blockOffset = blockOffset,
-            .fragment = Some(fragBuilder.buildBox(input, size))
+            .breakState = Completed{
+                .pendingMargin = pendingMargin,
+                .bestBreakOpportunity = std::move(bestBreakOpportunity),
+            }
         };
     }
 };
