@@ -16,6 +16,14 @@ struct LogicalSize {
         return {block, inline_};
     }
 
+    static LogicalSize fromPhysical(Math::Vec2<T> physical, WritingMode writingMode) {
+        if (writingMode == WritingMode::HORIZONTAL_TB) {
+            return {physical.width, physical.height};
+        } else {
+            return {physical.height, physical.width};
+        }
+    }
+
     Math::Vec2<T> toPhysical(WritingMode writingMode) const {
         if (writingMode == WritingMode::HORIZONTAL_TB) {
             return Math::Vec2<T>{inline_, block};

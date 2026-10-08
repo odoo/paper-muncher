@@ -1,5 +1,6 @@
 export module Vaev.Engine:layout2.input;
 
+import :layout2.break_;
 import :layout2.sizing;
 
 namespace Vaev::Layout2 {
@@ -51,6 +52,10 @@ export struct Constraints {
     PendingMargin pendingMargin = PendingMargin{};
 
     LogicalInsets<Au> margins;
+
+    Opt<Fragmentainer> fragmentainer = NONE;
+
+    Opt<BreakOpportunity> replayedBreak = NONE;
 };
 
 export struct Metrics {
