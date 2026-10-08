@@ -7,7 +7,7 @@ using namespace Karm;
 
 namespace PaperMuncher {
 
-Res<> hardenSandbox() {
+Res<> hardenSandbox(Sandbox) {
     logWarn("sandbox hardening is not supported in this environment.");
     return Ok();
 }

@@ -1,0 +1,36 @@
+--- .cutekit/externs/skift/karm/src/karm-sys/kevent/async.cpp
++++ .cutekit/externs/skift/karm/src/karm-sys/kevent/async.cpp
+@@ -3,6 +3,7 @@
+ #include <karm/macros>
+ #include <sys/event.h>
+ #include <sys/time.h>
++#include <sys/stat.h>
+ #include <sys/types.h>
+ #include <unistd.h>
+ 
+@@ -40,6 +41,13 @@
+ 
+     [[clang::coro_wrapper]]
+     Async::Task<> waitFor(struct kevent64_s ev) {
++        int fd = (int)ev.ident;
++        struct stat st{};
++        if (ev.filter != EVFILT_TIMER && ::fstat(fd, &st) == 0 && (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode))) {
++            // Treat regular files and directories as immediately ready
++            return Async::makeTask(Async::One<Res<>>{Ok()});
++        }
++
+         usize id = _id++;
+         auto promise = Async::Promise<>();
+         auto future = promise.future();
+--- .cutekit/externs/skift/karm/src/karm-sys/kevent/async.cpp
++++ .cutekit/externs/skift/karm/src/karm-sys/kevent/async.cpp
+@@ -51,6 +51,9 @@
+         auto promise = Async::Promise<>();
+         auto future = promise.future();
+ 
++        if (ev.filter == EVFILT_TIMER)
++            ev.ident = id;
++
+         ev.udata = (decltype(ev.udata))id;
+         ::kevent64(
+             _kqueue,
