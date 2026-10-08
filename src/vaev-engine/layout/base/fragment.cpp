@@ -272,7 +272,8 @@ export struct SvgShapeFragment : Fragment {
         if (not svgPaint.fill)
             return NONE;
 
-        if (auto [color] = resolve(svgPaint.fill, style().color)) {
+        if (auto const& [c] = resolve(svgPaint.fill, style().color)) {
+            auto color = c;
             color = color.withOpacity(svgPaint.fillOpacity);
             if (color.transparent())
                 return NONE;
@@ -292,7 +293,8 @@ export struct SvgShapeFragment : Fragment {
         if (not svgPaint.stroke)
             return NONE;
 
-        if (auto [color] = resolve(svgPaint.stroke, style().color)) {
+        if (auto const& [c] = resolve(svgPaint.stroke, style().color)) {
+            auto color = c;
             color = color.withOpacity(svgPaint.strokeOpacity);
             if (color.transparent())
                 return NONE;

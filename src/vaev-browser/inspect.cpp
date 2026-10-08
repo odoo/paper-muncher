@@ -240,7 +240,7 @@ Opt<Ui::Child> node(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<Insp
     Ui::Children children{i.expect()};
     if (expanded) {
         for (auto child = n->firstChild(); child; child = child->nextSibling()) {
-            if (auto [item] = node(child.upgrade(), s, a, n->is<Dom::Document>() ? 0 : ident + 1))
+            if (auto const& [item] = node(child.upgrade(), s, a, n->is<Dom::Document>() ? 0 : ident + 1))
                 children.pushBack(item);
         }
         children.pushBack(itemFooter(n, ident));

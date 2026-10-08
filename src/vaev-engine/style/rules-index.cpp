@@ -70,11 +70,11 @@ struct RuleIndex {
                 _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::CLASS, s.class_));
             },
             [&](TypeSelector const& s) {
-                if (auto [name] = s.qualifiedName.exactName())
+                if (auto const& [name] = s.qualifiedName.exactName())
                     _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::TYPE, name.str()));
             },
             [&](AttributeSelector const& s) {
-                if (auto [name] = s.qualifiedName.exactName()) {
+                if (auto const& [name] = s.qualifiedName.exactName()) {
                     if (not oneOf(name, Html::ID_ATTR.name, Html::CLASS_ATTR.name, Html::STYLE_ATTR.name))
                         _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::ATTR, name.str()));
                 }
@@ -136,7 +136,7 @@ struct RuleIndex {
             [&](TypeSelector const& s) -> Opt<Candidate> {
                 auto const& qualifiedNameSelector = s.qualifiedName;
 
-                if (auto [name] = qualifiedNameSelector.exactName()) {
+                if (auto const& [name] = qualifiedNameSelector.exactName()) {
                     return Some(Candidate{DestinationBucket::TYPE, name.str()});
                 }
                 return NONE;
@@ -148,7 +148,7 @@ struct RuleIndex {
                 return Some(Candidate{DestinationBucket::CLASS, s.class_.str()});
             },
             [&](AttributeSelector const& s) -> Opt<Candidate> {
-                if (auto [name] = s.qualifiedName.exactName()) {
+                if (auto const& [name] = s.qualifiedName.exactName()) {
                     return Some(Candidate{DestinationBucket::ATTR, name.str()});
                 }
                 return NONE;
@@ -195,7 +195,7 @@ struct RuleIndex {
                     if (ancestorFilter.rejects(sub(_allAncestorHashes, entry.ancestorHashes)))
                         continue;
 
-                    if (auto [specificity] = matchPreprocessedSelector(entry.selector, el, pseudoElement)) {
+                    if (auto const& [specificity] = matchPreprocessedSelector(entry.selector, el, pseudoElement)) {
                         matching.pushBack({entry.originatingRule, specificity, entry.order});
                     }
                 }
@@ -223,7 +223,7 @@ struct RuleIndex {
             if (ancestorFilter.rejects(sub(_allAncestorHashes, entry.ancestorHashes)))
                 continue;
 
-            if (auto [specificity] = matchPreprocessedSelector(entry.selector, el, pseudoElement)) {
+            if (auto const& [specificity] = matchPreprocessedSelector(entry.selector, el, pseudoElement)) {
                 matching.pushBack({entry.originatingRule, specificity, entry.order});
             }
         }

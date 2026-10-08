@@ -47,7 +47,7 @@
             "tag": "v0.2.0"
         },
         "skift/karm": {
-            "commit": "836932b11809c2fbcf871ae93c7b98dbf81fe317",
+            "commit": "2c06e309ff5d70f5778609ec93cbcfb6720716f6",
             "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
         }

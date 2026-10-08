@@ -265,7 +265,7 @@ export struct VerticalAlignProperty : Property {
     Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         Vec<Rc<Property>> shorthands = {};
 
-        if (auto [baselineSource] = _value.baselineSource) {
+        if (auto const& [baselineSource] = _value.baselineSource) {
             shorthands.pushBack(
                 makeRc<BaselineSourceProperty>(
                     registry.resolveRegistration(Properties::BASELINE_SOURCE, {}).take(),
@@ -274,7 +274,7 @@ export struct VerticalAlignProperty : Property {
             );
         }
 
-        if (auto [alignmentBaseline] = _value.alignmentBaseline) {
+        if (auto const& [alignmentBaseline] = _value.alignmentBaseline) {
             shorthands.pushBack(
                 makeRc<AlignmentBaselineProperty>(
                     registry.resolveRegistration(Properties::ALIGNMENT_BASELINE, {}).take(),
@@ -283,7 +283,7 @@ export struct VerticalAlignProperty : Property {
             );
         }
 
-        if (auto [baselineShift] = _value.baselineShift) {
+        if (auto const& [baselineShift] = _value.baselineShift) {
             shorthands.pushBack(
                 makeRc<BaselineShiftProperty>(
                     registry.resolveRegistration(Properties::BASELINE_SHIFT, {}).take(),

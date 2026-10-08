@@ -59,7 +59,7 @@ export struct AncestorFilter {
 
         _add(hashEntry(TYPE, el->qualifiedName.name.str()), journalEntrySize);
 
-        if (auto [id] = el->id()) {
+        if (auto const& [id] = el->id()) {
             _add(hashEntry(ID, id), journalEntrySize);
         }
 
