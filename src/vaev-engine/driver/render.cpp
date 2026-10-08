@@ -18,7 +18,7 @@ namespace Vaev::Driver {
 static auto dumpFragments = Debug::Flag::debug("web-fragments"s, "Dump the constructed fragments"s);
 static auto dumpStacking = Debug::Flag::debug("web-stacking"s, "Dump the stacking context tree"s);
 
-static auto layout2 = Debug::Flag::feature("layout2"s, "Enable the work in progress layout engine rewrite"s);
+static auto layout2 = Debug::Flag::feature("layout2-render"s, "Enable the work in progress layout engine rewrite in render mode"s);
 
 export struct RenderResult {
     Rc<Layout::Tree> tree;
@@ -46,7 +46,7 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
     Opt<Rc<Layout::Fragment>> rootFrag = NONE;
     if (layout2) {
         // FIXME: Extract into a layoutRoot, and investigate the right init params.
-        rootFrag = Layout2::layout(
+        auto output = Layout2::layout(
             *tree, tree->root,
             Layout2::Constraints{
                 .knownSize = {Some(viewport.small.width), NONE},
@@ -66,8 +66,8 @@ export RenderResult render(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Style::Me
                 // NoSpec AF >.<
                 .margins = Layout2::LogicalInsets<Au>::all(0_au),
             }
-        ).fragment;
-
+        );
+        rootFrag = Some(output.is<Layout2::Placed>()->fragment);
         Layout2::absolutize(*rootFrag);
     } else {
         rootFrag = Layout::layoutRoot(

@@ -11,12 +11,15 @@ import Karm.Logger;
 
 import :style;
 import :layout;
+import :layout2;
 import :values;
 import :dom.document;
 import :paint;
 import :css;
 
 using namespace Karm;
+
+static auto layout2 = Debug::Flag::feature("layout2-print"s, "Enable the work in progress layout engine rewrite in print mode"s);
 
 namespace Vaev::Driver {
 
@@ -229,60 +232,136 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
         Layout::buildDocument(dom),
     };
 
-    Layout::RunningPositionMap runningPosition = {};
+    if (layout2) {
+        usize pageNumber = 1;
+        while (true) {
+            Style::Page page{
+                .name = ""s,
+                .number = pageNumber++,
+                .blank = false,
+            };
 
-    PaginationContext paginationContext{
-        .contentTree = contentTree,
-        .media = media,
-        .settings = settings,
-        .computer = computer,
-        .initialStyle = initialStyle,
-        .decorator = decorator,
-    };
-
-    auto startOfDocument = Layout::Breakpoint::startOfDocument();
-    auto pageInfos = collectBreakPointsAndRunningPositions(paginationContext);
-
-    for (auto [infos, i] : iter(pageInfos) | Index()) {
-        contentTree.viewport = {
-            .small = infos.pageContent.size(),
-        };
-        auto output = Layout::layoutRoot(
-            contentTree,
-            {
-                .generateFragment = true,
-                .knownSize = {Some(infos.pageContent.width), NONE},
-                .position = infos.pageContent.topStart(),
-                .availableSpace = infos.pageContent.size(),
-                .containingBlock = infos.pageContent.size(),
-                .runningPosition = &paginationContext.runningPosition,
-                .pageNumber = infos.pageNumber,
-                .breakpointTraverser = {
-                    i == 0 ? &startOfDocument : &pageInfos[i - 1].breakpoint,
-                    &infos.breakpoint,
-                },
-            }
-        );
-
-        Gfx::Snapshot::Recorder snapshot{settings.pageSize().cast<isize>()};
-        snapshot.push();
-        snapshot.transform(Math::Trans2f::scale(media.scale()));
-
-        if (settings.headerFooter and settings.margins != Print::MarginOption::NONE)
-            _paintMargins(
-                infos,
-                snapshot,
-                paginationContext.runningPosition
+            auto pageStyle = computer.computeValues(*initialStyle, page);
+            auto pageRect = RectAu{media.scaledViewport()};
+            auto pageDecoration = pageRect.shrink(
+                _resolvePageMargin(settings.margins, *pageStyle->style->margin, pageRect)
             );
 
-        if (auto& [decorator] = paginationContext.decorator)
-            decorator.decorate(paginationContext.media, infos, pageInfos.len(), snapshot);
+            // FIXME: Extract into a layoutRoot, and investigate the right init params.
+            // FIXME: Nospec POC.
+            auto output = Layout2::layout(
+                contentTree, contentTree.root,
+                Layout2::Constraints{
+                    .knownSize = {
+                        Some(pageRect.width),
+                        Some(pageRect.height),
+                    },
+                    .containingBlock = {
+                        Some(pageRect.width),
+                        Some(pageRect.height),
+                    },
+                    .availableSpace = {
+                        pageRect.width,
+                        pageRect.height,
+                    },
 
-        Paint::StackingContext::establishStackingContext(output.fragment.expect())->paintRoot(snapshot);
+                    // https://www.w3.org/TR/CSS22/box.html#collapsing-margins
+                    // - Margins of the root element's box do not collapse.
+                    .collapseMargins = false,
 
-        snapshot.pop();
+                    // NoSpec AF >.<
+                    .margins = Layout2::LogicalInsets<Au>::all(0_au),
 
-        co_yield snapshot.finalize();
+                    .fragmentainer = Some(Layout2::Fragmentainer{
+                        .type = Layout2::Fragmentainer::Type::PAGE,
+                        .direction = Layout2::Fragmentainer::Direction::VERTICAL,
+                        .blockSize = pageRect.height,
+                        .blockOffset = 0_au,
+                    }),
+                }
+            );
+
+            if (auto [placed] = output.is<Layout2::Placed>()) {
+                Layout2::absolutize(placed.fragment);
+
+                Gfx::Snapshot::Recorder snapshot{settings.pageSize().cast<isize>()};
+                snapshot.push();
+                snapshot.transform(Math::Trans2f::scale(media.scale()));
+
+                Paint::StackingContext::establishStackingContext(placed.fragment)->paintRoot(snapshot);
+
+                snapshot.pop();
+
+                co_yield snapshot.finalize();
+
+                // FIXME: Multipage.
+                break;
+            } else {
+                // FIXME: Relayout instead.
+                logError("layout aborted inside root");
+
+                Gfx::Snapshot::Recorder snapshot{settings.pageSize().cast<isize>()};
+                co_yield snapshot.finalize();
+
+                break;
+            }
+        }
+    } else {
+        Layout::RunningPositionMap runningPosition = {};
+
+        PaginationContext paginationContext{
+            .contentTree = contentTree,
+            .media = media,
+            .settings = settings,
+            .computer = computer,
+            .initialStyle = initialStyle,
+            .decorator = decorator,
+        };
+
+        auto startOfDocument = Layout::Breakpoint::startOfDocument();
+        auto pageInfos = collectBreakPointsAndRunningPositions(paginationContext);
+
+        for (auto [infos, i] : iter(pageInfos) | Index()) {
+            contentTree.viewport = {
+                .small = infos.pageContent.size(),
+            };
+            auto output = Layout::layoutRoot(
+                contentTree,
+                {
+                    .generateFragment = true,
+                    .knownSize = {Some(infos.pageContent.width), NONE},
+                    .position = infos.pageContent.topStart(),
+                    .availableSpace = infos.pageContent.size(),
+                    .containingBlock = infos.pageContent.size(),
+                    .runningPosition = &paginationContext.runningPosition,
+                    .pageNumber = infos.pageNumber,
+                    .breakpointTraverser = {
+                        i == 0 ? &startOfDocument : &pageInfos[i - 1].breakpoint,
+                        &infos.breakpoint,
+                    },
+                }
+            );
+
+            Gfx::Snapshot::Recorder snapshot{settings.pageSize().cast<isize>()};
+            snapshot.push();
+            snapshot.transform(Math::Trans2f::scale(media.scale()));
+
+            if (settings.headerFooter and settings.margins != Print::MarginOption::NONE)
+                _paintMargins(
+                    infos,
+                    snapshot,
+                    paginationContext.runningPosition
+                );
+
+            if (auto& [decorator] = paginationContext.decorator)
+                decorator.decorate(paginationContext.media, infos, pageInfos.len(), snapshot);
+
+            Paint::StackingContext::establishStackingContext(output.fragment.expect())->paintRoot(snapshot);
+
+            snapshot.pop();
+
+            co_yield snapshot.finalize();
+        }
     }
 }
 
