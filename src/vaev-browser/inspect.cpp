@@ -85,7 +85,7 @@ export using InspectAction = Union<
 export struct InspectState {
     bool visible = false;
     bool wireframe = false;
-    bool boxModel = false;
+    bool boxModel = true;
     InspectTab tab = InspectTab::ELEMENTS;
     InspectStyleTab styleTab = InspectStyleTab::CASCADED;
     String filter = ""s;
@@ -520,7 +520,7 @@ Ui::Child inspectTabElement(Rc<WebView> webview, InspectState const& s, Ui::Acti
     auto document = webview->document().upgrade();
     return Ui::vflow(
         node(document, s, send).expect() | Ui::vhscroll() | Kr::scaffoldContent() | Ui::grow(),
-        inspectStyleTab(document, s, send) | Kr::resizable(Kr::ResizeHandlePosition::TOP, {256}, NONE)
+        inspectStyleTab(document, s, send) | Kr::resizable(Kr::ResizeHandlePosition::TOP, {320}, NONE)
     );
 }
 
