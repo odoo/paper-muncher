@@ -125,10 +125,13 @@ Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, LogicalSize<Opt<Au>
     };
 }
 
-Output layout(Layout::Tree& tree, Layout::Box& box, Constraints const& constraints) {
+
+Output layout(Layout::Tree& tree, Layout::Box& box, Constraints const& constraints, Opt<BreakOpportunity const&> breakOpportunity, Opt<BreakNode const&> breakTree) {
     auto input = Input{
         .constraints = constraints,
         .metrics = computeMetrics(tree, box, constraints.containingBlock),
+        .breakOpportunity = breakOpportunity,
+        .breakTree = breakTree,
     };
 
     if (box.style->display == Display::BLOCK) {
