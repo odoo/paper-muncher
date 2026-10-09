@@ -38,14 +38,14 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     auto client = Http::defaultClient();
     client->userAgent = "Mozilla/5.0 Vaev Browser/" stringify$(__ck_version_value) ""s;
-    auto window = Vaev::Dom::Window::create(client);
-    window->changeMedia(
+    auto webview = Vaev::WebView::create(client);
+    webview->changeMedia(
         Vaev::Style::Media::forView(
             {},
             Ui::darkMode ? Vaev::ColorScheme::DARK : Vaev::ColorScheme::LIGHT
         )
     );
-    co_trya$(window->loadLocationAsync(
+    co_trya$(webview->loadLocationAsync(
         urlArg.value(),
         Ref::Uti::PUBLIC_OPEN,
         Async::CancellationToken::uninterruptible()
@@ -53,7 +53,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     co_return co_await Ui::runAsync(
         env,
-        Vaev::Browser::app({window, devArg.value()}),
+        Vaev::Browser::app({webview, devArg.value()}),
         ct
     );
 }
