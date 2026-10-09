@@ -228,7 +228,7 @@ Ui::Child appContent(State const& s) {
     return Ui::hflow(
         wv |
             Ui::grow(),
-        inspectorContent(s) | Kr::resizable(Kr::ResizeHandlePosition::START, {320}, NONE)
+        inspectorContent(s) | Kr::resizable(Kr::ResizeHandlePosition::START, {600}, NONE)
     );
 }
 
@@ -285,7 +285,7 @@ export Ui::Child app(State state) {
                 .body = [&] {
                     return appContent(s);
                 },
-                .size = {1024, 768},
+                .size = {1400, 900},
             });
             return scaffold |
                    Ui::keyboardShortcut(App::Key::R, App::KeyMod::CTRL, Model::bind<Reload>()) |
