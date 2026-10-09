@@ -54,8 +54,6 @@ export struct Constraints {
     LogicalInsets<Au> margins;
 
     Opt<Fragmentainer> fragmentainer = NONE;
-
-    Opt<BreakOpportunity> replayedBreak = NONE;
 };
 
 export struct Metrics {
@@ -75,8 +73,10 @@ export struct Metrics {
 };
 
 export struct Input {
-    Constraints constraints;
-    Metrics metrics;
+    Constraints const& constraints;
+    Metrics const& metrics;
+    Opt<BreakOpportunity const&> breakOpportunity = NONE;
+    Opt<BreakNode const&> breakTree = NONE;
 };
 
 } // namespace Vaev::Layout2

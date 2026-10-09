@@ -10,12 +10,14 @@ namespace Vaev::Layout2 {
 
 struct Completed {
     PendingMargin pendingMargin;
+    BreakBetween finalBreakAfter;
     Opt<BreakOpportunity> bestBreakOpportunity;
 };
 
 struct Broke {
-    BreakAppeal appeal;
     BreakNode tree;
+    BreakAppeal appeal;
+    bool forced;
 };
 
 struct NeedsEarlierBreak {
@@ -25,6 +27,7 @@ struct NeedsEarlierBreak {
 struct Placed {
     Rc<Layout::Fragment> fragment;
     Opt<Au> blockOffset = NONE;
+    BreakBetween initialBreakBefore;
     Union<Completed, Broke> breakState;
 };
 

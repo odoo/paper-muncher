@@ -282,7 +282,17 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
             );
 
             if (auto [placed] = output.is<Layout2::Placed>()) {
+                if (auto [broke] = placed.breakState.is<Layout2::Broke>()) {
+                    if (broke.forced) {
+                        logInfo("forced-break [{}]: {}", broke.appeal, broke.tree);
+                    } else {
+                        logInfo("soft-break [{}]: {}", broke.appeal, broke.tree);
+                    }
+                }
+
                 Layout2::absolutize(placed.fragment);
+
+                logInfo("{}", placed.fragment);
 
                 Gfx::Snapshot::Recorder snapshot{settings.pageSize().cast<isize>()};
                 snapshot.push();
