@@ -31,49 +31,61 @@ export enum struct InspectStyleTab {
     _LEN,
 };
 
-export struct ExpandNode {
+export struct InspectToggleVisible {};
+
+export struct InspectToggleWireframe {};
+
+export struct InspectToggleBoxModel {};
+
+export struct InspectExpandNode {
     Gc::Ref<Dom::Node> node;
 };
 
-export struct SelectNode {
+export struct InspectSelectNode {
     Gc::Ref<Dom::Node> node;
 };
 
-export struct ChangeFilter {
+export struct InspectChangeFilter {
     String filter;
 };
 
-export struct ChangePaper {
+export struct InspectChangePaper {
     Print::PaperStock paper;
 };
 
-export struct ChangeOrientation {
+export struct InspectChangeOrientation {
     Print::Orientation orientation;
 };
 
-export struct ChangeMargin {
+export struct InspectChangeMargin {
     Print::Margins margins;
 };
 
-export struct ChangeScale {
+export struct InspectChangeScale {
     f64 scale;
 };
 
-export struct ToggleHeaderFooter {};
+export struct InspectToggleHeaderFooter {};
 
-export using InspectorAction = Union<
+export using InspectAction = Union<
+    InspectToggleVisible,
+    InspectToggleWireframe,
+    InspectToggleBoxModel,
     InspectTab,
     InspectStyleTab,
-    ExpandNode,
-    SelectNode,
-    ChangeFilter,
-    ChangePaper,
-    ChangeOrientation,
-    ChangeMargin,
-    ChangeScale,
-    ToggleHeaderFooter>;
+    InspectExpandNode,
+    InspectSelectNode,
+    InspectChangeFilter,
+    InspectChangePaper,
+    InspectChangeOrientation,
+    InspectChangeMargin,
+    InspectChangeScale,
+    InspectToggleHeaderFooter>;
 
 export struct InspectState {
+    bool visible = false;
+    bool wireframe = false;
+    bool boxModel = false;
     InspectTab tab = InspectTab::ELEMENTS;
     InspectStyleTab styleTab = InspectStyleTab::CASCADED;
     String filter = ""s;
@@ -81,19 +93,28 @@ export struct InspectState {
     Gc::Ptr<Dom::Node> selectedNode = nullptr;
     Print::Settings settings;
 
-    void apply(InspectorAction action) {
+    void apply(InspectAction action) {
         action.visit(
+            [&](InspectToggleVisible const&) {
+                visible = not visible;
+            },
+            [&](InspectToggleWireframe const&) {
+                wireframe = not wireframe;
+            },
+            [&](InspectToggleBoxModel const&) {
+                boxModel = not boxModel;
+            },
             [&](InspectTab const& a) {
                 tab = a;
             },
             [&](InspectStyleTab const& a) {
                 styleTab = a;
             },
-            [&](ExpandNode const& a) {
+            [&](InspectExpandNode const& a) {
                 if (not expandedNodes.remove(a.node))
                     expandedNodes.add(a.node);
             },
-            [&](SelectNode const& a) {
+            [&](InspectSelectNode const& a) {
                 if (a.node->hasChildren())
                     expandedNodes.add(a.node);
                 selectedNode = a.node;
@@ -101,22 +122,22 @@ export struct InspectState {
                     expandedNodes.add(Gc::Ref{*current});
                 }
             },
-            [&](ChangeFilter const& a) {
+            [&](InspectChangeFilter const& a) {
                 filter = a.filter;
             },
-            [&](ChangePaper const& a) {
+            [&](InspectChangePaper const& a) {
                 settings.stock = a.paper;
             },
-            [&](ChangeOrientation const& a) {
+            [&](InspectChangeOrientation const& a) {
                 settings.orientation = a.orientation;
             },
-            [&](ChangeMargin const& a) {
+            [&](InspectChangeMargin const& a) {
                 settings.margins = a.margins;
             },
-            [&](ChangeScale const& a) {
+            [&](InspectChangeScale const& a) {
                 settings.scale = a.scale;
             },
-            [&](ToggleHeaderFooter const&) {
+            [&](InspectToggleHeaderFooter const&) {
                 settings.headerFooter = not settings.headerFooter;
             }
         );
@@ -219,7 +240,7 @@ Str displayToBadge(Display d) {
         return "";
 }
 
-Opt<Ui::Child> itemHeader(Gc::Ref<Dom::Node> n, Ui::Action<InspectorAction> a, bool expanded) {
+Opt<Ui::Child> itemHeader(Gc::Ref<Dom::Node> n, Ui::Action<InspectAction> a, bool expanded) {
     if (n->is<Dom::Document>()) {
         return Some(Ui::codeMedium("#document"));
     } else if (n->is<Dom::DocumentType>()) {
@@ -241,7 +262,7 @@ Opt<Ui::Child> itemHeader(Gc::Ref<Dom::Node> n, Ui::Action<InspectorAction> a, b
                 ) |
                     Ui::button(
                         Some([n, a](auto& btn) {
-                            a(btn, ExpandNode{n});
+                            a(btn, InspectExpandNode{n});
                         }),
                         Ui::ButtonStyle::subtle()
                     ),
@@ -279,7 +300,7 @@ Ui::ButtonStyle selected() {
     };
 }
 
-Opt<Ui::Child> item(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, bool expanded, isize ident) {
+Opt<Ui::Child> item(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<InspectAction> a, bool expanded, isize ident) {
     auto style = s.selectedNode == n ? selected() : Ui::ButtonStyle::subtle().withRadii(0);
     auto header = itemHeader(n, a, expanded);
     if (not header)
@@ -287,7 +308,7 @@ Opt<Ui::Child> item(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<Insp
     return Some(
         Ui::button(
             Some([n, a](auto& btn) {
-                a(btn, SelectNode{n});
+                a(btn, InspectSelectNode{n});
             }),
             style,
             header.expect() | idented(ident)
@@ -295,7 +316,7 @@ Opt<Ui::Child> item(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<Insp
     );
 }
 
-Opt<Ui::Child> node(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<InspectorAction> a, isize ident = 0) {
+Opt<Ui::Child> node(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<InspectAction> a, isize ident = 0) {
     bool expanded = n->is<Dom::Document>() or s.expandedNodes.contains(n);
     auto i = item(n, s, a, expanded, ident);
     if (not i)
@@ -366,7 +387,7 @@ Ui::Child inspectStyleTabCascaded(InspectState const& s) {
            Kr::scaffoldContent();
 }
 
-Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::Action<InspectorAction> send) {
+Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::Action<InspectAction> send) {
     auto content = noNodeSelected();
 
     if (s.selectedNode)
@@ -398,7 +419,7 @@ Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const
                Ui::hflow(
                    4,
                    Kr::input(Mdi::FILTER, "Filter..."s, s.filter, [send](auto& n, auto text) {
-                       send(n, ChangeFilter{text});
+                       send(n, InspectChangeFilter{text});
                    }) | Ui::grow(),
                    Kr::checkbox(false, Ui::SINK<bool>, "All"s), Kr::checkbox(false, Ui::SINK<bool>, "Variables"s)
                ) | Ui::insets(6),
@@ -407,7 +428,7 @@ Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const
            Kr::scaffoldContent() | Ui::pinSize(128);
 }
 
-Ui::Child inspectStyleTabContent(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::Action<InspectorAction> send) {
+Ui::Child inspectStyleTabContent(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::Action<InspectAction> send) {
     switch (s.styleTab) {
     case InspectStyleTab::CASCADED:
         return inspectStyleTabCascaded(s);
@@ -441,7 +462,7 @@ Ui::Child inspectStyleBoxInset(Str name, Gfx::Color color, Math::Insetsf, Ui::Ch
            });
 }
 
-Ui::Child inspectStyleBox() {
+Ui::Child inspectStyleBoxModel() {
     return inspectStyleBoxInset(
                "margin",
                Gfx::YELLOW800, {},
@@ -465,9 +486,9 @@ Ui::Child inspectStyleBox() {
            Ui::center() | Ui::bound() | Kr::scaffoldContent();
 }
 
-Ui::Child inspectStyleTab(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::Action<InspectorAction> send) {
-    return Ui::vflow(
-        2,
+Ui::Child inspectStyleTab(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::Action<InspectAction> send) {
+    Ui::Children items;
+    items.pushBack(
         Ui::hflow(
             Kr::tabbarContent({
                 Kr::tabbarItem(
@@ -482,14 +503,20 @@ Ui::Child inspectStyleTab(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui:
                 ),
             }),
             Ui::grow(NONE),
-            Ui::button(Some(Ui::SINK<>), Ui::ButtonStyle::subtle(), Mdi::SELECT_ALL)
-        ),
-        inspectStyleBox(),
-        inspectStyleTabContent(dom, s, send) | Ui::grow()
+            Ui::button(Some(rbind(send, InspectToggleBoxModel{})), Ui::ButtonStyle::subtle(), Mdi::SELECT_ALL)
+        )
+    );
+    if (s.boxModel)
+        items.pushBack(inspectStyleBoxModel());
+    items.pushBack(inspectStyleTabContent(dom, s, send) | Ui::grow());
+
+    return Ui::vflow(
+        2,
+        std::move(items)
     );
 }
 
-Ui::Child inspectTabElement(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectorAction> send) {
+Ui::Child inspectTabElement(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectAction> send) {
     auto document = window->document().upgrade();
     return Ui::vflow(
         node(document, s, send).expect() | Ui::vhscroll() | Kr::scaffoldContent() | Ui::grow(),
@@ -497,7 +524,7 @@ Ui::Child inspectTabElement(Rc<Dom::Window> window, InspectState const& s, Ui::A
     );
 }
 
-Ui::Child _paperSelect(InspectState const& s, Ui::Action<InspectorAction> send) {
+Ui::Child _paperSelect(InspectState const& s, Ui::Action<InspectAction> send) {
     return Kr::select(Kr::selectValue(s.settings.stock.name), [send] -> Ui::Children {
         Vec<Ui::Child> groups;
 
@@ -506,7 +533,7 @@ Ui::Child _paperSelect(InspectState const& s, Ui::Action<InspectorAction> send) 
             Vec<Ui::Child> items;
             items.pushBack(Kr::selectLabel(serie.name));
             for (auto const& stock : serie.stocks) {
-                items.pushBack(Kr::selectItem(Some(rbind(send, ChangePaper{stock})), stock.name));
+                items.pushBack(Kr::selectItem(Some(rbind(send, InspectChangePaper{stock})), stock.name));
             }
 
             if (not first)
@@ -520,13 +547,15 @@ Ui::Child _paperSelect(InspectState const& s, Ui::Action<InspectorAction> send) 
     });
 }
 
-Ui::Child inspectTabLayout() {
+Ui::Child inspectTabLayout(InspectState const& s, Ui::Action<InspectAction> send) {
     return Ui::vflow(
                4,
                Ui::vflow(
                    Kr::checkboxRow(
-                       true,
-                       Ui::SINK<bool>,
+                       s.wireframe,
+                       [send](auto& n, ...) {
+                           send(n, InspectToggleWireframe{});
+                       },
                        "Show wireframe"s
                    ),
                    Kr::checkboxRow(
@@ -540,7 +569,7 @@ Ui::Child inspectTabLayout() {
            Ui::grow();
 }
 
-Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectorAction> send) {
+Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectAction> send) {
     return Ui::vflow(
                4,
                Ui::vflow(
@@ -555,7 +584,7 @@ Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectorAction> sen
                    Kr::numberRow(
                        s.settings.scale,
                        [send](auto& n, f64 scale) {
-                           send(n, ChangeScale{scale});
+                           send(n, InspectChangeScale{scale});
                        },
                        0.1,
                        "Scale"s
@@ -577,8 +606,8 @@ Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectorAction> sen
                        ),
                        [send] -> Ui::Children {
                            return {
-                               Kr::selectItem(Some(rbind(send, ChangeOrientation{Print::Orientation::PORTRAIT})), "Portrait"s),
-                               Kr::selectItem(Some(rbind(send, ChangeOrientation{Print::Orientation::LANDSCAPE})), "Landscape"s),
+                               Kr::selectItem(Some(rbind(send, InspectChangeOrientation{Print::Orientation::PORTRAIT})), "Portrait"s),
+                               Kr::selectItem(Some(rbind(send, InspectChangeOrientation{Print::Orientation::LANDSCAPE})), "Landscape"s),
                            };
                        },
                        "Orientation"s
@@ -593,10 +622,10 @@ Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectorAction> sen
                        Kr::selectValue(Io::format("{}", Io::cased(s.settings.margins, Io::Case::CAPITAL))),
                        [send] -> Ui::Children {
                            return {
-                               Kr::selectItem(Some(rbind(send, ChangeMargin{Print::MarginOption::NONE})), "None"s),
-                               Kr::selectItem(Some(rbind(send, ChangeMargin{Print::MarginOption::MINIMUM})), "Minimum"s),
-                               Kr::selectItem(Some(rbind(send, ChangeMargin{Print::MarginOption::DEFAULT})), "Default"s),
-                               Kr::selectItem(Some(rbind(send, ChangeMargin{Math::InsetsAu{}})), "Custom"s),
+                               Kr::selectItem(Some(rbind(send, InspectChangeMargin{Print::MarginOption::NONE})), "None"s),
+                               Kr::selectItem(Some(rbind(send, InspectChangeMargin{Print::MarginOption::MINIMUM})), "Minimum"s),
+                               Kr::selectItem(Some(rbind(send, InspectChangeMargin{Print::MarginOption::DEFAULT})), "Default"s),
+                               Kr::selectItem(Some(rbind(send, InspectChangeMargin{Math::InsetsAu{}})), "Custom"s),
                            };
                        },
                        "Margins"s
@@ -605,7 +634,7 @@ Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectorAction> sen
                    Kr::checkboxRow(
                        s.settings.headerFooter,
                        [send](auto& n, ...) {
-                           send(n, ToggleHeaderFooter{});
+                           send(n, InspectToggleHeaderFooter{});
                        },
                        "Header and footers"s
                    )
@@ -616,12 +645,12 @@ Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectorAction> sen
     ;
 }
 
-Ui::Child inspectTabContent(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectorAction> send) {
+Ui::Child inspectTabContent(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectAction> send) {
     switch (s.tab) {
     case InspectTab::ELEMENTS:
         return inspectTabElement(window, s, send);
     case InspectTab::LAYOUT:
-        return inspectTabLayout();
+        return inspectTabLayout(s, send);
     case InspectTab::MEDIA:
         return inspectTabMedia(s, send);
     default:
@@ -629,7 +658,7 @@ Ui::Child inspectTabContent(Rc<Dom::Window> window, InspectState const& s, Ui::A
     }
 }
 
-export Ui::Child inspect(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectorAction> send) {
+export Ui::Child inspect(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectAction> send) {
     return Ui::vflow(
         4,
         Ui::hflow(
@@ -651,7 +680,11 @@ export Ui::Child inspect(Rc<Dom::Window> window, InspectState const& s, Ui::Acti
                 ),
             }),
             Ui::grow(NONE),
-            Ui::button(Some(Ui::SINK<>), Ui::ButtonStyle::subtle(), Mdi::CLOSE)
+            Ui::button(
+                Some(rbind(send, InspectToggleVisible{})),
+                Ui::ButtonStyle::subtle(),
+                Mdi::CLOSE
+            )
         ),
         inspectTabContent(window, s, send) | Ui::grow()
     );

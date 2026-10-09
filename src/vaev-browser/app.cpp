@@ -83,7 +83,7 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
         openInDefaultBrowser(s),
 #endif
         Kr::separator(),
-        Kr::contextMenuItem(Some(Model::bind<ToggleDeveloperMode>()), Some(Mdi::CODE_TAGS), "Developer Tools"),
+        Kr::contextMenuItem(Some(Model::bind<InspectAction>(InspectToggleVisible{})), Some(Mdi::CODE_TAGS), "Developer Tools"),
         Kr::separator(),
         Kr::contextMenuItem(Some(Ui::SINK<>), Some(Mdi::COG), "Settings"),
     });
@@ -211,7 +211,7 @@ Ui::Child webview(State const& s) {
                    }
                },
                {
-                   .wireframe = s.wireframe,
+                   .wireframe = s.inspect.wireframe,
                    .selected = selected,
                }
            ) |
@@ -222,7 +222,7 @@ Ui::Child webview(State const& s) {
 
 Ui::Child appContent(State const& s) {
     auto wv = webview(s) | Kr::scaffoldContent();
-    if (not s.developerMode)
+    if (not s.inspect.visible)
         return wv;
 
     return Ui::hflow(
@@ -290,7 +290,7 @@ export Ui::Child app(State state) {
             return scaffold |
                    Ui::keyboardShortcut(App::Key::R, App::KeyMod::CTRL, Model::bind<Reload>()) |
                    Ui::keyboardShortcut(App::Key::F5, Model::bind<Reload>()) |
-                   Ui::keyboardShortcut(App::Key::F12, Model::bind<ToggleDeveloperMode>()) |
+                   Ui::keyboardShortcut(App::Key::F12, Model::bind<InspectAction>(InspectToggleVisible{})) |
                    Ui::keyboardShortcut(App::Key::P, App::KeyMod::CTRL, [&](auto& n) {
                        if (not s.loadingResult)
                            return;
