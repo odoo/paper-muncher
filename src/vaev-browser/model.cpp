@@ -21,20 +21,19 @@ enum struct Status {
 
 struct State {
     Rc<Dom::Window> window;
-    bool developerMode = false;
     Status status = Status::LOADED;
     Res<> loadingResult = Ok();
     usize currentIndex = 0;
     Vec<Navigate> history = {};
     InspectState inspect = {};
-    bool wireframe = false;
     String locationInput;
 
-    State(Rc<Dom::Window> window, bool developerMode)
+    State(Rc<Dom::Window> window, bool dev = false)
         : window{window},
-          developerMode{developerMode},
           history{Navigate{window->location()}},
-          locationInput(window->location().str()) {}
+          locationInput(window->location().str()) {
+        inspect.visible = dev;
+    }
 
     bool canGoBack() const {
         return currentIndex > 0;
@@ -59,13 +58,9 @@ struct GoBack {};
 
 struct GoForward {};
 
-struct ToggleWireframe {};
-
 struct InspectElement {
     Opt<Dom::EventTarget> target;
 };
-
-struct ToggleDeveloperMode {};
 
 struct UpdateLocation {
     String location;
@@ -78,10 +73,8 @@ using Action = Union<
     Loaded,
     GoBack,
     GoForward,
-    ToggleWireframe,
     InspectElement,
-    ToggleDeveloperMode,
-    InspectorAction,
+    InspectAction,
     Navigate,
     UpdateLocation,
     NavigateLocation>;
@@ -112,22 +105,14 @@ Ui::Task<Action> reduce(State& s, Action a) {
             s.currentIndex++;
             return reduce(s, Reload{});
         },
-        [&](ToggleWireframe) -> Ui::Task<Action> {
-            s.wireframe = not s.wireframe;
-            return NONE;
-        },
         [&](InspectElement inspectElement) -> Ui::Task<Action> {
-            s.developerMode = true;
+            s.inspect.visible = true;
             if (auto& [target] = inspectElement.target)
                 if (auto node = target.is<Gc::Ref<Dom::Node>>())
-                    s.inspect.apply(SelectNode{*node});
+                    s.inspect.apply(InspectSelectNode{*node});
             return NONE;
         },
-        [&](ToggleDeveloperMode) -> Ui::Task<Action> {
-            s.developerMode = not s.developerMode;
-            return NONE;
-        },
-        [&](InspectorAction a) -> Ui::Task<Action> {
+        [&](InspectAction a) -> Ui::Task<Action> {
             s.inspect.apply(a);
             return NONE;
         },
