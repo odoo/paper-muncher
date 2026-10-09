@@ -35,10 +35,10 @@ struct Viewport : Ui::View<Viewport> {
         _props = o._props;
     }
 
-    void paint(Gfx::Canvas& g, Math::Recti) override {
+    void paint(Gfx::Canvas& g, Math::RectAu) override {
         g.push();
-        g.clip(_listener.containerBound());
-        g.origin(_listener.scroll() + _listener.containerBound().xy);
+        g.clip(_listener.containerBound().cast<f64>());
+        g.origin((_listener.scroll() + _listener.containerBound().xy).cast<f64>());
         _webview->paint(g);
 
         auto& render = _webview->ensureRender();
@@ -62,28 +62,28 @@ struct Viewport : Ui::View<Viewport> {
         if (auto e = event.is<App::MouseEvent>()) {
             if (e->type == App::MouseEvent::PRESS and
                 e->button == App::MouseButton::RIGHT and
-                bound().contains(e->pos)) {
-                auto mousePosition = e->pos - bound().topStart() - _listener.scroll().cast<isize>();
+                bound().contains(e->pos.cast<Au>())) {
+                auto mousePosition = e->pos.cast<Au>() - bound().topStart() - _listener.scroll();
 
                 auto hit = _webview->hittest(mousePosition.cast<f64>());
                 Dom::MouseEvent domEvent{};
                 domEvent.type = Dom::EventType::CONTEXTMENU;
                 domEvent.target = hit->originatingElement().map(Dom::EventTarget::fromOriginatingElement);
-                domEvent.screen = e->pos - bound().topStart();
+                domEvent.screen = e->pos - bound().topStart().cast<isize>();
                 _dispatchEvent(*this, domEvent);
                 event.accept();
             }
         }
     }
 
-    void layout(Math::Recti bound) override {
+    void layout(Math::RectAu bound) override {
         _listener.updateContainerBound(bound);
-        _webview->changeViewport(bound.size().cast<Au>());
-        _listener.updateContentBound(_webview->scrollableOverflow().cast<isize>());
+        _webview->changeViewport(bound.size());
+        _listener.updateContentBound(_webview->scrollableOverflow());
         View::layout(bound);
     }
 
-    Math::Vec2i size(Math::Vec2i size, Ui::Hint hint) override {
+    Math::Vec2Au size(Math::Vec2Au size, Ui::Hint hint) override {
         if (hint == Ui::Hint::MAX)
             return size;
         return {};
