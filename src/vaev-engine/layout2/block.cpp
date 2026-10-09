@@ -58,7 +58,7 @@ export struct BlockFormattingContext {
     }
 
     Output run(Layout::Tree& tree, Layout::Box& box, Input const& input) {
-        auto const& [constraints, metrics, _, _] = input;
+        auto const& [constraints, metrics, _, continuation] = input;
 
         auto fragBuilder = FragBuilder{tree, box};
 
@@ -74,7 +74,15 @@ export struct BlockFormattingContext {
         }
 
         PendingMargin pendingMargin = constraints.pendingMargin;
-        pendingMargin.add(constraints.margins.blockStart);
+
+        if (continuation) {
+            pendingMargin = {};
+            if (continuation->preservedMargin) {
+                pendingMargin.add(constraints.margins.blockStart);
+            }
+        } else {
+            pendingMargin.add(constraints.margins.blockStart);
+        }
 
         Opt<Au> blockOffset = NONE;
 
@@ -92,7 +100,7 @@ export struct BlockFormattingContext {
             }
         };
 
-        if (not constraints.collapseMargins or box.establishesFc or metrics.paddings.blockStart != 0_au or metrics.borders.blockStart != 0_au) {
+        if (not constraints.collapseMargins or box.establishesFc or metrics.paddings.blockStart != 0_au or metrics.borders.blockStart != 0_au or (continuation and continuation->preservedMargin)) {
             blockOffset = Some(pendingMargin.sum());
             pendingMargin = PendingMargin{};
 
@@ -118,7 +126,12 @@ export struct BlockFormattingContext {
 
         BreakBetween previousBreakAfter = BreakBetween::AUTO;
 
-        for (usize i = 0; i < box.children().len(); i++) {
+        usize i = 0;
+        if (continuation) {
+            i = continuation->_inner.is<BreakNode::BlockResumeData>()->startChildIndex;
+        }
+
+        for (; i < box.children().len(); i++) {
             auto& child = box.children()[i];
 
             if (child.isRemovedFromFlow()) {
@@ -143,7 +156,12 @@ export struct BlockFormattingContext {
                 .fragmentainer = childFragmentainer,
             };
 
-            auto childOutput = layout(tree, child, childConstraints);
+            Opt<BreakNode const&> childContinuation = NONE;
+            if (continuation and not isEmpty(continuation->_children)) {
+                childContinuation = Some(continuation->_children[0]);
+            }
+
+            auto childOutput = layout(tree, child, childConstraints, NONE, childContinuation);
 
             Opt<BreakNode> breakTree = NONE;
 
@@ -163,7 +181,9 @@ export struct BlockFormattingContext {
                                 // When a forced break occurs there, adjoining margins before the break are truncated,
                                 // but margins after the break are preserved.
                                 .preservedMargin = true,
-                                ._inner = BreakNode::BlockResumeData{},
+                                ._inner = BreakNode::BlockResumeData{
+                                    .startChildIndex = i,
+                                },
                                 ._children = {},
                             },
                             .appeal = BreakAppeal::PERFECT,
@@ -207,7 +227,9 @@ export struct BlockFormattingContext {
                                     // When a forced break occurs there, adjoining margins before the break are truncated,
                                     // but margins after the break are preserved.
                                     .preservedMargin = true,
-                                    ._inner = BreakNode::BlockResumeData{},
+                                    ._inner = BreakNode::BlockResumeData{
+                                        .startChildIndex = i,
+                                    },
                                     ._children = std::move(c),
                                 },
                                 .appeal = BreakAppeal::PERFECT,
