@@ -6,6 +6,7 @@ import Karm.Logger;
 
 using namespace Karm;
 using namespace Karm::Math;
+using namespace Karm::Math::Literals;
 
 namespace Vaev::Layout2 {
 
@@ -46,16 +47,19 @@ enum struct BreakAppeal {
     DROPS_AVOID,
     DROPS_ORPHANS_WINDOWS,
     PERFECT,
+    _LEN,
 };
 
-export struct BreakOpportunity {
-    Box<BreakOpportunity> inner;
+export struct BreakOpportunity : Meta::NoCopy {
+    Opt<Box<BreakOpportunity>> inner;
     usize index;
     Au consumedBlockSize;
     BreakAppeal appeal;
 };
 
-export struct BreakNode {
+export struct BreakNode : Meta::NoCopy {
+    bool preservedMargin = false;
+
     struct BlockResumeData {
     };
 
@@ -63,6 +67,21 @@ export struct BreakNode {
 
     Inner _inner;
     Vec<BreakNode> _children;
+
+    void repr(Io::Emit& e) const {
+        e("(break-node [");
+
+        if (not isEmpty(_children)) {
+            e("\n");
+            e.indent();
+            for (auto const& child : _children)
+                child.repr(e);
+            e.deindent();
+            e("\n");
+        }
+
+        e("])");
+    }
 };
 
 } // namespace Vaev::Layout2

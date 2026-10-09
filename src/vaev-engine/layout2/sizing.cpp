@@ -32,6 +32,8 @@ struct LogicalSize {
         }
     }
 
+
+
     void repr(Io::Emit& e) const {
         e("(logicalSize {} {})", inline_, block);
     }

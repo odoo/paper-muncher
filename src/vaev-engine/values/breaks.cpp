@@ -17,17 +17,17 @@ namespace Vaev {
 
 export enum struct BreakBetween {
     AUTO,
-    AVOID,
+    AVOID_REGION,
+    AVOID_COLUMN,
     AVOID_PAGE,
+    AVOID,
+    REGION,
+    COLUMN,
     PAGE,
     LEFT,
     RIGHT,
     RECTO,
     VERSO,
-    AVOID_COLUMN,
-    COLUMN,
-    AVOID_REGION,
-    REGION,
 
     _LEN,
 };
