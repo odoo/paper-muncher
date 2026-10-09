@@ -13,6 +13,7 @@ import Mdi;
 
 using namespace Karm;
 using namespace Karm::Literals;
+using namespace Karm::Math::Literals;
 using namespace Karm::Fmt::Literals;
 using namespace Vaev;
 
@@ -146,16 +147,16 @@ export struct InspectState {
 
 auto guide() {
     return Ui::hflow(
-        Ui::empty(8),
+        Ui::empty(8_au),
         Kr::separator(),
-        Ui::empty(9)
+        Ui::empty(9_au)
     );
 }
 
 auto idented(isize ident) {
     return [ident](Ui::Child c) -> Ui::Child {
         Ui::Children res;
-        res.pushBack(Ui::empty(4));
+        res.pushBack(Ui::empty(4_au));
         for (isize i = 0; i < ident; i++) {
             res.pushBack(guide());
         }
@@ -335,7 +336,7 @@ Opt<Ui::Child> node(Gc::Ref<Dom::Node> n, InspectState const& s, Ui::Action<Insp
 
 Ui::Child noNodeSelected() {
     return Ui::labelMedium("No element selected") |
-           Ui::insets({8, 16}) |
+           Ui::insets({8_au, 16_au}) |
            Ui::center();
 }
 
@@ -358,9 +359,9 @@ Ui::Child inspectStyleRule() {
                 inspectProperty(),
                 inspectProperty(),
                 inspectProperty()
-            ) | Ui::insets({0, 0, 0, 16}),
+            ) | Ui::insets({0_au, 0_au, 0_au, 16_au}),
             Ui::codeSmall("}"s)
-        ) | Ui::insets(6),
+        ) | Ui::insets(6_au),
         Kr::separator()
     );
 }
@@ -411,7 +412,7 @@ Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const
 
                 children.pushBack(
                     Ui::text(prose) |
-                    Ui::insets({0, 0, 0, 8})
+                    Ui::insets({0_au, 0_au, 0_au, 8_au})
                 );
             }
 
@@ -420,15 +421,15 @@ Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const
 
     return Ui::vflow(
                Ui::hflow(
-                   4,
+                   4_au,
                    Kr::input(Mdi::FILTER, "Filter..."s, s.filter, [send](auto& n, auto text) {
                        send(n, InspectChangeFilter{text});
                    }) | Ui::grow(),
                    Kr::checkbox(false, Ui::SINK<bool>, "All"s), Kr::checkbox(false, Ui::SINK<bool>, "Variables"s)
-               ) | Ui::insets(6),
+               ) | Ui::insets(6_au),
                content | Ui::grow()
            ) |
-           Kr::scaffoldContent() | Ui::pinSize(128);
+           Kr::scaffoldContent() | Ui::pinSize(128_au);
 }
 
 Ui::Child inspectStyleTabContent(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::Action<InspectAction> send) {
@@ -445,19 +446,19 @@ Ui::Child inspectStyleTabContent(Gc::Ref<Dom::Document> dom, InspectState const&
 Ui::Child inspectStyleBoxInset(Str name, Gfx::Color color, Math::Insetsf, Ui::Child inner) {
     return Ui::stack(
                Ui::vflow(
-                   0,
+                   0_au,
                    Math::Align::CENTER,
-                   Ui::labelSmall("0"s) | Ui::insets(4),
+                   Ui::labelSmall("0"s) | Ui::insets(4_au),
                    Ui::hflow(
-                       0,
+                       0_au,
                        Math::Align::CENTER,
-                       Ui::labelSmall("0"s) | Ui::insets(4),
+                       Ui::labelSmall("0"s) | Ui::insets(4_au),
                        inner,
-                       Ui::labelSmall("0"s) | Ui::insets(4)
+                       Ui::labelSmall("0"s) | Ui::insets(4_au)
                    ),
-                   Ui::labelSmall("0"s) | Ui::insets(4)
+                   Ui::labelSmall("0"s) | Ui::insets(4_au)
                ),
-               Ui::labelSmall(name) | Ui::bound() | Ui::insets(4)
+               Ui::labelSmall(name) | Ui::bound() | Ui::insets(4_au)
            ) |
            Ui::box({
                .borderRadii = 2,
@@ -477,15 +478,15 @@ Ui::Child inspectStyleBoxModel() {
                        Gfx::GREEN600, {},
                        Ui::labelSmall("100×100"s) | Ui::center() | Ui::bound() |
                            Ui::box({
-                               .padding = {4, 12},
+                               .padding = {4_au, 12_au},
                                .borderRadii = 2,
                                .backgroundFill = Some(Gfx::BLUE600),
                            }) |
-                           Ui::minSize({100, Ui::UNCONSTRAINED})
+                           Ui::minSize({100_au, Ui::UNCONSTRAINED})
                    )
                )
            ) |
-           Ui::insets(16) |
+           Ui::insets(16_au) |
            Ui::center() | Ui::bound() | Kr::scaffoldContent();
 }
 
@@ -514,7 +515,7 @@ Ui::Child inspectStyleTab(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui:
     items.pushBack(inspectStyleTabContent(dom, s, send) | Ui::grow());
 
     return Ui::vflow(
-        2,
+        2_au,
         std::move(items)
     );
 }
@@ -523,7 +524,7 @@ Ui::Child inspectTabElement(Rc<WebView> webview, InspectState const& s, Ui::Acti
     auto document = webview->document().upgrade();
     return Ui::vflow(
         node(document, s, send).expect() | Ui::vhscroll() | Kr::scaffoldContent() | Ui::grow(),
-        inspectStyleTab(document, s, send) | Kr::resizable(Kr::ResizeHandlePosition::TOP, {320}, NONE)
+        inspectStyleTab(document, s, send) | Kr::resizable(Kr::ResizeHandlePosition::TOP, {320_au}, NONE)
     );
 }
 
@@ -552,7 +553,7 @@ Ui::Child _paperSelect(InspectState const& s, Ui::Action<InspectAction> send) {
 
 Ui::Child inspectTabLayout(InspectState const& s, Ui::Action<InspectAction> send) {
     return Ui::vflow(
-               4,
+               4_au,
                Ui::vflow(
                    Kr::checkboxRow(
                        s.wireframe,
@@ -574,7 +575,7 @@ Ui::Child inspectTabLayout(InspectState const& s, Ui::Action<InspectAction> send
 
 Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectAction> send) {
     return Ui::vflow(
-               4,
+               4_au,
                Ui::vflow(
                    Kr::tabRow(
                        "Color Scheme"s,
@@ -663,7 +664,7 @@ Ui::Child inspectTabContent(Rc<WebView> webview, InspectState const& s, Ui::Acti
 
 export Ui::Child inspect(Rc<WebView> webview, InspectState const& s, Ui::Action<InspectAction> send) {
     return Ui::vflow(
-        4,
+        4_au,
         Ui::hflow(
             Kr::tabbarContent({
                 Kr::tabbarItem(
