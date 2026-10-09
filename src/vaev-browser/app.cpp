@@ -84,7 +84,6 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
 #endif
         Kr::separator(),
         Kr::contextMenuItem(Some(Model::bind<ToggleDeveloperMode>()), Some(Mdi::CODE_TAGS), "Developer Tools"),
-        Kr::contextMenuCheck(Some(Model::bind<ToggleWireframe>()), s.wireframe, "Show wireframe"),
         Kr::separator(),
         Kr::contextMenuItem(Some(Ui::SINK<>), Some(Mdi::COG), "Settings"),
     });
