@@ -234,7 +234,12 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
 
     if (layout2) {
         usize pageNumber = 1;
+
+        Opt<Layout2::BreakNode> continuation;
+
         while (true) {
+            logInfo("Laying out page {}", pageNumber);
+
             Style::Page page{
                 .name = ""s,
                 .number = pageNumber++,
@@ -278,7 +283,9 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
                         .blockSize = pageRect.height,
                         .blockOffset = 0_au,
                     }),
-                }
+                },
+                NONE,
+                continuation
             );
 
             if (auto [placed] = output.is<Layout2::Placed>()) {
@@ -288,6 +295,8 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
                     } else {
                         logInfo("soft-break [{}]: {}", broke.appeal, broke.tree);
                     }
+
+                    continuation = Some(std::move(broke.tree));
                 }
 
                 Layout2::absolutize(placed.fragment);
@@ -304,8 +313,9 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
 
                 co_yield snapshot.finalize();
 
-                // FIXME: Multipage.
-                break;
+                if (placed.breakState.is<Layout2::Completed>()) {
+                    break;
+                }
             } else {
                 // FIXME: Relayout instead.
                 logError("layout aborted inside root");

@@ -61,6 +61,7 @@ export struct BreakNode : Meta::NoCopy {
     bool preservedMargin = false;
 
     struct BlockResumeData {
+        usize startChildIndex;
     };
 
     using Inner = Union<BlockResumeData>;
