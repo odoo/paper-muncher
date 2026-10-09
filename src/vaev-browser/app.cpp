@@ -7,6 +7,7 @@ import Karm.Http;
 import Karm.Kira;
 import Karm.Ref;
 import Karm.Sys;
+import Karm.Math;
 import Karm.Ui;
 import Karm.Gfx;
 import Vaev.Engine;
@@ -16,6 +17,7 @@ import :dialogs;
 import :model;
 
 using namespace Karm::Literals;
+using namespace Karm::Math::Literals;
 using namespace Karm::Ref::Literals;
 
 namespace Vaev::Browser {
@@ -92,7 +94,7 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
 Ui::Child addressMenu() {
     return Kr::contextMenuContent({
         Kr::contextMenuDock({
-            Ui::labelMedium("Your are viewing a secure page") | Ui::insets(8),
+            Ui::labelMedium("Your are viewing a secure page") | Ui::insets(8_au),
             Kr::contextMenuIcon(Some(Ui::SINK<>), Mdi::CLOSE),
         }),
     });
@@ -104,9 +106,9 @@ Ui::Child reloadButton(State const& s) {
                    ? Kr::indeterminedProgress()
                    : Ui::icon(Mdi::REFRESH)
            ) |
-           Ui::insets(6) |
+           Ui::insets(6_au) |
            Ui::center() |
-           Ui::minSize({32, 32}) |
+           Ui::minSize({32_au, 32_au}) |
            Ui::button(Some(Model::bind<Reload>()), Ui::ButtonStyle::subtle());
 }
 
@@ -126,7 +128,7 @@ Ui::Child addressBar(State const& s) {
                    Ui::grow()
            ) |
            Ui::box({
-               .padding = {0, 0, 0, 0},
+               .padding = {0_au, 0_au, 0_au, 0_au},
                .borderRadii = 4,
                .backgroundFill = Some(Ui::GRAY800),
            }) |
@@ -205,7 +207,7 @@ Ui::Child webview(State const& s) {
                        if (e->type == Dom::EventType::CONTEXTMENU)
                            Kr::showContextMenu(
                                n,
-                               n.bound().topStart() + e->screen,
+                               n.bound().topStart() + e->screen.cast<Au>(),
                                contextMenu(s, domEvent.target)
                            );
                    }
@@ -228,7 +230,7 @@ Ui::Child appContent(State const& s) {
     return Ui::hflow(
         wv |
             Ui::grow(),
-        inspectorContent(s) | Kr::resizable(Kr::ResizeHandlePosition::START, {600}, NONE)
+        inspectorContent(s) | Kr::resizable(Kr::ResizeHandlePosition::START, {600_au}, NONE)
     );
 }
 
@@ -261,9 +263,9 @@ export Ui::Child app(State state) {
                 .middleTools = Some(
                     [&] -> Ui::Children {
                         return {
-                            Ui::empty(36),
+                            Ui::empty(36_au),
                             addressBar(s) | Ui::grow(),
-                            Ui::empty(36),
+                            Ui::empty(36_au),
                         };
                     }
                 ),
@@ -285,7 +287,7 @@ export Ui::Child app(State state) {
                 .body = [&] {
                     return appContent(s);
                 },
-                .size = {1400, 900},
+                .size = {1400_au, 900_au},
             });
             return scaffold |
                    Ui::keyboardShortcut(App::Key::R, App::KeyMod::CTRL, Model::bind<Reload>()) |
