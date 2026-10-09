@@ -14,7 +14,7 @@ import Karm.Gfx;
 import Karm.Sys;
 import Karm.Font;
 
-import :dom.window;
+import :webview;
 import :layout.values;
 
 namespace Vaev::Loader {
@@ -30,14 +30,14 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
     if (resp->header.contentType().unwrapOr(Ref::sniffBytes(data)).conformsTo(Ref::Uti::PUBLIC_SVG)) {
         auto subClient = makeRc<Http::Client>(client._transport);
         subClient->userAgent = client.userAgent;
-        auto window = Dom::Window::create(subClient);
+        auto webview = WebView::create(subClient);
 
         // FIXME: Properly determine the size of the SVG
         // https://www.w3.org/TR/SVG2/coords.html#SizingSVGInCSS
-        window->changeMedia(Style::Media::forRender({}, Resolution::fromDppx(1)));
-        co_trya$(window->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
-        window->computeStyle();
-        auto root = window->document()->documentElement();
+        webview->changeMedia(Style::Media::forRender({}, Resolution::fromDppx(1)));
+        co_trya$(webview->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
+        webview->computeStyle();
+        auto root = webview->document()->documentElement();
         Layout::Resolver resolver;
 
         // NOSPEC: The spec references a “default object size” but does not define explicit values.
@@ -46,8 +46,8 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
         auto width = resolver.resolve(root->computedValues()->sizing->width.unwrapOr<Calc<PercentOr<Length>>>(Length{300_au}), 300_au);
         auto height = resolver.resolve(root->computedValues()->sizing->height.unwrapOr<Calc<PercentOr<Length>>>(Length{300_au}), 300_au);
 
-        window->changeMedia(Style::Media::forRender({width, height}, Resolution::fromDppx(1)));
-        co_return Ok(window->snapshot());
+        webview->changeMedia(Style::Media::forRender({width, height}, Resolution::fromDppx(1)));
+        co_return Ok(webview->snapshot());
     } else {
         auto image = Karm::Image::load(data);
         if (not image)

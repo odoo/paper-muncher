@@ -516,8 +516,8 @@ Ui::Child inspectStyleTab(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui:
     );
 }
 
-Ui::Child inspectTabElement(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectAction> send) {
-    auto document = window->document().upgrade();
+Ui::Child inspectTabElement(Rc<WebView> webview, InspectState const& s, Ui::Action<InspectAction> send) {
+    auto document = webview->document().upgrade();
     return Ui::vflow(
         node(document, s, send).expect() | Ui::vhscroll() | Kr::scaffoldContent() | Ui::grow(),
         inspectStyleTab(document, s, send) | Kr::resizable(Kr::ResizeHandlePosition::TOP, {256}, NONE)
@@ -645,10 +645,10 @@ Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectAction> send)
     ;
 }
 
-Ui::Child inspectTabContent(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectAction> send) {
+Ui::Child inspectTabContent(Rc<WebView> webview, InspectState const& s, Ui::Action<InspectAction> send) {
     switch (s.tab) {
     case InspectTab::ELEMENTS:
-        return inspectTabElement(window, s, send);
+        return inspectTabElement(webview, s, send);
     case InspectTab::LAYOUT:
         return inspectTabLayout(s, send);
     case InspectTab::MEDIA:
@@ -658,7 +658,7 @@ Ui::Child inspectTabContent(Rc<Dom::Window> window, InspectState const& s, Ui::A
     }
 }
 
-export Ui::Child inspect(Rc<Dom::Window> window, InspectState const& s, Ui::Action<InspectAction> send) {
+export Ui::Child inspect(Rc<WebView> webview, InspectState const& s, Ui::Action<InspectAction> send) {
     return Ui::vflow(
         4,
         Ui::hflow(
@@ -686,7 +686,7 @@ export Ui::Child inspect(Rc<Dom::Window> window, InspectState const& s, Ui::Acti
                 Mdi::CLOSE
             )
         ),
-        inspectTabContent(window, s, send) | Ui::grow()
+        inspectTabContent(webview, s, send) | Ui::grow()
     );
 }
 

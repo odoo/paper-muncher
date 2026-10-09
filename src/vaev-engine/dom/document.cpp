@@ -13,8 +13,6 @@ import :style.stylesheet;
 
 namespace Vaev::Dom {
 
-export struct Window;
-
 export enum struct QuirkMode {
     NO,
     LIMITED,

@@ -13,10 +13,10 @@ using namespace Karm;
 
 namespace Vaev::View {
 
-export Ui::Child printDialog(Rc<Dom::Window> window) {
+export Ui::Child printDialog(Rc<WebView> webview) {
     return Print::printDialog(
-        [window](Print::Settings const& settings) -> Vec<Gfx::Snapshot> {
-            return window->print(settings) | Collect<Vec<Gfx::Snapshot>>();
+        [webview](Print::Settings const& settings) -> Vec<Gfx::Snapshot> {
+            return webview->print(settings) | Collect<Vec<Gfx::Snapshot>>();
         }
     );
 }

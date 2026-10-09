@@ -23,12 +23,12 @@ namespace Vaev::WebDriver {
 
 export struct Session {
     Ref::Uuid uuid;
-    Map<Ref::Uuid, Rc<Dom::Window>> windows;
+    Map<Ref::Uuid, Rc<WebView>> windows;
     Ref::Uuid current;
     TimeoutConfiguration timeouts;
 
     // https://www.w3.org/TR/webdriver2/#dfn-current-browsing-context
-    Res<Rc<Dom::Window>> currentBrowsingContext() {
+    Res<Rc<WebView>> currentBrowsingContext() {
         return windows
             .lookup(current)
             .okOr(Error::invalidInput("no current browsing context"));
@@ -56,10 +56,10 @@ export struct WebDriver {
         auto windowHandle = co_try$(Ref::Uuid::v4());
         auto session = makeRc<Session>(sessionId);
 
-        auto window = Dom::Window::create();
-        co_trya$(window->loadLocationAsync("about:blank"_url, Ref::Uti::PUBLIC_OPEN, ct));
+        auto webview = WebView::create();
+        co_trya$(webview->loadLocationAsync("about:blank"_url, Ref::Uti::PUBLIC_OPEN, ct));
 
-        session->windows.put(windowHandle, window);
+        session->windows.put(windowHandle, webview);
         session->current = windowHandle;
         _sessions.put(sessionId, session);
         co_return Ok(sessionId);
@@ -101,31 +101,31 @@ export struct WebDriver {
     // https://www.w3.org/TR/webdriver2/#navigate-to
     Async::Task<> navigateToAsync(Ref::Uuid sessionId, Ref::Url url, Async::CancellationToken ct) {
         auto session = co_try$(getSession(sessionId));
-        auto window = co_try$(session->currentBrowsingContext());
-        co_return co_await window->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct);
+        auto webview = co_try$(session->currentBrowsingContext());
+        co_return co_await webview->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct);
     }
 
     // https://www.w3.org/TR/webdriver2/#get-current-url
     Res<Ref::Url> getCurrentUrl(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
-        auto window = try$(session->currentBrowsingContext());
-        return Ok(window->location());
+        auto webview = try$(session->currentBrowsingContext());
+        return Ok(webview->location());
     }
 
     // https://www.w3.org/TR/webdriver2/#refresh
     Async::Task<> refreshAsync(Ref::Uuid sessionId, Async::CancellationToken ct) {
         auto session = co_try$(getSession(sessionId));
-        auto window = co_try$(session->currentBrowsingContext());
-        co_return co_await window->refreshAsync(ct);
+        auto webview = co_try$(session->currentBrowsingContext());
+        co_return co_await webview->refreshAsync(ct);
     }
 
     // https://www.w3.org/TR/webdriver2/#get-title
     Res<String> getTitle(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
-        auto window = try$(session->currentBrowsingContext());
+        auto webview = try$(session->currentBrowsingContext());
 
         // 3. Let title be the session's current top-level browsing context's active document's title.
-        return Ok(window->document().upgrade()->title());
+        return Ok(webview->document().upgrade()->title());
     }
 
     // MARK: 11. Context -------------------------------------------------------
@@ -177,9 +177,9 @@ export struct WebDriver {
     Async::Task<Ref::Uuid> newWindowAsync(Ref::Uuid sessionId, Async::CancellationToken ct) {
         auto session = co_try$(getSession(sessionId));
         auto windowHandle = co_try$(Ref::Uuid::v4());
-        auto window = Dom::Window::create();
-        co_trya$(window->loadLocationAsync("about:blank"_url, Ref::Uti::PUBLIC_OPEN, ct));
-        session->windows.put(windowHandle, window);
+        auto webview = WebView::create();
+        co_trya$(webview->loadLocationAsync("about:blank"_url, Ref::Uti::PUBLIC_OPEN, ct));
+        session->windows.put(windowHandle, webview);
         session->current = windowHandle;
         co_return Ok(windowHandle);
     }
@@ -190,15 +190,15 @@ export struct WebDriver {
     // https://www.w3.org/TR/webdriver2/#get-window-rect
     Res<RectAu> getWindowRect(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
-        auto window = try$(session->currentBrowsingContext());
-        return Ok(window->_media.viewportSize());
+        auto webview = try$(session->currentBrowsingContext());
+        return Ok(webview->_media.viewportSize());
     }
 
     // https://www.w3.org/TR/webdriver2/#set-window-rect
     Res<RectAu> setWindowRect(Ref::Uuid sessionId, RectAu rect) {
         auto session = try$(getSession(sessionId));
-        auto window = try$(session->currentBrowsingContext());
-        window->changeViewport(rect.size());
+        auto webview = try$(session->currentBrowsingContext());
+        webview->changeViewport(rect.size());
         return Ok(rect);
     }
 
@@ -223,8 +223,8 @@ export struct WebDriver {
     // https://www.w3.org/TR/webdriver2/#get-page-source
     Res<String> getPageSource(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
-        auto window = try$(session->currentBrowsingContext());
-        return Ok(Dom::serializeHtmlFragment(window->document().upgrade()));
+        auto webview = try$(session->currentBrowsingContext());
+        return Ok(Dom::serializeHtmlFragment(webview->document().upgrade()));
     }
 
     // https://www.w3.org/TR/webdriver2/#execute-script
@@ -260,8 +260,8 @@ export struct WebDriver {
     // https://www.w3.org/TR/webdriver2/#take-screenshot
     Res<String> takeScreenshot(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
-        auto window = try$(session->currentBrowsingContext());
-        auto image = window->rasterize();
+        auto webview = try$(session->currentBrowsingContext());
+        auto image = webview->rasterize();
         auto data = try$(
             Karm::Image::save(
                 image->pixels(),
@@ -280,7 +280,7 @@ export struct WebDriver {
     // https://www.w3.org/TR/webdriver2/#print-page
     Res<String> printPage(Ref::Uuid sessionId, PrintSettings settings = {}) {
         auto session = try$(getSession(sessionId));
-        auto window = try$(session->currentBrowsingContext());
+        auto webview = try$(session->currentBrowsingContext());
 
         auto printer = try$(
             Print::PdfPrinter::create(
@@ -288,7 +288,7 @@ export struct WebDriver {
             )
         );
 
-        window->print(settings.derivePrintSettings()) | ForEach([&](Gfx::Snapshot& page) {
+        webview->print(settings.derivePrintSettings()) | ForEach([&](Gfx::Snapshot& page) {
             page.replay(printer->beginPage(page.size().cast<f64>())).expect();
         });
 

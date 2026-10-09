@@ -119,9 +119,9 @@ bool FakeInlineBox::operator==(Box const& inlineBox) {
 }
 
 Async::Task<Box> _buildBoxesAsync(Str html, Async::CancellationToken ct) {
-    auto window = Dom::Window::create();
-    co_trya$(window->loadLocationAsync(Ref::Url::data("text/html"_mime, bytes(html)), Ref::Uti::PUBLIC_OPEN, ct));
-    co_return Ok(std::move(window->ensureRender().tree->root.children()[0]));
+    auto webview = WebView::create();
+    co_trya$(webview->loadLocationAsync(Ref::Url::data("text/html"_mime, bytes(html)), Ref::Uti::PUBLIC_OPEN, ct));
+    co_return Ok(std::move(webview->ensureRender().tree->root.children()[0]));
 }
 
 testAsync$("empty-body") {
@@ -466,9 +466,9 @@ testAsync$("table-fixup") {
         "<tr>wrap me!</tr>"
         "</table></body></html>";
 
-    auto window = Dom::Window::create();
-    co_trya$(window->loadLocationAsync(Ref::Url::data("application/xhtml+xml"_mime, bytes(xhtml)), Ref::Uti::PUBLIC_OPEN, ct));
-    Box body = std::move(window->ensureRender().tree->root.children()[0]);
+    auto webview = WebView::create();
+    co_trya$(webview->loadLocationAsync(Ref::Url::data("application/xhtml+xml"_mime, bytes(xhtml)), Ref::Uti::PUBLIC_OPEN, ct));
+    Box body = std::move(webview->ensureRender().tree->root.children()[0]);
 
     auto expectedBodySubtree =
         FakeBox{

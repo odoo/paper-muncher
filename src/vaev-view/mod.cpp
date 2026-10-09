@@ -22,16 +22,16 @@ export struct ViewportProps {
 };
 
 struct Viewport : Ui::View<Viewport> {
-    Rc<Dom::Window> _window;
+    Rc<WebView> _webview;
     DispatchEvent _dispatchEvent;
     ViewportProps _props;
     Ui::ScrollListener _listener;
 
-    Viewport(Rc<Dom::Window> window, DispatchEvent dispatchEvent, ViewportProps props)
-        : _window(window), _dispatchEvent(dispatchEvent), _props(props) {}
+    Viewport(Rc<WebView> webview, DispatchEvent dispatchEvent, ViewportProps props)
+        : _webview(webview), _dispatchEvent(dispatchEvent), _props(props) {}
 
     void reconcile(Viewport& o) override {
-        _window = o._window;
+        _webview = o._webview;
         _props = o._props;
     }
 
@@ -39,14 +39,14 @@ struct Viewport : Ui::View<Viewport> {
         g.push();
         g.clip(_listener.containerBound());
         g.origin(_listener.scroll() + _listener.containerBound().xy);
-        _window->paint(g);
+        _webview->paint(g);
 
-        auto& render = _window->ensureRender();
+        auto& render = _webview->ensureRender();
 
         if (_props.wireframe)
             render.stacking->paintWireframe(g, {});
         if (_props.selected)
-            render.stacking->paintOverlay(g, _props.selected.expect(), _window->scrollableOverflow().cast<f64>());
+            render.stacking->paintOverlay(g, _props.selected.expect(), _webview->scrollableOverflow().cast<f64>());
 
         g.pop();
 
@@ -65,7 +65,7 @@ struct Viewport : Ui::View<Viewport> {
                 bound().contains(e->pos)) {
                 auto mousePosition = e->pos - bound().topStart() - _listener.scroll().cast<isize>();
 
-                auto hit = _window->hittest(mousePosition.cast<f64>());
+                auto hit = _webview->hittest(mousePosition.cast<f64>());
                 Dom::MouseEvent domEvent{};
                 domEvent.type = Dom::EventType::CONTEXTMENU;
                 domEvent.target = hit->originatingElement().map(Dom::EventTarget::fromOriginatingElement);
@@ -78,8 +78,8 @@ struct Viewport : Ui::View<Viewport> {
 
     void layout(Math::Recti bound) override {
         _listener.updateContainerBound(bound);
-        _window->changeViewport(bound.size().cast<Au>());
-        _listener.updateContentBound(_window->scrollableOverflow().cast<isize>());
+        _webview->changeViewport(bound.size().cast<Au>());
+        _listener.updateContentBound(_webview->scrollableOverflow().cast<isize>());
         View::layout(bound);
     }
 
@@ -90,8 +90,8 @@ struct Viewport : Ui::View<Viewport> {
     }
 };
 
-export Ui::Child viewport(Rc<Dom::Window> window, DispatchEvent dispatchEvent, ViewportProps props) {
-    return makeRc<Viewport>(window, dispatchEvent, props);
+export Ui::Child viewport(Rc<WebView> webview, DispatchEvent dispatchEvent, ViewportProps props) {
+    return makeRc<Viewport>(webview, dispatchEvent, props);
 }
 
 } // namespace Vaev::View

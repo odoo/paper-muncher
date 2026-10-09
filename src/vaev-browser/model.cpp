@@ -20,7 +20,7 @@ enum struct Status {
 };
 
 struct State {
-    Rc<Dom::Window> window;
+    Rc<WebView> webview;
     Status status = Status::LOADED;
     Res<> loadingResult = Ok();
     usize currentIndex = 0;
@@ -28,10 +28,10 @@ struct State {
     InspectState inspect = {};
     String locationInput;
 
-    State(Rc<Dom::Window> window, bool dev = false)
-        : window{window},
-          history{Navigate{window->location()}},
-          locationInput(window->location().str()) {
+    State(Rc<WebView> webview, bool dev = false)
+        : webview{webview},
+          history{Navigate{webview->location()}},
+          locationInput(webview->location().str()) {
         inspect.visible = dev;
     }
 
@@ -79,8 +79,8 @@ using Action = Union<
     UpdateLocation,
     NavigateLocation>;
 
-Async::_Task<Opt<Action>> navigateAsync(Rc<Dom::Window> window, Navigate nav, Async::CancellationToken ct) {
-    co_return Some(Loaded{(co_await window->loadLocationAsync(nav.url, nav.action, ct))});
+Async::_Task<Opt<Action>> navigateAsync(Rc<WebView> webview, Navigate nav, Async::CancellationToken ct) {
+    co_return Some(Loaded{(co_await webview->loadLocationAsync(nav.url, nav.action, ct))});
 }
 
 Ui::Task<Action> reduce(State& s, Action a) {
@@ -89,7 +89,7 @@ Ui::Task<Action> reduce(State& s, Action a) {
             if (s.status == Status::LOADING)
                 return NONE;
             s.status = Status::LOADING;
-            return Some(navigateAsync(s.window, s.currentUrl(), Async::CancellationToken::uninterruptible()));
+            return Some(navigateAsync(s.webview, s.currentUrl(), Async::CancellationToken::uninterruptible()));
         },
         [&](Loaded l) -> Ui::Task<Action> {
             s.status = Status::LOADED;

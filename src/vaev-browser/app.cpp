@@ -71,10 +71,10 @@ Ui::Child mainMenu([[maybe_unused]] State const& s) {
         Kr::contextMenuItem(
             not s.loadingResult
                 ? Opt<Ui::Send<>>{NONE}
-                : Some([window = s.window](auto& n) {
+                : Some([webview = s.webview](auto& n) {
                       Ui::showDialog(
                           n,
-                          View::printDialog(window)
+                          View::printDialog(webview)
                       );
                   }),
             Some(Mdi::PRINTER), "Print..."
@@ -169,7 +169,7 @@ Ui::Child inspectorContent(State const& s) {
     }
 
     return inspect(
-        s.window,
+        s.webview,
         s.inspect,
         [&](auto& n, auto a) {
             Model::bubble(n, a);
@@ -199,7 +199,7 @@ Ui::Child webview(State const& s) {
     }
 
     return View::viewport(
-               s.window,
+               s.webview,
                [&](Ui::Node& n, Dom::Event& domEvent) {
                    if (auto e = domEvent.as<Dom::MouseEvent>()) {
                        if (e->type == Dom::EventType::CONTEXTMENU)
@@ -297,7 +297,7 @@ export Ui::Child app(State state) {
 
                        Ui::showDialog(
                            n,
-                           View::printDialog(s.window)
+                           View::printDialog(s.webview)
                        );
                    });
         }

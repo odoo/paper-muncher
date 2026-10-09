@@ -2,7 +2,7 @@ module;
 
 #include <karm/macros>
 
-export module Vaev.Engine:dom.window;
+export module Vaev.Engine:webview;
 
 import Karm.Gc;
 import Karm.Http;
@@ -19,23 +19,22 @@ import :driver.print;
 
 using namespace Karm;
 
-namespace Vaev::Dom {
+namespace Vaev {
 
-// https://html.spec.whatwg.org/multipage/nav-history-apis.html#the-window-object
-export struct Window {
+export struct WebView {
     mutable Gc::Heap _heap;
     Rc<Http::Client> _client;
     Style::Media _media = Style::Media::defaultMedia();
 
-    Gc::Ptr<Document> _document = nullptr;
+    Gc::Ptr<Dom::Document> _document = nullptr;
     Opt<Driver::RenderResult> _render = NONE;
     Style::CounterSet _initialCounterSet = {};
 
-    Window(Rc<Http::Client> client)
+    WebView(Rc<Http::Client> client)
         : _client(client) {}
 
-    static Rc<Window> create(Rc<Http::Client> client = Http::defaultClient()) {
-        return makeRc<Window>(client);
+    static Rc<WebView> create(Rc<Http::Client> client = Http::defaultClient()) {
+        return makeRc<WebView>(client);
     }
 
     void changeMedia(Style::Media media) {
@@ -79,7 +78,7 @@ export struct Window {
         return _document.upgrade()->url();
     }
 
-    Gc::Ptr<Document> document() const {
+    Gc::Ptr<Dom::Document> document() const {
         return _document;
     }
 
@@ -152,4 +151,4 @@ export struct Window {
     }
 };
 
-} // namespace Vaev::Dom
+} // namespace Vaev
