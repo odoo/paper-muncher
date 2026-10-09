@@ -8,18 +8,28 @@ import Karm.Gc;
 import Karm.Http;
 import Karm.Gfx;
 import Karm.Math;
+import Karm.Logger;
 
-import :style.media;
-import :style.counter;
+import :style;
 import :dom.document;
 import :loader.loader;
-import :layout.base;
-import :driver.render;
+import :layout;
+import :paint;
+import :values;
 import :driver.print;
 
 using namespace Karm;
 
 namespace Vaev {
+
+static auto dumpFragments = Debug::Flag::debug("web-fragments"s, "Dump the constructed fragments"s);
+static auto dumpStacking = Debug::Flag::debug("web-stacking"s, "Dump the stacking context tree"s);
+
+export struct RenderResult {
+    Rc<Layout::Tree> tree;
+    Rc<Layout::Fragment> fragments;
+    Rc<Paint::StackingContext> stacking;
+};
 
 export struct WebView {
     mutable Gc::Heap _heap;
@@ -27,7 +37,7 @@ export struct WebView {
     Style::Media _media = Style::Media::defaultMedia();
 
     Gc::Ptr<Dom::Document> _document = nullptr;
-    Opt<Driver::RenderResult> _render = NONE;
+    Opt<RenderResult> _render = NONE;
     Style::CounterSet _initialCounterSet = {};
 
     WebView(Rc<Http::Client> client)
@@ -82,18 +92,41 @@ export struct WebView {
         return _document;
     }
 
-    Driver::RenderResult& ensureRender() {
+    RenderResult& ensureRender() {
         if (_render)
             return *_render;
-        _render = Some(
-            Driver::render(
-                _heap,
-                _document.upgrade(),
-                _media,
-                {.small = _media.viewportSize()},
-                _initialCounterSet
-            )
+
+        computeStyle();
+
+        Style::Viewport viewport = {.small = _media.viewportSize()};
+        auto tree = makeRc<Layout::Tree>(
+            Layout::buildDocument(_document.upgrade()),
+            viewport
         );
+
+        auto layout = Layout::layoutRoot(
+            *tree,
+            {
+                .generateFragment = true,
+                .knownSize = {Some(viewport.small.width), NONE},
+                .availableSpace = {viewport.small.width, 0_au},
+                .containingBlock = {viewport.small.width, viewport.small.height},
+            }
+        );
+
+        auto stacking = Paint::StackingContext::establishStackingContext(layout.fragment.expect());
+
+        if (dumpFragments)
+            logDebugIf(dumpFragments, "fragments: {}", *layout.fragment);
+
+        if (dumpStacking)
+            logDebugIf(dumpStacking, "stacking: {}", stacking);
+
+        _render = Some(RenderResult{
+            tree,
+            *layout.fragment,
+            stacking,
+        });
         return *_render;
     }
 
@@ -106,7 +139,7 @@ export struct WebView {
             _document->fontDatabase,
         };
         computer.build();
-        computer.styleDocument(*_document);
+        computer.styleDocument(*_document, _initialCounterSet);
     }
 
     void invalidateRender() {
