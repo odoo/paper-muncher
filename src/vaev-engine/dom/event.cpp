@@ -2,14 +2,13 @@ export module Vaev.Engine:dom.event;
 
 import Karm.Core;
 import Vaev.Idl;
-import :dom.window;
+import :dom.element;
 
 using namespace Karm;
 
 namespace Vaev::Dom {
 
 using _EventTarget = Union<
-    Gc::Ref<Window>,
     Gc::Ref<Node>,
     Gc::Ref<PseudoElement>>;
 

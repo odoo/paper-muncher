@@ -131,8 +131,8 @@ export struct Option {
 };
 
 struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
-    Opt<Rc<Vaev::Dom::Window>> headerWindow;
-    Opt<Rc<Vaev::Dom::Window>> footerWindow;
+    Opt<Rc<Vaev::WebView>> headerWebView;
+    Opt<Rc<Vaev::WebView>> footerWebView;
     Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength> headerSize = Vaev::Keywords::AUTO;
     Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength> footerSize = Vaev::Keywords::AUTO;
     Map<Math::Vec2Au, Pair<Vaev::Au>> _memo;
@@ -143,7 +143,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
             Vaev::Au footerHeight = 0_au;
 
             if (headerSize == Vaev::Keywords::AUTO) {
-                if (auto& [w] = headerWindow) {
+                if (auto& [w] = headerWebView) {
                     w->changeMedia(media);
                     w->changeViewport(infos.pageDecoration.size());
                     headerHeight = w->borderBox().height;
@@ -153,7 +153,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
             }
 
             if (footerSize == Vaev::Keywords::AUTO) {
-                if (auto& [w] = footerWindow) {
+                if (auto& [w] = footerWebView) {
                     w->changeMedia(media);
                     w->changeViewport(infos.pageDecoration.size());
                     footerHeight = w->borderBox().height;
@@ -175,7 +175,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
         pageCounters.instantiateCounter(nullptr, {Vaev::CustomIdent{"page"_sym}, false}, static_cast<Vaev::Integer>(infos.pageNumber));
         pageCounters.instantiateCounter(nullptr, {Vaev::CustomIdent{"pages"_sym}, false}, static_cast<Vaev::Integer>(pageCount));
 
-        if (auto& [w] = headerWindow) {
+        if (auto& [w] = headerWebView) {
             w->changeMedia(media);
             w->changeViewport({decorationWidth, headerHeight});
             w->changeInitialCounterSet(pageCounters);
@@ -185,7 +185,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
             g.pop();
         }
 
-        if (auto& [w] = footerWindow) {
+        if (auto& [w] = footerWebView) {
             w->changeMedia(media);
             w->changeViewport({decorationWidth, footerHeight});
             w->changeInitialCounterSet(pageCounters);
@@ -197,14 +197,14 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
     }
 };
 
-Async::Task<Rc<Vaev::Dom::Window>> _loadHeaderFooterWindowAsync(Rc<Http::Client> client, Ref::Url const& url, Async::CancellationToken ct) {
-    auto window = Vaev::Dom::Window::create(client);
-    co_trya$(window->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
+Async::Task<Rc<Vaev::WebView>> _loadHeaderFooterWebViewAsync(Rc<Http::Client> client, Ref::Url const& url, Async::CancellationToken ct) {
+    auto webview = Vaev::WebView::create(client);
+    co_trya$(webview->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
 
-    auto sheet = co_trya$(Vaev::Loader::fetchStylesheetAsync(*client, *window->document(), "bundle://vaev-engine/wkhtmltopdf-polyfill.css"_url, Vaev::Style::Origin::USER_AGENT, ct));
-    window->document()->styleSheets->add(std::move(sheet));
+    auto sheet = co_trya$(Vaev::Loader::fetchStylesheetAsync(*client, *webview->document(), "bundle://vaev-engine/wkhtmltopdf-polyfill.css"_url, Vaev::Style::Origin::USER_AGENT, ct));
+    webview->document()->styleSheets->add(std::move(sheet));
 
-    co_return Ok(window);
+    co_return Ok(webview);
 }
 
 Async::Task<> runSingleAsync(
@@ -215,33 +215,33 @@ Async::Task<> runSingleAsync(
     Async::CancellationToken ct
 ) {
     logInfo("loading {}...", input);
-    auto window = Vaev::Dom::Window::create(client);
-    co_trya$(window->loadLocationAsync(input, Ref::Uti::PUBLIC_OPEN, ct));
+    auto webview = Vaev::WebView::create(client);
+    co_trya$(webview->loadLocationAsync(input, Ref::Uti::PUBLIC_OPEN, ct));
 
     logInfo("rendering {}...", input);
     if (options.flow == Flow::PAGINATE) {
         HeaderFooterDecorator decorator;
         if (auto& [header] = options.header) {
             logInfo("loading header {}...", header);
-            decorator.headerWindow = Some(co_trya$(_loadHeaderFooterWindowAsync(client, header, ct)));
+            decorator.headerWebView = Some(co_trya$(_loadHeaderFooterWebViewAsync(client, header, ct)));
         }
 
         decorator.headerSize = options.headerSize;
 
         if (auto& [footer] = options.footer) {
             logInfo("loading footer {}...", footer);
-            decorator.footerWindow = Some(co_trya$(_loadHeaderFooterWindowAsync(client, footer, ct)));
+            decorator.footerWebView = Some(co_trya$(_loadHeaderFooterWebViewAsync(client, footer, ct)));
         }
 
         decorator.footerSize = options.footerSize;
 
         auto settings = options.derivePrintSettings();
-        window->print(settings, Some(decorator)) | ForEach([&](Gfx::Snapshot& page) {
+        webview->print(settings, Some(decorator)) | ForEach([&](Gfx::Snapshot& page) {
             page.replay(output.beginPage(page.size().cast<f64>())).expect();
         });
     } else {
         auto media = options.deriveMedia();
-        window->changeMedia(media);
+        webview->changeMedia(media);
 
         Math::Vec2Au size{
             media.width,
@@ -249,7 +249,7 @@ Async::Task<> runSingleAsync(
         };
 
         if (options.extend == Extend::FIT) {
-            auto overflow = window->scrollableOverflow();
+            auto overflow = webview->scrollableOverflow();
             size.width = overflow.width;
             size.height = overflow.height;
         }
@@ -260,11 +260,11 @@ Async::Task<> runSingleAsync(
 
         // NOTE: Override the background of HTML document, since no
         //       one really expect a html document to be transparent
-        else if (window->document()->documentElement()->namespaceUri() == Vaev::Html::NAMESPACE) {
+        else if (webview->document()->documentElement()->namespaceUri() == Vaev::Html::NAMESPACE) {
             page.clear(Gfx::WHITE);
         }
 
-        window->paint(page);
+        webview->paint(page);
     }
 
     co_return Ok();

@@ -14,4 +14,3 @@ export import :dom.serialisation;
 export import :dom.text;
 export import :dom.tokenList;
 export import :dom.tree;
-export import :dom.window;
