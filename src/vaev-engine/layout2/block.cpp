@@ -167,14 +167,80 @@ export struct BlockFormattingContext {
 
             Opt<BreakNode> breakTree = NONE;
 
-            if (auto [placed] = childOutput.is<Placed>()) {
-                if (isEmpty(fragBuilder._children)) {
-                    initialBreakBefore = max(initialBreakBefore, placed.initialBreakBefore);
+            auto placed = childOutput.visit(
+                [](Placed& placed) -> Placed {
+                    return std::move(placed);
+                },
+                [&](NeedsEarlierBreak& needsEarlierBreak) -> Placed {
+                    auto relayoutOutput = layout(
+                        tree, child,
+                        childConstraints,
+                        Some(needsEarlierBreak.opportunity)
+                    );
+
+                    return relayoutOutput.take<Placed>();
+                }
+            );
+
+            if (isEmpty(fragBuilder._children)) {
+                initialBreakBefore = max(initialBreakBefore, placed.initialBreakBefore);
+            }
+
+            if (constraints.fragmentainer and not isEmpty(fragBuilder._children) and (placed.initialBreakBefore == BreakBetween::PAGE or previousBreakAfter == BreakBetween::PAGE)) {
+                return Placed{
+                    .fragment = fragBuilder.buildBox(input, {autoInlineSize, cursor.height}),
+                    .blockOffset = blockOffset,
+                    .initialBreakBefore = initialBreakBefore,
+                    .breakState = Broke{
+                        .tree = BreakNode{
+                            // https://www.w3.org/TR/css-break-3/#break-margins
+                            // When a forced break occurs there, adjoining margins before the break are truncated,
+                            // but margins after the break are preserved.
+                            .preservedMargin = true,
+                            ._inner = BreakNode::BlockResumeData{
+                                .startChildIndex = i,
+                            },
+                            ._children = {},
+                        },
+                        .appeal = BreakAppeal::PERFECT,
+                        .forced = true,
+                    },
+                };
+            }
+
+            if (auto [childOffset] = placed.blockOffset) {
+                // fragmentainerBudget -= childOffset;
+                if (not blockOffset) {
+                    blockOffset = Some(childOffset);
+                } else {
+                    cursor.y += childOffset;
+                }
+            }
+
+            // FIXME: Unsure that is handles all the edge cases.
+            // Can the parent break before the child?
+            if (constraints.fragmentainer) {
+                // TODO: Support other fragmentainers
+                auto appeal = BreakAppeal::PERFECT;
+                if (oneOf(placed.initialBreakBefore, BreakBetween::AVOID, BreakBetween::AVOID_PAGE)) {
+                    appeal = BreakAppeal::DROPS_AVOID;
                 }
 
-                if (constraints.fragmentainer and not isEmpty(fragBuilder._children) and (placed.initialBreakBefore == BreakBetween::PAGE or previousBreakAfter == BreakBetween::PAGE)) {
+                overrideBestBreakOpportunityIfBetter(BreakOpportunity{
+                    .inner = NONE,
+                    .index = i,
+                    .consumedBlockSize = 0_au, // FIXME: Is this really useful?
+                    .appeal = appeal,
+                });
+
+                if (constraints.fragmentainer->wouldOverflow(blockOffset.unwrapOr(0_au) + cursor.y)) {
+                    auto size = LogicalSize{
+                        input.metrics.size.inline_.unwrapOr(autoInlineSize + metrics.paddings.inlineEnd + metrics.borders.inlineEnd),
+                        input.metrics.size.block.unwrapOr(cursor.height + metrics.paddings.blockEnd + metrics.borders.blockEnd),
+                    };
+
                     return Placed{
-                        .fragment = fragBuilder.buildBox(input, {autoInlineSize, cursor.height}),
+                        .fragment = fragBuilder.buildBox(input, size),
                         .blockOffset = blockOffset,
                         .initialBreakBefore = initialBreakBefore,
                         .breakState = Broke{
@@ -182,172 +248,65 @@ export struct BlockFormattingContext {
                                 // https://www.w3.org/TR/css-break-3/#break-margins
                                 // When a forced break occurs there, adjoining margins before the break are truncated,
                                 // but margins after the break are preserved.
-                                .preservedMargin = true,
+                                .preservedMargin = false,
                                 ._inner = BreakNode::BlockResumeData{
                                     .startChildIndex = i,
                                 },
                                 ._children = {},
                             },
-                            .appeal = BreakAppeal::PERFECT,
-                            .forced = true,
-                        },
+                            .appeal = appeal,
+                            .forced = false,
+                        }
                     };
                 }
-
-                if (auto [childOffset] = placed.blockOffset) {
-                    // fragmentainerBudget -= childOffset;
-                    if (not blockOffset) {
-                        blockOffset = Some(childOffset);
-                    } else {
-                        cursor.y += childOffset;
-                    }
-                }
-
-                // FIXME: Unsure that is handles all the edge cases.
-                // Can the parent break before the child?
-                if (constraints.fragmentainer) {
-                    // TODO: Support other fragmentainers
-                    auto appeal = BreakAppeal::PERFECT;
-                    if (oneOf(placed.initialBreakBefore, BreakBetween::AVOID, BreakBetween::AVOID_PAGE)) {
-                        appeal = BreakAppeal::DROPS_AVOID;
-                    }
-
-                    overrideBestBreakOpportunityIfBetter(BreakOpportunity{
-                        .inner = NONE,
-                        .index = i,
-                        .consumedBlockSize = 0_au, // FIXME: Is this really useful?
-                        .appeal = appeal,
-                    });
-
-                    if (constraints.fragmentainer->wouldOverflow(blockOffset.unwrapOr(0_au) + cursor.y)) {
-                        auto size = LogicalSize{
-                            input.metrics.size.inline_.unwrapOr(autoInlineSize + metrics.paddings.inlineEnd + metrics.borders.inlineEnd),
-                            input.metrics.size.block.unwrapOr(cursor.height + metrics.paddings.blockEnd + metrics.borders.blockEnd),
-                        };
-
-                        return Placed{
-                            .fragment = fragBuilder.buildBox(input, size),
-                            .blockOffset = blockOffset,
-                            .initialBreakBefore = initialBreakBefore,
-                            .breakState = Broke{
-                                .tree = BreakNode{
-                                    // https://www.w3.org/TR/css-break-3/#break-margins
-                                    // When a forced break occurs there, adjoining margins before the break are truncated,
-                                    // but margins after the break are preserved.
-                                    .preservedMargin = false,
-                                    ._inner = BreakNode::BlockResumeData{
-                                        .startChildIndex = i,
-                                    },
-                                    ._children = {},
-                                },
-                                .appeal = appeal,
-                                .forced = false,
-                            }
-                        };
-                    }
-                }
-
-                fragBuilder.addChild(placed.fragment, cursor + Vec2Au{childMargins.inlineStart, 0_au});
-
-                if (auto [completed] = placed.breakState.is<Completed>()) {
-                    previousBreakAfter = completed.finalBreakAfter;
-                    pendingMargin = completed.pendingMargin;
-
-                    if (completed.bestBreakOpportunity)
-                        overrideBestBreakOpportunityIfBetter(completed.bestBreakOpportunity.take());
-                }
-
-                if (auto broke = placed.breakState.is<Broke>()) {
-                    if (bestBreakOpportunity and broke->appeal < bestBreakOpportunity->appeal) {
-                        logInfo("Returned NeedsEarlierBreak");
-                        return NeedsEarlierBreak{
-                            .opportunity = bestBreakOpportunity.take(),
-                        };
-                    }
-
-                    auto b = std::move(broke->tree);
-                    auto c = Vec<BreakNode>{};
-                    c.pushBack(std::move(b));
-
-                    logInfo("Returned Placed::Broke");
-                    return Placed{
-                        .fragment = fragBuilder.buildBox(input, {autoInlineSize, cursor.height}),
-                        .blockOffset = blockOffset,
-                        .initialBreakBefore = initialBreakBefore,
-                        .breakState = Broke{
-                            .tree = BreakNode{
-                                // https://www.w3.org/TR/css-break-3/#break-margins
-                                // When a forced break occurs there, adjoining margins before the break are truncated,
-                                // but margins after the break are preserved.
-                                .preservedMargin = broke->forced,
-                                ._inner = BreakNode::BlockResumeData{
-                                    .startChildIndex = i,
-                                },
-                                ._children = std::move(c),
-                            },
-                            .appeal = broke->appeal,
-                            .forced = broke->forced,
-                        },
-                    };
-                }
-
-                auto childSize = LogicalSize<Au>::fromPhysical(placed.fragment->borderBox().size(), box.style->writingMode);
-                cursor.y += childSize.block;
-            } else if (auto [abort] = childOutput.is<NeedsEarlierBreak>()) {
-                childOutput = layout(tree, child, childConstraints, Some(abort.opportunity));
-
-                if (auto [childOffset] = placed.blockOffset) {
-                    if (not blockOffset) {
-                        blockOffset = Some(childOffset);
-                    } else {
-                        cursor.y += childOffset;
-                    }
-                }
-
-                fragBuilder.addChild(placed.fragment, cursor + Vec2Au{childMargins.inlineStart, 0_au});
-
-                if (auto [completed] = placed.breakState.is<Completed>()) {
-                    previousBreakAfter = completed.finalBreakAfter;
-                    pendingMargin = completed.pendingMargin;
-
-                    if (completed.bestBreakOpportunity)
-                        overrideBestBreakOpportunityIfBetter(completed.bestBreakOpportunity.take());
-                }
-
-                if (auto broke = placed.breakState.is<Broke>()) {
-                    if (broke->forced) {
-                        auto b = std::move(broke->tree);
-                        auto c = Vec<BreakNode>{};
-                        c.pushBack(std::move(b));
-
-                        return Placed{
-                            .fragment = fragBuilder.buildBox(input, {autoInlineSize, cursor.height}),
-                            .blockOffset = blockOffset,
-                            .initialBreakBefore = initialBreakBefore,
-                            .breakState = Broke{
-                                .tree = BreakNode{
-                                    // https://www.w3.org/TR/css-break-3/#break-margins
-                                    // When a forced break occurs there, adjoining margins before the break are truncated,
-                                    // but margins after the break are preserved.
-                                    .preservedMargin = broke->forced,
-                                    ._inner = BreakNode::BlockResumeData{
-                                        .startChildIndex = i,
-                                    },
-                                    ._children = std::move(c),
-                                },
-                                .appeal = broke->appeal,
-                                .forced = broke->forced,
-                            },
-                        };
-                    }
-                }
-
-                auto childSize = LogicalSize<Au>::fromPhysical(placed.fragment->borderBox().size(), box.style->writingMode);
-
-                cursor.y += childSize.block;
-            } else {
-                unreachable();
             }
+
+            fragBuilder.addChild(placed.fragment, cursor + Vec2Au{childMargins.inlineStart, 0_au});
+
+            if (auto [completed] = placed.breakState.is<Completed>()) {
+                previousBreakAfter = completed.finalBreakAfter;
+                pendingMargin = completed.pendingMargin;
+
+                if (completed.bestBreakOpportunity)
+                    overrideBestBreakOpportunityIfBetter(completed.bestBreakOpportunity.take());
+            }
+
+            if (auto broke = placed.breakState.is<Broke>()) {
+                if (bestBreakOpportunity and broke->appeal < bestBreakOpportunity->appeal) {
+                    logInfo("Returned NeedsEarlierBreak");
+                    return NeedsEarlierBreak{
+                        .opportunity = bestBreakOpportunity.take(),
+                    };
+                }
+
+                auto b = std::move(broke->tree);
+                auto c = Vec<BreakNode>{};
+                c.pushBack(std::move(b));
+
+                logInfo("Returned Placed::Broke");
+                return Placed{
+                    .fragment = fragBuilder.buildBox(input, {autoInlineSize, cursor.height}),
+                    .blockOffset = blockOffset,
+                    .initialBreakBefore = initialBreakBefore,
+                    .breakState = Broke{
+                        .tree = BreakNode{
+                            // https://www.w3.org/TR/css-break-3/#break-margins
+                            // When a forced break occurs there, adjoining margins before the break are truncated,
+                            // but margins after the break are preserved.
+                            .preservedMargin = broke->forced,
+                            ._inner = BreakNode::BlockResumeData{
+                                .startChildIndex = i,
+                            },
+                            ._children = std::move(c),
+                        },
+                        .appeal = broke->appeal,
+                        .forced = broke->forced,
+                    },
+                };
+            }
+
+            auto childSize = LogicalSize<Au>::fromPhysical(placed.fragment->borderBox().size(), box.style->writingMode);
+            cursor.y += childSize.block;
 
             // FIXME: Rework and bring back in.
             // if (inlineSizeBehavior == AutoSizeBehavior::FIT_CONTENT or not constraints.containingBlock.inline_) {
