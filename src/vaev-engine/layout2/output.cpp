@@ -31,8 +31,6 @@ struct Placed {
     Union<Completed, Broke> breakState;
 };
 
-using Abort = Union<NeedsEarlierBreak>;
-
-using Output = Union<Placed, Abort>;
+using Output = Union<Placed, NeedsEarlierBreak>;
 
 } // namespace Vaev::Layout2

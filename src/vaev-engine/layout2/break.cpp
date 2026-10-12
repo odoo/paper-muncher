@@ -39,6 +39,10 @@ export struct Fragmentainer {
 
         return {type, direction, blockSize, blockOffset + offset};
     }
+
+    bool wouldOverflow(Au offset) const {
+        return blockSize < blockOffset + offset;
+    }
 };
 
 // https://www.w3.org/TR/css-break-3/#unforced-breaks
@@ -70,7 +74,7 @@ export struct BreakNode : Meta::NoCopy {
     Vec<BreakNode> _children;
 
     void repr(Io::Emit& e) const {
-        e("(break-node [");
+        e("(break-node preservedMargins={} [", preservedMargin);
 
         if (not isEmpty(_children)) {
             e("\n");
