@@ -217,6 +217,12 @@ export struct Property : Meta::NoCopy {
 
     virtual void repr(Io::Emit& e) const = 0;
 
+    virtual Res<> serializeValue(Io::TextWriter& w) const {
+        auto e = Io::Emit{w};
+        repr(e);
+        return Ok();
+    }
+
     /// Evaluates and returns the computed value of this property without permanently
     /// altering the target element's computed values.
     Rc<Property> computedValue(ComputedValues const& parent, ComputedValues& child) const {
@@ -295,6 +301,10 @@ struct CustomProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.setCustomProp(registration->name, _value);
+    }
+
+    Res<> serializeValue(Io::TextWriter& w) const override {
+        return Css::serialize(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
