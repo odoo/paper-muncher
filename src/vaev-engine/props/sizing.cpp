@@ -22,7 +22,7 @@ export struct BoxSizingProperty : Property {
         Registration() : Property::Registration(Properties::BOX_SIZING) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BoxSizingProperty>(self(), BoxSizing::CONTENT_BOX);
+            return makeRc<BoxSizingProperty>(self(), Keywords::CONTENT_BOX);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -30,15 +30,7 @@ export struct BoxSizingProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            BoxSizing value;
-            if (c.skip(Css::Token::ident("border-box")))
-                value = BoxSizing::BORDER_BOX;
-            else if (c.skip(Css::Token::ident("content-box")))
-                value = BoxSizing::CONTENT_BOX;
-            else
-                return Error::invalidData("expected 'border-box' or 'content-box'");
-
-            return Ok(makeRc<BoxSizingProperty>(self(), value));
+            return Ok(makeRc<BoxSizingProperty>(self(), try$(parseValue<BoxSizing>(c))));
         }
     };
 

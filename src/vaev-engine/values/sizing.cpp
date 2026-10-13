@@ -20,11 +20,7 @@ using namespace Karm::Math::Literals;
 namespace Vaev {
 
 // https://www.w3.org/TR/css-sizing-3/#box-sizing
-export enum struct BoxSizing : u8 {
-    CONTENT_BOX,
-    BORDER_BOX,
-    _LEN,
-};
+export using BoxSizing = Union<Keywords::ContentBox, Keywords::BorderBox>;
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 // https://www.w3.org/TR/css-sizing-3/#propdef-height
