@@ -45,6 +45,11 @@ export struct Fragmentainer {
     bool wouldOverflow(Au offset) const {
         return blockSize < blockOffset + offset;
     }
+
+    bool hasContext(Type type) const {
+        // FIXME: Check the full context chain once we support columns.
+        return this->type == type;
+    }
 };
 
 // https://www.w3.org/TR/css-break-3/#unforced-breaks
@@ -95,5 +100,31 @@ export struct BreakNode : Meta::NoCopy {
         e("])");
     }
 };
+
+export usize breakPrecedence(BreakBetween b) {
+    switch (b) {
+
+    case BreakBetween::AUTO:
+        return 0;
+    case BreakBetween::AVOID_REGION:
+    case BreakBetween::AVOID_COLUMN:
+    case BreakBetween::AVOID_PAGE:
+        return 1;
+    case BreakBetween::AVOID:
+        return 2;
+    case BreakBetween::REGION:
+    case BreakBetween::COLUMN:
+        return 3;
+    case BreakBetween::PAGE:
+        return 4;
+    case BreakBetween::LEFT:
+    case BreakBetween::RIGHT:
+    case BreakBetween::RECTO:
+    case BreakBetween::VERSO:
+        return 5;
+    case BreakBetween::_LEN:
+        unreachable();
+    }
+}
 
 } // namespace Vaev::Layout2
