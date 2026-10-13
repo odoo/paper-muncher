@@ -9,6 +9,7 @@ import Karm.Math;
 
 import :css;
 import :values.base;
+import :values.primitives;
 import :values.resolved;
 import :values.writing;
 
@@ -473,6 +474,48 @@ struct ValueParser<Length> {
             return v;
 
         return Error::invalidData("expected <length>");
+    }
+};
+
+export template <>
+struct ValueSerializer<Length> {
+    // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
+    static Res<> serialize(Io::TextWriter& w, Length const& value) {
+        // The <number> component serialized as per <number> followed by the unit in its canonical form as defined in its respective specification.
+        return value.visit(
+            [&](AbsoluteLength const& absolute) -> Res<> {
+                try$(serializeValue(w, absolute.value()));
+
+                switch (absolute.unit()) {
+                case AbsoluteLength::CM:
+                    return w.writeStr("cm"s);
+                case AbsoluteLength::MM:
+                    return w.writeStr("mm"s);
+                case AbsoluteLength::Q:
+                    return w.writeStr("Q"s);
+                case AbsoluteLength::IN:
+                    return w.writeStr("in"s);
+                case AbsoluteLength::PT:
+                    return w.writeStr("pt"s);
+                case AbsoluteLength::PC:
+                    return w.writeStr("pc"s);
+                case AbsoluteLength::PX:
+                    return w.writeStr("px"s);
+                case AbsoluteLength::_LEN:
+                    unreachable();
+                }
+
+                return Ok();
+            },
+            [&](RelativeLength const relative) -> Res<> {
+                try$(serializeValue(w, relative.value()));
+
+                for (auto r : iterRunes(nameOf(relative.unit())))
+                    try$(w.writeRune(toAsciiLower(r)));
+
+                return Ok();
+            }
+        );
     }
 };
 

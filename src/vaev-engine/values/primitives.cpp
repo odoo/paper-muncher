@@ -39,6 +39,16 @@ struct ValueParser<Integer> {
     }
 };
 
+export template <>
+struct ValueSerializer<Integer> {
+    // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
+    static Res<> serialize(Io::TextWriter& w, Integer const& value) {
+        // A base-ten integer using digits 0-9 (U+0030 to U+0039) in the shortest form possible,
+        // preceded by "-" (U+002D) if it is negative.
+        return Io::format(w, "{}", value);
+    }
+};
+
 // MARK: Number ----------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#numbers
 
@@ -70,6 +80,18 @@ struct ValueParser<Number> {
 };
 
 export template <>
+struct ValueSerializer<Number> {
+    // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
+    static Res<> serialize(Io::TextWriter& w, Number const& value) {
+        // A base-ten number using digits 0-9 (U+0030 to U+0039) in the shortest form possible,
+        // using "." to separate decimals (if any), rounding the value if necessary to not produce more than 6 decimals,
+        // preceded by "-" (U+002D) if it is negative.
+        // FIXME: It truncates instead of rounding, see https://codeberg.org/skift/karm/issues/73.
+        return Io::format(w, "{:.6}", value);
+    }
+};
+
+export template <>
 struct ValueParser<bool> {
     static Res<bool> parse(Cursor<Css::Sst>& c) {
         return Ok(try$(parseValue<Integer>(c)) > 0);
@@ -87,6 +109,15 @@ struct ValueParser<String> {
         if (c.peek() == Css::Token::STRING)
             return Ok(c.next().token.data);
         return Error::invalidData("expected string");
+    }
+};
+
+export template <>
+struct ValueSerializer<String> {
+    // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
+    static Res<> serialize(Io::TextWriter& w, String const& value) {
+        // The string serialized as a string.
+        return Css::serialize(w, Css::Token{Css::Token::STRING, value});
     }
 };
 
@@ -180,6 +211,15 @@ struct ValueParser<Union<Ts...>> {
 
         return Meta::any<Ts...>([&c]<typename T>() -> Res<Union<Ts...>> {
             return Ok(try$(parseValue<T>(c)));
+        });
+    }
+};
+
+export template <ValueSerializable... Ts>
+struct ValueSerializer<Union<Ts...>> {
+    static Res<> serialize(Io::TextWriter& w, Union<Ts...> const& value) {
+        return value.visit([&](auto const& inner) {
+            return serializeValue(w, inner);
         });
     }
 };

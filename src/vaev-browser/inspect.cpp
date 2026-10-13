@@ -444,7 +444,8 @@ Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const
                 prose->pushSpan(prose->currentSpanStyle().withColor(Ui::GRAY300));
                 prose->append(": "s);
                 auto w = Io::StringWriter{};
-                property->serializeValue(w).expect();
+                if (not property->serialize(w))
+                    w.append("<serialization-error>"s);
                 prose->append(w.take());
                 prose->popSpan();
 

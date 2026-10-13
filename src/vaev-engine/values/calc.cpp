@@ -254,4 +254,107 @@ struct ValueParser<Calc<T>> {
     }
 };
 
+export template <typename T>
+struct ValueSerializer<Calc<T>> {
+    // https://drafts.csswg.org/css-values/#calc-serialize
+    static Res<> serialize(Io::TextWriter& w, Calc<T> const& value) {
+        // NOTE: The current implementation is a rough approximation of the spec.
+        return value.visit(
+            [&](typename Calc<T>::Value const& v) -> Res<> {
+                return v.visit(Visitor{
+                    [&](T const& v) {
+                        return serializeValue(w, v);
+                    },
+                    [&](typename Calc<T>::Leaf const& v) {
+                        return serialize(w, *v);
+                    },
+                    [&](Number const& v) {
+                        return serializeValue(w, v);
+                    }
+                });
+            },
+            [&](auto const&) -> Res<> {
+                try$(w.writeStr("calc("s));
+                try$(serializeCalculationTree(w, value));
+                try$(w.writeStr(")"s));
+                return Ok();
+            }
+        );
+    }
+
+    static Res<> serializeCalculationTree(Io::TextWriter& w, Calc<T> const& value) {
+        auto serializeUnion = Visitor{
+            [&](T const& v) {
+                return serializeValue(w, v);
+            },
+            [&](Calc<T>::Leaf const& v) {
+                return serializeCalculationTree(w, *v);
+            },
+            [&](Number const& v) {
+                return serializeValue(w, v);
+            }
+        };
+
+        return value.visit(
+            [&](typename Calc<T>::Value const& v) -> Res<> {
+                return v.visit(serializeUnion);
+            },
+            [&](typename Calc<T>::Unary const& u) -> Res<> {
+                auto functionalOp = try$(serializeCalcOp(w, u.op));
+
+                try$(u.val.visit(serializeUnion));
+
+                if (functionalOp) {
+                    try$(w.writeRune(')'));
+                }
+
+                return Ok();
+            },
+            [&](typename Calc<T>::Binary const& b) -> Res<> {
+                try$(b.lhs.visit(serializeUnion));
+                try$(w.writeRune(' '));
+
+                auto functionalOp = try$(serializeCalcOp(w, b.op));
+                if (functionalOp)
+                    return Error::unsupported();
+
+                try$(w.writeRune(' '));
+                try$(b.rhs.visit(serializeUnion));
+
+                return Ok();
+            }
+        );
+    }
+
+    static Res<bool> serializeCalcOp(Io::TextWriter& w, CalcOp op) {
+        switch (op) {
+        case CalcOp::NOP:
+            return Ok(false);
+        case CalcOp::ADD:
+            try$(w.writeRune('+'));
+            return Ok(false);
+        case CalcOp::SUBTRACT:
+            try$(w.writeRune('-'));
+            return Ok(false);
+        case CalcOp::MULTIPLY:
+            try$(w.writeRune('*'));
+            return Ok(false);
+        case CalcOp::DIVIDE:
+            try$(w.writeRune('/'));
+            return Ok(false);
+        case CalcOp::SIN:
+            try$(w.writeStr("sin("s));
+            return Ok(true);
+        case CalcOp::TAN:
+            try$(w.writeStr("tan("s));
+            return Ok(true);
+        case CalcOp::COS:
+            try$(w.writeStr("cos("s));
+            return Ok(true);
+        case CalcOp::_LEN:
+            unreachable();
+        }
+    }
+};
+
 } // namespace Vaev

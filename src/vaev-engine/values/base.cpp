@@ -42,4 +42,17 @@ Res<T> parseValue(Str str) {
     return ValueParser<T>::parse(content);
 }
 
+export template <typename T>
+struct ValueSerializer;
+
+export template <typename T>
+concept ValueSerializable = requires() {
+    ValueSerializer<T>::serialize;
+};
+
+export template <typename T>
+Res<> serializeValue(Io::TextWriter& w, T const& value) {
+    return ValueSerializer<T>::serialize(w, value);
+}
+
 } // namespace Vaev

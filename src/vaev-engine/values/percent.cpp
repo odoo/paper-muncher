@@ -1,3 +1,7 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:values.percent;
 
 import Karm.Core;
@@ -29,6 +33,18 @@ struct ValueParser<Percent> {
         }
 
         return Error::invalidData("expected percentage");
+    }
+};
+
+export template <>
+struct ValueSerializer<Percent> {
+    // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
+    static Res<> serialize(Io::TextWriter& w, Percent const& value) {
+        // The <number> component serialized as per <number> followed by the literal string "%" (U+0025).
+        try$(serializeValue(w, value.value()));
+        try$(w.writeRune('%'));
+
+        return Ok();
     }
 };
 
