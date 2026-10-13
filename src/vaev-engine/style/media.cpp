@@ -291,6 +291,8 @@ export struct Media {
             height / scale()
         };
     }
+
+    bool operator==(Media const&) const = default;
 };
 
 // MARK: Media Features --------------------------------------------------------

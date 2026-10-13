@@ -213,6 +213,8 @@ Ui::Child webview(State const& s) {
                    }
                },
                {
+                   .scale = s.inspect.settings.scale,
+                   .prefersColorScheme = s.inspect.colorScheme,
                    .wireframe = s.inspect.wireframe,
                    .selected = selected,
                }
@@ -222,8 +224,52 @@ Ui::Child webview(State const& s) {
            });
 }
 
+Ui::Child _printPaper(State const& s, Gfx::Snapshot page) {
+    auto scale = 1.;
+
+    auto isMobile = App::formFactor == App::FormFactor::MOBILE;
+    if (isMobile)
+        scale = 0.5;
+
+    Math::Vec2f previewSize{
+        640 * scale,
+        640 * (1. / s.inspect.settings.pageAspectRatio()) * scale,
+    };
+
+    return Ui::canvas(
+               page
+           ) |
+           Ui::box({
+               .borderWidth = 1,
+               .borderFill = Some(Ui::GRAY50.withOpacity(0.1)),
+               .backgroundFill = Some(Gfx::WHITE),
+           }) |
+           Ui::pinSize(previewSize.cast<Math::Au>());
+}
+
+Ui::Child _printPreview(State const& s) {
+    Ui::Children pages;
+    for (auto snapshot : s.webview->print(s.inspect.settings)) {
+        pages.pushBack(_printPaper(s, snapshot));
+    }
+    return Ui::vflow(
+               8_au,
+               Math::Align::CENTER,
+               std::move(pages)
+           ) |
+           Ui::insets(32_au) |
+           Ui::vscroll();
+}
+
+Ui::Child appDocument(State const& s) {
+    if (s.inspect.paginated)
+        return _printPreview(s);
+    else
+        return webview(s);
+}
+
 Ui::Child appContent(State const& s) {
-    auto wv = webview(s) | Kr::scaffoldContent();
+    auto wv = appDocument(s) | Kr::scaffoldContent();
     if (not s.inspect.visible)
         return wv;
 

@@ -62,11 +62,21 @@ export struct InspectChangeMargin {
     Print::Margins margins;
 };
 
+export struct InspectChangeColorScheme {
+    Opt<ColorScheme> value;
+};
+
 export struct InspectChangeScale {
     f64 scale;
 };
 
+export struct InspectTogglePaginated {};
+
 export struct InspectToggleHeaderFooter {};
+
+export struct InspectToggleShowCustomProperties {};
+
+export struct InspectToggleShowAllProperties {};
 
 export using InspectAction = Union<
     InspectToggleVisible,
@@ -80,19 +90,29 @@ export using InspectAction = Union<
     InspectChangePaper,
     InspectChangeOrientation,
     InspectChangeMargin,
+    InspectChangeColorScheme,
     InspectChangeScale,
-    InspectToggleHeaderFooter>;
+    InspectTogglePaginated,
+    InspectToggleHeaderFooter,
+    InspectToggleShowCustomProperties,
+    InspectToggleShowAllProperties>;
 
 export struct InspectState {
     bool visible = false;
     bool wireframe = false;
-    bool boxModel = true;
+    bool boxModel = false;
     InspectTab tab = InspectTab::ELEMENTS;
-    InspectStyleTab styleTab = InspectStyleTab::CASCADED;
+    InspectStyleTab styleTab = InspectStyleTab::COMPUTED;
+    bool showCustomProperties = false;
+    bool showAllProperties = false;
+
     String filter = ""s;
     Set<Gc::Ref<Dom::Node>> expandedNodes = {};
     Gc::Ptr<Dom::Node> selectedNode = nullptr;
+
+    Opt<ColorScheme> colorScheme;
     Print::Settings settings;
+    bool paginated = false;
 
     void apply(InspectAction action) {
         action.visit(
@@ -138,8 +158,20 @@ export struct InspectState {
             [&](InspectChangeScale const& a) {
                 settings.scale = a.scale;
             },
+            [&](InspectChangeColorScheme const& a) {
+                colorScheme = a.value;
+            },
+            [&](InspectTogglePaginated const&) {
+                paginated = not paginated;
+            },
             [&](InspectToggleHeaderFooter const&) {
                 settings.headerFooter = not settings.headerFooter;
+            },
+            [&](InspectToggleShowCustomProperties const&) {
+                showCustomProperties = not showCustomProperties;
+            },
+            [&](InspectToggleShowAllProperties const&) {
+                showAllProperties = not showAllProperties;
             }
         );
     }
@@ -396,10 +428,16 @@ Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const
             Ui::Children children;
 
             for (auto const& [name, registration] : dom->registeredPropertySet.registrations().iterItems()) {
+                if (not s.showCustomProperties and startWith(name.str(), "--"s) != Match::NO)
+                    continue;
+
                 if (s.filter and startWith(name.str(), s.filter) == Match::NO)
                     continue;
 
                 auto property = registration->load(*el->computedValues());
+                if (not s.showAllProperties and property->isInitial())
+                    continue;
+
                 auto style = Ui::TextStyles::codeSmall().withColor(Ui::ACCENT400);
                 auto prose = makeRc<Gfx::Prose>(style, style);
                 prose->append(name.str());
@@ -419,13 +457,29 @@ Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const
             content = Ui::vflow(children) | Ui::vhscroll();
         }
 
+    auto filterInput = Kr::input(
+        Mdi::FILTER,
+        "Filter..."s,
+        s.filter,
+        [send](auto& n, auto text) {
+            send(n, InspectChangeFilter{text});
+        }
+    );
+
     return Ui::vflow(
                Ui::hflow(
                    4_au,
-                   Kr::input(Mdi::FILTER, "Filter..."s, s.filter, [send](auto& n, auto text) {
-                       send(n, InspectChangeFilter{text});
-                   }) | Ui::grow(),
-                   Kr::checkbox(false, Ui::SINK<bool>, "All"s), Kr::checkbox(false, Ui::SINK<bool>, "Variables"s)
+                   filterInput | Ui::grow(),
+                   Kr::checkbox(
+                       s.showAllProperties, [send](auto& n, ...) {
+                           send(n, InspectToggleShowAllProperties{});
+                       },
+                       "All"s
+                   ),
+                   Kr::checkbox(s.showCustomProperties, [send](auto& n, ...) {
+                       send(n, InspectToggleShowCustomProperties{});
+                   },
+                                "Variables"s)
                ) | Ui::insets(6_au),
                content | Ui::grow()
            ) |
@@ -495,11 +549,11 @@ Ui::Child inspectStyleTab(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui:
     items.pushBack(
         Ui::hflow(
             Kr::tabbarContent({
-                Kr::tabbarItem(
-                    s.styleTab == InspectStyleTab::CASCADED,
-                    rbind(send, InspectStyleTab::CASCADED),
-                    Kr::tabarItemLabel(Some(Mdi::FORMAT_LIST_GROUP), "Cascaded"s)
-                ),
+                // Kr::tabbarItem(
+                //     s.styleTab == InspectStyleTab::CASCADED,
+                //     rbind(send, InspectStyleTab::CASCADED),
+                //     Kr::tabarItemLabel(Some(Mdi::FORMAT_LIST_GROUP), "Cascaded"s)
+                // ),
                 Kr::tabbarItem(
                     s.styleTab == InspectStyleTab::COMPUTED,
                     rbind(send, InspectStyleTab::COMPUTED),
@@ -561,12 +615,12 @@ Ui::Child inspectTabLayout(InspectState const& s, Ui::Action<InspectAction> send
                            send(n, InspectToggleWireframe{});
                        },
                        "Show wireframe"s
-                   ),
-                   Kr::checkboxRow(
-                       true,
-                       Ui::SINK<bool>,
-                       "Show breaks"s
-                   )
+                   ) //,
+                   // Kr::checkboxRow(
+                   //     true,
+                   //     Ui::SINK<bool>,
+                   //     "Show breaks"s
+                   // )
                ) | Kr::scaffoldContent()
            ) |
            Ui::vscroll() |
@@ -574,75 +628,87 @@ Ui::Child inspectTabLayout(InspectState const& s, Ui::Action<InspectAction> send
 }
 
 Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectAction> send) {
+    Ui::Children sections;
+
+    sections.pushBack(
+        Ui::vflow(
+            Kr::tabRow(
+                "Color Scheme"s,
+                {
+                    Kr::tabbarItem(s.colorScheme == NONE, rbind(send, InspectChangeColorScheme{NONE}), Kr::tabarItemLabel(NONE, "Auto"s)),
+                    Kr::tabbarItem(s.colorScheme == ColorScheme::LIGHT, rbind(send, InspectChangeColorScheme{Some(ColorScheme::LIGHT)}), Kr::tabarItemLabel(NONE, "Light"s)),
+                    Kr::tabbarItem(s.colorScheme == ColorScheme::DARK, rbind(send, InspectChangeColorScheme{Some(ColorScheme::DARK)}), Kr::tabarItemLabel(NONE, "Dark"s)),
+                }
+            ),
+            Kr::numberRow(
+                s.settings.scale,
+                [send](auto& n, f64 scale) {
+                    send(n, InspectChangeScale{scale});
+                },
+                0.1,
+                "Scale"s
+            ),
+            Kr::tabRow(
+                "Flow"s,
+                {
+                    Kr::tabbarItem(not s.paginated, rbind(send, InspectTogglePaginated{}), Kr::tabarItemLabel(NONE, "Continuous"s)),
+                    Kr::tabbarItem(s.paginated, rbind(send, InspectTogglePaginated{}), Kr::tabarItemLabel(NONE, "Paginated"s)),
+                }
+            )
+        ) |
+        Kr::scaffoldContent()
+    );
+
+    if (s.paginated)
+        sections.pushBack(
+            Ui::vflow(
+                Kr::selectRow(
+                    Kr::selectValue(
+                        s.settings.orientation == Print::Orientation::PORTRAIT
+                            ? "Portrait"s
+                            : "Landscape"s
+                    ),
+                    [send] -> Ui::Children {
+                        return {
+                            Kr::selectItem(Some(rbind(send, InspectChangeOrientation{Print::Orientation::PORTRAIT})), "Portrait"s),
+                            Kr::selectItem(Some(rbind(send, InspectChangeOrientation{Print::Orientation::LANDSCAPE})), "Landscape"s),
+                        };
+                    },
+                    "Orientation"s
+                ),
+                Kr::rowContent(
+                    NONE,
+                    "Paper"s,
+                    NONE,
+                    Some(_paperSelect(s, send))
+                ),
+                Kr::selectRow(
+                    Kr::selectValue(Io::format("{}", Io::cased(s.settings.margins, Io::Case::CAPITAL))),
+                    [send] -> Ui::Children {
+                        return {
+                            Kr::selectItem(Some(rbind(send, InspectChangeMargin{Print::MarginOption::NONE})), "None"s),
+                            Kr::selectItem(Some(rbind(send, InspectChangeMargin{Print::MarginOption::MINIMUM})), "Minimum"s),
+                            Kr::selectItem(Some(rbind(send, InspectChangeMargin{Print::MarginOption::DEFAULT})), "Default"s),
+                            Kr::selectItem(Some(rbind(send, InspectChangeMargin{Math::InsetsAu{}})), "Custom"s),
+                        };
+                    },
+                    "Margins"s
+                ),
+
+                Kr::checkboxRow(
+                    s.settings.headerFooter,
+                    [send](auto& n, ...) {
+                        send(n, InspectToggleHeaderFooter{});
+                    },
+                    "Header and footers"s
+                )
+            ) |
+            Kr::scaffoldContent()
+        );
+
     return Ui::vflow(
                4_au,
-               Ui::vflow(
-                   Kr::tabRow(
-                       "Color Scheme"s,
-                       {
-                           Kr::tabbarItem(true, Ui::SINK<>, Kr::tabarItemLabel(NONE, "Auto"s)),
-                           Kr::tabbarItem(false, Ui::SINK<>, Kr::tabarItemLabel(NONE, "Light"s)),
-                           Kr::tabbarItem(false, Ui::SINK<>, Kr::tabarItemLabel(NONE, "Dark"s)),
-                       }
-                   ),
-                   Kr::numberRow(
-                       s.settings.scale,
-                       [send](auto& n, f64 scale) {
-                           send(n, InspectChangeScale{scale});
-                       },
-                       0.1,
-                       "Scale"s
-                   ),
-                   Kr::tabRow(
-                       "Flow"s,
-                       {
-                           Kr::tabbarItem(true, Ui::SINK<>, Kr::tabarItemLabel(NONE, "Continuous"s)),
-                           Kr::tabbarItem(false, Ui::SINK<>, Kr::tabarItemLabel(NONE, "Paginated"s)),
-                       }
-                   )
-               ) | Kr::scaffoldContent(),
-               Ui::vflow(
-                   Kr::selectRow(
-                       Kr::selectValue(
-                           s.settings.orientation == Print::Orientation::PORTRAIT
-                               ? "Portrait"s
-                               : "Landscape"s
-                       ),
-                       [send] -> Ui::Children {
-                           return {
-                               Kr::selectItem(Some(rbind(send, InspectChangeOrientation{Print::Orientation::PORTRAIT})), "Portrait"s),
-                               Kr::selectItem(Some(rbind(send, InspectChangeOrientation{Print::Orientation::LANDSCAPE})), "Landscape"s),
-                           };
-                       },
-                       "Orientation"s
-                   ),
-                   Kr::rowContent(
-                       NONE,
-                       "Paper"s,
-                       NONE,
-                       Some(_paperSelect(s, send))
-                   ),
-                   Kr::selectRow(
-                       Kr::selectValue(Io::format("{}", Io::cased(s.settings.margins, Io::Case::CAPITAL))),
-                       [send] -> Ui::Children {
-                           return {
-                               Kr::selectItem(Some(rbind(send, InspectChangeMargin{Print::MarginOption::NONE})), "None"s),
-                               Kr::selectItem(Some(rbind(send, InspectChangeMargin{Print::MarginOption::MINIMUM})), "Minimum"s),
-                               Kr::selectItem(Some(rbind(send, InspectChangeMargin{Print::MarginOption::DEFAULT})), "Default"s),
-                               Kr::selectItem(Some(rbind(send, InspectChangeMargin{Math::InsetsAu{}})), "Custom"s),
-                           };
-                       },
-                       "Margins"s
-                   ),
-
-                   Kr::checkboxRow(
-                       s.settings.headerFooter,
-                       [send](auto& n, ...) {
-                           send(n, InspectToggleHeaderFooter{});
-                       },
-                       "Header and footers"s
-                   )
-               ) | Kr::scaffoldContent()
+               std::move(sections)
            ) |
            Ui::vscroll() |
            Ui::grow();
