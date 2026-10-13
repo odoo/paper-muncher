@@ -378,13 +378,17 @@ struct FlexItem {
                         : containerSize.y
                 );
             },
+            [&](Keywords::Stretch const&) {
+                logWarn("not implemented");
+                return 0_au;
+            },
             [&](Keywords::MinContent const&) {
                 return isWidth ? minContentSize.x : minContentSize.y;
             },
             [&](Keywords::MaxContent const&) {
                 return isWidth ? maxContentSize.x : maxContentSize.y;
             },
-            [&](FitContent const&) {
+            [&](Keywords::FitContent const&) {
                 logWarn("not implemented");
                 return 0_au;
             },

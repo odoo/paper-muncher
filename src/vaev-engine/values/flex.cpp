@@ -80,7 +80,7 @@ export using FlexBasis = Union<
     Keywords::Content,
     Keywords::MinContent,
     Keywords::MaxContent,
-    FitContent,
+    Keywords::FitContent,
     Calc<PercentOr<Length>>>;
 
 export struct FlexItemProps {

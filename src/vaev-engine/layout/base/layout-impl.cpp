@@ -176,7 +176,7 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au c
     } else if (size.is<Keywords::MaxContent>()) {
         auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
         return Some(intrinsicSize.x + horizontalBorderBox);
-    } else if (size.is<FitContent>()) {
+    } else if (size.is<Keywords::FitContent>()) {
         auto minIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
         auto maxIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
         auto stretchIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, capmin);
@@ -207,14 +207,14 @@ Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au 
         // https://drafts.csswg.org/css-sizing-3/#valdef-width-max-content
         // for a box’s block size, unless otherwise specified, this is equivalent to its automatic size.
         return NONE;
-    } else if (size.is<FitContent>()) {
+    } else if (size.is<Keywords::FitContent>()) {
         // Since this depends on min/max content size, this is also unknown.
         return NONE;
     } else if (size.is<Keywords::Auto>()) {
         return NONE;
     } else {
         logWarn("unknown specified size: {}", size);
-        return Some(0_au);
+        return NONE;
     }
 }
 
