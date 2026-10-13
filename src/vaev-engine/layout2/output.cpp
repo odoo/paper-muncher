@@ -17,6 +17,7 @@ struct Completed {
 struct Broke {
     BreakNode tree;
     BreakAppeal appeal;
+    BreakBetween originatingBreak;
     bool forced;
 };
 

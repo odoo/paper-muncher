@@ -90,9 +90,11 @@ export struct BlockFormattingContext {
         auto overrideBestBreakOpportunityIfBetter = [&](BreakOpportunity&& other) {
             if (auto& [old] = bestBreakOpportunity) {
                 if (other.appeal >= old.appeal) {
+                    logInfo("New best break opportunity: {}", other);
                     bestBreakOpportunity = Some(std::move(other));
                 }
             } else {
+                logInfo("New best break opportunity: {}", other);
                 bestBreakOpportunity = Some(std::move(other));
             }
         };
@@ -100,19 +102,6 @@ export struct BlockFormattingContext {
         if (not constraints.collapseMargins or box.establishesFc or metrics.paddings.blockStart != 0_au or metrics.borders.blockStart != 0_au) {
             blockOffset = Some(pendingMargin.sum());
             pendingMargin = PendingMargin{};
-
-            if (constraints.fragmentainer) {
-                auto appeal = BreakAppeal::PERFECT;
-                if (box.style->break_->after == BreakBetween::AVOID)
-                    appeal = BreakAppeal::DROPS_AVOID;
-
-                overrideBestBreakOpportunityIfBetter(BreakOpportunity{
-                    .inner = NONE,
-                    .index = 0,
-                    .consumedBlockSize = *blockOffset,
-                    .appeal = appeal,
-                });
-            }
         }
 
         // FIXME: Express in logical units instead
@@ -130,14 +119,13 @@ export struct BlockFormattingContext {
 
         usize end = box.children().len();
         if (opportunity)
-            end = opportunity->index;
+            end = opportunity->inner ? opportunity->index + 1 : opportunity->index;
 
         for (usize i = start; i < end; i++) {
             auto& child = box.children()[i];
 
-            if (child.isRemovedFromFlow()) {
+            if (child.isRemovedFromFlow())
                 continue;
-            }
 
             auto childMargins = _computeChildMargins(tree, child, constraints.containingBlock);
 
@@ -163,7 +151,17 @@ export struct BlockFormattingContext {
                 childContinuation = Some(continuation->_children[0]);
             }
 
-            auto childOutput = layout(tree, child, childConstraints, NONE, childContinuation);
+            // FIXME: Rename bestOpportunity
+            Opt<BreakOpportunity const&> childOpportunity = NONE;
+            if (opportunity and opportunity->inner and i == opportunity->index)
+                childOpportunity = Some(**opportunity->inner);
+
+            auto childOutput = layout(
+                tree, child,
+                childConstraints,
+                childOpportunity,
+                childContinuation
+            );
 
             Opt<BreakNode> breakTree = NONE;
 
@@ -172,6 +170,8 @@ export struct BlockFormattingContext {
                     return std::move(placed);
                 },
                 [&](NeedsEarlierBreak& needsEarlierBreak) -> Placed {
+                    logInfo("Relayout: {}", needsEarlierBreak.opportunity);
+
                     auto relayoutOutput = layout(
                         tree, child,
                         childConstraints,
@@ -209,7 +209,6 @@ export struct BlockFormattingContext {
             }
 
             if (auto [childOffset] = placed.blockOffset) {
-                // fragmentainerBudget -= childOffset;
                 if (not blockOffset) {
                     blockOffset = Some(childOffset);
                 } else {
@@ -219,10 +218,12 @@ export struct BlockFormattingContext {
 
             // FIXME: Unsure that is handles all the edge cases.
             // Can the parent break before the child?
-            if (constraints.fragmentainer) {
+            if (constraints.fragmentainer  and not isEmpty(fragBuilder._children)) {
                 // TODO: Support other fragmentainers
+                auto between = max(previousBreakAfter, placed.initialBreakBefore);
+
                 auto appeal = BreakAppeal::PERFECT;
-                if (oneOf(placed.initialBreakBefore, BreakBetween::AVOID, BreakBetween::AVOID_PAGE)) {
+                if (oneOf(between, BreakBetween::AVOID, BreakBetween::AVOID_PAGE)) {
                     appeal = BreakAppeal::DROPS_AVOID;
                 }
 
@@ -230,14 +231,21 @@ export struct BlockFormattingContext {
                     .inner = NONE,
                     .index = i,
                     .consumedBlockSize = 0_au, // FIXME: Is this really useful?
+                    .originatingBreak = between,
                     .appeal = appeal,
                 });
 
                 if (constraints.fragmentainer->wouldOverflow(blockOffset.unwrapOr(0_au) + cursor.y)) {
+                    if (bestBreakOpportunity and bestBreakOpportunity->appeal > appeal) {
+                        return NeedsEarlierBreak{.opportunity = bestBreakOpportunity.take()};
+                    }
+
                     auto size = LogicalSize{
                         input.metrics.size.inline_.unwrapOr(autoInlineSize + metrics.paddings.inlineEnd + metrics.borders.inlineEnd),
                         input.metrics.size.block.unwrapOr(cursor.height + metrics.paddings.blockEnd + metrics.borders.blockEnd),
                     };
+
+                    logInfo("[{i}] Broke because of overflow with appeal={}", i, appeal);
 
                     return Placed{
                         .fragment = fragBuilder.buildBox(input, size),
@@ -267,13 +275,23 @@ export struct BlockFormattingContext {
                 previousBreakAfter = completed.finalBreakAfter;
                 pendingMargin = completed.pendingMargin;
 
-                if (completed.bestBreakOpportunity)
-                    overrideBestBreakOpportunityIfBetter(completed.bestBreakOpportunity.take());
+                if (completed.bestBreakOpportunity) {
+                    auto originatingBreak = completed.bestBreakOpportunity->originatingBreak;
+                    auto appeal = completed.bestBreakOpportunity->appeal;
+
+                    overrideBestBreakOpportunityIfBetter(BreakOpportunity{
+                        .inner = Some(makeBox<BreakOpportunity>(completed.bestBreakOpportunity.take())),
+                        .index = i,
+                        .consumedBlockSize = 0_au, // TODO
+                        .originatingBreak = originatingBreak,
+                        .appeal = appeal,
+                    });
+                }
             }
 
             if (auto broke = placed.breakState.is<Broke>()) {
                 if (bestBreakOpportunity and broke->appeal < bestBreakOpportunity->appeal) {
-                    logInfo("Returned NeedsEarlierBreak");
+                    logInfo("[{}] Returned NeedsEarlierBreak", i);
                     return NeedsEarlierBreak{
                         .opportunity = bestBreakOpportunity.take(),
                     };
@@ -283,7 +301,7 @@ export struct BlockFormattingContext {
                 auto c = Vec<BreakNode>{};
                 c.pushBack(std::move(b));
 
-                logInfo("Returned Placed::Broke");
+                logInfo("[{i}] Bubbling Placed::Broke", i);
                 return Placed{
                     .fragment = fragBuilder.buildBox(input, {autoInlineSize, cursor.height}),
                     .blockOffset = blockOffset,
@@ -314,6 +332,33 @@ export struct BlockFormattingContext {
             // }
         }
 
+        if (opportunity and not opportunity->inner) {
+            auto size = LogicalSize{
+                input.metrics.size.inline_.unwrapOr(autoInlineSize + metrics.paddings.inlineEnd + metrics.borders.inlineEnd),
+                input.metrics.size.block.unwrapOr(cursor.height + metrics.paddings.blockEnd + metrics.borders.blockEnd),
+            };
+
+            logInfo("Broke at chosen opportunity {}", *opportunity);
+
+            return Placed{
+                .fragment = fragBuilder.buildBox(input, size),
+                .blockOffset = blockOffset,
+                .initialBreakBefore = initialBreakBefore,
+                .breakState = Broke{
+                    .tree = BreakNode{
+                        .preservedMargin = false,
+                        ._inner = BreakNode::BlockResumeData{
+                            .startChildIndex = opportunity->index,
+                        },
+                        ._children = {},
+                    },
+                    .appeal = opportunity->appeal,
+                    .originatingBreak = opportunity->originatingBreak,
+                    .forced = false,
+                },
+            };
+        }
+
         // FIXME: Check for fixed height too.
         if (blockOffset and (box.establishesFc or metrics.paddings.blockEnd != 0_au or metrics.borders.blockEnd != 0_au)) {
             cursor.y += pendingMargin.sum();
@@ -334,7 +379,7 @@ export struct BlockFormattingContext {
 
         pendingMargin.add(constraints.margins.blockEnd);
 
-        logInfo("Returned Placed::Completed");
+        logInfo("Returned Placed::Completed {}", size);
 
         return Placed{
             .fragment = fragBuilder.buildBox(input, size),

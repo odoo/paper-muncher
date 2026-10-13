@@ -254,75 +254,85 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
 
             // FIXME: Extract into a layoutRoot, and investigate the right init params.
             // FIXME: Nospec POC.
+            auto constraints = Layout2::Constraints{
+                .knownSize = {
+                    Some(pageRect.width),
+                    Some(pageRect.height),
+                },
+                .containingBlock = {
+                    Some(pageRect.width),
+                    Some(pageRect.height),
+                },
+                .availableSpace = {
+                    pageRect.width,
+                    pageRect.height,
+                },
+
+                // https://www.w3.org/TR/CSS22/box.html#collapsing-margins
+                // - Margins of the root element's box do not collapse.
+                .collapseMargins = false,
+
+                // NoSpec AF >.<
+                .margins = Layout2::LogicalInsets<Au>::all(0_au),
+
+                .fragmentainer = Some(Layout2::Fragmentainer{
+                    .type = Layout2::Fragmentainer::Type::PAGE,
+                    .direction = Layout2::Fragmentainer::Direction::VERTICAL,
+                    .blockSize = pageRect.height,
+                    .blockOffset = 0_au,
+                }),
+            };
+
             auto output = Layout2::layout(
                 contentTree, contentTree.root,
-                Layout2::Constraints{
-                    .knownSize = {
-                        Some(pageRect.width),
-                        Some(pageRect.height),
-                    },
-                    .containingBlock = {
-                        Some(pageRect.width),
-                        Some(pageRect.height),
-                    },
-                    .availableSpace = {
-                        pageRect.width,
-                        pageRect.height,
-                    },
-
-                    // https://www.w3.org/TR/CSS22/box.html#collapsing-margins
-                    // - Margins of the root element's box do not collapse.
-                    .collapseMargins = false,
-
-                    // NoSpec AF >.<
-                    .margins = Layout2::LogicalInsets<Au>::all(0_au),
-
-                    .fragmentainer = Some(Layout2::Fragmentainer{
-                        .type = Layout2::Fragmentainer::Type::PAGE,
-                        .direction = Layout2::Fragmentainer::Direction::VERTICAL,
-                        .blockSize = pageRect.height,
-                        .blockOffset = 0_au,
-                    }),
-                },
+                constraints,
                 NONE,
                 continuation
             );
 
-            if (auto [placed] = output.is<Layout2::Placed>()) {
-                if (auto [broke] = placed.breakState.is<Layout2::Broke>()) {
-                    if (broke.forced) {
-                        logInfo("forced-break [{}]: {}", broke.appeal, broke.tree);
-                    } else {
-                        logInfo("soft-break [{}]: {}", broke.appeal, broke.tree);
-                    }
+            auto placed = output.visit(
+                [](Layout2::Placed& placed) -> Layout2::Placed {
+                    return std::move(placed);
+                },
+                [&](Layout2::NeedsEarlierBreak& needsEarlierBreak) -> Layout2::Placed {
+                    logInfo("Relayout: {}", needsEarlierBreak.opportunity);
 
-                    continuation = Some(std::move(broke.tree));
+                    auto relayoutOutput = layout(
+                        contentTree, contentTree.root,
+                        constraints,
+                        Some(needsEarlierBreak.opportunity),
+                        continuation
+                    );
+
+                    return relayoutOutput.take<Layout2::Placed>();
+                }
+            );
+
+            if (auto [broke] = placed.breakState.is<Layout2::Broke>()) {
+                if (broke.forced) {
+                    logInfo("forced-break [{}]: {}", broke.appeal, broke.tree);
+                } else {
+                    logInfo("soft-break [{}]: {}", broke.appeal, broke.tree);
                 }
 
-                Layout2::absolutize(placed.fragment);
+                continuation = Some(std::move(broke.tree));
+            }
 
-                logInfo("{}", placed.fragment);
+            Layout2::absolutize(placed.fragment);
 
-                Gfx::Snapshot::Recorder snapshot{settings.pageSize().cast<isize>()};
-                snapshot.push();
-                snapshot.transform(Math::Trans2f::scale(media.scale()));
+            logInfo("{}", placed.fragment);
 
-                Paint::StackingContext::establishStackingContext(placed.fragment)->paintRoot(snapshot);
+            Gfx::Snapshot::Recorder snapshot{settings.pageSize().cast<isize>()};
+            snapshot.push();
+            snapshot.transform(Math::Trans2f::scale(media.scale()));
 
-                snapshot.pop();
+            Paint::StackingContext::establishStackingContext(placed.fragment)->paintRoot(snapshot);
 
-                co_yield snapshot.finalize();
+            snapshot.pop();
 
-                if (placed.breakState.is<Layout2::Completed>()) {
-                    break;
-                }
-            } else {
-                // FIXME: Relayout instead.
-                logError("layout aborted inside root");
+            co_yield snapshot.finalize();
 
-                Gfx::Snapshot::Recorder snapshot{settings.pageSize().cast<isize>()};
-                co_yield snapshot.finalize();
-
+            if (placed.breakState.is<Layout2::Completed>()) {
                 break;
             }
         }
