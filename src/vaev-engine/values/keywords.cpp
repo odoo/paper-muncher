@@ -36,6 +36,15 @@ struct ValueParser<Keyword<K>> {
     }
 };
 
+export template <StrLit K>
+struct ValueSerializer<Keyword<K>> {
+    // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
+    static Res<> serialize(Io::TextWriter& w, Keyword<K> const&) {
+        // The keyword converted to ASCII lowercase.
+        return w.writeStr(static_cast<Str>(K));
+    }
+};
+
 namespace Keywords {
 
 #define KEYWORD(TYPE, VALUE, NAME)      \

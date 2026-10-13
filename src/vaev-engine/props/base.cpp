@@ -217,7 +217,7 @@ export struct Property : Meta::NoCopy {
 
     virtual void repr(Io::Emit& e) const = 0;
 
-    virtual Res<> serializeValue(Io::TextWriter& w) const {
+    virtual Res<> serialize(Io::TextWriter& w) const {
         auto e = Io::Emit{w};
         repr(e);
         return Ok();
@@ -307,7 +307,7 @@ struct CustomProperty : Property {
         c.setCustomProp(registration->name, _value);
     }
 
-    Res<> serializeValue(Io::TextWriter& w) const override {
+    Res<> serialize(Io::TextWriter& w) const override {
         return Css::serialize(w, _value);
     }
 
