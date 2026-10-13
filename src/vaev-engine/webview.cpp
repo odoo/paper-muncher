@@ -48,8 +48,10 @@ export struct WebView {
     }
 
     void changeMedia(Style::Media media) {
-        _media = media;
-        invalidateRender();
+        if (_media != media) {
+            _media = media;
+            invalidateRender();
+        }
     }
 
     void changeInitialCounterSet(Style::CounterSet counterSet) {
@@ -98,7 +100,7 @@ export struct WebView {
 
         computeStyle();
 
-        Style::Viewport viewport = {.small = _media.viewportSize()};
+        Style::Viewport viewport = {.small = _media.scaledViewport()};
         auto tree = makeRc<Layout::Tree>(
             Layout::buildDocument(_document.upgrade()),
             viewport
