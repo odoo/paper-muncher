@@ -266,7 +266,10 @@ Ui::Child computedStyles(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::
                 auto prose = makeRc<Gfx::Prose>(style, style);
                 prose->append(name.str());
                 prose->pushSpan(prose->currentSpanStyle().withColor(Ui::GRAY300));
-                prose->append(": {}"_f(*property));
+                prose->append(": "s);
+                auto w = Io::StringWriter{};
+                property->serializeValue(w).expect();
+                prose->append(w.take());
                 prose->popSpan();
 
                 children.pushBack(
