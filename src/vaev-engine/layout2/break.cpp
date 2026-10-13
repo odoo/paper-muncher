@@ -4,6 +4,8 @@ import Karm.Core;
 import Karm.Math;
 import Karm.Logger;
 
+import :style;
+
 using namespace Karm;
 using namespace Karm::Math;
 using namespace Karm::Math::Literals;
@@ -58,7 +60,12 @@ export struct BreakOpportunity : Meta::NoCopy {
     Opt<Box<BreakOpportunity>> inner;
     usize index;
     Au consumedBlockSize;
+    BreakBetween originatingBreak;
     BreakAppeal appeal;
+
+    void repr(Io::Emit& e) const {
+        e("(break appeal={} index={} inner={})", appeal, index, inner);
+    }
 };
 
 export struct BreakNode : Meta::NoCopy {
