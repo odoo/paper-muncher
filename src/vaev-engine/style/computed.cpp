@@ -104,7 +104,7 @@ export struct ComputedValues {
     WritingMode writingMode;
     Direction direction;
     Position position = Keywords::STATIC;
-    BoxSizing boxSizing;
+    BoxSizing boxSizing = Keywords::CONTENT_BOX;
     TableLayout tableLayout = TableLayout::AUTO;
 
     ComputedValues() : fontFace(Gfx::Fontface::fallback()) {}

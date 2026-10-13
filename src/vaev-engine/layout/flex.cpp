@@ -291,7 +291,7 @@ struct FlexItem {
                     mainContainerSize.unwrapOr(0_au)
                 );
 
-                if (box->style->boxSizing == BoxSizing::CONTENT_BOX) {
+                if (box->style->boxSizing == Keywords::CONTENT_BOX) {
                     flexBaseSize +=
                         fa.isRowOriented
                             ? borders.horizontal() + padding.horizontal()
