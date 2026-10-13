@@ -186,7 +186,26 @@ export struct BlockFormattingContext {
                 initialBreakBefore = max(initialBreakBefore, placed.initialBreakBefore);
             }
 
-            if (constraints.fragmentainer and not isEmpty(fragBuilder._children) and (placed.initialBreakBefore == BreakBetween::PAGE or previousBreakAfter == BreakBetween::PAGE)) {
+            auto forcedBreak = [](BreakBetween b, Fragmentainer const& f) {
+                switch (b) {
+                case BreakBetween::AUTO:
+                    return true;
+                case BreakBetween::REGION:
+                    return f.hasContext(Fragmentainer::Type::REGION);
+                case BreakBetween::COLUMN:
+                    return f.hasContext(Fragmentainer::Type::COLUMN);
+                case BreakBetween::PAGE:
+                case BreakBetween::LEFT:
+                case BreakBetween::RIGHT:
+                case BreakBetween::RECTO:
+                case BreakBetween::VERSO:
+                    return f.hasContext(Fragmentainer::Type::PAGE);
+                default:
+                    return false;
+                }
+            };
+
+            if (constraints.fragmentainer and not isEmpty(fragBuilder._children) and placed.initialBreakBefore == BreakBetween::PAGE or previousBreakAfter == BreakBetween::PAGE)) {
                 return Placed{
                     .fragment = fragBuilder.buildBox(input, {autoInlineSize, cursor.height}),
                     .blockOffset = blockOffset,
@@ -218,7 +237,7 @@ export struct BlockFormattingContext {
 
             // FIXME: Unsure that is handles all the edge cases.
             // Can the parent break before the child?
-            if (constraints.fragmentainer  and not isEmpty(fragBuilder._children)) {
+            if (constraints.fragmentainer and not isEmpty(fragBuilder._children)) {
                 // TODO: Support other fragmentainers
                 auto between = max(previousBreakAfter, placed.initialBreakBefore);
 
@@ -263,6 +282,7 @@ export struct BlockFormattingContext {
                                 ._children = {},
                             },
                             .appeal = appeal,
+                            .originatingBreak = between,
                             .forced = false,
                         }
                     };
@@ -318,6 +338,7 @@ export struct BlockFormattingContext {
                             ._children = std::move(c),
                         },
                         .appeal = broke->appeal,
+                        .originatingBreak = broke->originatingBreak,
                         .forced = broke->forced,
                     },
                 };
