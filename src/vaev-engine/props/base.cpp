@@ -246,6 +246,10 @@ export struct Property : Meta::NoCopy {
         return false;
     }
 
+    bool isInitial() const {
+        return *registration->initial() == *this;
+    }
+
     /// Determines whether this property instance represents a parsing failure or an unrecognized CSS declaration.
     virtual bool isBogusProperty() const {
         return registration->flags.has(BOGUS_REGISTRATION);
@@ -490,7 +494,7 @@ enum struct Default {
 struct DefaultedProperty : Property {
     Default _value;
 
-    DefaultedProperty(Rc<Property::Registration> registration, Default value)
+    DefaultedProperty(Rc<Registration> registration, Default value)
         : Property(registration), _value(value) {}
 
     Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
