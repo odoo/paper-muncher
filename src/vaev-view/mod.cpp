@@ -17,8 +17,11 @@ namespace Vaev::View {
 export using DispatchEvent = Ui::Send<Dom::Event&>;
 
 export struct ViewportProps {
+    f64 scale = 1.0;
+    Opt<ColorScheme> prefersColorScheme = NONE;
+
     bool wireframe = false;
-    Opt<Dom::OriginatingElement> selected;
+    Opt<Dom::OriginatingElement> selected = NONE;
 };
 
 struct Viewport : Ui::View<Viewport> {
@@ -35,10 +38,12 @@ struct Viewport : Ui::View<Viewport> {
         _props = o._props;
     }
 
-    void paint(Gfx::Canvas& g, Math::RectAu) override {
+    void paint(Gfx::Canvas& g, RectAu) override {
         g.push();
         g.clip(_listener.containerBound().cast<f64>());
         g.origin((_listener.scroll() + _listener.containerBound().xy).cast<f64>());
+
+        g.scale(_props.scale);
         _webview->paint(g);
 
         auto& render = _webview->ensureRender();
@@ -76,14 +81,18 @@ struct Viewport : Ui::View<Viewport> {
         }
     }
 
-    void layout(Math::RectAu bound) override {
+    void layout(RectAu bound) override {
         _listener.updateContainerBound(bound);
-        _webview->changeViewport(bound.size());
+
+        auto media = Style::Media::forRender(bound.size(), Resolution::fromDppx(_props.scale));
+        media.prefersColorScheme = _props.prefersColorScheme.unwrapOr(Ui::darkMode ? ColorScheme::DARK : ColorScheme::LIGHT);
+        _webview->changeMedia(media);
+
         _listener.updateContentBound(_webview->scrollableOverflow());
         View::layout(bound);
     }
 
-    Math::Vec2Au size(Math::Vec2Au size, Ui::Hint hint) override {
+    Vec2Au size(Vec2Au size, Ui::Hint hint) override {
         if (hint == Ui::Hint::MAX)
             return size;
         return {};
