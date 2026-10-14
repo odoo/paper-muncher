@@ -373,6 +373,22 @@ export struct StackingContext {
         return NONE;
     }
 
+    Yield<Rc<Layout::Fragment>> visibleFragmentsOf(Dom::OriginatingElement oe) {
+        if (fragment->originatingElement() == oe)
+            co_yield fragment;
+        for (auto& l : layers) {
+            if (auto const& [f] = l.content.is<Rc<Layout::Fragment>>()) {
+                if (f->originatingElement() == oe)
+                    co_yield f;
+            } else if (auto const& [stackingContext] = l.content.is<Rc<StackingContext>>()) {
+                for (auto& i : stackingContext->visibleFragmentsOf(oe))
+                    co_yield i;
+            } else {
+                unreachable();
+            }
+        }
+    }
+
     // https://drafts.csswg.org/css-overflow-3/#scrollable
     RectAu scrollableOverflow() {
         auto bound = fragment->borderBox();
