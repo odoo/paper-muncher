@@ -686,6 +686,42 @@ struct ValueParser<Color> {
     }
 };
 
+export template <>
+struct ValueSerializer<Color> {
+    // https://drafts.csswg.org/css-color-4/#serializing-color-values
+    static Res<> serialize(Io::TextWriter& w, Color const& value) {
+        // FIXME: This is a rough approximate of the spec and only supports srgb.
+
+        return value.visit(
+            [&](Gfx::Color const& srgb) -> Res<> {
+                if (srgb.alpha == Limits<u8>::MAX) {
+                    try$(w.writeStr("rgb("s));
+                } else {
+                    try$(w.writeStr("rgba("s));
+                }
+
+                try$(serializeValue(w, static_cast<Integer>(srgb.red)));
+                try$(w.writeStr(", "s));
+                try$(serializeValue(w, static_cast<Integer>(srgb.green)));
+                try$(w.writeStr(", "s));
+                try$(serializeValue(w, static_cast<Integer>(srgb.blue)));
+
+                if (srgb.alpha < Limits<u8>::MAX) {
+                    try$(w.writeStr(", "s));
+                    try$(serializeValue(w, static_cast<Number>(srgb.alpha) / 255.0));
+                }
+
+                try$(w.writeStr(")"s));
+
+                return Ok();
+            },
+            [&](auto const& other) -> Res<> {
+                return Io::format(w, "{}", other);
+            }
+        );
+    }
+};
+
 static Array<Gfx::Color, static_cast<usize>(SystemColor::_LEN)> SYSTEM_COLOR = {
 #define COLOR(NAME, _, VALUE) Gfx::Color::fromHex(VALUE),
 #include "defs/system-colors.inc"

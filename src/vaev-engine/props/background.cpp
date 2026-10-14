@@ -45,6 +45,10 @@ export struct BackgroundColorProperty : Property {
         c.backgrounds.cow().color = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -268,6 +272,10 @@ export struct ColorProperty : Property {
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         // In the color property, the used value of currentcolor is the resolved inherited value.
         c.color = resolve(_value, parent.color);
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
