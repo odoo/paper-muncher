@@ -493,16 +493,16 @@ export struct BorderLeftWidthProperty : Property {
 };
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
-export struct BorderRadiusTopRightProperty : Property {
+export struct BorderTopRightRadiusProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_TOP_RIGHT_RADIUS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusTopRightProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderTopRightRadiusProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRadiusTopRightProperty>(self(), Array{
+            return makeRc<BorderTopRightRadiusProperty>(self(), Array{
                                                                     c.borders->radii.c,
                                                                     c.borders->radii.d,
                                                                 });
@@ -513,13 +513,13 @@ export struct BorderRadiusTopRightProperty : Property {
             Array value{first, first};
             if (not c.ended())
                 value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
-            return Ok(makeRc<BorderRadiusTopRightProperty>(self(), value));
+            return Ok(makeRc<BorderTopRightRadiusProperty>(self(), value));
         }
     };
 
     Array<Calc<PercentOr<Length>>, 2> _value;
 
-    BorderRadiusTopRightProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
+    BorderTopRightRadiusProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -533,16 +533,16 @@ export struct BorderRadiusTopRightProperty : Property {
 };
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
-export struct BorderRadiusTopLeftProperty : Property {
+export struct BorderTopLeftRadiusProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_TOP_LEFT_RADIUS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusTopLeftProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderTopLeftRadiusProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRadiusTopLeftProperty>(
+            return makeRc<BorderTopLeftRadiusProperty>(
                 self(),
                 Array{
                     c.borders->radii.a,
@@ -556,13 +556,13 @@ export struct BorderRadiusTopLeftProperty : Property {
             Array value{first, first};
             if (not c.ended())
                 value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
-            return Ok(makeRc<BorderRadiusTopLeftProperty>(self(), value));
+            return Ok(makeRc<BorderTopLeftRadiusProperty>(self(), value));
         }
     };
 
     Array<Calc<PercentOr<Length>>, 2> _value;
 
-    BorderRadiusTopLeftProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
+    BorderTopLeftRadiusProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -576,16 +576,16 @@ export struct BorderRadiusTopLeftProperty : Property {
 };
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
-export struct BorderRadiusBottomRightProperty : Property {
+export struct BorderBottomRightRadiusProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_BOTTOM_RIGHT_RADIUS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusBottomRightProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderBottomRightRadiusProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRadiusBottomRightProperty>(self(), Array{
+            return makeRc<BorderBottomRightRadiusProperty>(self(), Array{
                                                                        c.borders->radii.e,
                                                                        c.borders->radii.f,
                                                                    });
@@ -596,13 +596,13 @@ export struct BorderRadiusBottomRightProperty : Property {
             Array value{first, first};
             if (not c.ended())
                 value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
-            return Ok(makeRc<BorderRadiusBottomRightProperty>(self(), value));
+            return Ok(makeRc<BorderBottomRightRadiusProperty>(self(), value));
         }
     };
 
     Array<Calc<PercentOr<Length>>, 2> _value;
 
-    BorderRadiusBottomRightProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
+    BorderBottomRightRadiusProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -616,16 +616,16 @@ export struct BorderRadiusBottomRightProperty : Property {
 };
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
-export struct BorderRadiusBottomLeftProperty : Property {
+export struct BorderBottomLeftRadiusProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_BOTTOM_LEFT_RADIUS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusBottomLeftProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderBottomLeftRadiusProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRadiusBottomLeftProperty>(
+            return makeRc<BorderBottomLeftRadiusProperty>(
                 self(),
                 Array{
                     c.borders->radii.g,
@@ -639,13 +639,13 @@ export struct BorderRadiusBottomLeftProperty : Property {
             Array value{first, first};
             if (not c.ended())
                 value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
-            return Ok(makeRc<BorderRadiusBottomLeftProperty>(self(), value));
+            return Ok(makeRc<BorderBottomLeftRadiusProperty>(self(), value));
         }
     };
 
     Array<Calc<PercentOr<Length>>, 2> _value;
 
-    BorderRadiusBottomLeftProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
+    BorderBottomLeftRadiusProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -661,7 +661,7 @@ export struct BorderRadiusBottomLeftProperty : Property {
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderRadiusProperty : Property {
     struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::BORDER_RADIUS) {}
+        Registration() : Property::Registration(Properties::BORDER_RADIUS, SHORTHAND) {}
 
         Rc<Property> initial() const override {
             return makeRc<BorderRadiusProperty>(self(), Math::Radii{Calc<PercentOr<Length>>(Length{})});
@@ -684,6 +684,15 @@ export struct BorderRadiusProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii = _value;
+    }
+
+    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+        return {
+            makeRc<BorderTopLeftRadiusProperty>(registry.resolveRegistration(Properties::BORDER_TOP_LEFT_RADIUS, {}).expect(), Array{_value.a, _value.b}),
+            makeRc<BorderTopRightRadiusProperty>(registry.resolveRegistration(Properties::BORDER_TOP_RIGHT_RADIUS, {}).expect(), Array{_value.c, _value.d}),
+            makeRc<BorderBottomRightRadiusProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_RIGHT_RADIUS, {}).expect(), Array{_value.e, _value.f}),
+            makeRc<BorderBottomLeftRadiusProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_LEFT_RADIUS, {}).expect(), Array{_value.g, _value.h}),
+        };
     }
 
     void repr(Io::Emit& e) const override {

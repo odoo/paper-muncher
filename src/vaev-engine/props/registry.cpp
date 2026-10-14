@@ -93,10 +93,10 @@ export RegisteredPropertySet const& defaultRegistry() {
         registry.registerProperty<BorderLeftStyleProperty>();
 
         // Borders – Radius
-        registry.registerProperty<BorderRadiusTopRightProperty>();
-        registry.registerProperty<BorderRadiusTopLeftProperty>();
-        registry.registerProperty<BorderRadiusBottomRightProperty>();
-        registry.registerProperty<BorderRadiusBottomLeftProperty>();
+        registry.registerProperty<BorderTopRightRadiusProperty>();
+        registry.registerProperty<BorderTopLeftRadiusProperty>();
+        registry.registerProperty<BorderBottomRightRadiusProperty>();
+        registry.registerProperty<BorderBottomLeftRadiusProperty>();
         registry.registerProperty<BorderRadiusProperty>();
 
         // Borders – Shorthand
