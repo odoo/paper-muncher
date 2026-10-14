@@ -549,6 +549,7 @@ Ui::Child inspectStyleTab(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui:
     items.pushBack(
         Ui::hflow(
             Kr::tabbarContent({
+                // TODO: Waiting for the DOM to expose cascaded values
                 // Kr::tabbarItem(
                 //     s.styleTab == InspectStyleTab::CASCADED,
                 //     rbind(send, InspectStyleTab::CASCADED),
@@ -615,7 +616,8 @@ Ui::Child inspectTabLayout(InspectState const& s, Ui::Action<InspectAction> send
                            send(n, InspectToggleWireframe{});
                        },
                        "Show wireframe"s
-                   ) //,
+                   )
+                   // TODO: Waiting for the fragment tree to remember breaking information
                    // Kr::checkboxRow(
                    //     true,
                    //     Ui::SINK<bool>,
@@ -712,7 +714,6 @@ Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectAction> send)
            ) |
            Ui::vscroll() |
            Ui::grow();
-    ;
 }
 
 Ui::Child inspectTabContent(Rc<WebView> webview, InspectState const& s, Ui::Action<InspectAction> send) {
