@@ -8,6 +8,7 @@ import Karm.Core;
 
 import :css;
 import :values.base;
+import :values.primitives;
 
 using namespace Karm;
 
@@ -452,6 +453,72 @@ struct ValueParser<Display> {
             outside.unwrapOr(Display::BLOCK),
             item,
         });
+    }
+};
+
+export template <>
+struct ValueSerializer<Display> {
+    static Res<> serialize(Io::TextWriter& w, Display const& value) {
+        // https://www.w3.org/TR/css-display-3/#the-display-properties
+        // NOTE: Following the precedence rules of “most backwards-compatible, then shortest”,
+        // serialization of equivalent display values uses the “Short display” column. [CSSOM]
+
+        switch (value.type()) {
+        case Display::Type::DEFAULT:
+            if (value.item() == Display::Item::NO) {
+                if (value.outside() == Display::BLOCK and value.inside() == Display::FLOW)
+                    return w.writeStr("block"s);
+
+                if (value.outside() == Display::BLOCK and value.inside() == Display::FLOW_ROOT)
+                    return w.writeStr("flow-root"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::FLOW)
+                    return w.writeStr("inline"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::FLOW_ROOT)
+                    return w.writeStr("inline-block"s);
+
+                if (value.outside() == Display::RUN_IN and value.inside() == Display::FLOW)
+                    return w.writeStr("run-in"s);
+
+                if (value.outside() == Display::BLOCK and value.inside() == Display::FLEX)
+                    return w.writeStr("flex"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::FLEX)
+                    return w.writeStr("inline-flex"s);
+
+                if (value.outside() == Display::BLOCK and value.inside() == Display::GRID)
+                    return w.writeStr("grid"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::GRID)
+                    return w.writeStr("inline-grid"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::RUBY)
+                    return w.writeStr("ruby"s);
+
+                if (value.outside() == Display::BLOCK and value.inside() == Display::RUBY)
+                    return w.writeStr("block ruby"s);
+
+                if (value.outside() == Display::BLOCK and value.inside() == Display::GRID)
+                    return w.writeStr("table"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::GRID)
+                    return w.writeStr("inline-table"s);
+            } else {
+                if (value.outside() == Display::BLOCK and value.inside() == Display::FLOW)
+                    return w.writeStr("list-item"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::FLOW)
+                    return w.writeStr("inline list-item"s);
+            }
+            return Error::invalidData();
+        case Display::Type::INTERNAL:
+            return serializeValue(w, value.internal());
+        case Display::Type::BOX:
+            return serializeValue(w, value.box());
+        default:
+            unreachable();
+        }
     }
 };
 

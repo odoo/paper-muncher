@@ -98,6 +98,22 @@ struct ValueParser<bool> {
     }
 };
 
+/// Helper to serialize an enum variant as if it was a keyword.
+export template <Meta::Enum E>
+struct ValueSerializer<E> {
+    static Res<> serialize(Io::TextWriter& w, E const& value) {
+        for (auto r : iterRunes(nameOf(value))) {
+            if (r == '_') {
+                try$(w.writeRune('-'));
+            } else {
+                try$(w.writeRune(toAsciiLower(r)));
+            }
+        }
+
+        return Ok();
+    }
+};
+
 // MARK: String ----------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#strings
 
@@ -241,6 +257,26 @@ struct ValueParser<Vec<T>> {
                 return Ok(std::move(result));
             result.pushBack(maybeValue.take());
         }
+    }
+};
+
+export template <Sliceable S>
+    requires ValueSerializable<typename S::Inner>
+struct ValueSerializer<S> {
+    static Res<> serialize(Io::TextWriter& w, S const& value) {
+        bool first = true;
+
+        for (auto const& item : value) {
+            if (first) {
+                first = false;
+            } else {
+                try$(w.writeRune(' '));
+            }
+
+            try$(serializeValue(w, item));
+        }
+
+        return Ok();
     }
 };
 
