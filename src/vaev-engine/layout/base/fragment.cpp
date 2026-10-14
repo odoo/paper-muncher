@@ -1,14 +1,24 @@
 export module Vaev.Engine:layout.fragment;
 
 import Karm.Core;
+import Karm.Font;
 import Karm.Math;
+import Karm.Ref;
 
 import :values.length;
 import :layout.box;
 
 using namespace Karm;
+using namespace Karm::Ref::Literals;
 
 namespace Vaev::Layout {
+
+static Rc<Gfx::Fontface> _bubbleFontface() {
+    static Opt<Rc<Gfx::Fontface>> fontface = NONE;
+    if (not fontface)
+        fontface = Some(Font::loadFontfaceOrFallback("bundle://fonts.fira-code/fonts/FiraCode-Regular.ttf"_url).expect());
+    return *fontface;
+}
 
 // https://drafts.csswg.org/css-position-4/#out-of-band-outline
 export struct OutOfBandOutline {
@@ -36,6 +46,10 @@ export struct Fragment {
         : _box(box), _children(std::move(children)) {}
 
     virtual ~Fragment() = default;
+
+    virtual Str name() const {
+        return "Fragment"s;
+    }
 
     Flags<Options>& flags() {
         return _flags;
@@ -133,6 +147,31 @@ export struct Fragment {
         g.fill(borderBox().cast<f64>());
     }
 
+    void _paintBubble(Gfx::Canvas& g, Math::Rectf document) {
+        Math::Insetsf const padding = {2, 4};
+
+        Gfx::ProseProps props{Gfx::Font{_bubbleFontface(), 8}};
+        props.color = Some(Gfx::ZINC50);
+        auto prose = makeRc<Gfx::Prose>(props, Io::format("{:.2} × {:.2}", contentBox().width, contentBox().height));
+        auto textSize = prose->layout(Limits<Au>::MAX).cast<f64>();
+
+        auto bubble = Math::Rectf{textSize + padding.all()}.center(borderBox().cast<f64>());
+        bubble.xy = bubble.xy.min(document.bottomEnd() - bubble.size()).max(document.topStart());
+
+        g.push();
+        g.fillStyle(Gfx::ZINC900.withOpacity(0.5));
+        g.fill(bubble, 4);
+        g.strokeStyle(
+            Gfx::stroke(Gfx::ZINC800)
+                .withWidth(1)
+                .withAlign(Gfx::INSIDE_ALIGN)
+        );
+        g.stroke(bubble, 4);
+        g.origin(bubble.shrink(padding).xy);
+        g.fill(prose);
+        g.pop();
+    }
+
     void _paintContentBoxGuides(Gfx::Canvas& g, Math::Rectf viewport) {
         auto cb = contentBox().cast<f64>();
         g.strokeStyle(
@@ -169,6 +208,7 @@ export struct Fragment {
         if (originatingElement() == of) {
             _paintContentBoxGuides(g, viewport);
             paintOwnOverlay(g);
+            _paintBubble(g, viewport);
         }
     }
 };
@@ -181,6 +221,10 @@ export struct PlaceholderFragment : Fragment {
 
     PlaceholderFragment(Box& box, RectAu staticPositionRectangle)
         : Fragment(box, {}), staticPosRect(staticPositionRectangle) {}
+
+    Str name() const override {
+        return "PlaceholderFragment"s;
+    }
 
     RectAu borderBox() const override {
         unreachable();
@@ -224,6 +268,10 @@ export struct SvgShapeFragment : Fragment {
 
     SvgShapeFragment(Box& box, SvgShape shape, Au strokeWidth, Vec<Rc<Fragment>> children = {})
         : Fragment(box, std::move(children)), shape(shape), strokeWidth(strokeWidth) {}
+
+    Str name() const override {
+        return "SvgShapeFragment"s;
+    }
 
     RectAu objectBoundingBox() const override {
         return shape.visit(
@@ -355,6 +403,10 @@ export struct SvgGroupFragment : Fragment {
     SvgGroupFragment(Box& box, Vec<Rc<Fragment>> children = {})
         : Fragment(box, std::move(children)) {}
 
+    Str name() const override {
+        return "SvgGroupFragment"s;
+    }
+
     RectAu objectBoundingBox() const override {
         if (not _children)
             return {};
@@ -419,6 +471,10 @@ export struct SvgRootFragment : Fragment {
 
     SvgRootFragment(Box& box, Math::Trans2f transf, RectAu boundingBox, Vec<Rc<Fragment>> children = {})
         : Fragment(box, std::move(children)), transform(transf), boundingBox(boundingBox) {
+    }
+
+    Str name() const override {
+        return "SvgRootFragment"s;
     }
 
     RectAu objectBoundingBox() const override {
@@ -517,6 +573,10 @@ export struct BoxFragment : Fragment {
 
     BoxFragment(Box& box, BoxMetrics metrics = {}, Vec<Rc<Fragment>> children = {})
         : Fragment(box, std::move(children)), metrics(metrics) {}
+
+    Str name() const override {
+        return "BoxFragment"s;
+    }
 
     RectAu borderBox() const override {
         return metrics.borderBox();

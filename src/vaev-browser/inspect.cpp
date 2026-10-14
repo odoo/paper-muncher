@@ -21,7 +21,6 @@ namespace Vaev::Browser {
 
 export enum struct InspectTab {
     ELEMENTS,
-    LAYOUT,
     MEDIA,
     _LEN,
 };
@@ -29,6 +28,7 @@ export enum struct InspectTab {
 export enum struct InspectStyleTab {
     CASCADED,
     COMPUTED,
+    FRAGMENTS,
     _LEN,
 };
 
@@ -36,7 +36,9 @@ export struct InspectToggleVisible {};
 
 export struct InspectToggleWireframe {};
 
-export struct InspectToggleBoxModel {};
+export struct InspectSelectFragment {
+    usize index;
+};
 
 export struct InspectExpandNode {
     Gc::Ref<Dom::Node> node;
@@ -81,7 +83,7 @@ export struct InspectToggleShowAllProperties {};
 export using InspectAction = Union<
     InspectToggleVisible,
     InspectToggleWireframe,
-    InspectToggleBoxModel,
+    InspectSelectFragment,
     InspectTab,
     InspectStyleTab,
     InspectExpandNode,
@@ -100,7 +102,6 @@ export using InspectAction = Union<
 export struct InspectState {
     bool visible = false;
     bool wireframe = false;
-    bool boxModel = false;
     InspectTab tab = InspectTab::ELEMENTS;
     InspectStyleTab styleTab = InspectStyleTab::COMPUTED;
     bool showCustomProperties = false;
@@ -109,6 +110,7 @@ export struct InspectState {
     String filter = ""s;
     Set<Gc::Ref<Dom::Node>> expandedNodes = {};
     Gc::Ptr<Dom::Node> selectedNode = nullptr;
+    usize selectedFragmentIndex = 0;
 
     Opt<ColorScheme> colorScheme;
     Print::Settings settings;
@@ -122,8 +124,8 @@ export struct InspectState {
             [&](InspectToggleWireframe const&) {
                 wireframe = not wireframe;
             },
-            [&](InspectToggleBoxModel const&) {
-                boxModel = not boxModel;
+            [&](InspectSelectFragment const& a) {
+                selectedFragmentIndex = a.index;
             },
             [&](InspectTab const& a) {
                 tab = a;
@@ -139,6 +141,7 @@ export struct InspectState {
                 if (a.node->hasChildren())
                     expandedNodes.add(a.node);
                 selectedNode = a.node;
+                selectedFragmentIndex = 0;
                 for (auto current = selectedNode->parentNode(); current; current = current->parentNode()) {
                     expandedNodes.add(Gc::Ref{*current});
                 }
@@ -420,14 +423,14 @@ Ui::Child inspectStyleTabCascaded(InspectState const& s) {
            Kr::scaffoldContent();
 }
 
-Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::Action<InspectAction> send) {
+Ui::Child inspectStyleTabComputed(Rc<WebView> webview, InspectState const& s, Ui::Action<InspectAction> send) {
     auto content = noNodeSelected();
 
     if (s.selectedNode)
         if (auto const el = s.selectedNode->as<Dom::Element>()) {
             Ui::Children children;
 
-            for (auto const& [name, registration] : dom->registeredPropertySet.registrations().iterItems()) {
+            for (auto const& [name, registration] : webview->document()->registeredPropertySet.registrations().iterItems()) {
                 if (not s.showCustomProperties and startWith(name.str(), "--"s) != Match::NO)
                     continue;
 
@@ -487,31 +490,20 @@ Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const
            Kr::scaffoldContent() | Ui::pinSize(128_au);
 }
 
-Ui::Child inspectStyleTabContent(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::Action<InspectAction> send) {
-    switch (s.styleTab) {
-    case InspectStyleTab::CASCADED:
-        return inspectStyleTabCascaded(s);
-    case InspectStyleTab::COMPUTED:
-        return inspectStyleTabComputed(dom, s, send);
-    default:
-        unreachable();
-    }
-}
-
-Ui::Child inspectStyleBoxInset(Str name, Gfx::Color color, Math::Insetsf, Ui::Child inner) {
+Ui::Child inspectStyleBoxInset(Str name, Gfx::Color color, InsetsAu insets, Ui::Child inner) {
     return Ui::stack(
                Ui::vflow(
                    0_au,
                    Math::Align::CENTER,
-                   Ui::labelSmall("0"s) | Ui::insets(4_au),
+                   Ui::labelSmall("{:.2}", insets.top) | Ui::insets(4_au),
                    Ui::hflow(
                        0_au,
                        Math::Align::CENTER,
-                       Ui::labelSmall("0"s) | Ui::insets(4_au),
+                       Ui::labelSmall("{:.2}", insets.start) | Ui::insets(4_au),
                        inner,
-                       Ui::labelSmall("0"s) | Ui::insets(4_au)
+                       Ui::labelSmall("{:.2}", insets.end) | Ui::insets(4_au)
                    ),
-                   Ui::labelSmall("0"s) | Ui::insets(4_au)
+                   Ui::labelSmall("{:.2}", insets.bottom) | Ui::insets(4_au)
                ),
                Ui::labelSmall(name) | Ui::bound() | Ui::insets(4_au)
            ) |
@@ -521,31 +513,107 @@ Ui::Child inspectStyleBoxInset(Str name, Gfx::Color color, Math::Insetsf, Ui::Ch
            });
 }
 
-Ui::Child inspectStyleBoxModel() {
-    return inspectStyleBoxInset(
-               "margin",
-               Gfx::YELLOW800, {},
-               inspectStyleBoxInset(
-                   "border"s,
-                   Gfx::YELLOW600, {},
-                   inspectStyleBoxInset(
-                       "padding"s,
-                       Gfx::GREEN600, {},
-                       Ui::labelSmall("100×100"s) | Ui::center() | Ui::bound() |
-                           Ui::box({
-                               .padding = {4_au, 12_au},
-                               .borderRadii = 2,
-                               .backgroundFill = Some(Gfx::BLUE600),
-                           }) |
-                           Ui::minSize({100_au, Ui::UNCONSTRAINED})
-                   )
-               )
-           ) |
+Ui::Child inspectStyleBoxModel(Rc<Layout::Fragment> fragment) {
+    auto contentBox = fragment->contentBox();
+    auto content = Ui::labelSmall("{:.2} × {:.2}"s, contentBox.width, contentBox.height) |
+                   Ui::center() |
+                   Ui::bound() |
+                   Ui::box({
+                       .padding = {4_au, 12_au},
+                       .borderRadii = 2,
+                       .backgroundFill = Some(Gfx::BLUE600),
+                   }) |
+                   Ui::minSize({100_au, Ui::UNCONSTRAINED});
+
+    if (auto const& [boxFragment] = fragment.is<Layout::BoxFragment>()) {
+        auto metrics = boxFragment.metrics;
+        content = inspectStyleBoxInset(
+            "margin",
+            Gfx::YELLOW800, metrics.margin,
+            inspectStyleBoxInset(
+                "border"s,
+                Gfx::YELLOW600, metrics.borders,
+                inspectStyleBoxInset(
+                    "padding"s,
+                    Gfx::GREEN600, metrics.padding,
+                    content
+                )
+            )
+        );
+    }
+
+    return content |
            Ui::insets(16_au) |
-           Ui::center() | Ui::bound() | Kr::scaffoldContent();
+           Ui::center() |
+           Ui::bound();
 }
 
-Ui::Child inspectStyleTab(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui::Action<InspectAction> send) {
+Ui::Child inspectStyleFragment(Rc<WebView> webview, InspectState const& s, Ui::Action<InspectAction> send) {
+    auto content = noNodeSelected();
+
+    if (s.selectedNode) {
+        // NOTE: Evil const_cast ahead, karm-ui enforce that the state should
+        //       be const, but there is no easy way of constructing a
+        //       OriginatingElement object from a const Dom::Element pointer.
+        if (auto element = const_cast<InspectState&>(s).selectedNode->as<Dom::Element>()) {
+            auto fragments = webview->ensureRender().stacking->visibleFragmentsOf(element.upgrade()) | Collect<Vec<Rc<Layout::Fragment>>>();
+            Ui::Children items =
+                iter(fragments) |
+                Selecti([&, send](auto f, auto i) {
+                    return Ui::labelMedium("{} #{}", f->name(), i) |
+                           Ui::insets(4_au) |
+                           Ui::button(
+                               Some(rbind(send, InspectSelectFragment{i})),
+                               i == s.selectedFragmentIndex ? Ui::ButtonStyle::regular() : Ui::ButtonStyle::subtle()
+                           );
+                }) |
+                Collect<Ui::Children>();
+
+            if (fragments) {
+                content = Ui::vflow(
+                    Ui::vflow(4_au, std::move(items)) | Ui::insets(6_au) | Ui::vscroll() | Ui::grow(),
+                    inspectStyleBoxModel(fragments[min(s.selectedFragmentIndex, fragments.len())])
+                );
+            }
+        }
+    }
+
+    return Ui::vflow(
+               Ui::hflow(
+                   Kr::checkbox(
+                       s.wireframe,
+                       [send](auto& n, ...) {
+                           send(n, InspectToggleWireframe{});
+                       },
+                       "Wireframe"s
+                   )
+                   // TODO: Waiting for the fragment tree to remember breaking information
+                   // Kr::checkbox(
+                   //     true,
+                   //     Ui::SINK<bool>,
+                   //     "Show breaks"s
+                   // )
+               ),
+               content | Ui::grow()
+           ) |
+           Kr::scaffoldContent() |
+           Ui::grow();
+}
+
+Ui::Child inspectStyleTabContent(Rc<WebView> webview, InspectState const& s, Ui::Action<InspectAction> send) {
+    switch (s.styleTab) {
+    case InspectStyleTab::CASCADED:
+        return inspectStyleTabCascaded(s);
+    case InspectStyleTab::COMPUTED:
+        return inspectStyleTabComputed(webview, s, send);
+    case InspectStyleTab::FRAGMENTS:
+        return inspectStyleFragment(webview, s, send);
+    default:
+        unreachable();
+    }
+}
+
+Ui::Child inspectStyleTab(Rc<WebView> webview, InspectState const& s, Ui::Action<InspectAction> send) {
     Ui::Children items;
     items.pushBack(
         Ui::hflow(
@@ -561,14 +629,18 @@ Ui::Child inspectStyleTab(Gc::Ref<Dom::Document> dom, InspectState const& s, Ui:
                     rbind(send, InspectStyleTab::COMPUTED),
                     Kr::tabarItemLabel(Some(Mdi::VARIABLE), "Computed"s)
                 ),
-            }),
-            Ui::grow(NONE),
-            Ui::button(Some(rbind(send, InspectToggleBoxModel{})), Ui::ButtonStyle::subtle(), Mdi::SELECT_ALL)
+                Kr::tabbarItem(
+                    s.styleTab == InspectStyleTab::FRAGMENTS,
+                    rbind(send, InspectStyleTab::FRAGMENTS),
+                    Kr::tabarItemLabel(Some(Mdi::FORMAT_PAGE_BREAK), "Fragments"s)
+                ),
+            })
         )
     );
-    if (s.boxModel)
-        items.pushBack(inspectStyleBoxModel());
-    items.pushBack(inspectStyleTabContent(dom, s, send) | Ui::grow());
+
+    items.pushBack(
+        inspectStyleTabContent(webview, s, send) | Ui::grow()
+    );
 
     return Ui::vflow(
         2_au,
@@ -580,7 +652,7 @@ Ui::Child inspectTabElement(Rc<WebView> webview, InspectState const& s, Ui::Acti
     auto document = webview->document().upgrade();
     return Ui::vflow(
         node(document, s, send).expect() | Ui::vhscroll() | Kr::scaffoldContent() | Ui::grow(),
-        inspectStyleTab(document, s, send) | Kr::resizable(Kr::ResizeHandlePosition::TOP, {320_au}, NONE)
+        inspectStyleTab(webview, s, send) | Kr::resizable(Kr::ResizeHandlePosition::TOP, {320_au}, NONE)
     );
 }
 
@@ -605,29 +677,6 @@ Ui::Child _paperSelect(InspectState const& s, Ui::Action<InspectAction> send) {
 
         return groups;
     });
-}
-
-Ui::Child inspectTabLayout(InspectState const& s, Ui::Action<InspectAction> send) {
-    return Ui::vflow(
-               4_au,
-               Ui::vflow(
-                   Kr::checkboxRow(
-                       s.wireframe,
-                       [send](auto& n, ...) {
-                           send(n, InspectToggleWireframe{});
-                       },
-                       "Show wireframe"s
-                   )
-                   // TODO: Waiting for the fragment tree to remember breaking information
-                   // Kr::checkboxRow(
-                   //     true,
-                   //     Ui::SINK<bool>,
-                   //     "Show breaks"s
-                   // )
-               ) | Kr::scaffoldContent()
-           ) |
-           Ui::vscroll() |
-           Ui::grow();
 }
 
 Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectAction> send) {
@@ -721,8 +770,6 @@ Ui::Child inspectTabContent(Rc<WebView> webview, InspectState const& s, Ui::Acti
     switch (s.tab) {
     case InspectTab::ELEMENTS:
         return inspectTabElement(webview, s, send);
-    case InspectTab::LAYOUT:
-        return inspectTabLayout(s, send);
     case InspectTab::MEDIA:
         return inspectTabMedia(s, send);
     default:
@@ -739,11 +786,6 @@ export Ui::Child inspect(Rc<WebView> webview, InspectState const& s, Ui::Action<
                     s.tab == InspectTab::ELEMENTS,
                     rbind(send, InspectTab::ELEMENTS),
                     Kr::tabarItemLabel(Some(Mdi::CODE_TAGS), "Elements"s)
-                ),
-                Kr::tabbarItem(
-                    s.tab == InspectTab::LAYOUT,
-                    rbind(send, InspectTab::LAYOUT),
-                    Kr::tabarItemLabel(Some(Mdi::RULER_SQUARE), "Layout"s)
                 ),
                 Kr::tabbarItem(
                     s.tab == InspectTab::MEDIA,
