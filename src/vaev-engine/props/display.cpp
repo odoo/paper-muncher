@@ -40,6 +40,10 @@ export struct DisplayProperty : Property {
         c.display = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }

@@ -60,6 +60,22 @@ export struct FontFamilyProperty : Property {
         c.font.cow().families = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        bool first = true;
+
+        for (auto const& family : _value) {
+            if (first) {
+                first = false;
+            } else {
+                try$(w.writeStr(", "s));
+            }
+
+            try$(w.writeStr(family.name.str()));
+        }
+
+        return Ok();
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -227,6 +243,10 @@ export struct FontSizeProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.font.cow().size = resolve(_value, cx);
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

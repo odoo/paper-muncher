@@ -391,6 +391,10 @@ export struct BorderTopWidthProperty : Property {
         c.borders.cow().top.width = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -421,6 +425,10 @@ export struct BorderRightWidthProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().end.width = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -455,6 +463,10 @@ export struct BorderBottomWidthProperty : Property {
         c.borders.cow().bottom.width = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -485,6 +497,10 @@ export struct BorderLeftWidthProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().start.width = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -525,6 +541,10 @@ export struct BorderTopRightRadiusProperty : Property {
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii.c = _value[0];
         c.borders.cow().radii.d = _value[1];
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -570,6 +590,10 @@ export struct BorderTopLeftRadiusProperty : Property {
         c.borders.cow().radii.b = _value[0];
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -608,6 +632,10 @@ export struct BorderBottomRightRadiusProperty : Property {
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii.e = _value[1];
         c.borders.cow().radii.f = _value[0];
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -651,6 +679,10 @@ export struct BorderBottomLeftRadiusProperty : Property {
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii.g = _value[0];
         c.borders.cow().radii.h = _value[1];
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

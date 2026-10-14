@@ -177,7 +177,8 @@ export struct BackgroundRepeatProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const&) const override {
-            return makeRc<BackgroundRepeatProperty>(self(), Vec<BackgroundRepeat>{});
+            // TODO
+            return makeRc<BackgroundRepeatProperty>(self(), Vec<BackgroundRepeat>{BackgroundRepeat::REPEAT});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>&) const override {

@@ -42,6 +42,10 @@ export struct MarginTopProperty : Property {
         c.margin.cow().top = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -74,6 +78,10 @@ export struct MarginRightProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.margin.cow().end = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -110,6 +118,10 @@ export struct MarginBottomProperty : Property {
         c.margin.cow().bottom = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -142,6 +154,10 @@ export struct MarginLeftProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.margin.cow().start = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

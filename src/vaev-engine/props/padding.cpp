@@ -43,6 +43,10 @@ export struct PaddingTopProperty : Property {
         c.padding.cow().top = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -72,6 +76,10 @@ export struct PaddingRightProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.padding.cow().end = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -105,6 +113,10 @@ export struct PaddingBottomProperty : Property {
         c.padding.cow().bottom = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -134,6 +146,10 @@ export struct PaddingLeftProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.padding.cow().start = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

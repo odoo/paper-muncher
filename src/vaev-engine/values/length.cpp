@@ -510,8 +510,8 @@ struct ValueSerializer<Length> {
             [&](RelativeLength const relative) -> Res<> {
                 try$(serializeValue(w, relative.value()));
 
-                for (auto r : iterRunes(nameOf(relative.unit())))
-                    try$(w.writeRune(toAsciiLower(r)));
+                // NOTE: Since relative units are all lowercase text, we can serialize them as keywords.
+                try$(serializeValue(w, relative.unit()));
 
                 return Ok();
             }
