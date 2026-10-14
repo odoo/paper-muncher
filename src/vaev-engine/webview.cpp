@@ -25,6 +25,8 @@ namespace Vaev {
 static auto dumpFragments = Debug::Flag::debug("web-fragments"s, "Dump the constructed fragments"s);
 static auto dumpStacking = Debug::Flag::debug("web-stacking"s, "Dump the stacking context tree"s);
 
+static auto layout2 = Debug::Flag::feature("layout2-render"s, "Enable the work in progress layout engine rewrite in render mode"s);
+
 export struct RenderResult {
     Rc<Layout::Box> root;
     Rc<Layout::Fragment> fragments;
@@ -111,28 +113,56 @@ export struct WebView {
         Layout::Fragmentainer fragmentainer;
 
         auto viewport = Layout::resolve(_area.viewport);
-        auto layout = Layout::layoutRoot(
-            *root,
-            {
-                .fragmentainer = Some<Layout::Fragmentainer&>(fragmentainer),
-                .generateFragment = true,
-                .knownSize = {Some(viewport.width), NONE},
-                .availableSpace = {viewport.width, 0_au},
-                .containingBlock = viewport,
-            }
-        );
+        Opt<Rc<Layout::Fragment>> rootFrag = NONE;
+        if (layout2) {
+            // FIXME: Extract into a layoutRoot, and investigate the right init params.
+            rootFrag = Some(Layout2::layout(
+                *root,
+                Layout2::Constraints{
+                    .knownSize = {Some(viewport.small.width), NONE},
+                    .containingBlock = {
+                        Some(viewport.small.width),
+                        Some(viewport.small.height),
+                    },
+                    .availableSpace = {
+                        viewport.small.width,
+                        Layout2::MAX_CONTENT,
+                    },
 
-        auto stacking = Paint::StackingContext::establishStackingContext(layout.fragment.expect());
+                    // https://www.w3.org/TR/CSS22/box.html#collapsing-margins
+                    // - Margins of the root element's box do not collapse.
+                    .collapseMargins = false,
+
+                    // NoSpec AF >.<
+                    .margins = Layout2::LogicalInsets<Au>::all(0_au),
+                }
+            ).is<Layout2::Placed>()->fragment);
+
+            Layout2::absolutize(*rootFrag);
+        } else {
+            rootFrag = Layout::layoutRoot(
+                *root,
+                {
+                    .fragmentainer = Some<Layout::Fragmentainer&>(fragmentainer),
+                    .generateFragment = true,
+                    .knownSize = {Some(viewport.width), NONE},
+                    .availableSpace = {viewport.width, 0_au},
+                    .containingBlock = viewport,
+                }
+            ).fragment;
+        }
+
+        auto stacking = Paint::StackingContext::establishStackingContext(*rootFrag);
 
         if (dumpFragments)
-            logDebugIf(dumpFragments, "fragments: {}", *layout.fragment);
+            logDebugIf(dumpFragments, "fragments: {}", *rootFrag);
 
         if (dumpStacking)
             logDebugIf(dumpStacking, "stacking: {}", stacking);
 
         _render = Some(RenderResult{
             root,
-            *layout.fragment,
+            *rootFrag,
             stacking,
         });
         return *_render;

@@ -188,8 +188,6 @@ export struct BlockFormattingContext {
 
             auto forcedBreak = [](BreakBetween b, Fragmentainer const& f) {
                 switch (b) {
-                case BreakBetween::AUTO:
-                    return true;
                 case BreakBetween::REGION:
                     return f.hasContext(Fragmentainer::Type::REGION);
                 case BreakBetween::COLUMN:
@@ -205,7 +203,10 @@ export struct BlockFormattingContext {
                 }
             };
 
-            if (constraints.fragmentainer and not isEmpty(fragBuilder._children) and placed.initialBreakBefore == BreakBetween::PAGE or previousBreakAfter == BreakBetween::PAGE)) {
+            // FIXME: Inaccurate tie breaking model.
+            auto maybeForcedBreak = max(placed.initialBreakBefore, previousBreakAfter);
+
+            if (constraints.fragmentainer and not isEmpty(fragBuilder._children) and forcedBreak(maybeForcedBreak, *constraints.fragmentainer)) {
                 return Placed{
                     .fragment = fragBuilder.buildBox(input, {autoInlineSize, cursor.height}),
                     .blockOffset = blockOffset,
@@ -222,12 +223,13 @@ export struct BlockFormattingContext {
                             ._children = {},
                         },
                         .appeal = BreakAppeal::PERFECT,
+                        .originatingBreak = maybeForcedBreak,
                         .forced = true,
                     },
                 };
             }
 
-            if (auto [childOffset] = placed.blockOffset) {
+            if (auto const& [childOffset] = placed.blockOffset) {
                 if (not blockOffset) {
                     blockOffset = Some(childOffset);
                 } else {
