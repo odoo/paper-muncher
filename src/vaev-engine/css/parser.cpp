@@ -117,7 +117,7 @@ export struct Sst {
 Sst consumeAtRule(Lexer& lex, Diag::Collector& diags);
 export Content consumeDeclarationList(Lexer& lex, Diag::Collector& diags, bool topLevel = true);
 Content consumeDeclarationBlock(Lexer& lex, Diag::Collector& diags);
-Sst consumeComponentValue(Lexer& lex, Diag::Collector& diags);
+export Sst consumeComponentValue(Lexer& lex, Diag::Collector& diags);
 Sst consumeBlock(Lexer& lex, Diag::Collector& diags, Token::Type endingToken);
 export Opt<Sst> consumeDeclaration(Lexer& lex, Diag::Collector& diags);
 

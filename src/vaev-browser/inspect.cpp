@@ -9,6 +9,7 @@ import Karm.Gc;
 import Karm.Gfx;
 import Karm.Core;
 import Karm.Logger;
+import Karm.Diag;
 import Mdi;
 
 using namespace Karm;
@@ -439,6 +440,7 @@ Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const
                     continue;
 
                 auto style = Ui::TextStyles::codeSmall().withColor(Ui::ACCENT400);
+
                 auto prose = makeRc<Gfx::Prose>(style, style);
                 prose->append(name.str());
                 prose->pushSpan(prose->currentSpanStyle().withColor(Ui::GRAY300));
@@ -446,6 +448,26 @@ Ui::Child inspectStyleTabComputed(Gc::Ref<Dom::Document> dom, InspectState const
                 auto w = Io::StringWriter{};
                 if (not property->serialize(w))
                     w.append("<serialization-error>"s);
+
+                auto lex = Css::Lexer{w.str()};
+                auto diags = Diag::Collector::ignore();
+
+                eatWhitespace(lex);
+                while (not endedDeclarationValue(lex)) {
+                    auto component = Css::consumeComponentValue(lex, diags);
+                    auto c = Cursor<Css::Sst>{component};
+                    auto maybeColor = parseValue<Color>(c);
+
+                    if (maybeColor) {
+                        auto resolved = resolve(maybeColor.take(), Gfx::BLACK);
+                        prose->pushSpan(Ui::TextStyles::codeMedium().withColor(resolved));
+                        prose->append("■"s);
+                        prose->popSpan();
+                    }
+
+                    eatWhitespace(lex);
+                }
+
                 prose->append(w.take());
                 prose->popSpan();
 
