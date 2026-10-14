@@ -82,13 +82,13 @@ Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, LogicalSize<Opt<Au>
                 size.block = Some(width);
             }
             if (box.style->writingMode == WritingMode::HORIZONTAL_TB) {
-                if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
+                if (box.style->boxSizing == Keywords::CONTENT_BOX) {
                     size.inline_ = Some(width + paddings.inlineSum() + borders.inlineSum());
                 } else {
                     size.inline_ = Some(max(width, paddings.inlineSum() + borders.inlineSum()));
                 }
             } else {
-                if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
+                if (box.style->boxSizing == Keywords::CONTENT_BOX) {
                     size.block = Some(width + paddings.blockSum() + borders.blockSum());
                 } else {
                     size.block = Some(max(width, paddings.blockSum() + borders.blockSum()));
@@ -103,13 +103,13 @@ Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, LogicalSize<Opt<Au>
             auto height = resolve(tree, box, calc, containingBlock.inline_.unwrapOr(0_au));
 
             if (box.style->writingMode == WritingMode::HORIZONTAL_TB) {
-                if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
+                if (box.style->boxSizing == Keywords::CONTENT_BOX) {
                     size.block = Some(height + paddings.blockSum() + borders.blockSum());
                 } else {
                     size.block = Some(max(height, paddings.blockSum() + borders.blockSum()));
                 }
             } else {
-                if (box.style->boxSizing == BoxSizing::CONTENT_BOX) {
+                if (box.style->boxSizing == Keywords::CONTENT_BOX) {
                     size.inline_ = Some(height + paddings.inlineSum() + borders.inlineSum());
                 } else {
                     size.inline_ = Some(max(height, paddings.inlineSum() + borders.inlineSum()));
