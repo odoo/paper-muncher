@@ -288,4 +288,54 @@
 
 </rendering>
 </test>
+<test name="page-margin-relative-units" width="200px" height="200px" flow="paginate">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div {
+                    height: 50px;
+                    background-color: green;
+                }
+            </style>
+            <slot/>
+        </head>
+
+        <body>
+        <div></div>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <style>
+            @page {
+                margin: 32px;
+            }
+        </style>
+    </rendering>
+
+    <rendering help="em in @page are relative to the initial font size">
+        <style>
+            @page {
+                margin: 2em;
+            }
+        </style>
+    </rendering>
+
+    <error help="the page margin changes the rendering">
+        <style>
+            @page {
+                margin: 0;
+            }
+        </style>
+    </error>
+</test>
+
 </tests>

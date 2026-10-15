@@ -78,6 +78,75 @@
     <rendering help="negative multiplication with var">
         <div class="foo" style="width: calc(-.5* var(--thevar))"></div>
     </rendering>
+
+    <rendering help="percentage and length">
+        <div class="foo" style="width: calc(25% + 50px)"></div>
+    </rendering>
+
+    <rendering help="font relative and absolute length">
+        <div class="foo" style="width: calc(4em + 36px)"></div>
+    </rendering>
+
+    <rendering help="root font relative and absolute length">
+        <div class="foo" style="width: calc(5rem + 20px)"></div>
+    </rendering>
+
+    <rendering help="multiplication of a font relative length">
+        <div class="foo" style="width: calc(1.25 * 5em)"></div>
+    </rendering>
+
+    <rendering help="division of a font relative length">
+        <div class="foo" style="width: calc(12.5em / 2)"></div>
+    </rendering>
+</test>
+
+<test name="calc-invalid">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                div {
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div></div>
+    </rendering>
+
+    <rendering help="multiplying two lengths is invalid, the declaration is ignored">
+        <div style="width: calc(10px * 10px)"></div>
+    </rendering>
+
+    <rendering help="dividing by a length is invalid, the declaration is ignored">
+        <div style="width: calc(100px / 2px)"></div>
+    </rendering>
+
+    <rendering help="adding a length and a number is invalid, the declaration is ignored">
+        <div style="width: calc(10px + 2)"></div>
+    </rendering>
+
+    <rendering help="adding a length and an angle is invalid, the declaration is ignored">
+        <div style="width: calc(10px + 5deg)"></div>
+    </rendering>
+
+    <error help="a valid calc() is applied">
+        <div style="width: calc(10px * 10)"></div>
+    </error>
 </test>
 
 </tests>

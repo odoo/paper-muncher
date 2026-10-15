@@ -751,4 +751,44 @@
 
 </test>
 
+<test name="svg-relative-units" width="300px" height="300px">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <style>
+        body {
+            margin: 0px;
+        }
+    </style>
+
+    <body>
+    <section>
+        <slot/>
+    </section>
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="20" width="60" height="40" fill="lightgreen"/>
+        <circle cx="120" cy="50" r="30" fill="lightblue" stroke="darkblue" stroke-width="4"/>
+    </svg>
+</rendering>
+
+<rendering help="svg geometry is resolved against the font size">
+    <svg width="200" height="150" xmlns="http://www.w3.org/2000/svg" style="font-size: 10px">
+        <rect style="x: 1em; y: 2em; width: 6em; height: 4em" fill="lightgreen"/>
+        <circle style="cx: 12em; cy: 5em; r: 3em; stroke-width: 0.4em" fill="lightblue" stroke="darkblue"/>
+    </svg>
+</rendering>
+
+<error help="the geometry changes the rendering">
+    <svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="0" width="60" height="40" fill="lightgreen"/>
+        <circle cx="120" cy="50" r="30" fill="lightblue" stroke="darkblue" stroke-width="4"/>
+    </svg>
+</error>
+</test>
+
 </tests>

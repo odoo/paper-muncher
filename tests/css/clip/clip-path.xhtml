@@ -49,4 +49,47 @@
 
 </test>
 
+<test name="clip-path-relative-units">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                div {
+                    font-size: 10px;
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="clip-path: inset(10px round 20px)"></div>
+        <div style="clip-path: xywh(10px 0 20px 100%)"></div>
+    </rendering>
+
+    <rendering help="basic shapes are resolved against the font size">
+        <div style="clip-path: inset(1em round 2em)"></div>
+        <div style="clip-path: xywh(1em 0 2em 100%)"></div>
+    </rendering>
+
+    <error help="the clip path changes the rendering">
+        <div style="clip-path: inset(0 round 20px)"></div>
+        <div style="clip-path: xywh(10px 0 20px 100%)"></div>
+    </error>
+</test>
+
 </tests>
