@@ -6,11 +6,13 @@ import Karm.Math;
 import :values.color;
 import :values.lineWidth;
 
+using namespace Vaev::Literals;
+
 namespace Vaev {
 
 export struct SpecifiedOutline {
     LineWidth width = Keywords::MEDIUM;
-    Calc<Length> offset = 0_au;
+    Calc<Length> offset = 0_px;
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
     Union<Keywords::Auto, Color> color = Keywords::AUTO;
 
@@ -22,7 +24,7 @@ export struct SpecifiedOutline {
 // https://drafts.csswg.org/css-ui/#outline
 export struct OutlineProps {
     LineWidth width = Keywords::MEDIUM;
-    Calc<Length> offset = 0_au;
+    Calc<Length> offset = 0_px;
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
     Color color = Gfx::BLUE500;
 

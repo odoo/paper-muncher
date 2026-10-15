@@ -17,6 +17,8 @@ import Karm.Font;
 import :webview;
 import :layout.values;
 
+using namespace Vaev::Literals;
+
 namespace Vaev::Loader {
 
 Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct) {
@@ -43,8 +45,8 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
         // NOSPEC: The spec references a “default object size” but does not define explicit values.
         //         Historically, browsers (including Chrome) default to 300x150, as mentioned in older drafts:
         //         https://www.w3.org/TR/2011/WD-css3-images-20110908/#default-object-size
-        auto width = resolver.resolve(root->computedValues()->sizing->width.unwrapOr<Calc<PercentOr<Length>>>(Length{300_au}), 300_au);
-        auto height = resolver.resolve(root->computedValues()->sizing->height.unwrapOr<Calc<PercentOr<Length>>>(Length{300_au}), 300_au);
+        auto width = resolver.resolve(root->computedValues()->sizing->width.unwrapOr<Calc<PercentOr<Length>>>(Length{300_px}), 300_au);
+        auto height = resolver.resolve(root->computedValues()->sizing->height.unwrapOr<Calc<PercentOr<Length>>>(Length{300_px}), 300_au);
 
         webview->changeMedia(Style::Media::forRender({width, height}, Resolution::fromDppx(1)));
         co_return Ok(webview->snapshot());

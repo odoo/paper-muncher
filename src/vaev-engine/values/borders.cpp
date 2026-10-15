@@ -11,6 +11,8 @@ import :values.length;
 import :values.lineWidth;
 import :values.percent;
 
+using namespace Vaev::Literals;
+
 namespace Vaev {
 
 // MARK: Border Style ----------------------------------------------------------
@@ -59,12 +61,12 @@ export struct SpecifiedBorder {
 };
 
 export struct ComputedBorder {
-    LineWidth width = Keywords::MEDIUM;
+    Pixel width = 0_px;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
-    Color color = Gfx::BLACK;
+    Gfx::Color color = Gfx::BLACK;
 
     operator SpecifiedBorder() const {
-        return {width, style, color};
+        return {Calc<Length>{AbsoluteLength{width}}, style, color};
     }
 
     void repr(Io::Emit& e) const {
@@ -126,7 +128,7 @@ export enum struct BorderEdge {
 
 export struct BorderProps {
     ComputedBorder top, start, bottom, end;
-    Math::Radii<Calc<PercentOr<Length>>> radii = {Length{0_au}};
+    Math::Radii<Calc<PercentOr<Length>>> radii = {Length{0_px}};
 
     ComputedBorder const& get(BorderEdge edge) const {
         switch (edge) {
@@ -188,7 +190,7 @@ struct ValueParser<Math::Radii<T>> {
         if (c.ended() or c.peek().token.data != "/"s)
             return maybeRadii.okOr(Error::invalidData("expected border radius"));
 
-        auto radii = maybeRadii.unwrapOr(Math::Radii<T>{Length{0_au}});
+        auto radii = maybeRadii.unwrapOr(Math::Radii<T>{Length{0_px}});
         c.next();
         eatWhitespace(c);
         auto value1 = parseValue<PercentOr<Length>>(c);

@@ -271,7 +271,7 @@ using FontSize = Union<
 
 export template <>
 struct _Resolved<FontSize> {
-    using Type = Au;
+    using Type = Pixel;
 };
 
 export struct FontSizeContextData {
@@ -285,40 +285,40 @@ concept FontSizeContext = LengthContext<T> and requires(T t) {
     { t.parentFontSize } -> Meta::Convertible<f64>;
 };
 
-Au resolve(FontSize const& value, FontSizeContext auto const& ctx) {
+Pixel resolve(FontSize const& value, FontSizeContext auto const& ctx) {
     return value.visit(
-        [&](Length const& v) {
+        [&](Length const& v) -> Pixel {
             return resolve(v, ctx);
         },
         [&](Percent const& v) {
-            return Au::fromFloatNearest(ctx.parentFontSize * (v.value() / 100.0));
+            return Pixel(ctx.parentFontSize * (v.value() / 100.0));
         },
         [&](Keywords::XxSmall) {
-            return Au::fromFloatNearest(ctx.userFontSize * 0.5);
+            return Pixel(ctx.userFontSize * 0.5);
         },
         [&](Keywords::XSmall) {
-            return Au::fromFloatNearest(ctx.userFontSize * 0.75);
+            return Pixel(ctx.userFontSize * 0.75);
         },
         [&](Keywords::Small) {
-            return Au::fromFloatNearest(ctx.userFontSize * 0.875);
+            return Pixel(ctx.userFontSize * 0.875);
         },
         [&](Keywords::Medium) {
-            return Au::fromFloatNearest(ctx.userFontSize);
+            return Pixel(ctx.userFontSize);
         },
         [&](Keywords::Large) {
-            return Au::fromFloatNearest(ctx.userFontSize * 1.125);
+            return Pixel(ctx.userFontSize * 1.125);
         },
         [&](Keywords::XLarge) {
-            return Au::fromFloatNearest(ctx.userFontSize * 1.25);
+            return Pixel(ctx.userFontSize * 1.25);
         },
         [&](Keywords::XxLarge) {
-            return Au::fromFloatNearest(ctx.userFontSize * 1.5);
+            return Pixel(ctx.userFontSize * 1.5);
         },
         [&](Keywords::Larger) {
-            return Au::fromFloatNearest(ctx.parentFontSize * 1.25);
+            return Pixel(ctx.parentFontSize * 1.25);
         },
         [&](Keywords::Smaller) {
-            return Au::fromFloatNearest(ctx.parentFontSize * 0.875);
+            return Pixel(ctx.parentFontSize * 0.875);
         }
     );
 }

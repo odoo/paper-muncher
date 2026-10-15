@@ -27,7 +27,51 @@ export using Math::Vec2Au;
 export using Math::RadiiAu;
 export using Math::EllipseAu;
 
-export using Pixel = Distinct<f64, struct _PixelTag>;
+export struct Pixel : Distinct<f64, struct _PixelTag> {
+    using Distinct::Distinct;
+
+    constexpr Pixel(Distinct<f64, struct _PixelTag> other)
+        : Distinct(other) {}
+
+    // https://www.w3.org/TR/css-values-4/#snap-a-length-as-a-border-width
+    Pixel snapAsBorderWidth() const {
+        if (*this < Pixel{1})
+            return Pixel{Math::ceil(value())};
+
+        return Pixel{Math::floor(value())};
+    }
+
+    template <typename U>
+    constexpr U cast() const {
+        return static_cast<U>(value());
+    }
+
+    explicit constexpr operator Au() const {
+        return Au::fromFloatNearest(value());
+    }
+
+    void repr(Io::Emit& e) const {
+        e("{}px", value());
+    }
+};
+
+} // namespace Vaev
+
+namespace Vaev::Literals {
+
+export constexpr Pixel operator""_px(unsigned long long val) {
+    return Pixel{static_cast<f64>(val)};
+}
+
+export constexpr Pixel operator""_px(long double val) {
+    return Pixel{static_cast<f64>(val)};
+}
+
+} // namespace Vaev::Literals
+
+using namespace Vaev::Literals;
+
+namespace Vaev {
 
 // 6.1. MARK: Relative Lengths
 // https://drafts.csswg.org/css-values/#relative-lengths
@@ -74,7 +118,7 @@ export struct RelativeLength {
 
 export template <>
 struct _Resolved<RelativeLength> {
-    using Type = Au;
+    using Type = Pixel;
 };
 
 export struct RelativeLengthContextData {
@@ -132,43 +176,43 @@ concept RelativeLengthContext = requires(T t) {
     { t.boxAxis } -> Meta::Convertible<Axis>;
 };
 
-export Au resolve(RelativeLength value, RelativeLengthContext auto const& ctx) {
+export Pixel resolve(RelativeLength value, RelativeLengthContext auto const& ctx) {
     switch (value.unit()) {
     case RelativeLength::EM:
-        return Au::fromFloatNearest(value.value() * ctx.fontSize);
+        return Pixel(value.value() * ctx.fontSize);
 
     case RelativeLength::REM:
-        return Au::fromFloatNearest(value.value() * ctx.rootFontSize);
+        return Pixel(value.value() * ctx.rootFontSize);
 
     case RelativeLength::EX:
-        return Au::fromFloatNearest(value.value() * ctx.xHeight);
+        return Pixel(value.value() * ctx.xHeight);
 
     case RelativeLength::REX:
-        return Au::fromFloatNearest(value.value() * ctx.rootXHeight);
+        return Pixel(value.value() * ctx.rootXHeight);
 
     case RelativeLength::CAP:
-        return Au::fromFloatNearest(value.value() * ctx.capHeight);
+        return Pixel(value.value() * ctx.capHeight);
 
     case RelativeLength::RCAP:
-        return Au::fromFloatNearest(value.value() * ctx.rootCapHeight);
+        return Pixel(value.value() * ctx.rootCapHeight);
 
     case RelativeLength::CH:
-        return Au::fromFloatNearest(value.value() * ctx.zeroAdvance);
+        return Pixel(value.value() * ctx.zeroAdvance);
 
     case RelativeLength::RCH:
-        return Au::fromFloatNearest(value.value() * ctx.rootZeroAdvance);
+        return Pixel(value.value() * ctx.rootZeroAdvance);
 
     case RelativeLength::IC:
-        return Au::fromFloatNearest(value.value() * ctx.zeroAdvance);
+        return Pixel(value.value() * ctx.zeroAdvance);
 
     case RelativeLength::RIC:
-        return Au::fromFloatNearest(value.value() * ctx.rootZeroAdvance);
+        return Pixel(value.value() * ctx.rootZeroAdvance);
 
     case RelativeLength::LH:
-        return Au::fromFloatNearest(value.value() * ctx.lineHeight);
+        return Pixel(value.value() * ctx.lineHeight);
 
     case RelativeLength::RLH:
-        return Au::fromFloatNearest(value.value() * ctx.rootLineHeight);
+        return Pixel(value.value() * ctx.rootLineHeight);
     // Viewport-relative
 
     // https://drafts.csswg.org/css-values/#vw
@@ -176,48 +220,48 @@ export Au resolve(RelativeLength value, RelativeLengthContext auto const& ctx) {
     // Equal to 1% of the width of current viewport.
     case RelativeLength::VW:
     case RelativeLength::LVW:
-        return Au::fromFloatNearest(value.value() * ctx.viewportLargeWidth / 100);
+        return Pixel(value.value() * ctx.viewportLargeWidth / 100);
 
     case RelativeLength::SVW:
-        return Au::fromFloatNearest(value.value() * ctx.viewportSmallWidth / 100);
+        return Pixel(value.value() * ctx.viewportSmallWidth / 100);
 
     case RelativeLength::DVW:
-        return Au::fromFloatNearest(value.value() * ctx.viewportDynamicWidth / 100);
+        return Pixel(value.value() * ctx.viewportDynamicWidth / 100);
 
     // https://drafts.csswg.org/css-values/#vh
     // Equal to 1% of the height of current viewport.
     case RelativeLength::VH:
     case RelativeLength::LVH:
-        return Au::fromFloatNearest(value.value() * ctx.viewportLargeHeight / 100);
+        return Pixel(value.value() * ctx.viewportLargeHeight / 100);
 
     case RelativeLength::SVH:
-        return Au::fromFloatNearest(value.value() * ctx.viewportSmallHeight / 100);
+        return Pixel(value.value() * ctx.viewportSmallHeight / 100);
 
     case RelativeLength::DVH:
-        return Au::fromFloatNearest(value.value() * ctx.viewportDynamicHeight / 100);
+        return Pixel(value.value() * ctx.viewportDynamicHeight / 100);
 
     // https://drafts.csswg.org/css-values/#vi
     // Equal to 1% of the size of the viewport in the box’s inline axis.
     case RelativeLength::VI:
     case RelativeLength::LVI:
         if (ctx.boxAxis == Axis::HORIZONTAL) {
-            return Au::fromFloatNearest(value.value() * ctx.viewportLargeWidth / 100);
+            return Pixel(value.value() * ctx.viewportLargeWidth / 100);
         } else {
-            return Au::fromFloatNearest(value.value() * ctx.viewportLargeHeight / 100);
+            return Pixel(value.value() * ctx.viewportLargeHeight / 100);
         }
 
     case RelativeLength::SVI:
         if (ctx.boxAxis == Axis::HORIZONTAL) {
-            return Au::fromFloatNearest(value.value() * ctx.viewportSmallWidth / 100);
+            return Pixel(value.value() * ctx.viewportSmallWidth / 100);
         } else {
-            return Au::fromFloatNearest(value.value() * ctx.viewportSmallHeight / 100);
+            return Pixel(value.value() * ctx.viewportSmallHeight / 100);
         }
 
     case RelativeLength::DVI:
         if (ctx.boxAxis == Axis::HORIZONTAL) {
-            return Au::fromFloatNearest(value.value() * ctx.viewportDynamicWidth / 100);
+            return Pixel(value.value() * ctx.viewportDynamicWidth / 100);
         } else {
-            return Au::fromFloatNearest(value.value() * ctx.viewportDynamicHeight / 100);
+            return Pixel(value.value() * ctx.viewportDynamicHeight / 100);
         }
 
     // https://drafts.csswg.org/css-values/#vb
@@ -225,23 +269,23 @@ export Au resolve(RelativeLength value, RelativeLengthContext auto const& ctx) {
     case RelativeLength::VB:
     case RelativeLength::LVB:
         if (ctx.boxAxis.cross() == Axis::HORIZONTAL) {
-            return Au::fromFloatNearest(value.value() * ctx.viewportLargeWidth / 100);
+            return Pixel(value.value() * ctx.viewportLargeWidth / 100);
         } else {
-            return Au::fromFloatNearest(value.value() * ctx.viewportLargeHeight / 100);
+            return Pixel(value.value() * ctx.viewportLargeHeight / 100);
         }
 
     case RelativeLength::SVB:
         if (ctx.boxAxis.cross() == Axis::HORIZONTAL) {
-            return Au::fromFloatNearest(value.value() * ctx.viewportSmallWidth / 100);
+            return Pixel(value.value() * ctx.viewportSmallWidth / 100);
         } else {
-            return Au::fromFloatNearest(value.value() * ctx.viewportSmallHeight / 100);
+            return Pixel(value.value() * ctx.viewportSmallHeight / 100);
         }
 
     case RelativeLength::DVB:
         if (ctx.boxAxis.cross() == Axis::HORIZONTAL) {
-            return Au::fromFloatNearest(value.value() * ctx.viewportDynamicWidth / 100);
+            return Pixel(value.value() * ctx.viewportDynamicWidth / 100);
         } else {
-            return Au::fromFloatNearest(value.value() * ctx.viewportDynamicHeight / 100);
+            return Pixel(value.value() * ctx.viewportDynamicHeight / 100);
         }
 
     // https://drafts.csswg.org/css-values/#vmin
@@ -333,9 +377,6 @@ export struct AbsoluteLength {
     AbsoluteLength(Pixel px)
         : AbsoluteLength(px.value(), PX) {}
 
-    AbsoluteLength(Au au)
-        : AbsoluteLength(static_cast<f64>(au), PX) {}
-
     AbsoluteLength(f64 value, Unit unit)
         : _value(value), _unit(unit) {}
 
@@ -389,11 +430,11 @@ export struct AbsoluteLength {
 
 export template <>
 struct _Resolved<AbsoluteLength> {
-    using Type = Au;
+    using Type = Pixel;
 };
 
-export Au resolve(AbsoluteLength value) {
-    return Au::fromFloatNearest(value.pixels().value());
+export Pixel resolve(AbsoluteLength value) {
+    return value.pixels();
 }
 
 export template <>
@@ -425,9 +466,9 @@ struct ValueParser<AbsoluteLength> {
 export struct Length : Union<AbsoluteLength, RelativeLength> {
     using Union::Union;
 
-    Length() : Union(AbsoluteLength{0_au}) {}
+    Length() : Union(AbsoluteLength{0_px}) {}
 
-    Length(Au v) : Union(AbsoluteLength{v}) {}
+    Length(Pixel v) : Union(AbsoluteLength{v}) {}
 
     void repr(Io::Emit& e) const {
         visit([&](auto& v) {
@@ -438,13 +479,13 @@ export struct Length : Union<AbsoluteLength, RelativeLength> {
 
 export template <>
 struct _Resolved<Length> {
-    using Type = Au;
+    using Type = Pixel;
 };
 
 export template <typename T>
 concept LengthContext = RelativeLengthContext<T>;
 
-export Au resolve(Length const& l, LengthContext auto const& ctx) {
+export Pixel resolve(Length const& l, LengthContext auto const& ctx) {
     return l.visit(
         [&](RelativeLength l) {
             return resolve(l, ctx);
@@ -520,15 +561,3 @@ struct ValueSerializer<Length> {
 };
 
 } // namespace Vaev
-
-namespace Vaev::Literals {
-
-export constexpr Pixel operator""_px(unsigned long long val) {
-    return Pixel{static_cast<f64>(val)};
-}
-
-export constexpr Pixel operator""_px(long double val) {
-    return Pixel{static_cast<f64>(val)};
-}
-
-} // namespace Vaev::Literals

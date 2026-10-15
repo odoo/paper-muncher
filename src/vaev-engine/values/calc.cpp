@@ -129,23 +129,9 @@ Resolved<T> _resolveInfix(CalcOp op, Resolved<T> lhs, Resolved<T> rhs) {
     case CalcOp::SUBTRACT:
         return lhs - rhs;
     case CalcOp::MULTIPLY:
-        // NOTE: Normally, direct multiplication on Au is not allowed.
-        //       However, CSS calc() treats pixel units as floating-point numbers,
-        //       permitting all standard math operations between them.
-        if constexpr (Meta::Same<Resolved<T>, Au>) {
-            return Au(f64{lhs} * f64{rhs});
-        } else {
-            return lhs * rhs;
-        }
+        return lhs * rhs;
     case CalcOp::DIVIDE:
-        // NOTE: Normally, direct multiplication on Au is not allowed.
-        //       However, CSS calc() treats pixel units as floating-point numbers,
-        //       permitting all standard math operations between them.
-        if constexpr (Meta::Same<Resolved<T>, Au>) {
-            return Au(f64{lhs} / f64{rhs});
-        } else {
-            return lhs / rhs;
-        }
+        return lhs / rhs;
     default:
         panic("unexpected operator");
     }

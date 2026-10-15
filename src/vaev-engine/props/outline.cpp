@@ -10,6 +10,7 @@ import :css.parser;
 import :style.computed;
 
 using namespace Karm;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style {
 
@@ -142,7 +143,7 @@ export struct OutlineOffsetProperty : Property {
         Registration() : Property::Registration(Properties::OUTLINE_OFFSET) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OutlineOffsetProperty>(self(), Calc<Length>{0_au});
+            return makeRc<OutlineOffsetProperty>(self(), Calc<Length>{0_px});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

@@ -6,6 +6,7 @@ import Karm.Math;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style::Tests {
 
@@ -51,21 +52,21 @@ test$("feature-type") {
 }
 
 test$("feature-width") {
-    assert$(WidthFeature::min(1000_au).match(TEST_MEDIA));
+    assert$(WidthFeature::min(1000_px).match(TEST_MEDIA));
 
-    assert$(WidthFeature::max(2000_au).match(TEST_MEDIA));
+    assert$(WidthFeature::max(2000_px).match(TEST_MEDIA));
 
-    assert$(WidthFeature::exact(1920_au).match(TEST_MEDIA));
+    assert$(WidthFeature::exact(1920_px).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-height") {
-    assert$(HeightFeature::min(1000_au).match(TEST_MEDIA));
+    assert$(HeightFeature::min(1000_px).match(TEST_MEDIA));
 
-    assert$(HeightFeature::max(2000_au).match(TEST_MEDIA));
+    assert$(HeightFeature::max(2000_px).match(TEST_MEDIA));
 
-    assert$(HeightFeature::exact(1080_au).match(TEST_MEDIA));
+    assert$(HeightFeature::exact(1080_px).match(TEST_MEDIA));
 
     return Ok();
 }
@@ -223,21 +224,21 @@ test$("feature-prefers-reduced-data") {
 }
 
 test$("feature-device-width") {
-    assert$(DeviceWidthFeature::min(1920_au).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::min(1920_px).match(TEST_MEDIA));
 
-    assert$(DeviceWidthFeature::max(1920_au).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::max(1920_px).match(TEST_MEDIA));
 
-    assert$(DeviceWidthFeature::exact(1920_au).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::exact(1920_px).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-device-height") {
-    assert$(DeviceHeightFeature::min(1080_au).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::min(1080_px).match(TEST_MEDIA));
 
-    assert$(DeviceHeightFeature::max(1080_au).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::max(1080_px).match(TEST_MEDIA));
 
-    assert$(DeviceHeightFeature::exact(1080_au).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::exact(1080_px).match(TEST_MEDIA));
 
     return Ok();
 }

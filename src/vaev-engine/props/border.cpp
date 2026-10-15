@@ -10,6 +10,7 @@ import :css.parser;
 import :style.computed;
 
 using namespace Karm;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style {
 
@@ -39,7 +40,7 @@ export struct BorderTopColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().top.color = _value;
+        c.borders.cow().top.color = resolve(_value, c.color);
     }
 
     void repr(Io::Emit& e) const override {
@@ -71,7 +72,7 @@ export struct BorderRightColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().end.color = _value;
+        c.borders.cow().end.color = resolve(_value, c.color);
     }
 
     void repr(Io::Emit& e) const override {
@@ -103,7 +104,7 @@ export struct BorderBottomColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().bottom.color = _value;
+        c.borders.cow().bottom.color = resolve(_value, c.color);
     }
 
     void repr(Io::Emit& e) const override {
@@ -135,7 +136,7 @@ export struct BorderLeftColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().start.color = _value;
+        c.borders.cow().start.color = resolve(_value, c.color);
     }
 
     void repr(Io::Emit& e) const override {
@@ -374,7 +375,7 @@ export struct BorderTopWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderTopWidthProperty>(self(), c.borders->top.width);
+            return makeRc<BorderTopWidthProperty>(self(), Calc<Length>{AbsoluteLength{c.borders->top.width}});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -388,7 +389,7 @@ export struct BorderTopWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().top.width = _value;
+        c.borders.cow().top.width = resolve(_value, cx).snapAsBorderWidth();
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -410,7 +411,7 @@ export struct BorderRightWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRightWidthProperty>(self(), c.borders->end.width);
+            return makeRc<BorderRightWidthProperty>(self(), Calc<Length>{AbsoluteLength{c.borders->end.width}});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -424,7 +425,7 @@ export struct BorderRightWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().end.width = _value;
+        c.borders.cow().end.width = resolve(_value, cx).snapAsBorderWidth();
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -446,7 +447,7 @@ export struct BorderBottomWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderBottomWidthProperty>(self(), c.borders->bottom.width);
+            return makeRc<BorderBottomWidthProperty>(self(), Calc<Length>{AbsoluteLength{c.borders->bottom.width}});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -460,7 +461,7 @@ export struct BorderBottomWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().bottom.width = _value;
+        c.borders.cow().bottom.width = resolve(_value, cx).snapAsBorderWidth();
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -482,7 +483,7 @@ export struct BorderLeftWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderLeftWidthProperty>(self(), c.borders->start.width);
+            return makeRc<BorderLeftWidthProperty>(self(), Calc<Length>{AbsoluteLength{c.borders->start.width}});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -495,8 +496,8 @@ export struct BorderLeftWidthProperty : Property {
     BorderLeftWidthProperty(Rc<Property::Registration> registration, LineWidth value)
         : Property(registration), _value(value) {}
 
-    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().start.width = _value;
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
+        c.borders.cow().start.width = resolve(_value, cx).snapAsBorderWidth();
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -964,11 +965,11 @@ export struct BorderWidthProperty : Property {
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderWidthProperty>(
                 self(),
-                Math::Insets{
-                    c.borders->start.width,
-                    c.borders->end.width,
-                    c.borders->top.width,
-                    c.borders->bottom.width,
+                Math::Insets<LineWidth>{
+                    Calc<Length>{AbsoluteLength{c.borders->start.width}},
+                    Calc<Length>{AbsoluteLength{c.borders->end.width}},
+                    Calc<Length>{AbsoluteLength{c.borders->top.width}},
+                    Calc<Length>{AbsoluteLength{c.borders->bottom.width}},
                 }
             );
         }
@@ -1039,7 +1040,7 @@ export struct BorderSpacingProperty : Property {
             : Property::Registration(Properties::BORDER_SPACING, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderSpacingProperty>(self(), BorderSpacing{0_au, 0_au});
+            return makeRc<BorderSpacingProperty>(self(), BorderSpacing{0_px, 0_px});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

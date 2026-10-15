@@ -78,14 +78,7 @@ InsetsAu computeMargins(Tree& tree, Box& box, Vec2Au containingBlock) {
     return res;
 }
 
-// https://www.w3.org/TR/css-values-4/#snap-a-length-as-a-border-width
-Au _snapLengthAsBorderWidth(Au v) {
-    if (v < 1_au)
-        return ceil(v);
-    return floor(v);
-}
-
-InsetsAu computeBorders(Tree& tree, Box& box) {
+InsetsAu computeBorders([[maybe_unused]] Tree& tree, Box& box) {
     // NOTE: In borders collapse mode, we assume that the table box borders are 'transfered' to the cells
     if (box.style->display == Display::TABLE_BOX and box.style->table->collapse == BorderCollapse::COLLAPSE) {
         return InsetsAu{};
@@ -95,16 +88,16 @@ InsetsAu computeBorders(Tree& tree, Box& box) {
     auto borders = box.style->borders;
 
     if (borders->top.style != Gfx::BorderStyle::NONE)
-        res.top = _snapLengthAsBorderWidth(resolve(tree, box, borders->top.width));
+        res.top = Au{borders->top.width};
 
     if (borders->end.style != Gfx::BorderStyle::NONE)
-        res.end = _snapLengthAsBorderWidth(resolve(tree, box, borders->end.width));
+        res.end = Au{borders->end.width};
 
     if (borders->bottom.style != Gfx::BorderStyle::NONE)
-        res.bottom = _snapLengthAsBorderWidth(resolve(tree, box, borders->bottom.width));
+        res.bottom = Au{borders->bottom.width};
 
     if (borders->start.style != Gfx::BorderStyle::NONE)
-        res.start = _snapLengthAsBorderWidth(resolve(tree, box, borders->start.width));
+        res.start = Au{borders->start.width};
 
     return res;
 }

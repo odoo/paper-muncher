@@ -10,6 +10,7 @@ import :style;
 import :values;
 
 using namespace Karm;
+using namespace Vaev::Literals;
 
 namespace Vaev::Layout {
 
@@ -38,7 +39,7 @@ PercentOr<Length> fromSize(Size const& size) {
 // by the computer refactoring
 Au resolve(PercentOr<Length> const& value, Au relative) {
     if (auto valueLength = value.is<Length>())
-        return Au{valueLength->unwrapOr<AbsoluteLength>(0_au).pixels().value()};
+        return Au{valueLength->unwrapOr<AbsoluteLength>(0_px).pixels().value()};
     return Au{relative.cast<f64>() * (value.expect<Percent>().value() / 100.)};
 }
 
@@ -76,7 +77,7 @@ struct SvgFormatingContext : FormatingContext {
 
         // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
         if (absWidth and absHeight)
-            return Some(absWidth->unwrapOr<AbsoluteLength>(0_au).pixels().value() / absHeight->unwrapOr<AbsoluteLength>(0_au).pixels().value());
+            return Some(absWidth->unwrapOr<AbsoluteLength>(0_px).pixels().value() / absHeight->unwrapOr<AbsoluteLength>(0_px).pixels().value());
 
         // 2. If an SVG View is active:
         // TODO

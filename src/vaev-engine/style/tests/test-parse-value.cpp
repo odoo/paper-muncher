@@ -6,6 +6,7 @@ import Karm.Diag;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style::Tests {
 
@@ -86,41 +87,41 @@ test$("vaev-css-build-margin") {
 
     try$(testCase(
         "30px;",
-        Margin{Calc<PercentOr<Length>>{Length{30_au}}}
+        Margin{Calc<PercentOr<Length>>{Length{30_px}}}
     ));
 
     try$(testCase(
         "1px 2px;",
         Margin{
-            Calc<PercentOr<Length>>{Length{1_au}},
-            Calc<PercentOr<Length>>{Length{2_au}},
+            Calc<PercentOr<Length>>{Length{1_px}},
+            Calc<PercentOr<Length>>{Length{2_px}},
         }
     ));
 
     try$(testCase(
         "1px /* x */ 2px;",
         Margin{
-            Calc<PercentOr<Length>>{Length{1_au}},
-            Calc<PercentOr<Length>>{Length{2_au}},
+            Calc<PercentOr<Length>>{Length{1_px}},
+            Calc<PercentOr<Length>>{Length{2_px}},
         }
     ));
 
     try$(testCase(
         "1px 2px 3px;",
         Margin{
-            Calc<PercentOr<Length>>{Length{1_au}},
-            Calc<PercentOr<Length>>{Length{2_au}},
-            Calc<PercentOr<Length>>{Length{3_au}},
+            Calc<PercentOr<Length>>{Length{1_px}},
+            Calc<PercentOr<Length>>{Length{2_px}},
+            Calc<PercentOr<Length>>{Length{3_px}},
         }
     ));
 
     try$(testCase(
         "1px 2px 3px 4px;",
         Margin{
-            Calc<PercentOr<Length>>{Length{1_au}},
-            Calc<PercentOr<Length>>{Length{2_au}},
-            Calc<PercentOr<Length>>{Length{3_au}},
-            Calc<PercentOr<Length>>{Length{4_au}},
+            Calc<PercentOr<Length>>{Length{1_px}},
+            Calc<PercentOr<Length>>{Length{2_px}},
+            Calc<PercentOr<Length>>{Length{3_px}},
+            Calc<PercentOr<Length>>{Length{4_px}},
         }
     ));
 
