@@ -2923,7 +2923,7 @@ export struct HtmlParser : HtmlSink {
 
     // 13.2.6.4.8 MARK: The "text" insertion mode
     // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-incdata
-    void _handleText(HtmlToken const& t, Diag::Collector& diags) {
+    void _handleText(HtmlToken& t, Diag::Collector& diags) {
         // A character token
         if (t.type == HtmlToken::CHARACTER) {
             _insertACharacter(
@@ -2933,13 +2933,19 @@ export struct HtmlParser : HtmlSink {
             );
         }
 
+        // An end-of-file token
         else if (t.type == HtmlToken::END_OF_FILE) {
+            // Parse error.
             _raise(diags, t.span, "unexpected end of file");
 
             // TODO: If the current node is a script element, then set its already started to true.
 
+            // Pop the current node off the stack of open elements.
             _openElements.pop();
+
+            // Switch the insertion mode to the original insertion mode and reprocess the token.
             _switchTo(_originalInsertionMode);
+            accept(t, diags);
         }
 
         // An end tag whose tag name is "script"
