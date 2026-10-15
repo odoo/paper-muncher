@@ -1,0 +1,66 @@
+<tests>
+
+<test name="template-content-is-inert">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                .box {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="box"></div>
+    </rendering>
+
+    <rendering help="styles inside a template don't apply to the document">
+        <div class="box"></div>
+        <template>
+            <style>
+                .box {
+                    background-color: red;
+                }
+            </style>
+        </template>
+    </rendering>
+
+    <rendering help="styles inside a declarative shadow root don't apply to the document">
+        <div class="box"></div>
+        <div>
+            <template shadowrootmode="open">
+                <style>
+                    .box {
+                        background-color: red;
+                    }
+                </style>
+            </template>
+        </div>
+    </rendering>
+
+    <error help="the same styles outside of a template apply to the document">
+        <div class="box"></div>
+        <style>
+            .box {
+                background-color: red;
+            }
+        </style>
+    </error>
+</test>
+
+</tests>
