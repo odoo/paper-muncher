@@ -178,6 +178,11 @@ Gfx::Snapshot _missingImagePlaceholder() {
 
 Async::Task<> _fetchResourcesAsync(Http::Client& client, Dom::Document& document, Gc::Ref<Dom::Node> node, Async::CancellationToken ct) {
     auto el = node->as<Dom::Element>();
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#the-template-element
+    if (el and el->qualifiedName == Html::TEMPLATE_TAG)
+        co_return Ok();
+
     if (el and el->qualifiedName == Html::IMG_TAG) {
         auto src = el->getAttribute(Html::SRC_ATTR);
         if (not src) {
