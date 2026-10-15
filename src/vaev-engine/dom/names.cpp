@@ -48,6 +48,29 @@ export Array const BASIC_SCOPE_DELIMITERS = {
     TEMPLATE_TAG
 };
 
+// https://html.spec.whatwg.org/multipage/parsing.html#generate-all-implied-end-tags-thoroughly
+export Array const IMPLIED_END_TAGS_THOROUGHLY = {
+    CAPTION_TAG,
+    COLGROUP_TAG,
+    DD_TAG,
+    DT_TAG,
+    LI_TAG,
+    OPTGROUP_TAG,
+    OPTION_TAG,
+    P_TAG,
+    RB_TAG,
+    RP_TAG,
+    RT_TAG,
+    RTC_TAG,
+    TBODY_TAG,
+    TD_TAG,
+    TFOOT_TAG,
+    TH_TAG,
+    THEAD_TAG,
+    TR_TAG,
+};
+
+// https://html.spec.whatwg.org/multipage/parsing.html#generate-implied-end-tags
 export Array const IMPLIED_END_TAGS = {
     DD_TAG,
     DT_TAG,

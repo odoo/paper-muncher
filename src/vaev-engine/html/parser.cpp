@@ -902,6 +902,10 @@ export struct HtmlParser : HtmlSink {
             }
 
             // 10. If node is a template element, then switch the insertion mode to the current template insertion mode and return.
+            if (node->qualifiedName == Html::TEMPLATE_TAG) {
+                _switchTo(last(_templateInsertionModes));
+                return;
+            }
 
             // 11. If node is a head element and last is false, then switch the insertion mode to "in head" and return.
             if (node->qualifiedName == Html::HEAD_TAG and not _last) {
@@ -969,6 +973,17 @@ export struct HtmlParser : HtmlSink {
                _currentElement()->qualifiedName != except) {
             _openElements.pop();
         }
+    }
+
+    // https://html.spec.whatwg.org/multipage/parsing.html#generate-all-implied-end-tags-thoroughly
+    void _generateAllImpliedEndTagsThoroughly() {
+        while (contains(IMPLIED_END_TAGS_THOROUGHLY, _currentElement()->qualifiedName))
+            _openElements.pop();
+    }
+
+    void _replaceCurrentTemplateInsertionMode(Mode mode) {
+        _templateInsertionModes.popBack();
+        _templateInsertionModes.pushBack(mode);
     }
 
     // MARK: Utilities
@@ -1314,9 +1329,69 @@ export struct HtmlParser : HtmlSink {
         } else if (t.type == HtmlToken::END_TAG and (t.name == "body" or t.name == "html" or t.name == "br")) {
             anythingElse();
         } else if (t.type == HtmlToken::START_TAG and (t.name == "template")) {
-            // NOSPEC: We don't support templates
+            // 1. Let templateStartTag be the start tag.
+            // 2. Insert a marker at the end of the list of active formatting elements.
+            _activeFormattingElements.pushMarker();
+
+            // 3. Set the frameset-ok flag to "not ok".
+            _framesetOk = false;
+
+            // 4. Switch the insertion mode to "in template".
+            _switchTo(Mode::IN_TEMPLATE);
+
+            // 5. Push "in template" onto the stack of template insertion modes so that it is the new current template insertion mode.
+            _templateInsertionModes.pushBack(Mode::IN_TEMPLATE);
+
+            // 6. Let declarativeShadowHostElement be the current node.
+            // 7. Let hostIsRoot be true if declarativeShadowHostElement is the topmost element in the stack of open elements; otherwise false.
+            // NOSPEC: Declarative shadow roots aren't supported.
+
+            // 8. Let template be the result of creating an element for the token given templateStartTag, the HTML namespace, and the target parent of the appropriate place for inserting a node.
+            // 9. Let insertionLocation be the appropriate place for inserting a node.
+            // 10. Push template onto the stack of open elements so that it is the new current node.
+            // 11. Let sanitizerAction be "Keep".
+            // 12. If the parser's parser sanitizer configuration is not null, then set sanitizerAction to the result of getting the sanitizer action for an element name given template's local name, template's namespace, and the parser's parser sanitizer configuration.
+            // NOSPEC: There is no sanitizer, sanitizerAction is always "Keep".
+
+            // 13. Switch on sanitizerAction:
+            //     "Keep"
+            //         1. If template's shadowrootmode attribute is not in the None state: ...
+            //         2. Otherwise, if template has a for attribute: ...
+            //         3. Otherwise, insert an element at the adjusted insertion location with template, insertionLocation, and true.
+            // NOSPEC: Declarative shadow roots and content patching aren't supported, the template is always inserted
+            //         as a regular template element. Inserting an HTML element for the token covers steps 8 to 10 and 13.
+            _insertHtmlElement(t);
         } else if (t.type == HtmlToken::END_TAG and (t.name == "template")) {
-            // NOSPEC: We don't support templates
+            // If there is no template element on the stack of open elements, then this is a parse error; ignore the token.
+            if (not _openElements.contains(Html::TEMPLATE_TAG)) {
+                _raise(diags, t.span, "unexpected template end tag");
+                return;
+            }
+
+            // Otherwise, run these steps:
+
+            // 1. Generate all implied end tags thoroughly.
+            _generateAllImpliedEndTagsThoroughly();
+
+            // 2. If the current node is not a template element, then this is a parse error.
+            if (_currentElement()->qualifiedName != Html::TEMPLATE_TAG)
+                _raise(diags, t.span, "unexpected template end tag");
+
+            // 3. Let template be the last template element in the stack of open elements.
+            // 4. If template's insertion target is not null: ...
+            // NOSPEC: Content patching isn't supported, a template never has an insertion target.
+
+            // 5. Pop elements from the stack of open elements until a template element has been popped from the stack.
+            _openElements.popUntilOneOf(Html::TEMPLATE_TAG);
+
+            // 6. Clear the list of active formatting elements up to the last marker.
+            _activeFormattingElements.clearUpToLastMarker();
+
+            // 7. Pop the current template insertion mode off the stack of template insertion modes.
+            _templateInsertionModes.popBack();
+
+            // 8. Reset the insertion mode appropriately.
+            _resetTheInsertionModeAppropriately();
         } else if ((t.type == HtmlToken::START_TAG and (t.name == "head")) or t.type == HtmlToken::END_TAG) {
             // ignore
             _raise(diags, t.span, "unexpected head tag");
@@ -3664,8 +3739,9 @@ export struct HtmlParser : HtmlSink {
 
         // A start tag whose tag name is one of: "caption", "colgroup", "tbody", "tfoot", "thead"
         else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "caption", "colgroup", "tbody", "tfoot", "thead")) {
-            // TODO: Pop the current template insertion mode off the stack of template insertion modes.
-            // TODO: Push "in table" onto the stack of template insertion modes so that it is the new current template insertion mode.
+            // Pop the current template insertion mode off the stack of template insertion modes.
+            // Push "in table" onto the stack of template insertion modes so that it is the new current template insertion mode.
+            _replaceCurrentTemplateInsertionMode(Mode::IN_TABLE);
 
             // Switch the insertion mode to "in table", and reprocess the token.
             _switchTo(Mode::IN_TABLE);
@@ -3674,8 +3750,9 @@ export struct HtmlParser : HtmlSink {
 
         // A start tag whose tag name is "col"
         else if (t.type == HtmlToken::START_TAG and t.name == "col") {
-            // TODO: Pop the current template insertion mode off the stack of template insertion modes.
-            // TODO: Push "in column group" onto the stack of template insertion modes so that it is the new current template insertion mode.
+            // Pop the current template insertion mode off the stack of template insertion modes.
+            // Push "in column group" onto the stack of template insertion modes so that it is the new current template insertion mode.
+            _replaceCurrentTemplateInsertionMode(Mode::IN_COLUMN_GROUP);
 
             // Switch the insertion mode to "in column group", and reprocess the token.
             _switchTo(Mode::IN_COLUMN_GROUP);
@@ -3683,9 +3760,10 @@ export struct HtmlParser : HtmlSink {
         }
 
         // A start tag whose tag name is "tr"
-        else if (t.type == HtmlToken::START_TAG and t.name == "col") {
-            // TODO: Pop the current template insertion mode off the stack of template insertion modes.
-            // TODO: Push "in table body" onto the stack of template insertion modes so that it is the new current template insertion mode.
+        else if (t.type == HtmlToken::START_TAG and t.name == "tr") {
+            // Pop the current template insertion mode off the stack of template insertion modes.
+            // Push "in table body" onto the stack of template insertion modes so that it is the new current template insertion mode.
+            _replaceCurrentTemplateInsertionMode(Mode::IN_TABLE_BODY);
 
             // Switch the insertion mode to "in table body", and reprocess the token.
             _switchTo(Mode::IN_TABLE_BODY);
@@ -3694,8 +3772,9 @@ export struct HtmlParser : HtmlSink {
 
         // A start tag whose tag name is one of: "td", "th"
         else if (t.type == HtmlToken::START_TAG and oneOf(t.name, "td", "th")) {
-            // TODO: Pop the current template insertion mode off the stack of template insertion modes.
-            // TODO: Push "in row" onto the stack of template insertion modes so that it is the new current template insertion mode.
+            // Pop the current template insertion mode off the stack of template insertion modes.
+            // Push "in row" onto the stack of template insertion modes so that it is the new current template insertion mode.
+            _replaceCurrentTemplateInsertionMode(Mode::IN_ROW);
 
             // Switch the insertion mode to "in row", and reprocess the token.
             _switchTo(Mode::IN_ROW);
@@ -3704,8 +3783,9 @@ export struct HtmlParser : HtmlSink {
 
         // Any other start tag
         else if (t.type == HtmlToken::START_TAG) {
-            // TODO: Pop the current template insertion mode off the stack of template insertion modes.
-            // TODO: Push "in body" onto the stack of template insertion modes so that it is the new current template insertion mode.
+            // Pop the current template insertion mode off the stack of template insertion modes.
+            // Push "in body" onto the stack of template insertion modes so that it is the new current template insertion mode.
+            _replaceCurrentTemplateInsertionMode(Mode::IN_BODY);
 
             // Switch the insertion mode to "in body", and reprocess the token.
             _switchTo(Mode::IN_BODY);
@@ -3735,7 +3815,8 @@ export struct HtmlParser : HtmlSink {
             // Clear the list of active formatting elements up to the last marker.
             _activeFormattingElements.clearUpToLastMarker();
 
-            // TODO: Pop the current template insertion mode off the stack of template insertion modes.
+            // Pop the current template insertion mode off the stack of template insertion modes.
+            _templateInsertionModes.popBack();
 
             // Reset the insertion mode appropriately.
             _resetTheInsertionModeAppropriately();
