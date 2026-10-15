@@ -58,7 +58,7 @@ export Array const IMPLIED_END_TAGS = {
     RB_TAG,
     RP_TAG,
     RT_TAG,
-    RT_TAG
+    RTC_TAG,
 };
 
 #define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT##_ATTR = {NONE, Symbol::from(#VALUE)};

@@ -472,8 +472,8 @@ ruby.dat/894122a18dfc9c9d: PASS
 ruby.dat/8c389794d771e8dc: PASS
 ruby.dat/92f869be112063ef: PASS
 ruby.dat/d0aa8299a46f102e: PASS
-ruby.dat/d4bea8b83b516d7e: FAIL
-ruby.dat/d51b884b7765c8b5: FAIL
+ruby.dat/d4bea8b83b516d7e: PASS
+ruby.dat/d51b884b7765c8b5: PASS
 ruby.dat/d8130337d3dc6f09: PASS
 ruby.dat/df7b3d6a16cfc2f6: PASS
 ruby.dat/e73e38e74b326edf: PASS
@@ -1175,7 +1175,7 @@ tests19.dat/caa89fc1d5392838: PASS
 tests19.dat/cc28366f670d53b0: PASS
 tests19.dat/cd642da9023e4db3: PASS
 tests19.dat/cd64837b05d4d6f8: PASS
-tests19.dat/d006ee8573747cc3: FAIL
+tests19.dat/d006ee8573747cc3: PASS
 tests19.dat/d0940677c29ce619: PASS
 tests19.dat/d1ab88e71acf8065: PASS
 tests19.dat/d8130337d3dc6f09: PASS
