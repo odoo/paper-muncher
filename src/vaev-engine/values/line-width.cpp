@@ -11,6 +11,7 @@ import :values.base;
 import :values.calc;
 import :values.keywords;
 import :values.length;
+import :values.resolved;
 
 using namespace Karm::Math::Literals;
 
@@ -45,6 +46,23 @@ export Au resolve(LineWidth const& value, auto const& ctx) {
         }
     );
 }
+
+// Computed value: absolute length
+export template <>
+struct _Computed<LineWidth> {
+    using Type = Au;
+};
+
+export Au compute(LineWidth const& value, auto const& ctx) {
+    return resolve(value, ctx);
+}
+
+export template <>
+struct _Specify<LineWidth> {
+    static LineWidth from(Au value) {
+        return Calc<Length>{Length{value}};
+    }
+};
 
 export template <>
 struct ValueParser<LineWidth> {

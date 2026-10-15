@@ -14,6 +14,7 @@ import :values.image;
 import :values.keywords;
 import :values.length;
 import :values.percent;
+import :values.resolved;
 
 using namespace Karm;
 
@@ -40,27 +41,29 @@ using BackgroundAttachment = Union<
 //   [ center | [ top | bottom ] <length-percentage>? ]
 // ]
 
-export struct BackgroundPosition {
+export template <template <typename> typename S>
+struct _BackgroundPosition {
     using HorizontalAnchor = Union<Keywords::Left, Keywords::Center, Keywords::Right>;
     using VerticalAnchor = Union<Keywords::Top, Keywords::Center, Keywords::Bottom>;
+    using Offset = S<Calc<Length, Percent>>;
 
     HorizontalAnchor horizontalAnchor;
-    Calc<PercentOr<Length>> horizontal;
+    Offset horizontal;
     VerticalAnchor verticalAnchor;
-    Calc<PercentOr<Length>> vertical;
+    Offset vertical;
 
-    constexpr BackgroundPosition()
+    constexpr _BackgroundPosition()
         : horizontalAnchor(Keywords::LEFT),
           horizontal(Percent{0}),
           verticalAnchor(Keywords::TOP),
           vertical(Percent{0}) {
     }
 
-    constexpr BackgroundPosition(Calc<PercentOr<Length>> horizontal, Calc<PercentOr<Length>> vertical)
+    constexpr _BackgroundPosition(Offset horizontal, Offset vertical)
         : horizontalAnchor(Keywords::LEFT), horizontal(horizontal), verticalAnchor(Keywords::TOP), vertical(vertical) {
     }
 
-    constexpr BackgroundPosition(HorizontalAnchor horizontalAnchor, Calc<PercentOr<Length>> horizontal, VerticalAnchor verticalAnchor, Calc<PercentOr<Length>> vertical)
+    constexpr _BackgroundPosition(HorizontalAnchor horizontalAnchor, Offset horizontal, VerticalAnchor verticalAnchor, Offset vertical)
         : horizontalAnchor(horizontalAnchor), horizontal(horizontal), verticalAnchor(verticalAnchor), vertical(vertical) {
     }
 
@@ -69,6 +72,34 @@ export struct BackgroundPosition {
 
         e(" ");
         e("{} {})", verticalAnchor, vertical);
+    }
+};
+
+export using BackgroundPosition = _BackgroundPosition<Specified>;
+
+export template <>
+struct _Computed<BackgroundPosition> {
+    using Type = _BackgroundPosition<Computed>;
+};
+
+export Computed<BackgroundPosition> compute(BackgroundPosition const& value, auto const& ctx) {
+    return {
+        value.horizontalAnchor,
+        compute(value.horizontal, ctx),
+        value.verticalAnchor,
+        compute(value.vertical, ctx),
+    };
+}
+
+export template <>
+struct _Specify<BackgroundPosition> {
+    static BackgroundPosition from(Computed<BackgroundPosition> const& value) {
+        return {
+            value.horizontalAnchor,
+            specified<Calc<Length, Percent>>(value.horizontal),
+            value.verticalAnchor,
+            specified<Calc<Length, Percent>>(value.vertical),
+        };
     }
 };
 
@@ -85,7 +116,7 @@ struct ValueParser<BackgroundPosition> {
             Keywords::Top,
             Keywords::Center,
             Keywords::Bottom,
-            Calc<PercentOr<Length>>>;
+            Calc<Length, Percent>>;
 
         InlineVec<Item, 4> items;
         for (int i = 0; i < 4 && not c.ended(); ++i) {
@@ -113,9 +144,9 @@ struct ValueParser<BackgroundPosition> {
                 items.pushBack(items.popFront());
 
             BackgroundPosition::HorizontalAnchor hAnchor = Keywords::LEFT;
-            Calc<PercentOr<Length>> hValue = {Percent(0)};
+            Calc<Length, Percent> hValue = {Percent(0)};
             BackgroundPosition::VerticalAnchor vAnchor = Keywords::TOP;
-            Calc<PercentOr<Length>> vValue = {Percent(0)};
+            Calc<Length, Percent> vValue = {Percent(0)};
 
             try$(
                 items[0].visit(
@@ -123,7 +154,7 @@ struct ValueParser<BackgroundPosition> {
                         hAnchor = t;
                         return Ok();
                     },
-                    [&](Calc<PercentOr<Length>>& t) -> Res<> {
+                    [&](Calc<Length, Percent>& t) -> Res<> {
                         hValue = t;
                         return Ok();
                     },
@@ -139,7 +170,7 @@ struct ValueParser<BackgroundPosition> {
                         vAnchor = t;
                         return Ok();
                     },
-                    [&](Calc<PercentOr<Length>>& t) -> Res<> {
+                    [&](Calc<Length, Percent>& t) -> Res<> {
                         vValue = t;
                         return Ok();
                     },
@@ -154,11 +185,11 @@ struct ValueParser<BackgroundPosition> {
 
         // case 3
         BackgroundPosition::HorizontalAnchor hAnchor = Keywords::LEFT;
-        Calc<PercentOr<Length>> hValue = {Percent(0)};
+        Calc<Length, Percent> hValue = {Percent(0)};
         bool hSet = false;
 
         BackgroundPosition::VerticalAnchor vAnchor = Keywords::TOP;
-        Calc<PercentOr<Length>> vValue = {Percent(0)};
+        Calc<Length, Percent> vValue = {Percent(0)};
 
         usize secondPairIndex = 2;
 
@@ -168,7 +199,7 @@ struct ValueParser<BackgroundPosition> {
                     hAnchor = t;
                     hSet = true;
 
-                    if (auto mesure = items[1].is<Calc<PercentOr<Length>>>()) {
+                    if (auto mesure = items[1].is<Calc<Length, Percent>>()) {
                         hValue = *mesure;
                     } else {
                         secondPairIndex = 1;
@@ -187,7 +218,7 @@ struct ValueParser<BackgroundPosition> {
                 [&](Meta::Contains<Keywords::Top, Keywords::Bottom> auto& t) -> Res<> {
                     vAnchor = t;
 
-                    if (auto mesure = items[1].is<Calc<PercentOr<Length>>>()) {
+                    if (auto mesure = items[1].is<Calc<Length, Percent>>()) {
                         vValue = *mesure;
                     } else {
                         secondPairIndex = 1;
@@ -216,7 +247,7 @@ struct ValueParser<BackgroundPosition> {
                     hAnchor = t;
 
                     if (secondPairIndex + 1 < items.len()) {
-                        if (auto mesure = items[secondPairIndex + 1].is<Calc<PercentOr<Length>>>())
+                        if (auto mesure = items[secondPairIndex + 1].is<Calc<Length, Percent>>())
                             hValue = *mesure;
                         else {
                             return Error::invalidData("expected percent or length");
@@ -229,7 +260,7 @@ struct ValueParser<BackgroundPosition> {
                     vAnchor = t;
 
                     if (secondPairIndex + 1 < items.len()) {
-                        if (auto mesure = items[secondPairIndex + 1].is<Calc<PercentOr<Length>>>())
+                        if (auto mesure = items[secondPairIndex + 1].is<Calc<Length, Percent>>())
                             vValue = *mesure;
                         else {
                             return Error::invalidData("unexpected last value");

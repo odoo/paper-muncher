@@ -8,8 +8,10 @@ import Karm.Core;
 
 import :css;
 import :values.base;
+import :values.dimension;
 import :values.length;
 import :values.primitives;
+import :values.resolved;
 
 using namespace Karm;
 
@@ -29,59 +31,32 @@ export enum struct CalcOp {
     _LEN
 };
 
-// 10. Mathematical Expressions
+// 10. MARK: Mathematical Expressions
 // https://drafts.csswg.org/css-values/#math
-export template <typename T>
-struct Calc {
-    using Leaf = Box<Calc<T>>;
 
-    using Value = Union<
-        T,
-        Leaf,
-        Number>;
-
-    struct Unary {
-        CalcOp op = CalcOp::NOP;
-        Value val;
-    };
-
-    struct Binary {
-        CalcOp op = CalcOp::NOP;
-        Value lhs;
-        Value rhs;
-    };
+// An untyped math expression, every operand is a dimension.
+export struct CalcExpr {
+    struct Unary;
+    struct Binary;
 
     using Inner = Union<
-        Value,
+        Dimension,
         Box<Unary>,
         Box<Binary>>;
 
     Inner _inner;
 
-    constexpr Calc()
-        : Calc(T{}) {
-    }
+    CalcExpr(Dimension dim)
+        : _inner(dim) {}
 
-    constexpr Calc(Meta::Convertible<T> auto val)
-        : _inner(Value{T{val}}) {
-    }
+    CalcExpr(CalcOp op, CalcExpr val);
 
-    constexpr Calc(Value val)
-        : _inner(val) {
-    }
-
-    constexpr Calc(CalcOp op, Value val)
-        : _inner(makeBox<Unary>(op, val)) {
-    }
-
-    constexpr Calc(CalcOp op, Value lhs, Value rhs)
-        : _inner(makeBox<Binary>(op, lhs, rhs)) {
-    }
+    CalcExpr(CalcOp op, CalcExpr lhs, CalcExpr rhs);
 
     auto visit(this auto& self, auto visitor) {
         return self._inner.visit(
-            [&](Value const& v) {
-                return visitor(v);
+            [&](Dimension const& d) {
+                return visitor(d);
             },
             [&](Box<Unary> const& u) {
                 return visitor(*u);
@@ -96,100 +71,327 @@ struct Calc {
         return self.visit(Visitor{std::forward<decltype(visitors)>(visitors)...});
     }
 
-    void repr(Io::Emit& e) const {
-        visit(
-            [&](Value const& v) {
-                e("{}", v);
-            },
-            [&](Unary const& u) {
-                e("(calc {} {})", u.op, u.val);
-            },
-            [&](Binary const& b) {
-                e("(calc {} {} {})", b.op, b.lhs, b.rhs);
-            }
-        );
+    // Returns the operand if the expression is made of a single one.
+    Opt<Dimension> dimension() const {
+        if (auto dim = _inner.is<Dimension>())
+            return Some(*dim);
+        return NONE;
     }
+
+    void repr(Io::Emit& e) const;
 };
 
-export template <typename T>
-struct _Resolved<Calc<T>> {
-    using Type = _Resolved<T>;
+struct CalcExpr::Unary {
+    CalcOp op = CalcOp::NOP;
+    CalcExpr val;
 };
 
-template <typename T>
-Resolved<T> _resolveUnary(CalcOp, Resolved<T>) {
-    notImplemented();
-}
+struct CalcExpr::Binary {
+    CalcOp op = CalcOp::NOP;
+    CalcExpr lhs;
+    CalcExpr rhs;
+};
 
-template <typename T>
-Resolved<T> _resolveInfix(CalcOp op, Resolved<T> lhs, Resolved<T> rhs) {
-    switch (op) {
-    case CalcOp::ADD:
-        return lhs + rhs;
-    case CalcOp::SUBTRACT:
-        return lhs - rhs;
-    case CalcOp::MULTIPLY:
-        // NOTE: Normally, direct multiplication on Au is not allowed.
-        //       However, CSS calc() treats pixel units as floating-point numbers,
-        //       permitting all standard math operations between them.
-        if constexpr (Meta::Same<Resolved<T>, Au>) {
-            return Au(f64{lhs} * f64{rhs});
-        } else {
-            return lhs * rhs;
-        }
-    case CalcOp::DIVIDE:
-        // NOTE: Normally, direct multiplication on Au is not allowed.
-        //       However, CSS calc() treats pixel units as floating-point numbers,
-        //       permitting all standard math operations between them.
-        if constexpr (Meta::Same<Resolved<T>, Au>) {
-            return Au(f64{lhs} / f64{rhs});
-        } else {
-            return lhs / rhs;
-        }
-    default:
-        panic("unexpected operator");
-    }
-}
+CalcExpr::CalcExpr(CalcOp op, CalcExpr val)
+    : _inner(makeBox<Unary>(op, std::move(val))) {}
 
-export template <typename T, typename... Args>
-Resolved<T> resolve(Calc<T> const& calc, Args... args) {
-    auto resolveUnion = Visitor{
-        [&](T const& v) {
-            return resolve(v, args...);
-        },
-        [&](Calc<T>::Leaf const& v) {
-            return resolve<T>(*v, args...);
-        },
-        [&](Number const& v)
-            requires(not Meta::Same<T, Number>)
-        {
-            return Resolved<T>{v};
-        }
-        };
+CalcExpr::CalcExpr(CalcOp op, CalcExpr lhs, CalcExpr rhs)
+    : _inner(makeBox<Binary>(op, std::move(lhs), std::move(rhs))) {}
 
-    return calc.visit(
-        [&](typename Calc<T>::Value const& v) {
-            return v.visit(resolveUnion);
+void CalcExpr::repr(Io::Emit& e) const {
+    visit(
+        [&](Dimension const& d) {
+            e("{}", d);
         },
-        [&](typename Calc<T>::Unary const& u) {
-            return _resolveUnary<T>(
-                u.op,
-                u.val.visit(resolveUnion)
-            );
+        [&](Unary const& u) {
+            e("(calc {} {})", u.op, u.val);
         },
-        [&](typename Calc<T>::Binary const& b) {
-            return _resolveInfix<T>(
-                b.op,
-                b.lhs.visit(resolveUnion),
-                b.rhs.visit(resolveUnion)
-            );
+        [&](Binary const& b) {
+            e("(calc {} {} {})", b.op, b.lhs, b.rhs);
         }
     );
 }
 
-export template <typename T>
-struct ValueParser<Calc<T>> {
-    static Res<Calc<T>> parse(Cursor<Css::Sst>& c) {
+// https://drafts.csswg.org/css-values/#calc-type-checking
+// NOTE: This is a simplified version of the type checking algorithm, percentages
+//       take the type they resolve against (the percent hint) when there is one.
+Res<Dimension::Type> _typeOf(CalcExpr const& expr, Opt<Dimension::Type> percentHint) {
+    return expr.visit(
+        [&](Dimension const& d) -> Res<Dimension::Type> {
+            if (d.type() == Dimension::PERCENTAGE and percentHint)
+                return Ok(*percentHint);
+            return Ok(d.type());
+        },
+        [&](CalcExpr::Unary const& u) -> Res<Dimension::Type> {
+            auto type = try$(_typeOf(u.val, percentHint));
+            if (type != Dimension::NUMBER and type != Dimension::ANGLE)
+                return Error::invalidData("expected a number or an angle");
+            return Ok(Dimension::NUMBER);
+        },
+        [&](CalcExpr::Binary const& b) -> Res<Dimension::Type> {
+            auto lhs = try$(_typeOf(b.lhs, percentHint));
+            auto rhs = try$(_typeOf(b.rhs, percentHint));
+            switch (b.op) {
+            case CalcOp::ADD:
+            case CalcOp::SUBTRACT:
+                if (lhs != rhs)
+                    return Error::invalidData("adding values of different types");
+                return Ok(lhs);
+            case CalcOp::MULTIPLY:
+                if (lhs == Dimension::NUMBER)
+                    return Ok(rhs);
+                if (rhs == Dimension::NUMBER)
+                    return Ok(lhs);
+                return Error::invalidData("multiplying two values with a unit");
+            case CalcOp::DIVIDE:
+                if (rhs != Dimension::NUMBER)
+                    return Error::invalidData("dividing by a value with a unit");
+                return Ok(lhs);
+            default:
+                return Error::invalidData("unexpected operator");
+            }
+        }
+    );
+}
+
+// Evaluates the expression in canonical units, `operand` gives
+// the canonical value of each dimension of the expression.
+f64 _evalCalc(CalcExpr const& expr, auto const& operand) {
+    return expr.visit(
+        [&](Dimension const& d) -> f64 {
+            return operand(d);
+        },
+        [&](CalcExpr::Unary const&) -> f64 {
+            notImplemented();
+        },
+        [&](CalcExpr::Binary const& b) -> f64 {
+            auto lhs = _evalCalc(b.lhs, operand);
+            auto rhs = _evalCalc(b.rhs, operand);
+            switch (b.op) {
+            case CalcOp::ADD:
+                return lhs + rhs;
+            case CalcOp::SUBTRACT:
+                return lhs - rhs;
+            case CalcOp::MULTIPLY:
+                return lhs * rhs;
+            case CalcOp::DIVIDE:
+                return lhs / rhs;
+            default:
+                panic("unexpected operator");
+            }
+        }
+    );
+}
+
+// A math expression resolving to one of Ts, the first one being the type it
+// resolves to (eg. Calc<Length, Percent> for <length-percentage>).
+export template <typename... Ts>
+struct Calc {
+    using First = Meta::First<Ts...>;
+
+    CalcExpr _expr;
+
+    static constexpr bool accepts(Dimension::Type type) {
+        return ((type == dimensionTypeOf<Ts>) or ...);
+    }
+
+    static constexpr Opt<Dimension::Type> percentHint() {
+        if (accepts(Dimension::PERCENTAGE) and dimensionTypeOf<First> != Dimension::PERCENTAGE)
+            return Some(dimensionTypeOf<First>);
+        return NONE;
+    }
+
+    static Res<> typeCheck(CalcExpr const& expr) {
+        if (not accepts(try$(_typeOf(expr, percentHint()))))
+            return Error::invalidData("unexpected calc() type");
+        return Ok();
+    }
+
+    template <typename U>
+    static Dimension _wrap(U const& val) {
+        if constexpr (Meta::Contains<U, Ts...>) {
+            return toDimension(val);
+        } else {
+            Opt<Dimension> result;
+            (
+                [&] {
+                    if constexpr (Meta::Convertible<U, Ts>)
+                        if (not result)
+                            result = Some(toDimension(Ts(val)));
+                }(),
+                ...);
+            return result.take();
+        }
+    }
+
+    constexpr Calc()
+        : _expr(Dimension{0, Dimension::canonicalUnitOf(dimensionTypeOf<First>)}) {}
+
+    template <typename U>
+        requires(Meta::Convertible<U, Ts> or ...)
+    constexpr Calc(U const& val)
+        : _expr(_wrap(val)) {}
+
+    constexpr explicit Calc(CalcExpr expr)
+        : _expr(std::move(expr)) {}
+
+    constexpr Calc(CalcOp op, Calc lhs, Calc rhs)
+        : _expr(op, std::move(lhs._expr), std::move(rhs._expr)) {}
+
+    // Returns the operand if the expression is made of a single operand of type U.
+    template <typename U>
+    Opt<U> is() const {
+        if (auto dim = _expr.dimension(); dim and dim->type() == dimensionTypeOf<U>)
+            return Some(fromDimension<U>(*dim));
+        return NONE;
+    }
+
+    void repr(Io::Emit& e) const {
+        e("{}", _expr);
+    }
+};
+
+export template <typename... Ts>
+struct _Resolved<Calc<Ts...>> {
+    using Type = Resolved<Meta::First<Ts...>>;
+};
+
+// Turns a value in the canonical unit of T into its resolved value.
+template <typename T>
+Resolved<T> _resolveCanonical(f64 value) {
+    if constexpr (Meta::Same<Resolved<T>, Au>) {
+        return Au::fromFloatNearest(value);
+    } else {
+        auto dim = Dimension{value, Dimension::canonicalUnitOf(dimensionTypeOf<T>)};
+        return resolve(fromDimension<T>(dim));
+    }
+}
+
+// Resolves an expression made of dimensions that don't depend on a context.
+export template <typename... Ts>
+Resolved<Calc<Ts...>> resolve(Calc<Ts...> const& calc) {
+    auto value = _evalCalc(calc._expr, [](Dimension const& d) {
+        return d.canonical().value();
+    });
+    return _resolveCanonical<Meta::First<Ts...>>(value);
+}
+
+export template <typename... Ts>
+Resolved<Calc<Ts...>> resolve(Calc<Ts...> const& calc, LengthContext auto const& ctx) {
+    auto value = _evalCalc(calc._expr, [&](Dimension const& d) {
+        if (d.type() == Dimension::LENGTH and not d.isAbsolute())
+            return resolve(Length{d}, ctx).template cast<f64>();
+        return d.canonical().value();
+    });
+    return _resolveCanonical<Meta::First<Ts...>>(value);
+}
+
+// Resolves an expression whose percentages are relative to `basis`.
+export template <typename... Ts>
+Resolved<Calc<Ts...>> resolve(Calc<Ts...> const& calc, Resolved<Calc<Ts...>> basis) {
+    auto canonicalBasis = toDimension(basis).canonical().value();
+    auto value = _evalCalc(calc._expr, [&](Dimension const& d) {
+        if (d.type() == Dimension::PERCENTAGE)
+            return canonicalBasis * d.value() / 100.;
+        return d.canonical().value();
+    });
+    return _resolveCanonical<Meta::First<Ts...>>(value);
+}
+
+// MARK: Computed Value --------------------------------------------------------
+// https://drafts.csswg.org/css-values/#calc-computed-value
+
+// Simplifies an operation between two operands in canonical units.
+Opt<Dimension> _foldInfix(CalcOp op, Dimension lhs, Dimension rhs) {
+    switch (op) {
+    case CalcOp::ADD:
+        if (lhs.unit() == rhs.unit())
+            return Some(Dimension{lhs.value() + rhs.value(), lhs.unit()});
+        return NONE;
+    case CalcOp::SUBTRACT:
+        if (lhs.unit() == rhs.unit())
+            return Some(Dimension{lhs.value() - rhs.value(), lhs.unit()});
+        return NONE;
+    case CalcOp::MULTIPLY:
+        if (lhs.type() == Dimension::NUMBER)
+            return Some(Dimension{lhs.value() * rhs.value(), rhs.unit()});
+        if (rhs.type() == Dimension::NUMBER)
+            return Some(Dimension{lhs.value() * rhs.value(), lhs.unit()});
+        return NONE;
+    case CalcOp::DIVIDE:
+        if (rhs.type() == Dimension::NUMBER)
+            return Some(Dimension{lhs.value() / rhs.value(), lhs.unit()});
+        return NONE;
+    default:
+        return NONE;
+    }
+}
+
+// Every operand is converted to its canonical unit and the operations that
+// don't depend on a percentage basis are simplified away, what is left is
+// resolved during layout once the basis is known.
+CalcExpr _computeCalc(CalcExpr const& expr, LengthContext auto const& ctx) {
+    return expr.visit(
+        [&](Dimension const& d) -> CalcExpr {
+            if (d.type() == Dimension::LENGTH and not d.isAbsolute())
+                return Dimension{resolve(Length{d}, ctx).template cast<f64>(), Dimension::Unit::PX};
+            return d.canonical();
+        },
+        [&](CalcExpr::Unary const& u) -> CalcExpr {
+            return {u.op, _computeCalc(u.val, ctx)};
+        },
+        [&](CalcExpr::Binary const& b) -> CalcExpr {
+            auto lhs = _computeCalc(b.lhs, ctx);
+            auto rhs = _computeCalc(b.rhs, ctx);
+            if (auto l = lhs.dimension(), r = rhs.dimension(); l and r)
+                if (auto folded = _foldInfix(b.op, *l, *r))
+                    return *folded;
+            return {b.op, std::move(lhs), std::move(rhs)};
+        }
+    );
+}
+
+export template <typename... Ts>
+struct _Computed<Calc<Ts...>> {
+    using Type = Calc<Computed<Ts>...>;
+};
+
+export template <typename... Ts>
+    requires(not Meta::Same<Computed<Calc<Ts...>>, Calc<Ts...>>)
+Computed<Calc<Ts...>> compute(Calc<Ts...> const& calc, LengthContext auto const& ctx) {
+    return Computed<Calc<Ts...>>{_computeCalc(calc._expr, ctx)};
+}
+
+export template <typename... Ts>
+struct _Specify<Calc<Ts...>> {
+    static Calc<Ts...> from(Calc<Computed<Ts>...> const& calc) {
+        return Calc<Ts...>{calc._expr};
+    }
+};
+
+// A calc() resolving to a <length> doesn't depend on any percentage basis,
+// so it computes all the way down to an absolute length.
+export template <>
+struct _Computed<Calc<Length>> {
+    using Type = Au;
+};
+
+export Au compute(Calc<Length> const& calc, LengthContext auto const& ctx) {
+    return resolve(calc, ctx);
+}
+
+export template <>
+struct _Specify<Calc<Length>> {
+    static Calc<Length> from(Au value) {
+        return Length{value};
+    }
+};
+
+// MARK: Parsing ---------------------------------------------------------------
+
+export template <typename... Ts>
+struct ValueParser<Calc<Ts...>> {
+    static Res<Calc<Ts...>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -198,23 +400,24 @@ struct ValueParser<Calc<T>> {
             auto prefixToken = prefix.expect()->token;
             if (prefixToken.data == "calc(") {
                 Cursor<Css::Sst> content = c.peek().content;
-                auto lhs = try$(parseVal(content));
+                CalcExpr expr = try$(parseValue<Dimension>(content));
 
-                auto op = parseOp(content);
-                if (not op) {
-                    c.next();
-                    return Ok(Calc<T>{lhs});
+                if (auto op = parseOp(content)) {
+                    eatWhitespace(content);
+                    auto rhs = try$(parseValue<Dimension>(content));
+                    expr = CalcExpr{op.take(), std::move(expr), rhs};
                 }
 
-                eatWhitespace(content);
-                auto rhs = try$(parseVal(content));
-
+                try$(Calc<Ts...>::typeCheck(expr));
                 c.next();
-                return Ok(Calc<T>{op.expect(), lhs, rhs});
+                return Ok(Calc<Ts...>{std::move(expr)});
             }
         }
 
-        return Ok(try$(parseValue<T>(c)));
+        auto value = try$(parseValue<Union<Ts...>>(c));
+        return Ok(value.visit([](auto const& v) {
+            return Calc<Ts...>{v};
+        }));
     }
 
     static Res<CalcOp> parseOp(Cursor<Css::Sst>& c) {
@@ -241,68 +444,33 @@ struct ValueParser<Calc<T>> {
         }
         return Error::invalidData("unexpected operator");
     }
-
-    static Res<typename Calc<T>::Value> parseVal(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.peek().token == Css::Token::NUMBER) {
-            return Ok(try$(parseValue<Number>(c)));
-        }
-
-        return Ok(try$(parseValue<T>(c)));
-    }
 };
 
-export template <typename T>
-struct ValueSerializer<Calc<T>> {
+// MARK: Serialization ---------------------------------------------------------
+
+export template <typename... Ts>
+struct ValueSerializer<Calc<Ts...>> {
     // https://drafts.csswg.org/css-values/#calc-serialize
-    static Res<> serialize(Io::TextWriter& w, Calc<T> const& value) {
+    static Res<> serialize(Io::TextWriter& w, Calc<Ts...> const& value) {
         // NOTE: The current implementation is a rough approximation of the spec.
-        return value.visit(
-            [&](typename Calc<T>::Value const& v) -> Res<> {
-                return v.visit(Visitor{
-                    [&](T const& v) {
-                        return serializeValue(w, v);
-                    },
-                    [&](typename Calc<T>::Leaf const& v) {
-                        return serialize(w, *v);
-                    },
-                    [&](Number const& v) {
-                        return serializeValue(w, v);
-                    }
-                });
-            },
-            [&](auto const&) -> Res<> {
-                try$(w.writeStr("calc("s));
-                try$(serializeCalculationTree(w, value));
-                try$(w.writeStr(")"s));
-                return Ok();
-            }
-        );
+        if (auto dim = value._expr.dimension())
+            return serializeValue(w, *dim);
+
+        try$(w.writeStr("calc("s));
+        try$(serializeCalculationTree(w, value._expr));
+        try$(w.writeStr(")"s));
+        return Ok();
     }
 
-    static Res<> serializeCalculationTree(Io::TextWriter& w, Calc<T> const& value) {
-        auto serializeUnion = Visitor{
-            [&](T const& v) {
-                return serializeValue(w, v);
+    static Res<> serializeCalculationTree(Io::TextWriter& w, CalcExpr const& expr) {
+        return expr.visit(
+            [&](Dimension const& d) -> Res<> {
+                return serializeValue(w, d);
             },
-            [&](Calc<T>::Leaf const& v) {
-                return serializeCalculationTree(w, *v);
-            },
-            [&](Number const& v) {
-                return serializeValue(w, v);
-            }
-        };
-
-        return value.visit(
-            [&](typename Calc<T>::Value const& v) -> Res<> {
-                return v.visit(serializeUnion);
-            },
-            [&](typename Calc<T>::Unary const& u) -> Res<> {
+            [&](CalcExpr::Unary const& u) -> Res<> {
                 auto functionalOp = try$(serializeCalcOp(w, u.op));
 
-                try$(u.val.visit(serializeUnion));
+                try$(serializeCalculationTree(w, u.val));
 
                 if (functionalOp) {
                     try$(w.writeRune(')'));
@@ -310,8 +478,8 @@ struct ValueSerializer<Calc<T>> {
 
                 return Ok();
             },
-            [&](typename Calc<T>::Binary const& b) -> Res<> {
-                try$(b.lhs.visit(serializeUnion));
+            [&](CalcExpr::Binary const& b) -> Res<> {
+                try$(serializeCalculationTree(w, b.lhs));
                 try$(w.writeRune(' '));
 
                 auto functionalOp = try$(serializeCalcOp(w, b.op));
@@ -319,7 +487,7 @@ struct ValueSerializer<Calc<T>> {
                     return Error::unsupported();
 
                 try$(w.writeRune(' '));
-                try$(b.rhs.visit(serializeUnion));
+                try$(serializeCalculationTree(w, b.rhs));
 
                 return Ok();
             }

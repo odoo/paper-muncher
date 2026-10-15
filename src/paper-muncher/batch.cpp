@@ -120,9 +120,8 @@ export struct Option {
     }
 
     Vaev::Style::Media deriveMedia() {
-        Vaev::Layout::Resolver resolver;
-        auto width = this->width ? resolver.resolve(*this->width) : 800_au;
-        auto height = this->height ? resolver.resolve(*this->height) : 600_au;
+        auto width = this->width ? Vaev::resolve(*this->width) : 800_au;
+        auto height = this->height ? Vaev::resolve(*this->height) : 600_au;
         return Vaev::Style::Media::forRender(
             {width, height},
             this->scale

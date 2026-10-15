@@ -105,7 +105,7 @@ export struct ClipPathProperty : Property {
 
         Rc<Property> load(ComputedValues const& c) const override {
             if (auto const& [clip] = *c.clip)
-                return makeRc<ClipPathProperty>(self(), clip);
+                return makeRc<ClipPathProperty>(self(), specified<BasicShape>(clip));
             return makeRc<ClipPathProperty>(self(), Keywords::NONE);
         }
 
@@ -121,7 +121,7 @@ export struct ClipPathProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         if (auto clipShape = _value.is<BasicShape>())
-            c.clip.cow() = Some(*clipShape);
+            c.clip.cow() = Some(compute(*clipShape, cx));
         else
             c.clip.cow() = NONE;
     }

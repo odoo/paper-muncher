@@ -216,8 +216,7 @@ export struct PageAreaRule {
         return Some(res);
     }
 
-    void apply(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const {
-        ComputationContext cx;
+    void apply(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child, ComputationContext const& cx) const {
         for (auto const& prop : props) {
             if (prop->isBogusProperty())
                 continue;

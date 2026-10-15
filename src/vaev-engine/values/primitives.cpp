@@ -59,7 +59,8 @@ struct _Resolved<Number> {
     using Type = Number;
 };
 
-export Number resolve(Number const& value, [[maybe_unused]] auto const& ctx = NONE) {
+export template <typename Ctx = None>
+Number resolve(Number const& value, [[maybe_unused]] Ctx const& ctx = NONE) {
     return value;
 }
 
@@ -240,6 +241,34 @@ struct ValueSerializer<Union<Ts...>> {
     }
 };
 
+export template <typename... Ts>
+struct _Computed<Union<Ts...>> {
+    using Type = Union<Computed<Ts>...>;
+};
+
+export template <typename... Ts>
+Union<Computed<Ts>...> compute(Union<Ts...> const& value, auto const& ctx) {
+    return value.visit([&](auto const& inner) -> Union<Computed<Ts>...> {
+        return compute(inner, ctx);
+    });
+}
+
+export template <typename... Ts>
+struct _Specify<Union<Ts...>> {
+    static Union<Ts...> from(Union<Computed<Ts>...> const& value) {
+        Opt<Union<Ts...>> result;
+        (
+            [&] {
+                if (result)
+                    return;
+                if (auto inner = value.template is<Computed<Ts>>())
+                    result = Some(Union<Ts...>{specified<Ts>(*inner)});
+            }(),
+            ...);
+        return result.take();
+    }
+};
+
 // MARK: Component Value Multipliers -------------------------------------------
 // https://drafts.csswg.org/css-values-4/#component-multipliers
 
@@ -277,6 +306,29 @@ struct ValueSerializer<S> {
         }
 
         return Ok();
+    }
+};
+
+export template <typename T>
+struct _Computed<Vec<T>> {
+    using Type = Vec<Computed<T>>;
+};
+
+export template <typename T>
+Vec<Computed<T>> compute(Vec<T> const& value, auto const& ctx) {
+    Vec<Computed<T>> result;
+    for (auto const& v : value)
+        result.pushBack(compute(v, ctx));
+    return result;
+}
+
+export template <typename T>
+struct _Specify<Vec<T>> {
+    static Vec<T> from(Vec<Computed<T>> const& value) {
+        Vec<T> result;
+        for (auto const& v : value)
+            result.pushBack(specified<T>(v));
+        return result;
     }
 };
 

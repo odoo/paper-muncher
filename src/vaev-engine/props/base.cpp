@@ -225,8 +225,7 @@ export struct Property : Meta::NoCopy {
 
     /// Evaluates and returns the computed value of this property without permanently
     /// altering the target element's computed values.
-    Rc<Property> computedValue(ComputedValues const& parent, ComputedValues& child) const {
-        ComputationContext cx{};
+    Rc<Property> computedValue(ComputedValues const& parent, ComputedValues& child, ComputationContext const& cx) const {
         auto save = registration->load(child);
         apply(parent, child, cx);
         auto result = registration->load(child);
@@ -351,7 +350,7 @@ struct ToggleProperty : Property {
         usize index = 0;
         for (auto& p : _value) {
             index++;
-            if (parentProperty == p->computedValue(parent, c))
+            if (parentProperty == p->computedValue(parent, c, cx))
                 break;
         }
         _value[index % _value.len()]->apply(parent, c, cx);

@@ -7,6 +7,7 @@ import :css;
 import :values.base;
 import :values.length;
 import :values.percent;
+import :values.resolved;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
@@ -97,6 +98,30 @@ export struct BorderSpacing {
 
     void repr(Io::Emit& e) const {
         e("({}, {})", horizontal, vertical);
+    }
+};
+
+export struct ComputedBorderSpacing {
+    Au horizontal, vertical;
+
+    void repr(Io::Emit& e) const {
+        e("({}, {})", horizontal, vertical);
+    }
+};
+
+export template <>
+struct _Computed<BorderSpacing> {
+    using Type = ComputedBorderSpacing;
+};
+
+export ComputedBorderSpacing compute(BorderSpacing const& value, LengthContext auto const& ctx) {
+    return {compute(value.horizontal, ctx), compute(value.vertical, ctx)};
+}
+
+export template <>
+struct _Specify<BorderSpacing> {
+    static BorderSpacing from(ComputedBorderSpacing const& value) {
+        return {value.horizontal, value.vertical};
     }
 };
 

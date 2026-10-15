@@ -28,7 +28,7 @@ export struct LineHeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<LineHeightProperty>(self(), c.inline_->lineHeight);
+            return makeRc<LineHeightProperty>(self(), specified<LineHeight>(c.inline_->lineHeight));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -42,7 +42,7 @@ export struct LineHeightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.inline_.cow().lineHeight = _value;
+        c.inline_.cow().lineHeight = compute(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -152,11 +152,11 @@ export struct BaselineShiftProperty : Property {
         Registration() : Property::Registration(Properties::BASELINE_SHIFT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BaselineShiftProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<BaselineShiftProperty>(self(), Calc<Length, Percent>(Length{}));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BaselineShiftProperty>(self(), c.inline_->baselineShift);
+            return makeRc<BaselineShiftProperty>(self(), specified<BaselineShift>(c.inline_->baselineShift));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -170,7 +170,7 @@ export struct BaselineShiftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.inline_.cow().baselineShift = _value;
+        c.inline_.cow().baselineShift = compute(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -200,7 +200,7 @@ export struct VerticalAlignProperty : Property {
                 Value{
                     Some(c.inline_->baselineSource),
                     Some(c.inline_->alignmentBaseline),
-                    Some(c.inline_->baselineShift),
+                    Some(specified<BaselineShift>(c.inline_->baselineShift)),
                 }
             );
         }

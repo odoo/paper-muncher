@@ -5,6 +5,7 @@ import Karm.Core;
 import :css;
 import :values.base;
 import :values.keywords;
+import :values.resolved;
 import :values.sizing;
 
 using namespace Karm;
@@ -81,7 +82,7 @@ export using FlexBasis = Union<
     Keywords::MinContent,
     Keywords::MaxContent,
     Keywords::FitContent,
-    Calc<PercentOr<Length>>>;
+    Calc<Length, Percent>>;
 
 export struct FlexItemProps {
     FlexBasis flexBasis = Keywords::AUTO;
@@ -98,7 +99,7 @@ export struct FlexProps {
     FlexWrap wrap = FlexWrap::NOWRAP;
 
     // FlexItem
-    FlexBasis basis = Keywords::AUTO;
+    Computed<FlexBasis> basis = Keywords::AUTO;
     Number grow = 0;
     Number shrink = 1;
 

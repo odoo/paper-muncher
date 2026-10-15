@@ -8,6 +8,7 @@ import :values.base;
 import :values.calc;
 import :values.keywords;
 import :values.percent;
+import :values.resolved;
 
 using namespace Karm;
 
@@ -57,12 +58,12 @@ struct ValueParser<Position> {
     }
 };
 
-export using Margin = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Length>>>>;
+export using Margin = Math::Insets<Union<Keywords::Auto, Calc<Length, Percent>>>;
 
-export using Padding = Math::Insets<Calc<PercentOr<Length>>>;
+export using Padding = Math::Insets<Calc<Length, Percent>>;
 
 // https://www.w3.org/TR/css-position-3/#propdef-inset
-export using BoxInsets = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Length>>>>;
+export using BoxInsets = Math::Insets<Union<Keywords::Auto, Calc<Length, Percent>>>;
 
 export template <typename T>
 struct ValueParser<Math::Insets<T>> {
@@ -90,16 +91,56 @@ struct ValueParser<Math::Insets<T>> {
     }
 };
 
+export template <typename T>
+struct _Computed<Math::Insets<T>> {
+    using Type = Math::Insets<Computed<T>>;
+};
+
+export template <typename T>
+Math::Insets<Computed<T>> compute(Math::Insets<T> const& value, auto const& ctx) {
+    return value.map([&](T const& v) {
+        return compute(v, ctx);
+    });
+}
+
+export template <typename T>
+struct _Specify<Math::Insets<T>> {
+    static Math::Insets<T> from(Math::Insets<Computed<T>> const& value) {
+        return value.map([](Computed<T> const& v) {
+            return specified<T>(v);
+        });
+    }
+};
+
 export using Gap = Union<
     Keywords::Normal,
-    Calc<PercentOr<Length>>>;
+    Calc<Length, Percent>>;
 
-export struct Gaps {
-    Gap row = Keywords::NORMAL;
-    Gap col = Keywords::NORMAL;
+export template <template <typename> typename S>
+struct _Gaps {
+    S<Gap> row = Keywords::NORMAL;
+    S<Gap> col = Keywords::NORMAL;
 
     void repr(Io::Emit& e) const {
         e("(gaps {} {})", row, col);
+    }
+};
+
+export using Gaps = _Gaps<Specified>;
+
+export template <>
+struct _Computed<Gaps> {
+    using Type = _Gaps<Computed>;
+};
+
+export Computed<Gaps> compute(Gaps const& value, auto const& ctx) {
+    return {compute(value.row, ctx), compute(value.col, ctx)};
+}
+
+export template <>
+struct _Specify<Gaps> {
+    static Gaps from(Computed<Gaps> const& value) {
+        return {specified<Gap>(value.row), specified<Gap>(value.col)};
     }
 };
 

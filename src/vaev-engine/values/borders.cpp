@@ -10,6 +10,7 @@ import :values.color;
 import :values.length;
 import :values.lineWidth;
 import :values.percent;
+import :values.resolved;
 
 namespace Vaev {
 
@@ -59,12 +60,12 @@ export struct SpecifiedBorder {
 };
 
 export struct ComputedBorder {
-    LineWidth width = Keywords::MEDIUM;
+    Computed<LineWidth> width = MEDIUM_VALUE;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
     Color color = Gfx::BLACK;
 
     operator SpecifiedBorder() const {
-        return {width, style, color};
+        return {specified<LineWidth>(width), style, color};
     }
 
     void repr(Io::Emit& e) const {
@@ -116,6 +117,27 @@ struct ValueParser<SpecifiedBorder> {
     }
 };
 
+export template <typename T>
+struct _Computed<Math::Radii<T>> {
+    using Type = Math::Radii<Computed<T>>;
+};
+
+export template <typename T>
+Math::Radii<Computed<T>> compute(Math::Radii<T> const& value, auto const& ctx) {
+    return value.map([&](T const& v) {
+        return compute(v, ctx);
+    });
+}
+
+export template <typename T>
+struct _Specify<Math::Radii<T>> {
+    static Math::Radii<T> from(Math::Radii<Computed<T>> const& value) {
+        return value.map([](Computed<T> const& v) {
+            return specified<T>(v);
+        });
+    }
+};
+
 // FIXME: cant we have this for karm/insets?
 export enum struct BorderEdge {
     TOP,
@@ -126,7 +148,7 @@ export enum struct BorderEdge {
 
 export struct BorderProps {
     ComputedBorder top, start, bottom, end;
-    Math::Radii<Calc<PercentOr<Length>>> radii = {Length{0_au}};
+    Computed<Math::Radii<Calc<Length, Percent>>> radii = {0_au};
 
     ComputedBorder const& get(BorderEdge edge) const {
         switch (edge) {
@@ -158,21 +180,21 @@ struct ValueParser<Math::Radii<T>> {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        auto value1 = parseValue<PercentOr<Length>>(c);
+        auto value1 = parseValue<T>(c);
         if (not value1)
             return parsePostSlash(c, NONE);
 
-        auto value2 = parseValue<PercentOr<Length>>(c);
+        auto value2 = parseValue<T>(c);
         if (not value2)
             return parsePostSlash(c, Some(Math::Radii<T>{value1.take()}));
 
-        auto value3 = parseValue<PercentOr<Length>>(c);
+        auto value3 = parseValue<T>(c);
         if (not value3)
             return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take()}));
 
-        auto value4 = parseValue<PercentOr<Length>>(c);
+        auto value4 = parseValue<T>(c);
         if (not value4)
-            return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take(), value3.take(), value2.take()}));
+            return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.expect(), value3.take(), value2.take()}));
 
         return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take(), value3.take(), value4.take()}));
     }
@@ -191,12 +213,12 @@ struct ValueParser<Math::Radii<T>> {
         auto radii = maybeRadii.unwrapOr(Math::Radii<T>{Length{0_au}});
         c.next();
         eatWhitespace(c);
-        auto value1 = parseValue<PercentOr<Length>>(c);
+        auto value1 = parseValue<T>(c);
         if (not value1) {
             return Ok(std::move(radii));
         }
 
-        auto value2 = parseValue<PercentOr<Length>>(c);
+        auto value2 = parseValue<T>(c);
         if (not value2) {
             radii.a = value1.expect();
             radii.d = value1.expect();
@@ -206,7 +228,7 @@ struct ValueParser<Math::Radii<T>> {
         }
 
         eatWhitespace(c);
-        auto value3 = parseValue<PercentOr<Length>>(c);
+        auto value3 = parseValue<T>(c);
         if (not value3) {
             radii.a = value1.expect();
             radii.d = value2.expect();
@@ -216,7 +238,7 @@ struct ValueParser<Math::Radii<T>> {
         }
 
         eatWhitespace(c);
-        auto value4 = parseValue<PercentOr<Length>>(c);
+        auto value4 = parseValue<T>(c);
         if (not value4) {
             radii.a = value1.expect();
             radii.d = value2.expect();

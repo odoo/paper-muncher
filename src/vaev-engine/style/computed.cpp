@@ -20,10 +20,10 @@ struct FontProps {
 };
 
 struct TransformProps {
-    Transform transform = Keywords::NONE;
-    TransformOrigin origin = {
-        .xOffset = Calc<PercentOr<Length>>{Percent{0}},
-        .yOffset = Calc<PercentOr<Length>>{Percent{0}},
+    Computed<Transform> transform = Keywords::NONE;
+    Computed<TransformOrigin> origin = {
+        .xOffset = Calc<Au, Percent>{Percent{0}},
+        .yOffset = Calc<Au, Percent>{Percent{0}},
     };
     TransformBox box = Keywords::BORDER_BOX;
 
@@ -34,16 +34,16 @@ struct TransformProps {
 
 export struct TableProps {
     CaptionSide captionSide = CaptionSide::TOP;
-    BorderSpacing spacing = {0_au, 0_au};
+    Computed<BorderSpacing> spacing = {0_au, 0_au};
     BorderCollapse collapse = BorderCollapse::SEPARATE;
 };
 
 export struct SvgProps {
-    PercentOr<Length> x = Length{0_au};
-    PercentOr<Length> y = Length{0_au};
-    PercentOr<Length> cx = Length{0_au};
-    PercentOr<Length> cy = Length{0_au};
-    PercentOr<Length> r = Length{0_au};
+    Computed<Calc<Length, Percent>> x = 0_au;
+    Computed<Calc<Length, Percent>> y = 0_au;
+    Computed<Calc<Length, Percent>> cx = 0_au;
+    Computed<Calc<Length, Percent>> cy = 0_au;
+    Computed<Calc<Length, Percent>> r = 0_au;
 
     Union<String, None> d = NONE;
     Opt<SvgViewBox> viewBox = NONE;
@@ -51,27 +51,27 @@ export struct SvgProps {
 
 export struct SvgPaintProps {
     Number fillOpacity = 1;
-    PercentOr<Length> strokeWidth = Length{1_au};
+    Computed<Calc<Length, Percent>> strokeWidth = 1_au;
     Number strokeOpacity = 1;
     SvgPaint fill = Some(Gfx::BLACK);
     SvgPaint stroke = NONE;
 };
 
-using ClipProps = Opt<BasicShape>;
+using ClipProps = Opt<Computed<BasicShape>>;
 
 export struct Inherited {};
 
 // https://www.w3.org/TR/css-cascade/#computed
 export struct ComputedValues {
-    Cow<Gaps> gaps;
+    Cow<Computed<Gaps>> gaps;
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
-    Cow<Margin> margin = Margin(Calc<PercentOr<Length>>(Length())); // FIXME
+    Cow<Computed<Margin>> margin = Computed<Margin>(Calc<Au, Percent>(0_au));
     Cow<OutlineProps> outline;
-    Cow<Padding> padding = Padding(Length{}); // FIXME
+    Cow<Computed<Padding>> padding = Computed<Padding>(0_au);
     Cow<SizingProps> sizing;
     Cow<InlineProps> inline_;
-    Cow<BoxInsets> insets = BoxInsets(Keywords::AUTO); // FIXME
+    Cow<Computed<BoxInsets>> insets = Computed<BoxInsets>(Keywords::AUTO);
     Cow<ClipProps> clip;
     Cow<TransformProps> transform;
     Cow<TableProps> table;

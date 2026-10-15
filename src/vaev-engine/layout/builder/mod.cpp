@@ -74,8 +74,6 @@ static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues const& style) 
 }
 
 static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
-    Resolver resolver{};
-
     // FIXME: Assert bounds at parse time to respect inherits.
     auto usedLineHeight = style.inline_->lineHeight.visit(
         [](Keywords::Normal) -> Opt<Au> {
@@ -87,14 +85,11 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
 
             return Some(style.font->size * number);
         },
-        [&](Calc<PercentOr<Length>> const& length) -> Opt<Au> {
-            auto oneEm = resolver.resolve(Length{RelativeLength{1, RelativeLength::EM}});
-            auto result = resolver.resolve(length, oneEm);
-
-            if (result < 0_au)
+        [&](Au length) -> Opt<Au> {
+            if (length < 0_au)
                 return NONE;
 
-            return Some(result);
+            return Some(length);
         }
     );
 
@@ -105,8 +100,8 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
         },
         .color = Some(style.color),
         // FIXME: Should be done during prose layout
-        .marginLeft = resolver.resolve(style.margin->start, 0_au),
-        .marginRight = resolver.resolve(style.margin->end, 0_au),
+        .marginLeft = resolve(style.margin->start, 0_au),
+        .marginRight = resolve(style.margin->end, 0_au),
         .lineHeight = usedLineHeight,
         .wordwrap = _allowsWrap(style.text->whiteSpace),
         .collapsibleWhitespace = _collapsesWhitespace(style.text->whiteSpace),
@@ -950,15 +945,15 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
             String marker = ""s;
             if (listStyleType == CustomIdent{"disc"_sym}) {
                 // NOSPEC: By default chrome and other browser seems to make this a bit larger
-                style->transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
+                style->transform.cow().transform = Computed<TransformList>{ScaleTransform{1.25, 1.25}};
                 marker = "\u2022"s;
             } else if (listStyleType == CustomIdent{"circle"_sym}) {
                 // NOSPEC: By default chrome and other browser seems to make this a bit larger
-                style->transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
+                style->transform.cow().transform = Computed<TransformList>{ScaleTransform{1.25, 1.25}};
                 marker = "\u25E6"s;
             } else if (listStyleType == CustomIdent{"square"_sym}) {
                 // NOSPEC: By default chrome and other browser seems to make this a bit larger
-                style->transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
+                style->transform.cow().transform = Computed<TransformList>{ScaleTransform{1.25, 1.25}};
                 marker = "\u25AA"s;
             } else if (listStyleType == CustomIdent{"decimal"_sym}) {
                 auto value =

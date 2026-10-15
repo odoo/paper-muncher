@@ -12,6 +12,7 @@ import :values.calc;
 import :values.keywords;
 import :values.length;
 import :values.percent;
+import :values.resolved;
 import :values.writing;
 
 using namespace Karm;
@@ -24,35 +25,35 @@ export using BoxSizing = Union<Keywords::ContentBox, Keywords::BorderBox>;
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 // https://www.w3.org/TR/css-sizing-3/#propdef-height
-export using Size = Union<Keywords::Auto, Calc<PercentOr<Length>>, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
-export using MaxSize = Union<Keywords::None, Calc<PercentOr<Length>>, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+export using Size = Union<Keywords::Auto, Calc<Length, Percent>, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+export using MaxSize = Union<Keywords::None, Calc<Length, Percent>, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
 
 export struct SizingProps {
-    Size width = Keywords::AUTO, height = Keywords::AUTO;
-    Size minWidth = Keywords::AUTO, minHeight = Keywords::AUTO;
-    MaxSize maxWidth = Keywords::NONE, maxHeight = Keywords::NONE;
+    Computed<Size> width = Keywords::AUTO, height = Keywords::AUTO;
+    Computed<Size> minWidth = Keywords::AUTO, minHeight = Keywords::AUTO;
+    Computed<MaxSize> maxWidth = Keywords::NONE, maxHeight = Keywords::NONE;
 
-    Size& size(Axis axis) {
+    Computed<Size>& size(Axis axis) {
         return axis == Axis::HORIZONTAL ? width : height;
     }
 
-    Size const size(Axis axis) const {
+    Computed<Size> const size(Axis axis) const {
         return axis == Axis::HORIZONTAL ? width : height;
     }
 
-    Size& minSize(Axis axis) {
+    Computed<Size>& minSize(Axis axis) {
         return axis == Axis::HORIZONTAL ? minWidth : minHeight;
     }
 
-    Size const minSize(Axis axis) const {
+    Computed<Size> const minSize(Axis axis) const {
         return axis == Axis::HORIZONTAL ? minWidth : minHeight;
     }
 
-    MaxSize& maxSize(Axis axis) {
+    Computed<MaxSize>& maxSize(Axis axis) {
         return axis == Axis::HORIZONTAL ? maxWidth : maxHeight;
     }
 
-    MaxSize const maxSize(Axis axis) const {
+    Computed<MaxSize> const maxSize(Axis axis) const {
         return axis == Axis::HORIZONTAL ? maxWidth : maxHeight;
     }
 

@@ -42,9 +42,7 @@ RectAu resolveTransformReference(Rc<Layout::Fragment>& fragment, TransformBox bo
 }
 
 // https://www.w3.org/TR/css-transforms-1/#transform-origin-property
-Vec2Au resolveTransformOrigin(TransformOrigin origin, RectAu referenceBox) {
-    Layout::Resolver resolver{};
-
+Vec2Au resolveTransformOrigin(Computed<TransformOrigin> const& origin, RectAu referenceBox) {
     auto x = origin.xOffset.visit(
         [&](Keywords::Left) {
             return referenceBox.start();
@@ -55,8 +53,8 @@ Vec2Au resolveTransformOrigin(TransformOrigin origin, RectAu referenceBox) {
         [&](Keywords::Center) {
             return referenceBox.center().x;
         },
-        [&](Calc<PercentOr<Length>> value) {
-            return referenceBox.start() + resolver.resolve(value, referenceBox.width);
+        [&](Calc<Au, Percent> const& value) {
+            return referenceBox.start() + resolve(value, referenceBox.width);
         }
     );
 
@@ -70,8 +68,8 @@ Vec2Au resolveTransformOrigin(TransformOrigin origin, RectAu referenceBox) {
         [&](Keywords::Center) {
             return referenceBox.center().y;
         },
-        [&](Calc<PercentOr<Length>> value) {
-            return referenceBox.top() + resolver.resolve(value, referenceBox.height);
+        [&](Calc<Au, Percent> const& value) {
+            return referenceBox.top() + resolve(value, referenceBox.height);
         }
     );
 
@@ -79,9 +77,7 @@ Vec2Au resolveTransformOrigin(TransformOrigin origin, RectAu referenceBox) {
 }
 
 // https://www.w3.org/TR/css-transforms-1/#transform-property
-Math::Trans2f resolveTransform(Slice<TransformFunction> transforms, RectAu referenceBox, Vec2Au origin) {
-    Layout::Resolver resolver{};
-
+Math::Trans2f resolveTransform(Slice<Computed<TransformFunction>> transforms, RectAu referenceBox, Vec2Au origin) {
     auto result = Math::Trans2f::translate(
         origin.cast<f64>()
     );
@@ -90,45 +86,45 @@ Math::Trans2f resolveTransform(Slice<TransformFunction> transforms, RectAu refer
         auto trans = transform.visit(
             [&](MatrixTransform const& t) {
                 return Math::Trans2f{
-                    resolver.resolve(t.values[0]),
-                    resolver.resolve(t.values[1]),
-                    resolver.resolve(t.values[2]),
-                    resolver.resolve(t.values[3]),
-                    resolver.resolve(t.values[4]),
-                    resolver.resolve(t.values[5]),
+                    resolve(t.values[0]),
+                    resolve(t.values[1]),
+                    resolve(t.values[2]),
+                    resolve(t.values[3]),
+                    resolve(t.values[4]),
+                    resolve(t.values[5]),
                 };
             },
-            [&](TranslateTransform const& t) {
+            [&](Computed<TranslateTransform> const& t) {
                 return Math::Trans2f::translate({
-                    resolver.resolve(t.x, referenceBox.width).cast<f64>(),
-                    resolver.resolve(t.y, referenceBox.height).cast<f64>(),
+                    resolve(t.x, referenceBox.width).cast<f64>(),
+                    resolve(t.y, referenceBox.height).cast<f64>(),
                 });
             },
             [&](ScaleTransform const& t) {
                 return Math::Trans2f::scale({
-                    resolver.resolve(t.x),
-                    resolver.resolve(t.y),
+                    resolve(t.x),
+                    resolve(t.y),
                 });
             },
             [&](RotateTransform const& t) {
-                return Math::Trans2f::rotate(resolver.resolve(t.value).value());
+                return Math::Trans2f::rotate(resolve(t.value).value());
             },
             [&](SkewTransform const& t) {
                 return Math::Trans2f::skew({
-                    Math::tan(resolver.resolve(t.x).value()),
-                    Math::tan(resolver.resolve(t.y).value()),
+                    Math::tan(resolve(t.x).value()),
+                    Math::tan(resolve(t.y).value()),
                 });
             },
             [&](SkewXTransform const& t) {
                 return Math::Trans2f::skew({
-                    Math::tan(resolver.resolve(t.value).value()),
+                    Math::tan(resolve(t.value).value()),
                     0,
                 });
             },
             [&](SkewYTransform const& t) {
                 return Math::Trans2f::skew({
                     0,
-                    Math::tan(resolver.resolve(t.value).value()),
+                    Math::tan(resolve(t.value).value()),
                 });
             }
         );
@@ -143,7 +139,7 @@ Math::Trans2f resolveTransform(Rc<Layout::Fragment>& fragment, Math::Rectf viewB
     auto const& transform = *fragment->style().transform;
     auto referenceBox = resolveTransformReference(fragment, transform.box, viewBox.cast<Au>());
     auto origin = resolveTransformOrigin(transform.origin, referenceBox);
-    return resolveTransform(transform.transform.expect<Vec<TransformFunction>>(), referenceBox, origin);
+    return resolveTransform(transform.transform.expect<Computed<TransformList>>(), referenceBox, origin);
 }
 
 void applyTransform(Rc<Layout::Fragment>& fragment, Gfx::Canvas& g, Math::Rectf viewBox) {
