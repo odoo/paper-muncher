@@ -8,7 +8,6 @@ import Karm.Core;
 
 import :css;
 import :values.base;
-import :values.primitives;
 
 using namespace Karm;
 
@@ -174,7 +173,7 @@ export struct Dimension {
 };
 
 export template <>
-struct ValueParser<Dimension> {
+struct ValueTraits<Dimension> {
     static Res<Dimension> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -201,14 +200,11 @@ struct ValueParser<Dimension> {
 
         return Error::invalidData("expected dimension");
     }
-};
 
-export template <>
-struct ValueSerializer<Dimension> {
     // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
     static Res<> serialize(Io::TextWriter& w, Dimension const& value) {
         // The <number> component serialized as per <number> followed by the unit in its canonical form as defined in its respective specification.
-        try$(serializeValue(w, value.value()));
+        try$(Css::serializeNumber(w, value.value()));
         return w.writeStr(Dimension::nameOf(value.unit()));
     }
 };
@@ -232,47 +228,28 @@ export Res<Dimension> parseDimension(Cursor<Css::Sst>& c, Dimension::Type type) 
     return Ok(dim);
 }
 
-// MARK: Dimension Traits ------------------------------------------------------
+// MARK: Dimension Value -------------------------------------------------------
 
-// How a value is stored as a dimension, values that are a dimension of a single
-// type (Length, Angle, ...) hold it in `_dim` and declare their type in `TYPE`.
-export template <typename T>
-struct _Dimension {
-    static constexpr Dimension::Type TYPE = T::TYPE;
+// Traits of a value that wraps a dimension of a single type in `_dim`.
+export template <typename T, Dimension::Type TYPE>
+struct DimensionValueTraits {
+    static constexpr Dimension::Type DIMENSION_TYPE = TYPE;
 
-    static Dimension to(T const& value) {
+    static Dimension toDimension(T const& value) {
         return value._dim;
     }
 
-    static T from(Dimension dim) {
+    static T fromDimension(Dimension dim) {
         return T{dim};
     }
-};
 
-export template <>
-struct _Dimension<Number> {
-    static constexpr Dimension::Type TYPE = Dimension::NUMBER;
-
-    static Dimension to(Number value) {
-        return {value, Dimension::Unit::NONE};
+    static Res<T> parse(Cursor<Css::Sst>& c) {
+        return Ok(T{try$(parseDimension(c, TYPE))});
     }
 
-    static Number from(Dimension dim) {
-        return dim.value();
+    static Res<> serialize(Io::TextWriter& w, T const& value) {
+        return serializeValue(w, value._dim);
     }
 };
-
-export template <typename T>
-constexpr Dimension::Type dimensionTypeOf = _Dimension<T>::TYPE;
-
-export template <typename T>
-Dimension toDimension(T const& value) {
-    return _Dimension<T>::to(value);
-}
-
-export template <typename T>
-T fromDimension(Dimension dim) {
-    return _Dimension<T>::from(dim);
-}
 
 } // namespace Vaev

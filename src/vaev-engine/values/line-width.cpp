@@ -11,7 +11,6 @@ import :values.base;
 import :values.calc;
 import :values.keywords;
 import :values.length;
-import :values.resolved;
 
 using namespace Karm::Math::Literals;
 
@@ -30,42 +29,15 @@ export using LineWidth = Union<
     Keywords::Thick,
     Calc<Length>>;
 
-export Au resolve(LineWidth const& value, auto const& ctx) {
-    return value.visit(
-        [](Keywords::Thin const&) {
-            return THIN_VALUE;
-        },
-        [](Keywords::Medium const&) {
-            return MEDIUM_VALUE;
-        },
-        [](Keywords::Thick const&) {
-            return THICK_VALUE;
-        },
-        [&](auto const& length) {
-            return resolve(length, ctx);
-        }
-    );
-}
-
-// Computed value: absolute length
 export template <>
-struct _Computed<LineWidth> {
-    using Type = Au;
-};
+struct ValueTraits<LineWidth> : UnionValueTraits<LineWidth> {
+    // Computed value: absolute length
+    using Computed = Au;
 
-export Au compute(LineWidth const& value, auto const& ctx) {
-    return resolve(value, ctx);
-}
-
-export template <>
-struct _Specify<LineWidth> {
-    static LineWidth from(Au value) {
+    static LineWidth specify(Au value) {
         return Calc<Length>{Length{value}};
     }
-};
 
-export template <>
-struct ValueParser<LineWidth> {
     static Res<LineWidth> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -84,6 +56,27 @@ struct ValueParser<LineWidth> {
         }
 
         return Ok(try$(parseValue<Calc<Length>>(c)));
+    }
+
+    static Au resolve(LineWidth const& value, auto const& ctx) {
+        return value.visit(
+            [](Keywords::Thin const&) {
+                return THIN_VALUE;
+            },
+            [](Keywords::Medium const&) {
+                return MEDIUM_VALUE;
+            },
+            [](Keywords::Thick const&) {
+                return THICK_VALUE;
+            },
+            [&](auto const& length) {
+                return Vaev::resolve(length, ctx);
+            }
+        );
+    }
+
+    static Au compute(LineWidth const& value, auto const& ctx) {
+        return Vaev::resolve(value, ctx);
     }
 };
 

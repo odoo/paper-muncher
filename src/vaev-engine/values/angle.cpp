@@ -9,7 +9,6 @@ import Karm.Core;
 import :css;
 import :values.base;
 import :values.dimension;
-import :values.resolved;
 
 using namespace Karm;
 
@@ -21,8 +20,6 @@ namespace Vaev {
 export using Rad = Distinct<f64, struct _RadTag>;
 
 export struct Angle {
-    static constexpr auto TYPE = Dimension::ANGLE;
-
     Dimension _dim;
 
     static constexpr Angle fromDegree(f64 val) {
@@ -77,26 +74,12 @@ export struct Angle {
 };
 
 export template <>
-struct _Resolved<Angle> {
-    using Type = Rad;
-};
+struct ValueTraits<Angle> : DimensionValueTraits<Angle, Dimension::ANGLE> {
+    using Resolved = Rad;
 
-template <typename Ctx = None>
-Rad resolve(Angle const& value, [[maybe_unused]] Ctx const& ctx = NONE) {
-    return Rad{value.toRadian()};
-}
-
-export template <>
-struct ValueParser<Angle> {
-    static Res<Angle> parse(Cursor<Css::Sst>& c) {
-        return Ok(Angle{try$(parseDimension(c, Angle::TYPE))});
-    }
-};
-
-export template <>
-struct ValueSerializer<Angle> {
-    static Res<> serialize(Io::TextWriter& w, Angle const& value) {
-        return serializeValue(w, value._dim);
+    template <typename Ctx = None>
+    static Rad resolve(Angle const& value, [[maybe_unused]] Ctx const& ctx = NONE) {
+        return Rad{value.toRadian()};
     }
 };
 

@@ -8,7 +8,6 @@ import :values.base;
 import :values.calc;
 import :values.keywords;
 import :values.percent;
-import :values.resolved;
 
 using namespace Karm;
 
@@ -28,7 +27,7 @@ export struct RunningPosition {
 export using Position = Union<Keywords::Static, Keywords::Relative, Keywords::Absolute, Keywords::Fixed, Keywords::Sticky, RunningPosition>;
 
 export template <>
-struct ValueParser<Position> {
+struct ValueTraits<Position> : UnionValueTraits<Position> {
     // https://drafts.csswg.org/css-position-3/#propdef-position
     static Res<Position> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
@@ -66,7 +65,7 @@ export using Padding = Math::Insets<Calc<Length, Percent>>;
 export using BoxInsets = Math::Insets<Union<Keywords::Auto, Calc<Length, Percent>>>;
 
 export template <typename T>
-struct ValueParser<Math::Insets<T>> {
+struct ValueTraits<Math::Insets<T>> {
     static Res<Math::Insets<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -89,25 +88,18 @@ struct ValueParser<Math::Insets<T>> {
 
         return Ok(Math::Insets<T>{top.take(), right.take(), bottom.take(), left.take()});
     }
-};
 
-export template <typename T>
-struct _Computed<Math::Insets<T>> {
-    using Type = Math::Insets<Computed<T>>;
-};
+    using Computed = Math::Insets<Vaev::Computed<T>>;
 
-export template <typename T>
-Math::Insets<Computed<T>> compute(Math::Insets<T> const& value, auto const& ctx) {
-    return value.map([&](T const& v) {
-        return compute(v, ctx);
-    });
-}
-
-export template <typename T>
-struct _Specify<Math::Insets<T>> {
-    static Math::Insets<T> from(Math::Insets<Computed<T>> const& value) {
-        return value.map([](Computed<T> const& v) {
+    static Math::Insets<T> specify(Math::Insets<Vaev::Computed<T>> const& value) {
+        return value.map([](Vaev::Computed<T> const& v) {
             return specified<T>(v);
+        });
+    }
+
+    static Math::Insets<Vaev::Computed<T>> compute(Math::Insets<T> const& value, auto const& ctx) {
+        return value.map([&](T const& v) {
+            return Vaev::compute(v, ctx);
         });
     }
 };
@@ -129,18 +121,15 @@ struct _Gaps {
 export using Gaps = _Gaps<Specified>;
 
 export template <>
-struct _Computed<Gaps> {
-    using Type = _Gaps<Computed>;
-};
+struct ValueTraits<Gaps> {
+    using Computed = _Gaps<Computed>;
 
-export Computed<Gaps> compute(Gaps const& value, auto const& ctx) {
-    return {compute(value.row, ctx), compute(value.col, ctx)};
-}
-
-export template <>
-struct _Specify<Gaps> {
-    static Gaps from(Computed<Gaps> const& value) {
+    static Gaps specify(Vaev::Computed<Gaps> const& value) {
         return {specified<Gap>(value.row), specified<Gap>(value.col)};
+    }
+
+    static Vaev::Computed<Gaps> compute(Gaps const& value, auto const& ctx) {
+        return {Vaev::compute(value.row, ctx), Vaev::compute(value.col, ctx)};
     }
 };
 

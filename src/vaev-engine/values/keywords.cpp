@@ -22,7 +22,7 @@ struct Keyword {
 };
 
 export template <StrLit K>
-struct ValueParser<Keyword<K>> {
+struct ValueTraits<Keyword<K>> {
     static Res<Keyword<K>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -34,10 +34,7 @@ struct ValueParser<Keyword<K>> {
 
         return Error::invalidData("expected keyword");
     }
-};
 
-export template <StrLit K>
-struct ValueSerializer<Keyword<K>> {
     // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
     static Res<> serialize(Io::TextWriter& w, Keyword<K> const&) {
         // The keyword converted to ASCII lowercase.

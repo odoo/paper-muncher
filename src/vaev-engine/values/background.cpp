@@ -14,7 +14,6 @@ import :values.image;
 import :values.keywords;
 import :values.length;
 import :values.percent;
-import :values.resolved;
 
 using namespace Karm;
 
@@ -78,22 +77,10 @@ struct _BackgroundPosition {
 export using BackgroundPosition = _BackgroundPosition<Specified>;
 
 export template <>
-struct _Computed<BackgroundPosition> {
-    using Type = _BackgroundPosition<Computed>;
-};
+struct ValueTraits<BackgroundPosition> {
+    using Computed = _BackgroundPosition<Computed>;
 
-export Computed<BackgroundPosition> compute(BackgroundPosition const& value, auto const& ctx) {
-    return {
-        value.horizontalAnchor,
-        compute(value.horizontal, ctx),
-        value.verticalAnchor,
-        compute(value.vertical, ctx),
-    };
-}
-
-export template <>
-struct _Specify<BackgroundPosition> {
-    static BackgroundPosition from(Computed<BackgroundPosition> const& value) {
+    static BackgroundPosition specify(Vaev::Computed<BackgroundPosition> const& value) {
         return {
             value.horizontalAnchor,
             specified<Calc<Length, Percent>>(value.horizontal),
@@ -101,10 +88,7 @@ struct _Specify<BackgroundPosition> {
             specified<Calc<Length, Percent>>(value.vertical),
         };
     }
-};
 
-export template <>
-struct ValueParser<BackgroundPosition> {
     static Res<BackgroundPosition> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -276,6 +260,15 @@ struct ValueParser<BackgroundPosition> {
         );
 
         return Ok(BackgroundPosition(hAnchor, hValue, vAnchor, vValue));
+    }
+
+    static Vaev::Computed<BackgroundPosition> compute(BackgroundPosition const& value, auto const& ctx) {
+        return {
+            value.horizontalAnchor,
+            Vaev::compute(value.horizontal, ctx),
+            value.verticalAnchor,
+            Vaev::compute(value.vertical, ctx),
+        };
     }
 };
 

@@ -5,7 +5,6 @@ import Karm.Core;
 import :css;
 import :values.base;
 import :values.keywords;
-import :values.resolved;
 import :values.sizing;
 
 using namespace Karm;
@@ -30,7 +29,7 @@ export enum struct FlexDirection {
 };
 
 export template <>
-struct ValueParser<FlexDirection> {
+struct ValueTraits<FlexDirection> : EnumValueTraits<FlexDirection> {
     static Res<FlexDirection> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -60,7 +59,7 @@ export enum struct FlexWrap {
 };
 
 export template <>
-struct ValueParser<FlexWrap> {
+struct ValueTraits<FlexWrap> : EnumValueTraits<FlexWrap> {
     static Res<FlexWrap> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

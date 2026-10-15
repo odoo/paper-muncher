@@ -18,8 +18,6 @@ namespace Vaev {
 // https://drafts.csswg.org/css-values/#resolution
 
 export struct Resolution {
-    static constexpr auto TYPE = Dimension::RESOLUTION;
-
     Dimension _dim;
 
     static constexpr Resolution fromDpi(f64 val) {
@@ -73,17 +71,7 @@ export struct Resolution {
 };
 
 export template <>
-struct ValueParser<Resolution> {
-    static Res<Resolution> parse(Cursor<Css::Sst>& c) {
-        return Ok(Resolution{try$(parseDimension(c, Resolution::TYPE))});
-    }
-};
-
-export template <>
-struct ValueSerializer<Resolution> {
-    static Res<> serialize(Io::TextWriter& w, Resolution const& value) {
-        return serializeValue(w, value._dim);
-    }
+struct ValueTraits<Resolution> : DimensionValueTraits<Resolution, Dimension::RESOLUTION> {
 };
 
 } // namespace Vaev

@@ -324,7 +324,7 @@ export struct Display {
 };
 
 export template <>
-struct ValueParser<Display> {
+struct ValueTraits<Display> {
     static Res<Display> _parseLegacyDisplay(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -454,10 +454,7 @@ struct ValueParser<Display> {
             item,
         });
     }
-};
 
-export template <>
-struct ValueSerializer<Display> {
     static Res<> serialize(Io::TextWriter& w, Display const& value) {
         // https://www.w3.org/TR/css-display-3/#the-display-properties
         // NOTE: Following the precedence rules of “most backwards-compatible, then shortest”,

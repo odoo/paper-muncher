@@ -7,7 +7,6 @@ import :css;
 import :values.base;
 import :values.length;
 import :values.percent;
-import :values.resolved;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
@@ -25,7 +24,7 @@ export enum struct TableLayout {
 };
 
 export template <>
-struct ValueParser<TableLayout> {
+struct ValueTraits<TableLayout> : EnumValueTraits<TableLayout> {
     static Res<TableLayout> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -51,7 +50,7 @@ export enum struct CaptionSide {
 };
 
 export template <>
-struct ValueParser<CaptionSide> {
+struct ValueTraits<CaptionSide> : EnumValueTraits<CaptionSide> {
     static Res<CaptionSide> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -75,7 +74,7 @@ export enum struct BorderCollapse {
 };
 
 export template <>
-struct ValueParser<BorderCollapse> {
+struct ValueTraits<BorderCollapse> : EnumValueTraits<BorderCollapse> {
     static Res<BorderCollapse> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -110,23 +109,13 @@ export struct ComputedBorderSpacing {
 };
 
 export template <>
-struct _Computed<BorderSpacing> {
-    using Type = ComputedBorderSpacing;
-};
+struct ValueTraits<BorderSpacing> {
+    using Computed = ComputedBorderSpacing;
 
-export ComputedBorderSpacing compute(BorderSpacing const& value, LengthContext auto const& ctx) {
-    return {compute(value.horizontal, ctx), compute(value.vertical, ctx)};
-}
-
-export template <>
-struct _Specify<BorderSpacing> {
-    static BorderSpacing from(ComputedBorderSpacing const& value) {
+    static BorderSpacing specify(ComputedBorderSpacing const& value) {
         return {value.horizontal, value.vertical};
     }
-};
 
-export template <>
-struct ValueParser<BorderSpacing> {
     static Res<BorderSpacing> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -145,6 +134,10 @@ struct ValueParser<BorderSpacing> {
         }
 
         return Error::invalidData("expected border spacing value");
+    }
+
+    static ComputedBorderSpacing compute(BorderSpacing const& value, LengthContext auto const& ctx) {
+        return {Vaev::compute(value.horizontal, ctx), Vaev::compute(value.vertical, ctx)};
     }
 };
 

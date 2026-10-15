@@ -7,7 +7,7 @@ import :values.keywords;
 import :values.length;
 import :values.percent;
 import :values.primitives;
-import :values.resolved;
+import :values.base;
 
 using namespace Karm;
 
@@ -17,29 +17,11 @@ namespace Vaev {
 export using LineHeight = Union<Keywords::Normal, Number, Calc<Length, Percent>>;
 
 export template <>
-struct _Computed<LineHeight> {
-    using Type = Union<Keywords::Normal, Number, Au>;
-};
+struct ValueTraits<LineHeight> : UnionValueTraits<LineHeight> {
+    // Computed value: the specified keyword, a number, or a computed <length> value
+    using Computed = Union<Keywords::Normal, Number, Au>;
 
-// Computed value: the specified keyword, a number, or a computed <length> value
-export Computed<LineHeight> compute(LineHeight const& value, LengthContext auto const& ctx) {
-    return value.visit(
-        [](Keywords::Normal const& v) -> Computed<LineHeight> {
-            return v;
-        },
-        [](Number const& v) -> Computed<LineHeight> {
-            return v;
-        },
-        [&](Calc<Length, Percent> const& v) -> Computed<LineHeight> {
-            // Percentage: relative to the font size of the element itself.
-            return resolve(compute(v, ctx), Au::fromFloatNearest(ctx.fontSize));
-        }
-    );
-}
-
-export template <>
-struct _Specify<LineHeight> {
-    static LineHeight from(Computed<LineHeight> const& value) {
+    static LineHeight specify(Vaev::Computed<LineHeight> const& value) {
         return value.visit(
             [](Keywords::Normal const& v) -> LineHeight {
                 return v;
@@ -49,6 +31,21 @@ struct _Specify<LineHeight> {
             },
             [](Au const& v) -> LineHeight {
                 return Calc<Length, Percent>{Length{v}};
+            }
+        );
+    }
+
+    static Vaev::Computed<LineHeight> compute(LineHeight const& value, LengthContext auto const& ctx) {
+        return value.visit(
+            [](Keywords::Normal const& v) -> Vaev::Computed<LineHeight> {
+                return v;
+            },
+            [](Number const& v) -> Vaev::Computed<LineHeight> {
+                return v;
+            },
+            [&](Calc<Length, Percent> const& v) -> Vaev::Computed<LineHeight> {
+                // Percentage: relative to the font size of the element itself.
+                return Vaev::resolve(Vaev::compute(v, ctx), Au::fromFloatNearest(ctx.fontSize));
             }
         );
     }

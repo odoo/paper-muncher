@@ -14,7 +14,6 @@ import :values.calc;
 import :values.keywords;
 import :values.percent;
 import :values.primitives;
-import :values.resolved;
 
 using namespace Karm::Math::Literals;
 
@@ -44,26 +43,16 @@ struct _TransformOrigin {
 export using TransformOrigin = _TransformOrigin<Specified>;
 
 export template <>
-struct _Computed<TransformOrigin> {
-    using Type = _TransformOrigin<Computed>;
-};
+struct ValueTraits<TransformOrigin> {
+    using Computed = _TransformOrigin<Computed>;
 
-export Computed<TransformOrigin> compute(TransformOrigin const& value, auto const& ctx) {
-    return {compute(value.xOffset, ctx), compute(value.yOffset, ctx)};
-}
-
-export template <>
-struct _Specify<TransformOrigin> {
-    static TransformOrigin from(Computed<TransformOrigin> const& value) {
+    static TransformOrigin specify(Vaev::Computed<TransformOrigin> const& value) {
         return {
             specified<TransformOrigin::XOffset>(value.xOffset),
             specified<TransformOrigin::YOffset>(value.yOffset),
         };
     }
-};
 
-export template <>
-struct ValueParser<TransformOrigin> {
     static Res<TransformOrigin> _twoValues(Cursor<Css::Sst>& c) {
         auto xoffset = try$(parseValue<TransformOrigin::XOffset>(c));
         if (c.ended())
@@ -136,6 +125,10 @@ struct ValueParser<TransformOrigin> {
             }
         );
     }
+
+    static Vaev::Computed<TransformOrigin> compute(TransformOrigin const& value, auto const& ctx) {
+        return {Vaev::compute(value.xOffset, ctx), Vaev::compute(value.yOffset, ctx)};
+    }
 };
 
 // MARK: Transform Box ---------------------------------------------------------
@@ -161,7 +154,7 @@ export struct MatrixTransform {
 };
 
 export template <>
-struct ValueParser<MatrixTransform> {
+struct ValueTraits<MatrixTransform> {
     static Res<MatrixTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -202,26 +195,16 @@ struct _TranslateTransform {
 export using TranslateTransform = _TranslateTransform<Specified>;
 
 export template <>
-struct _Computed<TranslateTransform> {
-    using Type = _TranslateTransform<Computed>;
-};
+struct ValueTraits<TranslateTransform> {
+    using Computed = _TranslateTransform<Computed>;
 
-export Computed<TranslateTransform> compute(TranslateTransform const& value, auto const& ctx) {
-    return {compute(value.x, ctx), compute(value.y, ctx)};
-}
-
-export template <>
-struct _Specify<TranslateTransform> {
-    static TranslateTransform from(Computed<TranslateTransform> const& value) {
+    static TranslateTransform specify(Vaev::Computed<TranslateTransform> const& value) {
         return {
             specified<Calc<Length, Percent>>(value.x),
             specified<Calc<Length, Percent>>(value.y),
         };
     }
-};
 
-export template <>
-struct ValueParser<TranslateTransform> {
     static Res<TranslateTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -272,6 +255,10 @@ struct ValueParser<TranslateTransform> {
         c.next(); // consume the function token
         return Ok(TranslateTransform{std::move(tx), std::move(ty)});
     }
+
+    static Vaev::Computed<TranslateTransform> compute(TranslateTransform const& value, auto const& ctx) {
+        return {Vaev::compute(value.x, ctx), Vaev::compute(value.y, ctx)};
+    }
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-scale
@@ -285,7 +272,7 @@ export struct ScaleTransform {
 };
 
 export template <>
-struct ValueParser<ScaleTransform> {
+struct ValueTraits<ScaleTransform> {
     static Res<ScaleTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -349,7 +336,7 @@ export struct RotateTransform {
 };
 
 export template <>
-struct ValueParser<RotateTransform> {
+struct ValueTraits<RotateTransform> {
     static Res<RotateTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -382,7 +369,7 @@ export struct SkewTransform {
 };
 
 export template <>
-struct ValueParser<SkewTransform> {
+struct ValueTraits<SkewTransform> {
     static Res<SkewTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -423,7 +410,7 @@ export struct SkewXTransform {
 };
 
 export template <>
-struct ValueParser<SkewXTransform> {
+struct ValueTraits<SkewXTransform> {
     static Res<SkewXTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -455,7 +442,7 @@ export struct SkewYTransform {
 };
 
 export template <>
-struct ValueParser<SkewYTransform> {
+struct ValueTraits<SkewYTransform> {
     static Res<SkewYTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -493,7 +480,7 @@ export using TransformList = Vec<TransformFunction>;
 export using Transform = Union<Keywords::None, TransformList>;
 
 export template <>
-struct ValueParser<Transform> {
+struct ValueTraits<Transform> : UnionValueTraits<Transform> {
     static Res<Transform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

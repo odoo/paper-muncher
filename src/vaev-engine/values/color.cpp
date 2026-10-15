@@ -260,8 +260,23 @@ export Opt<SystemColor> parseSystemColor(Str name) {
     return NONE;
 }
 
+static Array<Gfx::Color, static_cast<usize>(SystemColor::_LEN)> SYSTEM_COLOR = {
+#define COLOR(NAME, _, VALUE) Gfx::Color::fromHex(VALUE),
+#include "defs/system-colors.inc"
+
+#undef COLOR
+};
+
 export template <>
-struct ValueParser<Color> {
+struct ValueTraits<ColorMix> {
+    using Resolved = Gfx::Color;
+
+    static Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor);
+};
+
+export template <>
+struct ValueTraits<Color> : UnionValueTraits<Color> {
+    using Resolved = Gfx::Color;
 
     static Res<Gfx::Color> _parseHexColor(Io::SScan& s) {
         if (s.next() != '#')
@@ -684,10 +699,7 @@ struct ValueParser<Color> {
 
         return Error::invalidData("expected color");
     }
-};
 
-export template <>
-struct ValueSerializer<Color> {
     // https://drafts.csswg.org/css-color-4/#serializing-color-values
     static Res<> serialize(Io::TextWriter& w, Color const& value) {
         // FIXME: This is a rough approximate of the spec and only supports srgb.
@@ -720,41 +732,32 @@ struct ValueSerializer<Color> {
             }
         );
     }
+
+    static Gfx::Color resolve(Color const& c, Gfx::Color currentColor) {
+        return c.visit(
+            [&](Gfx::Color const& srgb) {
+                return srgb;
+            },
+            [&](Keywords::CurrentColor) {
+                return currentColor;
+            },
+            [&](SystemColor const& system) {
+                return SYSTEM_COLOR[static_cast<usize>(system)];
+            },
+            [&](Box<ColorMix> const& mix) {
+                return Vaev::resolve(*mix, currentColor);
+            }
+        );
+    }
 };
 
-static Array<Gfx::Color, static_cast<usize>(SystemColor::_LEN)> SYSTEM_COLOR = {
-#define COLOR(NAME, _, VALUE) Gfx::Color::fromHex(VALUE),
-#include "defs/system-colors.inc"
-
-#undef COLOR
-};
-
-export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor);
-
-export Gfx::Color resolve(Color const& c, Gfx::Color currentColor) {
-    return c.visit(
-        [&](Gfx::Color const& srgb) {
-            return srgb;
-        },
-        [&](Keywords::CurrentColor) {
-            return currentColor;
-        },
-        [&](SystemColor const& system) {
-            return SYSTEM_COLOR[static_cast<usize>(system)];
-        },
-        [&](Box<ColorMix> const& mix) {
-            return resolve(*mix, currentColor);
-        }
-    );
-}
-
-export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor) {
-    Gfx::Color lhsColor = resolve(cm.lhs.color, currentColor);
+Gfx::Color ValueTraits<ColorMix>::resolve(ColorMix const& cm, Gfx::Color currentColor) {
+    Gfx::Color lhsColor = Vaev::resolve(cm.lhs.color, currentColor);
     f64 lhsPerc = cm.lhs.perc
                       ? cm.lhs.perc->value()
                       : 100 - cm.rhs.perc.unwrapOr(Percent{50}).value();
 
-    Gfx::Color rhsColor = resolve(cm.rhs.color, currentColor);
+    Gfx::Color rhsColor = Vaev::resolve(cm.rhs.color, currentColor);
     f64 rhsPerc = cm.rhs.perc
                       ? cm.rhs.perc->value()
                       : 100 - cm.lhs.perc.unwrapOr(Percent{50}).value();

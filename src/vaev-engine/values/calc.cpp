@@ -11,7 +11,6 @@ import :values.base;
 import :values.dimension;
 import :values.length;
 import :values.primitives;
-import :values.resolved;
 
 using namespace Karm;
 
@@ -192,12 +191,12 @@ struct Calc {
     CalcExpr _expr;
 
     static constexpr bool accepts(Dimension::Type type) {
-        return ((type == dimensionTypeOf<Ts>) or ...);
+        return ((type == ValueTraits<Ts>::DIMENSION_TYPE) or ...);
     }
 
     static constexpr Opt<Dimension::Type> percentHint() {
-        if (accepts(Dimension::PERCENTAGE) and dimensionTypeOf<First> != Dimension::PERCENTAGE)
-            return Some(dimensionTypeOf<First>);
+        if (accepts(Dimension::PERCENTAGE) and ValueTraits<First>::DIMENSION_TYPE != Dimension::PERCENTAGE)
+            return Some(ValueTraits<First>::DIMENSION_TYPE);
         return NONE;
     }
 
@@ -210,14 +209,14 @@ struct Calc {
     template <typename U>
     static Dimension _wrap(U const& val) {
         if constexpr (Meta::Contains<U, Ts...>) {
-            return toDimension(val);
+            return ValueTraits<U>::toDimension(val);
         } else {
             Opt<Dimension> result;
             (
                 [&] {
                     if constexpr (Meta::Convertible<U, Ts>)
                         if (not result)
-                            result = Some(toDimension(Ts(val)));
+                            result = Some(ValueTraits<Ts>::toDimension(Ts(val)));
                 }(),
                 ...);
             return result.take();
@@ -225,7 +224,7 @@ struct Calc {
     }
 
     constexpr Calc()
-        : _expr(Dimension{0, Dimension::canonicalUnitOf(dimensionTypeOf<First>)}) {}
+        : _expr(Dimension{0, Dimension::canonicalUnitOf(ValueTraits<First>::DIMENSION_TYPE)}) {}
 
     template <typename U>
         requires(Meta::Convertible<U, Ts> or ...)
@@ -241,8 +240,8 @@ struct Calc {
     // Returns the operand if the expression is made of a single operand of type U.
     template <typename U>
     Opt<U> is() const {
-        if (auto dim = _expr.dimension(); dim and dim->type() == dimensionTypeOf<U>)
-            return Some(fromDimension<U>(*dim));
+        if (auto dim = _expr.dimension(); dim and dim->type() == ValueTraits<U>::DIMENSION_TYPE)
+            return Some(ValueTraits<U>::fromDimension(*dim));
         return NONE;
     }
 
@@ -251,10 +250,7 @@ struct Calc {
     }
 };
 
-export template <typename... Ts>
-struct _Resolved<Calc<Ts...>> {
-    using Type = Resolved<Meta::First<Ts...>>;
-};
+// MARK: Value Traits ----------------------------------------------------------
 
 // Turns a value in the canonical unit of T into its resolved value.
 template <typename T>
@@ -262,40 +258,9 @@ Resolved<T> _resolveCanonical(f64 value) {
     if constexpr (Meta::Same<Resolved<T>, Au>) {
         return Au::fromFloatNearest(value);
     } else {
-        auto dim = Dimension{value, Dimension::canonicalUnitOf(dimensionTypeOf<T>)};
-        return resolve(fromDimension<T>(dim));
+        auto dim = Dimension{value, Dimension::canonicalUnitOf(ValueTraits<T>::DIMENSION_TYPE)};
+        return resolve(ValueTraits<T>::fromDimension(dim));
     }
-}
-
-// Resolves an expression made of dimensions that don't depend on a context.
-export template <typename... Ts>
-Resolved<Calc<Ts...>> resolve(Calc<Ts...> const& calc) {
-    auto value = _evalCalc(calc._expr, [](Dimension const& d) {
-        return d.canonical().value();
-    });
-    return _resolveCanonical<Meta::First<Ts...>>(value);
-}
-
-export template <typename... Ts>
-Resolved<Calc<Ts...>> resolve(Calc<Ts...> const& calc, LengthContext auto const& ctx) {
-    auto value = _evalCalc(calc._expr, [&](Dimension const& d) {
-        if (d.type() == Dimension::LENGTH and not d.isAbsolute())
-            return resolve(Length{d}, ctx).template cast<f64>();
-        return d.canonical().value();
-    });
-    return _resolveCanonical<Meta::First<Ts...>>(value);
-}
-
-// Resolves an expression whose percentages are relative to `basis`.
-export template <typename... Ts>
-Resolved<Calc<Ts...>> resolve(Calc<Ts...> const& calc, Resolved<Calc<Ts...>> basis) {
-    auto canonicalBasis = toDimension(basis).canonical().value();
-    auto value = _evalCalc(calc._expr, [&](Dimension const& d) {
-        if (d.type() == Dimension::PERCENTAGE)
-            return canonicalBasis * d.value() / 100.;
-        return d.canonical().value();
-    });
-    return _resolveCanonical<Meta::First<Ts...>>(value);
 }
 
 // MARK: Computed Value --------------------------------------------------------
@@ -352,45 +317,14 @@ CalcExpr _computeCalc(CalcExpr const& expr, LengthContext auto const& ctx) {
 }
 
 export template <typename... Ts>
-struct _Computed<Calc<Ts...>> {
-    using Type = Calc<Computed<Ts>...>;
-};
+struct ValueTraits<Calc<Ts...>> {
+    // A calc() resolving to a <length> doesn't depend on any percentage basis,
+    // so it computes all the way down to an absolute length.
+    static constexpr bool _COMPUTES_TO_LENGTH = Meta::Same<Calc<Ts...>, Calc<Length>>;
 
-export template <typename... Ts>
-    requires(not Meta::Same<Computed<Calc<Ts...>>, Calc<Ts...>>)
-Computed<Calc<Ts...>> compute(Calc<Ts...> const& calc, LengthContext auto const& ctx) {
-    return Computed<Calc<Ts...>>{_computeCalc(calc._expr, ctx)};
-}
+    using Computed = Meta::Cond<_COMPUTES_TO_LENGTH, Au, Calc<Vaev::Computed<Ts>...>>;
+    using Resolved = Vaev::Resolved<Meta::First<Ts...>>;
 
-export template <typename... Ts>
-struct _Specify<Calc<Ts...>> {
-    static Calc<Ts...> from(Calc<Computed<Ts>...> const& calc) {
-        return Calc<Ts...>{calc._expr};
-    }
-};
-
-// A calc() resolving to a <length> doesn't depend on any percentage basis,
-// so it computes all the way down to an absolute length.
-export template <>
-struct _Computed<Calc<Length>> {
-    using Type = Au;
-};
-
-export Au compute(Calc<Length> const& calc, LengthContext auto const& ctx) {
-    return resolve(calc, ctx);
-}
-
-export template <>
-struct _Specify<Calc<Length>> {
-    static Calc<Length> from(Au value) {
-        return Length{value};
-    }
-};
-
-// MARK: Parsing ---------------------------------------------------------------
-
-export template <typename... Ts>
-struct ValueParser<Calc<Ts...>> {
     static Res<Calc<Ts...>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -444,12 +378,7 @@ struct ValueParser<Calc<Ts...>> {
         }
         return Error::invalidData("unexpected operator");
     }
-};
 
-// MARK: Serialization ---------------------------------------------------------
-
-export template <typename... Ts>
-struct ValueSerializer<Calc<Ts...>> {
     // https://drafts.csswg.org/css-values/#calc-serialize
     static Res<> serialize(Io::TextWriter& w, Calc<Ts...> const& value) {
         // NOTE: The current implementation is a rough approximation of the spec.
@@ -522,6 +451,48 @@ struct ValueSerializer<Calc<Ts...>> {
         case CalcOp::_LEN:
             unreachable();
         }
+    }
+
+    static Computed compute(Calc<Ts...> const& calc, LengthContext auto const& ctx) {
+        if constexpr (_COMPUTES_TO_LENGTH)
+            return resolve(calc, ctx);
+        else
+            return Computed{_computeCalc(calc._expr, ctx)};
+    }
+
+    static Calc<Ts...> specify(Computed const& value) {
+        if constexpr (_COMPUTES_TO_LENGTH)
+            return Length{value};
+        else
+            return Calc<Ts...>{value._expr};
+    }
+
+    // Resolves an expression made of dimensions that don't depend on a context.
+    static Resolved resolve(Calc<Ts...> const& calc) {
+        auto value = _evalCalc(calc._expr, [](Dimension const& d) {
+            return d.canonical().value();
+        });
+        return _resolveCanonical<Meta::First<Ts...>>(value);
+    }
+
+    static Resolved resolve(Calc<Ts...> const& calc, LengthContext auto const& ctx) {
+        auto value = _evalCalc(calc._expr, [&](Dimension const& d) {
+            if (d.type() == Dimension::LENGTH and not d.isAbsolute())
+                return Vaev::resolve(Length{d}, ctx).template cast<f64>();
+            return d.canonical().value();
+        });
+        return _resolveCanonical<Meta::First<Ts...>>(value);
+    }
+
+    // Resolves an expression whose percentages are relative to `basis`.
+    static Resolved resolve(Calc<Ts...> const& calc, Resolved basis) {
+        auto canonicalBasis = ValueTraits<Resolved>::toDimension(basis).canonical().value();
+        auto value = _evalCalc(calc._expr, [&](Dimension const& d) {
+            if (d.type() == Dimension::PERCENTAGE)
+                return canonicalBasis * d.value() / 100.;
+            return d.canonical().value();
+        });
+        return _resolveCanonical<Meta::First<Ts...>>(value);
     }
 };
 

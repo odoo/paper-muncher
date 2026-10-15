@@ -17,7 +17,6 @@ import :values.background;
 import :values.insets;
 import :values.borders;
 import :values.keywords;
-import :values.resolved;
 
 using namespace Karm;
 
@@ -75,23 +74,13 @@ struct _Circle {
 export using Circle = _Circle<Specified>;
 
 export template <>
-struct _Computed<Circle> {
-    using Type = _Circle<Computed>;
-};
+struct ValueTraits<Circle> {
+    using Computed = _Circle<Computed>;
 
-export Computed<Circle> compute(Circle const& value, auto const& ctx) {
-    return {compute(value.radius, ctx), compute(value.position, ctx)};
-}
-
-export template <>
-struct _Specify<Circle> {
-    static Circle from(Computed<Circle> const& value) {
+    static Circle specify(Vaev::Computed<Circle> const& value) {
         return {specified<ShapeRadius>(value.radius), specified<BackgroundPosition>(value.position)};
     }
-};
 
-export template <>
-struct ValueParser<Circle> {
     static Res<Circle> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -121,6 +110,10 @@ struct ValueParser<Circle> {
         }
         return Error::invalidData("invalid circle");
     }
+
+    static Vaev::Computed<Circle> compute(Circle const& value, auto const& ctx) {
+        return {Vaev::compute(value.radius, ctx), Vaev::compute(value.position, ctx)};
+    }
 };
 
 // MARK: Ellipse ---------------------------------------------------------------
@@ -140,27 +133,17 @@ struct _Ellipse {
 export using Ellipse = _Ellipse<Specified>;
 
 export template <>
-struct _Computed<Ellipse> {
-    using Type = _Ellipse<Computed>;
-};
+struct ValueTraits<Ellipse> {
+    using Computed = _Ellipse<Computed>;
 
-export Computed<Ellipse> compute(Ellipse const& value, auto const& ctx) {
-    return {compute(value.rx, ctx), compute(value.ry, ctx), compute(value.position, ctx)};
-}
-
-export template <>
-struct _Specify<Ellipse> {
-    static Ellipse from(Computed<Ellipse> const& value) {
+    static Ellipse specify(Vaev::Computed<Ellipse> const& value) {
         return {
             specified<ShapeRadius>(value.rx),
             specified<ShapeRadius>(value.ry),
             specified<BackgroundPosition>(value.position),
         };
     }
-};
 
-export template <>
-struct ValueParser<Ellipse> {
     static Res<Ellipse> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -192,6 +175,10 @@ struct ValueParser<Ellipse> {
         }
         return Error::invalidData("invalid ellipse");
     }
+
+    static Vaev::Computed<Ellipse> compute(Ellipse const& value, auto const& ctx) {
+        return {Vaev::compute(value.rx, ctx), Vaev::compute(value.ry, ctx), Vaev::compute(value.position, ctx)};
+    }
 };
 
 // MARK: Inset -----------------------------------------------------------------
@@ -210,26 +197,16 @@ struct _Inset {
 export using Inset = _Inset<Specified>;
 
 export template <>
-struct _Computed<Inset> {
-    using Type = _Inset<Computed>;
-};
+struct ValueTraits<Inset> {
+    using Computed = _Inset<Computed>;
 
-export Computed<Inset> compute(Inset const& value, auto const& ctx) {
-    return {compute(value.insets, ctx), compute(value.borderRadius, ctx)};
-}
-
-export template <>
-struct _Specify<Inset> {
-    static Inset from(Computed<Inset> const& value) {
+    static Inset specify(Vaev::Computed<Inset> const& value) {
         return {
             specified<Math::Insets<Calc<Length, Percent>>>(value.insets),
             specified<Math::Radii<Calc<Length, Percent>>>(value.borderRadius),
         };
     }
-};
 
-export template <>
-struct ValueParser<Inset> {
     static Res<Inset> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -261,6 +238,10 @@ struct ValueParser<Inset> {
         }
         return Error::invalidData("invalid inset");
     }
+
+    static Vaev::Computed<Inset> compute(Inset const& value, auto const& ctx) {
+        return {Vaev::compute(value.insets, ctx), Vaev::compute(value.borderRadius, ctx)};
+    }
 };
 
 // MARK: Path ------------------------------------------------------------------
@@ -276,7 +257,7 @@ export struct Path {
 };
 
 export template <>
-struct ValueParser<Path> {
+struct ValueTraits<Path> {
     static Res<Path> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -328,21 +309,10 @@ struct _Polygon {
 export using Polygon = _Polygon<Specified>;
 
 export template <>
-struct _Computed<Polygon> {
-    using Type = _Polygon<Computed>;
-};
+struct ValueTraits<Polygon> {
+    using Computed = _Polygon<Computed>;
 
-export Computed<Polygon> compute(Polygon const& value, auto const& ctx) {
-    Computed<Polygon> result;
-    result.fillRule = value.fillRule;
-    for (auto const& point : value.points)
-        result.points.emplaceBack(compute(point.v0, ctx), compute(point.v1, ctx));
-    return result;
-}
-
-export template <>
-struct _Specify<Polygon> {
-    static Polygon from(Computed<Polygon> const& value) {
+    static Polygon specify(Vaev::Computed<Polygon> const& value) {
         Polygon result;
         result.fillRule = value.fillRule;
         for (auto const& point : value.points)
@@ -352,10 +322,7 @@ struct _Specify<Polygon> {
             );
         return result;
     }
-};
 
-export template <>
-struct ValueParser<Polygon> {
     static Res<Polygon> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -389,6 +356,14 @@ struct ValueParser<Polygon> {
         }
         return Error::invalidData("invalid polygon");
     }
+
+    static Vaev::Computed<Polygon> compute(Polygon const& value, auto const& ctx) {
+        Vaev::Computed<Polygon> result;
+        result.fillRule = value.fillRule;
+        for (auto const& point : value.points)
+            result.points.emplaceBack(Vaev::compute(point.v0, ctx), Vaev::compute(point.v1, ctx));
+        return result;
+    }
 };
 
 // MARK: Rect ------------------------------------------------------------------
@@ -407,26 +382,16 @@ struct _Rect {
 export using Rect = _Rect<Specified>;
 
 export template <>
-struct _Computed<Rect> {
-    using Type = _Rect<Computed>;
-};
+struct ValueTraits<Rect> {
+    using Computed = _Rect<Computed>;
 
-export Computed<Rect> compute(Rect const& value, auto const& ctx) {
-    return {compute(value.insets, ctx), compute(value.borderRadius, ctx)};
-}
-
-export template <>
-struct _Specify<Rect> {
-    static Rect from(Computed<Rect> const& value) {
+    static Rect specify(Vaev::Computed<Rect> const& value) {
         return {
             specified<Math::Insets<Calc<Length, Percent>>>(value.insets),
             specified<Math::Radii<Calc<Length, Percent>>>(value.borderRadius),
         };
     }
-};
 
-export template <>
-struct ValueParser<Rect> {
     static Res<Rect> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -467,6 +432,10 @@ struct ValueParser<Rect> {
         }
         return Error::invalidData("invalid rect");
     }
+
+    static Vaev::Computed<Rect> compute(Rect const& value, auto const& ctx) {
+        return {Vaev::compute(value.insets, ctx), Vaev::compute(value.borderRadius, ctx)};
+    }
 };
 
 // MARK: Xywh ------------------------------------------------------------------
@@ -485,33 +454,18 @@ struct _Xywh {
 export using Xywh = _Xywh<Specified>;
 
 export template <>
-struct _Computed<Xywh> {
-    using Type = _Xywh<Computed>;
-};
+struct ValueTraits<Xywh> {
+    using Computed = _Xywh<Computed>;
 
-export Computed<Xywh> compute(Xywh const& value, auto const& ctx) {
-    return {
-        value.rect.map([&](Calc<Length, Percent> const& v) {
-            return compute(v, ctx);
-        }),
-        compute(value.borderRadius, ctx),
-    };
-}
-
-export template <>
-struct _Specify<Xywh> {
-    static Xywh from(Computed<Xywh> const& value) {
+    static Xywh specify(Vaev::Computed<Xywh> const& value) {
         return {
-            value.rect.map([](Computed<Calc<Length, Percent>> const& v) {
+            value.rect.map([](Vaev::Computed<Calc<Length, Percent>> const& v) {
                 return specified<Calc<Length, Percent>>(v);
             }),
             specified<Math::Radii<Calc<Length, Percent>>>(value.borderRadius),
         };
     }
-};
 
-export template <>
-struct ValueParser<Xywh> {
     static Res<Xywh> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -549,6 +503,15 @@ struct ValueParser<Xywh> {
         }
         return Error::invalidData("invalid xywh");
     }
+
+    static Vaev::Computed<Xywh> compute(Xywh const& value, auto const& ctx) {
+        return {
+            value.rect.map([&](Calc<Length, Percent> const& v) {
+                return Vaev::compute(v, ctx);
+            }),
+            Vaev::compute(value.borderRadius, ctx),
+        };
+    }
 };
 
 // MARK: Basic Shape -----------------------------------------------------------
@@ -571,31 +534,17 @@ struct _BasicShape {
 export using BasicShape = _BasicShape<Specified>;
 
 export template <>
-struct _Computed<BasicShape> {
-    using Type = _BasicShape<Computed>;
-};
+struct ValueTraits<BasicShape> {
+    using Computed = _BasicShape<Computed>;
 
-export Computed<BasicShape> compute(BasicShape const& value, auto const& ctx) {
-    Computed<BasicShape> result;
-    if (value.shape)
-        result.shape = Some(compute(*value.shape, ctx));
-    result.referenceBox = value.referenceBox;
-    return result;
-}
-
-export template <>
-struct _Specify<BasicShape> {
-    static BasicShape from(Computed<BasicShape> const& value) {
+    static BasicShape specify(Vaev::Computed<BasicShape> const& value) {
         BasicShape result;
         if (value.shape)
             result.shape = Some(specified<BasicShapeFunction>(*value.shape));
         result.referenceBox = value.referenceBox;
         return result;
     }
-};
 
-export template <>
-struct ValueParser<BasicShape> {
     static Res<BasicShape> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -616,6 +565,14 @@ struct ValueParser<BasicShape> {
             resultShape.shape = Some(shape.expect());
 
         return Ok(resultShape);
+    }
+
+    static Vaev::Computed<BasicShape> compute(BasicShape const& value, auto const& ctx) {
+        Vaev::Computed<BasicShape> result;
+        if (value.shape)
+            result.shape = Some(Vaev::compute(*value.shape, ctx));
+        result.referenceBox = value.referenceBox;
+        return result;
     }
 };
 

@@ -17,8 +17,6 @@ namespace Vaev {
 // https://drafts.csswg.org/css-values/#frequency
 // It represents the number of occurrences per second.
 export struct Frequency {
-    static constexpr auto TYPE = Dimension::FREQUENCY;
-
     Dimension _dim;
 
     static constexpr Frequency fromHz(f64 hz) {
@@ -53,17 +51,7 @@ export struct Frequency {
 };
 
 export template <>
-struct ValueParser<Frequency> {
-    static Res<Frequency> parse(Cursor<Css::Sst>& c) {
-        return Ok(Frequency{try$(parseDimension(c, Frequency::TYPE))});
-    }
-};
-
-export template <>
-struct ValueSerializer<Frequency> {
-    static Res<> serialize(Io::TextWriter& w, Frequency const& value) {
-        return serializeValue(w, value._dim);
-    }
+struct ValueTraits<Frequency> : DimensionValueTraits<Frequency, Dimension::FREQUENCY> {
 };
 
 } // namespace Vaev

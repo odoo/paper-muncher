@@ -18,8 +18,6 @@ namespace Vaev {
 // https://drafts.csswg.org/css-values/#time
 
 export struct Time {
-    static constexpr auto TYPE = Dimension::TIME;
-
     Dimension _dim;
 
     static constexpr Time fromSecond(f64 val) {
@@ -58,17 +56,7 @@ export struct Time {
 };
 
 export template <>
-struct ValueParser<Time> {
-    static Res<Time> parse(Cursor<Css::Sst>& c) {
-        return Ok(Time{try$(parseDimension(c, Time::TYPE))});
-    }
-};
-
-export template <>
-struct ValueSerializer<Time> {
-    static Res<> serialize(Io::TextWriter& w, Time const& value) {
-        return serializeValue(w, value._dim);
-    }
+struct ValueTraits<Time> : DimensionValueTraits<Time, Dimension::TIME> {
 };
 
 } // namespace Vaev

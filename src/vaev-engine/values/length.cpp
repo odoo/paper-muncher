@@ -11,7 +11,6 @@ import :css;
 import :values.base;
 import :values.dimension;
 import :values.primitives;
-import :values.resolved;
 import :values.writing;
 
 using namespace Karm;
@@ -34,8 +33,6 @@ export using Pixel = Distinct<f64, struct _PixelTag>;
 // https://drafts.csswg.org/css-values/#lengths
 
 export struct Length {
-    static constexpr auto TYPE = Dimension::LENGTH;
-
     Dimension _dim;
 
     constexpr Length()
@@ -72,11 +69,6 @@ export struct Length {
     void repr(Io::Emit& e) const {
         e("{}", _dim);
     }
-};
-
-export template <>
-struct _Resolved<Length> {
-    using Type = Au;
 };
 
 export struct RelativeLengthContextData {
@@ -296,55 +288,40 @@ Au _resolveRelative(f64 value, Dimension::Unit unit, RelativeLengthContext auto 
     }
 }
 
-export Au resolve(Length const& value, LengthContext auto const& ctx) {
-    if (value.isAbsolute())
-        return Au::fromFloatNearest(value._dim.to(Dimension::Unit::PX));
-    return _resolveRelative(value.value(), value.unit(), ctx);
-}
-
-// https://drafts.csswg.org/css-values/#lengths
-// The computed value of a <length> is an absolute length.
-export template <>
-struct _Computed<Length> {
-    using Type = Au;
-};
-
-export Au compute(Length const& l, LengthContext auto const& ctx) {
-    return resolve(l, ctx);
-}
-
-export template <>
-struct _Specify<Length> {
-    static Length from(Au value) {
-        return value;
-    }
-};
-
 // A computed length is stored as a dimension in px
 export template <>
-struct _Dimension<Au> {
-    static constexpr Dimension::Type TYPE = Dimension::LENGTH;
+struct ValueTraits<Au> {
+    static constexpr Dimension::Type DIMENSION_TYPE = Dimension::LENGTH;
 
-    static Dimension to(Au value) {
+    static Dimension toDimension(Au value) {
         return {value.cast<f64>(), Dimension::Unit::PX};
     }
 
-    static Au from(Dimension dim) {
+    static Au fromDimension(Dimension dim) {
         return Au::fromFloatNearest(dim.to(Dimension::Unit::PX));
     }
 };
 
 export template <>
-struct ValueParser<Length> {
-    static Res<Length> parse(Cursor<Css::Sst>& c) {
-        return Ok(Length{try$(parseDimension(c, Length::TYPE))});
-    }
-};
+struct ValueTraits<Length> : DimensionValueTraits<Length, Dimension::LENGTH> {
+    using Resolved = Au;
 
-export template <>
-struct ValueSerializer<Length> {
-    static Res<> serialize(Io::TextWriter& w, Length const& value) {
-        return serializeValue(w, value._dim);
+    // https://drafts.csswg.org/css-values/#lengths
+    // The computed value of a <length> is an absolute length.
+    using Computed = Au;
+
+    static Length specify(Au value) {
+        return value;
+    }
+
+    static Au resolve(Length const& value, LengthContext auto const& ctx) {
+        if (value.isAbsolute())
+            return Au::fromFloatNearest(value._dim.to(Dimension::Unit::PX));
+        return _resolveRelative(value.value(), value.unit(), ctx);
+    }
+
+    static Au compute(Length const& l, LengthContext auto const& ctx) {
+        return Vaev::resolve(l, ctx);
     }
 };
 
@@ -353,8 +330,6 @@ struct ValueSerializer<Length> {
 
 // A length that doesn't depend on any context.
 export struct AbsoluteLength {
-    static constexpr auto TYPE = Dimension::LENGTH;
-
     Dimension _dim;
 
     constexpr AbsoluteLength(Pixel px)
@@ -388,31 +363,21 @@ export struct AbsoluteLength {
 };
 
 export template <>
-struct _Resolved<AbsoluteLength> {
-    using Type = Au;
-};
+struct ValueTraits<AbsoluteLength> : DimensionValueTraits<AbsoluteLength, Dimension::LENGTH> {
+    using Resolved = Au;
 
-export Au resolve(AbsoluteLength value) {
-    return Au::fromFloatNearest(value.pixels().value());
-}
-
-export template <>
-struct ValueParser<AbsoluteLength> {
     static Res<AbsoluteLength> parse(Cursor<Css::Sst>& c) {
         auto save = c;
-        auto dim = try$(parseDimension(c, AbsoluteLength::TYPE));
+        auto dim = try$(parseDimension(c, Dimension::LENGTH));
         if (not dim.isAbsolute()) {
             c = save;
             return Error::invalidData("expected <absolute-length>");
         }
         return Ok(AbsoluteLength{dim});
     }
-};
 
-export template <>
-struct ValueSerializer<AbsoluteLength> {
-    static Res<> serialize(Io::TextWriter& w, AbsoluteLength const& value) {
-        return serializeValue(w, value._dim);
+    static Au resolve(AbsoluteLength value) {
+        return Au::fromFloatNearest(value.pixels().value());
     }
 };
 

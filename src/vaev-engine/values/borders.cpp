@@ -10,7 +10,6 @@ import :values.color;
 import :values.length;
 import :values.lineWidth;
 import :values.percent;
-import :values.resolved;
 
 namespace Vaev {
 
@@ -18,7 +17,7 @@ namespace Vaev {
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 
 export template <>
-struct ValueParser<Gfx::BorderStyle> {
+struct ValueTraits<Gfx::BorderStyle> : EnumValueTraits<Gfx::BorderStyle> {
     static Res<Gfx::BorderStyle> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of property");
@@ -86,7 +85,7 @@ export struct UsedBorder {
 export using UsedBorders = Math::Insets<UsedBorder>;
 
 export template <>
-struct ValueParser<SpecifiedBorder> {
+struct ValueTraits<SpecifiedBorder> {
     static Res<SpecifiedBorder> parse(Cursor<Css::Sst>& c) {
         SpecifiedBorder border;
         while (not c.ended()) {
@@ -118,64 +117,15 @@ struct ValueParser<SpecifiedBorder> {
 };
 
 export template <typename T>
-struct _Computed<Math::Radii<T>> {
-    using Type = Math::Radii<Computed<T>>;
-};
+struct ValueTraits<Math::Radii<T>> {
+    using Computed = Math::Radii<Vaev::Computed<T>>;
 
-export template <typename T>
-Math::Radii<Computed<T>> compute(Math::Radii<T> const& value, auto const& ctx) {
-    return value.map([&](T const& v) {
-        return compute(v, ctx);
-    });
-}
-
-export template <typename T>
-struct _Specify<Math::Radii<T>> {
-    static Math::Radii<T> from(Math::Radii<Computed<T>> const& value) {
-        return value.map([](Computed<T> const& v) {
+    static Math::Radii<T> specify(Math::Radii<Vaev::Computed<T>> const& value) {
+        return value.map([](Vaev::Computed<T> const& v) {
             return specified<T>(v);
         });
     }
-};
 
-// FIXME: cant we have this for karm/insets?
-export enum struct BorderEdge {
-    TOP,
-    START,
-    BOTTOM,
-    END,
-};
-
-export struct BorderProps {
-    ComputedBorder top, start, bottom, end;
-    Computed<Math::Radii<Calc<Length, Percent>>> radii = {0_au};
-
-    ComputedBorder const& get(BorderEdge edge) const {
-        switch (edge) {
-        case BorderEdge::TOP:
-            return top;
-        case BorderEdge::START:
-            return start;
-        case BorderEdge::BOTTOM:
-            return bottom;
-        case BorderEdge::END:
-            return end;
-        }
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(borders");
-        e(" top={}", top);
-        e(" start={}", start);
-        e(" bottom={}", bottom);
-        e(" end={}", end);
-        e(" radii={}", radii);
-        e(")");
-    }
-};
-
-export template <typename T>
-struct ValueParser<Math::Radii<T>> {
     static Res<Math::Radii<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -254,6 +204,48 @@ struct ValueParser<Math::Radii<T>> {
         radii.h = value4.expect();
 
         return Ok(std::move(radii));
+    }
+
+    static Math::Radii<Vaev::Computed<T>> compute(Math::Radii<T> const& value, auto const& ctx) {
+        return value.map([&](T const& v) {
+            return Vaev::compute(v, ctx);
+        });
+    }
+};
+
+// FIXME: cant we have this for karm/insets?
+export enum struct BorderEdge {
+    TOP,
+    START,
+    BOTTOM,
+    END,
+};
+
+export struct BorderProps {
+    ComputedBorder top, start, bottom, end;
+    Computed<Math::Radii<Calc<Length, Percent>>> radii = {0_au};
+
+    ComputedBorder const& get(BorderEdge edge) const {
+        switch (edge) {
+        case BorderEdge::TOP:
+            return top;
+        case BorderEdge::START:
+            return start;
+        case BorderEdge::BOTTOM:
+            return bottom;
+        case BorderEdge::END:
+            return end;
+        }
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(borders");
+        e(" top={}", top);
+        e(" start={}", start);
+        e(" bottom={}", bottom);
+        e(" end={}", end);
+        e(" radii={}", radii);
+        e(")");
     }
 };
 

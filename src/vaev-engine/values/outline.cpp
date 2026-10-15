@@ -5,7 +5,7 @@ import Karm.Math;
 
 import :values.color;
 import :values.lineWidth;
-import :values.resolved;
+import :values.base;
 
 namespace Vaev {
 

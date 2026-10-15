@@ -46,12 +46,6 @@ export enum struct SvgMeetOrSlice {
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export using SvgPaint = Opt<Color>;
 
-Opt<Gfx::Color> resolve(SvgPaint color, Gfx::Color currentColor) {
-    if (color == NONE)
-        return NONE;
-    return Some(Vaev::resolve(color.expect(), currentColor));
-}
-
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
 export struct SvgViewBox {
     Number minX;
@@ -76,7 +70,7 @@ enum struct SvgShapeElement {
 // MARK: Paint
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export template <>
-struct ValueParser<SvgPaint> {
+struct ValueTraits<SvgPaint> {
     static Res<SvgPaint> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -85,6 +79,12 @@ struct ValueParser<SvgPaint> {
             return Ok(NONE);
 
         return Ok(Some(try$(parseValue<Color>(c))));
+    }
+
+    static Opt<Gfx::Color> resolve(SvgPaint color, Gfx::Color currentColor) {
+        if (color == NONE)
+            return NONE;
+        return Some(Vaev::resolve(color.expect(), currentColor));
     }
 };
 

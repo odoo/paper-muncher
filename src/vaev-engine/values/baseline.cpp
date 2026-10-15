@@ -6,7 +6,7 @@ import :values.calc;
 import :values.keywords;
 import :values.lineHeight;
 import :values.percent;
-import :values.resolved;
+import :values.base;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;

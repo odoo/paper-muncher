@@ -12,7 +12,6 @@ import :values.calc;
 import :values.keywords;
 import :values.length;
 import :values.percent;
-import :values.resolved;
 import :values.writing;
 
 using namespace Karm;
