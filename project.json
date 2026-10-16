@@ -17,7 +17,7 @@
         },
         "cute-engineering/cat": {
             "git": "https://codeberg.org/cute-engineering/cat.git",
-            "tag": "v0.14.0"
+            "tag": "main"
         }
     }
 }

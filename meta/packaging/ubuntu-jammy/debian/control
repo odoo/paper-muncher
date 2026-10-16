@@ -1,8 +1,0 @@
-Package: paper-muncher
-Description: Munch the web into crisp documents
-Version: 0.9.0
-Section: utils
-Priority: optional
-Architecture: amd64
-Maintainer: Odoo S.A. <info@odoo.com>
-Depends: libseccomp2, libunwind8

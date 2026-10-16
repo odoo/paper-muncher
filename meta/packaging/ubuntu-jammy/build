@@ -3,7 +3,6 @@ set -euo pipefail
 
 rm -rf .cutekit/venv
 rm -rf .cutekit/tools-ready
-rm -rf sysroot/
 
 podman run \
     --rm \
@@ -13,13 +12,8 @@ podman run \
     ubuntu:jammy \
     bash -c " \
         NO_URING=1 ./ck tools setup && \
-        ./ck package --props:async=epoll --release --prefix=/opt/${COMPONENT} --sysroot=/src/sysroot ${COMPONENT} && \
-        mkdir /deb && \
-        mkdir /deb/DEBIAN && \
-        cp -r /src/sysroot/* /deb && \
-        cp -r meta/packaging/ubuntu-jammy/debian/* /deb/DEBIAN && \
         mkdir -p /src/dist && \
-        dpkg-deb --build /deb /src/dist/${COMPONENT}_${VERSION}_jammy_amd64.deb"
+        ./ck package --props:async=epoll --release --layout=deb --prefix=/opt/${COMPONENT} --staging=/deb --maintainer='Odoo S.A. <info@odoo.com>' --output=/src/dist/${COMPONENT}_${VERSION}_jammy_amd64.deb ${COMPONENT}"
 
 # Check if installing the package works
 podman run --rm -v "$PWD:/src" \

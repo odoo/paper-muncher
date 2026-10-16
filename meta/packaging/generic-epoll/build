@@ -5,6 +5,8 @@ rm -rf .cutekit/venv
 rm -rf .cutekit/tools-ready
 rm -rf sysroot/
 
+# NOTE: The generic tarballs carry no dependency information, so they don't
+#       link against the system image codecs.
 podman run \
     --rm \
     -v "$PWD:/src" \
@@ -12,8 +14,6 @@ podman run \
     -e CUTEKIT_ALLOW_ROOT=1 \
     ubuntu:resolute \
     bash -c " \
-        NO_URING=1 ./ck tools setup && \
-        ./ck package --props:async=epoll --release --prefix=/opt/${COMPONENT} --sysroot=/src/sysroot ${COMPONENT} && \
+        NO_URING=1 NO_SYSTEM_CODECS=1 ./ck tools setup && \
         mkdir -p /src/dist && \
-        cd /src/sysroot && \
-        tar -czf /src/dist/${COMPONENT}_${VERSION}_generic_epoll_amd64.tar.gz *"
+        ./ck package --props:async=epoll --release --layout=flat --prefix=/opt/${COMPONENT} --staging=/src/sysroot --output=/src/dist/${COMPONENT}_${VERSION}_generic_epoll_amd64.tar.gz ${COMPONENT}"

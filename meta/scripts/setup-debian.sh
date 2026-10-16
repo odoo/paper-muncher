@@ -19,3 +19,11 @@ apt-get install -y --no-install-recommends \
 if [ -z "$NO_URING" ]; then
     apt-get install -y --no-install-recommends liburing-dev
 fi
+
+# NOTE: Not every distro ships all of these, karm falls back to its builtin
+#       codecs for the ones that are missing.
+if [ -z "$NO_SYSTEM_CODECS" ]; then
+    for pkg in libpng-dev libturbojpeg0-dev libwebp-dev libavif-dev libjxl-dev libtiff-dev; do
+        apt-get install -y --no-install-recommends "$pkg" || echo "Skipping $pkg, not available"
+    done
+fi
