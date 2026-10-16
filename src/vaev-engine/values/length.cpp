@@ -33,8 +33,8 @@ export using Pixel = Distinct<f64, struct _PixelTag>;
 // 6. MARK: Distance Units: the <length> type
 // https://drafts.csswg.org/css-values/#lengths
 
-export struct Length {
-    UnitValue _value;
+export struct Length : TypedUnitValue<NumericBaseType::LENGTH> {
+    using TypedUnitValue::TypedUnitValue;
 
     static constexpr Length fromPx(f64 val) {
         return Length{UnitValue{val, UnitValue::Unit::PX}};
@@ -44,21 +44,10 @@ export struct Length {
         return Length{UnitValue{val, UnitValue::Unit::EM}};
     }
 
-    constexpr Length()
-        : _value(0, UnitValue::Unit::PX) {}
+    constexpr Length() = default;
 
     constexpr Length(Au value)
-        : _value(value.cast<f64>(), UnitValue::Unit::PX) {}
-
-    constexpr explicit Length(UnitValue value)
-        : _value(value) {
-        if (value.baseType() != NumericBaseType::LENGTH)
-            panic("unit value is not a <length>");
-    }
-
-    constexpr UnitValue unitValue() const {
-        return _value;
-    }
+        : TypedUnitValue(UnitValue{value.cast<f64>(), UnitValue::Unit::PX}) {}
 
     constexpr f64 value() const {
         return _value.value();
@@ -77,12 +66,6 @@ export struct Length {
         if (not absolute())
             return NONE;
         return Some(_value.to(UnitValue::Unit::PX));
-    }
-
-    constexpr auto operator<=>(Length const&) const = default;
-
-    void repr(Io::Emit& e) const {
-        _value.repr(e);
     }
 };
 
@@ -314,40 +297,20 @@ export Au resolve(Length const& value, LengthContext auto const& ctx) {
     return _resolveRelative(value.value(), value.unit(), ctx);
 }
 
-export template <>
-struct ValueParser<Length> {
-    static Res<Length> parse(Cursor<Css::Sst>& c) {
-        return Ok(Length{try$(parseUnitValue(c, NumericBaseType::LENGTH))});
-    }
-};
-
-export template <>
-struct ValueSerializer<Length> {
-    static Res<> serialize(Io::TextWriter& w, Length const& value) {
-        return serializeValue(w, value.unitValue());
-    }
-};
-
 // 6.2. MARK: Absolute Lengths: the cm, mm, Q, in, pt, pc, px units
 // https://drafts.csswg.org/css-values/#absolute-lengths
 
-export struct AbsoluteLength {
-    UnitValue _value;
-
+export struct AbsoluteLength : TypedUnitValue<NumericBaseType::LENGTH> {
     constexpr AbsoluteLength(Pixel px)
-        : _value(px.value(), UnitValue::Unit::PX) {}
+        : TypedUnitValue(UnitValue{px.value(), UnitValue::Unit::PX}) {}
 
     constexpr AbsoluteLength(Au value)
-        : _value(value.cast<f64>(), UnitValue::Unit::PX) {}
+        : TypedUnitValue(UnitValue{value.cast<f64>(), UnitValue::Unit::PX}) {}
 
     constexpr explicit AbsoluteLength(UnitValue value)
-        : _value(value) {
-        if (value.baseType() != NumericBaseType::LENGTH or not value.absolute())
+        : TypedUnitValue(value) {
+        if (not value.absolute())
             panic("unit value is not an absolute <length>");
-    }
-
-    constexpr UnitValue unitValue() const {
-        return _value;
     }
 
     constexpr Pixel pixels() const {
@@ -356,12 +319,6 @@ export struct AbsoluteLength {
 
     constexpr operator Length() const {
         return Length{_value};
-    }
-
-    constexpr auto operator<=>(AbsoluteLength const&) const = default;
-
-    void repr(Io::Emit& e) const {
-        _value.repr(e);
     }
 };
 
@@ -384,13 +341,6 @@ struct ValueParser<AbsoluteLength> {
             return Error::invalidData("expected <absolute-length>");
         }
         return Ok(AbsoluteLength{value});
-    }
-};
-
-export template <>
-struct ValueSerializer<AbsoluteLength> {
-    static Res<> serialize(Io::TextWriter& w, AbsoluteLength const& value) {
-        return serializeValue(w, value.unitValue());
     }
 };
 

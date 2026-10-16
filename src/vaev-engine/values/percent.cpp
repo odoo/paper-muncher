@@ -19,21 +19,11 @@ namespace Vaev {
 // MARK: Percentage ------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#percentages
 
-export struct Percent {
-    UnitValue _value;
+export struct Percent : TypedUnitValue<NumericBaseType::PERCENT> {
+    using TypedUnitValue::TypedUnitValue;
 
     constexpr explicit Percent(f64 value)
-        : _value(value, UnitValue::Unit::PERCENT) {}
-
-    constexpr explicit Percent(UnitValue value)
-        : _value(value) {
-        if (value.baseType() != NumericBaseType::PERCENT)
-            panic("unit value is not a <percentage>");
-    }
-
-    constexpr UnitValue unitValue() const {
-        return _value;
-    }
+        : TypedUnitValue(UnitValue{value, UnitValue::Unit::PERCENT}) {}
 
     constexpr f64 value() const {
         return _value.value();
@@ -45,26 +35,6 @@ export struct Percent {
 
     constexpr Percent operator-(Percent other) const {
         return Percent{value() - other.value()};
-    }
-
-    constexpr auto operator<=>(Percent const&) const = default;
-
-    void repr(Io::Emit& e) const {
-        _value.repr(e);
-    }
-};
-
-export template <>
-struct ValueParser<Percent> {
-    static Res<Percent> parse(Cursor<Css::Sst>& c) {
-        return Ok(Percent{try$(parseUnitValue(c, NumericBaseType::PERCENT))});
-    }
-};
-
-export template <>
-struct ValueSerializer<Percent> {
-    static Res<> serialize(Io::TextWriter& w, Percent const& value) {
-        return serializeValue(w, value.unitValue());
     }
 };
 
