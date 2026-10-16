@@ -1,6 +1,14 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:values.time;
 
 import Karm.Core;
+
+import :css;
+import :values.base;
+import :values.unitValue;
 
 using namespace Karm;
 
@@ -10,56 +18,55 @@ namespace Vaev {
 // https://drafts.csswg.org/css-values/#time
 
 export struct Time {
-    enum struct Unit {
-        S,
-        MS
-    };
-
-    using enum Unit;
-
-    f64 _val;
-    Unit _unit;
+    UnitValue _value;
 
     static constexpr Time fromSecond(f64 val) {
-        return {val, Unit::S};
+        return Time{UnitValue{val, UnitValue::Unit::S}};
     }
 
     static constexpr Time fromMillisecond(f64 val) {
-        return {val, Unit::MS};
+        return Time{UnitValue{val, UnitValue::Unit::MS}};
     }
 
-    constexpr f64 val() const {
-        return _val;
+    constexpr Time()
+        : _value(0, UnitValue::Unit::S) {}
+
+    constexpr explicit Time(UnitValue value)
+        : _value(value) {
+        if (value.baseType() != NumericBaseType::TIME)
+            panic("unit value is not a <time>");
     }
 
-    constexpr Unit unit() const {
-        return _unit;
+    constexpr UnitValue unitValue() const {
+        return _value;
     }
 
     constexpr f64 toSecond() const {
-        switch (_unit) {
-        case Unit::S:
-            return _val;
-        case Unit::MS:
-            return _val / 1000.0;
-        }
+        return _value.to(UnitValue::Unit::S);
     }
 
     constexpr f64 toMillisecond() const {
-        switch (_unit) {
-        case Unit::S:
-            return _val * 1000.0;
-        case Unit::MS:
-            return _val;
-        }
+        return _value.to(UnitValue::Unit::MS);
     }
 
-    constexpr bool operator==(Time const& other) const {
-        return _val == other._val and _unit == other._unit;
-    }
+    constexpr auto operator<=>(Time const&) const = default;
 
-    constexpr auto operator<=>(Time const& other) const {
-        return toSecond() <=> other.toSecond();
+    void repr(Io::Emit& e) const {
+        _value.repr(e);
+    }
+};
+
+export template <>
+struct ValueParser<Time> {
+    static Res<Time> parse(Cursor<Css::Sst>& c) {
+        return Ok(Time{try$(parseUnitValue(c, NumericBaseType::TIME))});
+    }
+};
+
+export template <>
+struct ValueSerializer<Time> {
+    static Res<> serialize(Io::TextWriter& w, Time const& value) {
+        return serializeValue(w, value.unitValue());
     }
 };
 

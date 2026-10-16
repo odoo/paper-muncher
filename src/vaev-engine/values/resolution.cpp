@@ -8,6 +8,7 @@ import Karm.Core;
 
 import :css;
 import :values.base;
+import :values.unitValue;
 
 using namespace Karm;
 
@@ -17,133 +18,70 @@ namespace Vaev {
 // https://drafts.csswg.org/css-values/#resolution
 
 export struct Resolution {
-    enum struct Unit {
-        DPI,
-        DPCM,
-        DPPX,
-        X = DPPX,
-        INFINITE,
-    };
+    UnitValue _value;
 
-    using enum Unit;
-
-    f64 _val;
-    Unit _unit;
-
-    static Resolution fromDpi(f64 val) {
-        return {val, Unit::DPI};
+    static constexpr Resolution fromDpi(f64 val) {
+        return Resolution{UnitValue{val, UnitValue::Unit::DPI}};
     }
 
-    static Resolution fromDpcm(f64 val) {
-        return {val, Unit::DPCM};
+    static constexpr Resolution fromDpcm(f64 val) {
+        return Resolution{UnitValue{val, UnitValue::Unit::DPCM}};
     }
 
-    static Resolution fromDppx(f64 val) {
-        return {val, Unit::DPPX};
+    static constexpr Resolution fromDppx(f64 val) {
+        return Resolution{UnitValue{val, UnitValue::Unit::DPPX}};
     }
 
-    static Resolution infinite() {
-        return {0.0, Unit::INFINITE};
+    static constexpr Resolution infinite() {
+        return fromDppx(Math::INF);
     }
 
-    constexpr f64 val() const {
-        return _val;
+    constexpr Resolution()
+        : _value(0, UnitValue::Unit::DPPX) {}
+
+    constexpr explicit Resolution(UnitValue value)
+        : _value(value) {
+        if (value.baseType() != NumericBaseType::RESOLUTION)
+            panic("unit value is not a <resolution>");
     }
 
-    constexpr Unit unit() const {
-        return _unit;
+    constexpr UnitValue unitValue() const {
+        return _value;
     }
 
     constexpr f64 toDpi() const {
-        switch (_unit) {
-        case Unit::DPI:
-            return _val;
-        case Unit::DPCM:
-            return _val * 2.54;
-        case Unit::DPPX:
-            return _val * 96.0;
-        case Unit::INFINITE:
-            return Math::INF;
-        }
+        return _value.to(UnitValue::Unit::DPI);
     }
 
     constexpr f64 toDpcm() const {
-        switch (_unit) {
-        case Unit::DPI:
-            return _val / 2.54;
-        case Unit::DPCM:
-            return _val;
-        case Unit::DPPX:
-            return _val * 96.0 / 2.54;
-        case Unit::INFINITE:
-            return Math::INF;
-        }
+        return _value.to(UnitValue::Unit::DPCM);
     }
 
     constexpr f64 toDppx() const {
-        switch (_unit) {
-        case Unit::DPI:
-            return _val / 96.0;
-        case Unit::DPCM:
-            return _val * 2.54 / 96.0;
-        case Unit::DPPX:
-            return _val;
-        case Unit::INFINITE:
-            return Math::INF;
-        }
+        return _value.to(UnitValue::Unit::DPPX);
     }
 
-    constexpr bool operator==(Resolution const& other) const {
-        return _val == other._val and _unit == other._unit;
-    }
+    constexpr auto operator<=>(Resolution const&) const = default;
 
-    std::partial_ordering operator<=>(Resolution const& other) const {
-        return toDpi() <=> other.toDpi();
-    }
-
-    constexpr void repr(Io::Emit& e) const {
-        switch (_unit) {
-        case Unit::DPI:
-            e("{}dpi", _val);
-            break;
-        case Unit::DPCM:
-            e("{}dpcm", _val);
-            break;
-        case Unit::DPPX:
-            e("{}dppx", _val);
-            break;
-        case Unit::INFINITE:
+    void repr(Io::Emit& e) const {
+        if (_value.value() == Math::INF)
             e("infinite");
-            break;
-        }
+        else
+            _value.repr(e);
     }
 };
 
 export template <>
 struct ValueParser<Resolution> {
-    static Res<Resolution::Unit> _parseResolutionUnit(Str unit) {
-        if (eqCi(unit, "dpi"s))
-            return Ok(Resolution::Unit::DPI);
-        else if (eqCi(unit, "dpcm"s))
-            return Ok(Resolution::Unit::DPCM);
-        else if (eqCi(unit, "dppx"s) or eqCi(unit, "x"s))
-            return Ok(Resolution::Unit::DPPX);
-        else
-            return Error::invalidData("unknown resolution unit");
-    }
-
     static Res<Resolution> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
+        return Ok(Resolution{try$(parseUnitValue(c, NumericBaseType::RESOLUTION))});
+    }
+};
 
-        if (c.peek() == Css::Token::DIMENSION) {
-            Io::SScan scan = c->token.data.str();
-            auto value = Io::atof(scan).unwrapOr(0.0);
-            auto unit = try$(_parseResolutionUnit(scan.remStr()));
-            return Ok(Resolution{value, unit});
-        }
-
-        return Error::invalidData("expected resolution");
+export template <>
+struct ValueSerializer<Resolution> {
+    static Res<> serialize(Io::TextWriter& w, Resolution const& value) {
+        return serializeValue(w, value.unitValue());
     }
 };
 

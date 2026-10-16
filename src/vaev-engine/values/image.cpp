@@ -106,7 +106,7 @@ export struct CrossFade {
 // https://www.w3.org/TR/css-images-4/#typedef-color-stripe
 export struct ColorStrip {
     Gfx::Color color;
-    Union<Percent, Fr> thickness;
+    Union<Percent, Flex> thickness;
 
     void repr(Io::Emit& e) const {
         e("({} {})", color, thickness);

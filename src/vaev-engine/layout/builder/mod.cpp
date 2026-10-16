@@ -88,7 +88,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
             return Some(style.font->size * number);
         },
         [&](Calc<PercentOr<Length>> const& length) -> Opt<Au> {
-            auto oneEm = resolver.resolve(Length{RelativeLength{1, RelativeLength::EM}});
+            auto oneEm = resolver.resolve(Length::fromEm(1));
             auto result = resolver.resolve(length, oneEm);
 
             if (result < 0_au)

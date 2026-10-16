@@ -750,30 +750,30 @@ export Gfx::Color resolve(Color const& c, Gfx::Color currentColor) {
 
 export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor) {
     Gfx::Color lhsColor = resolve(cm.lhs.color, currentColor);
-    Percent lhsPerc = cm.lhs.perc.unwrapOrElse([&] {
-        return Percent{100} - cm.rhs.perc.unwrapOr(Percent{50});
-    });
+    f64 lhsPerc = cm.lhs.perc
+                      ? cm.lhs.perc->value()
+                      : 100 - cm.rhs.perc.unwrapOr(Percent{50}).value();
 
     Gfx::Color rhsColor = resolve(cm.rhs.color, currentColor);
-    Percent rhsPerc = cm.rhs.perc.unwrapOrElse([&] {
-        return Percent{100} - cm.lhs.perc.unwrapOr(Percent{50});
-    });
+    f64 rhsPerc = cm.rhs.perc
+                      ? cm.rhs.perc->value()
+                      : 100 - cm.lhs.perc.unwrapOr(Percent{50}).value();
 
-    if (lhsPerc == rhsPerc and lhsPerc == Percent{0}) {
+    if (lhsPerc == rhsPerc and lhsPerc == 0) {
         logWarn("cannot mix colors when both have zero percentages");
         return Gfx::WHITE;
     }
 
-    Percent rhsPercNorm = rhsPerc;
+    f64 rhsPercNorm = rhsPerc;
 
-    if (lhsPerc + rhsPerc != Percent{100})
+    if (lhsPerc + rhsPerc != 100)
         rhsPercNorm = rhsPercNorm / (lhsPerc + rhsPerc);
     else
-        rhsPercNorm /= Percent{100};
+        rhsPercNorm /= 100;
 
-    Gfx::Color resColor = cm.colorSpace.interpolate(lhsColor, rhsColor, rhsPercNorm.value());
-    if (lhsPerc + rhsPerc < Percent{100})
-        resColor = resColor.withOpacity((lhsPerc + rhsPerc).value() / 100.0);
+    Gfx::Color resColor = cm.colorSpace.interpolate(lhsColor, rhsColor, rhsPercNorm);
+    if (lhsPerc + rhsPerc < 100)
+        resColor = resColor.withOpacity((lhsPerc + rhsPerc) / 100.0);
 
     return resColor;
 }
