@@ -233,4 +233,48 @@ export Res<UnitValue> parseUnitValue(Cursor<Css::Sst>& c, NumericBaseType type) 
     return Ok(value);
 }
 
+// MARK: Typed Unit Value ------------------------------------------------------
+
+export template <NumericBaseType TYPE>
+struct TypedUnitValue {
+    static constexpr NumericBaseType BASE_TYPE = TYPE;
+
+    UnitValue _value;
+
+    constexpr TypedUnitValue()
+        : _value(0, UnitValue::canonicalUnitOf(Some(TYPE))) {}
+
+    constexpr explicit TypedUnitValue(UnitValue value)
+        : _value(value) {
+        if (value.baseType() != TYPE)
+            panic("unit value has the wrong base type");
+    }
+
+    constexpr UnitValue unitValue() const {
+        return _value;
+    }
+
+    constexpr auto operator<=>(TypedUnitValue const&) const = default;
+
+    void repr(Io::Emit& e) const {
+        _value.repr(e);
+    }
+};
+
+export template <typename T>
+    requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE>>
+struct ValueParser<T> {
+    static Res<T> parse(Cursor<Css::Sst>& c) {
+        return Ok(T{try$(parseUnitValue(c, T::BASE_TYPE))});
+    }
+};
+
+export template <typename T>
+    requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE>>
+struct ValueSerializer<T> {
+    static Res<> serialize(Io::TextWriter& w, T const& value) {
+        return serializeValue(w, value.unitValue());
+    }
+};
+
 } // namespace Vaev

@@ -19,48 +19,15 @@ namespace Vaev {
 // MARK: Flexible Length -------------------------------------------------------
 // https://drafts.csswg.org/css-grid/#typedef-flex
 
-export struct Flex {
-    UnitValue _value;
+export struct Flex : TypedUnitValue<NumericBaseType::FLEX> {
+    using TypedUnitValue::TypedUnitValue;
 
     static constexpr Flex fromFr(f64 val) {
         return Flex{UnitValue{val, UnitValue::Unit::FR}};
     }
 
-    constexpr Flex()
-        : _value(0, UnitValue::Unit::FR) {}
-
-    constexpr explicit Flex(UnitValue value)
-        : _value(value) {
-        if (value.baseType() != NumericBaseType::FLEX)
-            panic("unit value is not a <flex>");
-    }
-
-    constexpr UnitValue unitValue() const {
-        return _value;
-    }
-
     constexpr f64 toFr() const {
         return _value.to(UnitValue::Unit::FR);
-    }
-
-    constexpr auto operator<=>(Flex const&) const = default;
-
-    void repr(Io::Emit& e) const {
-        _value.repr(e);
-    }
-};
-
-export template <>
-struct ValueParser<Flex> {
-    static Res<Flex> parse(Cursor<Css::Sst>& c) {
-        return Ok(Flex{try$(parseUnitValue(c, NumericBaseType::FLEX))});
-    }
-};
-
-export template <>
-struct ValueSerializer<Flex> {
-    static Res<> serialize(Io::TextWriter& w, Flex const& value) {
-        return serializeValue(w, value.unitValue());
     }
 };
 

@@ -10,6 +10,12 @@ using namespace Karm::Math::Literals;
 
 namespace Vaev::Style::Tests {
 
+static_assert(Meta::Equatable<Time, Time> and Meta::Comparable<Time, Time>);
+static_assert(Meta::Equatable<AbsoluteLength, Length> and Meta::Comparable<AbsoluteLength, Length>);
+static_assert(not Meta::Equatable<Time, Angle> and not Meta::Comparable<Time, Angle>);
+static_assert(not Meta::Equatable<Length, Percent> and not Meta::Comparable<Length, Percent>);
+static_assert(not Meta::Equatable<Flex, Percent> and not Meta::Comparable<Flex, Percent>);
+
 template <typename T>
 static Res<T> _parse(Str input) {
     auto lex = Css::Lexer{input};

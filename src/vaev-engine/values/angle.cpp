@@ -20,8 +20,8 @@ namespace Vaev {
 
 export using Rad = Distinct<f64, struct _RadTag>;
 
-export struct Angle {
-    UnitValue _value;
+export struct Angle : TypedUnitValue<NumericBaseType::ANGLE> {
+    using TypedUnitValue::TypedUnitValue;
 
     static constexpr Angle fromDegree(f64 val) {
         return Angle{UnitValue{val, UnitValue::Unit::DEG}};
@@ -39,19 +39,6 @@ export struct Angle {
         return Angle{UnitValue{val, UnitValue::Unit::TURN}};
     }
 
-    constexpr Angle()
-        : _value(0, UnitValue::Unit::DEG) {}
-
-    constexpr explicit Angle(UnitValue value)
-        : _value(value) {
-        if (value.baseType() != NumericBaseType::ANGLE)
-            panic("unit value is not an <angle>");
-    }
-
-    constexpr UnitValue unitValue() const {
-        return _value;
-    }
-
     constexpr f64 toDegree() const {
         return _value.to(UnitValue::Unit::DEG);
     }
@@ -60,18 +47,12 @@ export struct Angle {
         return _value.to(UnitValue::Unit::RAD);
     }
 
-    constexpr auto operator<=>(Angle const&) const = default;
-
     constexpr Angle operator+(Angle other) const {
         return fromRadian(toRadian() + other.toRadian());
     }
 
     constexpr Angle operator-(Angle other) const {
         return fromRadian(toRadian() - other.toRadian());
-    }
-
-    void repr(Io::Emit& e) const {
-        _value.repr(e);
     }
 };
 
@@ -83,19 +64,5 @@ struct _Resolved<Angle> {
 Rad resolve(Angle const& value, [[maybe_unused]] auto const& ctx = NONE) {
     return Rad{value.toRadian()};
 }
-
-export template <>
-struct ValueParser<Angle> {
-    static Res<Angle> parse(Cursor<Css::Sst>& c) {
-        return Ok(Angle{try$(parseUnitValue(c, NumericBaseType::ANGLE))});
-    }
-};
-
-export template <>
-struct ValueSerializer<Angle> {
-    static Res<> serialize(Io::TextWriter& w, Angle const& value) {
-        return serializeValue(w, value.unitValue());
-    }
-};
 
 } // namespace Vaev
