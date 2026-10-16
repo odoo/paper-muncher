@@ -67,8 +67,16 @@ Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, LogicalSize<Opt<Au>
         .blockEnd = paddingBottom,
     };
 
-    // FIXME
-    auto borders = LogicalInsets<Au>{};
+    // FIXME: Move the resolution of borders for computed values, this should just be a cast to Au.
+    auto physicalBorders = Layout::computeBorders(tree, box);
+
+    // FIXME: Implement writing-mode translation
+    auto borders = LogicalInsets{
+        .inlineStart = physicalBorders.start,
+        .inlineEnd = physicalBorders.end,
+        .blockStart = physicalBorders.top,
+        .blockEnd = physicalBorders.bottom,
+    };
 
     LogicalSize<Opt<Au>> size = {NONE, NONE};
 
