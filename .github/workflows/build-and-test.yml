@@ -28,7 +28,7 @@ jobs:
         run: ./ck tools setup
 
       - name: Install Externs
-        run: ./ck install
+        run: ./ck sync
 
       - name: Build Libraries
         run: ./ck build --props:async=${{ matrix.async }}
