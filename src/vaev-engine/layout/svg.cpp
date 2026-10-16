@@ -38,7 +38,7 @@ PercentOr<Length> fromSize(Size const& size) {
 // by the computer refactoring
 Au resolve(PercentOr<Length> const& value, Au relative) {
     if (auto valueLength = value.is<Length>())
-        return Au{valueLength->unwrapOr<AbsoluteLength>(0_au).pixels().value()};
+        return Au{valueLength->absolutePixels().unwrapOr(0)};
     return Au{relative.cast<f64>() * (value.expect<Percent>().value() / 100.)};
 }
 
@@ -55,7 +55,7 @@ struct SvgFormatingContext : FormatingContext {
     Opt<Number> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, Size const& width, Size const& height) {
         // FIXME: again this should be targetted by the styling computation refactoring,
         // where Size will be resolved to a mix between Percent and Lengths
-        auto absoluteValue = [](Size size) -> Opt<Length> {
+        auto absoluteValue = [](Size size) -> Opt<f64> {
             if (not size.is<Calc<PercentOr<Length>>>())
                 return NONE;
 
@@ -68,7 +68,7 @@ struct SvgFormatingContext : FormatingContext {
             if (percOrLength->is<Percent>())
                 return NONE;
 
-            return Some(percOrLength->expect<Length>());
+            return percOrLength->expect<Length>().absolutePixels();
         };
 
         auto absWidth = absoluteValue(width);
@@ -76,7 +76,7 @@ struct SvgFormatingContext : FormatingContext {
 
         // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
         if (absWidth and absHeight)
-            return Some(absWidth->unwrapOr<AbsoluteLength>(0_au).pixels().value() / absHeight->unwrapOr<AbsoluteLength>(0_au).pixels().value());
+            return Some(*absWidth / *absHeight);
 
         // 2. If an SVG View is active:
         // TODO

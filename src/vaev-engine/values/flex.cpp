@@ -1,3 +1,7 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:values.flex;
 
 import Karm.Core;
@@ -6,15 +10,59 @@ import :css;
 import :values.base;
 import :values.keywords;
 import :values.sizing;
+import :values.unitValue;
 
 using namespace Karm;
 
 namespace Vaev {
 
 // MARK: Flexible Length -------------------------------------------------------
-// https://www.w3.org/TR/css-grid-2/#typedef-flex
+// https://drafts.csswg.org/css-grid/#typedef-flex
 
-using Fr = Distinct<f64, struct _FrTag>;
+export struct Flex {
+    UnitValue _value;
+
+    static constexpr Flex fromFr(f64 val) {
+        return Flex{UnitValue{val, UnitValue::Unit::FR}};
+    }
+
+    constexpr Flex()
+        : _value(0, UnitValue::Unit::FR) {}
+
+    constexpr explicit Flex(UnitValue value)
+        : _value(value) {
+        if (value.baseType() != NumericBaseType::FLEX)
+            panic("unit value is not a <flex>");
+    }
+
+    constexpr UnitValue unitValue() const {
+        return _value;
+    }
+
+    constexpr f64 toFr() const {
+        return _value.to(UnitValue::Unit::FR);
+    }
+
+    constexpr auto operator<=>(Flex const&) const = default;
+
+    void repr(Io::Emit& e) const {
+        _value.repr(e);
+    }
+};
+
+export template <>
+struct ValueParser<Flex> {
+    static Res<Flex> parse(Cursor<Css::Sst>& c) {
+        return Ok(Flex{try$(parseUnitValue(c, NumericBaseType::FLEX))});
+    }
+};
+
+export template <>
+struct ValueSerializer<Flex> {
+    static Res<> serialize(Io::TextWriter& w, Flex const& value) {
+        return serializeValue(w, value.unitValue());
+    }
+};
 
 // MARK: FlexDirection ---------------------------------------------------------
 // https://drafts.csswg.org/css-flexbox-1/#flex-direction-property
@@ -124,10 +172,3 @@ export struct FlexProps {
 };
 
 } // namespace Vaev
-
-template <>
-struct Io::Formatter<Vaev::Fr> {
-    Res<> format(Io::TextWriter& e, Vaev::Fr const& v) {
-        return Io::format(e, "{}fr", v.value());
-    }
-};

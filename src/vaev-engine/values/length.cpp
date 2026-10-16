@@ -9,6 +9,7 @@ import Karm.Math;
 
 import :css;
 import :values.base;
+import :values.unitValue;
 import :values.primitives;
 import :values.resolved;
 import :values.writing;
@@ -29,52 +30,60 @@ export using Math::EllipseAu;
 
 export using Pixel = Distinct<f64, struct _PixelTag>;
 
-// 6.1. MARK: Relative Lengths
-// https://drafts.csswg.org/css-values/#relative-lengths
+// 6. MARK: Distance Units: the <length> type
+// https://drafts.csswg.org/css-values/#lengths
 
-export struct RelativeLength {
-    enum struct Unit {
-#define LENGTH(NAME, ...) NAME,
-#include "defs/relative-lengths.inc"
+export struct Length {
+    UnitValue _value;
 
-#undef LENGTH
-        _LEN,
-    };
+    static constexpr Length fromPx(f64 val) {
+        return Length{UnitValue{val, UnitValue::Unit::PX}};
+    }
 
-    using enum Unit;
+    static constexpr Length fromEm(f64 val) {
+        return Length{UnitValue{val, UnitValue::Unit::EM}};
+    }
 
-    float _value;
-    Unit _unit;
+    constexpr Length()
+        : _value(0, UnitValue::Unit::PX) {}
 
-    RelativeLength(f64 value, Unit unit)
-        : _value(value), _unit(unit) {}
+    constexpr Length(Au value)
+        : _value(value.cast<f64>(), UnitValue::Unit::PX) {}
 
-    constexpr f64 value() const {
+    constexpr explicit Length(UnitValue value)
+        : _value(value) {
+        if (value.baseType() != NumericBaseType::LENGTH)
+            panic("unit value is not a <length>");
+    }
+
+    constexpr UnitValue unitValue() const {
         return _value;
     }
 
-    constexpr Unit unit() const {
-        return _unit;
+    constexpr f64 value() const {
+        return _value.value();
     }
 
-    constexpr bool operator==(RelativeLength const& other) const {
-        return _value == other._value and _unit == other._unit;
+    constexpr UnitValue::Unit unit() const {
+        return _value.unit();
     }
 
-    constexpr std::partial_ordering operator<=>(RelativeLength const& other) const {
-        if (_unit != other._unit)
-            return std::partial_ordering::unordered;
-        return _value <=> other._value;
+    // https://drafts.csswg.org/css-values/#absolute-lengths
+    constexpr bool absolute() const {
+        return _value.absolute();
     }
+
+    constexpr Opt<f64> absolutePixels() const {
+        if (not absolute())
+            return NONE;
+        return Some(_value.to(UnitValue::Unit::PX));
+    }
+
+    constexpr auto operator<=>(Length const&) const = default;
 
     void repr(Io::Emit& e) const {
-        e("{}{}", _value, _unit);
+        _value.repr(e);
     }
-};
-
-export template <>
-struct _Resolved<RelativeLength> {
-    using Type = Au;
 };
 
 export struct RelativeLengthContextData {
@@ -132,158 +141,162 @@ concept RelativeLengthContext = requires(T t) {
     { t.boxAxis } -> Meta::Convertible<Axis>;
 };
 
-export Au resolve(RelativeLength value, RelativeLengthContext auto const& ctx) {
-    switch (value.unit()) {
-    case RelativeLength::EM:
-        return Au::fromFloatNearest(value.value() * ctx.fontSize);
+export template <typename T>
+concept LengthContext = RelativeLengthContext<T>;
 
-    case RelativeLength::REM:
-        return Au::fromFloatNearest(value.value() * ctx.rootFontSize);
+// https://drafts.csswg.org/css-values/#relative-lengths
+Au _resolveRelative(f64 value, UnitValue::Unit unit, RelativeLengthContext auto const& ctx) {
+    switch (unit) {
+    case UnitValue::Unit::EM:
+        return Au::fromFloatNearest(value * ctx.fontSize);
 
-    case RelativeLength::EX:
-        return Au::fromFloatNearest(value.value() * ctx.xHeight);
+    case UnitValue::Unit::REM:
+        return Au::fromFloatNearest(value * ctx.rootFontSize);
 
-    case RelativeLength::REX:
-        return Au::fromFloatNearest(value.value() * ctx.rootXHeight);
+    case UnitValue::Unit::EX:
+        return Au::fromFloatNearest(value * ctx.xHeight);
 
-    case RelativeLength::CAP:
-        return Au::fromFloatNearest(value.value() * ctx.capHeight);
+    case UnitValue::Unit::REX:
+        return Au::fromFloatNearest(value * ctx.rootXHeight);
 
-    case RelativeLength::RCAP:
-        return Au::fromFloatNearest(value.value() * ctx.rootCapHeight);
+    case UnitValue::Unit::CAP:
+        return Au::fromFloatNearest(value * ctx.capHeight);
 
-    case RelativeLength::CH:
-        return Au::fromFloatNearest(value.value() * ctx.zeroAdvance);
+    case UnitValue::Unit::RCAP:
+        return Au::fromFloatNearest(value * ctx.rootCapHeight);
 
-    case RelativeLength::RCH:
-        return Au::fromFloatNearest(value.value() * ctx.rootZeroAdvance);
+    case UnitValue::Unit::CH:
+        return Au::fromFloatNearest(value * ctx.zeroAdvance);
 
-    case RelativeLength::IC:
-        return Au::fromFloatNearest(value.value() * ctx.zeroAdvance);
+    case UnitValue::Unit::RCH:
+        return Au::fromFloatNearest(value * ctx.rootZeroAdvance);
 
-    case RelativeLength::RIC:
-        return Au::fromFloatNearest(value.value() * ctx.rootZeroAdvance);
+    case UnitValue::Unit::IC:
+        return Au::fromFloatNearest(value * ctx.zeroAdvance);
 
-    case RelativeLength::LH:
-        return Au::fromFloatNearest(value.value() * ctx.lineHeight);
+    case UnitValue::Unit::RIC:
+        return Au::fromFloatNearest(value * ctx.rootZeroAdvance);
 
-    case RelativeLength::RLH:
-        return Au::fromFloatNearest(value.value() * ctx.rootLineHeight);
+    case UnitValue::Unit::LH:
+        return Au::fromFloatNearest(value * ctx.lineHeight);
+
+    case UnitValue::Unit::RLH:
+        return Au::fromFloatNearest(value * ctx.rootLineHeight);
     // Viewport-relative
 
     // https://drafts.csswg.org/css-values/#vw
 
     // Equal to 1% of the width of current viewport.
-    case RelativeLength::VW:
-    case RelativeLength::LVW:
-        return Au::fromFloatNearest(value.value() * ctx.viewportLargeWidth / 100);
+    case UnitValue::Unit::VW:
+    case UnitValue::Unit::LVW:
+        return Au::fromFloatNearest(value * ctx.viewportLargeWidth / 100);
 
-    case RelativeLength::SVW:
-        return Au::fromFloatNearest(value.value() * ctx.viewportSmallWidth / 100);
+    case UnitValue::Unit::SVW:
+        return Au::fromFloatNearest(value * ctx.viewportSmallWidth / 100);
 
-    case RelativeLength::DVW:
-        return Au::fromFloatNearest(value.value() * ctx.viewportDynamicWidth / 100);
+    case UnitValue::Unit::DVW:
+        return Au::fromFloatNearest(value * ctx.viewportDynamicWidth / 100);
 
     // https://drafts.csswg.org/css-values/#vh
     // Equal to 1% of the height of current viewport.
-    case RelativeLength::VH:
-    case RelativeLength::LVH:
-        return Au::fromFloatNearest(value.value() * ctx.viewportLargeHeight / 100);
+    case UnitValue::Unit::VH:
+    case UnitValue::Unit::LVH:
+        return Au::fromFloatNearest(value * ctx.viewportLargeHeight / 100);
 
-    case RelativeLength::SVH:
-        return Au::fromFloatNearest(value.value() * ctx.viewportSmallHeight / 100);
+    case UnitValue::Unit::SVH:
+        return Au::fromFloatNearest(value * ctx.viewportSmallHeight / 100);
 
-    case RelativeLength::DVH:
-        return Au::fromFloatNearest(value.value() * ctx.viewportDynamicHeight / 100);
+    case UnitValue::Unit::DVH:
+        return Au::fromFloatNearest(value * ctx.viewportDynamicHeight / 100);
 
     // https://drafts.csswg.org/css-values/#vi
     // Equal to 1% of the size of the viewport in the box’s inline axis.
-    case RelativeLength::VI:
-    case RelativeLength::LVI:
+    case UnitValue::Unit::VI:
+    case UnitValue::Unit::LVI:
         if (ctx.boxAxis == Axis::HORIZONTAL) {
-            return Au::fromFloatNearest(value.value() * ctx.viewportLargeWidth / 100);
+            return Au::fromFloatNearest(value * ctx.viewportLargeWidth / 100);
         } else {
-            return Au::fromFloatNearest(value.value() * ctx.viewportLargeHeight / 100);
+            return Au::fromFloatNearest(value * ctx.viewportLargeHeight / 100);
         }
 
-    case RelativeLength::SVI:
+    case UnitValue::Unit::SVI:
         if (ctx.boxAxis == Axis::HORIZONTAL) {
-            return Au::fromFloatNearest(value.value() * ctx.viewportSmallWidth / 100);
+            return Au::fromFloatNearest(value * ctx.viewportSmallWidth / 100);
         } else {
-            return Au::fromFloatNearest(value.value() * ctx.viewportSmallHeight / 100);
+            return Au::fromFloatNearest(value * ctx.viewportSmallHeight / 100);
         }
 
-    case RelativeLength::DVI:
+    case UnitValue::Unit::DVI:
         if (ctx.boxAxis == Axis::HORIZONTAL) {
-            return Au::fromFloatNearest(value.value() * ctx.viewportDynamicWidth / 100);
+            return Au::fromFloatNearest(value * ctx.viewportDynamicWidth / 100);
         } else {
-            return Au::fromFloatNearest(value.value() * ctx.viewportDynamicHeight / 100);
+            return Au::fromFloatNearest(value * ctx.viewportDynamicHeight / 100);
         }
 
     // https://drafts.csswg.org/css-values/#vb
     // Equal to 1% of the size of the viewport in the box’s block axis.
-    case RelativeLength::VB:
-    case RelativeLength::LVB:
+    case UnitValue::Unit::VB:
+    case UnitValue::Unit::LVB:
         if (ctx.boxAxis.cross() == Axis::HORIZONTAL) {
-            return Au::fromFloatNearest(value.value() * ctx.viewportLargeWidth / 100);
+            return Au::fromFloatNearest(value * ctx.viewportLargeWidth / 100);
         } else {
-            return Au::fromFloatNearest(value.value() * ctx.viewportLargeHeight / 100);
+            return Au::fromFloatNearest(value * ctx.viewportLargeHeight / 100);
         }
 
-    case RelativeLength::SVB:
+    case UnitValue::Unit::SVB:
         if (ctx.boxAxis.cross() == Axis::HORIZONTAL) {
-            return Au::fromFloatNearest(value.value() * ctx.viewportSmallWidth / 100);
+            return Au::fromFloatNearest(value * ctx.viewportSmallWidth / 100);
         } else {
-            return Au::fromFloatNearest(value.value() * ctx.viewportSmallHeight / 100);
+            return Au::fromFloatNearest(value * ctx.viewportSmallHeight / 100);
         }
 
-    case RelativeLength::DVB:
+    case UnitValue::Unit::DVB:
         if (ctx.boxAxis.cross() == Axis::HORIZONTAL) {
-            return Au::fromFloatNearest(value.value() * ctx.viewportDynamicWidth / 100);
+            return Au::fromFloatNearest(value * ctx.viewportDynamicWidth / 100);
         } else {
-            return Au::fromFloatNearest(value.value() * ctx.viewportDynamicHeight / 100);
+            return Au::fromFloatNearest(value * ctx.viewportDynamicHeight / 100);
         }
 
     // https://drafts.csswg.org/css-values/#vmin
     // Equal to the smaller of vw and vh.
-    case RelativeLength::VMIN:
-    case RelativeLength::LVMIN:
+    case UnitValue::Unit::VMIN:
+    case UnitValue::Unit::LVMIN:
         return min(
-            resolve(RelativeLength(value.value(), RelativeLength::VW), ctx),
-            resolve(RelativeLength(value.value(), RelativeLength::VH), ctx)
+            _resolveRelative(value, UnitValue::Unit::VW, ctx),
+            _resolveRelative(value, UnitValue::Unit::VH, ctx)
         );
 
-    case RelativeLength::SVMIN:
+    case UnitValue::Unit::SVMIN:
         return min(
-            resolve(RelativeLength(value.value(), RelativeLength::SVW), ctx),
-            resolve(RelativeLength(value.value(), RelativeLength::SVH), ctx)
+            _resolveRelative(value, UnitValue::Unit::SVW, ctx),
+            _resolveRelative(value, UnitValue::Unit::SVH, ctx)
         );
 
-    case RelativeLength::DVMIN:
+    case UnitValue::Unit::DVMIN:
         return min(
-            resolve(RelativeLength(value.value(), RelativeLength::DVW), ctx),
-            resolve(RelativeLength(value.value(), RelativeLength::DVH), ctx)
+            _resolveRelative(value, UnitValue::Unit::DVW, ctx),
+            _resolveRelative(value, UnitValue::Unit::DVH, ctx)
         );
 
     // https://drafts.csswg.org/css-values/#vmax
     // Equal to the larger of vw and vh.
-    case RelativeLength::VMAX:
-    case RelativeLength::LVMAX:
+    case UnitValue::Unit::VMAX:
+    case UnitValue::Unit::LVMAX:
         return max(
-            resolve(RelativeLength(value.value(), RelativeLength::VW), ctx),
-            resolve(RelativeLength(value.value(), RelativeLength::VH), ctx)
+            _resolveRelative(value, UnitValue::Unit::VW, ctx),
+            _resolveRelative(value, UnitValue::Unit::VH, ctx)
         );
 
-    case RelativeLength::DVMAX:
+    case UnitValue::Unit::DVMAX:
         return max(
-            resolve(RelativeLength(value.value(), RelativeLength::DVW), ctx),
-            resolve(RelativeLength(value.value(), RelativeLength::DVH), ctx)
+            _resolveRelative(value, UnitValue::Unit::DVW, ctx),
+            _resolveRelative(value, UnitValue::Unit::DVH, ctx)
         );
 
-    case RelativeLength::SVMAX:
+    case UnitValue::Unit::SVMAX:
         return max(
-            resolve(RelativeLength(value.value(), RelativeLength::SVW), ctx),
-            resolve(RelativeLength(value.value(), RelativeLength::SVH), ctx)
+            _resolveRelative(value, UnitValue::Unit::SVW, ctx),
+            _resolveRelative(value, UnitValue::Unit::SVH, ctx)
         );
     default:
         unreachable();
@@ -291,25 +304,27 @@ export Au resolve(RelativeLength value, RelativeLengthContext auto const& ctx) {
 }
 
 export template <>
-struct ValueParser<RelativeLength> {
-    static Res<RelativeLength::Unit> _parseLengthUnit(Str unit) {
-        return valueOfCi<RelativeLength::Unit>(unit)
-            .okOr(Error::invalidData("expected <relative-length> unit"));
+struct _Resolved<Length> {
+    using Type = Au;
+};
+
+export Au resolve(Length const& value, LengthContext auto const& ctx) {
+    if (auto px = value.absolutePixels())
+        return Au::fromFloatNearest(*px);
+    return _resolveRelative(value.value(), value.unit(), ctx);
+}
+
+export template <>
+struct ValueParser<Length> {
+    static Res<Length> parse(Cursor<Css::Sst>& c) {
+        return Ok(Length{try$(parseUnitValue(c, NumericBaseType::LENGTH))});
     }
+};
 
-    static Res<RelativeLength> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.peek() != Css::Token::DIMENSION)
-            return Error::invalidData("expected <relative-length>");
-
-        Io::SScan scan = c->token.data.str();
-        auto value = Io::atof(scan, {.allowExp = false}).unwrapOr(0.0);
-        auto unit = try$(_parseLengthUnit(scan.remStr()));
-        c.next();
-
-        return Ok(RelativeLength{value, unit});
+export template <>
+struct ValueSerializer<Length> {
+    static Res<> serialize(Io::TextWriter& w, Length const& value) {
+        return serializeValue(w, value.unitValue());
     }
 };
 
@@ -317,73 +332,36 @@ struct ValueParser<RelativeLength> {
 // https://drafts.csswg.org/css-values/#absolute-lengths
 
 export struct AbsoluteLength {
-    enum struct Unit {
-#define LENGTH(NAME, ...) NAME,
-#include "defs/absolute-lengths.inc"
+    UnitValue _value;
 
-#undef LENGTH
-        _LEN,
-    };
+    constexpr AbsoluteLength(Pixel px)
+        : _value(px.value(), UnitValue::Unit::PX) {}
 
-    using enum Unit;
+    constexpr AbsoluteLength(Au value)
+        : _value(value.cast<f64>(), UnitValue::Unit::PX) {}
 
-    float _value;
-    Unit _unit;
+    constexpr explicit AbsoluteLength(UnitValue value)
+        : _value(value) {
+        if (value.baseType() != NumericBaseType::LENGTH or not value.absolute())
+            panic("unit value is not an absolute <length>");
+    }
 
-    AbsoluteLength(Pixel px)
-        : AbsoluteLength(px.value(), PX) {}
-
-    AbsoluteLength(Au au)
-        : AbsoluteLength(static_cast<f64>(au), PX) {}
-
-    AbsoluteLength(f64 value, Unit unit)
-        : _value(value), _unit(unit) {}
-
-    constexpr f64 value() const {
+    constexpr UnitValue unitValue() const {
         return _value;
     }
 
-    constexpr Unit unit() const {
-        return _unit;
-    }
-
     constexpr Pixel pixels() const {
-        switch (_unit) {
-        case CM:
-            return Pixel(_value * 96 / 2.54);
-
-        case MM:
-            return Pixel(_value * 96 / 25.4);
-
-        case Q:
-            return Pixel(_value * 96 / 101.6);
-
-        case IN:
-            return Pixel(_value * 96);
-
-        case PT:
-            return Pixel(_value * 96 / 72.0);
-
-        case PC:
-            return Pixel(_value * 96 / 6.0);
-
-        case PX:
-            return Pixel(_value);
-        default:
-            unreachable();
-        }
+        return Pixel{_value.to(UnitValue::Unit::PX)};
     }
 
-    constexpr bool operator==(AbsoluteLength const& other) const {
-        return pixels() == other.pixels();
+    constexpr operator Length() const {
+        return Length{_value};
     }
 
-    constexpr auto operator<=>(AbsoluteLength const& other) const {
-        return pixels() <=> other.pixels();
-    }
+    constexpr auto operator<=>(AbsoluteLength const&) const = default;
 
     void repr(Io::Emit& e) const {
-        e("{}{}", _value, _unit);
+        _value.repr(e);
     }
 };
 
@@ -398,124 +376,21 @@ export Au resolve(AbsoluteLength value) {
 
 export template <>
 struct ValueParser<AbsoluteLength> {
-    static Res<AbsoluteLength::Unit> _parseLengthUnit(Str unit) {
-        return valueOfCi<AbsoluteLength::Unit>(unit)
-            .okOr(Error::invalidData("expected <absolute-length> unit"));
-    }
-
     static Res<AbsoluteLength> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.peek() != Css::Token::DIMENSION)
+        auto save = c;
+        auto value = try$(parseUnitValue(c, NumericBaseType::LENGTH));
+        if (not value.absolute()) {
+            c = save;
             return Error::invalidData("expected <absolute-length>");
-
-        Io::SScan scan = c->token.data.str();
-        auto value = Io::atof(scan, {.allowExp = false}).unwrapOr(0.0);
-        auto unit = try$(_parseLengthUnit(scan.remStr()));
-        c.next();
-
-        return Ok(AbsoluteLength{value, unit});
-    }
-};
-
-// 6. MARK: Distance Units: the <length> type
-// https://drafts.csswg.org/css-values/#lengths
-
-export struct Length : Union<AbsoluteLength, RelativeLength> {
-    using Union::Union;
-
-    Length() : Union(AbsoluteLength{0_au}) {}
-
-    Length(Au v) : Union(AbsoluteLength{v}) {}
-
-    void repr(Io::Emit& e) const {
-        visit([&](auto& v) {
-            e("{}", v);
-        });
-    }
-};
-
-export template <>
-struct _Resolved<Length> {
-    using Type = Au;
-};
-
-export template <typename T>
-concept LengthContext = RelativeLengthContext<T>;
-
-export Au resolve(Length const& l, LengthContext auto const& ctx) {
-    return l.visit(
-        [&](RelativeLength l) {
-            return resolve(l, ctx);
-        },
-        [](AbsoluteLength l) {
-            return resolve(l);
         }
-    );
-}
-
-export template <>
-struct ValueParser<Length> {
-    static Res<Length> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Css::Token::number("0")))
-            return Ok(AbsoluteLength{0.0, AbsoluteLength::PX});
-
-        if (c.peek() != Css::Token::DIMENSION)
-            return Error::invalidData("expected <length>");
-
-        if (auto v = parseValue<AbsoluteLength>(c))
-            return v;
-
-        if (auto v = parseValue<RelativeLength>(c))
-            return v;
-
-        return Error::invalidData("expected <length>");
+        return Ok(AbsoluteLength{value});
     }
 };
 
 export template <>
-struct ValueSerializer<Length> {
-    // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
-    static Res<> serialize(Io::TextWriter& w, Length const& value) {
-        // The <number> component serialized as per <number> followed by the unit in its canonical form as defined in its respective specification.
-        return value.visit(
-            [&](AbsoluteLength const& absolute) -> Res<> {
-                try$(serializeValue(w, absolute.value()));
-
-                switch (absolute.unit()) {
-                case AbsoluteLength::CM:
-                    return w.writeStr("cm"s);
-                case AbsoluteLength::MM:
-                    return w.writeStr("mm"s);
-                case AbsoluteLength::Q:
-                    return w.writeStr("Q"s);
-                case AbsoluteLength::IN:
-                    return w.writeStr("in"s);
-                case AbsoluteLength::PT:
-                    return w.writeStr("pt"s);
-                case AbsoluteLength::PC:
-                    return w.writeStr("pc"s);
-                case AbsoluteLength::PX:
-                    return w.writeStr("px"s);
-                case AbsoluteLength::_LEN:
-                    unreachable();
-                }
-
-                return Ok();
-            },
-            [&](RelativeLength const relative) -> Res<> {
-                try$(serializeValue(w, relative.value()));
-
-                // NOTE: Since relative units are all lowercase text, we can serialize them as keywords.
-                try$(serializeValue(w, relative.unit()));
-
-                return Ok();
-            }
-        );
+struct ValueSerializer<AbsoluteLength> {
+    static Res<> serialize(Io::TextWriter& w, AbsoluteLength const& value) {
+        return serializeValue(w, value.unitValue());
     }
 };
 

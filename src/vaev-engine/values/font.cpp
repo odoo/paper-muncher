@@ -130,7 +130,7 @@ export struct FontStyle {
     Gfx::FontStyle val;
 
     // The lack of an <angle> represents 14deg.
-    Angle obliqueAngle = Angle(14.0, Angle::Unit::DEGREE);
+    Angle obliqueAngle = Angle::fromDegree(14.0);
 
     constexpr FontStyle(Gfx::FontStyle named = NORMAL)
         : val(named) {

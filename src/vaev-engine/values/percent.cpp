@@ -8,6 +8,7 @@ import Karm.Core;
 
 import :css;
 import :values.base;
+import :values.unitValue;
 import :values.primitives;
 import :values.resolved;
 
@@ -18,33 +19,52 @@ namespace Vaev {
 // MARK: Percentage ------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#percentages
 
-export using Percent = Distinct<f64, struct _PercentTag>;
+export struct Percent {
+    UnitValue _value;
+
+    constexpr explicit Percent(f64 value)
+        : _value(value, UnitValue::Unit::PERCENT) {}
+
+    constexpr explicit Percent(UnitValue value)
+        : _value(value) {
+        if (value.baseType() != NumericBaseType::PERCENT)
+            panic("unit value is not a <percentage>");
+    }
+
+    constexpr UnitValue unitValue() const {
+        return _value;
+    }
+
+    constexpr f64 value() const {
+        return _value.value();
+    }
+
+    constexpr Percent operator+(Percent other) const {
+        return Percent{value() + other.value()};
+    }
+
+    constexpr Percent operator-(Percent other) const {
+        return Percent{value() - other.value()};
+    }
+
+    constexpr auto operator<=>(Percent const&) const = default;
+
+    void repr(Io::Emit& e) const {
+        _value.repr(e);
+    }
+};
 
 export template <>
 struct ValueParser<Percent> {
     static Res<Percent> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.peek() == Css::Token::PERCENTAGE) {
-            Io::SScan scan = c->token.data.str();
-            c.next();
-            return Ok(Percent{Io::atof(scan).unwrapOr(0.0)});
-        }
-
-        return Error::invalidData("expected percentage");
+        return Ok(Percent{try$(parseUnitValue(c, NumericBaseType::PERCENT))});
     }
 };
 
 export template <>
 struct ValueSerializer<Percent> {
-    // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
     static Res<> serialize(Io::TextWriter& w, Percent const& value) {
-        // The <number> component serialized as per <number> followed by the literal string "%" (U+0025).
-        try$(serializeValue(w, value.value()));
-        try$(w.writeRune('%'));
-
-        return Ok();
+        return serializeValue(w, value.unitValue());
     }
 };
 
@@ -64,10 +84,3 @@ Resolved<T> resolve(PercentOr<T> const& value, auto const& ctx, Resolved<T> rela
 }
 
 } // namespace Vaev
-
-export template <>
-struct Karm::Io::Repr<Vaev::Percent> {
-    static void repr(Io::Emit& e, Vaev::Percent const& v) {
-        e("{}%", v.value());
-    }
-};

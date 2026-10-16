@@ -246,7 +246,7 @@ export struct Media {
             .aspectRatio = pageSize.width / pageSize.height,
             .orientation = settings.orientation,
 
-            .resolution = Resolution{settings.scale, Resolution::X},
+            .resolution = Resolution::fromDppx(settings.scale),
             .scan = Scan::PROGRESSIVE,
             .grid = false,
             .update = Update::FAST,
