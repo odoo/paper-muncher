@@ -23,6 +23,7 @@ namespace Vaev::Browser {
 export enum struct InspectTab {
     ELEMENTS,
     MEDIA,
+
     _LEN,
 };
 
@@ -30,6 +31,7 @@ export enum struct InspectStyleTab {
     CASCADED,
     COMPUTED,
     FRAGMENTS,
+
     _LEN,
 };
 
