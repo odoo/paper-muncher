@@ -10,7 +10,7 @@ import Karm.Math;
 
 import :css;
 import :values.base;
-import :values.resolved;
+import :values.dimension;
 
 using namespace Karm;
 
@@ -22,7 +22,7 @@ namespace Vaev {
 export using Integer = isize;
 
 export template <>
-struct ValueParser<Integer> {
+struct ValueTraits<Integer> {
     static Res<Integer> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -37,10 +37,7 @@ struct ValueParser<Integer> {
 
         return Error::invalidData("expected integer");
     }
-};
 
-export template <>
-struct ValueSerializer<Integer> {
     // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
     static Res<> serialize(Io::TextWriter& w, Integer const& value) {
         // A base-ten integer using digits 0-9 (U+0030 to U+0039) in the shortest form possible,
@@ -55,16 +52,7 @@ struct ValueSerializer<Integer> {
 export using Number = f64;
 
 export template <>
-struct _Resolved<Number> {
-    using Type = Number;
-};
-
-export Number resolve(Number const& value, [[maybe_unused]] auto const& ctx = NONE) {
-    return value;
-}
-
-export template <>
-struct ValueParser<Number> {
+struct ValueTraits<Number> {
     static Res<Number> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -77,40 +65,31 @@ struct ValueParser<Number> {
 
         return Error::invalidData("expected number");
     }
-};
 
-export template <>
-struct ValueSerializer<Number> {
-    // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
     static Res<> serialize(Io::TextWriter& w, Number const& value) {
-        // A base-ten number using digits 0-9 (U+0030 to U+0039) in the shortest form possible,
-        // using "." to separate decimals (if any), rounding the value if necessary to not produce more than 6 decimals,
-        // preceded by "-" (U+002D) if it is negative.
-        // FIXME: It truncates instead of rounding, see https://codeberg.org/skift/karm/issues/73.
-        return Io::format(w, "{:.6}", value);
+        return Css::serializeNumber(w, value);
+    }
+
+    static constexpr Dimension::Type DIMENSION_TYPE = Dimension::NUMBER;
+
+    static Dimension toDimension(Number value) {
+        return {value, Dimension::Unit::NONE};
+    }
+
+    static Number fromDimension(Dimension dim) {
+        return dim.value();
+    }
+
+    template <typename Ctx = None>
+    static Number resolve(Number const& value, [[maybe_unused]] Ctx const& ctx = NONE) {
+        return value;
     }
 };
 
 export template <>
-struct ValueParser<bool> {
+struct ValueTraits<bool> {
     static Res<bool> parse(Cursor<Css::Sst>& c) {
         return Ok(try$(parseValue<Integer>(c)) > 0);
-    }
-};
-
-/// Helper to serialize an enum variant as if it was a keyword.
-export template <Meta::Enum E>
-struct ValueSerializer<E> {
-    static Res<> serialize(Io::TextWriter& w, E const& value) {
-        for (auto r : iterRunes(nameOf(value))) {
-            if (r == '_') {
-                try$(w.writeRune('-'));
-            } else {
-                try$(w.writeRune(toAsciiLower(r)));
-            }
-        }
-
-        return Ok();
     }
 };
 
@@ -118,7 +97,7 @@ struct ValueSerializer<E> {
 // https://drafts.csswg.org/css-values/#strings
 
 export template <>
-struct ValueParser<String> {
+struct ValueTraits<String> {
     static Res<String> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -126,10 +105,7 @@ struct ValueParser<String> {
             return Ok(c.next().token.data);
         return Error::invalidData("expected string");
     }
-};
 
-export template <>
-struct ValueSerializer<String> {
     // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
     static Res<> serialize(Io::TextWriter& w, String const& value) {
         // The string serialized as a string.
@@ -165,7 +141,7 @@ export struct CustomIdent {
 };
 
 export template <>
-struct ValueParser<CustomIdent> {
+struct ValueTraits<CustomIdent> {
     static Res<CustomIdent> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -209,34 +185,9 @@ export Res<String> parseUrlIntoString(Cursor<Css::Sst>& c) {
 }
 
 export template <>
-struct ValueParser<Ref::Url> {
+struct ValueTraits<Ref::Url> {
     static Res<Ref::Url> parse(Cursor<Css::Sst>& c) {
         return Ok(Ref::Url::parse(try$(parseUrlIntoString(c))));
-    }
-};
-
-// MARK: Combinator ------------------------------------------------------------
-// https://drafts.csswg.org/css-values-4/#component-combinators
-
-// https://drafts.csswg.org/css-values-4/#comb-one
-export template <ValueParseable... Ts>
-struct ValueParser<Union<Ts...>> {
-    static Res<Union<Ts...>> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        return Meta::any<Ts...>([&c]<typename T>() -> Res<Union<Ts...>> {
-            return Ok(try$(parseValue<T>(c)));
-        });
-    }
-};
-
-export template <ValueSerializable... Ts>
-struct ValueSerializer<Union<Ts...>> {
-    static Res<> serialize(Io::TextWriter& w, Union<Ts...> const& value) {
-        return value.visit([&](auto const& inner) {
-            return serializeValue(w, inner);
-        });
     }
 };
 
@@ -244,9 +195,11 @@ struct ValueSerializer<Union<Ts...>> {
 // https://drafts.csswg.org/css-values-4/#component-multipliers
 
 // https://drafts.csswg.org/css-values-4/#mult-zero-plus
-export template <ValueParseable T>
-struct ValueParser<Vec<T>> {
-    static Res<Vec<T>> parse(Cursor<Css::Sst>& c) {
+export template <typename T>
+struct ValueTraits<Vec<T>> : ListValueTraits<Vec<T>> {
+    static Res<Vec<T>> parse(Cursor<Css::Sst>& c)
+        requires ValueParseable<T>
+    {
         Vec<T> result = {};
 
         while (true) {
@@ -258,25 +211,21 @@ struct ValueParser<Vec<T>> {
             result.pushBack(maybeValue.take());
         }
     }
-};
 
-export template <Sliceable S>
-    requires ValueSerializable<typename S::Inner>
-struct ValueSerializer<S> {
-    static Res<> serialize(Io::TextWriter& w, S const& value) {
-        bool first = true;
+    using Computed = Vec<Vaev::Computed<T>>;
 
-        for (auto const& item : value) {
-            if (first) {
-                first = false;
-            } else {
-                try$(w.writeRune(' '));
-            }
+    static Vec<T> specify(Vec<Vaev::Computed<T>> const& value) {
+        Vec<T> result;
+        for (auto const& v : value)
+            result.pushBack(specified<T>(v));
+        return result;
+    }
 
-            try$(serializeValue(w, item));
-        }
-
-        return Ok();
+    static Vec<Vaev::Computed<T>> compute(Vec<T> const& value, auto const& ctx) {
+        Vec<Vaev::Computed<T>> result;
+        for (auto const& v : value)
+            result.pushBack(Vaev::compute(v, ctx));
+        return result;
     }
 };
 

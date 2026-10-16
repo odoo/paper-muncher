@@ -9,27 +9,27 @@ import :layout.formating;
 
 namespace Vaev::Layout {
 
-export InsetsAu computeMargins(Tree& tree, Box& box, Vec2Au containingBlock);
+export InsetsAu computeMargins(Box& box, Vec2Au containingBlock);
 
-export InsetsAu computeBorders(Tree& tree, Box& box);
+export InsetsAu computeBorders(Box& box);
 
-export InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock);
+export InsetsAu computePaddings(Box& box, Vec2Au containingBlock);
 
-export Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size);
+export Math::Radii<Au> computeRadii(Box& box, Vec2Au size);
 
-export Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin = NONE);
+export Opt<Au> computeSpecifiedBorderBoxWidth(Fragmentainer& fc, Box& box, Computed<Size> size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin = NONE);
 
-export Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au verticalBorderBox);
+export Opt<Au> computeSpecifiedBorderBoxHeight(Box& box, Computed<Size> size, Vec2Au containingBlock, Au verticalBorderBox);
 
-export Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin = NONE);
+export Vec2Au computeIntrinsicContentSize(Fragmentainer& fc, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin = NONE);
 
-export BoxMetrics computeBoxMetrics(Tree& tree, Box& box, Vec2Au position, Vec2Au size, UsedSpacings const& usedSpacings);
+export BoxMetrics computeBoxMetrics(Box& box, Vec2Au position, Vec2Au size, UsedSpacings const& usedSpacings);
 
 // MARK: Layout ---------------------------------------------------------------------
 
 // Main function for laying out a box and its children.
-export Output layoutContentBox(Tree& tree, Box& box, Input input);
-export Output layoutBorderBox(Tree& tree, Box& box, Input input);
+export Output layoutContentBox(Fragmentainer& fc, Box& box, Input input);
+export Output layoutBorderBox(Fragmentainer& fc, Box& box, Input input);
 
 // Layout wrappers for root elements
 export Output layoutRoot(Tree& tree, Input input);
@@ -37,13 +37,11 @@ export Output layoutRoot(Tree& tree, Input input);
 // MARK: Frag Builder ----------------------------------------------------------------
 
 export struct FragmentBuilder {
-    Tree& _tree;
     Box& _box;
     Vec<Rc<Fragment>> _children;
 
-    FragmentBuilder(Tree& tree, Box& box)
-        : _tree(tree),
-          _box(box) {}
+    FragmentBuilder(Box& box)
+        : _box(box) {}
 
     void addChildIfAny(Opt<Rc<Fragment>> child) {
         if (child)
@@ -63,7 +61,7 @@ export struct FragmentBuilder {
     }
 
     Rc<Fragment> buildBox(Vec2Au position, Vec2Au size, UsedSpacings usedSpacings) {
-        auto metrics = computeBoxMetrics(_tree, _box, position, size, usedSpacings);
+        auto metrics = computeBoxMetrics(_box, position, size, usedSpacings);
         return makeRc<BoxFragment>(_box, metrics, std::move(_children));
     }
 

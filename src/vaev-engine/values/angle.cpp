@@ -8,7 +8,7 @@ import Karm.Core;
 
 import :css;
 import :values.base;
-import :values.resolved;
+import :values.dimension;
 
 using namespace Karm;
 
@@ -20,72 +20,44 @@ namespace Vaev {
 export using Rad = Distinct<f64, struct _RadTag>;
 
 export struct Angle {
-    enum struct Unit {
-        DEGREE,
-        RADIAN,
-        GRAD,
-        TURN,
-    };
-
-    f64 _val;
-    Unit _unit;
+    Dimension _dim;
 
     static constexpr Angle fromDegree(f64 val) {
-        return {val, Unit::DEGREE};
+        return Angle{Dimension{val, Dimension::Unit::DEG}};
     }
 
     static constexpr Angle fromRadian(f64 val) {
-        return {val, Unit::RADIAN};
+        return Angle{Dimension{val, Dimension::Unit::RAD}};
     }
 
     static constexpr Angle fromGrad(f64 val) {
-        return {val, Unit::GRAD};
+        return Angle{Dimension{val, Dimension::Unit::GRAD}};
     }
 
     static constexpr Angle fromTurn(f64 val) {
-        return {val, Unit::TURN};
+        return Angle{Dimension{val, Dimension::Unit::TURN}};
     }
 
-    constexpr f64 val() const {
-        return _val;
-    }
+    constexpr Angle()
+        : _dim(0, Dimension::Unit::DEG) {}
 
-    constexpr Unit unit() const {
-        return _unit;
-    }
+    constexpr explicit Angle(Dimension dim)
+        : _dim(dim) {}
 
     constexpr f64 toDegree() const {
-        switch (_unit) {
-        case Unit::DEGREE:
-            return _val;
-        case Unit::RADIAN:
-            return _val * 180.0 / Math::PI;
-        case Unit::GRAD:
-            return _val * 0.9;
-        case Unit::TURN:
-            return _val * 360.0;
-        }
+        return _dim.to(Dimension::Unit::DEG);
     }
 
     constexpr f64 toRadian() const {
-        switch (_unit) {
-        case Unit::DEGREE:
-            return _val * Math::PI / 180.0;
-        case Unit::RADIAN:
-            return _val;
-        case Unit::GRAD:
-            return _val * Math::PI / 200.0;
-        case Unit::TURN:
-            return _val * 2.0 * Math::PI;
-        }
+        return _dim.to(Dimension::Unit::RAD);
     }
 
     constexpr bool operator==(Angle const& other) const {
-        return toRadian() == other.toRadian();
+        return _dim == other._dim;
     }
 
     constexpr std::partial_ordering operator<=>(Angle const& other) const {
-        return toRadian() <=> other.toRadian();
+        return _dim <=> other._dim;
     }
 
     constexpr Angle operator+(Angle other) const {
@@ -97,61 +69,17 @@ export struct Angle {
     }
 
     void repr(Io::Emit& e) const {
-        switch (_unit) {
-        case Unit::DEGREE:
-            e("{}deg", _val);
-            break;
-        case Unit::RADIAN:
-            e("{}rad", _val);
-            break;
-        case Unit::GRAD:
-            e("{}grad", _val);
-            break;
-        case Unit::TURN:
-            e("{}turn", _val);
-            break;
-        }
+        e("{}", _dim);
     }
 };
 
 export template <>
-struct _Resolved<Angle> {
-    using Type = Rad;
-};
+struct ValueTraits<Angle> : DimensionValueTraits<Angle, Dimension::ANGLE> {
+    using Resolved = Rad;
 
-Rad resolve(Angle const& value, [[maybe_unused]] auto const& ctx = NONE) {
-    return Rad{value.toRadian()};
-}
-
-export template <>
-struct ValueParser<Angle> {
-    static Res<Angle::Unit> _parseAngleUnit(Str unit) {
-        if (eqCi(unit, "deg"s))
-            return Ok(Angle::Unit::DEGREE);
-        else if (eqCi(unit, "grad"s))
-            return Ok(Angle::Unit::GRAD);
-        else if (eqCi(unit, "rad"s))
-            return Ok(Angle::Unit::RADIAN);
-        else if (eqCi(unit, "turn"s))
-            return Ok(Angle::Unit::TURN);
-        else
-            return Error::invalidData("unknown length unit");
-    }
-
-    static Res<Angle> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.peek() == Css::Token::DIMENSION) {
-            Io::SScan scan = c->token.data.str();
-            auto value = Io::atof(scan).unwrapOr(0.0);
-            auto unit = try$(_parseAngleUnit(scan.remStr()));
-
-            c.next();
-            return Ok(Angle{value, unit});
-        }
-
-        return Error::invalidData("expected angle");
+    template <typename Ctx = None>
+    static Rad resolve(Angle const& value, [[maybe_unused]] Ctx const& ctx = NONE) {
+        return Rad{value.toRadian()};
     }
 };
 

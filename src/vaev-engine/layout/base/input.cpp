@@ -53,6 +53,9 @@ export struct Input {
     MutCursor<RunningPositionMap> runningPosition = nullptr;
     usize pageNumber = 0;
 
+    /// Containing block of fixed positioned boxes.
+    RectAu viewport = {};
+
     BreakpointTraverser breakpointTraverser = {};
 
     // To be used between table wrapper and table box

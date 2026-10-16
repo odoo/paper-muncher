@@ -43,47 +43,45 @@ Pair<RectAu, RadiiAu> resolveClipGeometryBox(Rc<Layout::Fragment>& fragment, Geo
     );
 }
 
-Math::Radiif resolveRadii(Math::Radii<Calc<PercentOr<Length>>> const& baseRadii, RectAu const& referenceBox) {
+Math::Radiif resolveRadii(Math::Radii<Calc<Au, Percent>> const& baseRadii, RectAu const& referenceBox) {
     Math::Radiif radii;
-    Layout::Resolver resolver;
-    radii.a = resolver.resolve(baseRadii.a, referenceBox.height).cast<f64>();
-    radii.b = resolver.resolve(baseRadii.b, referenceBox.width).cast<f64>();
-    radii.c = resolver.resolve(baseRadii.c, referenceBox.width).cast<f64>();
-    radii.d = resolver.resolve(baseRadii.d, referenceBox.height).cast<f64>();
-    radii.e = resolver.resolve(baseRadii.e, referenceBox.height).cast<f64>();
-    radii.f = resolver.resolve(baseRadii.f, referenceBox.width).cast<f64>();
-    radii.g = resolver.resolve(baseRadii.g, referenceBox.width).cast<f64>();
-    radii.h = resolver.resolve(baseRadii.h, referenceBox.height).cast<f64>();
+    radii.a = resolve(baseRadii.a, referenceBox.height).cast<f64>();
+    radii.b = resolve(baseRadii.b, referenceBox.width).cast<f64>();
+    radii.c = resolve(baseRadii.c, referenceBox.width).cast<f64>();
+    radii.d = resolve(baseRadii.d, referenceBox.height).cast<f64>();
+    radii.e = resolve(baseRadii.e, referenceBox.height).cast<f64>();
+    radii.f = resolve(baseRadii.f, referenceBox.width).cast<f64>();
+    radii.g = resolve(baseRadii.g, referenceBox.width).cast<f64>();
+    radii.h = resolve(baseRadii.h, referenceBox.height).cast<f64>();
     return radii;
 }
 
 // https://drafts.csswg.org/css-shapes-1/#typedef-basic-shape
-Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(BasicShapeFunction const& shape, RectAu referenceBox) {
+Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Computed<BasicShapeFunction> const& shape, RectAu referenceBox) {
     Math::Path path;
     Gfx::FillRule fillRule = {};
-    Layout::Resolver resolver;
 
     shape.visit(
-        [&](Polygon const& polygon) {
+        [&](Computed<Polygon> const& polygon) {
             path.moveTo(
                 referenceBox.xy.cast<f64>() +
                 Math::Vec2f(
-                    resolver.resolve(first(polygon.points).v0, referenceBox.width).cast<f64>(),
-                    resolver.resolve(first(polygon.points).v1, referenceBox.height).cast<f64>()
+                    resolve(first(polygon.points).v0, referenceBox.width).cast<f64>(),
+                    resolve(first(polygon.points).v1, referenceBox.height).cast<f64>()
                 )
             );
             for (auto& point : next(polygon.points)) {
                 path.lineTo(
                     referenceBox.xy.cast<f64>() +
                     Math::Vec2f(
-                        resolver.resolve(point.v0, referenceBox.width).cast<f64>(),
-                        resolver.resolve(point.v1, referenceBox.height).cast<f64>()
+                        resolve(point.v0, referenceBox.width).cast<f64>(),
+                        resolve(point.v1, referenceBox.height).cast<f64>()
                     )
                 );
             }
             fillRule = polygon.fillRule;
         },
-        [&](Circle const& circle) {
+        [&](Computed<Circle> const& circle) {
             auto center = resolveBackgroundPosition(
                 circle.position,
                 referenceBox
@@ -107,43 +105,42 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(BasicShapeFunction const& sha
             } else {
                 auto hSquared = Math::pow2(referenceBox.height.cast<f64>());
                 auto wSquared = Math::pow2(referenceBox.width.cast<f64>());
-                radius = resolver
-                             .resolve(
-                                 circle.radius.expect<Calc<PercentOr<Length>>>(),
-                                 Au(Math::sqrt(hSquared + wSquared) / Math::sqrt(2.0))
-                             )
+                radius = resolve(
+                             circle.radius.expect<Calc<Au, Percent>>(),
+                             Au(Math::sqrt(hSquared + wSquared) / Math::sqrt(2.0))
+                )
                              .cast<f64>();
             }
             path.ellipse(Math::Ellipsef(center + referenceBox.xy.cast<f64>(), radius));
         },
-        [&](Inset const& inset) {
+        [&](Computed<Inset> const& inset) {
             Math::Insetsf resolved;
-            resolved.start = resolver.resolve(inset.insets.start, referenceBox.width).cast<f64>();
-            resolved.end = resolver.resolve(inset.insets.end, referenceBox.width).cast<f64>();
-            resolved.top = resolver.resolve(inset.insets.top, referenceBox.height).cast<f64>();
-            resolved.bottom = resolver.resolve(inset.insets.bottom, referenceBox.height).cast<f64>();
+            resolved.start = resolve(inset.insets.start, referenceBox.width).cast<f64>();
+            resolved.end = resolve(inset.insets.end, referenceBox.width).cast<f64>();
+            resolved.top = resolve(inset.insets.top, referenceBox.height).cast<f64>();
+            resolved.bottom = resolve(inset.insets.bottom, referenceBox.height).cast<f64>();
 
             Math::Radiif resolvedRadii = resolveRadii(inset.borderRadius, referenceBox);
 
             path.rect(referenceBox.cast<f64>().shrink(resolved), resolvedRadii);
         },
-        [&](Xywh const& xywh) {
+        [&](Computed<Xywh> const& xywh) {
             Math::Rectf resolvedRect;
-            resolvedRect.x = resolver.resolve(xywh.rect.x, referenceBox.width).cast<f64>();
-            resolvedRect.y = resolver.resolve(xywh.rect.y, referenceBox.height).cast<f64>();
-            resolvedRect.width = resolver.resolve(xywh.rect.width, referenceBox.width).cast<f64>();
-            resolvedRect.height = resolver.resolve(xywh.rect.height, referenceBox.height).cast<f64>();
+            resolvedRect.x = resolve(xywh.rect.x, referenceBox.width).cast<f64>();
+            resolvedRect.y = resolve(xywh.rect.y, referenceBox.height).cast<f64>();
+            resolvedRect.width = resolve(xywh.rect.width, referenceBox.width).cast<f64>();
+            resolvedRect.height = resolve(xywh.rect.height, referenceBox.height).cast<f64>();
 
             Math::Radiif resolvedRadii = resolveRadii(xywh.borderRadius, referenceBox);
 
             path.rect(resolvedRect.offset(referenceBox.xy.cast<f64>()), resolvedRadii);
         },
-        [&](Rect const& rect) {
+        [&](Computed<Rect> const& rect) {
             Math::Insetsf resolvedInsets;
-            resolvedInsets.top = resolver.resolve(rect.insets.top, referenceBox.height).cast<f64>();
-            resolvedInsets.end = resolver.resolve(rect.insets.end, referenceBox.width).cast<f64>();
-            resolvedInsets.bottom = resolver.resolve(rect.insets.bottom, referenceBox.height).cast<f64>();
-            resolvedInsets.start = resolver.resolve(rect.insets.start, referenceBox.width).cast<f64>();
+            resolvedInsets.top = resolve(rect.insets.top, referenceBox.height).cast<f64>();
+            resolvedInsets.end = resolve(rect.insets.end, referenceBox.width).cast<f64>();
+            resolvedInsets.bottom = resolve(rect.insets.bottom, referenceBox.height).cast<f64>();
+            resolvedInsets.start = resolve(rect.insets.start, referenceBox.width).cast<f64>();
 
             Math::Radiif resolvedRadii = resolveRadii(rect.borderRadius, referenceBox);
 
@@ -155,7 +152,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(BasicShapeFunction const& sha
 
             path.rect(resultBox, resolvedRadii);
         },
-        [&](Ellipse const& ellipse) {
+        [&](Computed<Ellipse> const& ellipse) {
             auto center = resolveBackgroundPosition(
                 ellipse.position,
                 referenceBox
@@ -167,9 +164,9 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(BasicShapeFunction const& sha
             } else if (ellipse.rx.is<Keywords::FarthestSide>()) {
                 rx = max(Math::abs(referenceBox.width.cast<f64>() - center.x), center.x);
             } else {
-                rx = resolver.resolve(
-                                 ellipse.rx.expect<Calc<PercentOr<Length>>>(),
-                                 referenceBox.width
+                rx = resolve(
+                         ellipse.rx.expect<Calc<Au, Percent>>(),
+                         referenceBox.width
                 )
                          .cast<f64>();
             }
@@ -181,9 +178,9 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(BasicShapeFunction const& sha
                 ry = max(Math::abs(referenceBox.height.cast<f64>() - center.y), center.y);
             } else {
                 ry =
-                    resolver.resolve(
-                                ellipse.ry.expect<Calc<PercentOr<Length>>>(),
-                                referenceBox.height
+                    resolve(
+                        ellipse.ry.expect<Calc<Au, Percent>>(),
+                        referenceBox.height
                     )
                         .cast<f64>();
             }

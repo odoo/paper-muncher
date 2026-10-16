@@ -26,14 +26,14 @@ export struct TransformOriginProperty : Property {
             return makeRc<TransformOriginProperty>(
                 self(),
                 TransformOrigin{
-                    .xOffset = Calc<PercentOr<Length>>{Percent{50}},
-                    .yOffset = Calc<PercentOr<Length>>{Percent{50}},
+                    .xOffset = Calc<Length, Percent>{Percent{50}},
+                    .yOffset = Calc<Length, Percent>{Percent{50}},
                 }
             );
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TransformOriginProperty>(self(), c.transform->origin);
+            return makeRc<TransformOriginProperty>(self(), specified<TransformOrigin>(c.transform->origin));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -47,7 +47,7 @@ export struct TransformOriginProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.transform.cow().origin = _value;
+        c.transform.cow().origin = compute(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -98,7 +98,7 @@ export struct TransformProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TransformProperty>(self(), c.transform->transform);
+            return makeRc<TransformProperty>(self(), specified<Transform>(c.transform->transform));
         }
 
         static void _expandSvgRotate(Vec<Css::Sst>& sst) {
@@ -201,7 +201,7 @@ export struct TransformProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.transform.cow().transform = _value;
+        c.transform.cow().transform = compute(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {

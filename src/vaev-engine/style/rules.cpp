@@ -241,8 +241,7 @@ export struct PageRule {
         return false;
     }
 
-    void apply(RegisteredPropertySet& registry, PageComputedValues& c) const {
-        ComputationContext cx;
+    void apply(RegisteredPropertySet& registry, PageComputedValues& c, ComputationContext const& cx) const {
         for (auto const& prop : props) {
             if (prop->isBogusProperty())
                 continue;
@@ -259,7 +258,7 @@ export struct PageRule {
 
         for (auto const& area : areas) {
             auto areaPseudoElement = c.area(area.area);
-            area.apply(registry, *c.style, *areaPseudoElement->computedValues());
+            area.apply(registry, *c.style, *areaPseudoElement->computedValues(), cx);
         }
     }
 

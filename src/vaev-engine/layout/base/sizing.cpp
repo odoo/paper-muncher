@@ -11,9 +11,9 @@ namespace Vaev::Layout {
 // https://www.w3.org/TR/css-sizing-3/#fit-content-size
 // NOTE: This is called the “shrink-to-fit” width in CSS2
 
-export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availableSpace) {
-    auto minSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT);
-    auto maxSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT);
+export Vec2Au computeFitContentSize(Fragmentainer& fc, Box& box, AvailableSpace availableSpace) {
+    auto minSize = computeIntrinsicContentSize(fc, box, IntrinsicSize::MIN_CONTENT);
+    auto maxSize = computeIntrinsicContentSize(fc, box, IntrinsicSize::MAX_CONTENT);
     Vec2Au size = {INDEFINITE, INDEFINITE};
 
     // If the available space in a given axis is definite,
@@ -40,28 +40,28 @@ export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availab
     return size;
 }
 
-export Au computeFitContentInlineSize(Tree& tree, Box& box, AvailableSpaceAxis availableSpace) {
-    return computeFitContentSize(tree, box, {availableSpace, INDEFINITE}).x;
+export Au computeFitContentInlineSize(Fragmentainer& fc, Box& box, AvailableSpaceAxis availableSpace) {
+    return computeFitContentSize(fc, box, {availableSpace, INDEFINITE}).x;
 }
 
-export Au computeFitContentBlockSize(Tree& tree, Box& box, AvailableSpaceAxis availableSpace) {
-    return computeFitContentSize(tree, box, {INDEFINITE, availableSpace}).y;
+export Au computeFitContentBlockSize(Fragmentainer& fc, Box& box, AvailableSpaceAxis availableSpace) {
+    return computeFitContentSize(fc, box, {INDEFINITE, availableSpace}).y;
 }
 
 // https://www.w3.org/TR/css-sizing-3/#preferred-size-properties
 // FIXME: Move this to a more generic width/height computation function.
-export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box, Vec2Au containingBlock) {
+export Math::Vec2<Opt<Au>> resolvePreferredSize(Box const& box, Vec2Au containingBlock) {
     auto const& style = *box.style;
 
     Opt<Au> width = NONE;
     Opt<Au> height = NONE;
 
-    if (auto calc = style.sizing->width.is<Calc<PercentOr<Length>>>()) {
-        width = Some(resolve(tree, box, *calc, containingBlock.width));
+    if (auto calc = style.sizing->width.is<Calc<Au, Percent>>()) {
+        width = Some(resolve(*calc, containingBlock.width));
     }
 
-    if (auto calc = style.sizing->height.is<Calc<PercentOr<Length>>>()) {
-        height = Some(resolve(tree, box, *calc, containingBlock.height));
+    if (auto calc = style.sizing->height.is<Calc<Au, Percent>>()) {
+        height = Some(resolve(*calc, containingBlock.height));
     }
 
     return {width, height};
@@ -69,7 +69,7 @@ export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box
 
 // https://www.w3.org/TR/CSS22/visudet.html#min-max-widths
 // FIXME: Values other than <length-percentage> are currently treated as 'auto'.
-export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2Au tentative, Vec2Au containingBlock, Math::Vec2<Opt<Au>> specifiedSize) {
+export Vec2Au applyReplacedMinMaxSizeConstraints(Box const& box, Vec2Au tentative, Vec2Au containingBlock, Math::Vec2<Opt<Au>> specifiedSize) {
     auto const& style = *box.style;
 
     Au minWidth = 0_au;
@@ -78,14 +78,14 @@ export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& bo
     Au maxWidth = Limits<Au>::MAX;
     Au maxHeight = Limits<Au>::MAX;
 
-    if (auto calc = style.sizing->minWidth.is<Calc<PercentOr<Length>>>())
-        minWidth = resolve(tree, box, *calc, containingBlock.width);
-    if (auto calc = style.sizing->maxWidth.is<Calc<PercentOr<Length>>>())
-        maxWidth = resolve(tree, box, *calc, containingBlock.width);
-    if (auto calc = style.sizing->minHeight.is<Calc<PercentOr<Length>>>())
-        minHeight = resolve(tree, box, *calc, containingBlock.height);
-    if (auto calc = style.sizing->maxHeight.is<Calc<PercentOr<Length>>>())
-        maxHeight = resolve(tree, box, *calc, containingBlock.height);
+    if (auto calc = style.sizing->minWidth.is<Calc<Au, Percent>>())
+        minWidth = resolve(*calc, containingBlock.width);
+    if (auto calc = style.sizing->maxWidth.is<Calc<Au, Percent>>())
+        maxWidth = resolve(*calc, containingBlock.width);
+    if (auto calc = style.sizing->minHeight.is<Calc<Au, Percent>>())
+        minHeight = resolve(*calc, containingBlock.height);
+    if (auto calc = style.sizing->maxHeight.is<Calc<Au, Percent>>())
+        maxHeight = resolve(*calc, containingBlock.height);
 
     maxWidth = max(maxWidth, minWidth);
     maxHeight = max(maxHeight, minHeight);

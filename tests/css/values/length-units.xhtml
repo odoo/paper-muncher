@@ -1,0 +1,283 @@
+<tests>
+
+<test name="length-units-rem">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                html {
+                    font-size: 20px;
+                }
+
+                body {
+                    margin: 0px;
+                }
+
+                div {
+                    height: 50px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px"></div>
+    </rendering>
+
+    <rendering help="rem is relative to the font size of the root element">
+        <div style="width: 5rem"></div>
+    </rendering>
+
+    <error help="rem isn't relative to the initial font size">
+        <div style="width: 80px"></div>
+    </error>
+</test>
+
+<test name="length-units-em">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                div {
+                    font-size: 10px;
+                    height: 50px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; margin-left: 20px; padding-left: 10px"></div>
+    </rendering>
+
+    <rendering help="em is relative to the font size of the element">
+        <div style="width: 10em; margin-left: 2em; padding-left: 1em"></div>
+    </rendering>
+</test>
+
+<test name="length-units-viewport">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                div {
+                    background-color: green;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="width: 100px; height: 50px"></div>
+    </rendering>
+
+    <rendering help="vw and vh are relative to the viewport">
+        <div style="width: 50vw; height: 25vh"></div>
+    </rendering>
+</test>
+
+<test name="length-units-inherited-em">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                .parent {
+                    font-size: 10px;
+                }
+
+                .child {
+                    font-size: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div class="parent" style="line-height: 20px">
+            <div class="child">A</div>
+            <div class="child">B</div>
+        </div>
+    </rendering>
+
+    <rendering help="em is resolved on the element declaring it, children inherit the absolute length">
+        <div class="parent" style="line-height: 2em">
+            <div class="child">A</div>
+            <div class="child">B</div>
+        </div>
+    </rendering>
+
+    <error help="em isn't resolved against the font size of the child">
+        <div class="parent" style="line-height: 40px">
+            <div class="child">A</div>
+            <div class="child">B</div>
+        </div>
+    </error>
+</test>
+
+<test name="length-units-line-height">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                div {
+                    font-size: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="line-height: 30px">A</div>
+        <div style="line-height: 30px">B</div>
+    </rendering>
+
+    <rendering help="percentages are relative to the font size">
+        <div style="line-height: 150%">A</div>
+        <div style="line-height: 150%">B</div>
+    </rendering>
+
+    <rendering help="em are relative to the font size">
+        <div style="line-height: 1.5em">A</div>
+        <div style="line-height: 1.5em">B</div>
+    </rendering>
+
+    <rendering help="calc mixing font relative and absolute lengths">
+        <div style="line-height: calc(1em + 10px)">A</div>
+        <div style="line-height: calc(1em + 10px)">B</div>
+    </rendering>
+
+    <error help="the line height changes the layout">
+        <div style="line-height: 20px">A</div>
+        <div style="line-height: 20px">B</div>
+    </error>
+</test>
+
+<test name="length-units-media-queries">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    background-color: red;
+                }
+            </style>
+            <slot />
+        </head>
+
+        <body>
+            <div></div>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <style>
+            div {
+                background-color: green;
+            }
+        </style>
+    </rendering>
+
+    <rendering help="em in media queries are relative to the initial font size">
+        <style>
+            @media (min-width: 10em) {
+                div {
+                    background-color: green;
+                }
+            }
+        </style>
+    </rendering>
+
+    <rendering help="rem in media queries are relative to the initial font size">
+        <style>
+            @media (max-width: 20rem) {
+                div {
+                    background-color: green;
+                }
+            }
+        </style>
+    </rendering>
+
+    <rendering help="viewport units in media queries are relative to the viewport">
+        <style>
+            @media (min-width: 50vw) {
+                div {
+                    background-color: green;
+                }
+            }
+        </style>
+    </rendering>
+
+    <error help="the media query doesn't match">
+        <style>
+            @media (min-width: 20em) {
+                div {
+                    background-color: green;
+                }
+            }
+        </style>
+    </error>
+</test>
+
+</tests>

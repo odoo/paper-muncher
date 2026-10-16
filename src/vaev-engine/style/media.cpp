@@ -246,7 +246,7 @@ export struct Media {
             .aspectRatio = pageSize.width / pageSize.height,
             .orientation = settings.orientation,
 
-            .resolution = Resolution{settings.scale, Resolution::X},
+            .resolution = Resolution{Dimension{settings.scale, Dimension::Unit::X}},
             .scan = Scan::PROGRESSIVE,
             .grid = false,
             .update = Update::FAST,
@@ -296,6 +296,43 @@ export struct Media {
 };
 
 // MARK: Media Features --------------------------------------------------------
+
+// https://drafts.csswg.org/mediaqueries/#units
+// Relative length units in media queries are based on the initial value, font
+// relative units use the initial font-size and viewport units the media viewport.
+RelativeLengthContextData _initialLengthContext(Media const& media) {
+    f64 fontSize = FontSizeContextData{}.userFontSize;
+    f64 width = media.width.cast<f64>();
+    f64 height = media.height.cast<f64>();
+
+    // NOTE: There is no font to take metrics from, the fallbacks of the spec are
+    //       used when it defines one, otherwise the value is an approximation.
+    f64 xHeight = fontSize * 0.5;     // https://drafts.csswg.org/css-values/#ex
+    f64 zeroAdvance = fontSize * 0.5; // https://drafts.csswg.org/css-values/#ch
+    f64 capHeight = fontSize;         // The ascent of the font, approximated to 1em
+    f64 lineHeight = fontSize * 1.2;  // line-height: normal, approximated to 1.2em
+
+    return {
+        .fontSize = fontSize,
+        .xHeight = xHeight,
+        .capHeight = capHeight,
+        .zeroAdvance = zeroAdvance,
+        .lineHeight = lineHeight,
+
+        .rootFontSize = fontSize,
+        .rootXHeight = xHeight,
+        .rootCapHeight = capHeight,
+        .rootZeroAdvance = zeroAdvance,
+        .rootLineHeight = lineHeight,
+
+        .viewportSmallWidth = width,
+        .viewportSmallHeight = height,
+        .viewportLargeWidth = width,
+        .viewportLargeHeight = height,
+        .viewportDynamicWidth = width,
+        .viewportDynamicHeight = height,
+    };
+}
 
 export enum struct RangePrefix {
     MIN,   // min-<feature> : value
@@ -366,7 +403,15 @@ struct RangeFeature {
     }
 
     bool match(Media const& media) const {
-        return match(media.*F);
+        if constexpr (Meta::Same<T, Length>) {
+            auto ctx = _initialLengthContext(media);
+            auto resolved = *this;
+            resolved.lower.value = resolve(lower.value, ctx);
+            resolved.upper.value = resolve(upper.value, ctx);
+            return resolved.match(media.*F);
+        } else {
+            return match(media.*F);
+        }
     }
 
     static RangeFeature min(T value) {

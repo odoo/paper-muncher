@@ -8,8 +8,8 @@ import Karm.Core;
 
 import :css;
 import :values.base;
+import :values.dimension;
 import :values.primitives;
-import :values.resolved;
 
 using namespace Karm;
 
@@ -18,56 +18,45 @@ namespace Vaev {
 // MARK: Percentage ------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#percentages
 
-export using Percent = Distinct<f64, struct _PercentTag>;
+export struct Percent {
+    Dimension _dim;
 
-export template <>
-struct ValueParser<Percent> {
-    static Res<Percent> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
+    constexpr explicit Percent(f64 value)
+        : _dim(value, Dimension::Unit::PERCENT) {}
 
-        if (c.peek() == Css::Token::PERCENTAGE) {
-            Io::SScan scan = c->token.data.str();
-            c.next();
-            return Ok(Percent{Io::atof(scan).unwrapOr(0.0)});
-        }
+    constexpr explicit Percent(Dimension dim)
+        : _dim(dim) {}
 
-        return Error::invalidData("expected percentage");
+    constexpr f64 value() const {
+        return _dim.value();
+    }
+
+    constexpr Percent operator+(Percent other) const {
+        return Percent{value() + other.value()};
+    }
+
+    constexpr Percent operator-(Percent other) const {
+        return Percent{value() - other.value()};
+    }
+
+    constexpr bool operator==(Percent const&) const = default;
+
+    constexpr std::partial_ordering operator<=>(Percent const& other) const {
+        return _dim <=> other._dim;
+    }
+
+    void repr(Io::Emit& e) const {
+        e("{}", _dim);
     }
 };
 
+// Resolves a percentage against its basis.
 export template <>
-struct ValueSerializer<Percent> {
-    // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
-    static Res<> serialize(Io::TextWriter& w, Percent const& value) {
-        // The <number> component serialized as per <number> followed by the literal string "%" (U+0025).
-        try$(serializeValue(w, value.value()));
-        try$(w.writeRune('%'));
-
-        return Ok();
+struct ValueTraits<Percent> : DimensionValueTraits<Percent, Dimension::PERCENTAGE> {
+    template <typename T>
+    static T resolve(Percent const& value, T relative) {
+        return T{relative.template cast<f64>() * (value.value() / 100.)};
     }
 };
-
-export template <typename T>
-using PercentOr = Union<Percent, T>;
-
-export template <typename T>
-struct _Resolved<PercentOr<T>> {
-    using Type = Resolved<T>;
-};
-
-export template <typename T>
-Resolved<T> resolve(PercentOr<T> const& value, auto const& ctx, Resolved<T> relative) {
-    if (auto v = value.template is<Percent>())
-        return Resolved<T>{relative.template cast<f64>() * ((*v).value() / 100.)};
-    return resolve(value.template expect<T>(), ctx);
-}
 
 } // namespace Vaev
-
-export template <>
-struct Karm::Io::Repr<Vaev::Percent> {
-    static void repr(Io::Emit& e, Vaev::Percent const& v) {
-        e("{}%", v.value());
-    }
-};

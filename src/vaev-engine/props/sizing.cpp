@@ -63,7 +63,7 @@ export struct WidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<WidthProperty>(self(), c.sizing->width);
+            return makeRc<WidthProperty>(self(), specified<Size>(c.sizing->width));
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
@@ -83,7 +83,7 @@ export struct WidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().width = _value;
+        c.sizing.cow().width = compute(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -107,7 +107,7 @@ export struct HeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<HeightProperty>(self(), c.sizing->height);
+            return makeRc<HeightProperty>(self(), specified<Size>(c.sizing->height));
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
@@ -127,7 +127,7 @@ export struct HeightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().height = _value;
+        c.sizing.cow().height = compute(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -149,7 +149,7 @@ export struct MinWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MinWidthProperty>(self(), c.sizing->minWidth);
+            return makeRc<MinWidthProperty>(self(), specified<Size>(c.sizing->minWidth));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -163,7 +163,7 @@ export struct MinWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().minWidth = _value;
+        c.sizing.cow().minWidth = compute(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -185,7 +185,7 @@ export struct MinHeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MinHeightProperty>(self(), c.sizing->minHeight);
+            return makeRc<MinHeightProperty>(self(), specified<Size>(c.sizing->minHeight));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -199,7 +199,7 @@ export struct MinHeightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().minHeight = _value;
+        c.sizing.cow().minHeight = compute(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -222,7 +222,7 @@ export struct MaxWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MaxWidthProperty>(self(), c.sizing->maxWidth);
+            return makeRc<MaxWidthProperty>(self(), specified<MaxSize>(c.sizing->maxWidth));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -236,7 +236,7 @@ export struct MaxWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().maxWidth = _value;
+        c.sizing.cow().maxWidth = compute(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -258,7 +258,7 @@ export struct MaxHeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MaxHeightProperty>(self(), c.sizing->maxHeight);
+            return makeRc<MaxHeightProperty>(self(), specified<MaxSize>(c.sizing->maxHeight));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -272,7 +272,7 @@ export struct MaxHeightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().maxHeight = _value;
+        c.sizing.cow().maxHeight = compute(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {

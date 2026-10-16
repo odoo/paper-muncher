@@ -117,22 +117,20 @@ struct PaginationContext {
     Layout::RunningPositionMap runningPosition = {};
 };
 
-static InsetsAu _resolvePageMargin(Print::Margins marginSetting, Margin const& margin, RectAu pageRect) {
+static InsetsAu _resolvePageMargin(Print::Margins marginSetting, Computed<Margin> const& margin, RectAu pageRect) {
     return marginSetting.visit(
         [&](Print::MarginOption option) -> InsetsAu {
             switch (option) {
             case Print::MarginOption::NONE:
                 return {};
 
-            case Print::MarginOption::DEFAULT: {
-                Layout::Resolver resolver{};
+            case Print::MarginOption::DEFAULT:
                 return {
-                    resolver.resolve(margin.top, pageRect.height),
-                    resolver.resolve(margin.end, pageRect.width),
-                    resolver.resolve(margin.bottom, pageRect.height),
-                    resolver.resolve(margin.start, pageRect.width),
+                    Layout::resolve(margin.top, pageRect.height),
+                    Layout::resolve(margin.end, pageRect.width),
+                    Layout::resolve(margin.bottom, pageRect.height),
+                    Layout::resolve(margin.start, pageRect.width),
                 };
-            }
 
             case Print::MarginOption::MINIMUM:
                 // FIXME: Supposed to be the minimum supported by the printer

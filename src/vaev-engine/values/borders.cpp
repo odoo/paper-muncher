@@ -17,7 +17,7 @@ namespace Vaev {
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 
 export template <>
-struct ValueParser<Gfx::BorderStyle> {
+struct ValueTraits<Gfx::BorderStyle> : EnumValueTraits<Gfx::BorderStyle> {
     static Res<Gfx::BorderStyle> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of property");
@@ -59,12 +59,12 @@ export struct SpecifiedBorder {
 };
 
 export struct ComputedBorder {
-    LineWidth width = Keywords::MEDIUM;
+    Computed<LineWidth> width = MEDIUM_VALUE;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
     Color color = Gfx::BLACK;
 
     operator SpecifiedBorder() const {
-        return {width, style, color};
+        return {specified<LineWidth>(width), style, color};
     }
 
     void repr(Io::Emit& e) const {
@@ -85,7 +85,7 @@ export struct UsedBorder {
 export using UsedBorders = Math::Insets<UsedBorder>;
 
 export template <>
-struct ValueParser<SpecifiedBorder> {
+struct ValueTraits<SpecifiedBorder> {
     static Res<SpecifiedBorder> parse(Cursor<Css::Sst>& c) {
         SpecifiedBorder border;
         while (not c.ended()) {
@@ -116,6 +116,103 @@ struct ValueParser<SpecifiedBorder> {
     }
 };
 
+export template <typename T>
+struct ValueTraits<Math::Radii<T>> {
+    using Computed = Math::Radii<Vaev::Computed<T>>;
+
+    static Math::Radii<T> specify(Math::Radii<Vaev::Computed<T>> const& value) {
+        return value.map([](Vaev::Computed<T> const& v) {
+            return specified<T>(v);
+        });
+    }
+
+    static Res<Math::Radii<T>> parse(Cursor<Css::Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        auto value1 = parseValue<T>(c);
+        if (not value1)
+            return parsePostSlash(c, NONE);
+
+        auto value2 = parseValue<T>(c);
+        if (not value2)
+            return parsePostSlash(c, Some(Math::Radii<T>{value1.take()}));
+
+        auto value3 = parseValue<T>(c);
+        if (not value3)
+            return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take()}));
+
+        auto value4 = parseValue<T>(c);
+        if (not value4)
+            return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.expect(), value3.take(), value2.take()}));
+
+        return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take(), value3.take(), value4.take()}));
+    }
+
+    static Res<Math::Radii<T>> parsePostSlash(Cursor<Css::Sst>& c, Opt<Math::Radii<T>> maybeRadii) {
+        // if parse a /
+        // 1 value-- > border all(a, d, e, h)
+        // 2 values-- > 1 = top - start + bottom - end 2 = the others
+        // 3 values-- > 1 = top - start, 2 = top - end + bottom - start, 3 = bottom - end
+        // 4 values-- > 1 = top - start, 2 = top - end 3 = bottom - end, 4 = bottom - start
+        eatWhitespace(c);
+
+        if (c.ended() or c.peek().token.data != "/"s)
+            return maybeRadii.okOr(Error::invalidData("expected border radius"));
+
+        auto radii = maybeRadii.unwrapOr(Math::Radii<T>{Length{0_au}});
+        c.next();
+        eatWhitespace(c);
+        auto value1 = parseValue<T>(c);
+        if (not value1) {
+            return Ok(std::move(radii));
+        }
+
+        auto value2 = parseValue<T>(c);
+        if (not value2) {
+            radii.a = value1.expect();
+            radii.d = value1.expect();
+            radii.e = value1.expect();
+            radii.h = value1.expect();
+            return Ok(std::move(radii));
+        }
+
+        eatWhitespace(c);
+        auto value3 = parseValue<T>(c);
+        if (not value3) {
+            radii.a = value1.expect();
+            radii.d = value2.expect();
+            radii.e = value1.expect();
+            radii.h = value2.expect();
+            return Ok(std::move(radii));
+        }
+
+        eatWhitespace(c);
+        auto value4 = parseValue<T>(c);
+        if (not value4) {
+            radii.a = value1.expect();
+            radii.d = value2.expect();
+            radii.e = value3.expect();
+            radii.h = value2.expect();
+
+            return Ok(std::move(radii));
+        }
+
+        radii.a = value1.expect();
+        radii.d = value2.expect();
+        radii.e = value3.expect();
+        radii.h = value4.expect();
+
+        return Ok(std::move(radii));
+    }
+
+    static Math::Radii<Vaev::Computed<T>> compute(Math::Radii<T> const& value, auto const& ctx) {
+        return value.map([&](T const& v) {
+            return Vaev::compute(v, ctx);
+        });
+    }
+};
+
 // FIXME: cant we have this for karm/insets?
 export enum struct BorderEdge {
     TOP,
@@ -126,7 +223,7 @@ export enum struct BorderEdge {
 
 export struct BorderProps {
     ComputedBorder top, start, bottom, end;
-    Math::Radii<Calc<PercentOr<Length>>> radii = {Length{0_au}};
+    Computed<Math::Radii<Calc<Length, Percent>>> radii = {0_au};
 
     ComputedBorder const& get(BorderEdge edge) const {
         switch (edge) {
@@ -149,89 +246,6 @@ export struct BorderProps {
         e(" end={}", end);
         e(" radii={}", radii);
         e(")");
-    }
-};
-
-export template <typename T>
-struct ValueParser<Math::Radii<T>> {
-    static Res<Math::Radii<T>> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        auto value1 = parseValue<PercentOr<Length>>(c);
-        if (not value1)
-            return parsePostSlash(c, NONE);
-
-        auto value2 = parseValue<PercentOr<Length>>(c);
-        if (not value2)
-            return parsePostSlash(c, Some(Math::Radii<T>{value1.take()}));
-
-        auto value3 = parseValue<PercentOr<Length>>(c);
-        if (not value3)
-            return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take()}));
-
-        auto value4 = parseValue<PercentOr<Length>>(c);
-        if (not value4)
-            return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take(), value3.take(), value2.take()}));
-
-        return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take(), value3.take(), value4.take()}));
-    }
-
-    static Res<Math::Radii<T>> parsePostSlash(Cursor<Css::Sst>& c, Opt<Math::Radii<T>> maybeRadii) {
-        // if parse a /
-        // 1 value-- > border all(a, d, e, h)
-        // 2 values-- > 1 = top - start + bottom - end 2 = the others
-        // 3 values-- > 1 = top - start, 2 = top - end + bottom - start, 3 = bottom - end
-        // 4 values-- > 1 = top - start, 2 = top - end 3 = bottom - end, 4 = bottom - start
-        eatWhitespace(c);
-
-        if (c.ended() or c.peek().token.data != "/"s)
-            return maybeRadii.okOr(Error::invalidData("expected border radius"));
-
-        auto radii = maybeRadii.unwrapOr(Math::Radii<T>{Length{0_au}});
-        c.next();
-        eatWhitespace(c);
-        auto value1 = parseValue<PercentOr<Length>>(c);
-        if (not value1) {
-            return Ok(std::move(radii));
-        }
-
-        auto value2 = parseValue<PercentOr<Length>>(c);
-        if (not value2) {
-            radii.a = value1.expect();
-            radii.d = value1.expect();
-            radii.e = value1.expect();
-            radii.h = value1.expect();
-            return Ok(std::move(radii));
-        }
-
-        eatWhitespace(c);
-        auto value3 = parseValue<PercentOr<Length>>(c);
-        if (not value3) {
-            radii.a = value1.expect();
-            radii.d = value2.expect();
-            radii.e = value1.expect();
-            radii.h = value2.expect();
-            return Ok(std::move(radii));
-        }
-
-        eatWhitespace(c);
-        auto value4 = parseValue<PercentOr<Length>>(c);
-        if (not value4) {
-            radii.a = value1.expect();
-            radii.d = value2.expect();
-            radii.e = value3.expect();
-            radii.h = value2.expect();
-
-            return Ok(std::move(radii));
-        }
-
-        radii.a = value1.expect();
-        radii.d = value2.expect();
-        radii.e = value3.expect();
-        radii.h = value4.expect();
-
-        return Ok(std::move(radii));
     }
 };
 

@@ -27,7 +27,7 @@ export struct RunningPosition {
 export using Position = Union<Keywords::Static, Keywords::Relative, Keywords::Absolute, Keywords::Fixed, Keywords::Sticky, RunningPosition>;
 
 export template <>
-struct ValueParser<Position> {
+struct ValueTraits<Position> : UnionValueTraits<Position> {
     // https://drafts.csswg.org/css-position-3/#propdef-position
     static Res<Position> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
@@ -57,15 +57,15 @@ struct ValueParser<Position> {
     }
 };
 
-export using Margin = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Length>>>>;
+export using Margin = Math::Insets<Union<Keywords::Auto, Calc<Length, Percent>>>;
 
-export using Padding = Math::Insets<Calc<PercentOr<Length>>>;
+export using Padding = Math::Insets<Calc<Length, Percent>>;
 
 // https://www.w3.org/TR/css-position-3/#propdef-inset
-export using BoxInsets = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Length>>>>;
+export using BoxInsets = Math::Insets<Union<Keywords::Auto, Calc<Length, Percent>>>;
 
 export template <typename T>
-struct ValueParser<Math::Insets<T>> {
+struct ValueTraits<Math::Insets<T>> {
     static Res<Math::Insets<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -88,18 +88,48 @@ struct ValueParser<Math::Insets<T>> {
 
         return Ok(Math::Insets<T>{top.take(), right.take(), bottom.take(), left.take()});
     }
+
+    using Computed = Math::Insets<Vaev::Computed<T>>;
+
+    static Math::Insets<T> specify(Math::Insets<Vaev::Computed<T>> const& value) {
+        return value.map([](Vaev::Computed<T> const& v) {
+            return specified<T>(v);
+        });
+    }
+
+    static Math::Insets<Vaev::Computed<T>> compute(Math::Insets<T> const& value, auto const& ctx) {
+        return value.map([&](T const& v) {
+            return Vaev::compute(v, ctx);
+        });
+    }
 };
 
 export using Gap = Union<
     Keywords::Normal,
-    Calc<PercentOr<Length>>>;
+    Calc<Length, Percent>>;
 
-export struct Gaps {
-    Gap row = Keywords::NORMAL;
-    Gap col = Keywords::NORMAL;
+export template <template <typename> typename S>
+struct _Gaps {
+    S<Gap> row = Keywords::NORMAL;
+    S<Gap> col = Keywords::NORMAL;
 
     void repr(Io::Emit& e) const {
         e("(gaps {} {})", row, col);
+    }
+};
+
+export using Gaps = _Gaps<Specified>;
+
+export template <>
+struct ValueTraits<Gaps> {
+    using Computed = _Gaps<Computed>;
+
+    static Gaps specify(Vaev::Computed<Gaps> const& value) {
+        return {specified<Gap>(value.row), specified<Gap>(value.col)};
+    }
+
+    static Vaev::Computed<Gaps> compute(Gaps const& value, auto const& ctx) {
+        return {Vaev::compute(value.row, ctx), Vaev::compute(value.col, ctx)};
     }
 };
 

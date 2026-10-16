@@ -1,12 +1,15 @@
 export module Vaev.Engine:values.baseline;
 
 import Karm.Core;
+import Karm.Math;
 import :values.calc;
 import :values.keywords;
 import :values.lineHeight;
 import :values.percent;
+import :values.base;
 
 using namespace Karm;
+using namespace Karm::Math::Literals;
 
 namespace Vaev::Style {
 
@@ -38,7 +41,7 @@ export using DominantBaseline = Union<
 
 // https://drafts.csswg.org/css-inline/#propdef-baseline-shift
 export using BaselineShift = Union<
-    Calc<PercentOr<Length>>,
+    Calc<Length, Percent>,
     Keywords::Sub,
     Keywords::Super,
     Keywords::Top,
@@ -49,8 +52,8 @@ export struct InlineProps {
     BaselineSource baselineSource = Keywords::AUTO;
     AlignmentBaseline alignmentBaseline = Keywords::BASELINE;
     DominantBaseline dominantBaseline = Keywords::AUTO;
-    BaselineShift baselineShift = Calc<PercentOr<Length>>(Length{});
-    LineHeight lineHeight = Keywords::NORMAL;
+    Computed<BaselineShift> baselineShift = Calc<Au, Percent>(0_au);
+    Computed<LineHeight> lineHeight = Keywords::NORMAL;
 };
 
 } // namespace Vaev::Style

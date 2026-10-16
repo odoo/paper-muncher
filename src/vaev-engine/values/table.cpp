@@ -24,7 +24,7 @@ export enum struct TableLayout {
 };
 
 export template <>
-struct ValueParser<TableLayout> {
+struct ValueTraits<TableLayout> : EnumValueTraits<TableLayout> {
     static Res<TableLayout> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -50,7 +50,7 @@ export enum struct CaptionSide {
 };
 
 export template <>
-struct ValueParser<CaptionSide> {
+struct ValueTraits<CaptionSide> : EnumValueTraits<CaptionSide> {
     static Res<CaptionSide> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -74,7 +74,7 @@ export enum struct BorderCollapse {
 };
 
 export template <>
-struct ValueParser<BorderCollapse> {
+struct ValueTraits<BorderCollapse> : EnumValueTraits<BorderCollapse> {
     static Res<BorderCollapse> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -100,8 +100,22 @@ export struct BorderSpacing {
     }
 };
 
+export struct ComputedBorderSpacing {
+    Au horizontal, vertical;
+
+    void repr(Io::Emit& e) const {
+        e("({}, {})", horizontal, vertical);
+    }
+};
+
 export template <>
-struct ValueParser<BorderSpacing> {
+struct ValueTraits<BorderSpacing> {
+    using Computed = ComputedBorderSpacing;
+
+    static BorderSpacing specify(ComputedBorderSpacing const& value) {
+        return {value.horizontal, value.vertical};
+    }
+
     static Res<BorderSpacing> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -120,6 +134,10 @@ struct ValueParser<BorderSpacing> {
         }
 
         return Error::invalidData("expected border spacing value");
+    }
+
+    static ComputedBorderSpacing compute(BorderSpacing const& value, LengthContext auto const& ctx) {
+        return {Vaev::compute(value.horizontal, ctx), Vaev::compute(value.vertical, ctx)};
     }
 };
 

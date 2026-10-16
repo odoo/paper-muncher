@@ -34,12 +34,12 @@ struct InlineFormatingContext : FormatingContext {
         };
     }
 
-    Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
-        auto fragBuilder = FragmentBuilder{tree, box};
+    Output run([[maybe_unused]] Fragmentainer& fc, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        auto fragBuilder = FragmentBuilder{box};
 
-        tree.fc.enterMonolithicBox();
+        fc.enterMonolithicBox();
         Defer _ = [&] {
-            tree.fc.leaveMonolithicBox();
+            fc.leaveMonolithicBox();
         };
 
         auto inlineSize = input.knownSize.width.unwrapOrElse([&] {
@@ -70,8 +70,8 @@ struct InlineFormatingContext : FormatingContext {
             };
 
             UsedSpacings usedSpacings{
-                .padding = computePaddings(tree, atomicBox, childContainingBlock),
-                .borders = computeBorders(tree, atomicBox),
+                .padding = computePaddings(atomicBox, childContainingBlock),
+                .borders = computeBorders(atomicBox),
             };
 
             Input childInput{
@@ -82,18 +82,18 @@ struct InlineFormatingContext : FormatingContext {
             };
 
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
+                fc, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
                 usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
             );
 
             childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
-                tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
+                atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
                 usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
             );
 
             // NOTE: We set the same availableSpace to child inline boxes since line wrapping is possible i.e. in the
             // worst case, they will take up the whole availableSpace, and a line break will be done right before them
-            auto atomicBoxOutput = layoutBorderBox(tree, atomicBox, childInput);
+            auto atomicBoxOutput = layoutBorderBox(fc, atomicBox, childInput);
 
             boxStrutCell->size = atomicBoxOutput.size;
             // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
@@ -145,8 +145,8 @@ struct InlineFormatingContext : FormatingContext {
                 };
 
                 UsedSpacings usedSpacings{
-                    .padding = computePaddings(tree, atomicBox, childContainingBlock),
-                    .borders = computeBorders(tree, atomicBox),
+                    .padding = computePaddings(atomicBox, childContainingBlock),
+                    .borders = computeBorders(atomicBox),
                 };
 
                 Input childInput{
@@ -160,33 +160,34 @@ struct InlineFormatingContext : FormatingContext {
                     .containingBlock = childContainingBlock,
                     .runningPosition = input.runningPosition,
                     .pageNumber = input.pageNumber,
+                    .viewport = input.viewport,
                 };
 
                 if (atomicBox.isRemovedFromFlow()) {
                     childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                        tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
+                        fc, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
                         usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
                     );
 
                     childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
-                        tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
+                        atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
                         usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
                     );
                 }
 
                 if (atomicBox.style->position == Keywords::RELATIVE) {
-                    childInput.position += relativePositionOffset(tree, atomicBox, input.containingBlock);
+                    childInput.position += relativePositionOffset(atomicBox, input.containingBlock);
                 }
 
-                auto output = layoutBorderBox(tree, atomicBox, childInput);
+                auto output = layoutBorderBox(fc, atomicBox, childInput);
 
                 outOfFlowChildren.pushBack(output.outOfFlowStash);
                 fragBuilder.addChildIfAny(output.fragment);
             }
         }
 
-        if (tree.fc.allowBreak() and
-            not tree.fc.acceptsFit(
+        if (fc.allowBreak() and
+            not fc.acceptsFit(
                 input.position.y,
                 size.y,
                 input.pendingVerticalSizes

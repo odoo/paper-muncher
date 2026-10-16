@@ -25,7 +25,7 @@ export struct OutlineWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineWidthProperty>(self(), c.outline->width);
+            return makeRc<OutlineWidthProperty>(self(), specified<LineWidth>(c.outline->width));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -39,7 +39,7 @@ export struct OutlineWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.outline.cow().width = _value;
+        c.outline.cow().width = compute(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -146,7 +146,7 @@ export struct OutlineOffsetProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineOffsetProperty>(self(), c.outline->offset);
+            return makeRc<OutlineOffsetProperty>(self(), specified<Calc<Length>>(c.outline->offset));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -160,7 +160,7 @@ export struct OutlineOffsetProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.outline.cow().offset = _value;
+        c.outline.cow().offset = compute(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {

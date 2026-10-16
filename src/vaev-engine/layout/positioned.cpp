@@ -9,16 +9,16 @@ import :layout.values;
 namespace Vaev::Layout {
 
 // https://www.w3.org/TR/css-position-3/#resolving-insets
-static RectAu _computeInsetModifiedContainingBlock(Tree const& tree, Box& box, RectAu containingBlock, RectAu staticPositionRect) {
+static RectAu _computeInsetModifiedContainingBlock(Box& box, RectAu containingBlock, RectAu staticPositionRect, RectAu viewport) {
     auto const& style = *box.style;
 
     auto relativeTo = style.position == Keywords::FIXED
-                          ? tree.viewport.small
+                          ? viewport
                           : containingBlock;
 
     InsetsAu resolvedInsets = {};
 
-    using InsetLength = Calc<PercentOr<Length>>;
+    using InsetLength = Calc<Au, Percent>;
 
     bool startIsAuto = style.insets->start.is<Keywords::Auto>().has();
     bool endIsAuto = style.insets->end.is<Keywords::Auto>().has();
@@ -67,10 +67,10 @@ static RectAu _computeInsetModifiedContainingBlock(Tree const& tree, Box& box, R
         }
     } else {
         if (not startIsAuto) {
-            resolvedInsets.start = resolve(tree, box, *style.insets->start.is<InsetLength>(), relativeTo.width);
+            resolvedInsets.start = resolve(*style.insets->start.is<InsetLength>(), relativeTo.width);
         }
         if (not endIsAuto) {
-            resolvedInsets.end = resolve(tree, box, *style.insets->end.is<InsetLength>(), relativeTo.width);
+            resolvedInsets.end = resolve(*style.insets->end.is<InsetLength>(), relativeTo.width);
         }
     }
 
@@ -122,10 +122,10 @@ static RectAu _computeInsetModifiedContainingBlock(Tree const& tree, Box& box, R
         }
     } else {
         if (not topIsAuto) {
-            resolvedInsets.top = resolve(tree, box, *style.insets->top.is<InsetLength>(), relativeTo.height);
+            resolvedInsets.top = resolve(*style.insets->top.is<InsetLength>(), relativeTo.height);
         }
         if (not bottomIsAuto) {
-            resolvedInsets.bottom = resolve(tree, box, *style.insets->bottom.is<InsetLength>(), relativeTo.height);
+            resolvedInsets.bottom = resolve(*style.insets->bottom.is<InsetLength>(), relativeTo.height);
         }
     }
 
@@ -170,7 +170,7 @@ export bool isFixedPositioningContainingBlock(Style::ComputedValues const& style
 }
 
 // https://www.w3.org/TR/css-position-3/#abspos-layout
-export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBlock, RectAu staticPositionRect, usize pageNumber) {
+export Output layoutAbsolutePositioned(Fragmentainer& fc, Box& box, RectAu containingBlock, RectAu staticPositionRect, usize pageNumber, RectAu viewport) {
     auto const& style = *box.style;
 
     // Absolute positioning not only takes a box out of flow, but also lays it out
@@ -178,17 +178,17 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
     // according to the absolute positioning layout model:
 
     // 1. First, its inset-modified containing block is calculated, defining its available space.
-    auto availableSpace = _computeInsetModifiedContainingBlock(tree, box, containingBlock, staticPositionRect);
+    auto availableSpace = _computeInsetModifiedContainingBlock(box, containingBlock, staticPositionRect, viewport);
 
     // 2. Next, its width and height are resolved against this definite available space,
     //    as its preferred size capped by its maximum size (if any), floored by its minimum size.
     //    Percentages, however, are resolved against the original containing block size.
 
     UsedSpacings usedSpacings{
-        .padding = computePaddings(tree, box, containingBlock.size()),
-        .borders = computeBorders(tree, box),
+        .padding = computePaddings(box, containingBlock.size()),
+        .borders = computeBorders(box),
         // FIXME: Auto margins should not always resolve to zero (see step 3).
-        .margin = computeMargins(tree, box, containingBlock.size())
+        .margin = computeMargins(box, containingBlock.size())
     };
 
     // https://www.w3.org/TR/css-position-3/#abspos-auto-size
@@ -199,7 +199,7 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
         width = Some(availableSpace.width);
     } else {
         width = computeSpecifiedBorderBoxWidth(
-            tree, box, style.sizing->width, containingBlock.size(),
+            fc, box, style.sizing->width, containingBlock.size(),
             usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
         );
     }
@@ -209,7 +209,7 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
         height = Some(availableSpace.height);
     } else {
         height = computeSpecifiedBorderBoxHeight(
-            tree, box, style.sizing->height, containingBlock.size(),
+            box, style.sizing->height, containingBlock.size(),
             usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
         );
     }
@@ -240,13 +240,14 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
         .availableSpace = availableSpace.size(),
         .containingBlock = containingBlock.size(),
         .pageNumber = pageNumber,
+        .viewport = viewport,
     };
 
-    return layoutBorderBox(tree, box, childInput);
+    return layoutBorderBox(fc, box, childInput);
 }
 
 // https://www.w3.org/TR/css-position-3/#relpos-insets
-Au _negotiateInsetsForRelativePositioning(Tree& tree, Box const& box, Size const& start, Size const& end, Au relativeTo) {
+Au _negotiateInsetsForRelativePositioning(Computed<Size> const& start, Computed<Size> const& end, Au relativeTo) {
     bool startIsAuto = start.is<Keywords::Auto>().has();
     bool endIsAuto = end.is<Keywords::Auto>().has();
 
@@ -258,25 +259,25 @@ Au _negotiateInsetsForRelativePositioning(Tree& tree, Box const& box, Size const
 
     // - If only one is auto, its used value becomes the negation of the other, and the box is shifted by the specified amount.
     if (not startIsAuto and endIsAuto) {
-        return resolve(tree, box, *start.is<Calc<PercentOr<Length>>>(), relativeTo);
+        return resolve(*start.is<Calc<Au, Percent>>(), relativeTo);
     }
     if (startIsAuto and not endIsAuto) {
-        return -resolve(tree, box, *end.is<Calc<PercentOr<Length>>>(), relativeTo);
+        return -resolve(*end.is<Calc<Au, Percent>>(), relativeTo);
     }
 
     // - If neither is auto, the position is over-constrained; (with respect to the writing mode of its containing block)
     //   the computed end side value is ignored, and its used value becomes the negation of the start side.
     // FIXME: Honor writing mode.
-    return resolve(tree, box, *start.is<Calc<PercentOr<Length>>>(), relativeTo);
+    return resolve(*start.is<Calc<Au, Percent>>(), relativeTo);
 }
 
 // https://www.w3.org/TR/css-position-3/#relpos-insets
-export Vec2Au relativePositionOffset(Tree& tree, Box const& box, RectAu containingBlock) {
+export Vec2Au relativePositionOffset(Box const& box, RectAu containingBlock) {
     auto const& s = *box.style;
 
     return Vec2Au{
-        _negotiateInsetsForRelativePositioning(tree, box, s.insets->start, s.insets->end, containingBlock.width),
-        _negotiateInsetsForRelativePositioning(tree, box, s.insets->top, s.insets->bottom, containingBlock.height),
+        _negotiateInsetsForRelativePositioning(s.insets->start, s.insets->end, containingBlock.width),
+        _negotiateInsetsForRelativePositioning(s.insets->top, s.insets->bottom, containingBlock.height),
     };
 }
 

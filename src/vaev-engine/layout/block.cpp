@@ -143,7 +143,7 @@ Output fragmentEmptyBox(Fragmentainer const& fc, FragmentBuilder& fragBuilder, I
 // The table wrapper box inline size is the table grid box inline size, computed
 // here from its intrinsic sizes since tables with 'width: auto' size to
 // fit-content instead of stretching like other block-level boxes.
-Opt<Au> _tableWrapperFitContentWidth(Tree& tree, Box& wrapper, Au availableWidth) {
+Opt<Au> _tableWrapperFitContentWidth(Fragmentainer& fc, Box& wrapper, Au availableWidth) {
     for (auto& gridBox : wrapper.children()) {
         if (gridBox.style->display != Display::Internal::TABLE_BOX)
             continue;
@@ -153,13 +153,13 @@ Opt<Au> _tableWrapperFitContentWidth(Tree& tree, Box& wrapper, Au availableWidth
         if (not gridBox.style->sizing->width.is<Keywords::Auto>())
             return NONE;
 
-        return Some(computeFitContentInlineSize(tree, wrapper, availableWidth));
+        return Some(computeFitContentInlineSize(fc, wrapper, availableWidth));
     }
 
     return NONE;
 }
 
-void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, Input& childInput, UsedSpacings const& usedSpacings, Opt<Au> blockInlineSize) {
+void _populateChildSpecifiedSizes(Fragmentainer& fc, Box& child, Input& parentInput, Input& childInput, UsedSpacings const& usedSpacings, Opt<Au> blockInlineSize) {
     // https://drafts.csswg.org/css-tables-3/#fixup-algorithm
     // Percentages which would depend on the width and height on the table-wrapper box’s size are relative to the table-wrapper
     // box’s containing block instead, not the table-wrapper box itself.
@@ -177,7 +177,7 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, In
                 // When the inline size is not known, we cannot enforce it to the child. (?)
                 Au availableWidth = blockInlineSize.expect() - usedSpacings.margin.horizontal();
                 if (child.style->display == Display::TABLE) {
-                    childInput.knownSize.width = Some(_tableWrapperFitContentWidth(tree, child, availableWidth)
+                    childInput.knownSize.width = Some(_tableWrapperFitContentWidth(fc, child, availableWidth)
                                                           .unwrapOr(availableWidth));
                 } else {
                     childInput.knownSize.width = Some(availableWidth);
@@ -185,14 +185,14 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, In
             }
         } else {
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                tree, child, child.style->sizing->width, containingBlock,
+                fc, child, child.style->sizing->width, containingBlock,
                 usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal(),
                 childInput.capmin
             );
         }
 
         childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
-            tree, child, child.style->sizing->height, containingBlock,
+            child, child.style->sizing->height, containingBlock,
             usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
         );
     }
@@ -234,19 +234,19 @@ void _resolveAutoHorizontalMargins(Box& child, Input& childInput, UsedSpacings& 
 
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
 struct BlockFormatingContext : FormatingContext {
-    Au _computeCapmin(Tree& tree, Box& box, Input input, Au inlineSize) {
+    Au _computeCapmin(Fragmentainer& fc, Box& box, Input input, Au inlineSize) {
         Au capmin{};
         for (auto& c : box.children()) {
             if (c.style->display != Display::TABLE_BOX) {
                 auto minContentContrib = computeIntrinsicContentSize(
-                    tree, c, IntrinsicSize::MIN_CONTENT
+                    fc, c, IntrinsicSize::MIN_CONTENT
                 );
 
                 Vec2Au containingBlock = {inlineSize, input.knownSize.height.unwrapOr(0_au)};
                 UsedSpacings usedSpacings{
-                    .padding = computePaddings(tree, c, containingBlock),
-                    .borders = computeBorders(tree, c),
-                    .margin = computeMargins(tree, c, containingBlock)
+                    .padding = computePaddings(c, containingBlock),
+                    .borders = computeBorders(c),
+                    .margin = computeMargins(c, containingBlock)
                 };
 
                 capmin = max(
@@ -260,14 +260,14 @@ struct BlockFormatingContext : FormatingContext {
         return capmin;
     }
 
-    Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
-        auto fragBuilder = FragmentBuilder{tree, box};
+    Output run(Fragmentainer& fc, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
+        auto fragBuilder = FragmentBuilder{box};
 
         Au blockSize = 0_au;
         Au inlineSize = input.knownSize.width.unwrapOr(0_au);
 
         if (box.children().len() == 0) {
-            return fragmentEmptyBox(tree.fc, fragBuilder, input);
+            return fragmentEmptyBox(fc, fragBuilder, input);
         }
 
         Breakpoint currentBreakpoint;
@@ -326,9 +326,9 @@ struct BlockFormatingContext : FormatingContext {
             auto childContainingBlock = Vec2Au{inlineSize, input.knownSize.height.unwrapOr(0_au)};
 
             auto usedSpacings = UsedSpacings{
-                .padding = computePaddings(tree, c, childContainingBlock),
-                .borders = computeBorders(tree, c),
-                .margin = computeMargins(tree, c, childContainingBlock)
+                .padding = computePaddings(c, childContainingBlock),
+                .borders = computeBorders(c),
+                .margin = computeMargins(c, childContainingBlock)
             };
 
             Input childInput = {
@@ -339,6 +339,7 @@ struct BlockFormatingContext : FormatingContext {
                 .containingBlock = childContainingBlock,
                 .runningPosition = input.runningPosition,
                 .pageNumber = input.pageNumber,
+                .viewport = input.viewport,
                 .breakpointTraverser = input.breakpointTraverser.traverseInsideUsingIthChild(i),
                 .pendingVerticalSizes = input.pendingVerticalSizes,
             };
@@ -356,29 +357,29 @@ struct BlockFormatingContext : FormatingContext {
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
             //       and avoid duplicating the layout code
             if (c.style->display == Display::Internal::TABLE_BOX)
-                childInput.capmin = Some(_computeCapmin(tree, box, input, inlineSize));
+                childInput.capmin = Some(_computeCapmin(fc, box, input, inlineSize));
 
-            _populateChildSpecifiedSizes(tree, c, input, childInput, usedSpacings, input.knownSize.width);
+            _populateChildSpecifiedSizes(fc, c, input, childInput, usedSpacings, input.knownSize.width);
 
             if (not c.isRemovedFromFlow())
                 _resolveAutoHorizontalMargins(c, childInput, usedSpacings, input.knownSize.width);
 
             childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
             if (box.style->text->align == TextAlign::BLOCK_CENTER)
-                childInput.position.x += inlineSize / 2 - layoutBorderBox(tree, c, childInput.withGenerateFragment(false)).width() / 2;
+                childInput.position.x += inlineSize / 2 - layoutBorderBox(fc, c, childInput.withGenerateFragment(false)).width() / 2;
 
             if (c.isPseudoElement(Dom::PseudoElement::MARKER)) {
                 // NOSPEC: The spec doesn't define where the marker should be placed.
-                auto width = computeIntrinsicContentSize(tree, c, IntrinsicSize::MAX_CONTENT).x;
+                auto width = computeIntrinsicContentSize(fc, c, IntrinsicSize::MAX_CONTENT).x;
                 childInput.position.x -= width * 2.5;
                 childInput.knownSize.width = Some(width);
             }
 
             if (c.style->position == Keywords::RELATIVE) {
-                childInput.position += relativePositionOffset(tree, c, input.containingBlock);
+                childInput.position += relativePositionOffset(c, input.containingBlock);
             }
 
-            auto output = layoutBorderBox(tree, c, childInput);
+            auto output = layoutBorderBox(fc, c, childInput);
             fragBuilder.addChildIfAny(output.fragment);
 
             outOfFlowChildren.pushBack(output.outOfFlowStash);
@@ -389,7 +390,7 @@ struct BlockFormatingContext : FormatingContext {
             }
 
             maybeProcessChildBreakpoint(
-                tree.fc,
+                fc,
                 currentBreakpoint,
                 i,
                 oneOf(box.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE),
@@ -401,7 +402,7 @@ struct BlockFormatingContext : FormatingContext {
             lastBaselineSet = output.lastBaselineSet.translate(childInput.position.y - input.position.y);
 
             try$(processBreakpointsAfterChild(
-                tree.fc,
+                fc,
                 fragBuilder,
                 currentBreakpoint,
                 box,
@@ -411,7 +412,7 @@ struct BlockFormatingContext : FormatingContext {
                 input
             ));
 
-            if (tree.fc.allowBreak() and i + 1 == endChildren) {
+            if (fc.allowBreak() and i + 1 == endChildren) {
                 blockWasCompletelyLaidOut = output.completelyLaidOut and i + 1 == box.children().len();
             }
 

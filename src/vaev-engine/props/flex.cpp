@@ -25,7 +25,7 @@ export struct FlexBasisProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FlexBasisProperty>(self(), c.flex->basis);
+            return makeRc<FlexBasisProperty>(self(), specified<FlexBasis>(c.flex->basis));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -39,7 +39,7 @@ export struct FlexBasisProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.flex.cow().basis = _value;
+        c.flex.cow().basis = compute(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {
@@ -245,7 +245,7 @@ export struct FlexProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FlexProperty>(self(), FlexItemProps{c.flex->basis, c.flex->grow, c.flex->shrink});
+            return makeRc<FlexProperty>(self(), FlexItemProps{specified<FlexBasis>(c.flex->basis), c.flex->grow, c.flex->shrink});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -264,7 +264,7 @@ export struct FlexProperty : Property {
 
             // default values if these parameters are omitted
             value.flexGrow = value.flexShrink = 1;
-            value.flexBasis = Calc<PercentOr<Length>>(Length{});
+            value.flexBasis = Calc<Length, Percent>(Length{});
 
             auto parseGrowShrink = [](Cursor<Css::Sst>& c, FlexItemProps& value) -> Res<> {
                 auto grow = parseValue<Number>(c);

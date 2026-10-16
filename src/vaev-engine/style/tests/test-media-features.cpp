@@ -60,6 +60,20 @@ test$("feature-width") {
     return Ok();
 }
 
+test$("feature-width-relative-units") {
+    // em and rem are relative to the initial font-size
+    assert$(WidthFeature::min(Length{100, Dimension::Unit::EM}).match(TEST_MEDIA));
+    assert$(not WidthFeature::min(Length{150, Dimension::Unit::EM}).match(TEST_MEDIA));
+    assert$(WidthFeature::exact(Length{120, Dimension::Unit::REM}).match(TEST_MEDIA));
+
+    // Viewport units are relative to the media viewport
+    assert$(WidthFeature::exact(Length{100, Dimension::Unit::VW}).match(TEST_MEDIA));
+    assert$(HeightFeature::max(Length{100, Dimension::Unit::VH}).match(TEST_MEDIA));
+    assert$(not WidthFeature::max(Length{50, Dimension::Unit::VW}).match(TEST_MEDIA));
+
+    return Ok();
+}
+
 test$("feature-height") {
     assert$(HeightFeature::min(1000_au).match(TEST_MEDIA));
 

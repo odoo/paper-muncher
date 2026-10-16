@@ -29,7 +29,7 @@ export enum struct FlexDirection {
 };
 
 export template <>
-struct ValueParser<FlexDirection> {
+struct ValueTraits<FlexDirection> : EnumValueTraits<FlexDirection> {
     static Res<FlexDirection> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -59,7 +59,7 @@ export enum struct FlexWrap {
 };
 
 export template <>
-struct ValueParser<FlexWrap> {
+struct ValueTraits<FlexWrap> : EnumValueTraits<FlexWrap> {
     static Res<FlexWrap> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -81,7 +81,7 @@ export using FlexBasis = Union<
     Keywords::MinContent,
     Keywords::MaxContent,
     Keywords::FitContent,
-    Calc<PercentOr<Length>>>;
+    Calc<Length, Percent>>;
 
 export struct FlexItemProps {
     FlexBasis flexBasis = Keywords::AUTO;
@@ -98,7 +98,7 @@ export struct FlexProps {
     FlexWrap wrap = FlexWrap::NOWRAP;
 
     // FlexItem
-    FlexBasis basis = Keywords::AUTO;
+    Computed<FlexBasis> basis = Keywords::AUTO;
     Number grow = 0;
     Number shrink = 1;
 

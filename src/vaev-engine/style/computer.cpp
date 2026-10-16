@@ -154,16 +154,16 @@ export struct Computer {
 
     // MARK: Cascading ---------------------------------------------------------
 
-    void _evalRule(Rule const& rule, Page const& page, PageComputedValues& c) {
+    void _evalRule(Rule const& rule, Page const& page, PageComputedValues& c, ComputationContext const& cx) {
         rule.visit(
             [&](PageRule const& r) {
                 if (r.match(page))
-                    r.apply(_registeredPropertySet, c);
+                    r.apply(_registeredPropertySet, c, cx);
             },
             [&](MediaRule const& r) {
                 if (r.match(_media))
                     for (auto const& subRule : r.rules)
-                        _evalRule(subRule, page, c);
+                        _evalRule(subRule, page, c, cx);
             },
             [&](auto const&) {
                 // Ignore other rule types
@@ -371,9 +371,15 @@ export struct Computer {
     Rc<PageComputedValues> computeValues(ComputedValues const& parent, Page const& page) {
         auto computed = makeRc<PageComputedValues>(_heap, parent);
 
+        ComputationContext cx;
+        cx.populateUsingViewport(_viewport);
+        cx.populateUsingRootComputedValues(_rootComputedValues ? **_rootComputedValues : parent);
+        cx.populateUsingParentComputedValues(parent);
+        cx.populateUsingOwnComputedValues(parent);
+
         for (auto const& sheet : _stylesheets.items)
             for (auto const& rule : sheet.rules)
-                _evalRule(rule, page, *computed);
+                _evalRule(rule, page, *computed, cx);
 
         for (auto& area : computed->_areas) {
             auto font = _lookupFontface(*area->computedValues());

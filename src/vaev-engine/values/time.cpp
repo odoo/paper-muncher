@@ -1,6 +1,14 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:values.time;
 
 import Karm.Core;
+
+import :css;
+import :values.base;
+import :values.dimension;
 
 using namespace Karm;
 
@@ -10,57 +18,45 @@ namespace Vaev {
 // https://drafts.csswg.org/css-values/#time
 
 export struct Time {
-    enum struct Unit {
-        S,
-        MS
-    };
-
-    using enum Unit;
-
-    f64 _val;
-    Unit _unit;
+    Dimension _dim;
 
     static constexpr Time fromSecond(f64 val) {
-        return {val, Unit::S};
+        return Time{Dimension{val, Dimension::Unit::S}};
     }
 
     static constexpr Time fromMillisecond(f64 val) {
-        return {val, Unit::MS};
+        return Time{Dimension{val, Dimension::Unit::MS}};
     }
 
-    constexpr f64 val() const {
-        return _val;
-    }
+    constexpr Time()
+        : _dim(0, Dimension::Unit::S) {}
 
-    constexpr Unit unit() const {
-        return _unit;
-    }
+    constexpr explicit Time(Dimension dim)
+        : _dim(dim) {}
 
     constexpr f64 toSecond() const {
-        switch (_unit) {
-        case Unit::S:
-            return _val;
-        case Unit::MS:
-            return _val / 1000.0;
-        }
+        return _dim.to(Dimension::Unit::S);
     }
 
     constexpr f64 toMillisecond() const {
-        switch (_unit) {
-        case Unit::S:
-            return _val * 1000.0;
-        case Unit::MS:
-            return _val;
-        }
+        return _dim.to(Dimension::Unit::MS);
     }
 
     constexpr bool operator==(Time const& other) const {
-        return _val == other._val and _unit == other._unit;
+        return _dim == other._dim;
     }
 
-    constexpr auto operator<=>(Time const& other) const {
-        return toSecond() <=> other.toSecond();
+    constexpr std::partial_ordering operator<=>(Time const& other) const {
+        return _dim <=> other._dim;
     }
+
+    void repr(Io::Emit& e) const {
+        e("{}", _dim);
+    }
+};
+
+export template <>
+struct ValueTraits<Time> : DimensionValueTraits<Time, Dimension::TIME> {
 };
 
 } // namespace Vaev

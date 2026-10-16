@@ -8,11 +8,9 @@ using namespace Karm;
 
 namespace Vaev::Paint {
 
-Math::Vec2f resolveBackgroundPosition(BackgroundPosition const& position, RectAu const& referenceBox) {
-    Layout::Resolver resolver = {};
-
-    auto horizontalPosition = resolver.resolve(position.horizontal, referenceBox.width);
-    auto verticalPosition = resolver.resolve(position.vertical, referenceBox.height);
+Math::Vec2f resolveBackgroundPosition(Computed<BackgroundPosition> const& position, RectAu const& referenceBox) {
+    auto horizontalPosition = resolve(position.horizontal, referenceBox.width);
+    auto verticalPosition = resolve(position.vertical, referenceBox.height);
 
     Math::Vec2f result;
     if (position.horizontalAnchor.is<Keywords::Left>()) {

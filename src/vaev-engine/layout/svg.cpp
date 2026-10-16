@@ -13,33 +13,10 @@ using namespace Karm;
 
 namespace Vaev::Layout {
 
-// SVG sizes shouldn't be defined using calc values
-Opt<PercentOr<Length>> extractValueFromCalc(Calc<PercentOr<Length>> const& size) {
-    return size.visit(
-        [](Calc<PercentOr<Length>>::Value const& v) -> Opt<PercentOr<Length>> {
-            return Some(v.expect<PercentOr<Length>>());
-        },
-        [](auto const) {
-            return Opt<PercentOr<Length>>{NONE};
-        }
-    );
-}
-
-// FIXME: this should be targeted by the computer refactoring, so we have only resolved percentage or length values
-PercentOr<Length> fromSize(Size const& size) {
-    if (size.is<Keywords::Auto>())
-        return PercentOr<Length>{Percent{100}};
-
-    return extractValueFromCalc(size.expect<Calc<PercentOr<Length>>>())
-        .unwrapOr(PercentOr<Length>{Percent{100}});
-}
-
-// FIXME: already present in Resolver obj, but it doesnt make sense to instantiate one here; should also be targeted
-// by the computer refactoring
-Au resolve(PercentOr<Length> const& value, Au relative) {
-    if (auto valueLength = value.is<Length>())
-        return Au{valueLength->unwrapOr<AbsoluteLength>(0_au).pixels().value()};
-    return Au{relative.cast<f64>() * (value.expect<Percent>().value() / 100.)};
+Calc<Au, Percent> fromSize(Computed<Size> const& size) {
+    if (auto calc = size.is<Calc<Au, Percent>>())
+        return *calc;
+    return Percent{100};
 }
 
 Au normalizedDiagonal(Vec2Au relativeTo) {
@@ -52,23 +29,12 @@ Au normalizedDiagonal(Vec2Au relativeTo) {
 
 struct SvgFormatingContext : FormatingContext {
     // https://svgwg.org/svg2-draft/coords.html#SizingSVGInCSS
-    Opt<Number> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, Size const& width, Size const& height) {
-        // FIXME: again this should be targetted by the styling computation refactoring,
-        // where Size will be resolved to a mix between Percent and Lengths
-        auto absoluteValue = [](Size size) -> Opt<Length> {
-            if (not size.is<Calc<PercentOr<Length>>>())
-                return NONE;
-
-            auto calc = size.expect<Calc<PercentOr<Length>>>();
-
-            auto percOrLength = extractValueFromCalc(calc);
-            if (not percOrLength)
-                return NONE;
-
-            if (percOrLength->is<Percent>())
-                return NONE;
-
-            return Some(percOrLength->expect<Length>());
+    Opt<Number> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, Computed<Size> const& width, Computed<Size> const& height) {
+        auto absoluteValue = [](Computed<Size> const& size) -> Opt<Au> {
+            if (auto calc = size.is<Calc<Au, Percent>>())
+                if (auto length = calc->is<Au>())
+                    return Some(*length);
+            return NONE;
         };
 
         auto absWidth = absoluteValue(width);
@@ -76,7 +42,7 @@ struct SvgFormatingContext : FormatingContext {
 
         // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
         if (absWidth and absHeight)
-            return Some(absWidth->unwrapOr<AbsoluteLength>(0_au).pixels().value() / absHeight->unwrapOr<AbsoluteLength>(0_au).pixels().value());
+            return Some(absWidth->cast<f64>() / absHeight->cast<f64>());
 
         // 2. If an SVG View is active:
         // TODO
@@ -108,23 +74,23 @@ struct SvgFormatingContext : FormatingContext {
 
     static RectAu _resolveRectangle(Style::ComputedValues const& style, Vec2Au const& relativeTo) {
         return {
-            Layout::resolve(style.svg->x, relativeTo.x),
-            Layout::resolve(style.svg->y, relativeTo.y),
-            Layout::resolve(fromSize(style.sizing->width), relativeTo.x),
-            Layout::resolve(fromSize(style.sizing->height), relativeTo.y)
+            resolve(style.svg->x, relativeTo.x),
+            resolve(style.svg->y, relativeTo.y),
+            resolve(fromSize(style.sizing->width), relativeTo.x),
+            resolve(fromSize(style.sizing->height), relativeTo.y)
         };
     }
 
     static EllipseAu _resolveCircle(Style::ComputedValues const& style, Vec2Au const& relativeTo) {
         return {
-            Vaev::Layout::resolve(style.svg->cx, relativeTo.x),
-            Vaev::Layout::resolve(style.svg->cy, relativeTo.y),
-            Vaev::Layout::resolve(style.svg->r, relativeTo.x),
+            resolve(style.svg->cx, relativeTo.x),
+            resolve(style.svg->cy, relativeTo.y),
+            resolve(style.svg->r, relativeTo.x),
         };
     }
 
     static void _commitShape(Box& box, FragmentBuilder& fragBuilder, Vec2Au relativeTo) {
-        Au resolvedStrokeWidth = Vaev::Layout::resolve(box.style->svgPaint->strokeWidth, normalizedDiagonal(relativeTo));
+        Au resolvedStrokeWidth = resolve(box.style->svgPaint->strokeWidth, normalizedDiagonal(relativeTo));
         auto shape = box.content.expect<SvgShapeElement>();
 
         switch (shape) {
@@ -151,16 +117,17 @@ struct SvgFormatingContext : FormatingContext {
         }
     }
 
-    void _commitElement(Tree& tree, Box& box, FragmentBuilder& fragBuilder, Vec2Au resolveTo) {
+    void _commitElement(Fragmentainer& fc, Box& box, FragmentBuilder& fragBuilder, Vec2Au resolveTo, RectAu viewport) {
         if (box.content.is<SvgShapeElement>()) {
             _commitShape(box, fragBuilder, resolveTo);
         } else if (box.isSvgRootBox()) {
             auto resolvedRect = _resolveRectangle(*box.style, resolveTo);
             auto root = _commitRoot(
-                tree,
+                fc,
                 box,
                 {resolvedRect.x, resolvedRect.y},
-                {resolvedRect.width, resolvedRect.height}
+                {resolvedRect.width, resolvedRect.height},
+                viewport
             );
             fragBuilder.addChildIfAny(Some(root));
         } else if (box.isSvgForeignObjectBox()) {
@@ -174,15 +141,16 @@ struct SvgFormatingContext : FormatingContext {
                     Some(resolvedRect.height),
                 },
                 .position = {resolvedRect.x, resolvedRect.y},
+                .viewport = viewport,
             };
 
-            auto output = layoutBorderBox(tree, box, childInput);
+            auto output = layoutBorderBox(fc, box, childInput);
             fragBuilder.addChildIfAny(output.fragment);
 
         } else if (box.isSvg()) {
-            auto nestedGroupFragBuilder = FragmentBuilder{tree, box};
+            auto nestedGroupFragBuilder = FragmentBuilder{box};
 
-            _commitChildren(tree, box, nestedGroupFragBuilder, resolveTo);
+            _commitChildren(fc, box, nestedGroupFragBuilder, resolveTo, viewport);
 
             fragBuilder.addChildIfAny(Some(nestedGroupFragBuilder.buildSvgGroup()));
         } else {
@@ -190,9 +158,9 @@ struct SvgFormatingContext : FormatingContext {
         }
     }
 
-    void _commitChildren(Tree& tree, Box& group, FragmentBuilder& fragBuilder, Vec2Au resolveTo) {
+    void _commitChildren(Fragmentainer& fc, Box& group, FragmentBuilder& fragBuilder, Vec2Au resolveTo, RectAu viewport) {
         for (auto& c : group.children())
-            _commitElement(tree, c, fragBuilder, resolveTo);
+            _commitElement(fc, c, fragBuilder, resolveTo, viewport);
     }
 
     // https://svgwg.org/svg2-draft/coords.html#ComputingAViewportsTransform
@@ -256,18 +224,18 @@ struct SvgFormatingContext : FormatingContext {
         return Math::Trans2f::translate({(f64)translateX, (f64)translateY}).scaled({(f64)scaleX, (f64)scaleY});
     }
 
-    Rc<Fragment> _commitRoot(Tree& tree, Box& box, Vec2Au position, Vec2Au size) {
+    Rc<Fragment> _commitRoot(Fragmentainer& fc, Box& box, Vec2Au position, Vec2Au size, RectAu viewport) {
         auto viewbox = box.style->svg->viewBox;
 
         Math::Trans2f trans = Math::Trans2f::translate(position.cast<f64>());
         if (viewbox)
             trans = _computeEquivalentTransformOfSVGViewport(*viewbox, position, size);
 
-        auto rootFragBuilder = FragmentBuilder{tree, box};
+        auto rootFragBuilder = FragmentBuilder{box};
 
         auto boundingBox = RectAu{position, size};
 
-        _commitChildren(tree, box, rootFragBuilder, _resolvePercentageRelative(viewbox, trans, boundingBox));
+        _commitChildren(fc, box, rootFragBuilder, _resolvePercentageRelative(viewbox, trans, boundingBox), viewport);
 
         return rootFragBuilder.buildSvgRoot(trans, boundingBox);
     }
@@ -295,10 +263,10 @@ struct SvgFormatingContext : FormatingContext {
         return size;
     }
 
-    Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
-        tree.fc.enterMonolithicBox();
+    Output run(Fragmentainer& fc, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        fc.enterMonolithicBox();
         Defer _ = [&] {
-            tree.fc.leaveMonolithicBox();
+            fc.leaveMonolithicBox();
         };
 
         auto aspectRatio = intrinsicAspectRatio(
@@ -308,10 +276,10 @@ struct SvgFormatingContext : FormatingContext {
         );
         auto size = _defaultSizing(input.knownSize, aspectRatio, input.containingBlock);
 
-        auto fragment = _commitRoot(tree, box, input.position, size);
+        auto fragment = _commitRoot(fc, box, input.position, size, input.viewport);
 
-        if (tree.fc.allowBreak() and
-            not tree.fc.acceptsFit(
+        if (fc.allowBreak() and
+            not fc.acceptsFit(
                 input.position.y,
                 size.y,
                 input.pendingVerticalSizes

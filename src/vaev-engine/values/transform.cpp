@@ -25,22 +25,34 @@ namespace Vaev {
 // MARK: Transform Origin ------------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#transform-origin-property
 
-export struct TransformOrigin {
-    using OneValue = Union<Keywords::Left, Keywords::Center, Keywords::Right, Calc<PercentOr<Length>>>;
+export template <template <typename> typename S>
+struct _TransformOrigin {
+    using OneValue = Union<Keywords::Left, Keywords::Center, Keywords::Right, Calc<Length, Percent>>;
 
-    using XOffset = Union<Keywords::Left, Keywords::Center, Keywords::Right, Calc<PercentOr<Length>>>;
-    using YOffset = Union<Keywords::Top, Keywords::Center, Keywords::Bottom, Calc<PercentOr<Length>>>;
+    using XOffset = Union<Keywords::Left, Keywords::Center, Keywords::Right, Calc<Length, Percent>>;
+    using YOffset = Union<Keywords::Top, Keywords::Center, Keywords::Bottom, Calc<Length, Percent>>;
 
-    XOffset xOffset;
-    YOffset yOffset;
+    S<XOffset> xOffset;
+    S<YOffset> yOffset;
 
     void repr(Io::Emit& e) const {
         e("{} {}", xOffset, yOffset);
     }
 };
 
+export using TransformOrigin = _TransformOrigin<Specified>;
+
 export template <>
-struct ValueParser<TransformOrigin> {
+struct ValueTraits<TransformOrigin> {
+    using Computed = _TransformOrigin<Computed>;
+
+    static TransformOrigin specify(Vaev::Computed<TransformOrigin> const& value) {
+        return {
+            specified<TransformOrigin::XOffset>(value.xOffset),
+            specified<TransformOrigin::YOffset>(value.yOffset),
+        };
+    }
+
     static Res<TransformOrigin> _twoValues(Cursor<Css::Sst>& c) {
         auto xoffset = try$(parseValue<TransformOrigin::XOffset>(c));
         if (c.ended())
@@ -105,13 +117,17 @@ struct ValueParser<TransformOrigin> {
                 });
             },
 
-            [&](Calc<PercentOr<Length>> value) -> Res<TransformOrigin> {
+            [&](Calc<Length, Percent> value) -> Res<TransformOrigin> {
                 return Ok(TransformOrigin{
                     .xOffset = std::move(value),
                     .yOffset = Keywords::CENTER, // default y-offset
                 });
             }
         );
+    }
+
+    static Vaev::Computed<TransformOrigin> compute(TransformOrigin const& value, auto const& ctx) {
+        return {Vaev::compute(value.xOffset, ctx), Vaev::compute(value.yOffset, ctx)};
     }
 };
 
@@ -138,7 +154,7 @@ export struct MatrixTransform {
 };
 
 export template <>
-struct ValueParser<MatrixTransform> {
+struct ValueTraits<MatrixTransform> {
     static Res<MatrixTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -166,17 +182,29 @@ struct ValueParser<MatrixTransform> {
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-translate
-export struct TranslateTransform {
-    Calc<PercentOr<Length>> x;
-    Calc<PercentOr<Length>> y;
+export template <template <typename> typename S>
+struct _TranslateTransform {
+    S<Calc<Length, Percent>> x;
+    S<Calc<Length, Percent>> y;
 
     void repr(Io::Emit& e) const {
         e("translate({}, {})", x, y);
     }
 };
 
+export using TranslateTransform = _TranslateTransform<Specified>;
+
 export template <>
-struct ValueParser<TranslateTransform> {
+struct ValueTraits<TranslateTransform> {
+    using Computed = _TranslateTransform<Computed>;
+
+    static TranslateTransform specify(Vaev::Computed<TranslateTransform> const& value) {
+        return {
+            specified<Calc<Length, Percent>>(value.x),
+            specified<Calc<Length, Percent>>(value.y),
+        };
+    }
+
     static Res<TranslateTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -184,7 +212,7 @@ struct ValueParser<TranslateTransform> {
         if (c->prefix == Css::Token::function("translateX(")) {
             Cursor<Css::Sst> content = c->content;
             eatWhitespace(content);
-            auto tx = try$(parseValue<Calc<PercentOr<Length>>>(content));
+            auto tx = try$(parseValue<Calc<Length, Percent>>(content));
             eatWhitespace(content);
             if (not content.ended()) {
                 return Error::invalidData("unexpected content after translateX function");
@@ -196,7 +224,7 @@ struct ValueParser<TranslateTransform> {
         if (c->prefix == Css::Token::function("translateY(")) {
             Cursor<Css::Sst> content = c->content;
             eatWhitespace(content);
-            auto ty = try$(parseValue<Calc<PercentOr<Length>>>(content));
+            auto ty = try$(parseValue<Calc<Length, Percent>>(content));
             eatWhitespace(content);
             if (not content.ended())
                 return Error::invalidData("unexpected content after translateY function");
@@ -210,7 +238,7 @@ struct ValueParser<TranslateTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto tx = try$(parseValue<Calc<PercentOr<Length>>>(content));
+        auto tx = try$(parseValue<Calc<Length, Percent>>(content));
         skipOmmitableComma(content);
 
         if (content.ended()) {
@@ -219,13 +247,17 @@ struct ValueParser<TranslateTransform> {
             return Ok(TranslateTransform{std::move(tx), Length{0_au}});
         }
 
-        auto ty = try$(parseValue<Calc<PercentOr<Length>>>(content));
+        auto ty = try$(parseValue<Calc<Length, Percent>>(content));
         eatWhitespace(content);
         if (not content.ended())
             return Error::invalidData("unexpected content after scale function");
 
         c.next(); // consume the function token
         return Ok(TranslateTransform{std::move(tx), std::move(ty)});
+    }
+
+    static Vaev::Computed<TranslateTransform> compute(TranslateTransform const& value, auto const& ctx) {
+        return {Vaev::compute(value.x, ctx), Vaev::compute(value.y, ctx)};
     }
 };
 
@@ -240,7 +272,7 @@ export struct ScaleTransform {
 };
 
 export template <>
-struct ValueParser<ScaleTransform> {
+struct ValueTraits<ScaleTransform> {
     static Res<ScaleTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -304,7 +336,7 @@ export struct RotateTransform {
 };
 
 export template <>
-struct ValueParser<RotateTransform> {
+struct ValueTraits<RotateTransform> {
     static Res<RotateTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -337,7 +369,7 @@ export struct SkewTransform {
 };
 
 export template <>
-struct ValueParser<SkewTransform> {
+struct ValueTraits<SkewTransform> {
     static Res<SkewTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -378,7 +410,7 @@ export struct SkewXTransform {
 };
 
 export template <>
-struct ValueParser<SkewXTransform> {
+struct ValueTraits<SkewXTransform> {
     static Res<SkewXTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -410,7 +442,7 @@ export struct SkewYTransform {
 };
 
 export template <>
-struct ValueParser<SkewYTransform> {
+struct ValueTraits<SkewYTransform> {
     static Res<SkewYTransform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
@@ -448,7 +480,7 @@ export using TransformList = Vec<TransformFunction>;
 export using Transform = Union<Keywords::None, TransformList>;
 
 export template <>
-struct ValueParser<Transform> {
+struct ValueTraits<Transform> : UnionValueTraits<Transform> {
     static Res<Transform> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");

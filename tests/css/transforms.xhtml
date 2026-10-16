@@ -168,4 +168,42 @@
     </rendering>
 </test>
 
+<test name="transforms-relative-units" width="150px" height="150px">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <style>
+            body {
+                margin: 0px;
+            }
+
+            div {
+                font-size: 10px;
+                width: 100px;
+                height: 100px;
+                background-color: green;
+            }
+        </style>
+
+        <body>
+            <section>
+                <slot />
+            </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="transform: rotate(45deg) translate(20px, 10px); transform-origin: 20px 30px;"></div>
+    </rendering>
+
+    <rendering help="transform-origin and translate() are resolved against the font size and the reference box">
+        <div style="transform: rotate(45deg) translate(2em, 10%); transform-origin: 2em 3em;"></div>
+    </rendering>
+
+    <error help="the transform origin changes the rendering">
+        <div style="transform: rotate(45deg) translate(20px, 10px); transform-origin: 0 0;"></div>
+    </error>
+</test>
+
 </tests>
