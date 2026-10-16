@@ -1,0 +1,16 @@
+--- skift/karm/src/karm-http/request.cpp
++++ skift/karm/src/karm-http/request.cpp
+@@ -88,7 +88,10 @@ namespace Karm::Http {
+ 
+     Res<> unparse(Io::TextWriter& w) const {
+         // Start line
+         auto path = url.path;
+         path.absolutize();
+-        try$(Io::format(w, "{} {} ", method, path));
++        try$(Io::format(w, "{} {}", method, path));
++        if (url.query)
++            try$(Io::format(w, "?{}", url.query));
++        try$(w.writeStr(" "s));
+ 
+         try$(version.unparse(w));
+         try$(w.writeStr("\r\n"s));
