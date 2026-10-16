@@ -7,6 +7,7 @@ import Vaev.Engine;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style::Tests {
 
@@ -48,7 +49,7 @@ static Media const TEST_MEDIA = {
 test$("logical-and") {
     auto query = MediaQuery::combineAnd(
         TypeFeature{MediaType::SCREEN},
-        WidthFeature::min(1920_au)
+        WidthFeature::min(1920_px)
     );
 
     assert$(query.match(TEST_MEDIA));
@@ -59,7 +60,7 @@ test$("logical-and") {
 test$("logical-or") {
     auto query = MediaQuery::combineOr(
         TypeFeature{MediaType::SCREEN},
-        WidthFeature::min(1920_au)
+        WidthFeature::min(1920_px)
     );
 
     assert$(query.match(TEST_MEDIA));

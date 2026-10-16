@@ -12,6 +12,7 @@ import :values.calc;
 import :values.keywords;
 import :values.length;
 
+using namespace Vaev::Literals;
 using namespace Karm::Math::Literals;
 
 namespace Vaev {
@@ -19,9 +20,9 @@ namespace Vaev {
 // MARK: Line Width -------------------------------------------------------------
 // https://drafts.csswg.org/css-backgrounds/#typedef-line-width
 
-export constexpr Au THIN_VALUE = 1_au;
-export constexpr Au MEDIUM_VALUE = 3_au;
-export constexpr Au THICK_VALUE = 5_au;
+export constexpr Pixel THIN_VALUE = 1_px;
+export constexpr Pixel MEDIUM_VALUE = 3_px;
+export constexpr Pixel THICK_VALUE = 5_px;
 
 export using LineWidth = Union<
     Keywords::Thin,
@@ -29,7 +30,7 @@ export using LineWidth = Union<
     Keywords::Thick,
     Calc<Length>>;
 
-export Au resolve(LineWidth const& value, auto const& ctx) {
+export Pixel resolve(LineWidth const& value, auto const& ctx) {
     return value.visit(
         [](Keywords::Thin const&) {
             return THIN_VALUE;
@@ -40,7 +41,7 @@ export Au resolve(LineWidth const& value, auto const& ctx) {
         [](Keywords::Thick const&) {
             return THICK_VALUE;
         },
-        [&](auto const& length) {
+        [&](auto const& length) -> Pixel {
             return resolve(length, ctx);
         }
     );

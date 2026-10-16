@@ -10,6 +10,7 @@ import :css.parser;
 import :style.computed;
 
 using namespace Karm;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style {
 
@@ -22,7 +23,7 @@ export struct SvgXProperty : Property {
             : Property::Registration(Properties::X, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgXProperty>(self(), PercentOr<Length>{Length{0_au}});
+            return makeRc<SvgXProperty>(self(), PercentOr<Length>{Length{0_px}});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -59,7 +60,7 @@ export struct SvgYProperty : Property {
             : Property::Registration(Properties::Y, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgYProperty>(self(), PercentOr<Length>{Length{0_au}});
+            return makeRc<SvgYProperty>(self(), PercentOr<Length>{Length{0_px}});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -96,7 +97,7 @@ export struct SvgCXProperty : Property {
             : Property::Registration(Properties::CX, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgCXProperty>(self(), PercentOr<Length>{Length{0_au}});
+            return makeRc<SvgCXProperty>(self(), PercentOr<Length>{Length{0_px}});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -133,7 +134,7 @@ export struct SvgCYProperty : Property {
             : Property::Registration(Properties::CY, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgCYProperty>(self(), PercentOr<Length>{Length{0_au}});
+            return makeRc<SvgCYProperty>(self(), PercentOr<Length>{Length{0_px}});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -170,7 +171,7 @@ export struct SvgRProperty : Property {
             : Property::Registration(Properties::R, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgRProperty>(self(), PercentOr<Length>{Length{0_au}});
+            return makeRc<SvgRProperty>(self(), PercentOr<Length>{Length{0_px}});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -456,7 +457,7 @@ export struct StrokeWidthProperty : Property {
             : Property::Registration(Properties::STROKE_WIDTH, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<StrokeWidthProperty>(self(), PercentOr<Length>{Length{1_au}});
+            return makeRc<StrokeWidthProperty>(self(), PercentOr<Length>{Length{1_px}});
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {

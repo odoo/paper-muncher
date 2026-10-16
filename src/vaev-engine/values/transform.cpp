@@ -16,6 +16,7 @@ import :values.percent;
 import :values.primitives;
 
 using namespace Karm::Math::Literals;
+using namespace Vaev::Literals;
 
 namespace Vaev {
 
@@ -190,7 +191,7 @@ struct ValueParser<TranslateTransform> {
                 return Error::invalidData("unexpected content after translateX function");
             }
             c.next(); // consume the function token
-            return Ok(TranslateTransform{std::move(tx), Length{0_au}});
+            return Ok(TranslateTransform{std::move(tx), Length{0_px}});
         }
 
         if (c->prefix == Css::Token::function("translateY(")) {
@@ -201,7 +202,7 @@ struct ValueParser<TranslateTransform> {
             if (not content.ended())
                 return Error::invalidData("unexpected content after translateY function");
             c.next(); // consume the function token
-            return Ok(TranslateTransform{Length{0_au}, std::move(ty)});
+            return Ok(TranslateTransform{Length{0_px}, std::move(ty)});
         }
 
         if (c->prefix != Css::Token::function("translate("))
@@ -216,7 +217,7 @@ struct ValueParser<TranslateTransform> {
         if (content.ended()) {
             // f <ty> is not provided, ty has zero as a value.
             c.next(); // consume the function token
-            return Ok(TranslateTransform{std::move(tx), Length{0_au}});
+            return Ok(TranslateTransform{std::move(tx), Length{0_px}});
         }
 
         auto ty = try$(parseValue<Calc<PercentOr<Length>>>(content));

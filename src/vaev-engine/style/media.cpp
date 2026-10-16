@@ -366,7 +366,12 @@ struct RangeFeature {
     }
 
     bool match(Media const& media) const {
-        return match(media.*F);
+        auto const& actual = media.*F;
+        // NOTE: Media dimensions are stored in Au, but queries compare them as lengths.
+        if constexpr (Meta::Same<T, Length> and Meta::Same<Meta::RemoveConstVolatileRef<decltype(actual)>, Au>)
+            return match(Length{Pixel{actual.template cast<f64>()}});
+        else
+            return match(actual);
     }
 
     static RangeFeature min(T value) {
@@ -447,7 +452,12 @@ struct DiscreteFeature {
     }
 
     bool match(Media const& media) const {
-        return match(media.*F);
+        auto const& actual = media.*F;
+        // NOTE: Media dimensions are stored in Au, but queries compare them as lengths.
+        if constexpr (Meta::Same<T, Length> and Meta::Same<Meta::RemoveConstVolatileRef<decltype(actual)>, Au>)
+            return match(Length{Pixel{actual.template cast<f64>()}});
+        else
+            return match(actual);
     }
 
     void repr(Io::Emit& e) const {

@@ -9,6 +9,25 @@ import :layout.formating;
 
 namespace Vaev::Layout {
 
+template <typename T>
+auto _auToPx(T value) {
+    if constexpr (Meta::Same<T, Au>)
+        return Pixel{value.template cast<f64>()};
+    else
+        return value;
+}
+
+template <typename T>
+auto _pxToAu(T value) {
+    if constexpr (Meta::Same<T, Pixel>)
+        return Au{value};
+    else
+        return value;
+}
+
+export template <typename T>
+using LayoutResolved = decltype(_pxToAu(Meta::declval<Resolved<T>>()));
+
 export struct Resolver :
     RelativeLengthContextData,
     FontSizeContextData {
@@ -44,21 +63,21 @@ export struct Resolver :
     }
 
     Au resolve(Length const& value) {
-        return Vaev::resolve(value, *this);
+        return _pxToAu(Vaev::resolve(value, *this));
     }
 
     Au resolve(LineWidth const& value) {
-        return Vaev::resolve(value, *this);
+        return _pxToAu(Vaev::resolve(value, *this));
     }
 
     Au resolve(PercentOr<Length> const& value, Au relative) {
-        return Vaev::resolve(value, *this, relative);
+        return _pxToAu(Vaev::resolve(value, *this, _auToPx(relative)));
     }
 
     Au resolve(Union<Keywords::Auto, Calc<PercentOr<Length>>> const& value, Au relative) {
         if (value.is<Keywords::Auto>())
             return 0_au;
-        return Vaev::resolve(value.expect<Calc<PercentOr<Length>>>(), *this, relative);
+        return _pxToAu(Vaev::resolve(value.expect<Calc<PercentOr<Length>>>(), *this, _auToPx(relative)));
     }
 
     Rad resolve(Angle const& value) {
@@ -70,12 +89,12 @@ export struct Resolver :
     }
 
     Au resolve(FontSize const& value) {
-        return Vaev::resolve(value, *this);
+        return _pxToAu(Vaev::resolve(value, *this));
     }
 
     template <typename T, typename... Args>
-    Resolved<T> resolve(Calc<T> const& calc, Args... args) {
-        return Vaev::resolve(calc, *this, args...);
+    LayoutResolved<T> resolve(Calc<T> const& calc, Args... args) {
+        return _pxToAu(Vaev::resolve(calc, *this, _auToPx(args)...));
     }
 };
 
@@ -114,7 +133,7 @@ export Au resolve(Tree const& tree, Box const& box, FontSize const& value) {
 }
 
 export template <typename T, typename... Args>
-auto resolve(Tree const& tree, Box const& box, Calc<T> const& value, Args... args) -> Resolved<T> {
+auto resolve(Tree const& tree, Box const& box, Calc<T> const& value, Args... args) -> LayoutResolved<T> {
     return Resolver::from(tree, box).resolve(value, args...);
 }
 

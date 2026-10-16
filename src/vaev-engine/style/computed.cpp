@@ -8,6 +8,7 @@ import :css;
 import :values;
 
 using namespace Karm;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style {
 
@@ -16,7 +17,7 @@ struct FontProps {
     Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;
     FontWidth width = FontWidth::NORMAL;
     FontStyle style = FontStyle::NORMAL;
-    Au size;
+    Pixel size;
 };
 
 struct TransformProps {
@@ -34,16 +35,16 @@ struct TransformProps {
 
 export struct TableProps {
     CaptionSide captionSide = CaptionSide::TOP;
-    BorderSpacing spacing = {0_au, 0_au};
+    BorderSpacing spacing = {0_px, 0_px};
     BorderCollapse collapse = BorderCollapse::SEPARATE;
 };
 
 export struct SvgProps {
-    PercentOr<Length> x = Length{0_au};
-    PercentOr<Length> y = Length{0_au};
-    PercentOr<Length> cx = Length{0_au};
-    PercentOr<Length> cy = Length{0_au};
-    PercentOr<Length> r = Length{0_au};
+    PercentOr<Length> x = Length{0_px};
+    PercentOr<Length> y = Length{0_px};
+    PercentOr<Length> cx = Length{0_px};
+    PercentOr<Length> cy = Length{0_px};
+    PercentOr<Length> r = Length{0_px};
 
     Union<String, None> d = NONE;
     Opt<SvgViewBox> viewBox = NONE;
@@ -51,7 +52,7 @@ export struct SvgProps {
 
 export struct SvgPaintProps {
     Number fillOpacity = 1;
-    PercentOr<Length> strokeWidth = Length{1_au};
+    PercentOr<Length> strokeWidth = Length{1_px};
     Number strokeOpacity = 1;
     SvgPaint fill = Some(Gfx::BLACK);
     SvgPaint stroke = NONE;

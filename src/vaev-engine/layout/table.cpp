@@ -50,14 +50,14 @@ void advanceUntil(MutCursor<Box>& cursor, auto pred) {
         cursor.next();
 }
 
-UsedBorder resolve(Tree const& tree, Box const& box, BorderEdge const edge) {
+UsedBorder resolve([[maybe_unused]] Tree const& tree, Box const& box, BorderEdge const edge) {
     auto& border = box.style->borders->get(edge);
     return UsedBorder{
         border.style == Gfx::BorderStyle::NONE
             ? 0_au
-            : Layout::resolve(tree, box, border.width),
+            : Au{border.width},
         border.style,
-        resolve(border.color, box.style->color),
+        border.color,
     };
 }
 

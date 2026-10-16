@@ -95,8 +95,8 @@ export struct Option {
         auto stock = this->stock;
         if (this->width or this->height)
             stock = Print::PaperStock::custom(
-                this->width ? Vaev::resolve(*this->width) : stock.minorAxis,
-                this->height ? Vaev::resolve(*this->height) : stock.majorAxis
+                this->width ? Math::Au{Vaev::resolve(*this->width)} : stock.minorAxis,
+                this->height ? Math::Au{Vaev::resolve(*this->height)} : stock.majorAxis
             );
 
         Print::Margins margins = Print::MarginOption::DEFAULT;
@@ -106,7 +106,7 @@ export struct Option {
             },
             [&](Math::Insets<Vaev::AbsoluteLength> const& insets) {
                 margins = insets.map([&](Vaev::AbsoluteLength l) {
-                    return Vaev::resolve(l);
+                    return Math::Au{Vaev::resolve(l)};
                 });
             }
         );
@@ -149,7 +149,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                     headerHeight = w->borderBox().height;
                 }
             } else {
-                headerHeight = Vaev::resolve(headerSize.expect<Vaev::AbsoluteLength>());
+                headerHeight = Math::Au{Vaev::resolve(headerSize.expect<Vaev::AbsoluteLength>())};
             }
 
             if (footerSize == Vaev::Keywords::AUTO) {
@@ -159,7 +159,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                     footerHeight = w->borderBox().height;
                 }
             } else {
-                footerHeight = Vaev::resolve(footerSize.expect<Vaev::AbsoluteLength>());
+                footerHeight = Math::Au{Vaev::resolve(footerSize.expect<Vaev::AbsoluteLength>())};
             }
 
             return Pair{headerHeight, footerHeight};

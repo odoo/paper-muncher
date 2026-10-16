@@ -85,7 +85,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
             if (number < 0)
                 return NONE;
 
-            return Some(style.font->size * number);
+            return Some(Au::fromFloatNearest(style.font->size.value() * number));
         },
         [&](Calc<PercentOr<Length>> const& length) -> Opt<Au> {
             auto oneEm = resolver.resolve(Length{RelativeLength{1, RelativeLength::EM}});
