@@ -361,6 +361,21 @@ struct ToggleProperty : Property {
         _value[index % _value.len()]->apply(parent, c, cx);
     }
 
+    // https://drafts.csswg.org/cssom/#serialize-a-comma-separated-list
+    Res<> serialize(Io::TextWriter& w) const override {
+        try$(w.writeStr("toggle("s));
+        bool first = true;
+        for (auto const& prop : _value) {
+            if (first) {
+                first = false;
+            } else {
+                try$(w.writeStr(", "s));
+            }
+            try$(prop->serialize(w));
+        }
+        return w.writeRune(')');
+    }
+
     void repr(Io::Emit& e) const override {
         e("(toggle {})", _value);
     }
@@ -479,6 +494,10 @@ struct DeferredProperty : Property {
         prop.expect()->apply(parent, c, cx);
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return Css::serialize(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("(deferred {})", _value);
     }
@@ -557,6 +576,10 @@ struct DefaultedProperty : Property {
 
     bool isDefaulted() const override {
         return true;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

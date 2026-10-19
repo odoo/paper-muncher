@@ -115,6 +115,19 @@ struct ValueParser<TransformOrigin> {
     }
 };
 
+export template <>
+struct ValueSerializer<TransformOrigin> {
+    // https://drafts.csswg.org/cssom/#serialize-a-css-value
+    static Res<> serialize(Io::TextWriter& w, TransformOrigin const& value) {
+        // If either of the above syntactic translations would be less backwards-compatible, do not perform them.
+        try$(serializeValue(w, value.xOffset));
+        try$(w.writeRune(' '));
+        try$(serializeValue(w, value.yOffset));
+
+        return Ok();
+    }
+};
+
 // MARK: Transform Box ---------------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#transform-box
 
