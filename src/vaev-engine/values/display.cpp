@@ -499,10 +499,10 @@ struct ValueSerializer<Display> {
                 if (value.outside() == Display::BLOCK and value.inside() == Display::RUBY)
                     return w.writeStr("block ruby"s);
 
-                if (value.outside() == Display::BLOCK and value.inside() == Display::GRID)
+                if (value.outside() == Display::BLOCK and value.inside() == Display::TABLE)
                     return w.writeStr("table"s);
 
-                if (value.outside() == Display::INLINE and value.inside() == Display::GRID)
+                if (value.outside() == Display::INLINE and value.inside() == Display::TABLE)
                     return w.writeStr("inline-table"s);
             } else {
                 if (value.outside() == Display::BLOCK and value.inside() == Display::FLOW)
