@@ -209,7 +209,7 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
         height = Some(availableSpace.height);
     } else {
         height = computeSpecifiedBorderBoxHeight(
-            tree, box, style.sizing->height, containingBlock.size(),
+            box, style.sizing->height, containingBlock.size(),
             usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
         );
     }
@@ -246,7 +246,7 @@ export Output layoutAbsolutePositioned(Tree& tree, Box& box, RectAu containingBl
 }
 
 // https://www.w3.org/TR/css-position-3/#relpos-insets
-Au _negotiateInsetsForRelativePositioning(Tree& tree, Box const& box, Size const& start, Size const& end, Au relativeTo) {
+Au _negotiateInsetsForRelativePositioning(Tree& tree, Box const& box, Union<Keywords::Auto, Calc<PercentOr<Length>>> const& start, Union<Keywords::Auto, Calc<PercentOr<Length>>> const& end, Au relativeTo) {
     bool startIsAuto = start.is<Keywords::Auto>().has();
     bool endIsAuto = end.is<Keywords::Auto>().has();
 

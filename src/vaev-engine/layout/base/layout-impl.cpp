@@ -164,9 +164,9 @@ Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic
     return output.size;
 }
 
-Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
-    if (auto calc = size.is<Calc<PercentOr<Length>>>()) {
-        auto specifiedWidth = resolve(tree, box, *calc, containingBlock.x);
+Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, ComputedSize size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
+    if (auto calc = size.is<PixelPercentage>()) {
+        auto specifiedWidth = Layout::resolve(*calc, containingBlock.x);
         if (box.style->boxSizing == Keywords::CONTENT_BOX) {
             specifiedWidth += horizontalBorderBox;
         }
@@ -193,9 +193,9 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, Size size, Vec2Au c
     }
 }
 
-Opt<Au> computeSpecifiedBorderBoxHeight(Tree& tree, Box& box, Size size, Vec2Au containingBlock, Au verticalBorderBox) {
-    if (auto calc = size.is<Calc<PercentOr<Length>>>()) {
-        auto specifiedHeight = resolve(tree, box, *calc, containingBlock.y);
+Opt<Au> computeSpecifiedBorderBoxHeight(Box& box, ComputedSize size, Vec2Au containingBlock, Au verticalBorderBox) {
+    if (auto calc = size.is<PixelPercentage>()) {
+        auto specifiedHeight = Layout::resolve(*calc, containingBlock.y);
         if (box.style->boxSizing == Keywords::CONTENT_BOX) {
             specifiedHeight += verticalBorderBox;
         }
@@ -353,7 +353,7 @@ Output layoutRoot(Tree& tree, Input input) {
 
     if (not input.knownSize.height)
         input.knownSize.height = computeSpecifiedBorderBoxHeight(
-            tree, tree.root, tree.root.style->sizing->height, input.containingBlock,
+            tree.root, tree.root.style->sizing->height, input.containingBlock,
             usedSpacings.borders.vertical() + usedSpacings.padding.vertical()
         );
 

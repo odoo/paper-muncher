@@ -3,7 +3,7 @@
     "id": "vaev-values.tests",
     "type": "lib",
     "requires": [
-        "vaev-values",
+        "vaev-engine",
         "karm-test"
     ],
     "injects": [

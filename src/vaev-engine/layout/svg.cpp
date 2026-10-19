@@ -13,27 +13,6 @@ using namespace Karm;
 
 namespace Vaev::Layout {
 
-// SVG sizes shouldn't be defined using calc values
-Opt<PercentOr<Length>> extractValueFromCalc(Calc<PercentOr<Length>> const& size) {
-    return size.visit(
-        [](Calc<PercentOr<Length>>::Value const& v) -> Opt<PercentOr<Length>> {
-            return Some(v.expect<PercentOr<Length>>());
-        },
-        [](auto const) {
-            return Opt<PercentOr<Length>>{NONE};
-        }
-    );
-}
-
-// FIXME: this should be targeted by the computer refactoring, so we have only resolved percentage or length values
-PercentOr<Length> fromSize(Size const& size) {
-    if (size.is<Keywords::Auto>())
-        return PercentOr<Length>{Percent{100}};
-
-    return extractValueFromCalc(size.expect<Calc<PercentOr<Length>>>())
-        .unwrapOr(PercentOr<Length>{Percent{100}});
-}
-
 // FIXME: already present in Resolver obj, but it doesnt make sense to instantiate one here; should also be targeted
 // by the computer refactoring
 Au resolve(PercentOr<Length> const& value, Au relative) {
@@ -52,31 +31,15 @@ Au normalizedDiagonal(Vec2Au relativeTo) {
 
 struct SvgFormatingContext : FormatingContext {
     // https://svgwg.org/svg2-draft/coords.html#SizingSVGInCSS
-    Opt<Number> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, Size const& width, Size const& height) {
-        // FIXME: again this should be targetted by the styling computation refactoring,
-        // where Size will be resolved to a mix between Percent and Lengths
-        auto absoluteValue = [](Size size) -> Opt<f64> {
-            if (not size.is<Calc<PercentOr<Length>>>())
-                return NONE;
-
-            auto calc = size.expect<Calc<PercentOr<Length>>>();
-
-            auto percOrLength = extractValueFromCalc(calc);
-            if (not percOrLength)
-                return NONE;
-
-            if (percOrLength->is<Percent>())
-                return NONE;
-
-            return percOrLength->expect<Length>().absolutePixels();
-        };
-
-        auto absWidth = absoluteValue(width);
-        auto absHeight = absoluteValue(height);
-
+    Opt<Number> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, ComputedSize const& width, ComputedSize const& height) {
         // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
-        if (absWidth and absHeight)
-            return Some(*absWidth / *absHeight);
+        auto absolute = [](ComputedSize const& size) -> Opt<Pixel> {
+            if (auto pp = size.is<PixelPercentage>())
+                return pp->is<Pixel>();
+            return NONE;
+        };
+        if (auto w = absolute(width), h = absolute(height); w and h)
+            return Some(w->value() / h->value());
 
         // 2. If an SVG View is active:
         // TODO
@@ -110,8 +73,8 @@ struct SvgFormatingContext : FormatingContext {
         return {
             Layout::resolve(style.svg->x, relativeTo.x),
             Layout::resolve(style.svg->y, relativeTo.y),
-            Layout::resolve(fromSize(style.sizing->width), relativeTo.x),
-            Layout::resolve(fromSize(style.sizing->height), relativeTo.y)
+            Layout::resolve(style.sizing->width.is<PixelPercentage>().unwrapOr(Percentage{100}), relativeTo.x),
+            Layout::resolve(style.sizing->height.is<PixelPercentage>().unwrapOr(Percentage{100}), relativeTo.y),
         };
     }
 
