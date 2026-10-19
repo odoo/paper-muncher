@@ -21,6 +21,10 @@ test$("vaev-style-serialize-props") {
     try$(_expectSerialized(_driver, "border-spacing", "10px 20px", "10px 20px"));
     try$(_expectSerialized(_driver, "border-spacing", "10px 10px", "10px"));
 
+    // https://drafts.csswg.org/css-lists-3/#marker-side
+    try$(_expectSerialized(_driver, "marker-side", "match-self", "match-self"));
+    try$(_expectSerialized(_driver, "marker-side", "match-parent", "match-parent"));
+
     // https://drafts.csswg.org/css-backgrounds-3/#border-color
     // https://drafts.csswg.org/css-color-4/#serializing-sRGB-values
     try$(_expectSerialized(_driver, "border-top-color", "rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"));
