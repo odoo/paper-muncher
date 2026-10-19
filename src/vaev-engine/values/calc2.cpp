@@ -278,6 +278,242 @@ static Opt<NumericType> determineType(Calc const& calc) {
     );
 }
 
+// https://drafts.csswg.org/css-values-4/#sort-a-calculations-children
+static void sortCalculationChildren(MutSlice<Calc> children) {
+    // FIXME: Sort dimension units alphabetically in the .inc file.
+    stableSort(children, [](Calc const& a, Calc const& b) {
+        auto weight = [](Calc const& calc) {
+            if (auto [number] = calc.is<UnitValue>()) {
+                return toUnderlyingType(number.unit());
+            } else {
+                return toUnderlyingType(UnitValue::Unit::_LEN);
+            }
+        };
+
+        return weight(a) <=> weight(b);
+    });
+}
+
+static Res<> serializeCalculationTree(Io::TextWriter& w, Calc const& root, bool stripParens = false);
+
+// https://drafts.csswg.org/css-values-4/#serialize-a-math-function
+static Res<> serializeMathFunction(Io::TextWriter& w, Calc const& root) {
+    // TODO
+    // 1. If the root of the calculation tree fn represents is an unresolved numeric function
+    //    that is not a math function, serialize that function as normal and return the result.
+
+    // 2. If the root of the calculation tree fn represents is a numeric value (number, percentage, or dimension),
+    //    and the serialization being produced is of a computed value or later, then clamp the value to the range
+    //    allowed for its context (if necessary), then serialize the value as normal and return the result.
+    if (auto [numeric] = root.is<UnitValue>()) {
+        // TODO: Clamping
+        return serializeValue(w, numeric);
+    }
+
+    // TODO
+    // 3. If fn represents an infinite or NaN value:
+
+    // 4. If the calculation tree’s root node is a numeric value, or a calc-operator node,
+    //    let s be a string initially containing "calc(".
+    //    Otherwise, let s be a string initially containing the name of the root node,
+    //    lowercased (such as "sin" or "max"), followed by a "(" (open parenthesis).
+    // 5. For each child of the root node, serialize the calculation tree. If a result of this
+    //    serialization starts with a "(" (open parenthesis) and ends with a ")" (close parenthesis),
+    //    remove those characters from the result. Concatenate all of the results using ", " (comma followed by space),
+    //    then append the result to s.
+    try$(root.visit(
+        [&](MinNode const& min) -> Res<> {
+            try$(w.writeStr("min("s));
+
+            bool first = true;
+            for (auto const& child : min.children) {
+                if (first) {
+                    first = false;
+                } else {
+                    try$(w.writeStr(", "s));
+                }
+
+                try$(serializeCalculationTree(w, child, true));
+            }
+
+            return Ok();
+        },
+        [&](MaxNode const& max) -> Res<> {
+            try$(w.writeStr("max("s));
+
+            bool first = true;
+            for (auto const& child : max.children) {
+                if (first) {
+                    first = false;
+                } else {
+                    try$(w.writeStr(", "s));
+                }
+
+                try$(serializeCalculationTree(w, child, true));
+            }
+
+            return Ok();
+        },
+        [&](auto const& other) -> Res<> {
+            try$(w.writeStr("calc("s));
+            return serializeCalculationTree(w, other, true);
+        }
+    ));
+
+    // 6. Append ")" (close parenthesis) to s.
+    try$(w.writeRune(')'));
+
+    // 7. Return s.
+    return Ok();
+}
+
+// https://drafts.csswg.org/css-values-4/#serialize-a-calculation-tree
+Res<> serializeCalculationTree(Io::TextWriter& w, Calc const& root, bool stripParens) {
+    // 1. Let root be the root node of the calculation tree.
+
+    return root.visit(
+        // 2. If root is a numeric value, or a non-math function,
+        [&](UnitValue const& numeric) -> Res<> {
+            // serialize root per the normal rules for it and return the result.
+            return serializeValue(w, numeric);
+        },
+        // 4. If root is a Negate node:
+        [&](NegateNode const& negate) -> Res<> {
+            // 1. Let s be a string initially containing "(-1 * ".
+            if (not stripParens)
+                try$(w.writeRune('('));
+            try$(w.writeStr("-1 * "s));
+
+            // 2. Serialize root’s child, and append it to s.
+            try$(serializeCalculationTree(w, *negate.child));
+
+            // 3. Append ")" to s, then return it.
+            if (not stripParens)
+                return w.writeRune(')');
+
+            return Ok();
+        },
+        // 5. If root is an Invert node:
+        [&](InvertNode const& invert) -> Res<> {
+            // 1. Let s be a string initially containing "(1 / ".
+            if (not stripParens)
+                try$(w.writeRune('('));
+            try$(w.writeStr("1 / "s));
+
+            // 2. Serialize root’s child, and append it to s.
+            try$(serializeCalculationTree(w, *invert.child));
+
+            // 3. Append ")" to s, then return it.
+            if (not stripParens)
+                return w.writeRune(')');
+
+            return Ok();
+        },
+        // 6. If root is a Sum node:
+        [&](SumNode const& sum) -> Res<> {
+            // 1. Let s be a string initially containing "(".
+            if (not stripParens)
+                try$(w.writeRune('('));
+
+            // 2. Sort root’s children.
+            // NOTE: Children are already sorted by simplification step.
+
+            // 3. Serialize root’s first child, and append it to s.
+            if (isEmpty(sum.children))
+                return Error::invalidData("serializing sum with no children");
+            try$(serializeCalculationTree(w, sum.children[0]));
+
+            // 4. For each child of root beyond the first:
+            for (usize i = 1; i < sum.children.len(); i++) {
+                auto const& child = sum.children[i];
+
+                // 1. If child is a Negate node,
+                if (auto [negate] = child.is<NegateNode>()) {
+                    // append " - " to s,
+                    try$(w.writeStr(" - "s));
+
+                    // then serialize the Negate’s child and append the result to s.
+                    try$(serializeCalculationTree(w, *negate.child));
+                }
+
+                // 2. If child is a negative numeric value,
+                else if (auto numeric = child.is<UnitValue>(); numeric and numeric->value() < 0) {
+                    // append " - " to s,
+                    try$(w.writeStr(" - "s));
+
+                    // then serialize the negation of child as normal and append the result to s.
+                    try$(serializeCalculationTree(w, UnitValue{-numeric->value(), numeric->unit()}));
+                }
+
+                // 3. Otherwise,
+                else {
+                    // append " + " to s,
+                    try$(w.writeStr(" + "s));
+
+                    // then serialize child and append the result to s.
+                    try$(serializeCalculationTree(w, child));
+                }
+            }
+
+            // 5. Append ")" to s and return it.
+            if (not stripParens)
+                return w.writeRune(')');
+
+            return Ok();
+        },
+        // 7. If root is a Product node:
+        [&](ProductNode const& product) -> Res<> {
+            // 1. Let s be a string initially containing "(".
+            if (not stripParens)
+                try$(w.writeRune('('));
+
+            // 2. Sort root’s children.
+            // NOTE: Children are already sorted by simplification step.
+
+            // 3. Serialize root’s first child, and append it to s.
+            if (isEmpty(product.children))
+                return Error::invalidData("serializing product with no children");
+            try$(serializeCalculationTree(w, product.children[0]));
+
+            // 4. For each child of root beyond the first:
+            for (usize i = 1; i < product.children.len(); i++) {
+                auto const& child = product.children[i];
+
+                // 1. If child is an Invert node,
+                if (auto [invert] = child.is<InvertNode>()) {
+                    // append " / " to s,
+                    try$(w.writeStr(" / "s));
+
+                    // then serialize the Invert’s child and append the result to s.
+                    try$(serializeCalculationTree(w, *invert.child));
+                }
+
+                // 2. Otherwise,
+                else {
+                    // append " * " to s,
+                    try$(w.writeStr(" * "s));
+
+                    // then serialize child and append the result to s.
+                    try$(serializeCalculationTree(w, child));
+                }
+            }
+
+            // 5. Append ")" to s and return it.
+            if (not stripParens)
+                return w.writeRune(')');
+
+            return Ok();
+        },
+        // 3. If root is anything but a Sum, Negate, Product, or Invert node,
+        [&](auto const& other) -> Res<> {
+            //  serialize a math function for the function corresponding to the node type,
+            //  treating the node’s children as the function’s comma-separated calculation arguments,
+            //  and return the result.
+            return serializeMathFunction(w, other);
+        }
+    );
+}
+
 // https://drafts.csswg.org/css-values-4/#simplify-a-calculation-tree
 static Calc simplify(Calc const& calc) {
     auto simplifyChild = [&](Calc const& child) -> Calc {
@@ -294,21 +530,93 @@ static Calc simplify(Calc const& calc) {
         return simplified;
     };
 
+    auto foldNumericSiblings = [&](Vec<Calc>& children, auto pred, auto op) {
+        usize newLen = 0;
+
+        for (usize i = 0; i < children.len(); i++) {
+            auto& child = children[i];
+
+            if (auto n = child.is<UnitValue>(); n and newLen > 0) {
+                auto& prev = children[newLen - 1];
+                if (auto p = prev.is<UnitValue>(); p and p->unit() == n->unit() and pred(p->unit())) {
+                    *p = UnitValue{op(p->value(), n->value()), p->unit()};
+                    continue;
+                }
+            }
+
+            if (i != newLen)
+                children[newLen] = std::move(child);
+
+            newLen++;
+        }
+
+        children.resize(newLen, UnitValue{});
+    };
+
     return calc.visit(
         // 1. If root is a numeric value:
         [](UnitValue const& numeric) -> Calc {
             // FIXME
             return numeric.toComputed();
         },
-        //
+        // 5. If root is a Min or Max node, attempt to partially simplify it:
         [&](MinNode const& min) -> Calc {
+            auto simplifiedChildren = simplifyChildren(min.children);
+
             // 1. For each node child of root’s children:
-            for (auto const& child : simplifyChildren(min.children)) {
-                if (auto [numeric] = child.is<UnitValue>()) {
+            //   If child is a numeric value with enough information to compare magnitudes
+            //   with another child of the same unit (see note in previous step),
+            //   and there are other children of root that are numeric values with the same unit,
+            //   combine all such children with the appropriate operator per root, and replace child with the result,
+            //   removing all other child nodes involved.
+            sortCalculationChildren(simplifiedChildren);
+            foldNumericSiblings(
+                simplifiedChildren,
+                [](UnitValue::Unit unit) {
+                    return unit != UnitValue::Unit::PERCENT;
+                },
+                [](f64 a, f64 b) -> f64 {
+                    return Karm::min(a, b);
                 }
+            );
+
+            // 2. If root has only one child,
+            if (simplifiedChildren.len() == 1) {
+                // return the child.
+                return std::move(simplifiedChildren[0]);
             }
 
-            unreachable();
+            // Otherwise, return root.
+            return MinNode{std::move(simplifiedChildren)};
+        },
+        [&](MaxNode const& max) -> Calc {
+            auto simplifiedChildren = simplifyChildren(max.children);
+
+            // 1. For each node child of root’s children:
+            //   If child is a numeric value with enough information to compare magnitudes
+            //   with another child of the same unit (see note in previous step),
+            //   and there are other children of root that are numeric values with the same unit,
+            //   combine all such children with the appropriate operator per root, and replace child with the result,
+            //   removing all other child nodes involved.
+            sortCalculationChildren(simplifiedChildren);
+            foldNumericSiblings(
+                simplifiedChildren,
+                [](UnitValue::Unit unit) {
+                    return unit != UnitValue::Unit::PERCENT;
+                },
+                [](f64 a, f64 b) -> f64 {
+                    return Karm::max(a, b);
+                }
+            );
+
+            // 2. If root has only one child,
+            if (simplifiedChildren.len() == 1) {
+                // return the child.
+                return std::move(simplifiedChildren[0]);
+            }
+
+            // Otherwise, return root.
+            return MaxNode{std::move(simplifiedChildren)};
         },
         // 6. If root is a Negate node:
         [&](NegateNode const& negate) -> Calc {
@@ -383,57 +691,90 @@ static Calc simplify(Calc const& calc) {
         // 8. If root is a Sum node:
         [&](SumNode const& sum) -> Calc {
             // 1. For each of root’s children that are Sum nodes, replace them with their children.
-            auto flattenedChildren = Vec<Calc>{sum.children.len()};
+            auto simplifiedChildren = Vec<Calc>{sum.children.len()};
             for (auto& child : sum.children) {
                 auto simplifiedChild = simplifyChild(child);
                 if (auto [child] = simplifiedChild.is<SumNode>()) {
                     for (auto& grandchild : child.children) {
-                        flattenedChildren.pushBack(std::move(grandchild));
+                        simplifiedChildren.pushBack(std::move(grandchild));
                     }
                 } else {
-                    flattenedChildren.pushBack(std::move(simplifiedChild));
+                    simplifiedChildren.pushBack(std::move(simplifiedChild));
                 }
             }
-
-            stableSort(flattenedChildren, [](Calc const& a, Calc const& b) {
-                auto weight = [](Calc const& calc) {
-                    if (auto [number] = calc.is<UnitValue>()) {
-                        return toUnderlyingType(number.unit());
-                    } else {
-                        return toUnderlyingType(UnitValue::Unit::_LEN);
-                    }
-                };
-
-                return weight(a) <=> weight(b);
-            });
 
             // For each set of root’s children that are numeric values with identical units,
             // remove those children and replace them with a single numeric value containing
             // the sum of the removed nodes, and with the same unit.
-            auto mergedChildren = Vec<Calc>{flattenedChildren.len()};
-
-            for (auto& child : flattenedChildren) {
-                if (auto n = child.is<UnitValue>(); n and mergedChildren.len() > 0) {
-                    auto& prev = mergedChildren[mergedChildren.len() - 1];
-                    if (auto p = prev.is<UnitValue>(); p and p->unit() == n->unit()) {
-                        *p = UnitValue{p->value() + n->value(), p->unit()};
-                        continue;
-                    }
+            sortCalculationChildren(simplifiedChildren);
+            foldNumericSiblings(
+                simplifiedChildren,
+                [](UnitValue::Unit) {
+                    return true;
+                },
+                [](f64 a, f64 b) -> f64 {
+                    return a + b;
                 }
-                mergedChildren.pushBack(std::move(child));
-            }
+            );
 
             // 3. If root has only a single child at this point,
-            if (mergedChildren.len() == 1) {
+            if (simplifiedChildren.len() == 1) {
                 // return the child.
-                return std::move(mergedChildren[0]);
+                return std::move(simplifiedChildren[0]);
             }
 
             // Otherwise, return root.
-            return SumNode{std::move(mergedChildren)};
+            return SumNode{std::move(simplifiedChildren)};
         },
-        [](auto const&) -> Calc {
-            unreachable();
+        // 9. If root is a Product node:
+        [&](ProductNode const& product) -> Calc {
+            // 1. For each of root’s children that are Product nodes, replace them with their children.
+            auto simplifiedChildren = Vec<Calc>{product.children.len()};
+            for (auto& child : product.children) {
+                auto simplifiedChild = simplifyChild(child);
+                if (auto [child] = simplifiedChild.is<ProductNode>()) {
+                    for (auto& grandchild : child.children) {
+                        simplifiedChildren.pushBack(std::move(grandchild));
+                    }
+                } else {
+                    simplifiedChildren.pushBack(std::move(simplifiedChild));
+                }
+            }
+
+            // 2. If root has multiple children that are numbers (not percentages or dimensions),
+            //    remove them and replace them with a single number containing the product of the removed nodes.
+            sortCalculationChildren(simplifiedChildren);
+            foldNumericSiblings(
+                simplifiedChildren,
+                [](UnitValue::Unit unit) {
+                    return unit == UnitValue::Unit::NONE;
+                },
+                [](f64 a, f64 b) -> f64 {
+                    return a * b;
+                }
+            );
+
+            // 3. If root contains only two children, one of which is a number (not a percentage or dimension) and the other
+            //    of which is a Sum whose children are all numeric values, multiply all of the Sum’s children by the number,
+            //    then return the Sum.
+            // if (simplifiedChildren.len() == 2) {
+            //     auto multiplySumAndNumber = [](UnitValue const& numeric, SumNode& sum) {
+            //         if (numeric.unit() != UnitValue::Unit::NONE)
+            //             return false;
+            //
+            //         if (numeric.unit() != UnitValue::Unit::NONE)
+            //             return false;
+            //
+            //         if ()
+            //     };
+            //
+            //     if (simplifiedChildren[0].is<UnitValue>()) {
+            //
+            //     }
+            // }
+
+            // 5. Return root.
+            return ProductNode{std::move(simplifiedChildren)};
         }
     );
 }
@@ -454,7 +795,7 @@ struct TypedCalc {
 
 namespace Vaev {
 
-export template <typename T>
+template <typename T>
 struct ValueParser<Ng::TypedCalc<T>> {
     static Res<Ng::TypedCalc<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
@@ -509,9 +850,15 @@ struct ValueParser<Ng::TypedCalc<T>> {
 
             children.pushBack(try$(parseCalcSum(content)));
 
-            while (not content.ended() and content.peek() == Css::Token::COMMA) {
-                content.next();
+            eatWhitespace(content);
+
+            while (not content.ended()) {
+                if (not content.skip(Css::Token::COMMA))
+                    return Error::invalidData("unexpected token inside math function");
+
+                eatWhitespace(content);
                 children.pushBack(try$(parseCalcSum(content)));
+                eatWhitespace(content);
             }
 
             c.next();
@@ -662,20 +1009,34 @@ struct ValueParser<Ng::TypedCalc<T>> {
     }
 };
 
+template <typename T>
+struct ValueSerializer<Ng::TypedCalc<T>> {
+    static Res<> serialize(Io::TextWriter& w, Ng::TypedCalc<T> const& value) {
+        return Ng::serializeMathFunction(w, value._inner);
+    };
+};
+
 struct Lab {
     Lab() {
-        Css::Lexer lex = {"calc(1Q - (0px - 2px + (5% - 9%)) - 5cm + 2%)"};
+        Css::Lexer lex = {"calc(min(1%, 5px, 6%, 10px) + max(67px, 42px))"};
         auto diags = Diag::Collector::ignore();
 
         auto content = Css::consumeComponentValue(lex, diags);
         auto c = Cursor<Css::Sst>(content);
+
+        auto dump = [](Ng::Calc const& calc) {
+            Io::StringWriter sw{};
+            Ng::serializeMathFunction(sw, calc).expect();
+            logInfo("{}", sw.take());
+        };
+
         logInfo("{}", c);
 
-        auto parsed = parseValue<Ng::TypedCalc<LengthPercentage>>(c);
-        logInfo("parsed: {}", parsed);
+        auto parsed = parseValue<Ng::TypedCalc<LengthPercentage>>(c).expect();
+        dump(parsed._inner);
 
-        auto computed = Ng::simplify(parsed.expect()._inner);
-        logInfo("computed: {}", computed);
+        auto computed = Ng::simplify(parsed._inner);
+        dump(computed);
     }
 };
 
