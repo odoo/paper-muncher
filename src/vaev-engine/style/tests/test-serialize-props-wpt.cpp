@@ -180,17 +180,39 @@ test$("vaev-style-serialize-props-wpt") {
     try$(_expectSerialized(_driver, "row-gap", "calc(20% + 10px)", "calc(20% + 10px)"));
     try$(_expectSerialized(_driver, "row-gap", "0", "0px"));
 
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-backgrounds/parsing/background-color-valid.html
+    try$(_expectSerialized(_driver, "background-color", "#00FF00", "rgb(0, 255, 0)"));
+    try$(_expectSerialized(_driver, "background-color", "rgb(0, 0, 255)", "rgb(0, 0, 255)"));
+    try$(_expectSerialized(_driver, "background-color", "rgb(100%, 100%, 0%)", "rgb(255, 255, 0)"));
+    try$(_expectSerialized(_driver, "background-color", "hsl(120, 100%, 50%)", "rgb(0, 255, 0)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-backgrounds/parsing/background-computed.html
+    try$(_expectSerialized(_driver, "background-color", "rgb(255, 0, 0)", "rgb(255, 0, 0)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-backgrounds/parsing/border-radius-computed.html
+    try$(_expectSerialized(_driver, "border-top-left-radius", "40px 0px", "40px 0px"));
+
     // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-backgrounds/parsing/border-radius-valid.html
     try$(_expectSerialized(_driver, "border-radius", "initial", "initial", RegisteredPropertySet::TOP_LEVEL));
     try$(_expectSerialized(_driver, "border-radius", "inherit", "inherit", RegisteredPropertySet::TOP_LEVEL));
     try$(_expectSerialized(_driver, "border-radius", "unset", "unset", RegisteredPropertySet::TOP_LEVEL));
     try$(_expectSerialized(_driver, "border-radius", "revert", "revert", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "border-bottom-right-radius", "30px 40%", "30px 40%"));
+    try$(_expectSerialized(_driver, "border-bottom-left-radius", "50% 60px", "50% 60px"));
 
     // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-backgrounds/parsing/border-style-valid.html
     try$(_expectSerialized(_driver, "border-top-style", "solid", "solid"));
     try$(_expectSerialized(_driver, "border-right-style", "double", "double"));
     try$(_expectSerialized(_driver, "border-bottom-style", "groove", "groove"));
     try$(_expectSerialized(_driver, "border-left-style", "ridge", "ridge"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-backgrounds/parsing/border-width-computed.html
+    try$(_expectSerialized(_driver, "border-right-width", "10px", "10px"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-backgrounds/parsing/border-width-valid.html
+    try$(_expectSerialized(_driver, "border-top-width", "0px", "0px"));
+    try$(_expectSerialized(_driver, "border-right-width", "thin", "thin"));
+    try$(_expectSerialized(_driver, "border-left-width", "thick", "thick"));
 
     // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-box/parsing/clear-valid.html
     try$(_expectSerialized(_driver, "clear", "none", "none"));
@@ -207,13 +229,69 @@ test$("vaev-style-serialize-props-wpt") {
     try$(_expectSerialized(_driver, "float", "inline-start", "inline-start"));
     try$(_expectSerialized(_driver, "float", "inline-end", "inline-end"));
 
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-box/parsing/height-valid.html
+    try$(_expectSerialized(_driver, "height", "auto", "auto"));
+    try$(_expectSerialized(_driver, "height", "10px", "10px"));
+    try$(_expectSerialized(_driver, "height", "20%", "20%"));
+    try$(_expectSerialized(_driver, "height", "calc(2em + 3ex)", "calc(2em + 3ex)"));
+    try$(_expectSerialized(_driver, "height", "min-content", "min-content"));
+    try$(_expectSerialized(_driver, "height", "max-content", "max-content"));
+    try$(_expectSerialized(_driver, "height", "fit-content", "fit-content"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-box/parsing/margin-computed.html
+    try$(_expectSerialized(_driver, "margin-right", "20px", "20px"));
+    try$(_expectSerialized(_driver, "margin-bottom", "30px", "30px"));
+    try$(_expectSerialized(_driver, "margin-left", "40px", "40px"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-box/parsing/margin-valid.html
+    try$(_expectSerialized(_driver, "margin-top", "10px", "10px"));
+    try$(_expectSerialized(_driver, "margin-right", "20%", "20%"));
+    try$(_expectSerialized(_driver, "margin-bottom", "calc(2em + 3ex)", "calc(2em + 3ex)"));
+    try$(_expectSerialized(_driver, "margin-left", "auto", "auto"));
+    try$(_expectSerialized(_driver, "margin-top", "-10px", "-10px"));
+    try$(_expectSerialized(_driver, "margin-right", "-20%", "-20%"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-box/parsing/max-height-valid.html
+    try$(_expectSerialized(_driver, "max-height", "none", "none"));
+    try$(_expectSerialized(_driver, "max-height", "10px", "10px"));
+    try$(_expectSerialized(_driver, "max-height", "20%", "20%"));
+    try$(_expectSerialized(_driver, "max-height", "calc(2em + 3ex)", "calc(2em + 3ex)"));
+    try$(_expectSerialized(_driver, "max-height", "min-content", "min-content"));
+    try$(_expectSerialized(_driver, "max-height", "max-content", "max-content"));
+    try$(_expectSerialized(_driver, "max-height", "fit-content", "fit-content"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-box/parsing/max-width-valid.html
+    try$(_expectSerialized(_driver, "max-width", "none", "none"));
+    try$(_expectSerialized(_driver, "max-width", "10px", "10px"));
+    try$(_expectSerialized(_driver, "max-width", "20%", "20%"));
+    try$(_expectSerialized(_driver, "max-width", "calc(2em + 3ex)", "calc(2em + 3ex)"));
+    try$(_expectSerialized(_driver, "max-width", "min-content", "min-content"));
+    try$(_expectSerialized(_driver, "max-width", "max-content", "max-content"));
+    try$(_expectSerialized(_driver, "max-width", "fit-content", "fit-content"));
+
     // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-box/parsing/overflow-valid.html
     try$(_expectSerialized(_driver, "overflow-x", "hidden", "hidden"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-box/parsing/padding-valid.html
+    try$(_expectSerialized(_driver, "padding-top", "10px", "10px"));
+    try$(_expectSerialized(_driver, "padding-right", "20px", "20px"));
+    try$(_expectSerialized(_driver, "padding-bottom", "30px", "30px"));
+    try$(_expectSerialized(_driver, "padding-left", "40px", "40px"));
+    try$(_expectSerialized(_driver, "padding-right", "20%", "20%"));
 
     // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-box/parsing/visibility-valid.html
     try$(_expectSerialized(_driver, "visibility", "visible", "visible"));
     try$(_expectSerialized(_driver, "visibility", "hidden", "hidden"));
     try$(_expectSerialized(_driver, "visibility", "collapse", "collapse"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-box/parsing/width-valid.html
+    try$(_expectSerialized(_driver, "width", "auto", "auto"));
+    try$(_expectSerialized(_driver, "width", "10px", "10px"));
+    try$(_expectSerialized(_driver, "width", "20%", "20%"));
+    try$(_expectSerialized(_driver, "width", "calc(2em + 3ex)", "calc(2em + 3ex)"));
+    try$(_expectSerialized(_driver, "width", "min-content", "min-content"));
+    try$(_expectSerialized(_driver, "width", "max-content", "max-content"));
+    try$(_expectSerialized(_driver, "width", "fit-content", "fit-content"));
 
     // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-break/parsing/break-after-valid.html
     try$(_expectSerialized(_driver, "break-after", "auto", "auto"));
@@ -250,6 +328,13 @@ test$("vaev-style-serialize-props-wpt") {
     try$(_expectSerialized(_driver, "break-inside", "avoid-column", "avoid-column"));
     try$(_expectSerialized(_driver, "break-inside", "avoid-region", "avoid-region"));
 
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-color/parsing/color-valid.html
+    try$(_expectSerialized(_driver, "color", "#234", "rgb(34, 51, 68)"));
+    try$(_expectSerialized(_driver, "color", "#FEDCBA", "rgb(254, 220, 186)"));
+    try$(_expectSerialized(_driver, "color", "rgb(2, 3, 4)", "rgb(2, 3, 4)"));
+    try$(_expectSerialized(_driver, "color", "rgb(100%, 0%, 0%)", "rgb(255, 0, 0)"));
+    try$(_expectSerialized(_driver, "color", "hsl(120, 100%, 50%)", "rgb(0, 255, 0)"));
+
     // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-color/parsing/opacity-valid.html
     try$(_expectSerialized(_driver, "opacity", "1", "1"));
     try$(_expectSerialized(_driver, "opacity", "0.5", "0.5"));
@@ -259,6 +344,51 @@ test$("vaev-style-serialize-props-wpt") {
     try$(_expectSerialized(_driver, "opacity", "-100%", "-1"));
     try$(_expectSerialized(_driver, "opacity", "50%", "0.5"));
     try$(_expectSerialized(_driver, "opacity", "300%", "3"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-display/parsing/display-valid.html
+    try$(_expectSerialized(_driver, "display", "grid", "grid"));
+    try$(_expectSerialized(_driver, "display", "inline-grid", "inline-grid"));
+    try$(_expectSerialized(_driver, "display", "inline", "inline"));
+    try$(_expectSerialized(_driver, "display", "block", "block"));
+    try$(_expectSerialized(_driver, "display", "list-item", "list-item"));
+    try$(_expectSerialized(_driver, "display", "inline-block", "inline-block"));
+    try$(_expectSerialized(_driver, "display", "table", "table"));
+    try$(_expectSerialized(_driver, "display", "inline-table", "inline-table"));
+    try$(_expectSerialized(_driver, "display", "table-row-group", "table-row-group"));
+    try$(_expectSerialized(_driver, "display", "table-header-group", "table-header-group"));
+    try$(_expectSerialized(_driver, "display", "table-footer-group", "table-footer-group"));
+    try$(_expectSerialized(_driver, "display", "table-row", "table-row"));
+    try$(_expectSerialized(_driver, "display", "table-column-group", "table-column-group"));
+    try$(_expectSerialized(_driver, "display", "table-column", "table-column"));
+    try$(_expectSerialized(_driver, "display", "table-cell", "table-cell"));
+    try$(_expectSerialized(_driver, "display", "table-caption", "table-caption"));
+    try$(_expectSerialized(_driver, "display", "none", "none"));
+    try$(_expectSerialized(_driver, "display", "flex", "flex"));
+    try$(_expectSerialized(_driver, "display", "inline-flex", "inline-flex"));
+    try$(_expectSerialized(_driver, "display", "contents", "contents"));
+    try$(_expectSerialized(_driver, "display", "run-in", "run-in"));
+    try$(_expectSerialized(_driver, "display", "flow", "block"));
+    try$(_expectSerialized(_driver, "display", "flow-root", "flow-root"));
+    try$(_expectSerialized(_driver, "display", "ruby-base", "ruby-base"));
+    try$(_expectSerialized(_driver, "display", "ruby-text", "ruby-text"));
+    try$(_expectSerialized(_driver, "display", "flow list-item", "list-item"));
+    try$(_expectSerialized(_driver, "display", "flow block", "block"));
+    try$(_expectSerialized(_driver, "display", "flow-root block", "flow-root"));
+    try$(_expectSerialized(_driver, "display", "flex block", "flex"));
+    try$(_expectSerialized(_driver, "display", "grid block", "grid"));
+    try$(_expectSerialized(_driver, "display", "table block", "table"));
+    try$(_expectSerialized(_driver, "display", "ruby block", "block ruby"));
+    try$(_expectSerialized(_driver, "display", "block list-item", "list-item"));
+    try$(_expectSerialized(_driver, "display", "flow block list-item", "list-item"));
+    try$(_expectSerialized(_driver, "display", "flow inline", "inline"));
+    try$(_expectSerialized(_driver, "display", "flow-root inline", "inline-block"));
+    try$(_expectSerialized(_driver, "display", "flex inline", "inline-flex"));
+    try$(_expectSerialized(_driver, "display", "grid inline", "inline-grid"));
+    try$(_expectSerialized(_driver, "display", "table inline", "inline-table"));
+    try$(_expectSerialized(_driver, "display", "ruby inline", "ruby"));
+    try$(_expectSerialized(_driver, "display", "inline list-item", "inline list-item"));
+    try$(_expectSerialized(_driver, "display", "flow inline list-item", "inline list-item"));
+    try$(_expectSerialized(_driver, "display", "flow run-in", "run-in"));
 
     // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-flexbox/parsing/flex-basis-computed.html
     try$(_expectSerialized(_driver, "flex-basis", "calc(10%)", "10%"));
@@ -306,6 +436,32 @@ test$("vaev-style-serialize-props-wpt") {
     try$(_expectSerialized(_driver, "flex-wrap", "nowrap", "nowrap"));
     try$(_expectSerialized(_driver, "flex-wrap", "wrap", "wrap"));
     try$(_expectSerialized(_driver, "flex-wrap", "wrap-reverse", "wrap-reverse"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-fonts/parsing/font-family-computed.html
+    try$(_expectSerialized(_driver, "font-family", "serif", "serif"));
+    try$(_expectSerialized(_driver, "font-family", "sans-serif", "sans-serif"));
+    try$(_expectSerialized(_driver, "font-family", "cursive", "cursive"));
+    try$(_expectSerialized(_driver, "font-family", "fantasy", "fantasy"));
+    try$(_expectSerialized(_driver, "font-family", "monospace", "monospace"));
+    try$(_expectSerialized(_driver, "font-family", "serif, sans-serif, cursive, fantasy, monospace", "serif, sans-serif, cursive, fantasy, monospace"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-fonts/parsing/font-family-valid.html
+    try$(_expectSerialized(_driver, "font-family", "serif, sans-serif, cursive, fantasy, monospace, system-ui", "serif, sans-serif, cursive, fantasy, monospace, system-ui"));
+    try$(_expectSerialized(_driver, "font-family", "Helvetica, Verdana, sans-serif", "Helvetica, Verdana, sans-serif"));
+    try$(_expectSerialized(_driver, "font-family", "\"New Century Schoolbook\", serif", "New Century Schoolbook, serif"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-fonts/parsing/font-size-valid.html
+    try$(_expectSerialized(_driver, "font-size", "xx-small", "xx-small"));
+    try$(_expectSerialized(_driver, "font-size", "x-small", "x-small"));
+    try$(_expectSerialized(_driver, "font-size", "small", "small"));
+    try$(_expectSerialized(_driver, "font-size", "medium", "medium"));
+    try$(_expectSerialized(_driver, "font-size", "large", "large"));
+    try$(_expectSerialized(_driver, "font-size", "x-large", "x-large"));
+    try$(_expectSerialized(_driver, "font-size", "xx-large", "xx-large"));
+    try$(_expectSerialized(_driver, "font-size", "larger", "larger"));
+    try$(_expectSerialized(_driver, "font-size", "smaller", "smaller"));
+    try$(_expectSerialized(_driver, "font-size", "10px", "10px"));
+    try$(_expectSerialized(_driver, "font-size", "20%", "20%"));
 
     // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-fonts/parsing/font-style-valid.html
     try$(_expectSerialized(_driver, "font-style", "normal", "normal"));
@@ -467,6 +623,72 @@ test$("vaev-style-serialize-props-wpt") {
     try$(_expectSerialized(_driver, "z-index", "0", "0"));
     try$(_expectSerialized(_driver, "z-index", "123", "123"));
 
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-sizing/parsing/height-valid.html
+    try$(_expectSerialized(_driver, "height", "0", "0px"));
+    try$(_expectSerialized(_driver, "height", "10%", "10%"));
+    try$(_expectSerialized(_driver, "height", "0.5em", "0.5em"));
+    try$(_expectSerialized(_driver, "height", "calc(10% - 0.5em)", "calc(10% - 0.5em)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-sizing/parsing/max-height-computed.html
+    try$(_expectSerialized(_driver, "max-height", "calc(10% + 40px)", "calc(10% + 40px)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-sizing/parsing/max-height-valid.html
+    try$(_expectSerialized(_driver, "max-height", "0", "0px"));
+    try$(_expectSerialized(_driver, "max-height", "10%", "10%"));
+    try$(_expectSerialized(_driver, "max-height", "0.5em", "0.5em"));
+    try$(_expectSerialized(_driver, "max-height", "calc(10% - 0.5em)", "calc(10% - 0.5em)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-sizing/parsing/max-width-computed.html
+    try$(_expectSerialized(_driver, "max-width", "calc(10% + 40px)", "calc(10% + 40px)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-sizing/parsing/max-width-valid.html
+    try$(_expectSerialized(_driver, "max-width", "0", "0px"));
+    try$(_expectSerialized(_driver, "max-width", "10%", "10%"));
+    try$(_expectSerialized(_driver, "max-width", "0.5em", "0.5em"));
+    try$(_expectSerialized(_driver, "max-width", "calc(10% - 0.5em)", "calc(10% - 0.5em)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-sizing/parsing/min-height-computed.html
+    try$(_expectSerialized(_driver, "min-height", "10px", "10px"));
+    try$(_expectSerialized(_driver, "min-height", "20%", "20%"));
+    try$(_expectSerialized(_driver, "min-height", "calc(10% + 40px)", "calc(10% + 40px)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-sizing/parsing/min-height-valid.html
+    try$(_expectSerialized(_driver, "min-height", "auto", "auto"));
+    try$(_expectSerialized(_driver, "min-height", "min-content", "min-content"));
+    try$(_expectSerialized(_driver, "min-height", "max-content", "max-content"));
+    try$(_expectSerialized(_driver, "min-height", "0", "0px"));
+    try$(_expectSerialized(_driver, "min-height", "10%", "10%"));
+    try$(_expectSerialized(_driver, "min-height", "0.5em", "0.5em"));
+    try$(_expectSerialized(_driver, "min-height", "calc(10% - 0.5em)", "calc(10% - 0.5em)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-sizing/parsing/min-width-computed.html
+    try$(_expectSerialized(_driver, "min-width", "10px", "10px"));
+    try$(_expectSerialized(_driver, "min-width", "20%", "20%"));
+    try$(_expectSerialized(_driver, "min-width", "calc(10% + 40px)", "calc(10% + 40px)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-sizing/parsing/min-width-valid.html
+    try$(_expectSerialized(_driver, "min-width", "auto", "auto"));
+    try$(_expectSerialized(_driver, "min-width", "min-content", "min-content"));
+    try$(_expectSerialized(_driver, "min-width", "max-content", "max-content"));
+    try$(_expectSerialized(_driver, "min-width", "0", "0px"));
+    try$(_expectSerialized(_driver, "min-width", "10%", "10%"));
+    try$(_expectSerialized(_driver, "min-width", "0.5em", "0.5em"));
+    try$(_expectSerialized(_driver, "min-width", "calc(10% - 0.5em)", "calc(10% - 0.5em)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-sizing/parsing/width-valid.html
+    try$(_expectSerialized(_driver, "width", "0", "0px"));
+    try$(_expectSerialized(_driver, "width", "10%", "10%"));
+    try$(_expectSerialized(_driver, "width", "0.5em", "0.5em"));
+    try$(_expectSerialized(_driver, "width", "calc(10% - 0.5em)", "calc(10% - 0.5em)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-sizing/stretch/parsing.html
+    try$(_expectSerialized(_driver, "width", "stretch", "stretch"));
+    try$(_expectSerialized(_driver, "height", "stretch", "stretch"));
+    try$(_expectSerialized(_driver, "max-width", "stretch", "stretch"));
+    try$(_expectSerialized(_driver, "min-width", "stretch", "stretch"));
+    try$(_expectSerialized(_driver, "max-height", "stretch", "stretch"));
+    try$(_expectSerialized(_driver, "min-height", "stretch", "stretch"));
+
     // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-tables/parsing/border-collapse-valid.html
     try$(_expectSerialized(_driver, "border-collapse", "separate", "separate"));
     try$(_expectSerialized(_driver, "border-collapse", "collapse", "collapse"));
@@ -517,6 +739,17 @@ test$("vaev-style-serialize-props-wpt") {
     try$(_expectSerialized(_driver, "transform-origin", "left center", "left center"));
     try$(_expectSerialized(_driver, "transform-origin", "center top", "center top"));
     try$(_expectSerialized(_driver, "transform-origin", "right -4%", "right -4%"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-ui/parsing/box-sizing-valid.html
+    try$(_expectSerialized(_driver, "box-sizing", "content-box", "content-box"));
+    try$(_expectSerialized(_driver, "box-sizing", "border-box", "border-box"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-ui/parsing/outline-color-computed.html
+    try$(_expectSerialized(_driver, "outline-color", "red", "rgb(255, 0, 0)"));
+
+    // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-ui/parsing/outline-color-valid.html
+    try$(_expectSerialized(_driver, "outline-color", "rgba(10, 20, 30, 0.4)", "rgba(10, 20, 30, 0.4)"));
+    try$(_expectSerialized(_driver, "outline-color", "auto", "auto"));
 
     // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-ui/parsing/outline-offset-computed.html
     try$(_expectSerialized(_driver, "outline-offset", "2.5px", "2.5px"));
