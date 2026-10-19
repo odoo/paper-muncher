@@ -41,6 +41,10 @@ export struct FloatProperty : Property {
         c.float_ = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -70,6 +74,10 @@ export struct ClearProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.clear = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

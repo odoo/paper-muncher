@@ -1,3 +1,7 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:values.table;
 
 import Karm.Core;
@@ -71,6 +75,8 @@ struct ValueParser<CaptionSide> {
 export enum struct BorderCollapse {
     SEPARATE,
     COLLAPSE,
+
+    _LEN
 };
 
 export template <>
@@ -120,6 +126,24 @@ struct ValueParser<BorderSpacing> {
         }
 
         return Error::invalidData("expected border spacing value");
+    }
+};
+
+export template <>
+struct ValueSerializer<BorderSpacing> {
+    // https://drafts.csswg.org/cssom/#serialize-a-css-value
+    static Res<> serialize(Io::TextWriter& w, BorderSpacing const& value) {
+        // If component values can be omitted or replaced with a shorter representation
+        // without changing the meaning of the value, omit/replace them.
+        try$(serializeValue(w, value.horizontal));
+
+        if (value.horizontal == value.vertical)
+            return Ok();
+
+        try$(w.writeRune(' '));
+        try$(serializeValue(w, value.vertical));
+
+        return Ok();
     }
 };
 

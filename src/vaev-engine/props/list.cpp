@@ -117,6 +117,10 @@ struct ListStylePositionProperty : Property {
         c.list.cow().position = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -235,6 +239,10 @@ struct MarkerSideProperty : Property {
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().markerSide = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
