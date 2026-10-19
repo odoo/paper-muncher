@@ -170,6 +170,15 @@ export struct UnitValue {
         return canonical().value() <=> other.canonical().value();
     }
 
+    constexpr UnitValue toComputed() const {
+        if (baseType() == NumericBaseType::LENGTH) {
+            // FIXME: Resolve relative units
+            return canonical();
+        } else {
+            return canonical();
+        }
+    }
+
     void repr(Io::Emit& e) const {
         e("{}{}", _value, nameOf(_unit));
     }
@@ -235,9 +244,16 @@ export Res<UnitValue> parseUnitValue(Cursor<Css::Sst>& c, NumericBaseType type) 
 
 // MARK: Typed Unit Value ------------------------------------------------------
 
-export template <NumericBaseType TYPE>
+enum struct AcceptsPercent {
+    NO,
+    YES,
+    _LEN,
+};
+
+export template <NumericBaseType TYPE, AcceptsPercent WITH_PERCENT = AcceptsPercent::NO>
 struct TypedUnitValue {
     static constexpr NumericBaseType BASE_TYPE = TYPE;
+    static constexpr AcceptsPercent ACCEPTS_PERCENTS = WITH_PERCENT;
 
     UnitValue _value;
 
@@ -246,7 +262,8 @@ struct TypedUnitValue {
 
     constexpr explicit TypedUnitValue(UnitValue value)
         : _value(value) {
-        if (value.baseType() != TYPE)
+
+        if (not (value.baseType() == TYPE or (ACCEPTS_PERCENTS == AcceptsPercent::YES and value.baseType() == NumericBaseType::PERCENT)))
             panic("unit value has the wrong base type");
     }
 
@@ -265,7 +282,15 @@ export template <typename T>
     requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE>>
 struct ValueParser<T> {
     static Res<T> parse(Cursor<Css::Sst>& c) {
-        return Ok(T{try$(parseUnitValue(c, T::BASE_TYPE))});
+        auto maybeBase = parseUnitValue(c, T::BASE_TYPE);
+
+        if (maybeBase) {
+            return Ok(T{maybeBase.take()});
+        } else if (T::ACCEPTS_PERCENTS == AcceptsPercent::YES) {
+            return Ok(T{try$(parseUnitValue(c, NumericBaseType::PERCENT))});
+        } else {
+            return *maybeBase.error();
+        }
     }
 };
 

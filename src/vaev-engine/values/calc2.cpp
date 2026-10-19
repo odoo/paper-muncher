@@ -25,12 +25,15 @@ struct NumericType {
 
     NumericType() = default;
 
-    NumericType(NumericBaseType baseType, i32 exponent = 1) {
-        _els[toUnderlyingType(baseType)] = exponent;
+    static NumericType simple(NumericBaseType baseType, Opt<NumericBaseType> percentHint = NONE) {
+        auto type = NumericType{};
+        type._els[toUnderlyingType(baseType)] = 1;
+        type.percentHint = percentHint;
+        return type;
     }
 
-    bool contains(NumericBaseType hint) const {
-        return _els[toUnderlyingType(hint)] != 0;
+    bool contains(NumericBaseType baseType) const {
+        return _els[toUnderlyingType(baseType)] != 0;
     }
 
     bool isBaseType(NumericBaseType baseType) const {
@@ -138,6 +141,11 @@ struct NumericType {
         return finalType;
     }
 
+    // https://drafts.csswg.org/css-values-4/#css-contain-a-percentage
+    bool containsPercentage() const {
+        return contains(NumericBaseType::PERCENT) or percentHint;
+    }
+
     bool operator==(NumericType const&) const = default;
 
     always_inline constexpr i32 const& operator[](NumericBaseType baseType) const {
@@ -153,121 +161,272 @@ struct NumericType {
     }
 };
 
-export struct Unary;
-export struct Nary;
+export struct NegateNode;
+export struct InvertNode;
+export struct SumNode;
+export struct ProductNode;
+export struct MinNode;
+export struct MaxNode;
 
-using Calc = Union<UnitValue, Unary, Nary>;
+using Calc = Union<UnitValue, NegateNode, InvertNode, SumNode, ProductNode, MinNode, MaxNode>;
 
-struct Unary {
-    enum struct Op {
-        NEGATE,
-        INVERT,
-        _LEN,
-    };
-    using enum Op;
-
-    Op op;
+struct NegateNode {
     Box<Calc> child;
 
     void repr(Io::Emit& e) const {
-        e("({} {})", op, child);
+        e("(NEGATE {})", child);
     }
 };
 
-struct Nary {
-    enum struct Op {
-        SUM,
-        PRODUCT,
-        MIN,
-        MAX,
-        _LEN,
-    };
-    using enum Op;
+struct InvertNode {
+    Box<Calc> child;
 
-    Op op;
+    void repr(Io::Emit& e) const {
+        e("(INVERT {})", child);
+    }
+};
+
+struct SumNode {
     Vec<Calc> children;
 
     void repr(Io::Emit& e) const {
-        e("({} {})", op, children);
+        e("(SUM {})", children);
+    }
+};
+
+struct ProductNode {
+    Vec<Calc> children;
+
+    void repr(Io::Emit& e) const {
+        e("(PRODUCT {})", children);
+    }
+};
+
+struct MinNode {
+    Vec<Calc> children;
+
+    void repr(Io::Emit& e) const {
+        e("(MIN {})", children);
+    }
+};
+
+struct MaxNode {
+    Vec<Calc> children;
+
+    void repr(Io::Emit& e) const {
+        e("(MAX {})", children);
     }
 };
 
 // https://drafts.csswg.org/css-values-4/#determine-the-type-of-a-calculation
 static Opt<NumericType> determineType(Calc const& calc) {
+    auto addTypes = [](Slice<Calc> calculations) -> Opt<NumericType> {
+        Opt<NumericType> type = NONE;
+
+        for (auto const& calculation : calculations) {
+            if (not type) {
+                type = Some(try$(determineType(calculation)));
+            } else {
+                type = type->add(try$(determineType(calculation)));
+            }
+        }
+
+        return type;
+    };
+
+    auto multiplyTypes = [](Slice<Calc> calculations) -> Opt<NumericType> {
+        Opt<NumericType> type = NONE;
+
+        for (auto const& calculation : calculations) {
+            if (not type) {
+                type = Some(try$(determineType(calculation)));
+            } else {
+                type = type->multiply(try$(determineType(calculation)));
+            }
+        }
+
+        return type;
+    };
+
     return calc.visit(
         [&](UnitValue const& value) -> Opt<NumericType> {
             if (auto const& [baseType] = value.baseType()) {
-                return Some(NumericType{baseType});
+                return Some(NumericType::simple(baseType));
             } else {
                 return Some(NumericType{});
             }
         },
-        [&](Unary const& unary) -> Opt<NumericType> {
-            if (unary.op == Unary::NEGATE) {
-                return determineType(*unary.child);
-            } else if (unary.op == Unary::INVERT) {
-                auto childType = try$(determineType(*unary.child));
-                return Some(childType.invert());
-            } else {
-                unreachable();
-            }
+        [&](NegateNode const& negate) -> Opt<NumericType> {
+            return determineType(*negate.child);
         },
-        [&](Nary const& nary) -> Opt<NumericType> {
-            if (oneOf(nary.op, Nary::SUM, Nary::MIN, Nary::MAX)) {
-                Opt<NumericType> type = NONE;
-
-                for (auto const& child : nary.children) {
-                    if (not type) {
-                        type = Some(try$(determineType(child)));
-                    } else {
-                        type = type->add(try$(determineType(child)));
-                    }
-                }
-
-                return type;
-            } else if (nary.op == Nary::PRODUCT) {
-                Opt<NumericType> type = NONE;
-
-                for (auto const& child : nary.children) {
-                    if (not type) {
-                        type = Some(try$(determineType(child)));
-                    } else {
-                        type = type->multiply(try$(determineType(child)));
-                    }
-                }
-
-                return type;
-            } else {
-                unreachable();
-            }
+        [&](InvertNode const& invert) -> Opt<NumericType> {
+            auto childType = try$(determineType(*invert.child));
+            return Some(childType.invert());
+        },
+        [&](SumNode const& sum) {
+            return addTypes(sum.children);
+        },
+        [&](ProductNode const& product) {
+            return multiplyTypes(product.children);
+        },
+        [&](MinNode const& min) {
+            return addTypes(min.children);
+        },
+        [&](MaxNode const& max) {
+            return addTypes(max.children);
         }
     );
 }
 
-export template <NumericBaseType TYPE>
-TypedUnitValue<TYPE> resolve() {
-    
+// https://drafts.csswg.org/css-values-4/#simplify-a-calculation-tree
+static Calc simplify(Calc const& calc, LengthContext auto const& ctx) {
+    auto simplifyChild = [&](Calc const& child) -> Calc {
+        return simplify(child, ctx);
+    };
+
+    auto simplifyChildren = [&](Slice<Calc> children) -> Vec<Calc> {
+        auto simplified = Vec<Calc>{children.len()};
+
+        for (auto const& child : children) {
+            simplified.emplaceBack(simplify(child, ctx));
+        }
+
+        return simplified;
+    };
+
+    calc.visit(
+        // 1. If root is a numeric value:
+        [](UnitValue const& numeric) -> Calc {
+            // FIXME
+            return numeric.toComputed();
+        },
+        //
+        [&](MinNode const& min) -> Calc {
+            // 1. For each node child of root’s children:
+            for (auto const& child : simplifyChildren(min.children)) {
+                if (auto [numeric] = child.template is<UnitValue>()) {
+                }
+            }
+
+            unreachable();
+        },
+        // 6. If root is a Negate node:
+        [&](NegateNode const& negate) -> Calc {
+            auto simplifiedChild = simplifyChild(negate.child);
+
+            return simplifiedChild.visit(
+                // 1. If root’s child is a numeric value,
+                [](UnitValue const& child) -> Calc {
+                    // return an equivalent numeric value, but with the value negated (0 - value).
+                    return UnitValue{-child.value(), child.unit()};
+                },
+                // 2. If root’s child is a Negate node,
+                [](NegateNode const& child) -> Calc {
+                    // return the child’s child.
+                    return std::move(*child.child);
+                },
+                // 3. If root’s child is a Sum node:
+                [&](SumNode& child) -> Calc {
+                    // 1. Let negated grandchildren be an empty list
+                    auto negatedGrandChildren = Vec<Calc>{child.children.len()};
+
+                    // 2. For each grandchild of the child’s children:
+                    for (auto& grandchild : child.children) {
+                        // 1. If grandchild is a numeric value,
+                        if (auto [numeric] = grandchild.is<UnitValue>()) {
+                            // create an equivalent numeric value, but with the value negated (0 - value),
+                            // and append the result to negated grandchildren.
+                            negatedGrandChildren.pushBack(UnitValue{-numeric.value(), numeric.unit()});
+                            continue;
+                        }
+
+                        // 2. If grandchild is a Negate node
+                        if (auto [negate] = grandchild.is<NegateNode>()) {
+                            // append grandchild’s child to negated grandchildren
+                            negatedGrandChildren.pushBack(std::move(*negate.child));
+                            continue;
+                        }
+
+                        // Otherwise, create a Negate node with grandchild as its child,
+                        // and append the result to negated grandchildren
+                        negatedGrandChildren.pushBack(NegateNode{makeBox<Calc>(std::move(grandchild))});
+                    }
+
+                    // 3. Return a Sum node with negated grandchildren as its children
+                    return SumNode{std::move(negatedGrandChildren)};
+                },
+                // Return root.
+                [](auto& other) -> Calc {
+                    return NegateNode{makeBox<Calc>(std::move(other))};
+                }
+            );
+        },
+        // 7. If root is an Invert node:
+        [&](InvertNode const& invert) -> Calc {
+            auto simplifiedChild = simplifyChild(invert.child);
+
+            // 1. If root’s child is a number (not a percentage or dimension)
+            if (auto child = simplifiedChild.template is<UnitValue>; child and not child->baseType()) {
+                // return the reciprocal of the child’s value.
+                return UnitValue{1.0/child->value(), UnitValue::Unit::NONE};
+            }
+
+            // 2. If root’s child is an Invert node,
+            if (auto [child] = simplifiedChild.template is<InvertNode>()) {
+                // Return root.
+                return std::move(*child.child);
+            }
+
+            // 3. Return root.
+            return InvertNode{makeBox<Calc>(std::move(simplifiedChild))};
+        },
+        [](auto const&) {
+            unreachable();
+        }
+    );
 }
 
-}
+export template <typename T>
+struct TypedCalc {
+    Calc _inner;
+
+    void repr(Io::Emit& e) const {
+        e("{}", _inner);
+    }
+
+    // void simplify(LengthContext auto& ctx) {
+    // }
+};
+
+} // namespace Vaev::Ng
 
 namespace Vaev {
 
-export template <>
-struct ValueParser<Ng::Calc> {
-    static Res<Ng::Calc> parse(Cursor<Css::Sst>& c) {
+export template <typename T>
+struct ValueParser<Ng::TypedCalc<T>> {
+    static Res<Ng::TypedCalc<T>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
         if (c.peek() == Css::Sst::FUNC) {
             auto calc = try$(parseMathFunction(c));
-            if (not Ng::determineType(calc))
-                return Error::invalidData("type error in calc()");
+
+            auto type = try$(Ng::determineType(calc));
+
+            logInfo("type: {}", type);
+            logInfo("Accepts percents: {}", T::ACCEPTS_PERCENTS);
+            logInfo("Base type: {}", T::BASE_TYPE);
+
+            if (not type.isBaseType(T::BASE_TYPE) or (type.containsPercentage() and T::ACCEPTS_PERCENTS == AcceptsPercent::NO))
+                return Error::invalidData("calc() type error");
+
+            return Ok(Ng::TypedCalc<T>{
+                ._inner = std::move(calc),
+            });
         }
 
         return Error::invalidData();
     }
-
 
     static Res<Ng::Calc> parseMathFunction(Cursor<Css::Sst>& c) {
         logInfo("ENTER MATH FN: {}", c);
@@ -292,8 +451,6 @@ struct ValueParser<Ng::Calc> {
         // <min()>   = min( <calc-sum># )
         // <max()>   = max( <calc-sum># )
         if (prefixToken.data == "min(" or prefixToken.data == "max(") {
-            auto op = prefixToken.data == "min(" ? Ng::Nary::MIN : Ng::Nary::MAX;
-
             Cursor<Css::Sst> content = c.peek().content;
 
             Vec<Ng::Calc> children;
@@ -307,7 +464,10 @@ struct ValueParser<Ng::Calc> {
 
             c.next();
 
-            return Ok(Ng::Nary{op, std::move(children)});
+            if (prefixToken.data == "min(")
+                return Ok(Ng::MinNode{std::move(children)});
+            else
+                return Ok(Ng::MaxNode{std::move(children)});
         }
 
         return Error::notImplemented("math function not implemented");
@@ -342,7 +502,7 @@ struct ValueParser<Ng::Calc> {
             } else {
                 c.next();
                 auto term = try$(parseCalcProduct(c));
-                children.pushBack(Ng::Unary{Ng::Unary::NEGATE, makeBox<Ng::Calc>(std::move(term))});
+                children.pushBack(Ng::NegateNode{makeBox<Ng::Calc>(std::move(term))});
             }
 
             eatWhitespace(c);
@@ -350,7 +510,7 @@ struct ValueParser<Ng::Calc> {
 
         eatWhitespace(c);
 
-        return Ok(Ng::Nary{Ng::Nary::SUM, std::move(children)});
+        return Ok(Ng::SumNode{std::move(children)});
     }
 
     // <calc-product> = <calc-value> [ [ '*' | / ] <calc-value> ]*
@@ -382,7 +542,7 @@ struct ValueParser<Ng::Calc> {
             } else {
                 c.next();
                 auto factor = try$(parseCalcValue(c));
-                children.pushBack(Ng::Unary{Ng::Unary::INVERT, makeBox<Ng::Calc>(std::move(factor))});
+                children.pushBack(Ng::InvertNode{makeBox<Ng::Calc>(std::move(factor))});
             }
 
             eatWhitespace(c);
@@ -390,7 +550,7 @@ struct ValueParser<Ng::Calc> {
 
         eatWhitespace(c);
 
-        return Ok(Ng::Nary{Ng::Nary::PRODUCT, std::move(children)});
+        return Ok(Ng::ProductNode{std::move(children)});
     }
 
     // <calc-value> = <number> | <dimension> | <percentage> |
@@ -452,21 +612,20 @@ struct ValueParser<Ng::Calc> {
 
 struct Lab {
     Lab() {
-        Css::Lexer lex = {"calc(2px + 1px * (5deg / 2deg))"};
+        Css::Lexer lex = {"calc(0px - (0px - 2px))"};
         auto diags = Diag::Collector::ignore();
 
         auto content = Css::consumeComponentValue(lex, diags);
         auto c = Cursor<Css::Sst>(content);
         logInfo("{}", c);
 
-        auto parsed = parseValue<Ng::Calc>(c);
+        auto parsed = parseValue<Ng::TypedCalc<Length>>(c);
         logInfo("{}", parsed);
 
-        auto type = Ng::determineType(parsed.expect());
-        logInfo("{}", type);
+
     }
 };
 
 static Lab _lab{};
 
-}
+} // namespace Vaev
