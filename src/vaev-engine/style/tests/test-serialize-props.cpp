@@ -21,6 +21,10 @@ test$("vaev-style-serialize-props") {
     try$(_expectSerialized(_driver, "border-spacing", "10px 20px", "10px 20px"));
     try$(_expectSerialized(_driver, "border-spacing", "10px 10px", "10px"));
 
+    // https://drafts.csswg.org/css-lists-3/#marker-side
+    try$(_expectSerialized(_driver, "marker-side", "match-self", "match-self"));
+    try$(_expectSerialized(_driver, "marker-side", "match-parent", "match-parent"));
+
     // https://drafts.csswg.org/css-text-3/#text-align-property
     // NOSPEC: Non-standard values, written with the name res/html.css uses.
     try$(_expectSerialized(_driver, "text-align", "-vaev-block-center", "-vaev-block-center"));
