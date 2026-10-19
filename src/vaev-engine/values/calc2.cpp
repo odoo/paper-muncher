@@ -279,22 +279,22 @@ static Opt<NumericType> determineType(Calc const& calc) {
 }
 
 // https://drafts.csswg.org/css-values-4/#simplify-a-calculation-tree
-static Calc simplify(Calc const& calc, LengthContext auto const& ctx) {
+static Calc simplify(Calc const& calc) {
     auto simplifyChild = [&](Calc const& child) -> Calc {
-        return simplify(child, ctx);
+        return simplify(child);
     };
 
     auto simplifyChildren = [&](Slice<Calc> children) -> Vec<Calc> {
         auto simplified = Vec<Calc>{children.len()};
 
         for (auto const& child : children) {
-            simplified.emplaceBack(simplify(child, ctx));
+            simplified.emplaceBack(simplify(child));
         }
 
         return simplified;
     };
 
-    calc.visit(
+    return calc.visit(
         // 1. If root is a numeric value:
         [](UnitValue const& numeric) -> Calc {
             // FIXME
@@ -304,7 +304,7 @@ static Calc simplify(Calc const& calc, LengthContext auto const& ctx) {
         [&](MinNode const& min) -> Calc {
             // 1. For each node child of root’s children:
             for (auto const& child : simplifyChildren(min.children)) {
-                if (auto [numeric] = child.template is<UnitValue>()) {
+                if (auto [numeric] = child.is<UnitValue>()) {
                 }
             }
 
@@ -312,16 +312,16 @@ static Calc simplify(Calc const& calc, LengthContext auto const& ctx) {
         },
         // 6. If root is a Negate node:
         [&](NegateNode const& negate) -> Calc {
-            auto simplifiedChild = simplifyChild(negate.child);
+            auto simplifiedChild = simplifyChild(*negate.child);
 
             return simplifiedChild.visit(
                 // 1. If root’s child is a numeric value,
-                [](UnitValue const& child) -> Calc {
+                [](UnitValue& child) -> Calc {
                     // return an equivalent numeric value, but with the value negated (0 - value).
                     return UnitValue{-child.value(), child.unit()};
                 },
                 // 2. If root’s child is a Negate node,
-                [](NegateNode const& child) -> Calc {
+                [](NegateNode& child) -> Calc {
                     // return the child’s child.
                     return std::move(*child.child);
                 },
@@ -363,16 +363,16 @@ static Calc simplify(Calc const& calc, LengthContext auto const& ctx) {
         },
         // 7. If root is an Invert node:
         [&](InvertNode const& invert) -> Calc {
-            auto simplifiedChild = simplifyChild(invert.child);
+            auto simplifiedChild = simplifyChild(*invert.child);
 
             // 1. If root’s child is a number (not a percentage or dimension)
-            if (auto child = simplifiedChild.template is<UnitValue>; child and not child->baseType()) {
+            if (auto child = simplifiedChild.is<UnitValue>(); child and not child->baseType()) {
                 // return the reciprocal of the child’s value.
-                return UnitValue{1.0/child->value(), UnitValue::Unit::NONE};
+                return UnitValue{1.0 / child->value(), UnitValue::Unit::NONE};
             }
 
             // 2. If root’s child is an Invert node,
-            if (auto [child] = simplifiedChild.template is<InvertNode>()) {
+            if (auto [child] = simplifiedChild.is<InvertNode>()) {
                 // Return root.
                 return std::move(*child.child);
             }
@@ -380,7 +380,59 @@ static Calc simplify(Calc const& calc, LengthContext auto const& ctx) {
             // 3. Return root.
             return InvertNode{makeBox<Calc>(std::move(simplifiedChild))};
         },
-        [](auto const&) {
+        // 8. If root is a Sum node:
+        [&](SumNode const& sum) -> Calc {
+            // 1. For each of root’s children that are Sum nodes, replace them with their children.
+            auto flattenedChildren = Vec<Calc>{sum.children.len()};
+            for (auto& child : sum.children) {
+                auto simplifiedChild = simplifyChild(child);
+                if (auto [child] = simplifiedChild.is<SumNode>()) {
+                    for (auto& grandchild : child.children) {
+                        flattenedChildren.pushBack(std::move(grandchild));
+                    }
+                } else {
+                    flattenedChildren.pushBack(std::move(simplifiedChild));
+                }
+            }
+
+            stableSort(flattenedChildren, [](Calc const& a, Calc const& b) {
+                auto weight = [](Calc const& calc) {
+                    if (auto [number] = calc.is<UnitValue>()) {
+                        return toUnderlyingType(number.unit());
+                    } else {
+                        return toUnderlyingType(UnitValue::Unit::_LEN);
+                    }
+                };
+
+                return weight(a) <=> weight(b);
+            });
+
+            // For each set of root’s children that are numeric values with identical units,
+            // remove those children and replace them with a single numeric value containing
+            // the sum of the removed nodes, and with the same unit.
+            auto mergedChildren = Vec<Calc>{flattenedChildren.len()};
+
+            for (auto& child : flattenedChildren) {
+                if (auto n = child.is<UnitValue>(); n and mergedChildren.len() > 0) {
+                    auto& prev = mergedChildren[mergedChildren.len() - 1];
+                    if (auto p = prev.is<UnitValue>(); p and p->unit() == n->unit()) {
+                        *p = UnitValue{p->value() + n->value(), p->unit()};
+                        continue;
+                    }
+                }
+                mergedChildren.pushBack(std::move(child));
+            }
+
+            // 3. If root has only a single child at this point,
+            if (mergedChildren.len() == 1) {
+                // return the child.
+                return std::move(mergedChildren[0]);
+            }
+
+            // Otherwise, return root.
+            return SumNode{std::move(mergedChildren)};
+        },
+        [](auto const&) -> Calc {
             unreachable();
         }
     );
@@ -612,17 +664,18 @@ struct ValueParser<Ng::TypedCalc<T>> {
 
 struct Lab {
     Lab() {
-        Css::Lexer lex = {"calc(0px - (0px - 2px))"};
+        Css::Lexer lex = {"calc(1Q - (0px - 2px + (5% - 9%)) - 5cm + 2%)"};
         auto diags = Diag::Collector::ignore();
 
         auto content = Css::consumeComponentValue(lex, diags);
         auto c = Cursor<Css::Sst>(content);
         logInfo("{}", c);
 
-        auto parsed = parseValue<Ng::TypedCalc<Length>>(c);
-        logInfo("{}", parsed);
+        auto parsed = parseValue<Ng::TypedCalc<LengthPercentage>>(c);
+        logInfo("parsed: {}", parsed);
 
-
+        auto computed = Ng::simplify(parsed.expect()._inner);
+        logInfo("computed: {}", computed);
     }
 };
 
