@@ -71,6 +71,13 @@ export struct TextAlignProperty : Property {
         c.text.cow().align = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        // NOSPEC: Non-standard value, written with the name res/html.css uses.
+        if (_value == TextAlign::BLOCK_CENTER)
+            return w.writeStr("-vaev-block-center"s);
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -121,6 +128,10 @@ export struct TextTransformProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.text.cow().transform = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -176,6 +187,10 @@ export struct WhiteSpaceProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.text.cow().whiteSpace = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

@@ -88,4 +88,32 @@ struct ValueParser<SvgPaint> {
     }
 };
 
+export template <>
+struct ValueSerializer<SvgPaint> {
+    // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
+    static Res<> serialize(Io::TextWriter& w, SvgPaint const& value) {
+        if (auto const& [color] = value)
+            return serializeValue(w, color);
+        return w.writeStr("none"s);
+    }
+};
+
+export template <>
+struct ValueSerializer<SvgViewBox> {
+    // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
+    static Res<> serialize(Io::TextWriter& w, SvgViewBox const& value) {
+        // The value of the ‘viewBox’ attribute is a list of four numbers <min-x>, <min-y>,
+        // <width> and <height>, separated by whitespace and/or a comma
+        try$(serializeValue(w, value.minX));
+        try$(w.writeRune(' '));
+        try$(serializeValue(w, value.minY));
+        try$(w.writeRune(' '));
+        try$(serializeValue(w, value.width));
+        try$(w.writeRune(' '));
+        try$(serializeValue(w, value.height));
+
+        return Ok();
+    }
+};
+
 } // namespace Vaev
