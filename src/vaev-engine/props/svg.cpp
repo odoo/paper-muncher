@@ -47,6 +47,10 @@ export struct SvgXProperty : Property {
         c.svg.cow().x = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -82,6 +86,10 @@ export struct SvgYProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().y = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -121,6 +129,10 @@ export struct SvgCXProperty : Property {
         c.svg.cow().cx = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -156,6 +168,10 @@ export struct SvgCYProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().cy = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -195,6 +211,10 @@ export struct SvgRProperty : Property {
         c.svg.cow().r = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -226,6 +246,10 @@ export struct SvgFillProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().fill = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -289,6 +313,21 @@ export struct SvgDProperty : Property {
         c.svg.cow().d = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return _value.visit(
+            [&](String const& path) -> Res<> {
+                // https://drafts.csswg.org/css-shapes-1/#basic-shape-serialization
+                try$(w.writeStr("path("s));
+                try$(serializeValue(w, path));
+                return w.writeRune(')');
+            },
+            [&](None) -> Res<> {
+                // https://svgwg.org/svg2-draft/paths.html#TheDProperty
+                return w.writeStr("none"s);
+            }
+        );
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -335,6 +374,14 @@ export struct SvgViewBoxProperty : Property {
         c.svg.cow().viewBox = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        if (auto const& [viewBox] = _value)
+            return serializeValue(w, viewBox);
+
+        // NOSPEC: An unspecified viewBox has no serialized form.
+        return Ok();
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -366,6 +413,10 @@ export struct SvgStrokeProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().stroke = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -406,6 +457,10 @@ export struct SvgStrokeOpacityProperty : Property {
         c.svgPaint.cow().strokeOpacity = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -444,6 +499,10 @@ export struct FillOpacityProperty : Property {
         c.svgPaint.cow().fillOpacity = _value;
     }
 
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
     void repr(Io::Emit& e) const override {
         e("{}", _value);
     }
@@ -479,6 +538,10 @@ export struct StrokeWidthProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().strokeWidth = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

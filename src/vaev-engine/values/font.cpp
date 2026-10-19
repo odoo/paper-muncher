@@ -122,6 +122,14 @@ struct ValueParser<FontWidth> {
     }
 };
 
+export template <>
+struct ValueSerializer<FontWidth> {
+    // https://drafts.csswg.org/css-fonts-4/#font-width-prop
+    static Res<> serialize(Io::TextWriter& w, FontWidth const& value) {
+        return serializeValue(w, value.val());
+    }
+};
+
 // MARK: FontStyle -------------------------------------------------------------
 // https://drafts.csswg.org/css-fonts-4/#propdef-font-style
 
@@ -173,9 +181,34 @@ struct ValueParser<FontStyle> {
     }
 };
 
+export template <>
+struct ValueSerializer<FontStyle> {
+    // https://drafts.csswg.org/css-fonts-4/#font-style-prop
+    static Res<> serialize(Io::TextWriter& w, FontStyle const& value) {
+        // This represents an oblique value of "0".
+        // https://drafts.csswg.org/cssom/#serialize-a-css-value
+        // If component values can be omitted or replaced with a shorter representation
+        // without changing the meaning of the value, omit/replace them.
+        if (value.val == FontStyle::OBLIQUE and value.obliqueAngle.toDegree() == 0.0)
+            return w.writeStr("normal"s);
+
+        // the keyword specified, plus angle in degrees if specified
+        try$(serializeValue(w, value.val));
+
+        // The lack of an <angle> represents 14deg.
+        if (value.val != FontStyle::OBLIQUE or value.obliqueAngle.toDegree() == 14.0)
+            return Ok();
+
+        try$(w.writeRune(' '));
+        return serializeValue(w, Angle::fromDegree(value.obliqueAngle.toDegree()));
+    }
+};
+
 export enum struct RelativeFontWeight : u8 {
     LIGHTER,
     BOLDER,
+
+    _LEN
 };
 
 using _FontWeight = Union<
@@ -238,6 +271,14 @@ struct ValueParser<Gfx::FontWeight> {
 };
 
 export template <>
+struct ValueSerializer<Gfx::FontWeight> {
+    // https://drafts.csswg.org/css-fonts-4/#font-weight-prop
+    static Res<> serialize(Io::TextWriter& w, Gfx::FontWeight const& value) {
+        return serializeValue(w, static_cast<Integer>(value.value()));
+    }
+};
+
+export template <>
 struct ValueParser<FontWeight> {
     static Res<FontWeight> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
@@ -250,6 +291,15 @@ struct ValueParser<FontWeight> {
         } else {
             return Ok(try$(parseValue<Gfx::FontWeight>(c)));
         }
+    }
+};
+
+export template <>
+struct ValueSerializer<FontWeight> {
+    static Res<> serialize(Io::TextWriter& w, FontWeight const& value) {
+        return value.visit([&](auto const& v) {
+            return serializeValue(w, v);
+        });
     }
 };
 
