@@ -8,6 +8,7 @@ import Karm.Core;
 
 import :css;
 import :values.base;
+import :values.writing;
 
 using namespace Karm;
 
@@ -27,6 +28,65 @@ export enum struct NumericBaseType : u8 {
 
     _LEN,
 };
+
+
+export struct RelativeLengthContextData {
+    // current font metrics
+    f64 fontSize;
+    f64 xHeight;
+    f64 capHeight;
+    f64 zeroAdvance;
+    f64 lineHeight;
+
+    // relative font metrics
+    f64 rootFontSize;
+    f64 rootXHeight;
+    f64 rootCapHeight;
+    f64 rootZeroAdvance;
+    f64 rootLineHeight;
+
+    f64 viewportSmallWidth;
+    f64 viewportSmallHeight;
+
+    f64 viewportLargeWidth;
+    f64 viewportLargeHeight;
+
+    f64 viewportDynamicWidth;
+    f64 viewportDynamicHeight;
+
+    Axis boxAxis = Axis::HORIZONTAL;
+};
+
+export template <typename T>
+concept RelativeLengthContext = requires(T t) {
+    // Current font metrics
+    { t.fontSize } -> Meta::Convertible<f64>;
+    { t.xHeight } -> Meta::Convertible<f64>;
+    { t.capHeight } -> Meta::Convertible<f64>;
+    { t.zeroAdvance } -> Meta::Convertible<f64>;
+    { t.lineHeight } -> Meta::Convertible<f64>;
+
+    // Relative font metrics
+    { t.rootFontSize } -> Meta::Convertible<f64>;
+    { t.rootXHeight } -> Meta::Convertible<f64>;
+    { t.rootCapHeight } -> Meta::Convertible<f64>;
+    { t.rootZeroAdvance } -> Meta::Convertible<f64>;
+    { t.rootLineHeight } -> Meta::Convertible<f64>;
+
+    // Viewport dimensions (Small, Large, Dynamic)
+    { t.viewportSmallWidth } -> Meta::Convertible<f64>;
+    { t.viewportSmallHeight } -> Meta::Convertible<f64>;
+    { t.viewportLargeWidth } -> Meta::Convertible<f64>;
+    { t.viewportLargeHeight } -> Meta::Convertible<f64>;
+    { t.viewportDynamicWidth } -> Meta::Convertible<f64>;
+    { t.viewportDynamicHeight } -> Meta::Convertible<f64>;
+
+    // Layout axis constraint
+    { t.boxAxis } -> Meta::Convertible<Axis>;
+};
+
+export template <typename T>
+concept LengthContext = RelativeLengthContext<T>;
 
 // MARK: Unit Value ------------------------------------------------------------
 // https://drafts.css-houdini.org/css-typed-om-1/#cssunitvalue
@@ -142,12 +202,187 @@ export struct UnitValue {
         return baseTypeOf(_unit);
     }
 
-    constexpr bool absolute() const {
+    constexpr bool isAbsolute() const {
         return factorOf(_unit) != 0;
     }
 
-    constexpr UnitValue canonical() const {
-        if (not absolute())
+    constexpr bool isCanonical() const {
+        return canonicalUnitOf(baseType()) == _unit;
+    }
+
+
+    // https://drafts.csswg.org/css-values/#relative-lengths
+    UnitValue _resolveRelative(Unit unit, RelativeLengthContext auto const& ctx) const {
+        switch (unit) {
+        case Unit::EM:
+            return {_value * ctx.fontSize, Unit::PX};
+
+        case Unit::REM:
+            return {_value * ctx.rootFontSize, Unit::PX};
+
+        case Unit::EX:
+            return {_value * ctx.xHeight, Unit::PX};
+
+        case Unit::REX:
+            return {_value * ctx.rootXHeight, Unit::PX};
+
+        case Unit::CAP:
+            return {_value * ctx.capHeight, Unit::PX};
+
+        case Unit::RCAP:
+            return {_value * ctx.rootCapHeight, Unit::PX};
+
+        case Unit::CH:
+            return {_value * ctx.zeroAdvance, Unit::PX};
+
+        case Unit::RCH:
+            return {_value * ctx.rootZeroAdvance, Unit::PX};
+
+        case Unit::IC:
+            return {_value * ctx.zeroAdvance, Unit::PX};
+
+        case Unit::RIC:
+            return {_value * ctx.rootZeroAdvance, Unit::PX};
+
+        case Unit::LH:
+            return {_value * ctx.lineHeight, Unit::PX};
+
+        case Unit::RLH:
+            return {_value * ctx.rootLineHeight, Unit::PX};
+
+        // Viewport-relative
+
+        // https://drafts.csswg.org/css-values/#vw
+
+        // Equal to 1% of the width of current viewport.
+        case Unit::VW:
+        case Unit::LVW:
+            return {_value * ctx.viewportLargeWidth / 100, Unit::PX};
+
+        case Unit::SVW:
+            return {_value * ctx.viewportSmallWidth / 100, Unit::PX};
+
+        case Unit::DVW:
+            return {_value * ctx.viewportDynamicWidth / 100, Unit::PX};
+
+        // https://drafts.csswg.org/css-values/#vh
+        // Equal to 1% of the height of current viewport.
+        case Unit::VH:
+        case Unit::LVH:
+            return {_value * ctx.viewportLargeHeight / 100, Unit::PX};
+
+        case Unit::SVH:
+            return {_value * ctx.viewportSmallHeight / 100, Unit::PX};
+
+        case Unit::DVH:
+            return {_value * ctx.viewportDynamicHeight / 100, Unit::PX};
+
+        // https://drafts.csswg.org/css-values/#vi
+        // Equal to 1% of the size of the viewport in the box’s inline axis.
+        case Unit::VI:
+        case Unit::LVI:
+            if (ctx.boxAxis == Axis::HORIZONTAL) {
+                return {_value * ctx.viewportLargeWidth / 100, Unit::PX};
+            } else {
+                return {_value * ctx.viewportLargeHeight / 100, Unit::PX};
+            }
+
+        case Unit::SVI:
+            if (ctx.boxAxis == Axis::HORIZONTAL) {
+                return {_value * ctx.viewportSmallWidth / 100, Unit::PX};
+            } else {
+                return {_value * ctx.viewportSmallHeight / 100, Unit::PX};
+            }
+
+        case Unit::DVI:
+            if (ctx.boxAxis == Axis::HORIZONTAL) {
+                return {_value * ctx.viewportDynamicWidth / 100, Unit::PX};
+            } else {
+                return {_value * ctx.viewportDynamicHeight / 100, Unit::PX};
+            }
+
+        // https://drafts.csswg.org/css-values/#vb
+        // Equal to 1% of the size of the viewport in the box’s block axis.
+        case Unit::VB:
+        case Unit::LVB:
+            if (ctx.boxAxis.cross() == Axis::HORIZONTAL) {
+                return {_value * ctx.viewportLargeWidth / 100, Unit::PX};
+            } else {
+                return {_value * ctx.viewportLargeHeight / 100, Unit::PX};
+            }
+
+        case Unit::SVB:
+            if (ctx.boxAxis.cross() == Axis::HORIZONTAL) {
+                return {_value * ctx.viewportSmallWidth / 100, Unit::PX};
+            } else {
+                return {_value * ctx.viewportSmallHeight / 100, Unit::PX};
+            }
+
+        case Unit::DVB:
+            if (ctx.boxAxis.cross() == Axis::HORIZONTAL) {
+                return {_value * ctx.viewportDynamicWidth / 100, Unit::PX};
+            } else {
+                return {_value * ctx.viewportDynamicHeight / 100, Unit::PX};
+            }
+
+        // https://drafts.csswg.org/css-values/#vmin
+        // Equal to the smaller of vw and vh.
+        case Unit::VMIN:
+        case Unit::LVMIN:
+            return min(
+                _resolveRelative(Unit::VW, ctx),
+                _resolveRelative(Unit::VH, ctx)
+            );
+
+        case Unit::SVMIN:
+            return min(
+                _resolveRelative(Unit::SVW, ctx),
+                _resolveRelative(Unit::SVH, ctx)
+            );
+
+        case Unit::DVMIN:
+            return min(
+                _resolveRelative(Unit::DVW, ctx),
+                _resolveRelative(Unit::DVH, ctx)
+            );
+
+        // https://drafts.csswg.org/css-values/#vmax
+        // Equal to the larger of vw and vh.
+        case Unit::VMAX:
+        case Unit::LVMAX:
+            return max(
+                _resolveRelative(Unit::VW, ctx),
+                _resolveRelative(Unit::VH, ctx)
+            );
+
+        case Unit::DVMAX:
+            return max(
+                _resolveRelative(Unit::DVW, ctx),
+                _resolveRelative(Unit::DVH, ctx)
+            );
+
+        case Unit::SVMAX:
+            return max(
+                _resolveRelative(Unit::SVW, ctx),
+                _resolveRelative(Unit::SVH, ctx)
+            );
+        default:
+            unreachable();
+        }
+    }
+
+    constexpr UnitValue canonical(LengthContext auto const& ctx) const {
+        if (baseType() == NumericBaseType::LENGTH and not isAbsolute())
+            return _resolveRelative(_unit, ctx);
+
+        if (not isAbsolute())
+            panic("unit value depends on a context");
+
+        return {_value * factorOf(_unit), canonicalUnitOf(baseType())};
+    }
+
+    constexpr UnitValue canonical(None = NONE) const {
+        if (not isAbsolute())
             panic("unit value depends on a context");
         return {_value * factorOf(_unit), canonicalUnitOf(baseType())};
     }
@@ -165,9 +400,18 @@ export struct UnitValue {
     constexpr std::partial_ordering operator<=>(UnitValue const& other) const {
         if (_unit == other._unit)
             return _value <=> other._value;
-        if (baseType() != other.baseType() or not absolute() or not other.absolute())
+        if (baseType() != other.baseType() or not isAbsolute() or not other.isAbsolute())
             return std::partial_ordering::unordered;
         return canonical().value() <=> other.canonical().value();
+    }
+
+    constexpr UnitValue toComputed() const {
+        if (baseType() == NumericBaseType::LENGTH) {
+            // FIXME: Resolve relative units
+            return canonical();
+        } else {
+            return canonical();
+        }
     }
 
     void repr(Io::Emit& e) const {
@@ -235,9 +479,16 @@ export Res<UnitValue> parseUnitValue(Cursor<Css::Sst>& c, NumericBaseType type) 
 
 // MARK: Typed Unit Value ------------------------------------------------------
 
-export template <NumericBaseType TYPE>
+enum struct AcceptsPercent {
+    NO,
+    YES,
+    _LEN,
+};
+
+export template <NumericBaseType TYPE, AcceptsPercent WITH_PERCENT = AcceptsPercent::NO>
 struct TypedUnitValue {
     static constexpr NumericBaseType BASE_TYPE = TYPE;
+    static constexpr AcceptsPercent ACCEPTS_PERCENTS = WITH_PERCENT;
 
     UnitValue _value;
 
@@ -246,7 +497,8 @@ struct TypedUnitValue {
 
     constexpr explicit TypedUnitValue(UnitValue value)
         : _value(value) {
-        if (value.baseType() != TYPE)
+
+        if (not (value.baseType() == TYPE or (ACCEPTS_PERCENTS == AcceptsPercent::YES and value.baseType() == NumericBaseType::PERCENT)))
             panic("unit value has the wrong base type");
     }
 
@@ -262,10 +514,18 @@ struct TypedUnitValue {
 };
 
 export template <typename T>
-    requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE>>
+    requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE, T::ACCEPTS_PERCENTS>>
 struct ValueParser<T> {
     static Res<T> parse(Cursor<Css::Sst>& c) {
-        return Ok(T{try$(parseUnitValue(c, T::BASE_TYPE))});
+        auto maybeBase = parseUnitValue(c, T::BASE_TYPE);
+
+        if (maybeBase) {
+            return Ok(T{maybeBase.take()});
+        } else if (T::ACCEPTS_PERCENTS == AcceptsPercent::YES) {
+            return Ok(T{try$(parseUnitValue(c, NumericBaseType::PERCENT))});
+        } else {
+            return *maybeBase.error();
+        }
     }
 };
 
