@@ -242,7 +242,7 @@ struct MaxNode {
 };
 
 // https://drafts.csswg.org/css-values-4/#determine-the-type-of-a-calculation
-static Opt<NumericType> determineType(Calc const& calc) {
+export Opt<NumericType> determineType(Calc const& calc) {
     auto addTypes = [](Slice<Calc> calculations) -> Opt<NumericType> {
         Opt<NumericType> type = NONE;
 
@@ -302,7 +302,7 @@ static Opt<NumericType> determineType(Calc const& calc) {
 }
 
 // https://drafts.csswg.org/css-values-4/#sort-a-calculations-children
-static void sortCalculationChildren(MutSlice<Calc> children) {
+export void sortCalculationChildren(MutSlice<Calc> children) {
     // FIXME: Sort dimension units alphabetically in the .inc file.
     stableSort(children, [](Calc const& a, Calc const& b) {
         auto weight = [](Calc const& calc) {
@@ -317,10 +317,10 @@ static void sortCalculationChildren(MutSlice<Calc> children) {
     });
 }
 
-static Res<> serializeCalculationTree(Io::TextWriter& w, Calc const& root, bool stripParens = false);
+Res<> serializeCalculationTree(Io::TextWriter& w, Calc const& root, bool stripParens = false);
 
 // https://drafts.csswg.org/css-values-4/#serialize-a-math-function
-static Res<> serializeMathFunction(Io::TextWriter& w, Calc const& root) {
+export Res<> serializeMathFunction(Io::TextWriter& w, Calc const& root) {
     // TODO
     // 1. If the root of the calculation tree fn represents is an unresolved numeric function
     //    that is not a math function, serialize that function as normal and return the result.
@@ -540,7 +540,7 @@ Res<> serializeCalculationTree(Io::TextWriter& w, Calc const& root, bool stripPa
 }
 
 // https://drafts.csswg.org/css-values-4/#simplify-a-calculation-tree
-static Calc simplify(Calc const& calc, auto const& ctx) {
+export Calc simplify(Calc const& calc, auto const& ctx) {
     auto simplifyChild = [&](Calc const& child) -> Calc {
         return simplify(child, ctx);
     };
