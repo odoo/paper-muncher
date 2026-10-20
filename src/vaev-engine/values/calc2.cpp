@@ -15,6 +15,7 @@ import :values.percent;
 import :values.angle;
 
 using namespace Karm;
+using namespace Vaev::Literals;
 
 namespace Vaev::Ng {
 
@@ -539,16 +540,16 @@ Res<> serializeCalculationTree(Io::TextWriter& w, Calc const& root, bool stripPa
 }
 
 // https://drafts.csswg.org/css-values-4/#simplify-a-calculation-tree
-static Calc simplify(Calc const& calc) {
+static Calc simplify(Calc const& calc, auto const& ctx) {
     auto simplifyChild = [&](Calc const& child) -> Calc {
-        return simplify(child);
+        return simplify(child, ctx);
     };
 
     auto simplifyChildren = [&](Slice<Calc> children) -> Vec<Calc> {
         auto simplified = Vec<Calc>{children.len()};
 
         for (auto const& child : children) {
-            simplified.emplaceBack(simplify(child));
+            simplified.emplaceBack(simplify(child, ctx));
         }
 
         return simplified;
@@ -579,9 +580,8 @@ static Calc simplify(Calc const& calc) {
 
     return calc.visit(
         // 1. If root is a numeric value:
-        [](UnitValue const& numeric) -> Calc {
-            // FIXME
-            return numeric.toComputed();
+        [&](UnitValue const& numeric) -> Calc {
+            return numeric.canonical(ctx);
         },
         // 5. If root is a Min or Max node, attempt to partially simplify it:
         [&](MinNode const& min) -> Calc {
@@ -698,13 +698,13 @@ static Calc simplify(Calc const& calc) {
             auto simplifiedChild = simplifyChild(*invert.child);
 
             // 1. If root’s child is a number (not a percentage or dimension)
-            if (auto child = simplifiedChild.is<UnitValue>(); child and not child->baseType()) {
+            if (auto child = simplifiedChild.template is<UnitValue>(); child and not child->baseType()) {
                 // return the reciprocal of the child’s value.
                 return UnitValue{1.0 / child->value(), UnitValue::Unit::NONE};
             }
 
             // 2. If root’s child is an Invert node,
-            if (auto [child] = simplifiedChild.is<InvertNode>()) {
+            if (auto [child] = simplifiedChild.template is<InvertNode>()) {
                 // Return root.
                 return std::move(*child.child);
             }
@@ -718,7 +718,7 @@ static Calc simplify(Calc const& calc) {
             auto simplifiedChildren = Vec<Calc>{sum.children.len()};
             for (auto& child : sum.children) {
                 auto simplifiedChild = simplifyChild(child);
-                if (auto [child] = simplifiedChild.is<SumNode>()) {
+                if (auto [child] = simplifiedChild.template is<SumNode>()) {
                     for (auto& grandchild : child.children) {
                         simplifiedChildren.pushBack(std::move(grandchild));
                     }
@@ -756,7 +756,7 @@ static Calc simplify(Calc const& calc) {
             auto simplifiedChildren = Vec<Calc>{product.children.len()};
             for (auto& child : product.children) {
                 auto simplifiedChild = simplifyChild(child);
-                if (auto [child] = simplifiedChild.is<ProductNode>()) {
+                if (auto [child] = simplifiedChild.template is<ProductNode>()) {
                     for (auto& grandchild : child.children) {
                         simplifiedChildren.pushBack(std::move(grandchild));
                     }
@@ -857,32 +857,13 @@ static Calc simplify(Calc const& calc) {
     );
 }
 
-export template <typename T>
-struct _Computed;
-
-// export template <typename T>
-// using Computed = _Computed<T>::TYPE;
-//
-// struct Linear {
-//     f64 pixel;
-//     f64 percent;
-// };
-//
-// using PixelPercentage = Union<Linear, Calc>;
-//
-// struct _Computed<TypedUnitValue<NumericBaseType::LENGTH>> {
-//     using TYPE = Pixel;
-// };
-//
-// struct _Computed<TypedUnitValue<NumericBaseType::LENGTH, AcceptsPercent::YES>> {
-//     using TYPE = PixelPercentage;
-// };
-
 export template <NumericBaseType TYPE, AcceptsPercent WITH_PERCENT = AcceptsPercent::NO>
 struct TypedCalc {
-    using UnitType = TypedUnitValue<TYPE, WITH_PERCENT>;
-
     Calc _inner;
+
+    Calc const& calcTree() const {
+        return _inner;
+    }
 
     void repr(Io::Emit& e) const {
         e("{}", _inner);
@@ -1136,12 +1117,59 @@ template <NumericBaseType TYPE, AcceptsPercent WITH_PERCENT>
 struct ValueSerializer<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
     static Res<> serialize(Io::TextWriter& w, Ng::TypedCalc<TYPE, WITH_PERCENT> const& value) {
         return Ng::serializeMathFunction(w, value._inner);
-    };
+    }
 };
+
+export template <typename T>
+struct LinearMixedPercentage {
+    T dimension;
+    f64 percentage;
+};
+
+
+Pixel resolve(Ng::Length const& value, LengthContext auto const& ctx) {
+    auto simplified = Ng::simplify(value.calcTree(), ctx);
+
+    if (auto [canonical] = simplified.template is<UnitValue>()) {
+        return Pixel{canonical.value()};
+    } else {
+        panic("calc didn't simplify to a single value");
+    }
+}
+
+Union<Pixel, LinearMixedPercentage<Pixel>, Ng::Calc> resolve(Ng::LengthPercentage const& value, LengthContext auto const& ctx) {
+    auto simplified = Ng::simplify(value.calcTree(), ctx);
+
+    if (auto [numeric] = simplified.template is<UnitValue>()) {
+        if (numeric.unit() == UnitValue::Unit::PX) {
+            return Pixel{numeric.value()};
+        }
+
+        if (numeric.unit() == UnitValue::Unit::PERCENT) {
+            return LinearMixedPercentage{
+                .dimension = 0_px,
+                .percentage = numeric.value()
+            };
+        }
+    }
+
+    if (auto sum = simplified.template is<Ng::SumNode>(); sum and sum->children.len() == 2) {
+        auto maybePercent = sum->children[0].template is<UnitValue>();
+        auto maybePx = sum->children[1].template is<UnitValue>();
+        if (maybePercent and maybePx and maybePercent->unit() == UnitValue::Unit::PERCENT and maybePx->unit() == UnitValue::Unit::PX) {
+            return LinearMixedPercentage {
+                .dimension = Pixel{maybePx->value()},
+                .percentage = maybePercent->value(),
+            };
+        }
+    }
+
+    return simplified;
+}
 
 struct Lab {
     Lab() {
-        Css::Lexer lex = {"1px"};
+        Css::Lexer lex = {"min(1px, 2px)"};
         auto diags = Diag::Collector::ignore();
 
         auto content = Css::consumeComponentValue(lex, diags);
@@ -1156,9 +1184,9 @@ struct Lab {
         logInfo("{}", c);
 
         auto parsed = parseValue<Ng::LengthPercentage>(c).expect();
-        dump(parsed._inner);
+        dump(parsed.calcTree());
 
-        auto computed = Ng::simplify(parsed._inner);
+        auto computed = Ng::simplify(parsed.calcTree(), NONE);
         dump(computed);
     }
 };
