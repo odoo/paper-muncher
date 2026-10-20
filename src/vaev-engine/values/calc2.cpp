@@ -569,7 +569,7 @@ static Calc simplify(Calc const& calc) {
             //   and there are other children of root that are numeric values with the same unit,
             //   combine all such children with the appropriate operator per root, and replace child with the result,
             //   removing all other child nodes involved.
-            sortCalculationChildren(simplifiedChildren);
+            // NOSPEC: Chrome doesn't fold out of order childrens, so we don't do it too to stay O(n).
             foldNumericSiblings(
                 simplifiedChildren,
                 [](UnitValue::Unit unit) {
@@ -598,7 +598,7 @@ static Calc simplify(Calc const& calc) {
             //   and there are other children of root that are numeric values with the same unit,
             //   combine all such children with the appropriate operator per root, and replace child with the result,
             //   removing all other child nodes involved.
-            sortCalculationChildren(simplifiedChildren);
+            // NOSPEC: Chrome doesn't fold out of order childrens, so we don't do it too to stay O(n).
             foldNumericSiblings(
                 simplifiedChildren,
                 [](UnitValue::Unit unit) {
@@ -1018,7 +1018,7 @@ struct ValueSerializer<Ng::TypedCalc<T>> {
 
 struct Lab {
     Lab() {
-        Css::Lexer lex = {"calc(min(1%, 5px, 6%, 10px) + max(67px, 42px))"};
+        Css::Lexer lex = {"max(100% - 100% + 1cm, 67px)"};
         auto diags = Diag::Collector::ignore();
 
         auto content = Css::consumeComponentValue(lex, diags);
