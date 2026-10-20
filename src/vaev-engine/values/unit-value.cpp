@@ -283,7 +283,7 @@ struct TypedUnitValue {
 };
 
 export template <typename T>
-    requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE>>
+    requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE, T::ACCEPTS_PERCENTS>>
 struct ValueParser<T> {
     static Res<T> parse(Cursor<Css::Sst>& c) {
         auto maybeBase = parseUnitValue(c, T::BASE_TYPE);

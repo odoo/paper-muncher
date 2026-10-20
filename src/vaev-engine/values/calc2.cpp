@@ -857,62 +857,73 @@ static Calc simplify(Calc const& calc) {
     );
 }
 
-// export template <>
-// struct _Computed;
-//
+export template <typename T>
+struct _Computed;
+
 // export template <typename T>
 // using Computed = _Computed<T>::TYPE;
 //
-// template <>
-// struct _Computed<TypedUnitValue<NumericBaseType::LENGTH>>()
+// struct Linear {
+//     f64 pixel;
+//     f64 percent;
+// };
 //
+// using PixelPercentage = Union<Linear, Calc>;
+//
+// struct _Computed<TypedUnitValue<NumericBaseType::LENGTH>> {
+//     using TYPE = Pixel;
+// };
+//
+// struct _Computed<TypedUnitValue<NumericBaseType::LENGTH, AcceptsPercent::YES>> {
+//     using TYPE = PixelPercentage;
+// };
 
-export template <typename T>
+export template <NumericBaseType TYPE, AcceptsPercent WITH_PERCENT = AcceptsPercent::NO>
 struct TypedCalc {
+    using UnitType = TypedUnitValue<TYPE, WITH_PERCENT>;
+
     Calc _inner;
 
     void repr(Io::Emit& e) const {
         e("{}", _inner);
     }
-
-    void simplify(LengthContext auto& ctx) {
-        simplify(_inner);
-    }
-
-    void computeValue() {
-    }
 };
 
 // https://drafts.csswg.org/css-values-4/#lengths
-export using Length = TypedCalc<TypedUnitValue<NumericBaseType::LENGTH>>;
+export using Length = TypedCalc<NumericBaseType::LENGTH>;
 
 // https://drafts.csswg.org/css-values-4/#angles
-export using Angle = TypedCalc<TypedUnitValue<NumericBaseType::ANGLE>>;
+export using Angle = TypedCalc<NumericBaseType::ANGLE>;
 
 // https://drafts.csswg.org/css-values-4/#frequency
-export using Frequency = TypedCalc<TypedUnitValue<NumericBaseType::FREQUENCY>>;
+export using Frequency = TypedCalc<NumericBaseType::FREQUENCY>;
 
 // https://drafts.csswg.org/css-values-4/#resolution
-export using Resolution = TypedCalc<TypedUnitValue<NumericBaseType::RESOLUTION>>;
+export using Resolution = TypedCalc<NumericBaseType::RESOLUTION>;
 
 // https://drafts.csswg.org/css-values-4/#percentages
-export using Percentage = TypedCalc<TypedUnitValue<NumericBaseType::PERCENT>>;
+export using Percentage = TypedCalc<NumericBaseType::PERCENT>;
 
 // https://drafts.csswg.org/css-values-4/#mixed-percentages
-export using LengthPercentage = TypedCalc<TypedUnitValue<NumericBaseType::LENGTH, AcceptsPercent::YES>>;
-export using FrequencyPercentage = TypedCalc<TypedUnitValue<NumericBaseType::FREQUENCY, AcceptsPercent::YES>>;
-export using AnglePercentage = TypedCalc<TypedUnitValue<NumericBaseType::ANGLE, AcceptsPercent::YES>>;
-export using TimePercentage = TypedCalc<TypedUnitValue<NumericBaseType::TIME, AcceptsPercent::YES>>;
+export using LengthPercentage = TypedCalc<NumericBaseType::LENGTH, AcceptsPercent::YES>;
+export using FrequencyPercentage = TypedCalc<NumericBaseType::FREQUENCY, AcceptsPercent::YES>;
+export using AnglePercentage = TypedCalc<NumericBaseType::ANGLE, AcceptsPercent::YES>;
+export using TimePercentage = TypedCalc<NumericBaseType::TIME, AcceptsPercent::YES>;
 
 } // namespace Vaev::Ng
 
 namespace Vaev {
 
-template <typename T>
-struct ValueParser<Ng::TypedCalc<T>> {
-    static Res<Ng::TypedCalc<T>> parse(Cursor<Css::Sst>& c) {
+template <NumericBaseType TYPE, AcceptsPercent WITH_PERCENT>
+struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
+    static Res<Ng::TypedCalc<TYPE, WITH_PERCENT>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
+
+        auto numeric = parseValue<TypedUnitValue<TYPE, WITH_PERCENT>>(c);
+        if (numeric) {
+            return Ok(numeric.take().unitValue());
+        }
 
         if (c.peek() == Css::Sst::FUNC) {
             auto calc = try$(parseMathFunction(c));
@@ -920,13 +931,11 @@ struct ValueParser<Ng::TypedCalc<T>> {
             auto type = try$(Ng::determineType(calc));
 
             logInfo("type: {}", type);
-            logInfo("Accepts percents: {}", T::ACCEPTS_PERCENTS);
-            logInfo("Base type: {}", T::BASE_TYPE);
 
-            if (not type.isBaseType(T::BASE_TYPE) or (type.containsPercentage() and T::ACCEPTS_PERCENTS == AcceptsPercent::NO))
+            if (not type.isBaseType(TYPE) or (type.containsPercentage() and WITH_PERCENT == AcceptsPercent::NO))
                 return Error::invalidData("calc() type error");
 
-            return Ok(Ng::TypedCalc<T>{
+            return Ok(Ng::TypedCalc<TYPE, WITH_PERCENT>{
                 ._inner = std::move(calc),
             });
         }
@@ -1123,16 +1132,16 @@ struct ValueParser<Ng::TypedCalc<T>> {
     }
 };
 
-template <typename T>
-struct ValueSerializer<Ng::TypedCalc<T>> {
-    static Res<> serialize(Io::TextWriter& w, Ng::TypedCalc<T> const& value) {
+template <NumericBaseType TYPE, AcceptsPercent WITH_PERCENT>
+struct ValueSerializer<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
+    static Res<> serialize(Io::TextWriter& w, Ng::TypedCalc<TYPE, WITH_PERCENT> const& value) {
         return Ng::serializeMathFunction(w, value._inner);
     };
 };
 
 struct Lab {
     Lab() {
-        Css::Lexer lex = {"calc(1in * 3deg / 6rad + 7%)"};
+        Css::Lexer lex = {"1px"};
         auto diags = Diag::Collector::ignore();
 
         auto content = Css::consumeComponentValue(lex, diags);
