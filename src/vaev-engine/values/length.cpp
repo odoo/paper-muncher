@@ -59,7 +59,7 @@ export struct Length : TypedUnitValue<NumericBaseType::LENGTH> {
 
     // https://drafts.csswg.org/css-values/#absolute-lengths
     constexpr bool absolute() const {
-        return _value.absolute();
+        return _value.isAbsolute();
     }
 
     constexpr Opt<f64> absolutePixels() const {
@@ -309,7 +309,7 @@ export struct AbsoluteLength : TypedUnitValue<NumericBaseType::LENGTH> {
 
     constexpr explicit AbsoluteLength(UnitValue value)
         : TypedUnitValue(value) {
-        if (not value.absolute())
+        if (not value.isAbsolute())
             panic("unit value is not an absolute <length>");
     }
 
@@ -336,7 +336,7 @@ struct ValueParser<AbsoluteLength> {
     static Res<AbsoluteLength> parse(Cursor<Css::Sst>& c) {
         auto save = c;
         auto value = try$(parseUnitValue(c, NumericBaseType::LENGTH));
-        if (not value.absolute()) {
+        if (not value.isAbsolute()) {
             c = save;
             return Error::invalidData("expected <absolute-length>");
         }

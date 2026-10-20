@@ -19,7 +19,7 @@ using namespace Karm;
 namespace Vaev::Ng {
 
 struct NumericType {
-    Array<i32, toUnderlyingType(NumericBaseType::_LEN)> _els{};
+    Array<i32, toUnderlyingType(NumericBaseType::_LEN)> _exponents{};
 
     Opt<NumericBaseType> percentHint = NONE;
 
@@ -27,22 +27,22 @@ struct NumericType {
 
     static NumericType simple(NumericBaseType baseType, Opt<NumericBaseType> percentHint = NONE) {
         auto type = NumericType{};
-        type._els[toUnderlyingType(baseType)] = 1;
+        type._exponents[toUnderlyingType(baseType)] = 1;
         type.percentHint = percentHint;
         return type;
     }
 
     bool contains(NumericBaseType baseType) const {
-        return _els[toUnderlyingType(baseType)] != 0;
+        return _exponents[toUnderlyingType(baseType)] != 0;
     }
 
     bool isBaseType(NumericBaseType baseType) const {
         for (usize i = 0; i < toUnderlyingType(NumericBaseType::_LEN); i++) {
             if (i == static_cast<usize>(toUnderlyingType(baseType))) {
-                if (_els[i] != 1)
+                if (_exponents[i] != 1)
                     return false;
             } else {
-                if (_els[i] != 0)
+                if (_exponents[i] != 0)
                     return false;
             }
         }
@@ -52,7 +52,7 @@ struct NumericType {
 
     bool isEmpty() const {
         for (usize i = 0; i < toUnderlyingType(NumericBaseType::_LEN); i++) {
-            if (_els[i] != 0) {
+            if (_exponents[i] != 0) {
                 return false;
             }
         }
@@ -62,8 +62,8 @@ struct NumericType {
 
     // https://drafts.css-houdini.org/css-typed-om-1/#apply-the-percent-hint
     void applyPercentHint(NumericBaseType hint) {
-        _els[toUnderlyingType(hint)] += _els[toUnderlyingType(NumericBaseType::PERCENT)];
-        _els[toUnderlyingType(NumericBaseType::PERCENT)] = 0;
+        _exponents[toUnderlyingType(hint)] += _exponents[toUnderlyingType(NumericBaseType::PERCENT)];
+        _exponents[toUnderlyingType(NumericBaseType::PERCENT)] = 0;
         percentHint = Some(hint);
     }
 
@@ -81,7 +81,7 @@ struct NumericType {
             type1.applyPercentHint(*type2.percentHint);
         }
 
-        if (type1._els == type2._els) {
+        if (type1._exponents == type2._exponents) {
             auto finalType = type1;
             if (not finalType.percentHint)
                 finalType.percentHint = type2.percentHint;
@@ -101,7 +101,7 @@ struct NumericType {
                 t1.applyPercentHint(hint);
                 t2.applyPercentHint(hint);
 
-                if (t1._els == t2._els) {
+                if (t1._exponents == t2._exponents) {
                     t1.percentHint = Some(hint);
                     return Some(t1);
                 }
@@ -119,8 +119,8 @@ struct NumericType {
 
         NumericType finalType = *this;
 
-        for (usize i = 0; i < _els.len(); i++) {
-            finalType._els[i] += other._els[i];
+        for (usize i = 0; i < _exponents.len(); i++) {
+            finalType._exponents[i] += other._exponents[i];
         }
 
         if (not finalType.percentHint) {
@@ -134,8 +134,8 @@ struct NumericType {
     NumericType invert() const {
         NumericType finalType = *this;
 
-        for (usize i = 0; i < _els.len(); i++) {
-            finalType._els[i] *= -1;
+        for (usize i = 0; i < _exponents.len(); i++) {
+            finalType._exponents[i] *= -1;
         }
 
         return finalType;
@@ -146,18 +146,40 @@ struct NumericType {
         return contains(NumericBaseType::PERCENT) or percentHint;
     }
 
+    // https://drafts.csswg.org/css-values-4/#math-function
+    // https://drafts.css-houdini.org/css-typed-om-1/#cssnumericvalue-match
+    Opt<NumericBaseType> matchesAnyMathFunction() const {
+        isize exponentLocation = -1;
+        for (usize i = 0; i < toUnderlyingType(NumericBaseType::_LEN); i++) {
+            if (_exponents[i] == 0)
+                continue;
+
+            if (_exponents[i] == 1) {
+                if (exponentLocation >= 0)
+                    return NONE;
+
+                exponentLocation = i;
+                continue;
+            }
+
+            return NONE;
+        }
+
+        return Some(static_cast<NumericBaseType>(exponentLocation));
+    }
+
     bool operator==(NumericType const&) const = default;
 
     always_inline constexpr i32 const& operator[](NumericBaseType baseType) const {
-        return _els[toUnderlyingType(baseType)];
+        return _exponents[toUnderlyingType(baseType)];
     }
 
     always_inline constexpr i32& operator[](NumericBaseType baseType) {
-        return _els[toUnderlyingType(baseType)];
+        return _exponents[toUnderlyingType(baseType)];
     }
 
     void repr(Io::Emit& e) const {
-        e("(numeric-type {} hint={})", _els, percentHint);
+        e("(numeric-type {} hint={})", _exponents, percentHint);
     }
 };
 
@@ -305,6 +327,8 @@ static Res<> serializeMathFunction(Io::TextWriter& w, Calc const& root) {
     // 2. If the root of the calculation tree fn represents is a numeric value (number, percentage, or dimension),
     //    and the serialization being produced is of a computed value or later, then clamp the value to the range
     //    allowed for its context (if necessary), then serialize the value as normal and return the result.
+    // FIXME: We should pass context to serializers about the stage of the value that is being serialized,
+    //        treating everything as a computed value for now.
     if (auto [numeric] = root.is<UnitValue>()) {
         // TODO: Clamping
         return serializeValue(w, numeric);
@@ -757,21 +781,75 @@ static Calc simplify(Calc const& calc) {
             // 3. If root contains only two children, one of which is a number (not a percentage or dimension) and the other
             //    of which is a Sum whose children are all numeric values, multiply all of the Sum’s children by the number,
             //    then return the Sum.
-            // if (simplifiedChildren.len() == 2) {
-            //     auto multiplySumAndNumber = [](UnitValue const& numeric, SumNode& sum) {
-            //         if (numeric.unit() != UnitValue::Unit::NONE)
-            //             return false;
-            //
-            //         if (numeric.unit() != UnitValue::Unit::NONE)
-            //             return false;
-            //
-            //         if ()
-            //     };
-            //
-            //     if (simplifiedChildren[0].is<UnitValue>()) {
-            //
-            //     }
-            // }
+            if (simplifiedChildren.len() == 2) {
+                auto const isNumber = [](UnitValue const& numeric) {
+                    return numeric.unit() == UnitValue::Unit::NONE;
+                };
+
+                auto const onlyNumericChildren = [](SumNode const& sum) {
+                    for (auto const& child : sum.children) {
+                        if (not child.is<UnitValue>())
+                            return false;
+                    }
+                    return true;
+                };
+
+                auto fstAsUnit = simplifiedChildren[0].is<UnitValue>();
+                auto sndAsSum = simplifiedChildren[1].is<SumNode>();
+
+                if (fstAsUnit and isNumber(*fstAsUnit) and sndAsSum and onlyNumericChildren(*sndAsSum)) {
+                    for (auto& child : sndAsSum->children) {
+                        auto numeric = *child.is<UnitValue>();
+                        numeric = UnitValue{numeric.value() * fstAsUnit->value(), numeric.unit()};
+                    }
+
+                    return std::move(*sndAsSum);
+                }
+
+                auto fstAsSum = simplifiedChildren[0].is<SumNode>();
+                auto sndAsUnit = simplifiedChildren[1].is<UnitValue>();
+
+                if (sndAsUnit and isNumber(*sndAsUnit) and fstAsSum and onlyNumericChildren(*fstAsSum)) {
+                    for (auto& child : fstAsSum->children) {
+                        auto numeric = *child.is<UnitValue>();
+                        numeric = UnitValue{numeric.value() * sndAsUnit->value(), numeric.unit()};
+                    }
+
+                    return std::move(*fstAsSum);
+                }
+            }
+
+            // 4. If root contains only numeric values and/or Invert nodes containing numeric values, and multiplying the types of all the children
+            //    (noting that the type of an Invert node is the inverse of its child’s type) results in a type that matches any of the types that a math
+            //    function can resolve to, return the result of multiplying all the values of the children (noting that the value of an Invert node is the
+            //    reciprocal of its child’s value), expressed in the result’s canonical unit.
+            bool containsOnlyCanonicalNumerics = true;
+            for (auto const& child : product.children) {
+                if (auto numeric = child.is<UnitValue>(); numeric and numeric->isCanonical())
+                    continue;
+
+                if (auto invert = child.is<InvertNode>(); invert and invert->child->is<UnitValue>())
+                    continue;
+
+                containsOnlyCanonicalNumerics = false;
+                break;
+            }
+
+            auto resultBaseType = determineType(product)->matchesAnyMathFunction();
+
+            if (containsOnlyCanonicalNumerics and resultBaseType) {
+                f64 accumulator = 1.0;
+
+                for (auto const& child : product.children) {
+                    if (auto numeric = child.is<UnitValue>()) {
+                        accumulator *= numeric->value();
+                    } else if (auto invert = child.is<InvertNode>()) {
+                        accumulator *= invert->child->is<UnitValue>()->value();
+                    }
+                }
+
+                return UnitValue{accumulator, UnitValue::canonicalUnitOf(resultBaseType)};
+            }
 
             // 5. Return root.
             return ProductNode{std::move(simplifiedChildren)};
@@ -1000,6 +1078,7 @@ struct ValueParser<Ng::TypedCalc<T>> {
         } else if (c.skip(Css::Token::ident("-infinity"))) {
             value = Math::NEG_INF;
         } else if (c.skip(Css::Token::ident("NaN"))) {
+            // FIXME: NaN should be matched with exact casing.
             value = Math::NAN;
         } else {
             return Error::invalidData("unknown calc keyword");
@@ -1018,7 +1097,7 @@ struct ValueSerializer<Ng::TypedCalc<T>> {
 
 struct Lab {
     Lab() {
-        Css::Lexer lex = {"max(100% - 100% + 1cm, 67px)"};
+        Css::Lexer lex = {"calc(1in * 3deg / 6rad + 7%)"};
         auto diags = Diag::Collector::ignore();
 
         auto content = Css::consumeComponentValue(lex, diags);

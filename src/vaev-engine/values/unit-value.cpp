@@ -142,12 +142,16 @@ export struct UnitValue {
         return baseTypeOf(_unit);
     }
 
-    constexpr bool absolute() const {
+    constexpr bool isAbsolute() const {
         return factorOf(_unit) != 0;
     }
 
+    constexpr bool isCanonical() const {
+        return canonicalUnitOf(baseType()) == _unit;
+    }
+
     constexpr UnitValue canonical() const {
-        if (not absolute())
+        if (not isAbsolute())
             panic("unit value depends on a context");
         return {_value * factorOf(_unit), canonicalUnitOf(baseType())};
     }
@@ -165,7 +169,7 @@ export struct UnitValue {
     constexpr std::partial_ordering operator<=>(UnitValue const& other) const {
         if (_unit == other._unit)
             return _value <=> other._value;
-        if (baseType() != other.baseType() or not absolute() or not other.absolute())
+        if (baseType() != other.baseType() or not isAbsolute() or not other.isAbsolute())
             return std::partial_ordering::unordered;
         return canonical().value() <=> other.canonical().value();
     }
