@@ -41,8 +41,6 @@ export struct Percent : TypedUnitValue<NumericBaseType::PERCENT> {
 export template <typename T>
 using PercentOr = Union<Percent, T>;
 
-export using LengthPercentage = TypedUnitValue<NumericBaseType::LENGTH, AcceptsPercent::YES>;
-
 export template <typename T>
 struct _Resolved<PercentOr<T>> {
     using Type = Resolved<T>;

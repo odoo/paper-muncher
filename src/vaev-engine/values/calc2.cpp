@@ -857,6 +857,16 @@ static Calc simplify(Calc const& calc) {
     );
 }
 
+// export template <>
+// struct _Computed;
+//
+// export template <typename T>
+// using Computed = _Computed<T>::TYPE;
+//
+// template <>
+// struct _Computed<TypedUnitValue<NumericBaseType::LENGTH>>()
+//
+
 export template <typename T>
 struct TypedCalc {
     Calc _inner;
@@ -865,9 +875,34 @@ struct TypedCalc {
         e("{}", _inner);
     }
 
-    // void simplify(LengthContext auto& ctx) {
-    // }
+    void simplify(LengthContext auto& ctx) {
+        simplify(_inner);
+    }
+
+    void computeValue() {
+    }
 };
+
+// https://drafts.csswg.org/css-values-4/#lengths
+export using Length = TypedCalc<TypedUnitValue<NumericBaseType::LENGTH>>;
+
+// https://drafts.csswg.org/css-values-4/#angles
+export using Angle = TypedCalc<TypedUnitValue<NumericBaseType::ANGLE>>;
+
+// https://drafts.csswg.org/css-values-4/#frequency
+export using Frequency = TypedCalc<TypedUnitValue<NumericBaseType::FREQUENCY>>;
+
+// https://drafts.csswg.org/css-values-4/#resolution
+export using Resolution = TypedCalc<TypedUnitValue<NumericBaseType::RESOLUTION>>;
+
+// https://drafts.csswg.org/css-values-4/#percentages
+export using Percentage = TypedCalc<TypedUnitValue<NumericBaseType::PERCENT>>;
+
+// https://drafts.csswg.org/css-values-4/#mixed-percentages
+export using LengthPercentage = TypedCalc<TypedUnitValue<NumericBaseType::LENGTH, AcceptsPercent::YES>>;
+export using FrequencyPercentage = TypedCalc<TypedUnitValue<NumericBaseType::FREQUENCY, AcceptsPercent::YES>>;
+export using AnglePercentage = TypedCalc<TypedUnitValue<NumericBaseType::ANGLE, AcceptsPercent::YES>>;
+export using TimePercentage = TypedCalc<TypedUnitValue<NumericBaseType::TIME, AcceptsPercent::YES>>;
 
 } // namespace Vaev::Ng
 
@@ -1111,7 +1146,7 @@ struct Lab {
 
         logInfo("{}", c);
 
-        auto parsed = parseValue<Ng::TypedCalc<LengthPercentage>>(c).expect();
+        auto parsed = parseValue<Ng::LengthPercentage>(c).expect();
         dump(parsed._inner);
 
         auto computed = Ng::simplify(parsed._inner);
