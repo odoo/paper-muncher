@@ -259,7 +259,6 @@ export Res<> serializeNumber(Io::TextWriter& w, f64 value) {
     // A base-ten number using digits 0-9 (U+0030 to U+0039) in the shortest form possible,
     // using "." to separate decimals (if any), rounding the value if necessary to not produce more than 6 decimals,
     // preceded by "-" (U+002D) if it is negative.
-    // FIXME: It truncates instead of rounding, see https://codeberg.org/skift/karm/issues/73.
     return Io::format(w, "{:.6}", value);
 }
 

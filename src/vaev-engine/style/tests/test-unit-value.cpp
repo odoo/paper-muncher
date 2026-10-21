@@ -89,6 +89,12 @@ test$("vaev-css-unit-value-serialization") {
     assertEq$(try$(_serialize(try$(_parse<Percent>("25%")))), "25%"s);
     assertEq$(try$(_serialize(try$(_parse<Flex>("1fr")))), "1fr"s);
 
+    assertEq$(try$(_serialize(try$(_parse<Length>("0.1234567em")))), "0.123457em"s);
+    assertEq$(try$(_serialize(try$(_parse<Length>("3.5PX")))), "3.5px"s);
+    assertEq$(try$(_serialize(try$(_parse<Angle>("-0.900deg")))), "-0.9deg"s);
+    assertEq$(try$(_serialize(try$(_parse<Percent>("0.0%")))), "0%"s);
+    assertEq$(try$(_serialize(try$(_parse<Flex>("-0fr")))), "0fr"s);
+
     return Ok();
 }
 
