@@ -12,7 +12,7 @@
             "tag": "v0.3.1"
         },
         "cute-engineering/ce-heap": {
-            "commit": "664de4bd5c3810da1a679724c3533204f30e80f8",
+            "commit": "27dbbf134130f143061e42688c9f00a096c2f981",
             "git": "https://codeberg.org/cute-engineering/ce-heap.git",
             "tag": "v1.3.0"
         },
@@ -32,7 +32,7 @@
             "tag": "v0.8.0"
         },
         "cute-engineering/ce-stdcpp": {
-            "commit": "e92e902d4b3ebad8c79cebc7e059b7a1b4f075ff",
+            "commit": "ace6687f8eb5e3d89b5fba4f1b749fdc6c27131b",
             "git": "https://codeberg.org/cute-engineering/ce-stdcpp.git",
             "tag": "v1.9.1"
         },
@@ -42,12 +42,12 @@
             "tag": "v0.9.0"
         },
         "skift/assets": {
-            "commit": "627bb6c74ee34eb66011728e1ae808464f23b0c5",
+            "commit": "3fd469755d6a935a7470ed27ac77d497684803bc",
             "git": "https://codeberg.org/skift/assets.git",
             "tag": "main"
         },
         "skift/karm": {
-            "commit": "275745e5fbf7ce7a7bc483a045945e3b999693d1",
+            "commit": "b2f02c8b590f5ec79e326e5b79ee41fadd0ba9df",
             "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
         }
