@@ -58,33 +58,42 @@ export struct VisibilityProperty : Property {
 
 // https://www.w3.org/TR/css-color-4/#propdef-opacity
 export struct OpacityProperty : Property {
+    using Value = Union<Ng::Number, Ng::Percentage>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OPACITY) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OpacityProperty>(self(), Number{1});
+            return makeRc<OpacityProperty>(self(), Ng::Number::fromCanonical(1));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OpacityProperty>(self(), c.opacity);
+            return makeRc<OpacityProperty>(self(), Ng::Number::fromCanonical(c.opacity));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto maybePercent = parseValue<Percent>(c);
-            if (maybePercent) {
-                return Ok(makeRc<OpacityProperty>(self(), maybePercent.expect().value() / 100));
-            }
-            return Ok(makeRc<OpacityProperty>(self(), try$(parseValue<Number>(c))));
+            return Ok(makeRc<OpacityProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Number _value;
+    Union<Ng::Number, Ng::Percentage> _value;
 
-    OpacityProperty(Rc<Property::Registration> registration, Number value)
-        : Property(registration), _value(value) {}
+    OpacityProperty(Rc<Property::Registration> registration, Value const& value)
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.opacity = _value;
+        auto specifiedNumber = _value.visit(
+            [](Ng::Number const& n) {
+                return resolve(n);
+            },
+            [](Ng::Percentage const& percent) {
+                // Percentages:	map to the range [0,1]
+                return resolve(percent, 1);
+            }
+        );
+
+        // Computed value: specified number, clamped to the range [0,1]
+        c.opacity = clamp(specifiedNumber, 0, 1);
     }
 
     void repr(Io::Emit& e) const override {
