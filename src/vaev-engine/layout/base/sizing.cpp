@@ -50,18 +50,16 @@ export Au computeFitContentBlockSize(Tree& tree, Box& box, AvailableSpaceAxis av
 
 // https://www.w3.org/TR/css-sizing-3/#preferred-size-properties
 // FIXME: Move this to a more generic width/height computation function.
-export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box, Vec2Au containingBlock) {
-    auto const& style = *box.style;
-
+export Math::Vec2<Opt<Au>> resolvePreferredSize(Style::ComputedValues const& style, Vec2Au containingBlock) {
     Opt<Au> width = NONE;
     Opt<Au> height = NONE;
 
-    if (auto calc = style.sizing->width.is<Calc<PercentOr<Length>>>()) {
-        width = Some(resolve(tree, box, *calc, containingBlock.width));
+    if (auto calc = style.sizing->width.is<PixelPercentage>()) {
+        width = Some(Layout::resolve(*calc, containingBlock.width));
     }
 
-    if (auto calc = style.sizing->height.is<Calc<PercentOr<Length>>>()) {
-        height = Some(resolve(tree, box, *calc, containingBlock.height));
+    if (auto calc = style.sizing->height.is<PixelPercentage>()) {
+        height = Some(Layout::resolve(*calc, containingBlock.height));
     }
 
     return {width, height};
@@ -69,23 +67,21 @@ export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box
 
 // https://www.w3.org/TR/CSS22/visudet.html#min-max-widths
 // FIXME: Values other than <length-percentage> are currently treated as 'auto'.
-export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2Au tentative, Vec2Au containingBlock, Math::Vec2<Opt<Au>> specifiedSize) {
-    auto const& style = *box.style;
-
+export Vec2Au applyReplacedMinMaxSizeConstraints(Style::ComputedValues const& style, Vec2Au tentative, Vec2Au containingBlock, Math::Vec2<Opt<Au>> specifiedSize) {
     Au minWidth = 0_au;
     Au minHeight = 0_au;
 
     Au maxWidth = Limits<Au>::MAX;
     Au maxHeight = Limits<Au>::MAX;
 
-    if (auto calc = style.sizing->minWidth.is<Calc<PercentOr<Length>>>())
-        minWidth = resolve(tree, box, *calc, containingBlock.width);
-    if (auto calc = style.sizing->maxWidth.is<Calc<PercentOr<Length>>>())
-        maxWidth = resolve(tree, box, *calc, containingBlock.width);
-    if (auto calc = style.sizing->minHeight.is<Calc<PercentOr<Length>>>())
-        minHeight = resolve(tree, box, *calc, containingBlock.height);
-    if (auto calc = style.sizing->maxHeight.is<Calc<PercentOr<Length>>>())
-        maxHeight = resolve(tree, box, *calc, containingBlock.height);
+    if (auto calc = style.sizing->minWidth.is<PixelPercentage>())
+        minWidth = Layout::resolve(*calc, containingBlock.width);
+    if (auto calc = style.sizing->maxWidth.is<PixelPercentage>())
+        maxWidth = Layout::resolve(*calc, containingBlock.width);
+    if (auto calc = style.sizing->minHeight.is<PixelPercentage>())
+        minHeight = Layout::resolve(*calc, containingBlock.height);
+    if (auto calc = style.sizing->maxHeight.is<PixelPercentage>())
+        maxHeight = Layout::resolve(*calc, containingBlock.height);
 
     maxWidth = max(maxWidth, minWidth);
     maxHeight = max(maxHeight, minHeight);

@@ -459,7 +459,7 @@ struct ValueSerializer<UnitValue> {
     }
 };
 
-export Res<UnitValue> parseUnitValue(Cursor<Css::Sst>& c, NumericBaseType type) {
+export Res<UnitValue> parseUnitValue(Cursor<Css::Sst>& c, Opt<NumericBaseType> type) {
     if (c.ended())
         return Error::invalidData("unexpected end of input");
 
@@ -485,20 +485,20 @@ enum struct AcceptsPercent {
     _LEN,
 };
 
-export template <NumericBaseType TYPE, AcceptsPercent WITH_PERCENT = AcceptsPercent::NO>
+export template <Opt<NumericBaseType> TYPE, AcceptsPercent WITH_PERCENT = AcceptsPercent::NO>
 struct TypedUnitValue {
-    static constexpr NumericBaseType BASE_TYPE = TYPE;
+    static constexpr Opt<NumericBaseType> BASE_TYPE = TYPE;
     static constexpr AcceptsPercent ACCEPTS_PERCENTS = WITH_PERCENT;
 
     UnitValue _value;
 
     constexpr TypedUnitValue()
-        : _value(0, UnitValue::canonicalUnitOf(Some(TYPE))) {}
+        : _value(0, UnitValue::canonicalUnitOf(TYPE)) {}
 
     constexpr explicit TypedUnitValue(UnitValue value)
         : _value(value) {
 
-        if (not (value.baseType() == TYPE or (ACCEPTS_PERCENTS == AcceptsPercent::YES and value.baseType() == NumericBaseType::PERCENT)))
+        if (not (value.baseType() == TYPE or (WITH_PERCENT == AcceptsPercent::YES and value.baseType() == NumericBaseType::PERCENT)))
             panic("unit value has the wrong base type");
     }
 
@@ -522,7 +522,7 @@ struct ValueParser<T> {
         if (maybeBase) {
             return Ok(T{maybeBase.take()});
         } else if (T::ACCEPTS_PERCENTS == AcceptsPercent::YES) {
-            return Ok(T{try$(parseUnitValue(c, NumericBaseType::PERCENT))});
+            return Ok(T{try$(parseUnitValue(c, Some(NumericBaseType::PERCENT)))});
         } else {
             return *maybeBase.error();
         }

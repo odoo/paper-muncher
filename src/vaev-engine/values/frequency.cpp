@@ -17,7 +17,7 @@ namespace Vaev {
 // https://drafts.csswg.org/css-values/#frequency
 // It represents the number of occurrences per second.
 
-export struct Frequency : TypedUnitValue<NumericBaseType::FREQUENCY> {
+export struct Frequency : TypedUnitValue<Some(NumericBaseType::FREQUENCY)> {
     using TypedUnitValue::TypedUnitValue;
 
     static constexpr Frequency fromHz(f64 hz) {

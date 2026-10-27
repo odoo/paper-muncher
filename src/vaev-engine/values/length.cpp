@@ -32,7 +32,7 @@ export using Pixel = Distinct<f64, struct _PixelTag>;
 // 6. MARK: Distance Units: the <length> type
 // https://drafts.csswg.org/css-values/#lengths
 
-export struct Length : TypedUnitValue<NumericBaseType::LENGTH> {
+export struct Length : TypedUnitValue<Some(NumericBaseType::LENGTH)> {
     using TypedUnitValue::TypedUnitValue;
 
     static constexpr Length fromPx(f64 val) {
@@ -80,7 +80,7 @@ export Au resolve(Length const& value, LengthContext auto const& ctx) {
 // 6.2. MARK: Absolute Lengths: the cm, mm, Q, in, pt, pc, px units
 // https://drafts.csswg.org/css-values/#absolute-lengths
 
-export struct AbsoluteLength : TypedUnitValue<NumericBaseType::LENGTH> {
+export struct AbsoluteLength : TypedUnitValue<Some(NumericBaseType::LENGTH)> {
     constexpr AbsoluteLength(Pixel px)
         : TypedUnitValue(UnitValue{px.value(), UnitValue::Unit::PX}) {}
 
@@ -115,7 +115,7 @@ export template <>
 struct ValueParser<AbsoluteLength> {
     static Res<AbsoluteLength> parse(Cursor<Css::Sst>& c) {
         auto save = c;
-        auto value = try$(parseUnitValue(c, NumericBaseType::LENGTH));
+        auto value = try$(parseUnitValue(c, Some(NumericBaseType::LENGTH)));
         if (not value.isAbsolute()) {
             c = save;
             return Error::invalidData("expected <absolute-length>");
@@ -129,11 +129,18 @@ struct ValueParser<AbsoluteLength> {
 namespace Vaev::Literals {
 
 export constexpr Pixel operator""_px(unsigned long long val) {
-    return Pixel{static_cast<f64>(val)};
+    return Pixel{static_cast<f32>(val)};
 }
 
 export constexpr Pixel operator""_px(long double val) {
-    return Pixel{static_cast<f64>(val)};
+    return Pixel{static_cast<f32>(val)};
 }
 
 } // namespace Vaev::Literals
+
+export template <>
+struct Karm::Io::Formatter<Vaev::Pixel> {
+    Res<> format(Io::TextWriter& writer, Vaev::Pixel value) {
+        return Io::format(writer, "{}px", value.value());
+    }
+};

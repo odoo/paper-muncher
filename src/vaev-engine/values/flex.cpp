@@ -19,7 +19,7 @@ namespace Vaev {
 // MARK: Flexible Length -------------------------------------------------------
 // https://drafts.csswg.org/css-grid/#typedef-flex
 
-export struct Flex : TypedUnitValue<NumericBaseType::FLEX> {
+export struct Flex : TypedUnitValue<Some(NumericBaseType::FLEX)> {
     using TypedUnitValue::TypedUnitValue;
 
     static constexpr Flex fromFr(f64 val) {

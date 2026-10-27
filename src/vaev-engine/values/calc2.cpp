@@ -37,9 +37,12 @@ struct NumericType {
         return _exponents[toUnderlyingType(baseType)] != 0;
     }
 
-    bool isBaseType(NumericBaseType baseType) const {
+    bool isBaseType(Opt<NumericBaseType> baseType) const {
+        if (not baseType)
+            return isEmpty();
+
         for (usize i = 0; i < toUnderlyingType(NumericBaseType::_LEN); i++) {
-            if (i == static_cast<usize>(toUnderlyingType(baseType))) {
+            if (i == static_cast<usize>(toUnderlyingType(*baseType))) {
                 if (_exponents[i] != 1)
                     return false;
             } else {
@@ -165,6 +168,10 @@ struct NumericType {
 
             return NONE;
         }
+
+        // NOTE: A <number> has no base type to return, callers must check isEmpty() first.
+        if (exponentLocation < 0)
+            return NONE;
 
         return Some(static_cast<NumericBaseType>(exponentLocation));
     }
@@ -540,7 +547,7 @@ Res<> serializeCalculationTree(Io::TextWriter& w, Calc const& root, bool stripPa
 }
 
 // https://drafts.csswg.org/css-values-4/#simplify-a-calculation-tree
-export Calc simplify(Calc const& calc, auto const& ctx) {
+export Calc simplify(Calc const& calc, auto const& ctx, Opt<UnitValue> percentBasis = NONE) {
     auto simplifyChild = [&](Calc const& child) -> Calc {
         return simplify(child, ctx);
     };
@@ -581,6 +588,15 @@ export Calc simplify(Calc const& calc, auto const& ctx) {
     return calc.visit(
         // 1. If root is a numeric value:
         [&](UnitValue const& numeric) -> Calc {
+            // 1. If root is a percentage that will be resolved against another value,
+            //    and there is enough information available to resolve it,
+            if (numeric.unit() == UnitValue::Unit::PERCENT and percentBasis)
+                // do so, and express the resulting numeric value in the appropriate canonical unit. Return the value.
+                return UnitValue{(numeric.value() * percentBasis->value()) / 100, percentBasis->unit()}.canonical(ctx);
+
+            // 2. If root is a dimension that is not expressed in its canonical unit,
+            //    and there is enough information available to convert it to the canonical unit, do so, and return the value.
+            // TODO: 3 & 4
             return numeric.canonical(ctx);
         },
         // 5. If root is a Min or Max node, attempt to partially simplify it:
@@ -794,28 +810,17 @@ export Calc simplify(Calc const& calc, auto const& ctx) {
                     return true;
                 };
 
-                auto fstAsUnit = simplifiedChildren[0].is<UnitValue>();
-                auto sndAsSum = simplifiedChildren[1].is<SumNode>();
+                // NOTE: We know it must happen in this order because children are sorted.
+                auto maybeNumber = simplifiedChildren[0].is<UnitValue>();
+                auto maybeSum = simplifiedChildren[1].is<SumNode>();
 
-                if (fstAsUnit and isNumber(*fstAsUnit) and sndAsSum and onlyNumericChildren(*sndAsSum)) {
-                    for (auto& child : sndAsSum->children) {
+                if (maybeNumber and isNumber(*maybeNumber) and maybeSum and onlyNumericChildren(*maybeSum)) {
+                    for (auto& child : maybeSum->children) {
                         auto numeric = *child.is<UnitValue>();
-                        numeric = UnitValue{numeric.value() * fstAsUnit->value(), numeric.unit()};
+                        child = UnitValue{numeric.value() * maybeNumber->value(), numeric.unit()};
                     }
 
-                    return std::move(*sndAsSum);
-                }
-
-                auto fstAsSum = simplifiedChildren[0].is<SumNode>();
-                auto sndAsUnit = simplifiedChildren[1].is<UnitValue>();
-
-                if (sndAsUnit and isNumber(*sndAsUnit) and fstAsSum and onlyNumericChildren(*fstAsSum)) {
-                    for (auto& child : fstAsSum->children) {
-                        auto numeric = *child.is<UnitValue>();
-                        numeric = UnitValue{numeric.value() * sndAsUnit->value(), numeric.unit()};
-                    }
-
-                    return std::move(*fstAsSum);
+                    return std::move(*maybeSum);
                 }
             }
 
@@ -824,31 +829,36 @@ export Calc simplify(Calc const& calc, auto const& ctx) {
             //    function can resolve to, return the result of multiplying all the values of the children (noting that the value of an Invert node is the
             //    reciprocal of its child’s value), expressed in the result’s canonical unit.
             bool containsOnlyCanonicalNumerics = true;
-            for (auto const& child : product.children) {
+            for (auto const& child : simplifiedChildren) {
                 if (auto numeric = child.is<UnitValue>(); numeric and numeric->isCanonical())
                     continue;
 
-                if (auto invert = child.is<InvertNode>(); invert and invert->child->is<UnitValue>())
+                if (auto invert = child.is<InvertNode>(); invert and invert->child->is<UnitValue>() and invert->child->is<UnitValue>()->isCanonical())
                     continue;
 
                 containsOnlyCanonicalNumerics = false;
                 break;
             }
 
-            auto resultBaseType = determineType(product)->matchesAnyMathFunction();
+            auto type = determineType(product);
+            Opt<UnitValue::Unit> resultUnit = NONE;
+            if (type and type->isEmpty())
+                resultUnit = Some(UnitValue::Unit::NONE);
+            else if (auto baseType = type ? type->matchesAnyMathFunction() : NONE)
+                resultUnit = Some(UnitValue::canonicalUnitOf(baseType));
 
-            if (containsOnlyCanonicalNumerics and resultBaseType) {
+            if (containsOnlyCanonicalNumerics and resultUnit) {
                 f64 accumulator = 1.0;
 
-                for (auto const& child : product.children) {
+                for (auto const& child : simplifiedChildren) {
                     if (auto numeric = child.is<UnitValue>()) {
                         accumulator *= numeric->value();
                     } else if (auto invert = child.is<InvertNode>()) {
-                        accumulator *= invert->child->is<UnitValue>()->value();
+                        accumulator /= invert->child->is<UnitValue>()->value();
                     }
                 }
 
-                return UnitValue{accumulator, UnitValue::canonicalUnitOf(resultBaseType)};
+                return UnitValue{accumulator, *resultUnit};
             }
 
             // 5. Return root.
@@ -857,45 +867,56 @@ export Calc simplify(Calc const& calc, auto const& ctx) {
     );
 }
 
-export template <NumericBaseType TYPE, AcceptsPercent WITH_PERCENT = AcceptsPercent::NO>
+export template <Opt<NumericBaseType> TYPE, AcceptsPercent WITH_PERCENT = AcceptsPercent::NO>
 struct TypedCalc {
-    Calc _inner;
+    static_assert(WITH_PERCENT == AcceptsPercent::NO or TYPE);
+
+    Calc _calc;
+
+    TypedCalc(Unchecked, Calc const& calc) : _calc(std::move(calc)) {}
+
+    static TypedCalc fromCanonical(f64 value) {
+        return {UNCHECKED, UnitValue{value, UnitValue::canonicalUnitOf(TYPE)}};
+    }
 
     Calc const& calcTree() const {
-        return _inner;
+        return _calc;
     }
 
     void repr(Io::Emit& e) const {
-        e("{}", _inner);
+        e("{}", _calc);
     }
 };
 
+// https://drafts.csswg.org/css-values-4/#numbers
+export using Number = TypedCalc<NONE>;
+
 // https://drafts.csswg.org/css-values-4/#lengths
-export using Length = TypedCalc<NumericBaseType::LENGTH>;
+export using Length = TypedCalc<Some(NumericBaseType::LENGTH)>;
 
 // https://drafts.csswg.org/css-values-4/#angles
-export using Angle = TypedCalc<NumericBaseType::ANGLE>;
+export using Angle = TypedCalc<Some(NumericBaseType::ANGLE)>;
 
 // https://drafts.csswg.org/css-values-4/#frequency
-export using Frequency = TypedCalc<NumericBaseType::FREQUENCY>;
+export using Frequency = TypedCalc<Some(NumericBaseType::FREQUENCY)>;
 
 // https://drafts.csswg.org/css-values-4/#resolution
-export using Resolution = TypedCalc<NumericBaseType::RESOLUTION>;
+export using Resolution = TypedCalc<Some(NumericBaseType::RESOLUTION)>;
 
 // https://drafts.csswg.org/css-values-4/#percentages
-export using Percentage = TypedCalc<NumericBaseType::PERCENT>;
+export using Percentage = TypedCalc<Some(NumericBaseType::PERCENT)>;
 
 // https://drafts.csswg.org/css-values-4/#mixed-percentages
-export using LengthPercentage = TypedCalc<NumericBaseType::LENGTH, AcceptsPercent::YES>;
-export using FrequencyPercentage = TypedCalc<NumericBaseType::FREQUENCY, AcceptsPercent::YES>;
-export using AnglePercentage = TypedCalc<NumericBaseType::ANGLE, AcceptsPercent::YES>;
-export using TimePercentage = TypedCalc<NumericBaseType::TIME, AcceptsPercent::YES>;
+export using LengthPercentage = TypedCalc<Some(NumericBaseType::LENGTH), AcceptsPercent::YES>;
+export using FrequencyPercentage = TypedCalc<Some(NumericBaseType::FREQUENCY), AcceptsPercent::YES>;
+export using AnglePercentage = TypedCalc<Some(NumericBaseType::ANGLE), AcceptsPercent::YES>;
+export using TimePercentage = TypedCalc<Some(NumericBaseType::TIME), AcceptsPercent::YES>;
 
 } // namespace Vaev::Ng
 
 namespace Vaev {
 
-template <NumericBaseType TYPE, AcceptsPercent WITH_PERCENT>
+template <Opt<NumericBaseType> TYPE, AcceptsPercent WITH_PERCENT>
 struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
     static Res<Ng::TypedCalc<TYPE, WITH_PERCENT>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
@@ -903,33 +924,38 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
 
         auto numeric = parseValue<TypedUnitValue<TYPE, WITH_PERCENT>>(c);
         if (numeric) {
-            return Ok(numeric.take().unitValue());
+            return Ok(Ng::TypedCalc<TYPE, WITH_PERCENT>{UNCHECKED, numeric.take().unitValue()});
         }
 
         if (c.peek() == Css::Sst::FUNC) {
-            auto calc = try$(parseMathFunction(c));
-
-            auto type = try$(Ng::determineType(calc));
-
-            logInfo("type: {}", type);
-
-            if (not type.isBaseType(TYPE) or (type.containsPercentage() and WITH_PERCENT == AcceptsPercent::NO))
-                return Error::invalidData("calc() type error");
-
-            return Ok(Ng::TypedCalc<TYPE, WITH_PERCENT>{
-                ._inner = std::move(calc),
-            });
+            auto save = c;
+            auto res = _parseTypedMathFunction(c);
+            if (not res)
+                c = save;
+            return res;
         }
 
         return Error::invalidData();
     }
 
-    static Res<Ng::Calc> parseMathFunction(Cursor<Css::Sst>& c) {
-        logInfo("ENTER MATH FN: {}", c);
-        auto _d = Defer([&]() {
-            logInfo("EXIT MATH FN: {}", c);
-        });
+    static Res<Ng::TypedCalc<TYPE, WITH_PERCENT>> _parseTypedMathFunction(Cursor<Css::Sst>& c) {
+        auto calc = try$(parseMathFunction(c));
 
+        auto type = Ng::determineType(calc);
+        if (not type)
+            return Error::invalidData("calc() type error");
+
+        // NOTE: A bare percentage in a <*-percentage> context resolves to the base type.
+        if (TYPE and type->contains(NumericBaseType::PERCENT) and WITH_PERCENT == AcceptsPercent::YES)
+            type->applyPercentHint(*TYPE);
+
+        if (not type->isBaseType(TYPE) or (type->containsPercentage() and WITH_PERCENT == AcceptsPercent::NO))
+            return Error::invalidData("calc() type error");
+
+        return Ok(Ng::TypedCalc<TYPE, WITH_PERCENT>{UNCHECKED, std::move(calc)});
+    }
+
+    static Res<Ng::Calc> parseMathFunction(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -977,11 +1003,6 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
 
     // <calc-sum> = <calc-product> [ [ '+' | '-' ] <calc-product> ]*
     static Res<Ng::Calc> parseCalcSum(Cursor<Css::Sst>& c) {
-        logInfo("ENTER SUM: {}", c);
-        auto _d = Defer([&]() {
-            logInfo("EXIT SUM: {}", c);
-        });
-
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -1017,11 +1038,6 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
 
     // <calc-product> = <calc-value> [ [ '*' | / ] <calc-value> ]*
     static Res<Ng::Calc> parseCalcProduct(Cursor<Css::Sst>& c) {
-        logInfo("ENTER PRODUCT: {}", c);
-        auto _d = Defer([&]() {
-            logInfo("EXIT PRODUCT: {}", c);
-        });
-
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -1058,11 +1074,6 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
     // <calc-value> = <number> | <dimension> | <percentage> |
     //           <calc-keyword> | ( <calc-sum> ) | <math-function>
     static Res<Ng::Calc> parseCalcValue(Cursor<Css::Sst>& c) {
-        logInfo("ENTER VALUE: {}", c);
-        auto _d = Defer([&]() {
-            logInfo("EXIT VALUE: {}", c);
-        });
-
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -1113,31 +1124,67 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
     }
 };
 
-template <NumericBaseType TYPE, AcceptsPercent WITH_PERCENT>
+template <Opt<NumericBaseType> TYPE, AcceptsPercent WITH_PERCENT>
 struct ValueSerializer<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
     static Res<> serialize(Io::TextWriter& w, Ng::TypedCalc<TYPE, WITH_PERCENT> const& value) {
-        return Ng::serializeMathFunction(w, value._inner);
+        return Ng::serializeMathFunction(w, value.calcTree());
     }
 };
 
-export template <typename T>
-struct LinearMixedPercentage {
-    T dimension;
-    f64 percentage;
+// FIXME: Make Pixel and Percentage backed by f32.
+export struct LinearPixelPercentage {
+    Pixel px;
+    Percentage percentage;
+
+    void repr(Io::Emit& e) const {
+        e("({} + {})", px, percentage);
+    }
 };
 
+export Number resolve(Ng::Number const& value) {
+    auto simplified = Ng::simplify(value.calcTree(), NONE);
 
-Pixel resolve(Ng::Length const& value, LengthContext auto const& ctx) {
-    auto simplified = Ng::simplify(value.calcTree(), ctx);
-
-    if (auto [canonical] = simplified.template is<UnitValue>()) {
-        return Pixel{canonical.value()};
+    if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::NONE) {
+        return n->value();
     } else {
-        panic("calc didn't simplify to a single value");
+        panic("calc didn't simplify to a single value of expected unit");
     }
 }
 
-Union<Pixel, LinearMixedPercentage<Pixel>, Ng::Calc> resolve(Ng::LengthPercentage const& value, LengthContext auto const& ctx) {
+export Percentage resolve(Ng::Percentage const& value) {
+    auto simplified = Ng::simplify(value.calcTree(), NONE);
+
+    if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PERCENT) {
+        return Percentage{n->value()};
+    } else {
+        panic("calc didn't simplify to a single value of expected unit");
+    }
+}
+
+export Number resolve(Ng::Percentage const& value, Number percentBasis) {
+    auto simplified = Ng::simplify(value.calcTree(), NONE, Some(UnitValue{percentBasis, UnitValue::Unit::NONE}));
+
+    if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::NONE) {
+        return n->value();
+    } else {
+        panic("calc didn't simplify to a single value of expected unit");
+    }
+}
+
+export using PixelPercentage = Union<Pixel, Percentage, LinearPixelPercentage, Box<Ng::Calc>>;
+
+export Pixel resolve(Ng::Length const& value, LengthContext auto const& ctx) {
+    auto simplified = Ng::simplify(value.calcTree(), ctx);
+
+    if (auto n = simplified.template is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
+        return Pixel{n->value()};
+    } else {
+        panic("calc didn't simplify to a single value of expected unit");
+    }
+}
+
+// https://drafts.csswg.org/css-values-4/#calc-computed-value
+export PixelPercentage resolve(Ng::LengthPercentage const& value, LengthContext auto const& ctx) {
     auto simplified = Ng::simplify(value.calcTree(), ctx);
 
     if (auto [numeric] = simplified.template is<UnitValue>()) {
@@ -1146,26 +1193,111 @@ Union<Pixel, LinearMixedPercentage<Pixel>, Ng::Calc> resolve(Ng::LengthPercentag
         }
 
         if (numeric.unit() == UnitValue::Unit::PERCENT) {
-            return LinearMixedPercentage{
-                .dimension = 0_px,
-                .percentage = numeric.value()
-            };
+            return Percentage{numeric.value()};
         }
     }
 
+    // NOTE: Children are sorted by simplification, so the percentage comes first.
     if (auto sum = simplified.template is<Ng::SumNode>(); sum and sum->children.len() == 2) {
         auto maybePercent = sum->children[0].template is<UnitValue>();
         auto maybePx = sum->children[1].template is<UnitValue>();
         if (maybePercent and maybePx and maybePercent->unit() == UnitValue::Unit::PERCENT and maybePx->unit() == UnitValue::Unit::PX) {
-            return LinearMixedPercentage {
-                .dimension = Pixel{maybePx->value()},
-                .percentage = maybePercent->value(),
-            };
+            return LinearPixelPercentage{Pixel{maybePx->value()}, Percentage{maybePercent->value()}};
         }
     }
 
-    return simplified;
+    return makeBox<Ng::Calc>(std::move(simplified));
 }
+
+export Ng::LengthPercentage toSpecified(PixelPercentage const& value) {
+    return value.visit(
+        [](Pixel const& px) -> Ng::LengthPercentage {
+            return Ng::LengthPercentage{UNCHECKED, UnitValue{px.value(), UnitValue::Unit::PX}};
+        },
+        [](Percentage const& percentage) -> Ng::LengthPercentage {
+            return Ng::LengthPercentage{UNCHECKED, UnitValue{percentage.value(), UnitValue::Unit::PERCENT}};
+        },
+        [](LinearPixelPercentage const& lin) -> Ng::LengthPercentage {
+            return Ng::LengthPercentage{
+                UNCHECKED,
+                Ng::SumNode{
+                    .children = {
+                        UnitValue{lin.px.value(), UnitValue::Unit::PX},
+                        UnitValue{lin.percentage.value(), UnitValue::Unit::PERCENT},
+                    },
+                }
+            };
+        },
+        [](Box<Ng::Calc> const& calc) -> Ng::LengthPercentage {
+            return Ng::LengthPercentage{UNCHECKED, *calc};
+        }
+    );
+}
+
+
+// https://www.w3.org/TR/css-values-4/#calc-computed-value
+export Au resolve(PixelPercentage const& value, Au relative) {
+    return value.visit(
+        [](Pixel const& px) {
+            return Au::fromFloatNearest(px.value());
+        },
+        [&](Percentage const& percentage) {
+            return Au::fromFloatNearest(relative.cast<f32>() * (percentage.value() / 100.));
+        },
+        [&](LinearPixelPercentage const& lin) {
+            return Au::fromFloatNearest(lin.px.value() + relative.cast<f32>() * (lin.percentage.value() / 100.));
+        },
+        [&](Box<Ng::Calc> const& calc) {
+            auto simplified = Ng::simplify(*calc, NONE, Some(UnitValue{relative.cast<f64>(), UnitValue::Unit::PX}));
+
+
+            if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
+                return Au{n->value()};
+            } else {
+                panic("calc didn't simplify to a single value of expected unit");
+            }
+        }
+    );
+}
+
+export Opt<Au> resolve(PixelPercentage const& value, Opt<Au> relative) {
+    return value.visit(
+        [](Pixel const& px) {
+            return Some(Au::fromFloatNearest(px.value()));
+        },
+        [&](Percentage const& percentage) -> Opt<Au> {
+            if (auto const [r] = relative)
+                return Some(Au::fromFloatNearest(r.cast<f32>() * (percentage.value() / 100.)));
+
+            return NONE;
+        },
+        [&](LinearPixelPercentage const& lin) -> Opt<Au> {
+            if (auto const [r] = relative)
+                return Some(Au::fromFloatNearest(lin.px.value() + r.cast<f32>() * (lin.percentage.value() / 100.)));
+
+            return NONE;
+        },
+        [&](Box<Ng::Calc> const& calc) -> Opt<Au> {
+            auto percentBasis = relative.map([](Au r) {
+                return UnitValue{r.cast<f64>(), UnitValue::Unit::PX};
+            });
+
+            auto simplified = Ng::simplify(*calc, NONE, percentBasis);
+
+            if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
+                return Some(Au{n->value()});
+            } else {
+                return NONE;
+            }
+        }
+    );
+}
+
+// HACK: Temporary workaround while layout can't tell definite percentages apart.
+// export bool isPurePercentage(ComputedLengthPercentage const& value) {
+//     auto mixed = value.is<MixedDimension>();
+//     return mixed and mixed->dimension == 0_px;
+// }
 
 struct Lab {
     Lab() {
@@ -1190,7 +1322,5 @@ struct Lab {
         dump(computed);
     }
 };
-
-static Lab _lab{};
 
 } // namespace Vaev
