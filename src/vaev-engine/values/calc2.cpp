@@ -13,6 +13,7 @@ import :values.unitValue;
 import :values.length;
 import :values.percent;
 import :values.angle;
+import :values.keywords;
 
 using namespace Karm;
 using namespace Vaev::Literals;
@@ -195,10 +196,15 @@ export struct NegateNode;
 export struct InvertNode;
 export struct SumNode;
 export struct ProductNode;
-export struct MinNode;
-export struct MaxNode;
+export struct FnNode;
 
-using Calc = Union<UnitValue, NegateNode, InvertNode, SumNode, ProductNode, MinNode, MaxNode>;
+using Calc = Union<
+    UnitValue,
+    NegateNode,
+    InvertNode,
+    SumNode,
+    ProductNode,
+    FnNode>;
 
 struct NegateNode {
     Box<Calc> child;
@@ -232,46 +238,221 @@ struct ProductNode {
     }
 };
 
-struct MinNode {
+struct FnNode {
+    enum struct Name {
+        MIN,
+        MAX,
+        CLAMP,
+        SIN,
+        COS,
+        TAN,
+        ASIN,
+        ACOS,
+        ATAN,
+        ATAN2,
+        POW,
+        SQRT,
+        HYPOT,
+        LOG,
+        EXP,
+        _LEN,
+    };
+
+    Name name;
     Vec<Calc> children;
 
+    FnNode(Unchecked, Name name, Vec<Calc> children) : name(name), children(std::move(children)) {}
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-min
+    static FnNode min(Vec<Calc> children) {
+        return {UNCHECKED, Name::MIN, std::move(children)};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-max
+    static FnNode max(Vec<Calc> children) {
+        return {UNCHECKED, Name::MAX, std::move(children)};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-clamp
+    static FnNode clamp(Calc min, Calc val, Calc max) {
+        return {UNCHECKED, Name::CLAMP, {std::move(min), std::move(val), std::move(max)}};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-sin
+    static FnNode sin(Calc a) {
+        return {UNCHECKED, Name::SIN, {std::move(a)}};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-cos
+    static FnNode cos(Calc a) {
+        return {UNCHECKED, Name::COS, {std::move(a)}};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-tan
+    static FnNode tan(Calc a) {
+        return {UNCHECKED, Name::TAN, {std::move(a)}};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-asin
+    static FnNode asin(Calc a) {
+        return {UNCHECKED, Name::ASIN, {std::move(a)}};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-acos
+    static FnNode acos(Calc a) {
+        return {UNCHECKED, Name::ACOS, {std::move(a)}};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-atan
+    static FnNode atan(Calc a) {
+        return {UNCHECKED, Name::ATAN, {std::move(a)}};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-atan2
+    static FnNode atan2(Calc a, Calc b) {
+        return {UNCHECKED, Name::ATAN2, {std::move(a), std::move(b)}};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-pow
+    static FnNode pow(Calc a, Calc b) {
+        return {UNCHECKED, Name::POW, {std::move(a), std::move(b)}};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-sqrt
+    static FnNode sqrt(Calc a) {
+        return {UNCHECKED, Name::SQRT, {std::move(a)}};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-hypot
+    static FnNode hypot(Vec<Calc> children) {
+        return {UNCHECKED, Name::HYPOT, std::move(children)};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-log
+    static FnNode log(Calc a, Opt<Calc> b) {
+        if (b) {
+            return {UNCHECKED, Name::LOG, {std::move(a), b.take()}};
+        }
+
+        return {UNCHECKED, Name::LOG, {std::move(a)}};
+    }
+
+    // https://drafts.csswg.org/css-values-4/#funcdef-exp
+    static FnNode exp(Calc a) {
+        return {UNCHECKED, Name::EXP, {std::move(a)}};
+    }
+
+    Opt<UnitValue::Unit> canonicalUnit() const {
+        switch (name) {
+        case Name::MIN:
+        case Name::MAX:
+        case Name::CLAMP:
+        case Name::HYPOT:
+            return NONE;
+
+        case Name::ASIN:
+        case Name::ACOS:
+        case Name::ATAN:
+        case Name::ATAN2:
+            return Some(UnitValue::Unit::RAD);
+
+        case Name::SIN:
+        case Name::COS:
+        case Name::TAN:
+        case Name::POW:
+        case Name::SQRT:
+        case Name::LOG:
+        case Name::EXP:
+            return Some(UnitValue::Unit::NONE);
+        case Name::_LEN:
+            unreachable();
+        }
+    }
+
     void repr(Io::Emit& e) const {
-        e("(MIN {})", children);
+        e("({} {})", name, children);
     }
 };
 
-struct MaxNode {
-    Vec<Calc> children;
+f64 apply(FnNode::Name name, usize count, auto get) {
+    using enum FnNode::Name;
 
-    void repr(Io::Emit& e) const {
-        e("(MAX {})", children);
+    switch (name) {
+    case MIN: {
+        f64 res = get(0);
+        for (usize i = 1; i < count; i++)
+            res = Karm::min(res, get(i));
+        return res;
     }
-};
+    case MAX: {
+        f64 res = get(0);
+        for (usize i = 1; i < count; i++)
+            res = Karm::max(res, get(i));
+        return res;
+    }
+    case CLAMP:
+        return Karm::clamp(get(1), get(0), get(2));
+    case SIN:
+        return Math::sin(get(0) * Math::DEG2RAD);
+    case COS:
+        return Math::cos(get(0) * Math::DEG2RAD);
+    case TAN:
+        return Math::tan(get(0) * Math::DEG2RAD);
+    case ASIN:
+        return Math::asin(get(0)) * Math::RAD2DEG;
+    case ACOS:
+        return Math::acos(get(0)) * Math::RAD2DEG;
+    case ATAN:
+        return Math::atan(get(0)) * Math::RAD2DEG;
+    case ATAN2:
+        return Math::atan2(get(0), get(0)) * Math::RAD2DEG;
+    case POW:
+        return Math::pow(get(0), get(1));
+    case SQRT:
+        return Math::sqrt(get(0));
+    case HYPOT: {
+        f64 res = get(0);
+        for (usize i = 1; i < count; i++)
+            res = Math::hypot(res, get(i));
+        return res;
+    }
+    case LOG: {
+        f64 res = Math::log(get(0));
+        if (count > 1)
+            res /= Math::log(get(1));
+        return res;
+    }
+    case EXP:
+        return Math::exp(get(0));
+    case _LEN:
+        unreachable();
+    }
+}
 
-// https://drafts.csswg.org/css-values-4/#determine-the-type-of-a-calculation
-export Opt<NumericType> determineType(Calc const& calc) {
-    auto addTypes = [](Slice<Calc> calculations) -> Opt<NumericType> {
+// https://drafts.csswg.org/css-values-4/#calc-type-checking
+export Opt<NumericType> determineType(Calc const& calc, Opt<NumericBaseType> mainType) {
+    auto addTypes = [&](Slice<Calc> calculations) -> Opt<NumericType> {
         Opt<NumericType> type = NONE;
 
         for (auto const& calculation : calculations) {
             if (not type) {
-                type = Some(try$(determineType(calculation)));
+                type = Some(try$(determineType(calculation, mainType)));
             } else {
-                type = type->add(try$(determineType(calculation)));
+                type = type->add(try$(determineType(calculation, mainType)));
             }
         }
 
         return type;
     };
 
-    auto multiplyTypes = [](Slice<Calc> calculations) -> Opt<NumericType> {
+    auto multiplyTypes = [&](Slice<Calc> calculations) -> Opt<NumericType> {
         Opt<NumericType> type = NONE;
 
         for (auto const& calculation : calculations) {
             if (not type) {
-                type = Some(try$(determineType(calculation)));
+                type = Some(try$(determineType(calculation, mainType)));
             } else {
-                type = type->multiply(try$(determineType(calculation)));
+                type = type->multiply(try$(determineType(calculation, mainType)));
             }
         }
 
@@ -281,29 +462,127 @@ export Opt<NumericType> determineType(Calc const& calc) {
     return calc.visit(
         [&](UnitValue const& value) -> Opt<NumericType> {
             if (auto const& [baseType] = value.baseType()) {
-                return Some(NumericType::simple(baseType));
+                Opt<NumericBaseType> percentHint = NONE;
+
+                // -> <percentage>
+                // If, in the context in which the math function containing this calculation is placed,
+                // <percentage>s are resolved relative to another type of value (such as in width,
+                // where <percentage> is resolved against a <length>), and that other type is not <number>,
+                // the type is determined as the other type, but with a percent hint set to that other type.
+                // Otherwise, the type is «[ "percent" → 1 ]», with a percent hint of "percent".
+                if (baseType == NumericBaseType::PERCENT)
+                    percentHint = mainType;
+
+                return Some(NumericType::simple(baseType, percentHint));
             } else {
                 return Some(NumericType{});
             }
         },
-        [&](NegateNode const& negate) -> Opt<NumericType> {
-            return determineType(*negate.child);
-        },
-        [&](InvertNode const& invert) -> Opt<NumericType> {
-            auto childType = try$(determineType(*invert.child));
-            return Some(childType.invert());
-        },
+
+        // - At a + or - sub-expression, attempt to add the types of the left and right arguments.
+        //   If this returns failure, the entire calculation’s type is failure.
+        //   Otherwise, the sub-expression’s type is the returned type.
         [&](SumNode const& sum) {
             return addTypes(sum.children);
         },
+        [&](NegateNode const& negate) -> Opt<NumericType> {
+            return determineType(*negate.child, mainType);
+        },
+
+        // - At a * sub-expression, multiply the types of the left and right arguments.
+        //   The sub-expression’s type is the returned result.
         [&](ProductNode const& product) {
             return multiplyTypes(product.children);
         },
-        [&](MinNode const& min) {
-            return addTypes(min.children);
+
+        // - At a / sub-expression, let left type be the result of finding the types of its left argument,
+        //   and right type be the result of finding the types of its right argument and then inverting it.
+        //
+        //   The sub-expression’s type is the result of multiplying the left type and right type.
+        [&](InvertNode const& invert) -> Opt<NumericType> {
+            auto childType = try$(determineType(*invert.child, mainType));
+            return Some(childType.invert());
         },
-        [&](MaxNode const& max) {
-            return addTypes(max.children);
+
+        // Math functions themselves have types, according to their contained calculations:
+        [&](FnNode const& f) -> Opt<NumericType> {
+            switch (f.name) {
+            // calc(), abs()
+            // The type of its contained calculation.
+
+            // min(), max(), clamp(), hypot(), round(), mod(), rem()
+            // The result of adding the types of its comma-separated calculations.
+            case FnNode::Name::MIN:
+            case FnNode::Name::MAX:
+            case FnNode::Name::CLAMP:
+            case FnNode::Name::HYPOT: {
+                // https://drafts.csswg.org/css-values-4/#comp-func
+                // https://drafts.csswg.org/css-values-4/#exponent-funcs
+                // The argument calculations can resolve to any <number>, <dimension>, or <percentage>,
+                // but must have a consistent type or else the function is invalid;
+                return addTypes(f.children);
+            }
+
+            // asin(), acos(), atan(), atan2()
+            // «[ "angle" → 1 ]».
+            case FnNode::Name::ASIN:
+            case FnNode::Name::ACOS:
+            case FnNode::Name::ATAN: {
+                // https://drafts.csswg.org/css-values-4/#trig-funcs
+                // The asin(A), acos(A), and atan(A) functions are the "arc" or "inverse"
+                // trigonometric functions, representing the inverse function to their
+                // corresponding "normal" trig functions. All of them contain a single
+                // calculation which must resolve to a <number>
+                for (auto const& child : f.children) {
+                    if (not try$(determineType(child, mainType)).isBaseType(NONE))
+                        return NONE;
+                }
+
+                return Some(NumericType::simple(NumericBaseType::ANGLE));
+            }
+            case FnNode::Name::ATAN2: {
+                // https://drafts.csswg.org/css-values-4/#trig-funcs
+                // The atan2(A, B) function contains two comma-separated calculations,
+                // A and B. A and B can resolve to any <number>, <dimension>, or <percentage>,
+                // but must have a consistent type or else the function is invalid
+                try$(addTypes(f.children));
+                return Some(NumericType::simple(NumericBaseType::ANGLE));
+            }
+            // TODO: sign()
+            // sign(), sin(), cos(), tan(), pow(), sqrt(), log(), exp()
+            // «[ ]» (empty map).
+            case FnNode::Name::SIN:
+            case FnNode::Name::COS:
+            case FnNode::Name::TAN: {
+                // https://drafts.csswg.org/css-values-4/#trig-funcs
+                // The sin(A), cos(A), and tan(A) functions all contain a single calculation
+                // which must resolve to either a <number> or an <angle>
+                auto childType = try$(determineType(f.children[0], mainType));
+
+                if (not (childType.isBaseType(NONE) or childType.isBaseType(Some(NumericBaseType::ANGLE))))
+                    return NONE;
+
+                return Some(NumericType{});
+            }
+            case FnNode::Name::POW:
+            case FnNode::Name::SQRT:
+            case FnNode::Name::LOG:
+            case FnNode::Name::EXP: {
+                // https://drafts.csswg.org/css-values-4/#exponent-funcs
+                // The pow(A, B) function contains two comma-separated calculations A and B, both of which must resolve to <number>s
+                // The sqrt(A) function contains a single calculation which must resolve to a <number>
+                // The log(A, B?) function contains one or two calculations, which must resolve to <number>s
+                // The exp(A) function contains one calculation which must resolve to a <number>
+                for (auto const& child : f.children) {
+                    if (not try$(determineType(child, mainType)).isBaseType(NONE))
+                        return NONE;
+                }
+
+                return Some(NumericType{});
+            }
+            case FnNode::Name::_LEN:
+                unreachable();
+            }
         }
     );
 }
@@ -354,27 +633,12 @@ export Res<> serializeMathFunction(Io::TextWriter& w, Calc const& root) {
     //    remove those characters from the result. Concatenate all of the results using ", " (comma followed by space),
     //    then append the result to s.
     try$(root.visit(
-        [&](MinNode const& min) -> Res<> {
-            try$(w.writeStr("min("s));
+        [&](FnNode const& f) -> Res<> {
+            try$(serializeValue(w, f.name));
+            try$(w.writeRune('('));
 
             bool first = true;
-            for (auto const& child : min.children) {
-                if (first) {
-                    first = false;
-                } else {
-                    try$(w.writeStr(", "s));
-                }
-
-                try$(serializeCalculationTree(w, child, true));
-            }
-
-            return Ok();
-        },
-        [&](MaxNode const& max) -> Res<> {
-            try$(w.writeStr("max("s));
-
-            bool first = true;
-            for (auto const& child : max.children) {
+            for (auto const& child : f.children) {
                 if (first) {
                     first = false;
                 } else {
@@ -547,16 +811,16 @@ Res<> serializeCalculationTree(Io::TextWriter& w, Calc const& root, bool stripPa
 }
 
 // https://drafts.csswg.org/css-values-4/#simplify-a-calculation-tree
-export Calc simplify(Calc const& calc, auto const& ctx, Opt<UnitValue> percentBasis = NONE) {
+export Calc simplify(Calc const& calc, auto const& ctx, Opt<NumericBaseType> mainType, Opt<f64> canonicalPercentBasis = NONE) {
     auto simplifyChild = [&](Calc const& child) -> Calc {
-        return simplify(child, ctx);
+        return simplify(child, ctx, mainType, canonicalPercentBasis);
     };
 
     auto simplifyChildren = [&](Slice<Calc> children) -> Vec<Calc> {
         auto simplified = Vec<Calc>{children.len()};
 
         for (auto const& child : children) {
-            simplified.emplaceBack(simplify(child, ctx));
+            simplified.emplaceBack(simplify(child, ctx, mainType, canonicalPercentBasis));
         }
 
         return simplified;
@@ -590,74 +854,47 @@ export Calc simplify(Calc const& calc, auto const& ctx, Opt<UnitValue> percentBa
         [&](UnitValue const& numeric) -> Calc {
             // 1. If root is a percentage that will be resolved against another value,
             //    and there is enough information available to resolve it,
-            if (numeric.unit() == UnitValue::Unit::PERCENT and percentBasis)
+            if (numeric.unit() == UnitValue::Unit::PERCENT and canonicalPercentBasis)
                 // do so, and express the resulting numeric value in the appropriate canonical unit. Return the value.
-                return UnitValue{(numeric.value() * percentBasis->value()) / 100, percentBasis->unit()}.canonical(ctx);
+                return UnitValue{(numeric.value() * canonicalPercentBasis.expect()) / 100, UnitValue::canonicalUnitOf(mainType)};
 
             // 2. If root is a dimension that is not expressed in its canonical unit,
             //    and there is enough information available to convert it to the canonical unit, do so, and return the value.
             // TODO: 3 & 4
             return numeric.canonical(ctx);
         },
+        // 4. If root is an operator node that’s not one of the calc-operator nodes, and all of its calculation children
+        //    are numeric values with enough information to compute the operation root represents, return the result of
+        //    running root’s operation using its children, expressed in the result’s canonical unit.
+        [&](FnNode const& f) -> Calc {
+            auto simplifiedChildren = simplifyChildren(f.children);
+
+            for (auto const& simplifiedChild : simplifiedChildren) {
+                if (auto [numeric] = simplifiedChild.template is<UnitValue>()) {
+                    // If a percentage is left at this point, it will usually block simplification of the node,
+                    // since it needs to be resolved against another value using information not currently available.
+                    // (Otherwise, it would have been converted to a different value in an earlier step.) This includes operations such as "min",
+                    // since percentages might resolve against a negative basis, and thus end up with an opposite comparative relationship than
+                    // the raw percentage value would seem to indicate.
+                    if (numeric.unit() == UnitValue::Unit::PERCENT and not(mainType and mainType.expect() == NumericBaseType::PERCENT))
+                        return FnNode{UNCHECKED, f.name, std::move(simplifiedChildren)};
+                } else {
+                    return FnNode{UNCHECKED, f.name, std::move(simplifiedChildren)};
+                }
+            }
+
+            auto result = apply(f.name, simplifiedChildren.len(), [&](usize i) {
+                return simplifiedChildren[i].template expect<UnitValue>().value();
+            });
+
+            if (auto const& [unit] = f.canonicalUnit())
+                return UnitValue{result, unit};
+
+            return UnitValue{result, simplifiedChildren[0].template expect<UnitValue>().unit()};
+        },
         // 5. If root is a Min or Max node, attempt to partially simplify it:
-        [&](MinNode const& min) -> Calc {
-            auto simplifiedChildren = simplifyChildren(min.children);
+        // NOSPEC: We simplified min/max like any other math function in the previous step.
 
-            // 1. For each node child of root’s children:
-            //   If child is a numeric value with enough information to compare magnitudes
-            //   with another child of the same unit (see note in previous step),
-            //   and there are other children of root that are numeric values with the same unit,
-            //   combine all such children with the appropriate operator per root, and replace child with the result,
-            //   removing all other child nodes involved.
-            // NOSPEC: Chrome doesn't fold out of order childrens, so we don't do it too to stay O(n).
-            foldNumericSiblings(
-                simplifiedChildren,
-                [](UnitValue::Unit unit) {
-                    return unit != UnitValue::Unit::PERCENT;
-                },
-                [](f64 a, f64 b) -> f64 {
-                    return Karm::min(a, b);
-                }
-            );
-
-            // 2. If root has only one child,
-            if (simplifiedChildren.len() == 1) {
-                // return the child.
-                return std::move(simplifiedChildren[0]);
-            }
-
-            // Otherwise, return root.
-            return MinNode{std::move(simplifiedChildren)};
-        },
-        [&](MaxNode const& max) -> Calc {
-            auto simplifiedChildren = simplifyChildren(max.children);
-
-            // 1. For each node child of root’s children:
-            //   If child is a numeric value with enough information to compare magnitudes
-            //   with another child of the same unit (see note in previous step),
-            //   and there are other children of root that are numeric values with the same unit,
-            //   combine all such children with the appropriate operator per root, and replace child with the result,
-            //   removing all other child nodes involved.
-            // NOSPEC: Chrome doesn't fold out of order childrens, so we don't do it too to stay O(n).
-            foldNumericSiblings(
-                simplifiedChildren,
-                [](UnitValue::Unit unit) {
-                    return unit != UnitValue::Unit::PERCENT;
-                },
-                [](f64 a, f64 b) -> f64 {
-                    return Karm::max(a, b);
-                }
-            );
-
-            // 2. If root has only one child,
-            if (simplifiedChildren.len() == 1) {
-                // return the child.
-                return std::move(simplifiedChildren[0]);
-            }
-
-            // Otherwise, return root.
-            return MaxNode{std::move(simplifiedChildren)};
-        },
         // 6. If root is a Negate node:
         [&](NegateNode const& negate) -> Calc {
             auto simplifiedChild = simplifyChild(*negate.child);
@@ -840,7 +1077,7 @@ export Calc simplify(Calc const& calc, auto const& ctx, Opt<UnitValue> percentBa
                 break;
             }
 
-            auto type = determineType(product);
+            auto type = determineType(product, mainType);
             Opt<UnitValue::Unit> resultUnit = NONE;
             if (type and type->isEmpty())
                 resultUnit = Some(UnitValue::Unit::NONE);
@@ -916,6 +1153,10 @@ export using TimePercentage = TypedCalc<Some(NumericBaseType::TIME), AcceptsPerc
 
 namespace Vaev {
 
+template <>
+struct ValueParser<Ng::Calc> {
+};
+
 template <Opt<NumericBaseType> TYPE, AcceptsPercent WITH_PERCENT>
 struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
     static Res<Ng::TypedCalc<TYPE, WITH_PERCENT>> parse(Cursor<Css::Sst>& c) {
@@ -930,6 +1171,7 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
         if (c.peek() == Css::Sst::FUNC) {
             auto save = c;
             auto res = _parseTypedMathFunction(c);
+
             if (not res)
                 c = save;
             return res;
@@ -938,10 +1180,11 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
         return Error::invalidData();
     }
 
+    // https://drafts.csswg.org/css-values-4/#calc-syntax
     static Res<Ng::TypedCalc<TYPE, WITH_PERCENT>> _parseTypedMathFunction(Cursor<Css::Sst>& c) {
         auto calc = try$(parseMathFunction(c));
 
-        auto type = Ng::determineType(calc);
+        auto type = Ng::determineType(calc, TYPE);
         if (not type)
             return Error::invalidData("calc() type error");
 
@@ -955,50 +1198,194 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
         return Ok(Ng::TypedCalc<TYPE, WITH_PERCENT>{UNCHECKED, std::move(calc)});
     }
 
+    struct ParamParser {
+        Cursor<Css::Sst> _c;
+
+        bool _isFirst = true;
+
+        auto _maybeParseNext(auto f) -> Opt<decltype(f())> {
+            eatWhitespace(_c);
+
+            if (not _isFirst) {
+                if (not _c.skip(Css::Token::COMMA))
+                    return NONE;
+                eatWhitespace(_c);
+            } else {
+                _isFirst = false;
+            }
+
+            return Some(f());
+        }
+
+        Opt<Res<Ng::Calc>> maybeParseNextSum() {
+            return _maybeParseNext([&] {
+                return parseCalcSum(_c);
+            });
+        }
+
+        Res<Ng::Calc> parseNextSum() {
+            auto next = maybeParseNextSum();
+            if (not next)
+                return Error::invalidData("missing comma in math function");
+            return next.take();
+        }
+
+        Res<> endedOrErr() {
+            eatWhitespace(_c);
+            if (not _c.ended())
+                return Error::invalidData("unexpected tokens");
+
+            return Ok();
+        }
+
+        Res<Opt<Ng::Calc>> parseNextSumOrNone() {
+            auto next = _maybeParseNext([&] -> Res<Opt<Ng::Calc>> {
+                if (parseValue<Keywords::None>(_c))
+                    return Ok(NONE);
+                return Ok(Some(try$(parseCalcSum(_c))));
+            });
+            if (not next)
+                return Error::invalidData("missing comma in math function");
+            return next.take();
+        }
+
+        Res<Vec<Ng::Calc>> parseOneOrMoreSums() {
+            auto calcs = Vec<Ng::Calc>{};
+
+            while (true) {
+                auto maybeNext = maybeParseNextSum();
+
+                if (not maybeNext) {
+                    break;
+                }
+
+                calcs.pushBack(try$(maybeNext.take()));
+            }
+
+            if (isEmpty(calcs))
+                return Error::invalidData("expected one or more parameters in math function");
+
+            return Ok(std::move(calcs));
+        }
+    };
+
     static Res<Ng::Calc> parseMathFunction(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        auto const& prefix = c.peek().prefix;
-        auto prefixToken = prefix.expect()->token;
-
-        // <calc()>  = calc( <calc-sum> )
-        if (prefixToken.data == "calc(") {
-            Cursor<Css::Sst> content = c.peek().content;
-            auto root = try$(parseCalcSum(content));
-            c.next();
-            return Ok(root);
-        }
-
-        // <min()>   = min( <calc-sum># )
-        // <max()>   = max( <calc-sum># )
-        if (prefixToken.data == "min(" or prefixToken.data == "max(") {
-            Cursor<Css::Sst> content = c.peek().content;
-
-            Vec<Ng::Calc> children;
-
-            children.pushBack(try$(parseCalcSum(content)));
-
-            eatWhitespace(content);
-
-            while (not content.ended()) {
-                if (not content.skip(Css::Token::COMMA))
-                    return Error::invalidData("unexpected token inside math function");
-
-                eatWhitespace(content);
-                children.pushBack(try$(parseCalcSum(content)));
-                eatWhitespace(content);
+        auto const parseFn = [](Str prefix, ParamParser& params) -> Res<Ng::Calc> {
+            // <calc()>  = calc( <calc-sum> )
+            if (prefix == "calc(") {
+                return Ok(std::move(try$(params.parseNextSum())));
             }
 
-            c.next();
+            // <min()>   = min( <calc-sum># )
+            if (prefix == "min(") {
+                return Ok(Ng::FnNode::min(try$(params.parseOneOrMoreSums())));
+            }
 
-            if (prefixToken.data == "min(")
-                return Ok(Ng::MinNode{std::move(children)});
-            else
-                return Ok(Ng::MaxNode{std::move(children)});
-        }
+            // <max()>   = max( <calc-sum># )
+            if (prefix == "max(") {
+                return Ok(Ng::FnNode::max(try$(params.parseOneOrMoreSums())));
+            }
 
-        return Error::notImplemented("math function not implemented");
+            // <clamp()> = clamp( [ <calc-sum> | none ], <calc-sum>, [ <calc-sum> | none ] )
+            if (prefix == "clamp(") {
+                auto min = try$(params.parseNextSumOrNone());
+                auto val = try$(params.parseNextSum());
+                auto max = try$(params.parseNextSumOrNone());
+
+                if (min and max)
+                    return Ok(Ng::FnNode::clamp(min.take(), std::move(val), max.take()));
+
+                // clamp(MIN, VAL, none) is equivalent to max(MIN, VAL)
+                if (min and not max)
+                    return Ok(Ng::FnNode::max({min.take(), std::move(val)}));
+
+                // clamp(none, VAL, MAX) is equivalent to min(VAL, MAX)
+                if (not min and max)
+                    return Ok(Ng::FnNode::min({std::move(val), max.take()}));
+
+                // clamp(none, VAL, none) is equivalent to just calc(VAL)
+                return Ok(std::move(val));
+            }
+
+            // <sin()>   = sin( <calc-sum> )
+            if (prefix == "sin(") {
+                return Ok(Ng::FnNode::sin(try$(params.parseNextSum())));
+            }
+
+            // <cos()>   = cos( <calc-sum> )
+            if (prefix == "cos(") {
+                return Ok(Ng::FnNode::cos(try$(params.parseNextSum())));
+            }
+
+            // <tan()>   = tan( <calc-sum> )
+            if (prefix == "tan(") {
+                return Ok(Ng::FnNode::tan(try$(params.parseNextSum())));
+            }
+
+            // <asin()>  = asin( <calc-sum> )
+            if (prefix == "asin(") {
+                return Ok(Ng::FnNode::asin(try$(params.parseNextSum())));
+            }
+
+            // <acos()>  = acos( <calc-sum> )
+            if (prefix == "acos(") {
+                return Ok(Ng::FnNode::acos(try$(params.parseNextSum())));
+            }
+
+            // <atan()>  = atan( <calc-sum> )
+            if (prefix == "atan(") {
+                return Ok(Ng::FnNode::atan(try$(params.parseNextSum())));
+            }
+
+            // <atan2()> = atan2( <calc-sum>, <calc-sum> )
+            if (prefix == "atan2(") {
+                auto a = try$(params.parseNextSum());
+                auto b = try$(params.parseNextSum());
+
+                return Ok(Ng::FnNode::atan2(std::move(a), std::move(b)));
+            }
+
+            // <pow()>   = pow( <calc-sum>, <calc-sum> )
+            if (prefix == "pow(") {
+                auto a = try$(params.parseNextSum());
+                auto b = try$(params.parseNextSum());
+
+                return Ok(Ng::FnNode::pow(std::move(a), std::move(b)));
+            }
+
+            // <sqrt()>  = sqrt( <calc-sum> )
+            if (prefix == "sqrt(") {
+                return Ok(Ng::FnNode::sqrt(try$(params.parseNextSum())));
+            }
+
+            // <hypot()> = hypot( <calc-sum># )
+            if (prefix == "hypot(") {
+                return Ok(Ng::FnNode::hypot(try$(params.parseOneOrMoreSums())));
+            }
+
+            // <log()>   = log( <calc-sum>, <calc-sum>? )
+            if (prefix == "log(") {
+                auto a = try$(params.parseNextSum());
+                if (auto b = params.maybeParseNextSum())
+                    return Ok(Ng::FnNode::log(std::move(a), Some(try$(b.take()))));
+
+                return Ok(Ng::FnNode::log(std::move(a), NONE));
+            }
+
+            return Error::invalidData("unknown math function");
+        };
+
+        if (c.peek() != Css::Sst::FUNC)
+            return Error::invalidData("expected function");
+
+        auto params = ParamParser{c.peek().content};
+        auto fn = try$(parseFn(c.peek().prefix.expect()->token.data, params));
+        try$(params.endedOrErr());
+        c.next();
+        return Ok(std::move(fn));
     }
 
     // <calc-sum> = <calc-product> [ [ '+' | '-' ] <calc-product> ]*
@@ -1142,7 +1529,7 @@ export struct LinearPixelPercentage {
 };
 
 export Number resolve(Ng::Number const& value) {
-    auto simplified = Ng::simplify(value.calcTree(), NONE);
+    auto simplified = Ng::simplify(value.calcTree(), NONE, NONE);
 
     if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::NONE) {
         return n->value();
@@ -1152,7 +1539,12 @@ export Number resolve(Ng::Number const& value) {
 }
 
 export Percentage resolve(Ng::Percentage const& value) {
-    auto simplified = Ng::simplify(value.calcTree(), NONE);
+    auto simplified = Ng::simplify(
+        value.calcTree(),
+        NONE,
+        Some(NumericBaseType::PERCENT),
+        NONE
+    );
 
     if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PERCENT) {
         return Percentage{n->value()};
@@ -1161,8 +1553,13 @@ export Percentage resolve(Ng::Percentage const& value) {
     }
 }
 
-export Number resolve(Ng::Percentage const& value, Number percentBasis) {
-    auto simplified = Ng::simplify(value.calcTree(), NONE, Some(UnitValue{percentBasis, UnitValue::Unit::NONE}));
+export Number resolve(Ng::Percentage const& value, f64 percentBasis) {
+    auto simplified = Ng::simplify(
+        value.calcTree(),
+        NONE,
+        Some(NumericBaseType::PERCENT),
+        Some(percentBasis)
+    );
 
     if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::NONE) {
         return n->value();
@@ -1174,7 +1571,12 @@ export Number resolve(Ng::Percentage const& value, Number percentBasis) {
 export using PixelPercentage = Union<Pixel, Percentage, LinearPixelPercentage, Box<Ng::Calc>>;
 
 export Pixel resolve(Ng::Length const& value, LengthContext auto const& ctx) {
-    auto simplified = Ng::simplify(value.calcTree(), ctx);
+    auto simplified = Ng::simplify(
+        value.calcTree(),
+        ctx,
+        Some(NumericBaseType::LENGTH),
+        NONE
+    );
 
     if (auto n = simplified.template is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
         return Pixel{n->value()};
@@ -1185,7 +1587,12 @@ export Pixel resolve(Ng::Length const& value, LengthContext auto const& ctx) {
 
 // https://drafts.csswg.org/css-values-4/#calc-computed-value
 export PixelPercentage resolve(Ng::LengthPercentage const& value, LengthContext auto const& ctx) {
-    auto simplified = Ng::simplify(value.calcTree(), ctx);
+    auto simplified = Ng::simplify(
+        value.calcTree(),
+        ctx,
+        Some(NumericBaseType::LENGTH),
+        NONE
+    );
 
     if (auto [numeric] = simplified.template is<UnitValue>()) {
         if (numeric.unit() == UnitValue::Unit::PX) {
@@ -1234,7 +1641,6 @@ export Ng::LengthPercentage toSpecified(PixelPercentage const& value) {
     );
 }
 
-
 // https://www.w3.org/TR/css-values-4/#calc-computed-value
 export Au resolve(PixelPercentage const& value, Au relative) {
     return value.visit(
@@ -1248,8 +1654,12 @@ export Au resolve(PixelPercentage const& value, Au relative) {
             return Au::fromFloatNearest(lin.px.value() + relative.cast<f32>() * (lin.percentage.value() / 100.));
         },
         [&](Box<Ng::Calc> const& calc) {
-            auto simplified = Ng::simplify(*calc, NONE, Some(UnitValue{relative.cast<f64>(), UnitValue::Unit::PX}));
-
+            auto simplified = Ng::simplify(
+                *calc,
+                NONE,
+                Some(NumericBaseType::LENGTH),
+                Some(relative.cast<f64>())
+            );
 
             if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
                 return Au{n->value()};
@@ -1278,11 +1688,14 @@ export Opt<Au> resolve(PixelPercentage const& value, Opt<Au> relative) {
             return NONE;
         },
         [&](Box<Ng::Calc> const& calc) -> Opt<Au> {
-            auto percentBasis = relative.map([](Au r) {
-                return UnitValue{r.cast<f64>(), UnitValue::Unit::PX};
-            });
-
-            auto simplified = Ng::simplify(*calc, NONE, percentBasis);
+            auto simplified = Ng::simplify(
+                *calc,
+                NONE,
+                Some(NumericBaseType::LENGTH),
+                relative.map([](Au au) {
+                    return au.cast<f64>();
+                })
+            );
 
             if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
                 return Some(Au{n->value()});
@@ -1292,35 +1705,5 @@ export Opt<Au> resolve(PixelPercentage const& value, Opt<Au> relative) {
         }
     );
 }
-
-// HACK: Temporary workaround while layout can't tell definite percentages apart.
-// export bool isPurePercentage(ComputedLengthPercentage const& value) {
-//     auto mixed = value.is<MixedDimension>();
-//     return mixed and mixed->dimension == 0_px;
-// }
-
-struct Lab {
-    Lab() {
-        Css::Lexer lex = {"min(1px, 2px)"};
-        auto diags = Diag::Collector::ignore();
-
-        auto content = Css::consumeComponentValue(lex, diags);
-        auto c = Cursor<Css::Sst>(content);
-
-        auto dump = [](Ng::Calc const& calc) {
-            Io::StringWriter sw{};
-            Ng::serializeMathFunction(sw, calc).expect();
-            logInfo("{}", sw.take());
-        };
-
-        logInfo("{}", c);
-
-        auto parsed = parseValue<Ng::LengthPercentage>(c).expect();
-        dump(parsed.calcTree());
-
-        auto computed = Ng::simplify(parsed.calcTree(), NONE);
-        dump(computed);
-    }
-};
 
 } // namespace Vaev
