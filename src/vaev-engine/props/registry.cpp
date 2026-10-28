@@ -15,6 +15,7 @@ import :props.floats;
 import :props.fonts;
 import :props.list;
 import :props.margin;
+import :props.multicol;
 import :props.outline;
 import :props.overflow;
 import :props.padding;
@@ -245,6 +246,12 @@ export RegisteredPropertySet const& defaultRegistry() {
         // Writing
         registry.registerProperty<WritingModeProperty>();
         registry.registerProperty<DirectionProperty>();
+
+        // Multi-column
+        registry.registerProperty<ColumnWidthProperty>();
+        registry.registerProperty<ColumnHeightProperty>();
+        registry.registerProperty<ColumnCountProperty>();
+        registry.registerProperty<ColumnsProperty>();
 
         return registry;
     }();
