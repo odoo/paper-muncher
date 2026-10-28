@@ -26,6 +26,7 @@ export import :values.lineHeight;
 export import :values.lineWidth;
 export import :values.list;
 export import :values.media;
+export import :values.multicol;
 export import :values.outline;
 export import :values.overflow;
 export import :values.page;
