@@ -11,6 +11,7 @@ export import :props.flex;
 export import :props.floats;
 export import :props.fonts;
 export import :props.margin;
+export import :props.multicol;
 export import :props.outline;
 export import :props.overflow;
 export import :props.padding;

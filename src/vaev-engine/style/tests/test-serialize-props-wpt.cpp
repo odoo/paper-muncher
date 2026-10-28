@@ -5137,6 +5137,106 @@ test$("vaev-style-wpt-css-css-mixins-functions-dashed-function-parsing-xfail", X
     return Ok();
 }
 
+// https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-multicol/parsing/column-count-invalid.html
+test$("vaev-style-wpt-css-css-multicol-parsing-column-count-invalid") {
+    try$(_expectInvalid(_driver, "column-count", "none"));
+    try$(_expectInvalid(_driver, "column-count", "2.5"));
+    try$(_expectInvalid(_driver, "column-count", "auto 1"));
+    try$(_expectInvalid(_driver, "column-count", "1 234"));
+    return Ok();
+}
+
+test$("vaev-style-wpt-css-css-multicol-parsing-column-count-invalid-xfail", XFAIL) {
+    try$(_expectInvalid(_driver, "column-count", "-1"));
+    try$(_expectInvalid(_driver, "column-count", "0"));
+    return Ok();
+}
+
+// https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-multicol/parsing/column-count-valid.html
+test$("vaev-style-wpt-css-css-multicol-parsing-column-count-valid") {
+    try$(_expectSerialized(_driver, "column-count", "auto", "auto"));
+    try$(_expectSerialized(_driver, "column-count", "1", "1"));
+    try$(_expectSerialized(_driver, "column-count", "234", "234"));
+    return Ok();
+}
+
+// https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-multicol/parsing/column-width-invalid.html
+test$("vaev-style-wpt-css-css-multicol-parsing-column-width-invalid") {
+    try$(_expectInvalid(_driver, "column-width", "none"));
+    try$(_expectInvalid(_driver, "column-width", "10"));
+    try$(_expectInvalid(_driver, "column-width", "30%"));
+    try$(_expectInvalid(_driver, "column-width", "auto 40px"));
+    return Ok();
+}
+
+test$("vaev-style-wpt-css-css-multicol-parsing-column-width-invalid-xfail", XFAIL) {
+    try$(_expectInvalid(_driver, "column-width", "-20px"));
+    return Ok();
+}
+
+// https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-multicol/parsing/column-width-valid.html
+test$("vaev-style-wpt-css-css-multicol-parsing-column-width-valid") {
+    try$(_expectSerialized(_driver, "column-width", "auto", "auto"));
+    try$(_expectSerialized(_driver, "column-width", "0", "0px"));
+    try$(_expectSerialized(_driver, "column-width", "10px", "10px"));
+    return Ok();
+}
+
+// https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-multicol/parsing/columns-invalid.html
+test$("vaev-style-wpt-css-css-multicol-parsing-columns-invalid") {
+    try$(_expectInvalid(_driver, "columns", "none"));
+    try$(_expectInvalid(_driver, "columns", "10px 20px"));
+    try$(_expectInvalid(_driver, "columns", "10 20"));
+    try$(_expectInvalid(_driver, "columns", "0 7px"));
+    try$(_expectInvalid(_driver, "columns", "auto auto auto"));
+    try$(_expectInvalid(_driver, "columns", "10em auto auto"));
+    try$(_expectInvalid(_driver, "columns", "initial initial"));
+    try$(_expectInvalid(_driver, "columns", "inherit inherit"));
+    try$(_expectInvalid(_driver, "columns", "/ 100px"));
+    try$(_expectInvalid(_driver, "columns", "/ auto"));
+    try$(_expectInvalid(_driver, "columns", "/"));
+    try$(_expectInvalid(_driver, "columns", "auto /"));
+    try$(_expectInvalid(_driver, "columns", "100px /"));
+    try$(_expectInvalid(_driver, "columns", "2 /"));
+    try$(_expectInvalid(_driver, "columns", "2 100px /"));
+    try$(_expectInvalid(_driver, "columns", "100px 2 /"));
+    return Ok();
+}
+
+test$("vaev-style-wpt-css-css-multicol-parsing-columns-invalid-xfail", XFAIL) {
+    try$(_expectInvalid(_driver, "columns", "0 0"));
+    return Ok();
+}
+
+// https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-multicol/parsing/columns-valid.html
+test$("vaev-style-wpt-css-css-multicol-parsing-columns-valid") {
+    try$(_expectSerialized(_driver, "columns", "auto 3", "3"));
+    try$(_expectSerialized(_driver, "columns", "auto 10em", "10em"));
+    try$(_expectSerialized(_driver, "columns", "3 auto", "3"));
+    try$(_expectSerialized(_driver, "columns", "10em auto", "10em"));
+    try$(_expectSerialized(_driver, "columns", "2 10px", "10px 2"));
+    try$(_expectSerialized(_driver, "columns", "10px 2", "10px 2"));
+    try$(_expectSerialized(_driver, "columns", "auto", "auto"));
+    try$(_expectSerialized(_driver, "columns", "auto auto", "auto"));
+    try$(_expectSerialized(_driver, "columns", "7", "7"));
+    try$(_expectSerialized(_driver, "columns", "7em", "7em"));
+    try$(_expectSerialized(_driver, "columns", "0 1", "0px 1"));
+    try$(_expectSerialized(_driver, "columns", "1 0", "0px 1"));
+    try$(_expectSerialized(_driver, "columns", "0px 1", "0px 1"));
+    try$(_expectSerialized(_driver, "columns", "10px 2 / 100px", "10px 2 / 100px"));
+    try$(_expectSerialized(_driver, "columns", "2 10px / 100px", "10px 2 / 100px"));
+    try$(_expectSerialized(_driver, "columns", "10px / 100px", "10px / 100px"));
+    try$(_expectSerialized(_driver, "columns", "auto / 100px", "auto / 100px"));
+    try$(_expectSerialized(_driver, "columns", "10px 2 / auto", "10px 2"));
+    try$(_expectSerialized(_driver, "columns", "2 10px / auto", "10px 2"));
+    try$(_expectSerialized(_driver, "columns", "10px / auto", "10px"));
+    try$(_expectSerialized(_driver, "columns", "2 / auto", "2"));
+    try$(_expectSerialized(_driver, "columns", "auto / auto", "auto"));
+    try$(_expectSerialized(_driver, "columns", "initial", "initial", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "columns", "inherit", "inherit", RegisteredPropertySet::TOP_LEVEL));
+    return Ok();
+}
+
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/parsing/overflow-invalid.html
 test$("vaev-style-wpt-css-css-overflow-parsing-overflow-invalid") {
     try$(_expectInvalid(_driver, "overflow", "none"));
