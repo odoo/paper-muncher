@@ -2,6 +2,8 @@ export module Vaev.Engine:values.writing;
 
 import Karm.Core;
 
+import :values.keywords;
+
 using namespace Karm;
 
 namespace Vaev {
@@ -43,17 +45,10 @@ export struct Axis {
     }
 };
 
-// https://www.w3.org/TR/css-writing-modes-3/#propdef-writing-mode
-export enum struct WritingMode : u8 {
-    HORIZONTAL_TB,
-    VERTICAL_RL,
-    VERTICAL_LR,
-};
+// https://drafts.csswg.org/css-writing-modes-4/#propdef-writing-mode
+export using WritingMode = Union<Keywords::HorizontalTb, Keywords::VerticalRl, Keywords::VerticalLr, Keywords::SidewaysRl, Keywords::SidewaysLr>;
 
-// https://www.w3.org/TR/css-writing-modes-3/#propdef-direction
-export enum struct Direction : u8 {
-    LTR,
-    RTL,
-};
+// https://drafts.csswg.org/css-writing-modes-4/#propdef-direction
+export using Direction = Union<Keywords::Ltr, Keywords::Rtl>;
 
 } // namespace Vaev

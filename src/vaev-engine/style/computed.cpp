@@ -101,8 +101,8 @@ export struct ComputedValues {
     Float float_ = Float::NONE;
     Clear clear = Clear::NONE;
     Visibility visibility;
-    WritingMode writingMode;
-    Direction direction;
+    WritingMode writingMode = Keywords::HORIZONTAL_TB;
+    Direction direction = Keywords::LTR;
     Position position = Keywords::STATIC;
     BoxSizing boxSizing = Keywords::CONTENT_BOX;
     TableLayout tableLayout = TableLayout::AUTO;

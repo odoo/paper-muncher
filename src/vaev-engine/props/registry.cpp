@@ -25,6 +25,7 @@ import :props.table;
 import :props.text;
 import :props.transform;
 import :props.visibility;
+import :props.writing;
 
 using namespace Karm;
 
@@ -237,6 +238,10 @@ export RegisteredPropertySet const& defaultRegistry() {
         registry.registerProperty<ListStylePositionProperty>();
         registry.registerProperty<ListStyleProperty>();
         registry.registerProperty<MarkerSideProperty>();
+
+        // Writing
+        registry.registerProperty<WritingModeProperty>();
+        registry.registerProperty<DirectionProperty>();
 
         return registry;
     }();
