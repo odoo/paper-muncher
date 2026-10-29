@@ -1,0 +1,224 @@
+<tests>
+
+<test name="cascade: layers">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0px;
+                }
+
+                .square {
+                    width: 100px;
+                    height: 100px;
+                }
+            </style>
+        </head>
+
+        <body>
+        <section>
+            <slot />
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="width: 100px; height: 100px; background-color: green"></div>
+    </rendering>
+
+    <rendering help="rules inside a layer are applied">
+        <style>
+            @layer a {
+                .square {
+                    background-color: green;
+                }
+            }
+        </style>
+        <div class="square"></div>
+    </rendering>
+
+    <rendering help="unlayered styles win over layered ones, regardless of specificity">
+        <style>
+            @layer a {
+                div#x.square {
+                    background-color: red;
+                }
+            }
+
+            div {
+                background-color: green;
+            }
+        </style>
+        <div id="x" class="square"></div>
+    </rendering>
+
+    <rendering help="layer order is decided by the first declaration">
+        <style>
+            @layer b, a;
+
+            @layer a {
+                .square {
+                    background-color: green;
+                }
+            }
+
+            @layer b {
+                #x {
+                    background-color: red;
+                }
+            }
+        </style>
+        <div id="x" class="square"></div>
+    </rendering>
+
+    <rendering help="a layer's own rules win over its sublayers">
+        <style>
+            @layer a {
+                .square {
+                    background-color: green;
+                }
+
+                @layer inner {
+                    #x {
+                        background-color: red;
+                    }
+                }
+            }
+        </style>
+        <div id="x" class="square"></div>
+    </rendering>
+
+    <rendering help="dotted names refer to sublayers">
+        <style>
+            @layer a.inner {
+                #x {
+                    background-color: red;
+                }
+            }
+
+            @layer a {
+                .square {
+                    background-color: green;
+                }
+            }
+        </style>
+        <div id="x" class="square"></div>
+    </rendering>
+
+    <rendering help="anonymous layers are distinct, the later one wins">
+        <style>
+            @layer {
+                #x {
+                    background-color: red;
+                }
+            }
+
+            @layer {
+                .square {
+                    background-color: green;
+                }
+            }
+        </style>
+        <div id="x" class="square"></div>
+    </rendering>
+
+    <rendering help="important declarations reverse layer order">
+        <style>
+            @layer a {
+                .square {
+                    background-color: green !important;
+                }
+            }
+
+            @layer b {
+                #x {
+                    background-color: red !important;
+                }
+            }
+
+            #x.square {
+                background-color: red !important;
+            }
+        </style>
+        <div id="x" class="square"></div>
+    </rendering>
+
+    <rendering help="layers declared in a non-matching media query are ignored">
+        <style>
+            @media (max-width: 1px) {
+                @layer b;
+            }
+
+            @layer a {
+                #x {
+                    background-color: red;
+                }
+            }
+
+            @layer b {
+                .square {
+                    background-color: green;
+                }
+            }
+        </style>
+        <div id="x" class="square"></div>
+    </rendering>
+
+    <rendering help="layers with the same name are shared between stylesheets">
+        <style>
+            @layer a, b;
+
+            @layer b {
+                .square {
+                    background-color: green;
+                }
+            }
+        </style>
+        <style>
+            @layer a {
+                #x {
+                    background-color: red;
+                }
+            }
+        </style>
+        <div id="x" class="square"></div>
+    </rendering>
+
+    <rendering help="invalid layer rules are dropped">
+        <style>
+            .square {
+                background-color: green;
+            }
+
+            @layer initial {
+                .square {
+                    background-color: red;
+                }
+            }
+        </style>
+        <div class="square"></div>
+    </rendering>
+
+    <error help="later layer wins over earlier layer">
+        <style>
+            @layer a {
+                .square {
+                    background-color: green;
+                }
+            }
+
+            @layer b {
+                .square {
+                    background-color: red;
+                }
+            }
+        </style>
+        <div class="square"></div>
+    </error>
+</test>
+
+</tests>

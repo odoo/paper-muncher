@@ -3,6 +3,7 @@ export module Vaev.Engine:style.ruleIndex;
 import Karm.Core;
 
 import :style.ancestorFilter;
+import :style.layers;
 import :style.matcher;
 import :style.rules;
 
@@ -16,6 +17,7 @@ struct RuleIndex {
         Selector const& selector;
         urange ancestorHashes;
         usize order;
+        Layer layer;
         Opt<Symbol> pseudoElement;
     };
 
@@ -42,20 +44,20 @@ struct RuleIndex {
         Str key;
     };
 
-    void _insert(Opt<Candidate> candidate, StyleRule const& rule, Selector const& selector, usize order) {
+    void _insert(Opt<Candidate> candidate, StyleRule const& rule, Selector const& selector, usize order, Layer layer) {
         auto ancestorHashes = _indexAncestorHashes(selector);
         auto pseudoElement = selectorPseudoElement(selector);
 
         if (not candidate) {
-            _complexRules.emplaceBack(rule, selector, ancestorHashes, order, pseudoElement);
+            _complexRules.emplaceBack(rule, selector, ancestorHashes, order, layer, pseudoElement);
         } else if (candidate->destination == DestinationBucket::ID) {
-            _idRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes, order, pseudoElement);
+            _idRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes, order, layer, pseudoElement);
         } else if (candidate->destination == DestinationBucket::CLASS) {
-            _classRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes, order, pseudoElement);
+            _classRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes, order, layer, pseudoElement);
         } else if (candidate->destination == DestinationBucket::TYPE) {
-            _typeRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes, order, pseudoElement);
+            _typeRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes, order, layer, pseudoElement);
         } else if (candidate->destination == DestinationBucket::ATTR) {
-            _attrRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes, order, pseudoElement);
+            _attrRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes, order, layer, pseudoElement);
         } else {
             unreachable();
         }
@@ -119,15 +121,15 @@ struct RuleIndex {
         return {before, _allAncestorHashes.len() - before};
     }
 
-    void add(StyleRule const& rule) {
+    void add(StyleRule const& rule, Layer layer) {
         auto order = _ruleCounter++;
 
         if (auto s = rule.selector.is<Nfix>(); s and s->type == Nfix::OR) {
             for (auto const& inner : s->inners) {
-                _insert(_addInner(inner), rule, inner, order);
+                _insert(_addInner(inner), rule, inner, order, layer);
             }
         } else {
-            _insert(_addInner(rule.selector), rule, rule.selector, order);
+            _insert(_addInner(rule.selector), rule, rule.selector, order, layer);
         }
     }
 
@@ -196,7 +198,7 @@ struct RuleIndex {
                         continue;
 
                     if (auto const& [specificity] = matchPreprocessedSelector(entry.selector, el, pseudoElement)) {
-                        matching.pushBack({entry.originatingRule, specificity, entry.order});
+                        matching.pushBack({entry.originatingRule, specificity, entry.order, entry.layer});
                     }
                 }
             }
@@ -224,7 +226,7 @@ struct RuleIndex {
                 continue;
 
             if (auto const& [specificity] = matchPreprocessedSelector(entry.selector, el, pseudoElement)) {
-                matching.pushBack({entry.originatingRule, specificity, entry.order});
+                matching.pushBack({entry.originatingRule, specificity, entry.order, entry.layer});
             }
         }
 
