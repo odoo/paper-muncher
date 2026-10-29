@@ -37,7 +37,7 @@
             "tag": "v1.9.1"
         },
         "cute-engineering/ce-targets": {
-            "commit": "28728bc72f837549261ace928815b34f709bbaec",
+            "commit": "2dc6872644fc10abe6b96832609dbfb7687b0337",
             "git": "https://codeberg.org/cute-engineering/ce-targets.git",
             "tag": "v0.9.0"
         },
@@ -47,7 +47,7 @@
             "tag": "main"
         },
         "skift/karm": {
-            "commit": "b2f02c8b590f5ec79e326e5b79ee41fadd0ba9df",
+            "commit": "ddd76275b640e57e90d86dabe5f104f25fec9baa",
             "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
         }

@@ -40,9 +40,9 @@ Ui::Child openInDefaultBrowser(State const& s) {
                     return;
                 }
 
-                auto res = Sys::launch({
+                auto res = App::launch({
                     .action = Ref::Uti::PUBLIC_OPEN,
-                    .objects = {s.currentUrl().url},
+                    .attachments = {App::Attachment{s.currentUrl().url}},
                 });
 
                 if (not res)
