@@ -14,6 +14,7 @@ import :style.ancestorFilter;
 import :style.cascaded;
 import :style.computed;
 import :style.counter;
+import :style.layers;
 import :style.ruleIndex;
 import :style.stylesheet;
 
@@ -28,6 +29,7 @@ export struct Computer {
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
     RuleIndex _ruleIndex = {};
+    CascadeLayers _layers = {};
     AncestorFilter _ancestorFilter = {};
     Viewport _viewport{.small = _media.viewportSize()};
     Opt<Rc<ComputedValues>> _rootComputedValues = NONE;
@@ -164,6 +166,11 @@ export struct Computer {
                 if (r.match(_media))
                     for (auto const& subRule : r.rules)
                         _evalRule(subRule, page, c);
+            },
+            [&](LayerBlockRule const& r) {
+                // FIXME: Page rules are applied in source order, ignoring layer order.
+                for (auto const& subRule : r.rules)
+                    _evalRule(subRule, page, c);
             },
             [&](auto const&) {
                 // Ignore other rule types
@@ -331,8 +338,8 @@ export struct Computer {
 
         Vec<MatchingRule> const matchingRules = _ruleIndex.match(el, pseudoElement, _ancestorFilter);
         CascadedValues cascadedValues;
-        for (auto const& [styleRule, specificity, order] : matchingRules) {
-            cascadedValues.putStyleRule(styleRule, specificity, order);
+        for (auto const& [styleRule, specificity, order, layer] : matchingRules) {
+            cascadedValues.putStyleRule(styleRule, _layers.rank(layer), specificity, order);
         }
 
         if (not pseudoElement) {
@@ -450,18 +457,23 @@ export struct Computer {
         }
     }
 
+    static void _collectCounterStyle(Rule const& rule, CounterDescriptorSet& counters) {
+        if (auto it = rule.is<CounterRule>()) {
+            CounterDescriptors descriptor;
+            for (auto const& d : it->descriptors)
+                d.apply(descriptor);
+            counters.put(it->name, descriptor);
+        } else if (auto block = rule.is<LayerBlockRule>()) {
+            for (auto const& subRule : block->rules)
+                _collectCounterStyle(subRule, counters);
+        }
+    }
+
     CounterStyleSet _resolveCounterStyle(StyleSheetList const& stylesheets) {
         CounterDescriptorSet counters;
-        for (auto const& sheet : stylesheets.items) {
-            for (auto const& rule : sheet.rules) {
-                if (auto it = rule.is<CounterRule>()) {
-                    CounterDescriptors descriptor;
-                    for (auto const& d : it->descriptors)
-                        d.apply(descriptor);
-                    counters.put(it->name, descriptor);
-                }
-            }
-        }
+        for (auto const& sheet : stylesheets.items)
+            for (auto const& rule : sheet.rules)
+                _collectCounterStyle(rule, counters);
         return resolveExtends(counters);
     }
 
@@ -496,20 +508,32 @@ export struct Computer {
     void build() {
         for (auto const& sheet : _stylesheets.items) {
             for (auto const& rule : sheet.rules) {
-                _addRuleToLookup(&rule);
+                _addRuleToLookup(&rule, _layers.root(sheet.origin));
             }
         }
+        _layers.finalize();
     }
 
-    void _addRuleToLookup(Cursor<Rule> rule) {
+    void _addRuleToLookup(Cursor<Rule> rule, Layer layer) {
         rule->visit(
             [&](StyleRule const& r) {
-                _ruleIndex.add(r);
+                _ruleIndex.add(r, layer);
             },
             [&](MediaRule const& r) {
                 if (r.match(_media))
                     for (auto const& subRule : r.rules)
-                        _addRuleToLookup(&subRule);
+                        _addRuleToLookup(&subRule, layer);
+            },
+            [&](LayerStatementRule const& r) {
+                for (auto const& name : r.names)
+                    _layers.declare(layer, name);
+            },
+            [&](LayerBlockRule const& r) {
+                auto subLayer = r.name
+                                    ? _layers.declare(layer, r.name.expect())
+                                    : _layers.declareAnonymous(layer);
+                for (auto const& subRule : r.rules)
+                    _addRuleToLookup(&subRule, subLayer);
             },
             [&](auto const&) {
                 // Ignore other rule types

@@ -1,3 +1,7 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:style.rules;
 
 import Karm.Core;
@@ -7,6 +11,7 @@ import Karm.Logger;
 
 import :css;
 import :style.fonts;
+import :style.layers;
 import :style.media;
 import :style.origin;
 import :style.page;
@@ -108,6 +113,71 @@ export struct MediaRule {
     }
 
     void repr(Io::Emit& e) const;
+};
+
+// https://drafts.csswg.org/css-cascade-5/#typedef-layer-name
+static Res<LayerName> _parseLayerName(Cursor<Css::Sst>& c) {
+    LayerName name;
+    while (true) {
+        if (c.ended() or *c != Css::Token::IDENT)
+            return Error::invalidData("expected layer name");
+
+        // The CSS-wide keywords are reserved for future use, and cause the rule
+        // to be invalid at parse time if used as an ident in the <layer-name>.
+        Str segment = c->token.data;
+        if (eqCi(segment, "initial"s) or
+            eqCi(segment, "inherit"s) or
+            eqCi(segment, "unset"s) or
+            eqCi(segment, "revert"s) or
+            eqCi(segment, "revert-layer"s))
+            return Error::invalidData("css-wide keyword in layer name");
+
+        name.pushBack(Symbol::from(segment));
+        c.next();
+
+        if (c.ended() or *c != Css::Token::DELIM or c->token.data != "."s)
+            return Ok(name);
+        c.next();
+    }
+}
+
+// https://drafts.csswg.org/css-cascade-5/#layer-block
+export struct LayerBlockRule {
+    Opt<LayerName> name;
+    Vec<Rule> rules;
+
+    static Res<LayerBlockRule> parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns);
+
+    void repr(Io::Emit& e) const;
+};
+
+// https://drafts.csswg.org/css-cascade-5/#layer-empty
+export struct LayerStatementRule {
+    Vec<LayerName> names;
+
+    static Res<LayerStatementRule> parse(Css::Sst const& sst) {
+        if (sst.prefix != Css::Sst::LIST)
+            panic("expected list");
+
+        auto& prefix = sst.prefix.expect();
+        Cursor<Css::Sst> prefixContent = prefix->content;
+
+        LayerStatementRule res;
+        eatWhitespace(prefixContent);
+        while (true) {
+            res.names.pushBack(try$(_parseLayerName(prefixContent)));
+            eatWhitespace(prefixContent);
+            if (prefixContent.ended())
+                return Ok(res);
+            if (not prefixContent.skip(Css::Token::COMMA))
+                return Error::invalidData("expected comma in layer list");
+            eatWhitespace(prefixContent);
+        }
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(layer-statement-rule {})", names);
+    }
 };
 
 // https://www.w3.org/TR/css-fonts-4/#cssfontfacerule
@@ -276,7 +346,9 @@ using _Rule = Union<
     MediaRule,
     ImportRule,
     NamespaceRule,
-    PageRule>;
+    PageRule,
+    LayerBlockRule,
+    LayerStatementRule>;
 
 export struct Rule : _Rule {
     using _Rule::_Rule;
@@ -301,8 +373,23 @@ export struct Rule : _Rule {
             return StyleRule{};
         } else if (tok.data == "@namespace") {
             return NamespaceRule::parse(sst, ns);
+        } else if (tok.data == "@layer") {
+            return _parseLayer(registry, sst, origin, ns);
         } else
             return StyleRule::parse(registry, sst, origin, ns);
+    }
+
+    static Rule _parseLayer(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
+        if (sst.flags.has(Css::Sst::WITH_BLOCK)) {
+            if (auto rule = LayerBlockRule::parse(registry, sst, origin, ns))
+                return rule.take();
+        } else {
+            if (auto rule = LayerStatementRule::parse(sst))
+                return rule.take();
+        }
+
+        logWarnIf(debugRule, "invalid '@layer' at-rule: {}", sst);
+        return LayerStatementRule{};
     }
 
     void repr(Io::Emit& e) const {
@@ -311,6 +398,51 @@ export struct Rule : _Rule {
         });
     }
 };
+
+Res<LayerBlockRule> LayerBlockRule::parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
+    if (sst.prefix != Css::Sst::LIST)
+        panic("expected list");
+
+    LayerBlockRule res;
+
+    auto& prefix = sst.prefix.expect();
+    Cursor<Css::Sst> prefixContent = prefix->content;
+    eatWhitespace(prefixContent);
+    if (not prefixContent.ended()) {
+        res.name = Some(try$(_parseLayerName(prefixContent)));
+        eatWhitespace(prefixContent);
+        if (not prefixContent.ended())
+            return Error::invalidData("unexpected tokens after layer name");
+    }
+
+    for (auto const& item : sst.content) {
+        if (item == Css::Sst::RULE) {
+            res.rules.pushBack(Rule::parse(registry, item, origin, ns));
+        } else {
+            logWarnIf(debugRule, "unexpected item in layer rule: {}", item.type);
+        }
+    }
+
+    return Ok(std::move(res));
+}
+
+void LayerBlockRule::repr(Io::Emit& e) const {
+    e("(layer-block-rule");
+    e.indent();
+    e("\nname: {}", name);
+    if (rules) {
+        e.newline();
+        e("rules: [");
+        e.indentNewline();
+        for (auto const& rule : rules) {
+            e("{}\n", rule);
+        }
+        e.deindent();
+        e("]\n");
+    }
+    e.deindent();
+    e(")");
+}
 
 MediaRule MediaRule::parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
     if (sst != Css::Sst::RULE)
@@ -358,6 +490,7 @@ struct MatchingRule {
     StyleRule const& rule;
     Specificity specificity;
     usize order;
+    Layer layer;
 };
 
 } // namespace Vaev::Style

@@ -63,6 +63,10 @@ void _evalFontfaceRules(Style::Rule const& rule, Vec<Style::FontFace>& fontFaces
             for (auto const& decl : r.descriptors)
                 decl.apply(fontFace);
         },
+        [&](Style::LayerBlockRule const& r) {
+            for (auto const& subRule : r.rules)
+                _evalFontfaceRules(subRule, fontFaces);
+        },
         [&](auto const&) {
             // Ignore other rule types
         }
