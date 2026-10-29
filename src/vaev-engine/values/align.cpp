@@ -1,8 +1,13 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:values.align;
 
 import Karm.Core;
 import :css;
 import :values.base;
+import :values.primitives;
 
 using namespace Karm;
 
@@ -138,6 +143,30 @@ struct ValueParser<Align> {
             return Error::invalidData("expected align value");
 
         return Ok(align);
+    }
+};
+
+export template <>
+struct ValueSerializer<Align> {
+    static Res<> serialize(Io::TextWriter& w, Align const& value) {
+        if (value.prefix != Align::NO_PREFIX)
+            try$(serializeValue(w, value.prefix));
+
+        if (value.keyword == Align::NO_KEYWORD)
+            return Ok();
+
+        if (value.prefix != Align::NO_PREFIX)
+            try$(w.writeRune(' '));
+
+        // https://drafts.csswg.org/css-align-3/#baseline-values
+        // Because they are equivalent, and baseline is shorter, the CSSOM serializes first baseline as baseline.
+        if (value.keyword == Align::FIRST_BASELINE)
+            return w.writeStr("baseline"s);
+
+        if (value.keyword == Align::LAST_BASELINE)
+            return w.writeStr("last baseline"s);
+
+        return serializeValue(w, value.keyword);
     }
 };
 
