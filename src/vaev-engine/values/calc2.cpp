@@ -177,6 +177,25 @@ struct NumericType {
         return Some(static_cast<NumericBaseType>(exponentLocation));
     }
 
+    // https://drafts.css-houdini.org/css-typed-om-1/#cssnumericvalue-match
+    bool matches(Opt<NumericBaseType> baseType, bool acceptPercents) const {
+        // A type is said to match a CSS production in some circumstances:
+
+        // - A type matches <length> if its only non-zero entry is «[ "length" → 1 ]». Similarly for <angle>, <time>,
+        //   <frequency>, <resolution>, and <flex>.
+        //
+        //   If the context in which the value is used allows <percentage> values, and those percentages are resolved
+        //   against another type, then for the type to be considered matching it must either have a null percent hint,
+        //   or the percent hint must match the other type.
+        //
+        //   If the context does not allow <percentage> values to be mixed with <length>/etc values (or doesn’t allow
+        //   <percentage> values at all, such as border-width), then for the type to be considered matching the percent
+        //   hint must be null.
+
+        // TODO
+        return false;
+    }
+
     bool operator==(NumericType const&) const = default;
 
     always_inline constexpr i32 const& operator[](NumericBaseType baseType) const {
@@ -354,7 +373,7 @@ struct FnNode {
         case Name::ACOS:
         case Name::ATAN:
         case Name::ATAN2:
-            return Some(UnitValue::Unit::RAD);
+            return Some(UnitValue::canonicalUnitOf(Some(NumericBaseType::ANGLE)));
 
         case Name::SIN:
         case Name::COS:
@@ -377,53 +396,67 @@ struct FnNode {
 f64 apply(FnNode::Name name, usize count, auto get) {
     using enum FnNode::Name;
 
+    auto const v = [&](usize i) {
+        return get(i).value();
+    };
+
+    auto const rad = [&](usize i) {
+        auto x = get(i);
+        if (x.unit() == UnitValue::Unit::DEG)
+            return x.value() * Math::DEG2RAD;
+        else if (x.unit() == UnitValue::Unit::NONE)
+            return x.value();
+        else
+            panic("unexpected unit");
+    };
+
     switch (name) {
     case MIN: {
-        f64 res = get(0);
+        f64 res = v(0);
         for (usize i = 1; i < count; i++)
-            res = Karm::min(res, get(i));
+            res = Karm::min(res, v(i));
         return res;
     }
     case MAX: {
-        f64 res = get(0);
+        f64 res = v(0);
         for (usize i = 1; i < count; i++)
-            res = Karm::max(res, get(i));
+            res = Karm::max(res, v(i));
         return res;
     }
     case CLAMP:
-        return Karm::clamp(get(1), get(0), get(2));
+        return Karm::max(v(0), Karm::min(v(1), v(2)));
     case SIN:
-        return Math::sin(get(0) * Math::DEG2RAD);
+        return Math::sin(rad(0));
     case COS:
-        return Math::cos(get(0) * Math::DEG2RAD);
+        return Math::cos(rad(0));
     case TAN:
-        return Math::tan(get(0) * Math::DEG2RAD);
+        return Math::tan(rad(0));
     case ASIN:
-        return Math::asin(get(0)) * Math::RAD2DEG;
+        return Math::asin(v(0)) * Math::RAD2DEG;
     case ACOS:
-        return Math::acos(get(0)) * Math::RAD2DEG;
+        return Math::acos(v(0)) * Math::RAD2DEG;
     case ATAN:
-        return Math::atan(get(0)) * Math::RAD2DEG;
+        return Math::atan(v(0)) * Math::RAD2DEG;
     case ATAN2:
-        return Math::atan2(get(0), get(0)) * Math::RAD2DEG;
+        return Math::atan2(v(0), v(1)) * Math::RAD2DEG;
     case POW:
-        return Math::pow(get(0), get(1));
+        return Math::pow(v(0), v(1));
     case SQRT:
-        return Math::sqrt(get(0));
+        return Math::sqrt(v(0));
     case HYPOT: {
-        f64 res = get(0);
+        f64 res = Math::abs(v(0));
         for (usize i = 1; i < count; i++)
-            res = Math::hypot(res, get(i));
+            res = Math::hypot(res, v(i));
         return res;
     }
     case LOG: {
-        f64 res = Math::log(get(0));
+        f64 res = Math::log(v(0));
         if (count > 1)
-            res /= Math::log(get(1));
+            res /= Math::log(v(1));
         return res;
     }
     case EXP:
-        return Math::exp(get(0));
+        return Math::exp(v(0));
     case _LEN:
         unreachable();
     }
@@ -854,9 +887,10 @@ export Calc simplify(Calc const& calc, auto const& ctx, Opt<NumericBaseType> mai
         [&](UnitValue const& numeric) -> Calc {
             // 1. If root is a percentage that will be resolved against another value,
             //    and there is enough information available to resolve it,
-            if (numeric.unit() == UnitValue::Unit::PERCENT and canonicalPercentBasis)
+            if (numeric.unit() == UnitValue::Unit::PERCENT and canonicalPercentBasis) {
                 // do so, and express the resulting numeric value in the appropriate canonical unit. Return the value.
                 return UnitValue{(numeric.value() * canonicalPercentBasis.expect()) / 100, UnitValue::canonicalUnitOf(mainType)};
+            }
 
             // 2. If root is a dimension that is not expressed in its canonical unit,
             //    and there is enough information available to convert it to the canonical unit, do so, and return the value.
@@ -884,7 +918,7 @@ export Calc simplify(Calc const& calc, auto const& ctx, Opt<NumericBaseType> mai
             }
 
             auto result = apply(f.name, simplifiedChildren.len(), [&](usize i) {
-                return simplifiedChildren[i].template expect<UnitValue>().value();
+                return simplifiedChildren[i].template expect<UnitValue>();
             });
 
             if (auto const& [unit] = f.canonicalUnit())
@@ -1110,7 +1144,7 @@ struct TypedCalc {
 
     Calc _calc;
 
-    TypedCalc(Unchecked, Calc const& calc) : _calc(std::move(calc)) {}
+    TypedCalc(Unchecked, Calc calc) : _calc(std::move(calc)) {}
 
     static TypedCalc fromCanonical(f64 value) {
         return {UNCHECKED, UnitValue{value, UnitValue::canonicalUnitOf(TYPE)}};
@@ -1473,8 +1507,13 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
         if (c.peek() == Css::Sst::BLOCK and c.peek().token == Css::Token::LEFT_PARENTHESIS) {
             Cursor<Css::Sst> content = c.peek().content;
             auto sum = try$(parseCalcSum(content));
+
+            if (not content.ended())
+                return Error::invalidData("unexpected tokens");
+
             c.next();
             eatWhitespace(c);
+
             return Ok(sum);
         }
 
@@ -1557,7 +1596,7 @@ export Number resolve(Ng::Percentage const& value, f64 percentBasis) {
     auto simplified = Ng::simplify(
         value.calcTree(),
         NONE,
-        Some(NumericBaseType::PERCENT),
+        NONE,
         Some(percentBasis)
     );
 
@@ -1568,8 +1607,6 @@ export Number resolve(Ng::Percentage const& value, f64 percentBasis) {
     }
 }
 
-export using PixelPercentage = Union<Pixel, Percentage, LinearPixelPercentage, Box<Ng::Calc>>;
-
 export Pixel resolve(Ng::Length const& value, LengthContext auto const& ctx) {
     auto simplified = Ng::simplify(
         value.calcTree(),
@@ -1578,12 +1615,16 @@ export Pixel resolve(Ng::Length const& value, LengthContext auto const& ctx) {
         NONE
     );
 
+    logInfo("{}", simplified);
+
     if (auto n = simplified.template is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
         return Pixel{n->value()};
     } else {
         panic("calc didn't simplify to a single value of expected unit");
     }
 }
+
+export using PixelPercentage = Union<Pixel, Percentage, LinearPixelPercentage, Box<Ng::Calc>>;
 
 // https://drafts.csswg.org/css-values-4/#calc-computed-value
 export PixelPercentage resolve(Ng::LengthPercentage const& value, LengthContext auto const& ctx) {
@@ -1629,8 +1670,8 @@ export Ng::LengthPercentage toSpecified(PixelPercentage const& value) {
                 UNCHECKED,
                 Ng::SumNode{
                     .children = {
-                        UnitValue{lin.px.value(), UnitValue::Unit::PX},
                         UnitValue{lin.percentage.value(), UnitValue::Unit::PERCENT},
+                        UnitValue{lin.px.value(), UnitValue::Unit::PX},
                     },
                 }
             };

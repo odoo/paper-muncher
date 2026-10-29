@@ -61,6 +61,7 @@ test$("parse-simple-numeric-values") {
     assertEq$(try$(_computed<Length>("clamp(none, 2px, none)")), "2px"s);
     assertEq$(try$(_computed<Length>("hypot(1px, 2px, 3px)")), "3.741657px"s);
     assertEq$(try$(_computed<Length>("calc(1px * sin(30deg))")), "0.5px"s);
+    assertEq$(try$(_computed<Length>("calc(1px * asin(1/2) / 1deg)")), "30px"s);
 
     return Ok();
 }
