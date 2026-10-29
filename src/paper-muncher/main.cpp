@@ -98,9 +98,9 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
         .epilog = "Explicit --width and --height values take precedence over the --paper dimensions."s
     };
 
-    auto headerArg = Cli::option<Opt<Ref::Url>>(NONE, "header"s, "Document to render as the page header"s, NONE);
+    auto headerArg = Cli::option<Vec<Ref::Url>>(NONE, "header"s, "Documents to render as page headers; pass one for all inputs or one per input"s);
     auto headerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength>>(NONE, "header-size"s, "Height of the page header (default: auto)"s, Vaev::Keywords::AUTO);
-    auto footerArg = Cli::option<Opt<Ref::Url>>(NONE, "footer"s, "Document to render as the page footer"s, NONE);
+    auto footerArg = Cli::option<Vec<Ref::Url>>(NONE, "footer"s, "Documents to render as page footers; pass one for all inputs or one per input"s);
     auto footerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength>>(NONE, "footer-size"s, "Height of the page footer (default: auto)"s, Vaev::Keywords::AUTO);
 
     Cli::Section decorationSection{
@@ -111,7 +111,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
             footerArg,
             footerSizeArg,
         },
-        .epilog = "Headers and footers repeat on every page, above and below the main content, within the page margins."s
+        .epilog = "Headers and footers repeat on every page, above and below the main content, within the page margins. Each option accepts one document for all inputs or one document per input; pass positional inputs before --header/--footer."s
     };
 
     auto flowArg = Cli::option<PaperMuncher::Flow>(NONE, "flow"s, "How content flows across pages (default: auto)"s, PaperMuncher::Flow::AUTO);
@@ -202,8 +202,6 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     if (outputArg.value() != "-"s)
         output = Ref::parseUrlOrPath(outputArg.value(), env.cwd());
 
-    options.header = headerArg.value();
-    options.footer = footerArg.value();
     options.headerSize = headerSizeArg.value();
     options.footerSize = footerSizeArg.value();
 
@@ -220,6 +218,8 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     options.flow = flowArg.value();
     options.extend = extendArg.value();
 
+    auto items = co_try$(PaperMuncher::makeBatchItems(inputs, headerArg.value(), footerArg.value()));
+
     auto client = PaperMuncher::defaultHttpClient(sandboxedArg.value());
-    co_return co_await PaperMuncher::runBatchAsync(client, inputs, output, options, ct);
+    co_return co_await PaperMuncher::runBatchAsync(client, items, output, options, ct);
 }
