@@ -83,6 +83,7 @@ export struct ComputedValues {
     Cow<SvgPaintProps> svgPaint;
     Cow<CounterProps> counters;
     Cow<ListProps> list;
+    Cow<ColumnProps> column;
 
     Cow<Map<Symbol, Css::Content>> customProps;
     Rc<Gfx::Fontface> fontFace;
