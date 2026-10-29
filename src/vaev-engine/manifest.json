@@ -33,6 +33,7 @@
         "karm-ref",
         "karm-print",
         "karm-font",
-        "karm-diag"
+        "karm-diag",
+        "fonts"
     ]
 }

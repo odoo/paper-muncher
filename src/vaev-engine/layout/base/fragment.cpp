@@ -3,20 +3,19 @@ export module Vaev.Engine:layout.fragment;
 import Karm.Core;
 import Karm.Font;
 import Karm.Math;
-import Karm.Ref;
 
 import :values.length;
 import :layout.box;
 
 using namespace Karm;
-using namespace Karm::Ref::Literals;
+using namespace Karm::Literals;
 
 namespace Vaev::Layout {
 
 static Rc<Gfx::Fontface> _bubbleFontface() {
     static Opt<Rc<Gfx::Fontface>> fontface = NONE;
     if (not fontface)
-        fontface = Some(Font::loadFontfaceOrFallback("bundle://fonts.fira-code/fonts/FiraCode-Regular.ttf"_url).expect());
+        fontface = Some(Font::globalDatabase().queryClosestOrFallback("monospace"_sym));
     return *fontface;
 }
 

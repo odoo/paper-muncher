@@ -7,7 +7,8 @@ import subprocess
 import traceback
 from abc import ABC, abstractmethod
 from enum import StrEnum
-from multiprocessing import Pool, cpu_count
+from multiprocessing import cpu_count
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 import hashlib
 
@@ -250,7 +251,7 @@ def _runTests(testRunner: builder.ProductScope, suite: TestSuite) -> list[TestRe
 
     testResults: list[TestResult] = []
 
-    with Pool(processes=numWorkers) as pool:
+    with ThreadPool(processes=numWorkers) as pool:
         results_iter = pool.imap_unordered(_runTest, allTests, chunksize=10)
         for idx, result in enumerate(results_iter, 1):
             testResults.append(result)
