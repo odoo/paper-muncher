@@ -4,6 +4,7 @@ export import :style.computer;
 export import :style.counter;
 export import :style.decls;
 export import :style.fonts;
+export import :style.layers;
 export import :style.matcher;
 export import :style.media;
 export import :style.origin;
