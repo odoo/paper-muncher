@@ -20,7 +20,7 @@ namespace Vaev {
 
 export using Rad = Distinct<f64, struct _RadTag>;
 
-export struct Angle : TypedUnitValue<NumericBaseType::ANGLE> {
+export struct Angle : TypedUnitValue<Some(NumericBaseType::ANGLE)> {
     using TypedUnitValue::TypedUnitValue;
 
     static constexpr Angle fromDegree(f64 val) {

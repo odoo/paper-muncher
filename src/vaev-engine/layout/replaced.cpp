@@ -31,9 +31,9 @@ struct ReplacedFormatingContext : FormatingContext {
                 .aspectRatio = Some(naturalSize.width / naturalSize.height),
             };
 
-            auto specifiedSize = resolvePreferredSize(tree, box, input.containingBlock);
+            auto specifiedSize = resolvePreferredSize(*box.style, input.containingBlock);
             auto tentativeSize = resolveObjectDefaultSizing(naturalDimensions, specifiedSize);
-            size = applyReplacedMinMaxSizeConstraints(tree, box, tentativeSize, input.containingBlock, specifiedSize);
+            size = applyReplacedMinMaxSizeConstraints(*box.style, tentativeSize, input.containingBlock, specifiedSize);
         } else {
             panic("unsupported replaced content");
         }

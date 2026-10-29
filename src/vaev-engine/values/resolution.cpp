@@ -17,7 +17,7 @@ namespace Vaev {
 // 7.4. MARK: Resolution Units: the <resolution> type and dpi, dpcm, dppx units
 // https://drafts.csswg.org/css-values/#resolution
 
-export struct Resolution : TypedUnitValue<NumericBaseType::RESOLUTION> {
+export struct Resolution : TypedUnitValue<Some(NumericBaseType::RESOLUTION)> {
     using TypedUnitValue::TypedUnitValue;
 
     static constexpr Resolution fromDpi(f64 val) {

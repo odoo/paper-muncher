@@ -19,7 +19,11 @@ namespace Vaev {
 // MARK: Percentage ------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#percentages
 
-export struct Percent : TypedUnitValue<NumericBaseType::PERCENT> {
+// FIXME: There is a bit of a name collision with Percent, this should be resolved once
+//        specified values live in a different namespace.
+export using Percentage = Distinct<f64, struct _PercentageTag>;
+
+export struct Percent : TypedUnitValue<Some(NumericBaseType::PERCENT)> {
     using TypedUnitValue::TypedUnitValue;
 
     constexpr explicit Percent(f64 value)
@@ -54,3 +58,10 @@ Resolved<T> resolve(PercentOr<T> const& value, auto const& ctx, Resolved<T> rela
 }
 
 } // namespace Vaev
+
+export template <>
+struct Karm::Io::Formatter<Vaev::Percentage> {
+    Res<> format(Io::TextWriter& writer, Vaev::Percentage value) {
+        return Io::format(writer, "{}%", value.value());
+    }
+};

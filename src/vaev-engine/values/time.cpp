@@ -17,7 +17,7 @@ namespace Vaev {
 // 7.2. MARK: Duration Units: the <time> type and s, ms units
 // https://drafts.csswg.org/css-values/#time
 
-export struct Time : TypedUnitValue<NumericBaseType::TIME> {
+export struct Time : TypedUnitValue<Some(NumericBaseType::TIME)> {
     using TypedUnitValue::TypedUnitValue;
 
     static constexpr Time fromSecond(f64 val) {

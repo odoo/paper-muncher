@@ -192,7 +192,7 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, In
         }
 
         childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
-            tree, child, child.style->sizing->height, containingBlock,
+            child, child.style->sizing->height, containingBlock,
             usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
         );
     }

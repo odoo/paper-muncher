@@ -9,6 +9,7 @@ import Karm.Core;
 import :css;
 import :values.base;
 import :values.calc;
+import :values.calc2;
 import :values.keywords;
 import :values.length;
 import :values.percent;
@@ -24,35 +25,54 @@ export using BoxSizing = Union<Keywords::ContentBox, Keywords::BorderBox>;
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 // https://www.w3.org/TR/css-sizing-3/#propdef-height
-export using Size = Union<Keywords::Auto, Calc<PercentOr<Length>>, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
-export using MaxSize = Union<Keywords::None, Calc<PercentOr<Length>>, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+export using Size = Union<Keywords::Auto, Ng::LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+export using MaxSize = Union<Keywords::None, Ng::LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+
+export using ComputedSize = Union<Keywords::Auto, PixelPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+export using ComputedMaxSize = Union<Keywords::None, PixelPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+
+export ComputedSize resolve(Size const& value, LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> ComputedSize { return resolve(v, ctx); });
+}
+
+export ComputedMaxSize resolve(MaxSize const& value, LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> ComputedMaxSize { return resolve(v, ctx); });
+}
+
+export Size toSpecified(ComputedSize const& value) {
+    return value.visit([](auto const& v) -> Size { return toSpecified(v); });
+}
+
+export MaxSize toSpecified(ComputedMaxSize const& value) {
+    return value.visit([](auto const& v) -> MaxSize { return toSpecified(v); });
+}
 
 export struct SizingProps {
-    Size width = Keywords::AUTO, height = Keywords::AUTO;
-    Size minWidth = Keywords::AUTO, minHeight = Keywords::AUTO;
-    MaxSize maxWidth = Keywords::NONE, maxHeight = Keywords::NONE;
+    ComputedSize width = Keywords::AUTO, height = Keywords::AUTO;
+    ComputedSize minWidth = Keywords::AUTO, minHeight = Keywords::AUTO;
+    ComputedMaxSize maxWidth = Keywords::NONE, maxHeight = Keywords::NONE;
 
-    Size& size(Axis axis) {
+    ComputedSize& size(Axis axis) {
         return axis == Axis::HORIZONTAL ? width : height;
     }
 
-    Size const size(Axis axis) const {
+    ComputedSize const& size(Axis axis) const {
         return axis == Axis::HORIZONTAL ? width : height;
     }
 
-    Size& minSize(Axis axis) {
+    ComputedSize& minSize(Axis axis) {
         return axis == Axis::HORIZONTAL ? minWidth : minHeight;
     }
 
-    Size const minSize(Axis axis) const {
+    ComputedSize const& minSize(Axis axis) const {
         return axis == Axis::HORIZONTAL ? minWidth : minHeight;
     }
 
-    MaxSize& maxSize(Axis axis) {
+    ComputedMaxSize& maxSize(Axis axis) {
         return axis == Axis::HORIZONTAL ? maxWidth : maxHeight;
     }
 
-    MaxSize const maxSize(Axis axis) const {
+    ComputedMaxSize const& maxSize(Axis axis) const {
         return axis == Axis::HORIZONTAL ? maxWidth : maxHeight;
     }
 

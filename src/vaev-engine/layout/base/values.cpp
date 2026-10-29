@@ -82,7 +82,7 @@ export struct Resolver :
 // MARK: Resolve during layout -------------------------------------------------
 
 // HACK: Temporary workaround while we don't properly evaluate computed values
-export bool isPurePercentage(Calc<PercentOr<Length>> calcValue) {
+export bool isPurePercentage(Calc<PercentOr<Length>> const& calcValue) {
     if (not calcValue._inner.is<Calc<PercentOr<Length>>::Value>())
         return false;
 
@@ -91,6 +91,10 @@ export bool isPurePercentage(Calc<PercentOr<Length>> calcValue) {
         return false;
 
     return value.expect<PercentOr<Length>>().is<Percent>().has();
+}
+export bool isPurePercentage(PixelPercentage const& calc) {
+    // FIXME: If the calc is a non-linear tree, it should check inside if it contains percentages.
+    return calc.is<Percentage>() or calc.is<LinearPixelPercentage>();
 }
 
 export Au resolve(Tree const& tree, Box const& box, Length const& value) {
@@ -116,6 +120,14 @@ export Au resolve(Tree const& tree, Box const& box, FontSize const& value) {
 export template <typename T, typename... Args>
 auto resolve(Tree const& tree, Box const& box, Calc<T> const& value, Args... args) -> Resolved<T> {
     return Resolver::from(tree, box).resolve(value, args...);
+}
+
+export Au resolve(PixelPercentage const& value, Au relative) {
+    return Vaev::resolve(value, relative);
+}
+
+export Opt<Au> resolve(PixelPercentage const& value, Opt<Au> relative) {
+    return Vaev::resolve(value, relative);
 }
 
 } // namespace Vaev::Layout

@@ -87,7 +87,7 @@ struct InlineFormatingContext : FormatingContext {
             );
 
             childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
-                tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
+                atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
                 usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
             );
 
@@ -169,7 +169,7 @@ struct InlineFormatingContext : FormatingContext {
                     );
 
                     childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
-                        tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
+                        atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
                         usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
                     );
                 }
