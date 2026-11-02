@@ -30,7 +30,7 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
     if (resp->header.contentType().unwrapOr(Ref::sniffBytes(data)).conformsTo(Ref::Uti::PUBLIC_SVG)) {
         auto subClient = makeRc<Http::Client>(client._transport);
         subClient->userAgent = client.userAgent;
-        auto webview = WebView::create(subClient);
+        auto webview = WebView::create(ResourceLoader::create(subClient));
 
         // FIXME: Properly determine the size of the SVG
         // https://www.w3.org/TR/SVG2/coords.html#SizingSVGInCSS
@@ -105,7 +105,7 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Dom::
     auto fontDatabase = document.fontDatabase;
     for (auto const& sheet : document.styleSheets->items) {
         Vec<Style::FontFace> fontFaces;
-        for (auto const& rule : sheet.rules)
+        for (auto const& rule : sheet->rules)
             _evalFontfaceRules(rule, fontFaces);
 
         for (auto const& ff : fontFaces) {
@@ -129,9 +129,9 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Dom::
 
                 auto fontUrl = src.identifier.expect<Ref::Url>();
 
-                auto resolvedUrl = Ref::Url::resolveReference(sheet.href, fontUrl);
+                auto resolvedUrl = Ref::Url::resolveReference(sheet->href, fontUrl);
                 if (not resolvedUrl) {
-                    logWarn("Cannot resolve urls when loading fonts: {} {}", ff.family, sheet.href);
+                    logWarn("Cannot resolve urls when loading fonts: {} {}", ff.family, sheet->href);
                     continue;
                 }
 

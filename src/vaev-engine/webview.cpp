@@ -5,7 +5,6 @@ module;
 export module Vaev.Engine:webview;
 
 import Karm.Gc;
-import Karm.Http;
 import Karm.Gfx;
 import Karm.Math;
 import Karm.Logger;
@@ -33,18 +32,22 @@ export struct RenderResult {
 
 export struct WebView {
     mutable Gc::Heap _heap;
-    Rc<Http::Client> _client;
+    Rc<Loader::ResourceLoader> _loader;
     Style::Media _media = Style::Media::defaultMedia();
 
     Gc::Ptr<Dom::Document> _document = nullptr;
     Opt<RenderResult> _render = NONE;
     Style::CounterSet _initialCounterSet = {};
 
-    WebView(Rc<Http::Client> client)
-        : _client(client) {}
+    WebView(Rc<Loader::ResourceLoader> loader)
+        : _loader(std::move(loader)) {}
 
-    static Rc<WebView> create(Rc<Http::Client> client = Http::defaultClient()) {
-        return makeRc<WebView>(client);
+    static Rc<WebView> create(Rc<Loader::ResourceLoader> loader = Loader::ResourceLoader::create()) {
+        return makeRc<WebView>(std::move(loader));
+    }
+
+    Loader::ResourceLoader& loader() {
+        return *_loader;
     }
 
     void changeMedia(Style::Media media) {
@@ -68,11 +71,11 @@ export struct WebView {
         if (intent == Ref::Uti::PUBLIC_OPEN) {
             _document = co_trya$(
                 Loader::fetchDocumentAsync(
-                    _heap, *_client, url, ct
+                    _heap, *_loader, url, ct
                 )
             );
         } else if (intent == Ref::Uti::PUBLIC_MODIFY) {
-            _document = co_trya$(Loader::viewSourceAsync(_heap, *_client, url, ct));
+            _document = co_trya$(Loader::viewSourceAsync(_heap, *_loader, url, ct));
         } else {
             co_return Error::invalidInput("unsupported intent");
         }
