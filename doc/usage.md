@@ -48,12 +48,16 @@ Renders one or more web documents to a print-ready file (typically PDF).
 
 **Document Decoration:**
 
-- `--header <document>...`: Documents to render as page headers; pass one for all inputs or one per input
+- `--header <document>`: Document to render as the page header
 - `--header-size <size>`: Height of the page header (default: `auto`)
-- `--footer <document>...`: Documents to render as page footers; pass one for all inputs or one per input
+- `--footer <document>`: Document to render as the page footer
 - `--footer-size <size>`: Height of the page footer (default: `auto`)
 
-*Headers and footers repeat on every page within the page margins. `--header` and `--footer` can be omitted, given once to reuse the same document for all inputs, or given once per input in the same order as the inputs. When given once per input, use `none` for any input that does not need a header or footer. Any other number is rejected. Input documents must come before `--header` and `--footer`.*
+*Headers and footers repeat on every page within the page margins. `--header` and `--footer` apply to the input they follow; given before the first input, they apply to every input:*
+
+```bash
+paper-muncher --header default.html a.html b.html --header b-header.html -o out.pdf
+```
 
 **Document Flow:**
 
