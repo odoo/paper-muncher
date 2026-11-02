@@ -38,7 +38,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     auto client = Http::defaultClient();
     client->userAgent = "Mozilla/5.0 Vaev Browser/" stringify$(__ck_version_value) ""s;
-    auto webview = Vaev::WebView::create(client);
+    auto webview = Vaev::WebView::create(Vaev::Loader::ResourceLoader::create(client));
     co_trya$(webview->loadLocationAsync(
         urlArg.value(),
         Ref::Uti::PUBLIC_OPEN,

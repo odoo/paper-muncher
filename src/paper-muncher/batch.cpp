@@ -201,25 +201,25 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
     }
 };
 
-Async::Task<Rc<Vaev::WebView>> _loadHeaderFooterWebViewAsync(Rc<Http::Client> client, Ref::Url const& url, Async::CancellationToken ct) {
-    auto webview = Vaev::WebView::create(client);
+Async::Task<Rc<Vaev::WebView>> _loadHeaderFooterWebViewAsync(Rc<Vaev::Loader::ResourceLoader> loader, Ref::Url const& url, Async::CancellationToken ct) {
+    auto webview = Vaev::WebView::create(loader);
     co_trya$(webview->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
 
-    auto sheet = co_trya$(Vaev::Loader::fetchStylesheetAsync(*client, *webview->document(), "bundle://vaev-engine/wkhtmltopdf-polyfill.css"_url, Vaev::Style::Origin::USER_AGENT, ct));
+    auto sheet = co_trya$(loader->fetchStylesheetAsync(*webview->document(), "bundle://vaev-engine/wkhtmltopdf-polyfill.css"_url, Vaev::Style::Origin::USER_AGENT, ct));
     webview->document()->styleSheets->add(std::move(sheet));
 
     co_return Ok(webview);
 }
 
 Async::Task<> runSingleAsync(
-    Rc<Http::Client> client,
+    Rc<Vaev::Loader::ResourceLoader> loader,
     BatchItem const& item,
     Print::Printer& output,
     Option const& options,
     Async::CancellationToken ct
 ) {
     logInfo("loading {}...", item.input);
-    auto webview = Vaev::WebView::create(client);
+    auto webview = Vaev::WebView::create(loader);
     co_trya$(webview->loadLocationAsync(item.input, Ref::Uti::PUBLIC_OPEN, ct));
 
     logInfo("rendering {}...", item.input);
@@ -227,13 +227,13 @@ Async::Task<> runSingleAsync(
         HeaderFooterDecorator decorator;
         if (auto const& [header] = item.header) {
             logInfo("loading header {}...", header);
-            decorator.headerWebView = Some(co_trya$(_loadHeaderFooterWebViewAsync(client, header, ct)));
+            decorator.headerWebView = Some(co_trya$(_loadHeaderFooterWebViewAsync(loader, header, ct)));
             decorator.headerSize = options.headerSize;
         }
 
         if (auto const& [footer] = item.footer) {
             logInfo("loading footer {}...", footer);
-            decorator.footerWebView = Some(co_trya$(_loadHeaderFooterWebViewAsync(client, footer, ct)));
+            decorator.footerWebView = Some(co_trya$(_loadHeaderFooterWebViewAsync(loader, footer, ct)));
             decorator.footerSize = options.footerSize;
         }
 
@@ -285,6 +285,8 @@ export Async::Task<> runBatchAsync(
                 ? Flow::PAGINATE
                 : Flow::CONTINUOUS;
 
+    auto loader = Vaev::Loader::ResourceLoader::create(client);
+
     if (options.batch == Batch::CONCAT) {
         auto printer = co_try$(
             Print::FilePrinter::create(
@@ -296,7 +298,7 @@ export Async::Task<> runBatchAsync(
         );
         for (auto& item : items)
             co_trya$(runSingleAsync(
-                client,
+                loader,
                 item,
                 *printer,
                 options,
@@ -323,7 +325,7 @@ export Async::Task<> runBatchAsync(
                     }
                 )
             );
-            co_trya$(runSingleAsync(client, item, *printer, options, ct));
+            co_trya$(runSingleAsync(loader, item, *printer, options, ct));
 
             logInfo("saving {}...", fileUrl);
             Io::BufferWriter bw;

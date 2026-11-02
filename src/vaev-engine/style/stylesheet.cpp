@@ -71,9 +71,13 @@ export struct StyleSheet {
 
 // https://drafts.csswg.org/cssom/#the-stylesheetlist-interface
 export struct StyleSheetList {
-    Vec<StyleSheet> items = {};
+    Vec<Rc<StyleSheet>> items = {};
 
     void add(StyleSheet&& sheet) {
+        items.pushBack(makeRc<StyleSheet>(std::move(sheet)));
+    }
+
+    void add(Rc<StyleSheet> sheet) {
         items.pushBack(std::move(sheet));
     }
 

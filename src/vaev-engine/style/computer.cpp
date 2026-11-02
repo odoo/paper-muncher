@@ -379,7 +379,7 @@ export struct Computer {
         auto computed = makeRc<PageComputedValues>(_heap, parent);
 
         for (auto const& sheet : _stylesheets.items)
-            for (auto const& rule : sheet.rules)
+            for (auto const& rule : sheet->rules)
                 _evalRule(rule, page, *computed);
 
         for (auto& area : computed->_areas) {
@@ -472,7 +472,7 @@ export struct Computer {
     CounterStyleSet _resolveCounterStyle(StyleSheetList const& stylesheets) {
         CounterDescriptorSet counters;
         for (auto const& sheet : stylesheets.items)
-            for (auto const& rule : sheet.rules)
+            for (auto const& rule : sheet->rules)
                 _collectCounterStyle(rule, counters);
         return resolveExtends(counters);
     }
@@ -507,8 +507,8 @@ export struct Computer {
 
     void build() {
         for (auto const& sheet : _stylesheets.items) {
-            for (auto const& rule : sheet.rules) {
-                _addRuleToLookup(&rule, _layers.root(sheet.origin));
+            for (auto const& rule : sheet->rules) {
+                _addRuleToLookup(&rule, _layers.root(sheet->origin));
             }
         }
         _layers.finalize();
