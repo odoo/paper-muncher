@@ -6,6 +6,30 @@
 
 [GitHub Link](https://github.com/odoo/paper-muncher/)
 
+# 🦣 Paper Muncher v0.10.0
+
+## Changes
+
+ - Added per-document headers and footers in batch mode [#305](https://github.com/odoo/paper-muncher/pull/305)
+ - Sped up batch rendering by sharing parsed stylesheets between documents [#346](https://github.com/odoo/paper-muncher/pull/346)
+ - Added support for WebP, AVIF, JPEG XL and TIFF images [karm@32b4595](https://codeberg.org/skift/karm/commit/32b4595638bcc48b6237c59094163a4b06eb64f4)
+ - Replaced the default fonts with a more web friendly set [karm@a1df473](https://codeberg.org/skift/karm/commit/a1df473bd1c512251194aaaa5e95f8a3452ce2c8)
+ - Replaced the VGA fallback font with a tofu font [karm@5c38cf5](https://codeberg.org/skift/karm/commit/5c38cf5c010b2717c27dbbdfbb26fe451eb8fbdd)
+ - Fixed font family matching for names with non-alphabetic characters [karm@d432809](https://codeberg.org/skift/karm/commit/d432809aa382f7bde40ea7985631fa675abaabeb)
+ - Added support for `<template>` elements and fixed a few HTML parser edge cases [#336](https://github.com/odoo/paper-muncher/pull/336)
+ - Fixed comment handling in the CSS lexer [#325](https://github.com/odoo/paper-muncher/pull/325)
+ - Fixed a crash with ruby boxes [#309](https://github.com/odoo/paper-muncher/pull/309)
+ - Fixed the sandbox build on non-Linux targets [9478416](https://github.com/odoo/paper-muncher/commit/9478416b8802bc7c0df5a8c4f7c2bfad17d67b5d)
+ - Reworked the inspector with print preview, fragment inspection and color previews [#328](https://github.com/odoo/paper-muncher/pull/328) [#330](https://github.com/odoo/paper-muncher/pull/330) [#331](https://github.com/odoo/paper-muncher/pull/331)
+ - Added initial support for cascade layers (`@layer`) [219edb4](https://github.com/odoo/paper-muncher/commit/219edb4748b3f5521307f125b17874401f3eb951)
+ - Added CSS serialization for stylesheets, properties and colors [#326](https://github.com/odoo/paper-muncher/pull/326) [#327](https://github.com/odoo/paper-muncher/pull/327) [#329](https://github.com/odoo/paper-muncher/pull/329) [#332](https://github.com/odoo/paper-muncher/pull/332) [#333](https://github.com/odoo/paper-muncher/pull/333) [#341](https://github.com/odoo/paper-muncher/pull/341)
+ - Unified the representation of CSS dimensions [#337](https://github.com/odoo/paper-muncher/pull/337)
+ - And many more random bug fixes all around the engine!
+
+[GitHub Link](https://github.com/odoo/paper-muncher/releases/tag/v0.10.0)
+
+---
+
 # 🛠️ Paper Muncher v0.9.0
 
 ## Changes
