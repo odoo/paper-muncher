@@ -55,57 +55,6 @@ export struct BatchItem {
     Opt<Ref::Url> footer = NONE;
 };
 
-static Res<> _validateDecorationCount(Str name, usize count, usize inputCount) {
-    if (count == 0 or count == 1 or count == inputCount)
-        return Ok();
-
-    return Error::invalidInput(
-        "expected --{} to receive zero documents, one document, or one document per input (got {} documents for {} inputs)"_f(
-            name, count, inputCount
-        )
-    );
-}
-
-static bool _isUrlNone(Ref::Url const& url) {
-    return Io::toLowerCase(url.path.basename()).expect() == "none"s;
-}
-
-static Opt<Ref::Url> _resolveDecoration(Vec<Ref::Url> const& docs, usize inputCount, usize index) {
-    if (docs.len() == 1) {
-        if (_isUrlNone(docs[0]))
-            return NONE;
-        return Some(docs[0]);
-    }
-
-    if (docs.len() == inputCount) {
-        if (_isUrlNone(docs[index]))
-            return NONE;
-        return Some(docs[index]);
-    }
-
-    return NONE;
-}
-
-export Res<Vec<BatchItem>> makeBatchItems(
-    Vec<Ref::Url> const& inputs,
-    Vec<Ref::Url> const& headers,
-    Vec<Ref::Url> const& footers
-) {
-    try$(_validateDecorationCount("header"s, headers.len(), inputs.len()));
-    try$(_validateDecorationCount("footer"s, footers.len(), inputs.len()));
-
-    Vec<BatchItem> items;
-    for (auto [input, index] : iter(inputs) | Index()) {
-        items.pushBack(BatchItem{
-            .input = input,
-            .header = _resolveDecoration(headers, inputs.len(), index),
-            .footer = _resolveDecoration(footers, inputs.len(), index),
-        });
-    }
-
-    return Ok(std::move(items));
-}
-
 Rc<Http::Transport> _createHttpTransport(bool sandboxed) {
     if (sandboxed) {
         return Http::multiplexTransport({

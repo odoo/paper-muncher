@@ -123,28 +123,32 @@ def runPaperMuncher(executable, test: TestCase):
     if test.margins:
         command.extend(["--margins", test.margins])
 
-    if test.header:
-        command.append("--header")
-        for header in test.header.split(","):
-            command.append(TESTS_DIR / header)
+    headers = test.header.split(",") if test.header else []
+    footers = test.footer.split(",") if test.footer else []
+    inputs = [TESTS_DIR / i for i in test.inputs.split(",")] if test.inputs else [test.inputPath]
+
+    if len(headers) == 1:
+        command.extend(["--header", TESTS_DIR / headers[0]])
+        headers = []
+
+    if len(footers) == 1:
+        command.extend(["--footer", TESTS_DIR / footers[0]])
+        footers = []
 
     if test.headerSize:
         command.extend(["--header-size", test.headerSize])
-
-    if test.footer:
-        command.append("--footer")
-        for footer in test.footer.split(","):
-            command.append(TESTS_DIR / footer)
 
     if test.footerSize:
         command.extend(["--footer-size", test.footerSize])
 
     command += ["-o", test.outputPath]
 
-    if test.inputs:
-        command.extend(TESTS_DIR / input for input in test.inputs.split(","))
-    else:
-        command.append(test.inputPath)
+    for index, input in enumerate(inputs):
+        command.append(input)
+        if index < len(headers) and headers[index] != "none":
+            command.extend(["--header", TESTS_DIR / headers[index]])
+        if index < len(footers) and footers[index] != "none":
+            command.extend(["--footer", TESTS_DIR / footers[index]])
 
     try:
         executable.popen(*command)

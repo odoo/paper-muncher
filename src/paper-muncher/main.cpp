@@ -45,6 +45,35 @@ struct Cli::ValueParser<Print::PaperStock> {
     }
 };
 
+struct InputArg {
+    Str input;
+    Opt<Ref::Url> header = NONE;
+    Opt<Ref::Url> footer = NONE;
+};
+
+template <>
+struct Cli::ValueParser<InputArg> {
+    static Res<> usage(Io::TextWriter& w) {
+        return w.writeStr("input [--header <document>] [--footer <document>]"s);
+    }
+
+    static Res<InputArg> parse(Cursor<Token>& c) {
+        if (c.ended() or c->kind != Token::OPERAND)
+            return Error::invalidInput("expected input");
+
+        InputArg res{.input = c.next().value};
+
+        auto headerArg = Cli::option<Opt<Ref::Url>>(NONE, "header"s, "Document to render as the page header"s, NONE);
+        auto footerArg = Cli::option<Opt<Ref::Url>>(NONE, "footer"s, "Document to render as the page footer"s, NONE);
+        Cli::Command cmd{"input"s, ""s, {{.title = ""s, .options = {headerArg, footerArg}}}, true};
+        try$(cmd.exec(c));
+
+        res.header = headerArg.value();
+        res.footer = footerArg.value();
+        return Ok(res);
+    }
+};
+
 Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     auto memoryArg = Cli::option<DataSize>(NONE, "memory"s, "Memory limit enforced by the sandbox; ignored without --sandboxed (default: 4GiB)"s, 4_GiB);
     auto sandboxedArg = Cli::flag(NONE, "sandboxed"s, "Disallow access to local files and the network"s);
@@ -61,7 +90,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
         _LEN,
     };
 
-    auto inputsArg = Cli::operand<Vec<Str>>("inputs"s, "Input files (default: stdin)"s, {"-"s});
+    auto inputsArg = Cli::operand<Vec<InputArg>>("inputs"s, "Input files, each optionally followed by --header/--footer (default: stdin)"s, {{.input = "-"s}});
     auto outputArg = Cli::option<Str>(Some('o'), "output"s, "Output file (default: stdout)"s, "-"s);
     auto batchArg = Cli::option<PaperMuncher::Batch>(NONE, "batch"s, "How to handle multiple input documents (default: concat)"s, PaperMuncher::Batch::CONCAT);
     auto formatArg = Cli::option<Union<FormatInfer, Ref::Uti>>(Some('f'), "format"s, "Override the output format (default: inferred from the output file extension)"s, FormatInfer::INFER);
@@ -98,9 +127,9 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
         .epilog = "Explicit --width and --height values take precedence over the --paper dimensions."s
     };
 
-    auto headerArg = Cli::option<Vec<Ref::Url>>(NONE, "header"s, "Documents to render as page headers; pass one for all inputs or one per input"s);
+    auto headerArg = Cli::option<Opt<Ref::Url>>(NONE, "header"s, "Document to render as the page header"s, NONE);
     auto headerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength>>(NONE, "header-size"s, "Height of the page header (default: auto)"s, Vaev::Keywords::AUTO);
-    auto footerArg = Cli::option<Vec<Ref::Url>>(NONE, "footer"s, "Documents to render as page footers; pass one for all inputs or one per input"s);
+    auto footerArg = Cli::option<Opt<Ref::Url>>(NONE, "footer"s, "Document to render as the page footer"s, NONE);
     auto footerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::AbsoluteLength>>(NONE, "footer-size"s, "Height of the page footer (default: auto)"s, Vaev::Keywords::AUTO);
 
     Cli::Section decorationSection{
@@ -111,7 +140,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
             footerArg,
             footerSizeArg,
         },
-        .epilog = "Headers and footers repeat on every page, above and below the main content, within the page margins. Each option accepts one document for all inputs or one document per input; pass positional inputs before --header/--footer."s
+        .epilog = "Headers and footers repeat on every page, above and below the main content, within the page margins. --header and --footer apply to the input they follow; given before the first input, they apply to every input."s
     };
 
     auto flowArg = Cli::option<PaperMuncher::Flow>(NONE, "flow"s, "How content flows across pages (default: auto)"s, PaperMuncher::Flow::AUTO);
@@ -194,9 +223,14 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     options.margins = marginArg.value();
     options.batch = batchArg.value();
 
-    Vec<Ref::Url> inputs;
-    for (auto& i : inputsArg.value())
-        inputs.pushBack(i == "-"s ? "fd:stdin"_url : Ref::parseUrlOrPath(i, env.cwd()));
+    Vec<PaperMuncher::BatchItem> items;
+    for (auto& i : inputsArg.value()) {
+        items.pushBack({
+            .input = i.input == "-"s ? "fd:stdin"_url : Ref::parseUrlOrPath(i.input, env.cwd()),
+            .header = i.header ? i.header : headerArg.value(),
+            .footer = i.footer ? i.footer : footerArg.value(),
+        });
+    }
 
     Ref::Url output = "fd:stdout"_url;
     if (outputArg.value() != "-"s)
@@ -217,8 +251,6 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     );
     options.flow = flowArg.value();
     options.extend = extendArg.value();
-
-    auto items = co_try$(PaperMuncher::makeBatchItems(inputs, headerArg.value(), footerArg.value()));
 
     auto client = PaperMuncher::defaultHttpClient(sandboxedArg.value());
     co_return co_await PaperMuncher::runBatchAsync(client, items, output, options, ct);
