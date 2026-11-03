@@ -6,6 +6,7 @@ export module Vaev.Engine:props.fonts;
 
 import Karm.Core;
 import :props.base;
+import :props.baseline;
 import :css.parser;
 import :style.computed;
 
@@ -262,6 +263,7 @@ export struct FontProperty : Property {
         FontWidth width = FontWidth::NORMAL;
         FontStyle style = FontStyle::NORMAL;
         FontSize size = Keywords::MEDIUM;
+        LineHeight lineHeight = Keywords::NORMAL;
 
         void repr(Io::Emit& e) const {
             e("(font");
@@ -330,10 +332,8 @@ export struct FontProperty : Property {
                 return Error::invalidData("expected font-style, font-weight, font-width or font-size");
             }
 
-            if (c.skip(Css::Token::delim("/"))) {
-                auto lh = Ok(parseValue<LineHeight>(c));
-                // TODO: use lineheight parsed value
-            }
+            if (c.skip(Css::Token::delim("/")))
+                value.lineHeight = try$(parseValue<LineHeight>(c));
 
             value.families = {try$(parseValue<FontFamily>(c))};
 
@@ -352,6 +352,7 @@ export struct FontProperty : Property {
         result.pushBack(makeRc<FontWidthProperty>(registry.resolveRegistration(Properties::FONT_WIDTH, {}).expect(), _value.width));
         result.pushBack(makeRc<FontSizeProperty>(registry.resolveRegistration(Properties::FONT_SIZE, {}).expect(), _value.size));
         result.pushBack(makeRc<FontFamilyProperty>(registry.resolveRegistration(Properties::FONT_FAMILY, {}).expect(), _value.families));
+        result.pushBack(makeRc<LineHeightProperty>(registry.resolveRegistration(Properties::LINE_HEIGHT, {}).expect(), _value.lineHeight));
         if (_value.weight)
             result.pushBack(makeRc<FontWeightProperty>(registry.resolveRegistration(Properties::FONT_WEIGHT, {}).expect(), *_value.weight));
         return result;
