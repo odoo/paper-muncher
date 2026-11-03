@@ -113,7 +113,10 @@ static bool _match(Nfix const& selector, Gc::Ref<Dom::Element> element, Opt<Symb
         return not _matchSelector(selector.inners[0], element, pseudoElement);
 
     case Nfix::WHERE:
-        return not _matchSelector(selector.inners[0], element, pseudoElement);
+        for (auto& inner : selector.inners)
+            if (_matchSelector(inner, element, pseudoElement))
+                return true;
+        return false;
 
     default:
         logWarnIf(debugMatching, "unimplemented selector: {}", selector);

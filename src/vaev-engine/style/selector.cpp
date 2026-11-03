@@ -949,6 +949,14 @@ export struct Selector : _Selector {
                         Cursor<Css::Sst> c = cur->content;
                         // consume a whole selector not a single one
                         val = not_(try$(Selector::parse(c, ns)));
+                    } else if (cur->prefix == Css::Token::function("is(")) {
+                        // https://www.w3.org/TR/selectors-4/#matches
+                        Cursor<Css::Sst> c = cur->content;
+                        val = try$(Selector::parse(c, ns));
+                    } else if (cur->prefix == Css::Token::function("where(")) {
+                        // https://www.w3.org/TR/selectors-4/#zero-matches
+                        Cursor<Css::Sst> c = cur->content;
+                        val = where(try$(Selector::parse(c, ns)));
                     } else {
                         val = try$(_parsePseudoClassFunction(cur, ns));
                     }
