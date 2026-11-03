@@ -275,10 +275,10 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
                 paginationContext.runningPosition
             );
 
+        Paint::StackingContext::establishStackingContext(output.fragment.expect())->paintRoot(snapshot);
+
         if (auto& [decorator] = paginationContext.decorator)
             decorator.decorate(paginationContext.media, infos, pageInfos.len(), snapshot);
-
-        Paint::StackingContext::establishStackingContext(output.fragment.expect())->paintRoot(snapshot);
 
         snapshot.pop();
 
