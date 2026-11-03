@@ -57,6 +57,25 @@ test$("test-specificity-selector-list") {
     return Ok();
 }
 
+test$("test-specificity-is-where") {
+    Dom::Element el{Html::DIV_TAG};
+    el.classList.add("a");
+    el.setAttribute(Html::ID_ATTR, "x"s);
+
+    // https://www.w3.org/TR/selectors-4/#zero-matches
+    StyleRule where{.selector = try$(Selector::parse("div:where(#x, .a)")), .props = {}};
+    assert$(where.match(el, NONE) == Specificity(0, 0, 1));
+
+    // https://www.w3.org/TR/selectors-4/#matches
+    StyleRule is{.selector = try$(Selector::parse("div:is(.a, #y)")), .props = {}};
+    assert$(is.match(el, NONE) == Specificity(1, 0, 1));
+
+    StyleRule whereNoMatch{.selector = try$(Selector::parse("div:where(.b)")), .props = {}};
+    assert$(whereNoMatch.match(el, NONE) == NONE);
+
+    return Ok();
+}
+
 test$("test-specificity-simple-selector-class") {
     Selector selector{try$(Selector::parse(".a"))};
     Specificity specificity{spec(selector)};
