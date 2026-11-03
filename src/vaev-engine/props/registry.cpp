@@ -123,6 +123,9 @@ export RegisteredPropertySet const& defaultRegistry() {
         registry.registerProperty<BreakAfterProperty>();
         registry.registerProperty<BreakBeforeProperty>();
         registry.registerProperty<BreakInsideProperty>();
+        registry.registerProperty<PageBreakAfterProperty>();
+        registry.registerProperty<PageBreakBeforeProperty>();
+        registry.registerProperty<PageBreakInsideProperty>();
 
         // Flex
         registry.registerProperty<FlexBasisProperty>();
