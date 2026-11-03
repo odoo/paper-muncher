@@ -104,7 +104,7 @@ export struct TextTransformProperty : Property {
                 value = TextTransform::NONE;
             } else if (c.skip(Css::Token::ident("uppercase"))) {
                 value = TextTransform::UPPERCASE;
-            } else if (c.skip(Css::Token::ident("lowsercase"))) {
+            } else if (c.skip(Css::Token::ident("lowercase"))) {
                 value = TextTransform::LOWERCASE;
             } else {
                 return Error::invalidData("expected text-transform");
