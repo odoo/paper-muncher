@@ -120,6 +120,9 @@ struct ValueParser<Align> {
             align.keyword = Align::Keywords::LEFT;
         } else if (c.skip(Css::Token::ident("right"))) {
             align.keyword = Align::Keywords::RIGHT;
+        } else if (c.skip(Css::Token::ident("baseline"))) {
+            // https://drafts.csswg.org/css-align-3/#valdef-justify-self-baseline
+            align.keyword = Align::Keywords::FIRST_BASELINE;
         } else if (c.skip(Css::Token::ident("first-baseline"))) {
             align.keyword = Align::Keywords::FIRST_BASELINE;
         } else if (c.skip(Css::Token::ident("last-baseline"))) {
