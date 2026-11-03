@@ -22,6 +22,11 @@ export struct TransformOriginProperty : Property {
         Registration()
             : Property::Registration(Properties::TRANSFORM_ORIGIN, PRESENTATION_ATTRIBUTE) {}
 
+        // https://compat.spec.whatwg.org/#css-simple-aliases
+        Vec<Symbol> legacyAlias() const override {
+            return {"-webkit-transform-origin"_sym};
+        }
+
         Rc<Property> initial() const override {
             return makeRc<TransformOriginProperty>(
                 self(),
@@ -92,6 +97,11 @@ export struct TransformProperty : Property {
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::TRANSFORM, PRESENTATION_ATTRIBUTE) {}
+
+        // https://compat.spec.whatwg.org/#css-simple-aliases
+        Vec<Symbol> legacyAlias() const override {
+            return {"-webkit-transform"_sym};
+        }
 
         Rc<Property> initial() const override {
             return makeRc<TransformProperty>(self(), Transform{Keywords::NONE});
