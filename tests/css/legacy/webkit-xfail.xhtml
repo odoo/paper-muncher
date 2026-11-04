@@ -1,0 +1,154 @@
+<!-- Legacy WebKit properties used by Odoo templates written for wkhtmltopdf. -->
+<tests>
+
+<test name="zoom">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                    .g { background-color: green; }
+                .sq { width: 50px; height: 50px; background-color: green; } .bar { width: 100px; height: 20px; background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 100x100 box">
+        <div class="g" style="width: 100px; height: 100px"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): zoom: 2" xfail="true">
+        <div class="g" style="width: 50px; height: 50px; zoom: 2"/>
+    </rendering>
+</test>
+
+<test name="webkit-transform">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                    .g { background-color: green; }
+                .sq { width: 50px; height: 50px; background-color: green; } .bar { width: 100px; height: 20px; background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: transform">
+        <div style="padding: 50px"><div class="bar" style="transform: rotate(90deg)"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): -webkit-transform (wkhtmltopdf does not know the unprefixed property, so templates only use this one)">
+        <div style="padding: 50px"><div class="bar" style="-webkit-transform: rotate(90deg)"/></div>
+    </rendering>
+</test>
+
+<test name="webkit-box-pack">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                    .g { background-color: green; }
+                .sq { width: 50px; height: 50px; background-color: green; } .bar { width: 100px; height: 20px; background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: flex + justify-content: flex-end">
+        <div style="display: flex; justify-content: flex-end"><div class="sq"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): display: -webkit-box + -webkit-box-pack: end (wkhtmltopdf flexbox, used alone in some inline styles)" xfail="true">
+        <div style="display: -webkit-box; -webkit-box-pack: end"><div class="sq"/></div>
+    </rendering>
+</test>
+
+<test name="webkit-box-align">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                    .g { background-color: green; }
+                .sq { width: 50px; height: 50px; background-color: green; } .bar { width: 100px; height: 20px; background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: flex + align-items: center">
+        <div style="display: flex; align-items: center; height: 100px"><div class="sq"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): -webkit-box-align: center" xfail="true">
+        <div style="display: -webkit-box; -webkit-box-align: center; height: 100px"><div class="sq"/></div>
+    </rendering>
+</test>
+
+<test name="webkit-box-flex">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                    .g { background-color: green; }
+                .sq { width: 50px; height: 50px; background-color: green; } .bar { width: 100px; height: 20px; background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: flex-grow: 1">
+        <div style="display: flex"><div class="sq" style="flex-grow: 1"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): -webkit-box-flex: 1" xfail="true">
+        <div style="display: -webkit-box"><div class="sq" style="-webkit-box-flex: 1"/></div>
+    </rendering>
+</test>
+
+<test name="webkit-box-orient">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                    .g { background-color: green; }
+                .sq { width: 50px; height: 50px; background-color: green; } .bar { width: 100px; height: 20px; background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: flex-direction: column + justify-content: flex-end">
+        <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 150px"><div class="sq"/><div class="sq"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): -webkit-box-orient: vertical + -webkit-box-pack: end" xfail="true">
+        <div style="display: -webkit-box; -webkit-box-orient: vertical; -webkit-box-pack: end; height: 150px"><div class="sq"/><div class="sq"/></div>
+    </rendering>
+</test>
+
+</tests>

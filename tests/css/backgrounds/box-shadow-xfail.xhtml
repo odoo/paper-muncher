@@ -1,0 +1,33 @@
+<!-- box-shadow is not supported. -->
+<tests>
+
+<test name="box-shadow">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                    .g { background-color: green; }
+                .sq { position: absolute; width: 50px; height: 50px; background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: box and its hard shadow drawn as two boxes">
+        <div style="position: relative"><div class="sq" style="left: 10px; top: 10px"/><div class="sq" style="left: 0; top: 0"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): box-shadow without blur" xfail="true">
+        <div style="position: relative"><div class="sq" style="box-shadow: 10px 10px 0 0 green"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): -webkit-box-shadow" xfail="true">
+        <div style="position: relative"><div class="sq" style="-webkit-box-shadow: 10px 10px 0 0 green"/></div>
+    </rendering>
+</test>
+
+</tests>

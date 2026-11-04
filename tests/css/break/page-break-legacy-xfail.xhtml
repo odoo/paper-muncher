@@ -1,0 +1,106 @@
+<tests>
+
+<test name="page-break-before-after" width="200px" height="100px" flow="paginate" margins="none">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                .g { background-color: green; }
+
+                .box { height: 40px; margin: 5px; }
+                .a { background: salmon; } .b { background: lightseagreen; } .c { background: rebeccapurple; }
+                .box.tall { height: auto; }
+                .tall > div { height: 30px; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: break-before: page">
+        <div class="box a"/><div class="box b" style="break-before: page"/><div class="box c"/>
+    </rendering>
+
+    <rendering help="control: break-after: page">
+        <div class="box a" style="break-after: page"/><div class="box b"/><div class="box c"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): page-break-after: always (CSS 2 alias of break-after: page, the only syntax wkhtmltopdf knows)">
+        <div class="box a" style="page-break-after: always"/><div class="box b"/><div class="box c"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): page-break-before: always">
+        <div class="box a"/><div class="box b" style="page-break-before: always"/><div class="box c"/>
+    </rendering>
+</test>
+
+<test name="page-break-legacy-grammar" width="200px" height="100px" flow="paginate" margins="none">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                .box { height: 40px; margin: 5px; }
+                .a { background: salmon; } .b { background: lightseagreen; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: no break">
+        <div class="box a"/><div class="box b"/>
+    </rendering>
+
+    <rendering help="always is not a value of break-before">
+        <div class="box a"/><div class="box b" style="break-before: always"/>
+    </rendering>
+
+    <rendering help="page is not a value of page-break-before">
+        <div class="box a"/><div class="box b" style="page-break-before: page"/>
+    </rendering>
+
+    <rendering help="page is not a value of page-break-after">
+        <div class="box a" style="page-break-after: page"/><div class="box b"/>
+    </rendering>
+</test>
+
+<test name="page-break-inside" width="200px" height="100px" flow="paginate" margins="none">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                .g { background-color: green; }
+
+                .box { height: 40px; margin: 5px; }
+                .a { background: salmon; } .b { background: lightseagreen; } .c { background: rebeccapurple; }
+                .box.tall { height: auto; }
+                .tall > div { height: 30px; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: second box pushed to the next page">
+        <div class="box tall a"><div/><div/></div><div class="box tall b" style="break-before: page"><div/><div/></div>
+    </rendering>
+
+    <rendering help="control: break-inside: avoid">
+        <div class="box tall a"><div/><div/></div><div class="box tall b" style="break-inside: avoid"><div/><div/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): page-break-inside: avoid (alias of break-inside: avoid)">
+        <div class="box tall a"><div/><div/></div><div class="box tall b" style="page-break-inside: avoid"><div/><div/></div>
+    </rendering>
+</test>
+
+</tests>

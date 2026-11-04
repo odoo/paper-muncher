@@ -1,0 +1,57 @@
+<!-- Floats: BFC containment and shrink-to-fit with percentage-width content. -->
+<tests>
+
+<test name="bfc-contains-floats">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                    .g { background-color: green; }
+                .blue { background-color: blue; height: 50px; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 50px green band followed by a blue one">
+        <div class="g" style="height: 50px"/><div class="blue"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): an overflow: hidden block must grow to contain its float (Odoo totals block: .overflow-hidden > .float-end)" xfail="true">
+        <div class="g" style="overflow: hidden"><div class="g" style="float: right; width: 100px; height: 50px"/></div><div class="blue"/>
+    </rendering>
+</test>
+
+<test name="float-shrink-to-fit">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                .g { background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 50px wide green box">
+        <div class="g" style="width: 50px; height: 50px"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): a float containing a width: 100% table must shrink to fit its content (Odoo totals table)" xfail="true">
+        <div class="g" style="float: left"><table style="width: 100%; border-spacing: 0"><tr><td style="padding: 0"><div style="width: 50px; height: 50px"/></td></tr></table></div>
+    </rendering>
+
+    <rendering help="float containing a width: 100% block must shrink to fit its content" xfail="true">
+        <div class="g" style="float: left"><div style="width: 100%"><div style="width: 50px; height: 50px"/></div></div>
+    </rendering>
+</test>
+
+</tests>

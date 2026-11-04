@@ -1,0 +1,104 @@
+<!-- Header/footer documents are laid out at the wrong width when the scale option is not 1, and are hidden by the page background. -->
+<tests>
+
+<test name="decoration-left-anchored-with-scale" width="200px" height="100px" flow="paginate" margins="none" scale="0.5x">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: green bar on the left half of the top 20px, drawn in the body (page is 400 CSS px wide at scale 0.5x)">
+        <div style="width: 200px; height: 20px; background: green"/><div style="height: 1px"/>
+    </rendering>
+
+    <rendering help="control: left-anchored header content is placed correctly" header="print/decoration-scale-left.html" header-size="20px">
+        <div style="height: 1px"/>
+    </rendering>
+</test>
+
+<test name="decoration-layout-width-with-scale" width="200px" height="100px" flow="paginate" margins="none" scale="0.5x">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: green bar on the right half of the top 20px, drawn in the body (page is 400 CSS px wide at --scale 0.5x)">
+        <div style="margin-left: 200px; width: 200px; height: 20px; background: green"/><div style="height: 1px"/>
+    </rendering>
+
+    <rendering help="control: header child positioned with a CSS px offset (correct, only width-relative layout is wrong)" header="print/decoration-scale-px.html" header-size="20px">
+        <div style="height: 1px"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): header with margin-left: auto; width: 50% must be laid out at the page width, it is currently pushed off the page when --scale is not 1 (Odoo always passes --scale 76/dpi)" header="print/decoration-scale-auto.html" header-size="20px">
+        <div style="height: 1px"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): right-aligned header content (text-align: right), e.g. the company address in Odoo layouts" header="print/decoration-scale-right.html" header-size="20px">
+        <div style="height: 1px"/>
+    </rendering>
+</test>
+
+<test name="decoration-centered-with-scale" width="200px" height="100px" flow="paginate" margins="none" scale="0.5x">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: green bar centered in the top 20px, drawn in the body">
+        <div style="margin-left: 100px; width: 200px; height: 20px; background: green"/><div style="height: 1px"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): centered header content (e.g. page numbers) lands at its position divided by the scale" header="print/decoration-scale-center.html" header-size="20px">
+        <div style="height: 1px"/>
+    </rendering>
+</test>
+
+<test name="page-background-under-decorations" width="200px" height="100px" flow="paginate" margins="none">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: white page with a green bar in the top 20px, drawn in the body">
+        <div style="width: 200px; height: 20px; background: green"/><div style="height: 1px"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): the document background must be painted under the header, not over it: with bitmap output a white html background hides the whole header (PDF output is correct)" header="print/decoration-scale-left.html" header-size="20px">
+        <div style="height: 1px"/>
+    </rendering>
+</test>
+
+</tests>

@@ -1,0 +1,62 @@
+<!-- Content inside flex items / inline-blocks is not fragmented: everything after the first page is lost. -->
+<tests>
+
+<test name="fragmentation-of-flex-items" width="200px" height="100px" flow="paginate" margins="none">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                .g { background-color: green; }
+
+                .box { height: 40px; margin: 5px; }
+                .a { background: salmon; } .b { background: lightseagreen; } .c { background: rebeccapurple; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: boxes in normal flow, split over 3 pages">
+        <div class="box a"/><div class="box b"/><div class="box c"/><div class="box a"/><div class="box b"/><div class="box c"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): content of a flex item must continue on the next pages (Bootstrap .row > .col-*), it is currently cut after the first page" xfail="true">
+        <div style="display: flex"><div style="flex: 1 1 auto"><div class="box a"/><div class="box b"/><div class="box c"/><div class="box a"/><div class="box b"/><div class="box c"/></div></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): same with flex-wrap and a 100% flex item, as Bootstrap does" xfail="true">
+        <div style="display: flex; flex-wrap: wrap"><div style="flex: 0 0 100%; max-width: 100%"><div class="box a"/><div class="box b"/><div class="box c"/><div class="box a"/><div class="box b"/><div class="box c"/></div></div>
+    </rendering>
+</test>
+
+<test name="fragmentation-of-inline-blocks" width="200px" height="100px" flow="paginate" margins="none">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                .g { background-color: green; }
+
+                .box { height: 40px; margin: 5px; }
+                .a { background: salmon; } .b { background: lightseagreen; } .c { background: rebeccapurple; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: boxes in normal flow, split over 3 pages">
+        <div class="box a"/><div class="box b"/><div class="box c"/><div class="box a"/><div class="box b"/><div class="box c"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): content of an inline-block must continue on the next pages, it is currently cut after the first page" xfail="true">
+        <div style="display: inline-block; width: 100%; vertical-align: top"><div class="box a"/><div class="box b"/><div class="box c"/><div class="box a"/><div class="box b"/><div class="box c"/></div>
+    </rendering>
+</test>
+
+</tests>
