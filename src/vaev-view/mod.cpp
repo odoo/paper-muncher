@@ -84,9 +84,10 @@ struct Viewport : Ui::View<Viewport> {
     void layout(RectAu bound) override {
         _listener.updateContainerBound(bound);
 
-        auto media = Style::Media::forRender(bound.size(), Resolution::fromDppx(_props.scale));
-        media.prefersColorScheme = _props.prefersColorScheme.unwrapOr(Ui::darkMode ? ColorScheme::DARK : ColorScheme::LIGHT);
-        _webview->changeMedia(media);
+        auto prefs = Style::ViewerPrefs::forRender();
+        prefs.colorScheme = _props.prefersColorScheme.unwrapOr(Ui::darkMode ? ColorScheme::DARK : ColorScheme::LIGHT);
+        _webview->changeArea(Style::DisplayArea::forRender(bound.size(), Resolution::fromDppx(_props.scale)));
+        _webview->changePrefs(prefs);
 
         _listener.updateContentBound(_webview->scrollableOverflow());
         View::layout(bound);

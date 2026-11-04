@@ -32,11 +32,11 @@ export struct PageLayoutInfos {
 export struct PageDecorator {
     virtual ~PageDecorator() = default;
 
-    virtual RectAu layout([[maybe_unused]] Style::Media const& media, [[maybe_unused]] PageLayoutInfos const& infos) {
+    virtual RectAu layout([[maybe_unused]] Style::DisplayArea const& area, [[maybe_unused]] Style::ViewerPrefs const& prefs, [[maybe_unused]] PageLayoutInfos const& infos) {
         return infos.pageDecoration;
     }
 
-    virtual void decorate([[maybe_unused]] Style::Media const& media, [[maybe_unused]] PageLayoutInfos const& infos, [[maybe_unused]] usize pageCount, [[maybe_unused]] Gfx::Canvas& g) {
+    virtual void decorate([[maybe_unused]] Style::DisplayArea const& area, [[maybe_unused]] Style::ViewerPrefs const& prefs, [[maybe_unused]] PageLayoutInfos const& infos, [[maybe_unused]] usize pageCount, [[maybe_unused]] Gfx::Canvas& g) {
     }
 };
 
@@ -109,7 +109,8 @@ void _paintMargins(PageLayoutInfos& infos, Gfx::Canvas& g, Layout::RunningPositi
 
 struct PaginationContext {
     Layout::Tree& contentTree;
-    Style::Media& media;
+    Style::DisplayArea const& area;
+    Style::ViewerPrefs const& prefs;
     Print::Settings const& settings;
     Style::Computer& computer;
     Rc<Style::ComputedValues> initialStyle;
@@ -160,7 +161,7 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
         };
 
         auto pageStyle = context.computer.computeValues(*context.initialStyle, page);
-        auto pageRect = RectAu{context.media.scaledViewport()};
+        auto pageRect = RectAu{context.area.viewport};
         auto pageDecoration = pageRect.shrink(
             _resolvePageMargin(context.settings.margins, *pageStyle->style->margin, pageRect)
         );
@@ -174,7 +175,7 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
         };
 
         if (auto& [decorator] = context.decorator)
-            infos.pageContent = decorator.layout(context.media, infos);
+            infos.pageContent = decorator.layout(context.area, context.prefs, infos);
 
         context.contentTree.viewport = {
             .small = infos.pageContent.size(),
@@ -210,12 +211,13 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
     }
 }
 
-export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Print::Settings const& settings, Opt<PageDecorator&> decorator) {
-    auto media = Style::Media::forPrint(settings);
+export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Print::Settings const& settings, Style::ViewerPrefs const& prefs, Opt<PageDecorator&> decorator) {
+    auto area = Style::DisplayArea::forPrint(settings);
 
     Style::Computer computer{
         heap,
-        media,
+        area,
+        prefs,
         dom->registeredPropertySet,
         *dom->styleSheets,
         dom->fontDatabase,
@@ -233,7 +235,8 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
 
     PaginationContext paginationContext{
         .contentTree = contentTree,
-        .media = media,
+        .area = area,
+        .prefs = prefs,
         .settings = settings,
         .computer = computer,
         .initialStyle = initialStyle,
@@ -266,7 +269,7 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
 
         Gfx::Snapshot::Recorder snapshot{settings.pageSize().cast<isize>()};
         snapshot.push();
-        snapshot.transform(Math::Trans2f::scale(media.scale()));
+        snapshot.transform(Math::Trans2f::scale(area.scale()));
 
         if (settings.headerFooter and settings.margins != Print::MarginOption::NONE)
             _paintMargins(
@@ -278,7 +281,7 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
         Paint::StackingContext::establishStackingContext(output.fragment.expect())->paintRoot(snapshot);
 
         if (auto& [decorator] = paginationContext.decorator)
-            decorator.decorate(paginationContext.media, infos, pageInfos.len(), snapshot);
+            decorator.decorate(area, prefs, infos, pageInfos.len(), snapshot);
 
         snapshot.pop();
 

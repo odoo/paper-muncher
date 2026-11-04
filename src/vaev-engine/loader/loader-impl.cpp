@@ -34,7 +34,8 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
 
         // FIXME: Properly determine the size of the SVG
         // https://www.w3.org/TR/SVG2/coords.html#SizingSVGInCSS
-        webview->changeMedia(Style::Media::forRender({}, Resolution::fromDppx(1)));
+        webview->changeArea(Style::DisplayArea::forRender({}, Resolution::fromDppx(1)));
+        webview->changePrefs(Style::ViewerPrefs::forRender());
         co_trya$(webview->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
         webview->computeStyle();
         auto root = webview->document()->documentElement();
@@ -46,7 +47,7 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
         auto width = resolver.resolve(root->computedValues()->sizing->width.unwrapOr<Calc<PercentOr<Length>>>(Length{300_au}), 300_au);
         auto height = resolver.resolve(root->computedValues()->sizing->height.unwrapOr<Calc<PercentOr<Length>>>(Length{300_au}), 300_au);
 
-        webview->changeMedia(Style::Media::forRender({width, height}, Resolution::fromDppx(1)));
+        webview->changeArea(Style::DisplayArea::forRender({width, height}, Resolution::fromDppx(1)));
         co_return Ok(webview->snapshot());
     } else {
         auto image = Karm::Image::load(data);
