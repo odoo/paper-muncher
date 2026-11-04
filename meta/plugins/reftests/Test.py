@@ -10,7 +10,10 @@ SUPPORTED_PROPS = {
     "height": "200px",
     "flow": None,
     "margins": None,
+    "scale": None,
+    "features": None,
     "skip": None,
+    "xfail": None,
 }
 
 SUPPORTED_CASE_PROPS = {
@@ -21,6 +24,7 @@ SUPPORTED_CASE_PROPS = {
     "footer-size": None,
     "help": None,
     "skip": None,
+    "xfail": None,
 }
 
 class TestReference:
@@ -77,6 +81,9 @@ class TestCase:
         self.footerSize = caseProps.get("footer-size", SUPPORTED_CASE_PROPS["footer-size"])
         self.help = caseProps.get("help", SUPPORTED_CASE_PROPS["help"])
         self.skipped = caseProps.get("skip", SUPPORTED_CASE_PROPS["skip"]) == "true"
+        self.scale = props.get("scale", SUPPORTED_PROPS["scale"])
+        self.features = props.get("features", SUPPORTED_PROPS["features"])
+        self.xfail = "true" in (props.get("xfail"), caseProps.get("xfail"))
 
         self.inputPath: Path = TEST_REPORT / f"{self.id}.xhtml"  # path to test case's document
         self.outputPath: Path = TEST_REPORT / f"{self.id}.bmp"  # path to the output image
@@ -109,7 +116,10 @@ class TestCase:
 
 
 def runPaperMuncher(executable, test: TestCase):
-    command = ["--feature", "*=on", "wkhtmltopdf-quirks-*=off", "--quiet"]
+    command = ["--feature", "*=on", "wkhtmltopdf-quirks-*=off"]
+    if test.features:
+        command.extend(test.features.split())
+    command.append("--quiet")
 
     if test.flow:
         command.extend(["--flow", test.flow])
@@ -122,6 +132,9 @@ def runPaperMuncher(executable, test: TestCase):
 
     if test.margins:
         command.extend(["--margins", test.margins])
+
+    if test.scale:
+        command.extend(["--scale", test.scale])
 
     headers = test.header.split(",") if test.header else []
     footers = test.footer.split(",") if test.footer else []

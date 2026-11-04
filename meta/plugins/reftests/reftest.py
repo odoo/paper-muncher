@@ -55,6 +55,7 @@ class TestResults:
         self.passed: int = 0
         self.failed: int = 0
         self.skipped: int = 0
+        self.xfailed: int = 0
         self.failedDetails: str = ""
         self.panicTests: list[tuple[int, str]] = []  # (test_id, panic_info)
 
@@ -69,6 +70,9 @@ class TestResults:
     def addSkipped(self) -> None:
         self.skipped += 1
 
+    def addXfailed(self) -> None:
+        self.xfailed += 1
+
     def addPanic(self, test_id: int, panic_info: str) -> None:
         """Record a test panic."""
         self.panicTests.append((test_id, panic_info))
@@ -78,6 +82,7 @@ class TestResults:
         self.passed += other.passed
         self.failed += other.failed
         self.skipped += other.skipped
+        self.xfailed += other.xfailed
         self.failedDetails += other.failedDetails
         self.panicTests.extend(other.panicTests)
 
@@ -200,12 +205,26 @@ class TestRunner:
             testCase.outputImage
         )
 
-    def _runSingleTestCase(self, test: TestCase, reference: TestReference, skipped: bool = False) -> bool:
+    def _runSingleTestCase(self, test: TestCase, reference: TestReference, skipped: bool = False) -> str:
         """Run a single test case and report results."""
         if skipped:
             test.addInfos.append("skip flag")
 
         ok: bool = test.run(self._context.paperMuncher, reference)
+
+        if test.xfail:
+            if not ok:
+                test.addInfos.append("expected failure")
+                self._reporter.addTestCase(test, True)
+                return "xfailed"
+            test.addInfos.append("unexpected pass")
+            self._context.results.addFailed(f"""Test {test.id} passed but is marked xfail="true": remove the flag.
+            file://{test.inputPath}
+            file://{TEST_REPORT / "report.html"}#case-{test.id}
+            """)
+            self._reporter.addTestCase(test, False)
+            return "failed"
+
         if not ok:
             failureDetails: str = f"""Test {test.id} failed.
             file://{test.inputPath}
@@ -220,7 +239,7 @@ class TestRunner:
 
         self._reporter.addTestCase(test, ok)
 
-        return ok
+        return "passed" if ok else "failed"
 
     def _runTestCategory(self, category: TestCategory, file: Path) -> TestResults:
         categoryResults: TestResults = TestResults()
@@ -239,9 +258,11 @@ class TestRunner:
                 self._reporter.addSkippedCase(test)
                 continue
 
-            success: bool = self._runSingleTestCase(test, reference, testSkipped)
-            if success:
+            status: str = self._runSingleTestCase(test, reference, testSkipped)
+            if status == "passed":
                 categoryResults.addPassed()
+            elif status == "xfailed":
+                categoryResults.addXfailed()
             else:
                 categoryResults.addFailed()
 
