@@ -1362,15 +1362,13 @@ export struct TableFormatingContext : FormatingContext {
         Opt<Au> knownWidth;
         Opt<Au> knownHeight;
         IntrinsicSize intrinsic;
-        bool discovery;
 
-        AutoLayoutCacheKey(Input const& input, bool discovery)
+        AutoLayoutCacheKey(Input const& input)
             : containingBlockX(input.containingBlock.x),
               capmin(input.capmin),
               knownWidth(input.knownSize.width),
               knownHeight(input.knownSize.height),
-              intrinsic(input.intrinsic),
-              discovery(discovery) {
+              intrinsic(input.intrinsic) {
         }
 
         bool operator==(AutoLayoutCacheKey const&) const = default;
@@ -1403,6 +1401,11 @@ export struct TableFormatingContext : FormatingContext {
     Opt<AutoLayoutCacheKey> lastAutoLayoutInput;
 
     void computeWidthAndHeight(Tree& tree, Box& box, Input const& input) {
+        tree.fc.enterMonolithicBox();
+        Defer _ = [&] {
+            tree.fc.leaveMonolithicBox();
+        };
+
         // NOTE: When "table-layout: fixed" is set but "width: auto", the specs suggest
         //       that the UA can use the fixed layout after computing the width
         //      (see https://www.w3.org/TR/CSS22/visudet.html#blockwidth).
@@ -1414,10 +1417,7 @@ export struct TableFormatingContext : FormatingContext {
         Opt<AutoLayoutCacheKey> cacheKey;
 
         if (shouldRunAutoAlgorithm) {
-            cacheKey = Some(AutoLayoutCacheKey{
-                input,
-                tree.fc.isDiscoveryMode(),
-            });
+            cacheKey = Some(AutoLayoutCacheKey{input});
 
             if (lastAutoLayoutInput == cacheKey)
                 return;
