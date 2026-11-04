@@ -100,8 +100,8 @@ struct InlineFormatingContext : FormatingContext {
             boxStrutCell->baseline = getUsedBaselineFromBox(atomicBox, atomicBoxOutput).alphabetic;
         }
 
-        // FIXME: prose has a ongoing state that is not reset between layout calls, but it should be
-        prose->_blocksMeasured = false;
+        if (prose->_struts)
+            prose->_blocksMeasured = false;
         auto size = prose->layout(inlineSize);
 
         auto firstBaselineSet = _computeBaselinePositions(prose->_rootSpan->style.font.metrics(), first(prose->_lines).baseline);
