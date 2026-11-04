@@ -83,6 +83,7 @@ class WebReport(Reporter):
         passed_chip = f'<span class="chip passed">{results.passed} passed</span>' if results.passed else ""
         failed_chip = f'<span class="chip failed">{results.failed} failed</span>' if results.failed else ""
         skipped_chip = f'<span class="chip skipped">{results.skipped} skipped</span>' if results.skipped else ""
+        skipped_chip += f' <span class="chip skipped">{results.xfailed} xfail</span>' if getattr(results, "xfailed", 0) else ""
         self.html += f"""
                 <details class="wrapper">
                     <summary class="test-case {results.failed and "failed" or "passed"}">
