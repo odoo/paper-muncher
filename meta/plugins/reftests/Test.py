@@ -109,7 +109,7 @@ class TestCase:
 
 
 def runPaperMuncher(executable, test: TestCase):
-    command = ["--feature", "*=on", "--quiet"]
+    command = ["--feature", "*=on", "wkhtmltopdf-quirks-*=off", "--quiet"]
 
     if test.flow:
         command.extend(["--flow", test.flow])
