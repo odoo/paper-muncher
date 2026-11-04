@@ -406,6 +406,7 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, Box& group) {
         Box newSvgRoot{el->computedValues(), Some(el)};
         buildSVGAggregate(el, newSvgRoot);
         group.add(std::move(newSvgRoot));
+    } else if (el->qualifiedName == Svg::STYLE_TAG) {
     } else if (el->qualifiedName == Svg::FOREIGN_OBJECT_TAG) {
         Box box{el->computedValues(), Some(el)};
         Box rootInlineBox{

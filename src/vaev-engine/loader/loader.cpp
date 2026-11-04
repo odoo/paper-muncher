@@ -222,7 +222,7 @@ Async::Task<> _fetchResourcesAsync(ResourceLoader& loader, Dom::Document& docume
         }
 
         el->imageContent = Some(image.take());
-    } else if (el and el->qualifiedName == Html::STYLE_TAG) {
+    } else if (el and (el->qualifiedName == Html::STYLE_TAG or el->qualifiedName == Svg::STYLE_TAG)) {
         auto text = el->textContent();
         Io::SScan textScan{text};
         Diag::Collector diags;
