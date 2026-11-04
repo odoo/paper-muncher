@@ -4,6 +4,7 @@ import Karm.Core;
 import Karm.Print;
 import Karm.Math;
 import Karm.Logger;
+import Karm.Debug;
 
 import :values;
 import :css;
@@ -11,6 +12,18 @@ import :css;
 using namespace Karm;
 
 namespace Vaev::Style {
+
+// MARK: wkhtmltopdf Quirks ----------------------------------------------------
+
+static auto quirksMediaZeroViewport = Debug::Flag::feature(
+    "wkhtmltopdf-quirks-media-zero-viewport",
+    "Evaluate media queries against a 0x0 viewport, like wkhtmltopdf"
+);
+
+static auto quirksMediaScreen = Debug::Flag::feature(
+    "wkhtmltopdf-quirks-media-screen",
+    "Evaluate media queries with the screen media type when printing, like wkhtmltopdf"
+);
 
 // MARK: Display Area ----------------------------------------------------------
 
@@ -248,9 +261,16 @@ export struct Media {
 
         auto viewport = area.viewport;
         auto deviceSize = area.deviceSize();
+        auto type = area.type;
+
+        if (quirksMediaZeroViewport)
+            viewport = {};
+
+        if (quirksMediaScreen and type == MediaType::PRINT)
+            type = MediaType::SCREEN;
 
         return {
-            .type = area.type,
+            .type = type,
             .width = viewport.width,
             .height = viewport.height,
             .aspectRatio = ratio(viewport),
