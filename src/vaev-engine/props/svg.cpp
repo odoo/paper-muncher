@@ -459,15 +459,14 @@ export struct StrokeWidthProperty : Property {
             return makeRc<StrokeWidthProperty>(self(), PercentOr<Length>{Length{1_au}});
         }
 
-        Res<Rc<Property>> parsePresentationAttribute(Str style) override {
-            return Property::Registration::parsePresentationAttribute(Io::format("{}px", style));
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<StrokeWidthProperty>(self(), c.svgPaint->strokeWidth);
         }
 
+        // https://svgwg.org/svg2-draft/painting.html#StrokeWidth
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            if (auto number = parseValue<Number>(c))
+                return Ok(makeRc<StrokeWidthProperty>(self(), PercentOr<Length>{Length::fromPx(number.take())}));
             return Ok(makeRc<StrokeWidthProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
         }
     };
