@@ -1,0 +1,154 @@
+<!-- Text properties supported by wkhtmltopdf and dropped by paper-muncher. -->
+<tests>
+
+<test name="text-transform-capitalize">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; } div { font: 16px serif; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: capitalized text">
+        <div>Hello World</div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): text-transform: capitalize (value rejected)" xfail="true">
+        <div style="text-transform: capitalize">hello world</div>
+    </rendering>
+</test>
+
+<test name="letter-spacing">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; } div { font: 16px serif; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: no letter-spacing">
+        <div>SPACED</div>
+    </rendering>
+
+    <error help="wkhtmltopdf parity (Odoo reports): letter-spacing must change the rendering" xfail="true">
+        <div style="letter-spacing: 6px">SPACED</div>
+    </error>
+</test>
+
+<test name="text-decoration">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; } div { font: 16px serif; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: no decoration">
+        <div>decorated</div>
+    </rendering>
+
+    <error help="wkhtmltopdf parity (Odoo reports): text-decoration: underline" xfail="true">
+        <div style="text-decoration: underline">decorated</div>
+    </error>
+
+    <error help="wkhtmltopdf parity (Odoo reports): text-decoration: line-through" xfail="true">
+        <div style="text-decoration: line-through">decorated</div>
+    </error>
+</test>
+
+<test name="word-wrap">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; } div { font: 16px serif; } .narrow { width: 60px; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: unbreakable word overflowing a narrow box">
+        <div class="narrow">BE71096123456769</div>
+    </rendering>
+
+    <error help="wkhtmltopdf parity (Odoo reports): word-wrap: break-word must break the word (IBANs, references in Odoo tables)" xfail="true">
+        <div class="narrow" style="word-wrap: break-word">BE71096123456769</div>
+    </error>
+
+    <error help="wkhtmltopdf parity (Odoo reports): word-break: break-word" xfail="true">
+        <div class="narrow" style="word-break: break-word">BE71096123456769</div>
+    </error>
+
+    <error help="overflow-wrap: break-word (not supported by wkhtmltopdf, which uses word-wrap)" xfail="true">
+        <div class="narrow" style="overflow-wrap: break-word">BE71096123456769</div>
+    </error>
+</test>
+
+<test name="text-overflow-ellipsis">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; } div { font: 16px serif; } .clip { width: 80px; white-space: nowrap; overflow: hidden; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: text-overflow: clip">
+        <div class="clip" style="text-overflow: clip">This text is far too long</div>
+    </rendering>
+
+    <error help="wkhtmltopdf parity (Odoo reports): text-overflow: ellipsis must change the rendering" xfail="true">
+        <div class="clip" style="text-overflow: ellipsis">This text is far too long</div>
+    </error>
+</test>
+
+<test name="direction-rtl">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; } .sq { display: inline-block; width: 50px; height: 50px; background: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: inline-block aligned right">
+        <div style="text-align: right"><span class="sq"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): direction: rtl must align inline content to the right (no RTL support)" xfail="true">
+        <div style="direction: rtl"><span class="sq"/></div>
+    </rendering>
+</test>
+
+</tests>

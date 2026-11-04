@@ -1,0 +1,179 @@
+<!-- Media features and viewport-relative units use the viewport in CSS px, and the opt-in wkhtmltopdf media quirks. -->
+<tests>
+
+<test name="media-width-is-css-viewport" width="200px" height="100px" scale="0.5x">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; }
+                .box { width: 50px; height: 50px; }
+                .t { background: red; } @media (min-width: 300px) { .t { background: green; } }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 50x50 green box">
+        <div class="box" style="background: green"/>
+    </rendering>
+
+    <rendering help="media queries see the viewport in CSS px: 200px at 0.5x is a 400px wide viewport">
+        <div class="box t"/>
+    </rendering>
+</test>
+
+<test name="media-width-is-css-viewport-print" width="200px" height="100px" scale="0.5x" flow="paginate" margins="none">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; }
+                .box { width: 50px; height: 50px; }
+                .t { background: red; } @media (min-width: 300px) { .t { background: green; } }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 50x50 green box">
+        <div class="box" style="background: green"/>
+    </rendering>
+
+    <rendering help="same when printing">
+        <div class="box t"/>
+    </rendering>
+</test>
+
+<test name="vw-is-css-viewport" width="200px" height="100px" scale="0.5x">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; }
+                .box { width: 50px; height: 50px; }
+                .t { width: 25vw; background: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 100px wide green box">
+        <div style="width: 100px; height: 50px; background: green"/>
+    </rendering>
+
+    <rendering help="vw units are relative to the viewport in CSS px (25vw of 400px = 100px = 2 x 50px at 0.5x)">
+        <div class="t" style="height: 50px"/>
+    </rendering>
+</test>
+
+<test name="quirks-media-zero-viewport" features="wkhtmltopdf-quirks-media-zero-viewport=on">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; }
+                .box { width: 50px; height: 50px; }
+                .t { background: red; } @media (max-width: 1px) and (max-height: 1px) and (orientation: portrait) { .t { background: green; } } @media (min-width: 1px) { .t { background: red; } }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 50x50 green box">
+        <div class="box" style="background: green"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf-quirks-media-zero-viewport: media queries see a 0x0 portrait viewport, like wkhtmltopdf">
+        <div class="box t"/>
+    </rendering>
+</test>
+
+<test name="no-quirks-media-viewport">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; }
+                .box { width: 50px; height: 50px; }
+                .t { background: red; } @media (min-width: 100px) { .t { background: green; } } @media (max-width: 1px) { .t { background: red; } }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 50x50 green box">
+        <div class="box" style="background: green"/>
+    </rendering>
+
+    <rendering help="control: without the quirk, media queries see the real viewport">
+        <div class="box t"/>
+    </rendering>
+</test>
+
+<test name="quirks-media-screen" flow="paginate" margins="none" features="wkhtmltopdf-quirks-media-screen=on">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; }
+                .box { width: 50px; height: 50px; }
+                .t { background: red; } @media screen { .t { background: green; } } @media print { .t { background: red; } }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 50x50 green box">
+        <div class="box" style="background: green"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf-quirks-media-screen: printing uses the screen media type, like wkhtmltopdf without --print-media-type">
+        <div class="box t"/>
+    </rendering>
+</test>
+
+<test name="no-quirks-media-print" flow="paginate" margins="none">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; }
+                .box { width: 50px; height: 50px; }
+                .t { background: red; } @media print { .t { background: green; } } @media screen { .t { background: red; } }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 50x50 green box">
+        <div class="box" style="background: green"/>
+    </rendering>
+
+    <rendering help="control: without the quirk, printing uses the print media type">
+        <div class="box t"/>
+    </rendering>
+</test>
+
+</tests>

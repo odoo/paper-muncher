@@ -1,0 +1,63 @@
+<!-- Unparsable declarations are deferred instead of dropped, so they override valid earlier declarations. -->
+<tests>
+
+<test name="invalid-declaration-is-dropped">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                    .g { background-color: green; }
+                .blue { background-color: blue; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 50x50 green box">
+        <div class="g" style="width: 50px; height: 50px"/>
+    </rendering>
+
+    <rendering help="control: unknown property after a valid one">
+        <div class="g" style="width: 50px; height: 50px; not-a-property: 10px"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): an invalid value must be dropped at parse time, not override the previous valid declaration (CSS fallback chains)" xfail="true">
+        <div class="g" style="width: 50px; width: 10 apples; height: 50px"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): same with colors" xfail="true">
+        <div class="g" style="width: 50px; height: 50px; background-color: green; background-color: not-a-color"/>
+    </rendering>
+</test>
+
+<test name="invalid-display-is-dropped">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                    .g { background-color: green; }
+                .blue { background-color: blue; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 100x25 green box">
+        <div class="g" style="width: 100px; height: 25px"/>
+    </rendering>
+
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): same with a vendor value: display: flex; display: -webkit-bogus" xfail="true">
+        <div style="display: flex; display: -webkit-bogus; width: 100px"><div class="g" style="width: 50px; height: 25px"/><div class="g" style="width: 50px; height: 25px"/></div>
+    </rendering>
+</test>
+
+</tests>

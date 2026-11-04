@@ -1,0 +1,136 @@
+<!-- background-image / -position / -repeat are parsed but not implemented, background-size is unknown, the background shorthand only takes a color. -->
+<tests>
+
+<test name="background-image">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                .g { background-color: green; }
+
+                .box { width: 100px; height: 100px; }
+                .half { width: 50px; height: 100px; background-color: green; }
+                .top { width: 100px; height: 50px; background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: green background color">
+        <div class="box g"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): background-image: linear-gradient() (background-image is parsed but ignored)" xfail="true">
+        <div class="box" style="background-image: linear-gradient(green, green)"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): background-image: -webkit-linear-gradient(), the only gradient syntax wkhtmltopdf knows" xfail="true">
+        <div class="box" style="background-image: -webkit-linear-gradient(top, green, green)"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): background-image: url() with a raster image (survey certificates, watermarks)" xfail="true">
+        <div class="box" style="background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAIAAAAiOjnJAAACEklEQVR4nO3SQQkAIADAQDW50S3hEOQuwR6bYw+4br0O4E/GImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBLGImEsEsYiYSwSxiJhLBIHjh0CEPZdHgsAAAAASUVORK5CYII=)"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): background shorthand with an image (the shorthand only accepts a color)" xfail="true">
+        <div class="box" style="background: linear-gradient(green, green)"/>
+    </rendering>
+
+    <rendering help="background shorthand with a color and a repeat keyword">
+        <div class="box" style="background: green no-repeat"/>
+    </rendering>
+</test>
+
+<test name="background-size-and-repeat">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                .g { background-color: green; }
+
+                .box { width: 100px; height: 100px; }
+                .half { width: 50px; height: 100px; background-color: green; }
+                .top { width: 100px; height: 50px; background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: left half green">
+        <div class="box"><div class="half"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): background-size in % + background-repeat: no-repeat" xfail="true">
+        <div class="box" style="background-image: linear-gradient(green, green); background-size: 50% 100%; background-repeat: no-repeat"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): background-size in px + background-repeat: no-repeat" xfail="true">
+        <div class="box" style="background-image: linear-gradient(green, green); background-size: 50px 100px; background-repeat: no-repeat"/>
+    </rendering>
+</test>
+
+<test name="background-position">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                .g { background-color: green; }
+
+                .box { width: 100px; height: 100px; }
+                .half { width: 50px; height: 100px; background-color: green; }
+                .top { width: 100px; height: 50px; background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: right half green">
+        <div class="box"><div class="half" style="margin-left: 50px"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): background-position: right" xfail="true">
+        <div class="box" style="background-image: linear-gradient(green, green); background-size: 50% 100%; background-repeat: no-repeat; background-position: right"/>
+    </rendering>
+</test>
+
+<test name="background-repeat-x">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                .g { background-color: green; }
+
+                .box { width: 100px; height: 100px; }
+                .half { width: 50px; height: 100px; background-color: green; }
+                .top { width: 100px; height: 50px; background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: top half green">
+        <div class="box"><div class="top"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): background-repeat: repeat-x" xfail="true">
+        <div class="box" style="background-image: linear-gradient(green, green); background-size: 25px 50px; background-repeat: repeat-x"/>
+    </rendering>
+</test>
+
+</tests>

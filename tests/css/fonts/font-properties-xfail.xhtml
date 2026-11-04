@@ -1,0 +1,50 @@
+<!-- Font shorthand line-height, font-variant. -->
+<tests>
+
+<test name="font-shorthand-line-height">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: longhands">
+        <div style="font-size: 10px; line-height: 40px; font-family: serif">A<br/>B</div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): line-height in the font shorthand is parsed then dropped">
+        <div style="font: 10px/40px serif">A<br/>B</div>
+    </rendering>
+</test>
+
+<test name="font-variant-small-caps">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; } div { font: 20px serif; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: no font-variant">
+        <div>Small Caps</div>
+    </rendering>
+
+    <error help="wkhtmltopdf parity (Odoo reports): font-variant: small-caps must change the rendering" xfail="true">
+        <div style="font-variant: small-caps">Small Caps</div>
+    </error>
+</test>
+
+</tests>
