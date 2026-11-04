@@ -17,6 +17,7 @@ using namespace Karm::Ref::Literals;
 
 Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     co_try$(Debug::toggleFlag(Debug::FEATURE, "*", true));
+    co_try$(Debug::toggleFlag(Debug::FEATURE, "wkhtmltopdf-quirks-*", false));
 
     auto urlArg = Cli::operand<Ref::Url>("url"s, "Url to navigate to (default: about:blank)"s, "about:blank"_url);
     auto devArg = Cli::flag(NONE, "dev"s, "Open the developer tools on startup"s);
