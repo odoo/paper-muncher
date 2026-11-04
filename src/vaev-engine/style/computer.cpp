@@ -24,14 +24,16 @@ static auto debugCounters = Debug::Flag::debug("web-css-counters", "Log all the 
 
 export struct Computer {
     Gc::Heap& _heap;
-    Media _media;
+    DisplayArea _area;
+    ViewerPrefs _prefs;
     RegisteredPropertySet& _registeredPropertySet;
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
+    Media _media = Media::from(_area, _prefs);
     RuleIndex _ruleIndex = {};
     CascadeLayers _layers = {};
     AncestorFilter _ancestorFilter = {};
-    Viewport _viewport{.small = _media.viewportSize()};
+    Viewport _viewport{.small = _area.viewport};
     Opt<Rc<ComputedValues>> _rootComputedValues = NONE;
 
     // MARK: Counters ----------------------------------------------------------

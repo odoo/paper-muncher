@@ -33,7 +33,8 @@ export struct RenderResult {
 export struct WebView {
     mutable Gc::Heap _heap;
     Rc<Loader::ResourceLoader> _loader;
-    Style::Media _media = Style::Media::defaultMedia();
+    Style::DisplayArea _area = {};
+    Style::ViewerPrefs _prefs = {};
 
     Gc::Ptr<Dom::Document> _document = nullptr;
     Opt<RenderResult> _render = NONE;
@@ -50,9 +51,16 @@ export struct WebView {
         return *_loader;
     }
 
-    void changeMedia(Style::Media media) {
-        if (_media != media) {
-            _media = media;
+    void changeArea(Style::DisplayArea area) {
+        if (_area != area) {
+            _area = area;
+            invalidateRender();
+        }
+    }
+
+    void changePrefs(Style::ViewerPrefs prefs) {
+        if (_prefs != prefs) {
+            _prefs = prefs;
             invalidateRender();
         }
     }
@@ -60,11 +68,6 @@ export struct WebView {
     void changeInitialCounterSet(Style::CounterSet counterSet) {
         _initialCounterSet = std::move(counterSet);
         invalidateRender();
-    }
-
-    void changeViewport(Vec2Au viewport) {
-        if (_media.changeViewport(viewport))
-            invalidateRender();
     }
 
     Async::Task<> loadLocationAsync(Ref::Url url, Ref::Uti intent, Async::CancellationToken ct) {
@@ -103,7 +106,7 @@ export struct WebView {
 
         computeStyle();
 
-        Style::Viewport viewport = {.small = _media.scaledViewport()};
+        Style::Viewport viewport = {.small = _area.viewport};
         auto tree = makeRc<Layout::Tree>(
             Layout::buildDocument(_document.upgrade()),
             viewport
@@ -138,7 +141,8 @@ export struct WebView {
     void computeStyle() {
         Style::Computer computer{
             _heap,
-            _media,
+            _area,
+            _prefs,
             _document->registeredPropertySet,
             *_document->styleSheets,
             _document->fontDatabase,
@@ -160,13 +164,13 @@ export struct WebView {
     }
 
     Gfx::Snapshot snapshot() {
-        Gfx::Snapshot::Recorder snapshot{_media.viewportSize().ceili()};
+        Gfx::Snapshot::Recorder snapshot{_area.deviceSize().ceili()};
         ensureRender().stacking->paintRoot(snapshot);
         return snapshot.finalize();
     }
 
     Rc<Gfx::Image> rasterize() {
-        auto image = Gfx::Image::alloc(_media.viewportSize().ceili());
+        auto image = Gfx::Image::alloc(_area.deviceSize().ceili());
         Gfx::CpuCanvas canvas;
         canvas.begin(image->mutPixels());
         ensureRender().stacking->paintRoot(canvas);
@@ -185,7 +189,7 @@ export struct WebView {
 
     [[clang::coro_wrapper]]
     Yield<Gfx::Snapshot> print(Print::Settings const& settings, Opt<Driver::PageDecorator&> decorator = NONE) const {
-        return Driver::print(_heap, _document.upgrade(), settings, decorator);
+        return Driver::print(_heap, _document.upgrade(), settings, _prefs, decorator);
     }
 };
 

@@ -12,6 +12,108 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
+// MARK: Display Area ----------------------------------------------------------
+
+export struct DisplayArea {
+    MediaType type = MediaType::SCREEN;
+
+    Vec2Au viewport = {800_au, 600_au};
+
+    Resolution resolution = Resolution::fromDppx(1);
+
+    Scan scan = Scan::PROGRESSIVE;
+    bool grid = false;
+    Update update = Update::FAST;
+    OverflowBlock overflowBlock = OverflowBlock::SCROLL;
+    OverflowInline overflowInline = OverflowInline::SCROLL;
+
+    Integer color = 8;
+    Integer colorIndex = 0;
+    Integer monochrome = 0;
+    ColorGamut colorGamut = ColorGamut::SRGB;
+
+    Pointer pointer = Pointer::FINE;
+    Hover hover = Hover::HOVER;
+    Pointer anyPointer = Pointer::FINE;
+    Hover anyHover = Hover::HOVER;
+
+    static Vec2Au _toViewport(Vec2Au deviceSize, Resolution resolution) {
+        return {
+            Au{deviceSize.width / resolution.toDppx()},
+            Au{deviceSize.height / resolution.toDppx()},
+        };
+    }
+
+    static DisplayArea forView(Vec2Au deviceSize, Resolution resolution = Resolution::fromDppx(1)) {
+        return {
+            .type = MediaType::SCREEN,
+            .viewport = _toViewport(deviceSize, resolution),
+            .resolution = resolution,
+        };
+    }
+
+    static DisplayArea forRender(Vec2Au deviceSize, Resolution resolution) {
+        return {
+            .type = MediaType::SCREEN,
+            .viewport = _toViewport(deviceSize, resolution),
+            .resolution = resolution,
+            .update = Update::NONE,
+            .overflowBlock = OverflowBlock::NONE,
+            .overflowInline = OverflowInline::NONE,
+            .pointer = Pointer::NONE,
+            .hover = Hover::NONE,
+            .anyPointer = Pointer::NONE,
+            .anyHover = Hover::NONE,
+        };
+    }
+
+    static DisplayArea forPrint(Print::Settings const& settings) {
+        auto pageSize = settings.pageSize();
+        return {
+            .type = MediaType::PRINT,
+            .viewport = {Au{pageSize.width / settings.scale}, Au{pageSize.height / settings.scale}},
+            .resolution = Resolution::fromDppx(settings.scale),
+        };
+    }
+
+    f64 scale() const {
+        return resolution.toDppx();
+    }
+
+    Vec2Au deviceSize() const {
+        return {Au{viewport.width * scale()}, Au{viewport.height * scale()}};
+    }
+
+    DisplayArea withViewport(Vec2Au viewport) const {
+        DisplayArea area = *this;
+        area.viewport = viewport;
+        return area;
+    }
+
+    bool operator==(DisplayArea const&) const = default;
+};
+
+// MARK: Viewer Preferences ----------------------------------------------------
+
+export struct ViewerPrefs {
+    ReducedMotion reducedMotion = ReducedMotion::NO_PREFERENCE;
+    ReducedTransparency reducedTransparency = ReducedTransparency::NO_PREFERENCE;
+    Contrast contrast = Contrast::NO_PREFERENCE;
+    Colors forcedColors = Colors::NONE;
+    ColorScheme colorScheme = ColorScheme::LIGHT;
+    ReducedData reducedData = ReducedData::NO_PREFERENCE;
+
+    static ViewerPrefs forRender() {
+        return {
+            .reducedMotion = ReducedMotion::REDUCE,
+            .reducedTransparency = ReducedTransparency::REDUCE,
+            .contrast = Contrast::MORE,
+        };
+    }
+
+    bool operator==(ViewerPrefs const&) const = default;
+};
+
 // MARK: Media -----------------------------------------------------------------
 
 export struct Media {
@@ -137,158 +239,53 @@ export struct Media {
     Au deviceHeight;
     Number deviceAspectRatio;
 
-    bool changeViewport(Vec2Au viewport) {
-        if (width == viewport.width and height == viewport.height)
-            return false;
-
-        f64 ratio = static_cast<f64>(Au{viewport.width / viewport.height});
-
-        width = Au{viewport.width};
-        height = Au{viewport.height};
-        aspectRatio = ratio;
-
-        deviceWidth = Au{viewport.width};
-        deviceHeight = Au{viewport.height};
-        deviceAspectRatio = ratio;
-
-        return true;
-    }
-
-    static Media forView(Math::Vec2i viewport, ColorScheme colorScheme) {
-        return {
-            .type = MediaType::SCREEN,
-            .width = Au{viewport.width},
-            .height = Au{viewport.height},
-            .aspectRatio = viewport.width / (f64)viewport.height,
-            .orientation = Print::Orientation::LANDSCAPE,
-
-            .resolution = Resolution::fromDpi(96),
-            .scan = Scan::PROGRESSIVE,
-            .grid = false,
-            .update = Update::FAST,
-
-            .overflowBlock = OverflowBlock::SCROLL,
-            .overflowInline = OverflowInline::SCROLL,
-
-            .color = 8,
-            .colorIndex = 0,
-            .monochrome = 0,
-            .colorGamut = ColorGamut::SRGB,
-            .pointer = Pointer::FINE,
-            .hover = Hover::HOVER,
-            .anyPointer = Pointer::FINE,
-            .anyHover = Hover::HOVER,
-
-            .prefersReducedMotion = ReducedMotion::NO_PREFERENCE,
-            .prefersReducedTransparency = ReducedTransparency::NO_PREFERENCE,
-            .prefersContrast = Contrast::NO_PREFERENCE,
-            .forcedColors = Colors::NONE,
-            .prefersColorScheme = colorScheme,
-            .prefersReducedData = ReducedData::NO_PREFERENCE,
-
-            // NOTE: Deprecated Media Features
-            .deviceWidth = Au{viewport.width},
-            .deviceHeight = Au{viewport.height},
-            .deviceAspectRatio = viewport.width / (f64)viewport.height,
+    static Media from(DisplayArea const& area, ViewerPrefs const& prefs) {
+        auto ratio = [](Vec2Au size) -> Number {
+            if (size.height == 0_au)
+                return 0;
+            return static_cast<f64>(size.width) / static_cast<f64>(size.height);
         };
-    }
 
-    static Media defaultMedia() {
-        return forView({800, 600}, ColorScheme::LIGHT);
-    }
+        auto viewport = area.viewport;
+        auto deviceSize = area.deviceSize();
 
-    static Media forRender(Vec2Au viewport, Resolution scale) {
         return {
-            .type = MediaType::SCREEN,
+            .type = area.type,
             .width = viewport.width,
             .height = viewport.height,
-            .aspectRatio = Number{viewport.width} / Number{viewport.height},
-            .orientation = Print::Orientation::PORTRAIT,
+            .aspectRatio = ratio(viewport),
+            .orientation = viewport.height >= viewport.width
+                               ? Print::Orientation::PORTRAIT
+                               : Print::Orientation::LANDSCAPE,
 
-            .resolution = scale,
-            .scan = Scan::PROGRESSIVE,
-            .grid = false,
-            .update = Update::NONE,
+            .resolution = area.resolution,
+            .scan = area.scan,
+            .grid = area.grid,
+            .update = area.update,
 
-            .overflowBlock = OverflowBlock::NONE,
-            .overflowInline = OverflowInline::NONE,
+            .overflowBlock = area.overflowBlock,
+            .overflowInline = area.overflowInline,
 
-            .color = 8,
-            .colorIndex = 0,
-            .monochrome = 0,
-            .colorGamut = ColorGamut::SRGB,
-            .pointer = Pointer::NONE,
-            .hover = Hover::NONE,
-            .anyPointer = Pointer::NONE,
-            .anyHover = Hover::NONE,
+            .color = area.color,
+            .colorIndex = area.colorIndex,
+            .monochrome = area.monochrome,
+            .colorGamut = area.colorGamut,
+            .pointer = area.pointer,
+            .hover = area.hover,
+            .anyPointer = area.anyPointer,
+            .anyHover = area.anyHover,
 
-            .prefersReducedMotion = ReducedMotion::REDUCE,
-            .prefersReducedTransparency = ReducedTransparency::REDUCE,
-            .prefersContrast = Contrast::MORE,
-            .forcedColors = Colors::NONE,
-            .prefersColorScheme = ColorScheme::LIGHT,
-            .prefersReducedData = ReducedData::NO_PREFERENCE,
-
-            // NOTE: Deprecated Media Features
-            .deviceWidth = viewport.width,
-            .deviceHeight = viewport.height,
-            .deviceAspectRatio = Number{viewport.width} / Number{viewport.height},
-        };
-    }
-
-    static Media forPrint(Print::Settings const& settings) {
-        auto pageSize = settings.pageSize();
-
-        return {
-            .type = MediaType::PRINT,
-            .width = pageSize.width,
-            .height = pageSize.height,
-            .aspectRatio = pageSize.width / pageSize.height,
-            .orientation = settings.orientation,
-
-            .resolution = Resolution::fromDppx(settings.scale),
-            .scan = Scan::PROGRESSIVE,
-            .grid = false,
-            .update = Update::FAST,
-
-            .overflowBlock = OverflowBlock::SCROLL,
-            .overflowInline = OverflowInline::SCROLL,
-
-            .color = 8,
-            .colorIndex = 0,
-            .monochrome = 0,
-            .colorGamut = ColorGamut::SRGB,
-            .pointer = Pointer::FINE,
-            .hover = Hover::HOVER,
-            .anyPointer = Pointer::FINE,
-            .anyHover = Hover::HOVER,
-
-            .prefersReducedMotion = ReducedMotion::NO_PREFERENCE,
-            .prefersReducedTransparency = ReducedTransparency::NO_PREFERENCE,
-            .prefersContrast = Contrast::NO_PREFERENCE,
-            .forcedColors = Colors::NONE,
-            .prefersColorScheme = ColorScheme::LIGHT,
-            .prefersReducedData = ReducedData::NO_PREFERENCE,
+            .prefersReducedMotion = prefs.reducedMotion,
+            .prefersReducedTransparency = prefs.reducedTransparency,
+            .prefersContrast = prefs.contrast,
+            .forcedColors = prefs.forcedColors,
+            .prefersColorScheme = prefs.colorScheme,
+            .prefersReducedData = prefs.reducedData,
 
             // NOTE: Deprecated Media Features
-            .deviceWidth = pageSize.width,
-            .deviceHeight = pageSize.height,
-            .deviceAspectRatio = pageSize.width / pageSize.height,
-        };
-    }
-
-    Vec2Au viewportSize() const {
-        return {width, height};
-    }
-
-    f64 scale() const {
-        return resolution.toDppx();
-    }
-
-    Vec2Au scaledViewport() const {
-        return {
-            width / scale(),
-            height / scale()
+            .deviceWidth = deviceSize.width,
+            .deviceHeight = deviceSize.height,
+            .deviceAspectRatio = ratio(deviceSize),
         };
     }
 

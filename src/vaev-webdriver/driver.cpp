@@ -191,14 +191,14 @@ export struct WebDriver {
     Res<RectAu> getWindowRect(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
         auto webview = try$(session->currentBrowsingContext());
-        return Ok(webview->_media.viewportSize());
+        return Ok(webview->_area.viewport);
     }
 
     // https://www.w3.org/TR/webdriver2/#set-window-rect
     Res<RectAu> setWindowRect(Ref::Uuid sessionId, RectAu rect) {
         auto session = try$(getSession(sessionId));
         auto webview = try$(session->currentBrowsingContext());
-        webview->changeViewport(rect.size());
+        webview->changeArea(webview->_area.withViewport(rect.size()));
         return Ok(rect);
     }
 
