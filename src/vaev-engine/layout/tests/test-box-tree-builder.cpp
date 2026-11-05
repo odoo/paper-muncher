@@ -538,4 +538,96 @@ testAsync$("table-fixup") {
     co_return Ok();
 }
 
+testAsync$("float-blockified-without-preceding-inline-content") {
+    auto html =
+        "<html><body><div>"
+        "<div style=\"display:inline-block;float:right\">a</div>"
+        "<div>b</div>"
+        "</div></body></html>";
+
+    auto body = co_trya$(_buildBoxesAsync(html, ct));
+
+    auto expectedBodySubtree =
+        FakeBox{
+            // body
+            .content = Vec<FakeBox>{
+                FakeBox{
+                    // div
+                    .content = Vec<FakeBox>{
+                        FakeBox{
+                            // blockified float
+                            .content = FakeInlineBox{}
+                        },
+                        FakeBox{
+                            // <div>b</div>
+                            .content = FakeInlineBox{}
+                        },
+                    }
+                }
+            }
+        };
+
+    co_assertEq$(expectedBodySubtree, body);
+    co_return Ok();
+}
+
+testAsync$("float-stays-atomic-after-text") {
+    auto html =
+        "<html><body><div>"
+        "Title <span style=\"float:right\">Passed</span>"
+        "</div></body></html>";
+
+    auto body = co_trya$(_buildBoxesAsync(html, ct));
+
+    auto expectedBodySubtree =
+        FakeBox{
+            // body
+            .content = Vec<FakeBox>{
+                FakeBox{
+                    // div
+                    .content = FakeInlineBox{
+                        .atomicBoxes = {
+                            FakeBox{
+                                // float
+                                .content = FakeInlineBox{}
+                            },
+                        },
+                    }
+                }
+            }
+        };
+
+    co_assertEq$(expectedBodySubtree, body);
+    co_return Ok();
+}
+
+testAsync$("float-ignored-when-absolutely-positioned") {
+    auto html =
+        "<html><body><div>"
+        "Title <span style=\"position:absolute;float:right\">Passed</span>"
+        "</div></body></html>";
+
+    auto body = co_trya$(_buildBoxesAsync(html, ct));
+
+    auto expectedBodySubtree =
+        FakeBox{
+            // body
+            .content = Vec<FakeBox>{
+                FakeBox{
+                    // div
+                    .content = FakeInlineBox{
+                        .children = {
+                            FakeInlineBox{
+                                // span
+                            },
+                        },
+                    }
+                }
+            }
+        };
+
+    co_assertEq$(expectedBodySubtree, body);
+    co_return Ok();
+}
+
 } // namespace Vaev::Layout::Tests

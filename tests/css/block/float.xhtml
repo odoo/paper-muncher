@@ -56,6 +56,16 @@
         </div>
     </rendering>
 
+    <rendering help="float-left">
+        <div>
+            <div class="blue item" style="float: left;"></div>
+            <div class="pink item" style="float: left;"></div>
+            <div class="white item" style="float: left;"></div>
+            <div class="pink item" style="float: left;"></div>
+            <div class="blue item" style="float: left;"></div>
+        </div>
+    </rendering>
+
     <rendering help="float with text" skip="true">
         <div>
             <div class="blue item" style="float: left;"></div>
@@ -131,7 +141,7 @@
     </div>
 </rendering>
 
-<rendering help="float-right" skip="true">
+<rendering help="float-right">
     <div>
         <div class="blue item" style="float: right;"></div>
         <div class="pink item" style="float: right;"></div>
@@ -143,6 +153,1347 @@
 
 <error>
 </error>
+</test>
+
+
+<test name="float-two-halves-one-line">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="green bar" style="position: absolute; left: 0; top: 0; width: 100px;"></div>
+        <div class="blue bar" style="position: absolute; left: 100px; top: 0; width: 100px;"></div>
+    </rendering>
+    <rendering>
+        <div class="green bar" style="float: left; width: 50%;"></div>
+        <div class="blue bar" style="float: left; width: 50%;"></div>
+    </rendering>
+</test>
+
+<test name="float-auto-margin-zero">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="green square" style="position: absolute; left: 150px; top: 0;"></div>
+    </rendering>
+    <rendering>
+        <div class="green square" style="float: right; margin-left: auto;"></div>
+    </rendering>
+</test>
+
+<test name="float-shrink-to-fit">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div style="text-align: right;">Total</div>
+    </rendering>
+    <rendering>
+        <div style="float: right;">Total</div>
+    </rendering>
+</test>
+
+<test name="float-table-fit-content">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="green square" style="position: absolute; left: 150px; top: 0;"></div>
+    </rendering>
+    <rendering>
+        <table style="float: right;">
+            <tr>
+                <td>
+                    <div class="green square"></div>
+                </td>
+            </tr>
+        </table>
+    </rendering>
+</test>
+
+<test name="float-overflow-hidden-contains">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="green square" style="position: absolute; left: 0; top: 0;"></div>
+        <div class="blue bar" style="position: absolute; left: 0; top: 50px; width: 200px;"></div>
+    </rendering>
+    <rendering>
+        <div style="overflow: hidden;">
+            <div class="green square" style="float: left;"></div>
+        </div>
+        <div class="blue bar"></div>
+    </rendering>
+    <rendering help="clearfix">
+        <div class="clearfix">
+            <div class="green square" style="float: left;"></div>
+        </div>
+        <div class="blue bar"></div>
+    </rendering>
+    <rendering help="clear">
+        <div class="green square" style="float: left;"></div>
+        <div class="blue bar" style="clear: both;"></div>
+    </rendering>
+</test>
+
+<test name="clear-without-floats-is-noop">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="green bar" style="margin: 10px;"></div>
+        <div class="blue bar" style="margin: 10px;"></div>
+    </rendering>
+    <rendering>
+        <div class="green bar" style="margin: 10px;"></div>
+        <div class="blue bar" style="margin: 10px; clear: both;"></div>
+    </rendering>
+</test>
+
+
+<test name="float-avoidance-right-aligned-text-beside">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <div class="green square" style="position: absolute; left: 150px; top: 0;"></div>
+        <div style="width: 150px; text-align: right;">Total</div>
+    </rendering>
+    <rendering>
+        <div class="green square" style="float: right;"></div>
+        <div style="text-align: right;">Total</div>
+    </rendering>
+</test>
+
+<test name="float-avoidance-text-wraps-beside">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <div class="green" style="position: absolute; left: 150px; top: 0; width: 50px; height: 150px;"></div>
+        <div style="width: 150px;">Payment Reference: POSC/2026/00006</div>
+    </rendering>
+    <rendering>
+        <div class="green" style="float: right; width: 50px; height: 150px;"></div>
+        <div>Payment Reference: POSC/2026/00006</div>
+    </rendering>
+</test>
+
+<test name="float-avoidance-long-text-below">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <div class="green square" style="position: absolute; left: 150px; top: 0;"></div>
+        <div style="padding-top: 50px;">Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua</div>
+    </rendering>
+    <rendering help="NOSPEC: line boxes are not shortened around floats, text that doesn't fit beside the float goes below it">
+        <div class="green square" style="float: right;"></div>
+        <div>Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua</div>
+    </rendering>
+</test>
+
+<test name="float-avoidance-empty-blocks-stay">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <div class="green square" style="position: absolute; left: 150px; top: 0;"></div>
+        <div><br/></div>
+        <div style="width: 150px; text-align: right;">Hi</div>
+    </rendering>
+    <rendering>
+        <div class="green square" style="float: right;"></div>
+        <div><br/></div>
+        <div style="text-align: right;">Hi</div>
+    </rendering>
+</test>
+
+<test name="float-avoidance-bfc-root-narrowed">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <div class="green square" style="position: absolute; left: 0; top: 0;"></div>
+        <div class="blue bar" style="position: absolute; left: 50px; top: 0; width: 150px;"></div>
+    </rendering>
+    <rendering>
+        <div class="green square" style="float: left;"></div>
+        <div class="blue bar" style="overflow: hidden;"></div>
+    </rendering>
+    <rendering help="the logical overflow longhands establish a block formatting context too">
+        <div class="green square" style="float: left;"></div>
+        <div class="blue bar" style="overflow-block: hidden;"></div>
+    </rendering>
+</test>
+
+
+<test name="inline-float-right-same-line">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <div style="position: absolute; left: 0; top: 0; width: 200px; text-align: right;">Passed</div>
+        <div>Title</div>
+    </rendering>
+    <rendering>
+        <div>Title <span style="float: right;">Passed</span></div>
+    </rendering>
+</test>
+
+<test name="inline-float-contained">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <div class="green square" style="position: absolute; left: 150px; top: 0;"></div>
+        <div class="blue bar" style="position: absolute; left: 0; top: 50px; width: 200px;"></div>
+        <div>Hi</div>
+    </rendering>
+    <rendering>
+        <div style="overflow: hidden;">Hi <span class="green square" style="float: right;"></span></div>
+        <div class="blue bar"></div>
+    </rendering>
+</test>
+
+
+<test name="float-two-halves-one-line-mm" width="800px">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <div style="width: 190mm; display: flex;">
+            <div class="green bar" style="width: 50%;"></div>
+            <div class="blue bar" style="width: 50%;"></div>
+        </div>
+    </rendering>
+    <rendering>
+        <div style="width: 190mm; overflow: hidden;">
+            <div class="green bar" style="float: left; width: 50%;"></div>
+            <div class="blue bar" style="float: left; width: 50%;"></div>
+        </div>
+    </rendering>
+</test>
+
+<test name="inline-float-in-shrink-to-fit-cell">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <table>
+            <tr>
+                <td>A <span>LongFloatValue</span></td>
+            </tr>
+        </table>
+    </rendering>
+    <rendering>
+        <table>
+            <tr>
+                <td>A <span style="float: right;">LongFloatValue</span></td>
+            </tr>
+        </table>
+    </rendering>
+</test>
+
+<test name="inline-floats-same-side-stack">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <div style="position: absolute; left: 0; top: 0; width: 200px; text-align: right;">BBBAAA</div>
+        <div>T</div>
+    </rendering>
+    <rendering>
+        <div>T <span style="float: right;">AAA</span><span style="float: right;">BBB</span></div>
+    </rendering>
+</test>
+
+<test name="float-in-centered-block">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <div class="green square" style="position: absolute; left: 150px; top: 0;"></div>
+        <div class="blue square" style="position: absolute; left: 0; top: 0;"></div>
+    </rendering>
+    <rendering>
+        <center>
+            <div class="green square" style="float: right;"></div>
+            <div class="blue square" style="float: left;"></div>
+        </center>
+    </rendering>
+</test>
+
+<test name="float-table-specified-width">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <div class="green bar" style="position: absolute; left: 100px; top: 0; width: 100px;"></div>
+    </rendering>
+    <rendering>
+        <table style="float: right; width: 50%;">
+            <tr>
+                <td>
+                    <div class="green bar"></div>
+                </td>
+            </tr>
+        </table>
+    </rendering>
+</test>
+
+<test name="float-avoidance-auto-margin">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .green {
+                    background-color: green;
+                }
+
+                .blue {
+                    background-color: blue;
+                }
+
+                .square {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .bar {
+                    height: 20px;
+                }
+
+                .clearfix::after {
+                    content: "";
+                    display: block;
+                    clear: both;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+        <rendering>
+        <div class="green square" style="position: absolute; left: 0; top: 0;"></div>
+        <div class="blue bar" style="position: absolute; left: 150px; top: 0; width: 50px;"></div>
+    </rendering>
+    <rendering>
+        <div class="green square" style="float: left;"></div>
+        <div class="blue bar" style="overflow: hidden; width: 50px; margin-left: auto;"></div>
+    </rendering>
+</test>
+
+<test name="float-beside-text-in-shrink-to-fit-box">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                :root {
+                    background-color: white;
+                }
+
+                body {
+                    margin: 0;
+                }
+
+                .a {
+                    width: 50px;
+                    height: 50px;
+                    background-color: lightseagreen;
+                }
+
+                .b {
+                    width: 50px;
+                    height: 50px;
+                    background-color: salmon;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="display: flex;">
+            <div class="a"></div>
+            <div class="b"></div>
+        </div>
+    </rendering>
+
+    <rendering help="Bootstrap breadcrumb: a float followed by text in a flex item stays on one line">
+        <div style="display: flex;">
+            <div>
+                <div class="a" style="float: left;"></div>
+                <span class="b" style="display: inline-block; vertical-align: top;"></span>
+            </div>
+        </div>
+    </rendering>
+</test>
+
+<test name="table-clear-goes-below-float">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                :root {
+                    background-color: white;
+                }
+
+                body {
+                    margin: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+
+                .a {
+                    width: 50px;
+                    height: 50px;
+                    background-color: lightseagreen;
+                }
+
+                .b {
+                    width: 50px;
+                    height: 50px;
+                    background-color: salmon;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div class="a"></div>
+        <div class="b"></div>
+    </rendering>
+    <rendering>
+        <div class="a" style="float: left;"></div>
+        <table style="clear: both;"><tr><td><div class="b"></div></td></tr></table>
+    </rendering>
+</test>
+
+<test name="absolutely-positioned-float-in-inline-content">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                :root {
+                    background-color: white;
+                }
+
+                body {
+                    margin: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+
+                .a {
+                    width: 50px;
+                    height: 50px;
+                    background-color: lightseagreen;
+                }
+
+                .b {
+                    width: 50px;
+                    height: 50px;
+                    background-color: salmon;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <div style="position: relative; height: 100px;">
+            <span class="b" style="display: inline-block; position: absolute; top: 50px; left: 10px;"></span>
+        </div>
+    </rendering>
+    <rendering help="the computed value of 'float' is 'none' for absolutely positioned boxes">
+        <div style="position: relative; height: 100px;">
+            <span class="b" style="display: inline-block; position: absolute; float: right; top: 50px; left: 10px;"></span>
+        </div>
+    </rendering>
+</test>
+
+<test name="percentage-inline-float-in-table-cell">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                :root {
+                    background-color: white;
+                }
+
+                body {
+                    margin: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                }
+
+                td {
+                    padding: 0;
+                }
+
+                .a {
+                    width: 50px;
+                    height: 50px;
+                    background-color: lightseagreen;
+                }
+
+                .b {
+                    width: 50px;
+                    height: 50px;
+                    background-color: salmon;
+                }
+            </style>
+        </head>
+        <body>
+        <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering>
+        <table><tr><td></td><td><div class="b"></div></td></tr></table>
+    </rendering>
+    <rendering help="a percentage width doesn't resolve against an infinite width while sizing the cell">
+        <table><tr><td><span class="a" style="float: right; width: 50%;"></span></td><td><div class="b"></div></td></tr></table>
+    </rendering>
 </test>
 
 </tests>

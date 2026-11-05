@@ -133,6 +133,26 @@ struct Box : Meta::NoCopy {
         return style->float_ != Float::NONE;
     }
 
+    // https://www.w3.org/TR/CSS22/visuren.html#block-formatting
+    // Floats, absolutely positioned elements, block containers (such as inline-blocks, table-cells, and
+    // table-captions) that are not block boxes, and block boxes with 'overflow' other than 'visible' (except when that
+    // value has been propagated to the viewport) establish new block formatting contexts for their contents.
+    // https://www.w3.org/TR/css-display-3/#replaced-element
+    // Replaced elements always establish an independent formatting context.
+    // https://www.w3.org/TR/css-display-3/#formatting-context
+    // Unless otherwise specified, however, establishing a new formatting context creates an independent formatting
+    // context.
+    // NOTE: 'overflow-block' and 'overflow-inline' are stored apart from 'overflow-x' and 'overflow-y'.
+    bool establishesBlockFormatingContext() const {
+        return isRemovedFromFlow() or
+               isReplaced() or
+               style->display != Display::Inside::FLOW or
+               style->overflows.x != Overflow::VISIBLE or
+               style->overflows.y != Overflow::VISIBLE or
+               style->overflows.block != Overflow::VISIBLE or
+               style->overflows.inline_ != Overflow::VISIBLE;
+    }
+
     // https://www.w3.org/TR/CSS22/zindex.html
     // https://svgwg.org/svg2-draft/single-page.html#render-EstablishingStackingContex
     bool impliesNewStackingContext() const {
