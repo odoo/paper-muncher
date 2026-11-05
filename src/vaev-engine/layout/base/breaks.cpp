@@ -120,7 +120,7 @@ export struct Breakpoint {
         return b;
     }
 
-    static Breakpoint fromChildren(Vec<Opt<Breakpoint>> childrenBreakpoints, usize endIdx, bool isAvoid, bool advance) {
+    static Opt<Breakpoint> fromChildren(Vec<Opt<Breakpoint>> childrenBreakpoints, usize endIdx, bool isAvoid, bool advance) {
         Appeal appeal = Appeal::MAX;
         for (auto& breakpoint : childrenBreakpoints) {
             if (not breakpoint)
@@ -128,8 +128,9 @@ export struct Breakpoint {
             appeal = min(appeal, breakpoint.expect().appeal);
         }
 
+        // NOTE: When no child has a breakpoint, there is no breakpoint inside of them either.
         if (appeal == Appeal::MAX)
-            panic("cannot build breakpoint from children when no children have a breakpoint");
+            return NONE;
 
         Breakpoint b{
             .endIdx = endIdx,
@@ -141,7 +142,7 @@ export struct Breakpoint {
         if (isAvoid)
             b.appeal = Appeal::AVOID;
 
-        return b;
+        return Some(std::move(b));
     }
 
     static Breakpoint classB(usize endIdx, bool isAvoid) {
