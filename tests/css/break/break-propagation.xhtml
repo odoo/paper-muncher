@@ -1,0 +1,190 @@
+<tests>
+<test name="break-after-last-child-adds-no-page" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .box {
+                height: 50px;
+                background-color: lightseagreen;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="box"></div>
+</rendering>
+
+<rendering>
+    <div class="box" style="break-after: page;"></div>
+</rendering>
+
+<rendering>
+    <div>
+        <div class="box" style="page-break-after: always;"></div>
+    </div>
+</rendering>
+</test>
+
+<test name="break-after-last-child-propagates-to-parent" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .box {
+                height: 50px;
+                background-color: lightseagreen;
+            }
+
+            .after {
+                height: 50px;
+                background-color: salmon;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="box"></div>
+    <div class="after" style="break-before: page;"></div>
+</rendering>
+
+<rendering>
+    <div>
+        <div class="box" style="break-after: page;"></div>
+    </div>
+    <div class="after"></div>
+</rendering>
+</test>
+<test name="break-before-first-child-propagates-to-parent" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .box {
+                height: 50px;
+                background-color: lightseagreen;
+            }
+
+            .after {
+                height: 50px;
+                background-color: salmon;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="box"></div>
+    <div class="after" style="break-before: page;"></div>
+</rendering>
+
+<rendering>
+    <div class="box"></div>
+    <div>
+        <div class="after" style="break-before: page;"></div>
+    </div>
+</rendering>
+
+<rendering help="out-of-flow siblings before the first in-flow child don't make it break a second time">
+    <div class="box"></div>
+    <div>
+        <div style="position: absolute;"></div>
+        <div class="after" style="break-before: page;"></div>
+    </div>
+</rendering>
+</test>
+
+<test name="break-after-followed-by-out-of-flow-sibling" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .box {
+                height: 50px;
+                background-color: lightseagreen;
+            }
+
+            .after {
+                height: 50px;
+                background-color: salmon;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="box"></div>
+    <div class="after" style="break-before: page;"></div>
+</rendering>
+
+<rendering>
+    <div>
+        <div class="box" style="break-after: page;"></div>
+        <div style="position: absolute;"></div>
+    </div>
+    <div class="after"></div>
+</rendering>
+</test>
+</tests>
