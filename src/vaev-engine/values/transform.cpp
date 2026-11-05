@@ -20,7 +20,7 @@ import :values.unitValue;
 
 using namespace Karm::Math::Literals;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // https://drafts.csswg.org/css-transforms
 // TODO: Add support for 3d transforms and perspective.
@@ -129,9 +129,13 @@ struct ValueSerializer<TransformOrigin> {
     }
 };
 
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
+
 // NOTE: The computed value is "for <length> the absolute value, otherwise a percentage",
 //       so keywords are turned into percentages.
-export Style::Position resolve(TransformOrigin const& value, LengthContext auto const& ctx) {
+export Style::Position resolve(Css::TransformOrigin const& value, Css::LengthContext auto const& ctx) {
     return {
         value.xOffset.visit(
             [](Keywords::Left) -> PixelPercentage {
@@ -143,7 +147,7 @@ export Style::Position resolve(TransformOrigin const& value, LengthContext auto 
             [](Keywords::Right) -> PixelPercentage {
                 return Percent{100};
             },
-            [&](LengthPercentage const& length) -> PixelPercentage {
+            [&](Css::LengthPercentage const& length) -> PixelPercentage {
                 return resolve(length, ctx);
             }
         ),
@@ -157,12 +161,16 @@ export Style::Position resolve(TransformOrigin const& value, LengthContext auto 
             [](Keywords::Bottom) -> PixelPercentage {
                 return Percent{100};
             },
-            [&](LengthPercentage const& length) -> PixelPercentage {
+            [&](Css::LengthPercentage const& length) -> PixelPercentage {
                 return resolve(length, ctx);
             }
         ),
     };
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 // MARK: Transform Box ---------------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#transform-box
@@ -191,15 +199,20 @@ export struct SpecifiedTransformTypes {
     using AngleType = Angle;
 };
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export struct TransformTypes {
     using LengthPercentageType = PixelPercentage;
     using NumberType = f64;
-    using AngleType = Rad;
+    using AngleType = Css::Rad;
 };
 
-} // namespace Style
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
+
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-matrix
 export template <typename T>
 struct MatrixTransformT {
@@ -211,11 +224,16 @@ struct MatrixTransformT {
 };
 
 export using MatrixTransform = MatrixTransformT<SpecifiedTransformTypes>;
-namespace Style {
 
-export using MatrixTransform = MatrixTransformT<Style::TransformTypes>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
+
+export using MatrixTransform = Css::MatrixTransformT<Style::TransformTypes>;
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<MatrixTransform> {
@@ -263,11 +281,16 @@ struct TranslateTransformT {
 };
 
 export using TranslateTransform = TranslateTransformT<SpecifiedTransformTypes>;
-namespace Style {
 
-export using TranslateTransform = TranslateTransformT<Style::TransformTypes>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
+
+export using TranslateTransform = Css::TranslateTransformT<Style::TransformTypes>;
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<TranslateTransform> {
@@ -335,11 +358,16 @@ struct ScaleTransformT {
 };
 
 export using ScaleTransform = ScaleTransformT<SpecifiedTransformTypes>;
-namespace Style {
 
-export using ScaleTransform = ScaleTransformT<Style::TransformTypes>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
+
+export using ScaleTransform = Css::ScaleTransformT<Style::TransformTypes>;
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<ScaleTransform> {
@@ -407,11 +435,16 @@ struct RotateTransformT {
 };
 
 export using RotateTransform = RotateTransformT<SpecifiedTransformTypes>;
-namespace Style {
 
-export using RotateTransform = RotateTransformT<Style::TransformTypes>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
+
+export using RotateTransform = Css::RotateTransformT<Style::TransformTypes>;
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<RotateTransform> {
@@ -448,11 +481,16 @@ struct SkewTransformT {
 };
 
 export using SkewTransform = SkewTransformT<SpecifiedTransformTypes>;
-namespace Style {
 
-export using SkewTransform = SkewTransformT<Style::TransformTypes>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
+
+export using SkewTransform = Css::SkewTransformT<Style::TransformTypes>;
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<SkewTransform> {
@@ -497,11 +535,16 @@ struct SkewXTransformT {
 };
 
 export using SkewXTransform = SkewXTransformT<SpecifiedTransformTypes>;
-namespace Style {
 
-export using SkewXTransform = SkewXTransformT<Style::TransformTypes>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
+
+export using SkewXTransform = Css::SkewXTransformT<Style::TransformTypes>;
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<SkewXTransform> {
@@ -537,11 +580,16 @@ struct SkewYTransformT {
 };
 
 export using SkewYTransform = SkewYTransformT<SpecifiedTransformTypes>;
-namespace Style {
 
-export using SkewYTransform = SkewYTransformT<Style::TransformTypes>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
+
+export using SkewYTransform = Css::SkewYTransformT<Style::TransformTypes>;
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<SkewYTransform> {
@@ -577,11 +625,16 @@ using TransformFunctionT = Union<
     SkewYTransformT<T>>;
 
 export using TransformFunction = TransformFunctionT<SpecifiedTransformTypes>;
-namespace Style {
 
-export using TransformFunction = TransformFunctionT<Style::TransformTypes>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
+
+export using TransformFunction = Css::TransformFunctionT<Style::TransformTypes>;
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 // MARK: Transform -------------------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#propdef-transform
@@ -589,19 +642,19 @@ export using TransformFunction = TransformFunctionT<Style::TransformTypes>;
 export using TransformList = Vec<TransformFunction>;
 export using Transform = Union<Keywords::None, TransformList>;
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export using TransformList = Vec<Style::TransformFunction>;
 
 export using Transform = Union<Keywords::None, Style::TransformList>;
 
-} // namespace Style
-
 // https://drafts.csswg.org/css-transforms/#transform-property
 // Computed value: as specified, but with lengths made absolute.
-export Style::TransformFunction resolve(TransformFunction const& value, LengthContext auto const& ctx) {
+export Style::TransformFunction resolve(Css::TransformFunction const& value, Css::LengthContext auto const& ctx) {
     return value.visit(
-        [](MatrixTransform const& t) -> Style::TransformFunction {
+        [](Css::MatrixTransform const& t) -> Style::TransformFunction {
             return Style::MatrixTransform{{
                 resolve(t.values[0]),
                 resolve(t.values[1]),
@@ -611,35 +664,35 @@ export Style::TransformFunction resolve(TransformFunction const& value, LengthCo
                 resolve(t.values[5]),
             }};
         },
-        [&](TranslateTransform const& t) -> Style::TransformFunction {
+        [&](Css::TranslateTransform const& t) -> Style::TransformFunction {
             return Style::TranslateTransform{resolve(t.x, ctx), resolve(t.y, ctx)};
         },
-        [](ScaleTransform const& t) -> Style::TransformFunction {
+        [](Css::ScaleTransform const& t) -> Style::TransformFunction {
             return Style::ScaleTransform{resolve(t.x), resolve(t.y)};
         },
-        [](RotateTransform const& t) -> Style::TransformFunction {
+        [](Css::RotateTransform const& t) -> Style::TransformFunction {
             return Style::RotateTransform{resolve(t.value)};
         },
-        [](SkewTransform const& t) -> Style::TransformFunction {
+        [](Css::SkewTransform const& t) -> Style::TransformFunction {
             return Style::SkewTransform{resolve(t.x), resolve(t.y)};
         },
-        [](SkewXTransform const& t) -> Style::TransformFunction {
+        [](Css::SkewXTransform const& t) -> Style::TransformFunction {
             return Style::SkewXTransform{resolve(t.value)};
         },
-        [](SkewYTransform const& t) -> Style::TransformFunction {
+        [](Css::SkewYTransform const& t) -> Style::TransformFunction {
             return Style::SkewYTransform{resolve(t.value)};
         }
     );
 }
 
-export TransformFunction toSpecified(Style::TransformFunction const& value) {
+export Css::TransformFunction toSpecified(Style::TransformFunction const& value) {
     auto number = [](f64 n) {
-        return Number::fromCanonical(n);
+        return Css::Number::fromCanonical(n);
     };
 
     return value.visit(
-        [&](Style::MatrixTransform const& t) -> TransformFunction {
-            return MatrixTransform{{
+        [&](Style::MatrixTransform const& t) -> Css::TransformFunction {
+            return Css::MatrixTransform{{
                 number(t.values[0]),
                 number(t.values[1]),
                 number(t.values[2]),
@@ -648,33 +701,33 @@ export TransformFunction toSpecified(Style::TransformFunction const& value) {
                 number(t.values[5]),
             }};
         },
-        [](Style::TranslateTransform const& t) -> TransformFunction {
-            return TranslateTransform{toSpecified(t.x), toSpecified(t.y)};
+        [](Style::TranslateTransform const& t) -> Css::TransformFunction {
+            return Css::TranslateTransform{toSpecified(t.x), toSpecified(t.y)};
         },
-        [&](Style::ScaleTransform const& t) -> TransformFunction {
-            return ScaleTransform{number(t.x), number(t.y)};
+        [&](Style::ScaleTransform const& t) -> Css::TransformFunction {
+            return Css::ScaleTransform{number(t.x), number(t.y)};
         },
-        [](Style::RotateTransform const& t) -> TransformFunction {
-            return RotateTransform{toSpecified(t.value)};
+        [](Style::RotateTransform const& t) -> Css::TransformFunction {
+            return Css::RotateTransform{toSpecified(t.value)};
         },
-        [](Style::SkewTransform const& t) -> TransformFunction {
-            return SkewTransform{toSpecified(t.x), toSpecified(t.y)};
+        [](Style::SkewTransform const& t) -> Css::TransformFunction {
+            return Css::SkewTransform{toSpecified(t.x), toSpecified(t.y)};
         },
-        [](Style::SkewXTransform const& t) -> TransformFunction {
-            return SkewXTransform{toSpecified(t.value)};
+        [](Style::SkewXTransform const& t) -> Css::TransformFunction {
+            return Css::SkewXTransform{toSpecified(t.value)};
         },
-        [](Style::SkewYTransform const& t) -> TransformFunction {
-            return SkewYTransform{toSpecified(t.value)};
+        [](Style::SkewYTransform const& t) -> Css::TransformFunction {
+            return Css::SkewYTransform{toSpecified(t.value)};
         }
     );
 }
 
-export Style::Transform resolve(Transform const& value, LengthContext auto const& ctx) {
+export Style::Transform resolve(Css::Transform const& value, Css::LengthContext auto const& ctx) {
     return value.visit(
         [](Keywords::None) -> Style::Transform {
             return Keywords::NONE;
         },
-        [&](TransformList const& list) -> Style::Transform {
+        [&](Css::TransformList const& list) -> Style::Transform {
             Style::TransformList result;
             for (auto const& function : list)
                 result.pushBack(resolve(function, ctx));
@@ -683,19 +736,23 @@ export Style::Transform resolve(Transform const& value, LengthContext auto const
     );
 }
 
-export Transform toSpecified(Style::Transform const& value) {
+export Css::Transform toSpecified(Style::Transform const& value) {
     return value.visit(
-        [](Keywords::None) -> Transform {
+        [](Keywords::None) -> Css::Transform {
             return Keywords::NONE;
         },
-        [](Style::TransformList const& list) -> Transform {
-            TransformList result;
+        [](Style::TransformList const& list) -> Css::Transform {
+            Css::TransformList result;
             for (auto const& function : list)
                 result.pushBack(toSpecified(function));
             return result;
         }
     );
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Transform> {
@@ -718,4 +775,5 @@ struct ValueParser<Transform> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

@@ -11,7 +11,7 @@ import :values.percent;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Position --------------------------------------------------------------
 
@@ -64,7 +64,9 @@ export using Paddings = Math::Insets<LengthPercentage>;
 // https://www.w3.org/TR/css-position-3/#propdef-inset
 export using BoxInsets = Math::Insets<Union<Keywords::Auto, LengthPercentage>>;
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export using Margins = Math::Insets<Union<Keywords::Auto, PixelPercentage>>;
 
@@ -72,18 +74,16 @@ export using Paddings = Math::Insets<PixelPercentage>;
 
 export using BoxInsets = Math::Insets<Union<Keywords::Auto, PixelPercentage>>;
 
-} // namespace Style
-
-export Union<Keywords::Auto, PixelPercentage> resolve(Union<Keywords::Auto, LengthPercentage> const& value, LengthContext auto const& ctx) {
+export Union<Keywords::Auto, PixelPercentage> resolve(Union<Keywords::Auto, Css::LengthPercentage> const& value, Css::LengthContext auto const& ctx) {
     return value.visit([&](auto const& v) -> Union<Keywords::Auto, PixelPercentage> { return resolve(v, ctx); });
 }
 
-export Union<Keywords::Auto, LengthPercentage> toSpecified(Union<Keywords::Auto, PixelPercentage> const& value) {
-    return value.visit([](auto const& v) -> Union<Keywords::Auto, LengthPercentage> { return toSpecified(v); });
+export Union<Keywords::Auto, Css::LengthPercentage> toSpecified(Union<Keywords::Auto, PixelPercentage> const& value) {
+    return value.visit([](auto const& v) -> Union<Keywords::Auto, Css::LengthPercentage> { return toSpecified(v); });
 }
 
 export template <typename T>
-auto resolve(Math::Insets<T> const& value, LengthContext auto const& ctx) -> Math::Insets<decltype(resolve(value.top, ctx))> {
+auto resolve(Math::Insets<T> const& value, Css::LengthContext auto const& ctx) -> Math::Insets<decltype(resolve(value.top, ctx))> {
     return {resolve(value.top, ctx), resolve(value.end, ctx), resolve(value.bottom, ctx), resolve(value.start, ctx)};
 }
 
@@ -91,6 +91,10 @@ export template <typename T>
 auto toSpecified(Math::Insets<T> const& value) -> Math::Insets<decltype(toSpecified(value.top))> {
     return {toSpecified(value.top), toSpecified(value.end), toSpecified(value.bottom), toSpecified(value.start)};
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <typename T>
 struct ValueParser<Math::Insets<T>> {
@@ -127,21 +131,25 @@ export using Gap = Union<
     Keywords::Normal,
     LengthPercentage>;
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export using Gap = Union<
     Keywords::Normal,
     PixelPercentage>;
 
-} // namespace Style
-
-export Style::Gap resolve(Gap const& value, LengthContext auto const& ctx) {
+export Style::Gap resolve(Css::Gap const& value, Css::LengthContext auto const& ctx) {
     return value.visit([&](auto const& v) -> Style::Gap { return resolve(v, ctx); });
 }
 
-export Gap toSpecified(Style::Gap const& value) {
-    return value.visit([](auto const& v) -> Gap { return toSpecified(v); });
+export Css::Gap toSpecified(Style::Gap const& value) {
+    return value.visit([](auto const& v) -> Css::Gap { return toSpecified(v); });
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export struct Gaps {
     Gap row = Keywords::NORMAL;
@@ -152,12 +160,14 @@ export struct Gaps {
     }
 };
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export struct Gaps {
     Style::Gap row = Keywords::NORMAL;
     Style::Gap col = Keywords::NORMAL;
 };
 
-} // namespace Style
-} // namespace Vaev
+} // namespace Vaev::Style
+

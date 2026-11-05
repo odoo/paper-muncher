@@ -10,7 +10,7 @@ import :values.keywords;
 import :values.primitives;
 import :values.counter;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // https://www.w3.org/TR/css-content-3/
 // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
@@ -34,7 +34,7 @@ export struct ElementFunc {
     }
 };
 
-export using Content = Union<
+export using ContentValue = Union<
     Keywords::Normal,
     Keywords::None,
     String,
@@ -43,10 +43,10 @@ export using Content = Union<
     CountersFunc>;
 
 export template <>
-struct ValueParser<Content> {
+struct ValueParser<ContentValue> {
     // https://www.w3.org/TR/css-content-3/
     // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
-    static Res<Content> parse(Cursor<Css::Sst>& c) {
+    static Res<ContentValue> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -106,4 +106,5 @@ struct ValueParser<ElementFunc> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

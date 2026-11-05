@@ -8,7 +8,7 @@ import :values.primitives;
 import :values.keywords;
 import :values.counter;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // https://www.w3.org/TR/css-lists-3/#image-markers
 export using ListImage = Union<Keywords::None, Image>;
@@ -22,14 +22,16 @@ export using ListPosition = Union<Keywords::Inside, Keywords::Outside>;
 // https://www.w3.org/TR/css-lists-3/#marker-side
 export using MarkerSide = Union<Keywords::MatchSelf, Keywords::MatchParent>;
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 struct List {
-    ListImage image = Keywords::NONE;
-    ListType type = CustomIdent{"disc"_sym};
-    ListPosition position = Keywords::OUTSIDE;
-    MarkerSide markerSide = Keywords::MATCH_SELF;
+    Css::ListImage image = Keywords::NONE;
+    Css::ListType type = Css::CustomIdent{"disc"_sym};
+    Css::ListPosition position = Keywords::OUTSIDE;
+    Css::MarkerSide markerSide = Keywords::MATCH_SELF;
 };
 
-} // namespace Style
-} // namespace Vaev
+} // namespace Vaev::Style
+

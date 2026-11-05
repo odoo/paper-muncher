@@ -10,7 +10,7 @@ import :values.unitValue;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // https://www.w3.org/TR/css-inline-3/#baseline-source
 export using BaselineSource = Union<Keywords::Auto, Keywords::First, Keywords::Last>;
@@ -47,7 +47,9 @@ export using BaselineShift = Union<
     Keywords::Center,
     Keywords::Bottom>;
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export using BaselineShift = Union<
     PixelPercentage,
@@ -58,21 +60,20 @@ export using BaselineShift = Union<
     Keywords::Bottom>;
 
 export struct Inline {
-    BaselineSource baselineSource = Keywords::AUTO;
-    AlignmentBaseline alignmentBaseline = Keywords::BASELINE;
-    DominantBaseline dominantBaseline = Keywords::AUTO;
+    Css::BaselineSource baselineSource = Keywords::AUTO;
+    Css::AlignmentBaseline alignmentBaseline = Keywords::BASELINE;
+    Css::DominantBaseline dominantBaseline = Keywords::AUTO;
     BaselineShift baselineShift = PixelPercentage{Pixel{}};
     Style::LineHeight lineHeight = Keywords::NORMAL;
 };
 
-} // namespace Style
-
-export Style::BaselineShift resolve(BaselineShift const& value, LengthContext auto const& ctx) {
+export Style::BaselineShift resolve(Css::BaselineShift const& value, Css::LengthContext auto const& ctx) {
     return value.visit([&](auto const& v) -> Style::BaselineShift { return resolve(v, ctx); });
 }
 
-export BaselineShift toSpecified(Style::BaselineShift const& value) {
-    return value.visit([](auto const& v) -> BaselineShift { return toSpecified(v); });
+export Css::BaselineShift toSpecified(Style::BaselineShift const& value) {
+    return value.visit([](auto const& v) -> Css::BaselineShift { return toSpecified(v); });
 }
 
-} // namespace Vaev
+} // namespace Vaev::Style
+

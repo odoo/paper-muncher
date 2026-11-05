@@ -7,8 +7,9 @@ import :values.primitives;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 export using ZIndex = Union<Keywords::Auto, Integer>;
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

@@ -266,21 +266,21 @@ struct FlexItem {
     // https://www.w3.org/TR/css-flexbox-1/#valdef-flex-basis-auto
     void computeFlexBaseSize(Opt<Au> mainContainerSize, IntrinsicSize containerSizing) {
         // A NONE return here indicates a CONTENT case for the flex basis
-        auto getDefiniteFlexBasisSize = [](Style::Flex& flexItemProps, FlexAxis& fa, Box* box) -> Opt<PixelPercentage> {
+        auto getDefiniteFlexBasisSize = [](Style::Flex& flexItemProps, FlexAxis& fa, Box* box) -> Opt<Style::PixelPercentage> {
             if (flexItemProps.basis.is<Keywords::Content>())
                 return NONE;
 
             // from now on flex basis is width
 
-            if (auto basis = flexItemProps.basis.is<PixelPercentage>())
+            if (auto basis = flexItemProps.basis.is<Style::PixelPercentage>())
                 return Some(*basis);
 
-            if (not fa.mainAxis(box->style->sizing).is<PixelPercentage>())
+            if (not fa.mainAxis(box->style->sizing).is<Style::PixelPercentage>())
                 return NONE;
 
             // TODO: solve definite values also min and max content
 
-            return Some(fa.mainAxis(box->style->sizing).expect<PixelPercentage>());
+            return Some(fa.mainAxis(box->style->sizing).expect<Style::PixelPercentage>());
         };
 
         if (auto const& [flexBasisDefiniteSize] = getDefiniteFlexBasisSize(flexItemProps, fa, box)) {
@@ -327,8 +327,8 @@ struct FlexItem {
     // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
     Au getMinAutoPrefMainSize(Vec2Au containerSize) const {
         Opt<Au> definiteMaxMainSize;
-        auto maxMainSize = box->style->sizing->maxSize(fa.isRowOriented ? Axis::HORIZONTAL : Axis::VERTICAL);
-        if (auto maxMainSizeCalc = maxMainSize.is<PixelPercentage>()) {
+        auto maxMainSize = box->style->sizing->maxSize(fa.isRowOriented ? Css::Axis::HORIZONTAL : Css::Axis::VERTICAL);
+        if (auto maxMainSizeCalc = maxMainSize.is<Style::PixelPercentage>()) {
             definiteMaxMainSize = Some(Layout::resolve(*maxMainSizeCalc, fa.mainAxis(containerSize)));
         }
 
@@ -338,7 +338,7 @@ struct FlexItem {
             contentSizeSuggestion = min(contentSizeSuggestion, definiteMaxMainSize.expect());
 
         auto mainAxis = fa.mainAxis(box->style->sizing);
-        if (auto mainAxisCalc = mainAxis.is<PixelPercentage>()) {
+        if (auto mainAxisCalc = mainAxis.is<Style::PixelPercentage>()) {
             Au specifiedSizeSuggestion = Layout::resolve(
                 *mainAxisCalc,
                 fa.mainAxis(containerSize)
@@ -359,7 +359,7 @@ struct FlexItem {
         Style::MaxSize maxSizeToResolve = isWidth ? box->style->sizing->maxWidth : box->style->sizing->maxHeight;
 
         auto visitor = Visitor{
-            [&](PixelPercentage const& v) {
+            [&](Style::PixelPercentage const& v) {
                 return Layout::resolve(
                     v,
                     isWidth
@@ -403,7 +403,7 @@ struct FlexItem {
         Au contentContribution = fa.mainAxis(isMin ? minContentSize : maxContentSize) + getMargin(BOTH_MAIN);
 
         auto mainAxis = fa.mainAxis(box->style->sizing);
-        if (auto mainAxisCalc = mainAxis.is<PixelPercentage>()) {
+        if (auto mainAxisCalc = mainAxis.is<Style::PixelPercentage>()) {
             contentContribution = max(
                 contentContribution,
                 Layout::resolve(
@@ -446,7 +446,7 @@ struct FlexItem {
             );
 
         auto crossAxis = fa.crossAxis(box->style->sizing);
-        if (auto crossAxisCalc = crossAxis.is<PixelPercentage>()) {
+        if (auto crossAxisCalc = crossAxis.is<Style::PixelPercentage>()) {
             contentContribution = max(
                 contentContribution,
                 Layout::resolve(
@@ -508,33 +508,33 @@ struct FlexItem {
     }
 
     // https://www.w3.org/TR/css-flexbox-1/#align-items-property
-    void alignItem(Au lineCrossSize, Align::Keywords parentAlignItems) {
+    void alignItem(Au lineCrossSize, Css::Align::Keywords parentAlignItems) {
         auto align = box->style->aligns.alignSelf.keyword;
 
         // https://www.w3.org/TR/css-flexbox-1/#valdef-align-items-auto
-        if (align == Align::AUTO)
+        if (align == Css::Align::AUTO)
             align = parentAlignItems;
 
         switch (align) {
-        case Align::FLEX_END:
+        case Css::Align::FLEX_END:
             alignCrossFlexEnd(lineCrossSize);
             return;
 
-        case Align::CENTER:
+        case Css::Align::CENTER:
             alignCrossCenter(lineCrossSize);
             return;
 
-        case Align::FIRST_BASELINE:
+        case Css::Align::FIRST_BASELINE:
             // https://www.w3.org/TR/css-flexbox-1/#valdef-align-items-baseline
             // TODO: complex case, ignoring for now
             return;
 
-        case Align::STRETCH:
+        case Css::Align::STRETCH:
             alignCrossStretch();
             return;
 
         default:
-        case Align::FLEX_START:
+        case Css::Align::FLEX_START:
             alignCrossFlexStart();
             return;
         }
@@ -610,31 +610,31 @@ struct FlexLine {
     }
 
     // https://www.w3.org/TR/css-flexbox-1/#justify-content-property
-    void justifyContent(Align::Keywords justifyContent, Au mainSize, Au occupiedSize) {
+    void justifyContent(Css::Align::Keywords justifyContent, Au mainSize, Au occupiedSize) {
         switch (justifyContent) {
-        case Align::SPACE_AROUND:
+        case Css::Align::SPACE_AROUND:
             if (occupiedSize > mainSize or items.len() == 1)
                 alignMainCenter(mainSize, occupiedSize);
             else
                 alignMainSpaceAround(mainSize, occupiedSize);
             break;
 
-        case Align::CENTER:
+        case Css::Align::CENTER:
             alignMainCenter(mainSize, occupiedSize);
             break;
 
-        case Align::FLEX_END:
+        case Css::Align::FLEX_END:
             alignMainFlexEnd(mainSize, occupiedSize);
             break;
 
-        case Align::SPACE_BETWEEN:
+        case Css::Align::SPACE_BETWEEN:
             if (occupiedSize > mainSize or items.len() == 1)
                 alignMainFlexStart();
             else
                 alignMainSpaceBetween(mainSize, occupiedSize);
             break;
 
-        case Align::FLEX_START:
+        case Css::Align::FLEX_START:
         default:
             alignMainFlexStart();
             break;
@@ -731,8 +731,8 @@ struct FlexFormatingContext : FormatingContext {
 
     void _determineFlexBaseSizeAndHypotheticalMainSize(Box& box, Input input) {
         Opt<Au> containerDefiniteMainSize = fa.mainAxis(input.knownSize);
-        if (fa.mainAxis(box.style->sizing).is<PixelPercentage>()) {
-            containerDefiniteMainSize = Some(Layout::resolve(fa.mainAxis(box.style->sizing).expect<PixelPercentage>(), fa.mainAxis(input.containingBlock)));
+        if (fa.mainAxis(box.style->sizing).is<Style::PixelPercentage>()) {
+            containerDefiniteMainSize = Some(Layout::resolve(fa.mainAxis(box.style->sizing).expect<Style::PixelPercentage>(), fa.mainAxis(input.containingBlock)));
         }
 
         for (auto& i : _items) {
@@ -1123,7 +1123,7 @@ struct FlexFormatingContext : FormatingContext {
 
             for (auto& flexItem : flexLine.items) {
                 if (
-                    flexItem.box->style->aligns.alignSelf == Align::FIRST_BASELINE and
+                    flexItem.box->style->aligns.alignSelf == Css::Align::FIRST_BASELINE and
                     not flexItem.hasAnyCrossMarginAuto() /* and
                     inline-axis is parallel to main-axis*/
                 ) {
@@ -1166,7 +1166,7 @@ struct FlexFormatingContext : FormatingContext {
         if (
             not(input.intrinsic == IntrinsicSize::MIN_CONTENT) and
             (fa.crossAxis(box.style->sizing).is<Keywords::Auto>() or fa.crossAxis(input.knownSize)) and
-            box.style->aligns.alignContent == Align::STRETCH
+            box.style->aligns.alignContent == Css::Align::STRETCH
         ) {
             Au sumOfCrossSizes{0};
             for (auto& flexLine : _lines)
@@ -1193,12 +1193,12 @@ struct FlexFormatingContext : FormatingContext {
     void _determineUsedCrossSize(Box& box, Input input) {
         for (auto& flexLine : _lines) {
             for (auto& flexItem : flexLine.items) {
-                Align itemAlign = flexItem.box->style->aligns.alignSelf;
-                if (itemAlign == Align::AUTO)
+                Css::Align itemAlign = flexItem.box->style->aligns.alignSelf;
+                if (itemAlign == Css::Align::AUTO)
                     itemAlign = box.style->aligns.alignItems;
 
                 if (
-                    itemAlign == Align::STRETCH and
+                    itemAlign == Css::Align::STRETCH and
                     fa.crossAxis(flexItem.box->style->sizing).is<Keywords::Auto>() and
                     not flexItem.hasAnyCrossMarginAuto()
                 ) {
@@ -1279,10 +1279,10 @@ struct FlexFormatingContext : FormatingContext {
                 // NOTE: justifying doesnt change sizes/margins, thus will only run when committing and setting positions
                 auto justifyContent = box.style->aligns.justifyContent.keyword;
                 if (_flex.isReverse()) {
-                    if (justifyContent == Align::FLEX_START)
-                        justifyContent = Align::FLEX_END;
-                    else if (justifyContent == Align::FLEX_END)
-                        justifyContent = Align::FLEX_START;
+                    if (justifyContent == Css::Align::FLEX_START)
+                        justifyContent = Css::Align::FLEX_END;
+                    else if (justifyContent == Css::Align::FLEX_END)
+                        justifyContent = Css::Align::FLEX_START;
                 }
                 flexLine.justifyContent(
                     justifyContent,
@@ -1395,7 +1395,7 @@ struct FlexFormatingContext : FormatingContext {
         };
 
         switch (box.style->aligns.alignContent.keyword) {
-        case Align::FLEX_END: {
+        case Css::Align::FLEX_END: {
             Au currPositionCross{availableCrossSpace};
             for (auto& flexLine : _lines) {
                 fa.crossAxis(flexLine.position) = currPositionCross;
@@ -1404,12 +1404,12 @@ struct FlexFormatingContext : FormatingContext {
             break;
         }
 
-        case Align::CENTER: {
+        case Css::Align::CENTER: {
             alignContentCenter();
             break;
         }
 
-        case Align::SPACE_AROUND: {
+        case Css::Align::SPACE_AROUND: {
             if (availableCrossSpace < 0_au) {
                 alignContentCenter();
             } else {
@@ -1424,7 +1424,7 @@ struct FlexFormatingContext : FormatingContext {
             break;
         }
 
-        case Align::SPACE_BETWEEN: {
+        case Css::Align::SPACE_BETWEEN: {
             if (availableCrossSpace < 0_au or _lines.len() == 1)
                 alignContentFlexStart();
             else {
@@ -1439,7 +1439,7 @@ struct FlexFormatingContext : FormatingContext {
             break;
         }
 
-        case Align::FLEX_START:
+        case Css::Align::FLEX_START:
         default:
             alignContentFlexStart();
         }

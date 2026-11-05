@@ -8,7 +8,7 @@ import Karm.Math;
 using namespace Karm;
 using namespace Karm::Literals;
 
-namespace Vaev::Tests {
+namespace Vaev::Css::Tests {
 
 // MARK: Helpers ---------------------------------------------------------------
 
@@ -46,45 +46,45 @@ static Res<String> _specified(Str input) {
 
 // Computed <length>, serialized.
 static Res<String> _px(Str input) {
-    auto calc = try$(_parse<Length>(input));
+    auto calc = try$(_parse<Css::Length>(input));
     auto cx = RelativeLengthContextData{};
-    return _serialize(toSpecified(resolve(calc, cx)));
+    return _serialize(Style::toSpecified(Style::resolve(calc, cx)));
 }
 
 // Computed <length-percentage>, serialized.
 static Res<String> _lp(Str input) {
-    auto calc = try$(_parse<LengthPercentage>(input));
+    auto calc = try$(_parse<Css::LengthPercentage>(input));
     auto cx = RelativeLengthContextData{};
-    return _serialize(toSpecified(resolve(calc, cx)));
+    return _serialize(Style::toSpecified(Style::resolve(calc, cx)));
 }
 
 // Used <length-percentage> against a percentage basis, in px.
 static Res<f64> _used(Str input, f64 basis) {
-    auto calc = try$(_parse<LengthPercentage>(input));
+    auto calc = try$(_parse<Css::LengthPercentage>(input));
     auto cx = RelativeLengthContextData{};
-    return Ok(resolve(resolve(calc, cx), Au{basis}).cast<f64>());
+    return Ok(Style::resolve(Style::resolve(calc, cx), Au{basis}).cast<f64>());
 }
 
 // Used <length-percentage> against an optional percentage basis, in px.
 static Res<Opt<f64>> _usedOpt(Str input, Opt<f64> basis) {
-    auto calc = try$(_parse<LengthPercentage>(input));
+    auto calc = try$(_parse<Css::LengthPercentage>(input));
     auto cx = RelativeLengthContextData{};
     Opt<Au> relative = NONE;
     if (basis)
         relative = Some(Au{*basis});
-    return Ok(resolve(resolve(calc, cx), relative).map([](Au au) {
+    return Ok(Style::resolve(Style::resolve(calc, cx), relative).map([](Au au) {
         return au.cast<f64>();
     }));
 }
 
 // Computed <number>.
 static Res<f64> _num(Str input) {
-    return Ok(static_cast<f64>(resolve(try$(_parse<Number>(input)))));
+    return Ok(static_cast<f64>(Style::resolve(try$(_parse<Number>(input)))));
 }
 
 // Computed <percentage>.
 static Res<f64> _pct(Str input) {
-    return Ok(resolve(try$(_parse<Percentage>(input))).value());
+    return Ok(Style::resolve(try$(_parse<Css::Percentage>(input))).value());
 }
 
 static bool _near(f64 a, f64 b) {
@@ -219,7 +219,7 @@ test$("calc-abs") {
 test$("calc-abs-percent") {
     assertEq$(try$(_used("abs(-10%)", 100)), 10.0);
     assertEq$(try$(_used("abs(10%)", -100)), 10.0);
-    assertEq$(try$(_specified<LengthPercentage>("abs(-10%)")), "abs(-10%)"s);
+    assertEq$(try$(_specified<Css::LengthPercentage>("abs(-10%)")), "abs(-10%)"s);
     return Ok();
 }
 
@@ -243,7 +243,7 @@ test$("calc-sign-signed-zero-and-nan") {
 test$("calc-sign-is-number") {
     assert$(_valid<Number>("sign(1px)"));
     assert$(_valid<Number>("sign(1deg)"));
-    assertNot$(_valid<Length>("sign(1px)"));
+    assertNot$(_valid<Css::Length>("sign(1px)"));
     return Ok();
 }
 
@@ -303,11 +303,11 @@ test$("calc-round-percent") {
 }
 
 test$("calc-round-serialization") {
-    assertEq$(try$(_specified<LengthPercentage>("round(10%, 1px)")), "round(10%, 1px)"s);
-    assertEq$(try$(_specified<LengthPercentage>("round(nearest, 10%, 1px)")), "round(10%, 1px)"s);
-    assertEq$(try$(_specified<LengthPercentage>("round(up, 10%, 1px)")), "round(up, 10%, 1px)"s);
-    assertEq$(try$(_specified<LengthPercentage>("round(down, 10%, 1px)")), "round(down, 10%, 1px)"s);
-    assertEq$(try$(_specified<LengthPercentage>("round(to-zero, 10%, 1px)")), "round(to-zero, 10%, 1px)"s);
+    assertEq$(try$(_specified<Css::LengthPercentage>("round(10%, 1px)")), "round(10%, 1px)"s);
+    assertEq$(try$(_specified<Css::LengthPercentage>("round(nearest, 10%, 1px)")), "round(10%, 1px)"s);
+    assertEq$(try$(_specified<Css::LengthPercentage>("round(up, 10%, 1px)")), "round(up, 10%, 1px)"s);
+    assertEq$(try$(_specified<Css::LengthPercentage>("round(down, 10%, 1px)")), "round(down, 10%, 1px)"s);
+    assertEq$(try$(_specified<Css::LengthPercentage>("round(to-zero, 10%, 1px)")), "round(to-zero, 10%, 1px)"s);
     assertEq$(try$(_lp("round(up, 10%, 1px)")), "round(up, 10%, 1px)"s);
     return Ok();
 }
@@ -410,8 +410,8 @@ test$("calc-mod-rem-percent") {
     assertEq$(try$(_used("rem(3px + 0%, 2px)", 100)), 1.0);
     assertEq$(try$(_used("calc(rem(3px + 0%, 2px + 0%))", 100)), 1.0);
     assertEq$(try$(_used("mod(50%, 30px)", 100)), 20.0);
-    assertEq$(try$(_specified<LengthPercentage>("mod(50%, 30px)")), "mod(50%, 30px)"s);
-    assertEq$(try$(_specified<LengthPercentage>("rem(50%, 30px)")), "rem(50%, 30px)"s);
+    assertEq$(try$(_specified<Css::LengthPercentage>("mod(50%, 30px)")), "mod(50%, 30px)"s);
+    assertEq$(try$(_specified<Css::LengthPercentage>("rem(50%, 30px)")), "rem(50%, 30px)"s);
     return Ok();
 }
 
@@ -497,10 +497,10 @@ test$("calc-unsimplifiable-functions") {
 test$("calc-computed-infinity-and-nan-are-clamped", XFAIL) {
     auto cx = RelativeLengthContextData{};
 
-    auto inf = resolve(try$(_parse<Length>("calc(1px / 0)")), cx).value();
+    auto inf = Style::resolve(try$(_parse<Css::Length>("calc(1px / 0)")), cx).value();
     assert$(inf > 0 and not Math::isInf(inf));
 
-    auto negInf = resolve(try$(_parse<Length>("calc(-infinity * 1px)")), cx).value();
+    auto negInf = Style::resolve(try$(_parse<Css::Length>("calc(-infinity * 1px)")), cx).value();
     assert$(negInf < 0 and not Math::isInf(negInf));
 
     assertEq$(try$(_px("calc(NaN * 1px)")), "0px"s);
@@ -561,32 +561,32 @@ test$("calc-number-context") {
 }
 
 test$("calc-percentage-context") {
-    assert$(_valid<Percentage>("calc(50%)"));
+    assert$(_valid<Css::Percentage>("calc(50%)"));
     assertEq$(try$(_pct("calc(50% * 2)")), 100.0);
     assertEq$(try$(_pct("calc(50% + 10%)")), 60.0);
     assertEq$(try$(_pct("min(20%, 10%)")), 10.0);
-    assertNot$(_valid<Percentage>("calc(1px)"));
-    assertNot$(_valid<Percentage>("calc(1% + 1px)"));
-    assertNot$(_valid<Percentage>("calc(10% * 10%)"));
+    assertNot$(_valid<Css::Percentage>("calc(1px)"));
+    assertNot$(_valid<Css::Percentage>("calc(1% + 1px)"));
+    assertNot$(_valid<Css::Percentage>("calc(10% * 10%)"));
     return Ok();
 }
 
 test$("calc-angle-context") {
-    assert$(_valid<Angle>("calc(1turn + 90deg)"));
-    assert$(_valid<Angle>("atan2(1px, 2px)"));
-    assertNot$(_valid<Angle>("calc(1px)"));
-    assertNot$(_valid<Angle>("calc(10%)"));
-    assert$(_valid<AnglePercentage>("calc(50% + 1deg)"));
-    assertNot$(_valid<AnglePercentage>("calc(50% + 1px)"));
+    assert$(_valid<Css::Angle>("calc(1turn + 90deg)"));
+    assert$(_valid<Css::Angle>("atan2(1px, 2px)"));
+    assertNot$(_valid<Css::Angle>("calc(1px)"));
+    assertNot$(_valid<Css::Angle>("calc(10%)"));
+    assert$(_valid<Css::AnglePercentage>("calc(50% + 1deg)"));
+    assertNot$(_valid<Css::AnglePercentage>("calc(50% + 1px)"));
     return Ok();
 }
 
 test$("calc-other-contexts") {
-    assert$(_valid<Resolution>("calc(2dppx)"));
-    assert$(_valid<Resolution>("calc(1dppx + 96dpi)"));
-    assertNot$(_valid<Resolution>("calc(1px)"));
-    assert$(_valid<FrequencyPercentage>("calc(1hz + 10%)"));
-    assertNot$(_valid<FrequencyPercentage>("calc(1hz + 1px)"));
+    assert$(_valid<Css::Resolution>("calc(2dppx)"));
+    assert$(_valid<Css::Resolution>("calc(1dppx + 96dpi)"));
+    assertNot$(_valid<Css::Resolution>("calc(1px)"));
+    assert$(_valid<Css::FrequencyPercentage>("calc(1hz + 10%)"));
+    assertNot$(_valid<Css::FrequencyPercentage>("calc(1hz + 1px)"));
     return Ok();
 }
 
@@ -615,55 +615,55 @@ test$("calc-parse-whitespace") {
 test$("calc-parse-plus-minus-require-whitespace") {
     // https://drafts.csswg.org/css-values-4/#calc-syntax
     // White space is required on both sides of the + and - operators.
-    assertNot$(_valid<Length>("calc(1px+ 2px)"));
-    assertNot$(_valid<Length>("calc(1px -(2px))"));
-    assertNot$(_valid<Length>("calc(1px +2px)"));
-    assertNot$(_valid<Length>("calc((1px)+(2px))"));
-    assertNot$(_valid<Length>("calc(1px +(2px))"));
-    assertNot$(_valid<Length>("calc(1px- 2px)"));
+    assertNot$(_valid<Css::Length>("calc(1px+ 2px)"));
+    assertNot$(_valid<Css::Length>("calc(1px -(2px))"));
+    assertNot$(_valid<Css::Length>("calc(1px +2px)"));
+    assertNot$(_valid<Css::Length>("calc((1px)+(2px))"));
+    assertNot$(_valid<Css::Length>("calc(1px +(2px))"));
+    assertNot$(_valid<Css::Length>("calc(1px- 2px)"));
     return Ok();
 }
 
 test$("calc-parse-rejects-type-errors") {
-    assertNot$(_valid<Length>("calc(0)"));
-    assertNot$(_valid<Length>("calc(1px * 2px)"));
-    assertNot$(_valid<Length>("calc(1px + 1)"));
-    assertNot$(_valid<Length>("calc(0 + 1px)"));
-    assertNot$(_valid<Length>("calc(1px + 1deg)"));
-    assertNot$(_valid<Length>("calc(1px * sin(1px))"));
-    assertNot$(_valid<Length>("calc(1px * pow(1px, 2))"));
-    assertNot$(_valid<Length>("calc(1px * pow(2px, 2))"));
-    assertNot$(_valid<Length>("min(1px, 1deg)"));
-    assertNot$(_valid<Length>("clamp(1px, 2px, 3deg)"));
-    assertNot$(_valid<Length>("hypot(1px, 1)"));
-    assertNot$(_valid<Length>("calc(1px * atan2(1px, 1deg) / 1deg)"));
-    assertNot$(_valid<LengthPercentage>("calc(1px / 1%)"));
-    assertNot$(_valid<LengthPercentage>("calc(1% * 1%)"));
+    assertNot$(_valid<Css::Length>("calc(0)"));
+    assertNot$(_valid<Css::Length>("calc(1px * 2px)"));
+    assertNot$(_valid<Css::Length>("calc(1px + 1)"));
+    assertNot$(_valid<Css::Length>("calc(0 + 1px)"));
+    assertNot$(_valid<Css::Length>("calc(1px + 1deg)"));
+    assertNot$(_valid<Css::Length>("calc(1px * sin(1px))"));
+    assertNot$(_valid<Css::Length>("calc(1px * pow(1px, 2))"));
+    assertNot$(_valid<Css::Length>("calc(1px * pow(2px, 2))"));
+    assertNot$(_valid<Css::Length>("min(1px, 1deg)"));
+    assertNot$(_valid<Css::Length>("clamp(1px, 2px, 3deg)"));
+    assertNot$(_valid<Css::Length>("hypot(1px, 1)"));
+    assertNot$(_valid<Css::Length>("calc(1px * atan2(1px, 1deg) / 1deg)"));
+    assertNot$(_valid<Css::LengthPercentage>("calc(1px / 1%)"));
+    assertNot$(_valid<Css::LengthPercentage>("calc(1% * 1%)"));
     return Ok();
 }
 
 test$("calc-parse-rejects-percent-in-length") {
-    assertNot$(_valid<Length>("calc(10%)"));
-    assertNot$(_valid<Length>("min(1px, 2%)"));
-    assertNot$(_valid<Length>("calc(1px * (10% / 1%))"));
+    assertNot$(_valid<Css::Length>("calc(10%)"));
+    assertNot$(_valid<Css::Length>("min(1px, 2%)"));
+    assertNot$(_valid<Css::Length>("calc(1px * (10% / 1%))"));
     return Ok();
 }
 
 test$("calc-parse-rejects-bad-arity") {
-    assertNot$(_valid<Length>("clamp(1px, 2px)"));
-    assertNot$(_valid<Length>("min()"));
-    assertNot$(_valid<Length>("calc()"));
-    assertNot$(_valid<Length>("calc(1px,)"));
-    assertNot$(_valid<Length>("min(1px, 2px,)"));
-    assertNot$(_valid<Length>("calc(1px, 2px)"));
-    assertNot$(_valid<Length>("hypot()"));
-    assertNot$(_valid<Length>("max(1px,,2px)"));
-    assertNot$(_valid<Length>("max(,1px)"));
-    assertNot$(_valid<Length>("calc(1px * log(8, 2, 3))"));
-    assertNot$(_valid<Length>("calc(1px * sin(1, 2))"));
-    assertNot$(_valid<Length>("calc(1px * pow(2))"));
-    assertNot$(_valid<Length>("calc(1px * sqrt())"));
-    assertNot$(_valid<Length>("calc(1px * atan2(1))"));
+    assertNot$(_valid<Css::Length>("clamp(1px, 2px)"));
+    assertNot$(_valid<Css::Length>("min()"));
+    assertNot$(_valid<Css::Length>("calc()"));
+    assertNot$(_valid<Css::Length>("calc(1px,)"));
+    assertNot$(_valid<Css::Length>("min(1px, 2px,)"));
+    assertNot$(_valid<Css::Length>("calc(1px, 2px)"));
+    assertNot$(_valid<Css::Length>("hypot()"));
+    assertNot$(_valid<Css::Length>("max(1px,,2px)"));
+    assertNot$(_valid<Css::Length>("max(,1px)"));
+    assertNot$(_valid<Css::Length>("calc(1px * log(8, 2, 3))"));
+    assertNot$(_valid<Css::Length>("calc(1px * sin(1, 2))"));
+    assertNot$(_valid<Css::Length>("calc(1px * pow(2))"));
+    assertNot$(_valid<Css::Length>("calc(1px * sqrt())"));
+    assertNot$(_valid<Css::Length>("calc(1px * atan2(1))"));
     assertNot$(_valid<Number>("log(8,)"));
     assertNot$(_valid<Number>("abs()"));
     assertNot$(_valid<Number>("abs(1, 2)"));
@@ -673,29 +673,29 @@ test$("calc-parse-rejects-bad-arity") {
 }
 
 test$("calc-parse-rejects-junk") {
-    assertNot$(_valid<Length>("calc((1px 2px))"));
-    assertNot$(_valid<Length>("calc(1px +)"));
-    assertNot$(_valid<Length>("calc(1px *)"));
-    assertNot$(_valid<Length>("calc(* 1px)"));
-    assertNot$(_valid<Length>("calc(())"));
-    assertNot$(_valid<Length>("calc(1px ())"));
-    assertNot$(_valid<Length>("min(1px 2px)"));
-    assertNot$(_valid<Length>("clamp(none none, 1px, 2px)"));
-    assertNot$(_valid<Length>("clamp(none, 1px, none none)"));
+    assertNot$(_valid<Css::Length>("calc((1px 2px))"));
+    assertNot$(_valid<Css::Length>("calc(1px +)"));
+    assertNot$(_valid<Css::Length>("calc(1px *)"));
+    assertNot$(_valid<Css::Length>("calc(* 1px)"));
+    assertNot$(_valid<Css::Length>("calc(())"));
+    assertNot$(_valid<Css::Length>("calc(1px ())"));
+    assertNot$(_valid<Css::Length>("min(1px 2px)"));
+    assertNot$(_valid<Css::Length>("clamp(none none, 1px, 2px)"));
+    assertNot$(_valid<Css::Length>("clamp(none, 1px, none none)"));
     assertNot$(_valid<Number>("log(8 2)"));
     assertNot$(_valid<Number>("atan2(1 2)"));
     return Ok();
 }
 
 test$("calc-parse-rejects-unknown-names") {
-    assertNot$(_valid<Length>("calcx(1px)"));
-    assertNot$(_valid<Length>("calc(foo(1px))"));
-    assertNot$(_valid<Length>("calc(foo * 1px)"));
-    assertNot$(_valid<Length>("calc(1e)"));
-    assertNot$(_valid<Length>("calc(1foo)"));
+    assertNot$(_valid<Css::Length>("calcx(1px)"));
+    assertNot$(_valid<Css::Length>("calc(foo(1px))"));
+    assertNot$(_valid<Css::Length>("calc(foo * 1px)"));
+    assertNot$(_valid<Css::Length>("calc(1e)"));
+    assertNot$(_valid<Css::Length>("calc(1foo)"));
     // Only -infinity is a keyword; -pi and -e are unknown identifiers.
-    assertNot$(_valid<Length>("calc(-pi * 1px)"));
-    assertNot$(_valid<Length>("calc(-e * 1px)"));
+    assertNot$(_valid<Css::Length>("calc(-pi * 1px)"));
+    assertNot$(_valid<Css::Length>("calc(-e * 1px)"));
     return Ok();
 }
 
@@ -752,4 +752,4 @@ test$("calc-parse-dimension-with-exponent", XFAIL) {
     return Ok();
 }
 
-} // namespace Vaev::Tests
+} // namespace Vaev::Css::Tests

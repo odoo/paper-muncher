@@ -18,24 +18,24 @@ namespace Vaev::Style {
 export struct FontFace {
     Symbol family = ""_sym;
 
-    Vec<FontSource> sources;
+    Vec<Css::FontSource> sources;
 
-    Union<None, FontStyle, Range<PureAngle>> style = FontStyle{FontStyle::NORMAL};
+    Union<None, Css::FontStyle, Range<Css::PureAngle>> style = Css::FontStyle{Css::FontStyle::NORMAL};
 
     Opt<Range<Gfx::FontWeight>> weight = Some(Range<Gfx::FontWeight>::emptyAt(Gfx::FontWeight::REGULAR));
-    Opt<Range<FontWidth>> width = Some(Range<FontWidth>::emptyAt(FontWidth::NORMAL));
+    Opt<Range<Css::FontWidth>> width = Some(Range<Css::FontWidth>::emptyAt(Css::FontWidth::NORMAL));
 
     Vec<Range<Rune>> unicodeRange;
 
-    Vec<FontFeature> features;
-    Vec<FontVariation> variations;
+    Vec<Css::FontFeature> features;
+    Vec<Css::FontVariation> variations;
 
-    Opt<PurePercentage> ascentOverride = NONE;
-    Opt<PurePercentage> descentOverride = NONE;
-    Opt<PurePercentage> lineGapOverride = NONE;
-    Opt<PurePercentage> sizeAdjust = NONE;
+    Opt<Css::PurePercentage> ascentOverride = NONE;
+    Opt<Css::PurePercentage> descentOverride = NONE;
+    Opt<Css::PurePercentage> lineGapOverride = NONE;
+    Opt<Css::PurePercentage> sizeAdjust = NONE;
 
-    FontDisplay display = FontDisplay::AUTO;
+    Css::FontDisplay display = Css::FontDisplay::AUTO;
 
     bool valid() const {
         return any(family.str()) and any(sources);
@@ -51,8 +51,8 @@ export struct FontFace {
             resolvedStretch = Gfx::FontStretch::fromPercent(width.expect().start.val().value());
 
         Gfx::FontStyle resolvedStyle = Gfx::FontStyle::NORMAL;
-        if (style.is<FontStyle>())
-            resolvedStyle = style.expect<FontStyle>().val;
+        if (style.is<Css::FontStyle>())
+            resolvedStyle = style.expect<Css::FontStyle>().val;
 
         return {
             .family = family,
@@ -64,10 +64,10 @@ export struct FontFace {
 
     Gfx::FontAdjust adjustments() const {
         return {
-            .ascent = ascentOverride.unwrapOr(PurePercentage{100}).value() / 100,
-            .descent = descentOverride.unwrapOr(PurePercentage{100}).value() / 100,
-            .linegap = lineGapOverride.unwrapOr(PurePercentage{100}).value() / 100,
-            .sizeAdjust = sizeAdjust.unwrapOr(PurePercentage{100}).value() / 100,
+            .ascent = ascentOverride.unwrapOr(Css::PurePercentage{100}).value() / 100,
+            .descent = descentOverride.unwrapOr(Css::PurePercentage{100}).value() / 100,
+            .linegap = lineGapOverride.unwrapOr(Css::PurePercentage{100}).value() / 100,
+            .sizeAdjust = sizeAdjust.unwrapOr(Css::PurePercentage{100}).value() / 100,
         };
     }
 };
@@ -105,12 +105,12 @@ export struct FontFamilyFontDescriptor {
 // MARK: src
 // https://www.w3.org/TR/css-fonts-4/#src-desc
 export struct SrcFontDescriptor {
-    Vec<FontSource> value;
+    Vec<Css::FontSource> value;
 
     static Str name() { return "src"; }
 
     static auto initial() {
-        return Vec<FontSource>{};
+        return Vec<Css::FontSource>{};
     }
 
     void apply(FontFace& f) {
@@ -118,7 +118,7 @@ export struct SrcFontDescriptor {
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        Vec<FontSource> fontSrcs;
+        Vec<Css::FontSource> fontSrcs;
         while (true) {
             eatWhitespace(c);
             if (c.ended())
@@ -127,7 +127,7 @@ export struct SrcFontDescriptor {
             if (c.peek() == Css::Sst::FUNC and c.peek().prefix == Css::Token::function("local(")) {
                 auto func = c.next();
                 auto localFuncScan = Cursor<Css::Sst>{func.content};
-                auto familyName = try$(parseValue<FontFamily>(localFuncScan));
+                auto familyName = try$(parseValue<Css::FontFamily>(localFuncScan));
                 fontSrcs.pushBack(familyName);
                 continue;
             }
@@ -185,11 +185,11 @@ export struct SrcFontDescriptor {
 // MARK: font-style
 // https://www.w3.org/TR/css-fonts-4/#font-style-desc
 export struct FontStyleFontDescriptor {
-    Union<None, FontStyle, Range<PureAngle>> value;
+    Union<None, Css::FontStyle, Range<Css::PureAngle>> value;
 
     static Str name() { return "font-style"; }
 
-    static auto initial() { return FontStyle::NORMAL; }
+    static auto initial() { return Css::FontStyle::NORMAL; }
 
     void apply(FontFace& f) const {
         f.style = value;
@@ -201,19 +201,19 @@ export struct FontStyleFontDescriptor {
             return Ok();
         }
 
-        auto style = try$(parseValue<FontStyle>(c));
-        if (style != FontStyle::OBLIQUE) {
+        auto style = try$(parseValue<Css::FontStyle>(c));
+        if (style != Css::FontStyle::OBLIQUE) {
             value = style;
             return Ok();
         }
 
-        auto val = parseValue<PureAngle>(c);
+        auto val = parseValue<Css::PureAngle>(c);
         if (not val) {
             value = style;
             return Ok();
         }
 
-        value = Range<PureAngle>::fromStartEnd(style.obliqueAngle, val.expect());
+        value = Range<Css::PureAngle>::fromStartEnd(style.obliqueAngle, val.expect());
         return Ok();
     }
 };
@@ -254,11 +254,11 @@ export struct FontWeightFontDescriptor {
 // MARK: font-width
 // https://www.w3.org/TR/css-fonts-4/#font-width-prop
 export struct FontWidthFontDescriptor {
-    Opt<Range<FontWidth>> value = initial();
+    Opt<Range<Css::FontWidth>> value = initial();
 
     static Str name() { return "font-width"; }
 
-    static Opt<Range<FontWidth>> initial() { return NONE; }
+    static Opt<Range<Css::FontWidth>> initial() { return NONE; }
 
     void apply(FontFace& f) const {
         f.width = value;
@@ -270,15 +270,15 @@ export struct FontWidthFontDescriptor {
             return Ok();
         }
 
-        auto width = try$(parseValue<FontWidth>(c));
+        auto width = try$(parseValue<Css::FontWidth>(c));
 
-        auto val = parseValue<FontWidth>(c);
+        auto val = parseValue<Css::FontWidth>(c);
         if (not val) {
-            value = Some(Range<FontWidth>::emptyAt(width));
+            value = Some(Range<Css::FontWidth>::emptyAt(width));
             return Ok();
         }
 
-        value = Some(Range<FontWidth>::fromStartEnd(width, val.expect()));
+        value = Some(Range<Css::FontWidth>::fromStartEnd(width, val.expect()));
 
         return Ok();
     }
@@ -303,11 +303,11 @@ export struct UnicodeRangeFontDescriptor {
 // MARK: font-feature-settings
 // https://www.w3.org/TR/css-fonts-4/#font-rend-desc
 export struct FontFeatureSettingsFontDescriptor {
-    Vec<FontFeature> value;
+    Vec<Css::FontFeature> value;
 
     static Str name() { return "font-feature-settings"; }
 
-    static Vec<FontFeature> initial() { return {}; }
+    static Vec<Css::FontFeature> initial() { return {}; }
 
     void apply(FontFace& f) const {
         f.features = value;
@@ -317,11 +317,11 @@ export struct FontFeatureSettingsFontDescriptor {
 // MARK: font-variation-settingsl
 // https://www.w3.org/TR/css-fonts-4/#font-rend-desc
 export struct FontVariationSettingsFontDescriptor {
-    Vec<FontVariation> value;
+    Vec<Css::FontVariation> value;
 
     static Str name() { return "font-variation-settings"; }
 
-    static Vec<FontVariation> initial() { return {}; }
+    static Vec<Css::FontVariation> initial() { return {}; }
 
     void apply(FontFace& f) const {
         f.variations = value;
@@ -355,11 +355,11 @@ export struct FontNamedInstanceFontDescriptor {
 // MARK: font-display
 // https://www.w3.org/TR/css-fonts-4/#font-display-desc
 export struct FontDisplayFontDescriptor {
-    FontDisplay value = initial();
+    Css::FontDisplay value = initial();
 
     static Str name() { return "font-display"; }
 
-    static FontDisplay initial() { return FontDisplay::AUTO; }
+    static Css::FontDisplay initial() { return Css::FontDisplay::AUTO; }
 
     void apply(FontFace& f) const {
         f.display = value;
@@ -367,15 +367,15 @@ export struct FontDisplayFontDescriptor {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         if (c.skip(Css::Token::ident("auto"))) {
-            value = FontDisplay::AUTO;
+            value = Css::FontDisplay::AUTO;
         } else if (c.skip(Css::Token::ident("block"))) {
-            value = FontDisplay::BLOCK;
+            value = Css::FontDisplay::BLOCK;
         } else if (c.skip(Css::Token::ident("swap"))) {
-            value = FontDisplay::SWAP;
+            value = Css::FontDisplay::SWAP;
         } else if (c.skip(Css::Token::ident("fallback"))) {
-            value = FontDisplay::FALLBACK;
+            value = Css::FontDisplay::FALLBACK;
         } else if (c.skip(Css::Token::ident("optional"))) {
-            value = FontDisplay::OPTIONAL;
+            value = Css::FontDisplay::OPTIONAL;
         } else {
             return Error::invalidData("expected font-display value");
         }
@@ -387,12 +387,12 @@ export struct FontDisplayFontDescriptor {
 // MARK: ascent-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct AscentOverrideFontDescriptor {
-    Opt<PurePercentage> value = initial();
+    Opt<Css::PurePercentage> value = initial();
 
     static Str name() { return "ascent-override"; }
 
     // NOTE: normal is NONE
-    static Opt<PurePercentage> initial() { return NONE; }
+    static Opt<Css::PurePercentage> initial() { return NONE; }
 
     void apply(FontFace& f) const {
         f.ascentOverride = value;
@@ -402,7 +402,7 @@ export struct AscentOverrideFontDescriptor {
         if (c.skip(Css::Token::ident("normal"))) {
             value = NONE;
         } else {
-            value = Some(try$(parseValue<PurePercentage>(c)));
+            value = Some(try$(parseValue<Css::PurePercentage>(c)));
         }
 
         return Ok();
@@ -412,12 +412,12 @@ export struct AscentOverrideFontDescriptor {
 // MARK: descent-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct DescentOverrideStyleProp {
-    Opt<PurePercentage> value = initial();
+    Opt<Css::PurePercentage> value = initial();
 
     static Str name() { return "descent-override"; }
 
     // NOTE: normal is NONE
-    static Opt<PurePercentage> initial() { return NONE; }
+    static Opt<Css::PurePercentage> initial() { return NONE; }
 
     void apply(FontFace& f) const {
         f.descentOverride = value;
@@ -427,7 +427,7 @@ export struct DescentOverrideStyleProp {
         if (c.skip(Css::Token::ident("normal"))) {
             value = NONE;
         } else {
-            value = Some(try$(parseValue<PurePercentage>(c)));
+            value = Some(try$(parseValue<Css::PurePercentage>(c)));
         }
 
         return Ok();
@@ -437,11 +437,11 @@ export struct DescentOverrideStyleProp {
 // MARK: line-gap-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct LineGapOverrideFontDescriptor {
-    Opt<PurePercentage> value = initial();
+    Opt<Css::PurePercentage> value = initial();
 
     static Str name() { return "line-gap-override"; }
 
-    static Opt<PurePercentage> initial() { return NONE; }
+    static Opt<Css::PurePercentage> initial() { return NONE; }
 
     void apply(FontFace& f) const {
         f.lineGapOverride = value;
@@ -451,7 +451,7 @@ export struct LineGapOverrideFontDescriptor {
         if (c.skip(Css::Token::ident("normal"))) {
             value = NONE;
         } else {
-            value = Some(try$(parseValue<PurePercentage>(c)));
+            value = Some(try$(parseValue<Css::PurePercentage>(c)));
         }
 
         return Ok();
@@ -461,18 +461,18 @@ export struct LineGapOverrideFontDescriptor {
 // MARK: size-adjust
 // https://www.w3.org/TR/css-fonts-5/#size-adjust-desc
 export struct SizeAdjustFontDescriptor {
-    PurePercentage value = initial();
+    Css::PurePercentage value = initial();
 
     static Str name() { return "size-adjust"; }
 
-    static PurePercentage initial() { return PurePercentage{100}; }
+    static Css::PurePercentage initial() { return Css::PurePercentage{100}; }
 
     void apply(FontFace& f) const {
         f.sizeAdjust = Some(value);
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<PurePercentage>(c));
+        value = try$(parseValue<Css::PurePercentage>(c));
         return Ok();
     }
 };

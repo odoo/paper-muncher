@@ -18,7 +18,7 @@ import :values.keywords;
 using namespace Karm;
 using namespace Karm::Math::Literals;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Table Layout ----------------------------------------------------------
 // https://www.w3.org/TR/CSS21/tables.html#propdef-table-layout
@@ -27,7 +27,6 @@ export using TableLayout = Union<
     Keywords::Auto,
     Keywords::Fixed>;
 
-
 // MARK: Caption Side ----------------------------------------------------------
 // https://www.w3.org/TR/CSS21/tables.html#caption-position
 
@@ -35,14 +34,12 @@ export using CaptionSide = Union<
     Keywords::Top,
     Keywords::Bottom>;
 
-
 // MARK: Border Collapse -------------------------------------------------------
 // https://www.w3.org/TR/CSS22/tables.html#propdef-border-collapse
 
 export using BorderCollapse = Union<
     Keywords::Separate,
     Keywords::Collapse>;
-
 
 // MARK: Border Spacing --------------------------------------------------------
 // https://www.w3.org/TR/CSS22/tables.html#propdef-border-spacing
@@ -55,21 +52,26 @@ export struct BorderSpacing {
     }
 };
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export struct BorderSpacing {
     Pixel horizontal = Pixel{0};
     Pixel vertical = Pixel{0};
 };
 
-} // namespace Style
-export Style::BorderSpacing resolve(BorderSpacing const& value, LengthContext auto const& ctx) {
+export Style::BorderSpacing resolve(Css::BorderSpacing const& value, Css::LengthContext auto const& ctx) {
     return {resolve(value.horizontal, ctx), resolve(value.vertical, ctx)};
 }
 
-export BorderSpacing toSpecified(Style::BorderSpacing const& value) {
+export Css::BorderSpacing toSpecified(Style::BorderSpacing const& value) {
     return {toSpecified(value.horizontal), toSpecified(value.vertical)};
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<BorderSpacing> {
@@ -119,4 +121,5 @@ struct ValueSerializer<BorderSpacing> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

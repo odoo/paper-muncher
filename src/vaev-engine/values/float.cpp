@@ -9,7 +9,7 @@ import :values.keywords;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Clear & Float ---------------------------------------------------------
 
@@ -20,7 +20,6 @@ export using Float = Union<
     Keywords::Left,
     Keywords::Right>;
 
-
 export using Clear = Union<
     Keywords::None,
     Keywords::Left,
@@ -29,5 +28,5 @@ export using Clear = Union<
     Keywords::InlineStart,
     Keywords::InlineEnd>;
 
+} // namespace Vaev::Css
 
-} // namespace Vaev

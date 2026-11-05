@@ -17,10 +17,10 @@ namespace Vaev::Style {
 // MARK: Counter Set ------------------------------------------------------
 
 struct Counter {
-    CustomIdent name;
+    Css::CustomIdent name;
     Dom::ElementHandle el;
     bool reversed;
-    Integer value;
+    Css::Integer value;
 
     void repr(Io::Emit& e) const {
         e("(counter {} {} {})", name, reversed, value);
@@ -56,7 +56,7 @@ export struct CounterSet {
     }
 
     // https://drafts.csswg.org/css-lists/#instantiating-counters
-    Counter& instantiateCounter(Dom::ElementHandle el, Style::Counters::Reset const& reset, Integer initial) {
+    Counter& instantiateCounter(Dom::ElementHandle el, Style::Counters::Reset const& reset, Css::Integer initial) {
         // 1. Let counters be element’s CSS counters set.
 
         // 2. Let innermost counter be the last counter in counters with the name name.
@@ -104,14 +104,14 @@ export struct CounterSet {
         return Karm::any(_counters);
     }
 
-    bool contains(CustomIdent name, Dom::ElementHandle el) const {
+    bool contains(Css::CustomIdent name, Dom::ElementHandle el) const {
         return iter(_counters) |
                Any([&](Counter const& c) {
                    return c.name == name and c.el == el;
                });
     }
 
-    Tuple<Opt<Counter&>, usize> innerMost(CustomIdent name) {
+    Tuple<Opt<Counter&>, usize> innerMost(Css::CustomIdent name) {
         Opt<Counter&> counter = NONE;
         usize index = 0;
         for (auto i : urange::zeroTo(_counters.len())) {
@@ -124,7 +124,7 @@ export struct CounterSet {
         return {counter, index};
     }
 
-    Integer innerMostValue(CustomIdent name) {
+    Css::Integer innerMostValue(Css::CustomIdent name) {
         auto [counter, _] = innerMost(name);
         if (not counter)
             return 0;
@@ -144,8 +144,8 @@ export struct CounterSet {
 
 // https://drafts.csswg.org/css-counter-styles-3/#counter-style-pad
 export struct CounterPad {
-    Integer value;
-    CounterSymbol symbol;
+    Css::Integer value;
+    Css::CounterSymbol symbol;
 
     explicit operator bool() const {
         return value and symbol;
@@ -159,34 +159,34 @@ export struct CounterPad {
 // https://drafts.csswg.org/css-counter-styles-3/#the-counter-style-rule
 export struct CounterStyle {
     // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-system
-    CounterSystem system;
+    Css::CounterSystem system;
 
     // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-negative
-    CounterNegative negative;
+    Css::CounterNegative negative;
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-prefix
-    CounterSymbol prefix = String{""s};
+    Css::CounterSymbol prefix = String{""s};
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-suffix
-    CounterSymbol suffix = String{""s};
+    Css::CounterSymbol suffix = String{""s};
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-range
-    CounterRange range = Keywords::AUTO;
+    Css::CounterRange range = Keywords::AUTO;
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-pad
     CounterPad pad = {0, String{""s}};
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-fallback
-    CustomIdent fallback;
+    Css::CustomIdent fallback;
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-symbols
-    Vec<CounterSymbol> symbols;
+    Vec<Css::CounterSymbol> symbols;
 
     // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-additive-symbols
-    Vec<AdditiveCounterSymbol> additiveSymbols;
+    Vec<Css::AdditiveCounterSymbol> additiveSymbols;
 
     // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-speak-as
-    CounterSpeakAs speakAs;
+    Css::CounterSpeakAs speakAs;
 
     static CounterStyle initial() {
         return {
@@ -196,7 +196,7 @@ export struct CounterStyle {
             .suffix = String{". "s},
             .range = Keywords::AUTO,
             .pad = {0, String{""s}},
-            .fallback = CustomIdent{"decimal"_sym},
+            .fallback = Css::CustomIdent{"decimal"_sym},
             .symbols = {},
             .additiveSymbols = {},
             .speakAs = Keywords::AUTO,
@@ -223,34 +223,34 @@ export struct CounterStyle {
 
 export struct CounterDescriptors {
     // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-system
-    Opt<CounterSystem> system;
+    Opt<Css::CounterSystem> system;
 
     // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-negative
-    Opt<CounterNegative> negative;
+    Opt<Css::CounterNegative> negative;
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-prefix
-    Opt<CounterSymbol> prefix;
+    Opt<Css::CounterSymbol> prefix;
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-suffix
-    Opt<CounterSymbol> suffix;
+    Opt<Css::CounterSymbol> suffix;
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-range
-    Opt<CounterRange> range;
+    Opt<Css::CounterRange> range;
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-pad
     Opt<CounterPad> pad;
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-fallback
-    Opt<CustomIdent> fallback;
+    Opt<Css::CustomIdent> fallback;
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-symbols
-    Opt<Vec<CounterSymbol>> symbols;
+    Opt<Vec<Css::CounterSymbol>> symbols;
 
     // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-additive-symbols
-    Opt<Vec<AdditiveCounterSymbol>> additiveSymbols;
+    Opt<Vec<Css::AdditiveCounterSymbol>> additiveSymbols;
 
     // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-speak-as
-    Opt<CounterSpeakAs> speakAs;
+    Opt<Css::CounterSpeakAs> speakAs;
 
     CounterStyle extends(CounterStyle const& other) const {
         return {
@@ -286,40 +286,40 @@ export struct CounterDescriptors {
 };
 
 struct CounterStyleSet {
-    Map<CustomIdent, CounterStyle> _counters;
+    Map<Css::CustomIdent, CounterStyle> _counters;
 
-    void put(CustomIdent ident, CounterStyle style) {
+    void put(Css::CustomIdent ident, CounterStyle style) {
         _counters.put(ident, style);
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#cyclic-system
-    Opt<Vec<CounterSymbol>> _constructCyclicCounter(CounterStyle const& style, Integer value) {
+    Opt<Vec<Css::CounterSymbol>> _constructCyclicCounter(CounterStyle const& style, Css::Integer value) {
         if (not style.symbols)
             return NONE;
-        Integer i = (value - 1) % (Integer)style.symbols.len();
+        Css::Integer i = (value - 1) % (Css::Integer)style.symbols.len();
         if (i < 0)
-            i += (Integer)style.symbols.len();
-        return Some(Vec<CounterSymbol>{style.symbols[i]});
+            i += (Css::Integer)style.symbols.len();
+        return Some(Vec<Css::CounterSymbol>{style.symbols[i]});
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#fixed-system
-    Opt<Vec<CounterSymbol>> _constructFixedCounter(CounterStyle const& style, FixedCounterSystem const& system, Integer value) {
+    Opt<Vec<Css::CounterSymbol>> _constructFixedCounter(CounterStyle const& style, Css::FixedCounterSystem const& system, Css::Integer value) {
         if (not style.symbols)
             return NONE;
         value -= system.number.unwrapOr(0);
         value -= 1;
         if (value >= static_cast<isize>(style.symbols.len()))
             return NONE;
-        return Some(Vec<CounterSymbol>{style.symbols[value]});
+        return Some(Vec<Css::CounterSymbol>{style.symbols[value]});
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#symbolic-system
-    Opt<Vec<CounterSymbol>> _constructSymbolicCounter(CounterStyle const& style, Integer value) {
+    Opt<Vec<Css::CounterSymbol>> _constructSymbolicCounter(CounterStyle const& style, Css::Integer value) {
         if (not style.symbols)
             return NONE;
 
         auto n = style.symbols.len();
-        Vec<CounterSymbol> s;
+        Vec<Css::CounterSymbol> s;
 
         //  1. Let the chosen symbol be symbol( (value - 1) mod N).
         auto chosen = style.symbols[(value - 1) % n];
@@ -333,7 +333,7 @@ struct CounterStyleSet {
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#alphabetic-system
-    Opt<Vec<CounterSymbol>> _constructAlphabeticCounter(CounterStyle const& style, Integer value) {
+    Opt<Vec<Css::CounterSymbol>> _constructAlphabeticCounter(CounterStyle const& style, Css::Integer value) {
         if (style.symbols.len() < 2)
             return NONE;
         if (value == 0)
@@ -341,7 +341,7 @@ struct CounterStyleSet {
 
         // Let N be the length of the list of counter symbols
         auto n = style.symbols.len();
-        Vec<CounterSymbol> s;
+        Vec<Css::CounterSymbol> s;
 
         // While value is not equal to 0:
         while (value != 0) {
@@ -358,13 +358,13 @@ struct CounterStyleSet {
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#numeric-system
-    Opt<Vec<CounterSymbol>> _constructNumericCounter(CounterStyle const& style, Integer value) {
+    Opt<Vec<Css::CounterSymbol>> _constructNumericCounter(CounterStyle const& style, Css::Integer value) {
         if (style.symbols.len() < 2)
             return NONE;
 
         // Let N be the length of the list of counter symbols, value initially be the counter value, S initially be the empty string, and symbol(n) be the nth counter symbol in the list of counter symbols (0-indexed).
         auto n = style.symbols.len();
-        Vec<CounterSymbol> s;
+        Vec<Css::CounterSymbol> s;
 
         // If value is 0, append symbol(0) to S and return S.
         if (value == 0) {
@@ -385,13 +385,13 @@ struct CounterStyleSet {
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#additive-system
-    Opt<Vec<CounterSymbol>> _constructAdditiveCounter(CounterStyle const& style, Integer value) {
+    Opt<Vec<Css::CounterSymbol>> _constructAdditiveCounter(CounterStyle const& style, Css::Integer value) {
         if (not style.additiveSymbols.len())
             return NONE;
 
         // 1. Let value initially be the counter value, S initially be the empty
         //    string, and symbol list initially be the list of additive tuples.
-        Vec<CounterSymbol> s;
+        Vec<Css::CounterSymbol> s;
 
         // 2. If value is zero:
         if (value == 0) {
@@ -399,7 +399,7 @@ struct CounterStyleSet {
             //    append that tuple’s counter symbol to S and return S.
             auto zeroSym =
                 iter(style.additiveSymbols) |
-                FindFirst([](AdditiveCounterSymbol const& it) {
+                FindFirst([](Css::AdditiveCounterSymbol const& it) {
                     return it.value == 0;
                 });
 
@@ -443,12 +443,12 @@ struct CounterStyleSet {
         return Some(s);
     }
 
-    Opt<Vec<CounterSymbol>> _dispatchCounterSystem(CounterStyle const& style, Integer value) {
+    Opt<Vec<Css::CounterSymbol>> _dispatchCounterSystem(CounterStyle const& style, Css::Integer value) {
         return style.system.visit(
             [&](Keywords::Cyclic) {
                 return _constructCyclicCounter(style, value);
             },
-            [&](FixedCounterSystem const& it) {
+            [&](Css::FixedCounterSystem const& it) {
                 return _constructFixedCounter(style, it, value);
             },
             [&](Keywords::Numeric) {
@@ -464,7 +464,7 @@ struct CounterStyleSet {
                 return _constructAdditiveCounter(style, value);
             },
 
-            [&](ExtendsCounterSystem) -> Opt<Vec<CounterSymbol>> {
+            [&](Css::ExtendsCounterSystem) -> Opt<Vec<Css::CounterSymbol>> {
                 // NOTE: This should be unreachable because all `extends` should
                 //       have been resolved away by `CounterDescriptorsSet`.
                 unreachable();
@@ -472,25 +472,25 @@ struct CounterStyleSet {
         );
     }
 
-    Opt<bool> _counterDefinedFor(CounterStyle const& style, Integer value) {
+    Opt<bool> _counterDefinedFor(CounterStyle const& style, Css::Integer value) {
         auto range = style.range;
-        if (auto it = range.is<Vec<Pair<Union<Integer, Keywords::Infinite>>>>()) {
+        if (auto it = range.is<Vec<Pair<Union<Css::Integer, Keywords::Infinite>>>>()) {
             for (auto& r : *it) {
                 auto lower = r.v0.visit(
-                    [](Integer i) {
+                    [](Css::Integer i) {
                         return i;
                     },
                     [](Keywords::Infinite) {
-                        return Limits<Integer>::MIN;
+                        return Limits<Css::Integer>::MIN;
                     }
                 );
 
                 auto upper = r.v1.visit(
-                    [](Integer i) {
+                    [](Css::Integer i) {
                         return i;
                     },
                     [](Keywords::Infinite) {
-                        return Limits<Integer>::MAX;
+                        return Limits<Css::Integer>::MAX;
                     }
                 );
 
@@ -504,10 +504,10 @@ struct CounterStyleSet {
     }
 
     CounterStyle _fallbackToDecimal() {
-        return _counters.lookup(CustomIdent{"decimal"_sym}).expect();
+        return _counters.lookup(Css::CustomIdent{"decimal"_sym}).expect();
     }
 
-    CounterStyle _lookupCounterOrFallbackToDecimal(CustomIdent counterStyleName) {
+    CounterStyle _lookupCounterOrFallbackToDecimal(Css::CustomIdent counterStyleName) {
         return _counters
             .lookup(counterStyleName)
             .unwrapOrElse([&] {
@@ -515,7 +515,7 @@ struct CounterStyleSet {
             });
     }
 
-    Vec<CounterSymbol> _dispatchToFallbackCounter(CounterStyle const& style, Integer value, Set<CustomIdent>& seen) {
+    Vec<Css::CounterSymbol> _dispatchToFallbackCounter(CounterStyle const& style, Css::Integer value, Set<Css::CustomIdent>& seen) {
         if (seen.contains(style.fallback))
             return _dispatchCounterFallback(_fallbackToDecimal(), value, seen);
         auto const& fallbackStyle = _lookupCounterOrFallbackToDecimal(style.fallback);
@@ -523,8 +523,8 @@ struct CounterStyleSet {
         return _dispatchCounterFallback(fallbackStyle, value, seen);
     }
 
-    Integer _measureRepresentation(Vec<CounterSymbol>& repr) {
-        Integer len = 0;
+    Css::Integer _measureRepresentation(Vec<Css::CounterSymbol>& repr) {
+        Css::Integer len = 0;
         for (auto& i : repr) {
             len += i.visit(
                 [](auto const& s) {
@@ -536,7 +536,7 @@ struct CounterStyleSet {
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#generate-a-counter
-    Vec<CounterSymbol> _dispatchCounterFallback(CounterStyle const& style, Integer value, Set<CustomIdent>& seen) {
+    Vec<Css::CounterSymbol> _dispatchCounterFallback(CounterStyle const& style, Css::Integer value, Set<Css::CustomIdent>& seen) {
         // 2. If the counter value is outside the range of the counter style,
         //    exit this algorithm and instead generate a counter representation
         //    using the counter style’s fallback style and the same counter value.
@@ -583,14 +583,14 @@ struct CounterStyleSet {
     }
 
     // https://drafts.csswg.org/css-counter-styles-3/#counter-style-system
-    Vec<CounterSymbol> constructCounterRepresentation(CustomIdent counterStyleName, Integer value) {
+    Vec<Css::CounterSymbol> constructCounterRepresentation(Css::CustomIdent counterStyleName, Css::Integer value) {
         auto const& style = _lookupCounterOrFallbackToDecimal(counterStyleName);
         Set seen = {counterStyleName};
         return _dispatchCounterFallback(style, value, seen);
     }
 
-    Vec<CounterSymbol> constructCounterRepresentation(CounterStyle const& anonymousStyle, Integer value) {
-        Set<CustomIdent> seen = {};
+    Vec<Css::CounterSymbol> constructCounterRepresentation(CounterStyle const& anonymousStyle, Css::Integer value) {
+        Set<Css::CustomIdent> seen = {};
         return _dispatchCounterFallback(anonymousStyle, value, seen);
     }
 
@@ -599,11 +599,11 @@ struct CounterStyleSet {
     }
 };
 
-export using CounterDescriptorSet = Map<CustomIdent, CounterDescriptors>;
+export using CounterDescriptorSet = Map<Css::CustomIdent, CounterDescriptors>;
 
 export CounterStyleSet resolveExtends(CounterDescriptorSet const& counters) {
-    Map<CustomIdent, CounterStyle> resolved = {};
-    auto resolveOne = [&](this auto const& recurse, CustomIdent name, Set<CustomIdent>& seen) -> CounterStyle {
+    Map<Css::CustomIdent, CounterStyle> resolved = {};
+    auto resolveOne = [&](this auto const& recurse, Css::CustomIdent name, Set<Css::CustomIdent>& seen) -> CounterStyle {
         if (auto it = resolved.lookup(name))
             return it.expect();
 
@@ -619,13 +619,13 @@ export CounterStyleSet resolveExtends(CounterDescriptorSet const& counters) {
 
         CounterStyle base = CounterStyle::initial();
 
-        if (desc.system and desc.system->is<ExtendsCounterSystem>()) {
-            auto const& ext = desc.system->expect<ExtendsCounterSystem>();
+        if (desc.system and desc.system->is<Css::ExtendsCounterSystem>()) {
+            auto const& ext = desc.system->expect<Css::ExtendsCounterSystem>();
             base = recurse(ext.name, seen);
         }
 
         CounterStyle resolvedStyle = desc.extends(base);
-        if (desc.system and desc.system->is<ExtendsCounterSystem>())
+        if (desc.system and desc.system->is<Css::ExtendsCounterSystem>())
             resolvedStyle.system = base.system;
 
         resolved.put(name, resolvedStyle);
@@ -633,7 +633,7 @@ export CounterStyleSet resolveExtends(CounterDescriptorSet const& counters) {
     };
 
     for (auto const& [k, v] : counters.iterItems()) {
-        Set<CustomIdent> seen;
+        Set<Css::CustomIdent> seen;
         resolveOne(k, seen);
     }
 
@@ -644,7 +644,7 @@ export CounterStyleSet resolveExtends(CounterDescriptorSet const& counters) {
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-system
 struct SystemCounterDescriptor {
-    CounterSystem value;
+    Css::CounterSystem value;
 
     static Str name() {
         return "system"s;
@@ -661,7 +661,7 @@ struct SystemCounterDescriptor {
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-negative
 struct NegativeCounterDescriptor {
-    CounterNegative value;
+    Css::CounterNegative value;
 
     static Str name() {
         return "negative"s;
@@ -678,7 +678,7 @@ struct NegativeCounterDescriptor {
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-prefix
 struct PrefixCounterDescriptor {
-    CounterSymbol value;
+    Css::CounterSymbol value;
 
     static Str name() {
         return "prefix"s;
@@ -695,7 +695,7 @@ struct PrefixCounterDescriptor {
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-suffix
 struct SuffixCounterDescriptor {
-    CounterSymbol value;
+    Css::CounterSymbol value;
 
     static Str name() {
         return "suffix"s;
@@ -712,7 +712,7 @@ struct SuffixCounterDescriptor {
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-range
 struct RangeCounterDescriptor {
-    CounterRange value;
+    Css::CounterRange value;
 
     static Str name() {
         return "range"s;
@@ -746,7 +746,7 @@ struct PadCounterDescriptor {
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-fallback
 struct FallbackCounterDescriptor {
-    CustomIdent value;
+    Css::CustomIdent value;
 
     static Str name() {
         return "fallback"s;
@@ -763,7 +763,7 @@ struct FallbackCounterDescriptor {
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-symbols
 struct SymbolsCounterDescriptor {
-    Vec<CounterSymbol> value;
+    Vec<Css::CounterSymbol> value;
 
     static Str name() {
         return "symbols"s;
@@ -780,7 +780,7 @@ struct SymbolsCounterDescriptor {
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-additive-symbols
 struct AdditiveSymbolsCounterDescriptor {
-    Vec<AdditiveCounterSymbol> value;
+    Vec<Css::AdditiveCounterSymbol> value;
 
     static Str name() {
         return "additive-symbols"s;
@@ -797,7 +797,7 @@ struct AdditiveSymbolsCounterDescriptor {
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-speak-as
 struct SpeakAsCounterDescriptor {
-    CounterSpeakAs value;
+    Css::CounterSpeakAs value;
 
     static Str name() {
         return "speak-as"s;

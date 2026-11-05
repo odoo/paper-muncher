@@ -32,13 +32,13 @@ export struct LineHeightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<LineHeightProperty>(self(), try$(parseValue<Vaev::LineHeight>(c))));
+            return Ok(makeRc<LineHeightProperty>(self(), try$(parseValue<Vaev::Css::LineHeight>(c))));
         }
     };
 
-    Vaev::LineHeight _value;
+    Vaev::Css::LineHeight _value;
 
-    LineHeightProperty(Rc<Property::Registration> registration, Vaev::LineHeight value)
+    LineHeightProperty(Rc<Property::Registration> registration, Vaev::Css::LineHeight value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -68,13 +68,13 @@ export struct DominantBaselineProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<DominantBaselineProperty>(self(), try$(parseValue<DominantBaseline>(c))));
+            return Ok(makeRc<DominantBaselineProperty>(self(), try$(parseValue<Css::DominantBaseline>(c))));
         }
     };
 
-    DominantBaseline _value;
+    Css::DominantBaseline _value;
 
-    DominantBaselineProperty(Rc<Property::Registration> registration, DominantBaseline value)
+    DominantBaselineProperty(Rc<Property::Registration> registration, Css::DominantBaseline value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -82,7 +82,7 @@ export struct DominantBaselineProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -104,13 +104,13 @@ export struct BaselineSourceProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BaselineSourceProperty>(self(), try$(parseValue<BaselineSource>(c))));
+            return Ok(makeRc<BaselineSourceProperty>(self(), try$(parseValue<Css::BaselineSource>(c))));
         }
     };
 
-    BaselineSource _value;
+    Css::BaselineSource _value;
 
-    BaselineSourceProperty(Rc<Property::Registration> registration, BaselineSource value)
+    BaselineSourceProperty(Rc<Property::Registration> registration, Css::BaselineSource value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -118,7 +118,7 @@ export struct BaselineSourceProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -140,13 +140,13 @@ export struct AlignmentBaselineProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignmentBaselineProperty>(self(), try$(parseValue<AlignmentBaseline>(c))));
+            return Ok(makeRc<AlignmentBaselineProperty>(self(), try$(parseValue<Css::AlignmentBaseline>(c))));
         }
     };
 
-    AlignmentBaseline _value;
+    Css::AlignmentBaseline _value;
 
-    AlignmentBaselineProperty(Rc<Property::Registration> registration, AlignmentBaseline value)
+    AlignmentBaselineProperty(Rc<Property::Registration> registration, Css::AlignmentBaseline value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -154,7 +154,7 @@ export struct AlignmentBaselineProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -168,7 +168,7 @@ export struct BaselineShiftProperty : Property {
         Registration() : Property::Registration(Properties::BASELINE_SHIFT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BaselineShiftProperty>(self(), LengthPercentage::fromCanonical(0));
+            return makeRc<BaselineShiftProperty>(self(), Css::LengthPercentage::fromCanonical(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -176,13 +176,13 @@ export struct BaselineShiftProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BaselineShiftProperty>(self(), try$(parseValue<Vaev::BaselineShift>(c))));
+            return Ok(makeRc<BaselineShiftProperty>(self(), try$(parseValue<Vaev::Css::BaselineShift>(c))));
         }
     };
 
-    Vaev::BaselineShift _value;
+    Vaev::Css::BaselineShift _value;
 
-    BaselineShiftProperty(Rc<Property::Registration> registration, Vaev::BaselineShift value)
+    BaselineShiftProperty(Rc<Property::Registration> registration, Vaev::Css::BaselineShift value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -201,9 +201,9 @@ export struct BaselineShiftProperty : Property {
 // https://drafts.csswg.org/css-inline/#transverse-alignment
 export struct VerticalAlignProperty : Property {
     struct Value {
-        Opt<BaselineSource> baselineSource = NONE;
-        Opt<AlignmentBaseline> alignmentBaseline = NONE;
-        Opt<Vaev::BaselineShift> baselineShift = NONE;
+        Opt<Css::BaselineSource> baselineSource = NONE;
+        Opt<Css::AlignmentBaseline> alignmentBaseline = NONE;
+        Opt<Vaev::Css::BaselineShift> baselineShift = NONE;
     };
 
     struct Registration : Property::Registration {
@@ -236,7 +236,7 @@ export struct VerticalAlignProperty : Property {
                 if (maybeFirstOrLast) {
                     if (not value.baselineSource) {
                         value.baselineSource = Some(maybeFirstOrLast.expect().visit(
-                            [](auto& v) -> BaselineSource {
+                            [](auto& v) -> Css::BaselineSource {
                                 return v;
                             }
                         ));
@@ -246,7 +246,7 @@ export struct VerticalAlignProperty : Property {
                     return Error::invalidData("duplicated value type");
                 }
 
-                auto maybeAlignmentBaseline = parseValue<AlignmentBaseline>(c);
+                auto maybeAlignmentBaseline = parseValue<Css::AlignmentBaseline>(c);
                 if (maybeAlignmentBaseline) {
                     if (not value.alignmentBaseline) {
                         value.alignmentBaseline = Some(maybeAlignmentBaseline.expect());
@@ -256,7 +256,7 @@ export struct VerticalAlignProperty : Property {
                     return Error::invalidData("duplicated value type");
                 }
 
-                auto maybeBaselineShift = parseValue<Vaev::BaselineShift>(c);
+                auto maybeBaselineShift = parseValue<Vaev::Css::BaselineShift>(c);
                 if (maybeBaselineShift) {
                     if (not value.baselineShift) {
                         value.baselineShift = Some(maybeBaselineShift.expect());

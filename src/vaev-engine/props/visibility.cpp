@@ -27,13 +27,13 @@ export struct VisibilityProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<VisibilityProperty>(self(), try$(parseValue<Visibility>(c))));
+            return Ok(makeRc<VisibilityProperty>(self(), try$(parseValue<Css::Visibility>(c))));
         }
     };
 
-    Visibility _value;
+    Css::Visibility _value;
 
-    VisibilityProperty(Rc<Property::Registration> registration, Visibility value)
+    VisibilityProperty(Rc<Property::Registration> registration, Css::Visibility value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -41,7 +41,7 @@ export struct VisibilityProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -51,42 +51,42 @@ export struct VisibilityProperty : Property {
 
 // https://www.w3.org/TR/css-color-4/#propdef-opacity
 export struct OpacityProperty : Property {
-    using Value = Union<Number, Percentage>;
+    using Value = Union<Css::Number, Css::Percentage>;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OPACITY) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OpacityProperty>(self(), Number::fromCanonical(1));
+            return makeRc<OpacityProperty>(self(), Css::Number::fromCanonical(1));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OpacityProperty>(self(), Number::fromCanonical(c.opacity));
+            return makeRc<OpacityProperty>(self(), Css::Number::fromCanonical(c.opacity));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             // NOTE: A literal <percentage> is equivalent to the <number> it maps to,
             //       only math functions keep their percentages.
             if (not c.ended() and c.peek() == Css::Token::PERCENTAGE) {
-                auto percentage = try$(parseValue<Percentage>(c));
-                return Ok(makeRc<OpacityProperty>(self(), Number::fromCanonical(resolve(percentage).value() / 100.)));
+                auto percentage = try$(parseValue<Css::Percentage>(c));
+                return Ok(makeRc<OpacityProperty>(self(), Css::Number::fromCanonical(resolve(percentage).value() / 100.)));
             }
 
             return Ok(makeRc<OpacityProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Union<Number, Percentage> _value;
+    Union<Css::Number, Css::Percentage> _value;
 
     OpacityProperty(Rc<Property::Registration> registration, Value const& value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         auto specifiedNumber = _value.visit(
-            [](Number const& n) {
+            [](Css::Number const& n) {
                 return resolve(n);
             },
-            [](Percentage const& percent) {
+            [](Css::Percentage const& percent) {
                 // Percentages:	map to the range [0,1]
                 return resolve(percent, 1);
             }
@@ -107,7 +107,7 @@ export struct OpacityProperty : Property {
 
 // https://drafts.csswg.org/css-masking/#the-clip-path
 export struct ClipPathProperty : Property {
-    using Value = Union</* Url, */ Vaev::BasicShape, Keywords::None>;
+    using Value = Union</* Url, */ Vaev::Css::BasicShape, Keywords::None>;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CLIP_PATH) {}
@@ -133,7 +133,7 @@ export struct ClipPathProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        if (auto clipShape = _value.is<Vaev::BasicShape>())
+        if (auto clipShape = _value.is<Vaev::Css::BasicShape>())
             c.clip.cow() = Some(resolve(*clipShape, cx));
         else
             c.clip.cow() = NONE;

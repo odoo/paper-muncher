@@ -21,7 +21,7 @@ export struct PositionProperty : Property {
         Registration() : Property::Registration(Properties::POSITION) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PositionProperty>(self(), Vaev::Position{Keywords::STATIC});
+            return makeRc<PositionProperty>(self(), Vaev::Css::Position{Keywords::STATIC});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -29,13 +29,13 @@ export struct PositionProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PositionProperty>(self(), try$(parseValue<Vaev::Position>(c))));
+            return Ok(makeRc<PositionProperty>(self(), try$(parseValue<Vaev::Css::Position>(c))));
         }
     };
 
-    Vaev::Position _value;
+    Vaev::Css::Position _value;
 
-    PositionProperty(Rc<Property::Registration> registration, Vaev::Position value)
+    PositionProperty(Rc<Property::Registration> registration, Vaev::Css::Position value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -49,7 +49,7 @@ export struct PositionProperty : Property {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-top
 export struct TopProperty : Property {
-    using Value = Union<Keywords::Auto, LengthPercentage>;
+    using Value = Union<Keywords::Auto, Css::LengthPercentage>;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::TOP) {}
@@ -205,7 +205,7 @@ export struct ZIndexProperty : Property {
         Registration() : Property::Registration(Properties::Z_INDEX) {}
 
         Rc<Property> initial() const override {
-            return makeRc<ZIndexProperty>(self(), ZIndex{Keywords::AUTO});
+            return makeRc<ZIndexProperty>(self(), Css::ZIndex{Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -213,13 +213,13 @@ export struct ZIndexProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ZIndexProperty>(self(), try$(parseValue<ZIndex>(c))));
+            return Ok(makeRc<ZIndexProperty>(self(), try$(parseValue<Css::ZIndex>(c))));
         }
     };
 
-    ZIndex _value;
+    Css::ZIndex _value;
 
-    ZIndexProperty(Rc<Property::Registration> registration, ZIndex value)
+    ZIndexProperty(Rc<Property::Registration> registration, Css::ZIndex value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -227,7 +227,7 @@ export struct ZIndexProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

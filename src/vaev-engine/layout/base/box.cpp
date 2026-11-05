@@ -16,8 +16,8 @@ export using Content = Union<
     None,
     Rc<Gfx::Prose>,
     Gfx::Snapshot,
-    SvgShapeElement,
-    SvgViewBox>;
+    Css::SvgShapeElement,
+    Css::SvgViewBox>;
 
 struct Box : Meta::NoCopy {
     Rc<Style::ComputedValues const> style;
@@ -99,7 +99,7 @@ struct Box : Meta::NoCopy {
     }
 
     bool isRunningPositionedBox() const {
-        return style->position.is<RunningPosition>().has();
+        return style->position.is<Css::RunningPosition>().has();
     }
 
     bool isRootElementPrincipalBox() const {
@@ -125,7 +125,7 @@ struct Box : Meta::NoCopy {
 
         return style->position == Keywords::ABSOLUTE or
                style->position == Keywords::FIXED or
-               style->position.is<RunningPosition>();
+               style->position.is<Css::RunningPosition>();
     }
 
     // https://drafts.csswg.org/css2/#floats
@@ -151,7 +151,7 @@ struct Box : Meta::NoCopy {
 
     // https://drafts.csswg.org/css-tables-3/#table-wrapper-box
     bool isTableWrapperBox() const {
-        return style->display == Display::Inside::TABLE;
+        return style->display == Css::Display::Inside::TABLE;
     }
 
     bool isPseudoElement(Symbol type) const {

@@ -16,7 +16,7 @@ import :values.percent;
 using namespace Karm::Literals;
 using namespace Karm::Math::Literals;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: PreserveAspectRatio
 // https://svgwg.org/svg2-draft/coords.html#PreserveAspectRatioAttribute
@@ -46,19 +46,19 @@ export enum struct SvgMeetOrSlice {
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export using SvgPaint = Opt<Color>;
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export using SvgPaint = Opt<Color>;
 
-} // namespace Style
-
-export Style::SvgPaint toComputed(SvgPaint const& value, Gfx::Color currentColor) {
-    return value.map([&](Color const& color) {
+export Style::SvgPaint toComputed(Css::SvgPaint const& value, Gfx::Color currentColor) {
+    return value.map([&](Css::Color const& color) {
         return toComputed(color, currentColor);
     });
 }
 
-export SvgPaint toSpecified(Style::SvgPaint const& value) {
+export Css::SvgPaint toSpecified(Style::SvgPaint const& value) {
     return value.map([](Style::Color const& color) {
         return toSpecified(color);
     });
@@ -69,6 +69,10 @@ export Opt<Gfx::Color> resolve(Style::SvgPaint const& value, Gfx::Color currentC
         return resolve(color, currentColor);
     });
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
 export struct SvgViewBox {
@@ -134,4 +138,5 @@ struct ValueSerializer<SvgViewBox> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

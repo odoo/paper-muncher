@@ -7,7 +7,7 @@ import :values.keywords;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // https://drafts.csswg.org/css-multicol-2/#cw
 // FIXME: Enforce the [0,∞] range.
@@ -27,13 +27,15 @@ export using ColumnCount = Union<
     Keywords::Auto,
     Integer>;
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export struct Columns {
     Union<Keywords::Auto, Au> width = Keywords::AUTO;
     Union<Keywords::Auto, Au> height = Keywords::AUTO;
-    ColumnCount count = Keywords::AUTO;
+    Css::ColumnCount count = Keywords::AUTO;
 };
 
-} // namespace Style
-} // namespace Vaev
+} // namespace Vaev::Style
+

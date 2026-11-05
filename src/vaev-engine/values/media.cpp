@@ -7,7 +7,7 @@ import :values.base;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Media Types -----------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#media-types
@@ -395,4 +395,5 @@ struct ValueParser<ReducedData> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

@@ -10,11 +10,10 @@ import Karm.Math;
 
 import :css;
 import :values.base;
-import :values.resolved;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Integer ---------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#integers
@@ -49,17 +48,20 @@ struct ValueSerializer<Integer> {
     }
 };
 
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
+
 // MARK: Number ----------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#numbers
-
-export template <>
-struct _Resolved<f64> {
-    using Type = f64;
-};
 
 export f64 resolve(f64 const& value, [[maybe_unused]] auto const& ctx = NONE) {
     return value;
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<f64> {
@@ -273,4 +275,5 @@ struct ValueSerializer<S> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

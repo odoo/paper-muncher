@@ -12,17 +12,17 @@ using namespace Karm;
 namespace Vaev::Style {
 
 struct Fonts {
-    Vec<FontFamily> families = {"sans-serif"_sym};
+    Vec<Css::FontFamily> families = {"sans-serif"_sym};
     Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;
-    FontWidth width = FontWidth::NORMAL;
-    FontStyle style = FontStyle::NORMAL;
+    Css::FontWidth width = Css::FontWidth::NORMAL;
+    Css::FontStyle style = Css::FontStyle::NORMAL;
     Au size;
 };
 
 struct Transforms {
     Transform transform = Keywords::NONE;
     Position origin = {Percent{0}, Percent{0}};
-    TransformBox box = Keywords::BORDER_BOX;
+    Css::TransformBox box = Keywords::BORDER_BOX;
 
     bool has() const {
         return not transform.is<Keywords::None>();
@@ -30,9 +30,9 @@ struct Transforms {
 };
 
 export struct Table {
-    CaptionSide captionSide = Keywords::TOP;
+    Css::CaptionSide captionSide = Keywords::TOP;
     BorderSpacing spacing;
-    BorderCollapse collapse = Keywords::SEPARATE;
+    Css::BorderCollapse collapse = Keywords::SEPARATE;
 };
 
 export struct SvgGeometry {
@@ -43,7 +43,7 @@ export struct SvgGeometry {
     PixelPercentage r = Pixel{0};
 
     Union<String, None> d = NONE;
-    Opt<SvgViewBox> viewBox = NONE;
+    Opt<Css::SvgViewBox> viewBox = NONE;
 };
 
 export struct SvgPainting {
@@ -86,24 +86,24 @@ export struct ComputedValues {
     Rc<Gfx::Fontface> fontFace;
 
     // Inlined fields
-    ZIndex zIndex = Keywords::AUTO;
-    Overflows overflows;
+    Css::ZIndex zIndex = Keywords::AUTO;
+    Css::Overflows overflows;
     Gfx::Color color;
-    Content content = Keywords::NORMAL;
-    Integer order;
+    Css::ContentValue content = Keywords::NORMAL;
+    Css::Integer order;
     Style::Aligns aligns;
-    Display display;
+    Css::Display display;
     f32 opacity;
 
     // Small Field
-    Float float_ = Keywords::NONE;
-    Clear clear = Keywords::NONE;
-    Visibility visibility = Keywords::VISIBLE;
-    WritingMode writingMode = Keywords::HORIZONTAL_TB;
-    Direction direction = Keywords::LTR;
-    Vaev::Position position = Keywords::STATIC;
-    BoxSizing boxSizing = Keywords::CONTENT_BOX;
-    TableLayout tableLayout = Keywords::AUTO;
+    Css::Float float_ = Keywords::NONE;
+    Css::Clear clear = Keywords::NONE;
+    Css::Visibility visibility = Keywords::VISIBLE;
+    Css::WritingMode writingMode = Keywords::HORIZONTAL_TB;
+    Css::Direction direction = Keywords::LTR;
+    Vaev::Css::Position position = Keywords::STATIC;
+    Css::BoxSizing boxSizing = Keywords::CONTENT_BOX;
+    Css::TableLayout tableLayout = Keywords::AUTO;
 
     ComputedValues() : fontFace(Gfx::Fontface::fallback()) {}
 

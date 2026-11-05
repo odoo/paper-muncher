@@ -40,13 +40,13 @@ export struct TextAlignProperty : Property {
             if (c.skip(Css::Token::ident("-webkit-center")) or c.skip(Css::Token::ident("-moz-center")))
                 return Ok(makeRc<TextAlignProperty>(self(), Keywords::VAEV_BLOCK_CENTER));
 
-            return Ok(makeRc<TextAlignProperty>(self(), try$(parseValue<TextAlign>(c))));
+            return Ok(makeRc<TextAlignProperty>(self(), try$(parseValue<Css::TextAlign>(c))));
         }
     };
 
-    TextAlign _value;
+    Css::TextAlign _value;
 
-    TextAlignProperty(Rc<Property::Registration> registration, TextAlign value)
+    TextAlignProperty(Rc<Property::Registration> registration, Css::TextAlign value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -57,7 +57,7 @@ export struct TextAlignProperty : Property {
         // NOSPEC: Non-standard value, written with the name res/html.css uses.
         if (_value == Keywords::VAEV_BLOCK_CENTER)
             return w.writeStr("-vaev-block-center"s);
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -88,13 +88,13 @@ export struct TextTransformProperty : Property {
             if (c.ended())
                 return Error::invalidData("unexpected end of input");
 
-            return Ok(makeRc<TextTransformProperty>(self(), try$(parseValue<TextTransform>(c))));
+            return Ok(makeRc<TextTransformProperty>(self(), try$(parseValue<Css::TextTransform>(c))));
         }
     };
 
-    TextTransform _value;
+    Css::TextTransform _value;
 
-    TextTransformProperty(Rc<Property::Registration> registration, TextTransform value)
+    TextTransformProperty(Rc<Property::Registration> registration, Css::TextTransform value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -102,7 +102,7 @@ export struct TextTransformProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -130,13 +130,13 @@ export struct WhiteSpaceProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<WhiteSpaceProperty>(self(), try$(parseValue<WhiteSpace>(c))));
+            return Ok(makeRc<WhiteSpaceProperty>(self(), try$(parseValue<Css::WhiteSpace>(c))));
         }
     };
 
-    WhiteSpace _value;
+    Css::WhiteSpace _value;
 
-    WhiteSpaceProperty(Rc<Property::Registration> registration, WhiteSpace value)
+    WhiteSpaceProperty(Rc<Property::Registration> registration, Css::WhiteSpace value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -144,7 +144,7 @@ export struct WhiteSpaceProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

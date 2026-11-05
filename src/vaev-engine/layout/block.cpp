@@ -145,7 +145,7 @@ Output fragmentEmptyBox(Fragmentainer const& fc, FragmentBuilder& fragBuilder, I
 // fit-content instead of stretching like other block-level boxes.
 Opt<Au> _tableWrapperFitContentWidth(Input const& input, Box& wrapper, Au availableWidth) {
     for (auto& gridBox : wrapper.children()) {
-        if (gridBox.style->display != Display::Internal::TABLE_BOX)
+        if (gridBox.style->display != Css::Display::Internal::TABLE_BOX)
             continue;
 
         // TODO: Specified widths live on the table grid box and may be percentages,
@@ -163,20 +163,20 @@ void _populateChildSpecifiedSizes(Box& child, Input& parentInput, Input& childIn
     // https://drafts.csswg.org/css-tables-3/#fixup-algorithm
     // Percentages which would depend on the width and height on the table-wrapper box’s size are relative to the table-wrapper
     // box’s containing block instead, not the table-wrapper box itself.
-    auto containingBlock = child.style->display == Display::TABLE_BOX ? parentInput.containingBlock : childInput.containingBlock;
+    auto containingBlock = child.style->display == Css::Display::TABLE_BOX ? parentInput.containingBlock : childInput.containingBlock;
 
-    if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Display::INLINE) {
+    if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Css::Display::INLINE) {
         if (child.style->sizing->width.is<Keywords::Auto>()) {
             // https://www.w3.org/TR/css-tables-3/#layout-principles
             // Unlike other block-level boxes, tables do not fill their containing block by default.
             // When their width computes to auto, they behave as if they had fit-content specified instead.
             // This is different from most block-level boxes, which behave as if they had stretch instead.
-            if (child.style->display == Display::TABLE_BOX) {
+            if (child.style->display == Css::Display::TABLE_BOX) {
                 // Do nothing. 'fit-content' is kinda intrinsic size, when we don't populate knownSize.
             } else if (blockInlineSize) {
                 // When the inline size is not known, we cannot enforce it to the child. (?)
                 Au availableWidth = blockInlineSize.expect() - usedSpacings.margin.horizontal();
-                if (child.style->display == Display::TABLE) {
+                if (child.style->display == Css::Display::TABLE) {
                     childInput.knownSize.width = Some(_tableWrapperFitContentWidth(parentInput, child, availableWidth)
                                                           .unwrapOr(availableWidth));
                 } else {
@@ -237,7 +237,7 @@ struct BlockFormatingContext : FormatingContext {
     Au _computeCapmin(Box& box, Input input, Au inlineSize) {
         Au capmin{};
         for (auto& c : box.children()) {
-            if (c.style->display != Display::TABLE_BOX) {
+            if (c.style->display != Css::Display::TABLE_BOX) {
                 auto minContentContrib = computeIntrinsicContentSize(
                     input, c, IntrinsicSize::MIN_CONTENT
                 );
@@ -357,7 +357,7 @@ struct BlockFormatingContext : FormatingContext {
 
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
             //       and avoid duplicating the layout code
-            if (c.style->display == Display::Internal::TABLE_BOX)
+            if (c.style->display == Css::Display::Internal::TABLE_BOX)
                 childInput.capmin = Some(_computeCapmin(box, input, inlineSize));
 
             _populateChildSpecifiedSizes(c, input, childInput, usedSpacings, input.knownSize.width);

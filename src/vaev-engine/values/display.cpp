@@ -12,7 +12,7 @@ import :values.primitives;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // 2. MARK: Box Layout Modes: the display property
 // https://www.w3.org/TR/css-display-3/#the-display-properties
@@ -522,4 +522,5 @@ struct ValueSerializer<Display> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

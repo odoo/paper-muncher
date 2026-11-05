@@ -17,7 +17,7 @@ import :values.keywords;
 
 using namespace Vaev::Literals;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 export enum struct FontDisplay {
     AUTO,
@@ -319,11 +319,6 @@ using FontSize = Union<
     Keywords::Smaller,
     Keywords::Larger>;
 
-export template <>
-struct _Resolved<FontSize> {
-    using Type = Au;
-};
-
 export struct FontSizeContextData {
     f64 userFontSize = 16;   /// Font size of the user agent
     f64 parentFontSize = 16; /// Font size of the parent box
@@ -335,12 +330,16 @@ concept FontSizeContext = LengthContext<T> and requires(T t) {
     { t.parentFontSize } -> Meta::Convertible<f64>;
 };
 
-Au resolve(FontSize const& value, FontSizeContext auto const& ctx) {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
+
+Au resolve(Css::FontSize const& value, Css::FontSizeContext auto const& ctx) {
     return value.visit(
-        [&](PureLength const& v) {
+        [&](Css::PureLength const& v) {
             return resolve(v, ctx);
         },
-        [&](PurePercentage const& v) {
+        [&](Css::PurePercentage const& v) {
             return Au::fromFloatNearest(ctx.parentFontSize * (v.value() / 100.0));
         },
         [&](Keywords::XxSmall) {
@@ -372,6 +371,10 @@ Au resolve(FontSize const& value, FontSizeContext auto const& ctx) {
         }
     );
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 // MARK: FontFeature -----------------------------------------------------------
 
@@ -494,4 +497,5 @@ struct ValueParser<FontFamily> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

@@ -19,7 +19,7 @@ export struct DisplayProperty : Property {
         Registration() : Property::Registration(Properties::DISPLAY) {}
 
         Rc<Property> initial() const override {
-            return makeRc<DisplayProperty>(self(), Display{Display::FLOW, Display::INLINE});
+            return makeRc<DisplayProperty>(self(), Css::Display{Css::Display::FLOW, Css::Display::INLINE});
         }
 
         Rc<Property> load(ComputedValues const& s) const override {
@@ -27,13 +27,13 @@ export struct DisplayProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<DisplayProperty>(self(), try$(parseValue<Display>(c))));
+            return Ok(makeRc<DisplayProperty>(self(), try$(parseValue<Css::Display>(c))));
         }
     };
 
-    Display _value;
+    Css::Display _value;
 
-    DisplayProperty(Rc<Property::Registration> registration, Display value)
+    DisplayProperty(Rc<Property::Registration> registration, Css::Display value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -64,13 +64,13 @@ export struct ContentProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ContentProperty>(self(), try$(parseValue<Content>(c))));
+            return Ok(makeRc<ContentProperty>(self(), try$(parseValue<Css::ContentValue>(c))));
         }
     };
 
-    Content _value;
+    Css::ContentValue _value;
 
-    ContentProperty(Rc<Property::Registration> registration, Content value)
+    ContentProperty(Rc<Property::Registration> registration, Css::ContentValue value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -88,7 +88,7 @@ export struct OrderProperty : Property {
         Registration() : Property::Registration(Properties::ORDER) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OrderProperty>(self(), Integer{0});
+            return makeRc<OrderProperty>(self(), Css::Integer{0});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -96,13 +96,13 @@ export struct OrderProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OrderProperty>(self(), try$(parseValue<Integer>(c))));
+            return Ok(makeRc<OrderProperty>(self(), try$(parseValue<Css::Integer>(c))));
         }
     };
 
-    Integer _value;
+    Css::Integer _value;
 
-    OrderProperty(Rc<Property::Registration> registration, Integer value)
+    OrderProperty(Rc<Property::Registration> registration, Css::Integer value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

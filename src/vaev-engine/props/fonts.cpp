@@ -27,7 +27,7 @@ export struct FontFamilyProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<FontFamilyProperty>(self(), Vec<FontFamily>{"sans-serif"_sym});
+            return makeRc<FontFamilyProperty>(self(), Vec<Css::FontFamily>{"sans-serif"_sym});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -39,10 +39,10 @@ export struct FontFamilyProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            Vec<FontFamily> value{};
+            Vec<Css::FontFamily> value{};
             eatWhitespace(c);
             while (not c.ended()) {
-                value.pushBack(try$(parseValue<FontFamily>(c)));
+                value.pushBack(try$(parseValue<Css::FontFamily>(c)));
 
                 eatWhitespace(c);
                 c.skip(Css::Token::COMMA);
@@ -52,9 +52,9 @@ export struct FontFamilyProperty : Property {
         }
     };
 
-    Vec<FontFamily> _value;
+    Vec<Css::FontFamily> _value;
 
-    FontFamilyProperty(Rc<Property::Registration> registration, Vec<FontFamily> value)
+    FontFamilyProperty(Rc<Property::Registration> registration, Vec<Css::FontFamily> value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -93,7 +93,7 @@ export struct FontWeightProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<FontWeightProperty>(self(), FontWeight{Gfx::FontWeight::REGULAR});
+            return makeRc<FontWeightProperty>(self(), Css::FontWeight{Gfx::FontWeight::REGULAR});
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -105,13 +105,13 @@ export struct FontWeightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FontWeightProperty>(self(), try$(parseValue<FontWeight>(c))));
+            return Ok(makeRc<FontWeightProperty>(self(), try$(parseValue<Css::FontWeight>(c))));
         }
     };
 
-    FontWeight _value;
+    Css::FontWeight _value;
 
-    FontWeightProperty(Rc<Property::Registration> registration, FontWeight value)
+    FontWeightProperty(Rc<Property::Registration> registration, Css::FontWeight value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -143,7 +143,7 @@ export struct FontWidthProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<FontWidthProperty>(self(), FontWidth::NORMAL);
+            return makeRc<FontWidthProperty>(self(), Css::FontWidth::NORMAL);
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -155,13 +155,13 @@ export struct FontWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FontWidthProperty>(self(), try$(parseValue<FontWidth>(c))));
+            return Ok(makeRc<FontWidthProperty>(self(), try$(parseValue<Css::FontWidth>(c))));
         }
     };
 
-    FontWidth _value;
+    Css::FontWidth _value;
 
-    FontWidthProperty(Rc<Property::Registration> registration, FontWidth value)
+    FontWidthProperty(Rc<Property::Registration> registration, Css::FontWidth value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -188,7 +188,7 @@ export struct FontStyleProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<FontStyleProperty>(self(), FontStyle::NORMAL);
+            return makeRc<FontStyleProperty>(self(), Css::FontStyle::NORMAL);
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -200,13 +200,13 @@ export struct FontStyleProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FontStyleProperty>(self(), try$(parseValue<FontStyle>(c))));
+            return Ok(makeRc<FontStyleProperty>(self(), try$(parseValue<Css::FontStyle>(c))));
         }
     };
 
-    FontStyle _value;
+    Css::FontStyle _value;
 
-    FontStyleProperty(Rc<Property::Registration> registration, FontStyle value)
+    FontStyleProperty(Rc<Property::Registration> registration, Css::FontStyle value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -241,17 +241,17 @@ export struct FontSizeProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontSizeProperty>(self(), PureLength{c.font->size});
+            return makeRc<FontSizeProperty>(self(), Css::PureLength{c.font->size});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FontSizeProperty>(self(), try$(parseValue<FontSize>(c))));
+            return Ok(makeRc<FontSizeProperty>(self(), try$(parseValue<Css::FontSize>(c))));
         }
     };
 
-    FontSize _value;
+    Css::FontSize _value;
 
-    FontSizeProperty(Rc<Property::Registration> registration, FontSize value)
+    FontSizeProperty(Rc<Property::Registration> registration, Css::FontSize value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -270,12 +270,12 @@ export struct FontSizeProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-prop
 export struct FontProperty : Property {
     struct Value {
-        Vec<FontFamily> families = {"sans-serif"_sym};
-        Opt<FontWeight> weight;
-        FontWidth width = FontWidth::NORMAL;
-        FontStyle style = FontStyle::NORMAL;
-        FontSize size = Keywords::MEDIUM;
-        Vaev::LineHeight lineHeight = Keywords::NORMAL;
+        Vec<Css::FontFamily> families = {"sans-serif"_sym};
+        Opt<Css::FontWeight> weight;
+        Css::FontWidth width = Css::FontWidth::NORMAL;
+        Css::FontStyle style = Css::FontStyle::NORMAL;
+        Css::FontSize size = Keywords::MEDIUM;
+        Vaev::Css::LineHeight lineHeight = Keywords::NORMAL;
 
         void repr(Io::Emit& e) const {
             e("(font");
@@ -305,7 +305,7 @@ export struct FontProperty : Property {
                     Some(font.weight),
                     font.width,
                     font.style,
-                    PureLength{font.size},
+                    Css::PureLength{font.size},
                 }
             );
         }
@@ -315,13 +315,13 @@ export struct FontProperty : Property {
             FontProperty::Value value;
 
             while (true) {
-                auto fontStyle = parseValue<FontStyle>(c);
+                auto fontStyle = parseValue<Css::FontStyle>(c);
                 if (fontStyle) {
                     value.style = fontStyle.expect();
                     continue;
                 }
 
-                auto fontWeight = parseValue<FontWeight>(c);
+                auto fontWeight = parseValue<Css::FontWeight>(c);
                 if (fontWeight) {
                     value.weight = Some(fontWeight.expect());
                     continue;
@@ -329,13 +329,13 @@ export struct FontProperty : Property {
 
                 // TODO: font variant https://www.w3.org/TR/css-fonts-4/#font-variant-css21-values
 
-                auto fontWidth = parseValue<FontWidth>(c);
+                auto fontWidth = parseValue<Css::FontWidth>(c);
                 if (fontWidth) {
                     value.width = fontWidth.expect();
                     continue;
                 }
 
-                auto fontSize = parseValue<FontSize>(c);
+                auto fontSize = parseValue<Css::FontSize>(c);
                 if (fontSize) {
                     value.size = fontSize.expect();
                     break;
@@ -345,9 +345,9 @@ export struct FontProperty : Property {
             }
 
             if (c.skip(Css::Token::delim("/")))
-                value.lineHeight = try$(parseValue<Vaev::LineHeight>(c));
+                value.lineHeight = try$(parseValue<Vaev::Css::LineHeight>(c));
 
-            value.families = {try$(parseValue<FontFamily>(c))};
+            value.families = {try$(parseValue<Css::FontFamily>(c))};
 
             return Ok(makeRc<FontProperty>(self(), std::move(value)));
         }

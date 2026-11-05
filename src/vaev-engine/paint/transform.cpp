@@ -7,7 +7,7 @@ import :layout.values;
 namespace Vaev::Paint {
 
 // https://www.w3.org/TR/css-transforms-1/#transform-box
-RectAu resolveTransformReference(Rc<Layout::Fragment>& fragment, TransformBox box, RectAu viewBox) {
+RectAu resolveTransformReference(Rc<Layout::Fragment>& fragment, Css::TransformBox box, RectAu viewBox) {
     // For SVG elements without associated CSS layout box, the used value
     // for content-box is fill-box and for border-box is stroke-box;
     // conversely for elements with one, fill-box is content-box and both

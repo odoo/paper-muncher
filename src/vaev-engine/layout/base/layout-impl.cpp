@@ -31,23 +31,23 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     } else if (box.content.is<Rc<Gfx::Prose>>()) {
         return Some(constructInlineFormatingContext(box));
     } else if (
-        display == Display::FLOW or
-        display == Display::FLOW_ROOT or
-        display == Display::TABLE_CELL or
-        display == Display::TABLE_CAPTION or
-        display == Display::TABLE
+        display == Css::Display::FLOW or
+        display == Css::Display::FLOW_ROOT or
+        display == Css::Display::TABLE_CELL or
+        display == Css::Display::TABLE_CAPTION or
+        display == Css::Display::TABLE
     ) {
         return Some(constructBlockFormatingContext(box));
-    } else if (display == Display::FLEX) {
+    } else if (display == Css::Display::FLEX) {
         return Some(constructFlexFormatingContext(box));
-    } else if (display == Display::GRID) {
+    } else if (display == Css::Display::GRID) {
         return Some(constructGridFormatingContext(box));
-    } else if (display == Display::TABLE_BOX) {
+    } else if (display == Css::Display::TABLE_BOX) {
         return Some(constructTableFormatingContext(box));
-    } else if (oneOf(display, Display::RUBY_BASE, Display::RUBY_TEXT, Display::RUBY_BASE_CONTAINER, Display::RUBY_TEXT_CONTAINER)) {
+    } else if (oneOf(display, Css::Display::RUBY_BASE, Css::Display::RUBY_TEXT, Css::Display::RUBY_BASE_CONTAINER, Css::Display::RUBY_TEXT_CONTAINER)) {
         // NOTE: no ruby FC yet, block it instead of skipping layout
         return Some(constructBlockFormatingContext(box));
-    } else if (display == Display::INTERNAL) {
+    } else if (display == Css::Display::INTERNAL) {
         return NONE;
     } else {
         return Some(constructBlockFormatingContext(box));
@@ -90,7 +90,7 @@ Au _snapLengthAsBorderWidth(Au v) {
 
 InsetsAu computeBorders(Box& box) {
     // NOTE: In borders collapse mode, we assume that the table box borders are 'transfered' to the cells
-    if (box.style->display == Display::TABLE_BOX and box.style->table->collapse == Keywords::COLLAPSE) {
+    if (box.style->display == Css::Display::TABLE_BOX and box.style->table->collapse == Keywords::COLLAPSE) {
         return InsetsAu{};
     }
 
@@ -114,7 +114,7 @@ InsetsAu computeBorders(Box& box) {
 
 InsetsAu computePaddings(Box& box, Vec2Au containingBlock) {
     // In a table only table cell have padding
-    if (box.style->display.isTableInternal() and box.style->display != Display::TABLE_CELL)
+    if (box.style->display.isTableInternal() and box.style->display != Css::Display::TABLE_CELL)
         return {};
 
     InsetsAu res;
@@ -166,7 +166,7 @@ Vec2Au computeIntrinsicContentSize(Input const& input, Box& box, IntrinsicSize i
 }
 
 Opt<Au> computeSpecifiedBorderBoxWidth(Input const& input, Box& box, Style::Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
-    if (auto calc = size.is<PixelPercentage>()) {
+    if (auto calc = size.is<Style::PixelPercentage>()) {
         auto specifiedWidth = Layout::resolve(*calc, containingBlock.x);
         if (box.style->boxSizing == Keywords::CONTENT_BOX) {
             specifiedWidth += horizontalBorderBox;
@@ -195,7 +195,7 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Input const& input, Box& box, Style::Size
 }
 
 Opt<Au> computeSpecifiedBorderBoxHeight(Box& box, Style::Size size, Vec2Au containingBlock, Au verticalBorderBox) {
-    if (auto calc = size.is<PixelPercentage>()) {
+    if (auto calc = size.is<Style::PixelPercentage>()) {
         auto specifiedHeight = Layout::resolve(*calc, containingBlock.y);
         if (box.style->boxSizing == Keywords::CONTENT_BOX) {
             specifiedHeight += verticalBorderBox;

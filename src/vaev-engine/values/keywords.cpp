@@ -21,6 +21,29 @@ struct Keyword {
     }
 };
 
+namespace Keywords {
+
+#define KEYWORD(TYPE, VALUE, NAME)      \
+    export using TYPE = Keyword<VALUE>; \
+    export constexpr inline TYPE NAME{};
+#include "defs/keywords.inc"
+#undef KEYWORD
+
+} // namespace Keywords
+
+export template <StrLit K>
+Keyword<K> resolve(Keyword<K> const& value, auto const&) {
+    return value;
+}
+export template <StrLit K>
+Keyword<K> toSpecified(Keyword<K> const& value) {
+    return value;
+}
+
+} // namespace Vaev
+
+namespace Vaev::Css {
+
 export template <StrLit K>
 struct ValueParser<Keyword<K>> {
     static Res<Keyword<K>> parse(Cursor<Css::Sst>& c) {
@@ -45,23 +68,4 @@ struct ValueSerializer<Keyword<K>> {
     }
 };
 
-namespace Keywords {
-
-#define KEYWORD(TYPE, VALUE, NAME)      \
-    export using TYPE = Keyword<VALUE>; \
-    export constexpr inline TYPE NAME{};
-#include "defs/keywords.inc"
-#undef KEYWORD
-
-} // namespace Keywords
-
-export template <StrLit K>
-Keyword<K> resolve(Keyword<K> const& value, auto const&) {
-    return value;
-}
-export template <StrLit K>
-Keyword<K> toSpecified(Keyword<K> const& value) {
-    return value;
-}
-
-} // namespace Vaev
+} // namespace Vaev::Css

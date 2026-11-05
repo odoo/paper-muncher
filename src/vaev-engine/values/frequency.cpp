@@ -12,10 +12,10 @@ import :values.unitValue;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // https://drafts.csswg.org/css-values/#frequency
 // It represents the number of occurrences per second.
 
+} // namespace Vaev::Css
 
-} // namespace Vaev

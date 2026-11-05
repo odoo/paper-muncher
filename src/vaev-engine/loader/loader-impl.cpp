@@ -34,7 +34,7 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
 
         // FIXME: Properly determine the size of the SVG
         // https://www.w3.org/TR/SVG2/coords.html#SizingSVGInCSS
-        webview->changeArea(Style::DisplayArea::forRender({}, PureResolution::fromDppx(1)));
+        webview->changeArea(Style::DisplayArea::forRender({}, Css::PureResolution::fromDppx(1)));
         webview->changePrefs(Style::ViewerPrefs::forRender());
         co_trya$(webview->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
         webview->computeStyle();
@@ -43,10 +43,10 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
         // NOSPEC: The spec references a “default object size” but does not define explicit values.
         //         Historically, browsers (including Chrome) default to 300x150, as mentioned in older drafts:
         //         https://www.w3.org/TR/2011/WD-css3-images-20110908/#default-object-size
-        auto width = resolve(root->computedValues()->sizing->width.unwrapOr<PixelPercentage>(Pixel{300}), 300_au);
-        auto height = resolve(root->computedValues()->sizing->height.unwrapOr<PixelPercentage>(Pixel{300}), 300_au);
+        auto width = resolve(root->computedValues()->sizing->width.unwrapOr<Style::PixelPercentage>(Style::Pixel{300}), 300_au);
+        auto height = resolve(root->computedValues()->sizing->height.unwrapOr<Style::PixelPercentage>(Style::Pixel{300}), 300_au);
 
-        webview->changeArea(Style::DisplayArea::forRender({width, height}, PureResolution::fromDppx(1)));
+        webview->changeArea(Style::DisplayArea::forRender({width, height}, Css::PureResolution::fromDppx(1)));
         co_return Ok(webview->snapshot());
     } else {
         auto image = Karm::Image::load(data);
@@ -114,9 +114,9 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Dom::
 
             for (auto const& src : ff.sources) {
                 if (not src.identifier.is<Ref::Url>()) {
-                    auto result = fontDatabase->queryExact(src.identifier.expect<FontFamily>().name);
+                    auto result = fontDatabase->queryExact(src.identifier.expect<Css::FontFamily>().name);
                     if (not result) {
-                        logWarn("Failed to assets font {}", src.identifier.expect<FontFamily>().name);
+                        logWarn("Failed to assets font {}", src.identifier.expect<Css::FontFamily>().name);
                         continue;
                     }
                     break;

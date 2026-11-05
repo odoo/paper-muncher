@@ -6,7 +6,7 @@ import :values.resolution;
 namespace Vaev::Style {
 
 export struct Viewport {
-    PureResolution dpi = PureResolution::fromDpi(96);
+    Css::PureResolution dpi = Css::PureResolution::fromDpi(96);
     // https://drafts.csswg.org/css-values/#small-viewport-size
     RectAu small;
     // https://drafts.csswg.org/css-values/#large-viewport-size

@@ -15,11 +15,10 @@ import :values.unitValue;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Flexible Length -------------------------------------------------------
 // https://drafts.csswg.org/css-grid/#typedef-flex
-
 
 // MARK: FlexDirection ---------------------------------------------------------
 // https://drafts.csswg.org/css-flexbox-1/#flex-direction-property
@@ -30,7 +29,6 @@ export using FlexDirection = Union<
     Keywords::Column,
     Keywords::ColumnReverse>;
 
-
 // MARK: FlexWrap --------------------------------------------------------------
 // https://drafts.csswg.org/css-flexbox-1/#flex-wrap-property
 
@@ -38,7 +36,6 @@ export using FlexWrap = Union<
     Keywords::Nowrap,
     Keywords::Wrap,
     Keywords::WrapReverse>;
-
 
 export using FlexBasis = Union<
     Keywords::Auto,
@@ -48,7 +45,9 @@ export using FlexBasis = Union<
     Keywords::FitContent,
     LengthPercentage>;
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export using FlexBasis = Union<
     Keywords::Auto,
@@ -58,22 +57,18 @@ export using FlexBasis = Union<
     Keywords::FitContent,
     PixelPercentage>;
 
-} // namespace Style
-
-export Style::FlexBasis resolve(FlexBasis const& value, LengthContext auto const& ctx) {
+export Style::FlexBasis resolve(Css::FlexBasis const& value, Css::LengthContext auto const& ctx) {
     return value.visit([&](auto const& v) -> Style::FlexBasis { return resolve(v, ctx); });
 }
 
-export FlexBasis toSpecified(Style::FlexBasis const& value) {
-    return value.visit([](auto const& v) -> FlexBasis { return toSpecified(v); });
+export Css::FlexBasis toSpecified(Style::FlexBasis const& value) {
+    return value.visit([](auto const& v) -> Css::FlexBasis { return toSpecified(v); });
 }
-
-namespace Style {
 
 export struct Flex {
     // FlexContainer
-    FlexDirection direction = Keywords::ROW;
-    FlexWrap wrap = Keywords::NOWRAP;
+    Css::FlexDirection direction = Keywords::ROW;
+    Css::FlexWrap wrap = Keywords::NOWRAP;
 
     // FlexItem
     Style::FlexBasis basis = Keywords::AUTO;
@@ -91,5 +86,5 @@ export struct Flex {
     }
 };
 
-} // namespace Style
-} // namespace Vaev
+} // namespace Vaev::Style
+

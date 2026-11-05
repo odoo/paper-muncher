@@ -10,45 +10,47 @@ import :values.unitValue;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // https://www.w3.org/TR/css-inline-3/#line-height-property
 export using LineHeight = Union<Keywords::Normal, Number, LengthPercentage>;
 
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
+
 // NOTE: The computed value of a <length-percentage> is an absolute length,
 //       so percentages are resolved against the element's own font size.
-namespace Style {
 
 export using LineHeight = Union<Keywords::Normal, f64, Pixel>;
 
-} // namespace Style
-
-export Style::LineHeight resolve(LineHeight const& value, LengthContext auto const& ctx) {
+export Style::LineHeight resolve(Css::LineHeight const& value, Css::LengthContext auto const& ctx) {
     return value.visit(
         [](Keywords::Normal const& normal) -> Style::LineHeight {
             return normal;
         },
-        [](Number const& number) -> Style::LineHeight {
+        [](Css::Number const& number) -> Style::LineHeight {
             return resolve(number);
         },
-        [&](LengthPercentage const& length) -> Style::LineHeight {
+        [&](Css::LengthPercentage const& length) -> Style::LineHeight {
             return resolve(length, ctx, ctx.fontSize);
         }
     );
 }
 
-export LineHeight toSpecified(Style::LineHeight const& value) {
+export Css::LineHeight toSpecified(Style::LineHeight const& value) {
     return value.visit(
-        [](Keywords::Normal const& normal) -> LineHeight {
+        [](Keywords::Normal const& normal) -> Css::LineHeight {
             return normal;
         },
-        [](f64 const& number) -> LineHeight {
-            return Number::fromCanonical(number);
+        [](f64 const& number) -> Css::LineHeight {
+            return Css::Number::fromCanonical(number);
         },
-        [](Pixel const& px) -> LineHeight {
+        [](Pixel const& px) -> Css::LineHeight {
             return toSpecified(PixelPercentage{px});
         }
     );
 }
 
-} // namespace Vaev
+} // namespace Vaev::Style
+

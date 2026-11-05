@@ -54,11 +54,11 @@ export Math::Vec2<Opt<Au>> resolvePreferredSize(Style::ComputedValues const& sty
     Opt<Au> width = NONE;
     Opt<Au> height = NONE;
 
-    if (auto calc = style.sizing->width.is<PixelPercentage>()) {
+    if (auto calc = style.sizing->width.is<Style::PixelPercentage>()) {
         width = Some(Layout::resolve(*calc, containingBlock.width));
     }
 
-    if (auto calc = style.sizing->height.is<PixelPercentage>()) {
+    if (auto calc = style.sizing->height.is<Style::PixelPercentage>()) {
         height = Some(Layout::resolve(*calc, containingBlock.height));
     }
 
@@ -74,13 +74,13 @@ export Vec2Au applyReplacedMinMaxSizeConstraints(Style::ComputedValues const& st
     Au maxWidth = Limits<Au>::MAX;
     Au maxHeight = Limits<Au>::MAX;
 
-    if (auto calc = style.sizing->minWidth.is<PixelPercentage>())
+    if (auto calc = style.sizing->minWidth.is<Style::PixelPercentage>())
         minWidth = Layout::resolve(*calc, containingBlock.width);
-    if (auto calc = style.sizing->maxWidth.is<PixelPercentage>())
+    if (auto calc = style.sizing->maxWidth.is<Style::PixelPercentage>())
         maxWidth = Layout::resolve(*calc, containingBlock.width);
-    if (auto calc = style.sizing->minHeight.is<PixelPercentage>())
+    if (auto calc = style.sizing->minHeight.is<Style::PixelPercentage>())
         minHeight = Layout::resolve(*calc, containingBlock.height);
-    if (auto calc = style.sizing->maxHeight.is<PixelPercentage>())
+    if (auto calc = style.sizing->maxHeight.is<Style::PixelPercentage>())
         maxHeight = Layout::resolve(*calc, containingBlock.height);
 
     maxWidth = max(maxWidth, minWidth);

@@ -80,27 +80,27 @@ export Rc<Http::Client> defaultHttpClient(bool sandboxed) {
 }
 
 export struct Option {
-    Vaev::PureResolution scale = Vaev::PureResolution::fromDppx(1);
-    Vaev::PureResolution density = Vaev::PureResolution::fromDppx(1);
-    Opt<Vaev::PureAbsoluteLength> width = NONE;
-    Opt<Vaev::PureAbsoluteLength> height = NONE;
-    Opt<Vaev::Color> background = NONE;
+    Vaev::Css::PureResolution scale = Vaev::Css::PureResolution::fromDppx(1);
+    Vaev::Css::PureResolution density = Vaev::Css::PureResolution::fromDppx(1);
+    Opt<Vaev::Css::PureAbsoluteLength> width = NONE;
+    Opt<Vaev::Css::PureAbsoluteLength> height = NONE;
+    Opt<Vaev::Css::Color> background = NONE;
     Print::PaperStock stock = Print::A4;
     Print::Orientation orientation = Print::Orientation::PORTRAIT;
-    Union<Print::MarginOption, Math::Insets<Vaev::PureAbsoluteLength>> margins = Print::MarginOption::DEFAULT;
+    Union<Print::MarginOption, Math::Insets<Vaev::Css::PureAbsoluteLength>> margins = Print::MarginOption::DEFAULT;
     Ref::Uti outputFormat = Ref::Uti::PUBLIC_DATA;
     Batch batch = Batch::CONCAT;
     Flow flow = Flow::AUTO;
     Extend extend = Extend::CROP;
-    Union<Vaev::Keywords::Auto, Vaev::PureAbsoluteLength> headerSize = Vaev::Keywords::AUTO;
-    Union<Vaev::Keywords::Auto, Vaev::PureAbsoluteLength> footerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::Css::PureAbsoluteLength> headerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::Css::PureAbsoluteLength> footerSize = Vaev::Keywords::AUTO;
 
     auto derivePrintSettings() const -> Print::Settings {
         auto stock = this->stock;
         if (this->width or this->height)
             stock = Print::PaperStock::custom(
-                this->width ? Vaev::resolve(*this->width) : stock.minorAxis,
-                this->height ? Vaev::resolve(*this->height) : stock.majorAxis
+                this->width ? Vaev::Style::resolve(*this->width) : stock.minorAxis,
+                this->height ? Vaev::Style::resolve(*this->height) : stock.majorAxis
             );
 
         Print::Margins margins = Print::MarginOption::DEFAULT;
@@ -108,9 +108,9 @@ export struct Option {
             [&](Print::MarginOption n) {
                 margins = n;
             },
-            [&](Math::Insets<Vaev::PureAbsoluteLength> const& insets) {
-                margins = insets.map([&](Vaev::PureAbsoluteLength l) {
-                    return Vaev::resolve(l);
+            [&](Math::Insets<Vaev::Css::PureAbsoluteLength> const& insets) {
+                margins = insets.map([&](Vaev::Css::PureAbsoluteLength l) {
+                    return Vaev::Style::resolve(l);
                 });
             }
         );
@@ -124,8 +124,8 @@ export struct Option {
     }
 
     Vaev::Style::DisplayArea deriveArea() const {
-        auto width = this->width ? Vaev::resolve(*this->width) : 800_au;
-        auto height = this->height ? Vaev::resolve(*this->height) : 600_au;
+        auto width = this->width ? Vaev::Style::resolve(*this->width) : 800_au;
+        auto height = this->height ? Vaev::Style::resolve(*this->height) : 600_au;
         return Vaev::Style::DisplayArea::forRender(
             {width, height},
             this->scale
@@ -136,8 +136,8 @@ export struct Option {
 struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
     Opt<Rc<Vaev::WebView>> headerWebView;
     Opt<Rc<Vaev::WebView>> footerWebView;
-    Union<Vaev::Keywords::Auto, Vaev::PureAbsoluteLength> headerSize = Vaev::Keywords::AUTO;
-    Union<Vaev::Keywords::Auto, Vaev::PureAbsoluteLength> footerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::Css::PureAbsoluteLength> headerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::Css::PureAbsoluteLength> footerSize = Vaev::Keywords::AUTO;
     Map<Math::Vec2Au, Pair<Vaev::Au>> _memo;
 
     Vaev::RectAu layout(Vaev::Style::DisplayArea const& area, Vaev::Style::ViewerPrefs const& prefs, Vaev::Driver::PageLayoutInfos const& infos) override {
@@ -152,7 +152,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                     headerHeight = w->borderBox().height;
                 }
             } else {
-                headerHeight = Vaev::resolve(headerSize.expect<Vaev::PureAbsoluteLength>());
+                headerHeight = Vaev::Style::resolve(headerSize.expect<Vaev::Css::PureAbsoluteLength>());
             }
 
             if (footerSize == Vaev::Keywords::AUTO) {
@@ -162,7 +162,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                     footerHeight = w->borderBox().height;
                 }
             } else {
-                footerHeight = Vaev::resolve(footerSize.expect<Vaev::PureAbsoluteLength>());
+                footerHeight = Vaev::Style::resolve(footerSize.expect<Vaev::Css::PureAbsoluteLength>());
             }
 
             return Pair{headerHeight, footerHeight};
@@ -175,8 +175,8 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
         auto [headerHeight, footerHeight] = _memo.lookup(infos.pageDecoration.size()).expect();
 
         Vaev::Style::CounterSet pageCounters;
-        pageCounters.instantiateCounter(nullptr, {Vaev::CustomIdent{"page"_sym}, false}, static_cast<Vaev::Integer>(infos.pageNumber));
-        pageCounters.instantiateCounter(nullptr, {Vaev::CustomIdent{"pages"_sym}, false}, static_cast<Vaev::Integer>(pageCount));
+        pageCounters.instantiateCounter(nullptr, {Vaev::Css::CustomIdent{"page"_sym}, false}, static_cast<Vaev::Css::Integer>(infos.pageNumber));
+        pageCounters.instantiateCounter(nullptr, {Vaev::Css::CustomIdent{"pages"_sym}, false}, static_cast<Vaev::Css::Integer>(pageCount));
 
         if (auto& [w] = headerWebView) {
             w->changeArea(area.withViewport({decorationWidth, headerHeight}));
@@ -255,7 +255,7 @@ Async::Task<> runSingleAsync(
         auto& page = output.beginPage(size.cast<f64>());
 
         if (options.background.has())
-            page.clear(Vaev::resolve(*options.background, Gfx::ALPHA));
+            page.clear(Vaev::Style::resolve(*options.background, Gfx::ALPHA));
 
         // NOTE: Override the background of HTML document, since no
         //       one really expect a html document to be transparent

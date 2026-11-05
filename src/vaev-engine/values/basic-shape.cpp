@@ -21,7 +21,7 @@ import :values.unitValue;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // https://drafts.csswg.org/css-masking/#typedef-geometry-box
 export using ShapeBox = Union<
@@ -61,19 +61,24 @@ using ShapeRadiusT = Union<
     Keywords::FarthestSide>;
 
 export using ShapeRadius = ShapeRadiusT<LengthPercentage>;
-namespace Style {
 
-export using ShapeRadius = ShapeRadiusT<PixelPercentage>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
 
-export Style::ShapeRadius resolve(ShapeRadius const& value, LengthContext auto const& ctx) {
+export using ShapeRadius = Css::ShapeRadiusT<PixelPercentage>;
+
+export Style::ShapeRadius resolve(Css::ShapeRadius const& value, Css::LengthContext auto const& ctx) {
     return value.visit([&](auto const& v) -> Style::ShapeRadius { return resolve(v, ctx); });
 }
 
-export ShapeRadius toSpecified(Style::ShapeRadius const& value) {
-    return value.visit([](auto const& v) -> ShapeRadius { return toSpecified(v); });
+export Css::ShapeRadius toSpecified(Style::ShapeRadius const& value) {
+    return value.visit([](auto const& v) -> Css::ShapeRadius { return toSpecified(v); });
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 // MARK: Circle ----------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-circle
@@ -89,19 +94,24 @@ struct CircleT {
 };
 
 export using Circle = CircleT<LengthPercentage, BackgroundPosition>;
-namespace Style {
 
-export using Circle = CircleT<PixelPercentage, Style::Position>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
 
-export Style::Circle resolve(Circle const& value, LengthContext auto const& ctx) {
+export using Circle = Css::CircleT<PixelPercentage, Style::Position>;
+
+export Style::Circle resolve(Css::Circle const& value, Css::LengthContext auto const& ctx) {
     return {resolve(value.radius, ctx), resolve(value.position, ctx)};
 }
 
-export Circle toSpecified(Style::Circle const& value) {
+export Css::Circle toSpecified(Style::Circle const& value) {
     return {toSpecified(value.radius), toSpecified(value.position)};
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Circle> {
@@ -151,19 +161,24 @@ struct EllipseT {
 };
 
 export using Ellipse = EllipseT<LengthPercentage, BackgroundPosition>;
-namespace Style {
 
-export using Ellipse = EllipseT<PixelPercentage, Style::Position>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
 
-export Style::Ellipse resolve(Ellipse const& value, LengthContext auto const& ctx) {
+export using Ellipse = Css::EllipseT<PixelPercentage, Style::Position>;
+
+export Style::Ellipse resolve(Css::Ellipse const& value, Css::LengthContext auto const& ctx) {
     return {resolve(value.rx, ctx), resolve(value.ry, ctx), resolve(value.position, ctx)};
 }
 
-export Ellipse toSpecified(Style::Ellipse const& value) {
+export Css::Ellipse toSpecified(Style::Ellipse const& value) {
     return {toSpecified(value.rx), toSpecified(value.ry), toSpecified(value.position)};
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Ellipse> {
@@ -216,19 +231,24 @@ struct InsetT {
 };
 
 export using Inset = InsetT<LengthPercentage>;
-namespace Style {
 
-export using Inset = InsetT<PixelPercentage>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
 
-export Style::Inset resolve(Inset const& value, LengthContext auto const& ctx) {
+export using Inset = Css::InsetT<PixelPercentage>;
+
+export Style::Inset resolve(Css::Inset const& value, Css::LengthContext auto const& ctx) {
     return {resolve(value.insets, ctx), resolve(value.borderRadius, ctx)};
 }
 
-export Inset toSpecified(Style::Inset const& value) {
+export Css::Inset toSpecified(Style::Inset const& value) {
     return {toSpecified(value.insets), toSpecified(value.borderRadius)};
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Inset> {
@@ -327,25 +347,30 @@ struct PolygonT {
 };
 
 export using Polygon = PolygonT<LengthPercentage>;
-namespace Style {
 
-export using Polygon = PolygonT<PixelPercentage>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
 
-export Style::Polygon resolve(Polygon const& value, LengthContext auto const& ctx) {
+export using Polygon = Css::PolygonT<PixelPercentage>;
+
+export Style::Polygon resolve(Css::Polygon const& value, Css::LengthContext auto const& ctx) {
     Style::Polygon result{value.fillRule, {}};
     for (auto const& [x, y] : value.points)
         result.points.emplaceBack(resolve(x, ctx), resolve(y, ctx));
     return result;
 }
 
-export Polygon toSpecified(Style::Polygon const& value) {
-    Polygon result{value.fillRule, {}};
+export Css::Polygon toSpecified(Style::Polygon const& value) {
+    Css::Polygon result{value.fillRule, {}};
     for (auto const& [x, y] : value.points)
         result.points.emplaceBack(toSpecified(x), toSpecified(y));
     return result;
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Polygon> {
@@ -400,19 +425,24 @@ struct RectT {
 };
 
 export using Rect = RectT<LengthPercentage>;
-namespace Style {
 
-export using Rect = RectT<PixelPercentage>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
 
-export Style::Rect resolve(Rect const& value, LengthContext auto const& ctx) {
+export using Rect = Css::RectT<PixelPercentage>;
+
+export Style::Rect resolve(Css::Rect const& value, Css::LengthContext auto const& ctx) {
     return {resolve(value.insets, ctx), resolve(value.borderRadius, ctx)};
 }
 
-export Rect toSpecified(Style::Rect const& value) {
+export Css::Rect toSpecified(Style::Rect const& value) {
     return {toSpecified(value.insets), toSpecified(value.borderRadius)};
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Rect> {
@@ -481,13 +511,14 @@ struct XywhT {
 };
 
 export using Xywh = XywhT<LengthPercentage>;
-namespace Style {
 
-export using Xywh = XywhT<PixelPercentage>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
 
-export Style::Xywh resolve(Xywh const& value, LengthContext auto const& ctx) {
+export using Xywh = Css::XywhT<PixelPercentage>;
+
+export Style::Xywh resolve(Css::Xywh const& value, Css::LengthContext auto const& ctx) {
     return {
         resolve(value.x, ctx),
         resolve(value.y, ctx),
@@ -497,7 +528,7 @@ export Style::Xywh resolve(Xywh const& value, LengthContext auto const& ctx) {
     };
 }
 
-export Xywh toSpecified(Style::Xywh const& value) {
+export Css::Xywh toSpecified(Style::Xywh const& value) {
     return {
         toSpecified(value.x),
         toSpecified(value.y),
@@ -506,6 +537,10 @@ export Xywh toSpecified(Style::Xywh const& value) {
         toSpecified(value.borderRadius),
     };
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Xywh> {
@@ -558,11 +593,16 @@ using BasicShapeFunctionT = Union<
     CircleT<L, P>, EllipseT<L, P>, InsetT<L>, Path, PolygonT<L>, RectT<L>, XywhT<L>>;
 
 export using BasicShapeFunction = BasicShapeFunctionT<LengthPercentage, BackgroundPosition>;
-namespace Style {
 
-export using BasicShapeFunction = BasicShapeFunctionT<PixelPercentage, Style::Position>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
+
+export using BasicShapeFunction = Css::BasicShapeFunctionT<PixelPercentage, Style::Position>;
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <typename L, typename P>
 struct BasicShapeT {
@@ -575,17 +615,18 @@ struct BasicShapeT {
 };
 
 export using BasicShape = BasicShapeT<LengthPercentage, BackgroundPosition>;
-namespace Style {
 
-export using BasicShape = BasicShapeT<PixelPercentage, Style::Position>;
+} // namespace Vaev::Css
 
-} // namespace Style
+namespace Vaev::Style {
 
-export Style::BasicShape resolve(BasicShape const& value, LengthContext auto const& ctx) {
+export using BasicShape = Css::BasicShapeT<PixelPercentage, Style::Position>;
+
+export Style::BasicShape resolve(Css::BasicShape const& value, Css::LengthContext auto const& ctx) {
     return {
-        value.shape.map([&](BasicShapeFunction const& shape) {
+        value.shape.map([&](Css::BasicShapeFunction const& shape) {
             return shape.visit(
-                [](Path const& path) -> Style::BasicShapeFunction {
+                [](Css::Path const& path) -> Style::BasicShapeFunction {
                     return path;
                 },
                 [&](auto const& s) -> Style::BasicShapeFunction {
@@ -597,14 +638,14 @@ export Style::BasicShape resolve(BasicShape const& value, LengthContext auto con
     };
 }
 
-export BasicShape toSpecified(Style::BasicShape const& value) {
+export Css::BasicShape toSpecified(Style::BasicShape const& value) {
     return {
         value.shape.map([](Style::BasicShapeFunction const& shape) {
             return shape.visit(
-                [](Path const& path) -> BasicShapeFunction {
+                [](Css::Path const& path) -> Css::BasicShapeFunction {
                     return path;
                 },
-                [](auto const& s) -> BasicShapeFunction {
+                [](auto const& s) -> Css::BasicShapeFunction {
                     return toSpecified(s);
                 }
             );
@@ -612,6 +653,10 @@ export BasicShape toSpecified(Style::BasicShape const& value) {
         value.referenceBox,
     };
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<BasicShape> {
@@ -638,4 +683,5 @@ struct ValueParser<BasicShape> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

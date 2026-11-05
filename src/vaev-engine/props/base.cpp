@@ -28,8 +28,8 @@ namespace Properties {
 export struct RegisteredPropertySet;
 
 export struct ComputationContext :
-    RelativeLengthContextData,
-    FontSizeContextData {
+    Css::RelativeLengthContextData,
+    Css::FontSizeContextData {
 
     void populateUsingViewport(Viewport const& vp) {
         viewportSmallWidth = vp.small.width.cast<f64>();
@@ -579,7 +579,7 @@ struct DefaultedProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

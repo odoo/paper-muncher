@@ -15,7 +15,7 @@ import :values.unitValue;
 
 using namespace Vaev::Literals;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Line Width -------------------------------------------------------------
 // https://drafts.csswg.org/css-backgrounds/#typedef-line-width
@@ -26,7 +26,11 @@ export using LineWidth = Union<
     Keywords::Thick,
     Length>;
 
-export Pixel resolve(LineWidth const& value, LengthContext auto const& ctx) {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
+
+export Pixel resolve(Css::LineWidth const& value, Css::LengthContext auto const& ctx) {
     return value.visit(
         [](Keywords::Thin const&) {
             return 1_px;
@@ -37,11 +41,15 @@ export Pixel resolve(LineWidth const& value, LengthContext auto const& ctx) {
         [](Keywords::Thick const&) {
             return 5_px;
         },
-        [&](Length const& length) {
+        [&](Css::Length const& length) {
             return resolve(length, ctx);
         }
     );
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<LineWidth> {
@@ -66,4 +74,5 @@ struct ValueParser<LineWidth> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

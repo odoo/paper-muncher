@@ -10,22 +10,21 @@ import :css;
 import :values.base;
 import :values.unitValue;
 import :values.primitives;
-import :values.resolved;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Style {
 
 // MARK: Percentage ------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#percentages
 
 export using Percent = Distinct<f64, struct _PercentTag>;
 
-} // namespace Vaev
+} // namespace Vaev::Style
 
 export template <>
-struct Karm::Io::Formatter<Vaev::Percent> {
-    Res<> format(Io::TextWriter& writer, Vaev::Percent value) {
+struct Karm::Io::Formatter<Vaev::Style::Percent> {
+    Res<> format(Io::TextWriter& writer, Vaev::Style::Percent value) {
         return Io::format(writer, "{}%", value.value());
     }
 };

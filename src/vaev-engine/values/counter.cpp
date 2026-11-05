@@ -7,7 +7,7 @@ export module Vaev.Engine:values.counter;
 import :values.primitives;
 import :values.image;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 export using CounterSymbolsType = Union<
     Keywords::Cyclic,
@@ -173,15 +173,18 @@ struct ValueParser<CountersFunc> {
     }
 };
 
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
+
 // https://www.w3.org/TR/css-lists-3/#counter-reset
 // https://www.w3.org/TR/css-lists-3/#increment-set
-namespace Style {
 
 export struct Counters {
     struct Reset {
-        CustomIdent name;
+        Css::CustomIdent name;
         bool reversed;
-        Opt<Integer> value = Some(0);
+        Opt<Css::Integer> value = Some(0);
 
         void repr(Io::Emit& e) const {
             e("(counter-reset {}{} {})", reversed ? "reversed " : "", name, value);
@@ -189,8 +192,8 @@ export struct Counters {
     };
 
     struct Increment {
-        CustomIdent name;
-        Opt<Integer> value;
+        Css::CustomIdent name;
+        Opt<Css::Integer> value;
 
         void repr(Io::Emit& e) const {
             e("(counter-increment {} {})", name, value);
@@ -204,7 +207,10 @@ export struct Counters {
     Vec<Set> set;
 };
 
-} // namespace Style
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
+
 export template <>
 struct ValueParser<Style::Counters::Reset> {
     static Res<Style::Counters::Reset> parse(Cursor<Css::Sst>& c) {
@@ -239,4 +245,5 @@ struct ValueParser<Style::Counters::Increment> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

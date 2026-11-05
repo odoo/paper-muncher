@@ -11,7 +11,7 @@ import :values.primitives;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Align -----------------------------------------------------------------
 
@@ -173,27 +173,29 @@ struct ValueSerializer<Align> {
     }
 };
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export struct Aligns {
     // https://drafts.csswg.org/css-align-3/#propdef-align-content
-    Align alignContent;
+    Css::Align alignContent;
 
     // https://drafts.csswg.org/css-align-3/#propdef-justify-content
-    Align justifyContent;
+    Css::Align justifyContent;
 
     // https://drafts.csswg.org/css-align-3/#propdef-justify-self
-    Align justifySelf;
+    Css::Align justifySelf;
 
     // https://drafts.csswg.org/css-align-3/#propdef-align-self
-    Align alignSelf;
+    Css::Align alignSelf;
 
     // https://drafts.csswg.org/css-align-3/#propdef-justify-items
-    Align justifyItems;
+    Css::Align justifyItems;
 
     // https://drafts.csswg.org/css-align-3/#propdef-align-items
-    Align alignItems;
+    Css::Align alignItems;
 };
 
-} // namespace Style
-} // namespace Vaev
+} // namespace Vaev::Style
+

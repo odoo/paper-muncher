@@ -8,7 +8,7 @@ import :values.base;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Orientation -----------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#orientation
@@ -28,4 +28,5 @@ struct ValueParser<Print::Orientation> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

@@ -24,7 +24,7 @@ enum struct PaintingOrder {
 export struct StackingContext {
     struct Layer {
         PaintingOrder paintingOrder;
-        Integer zIndex;
+        Css::Integer zIndex;
         Union<Rc<Layout::Fragment>, Rc<StackingContext>> content;
 
         void paintStackingContext(Gfx::Canvas& g, Math::Rectf viewBox) {
@@ -117,12 +117,12 @@ export struct StackingContext {
         return stackingContext;
     }
 
-    void addStackingLayer(PaintingOrder paintingOrder, Integer zIndex, Union<Rc<Layout::Fragment>, Rc<StackingContext>> content) {
+    void addStackingLayer(PaintingOrder paintingOrder, Css::Integer zIndex, Union<Rc<Layout::Fragment>, Rc<StackingContext>> content) {
         layers.emplaceBack(paintingOrder, zIndex, content);
     }
 
     // https://drafts.csswg.org/css-position-4/#paint-a-stacking-container
-    void addStackingContainer(PaintingOrder paintingOrder, Integer zIndex, Rc<Layout::Fragment> fragment) {
+    void addStackingContainer(PaintingOrder paintingOrder, Css::Integer zIndex, Rc<Layout::Fragment> fragment) {
         // Created a new stacking context, but any positioned descendants and
         // descendants which actually create a new stacking context should be
         // considered part of the parent stacking context
@@ -154,7 +154,7 @@ export struct StackingContext {
         // https://drafts.csswg.org/css2/#z-index
         // NOTE: 'z-index' only applies to positioned boxes, non-positioned ones
         //       always paint in tree order.
-        auto zIndexNumber = box.isPositioned() ? zIndex.unwrapOr<Integer>(0) : 0;
+        auto zIndexNumber = box.isPositioned() ? zIndex.unwrapOr<Css::Integer>(0) : 0;
         bool impliesStackingContext = box.impliesNewStackingContext();
 
         // 5. positioned descendants with negative (non-zero) z-index values

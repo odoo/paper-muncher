@@ -11,7 +11,7 @@ import :values.percent;
 
 // https://www.w3.org/TR/css-images-4/
 
-namespace Vaev {
+namespace Vaev::Css {
 
 export struct Image;
 
@@ -151,4 +151,5 @@ struct ValueParser<Image> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

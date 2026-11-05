@@ -23,11 +23,11 @@ Au normalizedDiagonal(Vec2Au relativeTo) {
 
 struct SvgFormatingContext : FormatingContext {
     // https://svgwg.org/svg2-draft/coords.html#SizingSVGInCSS
-    Opt<f64> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, Style::Size const& width, Style::Size const& height) {
+    Opt<f64> intrinsicAspectRatio(Opt<Css::SvgViewBox> const& vb, Style::Size const& width, Style::Size const& height) {
         // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
-        auto absolute = [](Style::Size const& size) -> Opt<Pixel> {
-            if (auto pp = size.is<PixelPercentage>())
-                return pp->is<Pixel>();
+        auto absolute = [](Style::Size const& size) -> Opt<Style::Pixel> {
+            if (auto pp = size.is<Style::PixelPercentage>())
+                return pp->is<Style::Pixel>();
             return NONE;
         };
         if (auto w = absolute(width), h = absolute(height); w and h)
@@ -43,7 +43,7 @@ struct SvgFormatingContext : FormatingContext {
         return NONE;
     }
 
-    Vec2Au _resolvePercentageRelative(Opt<SvgViewBox> const& viewbox, Math::Trans2f transform, RectAu boundingBox) {
+    Vec2Au _resolvePercentageRelative(Opt<Css::SvgViewBox> const& viewbox, Math::Trans2f transform, RectAu boundingBox) {
         // https://svgwg.org/svg2-draft/coords.html#Units
         // SPEC: For <percentage> values that are defined to be relative to the size of SVG viewport:
         // the value to use must be the percentage, in user units, of the * parameter of the ‘viewBox’ applied to that
@@ -65,8 +65,8 @@ struct SvgFormatingContext : FormatingContext {
         return {
             Layout::resolve(style.svg->x, relativeTo.x),
             Layout::resolve(style.svg->y, relativeTo.y),
-            Layout::resolve(style.sizing->width.is<PixelPercentage>().unwrapOr(Percent{100}), relativeTo.x),
-            Layout::resolve(style.sizing->height.is<PixelPercentage>().unwrapOr(Percent{100}), relativeTo.y),
+            Layout::resolve(style.sizing->width.is<Style::PixelPercentage>().unwrapOr(Style::Percent{100}), relativeTo.x),
+            Layout::resolve(style.sizing->height.is<Style::PixelPercentage>().unwrapOr(Style::Percent{100}), relativeTo.y),
         };
     }
 
@@ -80,22 +80,22 @@ struct SvgFormatingContext : FormatingContext {
 
     static void _commitShape(Box& box, FragmentBuilder& fragBuilder, Vec2Au relativeTo) {
         Au resolvedStrokeWidth = Vaev::Layout::resolve(box.style->svgPaint->strokeWidth, normalizedDiagonal(relativeTo));
-        auto shape = box.content.expect<SvgShapeElement>();
+        auto shape = box.content.expect<Css::SvgShapeElement>();
 
         switch (shape) {
-        case SvgShapeElement::RECT:
+        case Css::SvgShapeElement::RECT:
             fragBuilder.addChildIfAny(
                 Some(makeRc<SvgShapeFragment>(box, _resolveRectangle(*box.style, relativeTo), resolvedStrokeWidth))
             );
             break;
 
-        case SvgShapeElement::CIRCLE:
+        case Css::SvgShapeElement::CIRCLE:
             fragBuilder.addChildIfAny(
                 Some(makeRc<SvgShapeFragment>(box, _resolveCircle(*box.style, relativeTo), resolvedStrokeWidth))
             );
             break;
 
-        case SvgShapeElement::PATH:
+        case Css::SvgShapeElement::PATH:
             fragBuilder.addChildIfAny(
                 Some(makeRc<SvgShapeFragment>(box, _resolveShape(*box.style), resolvedStrokeWidth))
             );
@@ -107,7 +107,7 @@ struct SvgFormatingContext : FormatingContext {
     }
 
     void _commitElement(Input const& input, Box& box, FragmentBuilder& fragBuilder, Vec2Au resolveTo) {
-        if (box.content.is<SvgShapeElement>()) {
+        if (box.content.is<Css::SvgShapeElement>()) {
             _commitShape(box, fragBuilder, resolveTo);
         } else if (box.isSvgRootBox()) {
             auto resolvedRect = _resolveRectangle(*box.style, resolveTo);
@@ -153,19 +153,19 @@ struct SvgFormatingContext : FormatingContext {
     }
 
     // https://svgwg.org/svg2-draft/coords.html#ComputingAViewportsTransform
-    Math::Trans2f _computeEquivalentTransformOfSVGViewport(SvgViewBox const& vb, Vec2Au const& position, Vec2Au const& size) {
+    Math::Trans2f _computeEquivalentTransformOfSVGViewport(Css::SvgViewBox const& vb, Vec2Au const& position, Vec2Au const& size) {
         // 1. Let vb-x, vb-y, vb-width, vb-height be the min-x, min-y, width and height values of the viewBox attribute
         // respectively.
         // 2. Let e-x, e-y, e-width, e-height be the position and size of the element respectively.
 
         // 3. Let align be the align value of preserveAspectRatio, or 'xMidYMid' if preserveAspectRatio is not defined.
         // FIXME: preserveAspectRatio still not implemented
-        Opt<SvgAlignAxis> align = Some(SvgAlignAxis{SvgAlignAxis::MID, SvgAlignAxis::MID});
+        Opt<Css::SvgAlignAxis> align = Some(Css::SvgAlignAxis{Css::SvgAlignAxis::MID, Css::SvgAlignAxis::MID});
 
         // 4. Let meetOrSlice be the meetOrSlice value of preserveAspectRatio, or 'meet' if preserveAspectRatio is not
         // defined or if meetOrSlice is missing from this value.
         // FIXME: preserveAspectRatio still not implemented
-        SvgMeetOrSlice meetOrSlice{SvgMeetOrSlice::MEET};
+        Css::SvgMeetOrSlice meetOrSlice{Css::SvgMeetOrSlice::MEET};
 
         // 5. Initialize scale-x to e-width/vb-width.
         f64 scaleX = (f64)size.x / vb.width;
@@ -176,9 +176,9 @@ struct SvgFormatingContext : FormatingContext {
         // 7. If align is not 'none' and meetOrSlice is 'meet', set the larger of scale-x and scale-y to the smaller.
         // 8. Otherwise, if align is not 'none' and meetOrSlice is 'slice', set the smaller of scale-x and scale-y to
         // the larger.
-        if (align != NONE and meetOrSlice == SvgMeetOrSlice::MEET) {
+        if (align != NONE and meetOrSlice == Css::SvgMeetOrSlice::MEET) {
             scaleY = scaleX = min(scaleX, scaleY);
-        } else if (align != NONE and meetOrSlice == SvgMeetOrSlice::SLICE) {
+        } else if (align != NONE and meetOrSlice == Css::SvgMeetOrSlice::SLICE) {
             scaleY = scaleX = max(scaleX, scaleY);
         }
 
@@ -190,22 +190,22 @@ struct SvgFormatingContext : FormatingContext {
 
         if (align) {
             // 11. If align contains 'xMid', add (e-width - vb-width * scale-x) / 2 to translate-x.
-            if (align->x == SvgAlignAxis::MID) {
+            if (align->x == Css::SvgAlignAxis::MID) {
                 translateX += ((f64)size.x - vb.width * scaleX) / 2;
             }
 
             // 12. If align contains 'xMax', add (e-width - vb-width * scale-x) to translate-x.
-            if (align->x == SvgAlignAxis::MAX) {
+            if (align->x == Css::SvgAlignAxis::MAX) {
                 translateX += ((f64)size.x - vb.width * scaleX);
             }
 
             // 13. If align contains 'yMid', add (e-height - vb-height * scale-y) / 2 to translate-y.
-            if (align->y == SvgAlignAxis::MID) {
+            if (align->y == Css::SvgAlignAxis::MID) {
                 translateY += ((f64)size.y - vb.height * scaleY) / 2;
             }
 
             // 14. If align contains 'yMax', add (e-height - vb-height * scale-y) to translate-y.
-            if (align->y == SvgAlignAxis::MAX) {
+            if (align->y == Css::SvgAlignAxis::MAX) {
                 translateY += ((f64)size.y - vb.height * scaleY);
             }
         }

@@ -14,7 +14,7 @@ import :values.unitValue;
 
 using namespace Vaev::Literals;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Border Style ----------------------------------------------------------
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
@@ -61,19 +61,24 @@ export struct SpecifiedBorder {
     }
 };
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export struct Border {
     Pixel width = 3_px;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
     Style::Color color = Gfx::BLACK;
 
-    operator SpecifiedBorder() const {
+    operator Css::SpecifiedBorder() const {
         return {toSpecified(width), style, toSpecified(color)};
     }
 };
 
-} // namespace Style
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
+
 export struct UsedBorder {
     Au width = 0_au;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
@@ -146,27 +151,32 @@ void reprRadii(Io::Emit& e, Math::Radii<T> const& radii) {
     e("(radii {} {} {} {} {} {} {} {})", radii.a, radii.b, radii.c, radii.d, radii.e, radii.f, radii.g, radii.h);
 }
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export struct Borders {
     Style::Border top, start, bottom, end;
     Math::Radii<PixelPercentage> radii = {Pixel{0}};
 
-    Style::Border const& get(BorderEdge edge) const {
+    Style::Border const& get(Css::BorderEdge edge) const {
         switch (edge) {
-        case BorderEdge::TOP:
+        case Css::BorderEdge::TOP:
             return top;
-        case BorderEdge::START:
+        case Css::BorderEdge::START:
             return start;
-        case BorderEdge::BOTTOM:
+        case Css::BorderEdge::BOTTOM:
             return bottom;
-        case BorderEdge::END:
+        case Css::BorderEdge::END:
             return end;
         }
     }
 };
 
-} // namespace Style
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
+
 export template <typename T>
 struct ValueParser<Math::Radii<T>> {
     static Res<Math::Radii<T>> parse(Cursor<Css::Sst>& c) {
@@ -257,7 +267,11 @@ struct ValueParser<Math::Radii<T>> {
     }
 };
 
-export Math::Radii<PixelPercentage> resolve(Math::Radii<LengthPercentage> const& value, LengthContext auto const& ctx) {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
+
+export Math::Radii<PixelPercentage> resolve(Math::Radii<Css::LengthPercentage> const& value, Css::LengthContext auto const& ctx) {
     return {
         resolve(value.a, ctx),
         resolve(value.b, ctx),
@@ -270,7 +284,7 @@ export Math::Radii<PixelPercentage> resolve(Math::Radii<LengthPercentage> const&
     };
 }
 
-export Math::Radii<LengthPercentage> toSpecified(Math::Radii<PixelPercentage> const& value) {
+export Math::Radii<Css::LengthPercentage> toSpecified(Math::Radii<PixelPercentage> const& value) {
     return {
         toSpecified(value.a),
         toSpecified(value.b),
@@ -283,4 +297,5 @@ export Math::Radii<LengthPercentage> toSpecified(Math::Radii<PixelPercentage> co
     };
 }
 
-} // namespace Vaev
+} // namespace Vaev::Style
+

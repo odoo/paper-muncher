@@ -10,34 +10,34 @@ using namespace Karm::Math::Literals;
 namespace Vaev::Style::Tests {
 
 static Media const TEST_MEDIA = {
-    .type = MediaType::SCREEN,
+    .type = Css::MediaType::SCREEN,
     .width = 1920_au,
     .height = 1080_au,
     .aspectRatio = 16.0 / 9.0,
     .orientation = Print::Orientation::LANDSCAPE,
 
-    .resolution = PureResolution::fromDpi(96),
-    .scan = Scan::PROGRESSIVE,
+    .resolution = Css::PureResolution::fromDpi(96),
+    .scan = Css::Scan::PROGRESSIVE,
     .grid = false,
-    .update = Update::NONE,
-    .overflowBlock = OverflowBlock::NONE,
-    .overflowInline = OverflowInline::NONE,
+    .update = Css::Update::NONE,
+    .overflowBlock = Css::OverflowBlock::NONE,
+    .overflowInline = Css::OverflowInline::NONE,
 
     .color = 8,
     .colorIndex = 256,
     .monochrome = 0,
-    .colorGamut = ColorGamut::SRGB,
-    .pointer = Pointer::NONE,
-    .hover = Hover::NONE,
-    .anyPointer = Pointer::FINE,
-    .anyHover = Hover::HOVER,
+    .colorGamut = Css::ColorGamut::SRGB,
+    .pointer = Css::Pointer::NONE,
+    .hover = Css::Hover::NONE,
+    .anyPointer = Css::Pointer::FINE,
+    .anyHover = Css::Hover::HOVER,
 
-    .prefersReducedMotion = ReducedMotion::REDUCE,
-    .prefersReducedTransparency = ReducedTransparency::NO_PREFERENCE,
-    .prefersContrast = Contrast::LESS,
-    .forcedColors = Colors::NONE,
-    .prefersColorScheme = ColorScheme::LIGHT,
-    .prefersReducedData = ReducedData::REDUCE,
+    .prefersReducedMotion = Css::ReducedMotion::REDUCE,
+    .prefersReducedTransparency = Css::ReducedTransparency::NO_PREFERENCE,
+    .prefersContrast = Css::Contrast::LESS,
+    .forcedColors = Css::Colors::NONE,
+    .prefersColorScheme = Css::ColorScheme::LIGHT,
+    .prefersReducedData = Css::ReducedData::REDUCE,
 
     .deviceWidth = 1920_au,
     .deviceHeight = 1080_au,
@@ -45,7 +45,7 @@ static Media const TEST_MEDIA = {
 };
 
 test$("feature-type") {
-    assert$(TypeFeature{MediaType::SCREEN}.match(TEST_MEDIA));
+    assert$(TypeFeature{Css::MediaType::SCREEN}.match(TEST_MEDIA));
 
     return Ok();
 }
@@ -87,17 +87,17 @@ test$("feature-orientation") {
 }
 
 test$("feature-resolution") {
-    assert$(ResolutionFeature::min(PureResolution::fromDpi(96)).match(TEST_MEDIA));
+    assert$(ResolutionFeature::min(Css::PureResolution::fromDpi(96)).match(TEST_MEDIA));
 
-    assert$(ResolutionFeature::max(PureResolution::fromDpi(96)).match(TEST_MEDIA));
+    assert$(ResolutionFeature::max(Css::PureResolution::fromDpi(96)).match(TEST_MEDIA));
 
-    assert$(ResolutionFeature::exact(PureResolution::fromDpi(96)).match(TEST_MEDIA));
+    assert$(ResolutionFeature::exact(Css::PureResolution::fromDpi(96)).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-scan") {
-    assert$(ScanFeature{Scan::PROGRESSIVE}.match(TEST_MEDIA));
+    assert$(ScanFeature{Css::Scan::PROGRESSIVE}.match(TEST_MEDIA));
 
     return Ok();
 }
@@ -109,19 +109,19 @@ test$("feature-grid") {
 }
 
 test$("feature-update") {
-    assert$(UpdateFeature{Update::NONE}.match(TEST_MEDIA));
+    assert$(UpdateFeature{Css::Update::NONE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-overflow-block") {
-    assert$(OverflowBlockFeature{OverflowBlock::NONE}.match(TEST_MEDIA));
+    assert$(OverflowBlockFeature{Css::OverflowBlock::NONE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-overflow-inline") {
-    assert$(OverflowInlineFeature{OverflowInline::NONE}.match(TEST_MEDIA));
+    assert$(OverflowInlineFeature{Css::OverflowInline::NONE}.match(TEST_MEDIA));
 
     return Ok();
 }
@@ -157,67 +157,67 @@ test$("feature-monochrome") {
 }
 
 test$("feature-color-gamut") {
-    assert$(ColorGamutFeature{ColorGamut::SRGB}.match(TEST_MEDIA));
+    assert$(ColorGamutFeature{Css::ColorGamut::SRGB}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-pointer") {
-    assert$(PointerFeature{Pointer::NONE}.match(TEST_MEDIA));
+    assert$(PointerFeature{Css::Pointer::NONE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-hover") {
-    assert$(HoverFeature{Hover::NONE}.match(TEST_MEDIA));
+    assert$(HoverFeature{Css::Hover::NONE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-any-pointer") {
-    assert$(AnyPointerFeature{Pointer::FINE}.match(TEST_MEDIA));
+    assert$(AnyPointerFeature{Css::Pointer::FINE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-any-hover") {
-    assert$(AnyHoverFeature{Hover::HOVER}.match(TEST_MEDIA));
+    assert$(AnyHoverFeature{Css::Hover::HOVER}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-prefers-reduced-motion") {
-    assert$(PrefersReducedMotionFeature{ReducedMotion::REDUCE}.match(TEST_MEDIA));
+    assert$(PrefersReducedMotionFeature{Css::ReducedMotion::REDUCE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-prefers-reduced-transparency") {
-    assert$(PrefersReducedTransparencyFeature{ReducedTransparency::NO_PREFERENCE}.match(TEST_MEDIA));
+    assert$(PrefersReducedTransparencyFeature{Css::ReducedTransparency::NO_PREFERENCE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-prefers-contrast") {
-    assert$(PrefersContrastFeature{Contrast::LESS}.match(TEST_MEDIA));
+    assert$(PrefersContrastFeature{Css::Contrast::LESS}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-forced-colors") {
-    assert$(ForcedColorsFeature{Colors::NONE}.match(TEST_MEDIA));
+    assert$(ForcedColorsFeature{Css::Colors::NONE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-prefers-color-scheme") {
-    assert$(PrefersColorSchemeFeature{ColorScheme::LIGHT}.match(TEST_MEDIA));
+    assert$(PrefersColorSchemeFeature{Css::ColorScheme::LIGHT}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-prefers-reduced-data") {
-    assert$(PrefersReducedDataFeature{ReducedData::REDUCE}.match(TEST_MEDIA));
+    assert$(PrefersReducedDataFeature{Css::ReducedData::REDUCE}.match(TEST_MEDIA));
 
     return Ok();
 }

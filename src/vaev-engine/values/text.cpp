@@ -5,7 +5,7 @@ import :values.keywords;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // CSS Text Module Level 4
 // https://drafts.csswg.org/css-text-4
@@ -43,13 +43,15 @@ export using WhiteSpace = Union<
     Keywords::BreakSpaces,
     Keywords::PreLine>;
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export struct Text {
-    TextAlign align = Keywords::START;
-    TextTransform transform = Keywords::NONE;
-    WhiteSpace whiteSpace = Keywords::NORMAL;
+    Css::TextAlign align = Keywords::START;
+    Css::TextTransform transform = Keywords::NONE;
+    Css::WhiteSpace whiteSpace = Keywords::NORMAL;
 };
 
-} // namespace Style
-} // namespace Vaev
+} // namespace Vaev::Style
+

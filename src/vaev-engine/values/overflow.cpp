@@ -8,7 +8,7 @@ import :values.keywords;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Overflow
 // https://www.w3.org/TR/css-overflow/#overflow-control
@@ -56,4 +56,5 @@ export struct Overflows {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

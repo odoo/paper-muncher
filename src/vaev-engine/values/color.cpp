@@ -19,7 +19,7 @@ using namespace Karm::Literals;
 
 // https://www.w3.org/TR/css-color-4
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Color Interpolation ---------------------------------------------------
 
@@ -729,9 +729,13 @@ static Array<Gfx::Color, static_cast<usize>(SystemColor::_LEN)> SYSTEM_COLOR = {
 #undef COLOR
 };
 
-export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor);
+} // namespace Vaev::Css
 
-export Gfx::Color resolve(Color const& c, Gfx::Color currentColor) {
+namespace Vaev::Style {
+
+export Gfx::Color resolve(Css::ColorMix const& cm, Gfx::Color currentColor);
+
+export Gfx::Color resolve(Css::Color const& c, Gfx::Color currentColor) {
     return c.visit(
         [&](Gfx::Color const& srgb) {
             return srgb;
@@ -739,25 +743,25 @@ export Gfx::Color resolve(Color const& c, Gfx::Color currentColor) {
         [&](Keywords::CurrentColor) {
             return currentColor;
         },
-        [&](SystemColor const& system) {
-            return SYSTEM_COLOR[static_cast<usize>(system)];
+        [&](Css::SystemColor const& system) {
+            return Css::SYSTEM_COLOR[static_cast<usize>(system)];
         },
-        [&](Box<ColorMix> const& mix) {
+        [&](Box<Css::ColorMix> const& mix) {
             return resolve(*mix, currentColor);
         }
     );
 }
 
-export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor) {
+export Gfx::Color resolve(Css::ColorMix const& cm, Gfx::Color currentColor) {
     Gfx::Color lhsColor = resolve(cm.lhs.color, currentColor);
     f64 lhsPerc = cm.lhs.perc
                       ? cm.lhs.perc->value()
-                      : 100 - cm.rhs.perc.unwrapOr(PurePercentage{50}).value();
+                      : 100 - cm.rhs.perc.unwrapOr(Css::PurePercentage{50}).value();
 
     Gfx::Color rhsColor = resolve(cm.rhs.color, currentColor);
     f64 rhsPerc = cm.rhs.perc
                       ? cm.rhs.perc->value()
-                      : 100 - cm.lhs.perc.unwrapOr(PurePercentage{50}).value();
+                      : 100 - cm.lhs.perc.unwrapOr(Css::PurePercentage{50}).value();
 
     if (lhsPerc == rhsPerc and lhsPerc == 0) {
         logWarn("cannot mix colors when both have zero percentages");
@@ -778,17 +782,13 @@ export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor) {
     return resColor;
 }
 
-namespace Style {
-
 // https://drafts.csswg.org/css-color-4/#resolving-color-values
 // currentcolor computes to itself, so it inherits as a keyword,
 // every other color computes to an absolute color.
 export using Color = Union<Gfx::Color, Keywords::CurrentColor>;
 
-} // namespace Style
-
 // NOTE: currentColor is only used to resolve color-mix() functions referencing currentcolor.
-export Style::Color toComputed(Color const& value, Gfx::Color currentColor) {
+export Style::Color toComputed(Css::Color const& value, Gfx::Color currentColor) {
     return value.visit(
         [](Gfx::Color const& srgb) -> Style::Color {
             return srgb;
@@ -802,8 +802,8 @@ export Style::Color toComputed(Color const& value, Gfx::Color currentColor) {
     );
 }
 
-export Color toSpecified(Style::Color const& value) {
-    return value.visit([](auto const& v) -> Color { return v; });
+export Css::Color toSpecified(Style::Color const& value) {
+    return value.visit([](auto const& v) -> Css::Color { return v; });
 }
 
 export Gfx::Color resolve(Style::Color const& value, Gfx::Color currentColor) {
@@ -817,4 +817,5 @@ export Gfx::Color resolve(Style::Color const& value, Gfx::Color currentColor) {
     );
 }
 
-} // namespace Vaev
+} // namespace Vaev::Style
+

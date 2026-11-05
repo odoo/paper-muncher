@@ -18,7 +18,7 @@ import :values.keywords;
 using namespace Karm;
 using namespace Vaev::Literals;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 struct NumericType {
     Array<i32, toUnderlyingType(NumericBaseType::_LEN)> _entries{};
@@ -1432,9 +1432,9 @@ export using FrequencyPercentage = TypedCalc<Some(NumericBaseType::FREQUENCY), A
 export using AnglePercentage = TypedCalc<Some(NumericBaseType::ANGLE), AcceptsPercent::YES>;
 export using TimePercentage = TypedCalc<Some(NumericBaseType::TIME), AcceptsPercent::YES>;
 
-} // namespace Vaev
+} // namespace Vaev::Css
 
-namespace Vaev {
+namespace Vaev::Css {
 
 template <>
 struct ValueParser<Calc> {
@@ -1871,6 +1871,10 @@ struct ValueSerializer<TypedCalc<TYPE, WITH_PERCENT>> {
     }
 };
 
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
+
 // FIXME: Make Pixel and Percentage backed by f32.
 export struct LinearPixelPercentage {
     Pixel px;
@@ -1881,51 +1885,51 @@ export struct LinearPixelPercentage {
     }
 };
 
-export f64 resolve(Number const& value) {
+export f64 resolve(Css::Number const& value) {
     auto simplified = simplify(value.calcTree(), NONE, NONE);
 
-    if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::NONE) {
+    if (auto n = simplified.is<Css::UnitValue>(); n and n->unit() == Css::UnitValue::Unit::NONE) {
         return n->value();
     } else {
         panic("calc didn't simplify to a single value of expected unit");
     }
 }
 
-export Rad resolve(Angle const& value) {
+export Css::Rad resolve(Css::Angle const& value) {
     auto simplified = simplify(
         value.calcTree(),
         NONE,
-        Some(NumericBaseType::ANGLE),
+        Some(Css::NumericBaseType::ANGLE),
         NONE
     );
 
-    if (auto n = simplified.is<UnitValue>(); n and n->baseType() == NumericBaseType::ANGLE) {
-        return Rad{n->to(UnitValue::Unit::RAD)};
+    if (auto n = simplified.is<Css::UnitValue>(); n and n->baseType() == Css::NumericBaseType::ANGLE) {
+        return Css::Rad{n->to(Css::UnitValue::Unit::RAD)};
     } else {
         panic("calc didn't simplify to a single value of expected unit");
     }
 }
 
-export Angle toSpecified(Rad const& angle) {
-    return Angle{UNCHECKED, UnitValue{angle.value(), UnitValue::Unit::RAD}};
+export Css::Angle toSpecified(Css::Rad const& angle) {
+    return Css::Angle{UNCHECKED, Css::UnitValue{angle.value(), Css::UnitValue::Unit::RAD}};
 }
 
-export Percent resolve(Percentage const& value) {
+export Percent resolve(Css::Percentage const& value) {
     auto simplified = simplify(
         value.calcTree(),
         NONE,
-        Some(NumericBaseType::PERCENT),
+        Some(Css::NumericBaseType::PERCENT),
         NONE
     );
 
-    if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PERCENT) {
+    if (auto n = simplified.is<Css::UnitValue>(); n and n->unit() == Css::UnitValue::Unit::PERCENT) {
         return Percent{n->value()};
     } else {
         panic("calc didn't simplify to a single value of expected unit");
     }
 }
 
-export f64 resolve(Percentage const& value, f64 percentBasis) {
+export f64 resolve(Css::Percentage const& value, f64 percentBasis) {
     auto simplified = simplify(
         value.calcTree(),
         NONE,
@@ -1933,101 +1937,101 @@ export f64 resolve(Percentage const& value, f64 percentBasis) {
         Some(percentBasis)
     );
 
-    if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::NONE) {
+    if (auto n = simplified.is<Css::UnitValue>(); n and n->unit() == Css::UnitValue::Unit::NONE) {
         return n->value();
     } else {
         panic("calc didn't simplify to a single value of expected unit");
     }
 }
 
-export Pixel resolve(Length const& value, LengthContext auto const& ctx) {
+export Pixel resolve(Css::Length const& value, Css::LengthContext auto const& ctx) {
     auto simplified = simplify(
         value.calcTree(),
         ctx,
-        Some(NumericBaseType::LENGTH),
+        Some(Css::NumericBaseType::LENGTH),
         NONE
     );
 
-    if (auto n = simplified.template is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
+    if (auto n = simplified.template is<Css::UnitValue>(); n and n->unit() == Css::UnitValue::Unit::PX) {
         return Pixel{n->value()};
     } else {
         panic("calc didn't simplify to a single value of expected unit");
     }
 }
 
-export Length toSpecified(Pixel const& px) {
-    return Length{UNCHECKED, UnitValue{px.value(), UnitValue::Unit::PX}};
+export Css::Length toSpecified(Pixel const& px) {
+    return Css::Length{UNCHECKED, Css::UnitValue{px.value(), Css::UnitValue::Unit::PX}};
 }
 
-export Pixel resolve(LengthPercentage const& value, LengthContext auto const& ctx, f64 percentBasis) {
+export Pixel resolve(Css::LengthPercentage const& value, Css::LengthContext auto const& ctx, f64 percentBasis) {
     auto simplified = simplify(
         value.calcTree(),
         ctx,
-        Some(NumericBaseType::LENGTH),
+        Some(Css::NumericBaseType::LENGTH),
         Some(percentBasis)
     );
 
-    if (auto n = simplified.template is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
+    if (auto n = simplified.template is<Css::UnitValue>(); n and n->unit() == Css::UnitValue::Unit::PX) {
         return Pixel{n->value()};
     } else {
         panic("calc didn't simplify to a single value of expected unit");
     }
 }
 
-export using PixelPercentage = Union<Pixel, Percent, LinearPixelPercentage, Box<Calc>>;
+export using PixelPercentage = Union<Pixel, Percent, LinearPixelPercentage, Box<Css::Calc>>;
 
 // https://drafts.csswg.org/css-values-4/#calc-computed-value
-export PixelPercentage resolve(LengthPercentage const& value, LengthContext auto const& ctx) {
+export PixelPercentage resolve(Css::LengthPercentage const& value, Css::LengthContext auto const& ctx) {
     auto simplified = simplify(
         value.calcTree(),
         ctx,
-        Some(NumericBaseType::LENGTH),
+        Some(Css::NumericBaseType::LENGTH),
         NONE
     );
 
-    if (auto [numeric] = simplified.template is<UnitValue>()) {
-        if (numeric.unit() == UnitValue::Unit::PX) {
+    if (auto [numeric] = simplified.template is<Css::UnitValue>()) {
+        if (numeric.unit() == Css::UnitValue::Unit::PX) {
             return Pixel{numeric.value()};
         }
 
-        if (numeric.unit() == UnitValue::Unit::PERCENT) {
+        if (numeric.unit() == Css::UnitValue::Unit::PERCENT) {
             return Percent{numeric.value()};
         }
     }
 
     // NOTE: Children are sorted by simplification, so the percentage comes first.
-    if (auto sum = simplified.template is<SumNode>(); sum and sum->children.len() == 2) {
-        auto maybePercent = sum->children[0].template is<UnitValue>();
-        auto maybePx = sum->children[1].template is<UnitValue>();
-        if (maybePercent and maybePx and maybePercent->unit() == UnitValue::Unit::PERCENT and maybePx->unit() == UnitValue::Unit::PX) {
+    if (auto sum = simplified.template is<Css::SumNode>(); sum and sum->children.len() == 2) {
+        auto maybePercent = sum->children[0].template is<Css::UnitValue>();
+        auto maybePx = sum->children[1].template is<Css::UnitValue>();
+        if (maybePercent and maybePx and maybePercent->unit() == Css::UnitValue::Unit::PERCENT and maybePx->unit() == Css::UnitValue::Unit::PX) {
             return LinearPixelPercentage{Pixel{maybePx->value()}, Percent{maybePercent->value()}};
         }
     }
 
-    return makeBox<Calc>(std::move(simplified));
+    return makeBox<Css::Calc>(std::move(simplified));
 }
 
-export LengthPercentage toSpecified(PixelPercentage const& value) {
+export Css::LengthPercentage toSpecified(PixelPercentage const& value) {
     return value.visit(
-        [](Pixel const& px) -> LengthPercentage {
-            return LengthPercentage{UNCHECKED, UnitValue{px.value(), UnitValue::Unit::PX}};
+        [](Pixel const& px) -> Css::LengthPercentage {
+            return Css::LengthPercentage{UNCHECKED, Css::UnitValue{px.value(), Css::UnitValue::Unit::PX}};
         },
-        [](Percent const& percentage) -> LengthPercentage {
-            return LengthPercentage{UNCHECKED, UnitValue{percentage.value(), UnitValue::Unit::PERCENT}};
+        [](Percent const& percentage) -> Css::LengthPercentage {
+            return Css::LengthPercentage{UNCHECKED, Css::UnitValue{percentage.value(), Css::UnitValue::Unit::PERCENT}};
         },
-        [](LinearPixelPercentage const& lin) -> LengthPercentage {
-            return LengthPercentage{
+        [](LinearPixelPercentage const& lin) -> Css::LengthPercentage {
+            return Css::LengthPercentage{
                 UNCHECKED,
-                SumNode{
+                Css::SumNode{
                     .children = {
-                        UnitValue{lin.percentage.value(), UnitValue::Unit::PERCENT},
-                        UnitValue{lin.px.value(), UnitValue::Unit::PX},
+                        Css::UnitValue{lin.percentage.value(), Css::UnitValue::Unit::PERCENT},
+                        Css::UnitValue{lin.px.value(), Css::UnitValue::Unit::PX},
                     },
                 }
             };
         },
-        [](Box<Calc> const& calc) -> LengthPercentage {
-            return LengthPercentage{UNCHECKED, *calc};
+        [](Box<Css::Calc> const& calc) -> Css::LengthPercentage {
+            return Css::LengthPercentage{UNCHECKED, *calc};
         }
     );
 }
@@ -2044,15 +2048,15 @@ export Au resolve(PixelPercentage const& value, Au relative) {
         [&](LinearPixelPercentage const& lin) {
             return Au::fromFloatNearest(lin.px.value() + relative.cast<f32>() * (lin.percentage.value() / 100.));
         },
-        [&](Box<Calc> const& calc) {
+        [&](Box<Css::Calc> const& calc) {
             auto simplified = simplify(
                 *calc,
                 NONE,
-                Some(NumericBaseType::LENGTH),
+                Some(Css::NumericBaseType::LENGTH),
                 Some(relative.cast<f64>())
             );
 
-            if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
+            if (auto n = simplified.is<Css::UnitValue>(); n and n->unit() == Css::UnitValue::Unit::PX) {
                 return Au{n->value()};
             } else {
                 panic("calc didn't simplify to a single value of expected unit");
@@ -2078,17 +2082,17 @@ export Opt<Au> resolve(PixelPercentage const& value, Opt<Au> relative) {
 
             return NONE;
         },
-        [&](Box<Calc> const& calc) -> Opt<Au> {
+        [&](Box<Css::Calc> const& calc) -> Opt<Au> {
             auto simplified = simplify(
                 *calc,
                 NONE,
-                Some(NumericBaseType::LENGTH),
+                Some(Css::NumericBaseType::LENGTH),
                 relative.map([](Au au) {
                     return au.cast<f64>();
                 })
             );
 
-            if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
+            if (auto n = simplified.is<Css::UnitValue>(); n and n->unit() == Css::UnitValue::Unit::PX) {
                 return Some(Au{n->value()});
             } else {
                 return NONE;
@@ -2097,4 +2101,5 @@ export Opt<Au> resolve(PixelPercentage const& value, Opt<Au> relative) {
     );
 }
 
-} // namespace Vaev
+} // namespace Vaev::Style
+

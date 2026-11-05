@@ -10,7 +10,7 @@ import :values.lineWidth;
 
 using namespace Vaev::Literals;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 export struct SpecifiedOutline {
     LineWidth width = Keywords::MEDIUM;
@@ -23,8 +23,11 @@ export struct SpecifiedOutline {
     }
 };
 
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
+
 // https://drafts.csswg.org/css-ui/#outline
-namespace Style {
 
 export struct Outline {
     Pixel width = 3_px;
@@ -32,15 +35,15 @@ export struct Outline {
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
     Gfx::Color color = Gfx::BLUE500;
 
-    operator SpecifiedOutline() const {
+    operator Css::SpecifiedOutline() const {
         return {
             toSpecified(width),
             toSpecified(offset),
             style,
-            Vaev::Color{color}
+            Css::Color{color}
         };
     }
 };
 
-} // namespace Style
-} // namespace Vaev
+} // namespace Vaev::Style
+

@@ -74,7 +74,7 @@ struct FakeBox {
     Union<FakeInlineBox, Vec<FakeBox>> content = Vec<FakeBox>{};
 
     bool operator==(Box const& b) {
-        if (not(b.style->display.is(Display::Type::DEFAULT) or (isInternal and b.style->display.is(Display::Type::INTERNAL))))
+        if (not(b.style->display.is(Css::Display::Type::DEFAULT) or (isInternal and b.style->display.is(Css::Display::Type::INTERNAL))))
             return false;
 
         bool fakeBoxStablishesInline = content.is<FakeInlineBox>().has();

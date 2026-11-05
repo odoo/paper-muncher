@@ -9,25 +9,23 @@ import Karm.Core;
 import :css;
 import :values.base;
 import :values.unitValue;
-import :values.resolved;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // 7.1. MARK: Angle Units: the <angle> type and deg, grad, rad, turn units
 // https://drafts.csswg.org/css-values/#angles
 
 export using Rad = Distinct<f64, struct _RadTag>;
 
+} // namespace Vaev::Css
 
-export template <>
-struct _Resolved<PureAngle> {
-    using Type = Rad;
-};
+namespace Vaev::Style {
 
-Rad resolve(PureAngle const& value, [[maybe_unused]] auto const& ctx = NONE) {
-    return Rad{value.toRadian()};
+Css::Rad resolve(Css::PureAngle const& value, [[maybe_unused]] auto const& ctx = NONE) {
+    return Css::Rad{value.toRadian()};
 }
 
-} // namespace Vaev
+} // namespace Vaev::Style
+

@@ -5,11 +5,12 @@ import :values.keywords;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 export using Visibility = Union<
     Keywords::Visible,
     Keywords::Hidden,
     Keywords::Collapse>;
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

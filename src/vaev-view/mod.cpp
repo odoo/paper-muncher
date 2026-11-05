@@ -18,7 +18,7 @@ export using DispatchEvent = Ui::Send<Dom::Event&>;
 
 export struct ViewportProps {
     f64 scale = 1.0;
-    Opt<ColorScheme> prefersColorScheme = NONE;
+    Opt<Css::ColorScheme> prefersColorScheme = NONE;
 
     bool wireframe = false;
     Opt<Dom::OriginatingElement> selected = NONE;
@@ -85,8 +85,8 @@ struct Viewport : Ui::View<Viewport> {
         _listener.updateContainerBound(bound);
 
         auto prefs = Style::ViewerPrefs::forRender();
-        prefs.colorScheme = _props.prefersColorScheme.unwrapOr(Ui::darkMode ? ColorScheme::DARK : ColorScheme::LIGHT);
-        _webview->changeArea(Style::DisplayArea::forRender(bound.size(), PureResolution::fromDppx(_props.scale)));
+        prefs.colorScheme = _props.prefersColorScheme.unwrapOr(Ui::darkMode ? Css::ColorScheme::DARK : Css::ColorScheme::LIGHT);
+        _webview->changeArea(Style::DisplayArea::forRender(bound.size(), Css::PureResolution::fromDppx(_props.scale)));
         _webview->changePrefs(prefs);
 
         _listener.updateContentBound(_webview->scrollableOverflow());

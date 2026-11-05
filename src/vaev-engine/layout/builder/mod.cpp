@@ -32,15 +32,15 @@ bool isSegmentBreak(Rune rune) {
 }
 
 // http://drafts.csswg.org/css-text/#white-space-property
-static bool _allowsWrap(WhiteSpace whiteSpace) {
+static bool _allowsWrap(Css::WhiteSpace whiteSpace) {
     return oneOf(whiteSpace, Keywords::NORMAL, Keywords::PRE_WRAP, Keywords::BREAK_SPACES, Keywords::PRE_LINE);
 }
 
-static bool _collapsesWhitespace(WhiteSpace whiteSpace) {
+static bool _collapsesWhitespace(Css::WhiteSpace whiteSpace) {
     return oneOf(whiteSpace, Keywords::NORMAL, Keywords::NOWRAP, Keywords::PRE_LINE);
 }
 
-static bool _discardsWhitespaceOnlyTextAtContentStart(WhiteSpace whiteSpace) {
+static bool _discardsWhitespaceOnlyTextAtContentStart(Css::WhiteSpace whiteSpace) {
     return oneOf(whiteSpace, Keywords::NORMAL, Keywords::NOWRAP);
 }
 
@@ -79,7 +79,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
 
             return Some(style.font->size * number);
         },
-        [&](Pixel const& length) -> Opt<Au> {
+        [&](Style::Pixel const& length) -> Opt<Au> {
             auto result = Au::fromFloatNearest(length.value());
 
             if (result < 0_au)
@@ -104,7 +104,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
     };
 }
 
-void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, TextTransform transform) {
+void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, Css::TextTransform transform) {
     transform.visit(
         [&](Keywords::Uppercase) {
             prose->append(toAsciiUpper(rune));
@@ -199,7 +199,7 @@ struct BuilderContext {
         // HACK: Use we should be using the document's RegisteredPropertySet,
         //       but it's too impractical to string it down to here
         auto computedStyle = Style::defaultRegistry().inheritsComputedValues(*parentComputedValues);
-        computedStyle->display = Display{Display::Inside::FLOW, Display::Outside::BLOCK};
+        computedStyle->display = Css::Display{Css::Display::Inside::FLOW, Css::Display::Outside::BLOCK};
 
         auto newInlineBox = Box::fromInterruptedInlineBox(*_rootInlineBox);
         Box anonymousBox{computedStyle, NONE};
@@ -381,11 +381,11 @@ void buildSVGAggregate(Gc::Ref<Dom::Element> el, Box& group);
 
 void buildSVGElement(Gc::Ref<Dom::Element> el, Box& group) {
     if (el->qualifiedName == Svg::CIRCLE_TAG) {
-        group.add(Box{el->computedValues(), SvgShapeElement::CIRCLE, Some(el)});
+        group.add(Box{el->computedValues(), Css::SvgShapeElement::CIRCLE, Some(el)});
     } else if (el->qualifiedName == Svg::RECT_TAG) {
-        group.add({el->computedValues(), SvgShapeElement::RECT, Some(el)});
+        group.add({el->computedValues(), Css::SvgShapeElement::RECT, Some(el)});
     } else if (el->qualifiedName == Svg::PATH_TAG) {
-        group.add({el->computedValues(), SvgShapeElement::PATH, Some(el)});
+        group.add({el->computedValues(), Css::SvgShapeElement::PATH, Some(el)});
     } else if (el->qualifiedName == Svg::G_TAG) {
         Box nestedGroup{el->computedValues(), Some(el)};
         buildSVGAggregate(el, nestedGroup);
@@ -525,7 +525,7 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
     bc.finalizeParentBoxAndFlushInline();
 }
 
-static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::ComputedValues const> style, Gc::Ref<Dom::Element> el, Display display) {
+static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::ComputedValues const> style, Gc::Ref<Dom::Element> el, Css::Display display) {
     Box box = {style, Some(el)};
     Box rootInlineBox = {
         style,
@@ -536,7 +536,7 @@ static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::ComputedVal
         NONE,
     };
 
-    auto newBc = display == Display::Inside::FLEX
+    auto newBc = display == Css::Display::Inside::FLEX
                      ? bc.toFlexContext(box, rootInlineBox)
                      : bc.toBlockContext(box, rootInlineBox);
 
@@ -547,7 +547,7 @@ static Box createAndBuildBoxFromElement(BuilderContext bc, Rc<Style::ComputedVal
 
 // MARK: Build Table -----------------------------------------------------------
 
-static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> style, Display display);
+static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> style, Css::Display display);
 
 struct AnonymousTableBoxWrapper {
     Opt<Box> rowBox, cellBox;
@@ -562,7 +562,7 @@ struct AnonymousTableBoxWrapper {
             return;
 
         auto rowStyle = registeredPropertySet.inheritsComputedValues(*style);
-        rowStyle->display = Display::Internal::TABLE_ROW;
+        rowStyle->display = Css::Display::Internal::TABLE_ROW;
         rowBox = Some(Box{rowStyle, NONE});
     }
 
@@ -571,7 +571,7 @@ struct AnonymousTableBoxWrapper {
             return;
 
         auto cellStyle = registeredPropertySet.inheritsComputedValues(*style);
-        cellStyle->display = Display::Internal::TABLE_CELL;
+        cellStyle->display = Css::Display::Internal::TABLE_CELL;
 
         cellBox = Some(Box{cellStyle, NONE});
         rootInlineBoxForCell = Some(Box{
@@ -632,14 +632,14 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
             auto childStyle = childEL->computedValues();
             auto display = childStyle->display;
 
-            if (skipCaption and display == Display::Internal::TABLE_CAPTION)
+            if (skipCaption and display == Css::Display::Internal::TABLE_CAPTION)
                 continue;
 
             if (predForAccepted(display)) {
                 anonTableWrapper.finalizeAndResetCell();
                 anonTableWrapper.finalizeAndResetRow();
 
-                if (display == Display::Internal::TABLE_CELL) {
+                if (display == Css::Display::Internal::TABLE_CELL) {
                     _buildCell(bc, *childEL);
                 } else {
                     _buildTableInternal(bc, *childEL, childStyle, display);
@@ -647,11 +647,11 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
             } else {
                 // Unexpected display type for children, it will be wrapped by anonymous box
                 // First dispatching based on the parent's display type
-                if (bc.parentComputedValues->display == Display::Internal::TABLE_ROW) {
+                if (bc.parentComputedValues->display == Css::Display::Internal::TABLE_ROW) {
                     anonTableWrapper.createCellIfNone(registeredPropertySet, style);
                     _buildNodeWrappedByCell(anonTableWrapper.cellBuilderContext(), *childEL);
                 } else {
-                    if (display == Display::Internal::TABLE_CELL) {
+                    if (display == Css::Display::Internal::TABLE_CELL) {
                         anonTableWrapper.finalizeAndResetCell();
                         anonTableWrapper.createRowIfNone(registeredPropertySet, style);
 
@@ -665,7 +665,7 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
                 }
             }
         } else if (auto text = child->as<Dom::Text>()) {
-            if (bc.parentComputedValues->display != Display::Internal::TABLE_ROW)
+            if (bc.parentComputedValues->display != Css::Display::Internal::TABLE_ROW)
                 anonTableWrapper.createRowIfNone(registeredPropertySet, style);
             anonTableWrapper.createCellIfNone(registeredPropertySet, style);
             _buildText(anonTableWrapper.cellBuilderContext(), text->data(), style);
@@ -677,48 +677,48 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
 }
 
 // https://www.w3.org/TR/css-tables-3/#fixup-algorithm
-static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> style, Display display) {
+static void _buildTableInternal(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> style, Css::Display display) {
     Box tableInternalBox = {style, Some(el)};
 
     switch (display.internal()) {
-    case Display::Internal::TABLE_HEADER_GROUP:
-    case Display::Internal::TABLE_FOOTER_GROUP:
-    case Display::Internal::TABLE_ROW_GROUP: {
+    case Css::Display::Internal::TABLE_HEADER_GROUP:
+    case Css::Display::Internal::TABLE_FOOTER_GROUP:
+    case Css::Display::Internal::TABLE_ROW_GROUP: {
         // An anonymous table-row box must be generated around each sequence of consecutive children of a
         // table-row-group box which are not table-row boxes.
-        _buildTableChildrenWhileWrappingIntoAnonymousBox(bc.toTableContent(tableInternalBox), el, style, false, [](Display const& display) {
-            return display == Display::Internal::TABLE_ROW;
+        _buildTableChildrenWhileWrappingIntoAnonymousBox(bc.toTableContent(tableInternalBox), el, style, false, [](Css::Display const& display) {
+            return display == Css::Display::Internal::TABLE_ROW;
         });
         break;
     }
-    case Display::Internal::TABLE_COLUMN_GROUP: {
+    case Css::Display::Internal::TABLE_COLUMN_GROUP: {
         // "Children of a table-column-group which are not a table-column." should be discarded
         for (auto child = el->firstChild(); child; child = child->nextSibling()) {
             if (auto el = child->as<Dom::Element>()) {
                 auto childStyle = el->computedValues();
-                if (childStyle->display != Display::Internal::TABLE_COLUMN)
+                if (childStyle->display != Css::Display::Internal::TABLE_COLUMN)
                     continue;
                 _buildTableInternal(bc.toTableContent(tableInternalBox), *el, childStyle, display);
             }
         }
         break;
     }
-    case Display::Internal::TABLE_ROW: {
+    case Css::Display::Internal::TABLE_ROW: {
         // An anonymous table-cell box must be generated around each sequence of consecutive children of a
         // table-row box which are not table-cell boxes.
-        _buildTableChildrenWhileWrappingIntoAnonymousBox(bc.toTableContent(tableInternalBox), el, style, false, [](Display const& display) {
-            return display == Display::Internal::TABLE_CELL;
+        _buildTableChildrenWhileWrappingIntoAnonymousBox(bc.toTableContent(tableInternalBox), el, style, false, [](Css::Display const& display) {
+            return display == Css::Display::Internal::TABLE_CELL;
         });
         break;
     }
-    case Display::Internal::TABLE_COLUMN: {
+    case Css::Display::Internal::TABLE_COLUMN: {
         // "Children of a table-column." should be discarded
         // do nothing
         break;
     }
-    case Display::Internal::TABLE_BOX:
-    case Display::Internal::TABLE_CAPTION:
-    case Display::Internal::TABLE_CELL: {
+    case Css::Display::Internal::TABLE_BOX:
+    case Css::Display::Internal::TABLE_CAPTION:
+    case Css::Display::Internal::TABLE_CELL: {
         logWarn("table internal display in wrong flow");
         return;
     }
@@ -735,7 +735,7 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
         for (auto child = el->firstChild(); child; child = child->nextSibling()) {
             if (auto childEl = child->as<Dom::Element>()) {
                 auto childStyle = childEl->computedValues();
-                if (childStyle->display != Display::Internal::TABLE_CAPTION)
+                if (childStyle->display != Css::Display::Internal::TABLE_CAPTION)
                     continue;
                 _buildNode(tableWrapperBc, *childEl);
             }
@@ -755,7 +755,7 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
 
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-root
     // box which are not proper table child boxes.
-    _buildTableChildrenWhileWrappingIntoAnonymousBox(tableWrapperBc.toTableContent(tableBox), *el, tableBoxStyle, true, [](Display const& display) {
+    _buildTableChildrenWhileWrappingIntoAnonymousBox(tableWrapperBc.toTableContent(tableBox), *el, tableBoxStyle, true, [](Css::Display const& display) {
         return display.isProperTableChild();
     });
     tableWrapperBc.addToParentBox(std::move(tableBox));
@@ -791,7 +791,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
     auto innerStyle = makeRc<Style::ComputedValues>(*tableStyle);
 
     auto initial = registeredPropertySet.initialComputedValues();
-    innerStyle->display = Display::Internal::TABLE_BOX;
+    innerStyle->display = Css::Display::Internal::TABLE_BOX;
     innerStyle->margin = initial->margin;
     innerStyle->position = initial->position;
     innerStyle->float_ = initial->float_;
@@ -805,8 +805,8 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
 // MARK: Dispatch based on outside role -------------------------------------------------------------------------------
 
 // https://www.w3.org/TR/css-display-3/#outer-role
-static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> style, Display display) {
-    if (display == Display::Inside::TABLE) {
+static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> style, Css::Display display) {
+    if (display == Css::Display::Inside::TABLE) {
         auto wrapper = _createTableWrapperAndBuildTable(bc, style, el);
         bc.addToParentBox(std::move(wrapper));
     } else {
@@ -817,8 +817,8 @@ static void _innerDisplayDispatchCreationOfBlockLevelBox(BuilderContext bc, Gc::
 }
 
 // https://www.w3.org/TR/css-display-3/#outer-role
-static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> style, Display display) {
-    if (display == Display::Inside::TABLE) {
+static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc::Ref<Dom::Element> el, Rc<Style::ComputedValues const> style, Css::Display display) {
+    if (display == Css::Display::Inside::TABLE) {
         auto wrapper = _createTableWrapperAndBuildTable(bc, style, el);
         bc.addToInlineRoot(std::move(wrapper));
     } else {
@@ -832,7 +832,7 @@ static void _innerDisplayDispatchCreationOfInlineLevelBox(BuilderContext bc, Gc:
 
 static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent) {
     auto el = parent->as<Dom::Element>();
-    if (el->computedValues()->display == Display::Item::YES) {
+    if (el->computedValues()->display == Css::Display::Item::YES) {
         if (auto marker = el ? el->getPseudoElement(Dom::PseudoElement::MARKER) : NONE) {
             _buildPseudoElement(bc, marker.expect());
         }
@@ -851,8 +851,8 @@ static void _buildChildren(BuilderContext bc, Gc::Ref<Dom::Node> parent) {
     }
 }
 
-static void _buildChildBoxDisplay(BuilderContext bc, Gc::Ref<Dom::Node> node, Display display) {
-    if (display == Display::NONE)
+static void _buildChildBoxDisplay(BuilderContext bc, Gc::Ref<Dom::Node> node, Css::Display display) {
+    if (display == Css::Display::NONE)
         return;
 
     // Display::CONTENTS
@@ -866,7 +866,7 @@ static void _buildChildInternalDisplay(BuilderContext bc, Gc::Ref<Dom::Element> 
     _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, childStyle->display);
 }
 
-static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::ComputedValues const> childStyle, Display display) {
+static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> child, Rc<Style::ComputedValues const> childStyle, Css::Display display) {
     if (bc.from == BuilderContext::From::FLEX) {
         display = childStyle->display.blockify();
         _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
@@ -874,12 +874,12 @@ static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> c
     }
 
     // NOTE: Flow for From::BLOCK and From::INLINE
-    if (display == Display::Outside::BLOCK) {
+    if (display == Css::Display::Outside::BLOCK) {
         bc.flushRootInlineBoxIntoAnonymousBox();
         _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
     } else {
         // NOTE: <img> and <svg>, for example, should always be treated as inline-block instead of inline-flow (spans)
-        if (_alwaysInlineBlock(child) or display != Display::Inside::FLOW)
+        if (_alwaysInlineBlock(child) or display != Css::Display::Inside::FLOW)
             _innerDisplayDispatchCreationOfInlineLevelBox(bc, child, childStyle, display);
         else
             createAndBuildInlineFlowfromElement(bc, childStyle, child);
@@ -893,9 +893,9 @@ static void _buildNode(BuilderContext bc, Gc::Ref<Dom::Node> node) {
         auto childStyle = el->computedValues();
         auto display = childStyle->display;
 
-        if (display.type() == Display::Type::BOX) {
+        if (display.type() == Css::Display::Type::BOX) {
             _buildChildBoxDisplay(bc, *el, display);
-        } else if (display.type() == Display::Type::INTERNAL) {
+        } else if (display.type() == Css::Display::Type::INTERNAL) {
             _buildChildInternalDisplay(bc, *el, childStyle);
         } else {
             _buildChildDefaultDisplay(bc, *el, childStyle, display);
@@ -924,7 +924,7 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
     auto display = style->display;
     auto listStyleType = pseudoElement->element()->computedValues()->list->type;
 
-    if (display == Display::NONE)
+    if (display == Css::Display::NONE)
         return;
 
     bool isBeforeOrAfter = (pseudoElement->type == Dom::PseudoElement::BEFORE or pseudoElement->type == Dom::PseudoElement::AFTER);
@@ -937,22 +937,22 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
     auto generateInnerContent = [&](BuilderContext& innerBc) {
         if (pseudoElement->type == Dom::PseudoElement::MARKER and style->content.is<Keywords::Normal>()) {
             String marker = ""s;
-            if (listStyleType == CustomIdent{"disc"_sym}) {
+            if (listStyleType == Css::CustomIdent{"disc"_sym}) {
                 marker = "\u2022"s;
-            } else if (listStyleType == CustomIdent{"circle"_sym}) {
+            } else if (listStyleType == Css::CustomIdent{"circle"_sym}) {
                 marker = "\u25E6"s;
-            } else if (listStyleType == CustomIdent{"square"_sym}) {
+            } else if (listStyleType == Css::CustomIdent{"square"_sym}) {
                 marker = "\u25AA"s;
-            } else if (listStyleType == CustomIdent{"decimal"_sym}) {
+            } else if (listStyleType == Css::CustomIdent{"decimal"_sym}) {
                 auto value =
-                    pseudoElement->element()->counters.innerMostValue(CustomIdent{"list-item"_sym});
+                    pseudoElement->element()->counters.innerMostValue(Css::CustomIdent{"list-item"_sym});
                 marker = Io::format("{}.", value);
             }
             _buildText(innerBc, marker.str(), style);
         } else if (style->content.is<String>()) {
             // TODO: Expand this to iterate over a Vector of content items (Strings, URLs, Counters)
             _buildText(innerBc, style->content.expect<String>().str(), style);
-        } else if (auto counter = style->content.is<CounterFunc>()) {
+        } else if (auto counter = style->content.is<Css::CounterFunc>()) {
             auto value = pseudoElement->element()->counters.innerMostValue(counter->name);
             _buildText(innerBc, Io::toStr(value).str(), style);
         }
@@ -963,7 +963,7 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
         pseudoElement->type == Dom::PseudoElement::MARKER and
         pseudoElement->element()->computedValues()->list->position == Keywords::OUTSIDE;
 
-    if (bc.hasRootInlineBox() and oneOf(display, Display::INLINE, Display::CONTENTS) and not isOutsideMarker) {
+    if (bc.hasRootInlineBox() and oneOf(display, Css::Display::INLINE, Css::Display::CONTENTS) and not isOutsideMarker) {
         bc.startInlineBox(_spanStyleFromStyle(*style));
         generateInnerContent(bc);
         bc.endInlineBox();
@@ -980,7 +980,7 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
             NONE,
         };
 
-        BuilderContext pseudoBc = (display == Display::Inside::FLEX)
+        BuilderContext pseudoBc = (display == Css::Display::Inside::FLEX)
                                       ? bc.toFlexContext(pseudoBox, pseudoBoxInlineBox)
                                       : bc.toBlockContext(pseudoBox, pseudoBoxInlineBox);
 
@@ -1038,16 +1038,16 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, Runnin
         auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
         prose->append(style->content.expect<String>().str());
         return Box{style, prose, Some(el)};
-    } else if (style->content.is<ElementFunc>()) {
-        auto elt = style->content.expect<ElementFunc>();
+    } else if (style->content.is<Css::ElementFunc>()) {
+        auto elt = style->content.expect<Css::ElementFunc>();
         if (auto infos = runningPos.match(elt, pageNumber)) {
             Box box = buildElement(infos.expect().element);
             box.forceStaticPosition = true;
             return box;
         }
-    } else if (auto it = style->content.is<CounterFunc>()) {
+    } else if (auto it = style->content.is<Css::CounterFunc>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
-        if (it->name == CustomIdent{"page"_sym}) {
+        if (it->name == Css::CustomIdent{"page"_sym}) {
             // FIXME: Special case for the page counter for now, remove this once we figure out the pseudo element tree for page margins
             prose->append(Io::toStr(pageNumber).str());
         } else {

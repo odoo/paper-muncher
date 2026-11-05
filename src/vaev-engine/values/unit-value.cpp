@@ -13,7 +13,7 @@ import :values.writing;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // MARK: Numeric Base Type -----------------------------------------------------
 // https://drafts.css-houdini.org/css-typed-om-1/#enumdef-cssnumericbasetype
@@ -29,7 +29,6 @@ export enum struct NumericBaseType : u8 {
 
     _LEN,
 };
-
 
 export struct RelativeLengthContextData {
     // current font metrics
@@ -210,7 +209,6 @@ export struct UnitValue {
     constexpr bool isCanonical() const {
         return canonicalUnitOf(baseType()) == _unit;
     }
-
 
     // https://drafts.csswg.org/css-values/#relative-lengths
     UnitValue _resolveRelative(Unit unit, RelativeLengthContext auto const& ctx) const {
@@ -785,4 +783,5 @@ struct ValueSerializer<T> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

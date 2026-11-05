@@ -4,7 +4,7 @@ import Karm.Core;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 export struct Ratio {
     f64 num;
@@ -15,4 +15,5 @@ export struct Ratio {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

@@ -6,7 +6,7 @@ import :values.keywords;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // https://drafts.csswg.org/css-writing-modes-4/#inline-axis
 // https://drafts.csswg.org/css-writing-modes-4/#block-axis
@@ -51,4 +51,5 @@ export using WritingMode = Union<Keywords::HorizontalTb, Keywords::VerticalRl, K
 // https://drafts.csswg.org/css-writing-modes-4/#propdef-direction
 export using Direction = Union<Keywords::Ltr, Keywords::Rtl>;
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

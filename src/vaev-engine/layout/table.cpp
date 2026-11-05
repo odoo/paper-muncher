@@ -27,21 +27,21 @@ Opt<Str> _retrieveDomAttr(Box const& box, Dom::QualifiedName const& attr) {
 // https://html.spec.whatwg.org/multipage/tables.html#the-col-element
 Opt<u16> retrieveSpanFromDom(Box const& box) {
     auto attr = try$(_retrieveDomAttr(box, Html::SPAN_ATTR));
-    auto value = try$(parseValue<Integer>(attr).ok());
+    auto value = try$(Css::parseValue<Css::Integer>(attr).ok());
     return Some(clamp(value, 1, 1000));
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#attributes-common-to-td-and-th-elements
 Opt<u16> retrieveColSpanFromDom(Box const& box) {
     auto attr = try$(_retrieveDomAttr(box, Html::COLSPAN_ATTR));
-    auto value = try$(parseValue<Integer>(attr).ok());
+    auto value = try$(Css::parseValue<Css::Integer>(attr).ok());
     return Some(clamp(value, 1, 1000));
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#attributes-common-to-td-and-th-elements
 Opt<u16> retrieveRowSpanFromDom(Box const& box) {
     auto attr = try$(_retrieveDomAttr(box, Html::ROWSPAN_ATTR));
-    auto value = try$(parseValue<Integer>(attr).ok());
+    auto value = try$(Css::parseValue<Css::Integer>(attr).ok());
     return Some(clamp(value, 0, 65534));
 }
 
@@ -50,14 +50,14 @@ void advanceUntil(MutCursor<Box>& cursor, auto pred) {
         cursor.next();
 }
 
-UsedBorder resolve(Box const& box, BorderEdge const edge) {
+Css::UsedBorder resolve(Box const& box, Css::BorderEdge const edge) {
     auto& border = box.style->borders->get(edge);
-    return UsedBorder{
+    return Css::UsedBorder{
         border.style == Gfx::BorderStyle::NONE
             ? 0_au
             : Layout::resolve(border.width),
         border.style,
-        resolve(border.color, box.style->color),
+        Style::resolve(border.color, box.style->color),
     };
 }
 
@@ -192,8 +192,8 @@ export struct TableFormatingContext : FormatingContext {
 
         growDownwardGrowingCells();
 
-        advanceUntil(tableRowCursor, [](Display d) {
-            return d == Display::TABLE_CELL;
+        advanceUntil(tableRowCursor, [](Css::Display d) {
+            return d == Css::Display::TABLE_CELL;
         });
 
         while (not tableRowCursor.ended()) {
@@ -247,8 +247,8 @@ export struct TableFormatingContext : FormatingContext {
             current.x += colSpan;
 
             tableRowCursor.next();
-            advanceUntil(tableRowCursor, [](Display d) {
-                return d == Display::TABLE_CELL;
+            advanceUntil(tableRowCursor, [](Css::Display d) {
+                return d == Css::Display::TABLE_CELL;
             });
         }
         current.y++;
@@ -270,8 +270,8 @@ export struct TableFormatingContext : FormatingContext {
 
         usize ystartRowGroup = grid.size.y;
 
-        advanceUntil(rowGroupCursor, [](Display d) {
-            return d == Display::TABLE_ROW;
+        advanceUntil(rowGroupCursor, [](Css::Display d) {
+            return d == Css::Display::TABLE_ROW;
         });
 
         while (not rowGroupCursor.ended()) {
@@ -280,8 +280,8 @@ export struct TableFormatingContext : FormatingContext {
             rows.pushBack({.start = ystartRow, .end = grid.size.y - 1, .el = *rowGroupCursor});
 
             rowGroupCursor.next();
-            advanceUntil(rowGroupCursor, [](Display d) {
-                return d == Display::TABLE_ROW;
+            advanceUntil(rowGroupCursor, [](Css::Display d) {
+                return d == Css::Display::TABLE_ROW;
             });
         }
 
@@ -296,8 +296,8 @@ export struct TableFormatingContext : FormatingContext {
         auto tableBoxChildren = box.children();
         MutCursor<Box> tableBoxCursor{tableBoxChildren};
 
-        advanceUntil(tableBoxCursor, [](Display d) {
-            return d == Display::TABLE_HEADER_GROUP;
+        advanceUntil(tableBoxCursor, [](Css::Display d) {
+            return d == Css::Display::TABLE_HEADER_GROUP;
         });
 
         if (tableBoxCursor.ended())
@@ -316,7 +316,7 @@ export struct TableFormatingContext : FormatingContext {
         if (tableBoxCursor.ended())
             return;
 
-        advanceUntil(tableBoxCursor, [](Display d) {
+        advanceUntil(tableBoxCursor, [](Css::Display d) {
             return d.isHeadBodyFootRowOrColGroup();
         });
 
@@ -324,12 +324,12 @@ export struct TableFormatingContext : FormatingContext {
             return;
 
         // MARK: Columns groups
-        while (not tableBoxCursor.ended() and tableBoxCursor->style->display == Display::TABLE_COLUMN_GROUP) {
+        while (not tableBoxCursor.ended() and tableBoxCursor->style->display == Css::Display::TABLE_COLUMN_GROUP) {
             auto columnGroupChildren = tableBoxCursor->children();
             MutCursor<Box> columnGroupCursor = {columnGroupChildren};
 
-            advanceUntil(columnGroupCursor, [](Display d) {
-                return d == Display::TABLE_COLUMN;
+            advanceUntil(columnGroupCursor, [](Css::Display d) {
+                return d == Css::Display::TABLE_COLUMN;
             });
 
             if (not columnGroupCursor.ended()) {
@@ -343,8 +343,8 @@ export struct TableFormatingContext : FormatingContext {
                     cols.pushBack({.start = grid.size.x - span, .end = grid.size.x - 1, .el = *columnGroupCursor});
 
                     columnGroupCursor.next();
-                    advanceUntil(columnGroupCursor, [](Display d) {
-                        return d == Display::TABLE_COLUMN;
+                    advanceUntil(columnGroupCursor, [](Css::Display d) {
+                        return d == Css::Display::TABLE_COLUMN;
                     });
                 }
 
@@ -357,7 +357,7 @@ export struct TableFormatingContext : FormatingContext {
             }
 
             tableBoxCursor.next();
-            advanceUntil(tableBoxCursor, [](Display d) {
+            advanceUntil(tableBoxCursor, [](Css::Display d) {
                 return d.isHeadBodyFootRowOrColGroup();
             });
         }
@@ -372,14 +372,14 @@ export struct TableFormatingContext : FormatingContext {
         }
 
         while (true) {
-            advanceUntil(tableBoxCursor, [](Display d) {
+            advanceUntil(tableBoxCursor, [](Css::Display d) {
                 return d.isHeadBodyFootOrRow();
             });
 
             if (tableBoxCursor.ended())
                 break;
 
-            if (tableBoxCursor->style->display == Display::TABLE_ROW) {
+            if (tableBoxCursor->style->display == Css::Display::TABLE_ROW) {
                 processRows(*tableBoxCursor);
                 tableBoxCursor.next();
                 continue;
@@ -387,15 +387,15 @@ export struct TableFormatingContext : FormatingContext {
 
             endRowGroup();
 
-            if (tableBoxCursor->style->display == Display::TABLE_FOOTER_GROUP) {
+            if (tableBoxCursor->style->display == Css::Display::TABLE_FOOTER_GROUP) {
                 pendingTfoots.pushBack(tableBoxCursor - tableBoxChildren.begin());
                 tableBoxCursor.next();
                 continue;
             }
 
             // The current element is either a thead or a tbody.
-            if (tableBoxCursor->style->display != Display::TABLE_HEADER_GROUP and
-                tableBoxCursor->style->display != Display::TABLE_ROW_GROUP) {
+            if (tableBoxCursor->style->display != Css::Display::TABLE_HEADER_GROUP and
+                tableBoxCursor->style->display != Css::Display::TABLE_ROW_GROUP) {
                 // FIXME: Prod code should not fail, but ok for current dev scenario
                 panic("current element should be thead or tbody");
             }
@@ -451,11 +451,11 @@ export struct TableFormatingContext : FormatingContext {
     };
 
     // https://www.w3.org/TR/css-tables-3/#border-style-harmonization-algorithm
-    UsedBorder harmonizeConflictingBorders(Vec<UsedBorder> const& borders) {
-        UsedBorder currentlyWinningBorderProperties{
+    Css::UsedBorder harmonizeConflictingBorders(Vec<Css::UsedBorder> const& borders) {
+        Css::UsedBorder currentlyWinningBorderProperties{
             0_au,
             Gfx::BorderStyle::NONE,
-            BLACK,
+            Css::BLACK,
         };
 
         // https://www.w3.org/TR/css-tables-3/#border-specificity
@@ -497,9 +497,9 @@ export struct TableFormatingContext : FormatingContext {
     }
 
     void addAxisAndGroupBorder(
-        Vec<UsedBorder>& borders,
+        Vec<Css::UsedBorder>& borders,
         AxisAndGroupsIdxs const& axisAndGroupsIdxs,
-        BorderEdge edge,
+        Css::BorderEdge edge,
         Vec<TableAxis> const& axis,
         Vec<TableGroup> const& groups
     ) {
@@ -515,25 +515,25 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void paintCellEnd(usize i, usize j, UsedBorder const& finalBorder) {
+    void paintCellEnd(usize i, usize j, Css::UsedBorder const& finalBorder) {
         bordersStyleGrid.colorAt(i, j).end = finalBorder.color;
         bordersStyleGrid.styleAt(i, j).end = finalBorder.style;
         bordersGrid.widthAt(i, j).end = finalBorder.width;
     }
 
-    void paintCellStart(usize i, usize j, UsedBorder const& finalBorder) {
+    void paintCellStart(usize i, usize j, Css::UsedBorder const& finalBorder) {
         bordersStyleGrid.colorAt(i, j).start = finalBorder.color;
         bordersStyleGrid.styleAt(i, j).start = finalBorder.style;
         bordersGrid.widthAt(i, j).start = finalBorder.width;
     }
 
-    void paintCellTop(usize i, usize j, UsedBorder const& finalBorder) {
+    void paintCellTop(usize i, usize j, Css::UsedBorder const& finalBorder) {
         bordersStyleGrid.colorAt(i, j).top = finalBorder.color;
         bordersStyleGrid.styleAt(i, j).top = finalBorder.style;
         bordersGrid.widthAt(i, j).top = finalBorder.width;
     }
 
-    void paintCellBottom(usize i, usize j, UsedBorder const& finalBorder) {
+    void paintCellBottom(usize i, usize j, Css::UsedBorder const& finalBorder) {
         bordersStyleGrid.colorAt(i, j).bottom = finalBorder.color;
         bordersStyleGrid.styleAt(i, j).bottom = finalBorder.style;
         bordersGrid.widthAt(i, j).bottom = finalBorder.width;
@@ -576,18 +576,18 @@ export struct TableFormatingContext : FormatingContext {
                 end = max(endOfTop, endOfBottom);
             }
 
-            Vec<UsedBorder> borders;
+            Vec<Css::UsedBorder> borders;
 
             for (usize j = start; j <= end; j += colSpanAt(j, i))
                 if (grid.at(j, i).box)
-                    borders.pushBack(resolve(*grid.at(j, i).box, BorderEdge::BOTTOM));
+                    borders.pushBack(resolve(*grid.at(j, i).box, Css::BorderEdge::BOTTOM));
 
             for (usize j = start; j <= end; j += colSpanAt(j, i + 1))
                 if (grid.at(j, i + 1).box)
-                    borders.pushBack(resolve(*grid.at(j, i + 1).box, BorderEdge::TOP));
+                    borders.pushBack(resolve(*grid.at(j, i + 1).box, Css::BorderEdge::TOP));
 
-            addAxisAndGroupBorder(borders, rowGroupIdxs[i], BorderEdge::BOTTOM, rows, rowGroups);
-            addAxisAndGroupBorder(borders, rowGroupIdxs[i + 1], BorderEdge::TOP, rows, rowGroups);
+            addAxisAndGroupBorder(borders, rowGroupIdxs[i], Css::BorderEdge::BOTTOM, rows, rowGroups);
+            addAxisAndGroupBorder(borders, rowGroupIdxs[i + 1], Css::BorderEdge::TOP, rows, rowGroups);
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
@@ -632,18 +632,18 @@ export struct TableFormatingContext : FormatingContext {
                 end = max(endOfLeft, endOfRight);
             }
 
-            Vec<UsedBorder> borders;
+            Vec<Css::UsedBorder> borders;
 
             for (usize i = start; i <= end; i += rowSpanAt(j, i))
                 if (grid.at(j, i).box)
-                    borders.pushBack(resolve(*grid.at(j, i).box, BorderEdge::END));
+                    borders.pushBack(resolve(*grid.at(j, i).box, Css::BorderEdge::END));
 
             for (usize i = start; i <= end; i += rowSpanAt(j + 1, i))
                 if (grid.at(j + 1, i).box)
-                    borders.pushBack(resolve(*grid.at(j + 1, i).box, BorderEdge::START));
+                    borders.pushBack(resolve(*grid.at(j + 1, i).box, Css::BorderEdge::START));
 
-            addAxisAndGroupBorder(borders, colGroupIdxs[j], BorderEdge::END, cols, colGroups);
-            addAxisAndGroupBorder(borders, colGroupIdxs[j + 1], BorderEdge::START, cols, colGroups);
+            addAxisAndGroupBorder(borders, colGroupIdxs[j], Css::BorderEdge::END, cols, colGroups);
+            addAxisAndGroupBorder(borders, colGroupIdxs[j + 1], Css::BorderEdge::START, cols, colGroups);
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
@@ -659,12 +659,12 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void resolveConflictForTableBordersAtHorizontalAxis(Box& box, BorderEdge edge) {
+    void resolveConflictForTableBordersAtHorizontalAxis(Box& box, Css::BorderEdge edge) {
         if (grid.size.x == 0 or grid.size.y == 0)
             return;
 
-        UsedBorder tableBorder = resolve(box, edge);
-        usize const i = edge == BorderEdge::TOP ? 0 : grid.size.y - 1;
+        Css::UsedBorder tableBorder = resolve(box, edge);
+        usize const i = edge == Css::BorderEdge::TOP ? 0 : grid.size.y - 1;
 
         usize j = 0;
         while (j < grid.size.x) {
@@ -674,7 +674,7 @@ export struct TableFormatingContext : FormatingContext {
                 continue;
             }
 
-            Vec<UsedBorder> borders = {
+            Vec<Css::UsedBorder> borders = {
                 resolve(*grid.at(j, i).box, edge),
                 tableBorder
             };
@@ -684,7 +684,7 @@ export struct TableFormatingContext : FormatingContext {
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
-            if (edge == BorderEdge::TOP) {
+            if (edge == Css::BorderEdge::TOP) {
                 paintCellTop(i, j, finalBorder);
             } else {
                 auto sj = grid.at(j, i).anchorIdx.x;
@@ -695,12 +695,12 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void resolveConflictForTableBordersAtVerticalAxis(Box& box, BorderEdge edge) {
+    void resolveConflictForTableBordersAtVerticalAxis(Box& box, Css::BorderEdge edge) {
         if (grid.size.x == 0 or grid.size.y == 0)
             return;
 
-        UsedBorder tableBorder = resolve(box, edge);
-        usize const j = edge == BorderEdge::START ? 0 : grid.size.x - 1;
+        Css::UsedBorder tableBorder = resolve(box, edge);
+        usize const j = edge == Css::BorderEdge::START ? 0 : grid.size.x - 1;
 
         usize i = 0;
         while (i < grid.size.y) {
@@ -710,7 +710,7 @@ export struct TableFormatingContext : FormatingContext {
                 continue;
             }
 
-            Vec<UsedBorder> borders = {
+            Vec<Css::UsedBorder> borders = {
                 resolve(*grid.at(j, i).box, edge),
                 tableBorder
             };
@@ -720,7 +720,7 @@ export struct TableFormatingContext : FormatingContext {
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
-            if (edge == BorderEdge::START) {
+            if (edge == Css::BorderEdge::START) {
                 paintCellStart(i, j, finalBorder);
             } else {
                 auto si = grid.at(j, i).anchorIdx.y;
@@ -795,10 +795,10 @@ export struct TableFormatingContext : FormatingContext {
             }
         }
 
-        resolveConflictForTableBordersAtHorizontalAxis(box, BorderEdge::TOP);
-        resolveConflictForTableBordersAtHorizontalAxis(box, BorderEdge::BOTTOM);
-        resolveConflictForTableBordersAtVerticalAxis(box, BorderEdge::START);
-        resolveConflictForTableBordersAtVerticalAxis(box, BorderEdge::END);
+        resolveConflictForTableBordersAtHorizontalAxis(box, Css::BorderEdge::TOP);
+        resolveConflictForTableBordersAtHorizontalAxis(box, Css::BorderEdge::BOTTOM);
+        resolveConflictForTableBordersAtVerticalAxis(box, Css::BorderEdge::START);
+        resolveConflictForTableBordersAtVerticalAxis(box, Css::BorderEdge::END);
     }
 
     void computeBordersStructsSeparate() {
@@ -879,7 +879,7 @@ export struct TableFormatingContext : FormatingContext {
         // NOTE: The table does not automatically expand to fill its containing block.
         //       (https://www.w3.org/TR/CSS22/tables.html#width-layout)
 
-        if (not(style.sizing->width.is<Keywords::Auto>() or style.sizing->width.is<PixelPercentage>()))
+        if (not(style.sizing->width.is<Keywords::Auto>() or style.sizing->width.is<Style::PixelPercentage>()))
             logWarn("width can't be anything other than 'auto' or a length in a table context");
 
         tableUsedWidth = knownSizeX;
@@ -893,10 +893,10 @@ export struct TableFormatingContext : FormatingContext {
         for (auto& col : cols) {
             auto const& width = col.el.style->sizing->width;
 
-            if (not(width.is<Keywords::Auto>() or width.is<PixelPercentage>()))
+            if (not(width.is<Keywords::Auto>() or width.is<Style::PixelPercentage>()))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
 
-            if (auto widthCalc = width.is<PixelPercentage>()) {
+            if (auto widthCalc = width.is<Style::PixelPercentage>()) {
                 for (usize x = col.start; x <= col.end; ++x) {
                     colWidthOrNone[x] = Some(Layout::resolve(*widthCalc, tableUsedWidth));
                 }
@@ -920,7 +920,7 @@ export struct TableFormatingContext : FormatingContext {
                 continue;
             }
 
-            auto cellBoxWidthCalc = cell.box->style->sizing->width.is<PixelPercentage>();
+            auto cellBoxWidthCalc = cell.box->style->sizing->width.is<Style::PixelPercentage>();
 
             if (not(cell.box->style->sizing->width.is<Keywords::Auto>() or cellBoxWidthCalc))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
@@ -994,10 +994,10 @@ export struct TableFormatingContext : FormatingContext {
                             usedSpacings.borders.horizontal() +
                             usedSpacings.margin.horizontal();
 
-        if (not(cell.box->style->sizing->width.is<Keywords::Auto>() or cell.box->style->sizing->width.is<PixelPercentage>()))
+        if (not(cell.box->style->sizing->width.is<Keywords::Auto>() or cell.box->style->sizing->width.is<Style::PixelPercentage>()))
             logWarn("width can't be anything other than 'auto' or a length in a table context");
 
-        if (auto cellBoxWidthCalc = cell.box->style->sizing->width.is<PixelPercentage>()) {
+        if (auto cellBoxWidthCalc = cell.box->style->sizing->width.is<Style::PixelPercentage>()) {
             auto cellPreferredWidth = Layout::resolve(
                 *cellBoxWidthCalc,
                 tableComputedWidth
@@ -1090,7 +1090,7 @@ export struct TableFormatingContext : FormatingContext {
     void computeAutoWidthOfColGroups(Vec<Au>& minColWidth, Au tableWidth) {
         for (auto& group : colGroups) {
             auto columnGroupWidth = group.el.style->sizing->width;
-            auto columnGroupWidthCalc = columnGroupWidth.is<PixelPercentage>();
+            auto columnGroupWidthCalc = columnGroupWidth.is<Style::PixelPercentage>();
 
             if (not(columnGroupWidth.is<Keywords::Auto>() or columnGroupWidthCalc))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
@@ -1118,7 +1118,7 @@ export struct TableFormatingContext : FormatingContext {
     void computeAutoWidthOfCols(Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
         for (auto& [start, end, el] : cols) {
             auto width = el.style->sizing->width;
-            auto widthCalc = width.is<PixelPercentage>();
+            auto widthCalc = width.is<Style::PixelPercentage>();
 
             if (not(width.is<Keywords::Auto>() or widthCalc))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
@@ -1268,7 +1268,7 @@ export struct TableFormatingContext : FormatingContext {
 
         for (auto& [row, index] : iter(rows) | Index()) {
             auto& height = row.el.style->sizing->height;
-            auto heightCalc = height.is<PixelPercentage>();
+            auto heightCalc = height.is<Style::PixelPercentage>();
 
             if (not(height.is<Keywords::Auto>() or heightCalc))
                 logWarn("height can't be anything other than 'auto' or a length in a table context");
@@ -1299,11 +1299,11 @@ export struct TableFormatingContext : FormatingContext {
                 // [A] CSS 2.2 does not specify how cells that span more than one row affect row height calculations except
                 // that the sum of the row heights involved must be great enough to encompass the cell spanning the rows.
 
-                if (not(cell.box->style->sizing->height.is<Keywords::Auto>() or cell.box->style->sizing->height.is<PixelPercentage>()))
+                if (not(cell.box->style->sizing->height.is<Keywords::Auto>() or cell.box->style->sizing->height.is<Style::PixelPercentage>()))
                     logWarn("height can't be anything other than 'auto' or a length in a table context");
 
                 auto rowSpan = cell.rowSpan;
-                if (auto cellBoxHeightCalc = cell.box->style->sizing->height.is<PixelPercentage>()) {
+                if (auto cellBoxHeightCalc = cell.box->style->sizing->height.is<Style::PixelPercentage>()) {
                     auto computedHeight = Layout::resolve(
                         *cellBoxHeightCalc,
                         0_au
@@ -1490,7 +1490,7 @@ export struct TableFormatingContext : FormatingContext {
         lastAutoLayoutInput = cacheKey;
     }
 
-    UsedBorders buildUsedCollapsedBordersForCell(usize i, usize j, usize rowSpan, usize colSpan) {
+    Css::UsedBorders buildUsedCollapsedBordersForCell(usize i, usize j, usize rowSpan, usize colSpan) {
         auto topStartStyle = bordersStyleGrid.styleAt(i, j);
         auto topStartColor = bordersStyleGrid.colorAt(i, j);
         auto bottomEndStyle = bordersStyleGrid.styleAt(i + rowSpan - 1, j + colSpan - 1);
@@ -1498,11 +1498,11 @@ export struct TableFormatingContext : FormatingContext {
 
         // FIXME: Probably have a dedicated type for storing collapsed border
         //        style in box because width is not used and BoxMetrics is used instead
-        return UsedBorders{
-            UsedBorder{0_au, topStartStyle.top, topStartColor.top},
-            UsedBorder{0_au, bottomEndStyle.end, bottomEndColor.end},
-            UsedBorder{0_au, bottomEndStyle.bottom, bottomEndColor.bottom},
-            UsedBorder{0_au, topStartStyle.start, topStartColor.start},
+        return Css::UsedBorders{
+            Css::UsedBorder{0_au, topStartStyle.top, topStartColor.top},
+            Css::UsedBorder{0_au, bottomEndStyle.end, bottomEndColor.end},
+            Css::UsedBorder{0_au, bottomEndStyle.bottom, bottomEndColor.bottom},
+            Css::UsedBorder{0_au, topStartStyle.start, topStartColor.start},
         };
     }
 

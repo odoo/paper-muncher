@@ -7,7 +7,7 @@ import :paint.background;
 
 namespace Vaev::Paint {
 
-Pair<RectAu, RadiiAu> resolveClipGeometryBox(Rc<Layout::Fragment>& fragment, GeometryBox box, RectAu viewBox) {
+Pair<RectAu, RadiiAu> resolveClipGeometryBox(Rc<Layout::Fragment>& fragment, Css::GeometryBox box, RectAu viewBox) {
     RadiiAu metricsRadii = 0_au;
     if (auto boxFragment = fragment.is<Layout::BoxFragment>())
         metricsRadii = boxFragment->metrics.radii;
@@ -43,7 +43,7 @@ Pair<RectAu, RadiiAu> resolveClipGeometryBox(Rc<Layout::Fragment>& fragment, Geo
     );
 }
 
-Math::Radiif resolveRadii(Math::Radii<PixelPercentage> const& baseRadii, RectAu const& referenceBox) {
+Math::Radiif resolveRadii(Math::Radii<Style::PixelPercentage> const& baseRadii, RectAu const& referenceBox) {
     Math::Radiif radii;
     radii.a = Layout::resolve(baseRadii.a, referenceBox.height).cast<f64>();
     radii.b = Layout::resolve(baseRadii.b, referenceBox.width).cast<f64>();
@@ -106,7 +106,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
                 auto hSquared = Math::pow2(referenceBox.height.cast<f64>());
                 auto wSquared = Math::pow2(referenceBox.width.cast<f64>());
                 radius = Layout::resolve(
-                                 circle.radius.expect<PixelPercentage>(),
+                                 circle.radius.expect<Style::PixelPercentage>(),
                                  Au(Math::sqrt(hSquared + wSquared) / Math::sqrt(2.0))
                              )
                              .cast<f64>();
@@ -165,7 +165,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
                 rx = max(Math::abs(referenceBox.width.cast<f64>() - center.x), center.x);
             } else {
                 rx = Layout::resolve(
-                                 ellipse.rx.expect<PixelPercentage>(),
+                                 ellipse.rx.expect<Style::PixelPercentage>(),
                                  referenceBox.width
                 )
                          .cast<f64>();
@@ -179,7 +179,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
             } else {
                 ry =
                     Layout::resolve(
-                                ellipse.ry.expect<PixelPercentage>(),
+                                ellipse.ry.expect<Style::PixelPercentage>(),
                                 referenceBox.height
                     )
                         .cast<f64>();
@@ -188,7 +188,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
                 Math::Ellipsef(center + referenceBox.xy.cast<f64>(), Math::Vec2f(rx, ry))
             );
         },
-        [&](Path const& p) {
+        [&](Css::Path const& p) {
             path.path(p.path);
             path.offset(referenceBox.xy.cast<f64>());
             fillRule = p.fillRule;

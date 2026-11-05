@@ -30,9 +30,9 @@ export struct TransformOriginProperty : Property {
         Rc<Property> initial() const override {
             return makeRc<TransformOriginProperty>(
                 self(),
-                TransformOrigin{
-                    .xOffset = LengthPercentage::fromPercentage(50),
-                    .yOffset = LengthPercentage::fromPercentage(50),
+                Css::TransformOrigin{
+                    .xOffset = Css::LengthPercentage::fromPercentage(50),
+                    .yOffset = Css::LengthPercentage::fromPercentage(50),
                 }
             );
         }
@@ -40,7 +40,7 @@ export struct TransformOriginProperty : Property {
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<TransformOriginProperty>(
                 self(),
-                TransformOrigin{
+                Css::TransformOrigin{
                     .xOffset = toSpecified(c.transform->origin.x),
                     .yOffset = toSpecified(c.transform->origin.y),
                 }
@@ -48,13 +48,13 @@ export struct TransformOriginProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TransformOriginProperty>(self(), try$(parseValue<TransformOrigin>(c))));
+            return Ok(makeRc<TransformOriginProperty>(self(), try$(parseValue<Css::TransformOrigin>(c))));
         }
     };
 
-    TransformOrigin _value;
+    Css::TransformOrigin _value;
 
-    TransformOriginProperty(Rc<Property::Registration> registration, TransformOrigin value)
+    TransformOriginProperty(Rc<Property::Registration> registration, Css::TransformOrigin value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -76,7 +76,7 @@ export struct TransformBoxProperty : Property {
         Registration() : Property::Registration(Properties::TRANSFORM_BOX) {}
 
         Rc<Property> initial() const override {
-            return makeRc<TransformBoxProperty>(self(), TransformBox{Keywords::VIEW_BOX});
+            return makeRc<TransformBoxProperty>(self(), Css::TransformBox{Keywords::VIEW_BOX});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -84,13 +84,13 @@ export struct TransformBoxProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TransformBoxProperty>(self(), try$(parseValue<TransformBox>(c))));
+            return Ok(makeRc<TransformBoxProperty>(self(), try$(parseValue<Css::TransformBox>(c))));
         }
     };
 
-    TransformBox _value;
+    Css::TransformBox _value;
 
-    TransformBoxProperty(Rc<Property::Registration> registration, TransformBox value)
+    TransformBoxProperty(Rc<Property::Registration> registration, Css::TransformBox value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -98,7 +98,7 @@ export struct TransformBoxProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -118,7 +118,7 @@ export struct TransformProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<TransformProperty>(self(), Vaev::Transform{Keywords::NONE});
+            return makeRc<TransformProperty>(self(), Vaev::Css::Transform{Keywords::NONE});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -217,13 +217,13 @@ export struct TransformProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TransformProperty>(self(), try$(parseValue<Vaev::Transform>(c))));
+            return Ok(makeRc<TransformProperty>(self(), try$(parseValue<Vaev::Css::Transform>(c))));
         }
     };
 
-    Vaev::Transform _value;
+    Vaev::Css::Transform _value;
 
-    TransformProperty(Rc<Property::Registration> registration, Vaev::Transform value)
+    TransformProperty(Rc<Property::Registration> registration, Vaev::Css::Transform value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

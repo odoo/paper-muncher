@@ -12,10 +12,10 @@ import :values.unitValue;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // 7.2. MARK: Duration Units: the <time> type and s, ms units
 // https://drafts.csswg.org/css-values/#time
 
+} // namespace Vaev::Css
 
-} // namespace Vaev

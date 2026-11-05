@@ -11,7 +11,6 @@ import :css;
 import :values.base;
 import :values.unitValue;
 import :values.primitives;
-import :values.resolved;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
@@ -27,26 +26,28 @@ export using Math::Vec2Au;
 export using Math::RadiiAu;
 export using Math::EllipseAu;
 
+} // namespace Vaev
+
+namespace Vaev::Style {
+
 export using Pixel = Distinct<f64, struct _PixelTag>;
 
 // 6. MARK: Distance Units: the <length> type
 // https://drafts.csswg.org/css-values/#lengths
 
-
-export template <>
-struct _Resolved<PureLength> {
-    using Type = Au;
-};
-
-export Au resolve(PureLength const& value, LengthContext auto const& ctx) {
+export Au resolve(Css::PureLength const& value, Css::LengthContext auto const& ctx) {
     return Au::fromFloatNearest(value.unitValue().canonical(ctx).value());
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 // 6.2. MARK: Absolute Lengths: the cm, mm, Q, in, pt, pc, px units
 // https://drafts.csswg.org/css-values/#absolute-lengths
 
 export struct PureAbsoluteLength : TypedUnitValue<Some(NumericBaseType::LENGTH)> {
-    constexpr PureAbsoluteLength(Pixel px)
+    constexpr PureAbsoluteLength(Style::Pixel px)
         : TypedUnitValue(UnitValue{px.value(), UnitValue::Unit::PX}) {}
 
     constexpr PureAbsoluteLength(Au value)
@@ -58,19 +59,22 @@ export struct PureAbsoluteLength : TypedUnitValue<Some(NumericBaseType::LENGTH)>
             panic("unit value is not an absolute <length>");
     }
 
-    constexpr Pixel pixels() const {
-        return Pixel{_value.to(UnitValue::Unit::PX)};
+    constexpr Style::Pixel pixels() const {
+        return Style::Pixel{_value.to(UnitValue::Unit::PX)};
     }
 };
 
-export template <>
-struct _Resolved<PureAbsoluteLength> {
-    using Type = Au;
-};
+} // namespace Vaev::Css
 
-export Au resolve(PureAbsoluteLength value) {
+namespace Vaev::Style {
+
+export Au resolve(Css::PureAbsoluteLength value) {
     return Au::fromFloatNearest(value.pixels().value());
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<PureAbsoluteLength> {
@@ -85,23 +89,23 @@ struct ValueParser<PureAbsoluteLength> {
     }
 };
 
-} // namespace Vaev
+} // namespace Vaev::Css
 
 namespace Vaev::Literals {
 
-export constexpr Pixel operator""_px(unsigned long long val) {
-    return Pixel{static_cast<f32>(val)};
+export constexpr Style::Pixel operator""_px(unsigned long long val) {
+    return Style::Pixel{static_cast<f32>(val)};
 }
 
-export constexpr Pixel operator""_px(long double val) {
-    return Pixel{static_cast<f32>(val)};
+export constexpr Style::Pixel operator""_px(long double val) {
+    return Style::Pixel{static_cast<f32>(val)};
 }
 
 } // namespace Vaev::Literals
 
 export template <>
-struct Karm::Io::Formatter<Vaev::Pixel> {
-    Res<> format(Io::TextWriter& writer, Vaev::Pixel value) {
+struct Karm::Io::Formatter<Vaev::Style::Pixel> {
+    Res<> format(Io::TextWriter& writer, Vaev::Style::Pixel value) {
         return Io::format(writer, "{}px", value.value());
     }
 };

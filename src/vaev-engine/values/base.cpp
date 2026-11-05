@@ -5,7 +5,7 @@ import :css;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 export void eatWhitespace(Cursor<Css::Sst>& c) {
     while (not c.ended() and c.peek() == Css::Token::WHITESPACE)
@@ -55,4 +55,5 @@ Res<> serializeValue(Io::TextWriter& w, T const& value) {
     return ValueSerializer<T>::serialize(w, value);
 }
 
-} // namespace Vaev
+} // namespace Vaev::Css
+

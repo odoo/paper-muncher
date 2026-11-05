@@ -10,69 +10,69 @@ using namespace Karm::Math::Literals;
 namespace Vaev::Style::Tests {
 
 test$("vaev-css-build-display") {
-    auto testCase = [&](Str input, Display expected) -> Res<> {
+    auto testCase = [&](Str input, Css::Display expected) -> Res<> {
         auto lex = Css::Lexer{input};
 
         auto diags = Diag::Collector::ignore();
         auto [val, _] = consumeDeclarationValue(lex, diags);
         Cursor<Css::Sst> sst{val};
-        auto res = parseValue<Display>(sst);
+        auto res = parseValue<Css::Display>(sst);
         assert$(res);
         assertEq$(res.expect(), expected);
         return Ok();
     };
 
     // Inside
-    try$(testCase("flow", Display{Display::FLOW, Display::BLOCK}));
-    try$(testCase("flow-root", Display{Display::FLOW_ROOT, Display::BLOCK}));
-    try$(testCase("flex", Display{Display::FLEX, Display::BLOCK}));
-    try$(testCase("grid", Display{Display::GRID, Display::BLOCK}));
-    try$(testCase("ruby", Display{Display::RUBY, Display::BLOCK}));
-    try$(testCase("table", Display{Display::TABLE, Display::BLOCK}));
-    try$(testCase("math", Display{Display::MATH, Display::BLOCK}));
+    try$(testCase("flow", Css::Display{Css::Display::FLOW, Css::Display::BLOCK}));
+    try$(testCase("flow-root", Css::Display{Css::Display::FLOW_ROOT, Css::Display::BLOCK}));
+    try$(testCase("flex", Css::Display{Css::Display::FLEX, Css::Display::BLOCK}));
+    try$(testCase("grid", Css::Display{Css::Display::GRID, Css::Display::BLOCK}));
+    try$(testCase("ruby", Css::Display{Css::Display::RUBY, Css::Display::BLOCK}));
+    try$(testCase("table", Css::Display{Css::Display::TABLE, Css::Display::BLOCK}));
+    try$(testCase("math", Css::Display{Css::Display::MATH, Css::Display::BLOCK}));
 
     // Outside
-    try$(testCase("block", Display{Display::FLOW, Display::BLOCK}));
-    try$(testCase("inline", Display{Display::FLOW, Display::INLINE}));
-    try$(testCase("run-in", Display{Display::FLOW, Display::RUN_IN}));
+    try$(testCase("block", Css::Display{Css::Display::FLOW, Css::Display::BLOCK}));
+    try$(testCase("inline", Css::Display{Css::Display::FLOW, Css::Display::INLINE}));
+    try$(testCase("run-in", Css::Display{Css::Display::FLOW, Css::Display::RUN_IN}));
 
     // Default
-    try$(testCase("block flow", Display{Display::FLOW, Display::BLOCK}));
-    try$(testCase("inline flow", Display{Display::FLOW, Display::INLINE}));
-    try$(testCase("run-in flow", Display{Display::FLOW, Display::RUN_IN}));
+    try$(testCase("block flow", Css::Display{Css::Display::FLOW, Css::Display::BLOCK}));
+    try$(testCase("inline flow", Css::Display{Css::Display::FLOW, Css::Display::INLINE}));
+    try$(testCase("run-in flow", Css::Display{Css::Display::FLOW, Css::Display::RUN_IN}));
 
     // list-item
-    try$(testCase("run-in flow list-item", Display{Display::FLOW, Display::RUN_IN}));
+    try$(testCase("run-in flow list-item", Css::Display{Css::Display::FLOW, Css::Display::RUN_IN}));
 
     // Internal
-    try$(testCase("table-row-group", Display::TABLE_ROW_GROUP));
-    try$(testCase("table-header-group", Display::TABLE_HEADER_GROUP));
-    try$(testCase("table-footer-group", Display::TABLE_FOOTER_GROUP));
-    try$(testCase("table-row", Display::TABLE_ROW));
-    try$(testCase("table-cell", Display::TABLE_CELL));
-    try$(testCase("table-column-group", Display::TABLE_COLUMN_GROUP));
-    try$(testCase("table-column", Display::TABLE_COLUMN));
-    try$(testCase("table-caption", Display::TABLE_CAPTION));
-    try$(testCase("ruby-base", Display::RUBY_BASE));
-    try$(testCase("ruby-text", Display::RUBY_TEXT));
-    try$(testCase("ruby-base-container", Display::RUBY_BASE_CONTAINER));
-    try$(testCase("ruby-text-container", Display::RUBY_TEXT_CONTAINER));
+    try$(testCase("table-row-group", Css::Display::TABLE_ROW_GROUP));
+    try$(testCase("table-header-group", Css::Display::TABLE_HEADER_GROUP));
+    try$(testCase("table-footer-group", Css::Display::TABLE_FOOTER_GROUP));
+    try$(testCase("table-row", Css::Display::TABLE_ROW));
+    try$(testCase("table-cell", Css::Display::TABLE_CELL));
+    try$(testCase("table-column-group", Css::Display::TABLE_COLUMN_GROUP));
+    try$(testCase("table-column", Css::Display::TABLE_COLUMN));
+    try$(testCase("table-caption", Css::Display::TABLE_CAPTION));
+    try$(testCase("ruby-base", Css::Display::RUBY_BASE));
+    try$(testCase("ruby-text", Css::Display::RUBY_TEXT));
+    try$(testCase("ruby-base-container", Css::Display::RUBY_BASE_CONTAINER));
+    try$(testCase("ruby-text-container", Css::Display::RUBY_TEXT_CONTAINER));
 
     // Box
-    try$(testCase("contents", Display::CONTENTS));
-    try$(testCase("none", Display::NONE));
+    try$(testCase("contents", Css::Display::CONTENTS));
+    try$(testCase("none", Css::Display::NONE));
 
     // Legacy
-    try$(testCase("inline-block", Display{Display::FLOW_ROOT, Display::INLINE}));
-    try$(testCase("inline-table", Display{Display::TABLE, Display::INLINE}));
-    try$(testCase("inline-flex", Display{Display::FLEX, Display::INLINE}));
-    try$(testCase("inline-grid", Display{Display::GRID, Display::INLINE}));
+    try$(testCase("inline-block", Css::Display{Css::Display::FLOW_ROOT, Css::Display::INLINE}));
+    try$(testCase("inline-table", Css::Display{Css::Display::TABLE, Css::Display::INLINE}));
+    try$(testCase("inline-flex", Css::Display{Css::Display::FLEX, Css::Display::INLINE}));
+    try$(testCase("inline-grid", Css::Display{Css::Display::GRID, Css::Display::INLINE}));
 
     return Ok();
 }
 
 test$("vaev-css-build-margin") {
-    auto testCase = [&](Str input, Vaev::Margins expected) -> Res<> {
+    auto testCase = [&](Str input, Vaev::Css::Margins expected) -> Res<> {
         auto registry = defaultRegistry();
         auto res = registry.parseValue(Properties::MARGIN, input, {});
         assert$(res);
@@ -86,41 +86,41 @@ test$("vaev-css-build-margin") {
 
     try$(testCase(
         "30px;",
-        Vaev::Margins{LengthPercentage::fromCanonical(30)}
+        Vaev::Css::Margins{Css::LengthPercentage::fromCanonical(30)}
     ));
 
     try$(testCase(
         "1px 2px;",
-        Vaev::Margins{
-            LengthPercentage::fromCanonical(1),
-            LengthPercentage::fromCanonical(2),
+        Vaev::Css::Margins{
+            Css::LengthPercentage::fromCanonical(1),
+            Css::LengthPercentage::fromCanonical(2),
         }
     ));
 
     try$(testCase(
         "1px /* x */ 2px;",
-        Vaev::Margins{
-            LengthPercentage::fromCanonical(1),
-            LengthPercentage::fromCanonical(2),
+        Vaev::Css::Margins{
+            Css::LengthPercentage::fromCanonical(1),
+            Css::LengthPercentage::fromCanonical(2),
         }
     ));
 
     try$(testCase(
         "1px 2px 3px;",
-        Vaev::Margins{
-            LengthPercentage::fromCanonical(1),
-            LengthPercentage::fromCanonical(2),
-            LengthPercentage::fromCanonical(3),
+        Vaev::Css::Margins{
+            Css::LengthPercentage::fromCanonical(1),
+            Css::LengthPercentage::fromCanonical(2),
+            Css::LengthPercentage::fromCanonical(3),
         }
     ));
 
     try$(testCase(
         "1px 2px 3px 4px;",
-        Vaev::Margins{
-            LengthPercentage::fromCanonical(1),
-            LengthPercentage::fromCanonical(2),
-            LengthPercentage::fromCanonical(3),
-            LengthPercentage::fromCanonical(4),
+        Vaev::Css::Margins{
+            Css::LengthPercentage::fromCanonical(1),
+            Css::LengthPercentage::fromCanonical(2),
+            Css::LengthPercentage::fromCanonical(3),
+            Css::LengthPercentage::fromCanonical(4),
         }
     ));
 
@@ -141,7 +141,7 @@ test$("vaev-css-build-logical-margin") {
     };
 
     auto px = [](f64 v) {
-        return LengthPercentage::fromCanonical(v);
+        return Css::LengthPercentage::fromCanonical(v);
     };
 
     try$(testCase.operator()<MarginInlineProperty>(Properties::MARGIN_INLINE, "1px;", {px(1), px(1)}));

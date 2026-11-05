@@ -68,7 +68,7 @@ export struct InspectChangeMargin {
 };
 
 export struct InspectChangeColorScheme {
-    Opt<ColorScheme> value;
+    Opt<Css::ColorScheme> value;
 };
 
 export struct InspectChangeScale {
@@ -115,7 +115,7 @@ export struct InspectState {
     Gc::Ptr<Dom::Node> selectedNode = nullptr;
     usize selectedFragmentIndex = 0;
 
-    Opt<ColorScheme> colorScheme;
+    Opt<Css::ColorScheme> colorScheme;
     Print::Settings settings;
     bool paginated = false;
 
@@ -268,12 +268,12 @@ Ui::Child elementEndTag(Dom::Element const& el) {
     );
 }
 
-Str displayToBadge(Display d) {
-    if (d == Display::GRID)
+Str displayToBadge(Css::Display d) {
+    if (d == Css::Display::GRID)
         return "grid";
-    else if (d == Display::FLEX)
+    else if (d == Css::Display::FLEX)
         return "flex";
-    else if (d == Display::TABLE)
+    else if (d == Css::Display::TABLE)
         return "grid";
     else
         return "";
@@ -464,10 +464,10 @@ Ui::Child inspectStyleTabComputed(Rc<WebView> webview, InspectState const& s, Ui
                 while (not endedDeclarationValue(lex)) {
                     auto component = Css::consumeComponentValue(lex, diags);
                     auto c = Cursor<Css::Sst>{component};
-                    auto maybeColor = parseValue<Color>(c);
+                    auto maybeColor = parseValue<Css::Color>(c);
 
                     if (maybeColor) {
-                        auto resolved = resolve(maybeColor.take(), Gfx::BLACK);
+                        auto resolved = Style::resolve(maybeColor.take(), Gfx::BLACK);
                         prose->pushSpan(Ui::TextStyles::codeMedium().withColor(resolved));
                         prose->append("■"s);
                         prose->popSpan();
@@ -715,8 +715,8 @@ Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectAction> send)
                 "Color Scheme"s,
                 {
                     Kr::tabbarItem(s.colorScheme == NONE, rbind(send, InspectChangeColorScheme{NONE}), Kr::tabarItemLabel(NONE, "Auto"s)),
-                    Kr::tabbarItem(s.colorScheme == ColorScheme::LIGHT, rbind(send, InspectChangeColorScheme{Some(ColorScheme::LIGHT)}), Kr::tabarItemLabel(NONE, "Light"s)),
-                    Kr::tabbarItem(s.colorScheme == ColorScheme::DARK, rbind(send, InspectChangeColorScheme{Some(ColorScheme::DARK)}), Kr::tabarItemLabel(NONE, "Dark"s)),
+                    Kr::tabbarItem(s.colorScheme == Css::ColorScheme::LIGHT, rbind(send, InspectChangeColorScheme{Some(Css::ColorScheme::LIGHT)}), Kr::tabarItemLabel(NONE, "Light"s)),
+                    Kr::tabbarItem(s.colorScheme == Css::ColorScheme::DARK, rbind(send, InspectChangeColorScheme{Some(Css::ColorScheme::DARK)}), Kr::tabarItemLabel(NONE, "Dark"s)),
                 }
             ),
             Kr::numberRow(

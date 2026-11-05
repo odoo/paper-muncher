@@ -22,7 +22,7 @@ export struct AlignContentProperty : Property {
         Registration() : Property::Registration(Properties::ALIGN_CONTENT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<AlignContentProperty>(self(), Align::Keywords::STRETCH);
+            return makeRc<AlignContentProperty>(self(), Css::Align::Keywords::STRETCH);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -30,13 +30,13 @@ export struct AlignContentProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignContentProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<AlignContentProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
-    Align _value;
+    Css::Align _value;
 
-    AlignContentProperty(Rc<Property::Registration> registration, Align value)
+    AlignContentProperty(Rc<Property::Registration> registration, Css::Align value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -58,7 +58,7 @@ export struct JustifyContentProperty : Property {
         Registration() : Property::Registration(Properties::JUSTIFY_CONTENT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<JustifyContentProperty>(self(), Align::Keywords::FLEX_START);
+            return makeRc<JustifyContentProperty>(self(), Css::Align::Keywords::FLEX_START);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -66,13 +66,13 @@ export struct JustifyContentProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<JustifyContentProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<JustifyContentProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
-    Align _value;
+    Css::Align _value;
 
-    JustifyContentProperty(Rc<Property::Registration> registration, Align value)
+    JustifyContentProperty(Rc<Property::Registration> registration, Css::Align value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -94,7 +94,7 @@ export struct JustifySelfProperty : Property {
         Registration() : Property::Registration(Properties::JUSTIFY_SELF) {}
 
         Rc<Property> initial() const override {
-            return makeRc<JustifySelfProperty>(self(), Align::Keywords::AUTO);
+            return makeRc<JustifySelfProperty>(self(), Css::Align::Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -102,13 +102,13 @@ export struct JustifySelfProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<JustifySelfProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<JustifySelfProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
-    Align _value;
+    Css::Align _value;
 
-    JustifySelfProperty(Rc<Property::Registration> registration, Align value)
+    JustifySelfProperty(Rc<Property::Registration> registration, Css::Align value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -130,7 +130,7 @@ export struct AlignSelfProperty : Property {
         Registration() : Property::Registration(Properties::ALIGN_SELF) {}
 
         Rc<Property> initial() const override {
-            return makeRc<AlignSelfProperty>(self(), Align::Keywords::AUTO);
+            return makeRc<AlignSelfProperty>(self(), Css::Align::Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -138,13 +138,13 @@ export struct AlignSelfProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignSelfProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<AlignSelfProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
-    Align _value;
+    Css::Align _value;
 
-    AlignSelfProperty(Rc<Property::Registration> registration, Align value)
+    AlignSelfProperty(Rc<Property::Registration> registration, Css::Align value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -166,7 +166,7 @@ export struct JustifyItemsProperty : Property {
         Registration() : Property::Registration(Properties::JUSTIFY_ITEMS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<JustifyItemsProperty>(self(), Align::LEGACY);
+            return makeRc<JustifyItemsProperty>(self(), Css::Align::LEGACY);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -174,13 +174,13 @@ export struct JustifyItemsProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<JustifyItemsProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<JustifyItemsProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
-    Align _value;
+    Css::Align _value;
 
-    JustifyItemsProperty(Rc<Property::Registration> registration, Align value)
+    JustifyItemsProperty(Rc<Property::Registration> registration, Css::Align value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -202,7 +202,7 @@ export struct AlignItemsProperty : Property {
         Registration() : Property::Registration(Properties::ALIGN_ITEMS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<AlignItemsProperty>(self(), Align::Keywords::STRETCH);
+            return makeRc<AlignItemsProperty>(self(), Css::Align::Keywords::STRETCH);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -210,13 +210,13 @@ export struct AlignItemsProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignItemsProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<AlignItemsProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
-    Align _value;
+    Css::Align _value;
 
-    AlignItemsProperty(Rc<Property::Registration> registration, Align value)
+    AlignItemsProperty(Rc<Property::Registration> registration, Css::Align value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -251,13 +251,13 @@ export struct RowGapProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<RowGapProperty>(self(), try$(parseValue<Vaev::Gap>(c))));
+            return Ok(makeRc<RowGapProperty>(self(), try$(parseValue<Vaev::Css::Gap>(c))));
         }
     };
 
-    Vaev::Gap _value;
+    Vaev::Css::Gap _value;
 
-    RowGapProperty(Rc<Property::Registration> registration, Vaev::Gap value)
+    RowGapProperty(Rc<Property::Registration> registration, Vaev::Css::Gap value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -292,13 +292,13 @@ export struct ColumnGapProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColumnGapProperty>(self(), try$(parseValue<Vaev::Gap>(c))));
+            return Ok(makeRc<ColumnGapProperty>(self(), try$(parseValue<Vaev::Css::Gap>(c))));
         }
     };
 
-    Vaev::Gap _value;
+    Vaev::Css::Gap _value;
 
-    ColumnGapProperty(Rc<Property::Registration> registration, Vaev::Gap value)
+    ColumnGapProperty(Rc<Property::Registration> registration, Vaev::Css::Gap value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -326,7 +326,7 @@ export struct GapProperty : Property {
         Rc<Property> initial() const override {
             return makeRc<GapProperty>(
                 self(),
-                Vaev::Gaps{
+                Vaev::Css::Gaps{
                     Keywords::NORMAL,
                     Keywords::NORMAL,
                 }
@@ -334,23 +334,23 @@ export struct GapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<GapProperty>(self(), Vaev::Gaps{toSpecified(c.gaps->row), toSpecified(c.gaps->col)});
+            return makeRc<GapProperty>(self(), Vaev::Css::Gaps{toSpecified(c.gaps->row), toSpecified(c.gaps->col)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto rowGap = try$(parseValue<Vaev::Gap>(c));
+            auto rowGap = try$(parseValue<Vaev::Css::Gap>(c));
             eatWhitespace(c);
-            auto colGap = parseValue<Vaev::Gap>(c);
+            auto colGap = parseValue<Vaev::Css::Gap>(c);
 
             if (not colGap)
-                return Ok(makeRc<GapProperty>(self(), Vaev::Gaps{rowGap, rowGap}));
-            return Ok(makeRc<GapProperty>(self(), Vaev::Gaps{rowGap, colGap.take()}));
+                return Ok(makeRc<GapProperty>(self(), Vaev::Css::Gaps{rowGap, rowGap}));
+            return Ok(makeRc<GapProperty>(self(), Vaev::Css::Gaps{rowGap, colGap.take()}));
         }
     };
 
-    Vaev::Gaps _value;
+    Vaev::Css::Gaps _value;
 
-    GapProperty(Rc<Property::Registration> registration, Vaev::Gaps value)
+    GapProperty(Rc<Property::Registration> registration, Vaev::Css::Gaps value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {

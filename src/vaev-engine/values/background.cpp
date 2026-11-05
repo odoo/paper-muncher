@@ -18,7 +18,7 @@ import :values.unitValue;
 
 using namespace Karm;
 
-namespace Vaev {
+namespace Vaev::Css {
 
 // https://drafts.csswg.org/css-backgrounds/#background-attachment
 using BackgroundAttachment = Union<
@@ -76,9 +76,12 @@ export struct BackgroundPosition {
     }
 };
 
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
+
 // https://drafts.csswg.org/css-values/#position
 // The computed value is a pair of offsets from the top left origin.
-namespace Style {
 
 export struct Position {
     PixelPercentage x;
@@ -89,21 +92,20 @@ export struct Position {
     }
 };
 
-} // namespace Style
-export Style::Position resolve(BackgroundPosition const& value, LengthContext auto const& ctx) {
-    auto offset = [&](bool isCenter, bool isFromEnd, LengthPercentage const& length) -> PixelPercentage {
+export Style::Position resolve(Css::BackgroundPosition const& value, Css::LengthContext auto const& ctx) {
+    auto offset = [&](bool isCenter, bool isFromEnd, Css::LengthPercentage const& length) -> PixelPercentage {
         if (isCenter)
             return Percent{50};
 
         if (isFromEnd) {
             // calc(100% - <length-percentage>)
             return resolve(
-                LengthPercentage{
+                Css::LengthPercentage{
                     UNCHECKED,
-                    SumNode{
+                    Css::SumNode{
                         .children = {
-                            UnitValue{100, UnitValue::Unit::PERCENT},
-                            NegateNode{makeBox<Calc>(length.calcTree())},
+                            Css::UnitValue{100, Css::UnitValue::Unit::PERCENT},
+                            Css::NegateNode{makeBox<Css::Calc>(length.calcTree())},
                         },
                     },
                 },
@@ -128,9 +130,13 @@ export Style::Position resolve(BackgroundPosition const& value, LengthContext au
     };
 }
 
-export BackgroundPosition toSpecified(Style::Position const& value) {
+export Css::BackgroundPosition toSpecified(Style::Position const& value) {
     return {toSpecified(value.x), toSpecified(value.y)};
 }
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
 
 export template <>
 struct ValueParser<BackgroundPosition> {
@@ -364,25 +370,23 @@ export struct SpecifiedBackground {
     }
 };
 
-namespace Style {
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
 
 export struct BackgroundLayer {
-    Opt<Image> image;
-    BackgroundAttachment attachment = Keywords::FIXED;
+    Opt<Css::Image> image;
+    Css::BackgroundAttachment attachment = Keywords::FIXED;
     Style::Position position = {Percent{0}, Percent{0}};
-    BackgroundRepeat repeat;
+    Css::BackgroundRepeat repeat;
 };
 
-} // namespace Style
-
-export BackgroundLayer toSpecified(Style::BackgroundLayer const& value) {
+export Css::BackgroundLayer toSpecified(Style::BackgroundLayer const& value) {
     return {value.image, value.attachment, toSpecified(value.position), value.repeat};
 }
 
-namespace Style {
-
 export struct Backgrounds {
-    Style::Color color = TRANSPARENT;
+    Style::Color color = Css::TRANSPARENT;
     Vec<Style::BackgroundLayer> layers = {};
 
     bool imageIsNone() const {
@@ -392,8 +396,8 @@ export struct Backgrounds {
                });
     }
 
-    operator SpecifiedBackground() const {
-        Vec<Vaev::BackgroundLayer> specifiedLayers;
+    operator Css::SpecifiedBackground() const {
+        Vec<Css::BackgroundLayer> specifiedLayers;
         for (auto const& layer : layers)
             specifiedLayers.pushBack(toSpecified(layer));
         return {
@@ -403,5 +407,5 @@ export struct Backgrounds {
     }
 };
 
-} // namespace Style
-} // namespace Vaev
+} // namespace Vaev::Style
+

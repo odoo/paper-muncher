@@ -319,7 +319,7 @@ export struct SvgShapeFragment : Fragment {
         if (not svgPaint.fill)
             return NONE;
 
-        if (auto const& [c] = resolve(svgPaint.fill, style().color)) {
+        if (auto const& [c] = Style::resolve(svgPaint.fill, style().color)) {
             auto color = c;
             color = color.withOpacity(svgPaint.fillOpacity);
             if (color.transparent())
@@ -340,7 +340,7 @@ export struct SvgShapeFragment : Fragment {
         if (not svgPaint.stroke)
             return NONE;
 
-        if (auto const& [c] = resolve(svgPaint.stroke, style().color)) {
+        if (auto const& [c] = Style::resolve(svgPaint.stroke, style().color)) {
             auto color = c;
             color = color.withOpacity(svgPaint.strokeOpacity);
             if (color.transparent())
@@ -568,7 +568,7 @@ export struct BoxMetrics {
 
 export struct BoxFragment : Fragment {
     BoxMetrics metrics;
-    Opt<UsedBorders> usedBorders;
+    Opt<Css::UsedBorders> usedBorders;
 
     BoxFragment(Box& box, BoxMetrics metrics = {}, Vec<Rc<Fragment>> children = {})
         : Fragment(box, std::move(children)), metrics(metrics) {}
@@ -625,15 +625,15 @@ export struct BoxFragment : Fragment {
         borders.styles[2] = bordersStyle.bottom.style;
         borders.styles[3] = bordersStyle.start.style;
 
-        borders.fills[0] = resolve(bordersStyle.top.color, style.color);
-        borders.fills[1] = resolve(bordersStyle.end.color, style.color);
-        borders.fills[2] = resolve(bordersStyle.bottom.color, style.color);
-        borders.fills[3] = resolve(bordersStyle.start.color, style.color);
+        borders.fills[0] = Style::resolve(bordersStyle.top.color, style.color);
+        borders.fills[1] = Style::resolve(bordersStyle.end.color, style.color);
+        borders.fills[2] = Style::resolve(bordersStyle.bottom.color, style.color);
+        borders.fills[3] = Style::resolve(bordersStyle.start.color, style.color);
 
         return Some(borders);
     }
 
-    static Opt<Gfx::Borders> buildBorders(BoxMetrics const& metrics, UsedBorders const& border) {
+    static Opt<Gfx::Borders> buildBorders(BoxMetrics const& metrics, Css::UsedBorders const& border) {
         if (metrics.borders.zero())
             return NONE;
 
@@ -661,7 +661,7 @@ export struct BoxFragment : Fragment {
     void paintDecoration(Gfx::Canvas& g) override {
         auto const& background = style().backgrounds;
 
-        auto color = resolve(background->color, style().color);
+        auto color = Style::resolve(background->color, style().color);
 
         Math::Rectf bound = borderBox().round().cast<f64>();
         auto radii = metrics.radii.cast<f64>();

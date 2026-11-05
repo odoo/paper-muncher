@@ -29,13 +29,13 @@ export struct OverflowXProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OverflowXProperty>(self(), try$(parseValue<Overflow>(c))));
+            return Ok(makeRc<OverflowXProperty>(self(), try$(parseValue<Css::Overflow>(c))));
         }
     };
 
-    Overflow _value;
+    Css::Overflow _value;
 
-    OverflowXProperty(Rc<Property::Registration> registration, Overflow value)
+    OverflowXProperty(Rc<Property::Registration> registration, Css::Overflow value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -43,7 +43,7 @@ export struct OverflowXProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -65,13 +65,13 @@ export struct OverflowYProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OverflowYProperty>(self(), try$(parseValue<Overflow>(c))));
+            return Ok(makeRc<OverflowYProperty>(self(), try$(parseValue<Css::Overflow>(c))));
         }
     };
 
-    Overflow _value;
+    Css::Overflow _value;
 
-    OverflowYProperty(Rc<Property::Registration> registration, Overflow value)
+    OverflowYProperty(Rc<Property::Registration> registration, Css::Overflow value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -79,7 +79,7 @@ export struct OverflowYProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -101,13 +101,13 @@ export struct OverflowBlockProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OverflowBlockProperty>(self(), try$(parseValue<Overflow>(c))));
+            return Ok(makeRc<OverflowBlockProperty>(self(), try$(parseValue<Css::Overflow>(c))));
         }
     };
 
-    Overflow _value;
+    Css::Overflow _value;
 
-    OverflowBlockProperty(Rc<Property::Registration> registration, Overflow value)
+    OverflowBlockProperty(Rc<Property::Registration> registration, Css::Overflow value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -115,7 +115,7 @@ export struct OverflowBlockProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -137,13 +137,13 @@ export struct OverflowInlineProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OverflowInlineProperty>(self(), try$(parseValue<Overflow>(c))));
+            return Ok(makeRc<OverflowInlineProperty>(self(), try$(parseValue<Css::Overflow>(c))));
         }
     };
 
-    Overflow _value;
+    Css::Overflow _value;
 
-    OverflowInlineProperty(Rc<Property::Registration> registration, Overflow value)
+    OverflowInlineProperty(Rc<Property::Registration> registration, Css::Overflow value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -151,7 +151,7 @@ export struct OverflowInlineProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -166,7 +166,7 @@ export struct OverflowProperty : Property {
             : Property::Registration(Properties::OVERFLOW, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OverflowProperty>(self(), Pair<Overflow>{Keywords::VISIBLE, Keywords::VISIBLE});
+            return makeRc<OverflowProperty>(self(), Pair<Css::Overflow>{Keywords::VISIBLE, Keywords::VISIBLE});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -178,23 +178,23 @@ export struct OverflowProperty : Property {
             if (c.ended())
                 return Error::invalidData("unexpected end of input");
 
-            Pair<Overflow> value{Keywords::VISIBLE, Keywords::VISIBLE};
-            value.v0 = try$(parseValue<Overflow>(c));
+            Pair<Css::Overflow> value{Keywords::VISIBLE, Keywords::VISIBLE};
+            value.v0 = try$(parseValue<Css::Overflow>(c));
 
             eatWhitespace(c);
             if (c.ended()) {
                 value.v1 = value.v0;
             } else {
-                value.v1 = try$(parseValue<Overflow>(c));
+                value.v1 = try$(parseValue<Css::Overflow>(c));
             }
 
             return Ok(makeRc<OverflowProperty>(self(), value));
         }
     };
 
-    Pair<Overflow> _value;
+    Pair<Css::Overflow> _value;
 
-    OverflowProperty(Rc<Property::Registration> registration, Pair<Overflow> value)
+    OverflowProperty(Rc<Property::Registration> registration, Pair<Css::Overflow> value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
