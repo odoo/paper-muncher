@@ -23,7 +23,7 @@ export struct TransformOriginProperty : Property {
             : Property::Registration(Properties::TRANSFORM_ORIGIN, PRESENTATION_ATTRIBUTE) {}
 
         // https://compat.spec.whatwg.org/#css-simple-aliases
-        Vec<Symbol> legacyAlias() const override {
+        SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"-webkit-transform-origin"_sym};
         }
 
@@ -99,7 +99,7 @@ export struct TransformProperty : Property {
             : Property::Registration(Properties::TRANSFORM, PRESENTATION_ATTRIBUTE) {}
 
         // https://compat.spec.whatwg.org/#css-simple-aliases
-        Vec<Symbol> legacyAlias() const override {
+        SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"-webkit-transform"_sym};
         }
 

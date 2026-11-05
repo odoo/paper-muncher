@@ -214,7 +214,7 @@ export struct RowGapProperty : Property {
         Registration() : Property::Registration(Properties::ROW_GAP) {}
 
         // https://drafts.csswg.org/css-align-3/#gap-legacy
-        Vec<Symbol> legacyAlias() const override {
+        SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"grid-row-gap"_sym};
         }
 
@@ -251,7 +251,7 @@ export struct ColumnGapProperty : Property {
         Registration() : Property::Registration(Properties::COLUMN_GAP) {}
 
         // https://drafts.csswg.org/css-align-3/#gap-legacy
-        Vec<Symbol> legacyAlias() const override {
+        SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"grid-column-gap"_sym};
         }
 
@@ -287,7 +287,7 @@ export struct GapProperty : Property {
         Registration() : Property::Registration(Properties::GAP) {}
 
         // https://drafts.csswg.org/css-align-3/#gap-legacy
-        Vec<Symbol> legacyAlias() const override {
+        SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"grid-gap"_sym};
         }
 
