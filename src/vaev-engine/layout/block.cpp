@@ -331,6 +331,16 @@ struct BlockFormatingContext : FormatingContext {
                 .margin = computeMargins(tree, c, childContainingBlock)
             };
 
+            // https://www.w3.org/TR/css-break-3/#break-margins
+            // When an unforced break occurs before or after a block-level box, any margins adjoining the break are
+            // truncated to zero. When a forced break occurs there, adjoining margins before the break are truncated,
+            // but margins after the break are preserved.
+            bool truncatesMarginTop =
+                i == startAt and
+                (input.truncatesFirstChildMargin or input.breakpointTraverser.truncatesFirstChildMargin());
+            if (truncatesMarginTop)
+                usedSpacings.margin.top = 0_au;
+
             Input childInput = {
                 .generateFragment = input.generateFragment,
                 .usedSpacings = usedSpacings,
@@ -342,6 +352,10 @@ struct BlockFormatingContext : FormatingContext {
                 .breakpointTraverser = input.breakpointTraverser.traverseInsideUsingIthChild(i),
                 .pendingVerticalSizes = input.pendingVerticalSizes,
             };
+
+            // NOTE: Without a border or padding in between, the margin of the first child adjoins the break too.
+            if (truncatesMarginTop and not childInput.breakpointTraverser.prevIteration)
+                childInput.truncatesFirstChildMargin = usedSpacings.borders.top == 0_au and usedSpacings.padding.top == 0_au;
 
             if (not c.isRemovedFromFlow()) {
                 // TODO: collapsed margins for sibling elements

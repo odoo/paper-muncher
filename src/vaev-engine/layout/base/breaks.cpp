@@ -245,6 +245,13 @@ export struct BreakpointTraverser {
             return NONE;
         return Some(currIteration->endIdx);
     }
+
+    // NOTE: The child this box resumes with starts right after an unforced break between two of its children.
+    bool truncatesFirstChildMargin() const {
+        return prevIteration and
+               prevIteration->advance == Breakpoint::Advance::WITHOUT_CHILDREN and
+               not oneOf(prevIteration->appeal, Breakpoint::Appeal::EMPTY, Breakpoint::Appeal::FORCED);
+    }
 };
 
 } // namespace Vaev::Layout

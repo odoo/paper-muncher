@@ -58,6 +58,9 @@ export struct Input {
     // To be used between table wrapper and table box
     Opt<Au> capmin = NONE;
 
+    // Whether the block-start margin of the first child adjoins an unforced break, through this box's own margin.
+    bool truncatesFirstChildMargin = false;
+
     // TODO: instead of stringing this around, maybe change this (and check method of fragmentainer) to a
     // "availableSpaceInFragmentainer" parameter
     Au pendingVerticalSizes = {};
