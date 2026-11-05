@@ -1207,6 +1207,20 @@ export struct TableFormatingContext : FormatingContext {
                     }
                 }
                 colWidth = distWOPToUse;
+            } else if (auto sumMaxWithPerc = iter(maxWithPerc) | Sum(); &distWPToUse == &minWithPerc and sumMaxWithPerc > sumWithPerc) {
+                // If the assignable table width is less than or equal to the max-content
+                // sizing-guess, the used widths of the columns must be the linear combination
+                // (with weights adding to 1) of the two consecutive sizing-guesses whose width
+                // sums bound the available width.
+                //
+                // FIXME: Only the min-content and max-content sizing-guesses are used here; the
+                //        min-content-percentage and min-content-specified guesses that sit between
+                //        them are skipped, which is only exact when no column has a percentage or
+                //        specified width.
+                auto ratio = (tableUsedWidth - sumWithPerc) / (sumMaxWithPerc - sumWithPerc);
+                for (usize j = 0; j < grid.size.x; ++j)
+                    distWPToUse[j] += (maxWithPerc[j] - minWithPerc[j]) * min(ratio, 1.0);
+                colWidth = distWPToUse;
             } else {
                 if (sumWithPerc == 0_au) {
                     for (auto& w : distWPToUse)

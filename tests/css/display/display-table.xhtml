@@ -3103,4 +3103,65 @@
     </rendering>
 </test>
 
+<test name="table: auto layout gives extra width to columns by max-content minus min-content" width="300px" height="100px">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                td {
+                    padding: 0;
+                    border: 0;
+                    font-size: 0;
+                    vertical-align: top;
+                }
+
+                table {
+                    border-spacing: 0;
+                    width: 300px;
+                }
+
+                .item {
+                    display: inline-block;
+                    width: 20px;
+                    height: 20px;
+                    background: black;
+                }
+
+                .fixed {
+                    width: 40px;
+                    height: 20px;
+                    background: blue;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <!-- min-content: 20px + 40px, max-content: 280px + 40px, so 240px of the 260px gap goes to the first column -->
+        <div style="position: absolute; top: 0px; left: 0px; width: 260px; height: 20px; background: black;"></div>
+        <div style="position: absolute; top: 20px; left: 0px; width: 20px; height: 20px; background: black;"></div>
+        <div style="position: absolute; top: 0px; left: 260px; width: 40px; height: 20px; background: blue;"></div>
+    </rendering>
+
+    <rendering>
+        <table>
+            <tr>
+                <td><div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div></td>
+                <td><div class="fixed"></div></td>
+            </tr>
+        </table>
+    </rendering>
+</test>
+
 </tests>
