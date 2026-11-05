@@ -34,6 +34,50 @@ void maybeProcessChildBreakpoint(Fragmentainer& fc, Breakpoint& currentBreakpoin
     );
 }
 
+// https://www.w3.org/TR/css-break-3/#break-propagation
+// Since breaks are only allowed between siblings, not between a box and its container (see Possible Break Points),
+// break values applied to children at the start/end of a parent are propagated to the parent, where they can take
+// effect. Specifically—except in layout modes which define more specific rules to account for reordering and parallel
+// layout (e.g. in flex layout [CSS-FLEXBOX-1] or grid layout [CSS-GRID-1])—a break-before value on a first in-flow
+// child box is propagated to its container. Likewise a break-after value on a last in-flow child box is propagated to
+// its container.
+// NOTE: The children of a box with inline content are inline-level, their break values don't apply.
+static bool _forcesBreakBefore(Box const& box) {
+    if (box.style->break_->before == BreakBetween::PAGE)
+        return true;
+
+    if (box.content.is<Rc<Gfx::Prose>>())
+        return false;
+
+    for (auto const& child : box.children()) {
+        if (not child.isRemovedFromFlow())
+            return _forcesBreakBefore(child);
+    }
+
+    return false;
+}
+
+static bool _forcesBreakAfter(Box const& box) {
+    if (box.style->break_->after == BreakBetween::PAGE)
+        return true;
+
+    if (box.content.is<Rc<Gfx::Prose>>())
+        return false;
+
+    for (auto const& child : iterRev(box.children())) {
+        if (not child.isRemovedFromFlow())
+            return _forcesBreakAfter(child);
+    }
+
+    return false;
+}
+
+static bool _containsInFlowBox(Slice<Box> boxes) {
+    return iter(boxes) | Any([](Box const& box) {
+               return not box.isRemovedFromFlow();
+           });
+}
+
 Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, FragmentBuilder& fragBuilder, Breakpoint& currentBreakpoint, Box& parentBox, usize childIndex, Vec2Au currentBoxSize, bool childCompletelyLaidOut, Input input) {
     if (not fc.isDiscoveryMode())
         return Ok(NONE);
@@ -69,7 +113,7 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
     }
 
     // FORCED BREAK
-    if (childBox.style->break_->after == BreakBetween::PAGE) {
+    if (_containsInFlowBox(next(parentBox.children(), childIndex + 1)) and _forcesBreakAfter(childBox)) {
         return Output{
             .fragment = fragBuilder.buildBoxFromInput(input, currentBoxSize),
             .size = currentBoxSize,
@@ -459,7 +503,7 @@ struct BlockFormatingContext : FormatingContext {
                     fragBuilder,
                     i,
                     Vec2Au{inlineSize, contentBlockSize()},
-                    c.style->break_->before == BreakBetween::PAGE,
+                    _containsInFlowBox(sub(box.children(), startAt, i)) and _forcesBreakBefore(c),
                     startAt,
                     input
                 )
