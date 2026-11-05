@@ -228,7 +228,7 @@ export struct BackgroundProperty : Property {
     BackgroundProperty(Rc<Property::Registration> registration, SpecifiedBackground value)
         : Property(registration), _value(std::move(value)) {}
 
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BackgroundColorProperty>(
                 registry.resolveRegistration(Properties::BACKGROUND_COLOR, {}).take(),
