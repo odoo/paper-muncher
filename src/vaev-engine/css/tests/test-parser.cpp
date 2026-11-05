@@ -58,6 +58,21 @@ test$("vaev-css-parse-rule-block") {
     return Ok();
 }
 
+test$("vaev-css-parse-declaration") {
+    auto parse = [](Str input) {
+        Lexer lex{input};
+        auto diags = Diag::Collector::ignore();
+        return consumeDeclaration(lex, diags);
+    };
+
+    assert$(parse("color: {a}").has());
+    assert$(not parse("color: {a} b").has());
+    assert$(parse("--x: {a} b").has());
+    assert$(not parse("1: a").has());
+
+    return Ok();
+}
+
 test$("vaev-css-parse-comments") {
     Lexer lex{"color /* x */ : red; margin: 1px /* x */ 2px; display: none /* x */"};
     auto diags = Diag::Collector::ignore();
