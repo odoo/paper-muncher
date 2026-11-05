@@ -180,7 +180,7 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
         context.contentTree.viewport = {
             .small = infos.pageContent.size(),
         };
-        context.contentTree.fc = {infos.pageContent.size()};
+        context.contentTree.fc = {infos.pageContent.size(), infos.pageContent.y};
         context.contentTree.fc.enterDiscovery();
 
         auto outDiscovery = Layout::layoutRoot(
