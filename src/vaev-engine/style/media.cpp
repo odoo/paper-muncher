@@ -144,7 +144,7 @@ export struct Media {
     /// https://drafts.csswg.org/mediaqueries/#height
     Au height;
 
-    /// 4.3. Device Width: the device-width feature
+    /// 4.3. Aspect-Ratio: the aspect-ratio feature
     /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
     Number aspectRatio;
 
@@ -302,7 +302,6 @@ export struct Media {
             .prefersColorScheme = prefs.colorScheme,
             .prefersReducedData = prefs.reducedData,
 
-            // NOTE: Deprecated Media Features
             .deviceWidth = deviceSize.width,
             .deviceHeight = deviceSize.height,
             .deviceAspectRatio = ratio(deviceSize),
@@ -315,10 +314,10 @@ export struct Media {
 // MARK: Media Features --------------------------------------------------------
 
 export enum struct RangePrefix {
-    MIN,   // min-<feature> : value
-    MAX,   // max-<feature> : value
-    EXACT, // <feature> : value
-    BOOL,  // <feature>
+    MIN,
+    MAX,
+    EXACT,
+    BOOL,
 
     _LEN,
 };
@@ -374,7 +373,6 @@ struct RangeFeature {
             result &= actual < upper.value;
         }
 
-        // both types are NONE, evaluate in boolean context
         if (not lower.type and not upper.type) {
             result = actual != T{};
         }
