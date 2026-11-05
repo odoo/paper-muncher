@@ -180,7 +180,7 @@ export struct PaddingInlineStartProperty : Property {
         : Property(registration), _value(value) {}
 
     // FIXME: Take writing mode into account
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<PaddingLeftProperty>(registry.resolveRegistration(Properties::PADDING_LEFT, {}).expect(), _value),
         };
@@ -214,7 +214,7 @@ export struct PaddingInlineEndProperty : Property {
         : Property(registration), _value(value) {}
 
     // FIXME: Take writing mode into account
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<PaddingRightProperty>(registry.resolveRegistration(Properties::PADDING_RIGHT, {}).expect(), _value),
         };
@@ -248,7 +248,7 @@ export struct PaddingProperty : Property {
     PaddingProperty(Rc<Property::Registration> registration, Math::Insets<Calc<PercentOr<Length>>> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<PaddingTopProperty>(registry.resolveRegistration(Properties::PADDING_TOP, {}).expect(), _value.top),
             makeRc<PaddingRightProperty>(registry.resolveRegistration(Properties::PADDING_RIGHT, {}).expect(), _value.end),

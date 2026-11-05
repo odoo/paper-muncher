@@ -158,7 +158,7 @@ export struct PageBreakAfterProperty : Property {
     PageBreakAfterProperty(Rc<Property::Registration> registration, BreakBetween value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BreakAfterProperty>(registry.resolveRegistration(Properties::BREAK_AFTER, {}).expect(), _value),
         };
@@ -192,7 +192,7 @@ export struct PageBreakBeforeProperty : Property {
     PageBreakBeforeProperty(Rc<Property::Registration> registration, BreakBetween value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BreakBeforeProperty>(registry.resolveRegistration(Properties::BREAK_BEFORE, {}).expect(), _value),
         };
@@ -230,7 +230,7 @@ export struct PageBreakInsideProperty : Property {
     PageBreakInsideProperty(Rc<Property::Registration> registration, BreakInside value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<BreakInsideProperty>(registry.resolveRegistration(Properties::BREAK_INSIDE, {}).expect(), _value),
         };

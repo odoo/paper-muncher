@@ -191,7 +191,7 @@ export struct MarginProperty : Property {
     MarginProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.top),
             makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).expect(), _value.bottom),
@@ -231,7 +231,7 @@ export struct MarginInlineStartProperty : Property {
         : Property(registration), _value(value) {}
 
     // FIXME: Take writing mode into account
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<MarginLeftProperty>(registry.resolveRegistration(Properties::MARGIN_LEFT, {}).expect(), _value),
         };
@@ -268,7 +268,7 @@ export struct MarginInlineEndProperty : Property {
         : Property(registration), _value(value) {}
 
     // FIXME: Take writing mode into account
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<MarginRightProperty>(registry.resolveRegistration(Properties::MARGIN_RIGHT, {}).expect(), _value),
         };
@@ -305,7 +305,7 @@ export struct MarginInlineProperty : Property {
         : Property(registration), _value(value) {}
 
     // FIXME: Take writing mode into account
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<MarginLeftProperty>(registry.resolveRegistration(Properties::MARGIN_LEFT, {}).expect(), _value.start),
             makeRc<MarginRightProperty>(registry.resolveRegistration(Properties::MARGIN_RIGHT, {}).expect(), _value.end),
@@ -343,7 +343,7 @@ export struct MarginBlockStartProperty : Property {
         : Property(registration), _value(value) {}
 
     // FIXME: Take writing mode into account
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value),
         };
@@ -380,7 +380,7 @@ export struct MarginBlockEndProperty : Property {
         : Property(registration), _value(value) {}
 
     // FIXME: Take writing mode into account
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).expect(), _value),
         };
@@ -417,7 +417,7 @@ export struct MarginBlockProperty : Property {
         : Property(registration), _value(value) {}
 
     // FIXME: Take writing mode into account
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
             makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.top),
             makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).expect(), _value.bottom),

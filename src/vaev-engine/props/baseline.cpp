@@ -262,8 +262,8 @@ export struct VerticalAlignProperty : Property {
     VerticalAlignProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-        Vec<Rc<Property>> shorthands = {};
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+        Longhands shorthands = {};
 
         if (auto const& [baselineSource] = _value.baselineSource) {
             shorthands.pushBack(

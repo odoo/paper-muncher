@@ -71,6 +71,10 @@ export struct ComputationContext :
     }
 };
 
+export struct Property;
+
+export using Longhands = SmallVec<Rc<Property>, 12>;
+
 export struct Property : Meta::NoCopy {
     enum struct Options : u8 {
         // https://drafts.csswg.org/css-cascade-5/#inherited-value
@@ -200,7 +204,7 @@ export struct Property : Meta::NoCopy {
 
     virtual ~Property() = default;
 
-    virtual Vec<Rc<Property>> expand(RegisteredPropertySet&, [[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child) const {
+    virtual Longhands expand(RegisteredPropertySet&, [[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child) const {
         if (isBogusProperty())
             logFatal("trying to expand {:#} which is a bogus property", registration->name);
 
@@ -326,7 +330,7 @@ struct ToggleProperty : Property {
     ToggleProperty(Rc<Property::Registration> registration, Vec<Rc<Property>> value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
         // If toggle() is used on a shorthand property, it sets each of its
         // longhands to a toggle() value with arguments corresponding to what
         // the longhand would have received had each of the original toggle()
@@ -340,7 +344,7 @@ struct ToggleProperty : Property {
                Select([](Vec<Rc<Property>>& v) {
                    return makeRc<ToggleProperty>(v[0]->registration, std::move(v));
                }) |
-               Collect<Vec<Rc<Property>>>();
+               Collect<Longhands>();
     }
 
     void apply(ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
@@ -458,7 +462,7 @@ struct DeferredProperty : Property {
         return prop;
     }
 
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
         if (not isShorthandProperty())
             logFatal("expand called on non shorthand property {:#}", registration->name);
 
@@ -497,7 +501,7 @@ struct DefaultedProperty : Property {
     DefaultedProperty(Rc<Registration> registration, Default value)
         : Property(registration), _value(value) {}
 
-    Vec<Rc<Property>> expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
+    Longhands expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
         if (_value == Default::INITIAL) {
             // The initial CSS-wide keyword represents the value
             // defined as the property’s initial value.
