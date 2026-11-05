@@ -183,8 +183,11 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
             w->changeArea(area.withViewport({decorationWidth, headerHeight}));
             w->changePrefs(prefs);
             w->changeInitialCounterSet(pageCounters);
+            auto origin = infos.pageDecoration.topStart();
             g.push();
-            g.transform(Math::Trans2f::translate(infos.pageDecoration.topStart().cast<f64>()));
+            // Painted over the page content: keep the decoration's background out of it.
+            g.clip(Vaev::RectAu{origin, {decorationWidth, headerHeight}}.cast<f64>());
+            g.transform(Math::Trans2f::translate(origin.cast<f64>()));
             w->paint(g);
             g.pop();
         }
@@ -193,8 +196,10 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
             w->changeArea(area.withViewport({decorationWidth, footerHeight}));
             w->changePrefs(prefs);
             w->changeInitialCounterSet(pageCounters);
+            auto origin = infos.pageDecoration.bottomStart() - Math::Vec2Au{0_au, footerHeight};
             g.push();
-            g.transform(Math::Trans2f::translate((infos.pageDecoration.bottomStart() - Math::Vec2Au{0_au, footerHeight}).cast<f64>()));
+            g.clip(Vaev::RectAu{origin, {decorationWidth, footerHeight}}.cast<f64>());
+            g.transform(Math::Trans2f::translate(origin.cast<f64>()));
             w->paint(g);
             g.pop();
         }
