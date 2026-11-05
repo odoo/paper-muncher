@@ -159,8 +159,6 @@ struct Box : Meta::NoCopy {
         return style->clip->has() or
                style->transform->has() or
                style->opacity != 1.0 or
-               style->overflows.block != Overflow::VISIBLE or
-               style->overflows.inline_ != Overflow::VISIBLE or
                isSvgRootBox() or
                isSvgForeignObjectBox();
     }
