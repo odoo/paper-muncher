@@ -119,52 +119,54 @@ export struct TransformProperty : Property {
             return makeRc<TransformProperty>(self(), c.transform->transform);
         }
 
-        static void _expandSvgRotate(Vec<Css::Sst>& sst) {
+        // https://www.w3.org/TR/SVG11/coords.html#TransformAttribute
+        // rotate(<rotate-angle> <cx> <cy>) is equivalent to
+        // translate(<cx>, <cy>) rotate(<rotate-angle>) translate(-<cx>, -<cy>).
+        static Opt<Css::Content> _expandSvgRotate(Css::Sst const& c) {
+            if (c.prefix != Css::Token::function("rotate("))
+                return NONE;
+
+            Cursor<Css::Sst> content = c.content;
+            eatWhitespace(content);
+
+            auto angle = parseValue<Number>(content);
+            if (not angle)
+                return NONE;
+
+            skipOmmitableComma(content);
+
+            auto cx = parseValue<Number>(content);
+            if (not cx)
+                return NONE;
+
+            skipOmmitableComma(content);
+
+            auto cy = parseValue<Number>(content);
+            if (not cy)
+                return NONE;
+
+            eatWhitespace(content);
+            if (not content.ended())
+                return NONE;
+
+            auto expanded = Io::format(
+                "translate({:.17}, {:.17}) rotate({:.17}) translate({:.17}, {:.17})",
+                cx.expect(), cy.expect(), angle.expect(), -cx.expect(), -cy.expect()
+            );
+            Css::Lexer lex{expanded};
+            auto [res, _] = Css::consumeDeclarationValue(lex, Diag::Collector::ignore());
+            return Some(std::move(res));
+        }
+
+        static void _expandSvgRotate(Css::Content& sst) {
+            Css::Content res;
             for (auto& c : sst) {
-                if (c.prefix == Css::Token::function("rotate(")) {
-                    Cursor<Css::Sst> content = c.content;
-
-                    eatWhitespace(content);
-
-                    auto maybeAngle = parseValue<Number>(content);
-                    if (not maybeAngle)
-                        return;
-
-                    skipOmmitableComma(content);
-
-                    auto maybeCx = parseValue<Number>(content);
-                    if (not maybeCx)
-                        return;
-
-                    skipOmmitableComma(content);
-
-                    auto maybeCy = parseValue<Number>(content);
-                    if (not maybeCy)
-                        return;
-
-                    eatWhitespace(content);
-
-                    if (not content.ended())
-                        return;
-
-                    auto transform = Math::Trans2f::identity()
-                                         .translated({maybeCx.expect(), maybeCy.expect()})
-                                         .rotated(maybeAngle.expect() * Math::PI / 180.0)
-                                         .translated({-maybeCx.expect(), -maybeCy.expect()});
-
-                    auto generatedMatrix = Io::format(
-                        "matrix({}, {}, {}, {}, {}, {})",
-                        transform.xx, transform.xy,
-                        transform.yx, transform.yy,
-                        transform.ox, transform.oy
-                    );
-
-                    auto lexer = Css::Lexer{generatedMatrix};
-
-                    auto diags = Diag::Collector::ignore();
-                    c = Css::consumeFunc(lexer, diags);
-                }
+                if (auto expanded = _expandSvgRotate(c))
+                    res.insertMany(res.len(), *expanded);
+                else
+                    res.pushBack(c);
             }
+            sst = std::move(res);
         }
 
         static void _fixTransformNumberToDimensions(Vec<Css::Sst>& sst) {
