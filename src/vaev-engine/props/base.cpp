@@ -159,7 +159,7 @@ export struct Property : Meta::NoCopy {
         }
 
         // https://drafts.csswg.org/css-cascade-4/#legacy-name-alias
-        virtual Vec<Symbol> legacyAlias() const {
+        virtual SmallVec<Symbol, 1> legacyNameAlias() const {
             return {};
         }
 
@@ -601,7 +601,7 @@ struct BogusProperty : Property {
 // MARK: Property Registry -----------------------------------------------------
 
 export struct RegisteredPropertySet {
-    Map<Symbol, Symbol> _legacyAlias;
+    Map<Symbol, Symbol> _legacyNameAlias;
     Map<Symbol, Rc<Property::Registration>> _registrations;
     Map<Symbol, Rc<Property::Registration>> _presentationAttributes;
 
@@ -635,8 +635,8 @@ export struct RegisteredPropertySet {
         if (registrationFlags.has(Property::PRESENTATION_ATTRIBUTE))
             _presentationAttributes.put(propertyName, registration);
 
-        for (auto legacyAlias : registration->legacyAlias())
-            _legacyAlias.put(legacyAlias, registration->name);
+        for (auto legacyNameAlias : registration->legacyNameAlias())
+            _legacyNameAlias.put(legacyNameAlias, registration->name);
 
         if (registrationFlags.has(Property::INHERITED) and
             not registrationFlags.has(Property::BULK_INHERITED))
@@ -661,7 +661,7 @@ export struct RegisteredPropertySet {
 
     Opt<Rc<Property::Registration>> resolveRegistration(Symbol const& unresolvedPropertyName, Flags<Options> options) {
         auto const& propertyName =
-            _legacyAlias
+            _legacyNameAlias
                 .lookup(unresolvedPropertyName)
                 .unwrapOr(unresolvedPropertyName);
 

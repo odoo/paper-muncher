@@ -130,7 +130,7 @@ export struct FontWidthProperty : Property {
             : Property::Registration(Properties::FONT_WIDTH, {INHERITED, BULK_INHERITED}) {}
 
         // https://drafts.csswg.org/css-fonts/#font-stretch-prop
-        Vec<Symbol> legacyAlias() const override {
+        SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"font-stretch"_sym};
         }
 
