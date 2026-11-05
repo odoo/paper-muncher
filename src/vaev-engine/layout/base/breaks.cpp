@@ -16,10 +16,12 @@ namespace Vaev::Layout {
 // https://www.w3.org/TR/css-break-3/#fragmentation-context
 export struct Fragmentainer {
     Vec2Au _size;
+    Au _blockStart = 0_au; //< Block position of the fragmentainer's start, in the same space as the layout positions
     bool _isDiscoveryMode = false; //< Are we looking for suitable breakpoints?
     usize _monolithicCount = 0;    //< How deep we are in a monolithic box
 
-    Fragmentainer(Vec2Au currSize = Vec2Au::MAX) : _size(currSize) {}
+    Fragmentainer(Vec2Au currSize = Vec2Au::MAX, Au blockStart = 0_au)
+        : _size(currSize), _blockStart(blockStart) {}
 
     Vec2Au size() const { return _size; }
 
@@ -53,11 +55,11 @@ export struct Fragmentainer {
 
     bool acceptsFit(Au verticalPosition, Au verticalSize, Au pendingVerticalSizes) const {
         // TODO: consider apply this check only when in discovery mode
-        return verticalPosition + verticalSize + pendingVerticalSizes <= _size.y;
+        return verticalPosition - _blockStart + verticalSize + pendingVerticalSizes <= _size.y;
     }
 
     Au leftVerticalSpace(Au verticalPosition, Au pendingVerticalSizes) const {
-        return _size.y - verticalPosition - pendingVerticalSizes;
+        return _size.y - (verticalPosition - _blockStart) - pendingVerticalSizes;
     }
 };
 
