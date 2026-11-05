@@ -7,15 +7,15 @@ using namespace Karm;
 
 namespace Vaev::Css {
 
-export void eatWhitespace(Cursor<Css::Sst>& c) {
-    while (not c.ended() and c.peek() == Css::Token::WHITESPACE)
+export void eatWhitespace(Cursor<Sst>& c) {
+    while (not c.ended() and c.peek() == Token::WHITESPACE)
         c.next();
 }
 
 // https://www.w3.org/TR/css-values-4/#comb-comma
-export bool skipOmmitableComma(Cursor<Css::Sst>& c) {
+export bool skipOmmitableComma(Cursor<Sst>& c) {
     eatWhitespace(c);
-    bool res = c.skip(Css::Token::COMMA);
+    bool res = c.skip(Token::COMMA);
     eatWhitespace(c);
     return res;
 }
@@ -29,16 +29,16 @@ concept ValueParseable = requires() {
 };
 
 export template <typename T>
-Res<T> parseValue(Cursor<Css::Sst>& c) {
+Res<T> parseValue(Cursor<Sst>& c) {
     return ValueParser<T>::parse(c);
 }
 
 export template <typename T>
 Res<T> parseValue(Str str) {
-    Css::Lexer lex{str};
+    Lexer lex{str};
     auto diags = Diag::Collector::ignore();
-    auto [sst, _] = Css::consumeDeclarationValue(lex, diags);
-    Cursor<Css::Sst> content{sst};
+    auto [sst, _] = consumeDeclarationValue(lex, diags);
+    Cursor<Sst> content{sst};
     return ValueParser<T>::parse(content);
 }
 

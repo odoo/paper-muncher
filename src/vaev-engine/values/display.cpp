@@ -325,108 +325,108 @@ export struct Display {
 
 export template <>
 struct ValueParser<Display> {
-    static Res<Display> _parseLegacyDisplay(Cursor<Css::Sst>& c) {
+    static Res<Display> _parseLegacyDisplay(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("inline-block"))) {
+        if (c.skip(Token::ident("inline-block"))) {
             return Ok(Display{Display::FLOW_ROOT, Display::INLINE});
-        } else if (c.skip(Css::Token::ident("inline-table"))) {
+        } else if (c.skip(Token::ident("inline-table"))) {
             return Ok(Display{Display::TABLE, Display::INLINE});
-        } else if (c.skip(Css::Token::ident("inline-flex"))) {
+        } else if (c.skip(Token::ident("inline-flex"))) {
             return Ok(Display{Display::FLEX, Display::INLINE});
-        } else if (c.skip(Css::Token::ident("inline-grid"))) {
+        } else if (c.skip(Token::ident("inline-grid"))) {
             return Ok(Display{Display::GRID, Display::INLINE});
         }
 
         return Error::invalidData("expected legacy display value");
     }
 
-    static Res<Display::Outside> _parseOutsideDisplay(Cursor<Css::Sst>& c) {
+    static Res<Display::Outside> _parseOutsideDisplay(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("block"))) {
+        if (c.skip(Token::ident("block"))) {
             return Ok(Display::BLOCK);
-        } else if (c.skip(Css::Token::ident("inline"))) {
+        } else if (c.skip(Token::ident("inline"))) {
             return Ok(Display::INLINE);
-        } else if (c.skip(Css::Token::ident("run-in"))) {
+        } else if (c.skip(Token::ident("run-in"))) {
             return Ok(Display::RUN_IN);
         }
 
         return Error::invalidData("expected outside value");
     }
 
-    static Res<Display::Inside> _parseInsideDisplay(Cursor<Css::Sst>& c) {
+    static Res<Display::Inside> _parseInsideDisplay(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("flow"))) {
+        if (c.skip(Token::ident("flow"))) {
             return Ok(Display::FLOW);
-        } else if (c.skip(Css::Token::ident("flow-root"))) {
+        } else if (c.skip(Token::ident("flow-root"))) {
             return Ok(Display::FLOW_ROOT);
-        } else if (c.skip(Css::Token::ident("flex"))) {
+        } else if (c.skip(Token::ident("flex"))) {
             return Ok(Display::FLEX);
-        } else if (c.skip(Css::Token::ident("grid"))) {
+        } else if (c.skip(Token::ident("grid"))) {
             return Ok(Display::GRID);
-        } else if (c.skip(Css::Token::ident("ruby"))) {
+        } else if (c.skip(Token::ident("ruby"))) {
             return Ok(Display::RUBY);
-        } else if (c.skip(Css::Token::ident("table"))) {
+        } else if (c.skip(Token::ident("table"))) {
             return Ok(Display::TABLE);
-        } else if (c.skip(Css::Token::ident("math"))) {
+        } else if (c.skip(Token::ident("math"))) {
             return Ok(Display::MATH);
         }
 
         return Error::invalidData("expected inside value");
     }
 
-    static Res<Display> _parseInternalDisplay(Cursor<Css::Sst>& c) {
+    static Res<Display> _parseInternalDisplay(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("table-row-group"))) {
+        if (c.skip(Token::ident("table-row-group"))) {
             return Ok(Display::TABLE_ROW_GROUP);
-        } else if (c.skip(Css::Token::ident("table-header-group"))) {
+        } else if (c.skip(Token::ident("table-header-group"))) {
             return Ok(Display::TABLE_HEADER_GROUP);
-        } else if (c.skip(Css::Token::ident("table-footer-group"))) {
+        } else if (c.skip(Token::ident("table-footer-group"))) {
             return Ok(Display::TABLE_FOOTER_GROUP);
-        } else if (c.skip(Css::Token::ident("table-row"))) {
+        } else if (c.skip(Token::ident("table-row"))) {
             return Ok(Display::TABLE_ROW);
-        } else if (c.skip(Css::Token::ident("table-cell"))) {
+        } else if (c.skip(Token::ident("table-cell"))) {
             return Ok(Display::TABLE_CELL);
-        } else if (c.skip(Css::Token::ident("table-column-group"))) {
+        } else if (c.skip(Token::ident("table-column-group"))) {
             return Ok(Display::TABLE_COLUMN_GROUP);
-        } else if (c.skip(Css::Token::ident("table-column"))) {
+        } else if (c.skip(Token::ident("table-column"))) {
             return Ok(Display::TABLE_COLUMN);
-        } else if (c.skip(Css::Token::ident("table-caption"))) {
+        } else if (c.skip(Token::ident("table-caption"))) {
             return Ok(Display::TABLE_CAPTION);
-        } else if (c.skip(Css::Token::ident("ruby-base"))) {
+        } else if (c.skip(Token::ident("ruby-base"))) {
             return Ok(Display::RUBY_BASE);
-        } else if (c.skip(Css::Token::ident("ruby-text"))) {
+        } else if (c.skip(Token::ident("ruby-text"))) {
             return Ok(Display::RUBY_TEXT);
-        } else if (c.skip(Css::Token::ident("ruby-base-container"))) {
+        } else if (c.skip(Token::ident("ruby-base-container"))) {
             return Ok(Display::RUBY_BASE_CONTAINER);
-        } else if (c.skip(Css::Token::ident("ruby-text-container"))) {
+        } else if (c.skip(Token::ident("ruby-text-container"))) {
             return Ok(Display::RUBY_TEXT_CONTAINER);
         }
 
         return Error::invalidData("expected internal value");
     }
 
-    static Res<Display> _parseBoxDisplay(Cursor<Css::Sst>& c) {
+    static Res<Display> _parseBoxDisplay(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("contents"))) {
+        if (c.skip(Token::ident("contents"))) {
             return Ok(Display::CONTENTS);
-        } else if (c.skip(Css::Token::ident("none"))) {
+        } else if (c.skip(Token::ident("none"))) {
             return Ok(Display::NONE);
         }
 
         return Error::invalidData("expected box value");
     }
 
-    static Res<Display> parse(Cursor<Css::Sst>& c) {
+    static Res<Display> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -441,7 +441,7 @@ struct ValueParser<Display> {
 
         auto inside = _parseInsideDisplay(c);
         auto outside = _parseOutsideDisplay(c);
-        auto item = c.skip(Css::Token::ident("list-item"))
+        auto item = c.skip(Token::ident("list-item"))
                         ? Display::Item::YES
                         : Display::Item::NO;
 

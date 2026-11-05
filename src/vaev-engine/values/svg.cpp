@@ -99,11 +99,11 @@ enum struct SvgShapeElement {
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export template <>
 struct ValueParser<SvgPaint> {
-    static Res<SvgPaint> parse(Cursor<Css::Sst>& c) {
+    static Res<SvgPaint> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("none")))
+        if (c.skip(Token::ident("none")))
             return Ok(NONE);
 
         return Ok(Some(try$(parseValue<Color>(c))));

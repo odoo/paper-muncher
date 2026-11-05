@@ -41,14 +41,14 @@ export struct CounterSymbolsFunc {
 
 export template <>
 struct ValueParser<CounterSymbolsFunc> {
-    static Res<CounterSymbolsFunc> parse(Cursor<Css::Sst>& c) {
+    static Res<CounterSymbolsFunc> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.peek() != Css::Token::function("symbols("))
+        if (c.peek() != Token::function("symbols("))
             return Error::invalidData("expected counter(");
 
-        Cursor<Css::Sst> content = c->content;
+        Cursor<Sst> content = c->content;
         auto type = parseValue<CounterSymbolsType>(content).ok();
 
         auto symbols = try$(parseValue<Vec<CounterSymbol>>(content));
@@ -124,16 +124,16 @@ export struct CounterFunc {
 
 export template <>
 struct ValueParser<CounterFunc> {
-    static Res<CounterFunc> parse(Cursor<Css::Sst>& c) {
+    static Res<CounterFunc> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix != Css::Token::function("counter("))
+        if (c->prefix != Token::function("counter("))
             return Error::invalidData("expected counter(");
 
-        Cursor<Css::Sst> content = c->content;
+        Cursor<Sst> content = c->content;
         auto name = try$(parseValue<CustomIdent>(content));
-        content.skip(Css::Token::COMMA);
+        content.skip(Token::COMMA);
         auto maybeSymbols = parseValue<CounterStyle>(content).ok();
 
         c.next();
@@ -154,18 +154,18 @@ export struct CountersFunc {
 
 export template <>
 struct ValueParser<CountersFunc> {
-    static Res<CountersFunc> parse(Cursor<Css::Sst>& c) {
+    static Res<CountersFunc> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.peek() != Css::Token::function("counters("))
+        if (c.peek() != Token::function("counters("))
             return Error::invalidData("expected counter(");
 
-        Cursor<Css::Sst> content = c->content;
+        Cursor<Sst> content = c->content;
         auto name = try$(parseValue<CustomIdent>(content));
-        c.skip(Css::Token::COMMA);
+        c.skip(Token::COMMA);
         auto join = try$(parseValue<String>(content));
-        c.skip(Css::Token::COMMA);
+        c.skip(Token::COMMA);
         auto maybeSymbols = parseValue<CounterStyle>(content).ok();
 
         c.next();
@@ -213,15 +213,15 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Style::Counters::Reset> {
-    static Res<Style::Counters::Reset> parse(Cursor<Css::Sst>& c) {
+    static Res<Style::Counters::Reset> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
         bool reversed = false;
         CustomIdent name;
 
-        if (c.peek() == Css::Token::function("reversed(")) {
-            Cursor<Css::Sst> content = c->content;
+        if (c.peek() == Token::function("reversed(")) {
+            Cursor<Sst> content = c->content;
             name = try$(parseValue<CustomIdent>(content));
             reversed = true;
             c.next();
@@ -236,7 +236,7 @@ struct ValueParser<Style::Counters::Reset> {
 
 export template <>
 struct ValueParser<Style::Counters::Increment> {
-    static Res<Style::Counters::Increment> parse(Cursor<Css::Sst>& c) {
+    static Res<Style::Counters::Increment> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
         CustomIdent name = try$(parseValue<CustomIdent>(c));

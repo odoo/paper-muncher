@@ -78,7 +78,7 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<PureAbsoluteLength> {
-    static Res<PureAbsoluteLength> parse(Cursor<Css::Sst>& c) {
+    static Res<PureAbsoluteLength> parse(Cursor<Sst>& c) {
         auto save = c;
         auto value = try$(parseUnitValue(c, Some(NumericBaseType::LENGTH)));
         if (not value.isAbsolute()) {

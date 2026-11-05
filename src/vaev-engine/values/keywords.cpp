@@ -46,11 +46,11 @@ namespace Vaev::Css {
 
 export template <StrLit K>
 struct ValueParser<Keyword<K>> {
-    static Res<Keyword<K>> parse(Cursor<Css::Sst>& c) {
+    static Res<Keyword<K>> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->token == Css::Token::ident(K)) {
+        if (c->token == Token::ident(K)) {
             c.next();
             return Ok(Keyword<K>{});
         }

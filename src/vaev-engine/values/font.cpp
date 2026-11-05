@@ -94,27 +94,27 @@ export struct FontWidth {
 
 export template <>
 struct ValueParser<FontWidth> {
-    static Res<FontWidth> parse(Cursor<Css::Sst>& c) {
+    static Res<FontWidth> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("normal"))) {
+        if (c.skip(Token::ident("normal"))) {
             return Ok(FontWidth::NORMAL);
-        } else if (c.skip(Css::Token::ident("condensed"))) {
+        } else if (c.skip(Token::ident("condensed"))) {
             return Ok(FontWidth::CONDENSED);
-        } else if (c.skip(Css::Token::ident("expanded"))) {
+        } else if (c.skip(Token::ident("expanded"))) {
             return Ok(FontWidth::EXPANDED);
-        } else if (c.skip(Css::Token::ident("ultra-condensed"))) {
+        } else if (c.skip(Token::ident("ultra-condensed"))) {
             return Ok(FontWidth::ULTRA_CONDENSED);
-        } else if (c.skip(Css::Token::ident("extra-condensed"))) {
+        } else if (c.skip(Token::ident("extra-condensed"))) {
             return Ok(FontWidth::EXTRA_CONDENSED);
-        } else if (c.skip(Css::Token::ident("semi-condensed"))) {
+        } else if (c.skip(Token::ident("semi-condensed"))) {
             return Ok(FontWidth::SEMI_CONDENSED);
-        } else if (c.skip(Css::Token::ident("semi-expanded"))) {
+        } else if (c.skip(Token::ident("semi-expanded"))) {
             return Ok(FontWidth::SEMI_EXPANDED);
-        } else if (c.skip(Css::Token::ident("extra-expanded"))) {
+        } else if (c.skip(Token::ident("extra-expanded"))) {
             return Ok(FontWidth::EXTRA_EXPANDED);
-        } else if (c.skip(Css::Token::ident("ultra-expanded"))) {
+        } else if (c.skip(Token::ident("ultra-expanded"))) {
             return Ok(FontWidth::ULTRA_EXPANDED);
         }
 
@@ -161,15 +161,15 @@ export struct FontStyle {
 
 export template <>
 struct ValueParser<FontStyle> {
-    static Res<FontStyle> parse(Cursor<Css::Sst>& c) {
+    static Res<FontStyle> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("normal"))) {
+        if (c.skip(Token::ident("normal"))) {
             return Ok(FontStyle::NORMAL);
-        } else if (c.skip(Css::Token::ident("italic"))) {
+        } else if (c.skip(Token::ident("italic"))) {
             return Ok(FontStyle::ITALIC);
-        } else if (c.skip(Css::Token::ident("oblique"))) {
+        } else if (c.skip(Token::ident("oblique"))) {
             auto angle = parseValue<PureAngle>(c);
             if (angle)
                 return Ok(angle.expect());
@@ -253,13 +253,13 @@ export struct FontWeight : _FontWeight {
 
 export template <>
 struct ValueParser<Gfx::FontWeight> {
-    static Res<Gfx::FontWeight> parse(Cursor<Css::Sst>& c) {
+    static Res<Gfx::FontWeight> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("normal"))) {
+        if (c.skip(Token::ident("normal"))) {
             return Ok(Gfx::FontWeight::REGULAR);
-        } else if (c.skip(Css::Token::ident("bold"))) {
+        } else if (c.skip(Token::ident("bold"))) {
             return Ok(Gfx::FontWeight::BOLD);
         } else {
             auto weight = try$(parseValue<Integer>(c));
@@ -280,13 +280,13 @@ struct ValueSerializer<Gfx::FontWeight> {
 
 export template <>
 struct ValueParser<FontWeight> {
-    static Res<FontWeight> parse(Cursor<Css::Sst>& c) {
+    static Res<FontWeight> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("bolder"))) {
+        if (c.skip(Token::ident("bolder"))) {
             return Ok(RelativeFontWeight::BOLDER);
-        } else if (c.skip(Css::Token::ident("lighter"))) {
+        } else if (c.skip(Token::ident("lighter"))) {
             return Ok(RelativeFontWeight::LIGHTER);
         } else {
             return Ok(try$(parseValue<Gfx::FontWeight>(c)));
@@ -472,18 +472,18 @@ export struct FontSource {
 
 export template <>
 struct ValueParser<FontFamily> {
-    static Res<FontFamily> parse(Cursor<Css::Sst>& c) {
+    static Res<FontFamily> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.peek() == Css::Token::STRING)
+        if (c.peek() == Token::STRING)
             return Ok<FontFamily>(Symbol::from(try$(parseValue<String>(c))));
 
         StringBuilder familyStrBuilder;
         usize amountOfIdents = 0;
 
-        if (c.peek() == Css::Token::IDENT) {
-            while (not c.ended() and c.peek() == Css::Token::IDENT) {
+        if (c.peek() == Token::IDENT) {
+            while (not c.ended() and c.peek() == Token::IDENT) {
                 if (++amountOfIdents > 1)
                     familyStrBuilder.append(' ');
                 familyStrBuilder.append(c.next().token.data);

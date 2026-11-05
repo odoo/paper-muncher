@@ -53,19 +53,19 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<LineWidth> {
-    static Res<LineWidth> parse(Cursor<Css::Sst>& c) {
+    static Res<LineWidth> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.peek() == Css::Token::ident("thin")) {
+        if (c.peek() == Token::ident("thin")) {
             c.next();
             return Ok(Keywords::THIN);
         }
-        if (c.peek() == Css::Token::ident("medium")) {
+        if (c.peek() == Token::ident("medium")) {
             c.next();
             return Ok(Keywords::MEDIUM);
         }
-        if (c.peek() == Css::Token::ident("thick")) {
+        if (c.peek() == Token::ident("thick")) {
             c.next();
             return Ok(Keywords::THICK);
         }

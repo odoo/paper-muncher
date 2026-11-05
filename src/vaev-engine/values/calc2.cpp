@@ -1442,7 +1442,7 @@ struct ValueParser<Calc> {
 
 template <Opt<NumericBaseType> TYPE, AcceptsPercent WITH_PERCENT>
 struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
-    static Res<TypedCalc<TYPE, WITH_PERCENT>> parse(Cursor<Css::Sst>& c) {
+    static Res<TypedCalc<TYPE, WITH_PERCENT>> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -1451,7 +1451,7 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
             return Ok(TypedCalc<TYPE, WITH_PERCENT>{UNCHECKED, numeric.take().unitValue()});
         }
 
-        if (c.peek() == Css::Sst::FUNC) {
+        if (c.peek() == Sst::FUNC) {
             auto save = c;
             auto res = _parseTypedMathFunction(c);
 
@@ -1464,7 +1464,7 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
     }
 
     // https://drafts.csswg.org/css-values-4/#calc-syntax
-    static Res<TypedCalc<TYPE, WITH_PERCENT>> _parseTypedMathFunction(Cursor<Css::Sst>& c) {
+    static Res<TypedCalc<TYPE, WITH_PERCENT>> _parseTypedMathFunction(Cursor<Sst>& c) {
         auto calc = try$(parseMathFunction(c));
 
         auto type = determineType(calc, WITH_PERCENT == AcceptsPercent::YES ? TYPE : NONE);
@@ -1478,13 +1478,13 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
     }
 
     struct ParamParser {
-        Cursor<Css::Sst> _c;
+        Cursor<Sst> _c;
         bool _isFirst = true;
 
         bool _atParamEnd() {
             auto c = _c;
             eatWhitespace(c);
-            return c.ended() or c.peek() == Css::Token::COMMA;
+            return c.ended() or c.peek() == Token::COMMA;
         }
 
         auto _param(auto f) -> decltype(f()) {
@@ -1492,7 +1492,7 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
 
             eatWhitespace(_c);
             if (not _isFirst) {
-                if (not _c.skip(Css::Token::COMMA))
+                if (not _c.skip(Token::COMMA))
                     return Error::invalidData("expected comma in math function");
                 eatWhitespace(_c);
             }
@@ -1556,7 +1556,7 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
 
     using RoundingStrategy = Union<Keywords::Nearest, Keywords::Up, Keywords::Down, Keywords::ToZero>;
 
-    static Res<Calc> parseMathFunction(Cursor<Css::Sst>& c) {
+    static Res<Calc> parseMathFunction(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -1705,7 +1705,7 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
             return Error::invalidData("unknown math function");
         };
 
-        if (c.peek() != Css::Sst::FUNC)
+        if (c.peek() != Sst::FUNC)
             return Error::invalidData("expected function");
 
         auto params = ParamParser{c.peek().content};
@@ -1715,19 +1715,19 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
         return Ok(std::move(fn));
     }
 
-    static bool _isWhitespace(Cursor<Css::Sst> const& c) {
-        return not c.ended() and c.peek() == Css::Token::WHITESPACE;
+    static bool _isWhitespace(Cursor<Sst> const& c) {
+        return not c.ended() and c.peek() == Token::WHITESPACE;
     }
 
-    static bool _isOperator(Cursor<Css::Sst> const& c, auto... ops) {
-        return not c.ended() and c.peek() == Css::Sst::TOKEN and oneOf(c.peek().token.data, ops...);
+    static bool _isOperator(Cursor<Sst> const& c, auto... ops) {
+        return not c.ended() and c.peek() == Sst::TOKEN and oneOf(c.peek().token.data, ops...);
     }
 
     // <calc-sum> = <calc-product> [ [ '+' | '-' ] <calc-product> ]*
     // https://drafts.csswg.org/css-values-4/#calc-syntax
     // In addition, whitespace is required on both sides of the + and - operators.
     // (The * and / operators can be used without white space around them.)
-    static Res<Calc> parseCalcSum(Cursor<Css::Sst>& c) {
+    static Res<Calc> parseCalcSum(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -1773,7 +1773,7 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
     }
 
     // <calc-product> = <calc-value> [ [ '*' | / ] <calc-value> ]*
-    static Res<Calc> parseCalcProduct(Cursor<Css::Sst>& c) {
+    static Res<Calc> parseCalcProduct(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -1813,7 +1813,7 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
 
     // <calc-value> = <number> | <dimension> | <percentage> |
     //           <calc-keyword> | ( <calc-sum> ) | <math-function>
-    static Res<Calc> parseCalcValue(Cursor<Css::Sst>& c) {
+    static Res<Calc> parseCalcValue(Cursor<Sst>& c) {
         eatWhitespace(c);
 
         if (c.ended())
@@ -1823,8 +1823,8 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
             return Ok(unitValue.take());
         }
 
-        if (c.peek() == Css::Sst::BLOCK and c.peek().token == Css::Token::LEFT_PARENTHESIS) {
-            Cursor<Css::Sst> content = c.peek().content;
+        if (c.peek() == Sst::BLOCK and c.peek().token == Token::LEFT_PARENTHESIS) {
+            Cursor<Sst> content = c.peek().content;
             auto sum = try$(parseCalcSum(content));
 
             eatWhitespace(content);
@@ -1835,7 +1835,7 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
             return Ok(sum);
         }
 
-        if (c.peek() == Css::Sst::FUNC) {
+        if (c.peek() == Sst::FUNC) {
             return parseMathFunction(c);
         }
 
@@ -1843,17 +1843,17 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
     }
 
     // <calc-keyword> = e | pi | infinity | -infinity | NaN
-    static Res<UnitValue> parseCalcKeyword(Cursor<Css::Sst>& c) {
+    static Res<UnitValue> parseCalcKeyword(Cursor<Sst>& c) {
         f64 value = 0.0;
-        if (c.skip(Css::Token::ident("e"))) {
+        if (c.skip(Token::ident("e"))) {
             value = Math::E;
-        } else if (c.skip(Css::Token::ident("pi"))) {
+        } else if (c.skip(Token::ident("pi"))) {
             value = Math::PI;
-        } else if (c.skip(Css::Token::ident("infinity"))) {
+        } else if (c.skip(Token::ident("infinity"))) {
             value = Math::INF;
-        } else if (c.skip(Css::Token::ident("-infinity"))) {
+        } else if (c.skip(Token::ident("-infinity"))) {
             value = Math::NEG_INF;
-        } else if (c.skip(Css::Token::ident("NaN"))) {
+        } else if (c.skip(Token::ident("NaN"))) {
             // FIXME: NaN should be matched with exact casing.
             value = Math::NAN;
         } else {

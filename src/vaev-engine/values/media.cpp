@@ -23,17 +23,17 @@ export enum struct MediaType {
 
 export template <>
 struct ValueParser<MediaType> {
-    static Res<MediaType> parse(Cursor<Css::Sst>& c) {
+    static Res<MediaType> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("all")))
+        if (c.skip(Token::ident("all")))
             return Ok(MediaType::ALL);
 
-        if (c.skip(Css::Token::ident("print")))
+        if (c.skip(Token::ident("print")))
             return Ok(MediaType::PRINT);
 
-        if (c.skip(Css::Token::ident("screen")))
+        if (c.skip(Token::ident("screen")))
             return Ok(MediaType::SCREEN);
 
         // NOTE: The spec says that we should reconize the following media types
@@ -50,7 +50,7 @@ struct ValueParser<MediaType> {
         };
 
         for (auto const& item : OTHER) {
-            if (c.skip(Css::Token::ident(item)))
+            if (c.skip(Token::ident(item)))
                 return Ok(MediaType::OTHER);
         }
         return Error::invalidData("expected media type");
@@ -69,13 +69,13 @@ export enum struct Scan {
 
 export template <>
 struct ValueParser<Scan> {
-    static Res<Scan> parse(Cursor<Css::Sst>& c) {
+    static Res<Scan> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("interlace")))
+        if (c.skip(Token::ident("interlace")))
             return Ok(Scan::INTERLACE);
-        else if (c.skip(Css::Token::ident("progressive")))
+        else if (c.skip(Token::ident("progressive")))
             return Ok(Scan::PROGRESSIVE);
         else
             return Error::invalidData("expected scan value");
@@ -95,15 +95,15 @@ export enum struct Update {
 
 export template <>
 struct ValueParser<Update> {
-    static Res<Update> parse(Cursor<Css::Sst>& c) {
+    static Res<Update> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("none")))
+        if (c.skip(Token::ident("none")))
             return Ok(Update::NONE);
-        else if (c.skip(Css::Token::ident("slow")))
+        else if (c.skip(Token::ident("slow")))
             return Ok(Update::SLOW);
-        else if (c.skip(Css::Token::ident("fast")))
+        else if (c.skip(Token::ident("fast")))
             return Ok(Update::FAST);
         else
             return Error::invalidData("expected update value");
@@ -123,15 +123,15 @@ export enum struct OverflowBlock {
 
 export template <>
 struct ValueParser<OverflowBlock> {
-    static Res<OverflowBlock> parse(Cursor<Css::Sst>& c) {
+    static Res<OverflowBlock> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("none")))
+        if (c.skip(Token::ident("none")))
             return Ok(OverflowBlock::NONE);
-        else if (c.skip(Css::Token::ident("scroll")))
+        else if (c.skip(Token::ident("scroll")))
             return Ok(OverflowBlock::SCROLL);
-        else if (c.skip(Css::Token::ident("paged")))
+        else if (c.skip(Token::ident("paged")))
             return Ok(OverflowBlock::PAGED);
         else
             return Error::invalidData("expected overflow block value");
@@ -150,13 +150,13 @@ export enum struct OverflowInline {
 
 export template <>
 struct ValueParser<OverflowInline> {
-    static Res<OverflowInline> parse(Cursor<Css::Sst>& c) {
+    static Res<OverflowInline> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("none")))
+        if (c.skip(Token::ident("none")))
             return Ok(OverflowInline::NONE);
-        else if (c.skip(Css::Token::ident("scroll")))
+        else if (c.skip(Token::ident("scroll")))
             return Ok(OverflowInline::SCROLL);
         else
             return Error::invalidData("expected overflow inline value");
@@ -176,15 +176,15 @@ export enum struct ColorGamut {
 
 export template <>
 struct ValueParser<ColorGamut> {
-    static Res<ColorGamut> parse(Cursor<Css::Sst>& c) {
+    static Res<ColorGamut> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("srgb")))
+        if (c.skip(Token::ident("srgb")))
             return Ok(ColorGamut::SRGB);
-        else if (c.skip(Css::Token::ident("p3")))
+        else if (c.skip(Token::ident("p3")))
             return Ok(ColorGamut::DISPLAY_P3);
-        else if (c.skip(Css::Token::ident("rec2020")))
+        else if (c.skip(Token::ident("rec2020")))
             return Ok(ColorGamut::REC2020);
         else
             return Error::invalidData("expected color gamut");
@@ -204,15 +204,15 @@ export enum struct Pointer {
 
 export template <>
 struct ValueParser<Pointer> {
-    static Res<Pointer> parse(Cursor<Css::Sst>& c) {
+    static Res<Pointer> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("none")))
+        if (c.skip(Token::ident("none")))
             return Ok(Pointer::NONE);
-        else if (c.skip(Css::Token::ident("coarse")))
+        else if (c.skip(Token::ident("coarse")))
             return Ok(Pointer::COARSE);
-        else if (c.skip(Css::Token::ident("fine")))
+        else if (c.skip(Token::ident("fine")))
             return Ok(Pointer::FINE);
         else
             return Error::invalidData("expected pointer value");
@@ -231,13 +231,13 @@ export enum struct Hover {
 
 export template <>
 struct ValueParser<Hover> {
-    static Res<Hover> parse(Cursor<Css::Sst>& c) {
+    static Res<Hover> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("none")))
+        if (c.skip(Token::ident("none")))
             return Ok(Hover::NONE);
-        else if (c.skip(Css::Token::ident("hover")))
+        else if (c.skip(Token::ident("hover")))
             return Ok(Hover::HOVER);
         else
             return Error::invalidData("expected hover value");
@@ -256,13 +256,13 @@ export enum struct ReducedMotion {
 
 export template <>
 struct ValueParser<ReducedMotion> {
-    static Res<ReducedMotion> parse(Cursor<Css::Sst>& c) {
+    static Res<ReducedMotion> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("no-preference")))
+        if (c.skip(Token::ident("no-preference")))
             return Ok(ReducedMotion::NO_PREFERENCE);
-        else if (c.skip(Css::Token::ident("reduce")))
+        else if (c.skip(Token::ident("reduce")))
             return Ok(ReducedMotion::REDUCE);
         else
             return Error::invalidData("expected reduced motion value");
@@ -281,13 +281,13 @@ export enum struct ReducedTransparency {
 
 export template <>
 struct ValueParser<ReducedTransparency> {
-    static Res<ReducedTransparency> parse(Cursor<Css::Sst>& c) {
+    static Res<ReducedTransparency> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("no-preference")))
+        if (c.skip(Token::ident("no-preference")))
             return Ok(ReducedTransparency::NO_PREFERENCE);
-        else if (c.skip(Css::Token::ident("reduce")))
+        else if (c.skip(Token::ident("reduce")))
             return Ok(ReducedTransparency::REDUCE);
         else
             return Error::invalidData("expected reduced transparency value");
@@ -307,13 +307,13 @@ export enum struct Contrast {
 
 export template <>
 struct ValueParser<Contrast> {
-    static Res<Contrast> parse(Cursor<Css::Sst>& c) {
+    static Res<Contrast> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("less")))
+        if (c.skip(Token::ident("less")))
             return Ok(Contrast::LESS);
-        else if (c.skip(Css::Token::ident("more")))
+        else if (c.skip(Token::ident("more")))
             return Ok(Contrast::MORE);
         else
             return Error::invalidData("expected contrast value");
@@ -332,13 +332,13 @@ export enum struct Colors {
 
 export template <>
 struct ValueParser<Colors> {
-    static Res<Colors> parse(Cursor<Css::Sst>& c) {
+    static Res<Colors> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("none")))
+        if (c.skip(Token::ident("none")))
             return Ok(Colors::NONE);
-        else if (c.skip(Css::Token::ident("active")))
+        else if (c.skip(Token::ident("active")))
             return Ok(Colors::ACTIVE);
         else
             return Error::invalidData("expected colors value");
@@ -357,13 +357,13 @@ export enum struct ColorScheme {
 
 export template <>
 struct ValueParser<ColorScheme> {
-    static Res<ColorScheme> parse(Cursor<Css::Sst>& c) {
+    static Res<ColorScheme> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("light")))
+        if (c.skip(Token::ident("light")))
             return Ok(ColorScheme::LIGHT);
-        else if (c.skip(Css::Token::ident("dark")))
+        else if (c.skip(Token::ident("dark")))
             return Ok(ColorScheme::DARK);
         else
             return Error::invalidData("expected color scheme value");
@@ -382,13 +382,13 @@ export enum struct ReducedData {
 
 export template <>
 struct ValueParser<ReducedData> {
-    static Res<ReducedData> parse(Cursor<Css::Sst>& c) {
+    static Res<ReducedData> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("no-preference")))
+        if (c.skip(Token::ident("no-preference")))
             return Ok(ReducedData::NO_PREFERENCE);
-        else if (c.skip(Css::Token::ident("reduce")))
+        else if (c.skip(Token::ident("reduce")))
             return Ok(ReducedData::REDUCE);
         else
             return Error::invalidData("expected reduced data value");

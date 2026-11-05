@@ -20,20 +20,20 @@ export using Overflow = Union<
 
 export template <>
 struct ValueParser<Overflow> {
-    static Res<Overflow> parse(Cursor<Css::Sst>& c) {
+    static Res<Overflow> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("overlay")))
+        if (c.skip(Token::ident("overlay")))
             // https://www.w3.org/TR/css-overflow/#valdef-overflow-overlay
             return Ok(Keywords::AUTO);
-        else if (c.skip(Css::Token::ident("visible")))
+        else if (c.skip(Token::ident("visible")))
             return Ok(Keywords::VISIBLE);
-        else if (c.skip(Css::Token::ident("hidden")))
+        else if (c.skip(Token::ident("hidden")))
             return Ok(Keywords::HIDDEN);
-        else if (c.skip(Css::Token::ident("scroll")))
+        else if (c.skip(Token::ident("scroll")))
             return Ok(Keywords::SCROLL);
-        else if (c.skip(Css::Token::ident("auto")))
+        else if (c.skip(Token::ident("auto")))
             return Ok(Keywords::AUTO);
         else
             return Error::invalidData("expected overflow value");

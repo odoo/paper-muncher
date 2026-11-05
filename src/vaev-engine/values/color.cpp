@@ -302,46 +302,46 @@ struct ValueParser<Color> {
         }
     }
 
-    static Res<u8> _parseAlphaValue(Cursor<Css::Sst>& scan) {
+    static Res<u8> _parseAlphaValue(Cursor<Sst>& scan) {
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (scan.peek() == Css::Token::Type::PERCENTAGE) {
+        if (scan.peek() == Token::Type::PERCENTAGE) {
             auto perc = try$(parseValue<PurePercentage>(scan)).value();
             return Ok(Math::round((perc * 255) / 100));
-        } else if (scan.peek() == Css::Token::Type::NUMBER)
+        } else if (scan.peek() == Token::Type::NUMBER)
             return Ok(Math::round(try$(parseValue<f64>(scan)) * 255));
         return Error::invalidData("expected alpha channel");
     }
 
-    static Res<Opt<u8>> _parseAlphaComponentModernSyntax(Cursor<Css::Sst>& scan) {
+    static Res<Opt<u8>> _parseAlphaComponentModernSyntax(Cursor<Sst>& scan) {
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (not scan.skip(Css::Token::delim("/")))
+        if (not scan.skip(Token::delim("/")))
             return Error::invalidData("expected '/' before alpha channel");
 
         eatWhitespace(scan);
-        if (scan.skip(Css::Token::ident("none")))
+        if (scan.skip(Token::ident("none")))
             return Ok(NONE);
 
         return Ok(Some(try$(_parseAlphaValue(scan))));
     }
 
-    static Res<f64> _parseNumPercNone(Cursor<Css::Sst>& scan, f64 percOf, f64 noneValue = 0) {
+    static Res<f64> _parseNumPercNone(Cursor<Sst>& scan, f64 percOf, f64 noneValue = 0) {
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (scan.skip(Css::Token::ident("none"))) {
+        if (scan.skip(Token::ident("none"))) {
             return Ok(noneValue);
-        } else if (scan.peek() == Css::Token::Type::PERCENTAGE) {
+        } else if (scan.peek() == Token::Type::PERCENTAGE) {
             auto perc = try$(parseValue<PurePercentage>(scan));
             return Ok((perc.value() * percOf) / 100.0f);
         } else
             return Ok(try$(parseValue<f64>(scan)));
     }
 
-    static Res<Array<f64, 3>> _parsePredefinedRGBParams(Cursor<Css::Sst>& scan, f64 percOf = 255) {
+    static Res<Array<f64, 3>> _parsePredefinedRGBParams(Cursor<Sst>& scan, f64 percOf = 255) {
         Array<f64, 3> channels{};
         for (usize i = 0; i < 3; ++i) {
 
@@ -356,8 +356,8 @@ struct ValueParser<Color> {
     }
 
     // https://drafts.csswg.org/css-color/#rgb-functions
-    static Res<Gfx::Color> _parseSRGBModernFuncColor(Css::Sst const& s) {
-        Cursor<Css::Sst> scan = s.content;
+    static Res<Gfx::Color> _parseSRGBModernFuncColor(Sst const& s) {
+        Cursor<Sst> scan = s.content;
         eatWhitespace(scan);
 
         if (scan.ended())
@@ -377,14 +377,14 @@ struct ValueParser<Color> {
         return Ok(Gfx::Color::fromRgba(r, g, b, alphaComponent.unwrapOr(0)));
     }
 
-    static Res<Gfx::Color> _parseSRGBLegacyFuncColor(Css::Sst const& s) {
-        Cursor<Css::Sst> scan = s.content;
+    static Res<Gfx::Color> _parseSRGBLegacyFuncColor(Sst const& s) {
+        Cursor<Sst> scan = s.content;
         eatWhitespace(scan);
 
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
-        bool usingPercentages = scan.peek() == Css::Token::Type::PERCENTAGE;
+        bool usingPercentages = scan.peek() == Token::Type::PERCENTAGE;
 
         Array<u8, 3> channels{};
         for (usize i = 0; i < 3; ++i) {
@@ -399,7 +399,7 @@ struct ValueParser<Color> {
             }
             eatWhitespace(scan);
             if (i < 2) {
-                if (not scan.skip(Css::Token::COMMA))
+                if (not scan.skip(Token::COMMA))
                     return Error::invalidData("expected comma between rgb color channels");
                 eatWhitespace(scan);
             }
@@ -413,7 +413,7 @@ struct ValueParser<Color> {
         if (scan.ended())
             return Ok(Gfx::Color::fromRgb(r, g, b));
 
-        if (not scan.skip(Css::Token::COMMA))
+        if (not scan.skip(Token::COMMA))
             return Error::invalidData("expected comma before alpha channel");
 
         eatWhitespace(scan);
@@ -421,19 +421,19 @@ struct ValueParser<Color> {
     }
 
     // https://drafts.csswg.org/css-color/#funcdef-hsl
-    static Res<Gfx::Color> _parseHSLModernFuncColor(Css::Sst const& s) {
-        Cursor<Css::Sst> scan = s.content;
+    static Res<Gfx::Color> _parseHSLModernFuncColor(Sst const& s) {
+        Cursor<Sst> scan = s.content;
         eatWhitespace(scan);
 
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
         f64 hue;
-        if (scan.skip(Css::Token::ident("none")))
+        if (scan.skip(Token::ident("none")))
             hue = 0;
-        else if (scan.peek() == Css::Token::DIMENSION)
+        else if (scan.peek() == Token::DIMENSION)
             hue = try$(parseValue<PureAngle>(scan)).toDegree();
-        else if (scan.peek() == Css::Token::Type::NUMBER)
+        else if (scan.peek() == Token::Type::NUMBER)
             hue = try$(parseValue<f64>(scan));
         else
             return Error::invalidData("expected hue");
@@ -455,33 +455,33 @@ struct ValueParser<Color> {
         return Ok(color.withAlpha(alpha));
     }
 
-    static Res<Gfx::Color> _parseHSLLegacyFuncColor(Css::Sst const& s) {
-        Cursor<Css::Sst> scan = s.content;
+    static Res<Gfx::Color> _parseHSLLegacyFuncColor(Sst const& s) {
+        Cursor<Sst> scan = s.content;
         eatWhitespace(scan);
 
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
         f64 hue;
-        if (scan.skip(Css::Token::ident("none")))
+        if (scan.skip(Token::ident("none")))
             hue = 0;
-        else if (scan.peek() == Css::Token::DIMENSION)
+        else if (scan.peek() == Token::DIMENSION)
             hue = try$(parseValue<PureAngle>(scan)).toDegree();
-        else if (scan.peek() == Css::Token::Type::NUMBER)
+        else if (scan.peek() == Token::Type::NUMBER)
             hue = try$(parseValue<f64>(scan));
         else
             return Error::invalidData("expected hue");
 
         eatWhitespace(scan);
 
-        if (not scan.skip(Css::Token::COMMA))
+        if (not scan.skip(Token::COMMA))
             return Error::invalidData("comma is expected separating hsl components");
         eatWhitespace(scan);
 
         auto sat = try$(parseValue<PurePercentage>(scan)).value() / 100.0f;
         eatWhitespace(scan);
 
-        if (not scan.skip(Css::Token::COMMA))
+        if (not scan.skip(Token::COMMA))
             return Error::invalidData("comma is expected separating hsl components");
         eatWhitespace(scan);
 
@@ -493,7 +493,7 @@ struct ValueParser<Color> {
             return Ok(color);
         }
 
-        if (not scan.skip(Css::Token::COMMA))
+        if (not scan.skip(Token::COMMA))
             return Error::invalidData("expected comma before alpha channel");
 
         eatWhitespace(scan);
@@ -503,11 +503,11 @@ struct ValueParser<Color> {
     }
 
     // https://drafts.csswg.org/css-color-4/#predefined
-    static Res<Gfx::Color> _parseColorFuncColor(Css::Sst const& s) {
-        Cursor<Css::Sst> scan = s.content;
+    static Res<Gfx::Color> _parseColorFuncColor(Sst const& s) {
+        Cursor<Sst> scan = s.content;
         eatWhitespace(scan);
 
-        if (scan.ended() or not(scan.peek() == Css::Token::IDENT))
+        if (scan.ended() or not(scan.peek() == Token::IDENT))
             return Error::invalidData("expected color-space identifier");
 
         auto colorSpace = scan.next().token.data;
@@ -566,16 +566,16 @@ struct ValueParser<Color> {
         }
     }
 
-    static Res<Gfx::Color> _parseFuncColor(Css::Sst const& s) {
-        if (s.prefix == Css::Token::function("color(")) {
+    static Res<Gfx::Color> _parseFuncColor(Sst const& s) {
+        if (s.prefix == Token::function("color(")) {
             return _parseColorFuncColor(s);
-        } else if (s.prefix == Css::Token::function("rgb(") or s.prefix == Css::Token::function("rgba(")) {
+        } else if (s.prefix == Token::function("rgb(") or s.prefix == Token::function("rgba(")) {
             auto modernColor = _parseSRGBModernFuncColor(s);
             if (modernColor)
                 return modernColor;
 
             return _parseSRGBLegacyFuncColor(s);
-        } else if (s.prefix == Css::Token::function("hsl(") or s.prefix == Css::Token::function("hsla(")) {
+        } else if (s.prefix == Token::function("hsl(") or s.prefix == Token::function("hsla(")) {
             auto modernColor = _parseHSLModernFuncColor(s);
             if (modernColor)
                 return modernColor;
@@ -586,13 +586,13 @@ struct ValueParser<Color> {
         }
     }
 
-    static Res<ColorMix::Side> _parseColorMixSide(Cursor<Css::Sst>& s) {
+    static Res<ColorMix::Side> _parseColorMixSide(Cursor<Sst>& s) {
         Opt<PurePercentage> percent;
 
         if (s.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (s.peek() == Css::Token::Type::PERCENTAGE) {
+        if (s.peek() == Token::Type::PERCENTAGE) {
             percent = Some(try$(parseValue<PurePercentage>(s)));
             eatWhitespace(s);
             return Ok(ColorMix::Side{
@@ -603,7 +603,7 @@ struct ValueParser<Color> {
 
         Color color = try$(parseValue<Color>(s));
         eatWhitespace(s);
-        if (not s.ended() and s.peek() == Css::Token::Type::PERCENTAGE)
+        if (not s.ended() and s.peek() == Token::Type::PERCENTAGE)
             percent = Some(try$(parseValue<PurePercentage>(s)).value());
 
         return Ok(ColorMix::Side{
@@ -612,15 +612,15 @@ struct ValueParser<Color> {
         });
     }
 
-    static Res<Color> _parseColorMixFunc(Css::Sst const& s) {
-        Cursor<Css::Sst> scan = s.content;
+    static Res<Color> _parseColorMixFunc(Sst const& s) {
+        Cursor<Sst> scan = s.content;
 
         eatWhitespace(scan);
-        if (not scan.skip(Css::Token::ident("in"))) // FIXME: correct token class?
+        if (not scan.skip(Token::ident("in"))) // FIXME: correct token class?
             return Error::invalidData("expected 'in' keyword");
 
         eatWhitespace(scan);
-        if (scan.ended() or not(scan.peek() == Css::Token::IDENT))
+        if (scan.ended() or not(scan.peek() == Token::IDENT))
             return Error::invalidData("expected color-space identifier");
 
         // FIXME: not parsing interpolation method for polar spaces
@@ -636,15 +636,15 @@ struct ValueParser<Color> {
         return Ok(makeBox<ColorMix>(ColorSpace::fromStr(colorSpace), std::move(lhs), std::move(rhs)));
     }
 
-    static Res<Color> parse(Cursor<Css::Sst>& c) {
+    static Res<Color> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.peek() == Css::Token::HASH) {
+        if (c.peek() == Token::HASH) {
             Io::SScan scan = c->token.data.str();
             c.next();
             return Ok(try$(_parseHexColor(scan)));
-        } else if (c.peek() == Css::Token::IDENT) {
+        } else if (c.peek() == Token::IDENT) {
             Str data = c->token.data.str();
 
             if (eqCi(data, "currentcolor"s)) {
@@ -669,9 +669,9 @@ struct ValueParser<Color> {
                 return Ok(maybeSystemColor.expect());
             }
 
-        } else if (c.peek() == Css::Sst::FUNC) {
+        } else if (c.peek() == Sst::FUNC) {
 
-            if (c->prefix == Css::Token::function("color-mix(")) {
+            if (c->prefix == Token::function("color-mix(")) {
                 auto color = try$(_parseColorMixFunc(*c));
                 c.next();
                 return Ok(color);

@@ -41,8 +41,8 @@ export using TransformBox = Union<
 
 // https://drafts.csswg.org/css-transforms/#funcdef-transform-rotate
 // rotate(), skew(), skewX() and skewY() accept <angle> | <zero>.
-Res<Angle> _parseAngleOrZero(Cursor<Css::Sst>& c) {
-    if (c.skip(Css::Token::number("0")))
+Res<Angle> _parseAngleOrZero(Cursor<Sst>& c) {
+    if (c.skip(Token::number("0")))
         return Ok(Angle::fromCanonical(0));
     return parseValue<Angle>(c);
 }
@@ -94,14 +94,14 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<MatrixTransform> {
-    static Res<MatrixTransform> parse(Cursor<Css::Sst>& c) {
+    static Res<MatrixTransform> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix != Css::Token::function("matrix("))
+        if (c->prefix != Token::function("matrix("))
             return Error::invalidData("expected matrix function");
 
-        Cursor<Css::Sst> content = c->content;
+        Cursor<Sst> content = c->content;
         eatWhitespace(content);
 
         auto value = [&](bool last) -> Res<Number> {
@@ -151,12 +151,12 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<TranslateTransform> {
-    static Res<TranslateTransform> parse(Cursor<Css::Sst>& c) {
+    static Res<TranslateTransform> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix == Css::Token::function("translateX(")) {
-            Cursor<Css::Sst> content = c->content;
+        if (c->prefix == Token::function("translateX(")) {
+            Cursor<Sst> content = c->content;
             eatWhitespace(content);
             auto tx = try$(parseValue<LengthPercentage>(content));
             eatWhitespace(content);
@@ -167,8 +167,8 @@ struct ValueParser<TranslateTransform> {
             return Ok(TranslateTransform{std::move(tx), LengthPercentage::fromCanonical(0)});
         }
 
-        if (c->prefix == Css::Token::function("translateY(")) {
-            Cursor<Css::Sst> content = c->content;
+        if (c->prefix == Token::function("translateY(")) {
+            Cursor<Sst> content = c->content;
             eatWhitespace(content);
             auto ty = try$(parseValue<LengthPercentage>(content));
             eatWhitespace(content);
@@ -178,10 +178,10 @@ struct ValueParser<TranslateTransform> {
             return Ok(TranslateTransform{LengthPercentage::fromCanonical(0), std::move(ty)});
         }
 
-        if (c->prefix != Css::Token::function("translate("))
+        if (c->prefix != Token::function("translate("))
             return Error::invalidData("expected translate function");
 
-        Cursor<Css::Sst> content = c->content;
+        Cursor<Sst> content = c->content;
         eatWhitespace(content);
 
         auto tx = try$(parseValue<LengthPercentage>(content));
@@ -228,12 +228,12 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<ScaleTransform> {
-    static Res<ScaleTransform> parse(Cursor<Css::Sst>& c) {
+    static Res<ScaleTransform> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix == Css::Token::function("scaleX(")) {
-            Cursor<Css::Sst> content = c->content;
+        if (c->prefix == Token::function("scaleX(")) {
+            Cursor<Sst> content = c->content;
             eatWhitespace(content);
             auto sx = try$(parseValue<Number>(content));
             eatWhitespace(content);
@@ -244,8 +244,8 @@ struct ValueParser<ScaleTransform> {
             return Ok(ScaleTransform{std::move(sx), Number::fromCanonical(1)});
         }
 
-        if (c->prefix == Css::Token::function("scaleY(")) {
-            Cursor<Css::Sst> content = c->content;
+        if (c->prefix == Token::function("scaleY(")) {
+            Cursor<Sst> content = c->content;
             eatWhitespace(content);
             auto sy = try$(parseValue<Number>(content));
             eatWhitespace(content);
@@ -255,10 +255,10 @@ struct ValueParser<ScaleTransform> {
             return Ok(ScaleTransform{Number::fromCanonical(1), std::move(sy)});
         }
 
-        if (c->prefix != Css::Token::function("scale("))
+        if (c->prefix != Token::function("scale("))
             return Error::invalidData("expected scale function");
 
-        Cursor<Css::Sst> content = c->content;
+        Cursor<Sst> content = c->content;
         eatWhitespace(content);
 
         auto x = try$(parseValue<Number>(content));
@@ -305,14 +305,14 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<RotateTransform> {
-    static Res<RotateTransform> parse(Cursor<Css::Sst>& c) {
+    static Res<RotateTransform> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix != Css::Token::function("rotate("))
+        if (c->prefix != Token::function("rotate("))
             return Error::invalidData("expected rotate function");
 
-        Cursor<Css::Sst> content = c->content;
+        Cursor<Sst> content = c->content;
         eatWhitespace(content);
 
         auto value = try$(_parseAngleOrZero(content));
@@ -351,14 +351,14 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<SkewTransform> {
-    static Res<SkewTransform> parse(Cursor<Css::Sst>& c) {
+    static Res<SkewTransform> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix != Css::Token::function("skew("))
+        if (c->prefix != Token::function("skew("))
             return Error::invalidData("expected skew function");
 
-        Cursor<Css::Sst> content = c->content;
+        Cursor<Sst> content = c->content;
         eatWhitespace(content);
 
         auto x = try$(_parseAngleOrZero(content));
@@ -405,14 +405,14 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<SkewXTransform> {
-    static Res<SkewXTransform> parse(Cursor<Css::Sst>& c) {
+    static Res<SkewXTransform> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix != Css::Token::function("skewX("))
+        if (c->prefix != Token::function("skewX("))
             return Error::invalidData("expected skewX function");
 
-        Cursor<Css::Sst> content = c->content;
+        Cursor<Sst> content = c->content;
         eatWhitespace(content);
 
         auto value = try$(_parseAngleOrZero(content));
@@ -450,14 +450,14 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<SkewYTransform> {
-    static Res<SkewYTransform> parse(Cursor<Css::Sst>& c) {
+    static Res<SkewYTransform> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix != Css::Token::function("skewY("))
+        if (c->prefix != Token::function("skewY("))
             return Error::invalidData("expected skewY function");
 
-        Cursor<Css::Sst> content = c->content;
+        Cursor<Sst> content = c->content;
         eatWhitespace(content);
 
         auto value = try$(_parseAngleOrZero(content));

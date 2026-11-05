@@ -21,27 +21,27 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Gfx::BorderStyle> {
-    static Res<Gfx::BorderStyle> parse(Cursor<Css::Sst>& c) {
+    static Res<Gfx::BorderStyle> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of property");
 
-        if (c.skip(Css::Token::ident("none"))) {
+        if (c.skip(Token::ident("none"))) {
             return Ok(Gfx::BorderStyle::NONE);
-        } else if (c.skip(Css::Token::ident("solid"))) {
+        } else if (c.skip(Token::ident("solid"))) {
             return Ok(Gfx::BorderStyle::SOLID);
-        } else if (c.skip(Css::Token::ident("dashed"))) {
+        } else if (c.skip(Token::ident("dashed"))) {
             return Ok(Gfx::BorderStyle::DASHED);
-        } else if (c.skip(Css::Token::ident("dotted"))) {
+        } else if (c.skip(Token::ident("dotted"))) {
             return Ok(Gfx::BorderStyle::DOTTED);
-        } else if (c.skip(Css::Token::ident("hidden"))) {
+        } else if (c.skip(Token::ident("hidden"))) {
             return Ok(Gfx::BorderStyle::HIDDEN);
-        } else if (c.skip(Css::Token::ident("double"))) {
+        } else if (c.skip(Token::ident("double"))) {
             return Ok(Gfx::BorderStyle::DOUBLE);
-        } else if (c.skip(Css::Token::ident("groove"))) {
+        } else if (c.skip(Token::ident("groove"))) {
             return Ok(Gfx::BorderStyle::GROOVE);
-        } else if (c.skip(Css::Token::ident("ridge"))) {
+        } else if (c.skip(Token::ident("ridge"))) {
             return Ok(Gfx::BorderStyle::RIDGE);
-        } else if (c.skip(Css::Token::ident("outset"))) {
+        } else if (c.skip(Token::ident("outset"))) {
             return Ok(Gfx::BorderStyle::OUTSET);
         } else {
             return Error::invalidData("unknown border-style");
@@ -93,7 +93,7 @@ export using UsedBorders = Math::Insets<UsedBorder>;
 
 export template <>
 struct ValueParser<SpecifiedBorder> {
-    static Res<SpecifiedBorder> parse(Cursor<Css::Sst>& c) {
+    static Res<SpecifiedBorder> parse(Cursor<Sst>& c) {
         // https://drafts.csswg.org/css-backgrounds/#border-shorthands
         // <line-width> || <line-style> || <color>, each at most once.
         SpecifiedBorder border;
@@ -179,7 +179,7 @@ namespace Vaev::Css {
 
 export template <typename T>
 struct ValueParser<Math::Radii<T>> {
-    static Res<Math::Radii<T>> parse(Cursor<Css::Sst>& c) {
+    static Res<Math::Radii<T>> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -208,7 +208,7 @@ struct ValueParser<Math::Radii<T>> {
         return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take(), value3.take(), value4.take()}));
     }
 
-    static Res<Math::Radii<T>> parsePostSlash(Cursor<Css::Sst>& c, Opt<Math::Radii<T>> maybeRadii) {
+    static Res<Math::Radii<T>> parsePostSlash(Cursor<Sst>& c, Opt<Math::Radii<T>> maybeRadii) {
         // if parse a /
         // 1 value-- > border all(a, d, e, h)
         // 2 values-- > 1 = top - start + bottom - end 2 = the others

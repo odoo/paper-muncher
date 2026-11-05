@@ -140,7 +140,7 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<BackgroundPosition> {
-    static Res<BackgroundPosition> parse(Cursor<Css::Sst>& c) {
+    static Res<BackgroundPosition> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 

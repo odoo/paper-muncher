@@ -22,11 +22,11 @@ export using Integer = isize;
 
 export template <>
 struct ValueParser<Integer> {
-    static Res<Integer> parse(Cursor<Css::Sst>& c) {
+    static Res<Integer> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.peek() == Css::Token::NUMBER) {
+        if (c.peek() == Token::NUMBER) {
             Io::SScan scan = c->token.data.str();
             c.next();
             Integer result = try$(Io::atoi(scan));
@@ -65,11 +65,11 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<f64> {
-    static Res<f64> parse(Cursor<Css::Sst>& c) {
+    static Res<f64> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.peek() == Css::Token::NUMBER) {
+        if (c.peek() == Token::NUMBER) {
             Io::SScan scan = c->token.data.str();
             c.next();
             return Ok(try$(Io::atof(scan)));
@@ -82,13 +82,13 @@ struct ValueParser<f64> {
 export template <>
 struct ValueSerializer<f64> {
     static Res<> serialize(Io::TextWriter& w, f64 const& value) {
-        return Css::serializeNumber(w, value);
+        return serializeNumber(w, value);
     }
 };
 
 export template <>
 struct ValueParser<bool> {
-    static Res<bool> parse(Cursor<Css::Sst>& c) {
+    static Res<bool> parse(Cursor<Sst>& c) {
         return Ok(try$(parseValue<Integer>(c)) > 0);
     }
 };
@@ -114,10 +114,10 @@ struct ValueSerializer<E> {
 
 export template <>
 struct ValueParser<String> {
-    static Res<String> parse(Cursor<Css::Sst>& c) {
+    static Res<String> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
-        if (c.peek() == Css::Token::STRING)
+        if (c.peek() == Token::STRING)
             return Ok(c.next().token.data);
         return Error::invalidData("expected string");
     }
@@ -128,7 +128,7 @@ struct ValueSerializer<String> {
     // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
     static Res<> serialize(Io::TextWriter& w, String const& value) {
         // The string serialized as a string.
-        return Css::serialize(w, Css::Token{Css::Token::STRING, value});
+        return Css::serialize(w, Token{Token::STRING, value});
     }
 };
 
@@ -161,11 +161,11 @@ export struct CustomIdent {
 
 export template <>
 struct ValueParser<CustomIdent> {
-    static Res<CustomIdent> parse(Cursor<Css::Sst>& c) {
+    static Res<CustomIdent> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (*c != Css::Token::IDENT)
+        if (*c != Token::IDENT)
             return Error::invalidData("expected custom ident");
 
         // TODO: Don't really know what to do with the following... lol
@@ -181,22 +181,22 @@ struct ValueParser<CustomIdent> {
 // MARK: Url -------------------------------------------------------------------
 // https://www.w3.org/TR/css-values-4/#urls
 
-export Res<String> parseUrlIntoString(Cursor<Css::Sst>& c) {
+export Res<String> parseUrlIntoString(Cursor<Sst>& c) {
     if (c.ended())
         return Error::invalidData("unexpected end of input");
 
-    if (c.peek() == Css::Token::URL) {
+    if (c.peek() == Token::URL) {
         auto urlSize = c.peek().token.data.len() - 5; // "url()" takes 5 chars
         auto urlValue = sub(c.next().token.data, Range<usize>{4u, urlSize});
         return Ok(urlValue);
-    } else if (c.peek() != Css::Sst::FUNC or c.peek().prefix != Css::Token::function("url("))
+    } else if (c.peek() != Sst::FUNC or c.peek().prefix != Token::function("url("))
         return Error::invalidData("expected url function");
 
     auto urlFunc = c.next();
-    Cursor<Css::Sst> scanUrl{urlFunc.content};
+    Cursor<Sst> scanUrl{urlFunc.content};
     eatWhitespace(scanUrl);
 
-    if (scanUrl.ended() or not(scanUrl.peek() == Css::Token::STRING))
+    if (scanUrl.ended() or not(scanUrl.peek() == Token::STRING))
         return Error::invalidData("expected base url string");
 
     // TODO: it is unclear what url-modifiers are and how they are used
@@ -205,7 +205,7 @@ export Res<String> parseUrlIntoString(Cursor<Css::Sst>& c) {
 
 export template <>
 struct ValueParser<Ref::Url> {
-    static Res<Ref::Url> parse(Cursor<Css::Sst>& c) {
+    static Res<Ref::Url> parse(Cursor<Sst>& c) {
         return Ok(Ref::Url::parse(try$(parseUrlIntoString(c))));
     }
 };
@@ -216,7 +216,7 @@ struct ValueParser<Ref::Url> {
 // https://drafts.csswg.org/css-values-4/#comb-one
 export template <ValueParseable... Ts>
 struct ValueParser<Union<Ts...>> {
-    static Res<Union<Ts...>> parse(Cursor<Css::Sst>& c) {
+    static Res<Union<Ts...>> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -241,7 +241,7 @@ struct ValueSerializer<Union<Ts...>> {
 // https://drafts.csswg.org/css-values-4/#mult-zero-plus
 export template <ValueParseable T>
 struct ValueParser<Vec<T>> {
-    static Res<Vec<T>> parse(Cursor<Css::Sst>& c) {
+    static Res<Vec<T>> parse(Cursor<Sst>& c) {
         Vec<T> result = {};
 
         while (true) {

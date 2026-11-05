@@ -46,26 +46,26 @@ export template <>
 struct ValueParser<ContentValue> {
     // https://www.w3.org/TR/css-content-3/
     // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
-    static Res<ContentValue> parse(Cursor<Css::Sst>& c) {
+    static Res<ContentValue> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("normal")))
+        if (c.skip(Token::ident("normal")))
             return Ok(Keywords::NORMAL);
-        else if (c.skip(Css::Token::ident("open-quote")))
+        else if (c.skip(Token::ident("open-quote")))
             return Ok(String{"“"});
-        else if (c.skip(Css::Token::ident("close-quote")))
+        else if (c.skip(Token::ident("close-quote")))
             return Ok(String{"”"});
-        else if (c->prefix == Css::Token::function("element(")) {
-            Cursor<Css::Sst> cur = c->content;
+        else if (c->prefix == Token::function("element(")) {
+            Cursor<Sst> cur = c->content;
             auto element = try$(parseValue<ElementFunc>(cur));
             c.next();
             return Ok(element);
-        } else if (c->prefix == Css::Token::function("counter(")) {
+        } else if (c->prefix == Token::function("counter(")) {
             return parseValue<CounterFunc>(c);
-        } else if (c->prefix == Css::Token::function("counters(")) {
+        } else if (c->prefix == Token::function("counters(")) {
             return parseValue<CountersFunc>(c);
-        } else if (c->type == Css::Sst::TOKEN and c->token.type == Css::Token::STRING) {
+        } else if (c->type == Sst::TOKEN and c->token.type == Token::STRING) {
             return Ok(try$(parseValue<String>(c)));
         } else
             return Error::invalidData("expected content");
@@ -75,7 +75,7 @@ struct ValueParser<ContentValue> {
 export template <>
 struct ValueParser<ElementFunc> {
     // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
-    static Res<ElementFunc> parse(Cursor<Css::Sst>& c) {
+    static Res<ElementFunc> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -91,13 +91,13 @@ struct ValueParser<ElementFunc> {
         skipOmmitableComma(c);
 
         ElementFunc::Target target = ElementFunc::Target::UNDEFINED;
-        if (c.skip(Css::Token::ident("first"))) {
+        if (c.skip(Token::ident("first"))) {
             target = ElementFunc::Target::FIRST;
-        } else if (c.skip(Css::Token::ident("last"))) {
+        } else if (c.skip(Token::ident("last"))) {
             target = ElementFunc::Target::LAST;
-        } else if (c.skip(Css::Token::ident("start"))) {
+        } else if (c.skip(Token::ident("start"))) {
             target = ElementFunc::Target::START;
-        } else if (c.skip(Css::Token::ident("first-except"))) {
+        } else if (c.skip(Token::ident("first-except"))) {
             target = ElementFunc::Target::FIRST_EXCEPT;
         }
 

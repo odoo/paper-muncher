@@ -89,56 +89,56 @@ export struct [[gnu::packed]] Align {
 
 export template <>
 struct ValueParser<Align> {
-    static Res<Align> parse(Cursor<Css::Sst>& c) {
+    static Res<Align> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
         Align align;
 
-        if (c.skip(Css::Token::ident("legacy"))) {
+        if (c.skip(Token::ident("legacy"))) {
             align.prefix = Align::Prefix::LEGACY;
-        } else if (c.skip(Css::Token::ident("safe"))) {
+        } else if (c.skip(Token::ident("safe"))) {
             align.prefix = Align::Prefix::SAFE;
-        } else if (c.skip(Css::Token::ident("unsafe"))) {
+        } else if (c.skip(Token::ident("unsafe"))) {
             align.prefix = Align::Prefix::UNSAFE;
         }
 
-        if (c.skip(Css::Token::ident("auto"))) {
+        if (c.skip(Token::ident("auto"))) {
             align.keyword = Align::Keywords::AUTO;
-        } else if (c.skip(Css::Token::ident("normal"))) {
+        } else if (c.skip(Token::ident("normal"))) {
             align.keyword = Align::Keywords::NORMAL;
-        } else if (c.skip(Css::Token::ident("center"))) {
+        } else if (c.skip(Token::ident("center"))) {
             align.keyword = Align::Keywords::CENTER;
-        } else if (c.skip(Css::Token::ident("start"))) {
+        } else if (c.skip(Token::ident("start"))) {
             align.keyword = Align::Keywords::START;
-        } else if (c.skip(Css::Token::ident("end"))) {
+        } else if (c.skip(Token::ident("end"))) {
             align.keyword = Align::Keywords::END;
-        } else if (c.skip(Css::Token::ident("self-start"))) {
+        } else if (c.skip(Token::ident("self-start"))) {
             align.keyword = Align::Keywords::SELF_START;
-        } else if (c.skip(Css::Token::ident("self-end"))) {
+        } else if (c.skip(Token::ident("self-end"))) {
             align.keyword = Align::Keywords::SELF_END;
-        } else if (c.skip(Css::Token::ident("flex-start"))) {
+        } else if (c.skip(Token::ident("flex-start"))) {
             align.keyword = Align::Keywords::FLEX_START;
-        } else if (c.skip(Css::Token::ident("flex-end"))) {
+        } else if (c.skip(Token::ident("flex-end"))) {
             align.keyword = Align::Keywords::FLEX_END;
-        } else if (c.skip(Css::Token::ident("left"))) {
+        } else if (c.skip(Token::ident("left"))) {
             align.keyword = Align::Keywords::LEFT;
-        } else if (c.skip(Css::Token::ident("right"))) {
+        } else if (c.skip(Token::ident("right"))) {
             align.keyword = Align::Keywords::RIGHT;
-        } else if (c.skip(Css::Token::ident("baseline"))) {
+        } else if (c.skip(Token::ident("baseline"))) {
             // https://drafts.csswg.org/css-align-3/#valdef-justify-self-baseline
             align.keyword = Align::Keywords::FIRST_BASELINE;
-        } else if (c.skip(Css::Token::ident("first-baseline"))) {
+        } else if (c.skip(Token::ident("first-baseline"))) {
             align.keyword = Align::Keywords::FIRST_BASELINE;
-        } else if (c.skip(Css::Token::ident("last-baseline"))) {
+        } else if (c.skip(Token::ident("last-baseline"))) {
             align.keyword = Align::Keywords::LAST_BASELINE;
-        } else if (c.skip(Css::Token::ident("stretch"))) {
+        } else if (c.skip(Token::ident("stretch"))) {
             align.keyword = Align::Keywords::STRETCH;
-        } else if (c.skip(Css::Token::ident("space-between"))) {
+        } else if (c.skip(Token::ident("space-between"))) {
             align.keyword = Align::Keywords::SPACE_BETWEEN;
-        } else if (c.skip(Css::Token::ident("space-around"))) {
+        } else if (c.skip(Token::ident("space-around"))) {
             align.keyword = Align::Keywords::SPACE_AROUND;
-        } else if (c.skip(Css::Token::ident("space-evenly"))) {
+        } else if (c.skip(Token::ident("space-evenly"))) {
             align.keyword = Align::Keywords::SPACE_EVENLY;
         }
 

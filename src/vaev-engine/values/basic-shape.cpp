@@ -115,20 +115,20 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Circle> {
-    static Res<Circle> parse(Cursor<Css::Sst>& c) {
+    static Res<Circle> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix == Css::Token::function("circle(")) {
+        if (c->prefix == Token::function("circle(")) {
             Circle result;
-            Cursor<Css::Sst> scan = c->content;
+            Cursor<Sst> scan = c->content;
 
             if (auto radius = parseValue<ShapeRadius>(scan)) {
                 result.radius = radius.expect();
             }
 
             eatWhitespace(scan);
-            if (scan.skip(Css::Token::ident("at"))) {
+            if (scan.skip(Token::ident("at"))) {
                 eatWhitespace(scan);
                 if (auto position = parseValue<BackgroundPosition>(scan)) {
                     result.position = position.expect();
@@ -182,13 +182,13 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Ellipse> {
-    static Res<Ellipse> parse(Cursor<Css::Sst>& c) {
+    static Res<Ellipse> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix == Css::Token::function("ellipse(")) {
+        if (c->prefix == Token::function("ellipse(")) {
             Ellipse result;
-            Cursor<Css::Sst> scan = c->content;
+            Cursor<Sst> scan = c->content;
 
             if (auto radius = parseValue<ShapeRadius>(scan)) {
                 result.rx = radius.expect();
@@ -197,7 +197,7 @@ struct ValueParser<Ellipse> {
             }
 
             eatWhitespace(scan);
-            if (scan.skip(Css::Token::ident("at"))) {
+            if (scan.skip(Token::ident("at"))) {
                 eatWhitespace(scan);
                 if (auto position = parseValue<BackgroundPosition>(scan)) {
                     result.position = position.expect();
@@ -252,12 +252,12 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Inset> {
-    static Res<Inset> parse(Cursor<Css::Sst>& c) {
+    static Res<Inset> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix == Css::Token::function("inset(")) {
-            Cursor<Css::Sst> scan = c->content;
+        if (c->prefix == Token::function("inset(")) {
+            Cursor<Sst> scan = c->content;
 
             auto insets = parseValue<Math::Insets<LengthPercentage>>(scan);
             if (not insets)
@@ -266,7 +266,7 @@ struct ValueParser<Inset> {
             Inset result{insets.take(), {LengthPercentage::fromPercentage(0)}};
 
             eatWhitespace(scan);
-            if (scan.skip(Css::Token::ident("round"))) {
+            if (scan.skip(Token::ident("round"))) {
                 eatWhitespace(scan);
                 if (auto radii = parseValue<Math::Radii<LengthPercentage>>(scan)) {
                     result.borderRadius = radii.expect();
@@ -298,13 +298,13 @@ export struct Path {
 
 export template <>
 struct ValueParser<Path> {
-    static Res<Path> parse(Cursor<Css::Sst>& c) {
+    static Res<Path> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix == Css::Token::function("path(")) {
+        if (c->prefix == Token::function("path(")) {
             Path result;
-            Cursor<Css::Sst> scan = c->content;
+            Cursor<Sst> scan = c->content;
 
             bool begin = true;
             if (auto fill = parseValue<FillRule>(scan)) {
@@ -312,7 +312,7 @@ struct ValueParser<Path> {
                 begin = false;
             }
 
-            while ((begin or scan.skip(Css::Token::COMMA)) and not scan.ended()) {
+            while ((begin or scan.skip(Token::COMMA)) and not scan.ended()) {
                 begin = false;
 
                 eatWhitespace(scan);
@@ -374,13 +374,13 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Polygon> {
-    static Res<Polygon> parse(Cursor<Css::Sst>& c) {
+    static Res<Polygon> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix == Css::Token::function("polygon(")) {
+        if (c->prefix == Token::function("polygon(")) {
             Polygon result;
-            Cursor<Css::Sst> scan = c->content;
+            Cursor<Sst> scan = c->content;
 
             bool begin = true;
             if (auto fill = parseValue<FillRule>(scan)) {
@@ -388,7 +388,7 @@ struct ValueParser<Polygon> {
                 begin = false;
             }
 
-            while ((begin or scan.skip(Css::Token::COMMA)) and not scan.ended()) {
+            while ((begin or scan.skip(Token::COMMA)) and not scan.ended()) {
                 begin = false;
 
                 eatWhitespace(scan);
@@ -446,17 +446,17 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Rect> {
-    static Res<Rect> parse(Cursor<Css::Sst>& c) {
+    static Res<Rect> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix == Css::Token::function("rect(")) {
+        if (c->prefix == Token::function("rect(")) {
             // NOTE: An auto value makes the edge of the box coincide with the corresponding edge of the reference box.
             Rect result{
                 {LengthPercentage::fromPercentage(0), LengthPercentage::fromPercentage(100), LengthPercentage::fromPercentage(100), LengthPercentage::fromPercentage(0)},
                 {LengthPercentage::fromPercentage(0)},
             };
-            Cursor<Css::Sst> scan = c->content;
+            Cursor<Sst> scan = c->content;
 
             eatWhitespace(scan);
             if (not parseValue<Keywords::Auto>(scan))
@@ -475,7 +475,7 @@ struct ValueParser<Rect> {
                 result.insets.start = try$(parseValue<LengthPercentage>(scan));
 
             eatWhitespace(scan);
-            if (scan.skip(Css::Token::ident("round"))) {
+            if (scan.skip(Token::ident("round"))) {
                 eatWhitespace(scan);
                 if (auto radii = parseValue<Math::Radii<LengthPercentage>>(scan)) {
                     result.borderRadius = radii.expect();
@@ -544,12 +544,12 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<Xywh> {
-    static Res<Xywh> parse(Cursor<Css::Sst>& c) {
+    static Res<Xywh> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c->prefix == Css::Token::function("xywh(")) {
-            Cursor<Css::Sst> scan = c->content;
+        if (c->prefix == Token::function("xywh(")) {
+            Cursor<Sst> scan = c->content;
 
             eatWhitespace(scan);
             auto x = try$(parseValue<LengthPercentage>(scan));
@@ -566,7 +566,7 @@ struct ValueParser<Xywh> {
             Xywh result{x, y, width, height, {LengthPercentage::fromPercentage(0)}};
 
             eatWhitespace(scan);
-            if (scan.skip(Css::Token::ident("round"))) {
+            if (scan.skip(Token::ident("round"))) {
                 eatWhitespace(scan);
                 if (auto radii = parseValue<Math::Radii<LengthPercentage>>(scan)) {
                     result.borderRadius = radii.expect();
@@ -660,7 +660,7 @@ namespace Vaev::Css {
 
 export template <>
 struct ValueParser<BasicShape> {
-    static Res<BasicShape> parse(Cursor<Css::Sst>& c) {
+    static Res<BasicShape> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 

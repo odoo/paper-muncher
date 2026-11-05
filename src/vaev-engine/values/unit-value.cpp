@@ -420,23 +420,23 @@ export struct UnitValue {
 
 export template <>
 struct ValueParser<UnitValue> {
-    static Res<UnitValue> parse(Cursor<Css::Sst>& c) {
+    static Res<UnitValue> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.peek() == Css::Token::NUMBER) {
+        if (c.peek() == Token::NUMBER) {
             Io::SScan scan = c->token.data.str();
             c.next();
             return Ok(UnitValue{Io::atof(scan).unwrapOr(0.0), UnitValue::Unit::NONE});
         }
 
-        if (c.peek() == Css::Token::PERCENTAGE) {
+        if (c.peek() == Token::PERCENTAGE) {
             Io::SScan scan = c->token.data.str();
             c.next();
             return Ok(UnitValue{Io::atof(scan).unwrapOr(0.0), UnitValue::Unit::PERCENT});
         }
 
-        if (c.peek() == Css::Token::DIMENSION) {
+        if (c.peek() == Token::DIMENSION) {
             Io::SScan scan = c->token.data.str();
             auto value = Io::atof(scan, {.allowExp = false}).unwrapOr(0.0);
             auto unit = try$(UnitValue::unitFromName(scan.remStr()));
@@ -453,18 +453,18 @@ struct ValueSerializer<UnitValue> {
     // https://drafts.csswg.org/cssom/#serialize-a-css-component-value
     static Res<> serialize(Io::TextWriter& w, UnitValue const& value) {
         // The <number> component serialized as per <number> followed by the unit in its canonical form as defined in its respective specification.
-        try$(Css::serializeNumber(w, value.value()));
+        try$(serializeNumber(w, value.value()));
         return w.writeStr(UnitValue::nameOf(value.unit()));
     }
 };
 
-export Res<UnitValue> parseUnitValue(Cursor<Css::Sst>& c, Opt<NumericBaseType> type) {
+export Res<UnitValue> parseUnitValue(Cursor<Sst>& c, Opt<NumericBaseType> type) {
     if (c.ended())
         return Error::invalidData("unexpected end of input");
 
     // https://drafts.csswg.org/css-values/#lengths
     // For zero lengths the unit identifier is optional
-    if (type == NumericBaseType::LENGTH and c.skip(Css::Token::number("0")))
+    if (type == NumericBaseType::LENGTH and c.skip(Token::number("0")))
         return Ok(UnitValue{0, UnitValue::Unit::PX});
 
     auto save = c;
@@ -762,7 +762,7 @@ export using PureFlex = TypedUnitValue<Some(NumericBaseType::FLEX)>;
 export template <typename T>
     requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE, T::ACCEPTS_PERCENTS>>
 struct ValueParser<T> {
-    static Res<T> parse(Cursor<Css::Sst>& c) {
+    static Res<T> parse(Cursor<Sst>& c) {
         auto maybeBase = parseUnitValue(c, T::BASE_TYPE);
 
         if (maybeBase) {

@@ -29,22 +29,22 @@ export using Position = Union<Keywords::Static, Keywords::Relative, Keywords::Ab
 export template <>
 struct ValueParser<Position> {
     // https://drafts.csswg.org/css-position-3/#propdef-position
-    static Res<Position> parse(Cursor<Css::Sst>& c) {
+    static Res<Position> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        if (c.skip(Css::Token::ident("static")))
+        if (c.skip(Token::ident("static")))
             return Ok(Keywords::STATIC);
-        else if (c.skip(Css::Token::ident("relative")))
+        else if (c.skip(Token::ident("relative")))
             return Ok(Keywords::RELATIVE);
-        else if (c.skip(Css::Token::ident("absolute")))
+        else if (c.skip(Token::ident("absolute")))
             return Ok(Keywords::ABSOLUTE);
-        else if (c.skip(Css::Token::ident("fixed")))
+        else if (c.skip(Token::ident("fixed")))
             return Ok(Keywords::FIXED);
-        else if (c.skip(Css::Token::ident("sticky")))
+        else if (c.skip(Token::ident("sticky")))
             return Ok(Keywords::STICKY);
-        else if (c->type == Css::Sst::FUNC and c->prefix == Css::Token::function("running(")) {
-            Cursor<Css::Sst> cur = c->content;
+        else if (c->type == Sst::FUNC and c->prefix == Token::function("running(")) {
+            Cursor<Sst> cur = c->content;
             auto res = parseValue<CustomIdent>(cur);
             if (not res) {
                 return Error::invalidData("ill formed custom-ident in running position");
@@ -91,7 +91,7 @@ namespace Vaev::Css {
 
 export template <typename T>
 struct ValueParser<Math::Insets<T>> {
-    static Res<Math::Insets<T>> parse(Cursor<Css::Sst>& c) {
+    static Res<Math::Insets<T>> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
